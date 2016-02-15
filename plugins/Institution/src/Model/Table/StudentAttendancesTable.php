@@ -227,7 +227,13 @@ class StudentAttendancesTable extends AppTable {
 
 	// Event: ControllerAction.Model.onGetOpenemisNo
 	public function onGetOpenemisNo(Event $event, Entity $entity) {
-		return $entity->user->openemis_no;
+		return $event->subject()->Html->link($entity->user->openemis_no , [
+			'plugin' => 'Institution',
+			'controller' => 'Institutions',
+			'action' => 'StudentUser',
+			'view',
+			$entity->user->id
+		]);
 	}
 
 	// Event: ControllerAction.Model.onGetType
@@ -640,7 +646,7 @@ class StudentAttendancesTable extends AppTable {
     	return $query
     		->select([
     			$this->aliasField('student_id'), 
-    			'Users.openemis_no', 'Users.first_name', 'Users.last_name',
+    			'Users.openemis_no', 'Users.first_name', 'Users.last_name', 'Users.id',
     			'StudentAbsences.id',
     			'StudentAbsences.start_date',
     			'StudentAbsences.end_date',
