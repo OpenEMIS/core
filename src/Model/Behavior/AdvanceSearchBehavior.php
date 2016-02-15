@@ -68,6 +68,7 @@ class AdvanceSearchBehavior extends Behavior {
 						if (!empty($selected) && $advancedSearch == false) {
 							$advancedSearch = true;
 						}
+
 						$filters[$key] = [
 							'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->alias()),
 							'options' => $relatedModel->getList(),
@@ -115,6 +116,28 @@ class AdvanceSearchBehavior extends Behavior {
 **
 ******************************************************************************************************************/
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $paginateOptions) {
+		$submit = $request->data('submit');
+		if (!empty($submit)) {
+			if ($submit == 'Reset') {
+				$model = $this->_table;
+				$alias = $model->alias();
+				// clear session
+				if ($model->Session->check($alias.'.advanceSearch.belongsTo')) {
+					 $model->Session->delete($alias.'.advanceSearch.belongsTo');	
+				}
+				if ($model->Session->check($alias.'.advanceSearch.hasMany')) {
+					 $model->Session->delete($alias.'.advanceSearch.hasMany');	
+				}
+				// clear fields value
+				foreach ($request->data['AdvanceSearch'][$alias]['belongsTo'] as $key=>$value) {
+					$request->data['AdvanceSearch'][$alias]['belongsTo'][$key] = '';
+				}
+				foreach ($request->data['AdvanceSearch'][$alias]['hasMany'] as $key=>$value) {
+					$request->data['AdvanceSearch'][$alias]['hasMany'][$key] = '';
+				}
+				$request->data['AdvanceSearch'][$alias]['isSearch'] = false;
+			}
+		}
 		return $this->advancedSearchQuery ($request, $query);
 	}
 
@@ -125,14 +148,26 @@ class AdvanceSearchBehavior extends Behavior {
 
 		$model = $this->_table;
 		$alias = $model->alias();
-		if (isset($request->data['AdvanceSearch']) && isset($request->data['AdvanceSearch'][$alias])) {
-			if (isset($request->data['AdvanceSearch'][$alias]['belongsTo'])) {
-				$advancedSearchBelongsTo = $request->data['AdvanceSearch'][$alias]['belongsTo'];
-			}
-			if (isset($request->data['AdvanceSearch'][$alias]['hasMany'])) {
-				$advancedSearchHasMany = $request->data['AdvanceSearch'][$alias]['hasMany'];
+
+		$advancedSearchBelongsTo = $model->Session->check($alias.'.advanceSearch.belongsTo') ? $model->Session->read($alias.'.advanceSearch.belongsTo') : [];
+		$advancedSearchHasMany = $model->Session->check($alias.'.advanceSearch.hasMany') ? $model->Session->read($alias.'.advanceSearch.hasMany') : [];
+
+		if ($request->is(['post', 'put'])) {
+			if (isset($request->data['AdvanceSearch']) && isset($request->data['AdvanceSearch'][$alias])) {
+				if (isset($request->data['AdvanceSearch'][$alias]['belongsTo'])) {
+					$advancedSearchBelongsTo = $request->data['AdvanceSearch'][$alias]['belongsTo'];
+				}
+				if (isset($request->data['AdvanceSearch'][$alias]['hasMany'])) {
+					$advancedSearchHasMany = $request->data['AdvanceSearch'][$alias]['hasMany'];
+				}
+				$model->Session->write($alias.'.advanceSearch', $request->data['AdvanceSearch'][$alias]);
 			}
 		}
+
+		if ($model->Session->check($alias.'.advanceSearch')) {
+			$request->data['AdvanceSearch'][$alias] = $model->Session->read($alias.'.advanceSearch');
+		}
+
 		$areaKeys[] = 'area_id';
 		$areaKeys[] = 'area_administrative_id';
 		$areaKeys[] = 'birthplace_area_id';
