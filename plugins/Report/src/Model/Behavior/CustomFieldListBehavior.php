@@ -22,6 +22,7 @@ class CustomFieldListBehavior extends Behavior {
 		'model' => null,
 		'formFilterClass' => ['className' => 'CustomField.CustomFormsFilters'],
 		'fieldValueClass' => ['className' => 'CustomField.CustomFieldValues', 'foreignKey' => 'custom_record_id', 'dependent' => true, 'cascadeCallbacks' => true],
+		'tableCellClass' => ['className' => 'CustomField.CustomTableCells', 'foreignKey' => 'custom_record_id', 'dependent' => true, 'cascadeCallbacks' => true],
 		'condition' => [],
 	];
 
@@ -36,6 +37,7 @@ class CustomFieldListBehavior extends Behavior {
 			$this->CustomFormsFilters = TableRegistry::get($this->config('formFilterClass.className'));
 		}
 		$this->CustomFieldValues = TableRegistry::get($this->config('fieldValueClass.className'));
+		$this->CustomTableCells = TableRegistry::get($this->config('tableCellClass.className'));
 		$this->CustomForms = $this->CustomFieldValues->CustomFields->CustomForms;
 		$model = $this->config('model');
 		if (empty($model)) {
@@ -80,14 +82,47 @@ class CustomFieldListBehavior extends Behavior {
 			$filterValue = $settings['sheet']['key'];
 		}
 		$customFields = $this->getCustomFields($filterValue);
-
+		$tableCustomFieldIds = [];
+		
 		foreach ($customFields as $customField) {
-			$field['key'] = 'CustomField';
-			$field['field'] = 'custom_field';
-			$field['type'] = 'custom_field';
-			$field['label'] = $customField['name'];
-			$field['customField'] = ['id' => $customField['id'], 'field_type' => $customField['field_type']];
-			$fields[] = $field;
+			if ($customField['field_type'] != 'TABLE') {
+				$field['key'] = 'CustomField';
+				$field['field'] = 'custom_field';
+				$field['type'] = 'custom_field';
+				$field['label'] = $customField['name'];
+				$field['customField'] = ['id' => $customField['id'], 'field_type' => $customField['field_type']];
+				$fields[] = $field;
+			} else {
+				$tableCustomFieldIds[] = $customField['id'];
+				$tableRow = $customField->custom_table_rows;
+				$tableCol = $customField->custom_table_columns;
+
+				$row = [];
+				foreach ($tableRow as $r) {
+					$row[$r['order']] = $r;
+				}
+				ksort($row);
+				$row = array_values($row);
+				$col = [];
+				foreach ($tableCol as $c) {
+					$col[$c['order']] = $c;
+				}
+				ksort($col);
+				$col = array_values($col);
+
+				if (sizeof($row) !=0 && sizeof($col) !=0 ) {
+					for($i = 1; $i < sizeof($col); $i++) {
+						foreach ($row as $rw) {
+							$field['key'] = 'CustomField';
+							$field['field'] = 'custom_field';
+							$field['type'] = 'custom_field';
+							$field['label'] = $customField['name'] . ' ('.$col[$i]['name'].', '.$rw['name'].')';
+							$field['customField'] = ['id' => $customField['id'], 'field_type' => $customField['field_type'], 'col_id' => $col[$i]['id'], 'row_id' => $rw['id']];
+							$fields[] = $field;
+						}
+					}
+				}
+			}
 		}
 
 		// Setting the list of options into the sheet for easier fetching
@@ -316,13 +351,13 @@ class CustomFieldListBehavior extends Behavior {
 			$customFormFields = $this->CustomFormsFilters
 				->find()
 				->where([$this->CustomFormsFilters->aliasField($customFilterKey).' IN' => [$filterValue, 0]])
-				->contain(['CustomForms', 'CustomForms.CustomFields'])
+				->contain(['CustomForms', 'CustomForms.CustomFields.CustomTableColumns', 'CustomForms.CustomFields.CustomTableRows'])
 				->toArray();	
 		} else {
 			// If there is no filter specified
 			$customFormFields = $this->CustomForms
 				->find()
-				->contain(['CustomFields'])
+				->contain(['CustomFields.CustomTableColumns', 'CustomFields.CustomTableColumns'])
 				->toArray();
 		}
 
@@ -338,7 +373,7 @@ class CustomFieldListBehavior extends Behavior {
 
 			if (!(is_null($fields))) {
 				foreach ($fields as $field) {
-					if ($field->field_type != 'TABLE' && $field->field_type != 'STUDENT_LIST') {
+					if ($field->field_type != 'STUDENT_LIST') {
 						$customFields[$field->id] = $field;
 					}	
 				}
