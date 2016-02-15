@@ -24,6 +24,14 @@ class InstitutionGradesTable extends AppTable {
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 	}
 
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$newEvent = [];
+		$newEvent['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		$events = array_merge($events, $newEvent);
+		return $events;
+	}
+
 	public function validationDefault(Validator $validator) {
 		$validator
 			->allowEmpty('end_date')
@@ -396,6 +404,12 @@ class InstitutionGradesTable extends AppTable {
 			return $a;
 		}
 		return (($a->toUnixString() >= $b->toUnixString()) ? $a : $b);
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		$toolbarArray = $toolbarButtons->getArrayCopy();
+		unset($toolbarArray['search']);
+		$toolbarButtons->exchangeArray($toolbarArray);
 	}
 
 }
