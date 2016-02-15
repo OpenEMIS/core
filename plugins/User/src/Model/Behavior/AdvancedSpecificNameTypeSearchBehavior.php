@@ -32,7 +32,7 @@ class AdvancedSpecificNameTypeSearchBehavior extends Behavior {
 					$conditions[] = [$model->aliasField($searchKey).' LIKE' =>  '%' . $searchValue . '%'];
 				}
 			}
-			$query->orWhere( $conditions );
+			$query->andWhere( $conditions );
 		}
 		return $query;
 	}

@@ -31,7 +31,7 @@ class AdvancedContactNumberSearchBehavior extends Behavior {
 						]
 					]
 				]);
-			$query->orWhere(['Contacts.value LIKE' =>  $searchString]);
+			$query->andWhere(['Contacts.value LIKE' =>  $searchString]);
 		}
 		return $query;
 	}

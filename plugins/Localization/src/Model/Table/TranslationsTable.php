@@ -59,6 +59,13 @@ class TranslationsTable extends AppTable {
 		]);
 	}
 
+	public function addEditAfterAction(Event $event, Entity $entity) {
+		if ($entity->editable == 0) {
+			$this->ControllerAction->field('en', ['type' => 'readonly']);
+		}
+		$this->ControllerAction->field('editable', ['visible' => false]);
+	}
+
 	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
 		// Include the js file for the compiling
 		$includes['localization'] = ['include' => true, 'js' => 'Localization.translations'];
@@ -75,6 +82,10 @@ class TranslationsTable extends AppTable {
 		}
 	}
 
+	public function onGetEditable(Event $event, Entity $entity) {
+		return ($entity->editable == 0)? __('No'): __('Yes');
+	}
+
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if($action == "index"){
 			$toolbarButtons['download']['type'] = 'button';
@@ -89,6 +100,15 @@ class TranslationsTable extends AppTable {
 			}
 			$toolbarButtons['download']['url'] = $url;
 		}
+    }
+
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+    	$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+		if ($entity->editable == 0) {
+			// remove the delete button
+			unset($buttons['remove']);
+		}
+    	return $buttons;
     }
 
     public function validationDefault(Validator $validator) {
