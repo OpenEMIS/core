@@ -13,8 +13,6 @@ class MembershipsTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 	}
 
-	public function beforeAction() {}
-
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
 
@@ -34,6 +32,7 @@ class MembershipsTable extends AppTable {
 	}
 
 	public function afterAction(Event $event) {
+		$this->ControllerAction->setFieldOrder(['membership', 'issue_date', 'expiry_date', 'comment']);
 		$this->setupTabElements();
 	}
 }
