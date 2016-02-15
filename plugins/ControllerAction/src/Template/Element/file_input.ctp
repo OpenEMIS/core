@@ -60,28 +60,28 @@ if (isset($attr['alwaysShowOneButton'])) {
 
 		<?php if (!empty($wrapperClass)):?>
 			<div class="input-left-btn">
-				<?php if ($selectedButton=='download'):?>
-					<?php 
-						if (isset($downloadUrl) && !empty($downloadUrl)):
-							$downloadOnclick = "javascript:window.location.href='".$downloadUrl."'";
-						else:
-							$downloadOnclick = "";
-						endif;
-					?>
-					<button class="btn" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Download Template" type="reset" onclick="<?= $downloadOnclick ?>">
-						<i class="fa kd-download"></i>
-					</button>
-				<?php endif; ?>
-				<?php if ($selectedButton=='import'):?>
-					<?php 
-						if (isset($importUrl) && !empty($importUrl)):
-							$importOnclick = "javascript:window.location.href='".$importUrl."'";
-						else:
-							$importOnclick = '';
-						endif;
-					?>
-					<button class="btn" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Import" type="reset" onclick="<?= $importOnclick ?>"><i class="fa kd-import"></i></button>
-				<?php endif; ?>
+				<?php 
+					$downloadClass = ($selectedButton=='download') ? '' : 'fileinput-exists ';
+				?>
+				<?php 
+					if (!isset($downloadOnClick)):
+						$downloadOnClick = "";
+					endif;
+				?>
+				<button class="btn <?= $downloadClass; ?>" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Download Template" type="reset" onclick="<?= $downloadOnClick ?>">
+					<i class="fa kd-download"></i>
+				</button>
+				
+				<?php 
+					$importClass = ($selectedButton=='import') ? '' : 'fileinput-exists ';
+				?>
+				<?php 
+					if (!isset($importOnClick)):
+						$importOnClick = '';
+					endif;
+				?>
+				<button class="btn <?= $importClass; ?>" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Import" type="reset" onclick="<?= $importOnClick ?>"><i class="fa kd-import"></i></button>
+
 			</div>
 		<?php endif; ?>
 
@@ -90,12 +90,14 @@ if (isset($attr['alwaysShowOneButton'])) {
 				<i class="fa fa-file-o fileinput-exists"></i>
 				<span class="fileinput-filename"><?= !empty($attr['value']) ? $attr['value'] : ''; ?></span>
 			</div>
+
 			<a href="#" class="input-group-addon btn fileinput-exists btn-file-cancel" data-dismiss="fileinput" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Remove"><i class="fa fa-close"></i></a>
 			<div class="input-group-addon btn btn-default btn-file" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Browse">
 				<span class="fileinput-new"><i class="fa fa-folder"></i></span>
 				<span class="fileinput-exists fa fa-folder"></span>
 				<input type="file" name="<?= sprintf($fieldName, $attr['model'], $attr['field']) ?>" class="fa fa-folder">
 			</div>
+
 			<div class="file-input-text">
 		   		<p><?= $attr['comment'] ?></p>
 			</div>
@@ -105,7 +107,10 @@ if (isset($attr['alwaysShowOneButton'])) {
 </div>
 
 <script>
-$(document).ready(function(e){
+$(document).ready(function(e) {
+	if ($("#file-input-wrapper").hasClass("always-single")) {
+		$("#file-input-wrapper").find('button.btn.fileinput-exists').removeClass('fileinput-exists').addClass('hidden');
+	}
 	$("#file-input-wrapper").on('change.bs.fileinput', function(e){
 		if ($(this).hasClass("input-single-btn") && !$(this).hasClass("always-single")) {
 			$(this).removeClass("input-single-btn").addClass("input-double-btn");
