@@ -414,6 +414,7 @@ class RecordBehavior extends Behavior {
 				$field['type'] = 'custom_field';
 				$field['label'] = $_name;
 				$field['customField'] = ['id' => $_id, 'field_type' => $_field_type];
+				$fields[] = $field;
 			} else {
 				$tableRow = $_customField->custom_table_rows;
 				$tableCol = $_customField->custom_table_columns;
@@ -436,12 +437,11 @@ class RecordBehavior extends Behavior {
 							$field['type'] = 'custom_field';
 							$field['label'] = $_name . ' ('.$col[$i]['name'].', '.$rw['name'].')';
 							$field['customField'] = ['id' => $_id, 'field_type' => $_field_type, 'col_id' => $col[$i]['id'], 'row_id' => $rw['id']];
+							$fields[] = $field;
 						}
 					}
 				}
 			}
-			
-			$fields[] = $field;
 		}
 
 		// Set the available options for dropdown and checkbox type
