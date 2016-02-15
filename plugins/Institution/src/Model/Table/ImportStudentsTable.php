@@ -308,21 +308,28 @@ class ImportStudentsTable extends AppTable {
 				$this->availableSections = $this->populateInstitutionSectionsData();
 			}
 			$this->availableSections;
-			$selectedClassIdFound = false;
+			$selectedClassIdFound = null;
 			if (!empty($this->availableSections)) {
-				foreach($this->availableSections as $periodClasses) {
+				foreach($this->availableSections as $periodCode=>$periodClasses) {
 					if (!empty($periodClasses)) {
 						foreach($periodClasses as $id=>$name) {
 							if ($id == $tempRow['class']) {
-								$selectedClassIdFound = true;
+								if ($periodCode == $period->code) {
+									$selectedClassIdFound = true;
+								} else {
+									$selectedClassIdFound = false;
+								}
 								break;
 							}
 						}
 					}
 				}
 			}
-			if (!$selectedClassIdFound) {
+			if (is_null($selectedClassIdFound)) {
 				$rowInvalidCodeCols['class'] = __('Selected class does not exists in this institution');
+				return false;
+			} else if (!$selectedClassIdFound) {
+				$rowInvalidCodeCols['class'] = __('Selected class does not exists during the selected Academic Period');
 				return false;
 			}
 		}
