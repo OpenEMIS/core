@@ -32,7 +32,9 @@ class FieldOptionsController extends AppController {
 				"$controller.Conditions" 			=> "$controller.%s",
 				"$controller.ImmunizationTypes" 	=> "$controller.%s",
 				"$controller.TestTypes" 			=> "$controller.%s",
-				"$controller.QualityVisitTypes" 	=> "$controller.%s"
+				"$controller.QualityVisitTypes" 	=> "$controller.%s",
+				"$controller.QualificationSpecialisations" 	=> "$controller.%s",
+				"$controller.QualificationLevels" 	=> "$controller.%s"
 			]
 		]);
 	}
@@ -74,4 +76,6 @@ class FieldOptionsController extends AppController {
 	public function ImmunizationTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 		'className' => 'Health.ImmunizationTypes']); }
 	public function TestTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 				'className' => 'Health.TestTypes']); }
 	public function QualityVisitTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 		'className' => 'FieldOption.QualityVisitTypes']); }
+	public function QualificationSpecialisations() { $this->ControllerAction->process(['alias' => __FUNCTION__, 		'className' => 'FieldOption.QualificationSpecialisations']); }
+	public function QualificationLevels() { $this->ControllerAction->process(['alias' => __FUNCTION__, 		'className' => 'FieldOption.QualificationLevels']); }
 }
