@@ -126,7 +126,9 @@ class CustomFieldListBehavior extends Behavior {
 			}
 		}
 
-		$fields[$fieldCount]['tableCustomFieldIds'] = $tableCustomFieldIds;
+		if (!empty($tableCustomFieldIds) {
+			$fields[$fieldCount]['tableCustomFieldIds'] = $tableCustomFieldIds;
+		}
 
 		// Setting the list of options into the sheet for easier fetching
 		$this->setCustomFieldOptionsList($settings['sheet']['customFieldOptions']);
@@ -143,7 +145,9 @@ class CustomFieldListBehavior extends Behavior {
 		if (!array_key_exists($entity->id, $tmpFieldValues)) {
 			$fieldValues = $this->getFieldValue($entity->id);
 			if (isset($attr['tableCustomFieldIds'])) {
-				
+				$tableCellValues = $this->getTableCellValues($attr['tableCustomFieldIds'], $entity->id);
+				$fieldValues = $fieldValues + $tableCellValues;
+				ksort($fieldValues);
 			}
 			$tmpFieldValues = $this->setTmpFieldValues($fieldValues);
 		}
@@ -155,6 +159,28 @@ class CustomFieldListBehavior extends Behavior {
 			return '';
 		}
 	}
+
+	private function getTableCellValues($tableCustomFieldIds, $recordId) {
+		if (!empty($tableCustomFieldIds)) {
+			$TableCellTable = $this->CustomTableCells;
+			$customFieldsForeignKey = $TableCellTable->CustomFields->foreignKey();
+			$customRecordsForeignKey = $TableCellTable->CustomRecords->foreignKey();
+			$customColumnForeignKey = $TableCellTable->CustomTableColumns->foreignKey();
+			$customRowForeignKey = $TableCellTable->CustomTableRows->foreignKey();
+			$tableCellData = new ArrayObject();
+			$TableCellTable
+					->find()
+					->where([$TableCellTable->aliasField($customFieldsForeignKey).' IN ' => $tableCustomFieldIds, $TableCellTable->aliasField($customRecordsForeignKey) => $recordId])
+				    ->map(function ($row) use ($tableCellData, $customFieldsForeignKey, $customColumnForeignKey, $customRowForeignKey) {
+				        $tableCellData[$row[$customFieldsForeignKey]][$row[$customColumnForeignKey]][$row[$customRowForeignKey]] = $row['text_value'];
+				        return $row;
+				    })
+				    ->toArray();
+			$tableCellData = $tableCellData->getArrayCopy();
+			return $tableCellData;
+		}
+	}
+
 
 	/**
 	 *	Function to get the query condition
