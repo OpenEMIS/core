@@ -30,7 +30,9 @@ class QualificationsTable extends AppTable {
 			->add('graduate_year', 'ruleNumeric', 
 				['rule' => 'numeric']
 			)
-			->notEmpty('institution_name', 'Please enter the institution');
+			->notEmpty('institution_name', 'Please enter the institution')
+			->allowEmpty('file_content')
+			;
 		;
 	}
 
@@ -44,7 +46,7 @@ class QualificationsTable extends AppTable {
 		// temporary disable
 		$this->ControllerAction->field('file_name', 			['visible' => false]);
 		// file_content is a required field
-		$this->ControllerAction->field('file_content', 			['type' => 'binary', 'visible' => ['edit' => true], 'null'=>false]);
+		$this->ControllerAction->field('file_content', 			['type' => 'binary', 'visible' => ['edit' => true]]);
 
 		$this->ControllerAction->field('file_type', 			['type' => 'string', 'visible' => ['index'=>true]]);
 	}
@@ -154,7 +156,7 @@ class QualificationsTable extends AppTable {
 	}
 
 	public function onGetFileType(Event $event, Entity $entity) {
-		return $this->getFileTypeForView($entity->file_name);
+		return (!empty($entity->file_name))? $this->getFileTypeForView($entity->file_name): '';;
 	}
 
 	private function setupTabElements() {
@@ -175,13 +177,19 @@ class QualificationsTable extends AppTable {
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {   
 		if ($action == "view") {
-			$toolbarButtons['download']['type'] = 'button';
-			$toolbarButtons['download']['label'] = '<i class="fa kd-download"></i>';
-			$toolbarButtons['download']['attr'] = $attr;
-			$toolbarButtons['download']['attr']['title'] = __('Download');
-			$url = $this->ControllerAction->url('download');
-			if (!empty($url['action'])) {
-				$toolbarButtons['download']['url'] = $url;
+			if (array_key_exists(1, $this->request->params['pass'])) {
+				$filename = $this->get($this->request->params['pass'][1])->file_content;
+			}
+			
+			if (!empty($filename)) {
+				$toolbarButtons['download']['type'] = 'button';
+				$toolbarButtons['download']['label'] = '<i class="fa kd-download"></i>';
+				$toolbarButtons['download']['attr'] = $attr;
+				$toolbarButtons['download']['attr']['title'] = __('Download');
+				$url = $this->ControllerAction->url('download');
+				if (!empty($url['action'])) {
+					$toolbarButtons['download']['url'] = $url;
+				}
 			}
 		}
 	}
