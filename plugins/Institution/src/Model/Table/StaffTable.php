@@ -51,8 +51,8 @@ class StaffTable extends AppTable {
 	      	'number_of_staff' => [
         		'_function' => 'getNumberOfStaff',
 				'chart' => ['type' => 'column', 'borderWidth' => 1],
-				'xAxis' => ['title' => ['text' => 'Position Type']],
-				'yAxis' => ['title' => ['text' => 'Total']]
+				'xAxis' => ['title' => ['text' => __('Position Type')]],
+				'yAxis' => ['title' => ['text' => __('Total')]]
 			],
 			'institution_staff_gender' => [
 				'_function' => 'getNumberOfStaffsByGender'
@@ -861,7 +861,7 @@ class StaffTable extends AppTable {
 			}
 		}
 
-		$params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
+		$params['options']['subtitle'] = array('text' => sprintf(__('For Year %s'), $currentYear));
 		$params['options']['xAxis']['categories'] = array_values($positionTypes);
 		$params['dataSet'] = $dataSet;
 
