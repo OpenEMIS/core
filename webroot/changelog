@@ -1,3 +1,12 @@
+v3.4.14
+- Fixed a bug that caused Staff Career tabs not navigating to the correct page
+- User should be able to search for Student/Staff Absences.
+- Added hyperlinks to OpenEMIS ID/Name field in various pages to link to user profile
+- Fixed a bug that caused student import to class successfully when using a class code that is not in the same academic period
+- Implemented the link between Qualification Specializations and Education Subjects
+- Fixed a bug that caused sorting to refresh advanced search results
+- 
+
 v3.4.13
 - Class column in Institutions -> Students can be sortable now
 - The system does not allow users to create shifts with overlapped timing now
