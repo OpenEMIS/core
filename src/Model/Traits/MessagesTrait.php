@@ -810,7 +810,8 @@ trait MessagesTrait {
 					'required' => 'Please enter a valid Qualification Title'
 				],
 				'graduate_year' => [
-					'required' => 'Please enter a valid Graduate Year'
+					'required' => 'Please enter a valid Graduate Year',
+					'ruleNumeric' => 'Please enter a valid Numeric value',
 				],
 				'qualification_level_id' => [
 					'required' => 'Please enter a valid Qualification Level'
