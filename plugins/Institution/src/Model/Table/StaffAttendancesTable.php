@@ -475,6 +475,7 @@ class StaffAttendancesTable extends AppTable {
 			$weekStr = 'Week %d (%s - %s)';
 			$weekOptions = [];
 			$currentWeek = null;
+			$selectedWeekDate = [];
 			foreach ($weeks as $index => $dates) {
 				if ($todayDate >= $dates[0]->format('Y-m-d') && $todayDate <= $dates[1]->format('Y-m-d')) {
 					$weekStr = __('Current Week') . ' %d (%s - %s)';
@@ -484,12 +485,18 @@ class StaffAttendancesTable extends AppTable {
 				}
 				$weekOptions[$index] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
 			}
-			$selectedYear = $AcademicPeriod->get($selectedPeriod)->start_year;
-			if ($selectedYear == date("Y") && !is_null($currentWeek)) {
+			$academicPeriodObj = $AcademicPeriod->get($selectedPeriod);
+			$startYear = $academicPeriodObj->start_year;
+			$endYear = $academicPeriodObj->end_year;
+			if (date("Y") >= $startYear && date("Y") <= $endYear && !is_null($currentWeek)) {
 				$selectedWeek = !is_null($this->request->query('week')) ? $this->request->query('week') : $currentWeek;
 			} else {
 				$selectedWeek = $this->queryString('week', $weekOptions);
 			}
+
+			$weekStartDate = $weeks[$selectedWeek][0];
+			$weekEndDate = $weeks[$selectedWeek][1];
+
 			$this->advancedSelectOptions($weekOptions, $selectedWeek);
 			$this->controller->set(compact('weekOptions', 'selectedWeek'));
 			// end setup weeks
@@ -559,8 +566,10 @@ class StaffAttendancesTable extends AppTable {
 			// End setup days
 
 			$settings['pagination'] = false;
+
 			$query
 				->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
+				->find('inDateRange', ['start_date' => $weekStartDate, 'end_date' => $weekEndDate])
 				->contain(['Users'])
 				->find('withAbsence', ['date' => $this->selectedDate])
 				->where([$this->aliasField('institution_id') => $institutionId])
