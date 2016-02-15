@@ -55,7 +55,17 @@ class StudentBehavioursTable extends AppTable {
 	// }
 
 	public function onGetOpenemisNo(Event $event, Entity $entity) {
-		return $entity->student->openemis_no;
+		if ($this->action == 'view') {
+			return $event->subject()->Html->link($entity->student->openemis_no , [
+				'plugin' => 'Institution',
+				'controller' => 'Institutions',
+				'action' => 'StudentUser',
+				'view',
+				$entity->student->id
+			]);
+		} else {
+			return $entity->student->openemis_no;
+		}
 	}
 
 	public function beforeAction() {
