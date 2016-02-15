@@ -963,6 +963,25 @@ class InstitutionSectionsTable extends AppTable {
 		return $attr;
 	}
 
+	public function onGetStaffId(Event $event, Entity $entity) {
+		if ($this->action == 'view') {
+			return $event->subject()->Html->link($entity->staff->name_with_id , [
+				'plugin' => 'Institution',
+				'controller' => 'Institutions',
+				'action' => 'StaffUser',
+				'view',
+				$entity->staff->id
+			]);
+		} else {
+			if ($entity->has('staff')) {
+				return $entity->staff->name_with_id;
+			} else {
+				return __('No Teacher Assigned');
+			}
+			
+		}		
+	}
+
 
 /******************************************************************************************************************
 **
@@ -1081,7 +1100,7 @@ class InstitutionSectionsTable extends AppTable {
 
 			foreach ($query->toArray() as $key => $value) {
 				if ($value->has('user')) {
-					$options[$value->user->id] = $value->user->name;
+					$options[$value->user->id] = $value->user->name_with_id;
 				}
 			}
 		}

@@ -388,7 +388,7 @@ class NavigationComponent extends Component {
 				'title' => 'Positions',
 				'parent' => 'Institutions.index',
 				'params' => ['plugin' => 'Institution'],
-				'selected' => ['Institutions.Positions', 'Institutions.StaffPositions'],
+				'selected' => ['Institutions.Positions'],
 			],
 
 			'Institution.Finance' => [

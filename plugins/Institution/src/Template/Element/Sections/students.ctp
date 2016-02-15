@@ -64,7 +64,15 @@
 				<?php else:?>
 
 					<tr>
-						<td><?= $obj->user->openemis_no ?></td>
+						<td>
+							<?= $this->html->link($obj->user->openemis_no, [
+									'plugin' => 'Institution',
+									'controller' => 'Institutions',
+									'action' => 'StudentUser',
+									'view',
+									$obj->user->id
+								]) ?>
+						</td>
 						<td><?= $obj->user->name ?></td>
 						<td><?= $obj->user->gender->name ?></td>
 						<td><?= (is_object($obj->education_grade) ? $obj->education_grade->name : ''); ?></td>
