@@ -194,6 +194,7 @@ INSERT INTO `z_2526_config_items` SELECT * FROM `config_items` WHERE `code` = 'a
 UPDATE `config_items` SET `value` = 'Local' WHERE `code` = 'authentication_type' AND `type` = 'Authentication';
 
 --POCOR-2535
+
 -- db_patches
 INSERT INTO `db_patches` VALUES ('PHPOE-2535', NOW());
 
