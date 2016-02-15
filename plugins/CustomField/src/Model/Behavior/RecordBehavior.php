@@ -771,6 +771,6 @@ class RecordBehavior extends Behavior {
 		if (isset($data[$id][$colId][$rowId])) {
 			return $data[$id][$colId][$rowId];
 		}
-		return null;
+		return '';
 	}
 }

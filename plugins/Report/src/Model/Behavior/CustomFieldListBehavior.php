@@ -373,9 +373,10 @@ class CustomFieldListBehavior extends Behavior {
 		if (is_null($customModuleKey)) {
 			// Use for surveys
 			$SurveyFormsTable = $this->CustomFieldValues->CustomRecords->SurveyForms;
+			pr($SurveyFormsTable->table());die;
 			$customFormFields = $SurveyFormsTable
 				->find()
-				->contain(['CustomFields'])
+				->contain(['CustomFields.CustomTableColumns', 'CustomFields.CustomTableRows'])
 				->where([$SurveyFormsTable->aliasField('id') => $filterValue])
 				->toArray();
 		} elseif (!(empty($filterValue))) {
@@ -505,17 +506,17 @@ class CustomFieldListBehavior extends Behavior {
 	}
 	
 	private function textarea($data, $field, $options=[]) {
-		if (isset($data[$field]['id'])) {
-			return $data[$fieldId];
+		if (isset($data[$field['id']])) {
+			return $data[$field['id']];
 		} else {
 			return '';
 		}
 	}
 
-	private function dropdown($data, $fieldId, $options=[]) {
-		if (isset($data[$fieldId])) {
-			if (isset($options[$data[$fieldId]])) {
-				return $options[$data[$fieldId]];
+	private function dropdown($data, $field, $options=[]) {
+		if (isset($data[$field['id']])) {
+			if (isset($options[$data[$field['id']]])) {
+				return $options[$data[$field['id']]];
 			} else {
 				return '';
 			}
@@ -524,9 +525,9 @@ class CustomFieldListBehavior extends Behavior {
 		}
 	}
 	
-	private function checkbox($data, $fieldId, $options=[]) {
-		if (isset($data[$fieldId])) {
-			$values = explode(",", $data[$fieldId]);
+	private function checkbox($data, $field, $options=[]) {
+		if (isset($data[$field['id']])) {
+			$values = explode(",", $data[$field['id']]);
 			$returnValue = '';
 			foreach ($values as $value) {
 				if (isset($options[$value])) {
@@ -543,30 +544,36 @@ class CustomFieldListBehavior extends Behavior {
 		}
 	}
 
-	private function date($data, $fieldId, $options=[]) {
-		if (isset($data[$fieldId])) {
-			$date = date_create_from_format('Y-m-d', $data[$fieldId]);
+	private function date($data, $field, $options=[]) {
+		if (isset($data[$field['id']])) {
+			$date = date_create_from_format('Y-m-d', $data[$field['id']]);
 			return $this->_table->formatDate($date);
 		} else {
 			return '';
 		}
 	}
 
-	private function time($data, $fieldId, $options=[]) {
-		if (isset($data[$fieldId])) {
-			$time = date_create_from_format('G:i:s', $data[$fieldId]);
+	private function time($data, $field, $options=[]) {
+		if (isset($data[$field['id']])) {
+			$time = date_create_from_format('G:i:s', $data[$field['id']]);
 			return $this->_table->formatTime($date);
 		} else {
 			return '';
 		}
 	}
 
-	private function student_list($data, $fieldId, $options=[]) {
+	private function student_list($data, $field, $options=[]) {
 		return null;
 	}
 
-	private function table($data, $fieldId, $options=[]) {
-		return null;
+	private function table($data, $field, $options=[]) {
+		$id = $fieldInfo['id'];
+		$colId = $fieldInfo['col_id'];
+		$rowId = $fieldInfo['row_id'];
+		if (isset($data[$id][$colId][$rowId])) {
+			return $data[$id][$colId][$rowId];
+		}
+		return '';
 	}
 
 }
