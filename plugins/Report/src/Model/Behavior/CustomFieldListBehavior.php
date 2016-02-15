@@ -480,7 +480,7 @@ class CustomFieldListBehavior extends Behavior {
 		// Handle existing field types, if there are new field types please add another function for it
 		$type = strtolower($customField['field_type']);
 		if (method_exists($this, $type)) {
-			$ans = $this->$type($fieldValue, $customField['id'], $optionsValues);
+			$ans = $this->$type($fieldValue, $customField, $optionsValues);
 			if (!(is_null($ans))) {
 				$answer = $ans;
 			}
@@ -488,24 +488,24 @@ class CustomFieldListBehavior extends Behavior {
 		return $answer;
 	}
 
-	private function text($data, $fieldId, $options=[]) {
-		if (isset($data[$fieldId])) {
-			return $data[$fieldId];
+	private function text($data, $field, $options=[]) {
+		if (isset($data[$field['id']])) {
+			return $data[$field['id']];
 		} else {
 			return '';
 		}
 	}
 
-	private function number($data, $fieldId, $options=[]) {
-		if (isset($data[$fieldId])) {
-			return $data[$fieldId];
+	private function number($data, $field, $options=[]) {
+		if (isset($data[$field['id']])) {
+			return $data[$field['id']];
 		} else {
 			return '';
 		}
 	}
 	
-	private function textarea($data, $fieldId, $options=[]) {
-		if (isset($data[$fieldId])) {
+	private function textarea($data, $field, $options=[]) {
+		if (isset($data[$field]['id'])) {
 			return $data[$fieldId];
 		} else {
 			return '';
