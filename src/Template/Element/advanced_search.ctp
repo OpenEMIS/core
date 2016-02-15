@@ -3,7 +3,7 @@ use Cake\Utility\Inflector;
 ?>
 <div id="advanced-search" class="advanced-search-wrapper alert search-box <?= !$advancedSearch ? 'hidden' : '' ?>">
 
-	<button id="search-toggle" class="btn btn-xs close" type="button" alt="Collapse">×</button>
+	<button class="btn btn-xs close" type="button" alt="Collapse">×</button>
 	<h4><?= __('Advanced Search')?></h4>
 
 	<?php
@@ -14,7 +14,7 @@ use Cake\Utility\Inflector;
 		  <label class="form-label"><?= $filter['label'] ?>:</label>
 		  <div class="input-select-wrapper">	 
 			  <select name="AdvanceSearch[<?= $model ?>][belongsTo][<?= $key ?>]">
-				<option value="">&nbsp;</option>
+				<option value=""><?= __('-- SELECT --'); ?></option>
 				<?php foreach ($filter['options'] as $optKey=>$optVal): ?>
 					<?php $selected = ($optKey==$filter['selected']) ? 'selected' : ''; ?>
 					<option value="<?= $optKey ?>" <?= $selected ?>><?= $optVal ?></option>
@@ -40,27 +40,28 @@ use Cake\Utility\Inflector;
 	<hr>
 	<input type="hidden" name="AdvanceSearch[<?= $model ?>][isSearch]" value="" id="isSearch" />
 	<button class="btn btn-default btn-xs" href=""><?= __('Search') ?></button>
-	<button id="reset" class="btn btn-default btn-xs" value="Reset" href=""><?= __('Reset') ?></button>
+	<button id="reset" class="btn btn-default btn-xs" name="submit" value="Reset"><?= __('Reset') ?></button>
 </div>
 
 <script type="text/javascript">   
 	var box = $('#advanced-search');
 	var isSearch = $('#isSearch');
+
 	$('button#search-toggle').on('click', function () {
 		box.toggleClass('hidden');
-		if (! isSearch.val()) {
+		if (!isSearch.val()) {
 			isSearch.val('true');
 		}else {
 			isSearch.val('');
 		}
 	});
 
-
-	//reset form 
-	$("#reset").click(function(){
-		box.find('input:text, select').val('');
-		$(".icheckbox_minimal-grey").removeClass("checked");
-		isSearch.val('true');
+	$(box.selector+' button.close').on('click', function (e) {
+		e.preventDefault();
+		$('button#search-toggle').trigger('click');
 	});
 
+	if (!box.hasClass('hidden')) {
+		isSearch.val('true');
+	}
 </script>
