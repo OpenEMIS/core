@@ -81,9 +81,11 @@ class CustomFieldListBehavior extends Behavior {
 		if (isset($settings['sheet']['key'])) {
 			$filterValue = $settings['sheet']['key'];
 		}
+		$excelFields = $fields->getArrayCopy();
 		$customFields = $this->getCustomFields($filterValue);
 		$tableCustomFieldIds = [];
-		$fieldCount = count($fields);
+		$excelFields = array_values($excelFields);
+		$fieldCount = count($excelFields);
 		
 		foreach ($customFields as $customField) {
 			if ($customField['field_type'] != 'TABLE') {
@@ -92,7 +94,7 @@ class CustomFieldListBehavior extends Behavior {
 				$field['type'] = 'custom_field';
 				$field['label'] = $customField['name'];
 				$field['customField'] = ['id' => $customField['id'], 'field_type' => $customField['field_type']];
-				$fields[] = $field;
+				$excelFields[] = $field;
 			} else {
 				$tableCustomFieldIds[] = $customField['id'];
 				$tableRow = $customField->custom_table_rows;
@@ -119,7 +121,7 @@ class CustomFieldListBehavior extends Behavior {
 							$field['type'] = 'custom_field';
 							$field['label'] = $customField['name'] . ' ('.$col[$i]['name'].', '.$rw['name'].')';
 							$field['customField'] = ['id' => $customField['id'], 'field_type' => $customField['field_type'], 'col_id' => $col[$i]['id'], 'row_id' => $rw['id']];
-							$fields[] = $field;
+							$excelFields[] = $field;
 						}
 					}
 				}
@@ -127,9 +129,10 @@ class CustomFieldListBehavior extends Behavior {
 		}
 
 		if (!empty($tableCustomFieldIds)) {
-			$fields[$fieldCount]['tableCustomFieldIds'] = $tableCustomFieldIds;
+			$excelFields[$fieldCount]['tableCustomFieldIds'] = $tableCustomFieldIds;
 		}
 
+		$fields->exchangeArray($excelFields);
 		// Setting the list of options into the sheet for easier fetching
 		$this->setCustomFieldOptionsList($settings['sheet']['customFieldOptions']);
 	}
