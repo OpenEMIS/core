@@ -126,7 +126,7 @@ class CustomFieldListBehavior extends Behavior {
 			}
 		}
 
-		if (!empty($tableCustomFieldIds) {
+		if (!empty($tableCustomFieldIds)) {
 			$fields[$fieldCount]['tableCustomFieldIds'] = $tableCustomFieldIds;
 		}
 
@@ -373,7 +373,6 @@ class CustomFieldListBehavior extends Behavior {
 		if (is_null($customModuleKey)) {
 			// Use for surveys
 			$SurveyFormsTable = $this->CustomFieldValues->CustomRecords->SurveyForms;
-			pr($SurveyFormsTable->table());die;
 			$customFormFields = $SurveyFormsTable
 				->find()
 				->contain(['CustomFields.CustomTableColumns', 'CustomFields.CustomTableRows'])
