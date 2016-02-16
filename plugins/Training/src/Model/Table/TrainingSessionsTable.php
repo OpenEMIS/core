@@ -226,6 +226,13 @@ class TrainingSessionsTable extends AppTable {
 		];
 		$data[$this->alias()]['trainers'][] = $dataOptions;
 
+		$trainerData = $data[$this->alias()]['trainers'];
+		$rearrangedTrainerData = [];
+		foreach ($trainerData as $key => $value) {
+			$rearrangedTrainerData[] = $value;
+		}
+		$data[$this->alias()]['trainers'] = $rearrangedTrainerData;
+		
 		//Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
 		$options['associated'] = [
 			'Trainers' => ['validate' => false]
