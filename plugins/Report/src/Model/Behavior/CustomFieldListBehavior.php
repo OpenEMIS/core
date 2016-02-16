@@ -147,6 +147,18 @@ class CustomFieldListBehavior extends Behavior {
 			if (isset($attr['tableCustomFieldIds'])) {
 				$tableCellValues = $this->getTableCellValues($attr['tableCustomFieldIds'], $entity->id);
 				$fieldValues = $fieldValues + $tableCellValues;
+				
+				if (!empty($tableCellValues)) {
+					if (isset($fieldValues[$entity->id])) {
+						$tmpArray = $fieldValues[$entity->id];
+						$tmpArray = $tmpArray + $tableCellValues;
+						ksort($tmpArray);
+						$fieldValues[$entity->id] = $tmpArray;
+					} else {
+						$fieldValues[$entity->id] = $tableCellValues;
+					}
+				}
+				
 				ksort($fieldValues);
 			}
 			$tmpFieldValues = $this->setTmpFieldValues($fieldValues);
@@ -566,9 +578,9 @@ class CustomFieldListBehavior extends Behavior {
 	}
 
 	private function table($data, $field, $options=[]) {
-		$id = $fieldInfo['id'];
-		$colId = $fieldInfo['col_id'];
-		$rowId = $fieldInfo['row_id'];
+		$id = $field['id'];
+		$colId = $field['col_id'];
+		$rowId = $field['row_id'];
 		if (isset($data[$id][$colId][$rowId])) {
 			return $data[$id][$colId][$rowId];
 		}
