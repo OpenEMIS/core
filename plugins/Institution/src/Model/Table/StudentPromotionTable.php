@@ -213,7 +213,12 @@ class StudentPromotionTable extends AppTable {
 					->toArray();
 
 				$attr['type'] = 'select';
-				$selectedGrade = $request->query('grade_to_promote');
+				if (empty($request->data[$this->alias()]['grade_to_promote'])) {
+					$selectedGrade = null;
+				} else {
+					$selectedGrade = $request->data[$this->alias()]['grade_to_promote'];
+				}
+				
 				$GradeStudents = $this;
 				$this->advancedSelectOptions($gradeOptions, $selectedGrade, [
 					'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
@@ -229,6 +234,8 @@ class StudentPromotionTable extends AppTable {
 							->count();
 					}
 				]);
+				$request->data[$this->alias()]['grade_to_promote'] = $selectedGrade;
+
 				$attr['onChangeReload'] = true;
 				$attr['options'] = $gradeOptions;
 				if (empty($request->data[$this->alias()]['grade_to_promote'])) {
