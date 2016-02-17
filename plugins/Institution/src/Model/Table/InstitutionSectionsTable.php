@@ -187,7 +187,7 @@ class InstitutionSectionsTable extends AppTable {
 				return $Sections->findByInstitutionIdAndAcademicPeriodId($institutionId, $id)->count();
 			}
 		]);
-		$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
+		$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptionsForIndex($this->institutionId, $this->_selectedAcademicPeriodId);
 		$selectedAcademicPeriodId = $this->_selectedAcademicPeriodId;
 		if (!empty($gradeOptions)) {
 			/**
@@ -425,7 +425,10 @@ class InstitutionSectionsTable extends AppTable {
 			$this->ControllerAction->field('education_grade', [
 				'type' => 'select',
 				'options' => $gradeOptions,
-				'onChangeReload' => true
+				'onChangeReload' => true,
+				'attr' => [
+ 					'empty' => ((empty($gradeOptions)) ? $this->Alert->getMessage($this->aliasField('education_grade_options_empty')) : '')
+				]
 			]);
 
 			$numberOfSectionsOptions = $this->numberOfSectionsOptions();
@@ -960,6 +963,25 @@ class InstitutionSectionsTable extends AppTable {
 		return $attr;
 	}
 
+	public function onGetStaffId(Event $event, Entity $entity) {
+		if ($this->action == 'view') {
+			return $event->subject()->Html->link($entity->staff->name_with_id , [
+				'plugin' => 'Institution',
+				'controller' => 'Institutions',
+				'action' => 'StaffUser',
+				'view',
+				$entity->staff->id
+			]);
+		} else {
+			if ($entity->has('staff')) {
+				return $entity->staff->name_with_id;
+			} else {
+				return __('No Teacher Assigned');
+			}
+			
+		}		
+	}
+
 
 /******************************************************************************************************************
 **
@@ -1057,7 +1079,7 @@ class InstitutionSectionsTable extends AppTable {
 
 	protected function getStaffOptions($action='edit') {
 		if (in_array($action, ['edit', 'add'])) {
-			$options = [0=>'-- Select Teacher or Leave Blank --'];
+			$options = [0=>'-- ' . __('Select Teacher or Leave Blank') . ' --'];
 		} else {
 			$options = [0=>'No Teacher Assigned'];
 		}
@@ -1078,7 +1100,7 @@ class InstitutionSectionsTable extends AppTable {
 
 			foreach ($query->toArray() as $key => $value) {
 				if ($value->has('user')) {
-					$options[$value->user->id] = $value->user->name;
+					$options[$value->user->id] = $value->user->name_with_id;
 				}
 			}
 		}
@@ -1124,9 +1146,14 @@ class InstitutionSectionsTable extends AppTable {
 	}
 
 	protected function createVirtualStudentEntity($id, $entity) {
-		$userData = $this->Institutions->Students->find()
+		$InstitutionStudentsTable = $this->Institutions->Students;
+		$userData = $InstitutionStudentsTable->find()
 			->contain(['Users'=>['Genders'], 'StudentStatuses', 'EducationGrades'])
-			->where(['student_id'=>$id])
+			->where([
+				$InstitutionStudentsTable->aliasField('student_id') => $id,
+				$InstitutionStudentsTable->aliasField('academic_period_id') => $entity->academic_period_id,
+				$InstitutionStudentsTable->aliasField('institution_id') => $entity->institution_id
+			])
 			->first();
 
 		$data = [

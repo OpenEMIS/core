@@ -22,7 +22,7 @@ class HighChartBehavior extends Behavior {
 		if (!empty($params['options'])) {
 			$options = $params['options'];
 		}
-		$selectedConfig['title'] = array('text' => Inflector::humanize($chart));
+		$selectedConfig['title'] = array('text' => __(Inflector::humanize($chart)));
 		$selectedConfig['tooltip'] = ['useHTML'=>true];
 		$selectedConfig['legend'] = ['useHTML'=>true];
 		unset($selectedConfig['_function']);
