@@ -290,9 +290,9 @@ class StaffAbsencesTable extends AppTable {
 
 		} else if ($this->action == 'edit') {
 			$this->ControllerAction->field('start_date');
-			$this->ControllerAction->field('end_date');
 		}
 		// End
+		$this->ControllerAction->field('end_date');
 		$this->ControllerAction->field('start_time', ['type' => 'time']);
 		$this->ControllerAction->field('end_time', ['type' => 'time']);
 		$this->ControllerAction->field('staff_absence_reason_id', ['type' => 'select']);
@@ -394,8 +394,7 @@ class StaffAbsencesTable extends AppTable {
 	}
 
 	public function onUpdateFieldStaffAbsenceReasonId(Event $event, array $attr, $action, $request) {
-		$absenceTypeOptions = $this->fields['absence_type_id']['options'];
-		$selectedAbsenceType = $request->data[$this->alias]['absence_type_id'];
+		$selectedAbsenceType = $request->data[$this->alias()]['absence_type_id'];
 		if (!empty($selectedAbsenceType)) {
 			$absenceType = $this->absenceCodeList[$selectedAbsenceType];
 			if ($absenceType == 'UNEXCUSED' || $absenceType == 'LATE') {
