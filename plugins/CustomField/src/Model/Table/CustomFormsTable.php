@@ -92,10 +92,8 @@ class CustomFormsTable extends AppTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$moduleOptions = $this->CustomModules
-			->find('list')
-			->find('visible')
-			->toArray();
+		$moduleQuery = $this->getModuleQuery();
+		$moduleOptions = $moduleQuery->toArray();
 
 		if (!empty($moduleOptions)) {
 			$selectedModule = $this->queryString('module', $moduleOptions);
@@ -136,11 +134,9 @@ class CustomFormsTable extends AppTable {
 		$this->setupFields($entity);
 	}
 
-	public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, $request) {
-		$moduleOptions = $this->CustomModules
-			->find('list')
-			->find('visible')
-			->toArray();
+	public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, Request $request) {
+		$moduleQuery = $this->getModuleQuery();
+		$moduleOptions = $moduleQuery->toArray();
 		$selectedModule = $this->queryString('module', $moduleOptions);
 		$this->advancedSelectOptions($moduleOptions, $selectedModule);
 
@@ -151,7 +147,7 @@ class CustomFormsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldApplyToAll(Event $event, array $attr, $action, $request) {
+	public function onUpdateFieldApplyToAll(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'view' || $action == 'add' || $action == 'edit') {
 			// default hide
 			$attr['visible'] = false;
@@ -177,7 +173,7 @@ class CustomFormsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldCustomFilters(Event $event, array $attr, $action, $request) {
+	public function onUpdateFieldCustomFilters(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'view' || $action == 'add' || $action == 'edit') {
 			// default hide
 			$attr['visible'] = false;
@@ -208,7 +204,7 @@ class CustomFormsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldCustomFields(Event $event, array $attr, $action, $request) {
+	public function onUpdateFieldCustomFields(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add' || $action == 'edit') {
 			$customFieldOptions = $this->CustomFields
 				->find('list')
@@ -245,6 +241,12 @@ class CustomFormsTable extends AppTable {
 				}
 			}
 		}
+	}
+
+	public function getModuleQuery() {
+		return $this->CustomModules
+			->find('list')
+			->find('visible');
 	}
 
 	private function setupFields(Entity $entity=null) {
