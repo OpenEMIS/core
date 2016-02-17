@@ -7,17 +7,16 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use App\Model\Table\ControllerActionTable;
+use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
-class StaffAbsencesTable extends ControllerActionTable {
+class StaffAbsencesTable extends AppTable {
 	use OptionsTrait;
 	private $_fieldOrder = [
-		'absence_type', 'academic_period_id', 'staff_id',
+		'absence_type_id', 'staff_id',
 		'full_day', 'start_date', 'end_date', 'start_time', 'end_time',
 		'staff_absence_reason_id'
 	];
-
 	private $absenceList;
 	private $absenceCodeList;
 
@@ -179,12 +178,12 @@ class StaffAbsencesTable extends ControllerActionTable {
 		}
 	}
 
-	public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra) {
+	public function editOnInitialize(Event $event, Entity $entity) {
 		$this->request->query['staff'] = $entity->staff_id;
 		$this->request->query['full_day'] = $entity->full_day;
 	}
 
-	public function beforeAction(Event $event, ArrayObject $extra) {
+	public function beforeAction(Event $event) {
 		$tabElements = [
 			'Attendance' => [
 				'url' => ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffAttendances'],
@@ -195,18 +194,17 @@ class StaffAbsencesTable extends ControllerActionTable {
 				'text' => __('Absence')
 			]
 		];
-
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Absence');
 	}
 
-	public function afterAction(Event $event, ArrayObject $extra) {
-		$this->setFieldOrder('absence_type_id', 1);
+	public function afterAction(Event $event) {
+		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 
-	public function indexBeforeAction(Event $event, ArrayObject $extra) {
-		$this->field('date');
-		$this->field('absence_type_id', [
+	public function indexBeforeAction(Event $event) {
+		$this->ControllerAction->field('date');
+		$this->ControllerAction->field('absence_type_id', [
 			'options' => $this->absenceList
 		]);
 
@@ -220,12 +218,12 @@ class StaffAbsencesTable extends ControllerActionTable {
 		$this->_fieldOrder = ['date', 'staff_id', 'absence_type_id', 'staff_absence_reason_id'];
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+	public function viewAfterAction(Event $event, Entity $entity) {
 		unset($this->_fieldOrder[0]);// Academic period not in use in view page
-		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+		// $this->ControllerAction->setFieldOrder($this->_fieldOrder);
 		
 		$absenceTypeOptions = $this->absenceList;
-		$this->field('absence_type_id', [
+		$this->ControllerAction->field('absence_type_id', [
 			'options' => $this->absenceList
 		]);
 
@@ -235,18 +233,16 @@ class StaffAbsencesTable extends ControllerActionTable {
 		}
 	}
 
-	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+	public function addEditAfterAction(Event $event, Entity $entity) {
 		$fullDayOptions = $this->getSelectOptions('general.yesno');
-		$this->field('academic_period_id');
-		$this->field('staff_id');
+		$this->ControllerAction->field('academic_period_id');
+		$this->ControllerAction->field('staff_id');
 		$absenceTypeOptions = $this->absenceList;
-		$this->field('absence_type_id', [
-			'options' => $this->absenceList, 
-			'extra' => $extra
+		$this->ControllerAction->field('absence_type_id', [
+			'options' => $this->absenceList
 		]);
-		$this->field('full_day', [
-			'options' => $fullDayOptions,
-			'extra' => $extra
+		$this->ControllerAction->field('full_day', [
+			'options' => $fullDayOptions
 		]);
 		// Start Date and End Date
 		if ($this->action == 'add') {
@@ -258,15 +254,15 @@ class StaffAbsencesTable extends ControllerActionTable {
 			$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			$academicPeriod = $AcademicPeriodTable->get($academicPeriodId);
 
-			$this->field('start_date', ['startDate' => $academicPeriod->start_date, 'endDate' => $academicPeriod->end_date]);
-			$this->field('end_date', ['startDate' => $academicPeriod->start_date, 'endDate' => $academicPeriod->end_date]);
+			$this->ControllerAction->field('start_date', ['startDate' => $academicPeriod->start_date, 'endDate' => $academicPeriod->end_date]);
+			$this->ControllerAction->field('end_date', ['startDate' => $academicPeriod->start_date, 'endDate' => $academicPeriod->end_date]);
 
 			list($periodOptions, $selectedPeriod, $staffOptions, $selectedStaff) = array_values($this->_getSelectOptions());
 		
-			$this->field('academic_period_id', [
+			$this->ControllerAction->field('academic_period_id', [
 				'options' => $periodOptions
 			]);
-			$this->field('staff_id', [
+			$this->ControllerAction->field('staff_id', [
 				'options' => $staffOptions
 			]);
 
@@ -293,13 +289,13 @@ class StaffAbsencesTable extends ControllerActionTable {
 
 
 		} else if ($this->action == 'edit') {
-			$this->field('start_date', ['extra' => $extra]);
-			$this->field('end_date', ['extra' => $extra]);
+			$this->ControllerAction->field('start_date');
+			$this->ControllerAction->field('end_date');
 		}
 		// End
-		$this->field('start_time', ['type' => 'time', 'extra' => $extra]);
-		$this->field('end_time', ['type' => 'time', 'extra' => $extra]);
-		$this->field('staff_absence_reason_id', ['type' => 'select', 'extra' => $extra]);
+		$this->ControllerAction->field('start_time', ['type' => 'time']);
+		$this->ControllerAction->field('end_time', ['type' => 'time']);
+		$this->ControllerAction->field('staff_absence_reason_id', ['type' => 'select']);
 	}
 
 	public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request) {
@@ -411,7 +407,7 @@ class StaffAbsencesTable extends ControllerActionTable {
 		return $attr;
 	}
 
-	public function addEditOnChangeFullDay(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
+	public function addEditOnChangeFullDay(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 
 		$request = $this->request;
 		unset($request->query['full_day']);
@@ -424,7 +420,7 @@ class StaffAbsencesTable extends ControllerActionTable {
 		}
 	}
 
-	public function addEditOnChangeAbsenceType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
+	public function addEditOnChangeAbsenceType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$request = $this->request;
 		unset($request->query['absence_type']);
 		if ($request->is(['post', 'put'])) {
