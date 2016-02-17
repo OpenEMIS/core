@@ -25,7 +25,7 @@ class InstitutionsController extends AppController  {
 			'Programmes' 		=> ['className' => 'Institution.InstitutionGrades'],
 			'Sections' 			=> ['className' => 'Institution.InstitutionSections'],
 			'Classes' 			=> ['className' => 'Institution.InstitutionClasses'],
-			'Infrastructures' 	=> ['className' => 'Institution.InstitutionInfrastructures'],
+			'Infrastructures' 	=> ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'transfer']],
 
 			'Staff' 			=> ['className' => 'Institution.Staff'],
 			'StaffUser' 		=> ['className' => 'Institution.StaffUser', 'actions' => ['add', 'view', 'edit']],
@@ -33,7 +33,6 @@ class InstitutionsController extends AppController  {
 			'StaffAbsences' 	=> ['className' => 'Institution.StaffAbsences'],
 			'StaffAttendances' 	=> ['className' => 'Institution.StaffAttendances', 'actions' => ['index']],
 			'StaffBehaviours' 	=> ['className' => 'Institution.StaffBehaviours'],
-			'StaffPositions' 	=> ['className' => 'Institution.StaffPositions'],
 
 			'Students' 			=> ['className' => 'Institution.Students'],
 			'StudentUser' 		=> ['className' => 'Institution.StudentUser', 'actions' => ['add', 'view', 'edit']],

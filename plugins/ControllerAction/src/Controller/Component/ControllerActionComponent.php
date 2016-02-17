@@ -1679,4 +1679,46 @@ class ControllerActionComponent extends Component {
 		}
 		return $order;
 	}
+
+	public function getAssociatedRecords($model, $entity) {
+		$primaryKey = $model->primaryKey();
+		$id = $entity->$primaryKey;
+		$associations = [];
+		foreach ($model->associations() as $assoc) {
+			if (!$assoc->dependent() && ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany')) {
+				if (!array_key_exists($assoc->alias(), $associations)) {
+					$count = 0;
+					if ($assoc->type() == 'oneToMany') {
+						$count = $assoc->find()
+						->where([$assoc->aliasField($assoc->foreignKey()) => $id])
+						->count();
+					} else {
+						$modelAssociationTable = $assoc->junction();
+						$count = $modelAssociationTable->find()
+							->where([$modelAssociationTable->aliasField($assoc->foreignKey()) => $id])
+							->count();
+					}
+					$title = $assoc->name();
+					$event = $assoc->dispatchEvent('ControllerAction.Model.transfer.getModelTitle', [], $this);
+					if (!is_null($event->result)) {
+						$title = $event->result;
+					}
+					$associations[$assoc->alias()] = ['model' => $title, 'count' => $count];
+				}
+			}
+		}
+		return $associations;
+	}
+
+	public function hasAssociatedRecords($model, $entity) {
+		$records = $this->getAssociatedRecords($model, $entity);
+		$found = false;
+		foreach ($records as $count) {
+			if ($count['count'] > 0) {
+				$found = true;
+				break;
+			}
+		}
+		return $found;
+	}
 }

@@ -324,7 +324,7 @@ class NavigationComponent extends Component {
 			'Institutions.Students.index' => [
 				'title' => 'Students',
 				'parent' => 'Institutions.index',
-				'selected' => ['Institutions.Students', 'Institutions.Students.add', 'Institutions.TransferRequests', 'Institutions.Promotion', 'Institutions.Transfer', 'Institutions.Undo',
+				'selected' => ['Institutions.Students.add', 'Institutions.TransferRequests', 'Institutions.Promotion', 'Institutions.Transfer', 'Institutions.Undo',
 					'Institutions.StudentAdmission', 'Institutions.TransferApprovals', 'Institutions.StudentDropout', 'Institutions.DropoutRequests', 'Institutions.StudentUser.add', 
 					'Institutions.ImportStudents'],
 				'params' => ['plugin' => 'Institution']
@@ -334,7 +334,7 @@ class NavigationComponent extends Component {
 				'title' => 'Staff',
 				'parent' => 'Institutions.index',
 				'params' => ['plugin' => 'Institution'],
-				'selected' => ['Institutions.Staff.add', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffUser.add']
+				'selected' => ['Institutions.Staff.add', 'Institutions.StaffUser.add']
 			],
 
 			'Institution.Attendance' => [
@@ -388,7 +388,7 @@ class NavigationComponent extends Component {
 				'title' => 'Positions',
 				'parent' => 'Institutions.index',
 				'params' => ['plugin' => 'Institution'],
-				'selected' => ['Institutions.Positions', 'Institutions.StaffPositions'],
+				'selected' => ['Institutions.Positions'],
 			],
 
 			'Institution.Finance' => [
@@ -471,8 +471,8 @@ class NavigationComponent extends Component {
 				'title' => 'Academic', 
 				'parent' => 'Institutions.Students.index', 
 				'params' => ['plugin' => 'Student'], 
-				'selected' => ['Institutions.Students.view', 'Students.Programmes.index', 'Students.Sections', 'Students.Classes', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.Awards', 
-					'Students.Extracurriculars']],
+				'selected' => ['Students.Programmes.index', 'Students.Sections', 'Students.Classes', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.Awards', 
+					'Students.Extracurriculars', 'Institutions.Students.view', 'Institutions.Students.edit']],
 			'Students.BankAccounts' => [
 				'title' => 'Finance', 
 				'parent' => 'Institutions.Students.index',
@@ -503,7 +503,7 @@ class NavigationComponent extends Component {
 				'parent' => 'Institutions.Staff.index', 
 				'params' => ['plugin' => 'Staff'], 
 				'selected' => ['Staff.Employments', 'Staff.Positions', 'Staff.Sections', 'Staff.Classes', 'Staff.Absences', 
-					'Staff.Leaves', 'Staff.Behaviours', 'Staff.Awards'],
+					'Staff.Leaves', 'Staff.Behaviours', 'Staff.Awards', 'Institutions.Staff.edit', 'Institutions.Staff.view',],
 			],
 			'Staff.Qualifications' => [
 				'title' => 'Professional Development', 

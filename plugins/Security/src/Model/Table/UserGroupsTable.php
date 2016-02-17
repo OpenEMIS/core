@@ -251,14 +251,14 @@ class UserGroupsTable extends AppTable {
 		if ($data->offsetExists('area_id')) {
 			$id = $data['area_id'];
 			try {
-				$obj = $this->Areas->get($id, ['contain' => 'Levels']);
+				$obj = $this->Areas->get($id, ['contain' => 'AreaLevels']);
 				
 				if (!array_key_exists('areas', $data[$alias])) {
 					$data[$alias]['areas'] = [];
 				}
 				$data[$alias]['areas'][] = [
 					'id' => $obj->id,
-					'_joinData' => ['level' => $obj->level->name, 'code' => $obj->code, 'area_id' => $obj->id, 'name' => $obj->name]
+					'_joinData' => ['level' => $obj->area_level->name, 'code' => $obj->code, 'area_id' => $obj->id, 'name' => $obj->name]
 				];
 			} catch (RecordNotFoundException $ex) {
 				$this->log(__METHOD__ . ': Record not found for id: ' . $id, 'debug');
@@ -366,7 +366,12 @@ class UserGroupsTable extends AppTable {
 			if (!empty($associated[$key])) {
 				foreach ($associated[$key] as $i => $obj) {
 					$rowData = [];
-					$rowData[] = $obj->openemis_no;
+					$rowData[] = $event->subject()->Html->link($obj->openemis_no , [
+						'plugin' => 'Directory',
+						'controller' => 'Directories',
+						'action' => 'view',
+						$obj->id
+					]);
 					$rowData[] = $obj->name;
 					$roleId = $obj->_joinData->security_role_id;
 

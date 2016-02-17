@@ -216,7 +216,10 @@ class AcademicPeriodsTable extends AppTable {
 		return $attr;
 	}
 
-	public function getYearList() {
+	public function getYearList($params = []) {
+		$conditions = array_key_exists('conditions', $params) ? $params['conditions'] : [];
+		$isEditable = array_key_exists('isEditable', $params) ? $params['isEditable'] : null;
+
 		$level = $this->Levels
 			->find()
 			->order([$this->Levels->aliasField('level ASC')])
@@ -226,9 +229,10 @@ class AcademicPeriodsTable extends AppTable {
 			->find('list')
 			->find('visible')
 			->find('order')
+			->find('editable', ['isEditable' => $isEditable])
 			->where([$this->aliasField('academic_period_level_id') => $level->id])
+			->where($conditions)
 			->toArray();
-
 		return $list;
 	}
 
@@ -316,13 +320,13 @@ class AcademicPeriodsTable extends AppTable {
 
 	public function getWorkingDaysOfWeek() {
 		$weekdays = [
-			0 => 'Sunday',
-			1 => 'Monday',
-			2 => 'Tuesday',
-			3 => 'Wednesday',
-			4 => 'Thursday',
-			5 => 'Friday',
-			6 => 'Saturday',
+			0 => __('Sunday'),
+			1 => __('Monday'),
+			2 => __('Tuesday'),
+			3 => __('Wednesday'),
+			4 => __('Thursday'),
+			5 => __('Friday'),
+			6 => __('Saturday'),
 		];
 		$ConfigItems = TableRegistry::get('ConfigItems');
 		$firstDayOfWeek = $ConfigItems->value('first_day_of_week');

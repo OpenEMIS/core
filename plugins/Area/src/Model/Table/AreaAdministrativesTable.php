@@ -14,8 +14,8 @@ class AreaAdministrativesTable extends AppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->belongsTo('Parents', ['className' => 'Area.AreaAdministratives']);
-		$this->belongsTo('Levels', ['className' => 'Area.AreaAdministrativeLevels', 'foreignKey' => 'area_administrative_level_id']);
+		$this->belongsTo('AreaAdministrativeParents', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'parent_id']);
+		$this->belongsTo('AreaAdministrativeLevels', ['className' => 'Area.AreaAdministrativeLevels', 'foreignKey' => 'area_administrative_level_id']);
 		$this->hasMany('AreaAdministratives', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'parent_id']);
 		$this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
 		$this->hasMany('UsersAddressAreas', ['className' => 'Directory.Directories', 'foreignKey' => 'address_area_id']);
@@ -249,21 +249,21 @@ class AreaAdministrativesTable extends AppTable {
 			$levelId = $data->area_administrative_level_id;
 
 			if ($data->parent_id == -1) {	//World
-				$levelOptions = $this->Levels
+				$levelOptions = $this->AreaAdministrativeLevels
 					->find('list')
-					->where([$this->Levels->aliasField('level') => 0])
+					->where([$this->AreaAdministrativeLevels->aliasField('level') => 0])
 					->toArray();
 
 				$attr['options'] = $levelOptions;
 			} else {
 				// Filter levelOptions by Country
-				$levelResults = $this->Levels
+				$levelResults = $this->AreaAdministrativeLevels
 					->find()
 					->select([
-						$this->Levels->aliasField('level'),
-						$this->Levels->aliasField('area_administrative_id')
+						$this->AreaAdministrativeLevels->aliasField('level'),
+						$this->AreaAdministrativeLevels->aliasField('area_administrative_id')
 					])
-					->where([$this->Levels->aliasField('id') => $levelId])
+					->where([$this->AreaAdministrativeLevels->aliasField('id') => $levelId])
 					->all();
 
 				if (!$levelResults->isEmpty()) {
@@ -275,11 +275,11 @@ class AreaAdministrativesTable extends AppTable {
 						->area_administrative_id;
 					$countryId = $level < 1 ? $parentId : $countryId;	//-1 => World, 0 => Country
 
-					$levelOptions = $this->Levels
+					$levelOptions = $this->AreaAdministrativeLevels
 						->find('list')
 						->where([
-							$this->Levels->aliasField('area_administrative_id') => $countryId,
-							$this->Levels->aliasField('level >') => $level
+							$this->AreaAdministrativeLevels->aliasField('area_administrative_id') => $countryId,
+							$this->AreaAdministrativeLevels->aliasField('level >') => $level
 						])
 						->toArray();
 
