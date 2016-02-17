@@ -25,7 +25,6 @@ class RenderBehavior extends Behavior {
     public function implementedEvents() {
     	$events = parent::implementedEvents();
     	$eventMap = [
-            'Render.'.'onSet'.$this->fieldType.'Values' => 'onSet'.$this->fieldType.'Values',
             'Render.'.'process'.$this->fieldType.'Values' => 'process'.$this->fieldType.'Values',
             'Render.'.'onSave' => 'onSave'
         ];
