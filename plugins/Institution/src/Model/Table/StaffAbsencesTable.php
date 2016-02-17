@@ -7,16 +7,19 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 
-class StaffAbsencesTable extends AppTable {
+class StaffAbsencesTable extends ControllerActionTable {
 	use OptionsTrait;
 	private $_fieldOrder = [
-		'academic_period_id', 'staff_id',
+		'absence_type', 'academic_period_id', 'staff_id',
 		'full_day', 'start_date', 'end_date', 'start_time', 'end_time',
-		'absence_type', 'staff_absence_reason_id'
+		'staff_absence_reason_id'
 	];
+
+	private $absenceList;
+	private $absenceCodeList;
 
 	public function initialize(array $config) {
 		$this->table('institution_staff_absences');
@@ -25,6 +28,7 @@ class StaffAbsencesTable extends AppTable {
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'staff_id']);
 		$this->belongsTo('StaffAbsenceReasons', ['className' => 'FieldOption.StaffAbsenceReasons']);
+		$this->belongsTo('AbsenceTypes', ['className' => 'Institution.AbsenceTypes', 'foreignKey' =>'absence_type_id']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->addBehavior('Excel', [
 			'excludes' => [
@@ -40,6 +44,9 @@ class StaffAbsencesTable extends AppTable {
 			],
 			'pages' => ['index']
 		]);
+
+		$this->absenceList = $this->AbsenceTypes->getAbsenceTypeList();
+		$this->absenceCodeList = $this->AbsenceTypes->getCodeList();
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -162,9 +169,8 @@ class StaffAbsencesTable extends AppTable {
 		return $fullDayOptions[$entity->full_day];
 	}
 
-	public function onGetAbsenceType(Event $event, Entity $entity) {
-		$types = $this->getSelectOptions('Absence.types');
-		return $entity->staff_absence_reason_id == 0 ? $types['UNEXCUSED'] : $types['EXCUSED'];
+	public function onGetAbsenceTypeId(Event $event, Entity $entity) {
+		return __($entity->absence_type->name);
 	}
 
 	public function onGetStaffAbsenceReasonId(Event $event, Entity $entity) {
@@ -173,7 +179,12 @@ class StaffAbsencesTable extends AppTable {
 		}
 	}
 
-	public function beforeAction(Event $event) {
+	public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra) {
+		$this->request->query['staff'] = $entity->staff_id;
+		$this->request->query['full_day'] = $entity->full_day;
+	}
+
+	public function beforeAction(Event $event, ArrayObject $extra) {
 		$tabElements = [
 			'Attendance' => [
 				'url' => ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffAttendances'],
@@ -189,16 +200,14 @@ class StaffAbsencesTable extends AppTable {
         $this->controller->set('selectedAction', 'Absence');
 	}
 
-	public function afterAction(Event $event) {
-		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	public function afterAction(Event $event, ArrayObject $extra) {
+		$this->setFieldOrder('absence_type_id', 1);
 	}
 
-	public function indexBeforeAction(Event $event) {
-		$absenceTypeOptions = $this->getSelectOptions('Absence.types');
-
-		$this->ControllerAction->field('date');
-		$this->ControllerAction->field('absence_type', [
-			'options' => $absenceTypeOptions
+	public function indexBeforeAction(Event $event, ArrayObject $extra) {
+		$this->field('date');
+		$this->field('absence_type_id', [
+			'options' => $this->absenceList
 		]);
 
 		$this->fields['full_day']['visible'] = false;
@@ -208,22 +217,16 @@ class StaffAbsencesTable extends AppTable {
 		$this->fields['end_time']['visible'] = false;
 		$this->fields['comment']['visible'] = false;
 
-		$this->_fieldOrder = ['date', 'staff_id', 'absence_type', 'staff_absence_reason_id'];
+		$this->_fieldOrder = ['date', 'staff_id', 'absence_type_id', 'staff_absence_reason_id'];
 	}
 
-	public function editOnInitialize(Event $event, Entity $entity) {
-		$this->request->query['staff'] = $entity->staff_id;
-		$this->request->query['full_day'] = $entity->full_day;
-		$this->request->query['absence_type'] = $entity->staff_absence_reason_id == 0 ? 'UNEXCUSED' : 'EXCUSED';
-	}
-
-	public function viewAfterAction(Event $event, Entity $entity) {
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		unset($this->_fieldOrder[0]);// Academic period not in use in view page
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 		
-		$absenceTypeOptions = $this->getSelectOptions('Absence.types');
-		$this->ControllerAction->field('absence_type', [
-			'options' => $absenceTypeOptions
+		$absenceTypeOptions = $this->absenceList;
+		$this->field('absence_type_id', [
+			'options' => $this->absenceList
 		]);
 
 		if ($entity->full_day == 1) {
@@ -231,35 +234,39 @@ class StaffAbsencesTable extends AppTable {
 			$this->fields['end_time']['visible'] = false;
 		}
 	}
-	public function addBeforeAction(Event $event) {
-		if (empty($this->request->data[$this->alias()]['academic_period_id'])) {
-			$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-			$this->request->data[$this->alias()]['academic_period_id'] = $AcademicPeriodTable->getCurrent();
-		}
-		$academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
-		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$academicPeriod = $AcademicPeriodTable->get($academicPeriodId);
 
-		$this->ControllerAction->field('start_date', ['startDate' => $academicPeriod->start_date, 'endDate' => $academicPeriod->end_date]);
-		$this->ControllerAction->field('end_date', ['startDate' => $academicPeriod->start_date, 'endDate' => $academicPeriod->end_date]);
-	}
-
-	public function addEditAfterAction(Event $event, Entity $entity) {
+	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$fullDayOptions = $this->getSelectOptions('general.yesno');
-		$absenceTypeOptions = $this->getSelectOptions('Absence.types');
-		$this->ControllerAction->field('academic_period_id');
-		$this->ControllerAction->field('staff_id');
-		$this->ControllerAction->field('full_day', [
-			'options' => $fullDayOptions
+		$this->field('academic_period_id');
+		$this->field('staff_id');
+		$absenceTypeOptions = $this->absenceList;
+		$this->field('absence_type_id', [
+			'options' => $this->absenceList, 
+			'extra' => $extra
+		]);
+		$this->field('full_day', [
+			'options' => $fullDayOptions,
+			'extra' => $extra
 		]);
 		// Start Date and End Date
 		if ($this->action == 'add') {
+			if (!isset($this->request->data[$this->alias()]['academic_period_id'])) {
+				$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+				$this->request->data[$this->alias()]['academic_period_id'] = $AcademicPeriodTable->getCurrent();
+			}
+			$academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+			$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			$academicPeriod = $AcademicPeriodTable->get($academicPeriodId);
+
+			$this->field('start_date', ['startDate' => $academicPeriod->start_date, 'endDate' => $academicPeriod->end_date]);
+			$this->field('end_date', ['startDate' => $academicPeriod->start_date, 'endDate' => $academicPeriod->end_date]);
+
 			list($periodOptions, $selectedPeriod, $staffOptions, $selectedStaff) = array_values($this->_getSelectOptions());
 		
-			$this->ControllerAction->field('academic_period_id', [
+			$this->field('academic_period_id', [
 				'options' => $periodOptions
 			]);
-			$this->ControllerAction->field('staff_id', [
+			$this->field('staff_id', [
 				'options' => $staffOptions
 			]);
 
@@ -268,10 +275,10 @@ class StaffAbsencesTable extends AppTable {
 			// $startDate = $AcademicPeriod->get($selectedPeriod)->start_date;
 			// $endDate = $AcademicPeriod->get($selectedPeriod)->end_date;
 
-			// $this->ControllerAction->field('start_date', [
+			// $this->field('start_date', [
 			// 	'date_options' => ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')]
 			// ]);
-			// $this->ControllerAction->field('end_date', [
+			// $this->field('end_date', [
 			// 	'date_options' => ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')]
 			// ]);
 
@@ -283,17 +290,16 @@ class StaffAbsencesTable extends AppTable {
 			// 	$entity->start_date = $startDate->format('Y-m-d');
 			// 	$entity->end_date = $startDate->format('Y-m-d');
 			// }
+
+
 		} else if ($this->action == 'edit') {
-			$this->ControllerAction->field('start_date');
-			$this->ControllerAction->field('end_date');
+			$this->field('start_date', ['extra' => $extra]);
+			$this->field('end_date', ['extra' => $extra]);
 		}
 		// End
-		$this->ControllerAction->field('start_time', ['type' => 'time']);
-		$this->ControllerAction->field('end_time', ['type' => 'time']);
-		$this->ControllerAction->field('absence_type', [
-			'options' => $absenceTypeOptions
-		]);
-		$this->ControllerAction->field('staff_absence_reason_id', ['type' => 'select']);
+		$this->field('start_time', ['type' => 'time', 'extra' => $extra]);
+		$this->field('end_time', ['type' => 'time', 'extra' => $extra]);
+		$this->field('staff_absence_reason_id', ['type' => 'select', 'extra' => $extra]);
 	}
 
 	public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request) {
@@ -303,8 +309,9 @@ class StaffAbsencesTable extends AppTable {
 			$attr['value'] = $startDate->format('d-m-Y');
 			$attr['default_date'] = false;
 			$attr['date_options'] = ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')];
-			return $attr;
+			
 		}
+		return $attr;
 	}
 
 	public function onUpdateFieldEndDate(Event $event, array $attr, $action, $request) {
@@ -313,9 +320,17 @@ class StaffAbsencesTable extends AppTable {
 			$endDate = $attr['endDate'];
 			$attr['value'] = $startDate->format('d-m-Y');
 			$attr['default_date'] = false;
-			$attr['date_options'] = ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')];
-			return $attr;
+			$attr['date_options'] = ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')];	
 		}
+		if ($action == 'edit' || $action == 'add') {
+			$selectedAbsenceType = $request->data[$this->alias()]['absence_type_id'];
+			if ($this->absenceCodeList[$selectedAbsenceType] == 'LATE') {
+				$attr['type'] = 'hidden';
+				$attr['attr']['value'] = $request->data[$this->alias()]['start_date'];
+			}
+		}
+
+		return $attr;
 	}
 
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
@@ -323,33 +338,7 @@ class StaffAbsencesTable extends AppTable {
 		if ($action != 'add') {
 			$attr['visible'] = false;
 		}
-
 		return $attr;
-		/*
-		$periodOptions = $attr['options'];
-		$selectedPeriod = !is_null($request->query('period')) ? $request->query('period') : key($periodOptions);
-
-		$institutionId = $this->Session->read('Institution.Institutions.id');
-		$Staff = TableRegistry::get('Institution.Staff');
-		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
-			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStaff')),
-			'callable' => function($id) use ($Staff, $institutionId) {
-				return $Staff
-					->find()
-					->where([$Staff->aliasField('institution_id') => $institutionId])
-					->find('academicPeriod', ['academic_period_id' => $id])
-					->count();
-			}
-		]);
-
-		$attr['options'] = $periodOptions;
-		$attr['onChangeReload'] = 'changePeriod';
-		if ($action != 'add') {
-			$attr['visible'] = false;
-		}
-
-		return $attr;
-		*/
 	}
 
 	public function onUpdateFieldStaffId(Event $event, array $attr, $action, $request) {
@@ -366,7 +355,7 @@ class StaffAbsencesTable extends AppTable {
 
 	public function onUpdateFieldFullDay(Event $event, array $attr, $action, $request) {
 		$fullDayOptions = $attr['options'];
-		$selectedFullDay = !is_null($request->query('full_day')) ? $request->query('full_day') : key($fullDayOptions);
+		$selectedFullDay = isset($request->data[$this->alias()]['full_day']) ? $request->data[$this->alias()]['full_day'] : 1;
 		$this->advancedSelectOptions($fullDayOptions, $selectedFullDay);
 
 		if ($selectedFullDay == 1) {
@@ -377,36 +366,53 @@ class StaffAbsencesTable extends AppTable {
 			$this->fields['end_time']['visible'] = true;
 		}
 
+		if ($action == 'edit' || $action == 'add') {
+			$selectedAbsenceType = $request->data[$this->alias()]['absence_type_id'];
+			if ($this->absenceCodeList[$selectedAbsenceType] == 'LATE') {
+				$attr['type'] = 'hidden';
+				$attr['attr']['value'] = 0;
+				$this->fields['start_time']['visible'] = true;
+				$this->fields['end_time']['visible'] = true;
+				$request->data[$this->alias()]['full_day'] = 0;
+			}
+		}
+
 		$attr['options'] = $fullDayOptions;
 		$attr['onChangeReload'] = 'changeFullDay';
 
 		return $attr;
 	}
 
-	public function onUpdateFieldAbsenceType(Event $event, array $attr, $action, $request) {
-		$absenceTypeOptions = $attr['options'];
-		$selectedAbsenceType = !is_null($request->query('absence_type')) ? $request->query('absence_type') : key($absenceTypeOptions);
-
-		$attr['options'] = $absenceTypeOptions;
-		$attr['default'] = $selectedAbsenceType;
-		$attr['onChangeReload'] = 'changeAbsenceType';
-
+	public function onUpdateFieldAbsenceTypeId(Event $event, array $attr, $action, $request) {
+		if ($action == 'edit' || $action == 'add') {
+			$absenceTypeOptions = $attr['options'];
+			if (!isset($request->data[$this->alias()]['absence_type_id'])) {
+				$request->data[$this->alias()]['absence_type_id'] = key($absenceTypeOptions);
+			}
+			$selectedAbsenceType = $request->data[$this->alias()]['absence_type_id'];
+			$attr['options'] = $absenceTypeOptions;
+			$attr['default'] = $selectedAbsenceType;
+			$attr['onChangeReload'] = 'changeAbsenceType';
+		}
 		return $attr;
 	}
 
 	public function onUpdateFieldStaffAbsenceReasonId(Event $event, array $attr, $action, $request) {
-		$absenceTypeOptions = $this->fields['absence_type']['options'];
-		$selectedAbsenceType = !is_null($request->query('absence_type')) ? $request->query('absence_type') : key($absenceTypeOptions);
-
-		if ($selectedAbsenceType == 'UNEXCUSED') {
-			$attr['type'] = 'hidden';
-			$attr['attr']['value'] = 0;
+		$absenceTypeOptions = $this->fields['absence_type_id']['options'];
+		$selectedAbsenceType = $request->data[$this->alias]['absence_type_id'];
+		if (!empty($selectedAbsenceType)) {
+			$absenceType = $this->absenceCodeList[$selectedAbsenceType];
+			if ($absenceType == 'UNEXCUSED' || $absenceType == 'LATE') {
+				$attr['type'] = 'hidden';
+				$attr['attr']['value'] = 0;
+			}
 		}
 
 		return $attr;
 	}
 
-	public function addEditOnChangeFullDay(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditOnChangeFullDay(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
+
 		$request = $this->request;
 		unset($request->query['full_day']);
 		if ($request->is(['post', 'put'])) {
@@ -418,7 +424,7 @@ class StaffAbsencesTable extends AppTable {
 		}
 	}
 
-	public function addEditOnChangeAbsenceType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditOnChangeAbsenceType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
 		$request = $this->request;
 		unset($request->query['absence_type']);
 		if ($request->is(['post', 'put'])) {
