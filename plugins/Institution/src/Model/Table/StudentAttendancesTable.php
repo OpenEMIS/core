@@ -227,7 +227,13 @@ class StudentAttendancesTable extends AppTable {
 
 	// Event: ControllerAction.Model.onGetOpenemisNo
 	public function onGetOpenemisNo(Event $event, Entity $entity) {
-		return $entity->user->openemis_no;
+		return $event->subject()->Html->link($entity->user->openemis_no , [
+			'plugin' => 'Institution',
+			'controller' => 'Institutions',
+			'action' => 'StudentUser',
+			'view',
+			$entity->user->id
+		]);
 	}
 
 	// Event: ControllerAction.Model.onGetType
@@ -464,8 +470,10 @@ class StudentAttendancesTable extends AppTable {
 				}
 				$weekOptions[$index] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
 			}
-			$selectedYear = $AcademicPeriod->get($selectedPeriod)->start_year;
-			if ($selectedYear == date("Y") && !is_null($currentWeek)) {
+			$academicPeriodObj = $AcademicPeriod->get($selectedPeriod);
+			$startYear = $academicPeriodObj->start_year;
+			$endYear = $academicPeriodObj->end_year;
+			if (date("Y") >= $startYear && date("Y") <= $endYear && !is_null($currentWeek)) {
 				$selectedWeek = !is_null($this->request->query('week')) ? $this->request->query('week') : $currentWeek;
 			} else {
 				$selectedWeek = $this->queryString('week', $weekOptions);
@@ -640,7 +648,7 @@ class StudentAttendancesTable extends AppTable {
     	return $query
     		->select([
     			$this->aliasField('student_id'), 
-    			'Users.openemis_no', 'Users.first_name', 'Users.last_name',
+    			'Users.openemis_no', 'Users.first_name', 'Users.last_name', 'Users.id',
     			'StudentAbsences.id',
     			'StudentAbsences.start_date',
     			'StudentAbsences.end_date',

@@ -66,6 +66,8 @@ class StaffUserTable extends UserTable {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
+		$this->Session->write('Staff.Staff.id', $entity->id);
+		$this->Session->write('Staff.Staff.name', $entity->name);
 		$this->setupTabElements($entity);
 	}
 

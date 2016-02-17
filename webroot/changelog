@@ -1,3 +1,12 @@
+v3.4.14
+- Fixed a bug that caused Staff Career tabs not navigating to the correct page
+- User should be able to search for Student/Staff Absences.
+- Added hyperlinks to OpenEMIS ID/Name field in various pages to link to user profile
+- Fixed a bug that caused student import to class successfully when using a class code that is not in the same academic period
+- Implemented the link between Qualification Specializations and Education Subjects
+- Fixed a bug that caused sorting to refresh advanced search results
+- 
+
 v3.4.13
 - Class column in Institutions -> Students can be sortable now
 - The system does not allow users to create shifts with overlapped timing now
@@ -8,6 +17,8 @@ v3.4.13
 - Added SAML2 support for Single Sign On
 - Fixed a bug that caused the breadcrumb home icon not working properly	Actions
 - Implemented customised workflow for Positions
+- The system does not allow new student profile to be created if the student age does not fall within the allowed age range
+- Infrastructures can be added as hierarchy now
 
 v3.4.12
 - Fixed a bug that caused student data not removed completely when deleting a student from a school

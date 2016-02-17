@@ -13,8 +13,8 @@ class AreasTable extends AppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->belongsTo('Parents', ['className' => 'Area.Areas']);
-		$this->belongsTo('Levels', ['className' => 'Area.AreaLevels', 'foreignKey' => 'area_level_id']);
+		$this->belongsTo('AreaParents', ['className' => 'Area.Areas', 'foreignKey' => 'parent_id']);
+		$this->belongsTo('AreaLevels', ['className' => 'Area.AreaLevels', 'foreignKey' => 'area_level_id']);
 		$this->hasMany('Areas', ['className' => 'Area.Areas', 'foreignKey' => 'parent_id']);
 		$this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
 		$this->addBehavior('Tree');
@@ -197,19 +197,18 @@ class AreasTable extends AppTable {
 			$data = $results->first();
 			$areaLevelId = $data->area_level_id;
 
-			$levelResults = $this->Levels
+			$levelResults = $this->AreaLevels
 				->find()
-				->select([$this->Levels->aliasField('level')])
-				->where([$this->Levels->aliasField('id') => $areaLevelId])
+				->select([$this->AreaLevels->aliasField('level')])
+				->where([$this->AreaLevels->aliasField('id') => $areaLevelId])
 				->all();
-
 			if (!$levelResults->isEmpty()) {
 				$levelData = $levelResults->first();
 				$level = $levelData->level;
 
-				$levelOptions = $this->Levels
+				$levelOptions = $this->AreaLevels
 					->find('list')
-					->where([$this->Levels->aliasField('level >') => $level])
+					->where([$this->AreaLevels->aliasField('level >') => $level])
 					->toArray();
 				$attr['options'] = $levelOptions;
 			}
@@ -224,21 +223,21 @@ class AreasTable extends AppTable {
 
 		$list = $this
 			->find()
-			->contain('Levels')
+			->contain('AreaLevels')
 			->where([
 				'OR' => [
 					$this->aliasField('name') . ' LIKE' => $search,
 					$this->aliasField('code') . ' LIKE' => $search,
-					'Levels.name LIKE' => $search
+					'AreaLevels.name LIKE' => $search
 				]
 			])
-			->order(['Levels.level', $this->aliasField('order')])
+			->order(['AreaLevels.level', $this->aliasField('order')])
 			->all();
 		
 		$data = array();
 		foreach($list as $obj) {
 			$data[] = [
-				'label' => sprintf('%s - %s (%s)', $obj->level->name, $obj->name, $obj->code),
+				'label' => sprintf('%s - %s (%s)', $obj->area_level->name, $obj->name, $obj->code),
 				'value' => $obj->id
 			];
 		}
