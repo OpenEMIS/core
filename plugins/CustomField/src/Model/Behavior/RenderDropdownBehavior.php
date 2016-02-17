@@ -22,15 +22,27 @@ class RenderDropdownBehavior extends RenderBehavior {
                 $dropdownDefault = $obj->id;
             }
         }
+        // default to first key if is not set
+        $dropdownDefault = !is_null($dropdownDefault) ? $dropdownDefault : key($dropdownOptions);
 
+        // for edit
         $fieldId = $attr['customField']->id;
         $fieldValues = $attr['customFieldValues'];
+        $savedId = null;
+        $savedValue = null;
+        if (!empty($fieldValues) && array_key_exists($fieldId, $fieldValues)) {
+            if (isset($fieldValues[$fieldId]['id'])) {
+                $savedId = $fieldValues[$fieldId]['id'];
+            }
+            if (isset($fieldValues[$fieldId]['number_value'])) {
+                $savedValue = $fieldValues[$fieldId]['number_value'];
+            }
+        }
+        // End
+
         if ($action == 'view') {
-            if (!empty($dropdownOptions)) {
-                if (array_key_exists($fieldId, $fieldValues)) {
-                    $selectedValue = !is_null($fieldValues[$fieldId]['number_value']) ? $fieldValues[$fieldId]['number_value'] : $dropdownDefault;
-                    $value = $dropdownOptions[$selectedValue];
-                }
+            if (!is_null($savedValue)) {
+                $value = $dropdownOptions[$savedValue];
             }
         } else if ($action == 'edit') {
             $form = $event->subject()->Form;
@@ -39,21 +51,16 @@ class RenderDropdownBehavior extends RenderBehavior {
             $options['type'] = 'select';
             $options['options'] = $dropdownOptions;
 
-            $selectedValue = isset($attr['value']) && !is_null($attr['value']) ? $attr['value'] : $dropdownDefault;
-            $options['default'] = $selectedValue;
-            $options['value'] = $selectedValue;
-            // for edit
-            // if (array_key_exists($fieldId, $fieldValues)) {
-            //     $selectedValue = $fieldValues[$fieldId]['number_value'];
-            //     if (!is_null($selectedValue)) {
-            //         $options['default'] = $selectedValue;
-            //         $options['value'] = $selectedValue;
-            //     }
-
-            //     $value .= $form->hidden($fieldPrefix.".id", ['value' => $fieldValues[$fieldId]['id']]);
-            // }
+            if ($this->_table->request->is(['get'])) {
+                $selectedValue = !is_null($savedValue) ? $savedValue : $dropdownDefault;
+                $options['default'] = $selectedValue;
+                $options['value'] = $selectedValue;
+            }
             $value .= $form->input($fieldPrefix.".number_value", $options);
             $value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
+            if (!is_null($savedId)) {
+                $value .= $form->hidden($fieldPrefix.".id", ['value' => $savedId]);
+            }
         }
 
         $event->stopPropagation();
