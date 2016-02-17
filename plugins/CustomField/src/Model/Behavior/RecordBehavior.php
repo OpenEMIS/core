@@ -14,12 +14,11 @@ use Cake\Log\Log;
 class RecordBehavior extends Behavior {
 	protected $_defaultConfig = [
 		'events' => [
-			'ControllerAction.Model.view.beforeQuery'	=> ['callable' => 'viewBeforeQuery', 'priority' => 100],
+			'ControllerAction.Model.viewEdit.beforeQuery'	=> ['callable' => 'viewEditBeforeQuery', 'priority' => 100],
 			'ControllerAction.Model.view.afterAction'		=> ['callable' => 'viewAfterAction', 'priority' => 100],
 			'ControllerAction.Model.addEdit.beforePatch' 	=> ['callable' => 'addEditBeforePatch', 'priority' => 100],
 			'ControllerAction.Model.addEdit.afterAction' 	=> ['callable' => 'addEditAfterAction', 'priority' => 100],
             'ControllerAction.Model.add.beforeSave' 		=> ['callable' => 'addBeforeSave', 'priority' => 100],
-            'ControllerAction.Model.edit.beforeQuery'		=> ['callable' => 'editBeforeQuery', 'priority' => 100],
             'ControllerAction.Model.edit.afterQuery'		=> ['callable' => 'editAfterQuery', 'priority' => 100],
             'ControllerAction.Model.edit.beforeSave' 		=> ['callable' => 'editBeforeSave', 'priority' => 100]
 		],
@@ -73,74 +72,17 @@ class RecordBehavior extends Behavior {
     	return $events;
 	}
 
-	public function viewBeforeQuery(Event $event, Query $query) {
+	public function viewEditBeforeQuery(Event $event, Query $query) {
 		$query->contain(['CustomFieldValues.CustomFields', 'CustomTableCells']);
-	}
-
-	public function editBeforeQuery(Event $event, Query $query) {
-		$query->contain(['CustomFieldValues.CustomFields', 'CustomTableCells']);
-		// $query->contain(['CustomTableCells']);
 	}
 
 	public function editAfterQuery(Event $event, Entity $entity) {
-		$values = [];
-		if ($entity->has('custom_field_values')) {
-			foreach ($entity->custom_field_values as $key => $obj) {
-				$fieldId = $obj->{$this->config('fieldKey')};
-				$customField = $obj->custom_field;
-
-				if ($customField->field_type == 'CHECKBOX') {
-					$checkboxValues = [$obj['number_value']];
-					if (array_key_exists($fieldId, $values)) {
-						$checkboxValues = array_merge($checkboxValues, $values[$fieldId]['number_value']);
-					}
-					$obj['number_value'] = $checkboxValues;
-				}
-				$values[$fieldId] = $obj;
-			}
-		}
-
-		$query = $this->getCustomFieldQuery($entity);
-
-    	$fieldValues = [];	// values of custom field must be in sequence for validation errors to be placed correctly
-    	$extraFieldValues = [];	// to hold result for more checkbox values
-    	if (!is_null($query)) {
-			$customFields = $query->toArray();
-
-			$CustomFieldValues = $this->_table->CustomFieldValues;
-			foreach ($customFields as $key => $obj) {
-				$customField = $obj->custom_field;
-
-				// only apply for field type store in custom_field_values
-				if (in_array($customField->field_type, $this->fieldValueArray)) {
-					$fieldId = $customField->id;
-					
-					if (array_key_exists($fieldId, $values)) {
-						$fieldValues[] = $values[$fieldId];
-					} else {
-
-
-						$valueData = [
-							'text_value' => null,
-							'number_value' => null,
-							'textarea_value' => null,
-							'date_value' => null,
-							'time_value' => null,
-							$this->config('fieldKey') => $fieldId,
-							$this->config('recordKey') => $entity->id,
-							'custom_field' => null // to-do
-						];
-						$valueEntity = $CustomFieldValues->newEntity($valueData, ['validate' => false]);
-						$fieldValues[] = $valueEntity;
-					}
-				}
-			}
-		}
-
-		$entity->custom_field_values = $fieldValues;
+		$this->formatEntity($entity);
 	}
 
     public function viewAfterAction(Event $event, Entity $entity) {
+    	// add here to make view has the same format in edit
+    	$this->formatEntity($entity);
     	$this->setupCustomFields($entity);
     }
 
@@ -216,7 +158,7 @@ class RecordBehavior extends Behavior {
 		            ]);
 				}
 
-				// repatch $entity for saving
+				// repatch $entity for saving, turn off validation
 	            $data[$model->alias()]['custom_field_values'] = $settings['fieldValues'];
 				$data[$model->alias()]['custom_table_cells'] = $settings['tableCells'];
 
@@ -375,7 +317,63 @@ class RecordBehavior extends Behavior {
 		return $query;
 	}
 
-	public function setupCustomFields($entity) {
+	public function formatEntity(Entity $entity) {
+		$values = [];
+		if ($entity->has('custom_field_values')) {
+			foreach ($entity->custom_field_values as $key => $obj) {
+				$fieldId = $obj->{$this->config('fieldKey')};
+				$customField = $obj->custom_field;
+
+				if ($customField->field_type == 'CHECKBOX') {
+					$checkboxValues = [$obj['number_value']];
+					if (array_key_exists($fieldId, $values)) {
+						$checkboxValues = array_merge($checkboxValues, $values[$fieldId]['number_value']);
+					}
+					$obj['number_value'] = $checkboxValues;
+				}
+				$values[$fieldId] = $obj;
+			}
+		}
+
+		$query = $this->getCustomFieldQuery($entity);
+
+    	$fieldValues = [];	// values of custom field must be in sequence for validation errors to be placed correctly
+    	$extraFieldValues = [];	// to hold result for more checkbox values
+    	if (!is_null($query)) {
+			$customFields = $query->toArray();
+
+			$CustomFieldValues = $this->_table->CustomFieldValues;
+			foreach ($customFields as $key => $obj) {
+				$customField = $obj->custom_field;
+
+				// only apply for field type store in custom_field_values
+				if (in_array($customField->field_type, $this->fieldValueArray)) {
+					$fieldId = $customField->id;
+					
+					if (array_key_exists($fieldId, $values)) {
+						$fieldValues[] = $values[$fieldId];
+					} else {
+						$valueData = [
+							'text_value' => null,
+							'number_value' => null,
+							'textarea_value' => null,
+							'date_value' => null,
+							'time_value' => null,
+							$this->config('fieldKey') => $fieldId,
+							$this->config('recordKey') => $entity->id,
+							'custom_field' => null // to-do
+						];
+						$valueEntity = $CustomFieldValues->newEntity($valueData, ['validate' => false]);
+						$fieldValues[] = $valueEntity;
+					}
+				}
+			}
+		}
+
+		$entity->custom_field_values = $fieldValues;
+	}
+
+	public function setupCustomFields(Entity $entity) {
 		$model = $this->_table;
 		$query = $this->getCustomFieldQuery($entity);
 
@@ -392,55 +390,57 @@ class RecordBehavior extends Behavior {
 				}
 			}
 
-
+			// retrieve saved values
 			$values = new ArrayObject([]);
 			$cells = new ArrayObject([]);
 
-			// to-do retrieve saved values
-			/* retrieve saved values
-			$settings = new ArrayObject([
-				'fieldKey' => $this->config('fieldKey')
-			]);
+			if (isset($entity->id)) {
+				$fieldKey = $this->config('fieldKey');
+				$tableRowKey = $this->config('tableRowKey');
+				$tableColumnKey = $this->config('tableColumnKey');
 
-            if (isset($entity->id)) {
-            	if ($entity->has('custom_field_values')) {
-            		foreach ($entity->custom_field_values as $key => $obj) {
-            			if (isset($obj->id)) {
-	            			$fieldId = $obj->{$this->config('fieldKey')};
-
-	            			$settings['fieldRecord'] = $obj;
-							$settings['fieldValue'] = [
-								'id' => $obj->id,
-								'text_value' => $obj->text_value,
-								'number_value' => $obj->number_value,
-								'textarea_value' => $obj->textarea_value,
-								'date_value' => $obj->date_value,
-								'time_value' => $obj->time_value
-							];
-
-	            			$fieldType = Inflector::camelize(strtolower($obj['custom_field']->field_type));
-	            			$event = $model->dispatchEvent('Render.onSet'.$fieldType.'Values', [$entity, $values, $settings], $model);
-							if ($event->isStopped()) { return $event->result; }
-
-							$values[$fieldId] = $settings['fieldValue'];
+				if ($entity->has('custom_field_values')) {
+					foreach ($entity->custom_field_values as $key => $obj) {
+						if (isset($obj->id)) {
+							$fieldId = $obj->{$fieldKey};
+							$fieldData = ['id' => $obj->id];
+							if ($model->request->is(['get'])) {
+								// onGet
+								$fieldData['text_value'] = $obj->text_value;
+								$fieldData['number_value'] = $obj->number_value;
+								$fieldData['textarea_value'] = $obj->textarea_value;
+								$fieldData['date_value'] = $obj->date_value;
+								$fieldData['time_value'] = $obj->time_value;
+							} else if ($model->request->is(['post', 'put'])) {
+					        	// onPost
+					        }
+					        $values[$fieldId] = $fieldData;
+							// $values[$fieldId] = [
+							// 	'id' => $obj->id,
+							// 	'text_value' => $obj->text_value,
+							// 	'number_value' => $obj->number_value,
+							// 	'textarea_value' => $obj->textarea_value,
+							// 	'date_value' => $obj->date_value,
+							// 	'time_value' => $obj->time_value
+							// ];
 						}
-            		}
-            	}
+					}
+				}
 
-            	if ($entity->has('custom_table_cells')) {
-            		foreach ($entity->custom_table_cells as $key => $obj) {
-            			$fieldId = $obj->{$this->config('fieldKey')};
-            			$rowId = $obj->{$this->config('tableRowKey')};
-            			$columnId = $obj->{$this->config('tableColumnKey')};
+				if ($entity->has('custom_table_cells')) {
+					foreach ($entity->custom_table_cells as $key => $obj) {
+						$fieldId = $obj->{$fieldKey};
+						$rowId = $obj->{$tableRowKey};
+						$columnId = $obj->{$tableColumnKey};
 
             			$cells[$fieldId][$rowId][$columnId] = $obj['text_value'];
             		}
-            	}
-            }
-            */
+				}
+			}
 
 	        $valuesArray = $values->getArrayCopy();
 	        $cellsArray = $cells->getArrayCopy();
+			// End
 
 	        $count = 0;
 			foreach ($customFields as $key => $obj) {

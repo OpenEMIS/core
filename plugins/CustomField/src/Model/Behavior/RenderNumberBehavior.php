@@ -14,26 +14,38 @@ class RenderNumberBehavior extends RenderBehavior {
     public function onGetCustomNumberElement(Event $event, $action, $entity, $attr, $options=[]) {
         $value = '';
 
+        // for edit
         $fieldId = $attr['customField']->id;
         $fieldValues = $attr['customFieldValues'];
+        $savedId = null;
+        $savedValue = null;
+        if (!empty($fieldValues) && array_key_exists($fieldId, $fieldValues)) {
+            if (isset($fieldValues[$fieldId]['id'])) {
+                $savedId = $fieldValues[$fieldId]['id'];
+            }
+            if (isset($fieldValues[$fieldId]['number_value'])) {
+                $savedValue = $fieldValues[$fieldId]['number_value'];
+            }
+        }
+        // End
+
         if ($action == 'view') {
-            if (array_key_exists($fieldId, $fieldValues)) {
-                $value = $fieldValues[$fieldId]['number_value'];
+            if (!is_null($savedValue)) {
+                $value = $savedValue;
             }
         } else if ($action == 'edit') {
             $form = $event->subject()->Form;
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
             $options['type'] = 'number';
-            // for edit
-            // if (array_key_exists($fieldId, $fieldValues)) {
-            //     if ($attr['attr']['request'] == 'get') {
-            //         $options['value'] = $fieldValues[$fieldId]['number_value'];
-            //     }
-            //     $value .= $form->hidden($fieldPrefix.".id", ['value' => $fieldValues[$fieldId]['id']]);
-            // }
+            if (!is_null($savedValue)) {
+                $options['value'] = $savedValue;
+            }
             $value .= $form->input($fieldPrefix.".number_value", $options);
             $value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
+            if (!is_null($savedId)) {
+                $value .= $form->hidden($fieldPrefix.".id", ['value' => $savedId]);
+            }
         }
 
         $event->stopPropagation();

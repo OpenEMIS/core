@@ -20,14 +20,27 @@ class RenderCheckboxBehavior extends RenderBehavior {
             $checkboxOptions[$obj->id] = $obj->name;
         }
 
+        // for edit
         $fieldId = $attr['customField']->id;
         $fieldValues = $attr['customFieldValues'];
+        $savedId = null;
+        $savedValue = null;
+        if (!empty($fieldValues) && array_key_exists($fieldId, $fieldValues)) {
+            if (isset($fieldValues[$fieldId]['id'])) {
+                $savedId = $fieldValues[$fieldId]['id'];
+            }
+            if (isset($fieldValues[$fieldId]['number_value'])) {
+                $savedValue = $fieldValues[$fieldId]['number_value'];
+            }
+        }
+        // End
+
         $checkedValues = [];
-        if (array_key_exists($fieldId, $fieldValues)) {
-            $checkedValues = $fieldValues[$fieldId]['number_value'];
+        if (!is_null($savedValue)) {
+            $checkedValues =  $savedValue;
         }
         if ($action == 'view') {
-            if (!empty($checkedValues)) {
+            if (is_array($checkedValues) && !empty($checkedValues)) {
                 $answers = [];
                 foreach ($checkedValues as $checkedValue) {
                     $answers[] = $checkboxOptions[$checkedValue];
@@ -62,33 +75,19 @@ class RenderCheckboxBehavior extends RenderBehavior {
         return $value;
     }
 
-    public function onSetCheckboxValues(Event $event, Entity $entity, ArrayObject $values, ArrayObject $settings) {
-        $fieldKey = $settings['fieldKey'];
-        $fieldRecord = $settings['fieldRecord'];
-
-        $fieldId = $fieldRecord->{$fieldKey};
-        $checkboxValues = [$fieldRecord->number_value];
-        if (array_key_exists($fieldId, $values)) {
-            if (is_array($values[$fieldId]['number_value'])) {
-                $checkboxValues = array_merge($checkboxValues, $values[$fieldId]['number_value']);
-            }
-        }
-
-        $settings['fieldValue']['number_value'] = $checkboxValues;
-    }
-
     public function processCheckboxValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
         $settings['valueKey'] = 'number_value';
 
+        $fieldKey = $settings['fieldKey'];
         $valueKey = $settings['valueKey'];
         $customValue = $settings['customValue'];
+
+        $settings['deleteFieldIds'][] = $customValue[$fieldKey];
         $checkboxValues = $customValue[$valueKey];
         foreach ($checkboxValues as $checkboxKey => $checked) {
             $customValue[$valueKey] = $checkboxKey;
             $settings['customValue'] = $customValue;
-            if (!$checked) {
-                $settings['deleteFieldIds'][] = $checkboxKey;
-            } else {
+            if ($checked) {
                 $this->processValues($entity, $data, $settings);
             }
         }
