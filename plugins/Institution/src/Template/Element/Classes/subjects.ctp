@@ -14,7 +14,7 @@
 						<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
 						<th><?= $this->Label->get($attr['model'] .'.education_subject') ?></th>
 						<th><?= $this->Label->get('general.name') ?></th>
-						<th><?= $this->Label->get($attr['model'] .'.teacher') ?></th>
+						<th><?= $this->Label->get($attr['model'] .'.teacherOrTeachers') ?></th>
 					</tr>
 				</thead>
 				<?php if (isset($attr['data'])) : ?>
@@ -27,6 +27,7 @@
 							if ($selected) {
 								$attrValue = $attr['data']['existedSubjects'][$n]['name'];
 								$disabled = 'disabled';
+								$teachers = $attr['data']['existedSubjects'][$n]['teachers'];
 								unset($attr['data']['existedSubjects'][$n]);
 							} else {
 								if (!$obj->visible) {
@@ -91,7 +92,7 @@
 							<?php endif; ?>
 						</td>
 
-						<td>
+						<td> 
 							<input type="hidden" name="<?php echo sprintf('MultiSubjects[%d][institution_class_staff][0][status]', $i) ?>" value="1" />
 							<?php 
 							if (!$selected) {
@@ -99,6 +100,12 @@
 									'options' => $attr['data']['teachers'], 
 									'label' => false,
 								));
+							} else {
+								if (count($teachers)>0) {
+									$teachers = new \Cake\Collection\Collection($teachers);
+									$names = $teachers->extract('name_with_id');
+									echo implode(', ', $names->toArray());
+								}
 							}
 							?>
 						</td>
