@@ -844,7 +844,8 @@ class InstitutionClassesTable extends AppTable {
 			foreach ($subjects as $key => $value) {
 				$subjectList[$value->institution_class->education_subject->id] = [
 					'name' => $value->institution_class->name,
-					'subject_name' => $value->institution_class->education_subject->name
+					'subject_name' => $value->institution_class->education_subject->name,
+					'teachers' => $value->institution_class->teachers
 				];
 			}
 			$data = $subjectList;
