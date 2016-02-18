@@ -86,6 +86,7 @@ class InstitutionsTable extends AppTable  {
 			'fieldKey' => 'institution_custom_field_id',
 			'tableColumnKey' => 'institution_custom_table_column_id',
 			'tableRowKey' => 'institution_custom_table_row_id',
+			'fieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFields'],
 			'formKey' => 'institution_custom_form_id',
 			'filterKey' => 'institution_custom_filter_id',
 			'formFieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFields'],

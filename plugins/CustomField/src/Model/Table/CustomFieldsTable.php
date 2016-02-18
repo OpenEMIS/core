@@ -61,6 +61,10 @@ class CustomFieldsTable extends AppTable {
 		return $isUnique == 1 ? ($entity->is_unique == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>') : '<i class="fa fa-minus"></i>';
 	}
 
+	public function beforeAction(Event $event) {
+		$this->ControllerAction->field('params', ['visible' => false]);
+	}
+
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$this->setupFields($entity);
 	}
