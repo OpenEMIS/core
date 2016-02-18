@@ -3,10 +3,28 @@ DROP TABLE IF EXISTS `absence_types`;
 
 -- institution_staff_absences
 ALTER TABLE `institution_staff_absences` 
+CHANGE COLUMN `start_time` `start_time` VARCHAR(15) NULL DEFAULT NULL COMMENT '' ,
+CHANGE COLUMN `end_time` `end_time` VARCHAR(15) NULL DEFAULT NULL COMMENT '' ;
+
+UPDATE `institution_staff_absences`
+INNER JOIN `z_2562_institution_staff_absences` ON `z_2562_institution_staff_absences`.`id` = `institution_staff_absences`.`id`
+SET `institution_staff_absences`.`start_time` = `z_2562_institution_staff_absences`.`start_time`, 
+`institution_staff_absences`.`end_time` = `z_2562_institution_staff_absences`.`end_time`;
+
+ALTER TABLE `institution_staff_absences` 
 DROP COLUMN `absence_type_id`,
 DROP INDEX `absence_type_id` ;
 
 -- institution_student_absences
+ALTER TABLE `institution_student_absences` 
+CHANGE COLUMN `start_time` `start_time` VARCHAR(15) NULL DEFAULT NULL COMMENT '' ,
+CHANGE COLUMN `end_time` `end_time` VARCHAR(15) NULL DEFAULT NULL COMMENT '' ;
+
+UPDATE `institution_student_absences`
+INNER JOIN `z_2562_institution_student_absences` ON `z_2562_institution_student_absences`.`id` = `institution_student_absences`.`id`
+SET `institution_student_absences`.`start_time` = `z_2562_institution_student_absences`.`start_time`, 
+`institution_student_absences`.`end_time` = `z_2562_institution_student_absences`.`end_time`;
+
 ALTER TABLE `institution_student_absences` 
 DROP COLUMN `absence_type_id`,
 DROP INDEX `absence_type_id` ;

@@ -549,7 +549,20 @@ class HtmlFieldHelper extends Helper {
 				}
 			}
 		} else if ($action == 'edit') {
-			$attr['id'] = $attr['model'] . '_' . $field;
+			if (!isset($attr['id'])) {
+				$attr['id'] = $attr['model'] . '_' . $field;
+			}
+			$model = split('\.', $attr['model']);
+			$newModel = '';
+			foreach($model as $value) {
+				if (empty($newModel)) {
+					$newModel = $value;
+				} else {
+					$newModel .= '['.$value.']';
+				}
+			}
+			$attr['model'] = $newModel;
+
 			$attr['time_options'] = array_merge($_options, $attr['time_options']);
 			if (!is_null($value)) {
 				$attr['value'] = date('h:i A', strtotime($value));

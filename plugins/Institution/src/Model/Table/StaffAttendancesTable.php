@@ -11,6 +11,7 @@ use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\MessagesTrait;
 use Cake\Utility\Inflector;
+use Cake\I18n\Time;
 
 class StaffAttendancesTable extends AppTable {
 	use OptionsTrait;
@@ -271,14 +272,35 @@ class StaffAttendancesTable extends AppTable {
 			$alias = Inflector::underscore($StaffAbsences->alias());
 			$fieldPrefix = $StaffAbsences->Users->alias() . '.'.$alias.'.' . $id;
 			$options = ['type' => 'select', 'label' => false, 'options' => $this->typeOptions, 'onChange' => '$(".type_'.$id.'").hide();$("#type_'.$id.'_"+$(this).val()).show();'];
+			$timeValue = 0;
 			if (empty($entity->StaffAbsences['id'])) {
 				$options['value'] = self::PRESENT;
+				$html .= $Form->input($fieldPrefix.".absence_type_id", $options);
 			} else {
 				$html .= $Form->hidden($fieldPrefix.".id", ['value' => $entity->StaffAbsences['id']]);
 				$options['value'] = $entity->StaffAbsences['absence_type_id'];
-			}			
+				$html .= $Form->input($fieldPrefix.".absence_type_id", $options);
+				$html .= $Form->hidden($fieldPrefix.".start_time", ['value' => $entity->StaffAbsences['start_time']]);
+				// $startTime = Time::parseTime($entity->StaffAbsences['start_time']);
+				// $endTime = Time::parseTime($entity->StaffAbsences['end_time']);
+				// $unixStartTime = $startTime->toUnixString();
+				// $unixEndTime = $endTime->toUnixString();
+				// $difference = intval($unixEndTime) - intval($unixStartTime);
+				// $time = Time::createFromTimestamp($difference);
+				// $timeValue = $time->format('H:i');
+			}
+			$HtmlField = $event->subject()->HtmlField;
+			// $attr['field'] = $alias.'.' . $id.'.start_date';
+			$attr['field'] = 'late_time';
+			$attr['model'] = $fieldPrefix.'.'.$id;
+			$attr['id'] = 'late_time_'.$id;
+			$attr['label'] = false;
+			$attr['null'] = true;
+			$time = $HtmlField->time('edit', $entity, $attr);
 
-			$html .= $Form->input($fieldPrefix.".absence_type_id", $options);
+			// $time = $Form->time($fieldPrefix.".lateTime", ['value' => $timeValue]);
+			$html .= $time;
+			
 			$html .= $Form->hidden($fieldPrefix.".institution_id", ['value' => $institutionId]);
 			$html .= $Form->hidden($fieldPrefix.".staff_id", ['value' => $id]);
 
@@ -665,6 +687,8 @@ class StaffAttendancesTable extends AppTable {
     			'StaffAbsences.id',
     			'StaffAbsences.start_date',
     			'StaffAbsences.end_date',
+    			'StaffAbsences.start_time',
+    			'StaffAbsences.end_time',
     			'StaffAbsences.absence_type_id',
     			'StaffAbsences.staff_absence_reason_id'
     		])
@@ -722,8 +746,12 @@ class StaffAttendancesTable extends AppTable {
 							$obj['staff_absence_reason_id'] = 0;
 							$obj['full_day'] = 0;
 							$configItemsTable =  TableRegistry::get('ConfigItems');
-							$obj['start_time'] = $configItemsTable->value('start_time');
-							$obj['end_time'] = $configItemsTable->value('start_time');
+							if (!isset($obj['start_time'])) {
+								$obj['start_time'] = $configItemsTable->value('start_time');
+							}
+							$obj['start_time'] = Time::parseTime($obj['start_time']);
+							$endTime = Time::parseTime($obj['start_time']);
+							$obj['end_time'] = $endTime;
 						}
 
 						if ($obj['absence_type_id'] == self::PRESENT) {
