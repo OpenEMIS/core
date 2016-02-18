@@ -26,7 +26,6 @@ class InstitutionInfrastructuresTable extends AppTable {
 		$this->belongsTo('InfrastructureConditions', ['className' => 'FieldOption.InfrastructureConditions']);
 		$this->hasMany('ChildInfrastructures', ['className' => 'Institution.InstitutionInfrastructures', 'foreignKey' => 'parent_id']);
 
-		$this->addBehavior('Tree');
 		$this->addBehavior('CustomField.Record', [
 			'fieldKey' => 'infrastructure_custom_field_id',
 			'tableColumnKey' => 'infrastructure_custom_table_column_id',
@@ -42,10 +41,6 @@ class InstitutionInfrastructuresTable extends AppTable {
 		]);
 	}
 
-	public function onGetParentId(Event $event, Entity $entity) {
-		return $this->getParentPath($entity->parent_id);
-	}
-
 	public function onGetCode(Event $event, Entity $entity) {
 		return $event->subject()->Html->link($entity->code, [
 			'plugin' => $this->controller->plugin,
@@ -57,29 +52,16 @@ class InstitutionInfrastructuresTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-		// recover
-		$count = $this->find()->where([
-				'OR' => [
-					[$this->aliasField('lft').' IS NULL'],
-					[$this->aliasField('rght').' IS NULL']
-				]
-			])
-			->count();
-
-		if ($count) {
-			$this->runRecover();
-		}
-		// End
-
 		// Add breadcrumb
-		$toolbarElements = [
-            ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => [], 'options' => []]
-        ];
-		$this->controller->set('toolbarElements', $toolbarElements);
+		$action = $this->ControllerAction->action();
+		if ($action == 'index' || $action == 'edit') {
+			$toolbarElements = [
+	            ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => [], 'options' => []]
+	        ];
+			$this->controller->set('toolbarElements', $toolbarElements);
+		}
 
 		$this->ControllerAction->field('parent_id');
-		$this->ControllerAction->field('lft', ['visible' => false]);
-		$this->ControllerAction->field('rght', ['visible' => false]);
 		$this->ControllerAction->field('year_acquired');
 		$this->ControllerAction->field('year_disposed');
 
@@ -89,10 +71,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 	public function indexBeforeAction(Event $event) {
 		$parentId = $this->request->query('parent');
 		if (!is_null($parentId)) {
-			$crumbs = $this
-				->find('path', ['for' => $parentId])
-				->order([$this->aliasField('lft')])
-				->toArray();
+			$crumbs = $this->findPath(['for' => $parentId]);
 			$this->controller->set('crumbs', $crumbs);
 		}
 
@@ -121,10 +100,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 				$this->fields[$field]['type'] = 'hidden';
 				$parentId = $entity->parent_id;
 				if (!empty($parentId)) {
-					$list = $this
-						->find('path', ['for' => $parentId])
-						->matching('Levels')
-						->toArray();
+					$list = $this->findPath(['for' => $parentId, 'withLevels' => true]);
 				} else {
 					$list = [];
 				}
@@ -172,36 +148,14 @@ class InstitutionInfrastructuresTable extends AppTable {
 			$url = $this->ControllerAction->url('remove');
 			return $this->controller->redirect($url);
 		} else {
-			// Require to update the parent id of the children before removing the node from the tree
+			// Require to update the parent id
 			$this->updateAll(
-					[
-						'parent_id' => $transferTo, 
-						'lft' => null,
-						'rght' => null
-					],
-					['parent_id' => $transferFrom]
-				);
-
-			$left = $entity->lft;
-			$right = $entity->rght;
-
-			// The left and right value of the children will all have to be rebuilt
-			$this->updateAll(
-					[
-						'lft' => null,
-						'rght' => null
-					],
-					[ 
-						'lft > ' => $left, 
-						'rght < ' => $right
-					]
-				);
-
-			$this->runRecover();
+				['parent_id' => $transferTo],
+				['parent_id' => $transferFrom]
+			);
 
 			$process = function($model, $id, $options) {
 				$entity = $model->get($id);
-				$model->removeFromTree($entity);
 				return $model->delete($entity, $options->getArrayCopy());
 			};
 
@@ -230,10 +184,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 					$where[] = $this->Parents->aliasField('parent_id IS NULL');
 				} else {
 					$where[$this->Parents->aliasField('parent_id')] = $grandParentId;
-					$crumbs = $this
-						->find('path', ['for' => $grandParentId])
-						->order([$this->aliasField('lft')])
-						->toArray();
+					$crumbs = $this->findPath(['for' => $grandParentId]);
 					$this->controller->set('crumbs', $crumbs);
 				}
 				$parents = $this->Parents->find()->where($where)->all();
@@ -330,13 +281,27 @@ class InstitutionInfrastructuresTable extends AppTable {
 		exec($shellCmd);
 	}
 
-	public function getParentPath($parentId=null) {
-		$crumbs = $this
-			->find('path', ['for' => $parentId])
-			->order([$this->aliasField('lft')])
-			->toArray();
+	public function findPath($params=[]) {
+		$parentId = array_key_exists('for', $params) ? $params['for'] : null;
+		$withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : false;
 
-		$parentPath = '';
+		$paths = [];
+		while (!is_null($parentId)) {
+			$query = $this->find()->where([$this->aliasField('id') => $parentId]);
+			if ($withLevels) { $query->matching('Levels'); }
+			$results = $query->first();
+
+			array_unshift($paths, $results);
+			$parentId = $results->parent_id;
+		}
+
+		return $paths;
+	}
+
+	public function getParentPath($parentId=null) {
+		$crumbs = $this->findPath(['for' => $parentId]);
+
+		$parentPath = __('All') . ' > ';
 		foreach ($crumbs as $crumb) {
 			$parentPath .= $crumb->name;
 			$parentPath .= $crumb === end($crumbs) ? '' : ' > ';

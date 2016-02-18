@@ -116,9 +116,9 @@ class AdvanceSearchBehavior extends Behavior {
 **
 ******************************************************************************************************************/
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $paginateOptions) {
-		$submit = $request->data('submit');
-		if (!empty($submit)) {
-			if ($submit == 'Reset') {
+		$reset = $request->data('reset');
+		if (!empty($reset)) {
+			if ($reset == 'Reset') {
 				$model = $this->_table;
 				$alias = $model->alias();
 				// clear session
