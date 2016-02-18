@@ -9,12 +9,16 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
-use App\Model\Table\AppTable;
 use Cake\Utility\Inflector;
 
 use Cake\Log\Log;
 
-class StudentFeesTable extends AppTable {
+use App\Model\Table\ControllerActionTable;
+use App\Model\Traits\MessagesTrait;
+
+class StudentFeesTable extends ControllerActionTable {
+	use MessagesTrait;
+
 	private $institutionId = 0;
 	private $_selectedAcademicPeriodId = -1;
 	private $_academicPeriodOptions = [];
@@ -45,7 +49,7 @@ class StudentFeesTable extends AppTable {
 		return $events;
 	}
 
-	public function beforeAction(Event $event) {
+	public function beforeAction(Event $event, ArrayObject $extra) {
 		$session = $this->request->session();
 		$this->institutionId = $session->read('Institution.Institutions.id');
 
@@ -54,22 +58,22 @@ class StudentFeesTable extends AppTable {
     	$this->StudentFeesAbstract = TableRegistry::get('Institution.StudentFeesAbstract');
 		$this->InstitutionFees = TableRegistry::get('Institution.InstitutionFees');
 
-    	$this->ControllerAction->field('institution_id', ['visible' => false]);
-    	$this->ControllerAction->field('student_status_id', ['visible' => false]);
-    	$this->ControllerAction->field('education_grade_id', ['visible' => ['view'=>true, 'edit'=>true]]);
-    	$this->ControllerAction->field('academic_period_id', ['visible' => ['view'=>true, 'edit'=>true]]);
-    	$this->ControllerAction->field('start_date', ['visible' => false]);
-    	$this->ControllerAction->field('end_date', ['visible' => false]);
+    	$this->field('institution_id', ['visible' => false]);
+    	$this->field('student_status_id', ['visible' => false]);
+    	$this->field('education_grade_id', ['visible' => ['view'=>true, 'edit'=>true]]);
+    	$this->field('academic_period_id', ['visible' => ['view'=>true, 'edit'=>true]]);
+    	$this->field('start_date', ['visible' => false]);
+    	$this->field('end_date', ['visible' => false]);
 
-    	$this->ControllerAction->field('openemis_no', 		['type' => 'string', 	'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
-    	$this->ControllerAction->field('student_id', 		['type' => 'string',	'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
-    	$this->ControllerAction->field('total_fee', 		['type' => 'float',		'visible' => ['index'=>true, 'edit'=>true]]);
-    	$this->ControllerAction->field('amount_paid', 		['type' => 'float', 	'visible' => ['index'=>true, 'edit'=>true]]);
-    	$this->ControllerAction->field('outstanding_fee', 	['type' => 'float', 	'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
+    	$this->field('openemis_no', 		['type' => 'string', 	'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
+    	$this->field('student_id', 		['type' => 'string',	'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
+    	$this->field('total_fee', 		['type' => 'float',		'visible' => ['index'=>true, 'edit'=>true]]);
+    	$this->field('amount_paid', 		['type' => 'float', 	'visible' => ['index'=>true, 'edit'=>true]]);
+    	$this->field('outstanding_fee', 	['type' => 'float', 	'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
 
-    	$this->ControllerAction->field('education_programme', ['type' => 'string', 		'visible' => ['view'=>true, 'edit'=>true]]);
-    	$this->ControllerAction->field('fee_types', ['type' => 'element', 'element' => 'Institution.Fees/fee_types', 'currency' => $this->currency, 'non-editable'=>true, 'visible' => ['view'=>true, 'edit'=>true]]);
-    	$this->ControllerAction->field('payments', ['type' => 'element', 'element' => 'Institution.Fees/payments', 'currency' => $this->currency, 'visible' => ['view'=>true, 'edit'=>true]]);
+    	$this->field('education_programme', ['type' => 'string', 		'visible' => ['view'=>true, 'edit'=>true]]);
+    	$this->field('fee_types', ['type' => 'element', 'element' => 'Institution.Fees/fee_types', 'currency' => $this->currency, 'non-editable'=>true, 'visible' => ['view'=>true, 'edit'=>true]]);
+    	$this->field('payments', ['type' => 'element', 'element' => 'Institution.Fees/payments', 'currency' => $this->currency, 'visible' => ['view'=>true, 'edit'=>true]]);
 
     	$this->StudentFeesAbstract->fields['id'] = array_merge($this->StudentFeesAbstract->fields['id'], ['type' => 'hidden', 'tableHeader' => __(''), 'attr'=>['label' => false, 'name'=>'']]);
     	$this->StudentFeesAbstract->fields['created_user_id'] = array_merge($this->StudentFeesAbstract->fields['created_user_id'], ['type' => 'disabled', 'tableHeader' => __('Created By'), 'attr'=>['label' => false, 'name'=>'']]);
@@ -127,8 +131,8 @@ class StudentFeesTable extends AppTable {
 ** index action methods
 **
 ******************************************************************************************************************/
-    public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
-		$this->ControllerAction->setFieldOrder([
+    public function indexBeforeAction(Event $event, ArrayObject $extra) {
+		$this->setFieldOrder([
 			'openemis_no', 'student_id', 'total_fee', 'amount_paid', 'outstanding_fee'
 		]);
 		$conditions = array(
@@ -149,18 +153,6 @@ class StudentFeesTable extends AppTable {
 		$this->_selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);
 		$this->advancedSelectOptions($gradeOptions, $this->_selectedEducationGradeId);
 
-		$toolbarElements = [
-            ['name' => 'Institution.StudentFees/controls', 
-             'data' => [
-	            	'academicPeriodOptions'=>$academicPeriodOptions,
-	            	'gradeOptions'=>$gradeOptions,
-	            ],
-	         'options' => []
-            ]
-        ];
-
-		$this->controller->set('toolbarElements', $toolbarElements);
-		
 		$this->InstitutionFeeEntity = $this->InstitutionFees
 			->find()
 			->contain(['InstitutionFeeTypes.FeeTypes'])
@@ -172,9 +164,20 @@ class StudentFeesTable extends AppTable {
 			->first()
 			;
 
+		$extra['elements']['custom'] = [
+			'name' => 'Institution.StudentFees/controls', 
+			'data' => [
+				'academicPeriodOptions'=>$academicPeriodOptions,
+				'gradeOptions'=>$gradeOptions,
+			],
+			'options' => [],
+	         'order' => 0
+        ];
+		unset($extra['toolbarButtons']['add']);
+		unset($extra['toolbarButtons']['search']);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		$query
 		->where([
 			$this->aliasField('institution_id') => $this->institutionId,
@@ -201,7 +204,16 @@ class StudentFeesTable extends AppTable {
 ** view action methods
 **
 ******************************************************************************************************************/
-    public function viewAfterAction(Event $event, Entity $entity) {
+    public function viewBeforeAction(Event $event, ArrayObject $extra) {
+		$extra['toolbarButtons']['add'] = $extra['toolbarButtons']['edit'];
+		$extra['toolbarButtons']['add']['url'][0] = 'add';
+		$extra['toolbarButtons']['add']['label'] = '<i class="fa kd-add"></i>';
+		$extra['toolbarButtons']['add']['attr']['title'] = 'Add New Payment';
+
+		unset($extra['toolbarButtons']['edit']);
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$this->InstitutionFeeEntity = $this->InstitutionFees
 				->find()
 				->contain(['InstitutionFeeTypes.FeeTypes'])
@@ -226,13 +238,10 @@ class StudentFeesTable extends AppTable {
 		$this->fields['fee_types']['total'] = $this->onGetTotalFee($event, $entity);
 
     	$this->fields['payments']['fields'] = $this->StudentFeesAbstract->fields;
-    	$this->fields['payments']['data'] = $this->getPaymentRecords($entity);
+    	$this->fields['payments']['data'] = $this->_getPaymentRecords($entity);
     	$this->fields['payments']['total'] = $this->onGetAmountPaid($event, $entity);
 
-		$modal = $this->ControllerAction->getModalOptions('remove');
-		$this->controller->set('modal', $modal);
-
-		$this->ControllerAction->setFieldOrder([
+		$this->setFieldOrder([
    			'academic_period_id', 'education_programme', 'education_grade_id', 'openemis_no', 'student_id', 'fee_types', 'payments', 'outstanding_fee'
 		]);
 
@@ -244,7 +253,7 @@ class StudentFeesTable extends AppTable {
 ** add action methods
 **
 ******************************************************************************************************************/
-	public function addBeforeAction(Event $event) {
+	public function addBeforeAction(Event $event, ArrayObject $extra) {
 		$requestData = $this->request->data;
 		if (isset($requestData[$this->alias()]['id'])) {
 			// pr($requestData);//die;
@@ -252,23 +261,23 @@ class StudentFeesTable extends AppTable {
 				$idKey = $this->aliasField($this->primaryKey());
 	    		if ($this->exists([$idKey => $requestData[$this->alias()]['id']])) {
 	    			$entity = $this->find()
-	    				->contain($this->allAssociations())
+	    				->contain($this->_allAssociations())
 	    				->where([$idKey => $requestData[$this->alias()]['id']])
 						->first();
 	    			if ($entity) {
-				    	$this->addActionSetup($event, $entity);
+				    	$this->_addActionSetup($event, $entity);
 						if (isset($requestData['StudentFeesAbstract'])) {
 							foreach($requestData['StudentFeesAbstract'] as $key=>$record) {
 								/**
 								 * these are the rows from the form
 								 */
-						    	$this->fields['payments']['paymentFields'][] = $this->createVirtualPaymentEntity($entity, $record);
+						    	$this->fields['payments']['paymentFields'][] = $this->_createVirtualPaymentEntity($entity, $record);
 							}
 						}
 						/**
 						 * this is the new blank row
 						 */
-				    	$this->fields['payments']['paymentFields'][] = $this->createVirtualPaymentEntity($entity, false);
+				    	$this->fields['payments']['paymentFields'][] = $this->_createVirtualPaymentEntity($entity, false);
 					}
 	    		}
 	    	// }
@@ -276,12 +285,12 @@ class StudentFeesTable extends AppTable {
     		$idKey = $this->aliasField($this->primaryKey());
     		if ($this->exists([$idKey => $this->request->params['pass'][1]])) {
     			$entity = $this->find()
-    				->contain($this->allAssociations())
+    				->contain($this->_allAssociations())
     				->where([$idKey => $this->request->params['pass'][1]])
 					->first();
     			if ($entity) {
-			    	$this->addActionSetup($event, $entity);
-			    	$this->fields['payments']['paymentFields'] = $this->getPaymentRecords($entity);
+			    	$this->_addActionSetup($event, $entity);
+			    	$this->fields['payments']['paymentFields'] = $this->_getPaymentRecords($entity);
     			}
     		}
     	} else {
@@ -290,9 +299,11 @@ class StudentFeesTable extends AppTable {
     		 */
 	    	return false;
     	}
+
+		$extra['toolbarButtons']['back']['url'] = $extra['indexButtons']['view']['url'];
 	}
 
-    private function addActionSetup(Event $event, Entity $entity) {
+    private function _addActionSetup(Event $event, Entity $entity) {
     	$this->fields['student_id']['type'] = 'readonly';
 		$this->fields['openemis_no']['type'] = 'readonly';
 		$this->fields['education_grade_id']['type'] = 'readonly';
@@ -355,19 +366,18 @@ class StudentFeesTable extends AppTable {
     	$this->fields['payments']['amount_paid'] = $this->fields['amount_paid']['value'];
     	$this->fields['payments']['currency'] = $this->currency;
 
-		$modal = $this->ControllerAction->getModalOptions('remove');
-		$this->controller->set('modal', $modal);
-
-		$this->ControllerAction->setFieldOrder([
+		$this->setFieldOrder([
    			'academic_period_id', 'education_programme', 'education_grade_id', 'openemis_no', 'student_id', 'fee_types', 'outstanding_fee', 'payments'
 		]);
     }
 
-	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra) {
+		$model = $this;
 		$StudentFees = $this->StudentFeesAbstract;
 		$student_id = $entity->student_id;
         $institution_fee_id = $this->InstitutionFeeEntity->id;
-		$process = function ($model, $entity) use ($data, $StudentFees, $student_id, $institution_fee_id) {
+		// die('addBeforeSave');
+		$process = function ($model, $entity) use ($event, $data, $StudentFees, $student_id, $institution_fee_id) {
 			if (array_key_exists('StudentFeesAbstract', $data)) {
 				$fees = $StudentFees->newEntities($data['StudentFeesAbstract']);
 				$error = false;
@@ -419,6 +429,7 @@ class StudentFeesTable extends AppTable {
 						}
 					}
 					$model->fields['payments']['paymentFields'] = $fees;
+					$data['hasError'] = true;
 					$model->request->data = $data->getArrayCopy();
 					return false;
 				}
@@ -433,6 +444,12 @@ class StudentFeesTable extends AppTable {
 		return $process;
 	}
 
+	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra) {
+		if (!array_key_exists('hasError', $data)) {
+			$this->Alert->success('general.edit.success', ['reset' => true]);
+			return $this->controller->redirect($this->url('view', true));
+		}
+	}
 
 /******************************************************************************************************************
 **
@@ -510,7 +527,7 @@ class StudentFeesTable extends AppTable {
 		return $entity->education_grade->programme_name;
 	}
 
-	private function getPaymentRecords(Entity $entity) {
+	private function _getPaymentRecords(Entity $entity) {
 		if (!is_null($this->InstitutionFeeEntity)) {
 			$query = $this->StudentFeesAbstract->find('all');
 			$entityRecords = $query->contain(['CreatedBy'])->where([
@@ -526,7 +543,7 @@ class StudentFeesTable extends AppTable {
 		}
 	}
 
-	private function createVirtualPaymentEntity($entity, $requestData) {
+	private function _createVirtualPaymentEntity($entity, $requestData) {
 		$data = [
 			'id' => ($requestData) ? $requestData['id'] : '',
 			'amount' => ($requestData) ? $requestData['amount'] : '',
@@ -543,7 +560,7 @@ class StudentFeesTable extends AppTable {
 		return $studenFee;
 	}
 
-	private function allAssociations() {
+	private function _allAssociations() {
 		$omitForeignKeys = ['modified_user_id', 'created_user_id'];
 		$associations = [];
 		foreach ($this->associations() as $assoc) {
@@ -552,19 +569,6 @@ class StudentFeesTable extends AppTable {
 			}
 		}
 		return $associations;
-	}
-
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($action == 'index') {
-			unset($toolbarButtons['add']);
-		} else if ($action == 'view') {
-			$toolbarButtons['add'] = $toolbarButtons['back'];
-			$toolbarButtons['add']['url'] = $buttons['add']['url'];
-			$toolbarButtons['add']['label'] = '<i class="fa kd-add"></i>';
-			$toolbarButtons['add']['attr']['title'] = 'Add New Payment';
-		} else if ($action == 'add') {
-			$toolbarButtons['back']['url'] = $buttons['view']['url'];
-		}
 	}
 
 }

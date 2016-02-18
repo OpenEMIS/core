@@ -36,7 +36,8 @@ class FieldOptionsController extends AppController {
 				"$controller.InfrastructureOwnerships" 		=> "$controller.%s",
 				"$controller.InfrastructureConditions" 		=> "$controller.%s",
 				"$controller.QualificationSpecialisations" 	=> "$controller.%s",
-				"$controller.QualificationLevels" 			=> "$controller.%s"
+				"$controller.QualificationLevels" 			=> "$controller.%s",
+				"$controller.FeeTypes" 						=> "$controller.%s"
 			]
 		]);
 	}
@@ -82,4 +83,5 @@ class FieldOptionsController extends AppController {
 	public function InfrastructureConditions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 	'className' => 'FieldOption.InfrastructureConditions']); }
 	public function QualificationSpecialisations() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'FieldOption.QualificationSpecialisations']); }
 	public function QualificationLevels() { $this->ControllerAction->process(['alias' => __FUNCTION__, 			'className' => 'FieldOption.QualificationLevels']); }
+	public function FeeTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 					'className' => 'FieldOption.FeeTypes']); }
 }

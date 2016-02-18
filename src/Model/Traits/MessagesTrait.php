@@ -575,7 +575,12 @@ trait MessagesTrait {
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
 				],
-			]
+			],
+			'InstitutionFeeTypes' => [
+				'amount' => [
+					'ruleMaxLength' => 'Amount entered exceeds system limit'
+				],
+			],
 		],
 		'User' => [
 			'Users' => [

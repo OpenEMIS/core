@@ -38,13 +38,19 @@
 					?>
 					<tr>
 						<td><?= $record['type'] ?></td>
-						<td>
-							<input type="text" class="inputs_totalFee" name="<?php echo sprintf('InstitutionFees[institution_fee_types][%d][amount]', $i) ?>" value="<?= $record['amount'] ?>" onblur="jsTable.computeTotalForMoney('totalFee'); jsForm.compute(this); return fees.checkDecimal(this, 2); " 
+						<td class="<?= (!empty($record['error']))?"error":"";?>">
+							<input type="text" class="inputs_totalFee<?= (!empty($record['error']))?" form-error":"";?>" name="<?php echo sprintf('InstitutionFees[institution_fee_types][%d][amount]', $i) ?>" value="<?= $record['amount'] ?>" onblur="jsTable.computeTotalForMoney('totalFee'); jsForm.compute(this); return fees.checkDecimal(this, 2); " 
 							onkeypress="return utility.floatCheck(event); " onclick="fees.selectAll(this)" computeType="totalFee"/>
 							<input type="hidden" name="<?php echo sprintf('InstitutionFees[institution_fee_types][%d][fee_type_id]', $i) ?>" value="<?= $record['fee_type_id'] ?>" />
 							<input type="hidden" name="<?php echo sprintf('InstitutionFees[institution_fee_types][%d][id]', $i) ?>" value="<?= $record['id'] ?>" />
 						</td>
-						<td></td>
+						<td>
+							<?php if (!empty($record['error'])):?>
+							<span class="<?= (!empty($record['error']))?"error-message":"";?>">
+								<?= implode('<br/>', $record['error']);?>
+							</span>
+							<?php endif;?>
+						</td>
 					</tr>
 					<?php endforeach ?>
 				</tbody>

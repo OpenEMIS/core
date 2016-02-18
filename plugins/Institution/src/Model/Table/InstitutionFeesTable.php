@@ -9,9 +9,13 @@ use Cake\Utility\Text;
 use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use App\Model\Table\AppTable;
 
-class InstitutionFeesTable extends AppTable {
+use App\Model\Table\ControllerActionTable;
+use App\Model\Traits\MessagesTrait;
+
+class InstitutionFeesTable extends ControllerActionTable {
+	use MessagesTrait;
+
 	private $institutionId = 0;
 	private $_selectedAcademicPeriodId = 0;
 	private $_academicPeriodOptions = [];
@@ -40,19 +44,19 @@ class InstitutionFeesTable extends AppTable {
 		return $validator;
 	}
 
-	public function beforeAction(Event $event) {
+	public function beforeAction(Event $event, ArrayObject $extra) {
 		$session = $this->request->session();
 		$this->institutionId = $session->read('Institution.Institutions.id');
 
-    	$this->ControllerAction->field('total', ['type' => 'float', 'visible' => ['add' => false, 'edit' => false, 'index' => true, 'view' => true]]);
-    	$this->ControllerAction->field('institution_id', ['type' => 'hidden', 'visible' => ['edit'=>true]]);
-    	$this->ControllerAction->field('academic_period_id', ['type' => 'select', 'visible' => ['view'=>true, 'edit'=>true], 'onChangeReload'=>true]);
-    	$this->ControllerAction->field('education_grade_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
-    	$this->ControllerAction->field('education_programme', ['type' => 'select', 'visible' => ['index'=>true]]);
+    	$this->field('total', ['type' => 'float', 'visible' => ['add' => false, 'edit' => false, 'index' => true, 'view' => true]]);
+    	$this->field('institution_id', ['type' => 'hidden', 'visible' => ['edit'=>true]]);
+    	$this->field('academic_period_id', ['type' => 'select', 'visible' => ['view'=>true, 'edit'=>true], 'onChangeReload'=>true]);
+    	$this->field('education_grade_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
+    	$this->field('education_programme', ['type' => 'select', 'visible' => ['index'=>true]]);
 
 		$ConfigItems = TableRegistry::get('ConfigItems');
     	$this->currency = $ConfigItems->value('currency');
-    	$this->ControllerAction->field('fee_types', ['type' => 'element', 'element' => 'Institution.Fees/fee_types', 'currency' => $this->currency, 'visible' => ['view'=>true, 'edit'=>true]]);
+    	$this->field('fee_types', ['type' => 'element', 'element' => 'Institution.Fees/fee_types', 'currency' => $this->currency, 'visible' => ['view'=>true, 'edit'=>true]]);
 	}
 
 	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
@@ -69,13 +73,13 @@ class InstitutionFeesTable extends AppTable {
 ** index action methods
 **
 ******************************************************************************************************************/
-    public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
-		$this->ControllerAction->setFieldOrder([
+    public function indexBeforeAction(Event $event, ArrayObject $extra) {
+		$this->setFieldOrder([
 			'education_programme', 'education_grade_id', 'total'
 		]);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		$academicPeriodOptions = $this->AcademicPeriods->getList();
 		if (empty($request->query['academic_period_id'])) {
 			$request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
@@ -117,24 +121,24 @@ class InstitutionFeesTable extends AppTable {
 ** view action methods
 **
 ******************************************************************************************************************/
-    public function viewBeforeAction(Event $event) {
-		$this->ControllerAction->setFieldOrder([
+    public function viewBeforeAction(Event $event, ArrayObject $extra) {
+		$this->setFieldOrder([
 			'academic_period_id', 'education_grade_id', 'fee_types'
 		]);
 	}
 
-	public function viewEditBeforeQuery(Event $event, Query $query) {
+	public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		$query->contain([
 			'EducationGrades',
 			'InstitutionFeeTypes.FeeTypes'
 		]);
 	}
 
-    public function viewAfterAction(Event $event, Entity $entity) {
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$feeTypes = [];
 		$amount = 0.00;
     	foreach ($entity->institution_fee_types as $key=>$obj) {
-    		$feeTypes[] = [
+    		$feeTypes[$obj->fee_type->order] = [
     			'id' => $obj->id,
     			'type' => $obj->fee_type->name,
 				'fee_type_id' => $obj->fee_type_id,
@@ -142,6 +146,7 @@ class InstitutionFeesTable extends AppTable {
 			];
 			$amount = (float)$amount + (float)$obj->amount;
     	}
+    	ksort($feeTypes);
 		$this->fields['fee_types']['data'] = $feeTypes;
 		$this->fields['fee_types']['total'] = $this->currency.' '.number_format($amount, 2);
 	}
@@ -152,28 +157,29 @@ class InstitutionFeesTable extends AppTable {
 ** edit action methods
 **
 ******************************************************************************************************************/
-    public function editBeforeAction(Event $event) {
-		$this->ControllerAction->setFieldOrder([
+    public function editBeforeAction(Event $event, ArrayObject $extra) {
+		$this->setFieldOrder([
 			'academic_period_id', 'education_grade_id'
 		]);
 
 		$this->fields['academic_period_id']['type'] = 'readonly';
 		$this->fields['education_grade_id']['type'] = 'readonly';
-		$this->ControllerAction->field('total', ['visible' => false]);
+		$this->field('total', ['visible' => false]);
 	}
 
-	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
 		$this->cleanFeeTypes($data);
     }
 
-    public function editAfterAction(Event $event, Entity $entity) {
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$feeTypes = [];
     	foreach ($this->fields['fee_types']['options'] as $key=>$obj) {
     		$feeTypes[] = [
     			'id' => Text::uuid(),
     			'type' => $obj,
 				'fee_type_id' => $key,
-				'amount' => ''
+				'amount' => '',
+				// 'error' => ''
 			];
     	}
 		$this->fields['fee_types']['data'] = $feeTypes;
@@ -185,7 +191,8 @@ class InstitutionFeesTable extends AppTable {
     			'id' => $obj->id,
     			'type' => $types[$obj->fee_type_id],
 				'fee_type_id' => $obj->fee_type_id,
-				'amount' => $obj->amount
+				'amount' => $obj->amount,
+				'error' => $obj->errors('amount')
 			];
     	}
 		$this->fields['fee_types']['exists'] = $exists;
@@ -204,8 +211,8 @@ class InstitutionFeesTable extends AppTable {
 ** add action methods
 **
 ******************************************************************************************************************/
-    public function addBeforeAction($event) {
-		$this->ControllerAction->setFieldOrder([
+    public function addBeforeAction(Event $event, ArrayObject $extra) {
+		$this->setFieldOrder([
 			'academic_period_id', 'education_grade_id'
 		]);
 
@@ -226,7 +233,7 @@ class InstitutionFeesTable extends AppTable {
 
 	}
 
-	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
 		$this->cleanFeeTypes($data);
 		$newOptions = ['InstitutionFeeTypes'=>['validate'=>false]];
 		if (isset($options['associated'])) {
@@ -236,7 +243,7 @@ class InstitutionFeesTable extends AppTable {
 		}
 	}
 
-    public function addAfterAction(Event $event, Entity $entity) {
+    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$feeTypes = [];
     	foreach ($this->fields['fee_types']['options'] as $key=>$obj) {
     		$feeTypes[] = [
@@ -256,7 +263,7 @@ class InstitutionFeesTable extends AppTable {
 ** field specific methods
 **
 ******************************************************************************************************************/
-	public function onBeforeDelete(Event $event, ArrayObject $deleteOptions, $id) {
+	public function onBeforeDelete(Event $event, ArrayObject $deleteOptions, $id, ArrayObject $extra) {
 		$idKey = $this->aliasField($this->primaryKey());
 		if ($this->exists([$idKey => $id])) {
 			$query = $this->find()
@@ -267,7 +274,7 @@ class InstitutionFeesTable extends AppTable {
 			if ($query->has('student_fees') && count($query->student_fees)>0) {
 				$this->Alert->error('InstitutionFees.fee_payments_exists');
 				$event->stopPropagation();
-				$action = $this->ControllerAction->url('index');
+				$action = $this->url('index');
 				return $this->controller->redirect($action);
 			}
 		}
