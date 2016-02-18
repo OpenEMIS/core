@@ -137,7 +137,7 @@ class RecordBehavior extends Behavior {
 				}
 
 				if ($this->_table->hasBehavior('RenderTable')) {
-					if (array_key_exists('custom_field_cells', $data[$model->alias()])) {
+					if (array_key_exists('custom_table_cells', $data[$model->alias()])) {
 						$event = $model->dispatchEvent('Render.processTableValues', [$entity, $data, $settings], $model);
 						if ($event->isStopped()) { return $event->result; }
 					}
@@ -420,14 +420,6 @@ class RecordBehavior extends Behavior {
 					        	// onPost
 					        }
 					        $values[$fieldId] = $fieldData;
-							// $values[$fieldId] = [
-							// 	'id' => $obj->id,
-							// 	'text_value' => $obj->text_value,
-							// 	'number_value' => $obj->number_value,
-							// 	'textarea_value' => $obj->textarea_value,
-							// 	'date_value' => $obj->date_value,
-							// 	'time_value' => $obj->time_value
-							// ];
 						}
 					}
 				}
