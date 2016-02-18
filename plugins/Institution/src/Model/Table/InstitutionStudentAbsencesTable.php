@@ -155,7 +155,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 	}
 
 	public function onGetFullday(Event $event, Entity $entity) {
-		$fullDayOptions = $this->absenceList;
+		$fullDayOptions = $this->getSelectOptions('general.yesno');
 		return $fullDayOptions[$entity->full_day];
 	}
 
@@ -188,6 +188,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 	public function editOnInitialize(Event $event, Entity $entity) {
 		$this->request->query['student'] = $entity->student_id;
 		$this->request->query['full_day'] = $entity->full_day;
+		$this->request->data[$this->alias()]['absence_type_id'] = $entity->absence_type_id;
 	}
 
 	public function beforeAction(Event $event) {
@@ -256,6 +257,13 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			};
 			$this->Alert->error('InstitutionStudentAbsences.notEnrolled');
 			return $process;
+		}
+	}
+
+	public function addEditBeforePatch(Event $event, $entity, $requestData, $patchOptions) {
+		$absenceTypeId = $requestData[$this->alias()]['absence_type_id'];
+		if ($this->absenceCodeList[$absenceTypeId] == 'LATE') {
+			$requestData[$this->alias()]['end_date'] = $requestData[$this->alias()]['start_date'];
 		}
 	}
 
@@ -334,7 +342,6 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			$selectedAbsenceType = $request->data[$this->alias()]['absence_type_id'];
 			if ($this->absenceCodeList[$selectedAbsenceType] == 'LATE') {
 				$attr['type'] = 'hidden';
-				$attr['attr']['value'] = $request->data[$this->alias()]['start_date'];
 			}
 		}
 		return $attr;
