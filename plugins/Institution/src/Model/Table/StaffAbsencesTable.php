@@ -178,9 +178,18 @@ class StaffAbsencesTable extends AppTable {
 		}
 	}
 
+	public function addEditBeforePatch(Event $event, $entity, $requestData, $patchOptions) {
+		$absenceTypeId = $requestData[$this->alias()]['absence_type_id'];
+		if ($this->absenceCodeList[$absenceTypeId] == 'LATE') {
+			$requestData[$this->alias()]['end_date'] = $requestData[$this->alias()]['start_date'];
+		}
+	}
+
 	public function editOnInitialize(Event $event, Entity $entity) {
 		$this->request->query['staff'] = $entity->staff_id;
 		$this->request->query['full_day'] = $entity->full_day;
+		$this->request->data[$this->alias()]['absence_type_id'] = $entity->absence_type_id;
+		$this->request->data[$this->alias()]['start_date'] = $entity->start_date;
 	}
 
 	public function beforeAction(Event $event) {
@@ -322,7 +331,6 @@ class StaffAbsencesTable extends AppTable {
 			$selectedAbsenceType = $request->data[$this->alias()]['absence_type_id'];
 			if ($this->absenceCodeList[$selectedAbsenceType] == 'LATE') {
 				$attr['type'] = 'hidden';
-				$attr['attr']['value'] = $request->data[$this->alias()]['start_date'];
 			}
 		}
 
