@@ -46,7 +46,9 @@ class RecordBehavior extends Behavior {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->_table->belongsTo('CustomForms', $this->config('formClass'));
+		if (is_null($this->config('moduleKey'))) {
+			$this->_table->belongsTo('CustomForms', $this->config('formClass'));
+		}
 		$this->_table->hasMany('CustomFieldValues', $this->config('fieldValueClass'));
 		$this->_table->hasMany('CustomTableCells', $this->config('tableCellClass'));
 
@@ -89,14 +91,14 @@ class RecordBehavior extends Behavior {
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
     	$alias = $this->_table->alias();
 		$values = $data[$alias]['custom_field_values'];
-		$fieldValues = $this->_table->array_column($values, 'custom_field_id');
+		$fieldValues = $this->_table->array_column($values, $this->config('fieldKey'));
 
 		$CustomFields = TableRegistry::get($this->config('fieldClass.className'));
 		$fields = $CustomFields->find()->where(['id IN' => $fieldValues])->all();
 
 		foreach ($values as $key => $attr) {
 			foreach ($fields as $f) {
-				if ($f->id == $attr['custom_field_id']) {
+				if ($f->id == $attr[$this->config('fieldKey')]) {
 					$data[$alias]['custom_field_values'][$key]['field_type'] = $f->field_type;
 					$data[$alias]['custom_field_values'][$key]['mandatory'] = $f->is_mandatory;
 					$data[$alias]['custom_field_values'][$key]['unique'] = $f->is_unique;
@@ -135,8 +137,10 @@ class RecordBehavior extends Behavior {
 				}
 
 				if ($this->_table->hasBehavior('RenderTable')) {
-					$event = $model->dispatchEvent('Render.processTableValues', [$entity, $data, $settings], $model);
-					if ($event->isStopped()) { return $event->result; }
+					if (array_key_exists('custom_field_cells', $data[$model->alias()])) {
+						$event = $model->dispatchEvent('Render.processTableValues', [$entity, $data, $settings], $model);
+						if ($event->isStopped()) { return $event->result; }
+					}
 				}
 
 				// when edit always delete all the checkbox values before reinsert,
@@ -214,8 +218,10 @@ class RecordBehavior extends Behavior {
 	public function getCustomFieldQuery($entity) {
 		$query = null;
 
-		$CustomModules = $this->_table->CustomForms->CustomModules;
-		$CustomForms = $this->_table->CustomForms;
+		$CustomModules = TableRegistry::get('CustomField.CustomModules');
+		$CustomFieldValues = $this->_table->CustomFieldValues;
+		$CustomTableCells = $this->_table->CustomTableCells;
+		$CustomForms = $CustomFieldValues->CustomFields->CustomForms;
 		$CustomFormsFields = TableRegistry::get($this->config('formFieldClass.className'));
 		$CustomFormsFilters = TableRegistry::get($this->config('formFilterClass.className'));
 
@@ -253,14 +259,13 @@ class RecordBehavior extends Behavior {
 					->where([$CustomForms->aliasField($this->config('moduleKey')) => $moduleId]);
 
 				if (!empty($filterAlias)) {
-					list($modelplugin, $modelAlias) = explode('.', $filterAlias, 2);
-					$filterKey = $this->getFilterKey($filterAlias, $modelAlias);
+					$filterKey = $this->getFilterKey($filterAlias, $this->config('model'));
 					if (empty($filterKey)) {
-						$filterKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';	
+						list($modelplugin, $modelAlias) = explode('.', $filterAlias, 2);
+						$filterKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
 					}
 
 					$filterId = $entity->$filterKey;
-
 					$customFormQuery
 						->join([
 							'table' => $CustomFormsFilters->table(),
