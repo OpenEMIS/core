@@ -40,7 +40,7 @@ use Cake\Utility\Inflector;
 	<hr>
 	<input type="hidden" name="AdvanceSearch[<?= $model ?>][isSearch]" value="" id="isSearch" />
 	<button class="btn btn-default btn-xs" href=""><?= __('Search') ?></button>
-	<button id="reset" class="btn btn-default btn-xs" name="submit" value="Reset"><?= __('Reset') ?></button>
+	<button id="reset" class="btn btn-default btn-xs" name="reset" value="Reset"><?= __('Reset') ?></button>
 </div>
 
 <script type="text/javascript">   
