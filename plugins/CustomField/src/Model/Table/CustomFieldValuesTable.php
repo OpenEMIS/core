@@ -14,9 +14,6 @@ class CustomFieldValuesTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('CustomFields', ['className' => 'CustomField.CustomFields']);
 		$this->belongsTo('CustomRecords', ['className' => 'CustomField.CustomRecords']);
-		if (array_key_exists('extra', $config)) {
-			$this->extra = $config['extra'];
-		}
 	}
 
 	public function validationDefault(Validator $validator) {
