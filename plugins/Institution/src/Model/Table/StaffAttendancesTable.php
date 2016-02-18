@@ -22,6 +22,7 @@ class StaffAttendancesTable extends AppTable {
 	private $_fieldOrder = ['openemis_no', 'staff_id'];
 	private $dataCount = null;
 	private $_absenceData = [];
+	const PRESENT = 0;
 
 	public function initialize(array $config) {
 		$this->table('institution_staff');
@@ -50,6 +51,10 @@ class StaffAttendancesTable extends AppTable {
 			'pages' => ['index']
 		]);
 		$this->addBehavior('Import.ImportLink');
+
+		$AbsenceTypesTable = TableRegistry::get('Institution.AbsenceTypes');
+		$this->absenceList = $AbsenceTypesTable->getAbsenceTypeList();
+		$this->absenceCodeList = $AbsenceTypesTable->getCodeList();
 	}
 
 	public function implementedEvents() {
@@ -147,7 +152,7 @@ class StaffAttendancesTable extends AppTable {
 			if (! $absenceObj['full_day']) {
 				$startTimeAbsent = $absenceObj['start_time'];
 				$endTimeAbsent = $absenceObj['end_time'];
-				$timeStr = sprintf(__('Absent') . ' - ' . $absenceObj['absence_type']. ' (%s - %s)' , $startTimeAbsent, $endTimeAbsent);
+				$timeStr = sprintf(__('Absent') . ' - ' . $absenceObj['absence_type_id']. ' (%s - %s)' , $startTimeAbsent, $endTimeAbsent);
 				return $timeStr;
 			} else{
 				return sprintf('%s %s %s', __('Absent'), __('Full'), __('Day'));
@@ -267,17 +272,13 @@ class StaffAttendancesTable extends AppTable {
 			$fieldPrefix = $StaffAbsences->Users->alias() . '.'.$alias.'.' . $id;
 			$options = ['type' => 'select', 'label' => false, 'options' => $this->typeOptions, 'onChange' => '$(".type_'.$id.'").hide();$("#type_'.$id.'_"+$(this).val()).show();'];
 			if (empty($entity->StaffAbsences['id'])) {
-				$options['value'] = 'PRESENT';
+				$options['value'] = self::PRESENT;
 			} else {
 				$html .= $Form->hidden($fieldPrefix.".id", ['value' => $entity->StaffAbsences['id']]);
-				if (empty($entity->StaffAbsences['staff_absence_reason_id'])) {
-					$options['value'] = 'UNEXCUSED';
-				} else {
-					$options['value'] = 'EXCUSED';
-				}
+				$options['value'] = $entity->StaffAbsences['absence_type_id'];
 			}			
 
-			$html .= $Form->input($fieldPrefix.".absence_type", $options);
+			$html .= $Form->input($fieldPrefix.".absence_type_id", $options);
 			$html .= $Form->hidden($fieldPrefix.".institution_id", ['value' => $institutionId]);
 			$html .= $Form->hidden($fieldPrefix.".staff_id", ['value' => $id]);
 
@@ -286,15 +287,13 @@ class StaffAttendancesTable extends AppTable {
 			$html .= $Form->hidden($fieldPrefix.".start_date", ['value' => $selectedDate]);
 			$html .= $Form->hidden($fieldPrefix.".end_date", ['value' => $selectedDate]);
 		} else {
-			$types = $this->getSelectOptions('Absence.types');
-			$type = $types['EXCUSED'];
+			$absenceTypeList = $this->absenceList;
 
 			if (empty($entity->StaffAbsences['id'])) {
 				$type = '<i class="fa fa-check"></i>';
 			} else {
-				if (empty($entity->StaffAbsences['staff_absence_reason_id'])) {
-					$type = $types['UNEXCUSED'];
-				}
+				$absenceTypeId = $entity->StaffAbsences['absence_type_id'];
+				$type = __($absenceTypeList[$absenceTypeId]);
 			}
 			$html .= $type;
 		}
@@ -318,25 +317,31 @@ class StaffAttendancesTable extends AppTable {
 			$presentDisplay = 'display: none;';
 			$excusedDisplay = 'display: none;';
 			$unexcusedDisplay = 'display: none;';
+			$lateDisplay = 'display: none;';
+			$absenceCodeList = $this->absenceCodeList;
 			$reasonId = 0;
 			if (empty($entity->StaffAbsences['id'])) {
 				$presentDisplay = '';	// PRESENT
 			} else {
-				if (empty($entity->StaffAbsences['staff_absence_reason_id'])) {
-					$unexcusedDisplay = '';	// UNEXCUSED
-				} else {
-					$excusedDisplay = '';	// EXCUSED
-					$reasonId = $entity->StaffAbsences['staff_absence_reason_id'];
+				$absenceTypeId = $entity->StaffAbsences['absence_type_id'];
+				foreach ($absenceCodeList as $absenceTypeCode) {
+					$codeDisplay = strtolower($absenceTypeCode).'Display';
+					if ($absenceCodeList[$absenceTypeId] == $absenceTypeCode) {
+						$$codeDisplay = '';
+						break;
+					}
 				}
 			}
+			$codeAbsenceType = array_flip($absenceCodeList);
+			
 			foreach ($this->typeOptions as $key => $value) {
 				switch($key) {
-					case 'PRESENT':
+					case self::PRESENT:
 						$html .= '<span class="type_'.$id.'" id="type_'.$id.'_'.$key.'" style="'.$presentDisplay.'">';
-							$html .= '<i class="fa fa-minus"></i>';
+						$html .= '<i class="fa fa-minus"></i>';
 						$html .= '</span>';
 						break;
-					case 'EXCUSED':
+					case $codeAbsenceType['EXCUSED']:
 						$html .= '<span class="type_'.$id.'" id="type_'.$id.'_'.$key.'" style="'.$excusedDisplay.'">';
 							$options = ['type' => 'select', 'label' => false, 'options' => $this->reasonOptions];
 							if ($reasonId != 0) {
@@ -345,9 +350,14 @@ class StaffAttendancesTable extends AppTable {
 							$html .= $Form->input($fieldPrefix.".staff_absence_reason_id", $options);
 						$html .= '</span>';
 						break;
-					case 'UNEXCUSED':
+					case $codeAbsenceType['UNEXCUSED']:
 						$html .= '<span class="type_'.$id.'" id="type_'.$id.'_'.$key.'" style="'.$unexcusedDisplay.'">';
-							$html .= '<i class="fa fa-minus"></i>';
+						$html .= '<i class="fa fa-minus"></i>';
+						$html .= '</span>';
+						break;
+					case $codeAbsenceType['LATE']:
+						$html .= '<span class="type_'.$id.'" id="type_'.$id.'_'.$key.'" style="'.$lateDisplay.'">';
+						$html .= '<i class="fa fa-minus"></i>';
 						$html .= '</span>';
 						break;
 				}
@@ -586,12 +596,8 @@ class StaffAttendancesTable extends AppTable {
 				$this->ControllerAction->field('reason');
 				$this->_fieldOrder[] = 'type';
 				$this->_fieldOrder[] = 'reason';
-
-				$this->typeOptions = [
-					'PRESENT' => __('Present'),
-					'EXCUSED' => __('Absent - Excused'),
-					'UNEXCUSED' => __('Absent - Unexcused')
-				];
+				$typeOptions = [self::PRESENT => 'Present'];
+				$this->typeOptions = $typeOptions + $this->absenceList;
 
 				$StaffAbsenceReasons = TableRegistry::get('FieldOption.StaffAbsenceReasons');
 				$this->reasonOptions = $StaffAbsenceReasons->getList()->toArray();
@@ -659,6 +665,7 @@ class StaffAttendancesTable extends AppTable {
     			'StaffAbsences.id',
     			'StaffAbsences.start_date',
     			'StaffAbsences.end_date',
+    			'StaffAbsences.absence_type_id',
     			'StaffAbsences.staff_absence_reason_id'
     		])
 			->join([
@@ -703,22 +710,25 @@ class StaffAttendancesTable extends AppTable {
 			$requestData = $this->request->data;
 			$StaffAbsences = TableRegistry::get('Institution.StaffAbsences');
 			$alias = Inflector::underscore($StaffAbsences->alias());
+			$codeAbsenceType = array_flip($this->absenceCodeList);
 
 			if (array_key_exists($StaffAbsences->Users->alias(), $requestData)) {
 				if (array_key_exists($alias, $requestData[$StaffAbsences->Users->alias()])) {
 					foreach ($requestData[$StaffAbsences->Users->alias()][$alias] as $key => $obj) {
 						$obj['academic_period_id'] = $requestQuery['academic_period_id'];
-						if ($obj['absence_type'] == 'UNEXCUSED') {
+						if ($obj['absence_type_id'] == $codeAbsenceType['UNEXCUSED']) {
+							$obj['staff_absence_reason_id'] = 0;
+						} else if ($obj['absence_type_id'] == $codeAbsenceType['LATE']) {
 							$obj['staff_absence_reason_id'] = 0;
 						}
 
-						if ($obj['absence_type'] == 'PRESENT') {
+						if ($obj['absence_type_id'] == self::PRESENT) {
 							if (isset($obj['id'])) {
 								$StaffAbsences->deleteAll([
 									$StaffAbsences->aliasField('id') => $obj['id']
 								]);
 							}
-						} else if ($obj['absence_type'] == 'EXCUSED' || $obj['absence_type'] == 'UNEXCUSED') {
+						} else {
 							$entity = $StaffAbsences->newEntity($obj);
 							if ($StaffAbsences->save($entity)) {
 							} else {
