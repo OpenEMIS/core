@@ -3,7 +3,6 @@ namespace Infrastructure\Model\Table;
 
 use ArrayObject;
 use CustomField\Model\Table\CustomFormsTable;
-use Cake\ORM\Entity;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
@@ -29,16 +28,23 @@ class InfrastructureCustomFormsTable extends CustomFormsTable {
 		]);
 	}
 
-	public function _getSelectOptions() {
-		list($moduleOptions, $selectedModule, $applyToAllOptions, $selectedApplyToAll) = array_values(parent::_getSelectOptions());
-		$moduleOptions = $this->CustomModules
-			->find('list')
-			->where([
-				$this->CustomModules->aliasField('code') => 'Infrastructure'
-			])
-			->toArray();
-		$selectedModule = $this->queryString('module', $moduleOptions);
+	public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, Request $request) {
+		$module = $this->CustomModules
+			->find()
+			->where([$this->CustomModules->aliasField('code') => 'Infrastructure'])
+			->first();
+		$selectedModule = $module->id;
+		$request->query['module'] = $selectedModule;
 
-		return compact('moduleOptions', 'selectedModule', 'applyToAllOptions', 'selectedApplyToAll');
+		$attr['type'] = 'readonly';
+		$attr['value'] = $selectedModule;
+		$attr['attr']['value'] = $module->name;
+
+		return $attr;
+	}
+
+	public function getModuleQuery() {
+		$query = parent::getModuleQuery();
+		return $query->where([$this->CustomModules->aliasField('code') => 'Infrastructure']);
 	}
 }
