@@ -364,10 +364,12 @@ trait MessagesTrait {
 			'reconfirm' => 'Please review the information before proceeding with the operation',
 			'noStudentSelected' => 'There are no students selected',
 			'noAvailableGrades' => 'No Available Grades in this Institution',
+			'noAvailableAcademicPeriod' => 'No Available Academic Periods',
 			'noNextGradeOrNextPeriod' => 'Next grade in the Education Structure is not available in this Institution or no Next Academic Period defined',
 			'savingPromotionError' => 'Some selected students record were not updated succesfully',
 			'successGraduated' => 'Students have graduated',
 			'successOthers' => 'Students status changed successfully',
+			'noNextAcademicPeriod' => 'There is no next academic period for the promotion.',
 		],
 		'StudentTransfer' => [
 			'noGrades' => 'No Available Grades',
