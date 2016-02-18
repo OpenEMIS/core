@@ -720,6 +720,10 @@ class StaffAttendancesTable extends AppTable {
 							$obj['staff_absence_reason_id'] = 0;
 						} else if ($obj['absence_type_id'] == $codeAbsenceType['LATE']) {
 							$obj['staff_absence_reason_id'] = 0;
+							$obj['full_day'] = 0;
+							$configItemsTable =  TableRegistry::get('ConfigItems');
+							$obj['start_time'] = $configItemsTable->value('start_time');
+							$obj['end_time'] = $configItemsTable->value('start_time');
 						}
 
 						if ($obj['absence_type_id'] == self::PRESENT) {
