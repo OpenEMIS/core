@@ -53,14 +53,7 @@ class SurveyFormsTable extends CustomFormsTable {
     }
 
 	public function beforeAction(Event $event){
-		parent::beforeAction($event);
 		$this->ControllerAction->field('survey_question', ['type' => 'custom_survey_question', 'valueClass' => 'table-full-width', 'visible' => [ 'edit' => true, 'view' => true ]]);
-	}
-
-	public function indexBeforeAction(Event $event) {
-		parent::indexBeforeAction($event);
-		$this->fields['apply_to_all']['visible'] = false;
-		$this->fields['custom_filters']['visible'] = false;
 	}
 
 	public function afterAction(Event $event){
@@ -243,7 +236,9 @@ class SurveyFormsTable extends CustomFormsTable {
 				$cellCount = 0;
 				$form = $event->subject()->Form;
 				// Build Questions options
-				list($moduleOptions, $selectedModule) = array_values($this->_getSelectOptions());
+				$moduleQuery = $this->getModuleQuery();
+				$moduleOptions = $moduleQuery->toArray();
+				$selectedModule = isset($this->request->query['module']) ? $this->request->query['module'] : key($moduleOptions);
 				$customModule = $this->CustomModules->get($selectedModule);
 				$supportedFieldTypes = explode(",", $customModule->supported_field_types);
 
@@ -410,20 +405,12 @@ class SurveyFormsTable extends CustomFormsTable {
 		return $event->subject()->renderElement('Survey.formquestions', ['attr' => $attr]);
 	}
 
-	public function _getSelectOptions() {
-		list($moduleOptions, $selectedModule, $applyToAllOptions, $selectedApplyToAll) = array_values(parent::_getSelectOptions());
-		//Return all required options and their key
-		$query = $this->request->query;
-
-		$moduleOptions = $this->CustomModules
+	public function getModuleQuery() {
+		return $this->CustomModules
 			->find('list', ['keyField' => 'id', 'valueField' => 'code'])
 			->find('visible')
 			->where([
 				$this->CustomModules->aliasField('parent_id') => 0
-			])
-			->toArray();
-		$selectedModule = isset($query['module']) ? $query['module'] : key($moduleOptions);
-
-		return compact('moduleOptions', 'selectedModule', 'applyToAllOptions', 'selectedApplyToAll');
+			]);
 	}
 }
