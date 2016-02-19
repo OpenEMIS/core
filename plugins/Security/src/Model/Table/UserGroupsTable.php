@@ -213,7 +213,7 @@ class UserGroupsTable extends AppTable {
 					foreach ($associated[$key] as $i => $obj) {
 						$this->request->data[$alias][$key][] = [
 							'id' => $obj->id,
-							'_joinData' => ['level' => $obj->level->name, 'code' => $obj->code, 'area_id' => $obj->id, 'name' => $obj->name]
+							'_joinData' => ['level' => $obj->area_level->name, 'code' => $obj->code, 'area_id' => $obj->id, 'name' => $obj->name]
 						];
 					}
 				}
