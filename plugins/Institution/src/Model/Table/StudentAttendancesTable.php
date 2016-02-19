@@ -130,7 +130,15 @@ class StudentAttendancesTable extends AppTable {
 			if (! $absenceObj['full_day']) {
 				$startTimeAbsent = $absenceObj['start_time'];
 				$endTimeAbsent = $absenceObj['end_time'];
-				$timeStr = sprintf(__('Absent') . ' - ' . $absenceObj['absence_type_id']. ' (%s - %s)' , $startTimeAbsent, $endTimeAbsent);
+				$startTime = new Time ($startTimeAbsent);
+				$startTimeAbsent = $startTime->format('h:i A');
+				$endTime = new Time ($endTimeAbsent);
+				$endTimeAbsent = $endTime->format('h:i A');
+				if ($absenceCodeList[$absenceObj['absence_type_id']] == 'LATE') {
+					$timeStr = sprintf(__($absenceObj['absence_type_name']) . ' - (%s - %s)' , $startTimeAbsent, $endTimeAbsent);
+				} else {
+					$timeStr = sprintf(__('Absent') . ' - ' . $absenceObj['absence_reason']. ' (%s - %s)' , $startTimeAbsent, $endTimeAbsent);
+				}
 				return $timeStr;
 			} else{
 				return sprintf('%s %s %s', __('Absent'), __('Full'), __('Day'));
@@ -144,7 +152,7 @@ class StudentAttendancesTable extends AppTable {
 		$StudentAbsenceTable = TableRegistry::get('Institution.InstitutionStudentAbsences');
 
 		$absenceData = $StudentAbsenceTable->find('all')
-			->contain(['StudentAbsenceReasons'])
+			->contain(['StudentAbsenceReasons', 'AbsenceTypes'])
 			->where([
 				$StudentAbsenceTable->aliasField('institution_id') => $institutionId,
 				$StudentAbsenceTable->aliasField('start_date').' >= ' => $monthStartDay,
@@ -164,7 +172,9 @@ class StudentAttendancesTable extends AppTable {
 					'full_day' => $StudentAbsenceTable->aliasField('full_day'),
 					'start_time' => $StudentAbsenceTable->aliasField('start_time'),
 					'end_time' => $StudentAbsenceTable->aliasField('end_time'),
-					'absence_type' => 'StudentAbsenceReasons.name'
+					'absence_type_id' => $StudentAbsenceTable->aliasField('absence_type_id'), 
+					'absence_type_name' => 'AbsenceTypes.name',
+					'absence_reason' => 'StudentAbsenceReasons.name'
 				])
 			->toArray();
 		$absenceCheckList = [];
