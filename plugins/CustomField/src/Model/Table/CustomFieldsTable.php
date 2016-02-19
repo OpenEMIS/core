@@ -42,7 +42,7 @@ class CustomFieldsTable extends AppTable {
 		$this->addBehavior('CustomField.SetupDropdown');
 		$this->addBehavior('CustomField.SetupCheckbox');
 		$this->addBehavior('CustomField.SetupTable');
-		// $this->addBehavior('CustomField.SetupDate');
+		$this->addBehavior('CustomField.SetupDate');
 		// $this->addBehavior('CustomField.SetupTime');
 		// $this->addBehavior('CustomField.SetupStudentList');
 		// End
