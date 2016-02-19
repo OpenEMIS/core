@@ -527,6 +527,10 @@ class StudentAttendancesTable extends AppTable {
 			} else {
 				$selectedWeek = $this->queryString('week', $weekOptions);
 			}
+
+			$weekStartDate = $weeks[$selectedWeek][0];
+			$weekEndDate = $weeks[$selectedWeek][1];
+
 			$this->advancedSelectOptions($weekOptions, $selectedWeek);
 			$this->controller->set(compact('weekOptions', 'selectedWeek'));
 			// end setup weeks
@@ -613,10 +617,49 @@ class StudentAttendancesTable extends AppTable {
 			// End setup sections
 
 			$settings['pagination'] = false;
+
+			$startDate = $weekStartDate->format('Y-m-d');
+			$endDate = $weekEndDate->format('Y-m-d');
+
+			$conditions = [];
+			$conditions['OR'] = [
+				'OR' => [
+					[
+						'InstitutionStudents.end_date IS NOT NULL',
+						'InstitutionStudents.start_date <=' => $startDate,
+						'InstitutionStudents.end_date >=' => $startDate
+					],
+					[
+						'InstitutionStudents.end_date IS NOT NULL',
+						'InstitutionStudents.start_date <=' => $endDate,
+						'InstitutionStudents.end_date >=' => $endDate
+					],
+					[
+						'InstitutionStudents.end_date IS NOT NULL',
+						'InstitutionStudents.start_date >=' => $startDate,
+						'InstitutionStudents.end_date <=' => $endDate
+					]
+				],
+				[
+					'InstitutionStudents.end_date IS NULL',
+					'InstitutionStudents.start_date <=' => $endDate
+				]
+			];
+
 			$query
 				->contain(['Users'])
 				->find('withAbsence', ['date' => $this->selectedDate])
-				->where([$this->aliasField('institution_section_id') => $selectedSection]);
+				->innerJoin(['InstitutionSections' => 'institution_sections'], [
+					'InstitutionSections.id = '.$this->aliasField('institution_section_id')
+				])
+				->innerJoin(['InstitutionStudents' => 'institution_students'], [
+					'InstitutionStudents.academic_period_id = InstitutionSections.academic_period_id',
+					'InstitutionStudents.institution_id = InstitutionSections.institution_id',
+					'InstitutionStudents.education_grade_id = '. $this->aliasField('education_grade_id'),
+					'InstitutionStudents.student_id = '. $this->aliasField('student_id'),
+				])
+				->where([$this->aliasField('institution_section_id') => $selectedSection])
+				->where($conditions);
 
 			if ($selectedDay == -1) {
 				foreach ($this->allDayOptions as $key => $obj) {
