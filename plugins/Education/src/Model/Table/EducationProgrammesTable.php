@@ -137,10 +137,10 @@ class EducationProgrammesTable extends AppTable {
 		} else if ($action == 'edit') {
 			if (isset($entity->id)) {
 				$nextProgrammeslist = $EducationProgrammesNextProgrammes
-													->find('list', ['keyField' => 'id', 'valueField' => 'next_programme_id'])
-													->where([$EducationProgrammesNextProgrammes->aliasField('education_programme_id') => $entity->id])
-													->toArray()
-													;						
+					->find('list', ['keyField' => 'id', 'valueField' => 'next_programme_id'])
+					->where([$EducationProgrammesNextProgrammes->aliasField('education_programme_id') => $entity->id])
+					->toArray()
+					;			
 				$form = $event->subject()->Form;
 				$nextProgrammeOptions = [];
 
@@ -151,26 +151,24 @@ class EducationProgrammesTable extends AppTable {
 
 				$EducationSystems = TableRegistry::get('Education.EducationSystems');
 				$systems = $EducationSystems
-							->find()
-							->where([$EducationSystems->aliasField('id') => $systemId])
-							->contain(['EducationLevels.EducationCycles.EducationProgrammes']);
+					->find()
+					->where([$EducationSystems->aliasField('id') => $systemId])
+					->contain(['EducationLevels.EducationCycles.EducationProgrammes']);
 
-				//retrieving all programmes belonging to current level's cycle's or next level's cycle's			
-				foreach($systems as $system) {
-					foreach($system->education_levels as $level){
-						if($level->order >= $currentLevelOrder) {
-							foreach($level->education_cycles as $cycle){
-								if($cycle->order >= $currentCycleOrder) {
-									foreach($cycle->education_programmes as $programme) {
-										if(($programme->id != $entity->id) && !in_array($programme->id, $nextProgrammeslist)){
-											$nextProgrammeOptions[$programme->id] = $cycle->name.' - ('.$programme->name.')';
-										}
-									}
-								}
-							}
-						}
-					}
-				}			
+				$nextProgrammeOptions = $EducationSystems
+					->find('list', [
+							'keyField' => 'programme_id',
+							'valueField' => 'cycle_programme_name'
+						])
+					->matching('EducationLevels.EducationCycles.EducationProgrammes')
+					->select(['cycle_programme_name' => $EducationSystems->find()->func()->concat([
+							'EducationCycles.name' => 'literal', 
+							' - (', 
+							'EducationProgrammes.name' => 'literal', 
+							')'
+						]), 'programme_id' => 'EducationProgrammes.id'])
+					->where([$EducationSystems->aliasField('id') => $systemId, 'EducationCycles.order > ' => $currentCycleOrder])
+					->toArray();		
 
 				$tableHeaders = [__('Cycle - (Programme)'), '', ''];
 				$tableCells = [];
