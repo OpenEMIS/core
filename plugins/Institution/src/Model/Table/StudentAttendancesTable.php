@@ -618,8 +618,13 @@ class StudentAttendancesTable extends AppTable {
 
 			$settings['pagination'] = false;
 
-			$startDate = $weekStartDate->format('Y-m-d');
-			$endDate = $weekEndDate->format('Y-m-d');
+			if ($selectedDay == -1) {
+				$startDate = $weekStartDate->format('Y-m-d');
+				$endDate = $weekEndDate->format('Y-m-d');
+			} else {
+				$startDate = $this->selectedDate->format('Y-m-d');
+				$endDate = $startDate;
+			}
 
 			$conditions = [];
 			$conditions['OR'] = [
