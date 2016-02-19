@@ -616,9 +616,17 @@ class StaffAttendancesTable extends AppTable {
 
 			$settings['pagination'] = false;
 
+			if ($selectedDay == -1) {
+				$startDate = $weekStartDate;
+				$endDate = $weekEndDate;
+			} else {
+				$startDate = $this->selectedDate;
+				$endDate = $startDate;
+			}
+
 			$query
 				->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
-				->find('inDateRange', ['start_date' => $weekStartDate, 'end_date' => $weekEndDate])
+				->find('inDateRange', ['start_date' => $startDate, 'end_date' => $endDate])
 				->contain(['Users'])
 				->find('withAbsence', ['date' => $this->selectedDate])
 				->where([$this->aliasField('institution_id') => $institutionId])
