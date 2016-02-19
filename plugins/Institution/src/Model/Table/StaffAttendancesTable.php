@@ -271,8 +271,20 @@ class StaffAttendancesTable extends AppTable {
 			
 			$alias = Inflector::underscore($StaffAbsences->alias());
 			$fieldPrefix = $StaffAbsences->Users->alias() . '.'.$alias.'.' . $id;
-			$options = ['type' => 'select', 'label' => false, 'options' => $this->typeOptions, 'onChange' => '$(".type_'.$id.'").hide();$("#type_'.$id.'_"+$(this).val()).show();'];
+			$absenceCodeList = $this->absenceCodeList;
+			$codeAbsenceTypeList = array_flip($absenceCodeList);
+			$options = [
+				'type' => 'select', 
+				'label' => false, 
+				'options' => $this->typeOptions, 
+				'onChange' => '$(".type_'.$id.'").hide();$("#type_'.$id.'_"+$(this).val()).show();$("#late_time__'.$id.'").hide();$(".late_time__'.$id.'_"+$(this).val()).show();'
+			];
 			$timeValue = 0;
+			$displayTime = 'display:none;';
+			$HtmlField = $event->subject()->HtmlField;
+			$configItemsTable =  TableRegistry::get('ConfigItems');
+			$attr['value'] = $configItemsTable->value('start_time');
+			$attr['default_time'] = false;
 			if (empty($entity->StaffAbsences['id'])) {
 				$options['value'] = self::PRESENT;
 				$html .= $Form->input($fieldPrefix.".absence_type_id", $options);
@@ -281,25 +293,20 @@ class StaffAttendancesTable extends AppTable {
 				$options['value'] = $entity->StaffAbsences['absence_type_id'];
 				$html .= $Form->input($fieldPrefix.".absence_type_id", $options);
 				$html .= $Form->hidden($fieldPrefix.".start_time", ['value' => $entity->StaffAbsences['start_time']]);
-				// $startTime = Time::parseTime($entity->StaffAbsences['start_time']);
-				// $endTime = Time::parseTime($entity->StaffAbsences['end_time']);
-				// $unixStartTime = $startTime->toUnixString();
-				// $unixEndTime = $endTime->toUnixString();
-				// $difference = intval($unixEndTime) - intval($unixStartTime);
-				// $time = Time::createFromTimestamp($difference);
-				// $timeValue = $time->format('H:i');
+				if ($absenceCodeList[$options['value']] == 'LATE') {
+					$displayTime = '';
+					$endTime = new Time ($entity->StaffAbsences['end_time']);
+					$attr['value'] = $endTime->format('h:i A');
+				}
 			}
-			$HtmlField = $event->subject()->HtmlField;
-			// $attr['field'] = $alias.'.' . $id.'.start_date';
+			$attr['time_options']['defaultTime'] = $attr['value'];
 			$attr['field'] = 'late_time';
-			$attr['model'] = $fieldPrefix.'.'.$id;
+			$attr['model'] = $fieldPrefix;
 			$attr['id'] = 'late_time_'.$id;
 			$attr['label'] = false;
 			$attr['null'] = true;
 			$time = $HtmlField->time('edit', $entity, $attr);
-
-			// $time = $Form->time($fieldPrefix.".lateTime", ['value' => $timeValue]);
-			$html .= $time;
+			$html .= '<div id="late_time__'.$id.'" class="late_time__'.$id.'_'.$codeAbsenceTypeList['LATE'].'" style="'.$displayTime.'width:100px">'.$time.'</div>';
 			
 			$html .= $Form->hidden($fieldPrefix.".institution_id", ['value' => $institutionId]);
 			$html .= $Form->hidden($fieldPrefix.".staff_id", ['value' => $id]);
@@ -748,9 +755,11 @@ class StaffAttendancesTable extends AppTable {
 							$configItemsTable =  TableRegistry::get('ConfigItems');
 							if (!isset($obj['start_time'])) {
 								$obj['start_time'] = $configItemsTable->value('start_time');
+								$obj['start_time'] = Time::parseTime($obj['start_time']);
+							} else {
+								$obj['start_time'] = new Time ($obj['start_time']);
 							}
-							$obj['start_time'] = Time::parseTime($obj['start_time']);
-							$endTime = Time::parseTime($obj['start_time']);
+							$endTime = Time::parseTime($obj['late_time']);
 							$obj['end_time'] = $endTime;
 						}
 

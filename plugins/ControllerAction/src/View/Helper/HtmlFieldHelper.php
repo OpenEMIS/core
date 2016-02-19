@@ -554,15 +554,14 @@ class HtmlFieldHelper extends Helper {
 			}
 			$model = split('\.', $attr['model']);
 			$newModel = '';
-			foreach($model as $value) {
+			foreach($model as $part) {
 				if (empty($newModel)) {
-					$newModel = $value;
+					$newModel = $part;
 				} else {
-					$newModel .= '['.$value.']';
+					$newModel .= '['.$part.']';
 				}
 			}
 			$attr['model'] = $newModel;
-
 			$attr['time_options'] = array_merge($_options, $attr['time_options']);
 			if (!is_null($value)) {
 				$attr['value'] = date('h:i A', strtotime($value));
