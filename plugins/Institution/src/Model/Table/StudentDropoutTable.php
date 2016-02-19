@@ -301,7 +301,8 @@ class StudentDropoutTable extends AppTable {
 			if (empty($existingStudentEntity)) {
 				// if no record is found say 'This student is not eligible for this action. Please reject this request.'
 				$this->Alert->warning('DropoutRequests.notEligible');
-				return;
+				$event->stopPropagation();
+				return $this->controller->redirect($this->ControllerAction->url('edit'));
 			}
 
 			$existingStudentEntity->student_status_id = $statuses['DROPOUT'];
