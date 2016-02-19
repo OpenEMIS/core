@@ -8,22 +8,22 @@ use Cake\ORM\Entity;
 use CustomField\Model\Behavior\SetupBehavior;
 
 class SetupDateBehavior extends SetupBehavior {
+	private $rangeValidationOptions;
+
 	public function initialize(array $config) {
         parent::initialize($config);
 
-        $this->_table->addBehavior('ControllerAction.DatePicker', ['range_start', 'range_end']);
-    }
-    public function onSetDateElements(Event $event, Entity $entity) {
-    	// pr($this->_table->action);
-    	// pr($this->_table->request->data);
-
-    	$fieldType = strtolower($this->fieldTypeCode);
-		$rangeValidationOptions = [
+        $this->rangeValidationOptions = [
 			'no' => __('No Range Validation'),
 			'earlier' => __('Should not be earlier than'),
 			'later' => __('Should not be later than'),
 			'between' => __('In between (inclusive)')
 		];
+
+        $this->_table->addBehavior('ControllerAction.DatePicker', ['range_start', 'range_end']);
+    }
+    public function onSetDateElements(Event $event, Entity $entity) {
+    	$fieldType = strtolower($this->fieldTypeCode);
 
 		$paramsArray = [];
     	if ($this->_table->action == 'edit') {
@@ -46,7 +46,7 @@ class SetupDateBehavior extends SetupBehavior {
 			}
 		}
 
-		$this->_table->ControllerAction->field('date_range', ['options' => $rangeValidationOptions, 'onChangeReload' => true, 'after' => 'is_mandatory', 'default' => $selectedRangeValidation]);
+		$this->_table->ControllerAction->field('date_range', ['options' => $this->rangeValidationOptions, 'onChangeReload' => true, 'after' => 'is_mandatory', 'default' => $selectedRangeValidation]);
 
 		if (!empty($selectedRangeValidation)) {
 			switch ($selectedRangeValidation) {
@@ -83,10 +83,20 @@ class SetupDateBehavior extends SetupBehavior {
 		}
 	}
 
-	// public function 
+	public function onGetDateRange(Event $event, Entity $entity) {
+		$paramsArray = (!empty($entity->params))? json_decode($entity->params, true): [];
+		if (array_key_exists('range_start', $paramsArray) && array_key_exists('range_end', $paramsArray)) {
+			return $this->rangeValidationOptions['between'].' '.$paramsArray['range_start'].' - '.$paramsArray['range_end'];
+		} else if (array_key_exists('range_start', $paramsArray)) {
+			return $this->rangeValidationOptions['earlier'].' '.$paramsArray['range_start'];
+		} else if (array_key_exists('range_end', $paramsArray)) {
+			return $this->rangeValidationOptions['later'].' '.$paramsArray['range_end'];
+		} else {
+			return $this->rangeValidationOptions['no'];
+		}
+	}
 
 	public function beforeSave(Event $event, Entity $entity) {
-		// preparing params variable
 		$paramsArray = [];
 		$range_start = ($entity->has('range_start'))? $entity->range_start: null;
 		$range_end = ($entity->has('range_end'))? $entity->range_end: null;
@@ -100,6 +110,8 @@ class SetupDateBehavior extends SetupBehavior {
 
 		if (!empty($paramsArray)) {
 			$entity->params = json_encode($paramsArray);
+		} else {
+			$entity->params = '';
 		}
 	}
 
