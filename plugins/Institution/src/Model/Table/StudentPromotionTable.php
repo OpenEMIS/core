@@ -365,6 +365,44 @@ class StudentPromotionTable extends AppTable {
 						$this->aliasField('education_grade_id') => $selectedGrade
 					])
 					->toArray();
+
+				if (!empty($students)) {
+					// have to see if these students have pending requests of any kind
+					$StudentAdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+					foreach ($students as $key => $value) {
+						// at this point of time it is getting all requests - (admission and transfer requests)
+						$conditions = [
+							'student_id' => $value->student_id, 
+							'status' => $StudentAdmissionTable::NEW_REQUEST,
+							'education_grade_id' => $value->education_grade_id,
+							'previous_institution_id' => $value->institution_id
+						];
+
+						$count = $StudentAdmissionTable->find()
+							->where($conditions)
+							->count();
+
+						$students[$key]->admissionRequestCount = $count;
+					}
+
+					$StudentDropoutTable = TableRegistry::get('Institution.StudentDropout');
+					foreach ($students as $key => $value) {
+						// at this point of time it is getting all requests - (admission and transfer requests)
+						$conditions = [
+							'student_id' => $value->student_id, 
+							'status' => $StudentAdmissionTable::NEW_REQUEST,
+							'education_grade_id' => $value->education_grade_id,
+							'institution_id' => $value->institution_id,
+							'academic_period_id' => $value->academic_period_id,
+						];
+
+						$count = $StudentDropoutTable->find()
+							->where($conditions)
+							->count();
+
+						$students[$key]->dropoutRequestCount = $count;
+					}
+				}
 			}
 			if (empty($students)) {
 				$this->Alert->warning($this->aliasField('noData'));
