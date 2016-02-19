@@ -19,6 +19,9 @@ CREATE TABLE `z_2562_institution_staff_absences` LIKE `institution_staff_absence
 INSERT INTO `z_2562_institution_staff_absences`
 SELECT * FROM `institution_staff_absences` WHERE start_time IS NOT NULL OR end_time IS NOT NULL;
 
+UPDATE `institution_staff_absences`
+SET start_time = str_to_date(start_time, '%h:%i %p'), end_time = str_to_date(end_time, '%h:%i %p');
+
 ALTER TABLE `institution_staff_absences` 
 CHANGE COLUMN `start_time` `start_time` TIME NULL DEFAULT NULL COMMENT '' ,
 CHANGE COLUMN `end_time` `end_time` TIME NULL DEFAULT NULL COMMENT '' ;
@@ -47,6 +50,9 @@ CREATE TABLE `z_2562_institution_student_absences` LIKE `institution_student_abs
 
 INSERT INTO `z_2562_institution_student_absences`
 SELECT * FROM `institution_student_absences` WHERE start_time IS NOT NULL OR end_time IS NOT NULL;
+
+UPDATE `institution_student_absences`
+SET start_time = str_to_date(start_time, '%h:%i %p'), end_time = str_to_date(end_time, '%h:%i %p');
 
 ALTER TABLE `institution_student_absences` 
 CHANGE COLUMN `start_time` `start_time` TIME NULL DEFAULT NULL COMMENT '' ,
