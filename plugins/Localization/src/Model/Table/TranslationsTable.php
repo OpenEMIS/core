@@ -61,7 +61,9 @@ class TranslationsTable extends AppTable {
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
 		if ($entity->editable == 0) {
-			$this->ControllerAction->field('en', ['type' => 'readonly']);
+			if ($this->action == 'edit') {
+				$this->ControllerAction->field('en', ['type' => 'readonly']);
+			}
 		}
 		$this->ControllerAction->field('editable', ['visible' => false]);
 	}
