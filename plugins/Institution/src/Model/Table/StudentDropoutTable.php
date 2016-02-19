@@ -297,6 +297,13 @@ class StudentDropoutTable extends AppTable {
 					$Students->aliasField('student_status_id') => $statuses['CURRENT']
 				])
 				->first();
+
+			if (empty($existingStudentEntity)) {
+				// if no record is found say 'This student is not eligible for this action. Please reject this request.'
+				$this->Alert->warning('DropoutRequests.notEligible');
+				return;
+			}
+
 			$existingStudentEntity->student_status_id = $statuses['DROPOUT'];
 			$existingStudentEntity->end_date = $effectiveDate;
 			$Students->save($existingStudentEntity);
