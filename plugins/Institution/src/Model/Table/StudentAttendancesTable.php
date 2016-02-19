@@ -124,7 +124,7 @@ class StudentAttendancesTable extends AppTable {
 	public function onExcelRenderAttendance(Event $event, Entity $entity, array $attr) {
 		// Get the data from the temporary variable
 		$absenceData = $this->_absenceData;
-
+		$absenceCodeList = $this->absenceCodeList;
 		if (isset($absenceData[$entity->student_id][$attr['date']])) {
 			$absenceObj = $absenceData[$entity->student_id][$attr['date']];
 			if (! $absenceObj['full_day']) {
