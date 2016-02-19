@@ -23,4 +23,4 @@ SELECT * FROM `z_2601_security_group_areas`;
 DROP TABLE `z_2601_security_group_areas`;
 
 -- db_patches
-DELETE FROM `db_patches` `issue` = 'POCOR-2601';
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2601';
