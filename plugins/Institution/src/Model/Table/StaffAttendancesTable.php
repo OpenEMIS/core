@@ -148,12 +148,21 @@ class StaffAttendancesTable extends AppTable {
 	public function onExcelRenderAttendance(Event $event, Entity $entity, array $attr) {
 		// get the data from the temporary variable
 		$absenceData = $this->_absenceData;
+		$absenceCodeList = $this->absenceCodeList;
 		if (isset($absenceData[$entity->staff_id][$attr['date']])) {
 			$absenceObj = $absenceData[$entity->staff_id][$attr['date']];
 			if (! $absenceObj['full_day']) {
 				$startTimeAbsent = $absenceObj['start_time'];
 				$endTimeAbsent = $absenceObj['end_time'];
-				$timeStr = sprintf(__('Absent') . ' - ' . $absenceObj['absence_type_id']. ' (%s - %s)' , $startTimeAbsent, $endTimeAbsent);
+				$startTime = new Time ($startTimeAbsent);
+				$startTimeAbsent = $startTime->format('h:i A');
+				$endTime = new Time ($endTimeAbsent);
+				$endTimeAbsent = $endTime->format('h:i A');
+				if ($absenceCodeList[$absenceObj['absence_type_id']] == 'LATE') {
+					$timeStr = sprintf(__($absenceObj['absence_type_name']) . ' - (%s - %s)' , $startTimeAbsent, $endTimeAbsent);
+				} else {
+					$timeStr = sprintf(__('Absent') . ' - ' . $absenceObj['absence_reason']. ' (%s - %s)' , $startTimeAbsent, $endTimeAbsent);
+				}
 				return $timeStr;
 			} else{
 				return sprintf('%s %s %s', __('Absent'), __('Full'), __('Day'));
@@ -166,7 +175,7 @@ class StaffAttendancesTable extends AppTable {
 	public function getData($monthStartDay, $monthEndDay, $institutionId) {
 		$StaffAbsencesTable = TableRegistry::get('Institution.StaffAbsences');
 		$absenceData = $StaffAbsencesTable->find('all')
-				->contain(['StaffAbsenceReasons'])
+				->contain(['StaffAbsenceReasons', 'AbsenceTypes'])
 				->where([
 					$StaffAbsencesTable->aliasField('institution_id') => $institutionId,
 					$StaffAbsencesTable->aliasField('start_date').' >= ' => $monthStartDay,
@@ -179,7 +188,9 @@ class StaffAttendancesTable extends AppTable {
 					'full_day' => $StaffAbsencesTable->aliasField('full_day'),
 					'start_time' => $StaffAbsencesTable->aliasField('start_time'),
 					'end_time' => $StaffAbsencesTable->aliasField('end_time'),
-					'absence_type' => 'StaffAbsenceReasons.name'
+					'absence_type_id' => $StaffAbsencesTable->aliasField('absence_type_id'), 
+					'absence_type_name' => 'AbsenceTypes.name',
+					'absence_reason' => 'StaffAbsenceReasons.name'
 				])
 				->toArray();
 		$absenceCheckList = [];
