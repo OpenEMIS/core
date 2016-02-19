@@ -7,5 +7,6 @@ class SurveyTableRowsTable extends CustomTableRowsTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('CustomFields', ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id']);
+		$this->hasMany('CustomTableCells', ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'survey_table_row_id', 'dependent' => true]);
 	}
 }

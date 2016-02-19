@@ -30,6 +30,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 			'fieldKey' => 'infrastructure_custom_field_id',
 			'tableColumnKey' => 'infrastructure_custom_table_column_id',
 			'tableRowKey' => 'infrastructure_custom_table_row_id',
+			'fieldClass' => ['className' => 'Infrastructure.InfrastructureCustomFields'],
 			'formKey' => 'infrastructure_custom_form_id',
 			'filterKey' => 'infrastructure_custom_filter_id',
 			'formFieldClass' => ['className' => 'Infrastructure.InfrastructureCustomFormsFields'],
