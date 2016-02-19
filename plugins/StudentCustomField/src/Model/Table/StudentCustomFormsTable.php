@@ -10,16 +10,18 @@ class StudentCustomFormsTable extends CustomFormsTable {
 	private $dataCount = null;
 
 	public function initialize(array $config) {
+		$config['extra'] = [
+			'fieldClass' => [
+				'className' => 'StudentCustomField.StudentCustomFields',
+				'joinTable' => 'student_custom_forms_fields',
+				'foreignKey' => 'student_custom_form_id',
+				'targetForeignKey' => 'student_custom_field_id',
+				'through' => 'StudentCustomField.StudentCustomFormsFields',
+				'dependent' => true
+			]
+		];
 		parent::initialize($config);
 		$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
-		$this->belongsToMany('CustomFields', [
-			'className' => 'StudentCustomField.StudentCustomFields',
-			'joinTable' => 'student_custom_forms_fields',
-			'foreignKey' => 'student_custom_form_id',
-			'targetForeignKey' => 'student_custom_field_id',
-			'through' => 'StudentCustomField.StudentCustomFormsFields',
-			'dependent' => true
-		]);
 	}
 
 	public function implementedEvents() {

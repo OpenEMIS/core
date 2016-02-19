@@ -10,16 +10,18 @@ class StaffCustomFormsTable extends CustomFormsTable {
 	private $dataCount = null;
 
 	public function initialize(array $config) {
+		$config['extra'] = [
+			'fieldClass' => [
+				'className' => 'StaffCustomField.StaffCustomFields',
+				'joinTable' => 'staff_custom_forms_fields',
+				'foreignKey' => 'staff_custom_form_id',
+				'targetForeignKey' => 'staff_custom_field_id',
+				'through' => 'StaffCustomField.StaffCustomFormsFields',
+				'dependent' => true
+			]
+		];
 		parent::initialize($config);
 		$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
-		$this->belongsToMany('CustomFields', [
-			'className' => 'StaffCustomField.StaffCustomFields',
-			'joinTable' => 'staff_custom_forms_fields',
-			'foreignKey' => 'staff_custom_form_id',
-			'targetForeignKey' => 'staff_custom_field_id',
-			'through' => 'StaffCustomField.StaffCustomFormsFields',
-			'dependent' => true
-		]);
 	}
 
 	public function implementedEvents() {
