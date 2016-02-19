@@ -370,19 +370,33 @@ class StudentPromotionTable extends AppTable {
 					// have to see if these students have pending requests of any kind
 					$StudentAdmissionTable = TableRegistry::get('Institution.StudentAdmission');
 					foreach ($students as $key => $value) {
-						// at this point of time it is getting all requests - (admission and transfer requests)
+						// at this point of time it is getting all requests - (admission requests)
 						$conditions = [
 							'student_id' => $value->student_id, 
 							'status' => $StudentAdmissionTable::NEW_REQUEST,
 							'education_grade_id' => $value->education_grade_id,
-							'previous_institution_id' => $value->institution_id
+							'institution_id' => $value->institution_id,
+							'type' => $StudentAdmissionTable::ADMISSION
 						];
 
-						$count = $StudentAdmissionTable->find()
+						$admissionCount = $StudentAdmissionTable->find()
 							->where($conditions)
 							->count();
 
-						$students[$key]->admissionRequestCount = $count;
+						// at this point of time it is getting all requests - (transfer requests)
+						$conditions = [
+							'student_id' => $value->student_id, 
+							'status' => $StudentAdmissionTable::NEW_REQUEST,
+							'education_grade_id' => $value->education_grade_id,
+							'previous_institution_id' => $value->institution_id,
+							'type' => $StudentAdmissionTable::TRANSFER,
+						];
+
+						$transferCount = $StudentAdmissionTable->find()
+							->where($conditions)
+							->count();
+
+						$students[$key]->admissionRequestCount = $admissionCount + $transferCount;
 					}
 
 					$StudentDropoutTable = TableRegistry::get('Institution.StudentDropout');
