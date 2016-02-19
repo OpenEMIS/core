@@ -141,7 +141,7 @@ class StaffAbsencesTable extends AppTable {
 				$value = sprintf('%s (%s)', $startDate, __('full day'));
 			}
 		} else {
-			$value = sprintf('%s (%s - %s)', $startDate, $entity->start_time, $entity->end_time);
+			$value = sprintf('%s (%s - %s)', $startDate, $this->formatTime($entity->start_time), $this->formatTime($entity->end_time));
 		}
 		
 		return $value;

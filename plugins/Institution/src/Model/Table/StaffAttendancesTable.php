@@ -279,7 +279,6 @@ class StaffAttendancesTable extends AppTable {
 				'options' => $this->typeOptions, 
 				'onChange' => '$(".type_'.$id.'").hide();$("#type_'.$id.'_"+$(this).val()).show();$("#late_time__'.$id.'").hide();$(".late_time__'.$id.'_"+$(this).val()).show();'
 			];
-			$timeValue = 0;
 			$displayTime = 'display:none;';
 			$HtmlField = $event->subject()->HtmlField;
 			$configItemsTable =  TableRegistry::get('ConfigItems');
