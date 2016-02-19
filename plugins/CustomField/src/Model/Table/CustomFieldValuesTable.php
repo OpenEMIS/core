@@ -8,6 +8,8 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
 class CustomFieldValuesTable extends AppTable {
+	protected $extra = ['scope' => 'custom_field_id'];
+
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('CustomFields', ['className' => 'CustomField.CustomFields']);
@@ -16,6 +18,7 @@ class CustomFieldValuesTable extends AppTable {
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
+		$scope = $this->extra['scope'];
 
 		$validator
 			->allowEmpty('text_value', function ($context) {
@@ -40,7 +43,7 @@ class CustomFieldValuesTable extends AppTable {
 				return true;
 			})
 			->add('text_value', 'ruleUnique', [
-				'rule' => 'validateUnique',
+				'rule' => ['validateUnique', ['scope' => $scope]],
 				'provider' => 'table',
 				'message' => __('This field has to be unique'),
 				'on' => function ($context) {
@@ -50,7 +53,7 @@ class CustomFieldValuesTable extends AppTable {
 			    }
 			])
 			->add('number_value', 'ruleUnique', [
-				'rule' => 'validateUnique',
+				'rule' => ['validateUnique', ['scope' => $scope]],
 				'provider' => 'table',
 				'message' => __('This field has to be unique'),
 				'on' => function ($context) {

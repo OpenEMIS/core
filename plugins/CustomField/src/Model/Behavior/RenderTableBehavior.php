@@ -46,7 +46,8 @@ class RenderTableBehavior extends RenderBehavior {
                 $cellOptions = ['label' => false];
 
                 if (isset($cellValues[$fieldId][$tableRowId][$tableColumnId])) {
-                    $cellOptions['value'] = $cellValues[$fieldId][$tableRowId][$tableColumnId];
+                    $cellValue = $cellValues[$fieldId][$tableRowId][$tableColumnId];
+                    $cellOptions['value'] = $cellValue;
                 }
 
                 $cellInput .= $form->input($cellPrefix.".text_value", $cellOptions);
@@ -74,34 +75,33 @@ class RenderTableBehavior extends RenderBehavior {
         return $value;
     }
 
-    public function onSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
+    public function processTableValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
+        $settings['valueKey'] = 'text_value';
+        $tableCells = $settings['tableCells'];
+
         $alias = $this->_table->alias();
         $values = $data[$alias]['custom_table_cells'];
         $fieldKey = $settings['fieldKey'];
         $tableColumnKey = $settings['tableColumnKey'];
         $tableRowKey = $settings['tableRowKey'];
-        $recordKey = $settings['recordKey'];
-        $patchOptions = $settings['patchOptions'];
+        $valueKey = $settings['valueKey'];
 
-        $tableCells = [];
         foreach ($values as $fieldId => $rows) {
             foreach ($rows as $rowId => $columns) {
                 foreach ($columns as $columnId => $obj) {
-                    $cellValue = $obj['text_value'];
-                    if (strlen($cellValue > 0)) {
+                    $cellValue = $obj[$valueKey];
+                    if (strlen($cellValue) > 0) {
                         $tableCells[] = [
                             $fieldKey => $fieldId,
                             $tableRowKey => $rowId,
                             $tableColumnKey => $columnId,
-                            'text_value' => $cellValue
+                            $valueKey => $cellValue
                         ];
                     }
                 }
             }
         }
 
-        $data[$alias]['custom_table_cells'] = $tableCells;
-        $requestData = $data->getArrayCopy();
-        $entity = $this->_table->patchEntity($entity, $requestData, $patchOptions);
+        $settings['tableCells'] = $tableCells;
     }
 }

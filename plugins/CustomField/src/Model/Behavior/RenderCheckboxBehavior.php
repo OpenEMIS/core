@@ -20,14 +20,27 @@ class RenderCheckboxBehavior extends RenderBehavior {
             $checkboxOptions[$obj->id] = $obj->name;
         }
 
+        // for edit
         $fieldId = $attr['customField']->id;
         $fieldValues = $attr['customFieldValues'];
+        $savedId = null;
+        $savedValue = null;
+        if (!empty($fieldValues) && array_key_exists($fieldId, $fieldValues)) {
+            if (isset($fieldValues[$fieldId]['id'])) {
+                $savedId = $fieldValues[$fieldId]['id'];
+            }
+            if (isset($fieldValues[$fieldId]['number_value'])) {
+                $savedValue = $fieldValues[$fieldId]['number_value'];
+            }
+        }
+        // End
+
         $checkedValues = [];
-        if (array_key_exists($fieldId, $fieldValues)) {
-            $checkedValues = $fieldValues[$fieldId]['number_value'];
+        if (!is_null($savedValue)) {
+            $checkedValues =  $savedValue;
         }
         if ($action == 'view') {
-            if (!empty($checkedValues)) {
+            if (is_array($checkedValues) && !empty($checkedValues)) {
                 $answers = [];
                 foreach ($checkedValues as $checkedValue) {
                     $answers[] = $checkboxOptions[$checkedValue];
@@ -38,7 +51,7 @@ class RenderCheckboxBehavior extends RenderBehavior {
             $form = $event->subject()->Form;
 
             $html = '';
-            $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['key'];
+            $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
             foreach ($checkboxOptions as $key => $value) {
                 $html .= '<div class="input">';
@@ -62,65 +75,21 @@ class RenderCheckboxBehavior extends RenderBehavior {
         return $value;
     }
 
-    public function onSetCheckboxValues(Event $event, Entity $entity, ArrayObject $values, ArrayObject $settings) {
+    public function processCheckboxValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
+        $settings['valueKey'] = 'number_value';
+
         $fieldKey = $settings['fieldKey'];
-        $fieldRecord = $settings['fieldRecord'];
+        $valueKey = $settings['valueKey'];
+        $customValue = $settings['customValue'];
 
-        $fieldId = $fieldRecord->{$fieldKey};
-        $checkboxValues = [$fieldRecord->number_value];
-        if (array_key_exists($fieldId, $values)) {
-            if (is_array($values[$fieldId]['number_value'])) {
-                $checkboxValues = array_merge($checkboxValues, $values[$fieldId]['number_value']);
+        $settings['deleteFieldIds'][] = $customValue[$fieldKey];
+        $checkboxValues = $customValue[$valueKey];
+        foreach ($checkboxValues as $checkboxKey => $checked) {
+            $customValue[$valueKey] = $checkboxKey;
+            $settings['customValue'] = $customValue;
+            if ($checked) {
+                $this->processValues($entity, $data, $settings);
             }
         }
-
-        $settings['fieldValue']['number_value'] = $checkboxValues;
-    }
-
-    public function onSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
-        $alias = $this->_table->alias();
-        $values = $data[$alias]['custom_field_values'];
-        $fieldKey = $settings['fieldKey'];
-        $recordKey = $settings['recordKey'];
-        $patchOptions = $settings['patchOptions'];
-
-        $count = 0;
-        $checkboxes = [];
-        $fieldIds = [];
-
-        foreach ($values as $key => $obj) {
-            if (array_key_exists('number_value', $obj) && is_array($obj['number_value'])) {
-                $checkboxes[] = $obj;
-                $fieldIds[$obj[$fieldKey]] = $obj[$fieldKey];
-                unset($data[$alias]['custom_field_values'][$key]);
-            }
-            $count++;
-        }
-
-        foreach ($checkboxes as $checkbox) {
-            $checkboxValues = $checkbox['number_value'];
-
-            foreach ($checkboxValues as $checkboxKey => $checked) {
-                if ($checked) {
-                    $checkbox['number_value'] = $checkboxKey;
-                    $data[$alias]['custom_field_values'][++$count] = $checkbox;
-                }
-            }
-        }
-
-        if (array_key_exists('id', $data[$alias])) {
-            if (!empty($fieldIds)) {
-                $id = $data[$alias]['id'];
-                $CustomFieldValues = $this->_table->CustomFieldValues;
-
-                $CustomFieldValues->deleteAll([
-                    $CustomFieldValues->aliasField($recordKey) => $id,
-                    $CustomFieldValues->aliasField($fieldKey . ' IN ') => $fieldIds
-                ]);
-            }
-        }
-
-        $requestData = $data->getArrayCopy();
-        $entity = $this->_table->patchEntity($entity, $requestData, $patchOptions);
     }
 }
