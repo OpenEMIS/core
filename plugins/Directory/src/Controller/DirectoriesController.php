@@ -204,9 +204,19 @@ class DirectoriesController extends AppController {
 				$header = __('Users') . ' - ' . $model->getHeader($model->alias());
 				$this->set('contentHeader', $header);
 			} else {
-				$this->Alert->warning('general.notExists');
-				$event->stopPropagation();
-				return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'index']);
+
+				// $ext = $this->request->params['_ext'];
+				// if (in_array($ext, ['json', 'xml'])) {
+
+				// 	// should do somethng here...
+					
+				// } else {
+
+					$this->Alert->warning('general.notExists');
+					$event->stopPropagation();
+					return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'index']);
+
+				// }
 			}
 		}
 	}
