@@ -217,9 +217,19 @@ class InstitutionsController extends AppController  {
 				$header = __('Institutions') . ' - ' . $model->getHeader($model->alias());
 				$this->set('contentHeader', $header);
 			} else {
-				$this->Alert->warning('general.notExists');
-				$event->stopPropagation();
-				return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
+
+				$ext = $this->request->params['_ext'];
+				if (in_array($ext, ['json', 'xml'])) {
+
+					// should do somethng here...
+					
+				} else {
+
+					$this->Alert->warning('general.notExists');
+					$event->stopPropagation();
+					return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
+
+				}
 			}
 		}
 	}
