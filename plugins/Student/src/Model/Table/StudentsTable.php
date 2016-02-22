@@ -53,7 +53,7 @@ class StudentsTable extends AppTable {
 		]);
 
 		$this->addBehavior('Excel', [
-			'excludes' => ['photo_name', 'is_student', 'is_staff', 'is_guardian'],
+			'excludes' => ['photo_name', 'is_student', 'is_staff', 'is_guardian', 'super_admin', 'date_of_death'],
 			'filename' => 'Students',
 			'pages' => ['view']
 		]);
@@ -321,5 +321,30 @@ class StudentsTable extends AppTable {
 		}
 		$params['dataSet'] = $dataSet;
 		return $params;
+	}
+
+	public function getAcademicTabElements($options = []) {
+		// $action = (array_key_exists('action', $options))? $options['action']: 'add';
+		$id = (array_key_exists('id', $options))? $options['id']: 0;
+
+		$tabElements = [];
+		$studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
+		$studentTabElements = [
+			'Programmes' => ['text' => __('Programmes')],
+			'Sections' => ['text' => __('Classes')],
+			'Classes' => ['text' => __('Subjects')],
+			'Absences' => ['text' => __('Absences')],
+			'Behaviours' => ['text' => __('Behaviours')],
+			'Results' => ['text' => __('Results')],
+			'Awards' => ['text' => __('Awards')],
+			'Extracurriculars' => ['text' => __('Extracurriculars')],
+		];
+
+		$tabElements = array_merge($tabElements, $studentTabElements);
+
+		foreach ($studentTabElements as $key => $tab) {
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
+		}
+		return $tabElements;
 	}
 }
