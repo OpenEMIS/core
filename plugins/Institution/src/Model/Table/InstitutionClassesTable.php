@@ -323,7 +323,7 @@ class InstitutionClassesTable extends AppTable {
 		$Sections = $this->InstitutionSections;
 
 		$institutionId = $this->institutionId;
-		$periodOption = ['' => '-- Select Period --'];
+		$periodOption = ['' => '-- ' . __('Select Period') .' --'];
 		$academicPeriodOptions = $this->AcademicPeriods->getlist(['isEditable'=>true]);
 		$academicPeriodOptions = $periodOption + $academicPeriodOptions;
 
@@ -443,7 +443,7 @@ class InstitutionClassesTable extends AppTable {
 				->contain(['Users'])
 				->where(['Staff.institution_id'=>$this->institutionId])
 				->toArray();
-		$teachers = [0=>'-- Select Teacher or Leave Blank --'];
+		$teachers = [0=>'-- ' . __('Select Teacher or Leave Blank') . ' --'];
 		foreach ($query as $key => $value) {
 			if ($value->has('user')) {
 				$teachers[$value->user->id] = $value->user->name;
