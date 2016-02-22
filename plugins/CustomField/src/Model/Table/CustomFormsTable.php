@@ -363,9 +363,6 @@ class CustomFormsTable extends AppTable {
 		$this->setupFields($entity);
 	}
 
-	public function addOnInitialize(Event $event, Entity $entity) {
-	}
-
 	public function editOnInitialize(Event $event, Entity $entity) {
 		$this->request->query['module'] = $entity->custom_module_id;
 		$this->request->query['apply_all'] = $this->getApplyToAll($entity);
@@ -379,7 +376,7 @@ class CustomFormsTable extends AppTable {
 
 		// Required by patchEntity for associated data
 		$newOptions = [];
-		$newOptions['associated'] = ['CustomFields._joinData'];
+		$newOptions['associated'] = ['CustomFilters', 'CustomFields._joinData'];
 
 		$arrayOptions = $options->getArrayCopy();
 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
