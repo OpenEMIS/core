@@ -17,6 +17,7 @@ class AreasTable extends AppTable {
 		$this->belongsTo('AreaLevels', ['className' => 'Area.AreaLevels', 'foreignKey' => 'area_level_id']);
 		$this->hasMany('Areas', ['className' => 'Area.Areas', 'foreignKey' => 'parent_id']);
 		$this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
+		$this->hasMany('SecurityGroupAreas', ['className' => 'Security.SecurityGroupAreas', 'foreignKey' => 'area_id']);
 		$this->addBehavior('Tree');
 		if ($this->behaviors()->has('Reorder')) {
 			$this->behaviors()->get('Reorder')->config([
