@@ -25,7 +25,18 @@ class StaffBehavioursTable extends AppTable {
 	}
 
 	public function onGetOpenemisNo(Event $event, Entity $entity) {
-		return $entity->staff->openemis_no;
+
+		if ($this->action == 'view') {
+			return $event->subject()->Html->link($entity->staff->openemis_no , [
+				'plugin' => 'Institution',
+				'controller' => 'Institutions',
+				'action' => 'StaffUser',
+				'view',
+				$entity->staff->id
+			]);
+		} else {
+			return $entity->staff->openemis_no;
+		}
 	}
 
 	public function beforeAction() {

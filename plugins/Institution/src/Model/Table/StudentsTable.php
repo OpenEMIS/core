@@ -47,14 +47,14 @@ class StudentsTable extends AppTable {
 			'number_of_students_by_year' => [
 				'_function' => 'getNumberOfStudentsByYear',
 				'chart' => ['type' => 'column', 'borderWidth' => 1],
-				'xAxis' => ['title' => ['text' => 'Years']],
-				'yAxis' => ['title' => ['text' => 'Total']]
+				'xAxis' => ['title' => ['text' => __('Years')]],
+				'yAxis' => ['title' => ['text' => __('Total')]]
 			],
 			'number_of_students_by_grade' => [
 				'_function' => 'getNumberOfStudentsByGrade',
 				'chart' => ['type' => 'column', 'borderWidth' => 1],
-				'xAxis' => ['title' => ['text' => 'Education']],
-				'yAxis' => ['title' => ['text' => 'Total']]
+				'xAxis' => ['title' => ['text' => __('Education')]],
+				'yAxis' => ['title' => ['text' => __('Total')]]
 			],
 			'institution_student_gender' => [
 				'_function' => 'getNumberOfStudentsByGender'
@@ -558,6 +558,16 @@ class StudentsTable extends AppTable {
 				'photo_content', 'openemis_no', 'student_id', 'student_status_id', 'reason', 'comment'
 			]);
 		}
+		$this->Session->write('Student.Students.id', $entity->student_id);
+		$this->Session->write('Student.Students.name', $entity->user->name);
+		$this->setupTabElements($entity);
+	}
+
+	private function setupTabElements($entity) {
+		$options['type'] = 'student';
+		$tabElements = TableRegistry::get('Student.Students')->getAcademicTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', 'Programmes');
 	}
 
 	public function onGetCustomStatusReasonElement(Event $event, $action, $entity, $attr, $options=[]) {
@@ -756,6 +766,10 @@ class StudentsTable extends AppTable {
 		$endDate = $period->end_date->copy();
 		$this->fields['start_date']['date_options'] = ['startDate' => $period->start_date->format('d-m-Y')];
 		$this->fields['end_date']['date_options'] = ['endDate' => $endDate->subDay()->format('d-m-Y')];
+
+		$this->Session->write('Student.Students.id', $entity->student_id);
+		$this->Session->write('Student.Students.name', $entity->user->name);
+		$this->setupTabElements($entity);
 	}
 
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
@@ -833,6 +847,9 @@ class StudentsTable extends AppTable {
 				->find('list')
 				->where([$conditions])
 				->toArray();
+			foreach ($options as $key => $value) {
+				$options[$key] = __($value);
+			}
 			$attr['options'] = $options;
 		}
 		return $attr;
@@ -947,7 +964,7 @@ class StudentsTable extends AppTable {
 
 		// Grade
 		$gradeOptions = [];
-		$sectionOptions = ['0' => __('-- Select Class --')];
+		$sectionOptions = ['0' => __('-- ' . __('Select Class') . ' --')];
 		$selectedSection = 0;
 
 		if ($selectedPeriod != 0) {
@@ -1330,7 +1347,7 @@ class StudentsTable extends AppTable {
 		}
 
 		$params['dataSet'] = $dataSet;
-		
+
 		return $params;
 	}
 
@@ -1404,7 +1421,8 @@ class StudentsTable extends AppTable {
 			$dataSet[$gradeGender]['data'][$gradeId] = $gradeTotal;
 		}
 
-		$params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
+		// $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
+		$params['options']['subtitle'] = array('text' => sprintf(__('For Year %s'), $currentYear));
 		$params['options']['xAxis']['categories'] = array_values($grades);
 		$params['dataSet'] = $dataSet;
 
