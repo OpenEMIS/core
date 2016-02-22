@@ -473,7 +473,8 @@ class DirectoriesTable extends AppTable {
 		}
 
 		// To make sure the navigation component has already read the set value
-		if ($isSet) {
+		$ext = $this->request->params['_ext'];
+		if ($isSet && !in_array($ext, ['json', 'xml'])) {
 			$reload = $this->Session->read('Directory.Directories.reload');
 			if (!isset($reload)) {
 				$urlParams = $this->ControllerAction->url('view');
