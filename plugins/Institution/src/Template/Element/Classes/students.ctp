@@ -95,7 +95,14 @@
 				<?php else:?>
 
 					<tr>
-						<td><?= $obj->_matchingData['Users']->openemis_no ?></td>
+						<td><?= $this->html->link($obj->_matchingData['Users']->openemis_no , [
+									'plugin' => 'Institution',
+									'controller' => 'Institutions',
+									'action' => 'StudentUser',
+									'view',
+									$obj->_matchingData['Users']->id 
+								]) ?>
+						</td>
 						<td><?= $obj->_matchingData['Users']->name ?></td>
 						<td><?= $obj->_matchingData['Genders']->name ?></td>
 						<td><?= __($obj->student_status) ?></td>
