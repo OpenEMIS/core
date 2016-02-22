@@ -31,6 +31,12 @@ class EducationProgrammesTable extends AppTable {
 			'through' => 'Education.EducationProgrammesNextProgrammes',
 			'dependent' => true,
 		]);
+
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+				'filter' => 'education_cycle_id',
+			]);
+		}
 	}
 
 	public function beforeAction(Event $event) {
@@ -148,12 +154,26 @@ class EducationProgrammesTable extends AppTable {
 				$systemId = $currentProgrammSystem->education_cycle->education_level->education_system->id;
 				$currentCycleOrder = $currentProgrammSystem->education_cycle->order;
 				$currentLevelOrder = $currentProgrammSystem->education_cycle->education_level->order;
+				$currentLevelId = $currentProgrammSystem->education_cycle->education_level->id;
 
 				$EducationSystems = TableRegistry::get('Education.EducationSystems');
 				$systems = $EducationSystems
 					->find()
 					->where([$EducationSystems->aliasField('id') => $systemId])
 					->contain(['EducationLevels.EducationCycles.EducationProgrammes']);
+
+				$educationProgrammesTable = clone $this;
+				$educationProgrammesTable->alias('EducationProgrammesClone');
+
+				$excludedProgrammes = $educationProgrammesTable->find()
+					->innerJoin(['EducationCycles' => 'education_cycles'], [
+						'EducationCycles.id = '.$educationProgrammesTable->aliasField('education_cycle_id')
+					])
+					->select(1)
+					->where([
+						'EducationCycles.order <= '.$currentCycleOrder, 
+						'EducationCycles.education_level_id = '.$currentLevelId
+					]);
 
 				$nextProgrammeOptions = $EducationSystems
 					->find('list', [
@@ -167,8 +187,12 @@ class EducationProgrammesTable extends AppTable {
 							'EducationProgrammes.name' => 'literal', 
 							')'
 						]), 'programme_id' => 'EducationProgrammes.id'])
-					->where([$EducationSystems->aliasField('id') => $systemId, 'EducationCycles.order > ' => $currentCycleOrder])
-					->toArray();		
+					->where([
+						$EducationSystems->aliasField('id') => $systemId, 
+						'EducationLevels.order >= ' => $currentLevelOrder,
+						'NOT EXISTS('.$excludedProgrammes->where([$educationProgrammesTable->aliasField('id').' = '.'EducationProgrammes.id']).')'
+					])
+					->toArray();
 
 				$tableHeaders = [__('Cycle - (Programme)'), '', ''];
 				$tableCells = [];
