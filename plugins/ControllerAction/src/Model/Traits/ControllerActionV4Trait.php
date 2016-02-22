@@ -29,9 +29,21 @@ trait ControllerActionV4Trait {
 	private function _render($model) {
 		$ext = $this->controller->request->params['_ext'];
 		if (in_array($ext, ['json', 'xml'])) {
-			
-			$this->controller->set('_serialize', ['data']);    
-			$this->controller->render($this->templatePath . $ext);
+
+			if (array_key_exists('paging', $this->request->params)) {
+				$this->controller->set('paging', $this->request->params['paging'][$model->alias()]);
+			}
+			$this->controller->set('format', $ext);
+			$data = $this->controller->viewVars['data'];
+			foreach ($data as $key => $value) {
+				foreach ($value->visibleProperties() as $property) {
+					if (is_resource($value->$property)) {
+						$value->$property = base64_encode("data:image/jpeg;base64,".stream_get_contents($value->$property));						
+					}
+				}
+			}
+			$this->controller->set('query', $this->request->query);
+			$this->controller->set('_serialize', ['data', 'paging', 'format', 'query']);
 		
 		} else {
 
