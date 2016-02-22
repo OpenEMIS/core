@@ -75,33 +75,35 @@ class RecordBehavior extends Behavior {
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
-		$query->contain(['CustomFieldValues.CustomFields', 'CustomTableCells']);
+		// do not contain CustomFieldValues
+		$query->contain(['CustomTableCells']);
 	}
 
 	public function editAfterQuery(Event $event, Entity $entity) {
-		$this->formatEntity($entity);
+		// keep custom_field_values in entity as empty for display validation errors correctly to work
+		$entity->custom_field_values = [];
 	}
 
     public function viewAfterAction(Event $event, Entity $entity) {
-    	// add here to make view has the same format in edit
-    	$this->formatEntity($entity);
     	$this->setupCustomFields($entity);
     }
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
     	$alias = $this->_table->alias();
-		$values = $data[$alias]['custom_field_values'];
-		$fieldValues = $this->_table->array_column($values, $this->config('fieldKey'));
+    	if (array_key_exists('custom_field_values', $data[$alias])) {
+			$values = $data[$alias]['custom_field_values'];
+			$fieldValues = $this->_table->array_column($values, $this->config('fieldKey'));
 
-		$CustomFields = TableRegistry::get($this->config('fieldClass.className'));
-		$fields = $CustomFields->find()->where(['id IN' => $fieldValues])->all();
+			$CustomFields = TableRegistry::get($this->config('fieldClass.className'));
+			$fields = $CustomFields->find()->where(['id IN' => $fieldValues])->all();
 
-		foreach ($values as $key => $attr) {
-			foreach ($fields as $f) {
-				if ($f->id == $attr[$this->config('fieldKey')]) {
-					$data[$alias]['custom_field_values'][$key]['field_type'] = $f->field_type;
-					$data[$alias]['custom_field_values'][$key]['mandatory'] = $f->is_mandatory;
-					$data[$alias]['custom_field_values'][$key]['unique'] = $f->is_unique;
+			foreach ($values as $key => $attr) {
+				foreach ($fields as $f) {
+					if ($f->id == $attr[$this->config('fieldKey')]) {
+						$data[$alias]['custom_field_values'][$key]['field_type'] = $f->field_type;
+						$data[$alias]['custom_field_values'][$key]['mandatory'] = $f->is_mandatory;
+						$data[$alias]['custom_field_values'][$key]['unique'] = $f->is_unique;
+					}
 				}
 			}
 		}
@@ -295,22 +297,22 @@ class RecordBehavior extends Behavior {
 				->find('all')
 				->find('order')
 				->contain([
-					'CustomFields.CustomFieldOptions' => function($q) {
-						return $q
-							->find('visible')
-							->find('order');
-					},
-					'CustomFields.CustomTableColumns' => function ($q) {
-				       return $q
-				       		->find('visible')
-				       		->find('order');
-				    },
-					'CustomFields.CustomTableRows' => function ($q) {
-				       return $q
-				       		->find('visible')
-				       		->find('order');
-				    }
-				])
+						'CustomFields.CustomFieldOptions' => function($q) {
+							return $q
+								->find('visible')
+								->find('order');
+						},
+						'CustomFields.CustomTableColumns' => function ($q) {
+					       return $q
+					       		->find('visible')
+					       		->find('order');
+					    },
+						'CustomFields.CustomTableRows' => function ($q) {
+					       return $q
+					       		->find('visible')
+					       		->find('order');
+					    }
+					])
 				->where([
 					$CustomFormsFields->aliasField($this->config('formKey') . ' IN') => $customFormIds
 				])
@@ -320,62 +322,6 @@ class RecordBehavior extends Behavior {
 		}
 
 		return $query;
-	}
-
-	public function formatEntity(Entity $entity) {
-		$values = [];
-		if ($entity->has('custom_field_values')) {
-			foreach ($entity->custom_field_values as $key => $obj) {
-				$fieldId = $obj->{$this->config('fieldKey')};
-				$customField = $obj->custom_field;
-
-				if ($customField->field_type == 'CHECKBOX') {
-					$checkboxValues = [$obj['number_value']];
-					if (array_key_exists($fieldId, $values)) {
-						$checkboxValues = array_merge($checkboxValues, $values[$fieldId]['number_value']);
-					}
-					$obj['number_value'] = $checkboxValues;
-				}
-				$values[$fieldId] = $obj;
-			}
-		}
-
-		$query = $this->getCustomFieldQuery($entity);
-
-    	$fieldValues = [];	// values of custom field must be in sequence for validation errors to be placed correctly
-    	$extraFieldValues = [];	// to hold result for more checkbox values
-    	if (!is_null($query)) {
-			$customFields = $query->toArray();
-
-			$CustomFieldValues = $this->_table->CustomFieldValues;
-			foreach ($customFields as $key => $obj) {
-				$customField = $obj->custom_field;
-
-				// only apply for field type store in custom_field_values
-				if (in_array($customField->field_type, $this->fieldValueArray)) {
-					$fieldId = $customField->id;
-					
-					if (array_key_exists($fieldId, $values)) {
-						$fieldValues[] = $values[$fieldId];
-					} else {
-						$valueData = [
-							'text_value' => null,
-							'number_value' => null,
-							'textarea_value' => null,
-							'date_value' => null,
-							'time_value' => null,
-							$this->config('fieldKey') => $fieldId,
-							$this->config('recordKey') => $entity->id,
-							'custom_field' => null // to-do
-						];
-						$valueEntity = $CustomFieldValues->newEntity($valueData, ['validate' => false]);
-						$fieldValues[] = $valueEntity;
-					}
-				}
-			}
-		}
-
-		$entity->custom_field_values = $fieldValues;
 	}
 
 	public function setupCustomFields(Entity $entity) {
@@ -404,24 +350,43 @@ class RecordBehavior extends Behavior {
 				$tableRowKey = $this->config('tableRowKey');
 				$tableColumnKey = $this->config('tableColumnKey');
 
-				if ($entity->has('custom_field_values')) {
-					foreach ($entity->custom_field_values as $key => $obj) {
-						if (isset($obj->id)) {
-							$fieldId = $obj->{$fieldKey};
-							$fieldData = ['id' => $obj->id];
-							if ($model->request->is(['get'])) {
-								// onGet
-								$fieldData['text_value'] = $obj->text_value;
-								$fieldData['number_value'] = $obj->number_value;
-								$fieldData['textarea_value'] = $obj->textarea_value;
-								$fieldData['date_value'] = $obj->date_value;
-								$fieldData['time_value'] = $obj->time_value;
-							} else if ($model->request->is(['post', 'put'])) {
-					        	// onPost
-					        }
-					        $values[$fieldId] = $fieldData;
+				if ($model->request->is(['get'])) {
+					// onGet
+					$id = $entity->id;
+					$primaryKey = $model->primaryKey();
+					$idKey = $model->aliasField($primaryKey);
+					if ($model->exists([$idKey => $id])) {
+						$recordQuery = $model->find()->where([$idKey => $id]);
+						$recordQuery->contain(['CustomFieldValues.CustomFields']);
+						$recordEntity = $recordQuery->first();
+
+						if ($recordEntity->has('custom_field_values')) {
+							foreach ($recordEntity->custom_field_values as $key => $obj) {
+								$fieldId = $obj->{$this->config('fieldKey')};
+								$customField = $obj->custom_field;
+
+								if ($customField->field_type == 'CHECKBOX') {
+									$checkboxValues = [$obj['number_value']];
+									if (array_key_exists($fieldId, $values)) {
+										$checkboxValues = array_merge($checkboxValues, $values[$fieldId]['number_value']);
+									}
+									$obj['number_value'] = $checkboxValues;
+								}
+
+								$fieldData = [
+									'id' => $obj->id,
+									'text_value' => $obj->text_value,
+									'number_value' => $obj->number_value,
+									'textarea_value' => $obj->textarea_value,
+									'date_value' => $obj->date_value,
+									'time_value' => $obj->time_value
+								];
+								$values[$fieldId] = $fieldData;
+							}
 						}
 					}
+				} else if ($model->request->is(['post', 'put'])) {
+					// onPost
 				}
 
 				if ($entity->has('custom_table_cells')) {
