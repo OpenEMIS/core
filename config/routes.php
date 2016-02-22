@@ -71,6 +71,8 @@ Router::scope('/', function ($routes) {
      * routes you want in your application.
      */
     $routes->fallbacks('Route');
+
+    Router::extensions(['json', 'xml']);
 });
 
 /**
