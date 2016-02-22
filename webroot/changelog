@@ -1,3 +1,7 @@
+v3.4.15
+- Fixed a bug that caused loading animation to appear on the wrong position
+- Fixed a bug that display wrong validation message when importing students to schools
+
 v3.4.14
 - Users can now import trainees to Training Sessions using excel spreadsheet
 - Fixed a bug that caused Staff Career tabs not navigating to the correct page
