@@ -139,6 +139,8 @@ class StudentUserTable extends UserTable {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
+		$this->Session->write('Student.Students.id', $entity->id);
+		$this->Session->write('Student.Students.name', $entity->name);
 		$this->setupTabElements($entity);
 	}
 
@@ -293,9 +295,30 @@ class StudentUserTable extends UserTable {
 			unset($toolbarButtons['back']);
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$id = $this->request->query('id');
+
+			if (empty($id)) {
+				// if no url param found... query the database to find the latest one
+				// for catering redirections that do not contain institution_student_id url param - POCOR-2511
+				$securityUserId = $this->request->pass[1];
+				$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+				$institutionStudentRecord = $InstitutionStudentsTable->find()
+					->select([$InstitutionStudentsTable->aliasField('id')])
+					->where([
+						$InstitutionStudentsTable->aliasField('student_id') => $securityUserId,
+						$InstitutionStudentsTable->aliasField('institution_id') => $institutionId
+					])
+					->order($InstitutionStudentsTable->aliasField('end_date').' DESC')
+					->first()
+					;
+				$institutionStudentRecord = (!empty($institutionStudentRecord))? $institutionStudentRecord->toArray(): null;
+				$institutionStudentId = (!empty($institutionStudentRecord))? $institutionStudentRecord['id']: null;
+				$id = $institutionStudentId;
+			}
+
 			if (!empty($id)) {
 				$this->Session->write('Institution.Students.id', $id);
-			}
+			} 
+
 			$id = $this->Session->read('Institution.Students.id');
 			$StudentTable = TableRegistry::get('Institution.Students');
 			$studentId = $StudentTable->get($id)->student_id;
