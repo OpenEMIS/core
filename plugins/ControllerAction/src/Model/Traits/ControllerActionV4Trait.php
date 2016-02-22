@@ -27,30 +27,40 @@ trait ControllerActionV4Trait {
 	}
 
 	private function _render($model) {
-		list($plugin, $alias) = pluginSplit($model->registryAlias());
+		$ext = $this->controller->request->params['_ext'];
+		if (in_array($ext, ['json', 'xml'])) {
+			
+			$this->controller->set('_serialize', ['data']);    
+			$this->controller->render($this->templatePath . $ext);
 		
-		if (empty($plugin)) {
-			$path = APP . 'Template' . DS . $this->controller->name . DS;
 		} else {
-			$path = ROOT . DS . 'plugins' . DS . $plugin . DS . 'src' . DS . 'Template' . DS;
-		}
-		$ctp = $this->ctpFolder . DS . $model->action;
 
-		if (file_exists($path . DS . $ctp . '.ctp')) {
-			if ($this->autoRender) {
-				$this->autoRender = false;
-				$this->controller->render($ctp);
+			list($plugin, $alias) = pluginSplit($model->registryAlias());
+			
+			if (empty($plugin)) {
+				$path = APP . 'Template' . DS . $this->controller->name . DS;
+			} else {
+				$path = ROOT . DS . 'plugins' . DS . $plugin . DS . 'src' . DS . 'Template' . DS;
 			}
-		} else {
-			if ($this->autoRender) {
-				if (empty($this->view)) {
-					$view = $model->action == 'add' ? 'edit' : $model->action;
-					// $this->controller->render($this->templatePath . $view);
-					$this->controller->render($this->templatePath . 'template');
-				} else {
-					$this->controller->render($this->view);
+			$ctp = $this->ctpFolder . DS . $model->action;
+
+			if (file_exists($path . DS . $ctp . '.ctp')) {
+				if ($this->autoRender) {
+					$this->autoRender = false;
+					$this->controller->render($ctp);
+				}
+			} else {
+				if ($this->autoRender) {
+					if (empty($this->view)) {
+						$view = $model->action == 'add' ? 'edit' : $model->action;
+						// $this->controller->render($this->templatePath . $view);
+						$this->controller->render($this->templatePath . 'template');
+					} else {
+						$this->controller->render($this->view);
+					}
 				}
 			}
+
 		}
 	}
 
