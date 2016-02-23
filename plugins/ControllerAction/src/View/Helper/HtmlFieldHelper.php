@@ -48,6 +48,16 @@ class HtmlFieldHelper extends Helper {
 		return $this->_View->element($element, $attr);
 	}
 
+	public function viewSet($element, $attr) {
+		if (!is_null($this->_View->get('datepicker'))) {
+			$datepickers = $this->_View->get('datepicker');
+			$datepickers[] = $attr;
+			$this->_View->set('datepicker', $datepickers);
+		} else {
+			$this->_View->set('datepicker', [$attr]);
+		}
+	}
+
 	public function dispatchEvent($subject, $eventKey, $method=null, $params=[]) {
 		$eventMap = $subject->implementedEvents();
 		$event = new Event($eventKey, $this, $params);

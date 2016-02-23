@@ -27,20 +27,28 @@ use Cake\I18n\Time;
 
 class DatePickerBehavior extends Behavior {
 	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
-		$format = 'Y-m-d';
 		foreach ($this->config() as $field) {
 			if (!empty($data[$field])) {
 				if (!$data[$field] instanceof Time) {
-					// to handle both d-m-y and d-m-Y because datepicker and cake doesnt validate
-					$dateObj = date_create_from_format("d-m-Y",$data[$field]);
-					if ($dateObj === false) {
-						$dateObj = date_create_from_format("d-m-y",$data[$field]);
-					}
-					if ($dateObj !== false) {
-						$data[$field] = $dateObj->format($format);
-					}
+					$convertedDate = $this->convertForDatePicker($data[$field]);
+					$data[$field] = (!empty($convertedDate))? $convertedDate: $data[$field];
 				}
 			}
+		}
+	}
+
+	public function convertForDatePicker($data) {
+		$format = 'Y-m-d';
+		// to handle both d-m-y and d-m-Y because datepicker and cake doesnt validate
+		$dateObj = date_create_from_format("d-m-Y",$data);
+		if ($dateObj === false) {
+			$dateObj = date_create_from_format("d-m-y",$data);
+		}
+		if ($dateObj !== false) {
+			return $dateObj->format($format);
+		} else {
+			// failure
+			return null;
 		}
 	}
 }

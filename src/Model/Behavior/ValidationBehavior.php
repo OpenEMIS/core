@@ -922,4 +922,19 @@ class ValidationBehavior extends Behavior {
 	public static function checkNoSpaces($field, array $globalData) {
 		return !strrpos($field," ");
 	}
+
+	public static function checkDateRange($field, array $globalData) {
+		$model = $globalData['providers']['table'];
+		$params = (!empty($globalData['data']['params']))? json_decode($globalData['data']['params'],true): [];
+
+		if (array_key_exists('range_start', $params) && array_key_exists('range_end', $params)) {
+			return (strtotime($field) < strtotime($params['range_start']) || strtotime($field) > strtotime($params['range_end']))? $model->getMessage('CustomField.date.between', ['sprintf' => [$params['range_start'], $params['range_end']]]): true;
+		} else if (array_key_exists('range_start', $params)) {
+			return (strtotime($field) <= strtotime($params['range_start']))? $model->getMessage('CustomField.date.earlier', ['sprintf' => [$params['range_start']]]): true;
+		} else if (array_key_exists('range_end', $params)) {
+			return (strtotime($field) >= strtotime($params['range_end']))? $model->getMessage('CustomField.date.later', ['sprintf' => [$params['range_end']]]): true;
+		} else {
+			return true;
+		}
+	}
 }
