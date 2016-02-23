@@ -113,6 +113,12 @@ class DirectoriesController extends AppController {
 	}
 
 	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
+		$UserTable = TableRegistry::get('Directory.Directories');
+		$ext = $this->request->params['_ext'];
+		$query = $this->request->query;
+		if (in_array($ext, ['json', 'xml']) && array_key_exists('user_id', $query) && !empty($query['user_id'])) {
+			$UserTable->cacheSecurityUser($query['user_id'], $model);
+		}
 		/**
 		 * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
 		 */
@@ -205,18 +211,16 @@ class DirectoriesController extends AppController {
 				$this->set('contentHeader', $header);
 			} else {
 
-				// $ext = $this->request->params['_ext'];
-				// if (in_array($ext, ['json', 'xml'])) {
-
-				// 	// should do somethng here...
-					
-				// } else {
+				if (in_array($ext, ['json', 'xml'])) {
+					return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'index', '_ext'=>$ext]);					
+				} else {
 
 					$this->Alert->warning('general.notExists');
 					$event->stopPropagation();
 					return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'index']);
 
-				// }
+				}
+
 			}
 		}
 	}
