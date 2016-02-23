@@ -521,14 +521,15 @@ class DirectoriesTable extends AppTable {
 				$InstitutionStudentTable->aliasField('created').' END) DESC'])
 				->first();
 
+			$value = '';
+			$name = '';
 			if (!empty($studentInstitutions)) {
 				$value = $studentInstitutions->student_status_name;
-			} else {
-				$value = '';
+				$name = $studentInstitutions->name;
 			}
 			$entity->student_status_name = $value;
-
-			return $studentInstitutions->name;
+			
+			return $name;
 		}
 
 		$staffInstitutions = [];
