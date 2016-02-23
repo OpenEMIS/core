@@ -10,6 +10,11 @@ class EducationFieldOfStudiesTable extends AppTable {
 		$this->addBehavior('Education.Setup');
 		$this->belongsTo('ProgrammeOrientations', ['className' => 'Education.EducationProgrammeOrientations', 'foreignKey' => 'education_programme_orientation_id']);
 		$this->hasMany('EducationProgrammes', ['className' => 'Education.EducationProgrammes', 'cascadeCallbacks' => true]);
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+				'filter' => 'education_programme_orientation_id',
+			]);
+		}
 	}
 
 	public function addEditBeforeAction(Event $event) {
