@@ -42,7 +42,7 @@ class RecordBehavior extends Behavior {
 	];
 
 	// value for these field types will be saved on custom_field_values
-	private $fieldValueArray = ['TEXT', 'NUMBER', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX'];
+	private $fieldValueArray = ['TEXT', 'NUMBER', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'DATE'];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -58,7 +58,7 @@ class RecordBehavior extends Behavior {
 		$this->_table->addBehavior('CustomField.RenderDropdown');
 		$this->_table->addBehavior('CustomField.RenderCheckbox');
 		$this->_table->addBehavior('CustomField.RenderTable');
-		// $this->_table->addBehavior('CustomField.RenderDate');
+		$this->_table->addBehavior('CustomField.RenderDate');
 		// $this->_table->addBehavior('CustomField.RenderTime');
 		// $this->_table->addBehavior('CustomField.RenderStudentList');
 
@@ -102,6 +102,7 @@ class RecordBehavior extends Behavior {
 					$data[$alias]['custom_field_values'][$key]['field_type'] = $f->field_type;
 					$data[$alias]['custom_field_values'][$key]['mandatory'] = $f->is_mandatory;
 					$data[$alias]['custom_field_values'][$key]['unique'] = $f->is_unique;
+					$data[$alias]['custom_field_values'][$key]['params'] = $f->params;
 				}
 			}
 		}

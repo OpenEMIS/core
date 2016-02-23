@@ -999,9 +999,19 @@ trait MessagesTrait {
 				'reportName' => 'Students Out of School'
 			]
 		],
+		'CustomField' => [
+			'date' => [
+				'earlier' => 'Date should be earlier than %s',
+				'later' => 'Date shoud be later than %s',
+				'between' => 'Date should be between %s and %s (inclusive)'
+			]
+		],
+
 	];
 
-	public function getMessage($code) {
+	public function getMessage($code, $options = []) {
+		$sprintf = (array_key_exists('sprintf', $options))? $options['sprintf']: [];
+
 		$index = explode('.', $code);
 		$message = $this->messages;
 		foreach ($index as $i) {
@@ -1017,6 +1027,6 @@ trait MessagesTrait {
 				}
 			}
 		}
-		return !is_array($message) ? __($message) : $message;
+		return !is_array($message) ? vsprintf(__($message), $sprintf) : $message;
 	}
 }
