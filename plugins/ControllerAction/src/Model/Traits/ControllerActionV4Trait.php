@@ -43,7 +43,8 @@ trait ControllerActionV4Trait {
 				}
 			}
 			$this->controller->set('query', $this->request->query);
-			$this->controller->set('_serialize', ['data', 'paging', 'format', 'query']);
+			// $this->controller->set('_serialize', ['data', 'paging', 'format', 'query', '_navigations']);
+			$this->controller->set('_serialize', ['data', 'paging', 'query']);
 		
 		} else {
 
