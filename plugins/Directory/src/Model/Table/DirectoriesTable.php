@@ -444,6 +444,40 @@ class DirectoriesTable extends AppTable {
 		$this->setupTabElements($entity);
 	}
 
+	public function cacheSecurityUser($userId, $model) {
+		if ($this->exists([$this->primaryKey() => $userId])) {
+			$entity = $this->get($userId);
+			$model->Session->write('Directory.Directories.id', $entity->id);
+			$model->Session->write('Directory.Directories.name', $entity->name);
+			if (!$model->AccessControl->isAdmin()) {
+				$institutionIds = $model->AccessControl->getInstitutionsByUser();
+				$model->Session->write('AccessControl.Institutions.ids', $institutionIds);
+			}
+			$model->Session->delete('Directory.Directories.is_student');
+			$model->Session->delete('Directory.Directories.is_staff');
+			$model->Session->delete('Directory.Directories.is_guardian');
+			if ($entity->is_student) {
+				$model->Session->write('Directory.Directories.is_student', true);
+				$model->Session->write('Student.Students.id', $entity->id);
+				$model->Session->write('Student.Students.name', $entity->name);
+			}
+
+			if ($entity->is_staff) {
+				$model->Session->write('Directory.Directories.is_staff', true);
+				$model->Session->write('Staff.Staff.id', $entity->id);
+				$model->Session->write('Staff.Staff.name', $entity->name);
+			}
+			return true;
+		} else {
+			$model->Session->delete('Directory.Directories');
+			$model->Session->delete('Staff.Staff.id');
+			$model->Session->delete('Staff.Staff.name');
+			$model->Session->delete('Student.Students.id');
+			$model->Session->delete('Student.Students.name');
+			return false;
+		}
+	}
+
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$this->Session->write('Directory.Directories.id', $entity->id);
 		$this->Session->write('Directory.Directories.name', $entity->name);
