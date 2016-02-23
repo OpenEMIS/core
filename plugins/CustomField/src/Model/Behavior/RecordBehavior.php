@@ -53,6 +53,7 @@ class RecordBehavior extends Behavior {
 	// Use for excel only
 	private $_fieldValues = [];
 	private $_customFieldOptions = [];
+	private $_tableCellValues = [];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -401,6 +402,7 @@ class RecordBehavior extends Behavior {
 		$recordId = $settings['id'];
     	$entity = $this->_table->get($recordId);
 
+    	$tableCustomFieldIds = [];
 		$customFields = $this->getCustomFieldQuery($entity)->toArray();
 		foreach ($customFields as $customField) {
 			$_customField = $customField->custom_field;
@@ -408,19 +410,76 @@ class RecordBehavior extends Behavior {
 			$_id = $_customField->id;
 			$_name = $_customField->name;
 
-			$field['key'] = 'CustomField';
-			$field['field'] = 'custom_field';
-			$field['type'] = 'custom_field';
-			$field['label'] = $_name;
-			$field['customField'] = ['id' => $_id, 'field_type' => $_field_type];
-			$fields[] = $field;
+			if ($_field_type != 'TABLE') {
+				$field['key'] = 'CustomField';
+				$field['field'] = 'custom_field';
+				$field['type'] = 'custom_field';
+				$field['label'] = $_name;
+				$field['customField'] = ['id' => $_id, 'field_type' => $_field_type];
+				$fields[] = $field;
+			} else {
+				$tableCustomFieldIds[] = $_id;
+				$tableRow = $_customField->custom_table_rows;
+				$tableCol = $_customField->custom_table_columns;
+				$row = [];
+				foreach ($tableRow as $r) {
+					$row[$r['order']] = $r;
+				}
+				ksort($row);
+				$row = array_values($row);
+				$col = [];
+				foreach ($tableCol as $c) {
+					$col[$c['order']] = $c;
+				}
+				ksort($col);
+				$col = array_values($col);
+
+				if (sizeof($row) !=0 && sizeof($col) !=0 ) {
+					for($i = 1; $i < sizeof($col); $i++) {
+						foreach ($row as $rw) {
+							$field['key'] = 'CustomField';
+							$field['field'] = 'custom_field';
+							$field['type'] = 'custom_field';
+							$field['label'] = $_name . ' ('.$col[$i]['name'].', '.$rw['name'].')';
+							$field['customField'] = ['id' => $_id, 'field_type' => $_field_type, 'col_id' => $col[$i]['id'], 'row_id' => $rw['id']];
+							$fields[] = $field;
+						}
+					}
+				}
+			}
 		}
 
 		// Set the available options for dropdown and checkbox type
 		$this->_customFieldOptions = $settings['sheet']['customFieldOptions'];
 
+		// Set the fetched table cell values to avoid multiple call to the database
+		$tableCellValues = $this->getTableCellValues($tableCustomFieldIds, $entity->id);
+
 		// Set the fetched field values to avoid multiple call to the database
-		$this->_fieldValues = $this->getFieldValue($entity->id);
+		$fieldValues = $this->getFieldValue($entity->id) + $tableCellValues;
+		ksort($fieldValues);
+		$this->_fieldValues = $fieldValues;
+	}
+
+	private function getTableCellValues($tableCustomFieldIds, $recordId) {
+		if (!empty($tableCustomFieldIds)) {
+			$TableCellTable = $this->CustomTableCells;
+			$customFieldsForeignKey = $TableCellTable->CustomFields->foreignKey();
+			$customRecordsForeignKey = $TableCellTable->CustomRecords->foreignKey();
+			$customColumnForeignKey = $TableCellTable->CustomTableColumns->foreignKey();
+			$customRowForeignKey = $TableCellTable->CustomTableRows->foreignKey();
+			$tableCellData = new ArrayObject();
+			$TableCellTable
+					->find()
+					->where([$TableCellTable->aliasField($customFieldsForeignKey).' IN ' => $tableCustomFieldIds, $TableCellTable->aliasField($customRecordsForeignKey) => $recordId])
+				    ->map(function ($row) use ($tableCellData, $customFieldsForeignKey, $customColumnForeignKey, $customRowForeignKey) {
+				        $tableCellData[$row[$customFieldsForeignKey]][$row[$customColumnForeignKey]][$row[$customRowForeignKey]] = $row['text_value'];
+				        return $row;
+				    })
+				    ->toArray();
+			$tableCellData = $tableCellData->getArrayCopy();
+			return $tableCellData;
+		}
 	}
 
 	// Model.excel.onExcelRenderCustomField
@@ -429,7 +488,7 @@ class RecordBehavior extends Behavior {
 			$answer = '';
 			$type = strtolower($attr['customField']['field_type']);
 			if (method_exists($this, $type)) {
-				$ans = $this->$type($this->_fieldValues, $attr['customField']['id'], $this->_customFieldOptions);
+				$ans = $this->$type($this->_fieldValues, $attr['customField'], $this->_customFieldOptions);
 				if (!(is_null($ans))) {
 					$answer = $ans;
 				}
@@ -628,34 +687,34 @@ class RecordBehavior extends Behavior {
 		}
 	}
 	
-	private function text($data, $fieldId, $options=[]) {
-		if (isset($data[$fieldId])) {
-			return $data[$fieldId];
+	private function text($data, $fieldInfo, $options=[]) {
+		if (isset($data[$fieldInfo['id']])) {
+			return $data[$fieldInfo['id']];
 		} else {
 			return '';
 		}
 	}
 
-	private function number($data, $fieldId, $options=[]) {
-		if (isset($data[$fieldId])) {
-			return $data[$fieldId];
+	private function number($data, $fieldInfo, $options=[]) {
+		if (isset($data[$fieldInfo['id']])) {
+			return $data[$fieldInfo['id']];
 		} else {
 			return '';
 		}
 	}
 	
-	private function textarea($data, $fieldId, $options=[]) {
-		if (isset($data[$fieldId])) {
-			return $data[$fieldId];
+	private function textarea($data, $fieldInfo, $options=[]) {
+		if (isset($data[$fieldInfo['id']])) {
+			return $data[$fieldInfo['id']];
 		} else {
 			return '';
 		}
 	}
 
-	private function dropdown($data, $fieldId, $options=[]) {
-		if (isset($data[$fieldId])) {
-			if (isset($options[$data[$fieldId]])) {
-				return $options[$data[$fieldId]];
+	private function dropdown($data, $fieldInfo, $options=[]) {
+		if (isset($data[$fieldInfo['id']])) {
+			if (isset($options[$data[$fieldInfo['id']]])) {
+				return $options[$data[$fieldInfo['id']]];
 			} else {
 				return '';
 			}
@@ -664,9 +723,9 @@ class RecordBehavior extends Behavior {
 		}
 	}
 	
-	private function checkbox($data, $fieldId, $options=[]) {
-		if (isset($data[$fieldId])) {
-			$values = explode(",", $data[$fieldId]);
+	private function checkbox($data, $fieldInfo, $options=[]) {
+		if (isset($data[$fieldInfo['id']])) {
+			$values = explode(",", $data[$fieldInfo['id']]);
 			$returnValue = '';
 			foreach ($values as $value) {
 				if (isset($options[$value])) {
@@ -683,29 +742,35 @@ class RecordBehavior extends Behavior {
 		}
 	}
 
-	private function date($data, $fieldId, $options=[]) {
-		if (isset($data[$fieldId])) {
-			$date = date_create_from_format('Y-m-d', $data[$fieldId]);
+	private function date($data, $fieldInfo, $options=[]) {
+		if (isset($data[$fieldInfo['id']])) {
+			$date = date_create_from_format('Y-m-d', $data[$fieldInfo['id']]);
 			return $this->_table->formatDate($date);
 		} else {
 			return '';
 		}
 	}
 
-	private function time($data, $fieldId, $options=[]) {
-		if (isset($data[$fieldId])) {
-			$time = date_create_from_format('G:i:s', $data[$fieldId]);
+	private function time($data, $fieldInfo, $options=[]) {
+		if (isset($data[$fieldInfo['id']])) {
+			$time = date_create_from_format('G:i:s', $data[$fieldInfo['id']]);
 			return $this->_table->formatTime($date);
 		} else {
 			return '';
 		}
 	}
 
-	private function student_list($data, $fieldId, $options=[]) {
+	private function student_list($data, $fieldInfo, $options=[]) {
 		return null;
 	}
 
-	private function table($data, $fieldId, $options=[]) {
-		return null;
+	private function table($data, $fieldInfo, $options=[]) {
+		$id = $fieldInfo['id'];
+		$colId = $fieldInfo['col_id'];
+		$rowId = $fieldInfo['row_id'];
+		if (isset($data[$id][$colId][$rowId])) {
+			return $data[$id][$colId][$rowId];
+		}
+		return '';
 	}
 }
