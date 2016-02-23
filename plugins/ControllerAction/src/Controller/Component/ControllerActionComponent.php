@@ -557,7 +557,7 @@ class ControllerActionComponent extends Component {
 	public function render() {
 		$ext = $this->request->params['_ext'];
 		if (in_array($ext, ['json', 'xml'])) {
-			
+
 			if (array_key_exists('paging', $this->request->params)) {
 				$this->controller->set('paging', $this->request->params['paging'][$this->model->alias()]);
 			}
@@ -571,7 +571,8 @@ class ControllerActionComponent extends Component {
 				}
 			}
 			$this->controller->set('query', $this->request->query);
-			$this->controller->set('_serialize', ['data', 'paging', 'format', 'query']);
+			// $this->controller->set('_serialize', ['data', 'paging', 'format', 'query', '_navigations']);
+			$this->controller->set('_serialize', ['data', 'paging', 'query']);
 		
 		} else {
 
