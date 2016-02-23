@@ -35,10 +35,18 @@ trait ControllerActionV4Trait {
 			}
 			$this->controller->set('format', $ext);
 			$data = $this->controller->viewVars['data'];
-			foreach ($data as $key => $value) {
-				foreach ($value->visibleProperties() as $property) {
-					if (is_resource($value->$property)) {
-						$value->$property = base64_encode("data:image/jpeg;base64,".stream_get_contents($value->$property));						
+			if (!($data instanceof \Cake\Network\Response) && !($data instanceof \Cake\ORM\ResultSet)) {
+				foreach ($data->visibleProperties() as $property) {
+					if (is_resource($data->$property)) {
+						$data->$property = base64_encode("data:image/jpeg;base64,".stream_get_contents($data->$property));						
+					}
+				}
+			} else {
+				foreach ($data as $key => $value) {
+					foreach ($value->visibleProperties() as $property) {
+						if (is_resource($value->$property)) {
+							$value->$property = base64_encode("data:image/jpeg;base64,".stream_get_contents($value->$property));						
+						}
 					}
 				}
 			}
