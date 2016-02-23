@@ -181,7 +181,7 @@ BEGIN
     DEALLOCATE PREPARE insertBackupRecord;
     
     SET @rank = 0;
-    SET @updateRecord = CONCAT('UPDATE `', tblName,'` SET `order`=@rank:=@rank+1');
+    SET @updateRecord = CONCAT('UPDATE `', tblName,'` SET `order`=@rank:=@rank+1  ORDER BY `order`');
 	PREPARE updateRecord FROM @updateRecord;
 	EXECUTE updateRecord;
     DEALLOCATE PREPARE updateRecord;
