@@ -102,7 +102,6 @@ BEGIN
 			'area_administratives',
 			'areas',
 			'assessment_grading_options',
-			'assessments',
 			'bank_branches',
 			'config_item_options',
 			'contact_types',
@@ -208,10 +207,6 @@ CALL patchOrder('areas', 'parent_id');
 -- assessment_grading_options
 CALL tmpRefTable('assessment_grading_types');
 CALL patchOrder('assessment_grading_options', 'assessment_grading_type_id');
-
--- assessments
-CALL tmpRefTable('education_grades');
-CALL patchOrder('assessments', 'education_grade_id');
 
 -- bank_branches
 CALL tmpRefTable('banks');

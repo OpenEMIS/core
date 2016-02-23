@@ -27,11 +27,12 @@ class AssessmentsTable extends AppTable {
 		$this->hasMany('AssessmentStatuses', ['className' => 'Assessment.AssessmentStatuses', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionAssessments', ['className' => 'Institution.InstitutionAssessments', 'dependent' => true]);
 
-		if ($this->behaviors()->has('Reorder')) {
-			$this->behaviors()->get('Reorder')->config([
-				'filter' => 'education_grade_id',
-			]);
-		}
+		// To add this when there is a filter for education grade
+		// if ($this->behaviors()->has('Reorder')) {
+		// 	$this->behaviors()->get('Reorder')->config([
+		// 		'filter' => 'education_grade_id',
+		// 	]);
+		// }
 	}
 
 	public function beforeAction(Event $event) {
