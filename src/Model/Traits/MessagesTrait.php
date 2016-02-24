@@ -370,6 +370,7 @@ trait MessagesTrait {
 			'successGraduated' => 'Students have graduated',
 			'successOthers' => 'Students status changed successfully',
 			'noNextAcademicPeriod' => 'There is no next academic period for the promotion.',
+			'pendingRequest' => 'There is a pending student status change request at the moment.'
 		],
 		'StudentTransfer' => [
 			'noGrades' => 'No Available Grades',
@@ -398,6 +399,7 @@ trait MessagesTrait {
 		],
 		'DropoutRequests' => [
 			'request' => 'Dropout request hsa been submitted successfully.',
+			'notEligible' =>  'This student is not eligible for this action. Please reject this request.'
 		],
 		'StudentDropout' => [
 			'exists' => 'Student has already dropped out from the school.',
