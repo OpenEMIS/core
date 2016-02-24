@@ -979,11 +979,11 @@ class ValidationBehavior extends Behavior {
 		$params = (!empty($globalData['data']['params']))? json_decode($globalData['data']['params'],true): [];
 
 		if (array_key_exists('range_start_time', $params) && array_key_exists('range_end_time', $params)) {
-			return (strtotime($field) < strtotime($params['range_start_time']) || strtotime($field) > strtotime($params['range_end_time']))? $model->getMessage('CustomField.time.between', ['sprintf' => [strtotime($params['range_start_time']), strtotime($params['range_end_time'])]]): true;
+			return (strtotime($field) < strtotime($params['range_start_time']) || strtotime($field) > strtotime($params['range_end_time']))? $model->getMessage('CustomField.time.between', ['sprintf' => [($params['range_start_time']), ($params['range_end_time'])]]): true;
 		} else if (array_key_exists('range_start_time', $params)) {;
-			return (strtotime($field) <= strtotime($params['range_start_time']))? $model->getMessage('CustomField.time.later', ['sprintf' => [strtotime($params['range_start_time'])]]): true;
+			return (strtotime($field) <= strtotime($params['range_start_time']))? $model->getMessage('CustomField.time.later', ['sprintf' => [($params['range_start_time'])]]): true;
 		} else if (array_key_exists('range_end_time', $params)) {
-			return (strtotime($field) >= strtotime($params['range_end_time']))? $model->getMessage('CustomField.time.earlier', ['sprintf' => [strtotime($params['range_end_time'])]]): true;
+			return (strtotime($field) >= strtotime($params['range_end_time']))? $model->getMessage('CustomField.time.earlier', ['sprintf' => [($params['range_end_time'])]]): true;
 		} else {
 			return true;
 		}
