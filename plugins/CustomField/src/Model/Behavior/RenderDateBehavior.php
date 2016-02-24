@@ -63,6 +63,7 @@ class RenderDateBehavior extends RenderBehavior {
                 $savedId = $fieldValues[$fieldId]['id'];
             }
             if (isset($fieldValues[$fieldId]['date_value'])) {
+            	// this will never work. issue with all date fields. request data will never be set back on validation fail
                 $savedValue = $fieldValues[$fieldId]['date_value'];
             }
         }
