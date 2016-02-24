@@ -41,6 +41,18 @@ class RenderTextBehavior extends RenderBehavior {
             if (!is_null($savedValue)) {
                 $options['value'] = $savedValue;
             }
+            // input mask
+            $customField = $attr['customField'];
+            if ($customField->has('params') && !empty($customField->params)) {
+                $params = json_decode($customField->params, true);
+                if (array_key_exists('input_mask', $params) && !empty($params['input_mask'])) {
+                    $HtmlField = $event->subject();
+                    $HtmlField->includes['jasny']['include'] = true;
+                    $options['data-mask'] = $params['input_mask'];
+                }
+            }
+            // End
+
             $value .= $form->input($fieldPrefix.".text_value", $options);
             $value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
             if (!is_null($savedId)) {
