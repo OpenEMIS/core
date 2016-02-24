@@ -35,14 +35,19 @@
 								?>
 								<tr>
 									<?php if ($action != 'reconfirm') { ?>
-									<td class="checkbox-column">
+									<td class="checkbox-column tooltip-orange">
 										<?php
-											$alias = $ControllerAction['table']->alias();
-											$fieldPrefix = "$alias.students.$i";
+											$pendingRequestsCount = $obj->dropoutRequestCount + $obj->admissionRequestCount;
+											if ($pendingRequestsCount > 0) {
+												echo '<i class="fa fa-info-circle fa-lg table-tooltip icon-orange" data-animation="false" data-container="body" data-placement="top" data-toggle="tooltip" title="" data-original-title="' .$this->Label->get($ControllerAction['table']->alias().'.pendingRequest'). '"></i>';
+											} else {
+												$alias = $ControllerAction['table']->alias();
+												$fieldPrefix = "$alias.students.$i";
 
-											$checkboxOptions = ['type' => 'checkbox', 'class' => 'icheck-input', 'label' => false, 'div' => false];
-											echo $this->Form->input("$fieldPrefix.selected", $checkboxOptions);
-											echo $this->Form->hidden("$fieldPrefix.student_id", ['value' => $obj->student_id]);
+												$checkboxOptions = ['type' => 'checkbox', 'class' => 'icheck-input', 'label' => false, 'div' => false];
+												echo $this->Form->input("$fieldPrefix.selected", $checkboxOptions);
+												echo $this->Form->hidden("$fieldPrefix.student_id", ['value' => $obj->student_id]);
+											}
 										?>
 									</td>
 									<?php } ?>
