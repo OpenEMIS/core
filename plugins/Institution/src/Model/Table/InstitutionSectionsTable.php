@@ -959,19 +959,22 @@ class InstitutionSectionsTable extends AppTable {
 			}
 			
 		}
-
 		return $attr;
 	}
 
 	public function onGetStaffId(Event $event, Entity $entity) {
 		if ($this->action == 'view') {
-			return $event->subject()->Html->link($entity->staff->name_with_id , [
-				'plugin' => 'Institution',
-				'controller' => 'Institutions',
-				'action' => 'StaffUser',
-				'view',
-				$entity->staff->id
-			]);
+			if ($entity->has('staff')) {
+				return $event->subject()->Html->link($entity->staff->name_with_id , [
+					'plugin' => 'Institution',
+					'controller' => 'Institutions',
+					'action' => 'StaffUser',
+					'view',
+					$entity->staff->id
+				]);
+			} else {
+				return __('No Teacher Assigned');
+			}
 		} else {
 			if ($entity->has('staff')) {
 				return $entity->staff->name_with_id;
