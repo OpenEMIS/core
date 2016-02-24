@@ -86,6 +86,20 @@ class TransferApprovalsTable extends AppTable {
 				$newData['end_date'] = $entity->end_date->format('Y-m-d');
 				$newEntity = $Students->newEntity($newData);
 				if ($Students->save($newEntity)) {
+					// Add student into a class if the class is specified
+					$classId = $data[$this->alias()]['institution_class'];
+					if (!empty($classId)) {
+						$InstitutionClassStudentsTable = TableRegistry::get('Institutions.InstitutionSectionStudents');
+						$institutionClassStudentObj = [
+							'student_id' => $newEntity->student_id,
+							'institution_section_id' => $classId,
+							'education_grade_id' => $newEntity->education_grade_id,
+							'student_status_id' => $newEntity->student_status_id
+						];
+						$institutionClassStudentEntity = $InstitutionClassStudentsTable->newEntity($institutionClassStudentObj);
+						$InstitutionClassStudentsTable->save($institutionClassStudentEntity);
+					}
+
 					$this->Alert->success('TransferApprovals.approve');
 					$existingStudentEntity = $Students->find()->where([
 							$Students->aliasField('institution_id') => $previousSchoolId,
@@ -173,10 +187,11 @@ class TransferApprovalsTable extends AppTable {
 		$this->ControllerAction->field('previous_institution_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('type', ['type' => 'hidden', 'value' => self::TRANSFER]);
 		$this->ControllerAction->field('created', ['type' => 'disabled', 'attr' => ['value' => $this->formatDate($entity->created)]]);
+		$this->ControllerAction->field('institution_class', ['type' => 'select']);
 
 		$this->ControllerAction->setFieldOrder([
 			'created', 'transfer_status', 'student',
-			'institution_id', 'academic_period_id', 'education_grade_id',
+			'institution_id', 'academic_period_id', 'education_grade_id', 'institution_class',
 			'status', 'start_date', 'end_date',
 			'student_transfer_reason_id', 'comment',
 			'previous_institution_id'
@@ -185,6 +200,33 @@ class TransferApprovalsTable extends AppTable {
 		if ($urlParams['controller'] == 'Dashboard') {
 			$this->Navigation->addCrumb('Transfer Approvals', $urlParams);
 		}
+	}
+
+	public function onUpdateFieldInstitutionClass(Event $event, array $attr, $action, $request) {
+		$academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+		$institutionId = $this->request->data[$this->alias()]['institution_id'];
+		$educationGradeId = $this->request->data[$this->alias()]['education_grade_id'];
+		$listOfClasses = $this->Institutions->find('list', [
+				'keyField' => 'class_id',
+				'valueField' => 'class_name'
+			])
+			->matching('InstitutionSections.InstitutionSectionGrades')
+			->where([
+				'InstitutionSectionGrades.education_grade_id' => $educationGradeId,
+				'InstitutionSections.academic_period_id' => $academicPeriodId,
+				$this->Institutions->aliasField('id') => $institutionId
+			])
+			->select(['class_id' => 'InstitutionSections.id', 'class_name' => 'InstitutionSections.name'])
+			->hydrate(false)
+			->toArray()
+			;
+		if (count($listOfClasses) == 0) {
+			$options = ['' => __('No Available Classes')];
+		} else {
+			$options = ['' => '-- '.__('Select Class').' --'] + $listOfClasses;
+		}
+		$attr['options'] = $options;
+		return $attr;
 	}
 
 	public function viewAfterAction($event, Entity $entity) {
