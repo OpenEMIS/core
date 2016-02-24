@@ -25,6 +25,9 @@ class SetupDateBehavior extends SetupBehavior {
     }
 
     public function buildValidator(Event $event, Validator $validator, $name) {
+    	$validator->notEmpty('date_range');
+		$validator->notEmpty('range_start_date');
+		$validator->notEmpty('range_end_date');
     	if (!empty($this->_table->request->data)) {
     		if (array_key_exists('field_type', $this->_table->request->data[$this->_table->alias()]) &&
     			$this->_table->request->data[$this->_table->alias()]['field_type'] == 'DATE'
@@ -70,26 +73,26 @@ class SetupDateBehavior extends SetupBehavior {
 		if (!empty($selectedRangeValidation)) {
 			switch ($selectedRangeValidation) {
 				case 'earlier':
-					$options = ['type' => 'date', 'after' => 'date_range'];
+					$options = ['type' => 'date', 'after' => 'date_range', 'null' => false];
 					if (array_key_exists('range_start_date', $paramsArray)) {
 						$options['value'] = $paramsArray['range_start_date'];
 					}
 					$this->_table->ControllerAction->field('range_start_date', $options);
 					break;
 				case 'later':
-					$options = ['type' => 'date', 'after' => 'date_range'];
+					$options = ['type' => 'date', 'after' => 'date_range', 'null' => false];
 					if (array_key_exists('range_end_date', $paramsArray)) {
 						$options['value'] = $paramsArray['range_end_date'];
 					}
         			$this->_table->ControllerAction->field('range_end_date', $options);
 					break;
 				case 'between':
-					$options = ['type' => 'date', 'after' => 'date_range'];
+					$options = ['type' => 'date', 'after' => 'date_range', 'null' => false];
 					if (array_key_exists('range_start_date', $paramsArray)) {
 						$options['value'] = $paramsArray['range_start_date'];
 					}
 					$this->_table->ControllerAction->field('range_start_date', $options);
-					$options = ['type' => 'date', 'after' => 'range_start_date'];
+					$options = ['type' => 'date', 'after' => 'range_start_date', 'null' => false];
 					if (array_key_exists('range_end_date', $paramsArray)) {
 						$options['value'] = $paramsArray['range_end_date'];
 					}
