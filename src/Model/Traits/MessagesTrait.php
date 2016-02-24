@@ -1002,8 +1002,13 @@ trait MessagesTrait {
 		'CustomField' => [
 			'date' => [
 				'earlier' => 'Date should be earlier than %s',
-				'later' => 'Date shoud be later than %s',
+				'later' => 'Date should be later than %s',
 				'between' => 'Date should be between %s and %s (inclusive)'
+			],
+			'time' => [
+				'earlier' => 'Time should be earlier than %s',
+				'later' => 'Time should be later than %s',
+				'between' => 'Time should be between %s and %s (inclusive)'
 			]
 		],
 
