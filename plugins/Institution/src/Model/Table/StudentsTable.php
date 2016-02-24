@@ -847,6 +847,9 @@ class StudentsTable extends AppTable {
 				->find('list')
 				->where([$conditions])
 				->toArray();
+			foreach ($options as $key => $value) {
+				$options[$key] = __($value);
+			}
 			$attr['options'] = $options;
 		}
 		return $attr;
