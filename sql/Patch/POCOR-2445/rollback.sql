@@ -13,5 +13,8 @@ ALTER TABLE `student_custom_forms_fields` DROP `section`;
 ALTER TABLE `staff_custom_forms_fields` DROP `section`;
 ALTER TABLE `infrastructure_custom_forms_fields` DROP `section`;
 
+-- custom_modules
+UPDATE `custom_modules` SET `supported_field_types` = NULL, `visible` = 0 WHERE `model` = 'Institution.InstitutionInfrastructures';
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2445';

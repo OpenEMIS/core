@@ -30,6 +30,7 @@ class StudentSurveysTable extends AppTable {
 			'fieldKey' => 'survey_question_id',
 			'tableColumnKey' => 'survey_table_column_id',
 			'tableRowKey' => 'survey_table_row_id',
+			'fieldClass' => ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id'],
 			'formKey' => 'survey_form_id',
 			// 'filterKey' => 'custom_filter_id',
 			'formFieldClass' => ['className' => 'Survey.SurveyFormsQuestions'],

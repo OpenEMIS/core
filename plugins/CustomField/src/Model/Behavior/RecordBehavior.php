@@ -457,32 +457,23 @@ class RecordBehavior extends Behavior {
 				$tableRowKey = $this->config('tableRowKey');
 				$tableColumnKey = $this->config('tableColumnKey');
 
-				$id = $entity->id;
-				$primaryKey = $model->primaryKey();
-				$idKey = $model->aliasField($primaryKey);
-				if ($model->exists([$idKey => $id])) {
-					$recordQuery = $model->find()->where([$idKey => $id]);
-					$recordQuery->contain(['CustomFieldValues.CustomFields']);
-					$recordEntity = $recordQuery->first();
+				if ($entity->has('custom_field_values')) {
+					foreach ($entity->custom_field_values as $key => $obj) {
+						if (isset($obj->id)) {
+							$fieldId = $obj->{$fieldKey};
+							$fieldData = ['id' => $obj->id];
 
-					if ($recordEntity->has('custom_field_values')) {
-						foreach ($recordEntity->custom_field_values as $key => $obj) {
-							if (isset($obj->id)) {
-								$fieldId = $obj->{$fieldKey};
-								$fieldData = ['id' => $obj->id];
-
-								if ($model->request->is(['get'])) {
-									// onGet
-									$fieldData['text_value'] = $obj->text_value;
-									$fieldData['number_value'] = $obj->number_value;
-									$fieldData['textarea_value'] = $obj->textarea_value;
-									$fieldData['date_value'] = $obj->date_value;
-									$fieldData['time_value'] = $obj->time_value;
-								} else if ($model->request->is(['post', 'put'])) {
-						        	// onPost, no actions
-						        }
-						        $values[$fieldId] = $fieldData;
-							}
+							if ($model->request->is(['get'])) {
+								// onGet
+								$fieldData['text_value'] = $obj->text_value;
+								$fieldData['number_value'] = $obj->number_value;
+								$fieldData['textarea_value'] = $obj->textarea_value;
+								$fieldData['date_value'] = $obj->date_value;
+								$fieldData['time_value'] = $obj->time_value;
+							} else if ($model->request->is(['post', 'put'])) {
+					        	// onPost, no actions
+					        }
+					        $values[$fieldId] = $fieldData;
 						}
 					}
 				}
