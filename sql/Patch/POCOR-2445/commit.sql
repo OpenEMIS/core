@@ -15,3 +15,6 @@ ALTER TABLE `institution_custom_forms_fields` ADD `section` VARCHAR(250) CHARACT
 ALTER TABLE `student_custom_forms_fields` ADD `section` VARCHAR(250) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL AFTER `student_custom_field_id`;
 ALTER TABLE `staff_custom_forms_fields` ADD `section` VARCHAR(250) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL AFTER `staff_custom_field_id`;
 ALTER TABLE `infrastructure_custom_forms_fields` ADD `section` VARCHAR(250) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL AFTER `infrastructure_custom_field_id`;
+
+-- custom_modules
+UPDATE `custom_modules` SET `supported_field_types` = 'TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,TABLE', `visible` = 1 WHERE `model` = 'Institution.InstitutionInfrastructures';
