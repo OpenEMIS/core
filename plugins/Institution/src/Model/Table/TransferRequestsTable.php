@@ -156,6 +156,7 @@ class TransferRequestsTable extends AppTable {
 			$action['action'] = 'StudentUser';
 			$action[0] = 'view';
 			$action[1] = $id;
+			$action['id'] = $this->Session->read($this->registryAlias().'.id');
 	    	$event->stopPropagation();
 	    	return $this->controller->redirect($action);
     	}
@@ -342,6 +343,7 @@ class TransferRequestsTable extends AppTable {
 			$action['action'] = $Students->alias();
 			$action[0] = 'view';
 			$action[1] = $id;
+			$action['id'] = $this->Session->read($this->registryAlias().'.id');
 			$event->stopPropagation();
 			return $this->controller->redirect($action);
 		}
