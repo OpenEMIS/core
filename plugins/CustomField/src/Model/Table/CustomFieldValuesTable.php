@@ -75,7 +75,7 @@ class CustomFieldValuesTable extends AppTable {
 				'provider' => 'table',
 				'on' => function ($context) {
 					if (array_key_exists('params', $context['data'])) {
-						return $context['data']['field_type'] == 'DATE' && !empty($context['data']['params']);
+						return !empty($context['data']['params']);
 					}
 			    }
 			])	
@@ -92,7 +92,7 @@ class CustomFieldValuesTable extends AppTable {
 				'provider' => 'table',
 				'on' => function ($context) {
 					if (array_key_exists('params', $context['data'])) {
-						return $context['data']['field_type'] == 'TIME' && !empty($context['data']['params']);
+						return !empty($context['data']['params']);
 					}
 			    }
 			])

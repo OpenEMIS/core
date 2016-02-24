@@ -33,7 +33,7 @@ class SetupTimeBehavior extends SetupBehavior {
     			// only do this if it is TIME
 	    		if ($this->_table->request->data[$this->_table->alias()]['time_range'] == 'between') {
 	    			$validator->add('range_start_time', 'ruleCompareTime', [
-						'rule' => ['compareTime', 'range_end_time', false],
+						'rule' => ['compareTime', 'range_end_time', true],
 						'provider' => 'table'
 					]);
 	    		}
