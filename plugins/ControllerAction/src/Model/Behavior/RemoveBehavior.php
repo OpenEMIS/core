@@ -227,7 +227,7 @@ class RemoveBehavior extends Behavior {
 		return $associations;
 	}
 
-	private function hasAssociatedRecords($model, $entity) {
+	public function hasAssociatedRecords($model, $entity) {
 		$records = $this->getAssociatedRecords($model, $entity);
 		$found = false;
 		foreach ($records as $count) {

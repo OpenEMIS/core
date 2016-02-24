@@ -252,7 +252,7 @@ class DirectoriesTable extends AppTable {
 	public function beforeAction(Event $event) {
 		if ($this->action == 'add') {
 			if ($this->controller->name != 'Students') {
-				$this->ControllerAction->field('user_type', ['type' => 'select']);
+				$this->ControllerAction->field('user_type', ['type' => 'select', 'after' => 'photo_content']);
 			} else {
 				$this->request->data[$this->alias()]['user_type'] = self::GUARDIAN;
 			}
@@ -521,14 +521,15 @@ class DirectoriesTable extends AppTable {
 				$InstitutionStudentTable->aliasField('created').' END) DESC'])
 				->first();
 
+			$value = '';
+			$name = '';
 			if (!empty($studentInstitutions)) {
 				$value = $studentInstitutions->student_status_name;
-			} else {
-				$value = '';
+				$name = $studentInstitutions->name;
 			}
 			$entity->student_status_name = $value;
-
-			return $studentInstitutions->name;
+			
+			return $name;
 		}
 
 		$staffInstitutions = [];
