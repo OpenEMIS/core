@@ -35,8 +35,10 @@ class RenderDateBehavior extends RenderBehavior {
 		if (array_key_exists('custom_field_values', $dataArray)) {
 			foreach ($dataArray['custom_field_values'] as $key => $value) {
 				if (array_key_exists('date_value', $value)) {
-					$convertedDate = $this->_table->convertForDatePicker($dataArray['custom_field_values'][$key]['date_value']);
-					$data['custom_field_values'][$key]['date_value'] = (!empty($convertedDate))? $convertedDate: $data['custom_field_values'][$key]['date_value'];
+					if ($dataArray['custom_field_values'][$key]['field_type'] == 'DATE') {
+						$convertedDate = $this->_table->convertForDatePicker($dataArray['custom_field_values'][$key]['date_value']);
+						$data['custom_field_values'][$key]['date_value'] = (!empty($convertedDate))? $convertedDate: $data['custom_field_values'][$key]['date_value'];
+					}
 				}
 			}
 		}
@@ -54,8 +56,6 @@ class RenderDateBehavior extends RenderBehavior {
 		$fieldId = $attr['customField']->id;
         $fieldValues = $attr['customFieldValues'];
 
-// pr($this->_table->request->data);
-// pr($attr);
         $savedId = null;
         $savedValue = null;
 		if (!empty($fieldValues) && array_key_exists($fieldId, $fieldValues)) {
@@ -65,36 +65,11 @@ class RenderDateBehavior extends RenderBehavior {
             if (isset($fieldValues[$fieldId]['date_value'])) {
                 $savedValue = $fieldValues[$fieldId]['date_value'];
             }
-
         }
-
-
-		// $field = $attr['field'];
-		// $table = TableRegistry::get($attr['className']);
-		// $schema = $table->schema();
-		// $columnAttr = $schema->column($field);
-		// $defaultDate = true;
-		// if ($columnAttr['null'] == true) {
-		// 	$defaultDate = false;
-		// }
-
-		// if (!isset($attr['date_options'])) {
-		// 	$attr['date_options'] = [];
-		// }	
-		
-		// if (!isset($attr['default_date'])) {
-		// 	$attr['default_date'] = $defaultDate;
-		// }
 
 		if ($action == 'index' || $action == 'view') {
 			return (!empty($savedValue))? $this->_table->formatDate($savedValue): '';
 		} else if ($action == 'edit') {
-			$_options = [
-				'format' => 'dd-mm-yyyy',
-				'todayBtn' => 'linked',
-				'orientation' => 'auto',
-				'autoclose' => true,
-			];
 			$attr['date_options'] = $_options;
 			$fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 			
@@ -128,10 +103,6 @@ class RenderDateBehavior extends RenderBehavior {
 				}
 			}
 
-
-			// $attr['value'] = '22-02-2014'; 
-			// $attr['default-date'] = '22-02-2014'; 
-
 			$event->subject()->viewSet('datepicker', $attr);
 			$value = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
 
@@ -142,64 +113,11 @@ class RenderDateBehavior extends RenderBehavior {
             }
 		}
 
-
-        // $value = '';
-
-        // $dropdownOptions = [];
-        // $dropdownDefault = null;
-        // foreach ($attr['customField']['custom_field_options'] as $key => $obj) {
-        //     $dropdownOptions[$obj->id] = $obj->name;
-        //     if ($obj->is_default == 1) {
-        //         $dropdownDefault = $obj->id;
-        //     }
-        // }
-        // // default to first key if is not set
-        // $dropdownDefault = !is_null($dropdownDefault) ? $dropdownDefault : key($dropdownOptions);
-
-        // // for edit
-        // $fieldId = $attr['customField']->id;
-        // $fieldValues = $attr['customFieldValues'];
-        // $savedId = null;
-        // $savedValue = null;
-        // if (!empty($fieldValues) && array_key_exists($fieldId, $fieldValues)) {
-        //     if (isset($fieldValues[$fieldId]['id'])) {
-        //         $savedId = $fieldValues[$fieldId]['id'];
-        //     }
-        //     if (isset($fieldValues[$fieldId]['number_value'])) {
-        //         $savedValue = $fieldValues[$fieldId]['number_value'];
-        //     }
-        // }
-        // // End
-
-        // if ($action == 'view') {
-        //     if (!is_null($savedValue)) {
-        //         $value = $dropdownOptions[$savedValue];
-        //     }
-        // } else if ($action == 'edit') {
-        //     $form = $event->subject()->Form;
-        //     $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
-
-        //     $options['type'] = 'select';
-        //     $options['options'] = $dropdownOptions;
-
-        //     if ($this->_table->request->is(['get'])) {
-        //         $selectedValue = !is_null($savedValue) ? $savedValue : $dropdownDefault;
-        //         $options['default'] = $selectedValue;
-        //         $options['value'] = $selectedValue;
-        //     }
-        //     $value .= $form->input($fieldPrefix.".number_value", $options);
-        //     $value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
-        //     if (!is_null($savedId)) {
-        //         $value .= $form->hidden($fieldPrefix.".id", ['value' => $savedId]);
-        //     }
-        // }
-
         $event->stopPropagation();
         return $value;
     }
 
     public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
-
     	$includes['datepicker']['include'] = true;
     }
 
