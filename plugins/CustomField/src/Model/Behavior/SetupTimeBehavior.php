@@ -29,19 +29,14 @@ class SetupTimeBehavior extends SetupBehavior {
     	$validator->notEmpty('time_range');
 		$validator->notEmpty('range_start_time');
 		$validator->notEmpty('range_end_time');
-    	if (!empty($this->_table->request->data)) {
-    		if (array_key_exists('field_type', $this->_table->request->data[$this->_table->alias()]) &&
-    			$this->_table->request->data[$this->_table->alias()]['field_type'] == 'TIME'
-    			) {
-    			// only do this if it is TIME
-	    		if ($this->_table->request->data[$this->_table->alias()]['time_range'] == 'between') {
-	    			$validator->add('range_start_time', 'ruleCompareTime', [
-						'rule' => ['compareTime', 'range_end_time', true],
-						'provider' => 'table'
-					]);
-	    		}
-	    	}
-    	}
+
+		$validator->add('range_start_time', 'ruleCompareTime', [
+			'rule' => ['compareTime', 'range_end_time', true],
+			'provider' => 'table',
+			'on' => function ($context) {
+				return $context['data']['field_type'] == 'TIME' && $context['data']['time_range'] == 'between';
+			}
+		]);
     }
 
 
