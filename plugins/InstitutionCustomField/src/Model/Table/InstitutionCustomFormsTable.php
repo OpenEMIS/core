@@ -8,24 +8,26 @@ use Cake\Event\Event;
 
 class InstitutionCustomFormsTable extends CustomFormsTable {
 	public function initialize(array $config) {
-		$config['custom_filter'] = [
-			'className' => 'FieldOption.InstitutionTypes',
-			'joinTable' => 'institution_custom_forms_filters',
-			'foreignKey' => 'institution_custom_form_id',
-			'targetForeignKey' => 'institution_custom_filter_id',
-			'through' => 'InstitutionCustomField.InstitutionCustomFormsFilters',
-			'dependent' => true
+		$config['extra'] = [
+			'filterClass' => [
+				'className' => 'FieldOption.InstitutionTypes',
+				'joinTable' => 'institution_custom_forms_filters',
+				'foreignKey' => 'institution_custom_form_id',
+				'targetForeignKey' => 'institution_custom_filter_id',
+				'through' => 'InstitutionCustomField.InstitutionCustomFormsFilters',
+				'dependent' => true
+			],
+			'fieldClass' => [
+				'className' => 'InstitutionCustomField.InstitutionCustomFields',
+				'joinTable' => 'institution_custom_forms_fields',
+				'foreignKey' => 'institution_custom_form_id',
+				'targetForeignKey' => 'institution_custom_field_id',
+				'through' => 'InstitutionCustomField.InstitutionCustomFormsFields',
+				'dependent' => true
+			]
 		];
 		parent::initialize($config);
 		$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
-		$this->belongsToMany('CustomFields', [
-			'className' => 'InstitutionCustomField.InstitutionCustomFields',
-			'joinTable' => 'institution_custom_forms_fields',
-			'foreignKey' => 'institution_custom_form_id',
-			'targetForeignKey' => 'institution_custom_field_id',
-			'through' => 'InstitutionCustomField.InstitutionCustomFormsFields',
-			'dependent' => true
-		]);
 	}
 
 	public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, Request $request) {

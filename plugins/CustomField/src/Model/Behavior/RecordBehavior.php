@@ -75,7 +75,8 @@ class RecordBehavior extends Behavior {
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
-		$query->contain(['CustomFieldValues.CustomFields', 'CustomTableCells']);
+		// do not contain CustomFieldValues
+		$query->contain(['CustomTableCells']);
 	}
 
 	public function editAfterQuery(Event $event, Entity $entity) {
@@ -90,19 +91,22 @@ class RecordBehavior extends Behavior {
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
     	$alias = $this->_table->alias();
-		$values = $data[$alias]['custom_field_values'];
-		$fieldValues = $this->_table->array_column($values, $this->config('fieldKey'));
 
-		$CustomFields = TableRegistry::get($this->config('fieldClass.className'));
-		$fields = $CustomFields->find()->where(['id IN' => $fieldValues])->all();
+    	if (array_key_exists('custom_field_values', $data[$alias])) {
+			$values = $data[$alias]['custom_field_values'];
+			$fieldValues = $this->_table->array_column($values, $this->config('fieldKey'));
 
-		foreach ($values as $key => $attr) {
-			foreach ($fields as $f) {
-				if ($f->id == $attr[$this->config('fieldKey')]) {
-					$data[$alias]['custom_field_values'][$key]['field_type'] = $f->field_type;
-					$data[$alias]['custom_field_values'][$key]['mandatory'] = $f->is_mandatory;
-					$data[$alias]['custom_field_values'][$key]['unique'] = $f->is_unique;
-					$data[$alias]['custom_field_values'][$key]['params'] = $f->params;
+			$CustomFields = TableRegistry::get($this->config('fieldClass.className'));
+			$fields = $CustomFields->find()->where(['id IN' => $fieldValues])->all();
+
+			foreach ($values as $key => $attr) {
+				foreach ($fields as $f) {
+					if ($f->id == $attr[$this->config('fieldKey')]) {
+						$data[$alias]['custom_field_values'][$key]['field_type'] = $f->field_type;
+						$data[$alias]['custom_field_values'][$key]['mandatory'] = $f->is_mandatory;
+						$data[$alias]['custom_field_values'][$key]['unique'] = $f->is_unique;
+						$data[$alias]['custom_field_values'][$key]['params'] = $f->params;
+					}
 				}
 			}
 		}
@@ -177,7 +181,39 @@ class RecordBehavior extends Behavior {
 
         		return $model->save($entity);
 			} else {
-				Log::write('debug', $errors);
+				if (array_key_exists('custom_field_values', $errors)) {
+					$fields = ['text_value', 'number_value', 'textarea_value', 'date_value', 'time_value'];
+					$indexedErrors = [];
+					if ($entity->has('custom_field_values')) {
+						foreach ($entity->custom_field_values as $key => $obj) {
+							$fieldId = $obj->{$this->config('fieldKey')};
+
+							if (array_key_exists($key, $errors['custom_field_values'])) {
+								$indexedErrors[$fieldId] = $errors['custom_field_values'][$key];
+								foreach ($fields as $field) {
+									$entity->custom_field_values[$key]->dirty($field, true);
+								}
+							}
+						}
+					}
+
+					if (array_key_exists('custom_field_values', $data[$model->alias()])) {
+						foreach ($data[$model->alias()]['custom_field_values'] as $key => $obj) {
+							$fieldId = $obj[$this->config('fieldKey')];
+
+							if (array_key_exists($fieldId, $indexedErrors)) {
+								foreach ($fields as $field) {
+									if (array_key_exists($field, $indexedErrors[$fieldId])) {
+										$error = $indexedErrors[$fieldId][$field];
+										$entity->custom_field_values[$key]->errors($field, $error, true);
+									}
+								}
+							}
+						}
+					}
+				}
+				Log::write('debug', $entity->errors());
+
 				return false;
 			}
     	};
@@ -216,8 +252,9 @@ class RecordBehavior extends Behavior {
 		return $filterKey;
 	}
 
-	public function getCustomFieldQuery($entity) {
+	public function getCustomFieldQuery($entity, $params=[]) {
 		$query = null;
+		$withContain = array_key_exists('withContain', $params) ? $params['withContain'] : true;
 
 		$CustomModules = TableRegistry::get('CustomField.CustomModules');
 		$CustomFieldValues = $this->_table->CustomFieldValues;
@@ -295,67 +332,83 @@ class RecordBehavior extends Behavior {
 			$query = $CustomFormsFields
 				->find('all')
 				->find('order')
-				->contain([
-					'CustomFields.CustomFieldOptions' => function($q) {
-						return $q
-							->find('visible')
-							->find('order');
-					},
-					'CustomFields.CustomTableColumns' => function ($q) {
-				       return $q
-				       		->find('visible')
-				       		->find('order');
-				    },
-					'CustomFields.CustomTableRows' => function ($q) {
-				       return $q
-				       		->find('visible')
-				       		->find('order');
-				    }
-				])
 				->where([
 					$CustomFormsFields->aliasField($this->config('formKey') . ' IN') => $customFormIds
 				])
 				->group([
 					$CustomFormsFields->aliasField($this->config('fieldKey'))
 				]);
+
+			if ($withContain) {
+				if (is_array($withContain)) {
+					$query->contain($withContain);
+				} else {
+					$query->contain([
+						'CustomFields.CustomFieldOptions' => function($q) {
+							return $q
+								->find('visible')
+								->find('order');
+						},
+						'CustomFields.CustomTableColumns' => function ($q) {
+					       return $q
+					       		->find('visible')
+					       		->find('order');
+					    },
+						'CustomFields.CustomTableRows' => function ($q) {
+					       return $q
+					       		->find('visible')
+					       		->find('order');
+					    }
+					]);
+				}
+			}
 		}
 
 		return $query;
 	}
 
 	public function formatEntity(Entity $entity) {
-		$values = [];
-		if ($entity->has('custom_field_values')) {
-			foreach ($entity->custom_field_values as $key => $obj) {
-				$fieldId = $obj->{$this->config('fieldKey')};
-				$customField = $obj->custom_field;
+		$model = $this->_table;
+		$primaryKey = $model->primaryKey();
+		$idKey = $model->aliasField($primaryKey);
+		$id = $entity->id;
 
-				if ($customField->field_type == 'CHECKBOX') {
-					$checkboxValues = [$obj['number_value']];
-					if (array_key_exists($fieldId, $values)) {
-						$checkboxValues = array_merge($checkboxValues, $values[$fieldId]['number_value']);
+		$values = [];
+		if ($model->exists([$idKey => $id])) {
+			$query = $model->find()->contain(['CustomFieldValues.CustomFields'])->where([$idKey => $id]);
+
+			$newEntity = $query->first();
+			if ($newEntity->has('custom_field_values')) {
+				foreach ($newEntity->custom_field_values as $key => $obj) {
+					$fieldId = $obj->{$this->config('fieldKey')};
+					$customField = $obj->custom_field;
+
+					if ($customField->field_type == 'CHECKBOX') {
+						$checkboxValues = [$obj['number_value']];
+						if (array_key_exists($fieldId, $values)) {
+							$checkboxValues = array_merge($checkboxValues, $values[$fieldId]['number_value']);
+						}
+						$obj['number_value'] = $checkboxValues;
 					}
-					$obj['number_value'] = $checkboxValues;
+					$values[$fieldId] = $obj;
 				}
-				$values[$fieldId] = $obj;
 			}
 		}
 
-		$query = $this->getCustomFieldQuery($entity);
+		$query = $this->getCustomFieldQuery($entity, ['withContain' => ['CustomFields']]);
 
-    	$fieldValues = [];	// values of custom field must be in sequence for validation errors to be placed correctly
-    	$extraFieldValues = [];	// to hold result for more checkbox values
-    	if (!is_null($query)) {
-			$customFields = $query->toArray();
+		$fieldValues = [];	// values of custom field must be in sequence for validation errors to be placed correctly
+		if (!is_null($query)) {
+    		$customFields = $query->toArray();
 
-			$CustomFieldValues = $this->_table->CustomFieldValues;
+    		$CustomFieldValues = $model->CustomFieldValues;
 			foreach ($customFields as $key => $obj) {
 				$customField = $obj->custom_field;
 
 				// only apply for field type store in custom_field_values
 				if (in_array($customField->field_type, $this->fieldValueArray)) {
 					$fieldId = $customField->id;
-					
+
 					if (array_key_exists($fieldId, $values)) {
 						$fieldValues[] = $values[$fieldId];
 					} else {
@@ -370,13 +423,14 @@ class RecordBehavior extends Behavior {
 							'custom_field' => null // to-do
 						];
 						$valueEntity = $CustomFieldValues->newEntity($valueData, ['validate' => false]);
+						$valueEntity->custom_field = $customField;
 						$fieldValues[] = $valueEntity;
 					}
 				}
 			}
-		}
+    	}
 
-		$entity->custom_field_values = $fieldValues;
+    	$entity->set('custom_field_values', $fieldValues);
 	}
 
 	public function setupCustomFields(Entity $entity) {
@@ -410,6 +464,7 @@ class RecordBehavior extends Behavior {
 						if (isset($obj->id)) {
 							$fieldId = $obj->{$fieldKey};
 							$fieldData = ['id' => $obj->id];
+
 							if ($model->request->is(['get'])) {
 								// onGet
 								$fieldData['text_value'] = $obj->text_value;
@@ -418,7 +473,7 @@ class RecordBehavior extends Behavior {
 								$fieldData['date_value'] = $obj->date_value;
 								$fieldData['time_value'] = $obj->time_value;
 							} else if ($model->request->is(['post', 'put'])) {
-					        	// onPost
+					        	// onPost, no actions
 					        }
 					        $values[$fieldId] = $fieldData;
 						}
