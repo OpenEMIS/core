@@ -28,20 +28,14 @@ class SetupDateBehavior extends SetupBehavior {
     	$validator->notEmpty('date_range');
 		$validator->notEmpty('range_start_date');
 		$validator->notEmpty('range_end_date');
-    	if (!empty($this->_table->request->data)) {
-    		if (array_key_exists('field_type', $this->_table->request->data[$this->_table->alias()]) &&
-    			$this->_table->request->data[$this->_table->alias()]['field_type'] == 'DATE'
-    			) {
-    			// only do this if it is DATE
-	    		if (array_key_exists('date_range', $this->_table->request->data[$this->_table->alias()]) &&
-	    			$this->_table->request->data[$this->_table->alias()]['date_range'] == 'between') {
-	    			$validator->add('range_start_date', 'ruleCompareDate', [
-						'rule' => ['compareDate', 'range_end_date', true],
-						'provider' => 'table'
-					]);
-	    		}
-	    	}
-    	}
+
+		$validator->add('range_start_date', 'ruleCompareDate', [
+			'rule' => ['compareDate', 'range_end_date', true],
+			'provider' => 'table',
+			'on' => function ($context) {
+				return $context['data']['field_type'] == 'DATE' && $context['data']['date_range'] == 'between';
+			}
+		]);
     }
 
     public function onSetDateElements(Event $event, Entity $entity) {
