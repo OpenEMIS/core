@@ -5,6 +5,7 @@ use ArrayObject;
 
 use Cake\Event\Event;
 use Cake\ORM\Entity;
+use Cake\Validation\Validator;
 use CustomField\Model\Behavior\SetupBehavior;
 
 class SetupDateBehavior extends SetupBehavior {
@@ -20,8 +21,25 @@ class SetupDateBehavior extends SetupBehavior {
 			'between' => __('In between (inclusive)')
 		];
 
-        $this->_table->addBehavior('ControllerAction.DatePicker', ['range_start', 'range_end']);
+        $this->_table->addBehavior('ControllerAction.DatePicker', ['range_start_date', 'range_end_date']);
     }
+
+    public function buildValidator(Event $event, Validator $validator, $name) {
+    	if (!empty($this->_table->request->data)) {
+    		if (array_key_exists('field_type', $this->_table->request->data[$this->_table->alias()]) &&
+    			$this->_table->request->data[$this->_table->alias()]['field_type'] == 'DATE'
+    			) {
+    			// only do this if it is DATE
+	    		if ($this->_table->request->data[$this->_table->alias()]['date_range'] == 'between') {
+	    			$validator->add('range_start_date', 'ruleCompareDate', [
+						'rule' => ['compareDate', 'range_end_date', false],
+						'provider' => 'table'
+					]);
+	    		}
+	    	}
+    	}
+    }
+
     public function onSetDateElements(Event $event, Entity $entity) {
     	$fieldType = strtolower($this->fieldTypeCode);
 
@@ -35,11 +53,11 @@ class SetupDateBehavior extends SetupBehavior {
 		if (!empty($this->_table->request->data)) {
 			$selectedRangeValidation = (array_key_exists($this->_table->alias(), $this->_table->request->data) && array_key_exists('date_range', $this->_table->request->data[$this->_table->alias()]))? $this->_table->request->data[$this->_table->alias()]['date_range']: null;
 		} else {
-			if (array_key_exists('range_start', $paramsArray) && array_key_exists('range_end', $paramsArray)) {
+			if (array_key_exists('range_start_date', $paramsArray) && array_key_exists('range_end_date', $paramsArray)) {
 				$selectedRangeValidation = 'between';
-			} else if (array_key_exists('range_start', $paramsArray)) {
+			} else if (array_key_exists('range_start_date', $paramsArray)) {
 				$selectedRangeValidation = 'earlier';
-			} else if (array_key_exists('range_end', $paramsArray)) {
+			} else if (array_key_exists('range_end_date', $paramsArray)) {
 				$selectedRangeValidation = 'later';
 			} else {
 				$selectedRangeValidation = 'no';
@@ -52,29 +70,29 @@ class SetupDateBehavior extends SetupBehavior {
 			switch ($selectedRangeValidation) {
 				case 'earlier':
 					$options = ['type' => 'date', 'after' => 'date_range'];
-					if (array_key_exists('range_start', $paramsArray)) {
-						$options['value'] = $paramsArray['range_start'];
+					if (array_key_exists('range_start_date', $paramsArray)) {
+						$options['value'] = $paramsArray['range_start_date'];
 					}
-					$this->_table->ControllerAction->field('range_start', $options);
+					$this->_table->ControllerAction->field('range_start_date', $options);
 					break;
 				case 'later':
 					$options = ['type' => 'date', 'after' => 'date_range'];
-					if (array_key_exists('range_end', $paramsArray)) {
-						$options['value'] = $paramsArray['range_end'];
+					if (array_key_exists('range_end_date', $paramsArray)) {
+						$options['value'] = $paramsArray['range_end_date'];
 					}
-        			$this->_table->ControllerAction->field('range_end', $options);
+        			$this->_table->ControllerAction->field('range_end_date', $options);
 					break;
 				case 'between':
 					$options = ['type' => 'date', 'after' => 'date_range'];
-					if (array_key_exists('range_start', $paramsArray)) {
-						$options['value'] = $paramsArray['range_start'];
+					if (array_key_exists('range_start_date', $paramsArray)) {
+						$options['value'] = $paramsArray['range_start_date'];
 					}
-					$this->_table->ControllerAction->field('range_start', $options);
-					$options = ['type' => 'date', 'after' => 'range_start'];
-					if (array_key_exists('range_end', $paramsArray)) {
-						$options['value'] = $paramsArray['range_end'];
+					$this->_table->ControllerAction->field('range_start_date', $options);
+					$options = ['type' => 'date', 'after' => 'range_start_date'];
+					if (array_key_exists('range_end_date', $paramsArray)) {
+						$options['value'] = $paramsArray['range_end_date'];
 					}
-        			$this->_table->ControllerAction->field('range_end', $options);
+        			$this->_table->ControllerAction->field('range_end_date', $options);
 					break;
 				case 'no': default:
 					// no code required
@@ -85,34 +103,37 @@ class SetupDateBehavior extends SetupBehavior {
 
 	public function onGetDateRange(Event $event, Entity $entity) {
 		$paramsArray = (!empty($entity->params))? json_decode($entity->params, true): [];
-		if (array_key_exists('range_start', $paramsArray) && array_key_exists('range_end', $paramsArray)) {
-			return $this->rangeValidationOptions['between'].' '.$paramsArray['range_start'].' - '.$paramsArray['range_end'];
-		} else if (array_key_exists('range_start', $paramsArray)) {
-			return $this->rangeValidationOptions['earlier'].' '.$paramsArray['range_start'];
-		} else if (array_key_exists('range_end', $paramsArray)) {
-			return $this->rangeValidationOptions['later'].' '.$paramsArray['range_end'];
+		if (array_key_exists('range_start_date', $paramsArray) && array_key_exists('range_end_date', $paramsArray)) {
+			return $this->rangeValidationOptions['between'].' '.$paramsArray['range_start_date'].' - '.$paramsArray['range_end_date'];
+		} else if (array_key_exists('range_start_date', $paramsArray)) {
+			return $this->rangeValidationOptions['earlier'].' '.$paramsArray['range_start_date'];
+		} else if (array_key_exists('range_end_date', $paramsArray)) {
+			return $this->rangeValidationOptions['later'].' '.$paramsArray['range_end_date'];
 		} else {
 			return $this->rangeValidationOptions['no'];
 		}
 	}
 
 	public function beforeSave(Event $event, Entity $entity) {
-		$paramsArray = [];
-		$range_start = ($entity->has('range_start'))? $entity->range_start: null;
-		$range_end = ($entity->has('range_end'))? $entity->range_end: null;
+		if ($entity->field_type == 'DATE') {
+			$paramsArray = [];
+			$range_start_date = ($entity->has('range_start_date'))? $entity->range_start_date: null;
+			$range_end_date = ($entity->has('range_end_date'))? $entity->range_end_date: null;
 
-		if (!empty($range_start)) {
-			$paramsArray['range_start'] = $range_start;
-		}
-		if (!empty($range_end)) {
-			$paramsArray['range_end'] = $range_end;
-		}
+			if (!empty($range_start_date)) {
+				$paramsArray['range_start_date'] = $range_start_date;
+			}
+			if (!empty($range_end_date)) {
+				$paramsArray['range_end_date'] = $range_end_date;
+			}
 
-		if (!empty($paramsArray)) {
-			$entity->params = json_encode($paramsArray);
-		} else {
-			$entity->params = '';
+			if (!empty($paramsArray)) {
+				$entity->params = json_encode($paramsArray);
+			} else {
+				$entity->params = '';
+			}
 		}
+		
 	}
 
 

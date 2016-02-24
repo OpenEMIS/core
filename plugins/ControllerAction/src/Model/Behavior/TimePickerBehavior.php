@@ -23,11 +23,15 @@ use Cake\Validation\Validator;
 
 class TimePickerBehavior extends Behavior {
 	public function beforeSave(Event $event, Entity $entity) {
-		$format = 'H:i:s';
 		foreach ($this->config() as $field) {
 			if (!empty($entity->$field)) {
-				$entity->$field = date($format, strtotime($entity->$field));
+				$entity->$field = $this->convertForTimePicker($entity->$field);				
 			}
 		}
+	}
+
+	public function convertForTimePicker($data) {
+		$format = 'H:i:s';
+		return date($format, strtotime($data));
 	}
 }

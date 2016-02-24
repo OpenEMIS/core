@@ -193,6 +193,42 @@ class ValidationBehavior extends Behavior {
 		}
 	}
 
+	public static function compareTime($field, $compareField, $equals, array $globalData) {
+		$type = self::_getFieldType($compareField);
+		$startTime = strtotime($field);
+		if($compareField) {
+			$options = ['equals' => $equals, 'reverse' => false, 'type' => $type];
+			$result = self::doCompareTimes($startTime, $compareField, $options, $globalData);
+			if (!is_bool($result)) {
+				return $result;
+			} else {
+				return (!$result) ? __(Inflector::humanize($compareField).' should be on a later '.$type) : true;
+			}
+		} else {
+			return true;
+		}
+	}
+
+	protected static function doCompareTimes($timeOne, $compareField, $options, $globalData) {
+		$equals = $options['equals'];
+		$reverse = $options['reverse'];
+		$timeTwo = $globalData['data'][$compareField];
+		$timeTwo = strtotime($timeTwo);
+		if($equals) {
+			if ($reverse) {
+				return $timeOne >= $timeTwo;
+			} else {
+				return $timeTwo >= $timeOne;
+			}
+		} else {
+			if ($reverse) {
+				return $timeOne > $timeTwo;
+			} else {
+				return $timeTwo > $timeOne;
+			}
+		}
+	}
+
 	/**
 	 * [doCompareDates description]
 	 * @param  [type] $dateOne      [description]
@@ -927,12 +963,27 @@ class ValidationBehavior extends Behavior {
 		$model = $globalData['providers']['table'];
 		$params = (!empty($globalData['data']['params']))? json_decode($globalData['data']['params'],true): [];
 
-		if (array_key_exists('range_start', $params) && array_key_exists('range_end', $params)) {
-			return (strtotime($field) < strtotime($params['range_start']) || strtotime($field) > strtotime($params['range_end']))? $model->getMessage('CustomField.date.between', ['sprintf' => [$params['range_start'], $params['range_end']]]): true;
-		} else if (array_key_exists('range_start', $params)) {
-			return (strtotime($field) <= strtotime($params['range_start']))? $model->getMessage('CustomField.date.earlier', ['sprintf' => [$params['range_start']]]): true;
-		} else if (array_key_exists('range_end', $params)) {
-			return (strtotime($field) >= strtotime($params['range_end']))? $model->getMessage('CustomField.date.later', ['sprintf' => [$params['range_end']]]): true;
+		if (array_key_exists('range_start_date', $params) && array_key_exists('range_end', $params)) {
+			return (strtotime($field) < strtotime($params['range_start_date']) || strtotime($field) > strtotime($params['range_end_date']))? $model->getMessage('CustomField.date.between', ['sprintf' => [$params['range_start_date'], $params['range_end_date']]]): true;
+		} else if (array_key_exists('range_start_date', $params)) {
+			return (strtotime($field) <= strtotime($params['range_start_date']))? $model->getMessage('CustomField.date.later', ['sprintf' => [$params['range_start_date']]]): true;
+		} else if (array_key_exists('range_end_date', $params)) {
+			return (strtotime($field) >= strtotime($params['range_end_date']))? $model->getMessage('CustomField.date.earlier', ['sprintf' => [$params['range_end_date']]]): true;
+		} else {
+			return true;
+		}
+	}
+
+	public static function checkTimeRange($field, array $globalData) {
+		$model = $globalData['providers']['table'];
+		$params = (!empty($globalData['data']['params']))? json_decode($globalData['data']['params'],true): [];
+
+		if (array_key_exists('range_start_time', $params) && array_key_exists('range_end_time', $params)) {
+			return (strtotime($field) < strtotime($params['range_start_time']) || strtotime($field) > strtotime($params['range_end_time']))? $model->getMessage('CustomField.time.between', ['sprintf' => [strtotime($params['range_start_time']), strtotime($params['range_end_time'])]]): true;
+		} else if (array_key_exists('range_start_time', $params)) {;
+			return (strtotime($field) <= strtotime($params['range_start_time']))? $model->getMessage('CustomField.time.later', ['sprintf' => [strtotime($params['range_start_time'])]]): true;
+		} else if (array_key_exists('range_end_time', $params)) {
+			return (strtotime($field) >= strtotime($params['range_end_time']))? $model->getMessage('CustomField.time.earlier', ['sprintf' => [strtotime($params['range_end_time'])]]): true;
 		} else {
 			return true;
 		}
