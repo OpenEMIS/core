@@ -62,32 +62,6 @@ class FieldOptionsController extends AppController {
 		$this->set('contentHeader', $header);
 	}
 
-	// POCOR-2609 Temporary fix for reorder for field options
-	public function reorder() {
-		$this->autoRender = false;
-		$request = $this->request;
-
-		if ($request->is('ajax')) {
-			$model = TableRegistry::get('FieldOption.FieldOptionValues');
-			$primaryKey = $model->primaryKey();
-			$orderField = 'order';
-			
-			$ids = json_decode($request->data("ids"));
-			$originalOrder = $model->find('list')
-				->where([$model->aliasField($primaryKey).' IN ' => $ids])
-				->select(['id' => $model->aliasField($primaryKey), 'name' => $model->aliasField($orderField)])
-				->order([$model->aliasField($orderField)])
-				->toArray();
-
-			$originalOrder = array_reverse($originalOrder);
-
-			foreach ($ids as $order => $id) {
-				$orderValue = array_pop($originalOrder);
-				$model->updateAll([$orderField => $orderValue], [$primaryKey => $id]);
-			}
-		}
-	}
-
 	public function Genders() { $this->ControllerAction->process(['alias' => __FUNCTION__, 						'className' => 'Institution.Genders']); }
 	public function Localities() { $this->ControllerAction->process(['alias' => __FUNCTION__, 					'className' => 'Institution.Localities']); }
 	public function Ownerships() { $this->ControllerAction->process(['alias' => __FUNCTION__, 					'className' => 'Institution.Ownerships']); }
