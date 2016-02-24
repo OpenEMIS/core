@@ -26,6 +26,9 @@ class SetupTimeBehavior extends SetupBehavior {
     }
 
     public function buildValidator(Event $event, Validator $validator, $name) {
+    	$validator->notEmpty('time_range');
+		$validator->notEmpty('range_start_time');
+		$validator->notEmpty('range_end_time');
     	if (!empty($this->_table->request->data)) {
     		if (array_key_exists('field_type', $this->_table->request->data[$this->_table->alias()]) &&
     			$this->_table->request->data[$this->_table->alias()]['field_type'] == 'TIME'
@@ -71,26 +74,26 @@ class SetupTimeBehavior extends SetupBehavior {
 		if (!empty($selectedRangeValidation)) {
 			switch ($selectedRangeValidation) {
 				case 'earlier':
-					$options = ['type' => 'time', 'after' => 'time_range'];
+					$options = ['type' => 'time', 'after' => 'time_range', 'null' => false];
 					if (array_key_exists('range_start_time', $paramsArray)) {
 						$options['value'] = $paramsArray['range_start_time'];
 					}
 					$this->_table->ControllerAction->field('range_start_time', $options);
 					break;
 				case 'later':
-					$options = ['type' => 'time', 'after' => 'time_range'];
+					$options = ['type' => 'time', 'after' => 'time_range', 'null' => false];
 					if (array_key_exists('range_end_time', $paramsArray)) {
 						$options['value'] = $paramsArray['range_end_time'];
 					}
         			$this->_table->ControllerAction->field('range_end_time', $options);
 					break;
 				case 'between':
-					$options = ['type' => 'time', 'after' => 'time_range'];
+					$options = ['type' => 'time', 'after' => 'time_range', 'null' => false];
 					if (array_key_exists('range_start_time', $paramsArray)) {
 						$options['value'] = $paramsArray['range_start_time'];
 					}
 					$this->_table->ControllerAction->field('range_start_time', $options);
-					$options = ['type' => 'time', 'after' => 'range_start_time'];
+					$options = ['type' => 'time', 'after' => 'range_start_time', 'null' => false];
 					if (array_key_exists('range_end_time', $paramsArray)) {
 						$options['value'] = $paramsArray['range_end_time'];
 					}
