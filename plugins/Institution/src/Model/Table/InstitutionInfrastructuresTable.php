@@ -126,6 +126,11 @@ class InstitutionInfrastructuresTable extends AppTable {
 		$this->ControllerAction->field('infrastructure_condition_id', ['type' => 'select']);
 	}
 
+	public function addOnInitialize(Event $event, Entity $entity) {
+		list(, $selectedLevel) = array_values($this->getLevelOptions());
+		$entity->infrastructure_level_id = $selectedLevel;
+	}
+
 	public function editOnInitialize(Event $event, Entity $entity) {
 		$this->request->query['level'] = $entity->infrastructure_level_id;
 	}
@@ -204,17 +209,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 	}
 
 	public function onUpdateFieldInfrastructureLevelId(Event $event, array $attr, $action, Request $request) {
-		$parentId = $this->request->query('parent');
-		$levelQuery = $this->Levels->find('list');
-		if (is_null($parentId)) {
-			$levelQuery->where([$this->Levels->aliasField('parent_id') => 0]);
-		} else {
-			$levelId = $this->get($parentId)->infrastructure_level_id;
-			$levelQuery->where([$this->Levels->aliasField('parent_id') => $levelId]);
-		}
-		$levelOptions = $levelQuery->toArray();
-		$selectedLevel = $this->queryString('level', $levelOptions);
-		$this->advancedSelectOptions($levelOptions, $selectedLevel);
+		list($levelOptions, $selectedLevel) = array_values($this->getLevelOptions());
 
 		$attr['options'] = $levelOptions;
 		$attr['onChangeReload'] = 'changeLevel';
@@ -264,7 +259,9 @@ class InstitutionInfrastructuresTable extends AppTable {
 		if ($request->is(['post', 'put'])) {
 			if (array_key_exists($this->alias(), $request->data)) {
 				if (array_key_exists('infrastructure_level_id', $request->data[$this->alias()])) {
-					$request->query['level'] = $request->data[$this->alias()]['infrastructure_level_id'];
+					$selectedLevel = $request->data[$this->alias()]['infrastructure_level_id'];
+					$request->query['level'] = $selectedLevel;
+					$entity->infrastructure_level_id = $selectedLevel;
 				}
 			}
 		}
@@ -308,6 +305,22 @@ class InstitutionInfrastructuresTable extends AppTable {
 		}
 
 		return $parentPath;
+	}
+
+	public function getLevelOptions() {
+		$parentId = $this->request->query('parent');
+		$levelQuery = $this->Levels->find('list');
+		if (is_null($parentId)) {
+			$levelQuery->where([$this->Levels->aliasField('parent_id') => 0]);
+		} else {
+			$levelId = $this->get($parentId)->infrastructure_level_id;
+			$levelQuery->where([$this->Levels->aliasField('parent_id') => $levelId]);
+		}
+		$levelOptions = $levelQuery->toArray();
+		$selectedLevel = $this->queryString('level', $levelOptions);
+		$this->advancedSelectOptions($levelOptions, $selectedLevel);
+
+		return compact('levelOptions', 'selectedLevel');
 	}
 
 	public function getYearOptionsByConfig() {
