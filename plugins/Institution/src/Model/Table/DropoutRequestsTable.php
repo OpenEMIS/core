@@ -24,7 +24,7 @@ class DropoutRequestsTable extends AppTable {
 	}
 
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
-    	$id = $this->Session->read('Students.Student.id');
+    	$id = $this->Session->read('Student.Students.id');
     	$action = $this->ControllerAction->url('add');
 		$action['action'] = 'StudentUser';
 		$action[0] = 'view';
@@ -58,7 +58,7 @@ class DropoutRequestsTable extends AppTable {
 	}
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data) {
-		$id = $this->Session->read('Students.Student.id');
+		$id = $this->Session->read('Student.Students.id');
     	$action = $this->ControllerAction->url('edit');
 		$action['action'] = 'StudentUser';
 		$action[0] = 'view';
