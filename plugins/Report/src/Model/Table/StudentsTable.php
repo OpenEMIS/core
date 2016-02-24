@@ -26,6 +26,7 @@ class StudentsTable extends AppTable  {
 			'model' => 'Student.Students',
 			'formFilterClass' => null,
 			'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 	}
 

@@ -332,6 +332,8 @@ class ImportStudentsTable extends AppTable {
 				$rowInvalidCodeCols['class'] = __('Selected class does not exists during the selected Academic Period');
 				return false;
 			}
+		} else {
+			$tempRow['class'] = 0;
 		}
 
 		return true;
