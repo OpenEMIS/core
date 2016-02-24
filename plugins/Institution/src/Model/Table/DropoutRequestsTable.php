@@ -29,6 +29,7 @@ class DropoutRequestsTable extends AppTable {
 		$action['action'] = 'StudentUser';
 		$action[0] = 'view';
 		$action[1] = $id;
+		$action['id'] = $this->Session->read($this->registryAlias().'.id');
     	$event->stopPropagation();
     	$this->Session->delete($this->registryAlias().'.id');
     	return $this->controller->redirect($action);
@@ -63,6 +64,7 @@ class DropoutRequestsTable extends AppTable {
 		$action['action'] = 'StudentUser';
 		$action[0] = 'view';
 		$action[1] = $id;
+		$action['id'] = $this->Session->read($this->registryAlias().'.id');
     	$event->stopPropagation();
     	$this->Session->delete($this->registryAlias().'.id');
     	return $this->controller->redirect($action);
