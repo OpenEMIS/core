@@ -27,7 +27,6 @@ class TransferApprovalsTable extends AppTable {
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('StudentTransferReasons', ['className' => 'FieldOption.StudentTransferReasons']);
-		$this->addBehavior('Institution.UpdateStudentStatus');
 	}
 
 	public function implementedEvents() {
