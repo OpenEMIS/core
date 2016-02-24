@@ -32,17 +32,29 @@ class AreapickerBehavior extends Behavior {
 			$options['display-country'] = 1;
 			$targetTable = TableRegistry::get($targetModel);
 			$condition = [];
-
+			$areaOptions = $targetTable
+				->find('list');
+			if ($targetModel == 'Area.AreaAdministratives') {
+				$subQueryForWorldRecord = $targetTable->find()->select([$targetTable->aliasField('id')])->where([$targetTable->aliasField('parent_id') => -1]);
+				$areaOptions = $targetTable
+					->find('list')
+					->where([$targetTable->aliasField('parent_id').' <> ' => -1])
+					->order([$targetTable->aliasField('parent_id'), $targetTable->aliasField('order')])
+					->toArray();
+			}	
 			if ($targetModel == 'Area.Areas' && isset($attr['displayCountry'])) {
 				$options['display-country'] = $entity->area_id;
 			} else if (isset($attr['displayCountry']) && !$attr['displayCountry']) {
 				$options['display-country'] = 0;
+				if ($this->_table->action == 'add') {
+					$areaOptions = $targetTable
+						->find('list')
+						->where([$targetTable->aliasField('is_main_country') => 1])
+						->order([$targetTable->aliasField('order')])
+						->toArray();
+				}
 			}
-
-			$areaOptions = $targetTable
-				->find('list')
-				->toArray();
-				;
+			
 			$fieldName = $attr['model'] . '.' . $attr['field'];
 			$options['onchange'] = "Area.reload(this)";
 			$options['url'] = $Url->build(['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'ajaxGetArea']);
