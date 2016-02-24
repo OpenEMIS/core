@@ -104,6 +104,7 @@ class RenderDateBehavior extends RenderBehavior {
 				}
 			}
 
+			$attr['null'] = !$attr['customField']['is_mandatory'];
 			$event->subject()->viewSet('datepicker', $attr);
 			$value = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
 

@@ -30,9 +30,10 @@ class SetupDateBehavior extends SetupBehavior {
     			$this->_table->request->data[$this->_table->alias()]['field_type'] == 'DATE'
     			) {
     			// only do this if it is DATE
-	    		if ($this->_table->request->data[$this->_table->alias()]['date_range'] == 'between') {
+	    		if (array_key_exists('date_range', $this->_table->request->data[$this->_table->alias()]) &&
+	    			$this->_table->request->data[$this->_table->alias()]['date_range'] == 'between') {
 	    			$validator->add('range_start_date', 'ruleCompareDate', [
-						'rule' => ['compareDate', 'range_end_date', false],
+						'rule' => ['compareDate', 'range_end_date', true],
 						'provider' => 'table'
 					]);
 	    		}

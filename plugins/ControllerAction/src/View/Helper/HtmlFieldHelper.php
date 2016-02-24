@@ -50,9 +50,9 @@ class HtmlFieldHelper extends Helper {
 
 	public function viewSet($element, $attr) {
 		if (!is_null($this->_View->get($element))) {
-			$datepickers = $this->_View->get($element);
-			$datepickers[] = $attr;
-			$this->_View->set($element, $datepickers);
+			$options = $this->_View->get($element);
+			$options[] = $attr;
+			$this->_View->set($element, $options);
 		} else {
 			$this->_View->set($element, [$attr]);
 		}
