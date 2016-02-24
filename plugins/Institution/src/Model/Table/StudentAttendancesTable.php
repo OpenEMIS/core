@@ -22,6 +22,8 @@ class StudentAttendancesTable extends AppTable {
 	private $_fieldOrder = ['openemis_no', 'student_id'];
 	private $dataCount = null;
 	private $_absenceData = [];
+	private $absenceList;
+	private $absenceCodeList;
 
 	public function initialize(array $config) {
 		$this->table('institution_section_students');
@@ -39,6 +41,9 @@ class StudentAttendancesTable extends AppTable {
 			'pages' => ['index']
 		]);
 		$this->addBehavior('Import.ImportLink');
+
+		$this->absenceList = $this->AbsenceTypes->getAbsenceTypeList();
+		$this->absenceCodeList = $this->AbsenceTypes->getCodeList();
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
