@@ -1,5 +1,5 @@
 -- db_patches
-INSERT INTO `db_patches` VALUES ('PHPOE-1905', NOW());
+INSERT INTO `db_patches` VALUES ('POCOR-1905', NOW());
 
 INSERT INTO `config_items` (`name`, `code`, `type`, `label`, `value`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created` )
 VALUES
