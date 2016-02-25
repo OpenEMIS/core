@@ -6,42 +6,35 @@ use App\Model\Table\AppTable;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\ORM\Query;
+use App\Model\Table\ControllerActionTable;
 
-class AreaAdministrativeLevelsTable extends AppTable {
+class AreaAdministrativeLevelsTable extends ControllerActionTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('Countries', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'area_administrative_id']);
 		$this->hasMany('Areas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'area_administrative_level_id']);
+		$this->addBehavior('RestrictAssociatedDelete');
 	}
 
-	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('level');
-		$this->ControllerAction->field('area_administrative_id');
-		$this->ControllerAction->setFieldOrder('level', 'name');
-
-		$this->fields['area_administrative_id']['visible']['index'] = false;
-		$this->fields['area_administrative_id']['visible']['view'] = false;
+	public function beforeAction(Event $event, ArrayObject $extra) {
+		$this->field('level', ['before' => 'name']);
+		$this->field('area_administrative_id', ['type' => 'hidden', 'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true]]);
 	}
 
-	public function indexBeforeAction(Event $event) {
+	public function indexBeforeAction(Event $event, ArrayObject $extra) {
+		
+	}
+
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		//Add controls filter to index page
-		$toolbarElements = [
-			['name' => 'Area.controls', 'data' => [], 'options' => []]
-		];
-
-		$this->controller->set('toolbarElements', $toolbarElements);
-	}
-
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		list($countryOptions, $selectedCountry) = array_values($this->getSelectOptions());
-
+		$extra['elements']['controls'] = ['name' => 'Area.controls', 'data' => [], 'options' => [], 'order' => 1];
 		$this->controller->set(compact('countryOptions', 'selectedCountry'));
 		$query->where([$this->aliasField('area_administrative_id') => $selectedCountry]);
 	}
 
-	public function addEditBeforeAction(Event $event) {
+	public function addEditBeforeAction(Event $event, ArrayObject $extra) {
 		$this->fields['level']['type'] = 'hidden';
-		$this->fields['area_administrative_id']['type'] = 'hidden';
 	}
 
 	public function onUpdateFieldLevel(Event $event, array $attr, $action, Request $request) {
