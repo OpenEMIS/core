@@ -322,7 +322,7 @@ class StudentsTable extends AppTable {
 			->toArray();
 
 		// Academic Periods
-		$academicPeriodOptions = $this->AcademicPeriods->getList();
+		$academicPeriodOptions = $this->AcademicPeriods->getList(['restrictLevel' => ['1']]);
 
 		// Education Grades
 		$InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
