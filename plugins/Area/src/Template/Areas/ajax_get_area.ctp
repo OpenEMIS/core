@@ -10,16 +10,14 @@
 
 	$count = 0;
 	foreach ($path as $obj) {
-		
-		$name = $obj->level->name;
+		$name = $obj->$levelAssociation->name;
 		if (!($tableName=='Area.AreaAdministratives' && $count==0)) {
 			echo $this->Form->input($name, [
 				'class' => $formClass,
 				'div' => false,
 				'data-source' => $tableName,
 				'target-model' => $targetModel,
-				'area-label' => $areaLabel,
-				'label' => $areaLabel . " - " . $name,
+				'label' => __($name),
 				'url' => $url,
 				'onchange' => 'Area.reload(this)',
 				'options' => $obj->list,

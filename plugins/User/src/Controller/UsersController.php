@@ -51,46 +51,7 @@ class UsersController extends AppController {
 
 	public function postLogin() {
 		$this->autoRender = false;
-		if ($this->request->is('post')) {
-			if ($this->request->data['submit'] == 'login') {
-				$session = $this->request->session();
-				$username = $this->request->data('username');
-				$this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'debug');
-				$user = $this->Auth->identify();
-				if ($user) {
-					if ($user['status'] != 1) {
-						$this->Alert->error('security.login.inactive');
-						return $this->redirect(['action' => 'login']);
-					}
-					$this->Auth->setUser($user);
-					$labels = TableRegistry::get('Labels');
-					$labels->storeLabelsInCache();
-					if ($this->Auth->authenticationProvider()->needsPasswordRehash()) {
-						$user = $this->Users->get($this->Auth->user('id'));
-						$user->password = $this->request->data('password');
-						$this->Users->save($user);
-					}
-					// Support Url
-					$ConfigItems = TableRegistry::get('ConfigItems');
-					$supportUrl = $ConfigItems->value('support_url');
-					$session->write('System.help', $supportUrl);
-					// End
-					return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
-				} else {
-					$this->Alert->error('security.login.fail');
-					return $this->redirect(['action' => 'login']);
-				}
-			} else if ($this->request->data['submit'] == 'reload') {
-				$username = $this->request->data['username'];
-				$password = $this->request->data['password'];
-				$session = $this->request->session();
-				$session->write('login.username', $username);
-				$session->write('login.password', $password);
-				return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
-			}
-		} else {
-			return $this->redirect($this->Auth->logout());
-		}
+		$this->SSO->doAuthentication();
 	}
 
 	public function logout() {
@@ -109,5 +70,9 @@ class UsersController extends AppController {
 		$user->last_login = new DateTime();
 		$this->Users->save($user);
 		$this->log('[' . $user->username . '] Login successfully.', 'debug');
+
+		// To remove inactive staff security group users records
+		$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
+		$InstitutionStaffTable->removeInactiveStaffSecurityRole();
 	}
 }

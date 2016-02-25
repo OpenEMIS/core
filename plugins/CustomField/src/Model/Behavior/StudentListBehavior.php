@@ -269,7 +269,13 @@ class StudentListBehavior extends Behavior {
                             // End
 
                             if ($action == 'view') {
-                                $rowData[] = $student->user->openemis_no . $rowValue;
+                                $rowData[] = $event->subject->Html->link($student->user->openemis_no, [
+									'plugin' => 'Institution',
+									'controller' => 'Institutions',
+									'action' => 'StudentUser',
+									'view',
+									$student->user->id
+								]);
                                 $rowData[] = $student->user->name;
                             } else if ($action == 'edit') {
                                 $rowInput .= $Form->hidden($rowPrefix.".institution_id", ['value' => $institutionId]);

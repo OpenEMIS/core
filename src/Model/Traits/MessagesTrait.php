@@ -2,6 +2,7 @@
 namespace App\Model\Traits;
 use Cake\Cache\Cache;
 use Cake\ORM\TableRegistry;
+use Cake\Log\Log;
 
 trait MessagesTrait {
 	public $messages = [
@@ -123,6 +124,10 @@ trait MessagesTrait {
 		'InstitutionShifts' => [
 			'start_time' => 'Start Time',
 			'end_time' => 'End Time',
+			'our_shifts' => 'Our Shifts',
+			'external_shifts' => 'External Shifts',
+			'location' => 'Location',
+			'institution' => 'Institution',
 		],
 		'InstitutionSections' => [
 			'noClasses' => 'No Classes',
@@ -133,12 +138,13 @@ trait MessagesTrait {
 			'section' => 'Class',
 			'single_grade_field' => 'Single Grade Classes',
 			'multi_grade_field' => 'Class Grades',
-			
 			'emptyName' => 'Class name should not be empty',
 			'emptySecurityUserId' => 'Home Room Teacher should not be empty',
 			'emptyNameSecurityUserId' => 'Class name and Home Room Teacher should not be empty',
 			'emptySecurityUserIdName' => 'Class name and Home Room Teacher should not be empty',
-
+			'stopDeleteWhenStudentExists' => 'Delete is not allowed as students still exists in class',
+			'maximumStudentsReached' => 'Reached the maximum number of students allowed in a class',
+			'education_grade_options_empty' => 'No available Grades for the selected period'
 		],
 		'InstitutionClasses' => [
 			'noGrades' => 'No Grades Assigned',
@@ -248,9 +254,11 @@ trait MessagesTrait {
 		'security' => [
 			'login' => [
 				'fail' => 'You have entered an invalid username or password.',
-				'inactive' => 'Your account has been disabled.'
+				'inactive' => 'Your account has been disabled.',
+				'remoteFail' => 'Remote authentication failed, please try local login.',
 			],
-			'noAccess' => 'You do not have access to this location.'
+			'noAccess' => 'You do not have access to this location.',
+			'emptyFields' => 'Some of the required fields for this authentication type are empty.'
 		],
 		'SecurityRoles' => [
 			'userRoles' => 'User Roles',
@@ -347,15 +355,22 @@ trait MessagesTrait {
 		'StudentPromotion' => [
 			'noGrades' => 'No Available Grades',
 			'noStudents' => 'No Available Students',
-			'noPeriods' => 'You need to configure Academic Periods for Promotion / Graduation.',
-			'noData' => 'There are no available Students for Promotion / Graduation.',
+			'noPeriods' => 'You need to configure Academic Periods for Promotion / Graduation',
+			'noData' => 'There are no available Students for Promotion / Graduation',
 			'current_period' => 'Current Academic Period',
 			'next_period' => 'Next Academic Period',
-			'success' => 'Students have been promoted.',
-			'noNextGrade' => 'Next grade in the Education Structure is not available in this Institution.',
-			'reconfirm' => 'Please review the information before proceeding with the operation.',
-			'noStudentSelected' => 'There are no students selected.',
+			'success' => 'Students have been promoted',
+			'noNextGrade' => 'Next grade in the Education Structure is not available in this Institution',
+			'reconfirm' => 'Please review the information before proceeding with the operation',
+			'noStudentSelected' => 'There are no students selected',
 			'noAvailableGrades' => 'No Available Grades in this Institution',
+			'noAvailableAcademicPeriod' => 'No Available Academic Periods',
+			'noNextGradeOrNextPeriod' => 'Next grade in the Education Structure is not available in this Institution or no Next Academic Period defined',
+			'savingPromotionError' => 'Some selected students record were not updated succesfully',
+			'successGraduated' => 'Students have graduated',
+			'successOthers' => 'Students status changed successfully',
+			'noNextAcademicPeriod' => 'There is no next academic period for the promotion.',
+			'pendingRequest' => 'There is a pending student status change request at the moment.'
 		],
 		'StudentTransfer' => [
 			'noGrades' => 'No Available Grades',
@@ -384,6 +399,7 @@ trait MessagesTrait {
 		],
 		'DropoutRequests' => [
 			'request' => 'Dropout request hsa been submitted successfully.',
+			'notEligible' =>  'This student is not eligible for this action. Please reject this request.'
 		],
 		'StudentDropout' => [
 			'exists' => 'Student has already dropped out from the school.',
@@ -414,9 +430,10 @@ trait MessagesTrait {
 			'the_file' => 'The file',
 			'success' => 'is successfully imported.',
 			'failed' => 'failed to import.',
+			'partial_failed' => 'failed to import completely.',
 			'survey_code_not_found' => 'Survey code is missing from the file. Please make sure that survey code exists on sheet "References" cell B4.',
 			'survey_not_found' => 'No identifiable survey found',
-			'no_answers' => 'No answers were found in the file imported',
+			'no_answers' => 'No record were found in the file imported',
 			'institution_network_connectivity_id' => 'code'
 		],
 		'TrainingSessions' => [
@@ -491,11 +508,6 @@ trait MessagesTrait {
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				],
 			],
-			// 'InstitutionStudentAbsences' => [
-			// 	'end_date' => [
-			// 		'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
-			// 	]
-			// ],
 			'InstitutionStudents' => [
 				'academicPeriod' => 'You need to configure Academic Periods first.',
 				'educationProgrammeId' => 'You need to configure Education Programmes first.',
@@ -514,9 +526,17 @@ trait MessagesTrait {
 				'staffTypeId' => 'You need to configure Staff Types first.',
 				'error' => 'New staff is not added to the institutition, due to an error',
 			],
+			'InstitutionPositions' => [
+				'position_no' => [
+					'ruleUnique' => 'The position number that you have entered already existed, please try again.'
+				]
+			],
 			'InstitutionShifts' => [
 				'institution_name' => [
 					'ruleCheckLocationInstitutionId' => 'Please select an institution location.'
+				],
+				'location' => [
+					'ruleCheckShiftAvailable' => 'Shift timing is not available.'
 				]
 			],
 			'StudentGuardians' => [
@@ -539,7 +559,10 @@ trait MessagesTrait {
 					'ruleInstitutionStudentId' => 'Student has already been added.',
 					'ruleCheckAdmissionAgeWithEducationCycleGrade' => 'This student does not fall within the allowed age range for this grade.',
 					'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.'
-				]
+				],
+				'class' => [
+					'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
+				],
 			],
 			'Staff' => [
 				'staff_name' => [
@@ -904,6 +927,14 @@ trait MessagesTrait {
 				],
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				]
+			],
+			'Salaries' => [
+				'gross_salary' => [
+					'ruleMoney' => 'Please enter a valid amount.'
+				],
+				'net_salary' => [
+					'ruleMoney' => 'Please enter a valid amount.'
 				]
 			]
 		],

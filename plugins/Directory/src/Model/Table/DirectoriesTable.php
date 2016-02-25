@@ -13,6 +13,9 @@ use App\Model\Table\AppTable;
 
 class DirectoriesTable extends AppTable {
 	// public $InstitutionStudent;
+	
+	// these constants are being used in AdvancedPositionSearchBehavior as well
+	// remember to check AdvancedPositionSearchBehavior if these constants are being modified
 	const ALL = 0;
 	const STUDENT = 1;
 	const STAFF = 2;
@@ -34,6 +37,10 @@ class DirectoriesTable extends AppTable {
 		$this->addBehavior('User.AdvancedNameSearch');
 		$this->addBehavior('AdvanceSearch');
 		$this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
+		$this->addBehavior('User.AdvancedIdentitySearch');
+		$this->addBehavior('User.AdvancedContactNumberSearch');
+		$this->addBehavior('User.AdvancedPositionSearch');
+		$this->addBehavior('User.AdvancedSpecificNameTypeSearch');
 
 		$this->addBehavior('HighChart', [
 			'user_gender' => [
@@ -214,7 +221,7 @@ class DirectoriesTable extends AppTable {
 			$indexDashboard = 'dashboard';
 			$indexElements = $this->controller->viewVars['indexElements'];
 			
-			$indexElements[] = ['name' => 'Directory.Users/controls', 'data' => [], 'options' => [], 'order' => 1];
+			$indexElements[] = ['name' => 'Directory.Users/controls', 'data' => [], 'options' => [], 'order' => 0];
 			
 			$indexElements[] = [
 				'name' => $indexDashboard,
@@ -225,8 +232,19 @@ class DirectoriesTable extends AppTable {
 					'iconClass' => $iconClass
 				],
 				'options' => [],
-				'order' => 0
+				'order' => 2
 			];
+			foreach ($indexElements as $key => $value) {
+				if ($value['name']=='advanced_search') {
+					$indexElements[$key]['order'] = 1;
+				} else if ($value['name']=='OpenEmis.ControllerAction/index') {
+					$indexElements[$key]['order'] = 3;
+				} else if ($value['name']=='OpenEmis.pagination') {
+					$indexElements[$key]['order'] = 4;
+				} else {
+					// $indexElements[$key]['order'] = $key + 4;
+				}
+			}
 			$this->controller->set('indexElements', $indexElements);
 		}
 	}
@@ -234,7 +252,7 @@ class DirectoriesTable extends AppTable {
 	public function beforeAction(Event $event) {
 		if ($this->action == 'add') {
 			if ($this->controller->name != 'Students') {
-				$this->ControllerAction->field('user_type', ['type' => 'select']);
+				$this->ControllerAction->field('user_type', ['type' => 'select', 'after' => 'photo_content']);
 			} else {
 				$this->request->data[$this->alias()]['user_type'] = self::GUARDIAN;
 			}
@@ -370,8 +388,8 @@ class DirectoriesTable extends AppTable {
 					// Do nothing
 					break;
 				case self::STUDENT:
-					$this->ControllerAction->field('student_status', ['order' => 51]);
 					$this->ControllerAction->field('institution', ['order' => 50]);
+					$this->ControllerAction->field('student_status', ['order' => 51]);
 					break;
 
 				case self::STAFF:
@@ -390,22 +408,7 @@ class DirectoriesTable extends AppTable {
 	}
 
 	public function onGetStudentStatus(Event $event, Entity $entity) {
-		$userId = $entity->id;
-		$InstitutionStudentTable = TableRegistry::get('Institution.Students');
-		$studentInstitutions = $InstitutionStudentTable->find()
-			->matching('StudentStatuses')
-			->where([
-				$InstitutionStudentTable->aliasField('student_id') => $userId
-			])
-			->order([$InstitutionStudentTable->aliasField('modified').' DESC'])
-			->first();
-		
-		if (!empty($studentInstitutions)) {
-			$value = $studentInstitutions->_matchingData['StudentStatuses']['name'];
-		} else {
-			$value = '';
-		}
-		return $value;
+		return __($entity->student_status_name);
 	}
 
 	public function getNumberOfUsersByGender($params=[]) {
@@ -506,21 +509,27 @@ class DirectoriesTable extends AppTable {
 		$studentInstitutions = [];
 		if ($isStudent) {
 			$InstitutionStudentTable = TableRegistry::get('Institution.Students');
-			$studentInstitutions = $InstitutionStudentTable->find('list', [
-					'keyField' => 'id',
-					'valueField' => 'name'
-				])
+			$studentInstitutions = $InstitutionStudentTable->find()
 				->matching('StudentStatuses')
 				->matching('Institutions')
 				->where([
 					$InstitutionStudentTable->aliasField('student_id') => $userId,
-					'StudentStatuses.code' => 'CURRENT'
 				])
 				->distinct(['id'])
-				->select(['id' => $InstitutionStudentTable->aliasField('institution_id'), 'name' => 'Institutions.name'])
-				->order([$InstitutionStudentTable->aliasField('modified').' DESC'])
+				->select(['id' => $InstitutionStudentTable->aliasField('institution_id'), 'name' => 'Institutions.name', 'student_status_name' => 'StudentStatuses.name'])
+				->order(['(CASE WHEN '.$InstitutionStudentTable->aliasField('modified').' IS NOT NULL THEN '.$InstitutionStudentTable->aliasField('modified').' ELSE '.
+				$InstitutionStudentTable->aliasField('created').' END) DESC'])
 				->first();
-			return $studentInstitutions;
+
+			$value = '';
+			$name = '';
+			if (!empty($studentInstitutions)) {
+				$value = $studentInstitutions->student_status_name;
+				$name = $studentInstitutions->name;
+			}
+			$entity->student_status_name = $value;
+			
+			return $name;
 		}
 
 		$staffInstitutions = [];

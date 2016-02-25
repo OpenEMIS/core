@@ -216,7 +216,10 @@ class AcademicPeriodsTable extends AppTable {
 		return $attr;
 	}
 
-	public function getYearList() {
+	public function getYearList($params = []) {
+		$conditions = array_key_exists('conditions', $params) ? $params['conditions'] : [];
+		$isEditable = array_key_exists('isEditable', $params) ? $params['isEditable'] : null;
+
 		$level = $this->Levels
 			->find()
 			->order([$this->Levels->aliasField('level ASC')])
@@ -226,15 +229,18 @@ class AcademicPeriodsTable extends AppTable {
 			->find('list')
 			->find('visible')
 			->find('order')
+			->find('editable', ['isEditable' => $isEditable])
 			->where([$this->aliasField('academic_period_level_id') => $level->id])
+			->where($conditions)
 			->toArray();
-
 		return $list;
 	}
 
 	public function getList($params=[]) {
 
 		$withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : true;
+		$withSelect = array_key_exists('withSelect', $params) ? $params['withSelect'] : false;
+		$isEditable = array_key_exists('isEditable', $params) ? $params['isEditable'] : null;
 
 		if ( !$withLevels ) {
 			$where = [
@@ -253,6 +259,7 @@ class AcademicPeriodsTable extends AppTable {
 			$where[$this->aliasField('current')] = 0;
 			$data += $this->find('list')
 				->find('visible')
+				->find('editable', ['isEditable' => $isEditable])
 				->find('order')
 				->where($where)
 				->toArray();
@@ -264,6 +271,7 @@ class AcademicPeriodsTable extends AppTable {
 			// get the current period
 			$data = $this->find()
 				->find('visible')
+				->find('editable', ['isEditable' => $isEditable])
 				->contain(['Levels'])
 				->select([
 						'id' => $this->aliasField('id'),
@@ -286,7 +294,21 @@ class AcademicPeriodsTable extends AppTable {
 
 			$data = $list;
 		}
+
+		if ( $withSelect ) {
+			$data = ['' => __('-- Select Period --')] + $data;
+		}
+
 		return $data;
+	}
+
+	public function findEditable(Query $query, array $options) {
+		$isEditable = array_key_exists('isEditable', $options) ? $options['isEditable'] : null;
+		if (is_null($isEditable)) {
+			return $query;
+		} else {
+			return $query->where([$this->aliasField('editable') => (bool)$isEditable]);
+		}
 	}
 
 	public function getDate($dateObject) {
@@ -298,13 +320,13 @@ class AcademicPeriodsTable extends AppTable {
 
 	public function getWorkingDaysOfWeek() {
 		$weekdays = [
-			0 => 'Sunday',
-			1 => 'Monday',
-			2 => 'Tuesday',
-			3 => 'Wednesday',
-			4 => 'Thursday',
-			5 => 'Friday',
-			6 => 'Saturday',
+			0 => __('Sunday'),
+			1 => __('Monday'),
+			2 => __('Tuesday'),
+			3 => __('Wednesday'),
+			4 => __('Thursday'),
+			5 => __('Friday'),
+			6 => __('Saturday'),
 		];
 		$ConfigItems = TableRegistry::get('ConfigItems');
 		$firstDayOfWeek = $ConfigItems->value('first_day_of_week');

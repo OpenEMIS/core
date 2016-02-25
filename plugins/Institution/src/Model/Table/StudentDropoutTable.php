@@ -22,7 +22,7 @@ class StudentDropoutTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-		$this->belongsTo('StudentDropoutReasons', ['className' => 'FieldOption.StudentDropoutReasons']);
+		$this->belongsTo('StudentDropoutReasons', ['className' => 'FieldOption.StudentDropoutReasons', 'foreignKey' => 'student_dropout_reason_id']);
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -43,7 +43,6 @@ class StudentDropoutTable extends AppTable {
 	}
 
 	public function afterAction($event) {
-    	$this->ControllerAction->field('student_dropout_reason_id', ['visible' => ['edit' => true, 'index' => false, 'view' => false]]);
     	$this->ControllerAction->field('effective_date', ['visible' => ['edit' => true, 'index' => false, 'view' => true]]);
     	$this->ControllerAction->field('comment', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
     	$this->ControllerAction->field('student_id');
@@ -60,12 +59,12 @@ class StudentDropoutTable extends AppTable {
 		$this->ControllerAction->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
 		$this->ControllerAction->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $this->AcademicPeriods->get($entity->academic_period_id)->name]]);
 		$this->ControllerAction->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
-		$this->ControllerAction->field('student_dropout_reason_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('student_dropout_reason_id', ['type' => 'readonly', 'attr' => ['value' => $this->StudentDropoutReasons->get($entity->student_dropout_reason_id)->name]]);
 		$this->ControllerAction->field('created', ['type' => 'disabled', 'attr' => ['value' => $this->formatDate($entity->created)]]);
   		$this->ControllerAction->setFieldOrder([
 			'created', 'status', 'student_id',
 			'institution_id', 'academic_period_id', 'education_grade_id',
-			'effective_date', 'comment', 
+			'effective_date', 'student_dropout_reason_id', 'comment', 
 		]);
 
 		$urlParams = $this->ControllerAction->url('edit');
@@ -76,10 +75,11 @@ class StudentDropoutTable extends AppTable {
 
     public function viewAfterAction($event, Entity $entity) {
     	$this->request->data[$this->alias()]['status'] = $entity->status;
+    	$this->ControllerAction->field('student_dropout_reason_id', ['type' => 'readonly', 'attr' => ['value' => $this->StudentDropoutReasons->get($entity->student_dropout_reason_id)->name]]);
 		$this->ControllerAction->setFieldOrder([
 			'created', 'status', 'student_id',
 			'institution_id', 'academic_period_id', 'education_grade_id',
-			'effective_date', 'comment'
+			'effective_date', 'student_dropout_reason_id', 'comment'
 		]);
     }
 
@@ -289,17 +289,25 @@ class StudentDropoutTable extends AppTable {
 		if (!$Students->exists($conditions)) {
 			// Change the status of the student in the school
 			// Update only enrolled statuses student
-			$Students->updateAll(
-				['student_status_id' => $statuses['DROPOUT'], 'end_date' => $effectiveDate],
-				[
-					'institution_id' => $institutionId,
-					'student_id' => $studentId,
-					'academic_period_id' => $periodId,
-					'education_grade_id' => $gradeId,
-					'student_status_id' => $statuses['CURRENT']
-				]
-			);
+			$existingStudentEntity = $Students->find()->where([
+					$Students->aliasField('institution_id') => $institutionId,
+					$Students->aliasField('student_id') => $studentId,
+					$Students->aliasField('academic_period_id') => $periodId,
+					$Students->aliasField('education_grade_id') => $gradeId,
+					$Students->aliasField('student_status_id') => $statuses['CURRENT']
+				])
+				->first();
 
+			if (empty($existingStudentEntity)) {
+				// if no record is found say 'This student is not eligible for this action. Please reject this request.'
+				$this->Alert->warning('DropoutRequests.notEligible');
+				$event->stopPropagation();
+				return $this->controller->redirect($this->ControllerAction->url('edit'));
+			}
+
+			$existingStudentEntity->student_status_id = $statuses['DROPOUT'];
+			$existingStudentEntity->end_date = $effectiveDate;
+			$Students->save($existingStudentEntity);
 			$this->Alert->success('StudentDropout.approve');
 
 			$entity->status = self::APPROVED;

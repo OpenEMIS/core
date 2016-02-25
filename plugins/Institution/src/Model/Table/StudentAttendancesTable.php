@@ -22,6 +22,8 @@ class StudentAttendancesTable extends AppTable {
 	private $_fieldOrder = ['openemis_no', 'student_id'];
 	private $dataCount = null;
 	private $_absenceData = [];
+	private $absenceList;
+	private $absenceCodeList;
 
 	public function initialize(array $config) {
 		$this->table('institution_section_students');
@@ -32,12 +34,16 @@ class StudentAttendancesTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
 		$this->belongsTo('InstitutionSections', ['className' => 'Institution.InstitutionSections']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+		$this->belongsTo('StudentStatuses',	['className' => 'Student.StudentStatuses']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->addBehavior('Excel', [
 			'excludes' => ['status', 'education_grade_id'],
 			'pages' => ['index']
 		]);
 		$this->addBehavior('Import.ImportLink');
+
+		$this->absenceList = $this->AbsenceTypes->getAbsenceTypeList();
+		$this->absenceCodeList = $this->AbsenceTypes->getCodeList();
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
@@ -226,7 +232,13 @@ class StudentAttendancesTable extends AppTable {
 
 	// Event: ControllerAction.Model.onGetOpenemisNo
 	public function onGetOpenemisNo(Event $event, Entity $entity) {
-		return $entity->user->openemis_no;
+		return $event->subject()->Html->link($entity->user->openemis_no , [
+			'plugin' => 'Institution',
+			'controller' => 'Institutions',
+			'action' => 'StudentUser',
+			'view',
+			$entity->user->id
+		]);
 	}
 
 	// Event: ControllerAction.Model.onGetType
@@ -463,8 +475,10 @@ class StudentAttendancesTable extends AppTable {
 				}
 				$weekOptions[$index] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
 			}
-			$selectedYear = $AcademicPeriod->get($selectedPeriod)->start_year;
-			if ($selectedYear == date("Y") && !is_null($currentWeek)) {
+			$academicPeriodObj = $AcademicPeriod->get($selectedPeriod);
+			$startYear = $academicPeriodObj->start_year;
+			$endYear = $academicPeriodObj->end_year;
+			if (date("Y") >= $startYear && date("Y") <= $endYear && !is_null($currentWeek)) {
 				$selectedWeek = !is_null($this->request->query('week')) ? $this->request->query('week') : $currentWeek;
 			} else {
 				$selectedWeek = $this->queryString('week', $weekOptions);
@@ -639,7 +653,7 @@ class StudentAttendancesTable extends AppTable {
     	return $query
     		->select([
     			$this->aliasField('student_id'), 
-    			'Users.openemis_no', 'Users.first_name', 'Users.last_name',
+    			'Users.openemis_no', 'Users.first_name', 'Users.last_name', 'Users.id',
     			'StudentAbsences.id',
     			'StudentAbsences.start_date',
     			'StudentAbsences.end_date',
