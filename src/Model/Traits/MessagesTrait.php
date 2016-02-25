@@ -49,6 +49,7 @@ trait MessagesTrait {
 				'label' => 'Edit',
 			],
 			'delete' => [
+				'restrictDelete' => 'The record cannot be deleted.',
 				'success' => 'The record has been deleted successfully.',
 				'failed' => 'The record is not deleted due to errors encountered.',
 				'label' => 'Delete',
