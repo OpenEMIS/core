@@ -36,8 +36,8 @@ class SystemGroupsTable extends AppTable {
 		if ($action == 'edit') {
 			$includes['autocomplete'] = [
 				'include' => true, 
-				'css' => ['OpenEmis.jquery-ui.min', 'OpenEmis.../plugins/autocomplete/css/autocomplete'],
-				'js' => ['OpenEmis.jquery-ui.min', 'OpenEmis.../plugins/autocomplete/js/autocomplete']
+				'css' => ['OpenEmis.../plugins/autocomplete/css/autocomplete'],
+				'js' => ['OpenEmis.../plugins/autocomplete/js/autocomplete']
 			];
 		}
 	}
@@ -81,6 +81,7 @@ class SystemGroupsTable extends AppTable {
 				return $this->controller->redirect($urlParams);
 			}
 		}
+		$this->request->data['user_search'] = '';
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
@@ -184,7 +185,12 @@ class SystemGroupsTable extends AppTable {
 			if (!empty($associated[$key])) {
 				foreach ($associated[$key] as $i => $obj) {
 					$rowData = [];
-					$rowData[] = $obj->openemis_no;
+					$rowData[] = $event->subject()->Html->link($obj->openemis_no , [
+						'plugin' => 'Directory',
+						'controller' => 'Directories',
+						'action' => 'view',
+						$obj->id
+					]);
 					$rowData[] = $obj->name;
 					$roleId = $obj->_joinData->security_role_id;
 

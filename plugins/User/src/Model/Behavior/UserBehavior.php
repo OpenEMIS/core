@@ -9,6 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use User\Model\Entity\User;
+use Cake\I18n\I18n;
 
 class UserBehavior extends Behavior {
 	private $defaultStudentProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-students'></i></div></div>";
@@ -88,6 +89,7 @@ class UserBehavior extends Behavior {
 
 		if ($this->_table->table() == 'security_users') {
 			$this->_table->addBehavior('Area.Areapicker');
+			$this->_table->addBehavior('OpenEmis.Section');
 			$this->_table->fields['photo_name']['visible'] = false;
 			$this->_table->fields['super_admin']['visible'] = false;
 			$this->_table->fields['date_of_death']['visible'] = false;
@@ -124,6 +126,20 @@ class UserBehavior extends Behavior {
 				$this->_table->ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
 				$this->_table->ControllerAction->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
 			}
+
+			if ($this->_table->registryAlias() != 'Security.Users') {
+				$this->_table->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information'), 'before' => 'photo_content', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+				$this->_table->ControllerAction->field('location_section', ['type' => 'section', 'title' => __('Location'), 'before' => 'address', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+
+				$language = I18n::locale();
+				$field = 'address_area_id';
+				$areaLabel = $this->onGetFieldLabel($event, $this->_table->alias(), $field, $language, true);
+				$this->_table->ControllerAction->field('address_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+				$field = 'birthplace_area_id';
+				$areaLabel = $this->onGetFieldLabel($event, $this->_table->alias(), $field, $language, true);
+				$this->_table->ControllerAction->field('birthplace_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+				$this->_table->ControllerAction->field('contact_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+			}	
 		}
 	}
 

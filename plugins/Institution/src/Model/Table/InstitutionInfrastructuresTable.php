@@ -8,20 +8,23 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
+use Cake\Log\Log;
 
 class InstitutionInfrastructuresTable extends AppTable {
 	private $_fieldOrder = [
-		'institution_id', 'infrastructure_level_id', 'code', 'name', 'infrastructure_type_id', 'size', 'infrastructure_ownership_id', 'year_acquired', 'year_disposed', 'infrastructure_condition_id', 'comment'
+		'institution_id', 'parent_id', 'infrastructure_level_id', 'code', 'name', 'infrastructure_type_id', 'size', 'infrastructure_ownership_id', 'year_acquired', 'year_disposed', 'infrastructure_condition_id', 'comment'
 	];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
 
+		$this->belongsTo('Parents', ['className' => 'Institution.InstitutionInfrastructures']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('Levels', ['className' => 'Infrastructure.InfrastructureLevels', 'foreignKey' => 'infrastructure_level_id']);
 		$this->belongsTo('Types', ['className' => 'Infrastructure.InfrastructureTypes', 'foreignKey' => 'infrastructure_type_id']);
 		$this->belongsTo('InfrastructureOwnerships', ['className' => 'FieldOption.InfrastructureOwnerships']);
 		$this->belongsTo('InfrastructureConditions', ['className' => 'FieldOption.InfrastructureConditions']);
+		$this->hasMany('ChildInfrastructures', ['className' => 'Institution.InstitutionInfrastructures', 'foreignKey' => 'parent_id']);
 
 		$this->addBehavior('CustomField.Record', [
 			'fieldKey' => 'infrastructure_custom_field_id',
@@ -37,9 +40,27 @@ class InstitutionInfrastructuresTable extends AppTable {
 		]);
 	}
 
+	public function onGetCode(Event $event, Entity $entity) {
+		return $event->subject()->Html->link($entity->code, [
+			'plugin' => $this->controller->plugin,
+			'controller' => $this->controller->name,
+			'action' => $this->alias,
+			'index',
+			'parent' => $entity->id
+		]);
+	}
+
 	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('infrastructure_level_id');
-		$this->ControllerAction->field('infrastructure_type_id');
+		// Add breadcrumb
+		$action = $this->ControllerAction->action();
+		if ($action == 'index' || $action == 'edit') {
+			$toolbarElements = [
+	            ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => [], 'options' => []]
+	        ];
+			$this->controller->set('toolbarElements', $toolbarElements);
+		}
+
+		$this->ControllerAction->field('parent_id');
 		$this->ControllerAction->field('year_acquired');
 		$this->ControllerAction->field('year_disposed');
 
@@ -47,13 +68,13 @@ class InstitutionInfrastructuresTable extends AppTable {
 	}
 
 	public function indexBeforeAction(Event $event) {
-		//Add controls filter to index page
-		$toolbarElements = [
-            ['name' => 'Infrastructure.controls', 'data' => [], 'options' => []]
-        ];
+		$parentId = $this->request->query('parent');
+		if (!is_null($parentId)) {
+			$crumbs = $this->findPath(['for' => $parentId]);
+			$this->controller->set('crumbs', $crumbs);
+		}
 
-		$this->controller->set('toolbarElements', $toolbarElements);
-
+		$this->fields['parent_id']['visible'] = false;
 		$this->fields['infrastructure_level_id']['visible'] = false;
 		$this->fields['size']['visible'] = false;
 		$this->fields['infrastructure_ownership_id']['visible'] = false;
@@ -64,30 +85,138 @@ class InstitutionInfrastructuresTable extends AppTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		list($levelOptions, $selectedLevel) = array_values($this->getSelectOptions());
-		$this->controller->set(compact('levelOptions', 'selectedLevel'));
-
-		$query->where([$this->aliasField('infrastructure_level_id') => $selectedLevel]);
+		$parentId = $this->request->query('parent');
+		if (!is_null($parentId)) {
+			$query->where([$this->aliasField('parent_id') => $parentId]);
+		} else {
+			$query->where([$this->aliasField('parent_id IS NULL')]);
+		}
 	}
 
-	public function addEditBeforeAction(Event $event) {
-		//Setup fields
-		$this->fields['infrastructure_ownership_id']['type'] = 'select';
-		$this->fields['infrastructure_condition_id']['type'] = 'select';
+	public function viewAfterAction(Event $event, Entity $entity) {
+		foreach ($this->fields as $field => $attr) {
+			if ($field == 'parent_id' && $attr['type'] != 'hidden') {
+				$this->fields[$field]['type'] = 'hidden';
+				$parentId = $entity->parent_id;
+				if (!empty($parentId)) {
+					$list = $this->findPath(['for' => $parentId, 'withLevels' => true]);
+				} else {
+					$list = [];
+				}
+
+				$after = $field;
+				foreach ($list as $key => $infrastructure) {
+					$this->ControllerAction->field($field.$key, [
+						'type' => 'readonly', 
+						'attr' => ['label' => $infrastructure->_matchingData['Levels']->name],
+						'value' => $infrastructure->code_name,
+						'after' => $after
+					]);
+					$after = $field.$key;
+				}
+			}
+		}
 	}
 
-	public function addOnInitialize(Event $event, Entity $entity) {
-		//Initialize field values
-		list(, $selectedLevel) = array_values($this->getSelectOptions());
-		$entity->infrastructure_level_id = $selectedLevel;
+	public function addEditAfterAction(Event $event, Entity $entity) {
+		$this->ControllerAction->field('infrastructure_level_id');
+		$this->ControllerAction->field('infrastructure_type_id');
+		$this->ControllerAction->field('infrastructure_ownership_id', ['type' => 'select']);
+		$this->ControllerAction->field('infrastructure_condition_id', ['type' => 'select']);
+	}
+
+	public function editOnInitialize(Event $event, Entity $entity) {
+		$this->request->query['level'] = $entity->infrastructure_level_id;
+	}
+
+	public function onGetConvertOptions(Event $event, Entity $entity, Query $query) {
+		$query->where([
+			$this->aliasField('institution_id') => $entity->institution_id,
+			$this->aliasField('parent_id') => $entity->parent_id
+		]);	
+	}
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$entity = $this->get($id);
+		$transferTo = $this->request->data['transfer_to'];
+		$transferFrom = $id;
+
+		if (empty($transferTo) && $this->ControllerAction->hasAssociatedRecords($this, $entity)) {
+			$event->stopPropagation();
+			$this->Alert->error('general.deleteTransfer.restrictDelete');
+			$url = $this->ControllerAction->url('remove');
+			return $this->controller->redirect($url);
+		} else {
+			// Require to update the parent id
+			$this->updateAll(
+				['parent_id' => $transferTo],
+				['parent_id' => $transferFrom]
+			);
+
+			$process = function($model, $id, $options) {
+				$entity = $model->get($id);
+				return $model->delete($entity, $options->getArrayCopy());
+			};
+
+			return $process;
+		}
+	}
+
+	public function onUpdateFieldParentId(Event $event, array $attr, $action, Request $request) {
+		$parentId = $this->request->query('parent');
+		
+		if (is_null($parentId)) {
+			$attr['type'] = 'hidden';
+			$attr['value'] = null;
+		} else {
+			if ($action == 'add') {
+				$attr['type'] = 'readonly';
+				$attr['value'] = $parentId;
+				$attr['attr']['value'] = $this->getParentPath($parentId);
+			} else if ($action == 'edit') {
+				$session = $request->session();
+				$institutionId = $session->read('Institution.Institutions.id');
+
+				$grandParentId = $this->get($parentId)->parent_id;
+				$where = [$this->Parents->aliasField('institution_id') => $institutionId];
+				if (is_null($grandParentId)) {
+					$where[] = $this->Parents->aliasField('parent_id IS NULL');
+				} else {
+					$where[$this->Parents->aliasField('parent_id')] = $grandParentId;
+					$crumbs = $this->findPath(['for' => $grandParentId]);
+					$this->controller->set('crumbs', $crumbs);
+				}
+				$parents = $this->Parents->find()->where($where)->all();
+
+				$parentOptions = [];
+				foreach ($parents as $key => $parent) {
+					$parentOptions[$parent->id] = $parent->code . " - " . $parent->name;
+				}
+				$this->advancedSelectOptions($parentOptions, $parentId);
+
+				$attr['type'] = 'select';
+				$attr['options'] = $parentOptions;
+			}
+		}
+
+		return $attr;
 	}
 
 	public function onUpdateFieldInfrastructureLevelId(Event $event, array $attr, $action, Request $request) {
-		list($levelOptions, $selectedLevel) = array_values($this->getSelectOptions());
+		$parentId = $this->request->query('parent');
+		$levelQuery = $this->Levels->find('list');
+		if (is_null($parentId)) {
+			$levelQuery->where([$this->Levels->aliasField('parent_id') => 0]);
+		} else {
+			$levelId = $this->get($parentId)->infrastructure_level_id;
+			$levelQuery->where([$this->Levels->aliasField('parent_id') => $levelId]);
+		}
+		$levelOptions = $levelQuery->toArray();
+		$selectedLevel = $this->queryString('level', $levelOptions);
+		$this->advancedSelectOptions($levelOptions, $selectedLevel);
 
 		$attr['options'] = $levelOptions;
-		$attr['default'] = $selectedLevel;
-		$attr['onChangeReload'] = true;
+		$attr['onChangeReload'] = 'changeLevel';
 
 		$submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
 		if ($submit != 'save') {
@@ -105,19 +234,15 @@ class InstitutionInfrastructuresTable extends AppTable {
 	}
 
 	public function onUpdateFieldInfrastructureTypeId(Event $event, array $attr, $action, Request $request) {
-		list(, $selectedLevel) = array_values($this->getSelectOptions());
-		if ($request->is('post')) {
-			$selectedLevel = $request->data($this->aliasField('infrastructure_level_id'));
-		}
-
+		$selectedLevel = $request->query('level');
 		$typeOptions = $this->Types
 			->find('list')
 			->find('visible')
 			->find('order')
 			->where([$this->Types->aliasField('infrastructure_level_id') => $selectedLevel])
 			->toArray();
-		$attr['options'] = $typeOptions;
 
+		$attr['options'] = $typeOptions;
 		return $attr;
 	}
 
@@ -131,6 +256,59 @@ class InstitutionInfrastructuresTable extends AppTable {
 		return $attr;
 	}
 
+	public function addEditOnChangeLevel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$request = $this->request;
+		unset($request->query['level']);
+
+		if ($request->is(['post', 'put'])) {
+			if (array_key_exists($this->alias(), $request->data)) {
+				if (array_key_exists('infrastructure_level_id', $request->data[$this->alias()])) {
+					$request->query['level'] = $request->data[$this->alias()]['infrastructure_level_id'];
+				}
+			}
+		}
+	}
+
+	public function runRecover() {
+		$script = 'tree';
+
+		$consoleDir = ROOT . DS . 'bin' . DS;
+		$cmd = sprintf("%scake %s %s", $consoleDir, $script, $this->registryAlias());
+		$nohup = '%s >> %slogs/'.$script.'.log & echo $!';
+		$shellCmd = sprintf($nohup, $cmd, ROOT.DS);
+		Log::write('debug', $shellCmd);
+		exec($shellCmd);
+	}
+
+	public function findPath($params=[]) {
+		$parentId = array_key_exists('for', $params) ? $params['for'] : null;
+		$withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : false;
+
+		$paths = [];
+		while (!is_null($parentId)) {
+			$query = $this->find()->where([$this->aliasField('id') => $parentId]);
+			if ($withLevels) { $query->matching('Levels'); }
+			$results = $query->first();
+
+			array_unshift($paths, $results);
+			$parentId = $results->parent_id;
+		}
+
+		return $paths;
+	}
+
+	public function getParentPath($parentId=null) {
+		$crumbs = $this->findPath(['for' => $parentId]);
+
+		$parentPath = __('All') . ' > ';
+		foreach ($crumbs as $crumb) {
+			$parentPath .= $crumb->name;
+			$parentPath .= $crumb === end($crumbs) ? '' : ' > ';
+		}
+
+		return $parentPath;
+	}
+
 	public function getYearOptionsByConfig() {
 		$ConfigItems = TableRegistry::get('ConfigItems');
 		$lowestYear = $ConfigItems->value('lowest_year');
@@ -141,16 +319,5 @@ class InstitutionInfrastructuresTable extends AppTable {
 		}
 
 		return $yearOptions;
-	}
-
-	public function getSelectOptions() {
-		//Return all required options and their key
-		$levelId = $this->request->query('level');
-		$levelOptions = $this->Levels
-			->find('list')
-			->toArray();
-		$selectedLevel = !is_null($levelId) ? $levelId : key($levelOptions);
-
-		return compact('levelOptions', 'selectedLevel');
 	}
 }
