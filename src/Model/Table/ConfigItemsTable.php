@@ -21,6 +21,8 @@ class ConfigItemsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 
+		$this->addBehavior('Authentication');
+
 		// $this->belongsTo('ConfigItemOptions', ['foreignKey'=>'value']);
 	}
 
@@ -50,6 +52,10 @@ class ConfigItemsTable extends AppTable {
 **
 ******************************************************************************************************************/
 	public function indexBeforeAction(Event $event) {
+		$this->buildSystemConfigFilters();
+	}
+
+	public function buildSystemConfigFilters() {
 		$toolbarElements = [
 			['name' => 'Configurations/controls', 'data' => [], 'options' => []]
 		];
@@ -60,6 +66,7 @@ class ConfigItemsTable extends AppTable {
 		$selectedType = $this->queryString('type', $typeOptions);
 		$this->advancedSelectOptions($typeOptions, $selectedType);
 		$buffer = $typeOptions;
+
 		foreach ($buffer as $key => $value) {
 			$result = $this->find()->where([$this->aliasField('type') => $value['text'], $this->aliasField('visible') => 1])->count();
 			if (!$result) {
@@ -67,6 +74,7 @@ class ConfigItemsTable extends AppTable {
 			}
 		}
 		$this->request->query['type_value'] = $typeOptions[$selectedType]['text'];
+		
 		$this->controller->set('typeOptions', $typeOptions);
 	}
 
@@ -166,6 +174,11 @@ class ConfigItemsTable extends AppTable {
 							->toArray();
 						$attr['options'] = $options;
 					}
+
+					if (isset($this->request->data[$this->alias()]['value'])) {
+						$attr['onChangeReload'] = true;	
+					}
+
 				} else {
 					if ($entity->code == 'start_time') {
 						$attr['type'] = 'time';

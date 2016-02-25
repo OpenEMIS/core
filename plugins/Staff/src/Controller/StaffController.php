@@ -95,7 +95,7 @@ class StaffController extends AppController {
 		$this->set('contentHeader', $header);
     }
 
-	public function onInitialize($event, $model) {
+	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		/**
 		 * if student object is null, it means that student.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
 		 */
@@ -109,10 +109,10 @@ class StaffController extends AppController {
 			}
 
 			$alias = $model->alias;
-			$this->Navigation->addCrumb($model->getHeader($alias));
 			// temporary fix for renaming Sections and Classes
 			if ($alias == 'Sections') $alias = 'Classes';
 			else if ($alias == 'Classes') $alias = 'Subjects';
+			$this->Navigation->addCrumb($model->getHeader($alias));
 			$header = $header . ' - ' . $model->getHeader($alias);
 
 			// $params = $this->request->params;
@@ -203,25 +203,7 @@ class StaffController extends AppController {
 	}
 
 	public function getCareerTabElements($options = []) {
-		$tabElements = [];
-		$studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
-		$studentTabElements = [
-			'Employments' => ['text' => __('Employments')],
-			'Positions' => ['text' => __('Positions')],
-			'Sections' => ['text' => __('Classes')],
-			'Classes' => ['text' => __('Subjects')],
-			'Absences' => ['text' => __('Absences')],
-			'Leaves' => ['text' => __('Leaves')],
-			'Behaviours' => ['text' => __('Behaviours')],
-			'Awards' => ['text' => __('Awards')],
-		];
-
-		$tabElements = array_merge($tabElements, $studentTabElements);
-
-		foreach ($studentTabElements as $key => $tab) {
-			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
-		}
-		return $tabElements;
+		return TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
 	}
 
 	public function getProfessionalDevelopmentTabElements($options = []) {

@@ -89,7 +89,7 @@ class StudentsController extends AppController {
 		$this->set('contentHeader', $header);
 	}
 
-	public function onInitialize(Event $event, Table $model) {
+	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		/**
 		 * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
 		 */
@@ -122,10 +122,10 @@ class StudentsController extends AppController {
 			}
 
 			$alias = $model->alias;
-			$this->Navigation->addCrumb($model->getHeader($alias));
 			// temporary fix for renaming Sections and Classes
 			if ($alias == 'Sections') $alias = 'Classes';
 			else if ($alias == 'Classes') $alias = 'Subjects';
+			$this->Navigation->addCrumb($model->getHeader($alias));
 			$header = $header . ' - ' . $model->getHeader($alias);
 
 			// $params = $this->request->params;
@@ -238,28 +238,7 @@ class StudentsController extends AppController {
 	}
 
 	public function getAcademicTabElements($options = []) {
-		// $action = (array_key_exists('action', $options))? $options['action']: 'add';
-		$id = (array_key_exists('id', $options))? $options['id']: 0;
-
-		$tabElements = [];
-		$studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
-		$studentTabElements = [
-			'Programmes' => ['text' => __('Programmes')],
-			'Sections' => ['text' => __('Classes')],
-			'Classes' => ['text' => __('Subjects')],
-			'Absences' => ['text' => __('Absences')],
-			'Behaviours' => ['text' => __('Behaviours')],
-			'Results' => ['text' => __('Results')],
-			'Awards' => ['text' => __('Awards')],
-			'Extracurriculars' => ['text' => __('Extracurriculars')],
-		];
-
-		$tabElements = array_merge($tabElements, $studentTabElements);
-
-		foreach ($studentTabElements as $key => $tab) {
-			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
-		}
-		return $tabElements;
+		return TableRegistry::get('Student.Students')->getAcademicTabElements($options);
 	}
 
 	public function getFinanceTabElements($options = []) {

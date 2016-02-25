@@ -321,6 +321,22 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		return $attr;
 	}
 
+	public function onGetStudentId(Event $event, Entity $entity) {
+		if (isset($entity->user->name_with_id)) {
+			if ($this->action == 'view') {
+				return $event->subject()->Html->link($entity->user->name_with_id , [
+					'plugin' => 'Institution',
+					'controller' => 'Institutions',
+					'action' => 'StudentUser',
+					'view',
+					$entity->user->id
+				]);
+			} else {
+				return $entity->user->name_with_id;
+			}
+		}
+	}
+
 	public function onUpdateFieldFullDay(Event $event, array $attr, $action, $request) {
 		$fullDayOptions = $attr['options'];
 		$selectedFullDay = !is_null($request->query('full_day')) ? $request->query('full_day') : key($fullDayOptions);
@@ -426,7 +442,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 
 		// Academic Period
-		$periodOptions = $AcademicPeriod->getList();
+		$periodOptions = $AcademicPeriod->getList(['isEditable'=>true]);
 		$selectedPeriod = $this->queryString('period', $periodOptions);
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),

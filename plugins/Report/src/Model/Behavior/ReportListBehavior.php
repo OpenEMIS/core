@@ -64,9 +64,8 @@ class ReportListBehavior extends Behavior {
 
 		foreach($expiredReports as $report) {
 			if (file_exists($report['file_path'])) {
-				if (unlink($report['file_path'])) {
-					$this->ReportProgress->delete($report);
-				}
+				unlink($report['file_path']);
+				$this->ReportProgress->delete($report);
 			} else {
 				$this->ReportProgress->delete($report);
 			}

@@ -24,6 +24,7 @@
 						<th><?= $this->Label->get('General.openemis_no'); ?></th>
 						<th><?= $this->Label->get('Users.name'); ?></th>
 						<th><?= $this->Label->get('Users.gender_id'); ?></th>
+						<th><?= __('Student Status') ?></th>
 						<?php 
 
 						if ($action!='view') {
@@ -73,6 +74,7 @@
 						<td><?= $userData['openemis_no'] ?></td>
 						<td><?= $userData['name'] ?></td>
 						<td><?= $userData['gender']['name'] ?></td>
+						<td><?= __($obj->student_status) ?></td>
 						<td> 
 							<?php //if ($attr['data']['isHistoryRecord']): ?>
 							
@@ -93,9 +95,17 @@
 				<?php else:?>
 
 					<tr>
-						<td><?= $obj->_matchingData['Users']->openemis_no ?></td>
+						<td><?= $this->html->link($obj->_matchingData['Users']->openemis_no , [
+									'plugin' => 'Institution',
+									'controller' => 'Institutions',
+									'action' => 'StudentUser',
+									'view',
+									$obj->_matchingData['Users']->id 
+								]) ?>
+						</td>
 						<td><?= $obj->_matchingData['Users']->name ?></td>
 						<td><?= $obj->_matchingData['Genders']->name ?></td>
+						<td><?= __($obj->student_status) ?></td>
 					</tr>
 
 				<?php endif;?>

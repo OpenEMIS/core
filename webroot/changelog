@@ -1,3 +1,52 @@
+v3.4.15
+- Fixed a bug that caused loading animation to appear on the wrong position
+- Fixed a bug that display wrong validation message when importing students to schools
+
+v3.4.14
+- Users can now import trainees to Training Sessions using excel spreadsheet
+- Fixed a bug that caused Staff Career tabs not navigating to the correct page
+- When accessing Attendance, date will always default to current week and day now
+- Fixed a bug that caused search not working properly in Attendance
+- Added hyperlinks to OpenEMIS ID/Name field in various pages to link to user profile
+- Fixed a bug that caused student import to class successfully when using a class code that is not in the same academic period
+- Implemented the link between Qualification Specializations and Education Subjects
+- Fixed a bug that caused sorting to refresh advanced search results
+- Fixed a bug that caused 404 error page when access Administration -> Administrative Boundaries
+
+v3.4.13
+- Class column in Institutions -> Students can be sortable now
+- The system does not allow users to create shifts with overlapped timing now
+- Improved on Shifts list page to display shifts used by other schools
+- Reports -> Maps permission is now available
+- Positions are searchable by Position titles now, titles and grades are sortable now
+- Fixed a bug that caused principal accounts not able to see the areas in Institution -> edit mode
+- Added SAML2 support for Single Sign On
+- Fixed a bug that caused the breadcrumb home icon not working properly	Actions
+- Implemented customised workflow for Positions
+- The system does not allow new student profile to be created if the student age does not fall within the allowed age range
+- Infrastructures can be added as hierarchy now
+
+v3.4.12
+- Fixed a bug that caused student data not removed completely when deleting a student from a school
+- Fixed a bug that caused school name and status not displaying the correct value in Directories
+- Fixed a bug that caused Add buttons in Salaries to behave like Save button (only happens in Chrome browser)
+- Fixed a permission issue that caused user not able to access Directories -> Classes/Subjects
+- Fixed a bug that caused 404 error page when trying to access Field Options -> Position Titles
+- Position Types (Teaching/Non-Teaching) is now linked to Position Titles instead of Institution Positions
+- Improved on the validation error messages when importing data via excel spreadsheet
+- Added Google Authentication support
+- The system will not allow delete operations on Class if students still exists in the class
+- Fixed a number of css issues
+
+v3.4.11
+- Fixed a bug that caused removing last student from class not to be deleted
+- Fixed a bug that caused custom fields not appearing in Institutions
+- Fixed a bug that caused Roles with All Classes and All Subjects permissions not able to see students in Results module
+- Fixed a bug that caused Roles with Promote/Graduate permissions not able to see Promote/Graduate buttons
+- Added Dropout and Transfer Reasons will be displayed when accessing Institutions -> Students -> Academic -> Programmes
+- Added names, contacts, identities, positions to Advanced Search
+- The system will auto generate position numbers based on the school code + a set of random numbers
+
 v3.4.10
 - Fixed a bug that caused 404 error page when Promoting students but no students are selected
 - Added Search in Student Admission Page (Institutions -> Students -> <Select Pending Admission>)

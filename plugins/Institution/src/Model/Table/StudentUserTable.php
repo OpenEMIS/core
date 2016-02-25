@@ -22,13 +22,35 @@ class StudentUserTable extends UserTable {
 		$this->ControllerAction->field('username', ['visible' => false]);
 	}
 
+	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+		$validator
+			->add('date_of_birth', 'ruleCheckAdmissionAgeWithEducationCycleGrade', [
+				'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
+				'on' => 'create'
+			])
+			;
+		return $validator;
+	}
+
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$sessionKey = 'Institution.Students.new';
+		if ($this->Session->check($sessionKey)) {
+			$academicData = $this->Session->read($sessionKey);
+			$data[$this->alias()]['education_grade_id'] = $academicData['education_grade_id'];
+		} else {
+			$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
+			return $this->controller->redirect($action);
+		}
+	}
+
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
 		$sessionKey = 'Institution.Students.new';
 		if ($this->Session->check($sessionKey)) {
 			$academicData = $this->Session->read($sessionKey);
 			$academicData['student_id'] = $entity->id;
-			$class = $academicData['class'];
-			unset($academicData['class']);
+			// $class = $academicData['class'];
+			// unset($academicData['class']);
 			$StudentStatusesTable = TableRegistry::get('Student.StudentStatuses');
 			$pendingAdmissionCode = $StudentStatusesTable->getIdByCode('PENDING_ADMISSION');
 			if ($academicData['student_status_id'] != $pendingAdmissionCode) {
@@ -38,16 +60,8 @@ class StudentUserTable extends UserTable {
 				}
 
 				$newStudentEntity = $Student->newEntity($academicData);
-				if ($Student->save($newStudentEntity)) {
-					if ($class > 0) {
-						$sectionData = [];
-						$sectionData['student_id'] = $entity->id;
-						$sectionData['education_grade_id'] = $academicData['education_grade_id'];
-						$sectionData['institution_section_id'] = $class;
-						$InstitutionSectionStudents = TableRegistry::get('Institution.InstitutionSectionStudents');
-						$InstitutionSectionStudents->autoInsertSectionStudent($sectionData);
-					}
-				} else {
+				$newStudentEntity->class = $academicData['class']; // add the class value so the student will be added to the selected class
+				if (!$Student->save($newStudentEntity)) {
 					$validationErrors = [];
 					foreach ($newStudentEntity->errors() as $nkey => $nvalue) {
 						foreach ($nvalue as $ekey => $evalue) {
@@ -60,7 +74,29 @@ class StudentUserTable extends UserTable {
 					$event->stopPropagation();
 					$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
 					return $this->controller->redirect($action);
+					// if ($class > 0) {
+					// 	$sectionData = [];
+					// 	$sectionData['student_id'] = $entity->id;
+					// 	$sectionData['education_grade_id'] = $academicData['education_grade_id'];
+					// 	$sectionData['institution_section_id'] = $class;
+					// 	$InstitutionSectionStudents = TableRegistry::get('Institution.InstitutionSectionStudents');
+					// 	$InstitutionSectionStudents->autoInsertSectionStudent($sectionData);
+					// }
 				}
+				//  else {
+				// 	$validationErrors = [];
+				// 	foreach ($newStudentEntity->errors() as $nkey => $nvalue) {
+				// 		foreach ($nvalue as $ekey => $evalue) {
+				// 			$validationErrors[] = $evalue;
+				// 		}
+				// 	}
+
+				// 	$validationErrors = implode('; ', $validationErrors);
+				// 	$this->controller->ControllerAction->Alert->error($validationErrors, ['type' => 'text']);
+				// 	$event->stopPropagation();
+				// 	$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
+				// 	return $this->controller->redirect($action);
+				// }
 			} else {
 				$AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
 				$admissionStatus = 1;
@@ -103,6 +139,8 @@ class StudentUserTable extends UserTable {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
+		$this->Session->write('Student.Students.id', $entity->id);
+		$this->Session->write('Student.Students.name', $entity->name);
 		$this->setupTabElements($entity);
 	}
 
@@ -257,9 +295,30 @@ class StudentUserTable extends UserTable {
 			unset($toolbarButtons['back']);
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$id = $this->request->query('id');
+
+			if (empty($id)) {
+				// if no url param found... query the database to find the latest one
+				// for catering redirections that do not contain institution_student_id url param - POCOR-2511
+				$securityUserId = $this->request->pass[1];
+				$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+				$institutionStudentRecord = $InstitutionStudentsTable->find()
+					->select([$InstitutionStudentsTable->aliasField('id')])
+					->where([
+						$InstitutionStudentsTable->aliasField('student_id') => $securityUserId,
+						$InstitutionStudentsTable->aliasField('institution_id') => $institutionId
+					])
+					->order($InstitutionStudentsTable->aliasField('end_date').' DESC')
+					->first()
+					;
+				$institutionStudentRecord = (!empty($institutionStudentRecord))? $institutionStudentRecord->toArray(): null;
+				$institutionStudentId = (!empty($institutionStudentRecord))? $institutionStudentRecord['id']: null;
+				$id = $institutionStudentId;
+			}
+
 			if (!empty($id)) {
 				$this->Session->write('Institution.Students.id', $id);
-			}
+			} 
+
 			$id = $this->Session->read('Institution.Students.id');
 			$StudentTable = TableRegistry::get('Institution.Students');
 			$studentId = $StudentTable->get($id)->student_id;

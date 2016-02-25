@@ -503,7 +503,11 @@ class HtmlFieldHelper extends Helper {
 					$attr['value'] = date('d-m-Y');
 				}
 			} else {
-				$attr['value'] = date('d-m-Y', strtotime($attr['value']));
+				if ($attr['value'] instanceof Time) {
+					$attr['value'] = $attr['value']->format('d-m-Y');
+				} else {
+					$attr['value'] = date('d-m-Y', strtotime($attr['value']));
+				}
 			}
 
 			if (!is_null($this->_View->get('datepicker'))) {
@@ -645,7 +649,7 @@ class HtmlFieldHelper extends Helper {
 		return $value;
 	}
 
-	public function autocomplete($action, Entity $data, $attr, &$options=[]){
+	public function autocomplete($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
 		if ($action == 'index' || $action == 'view') {
 			$value = $data->$attr['field'];
@@ -669,6 +673,28 @@ class HtmlFieldHelper extends Helper {
 			$value = $this->_View->element('ControllerAction.autocomplete', ['attr' => $attr, 'options' => $options]);
 		}
 		return $value;
+	}
+
+	public function table($action, Entity $data, $attr, $options=[]) {
+		$html = '
+			<div class="input clearfix">
+				<label>%s</label>
+				<div class="table-wrapper">
+					<div class="table-in-view">
+						<table class="table">
+							<thead>%s</thead>
+							<tbody>%s</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		';
+
+		$headers = $this->Html->tableHeaders($attr['headers']);
+		$cells = $this->Html->tableCells($attr['cells']);
+
+		$html = sprintf($html, $attr['label'], $headers, $cells);
+		return $html;
 	}
 
 	// a template function for creating new elements

@@ -277,9 +277,18 @@ class InstitutionClassesTable extends AppTable {
 			->InstitutionClassStudents
 			->find()
 			->matching('Users.Genders')
+			->innerJoin(['InstitutionSectionStudent' => 'institution_section_students'], [
+					'InstitutionSectionStudent.institution_section_id = '.$this->InstitutionClassStudents->aliasField('institution_section_id'),
+					'InstitutionSectionStudent.student_id = '.$this->InstitutionClassStudents->aliasField('student_id')
+				])
+			->innerJoin(['StudentStatuses' => 'student_statuses'], [
+					'InstitutionSectionStudent.student_status_id = '. 'StudentStatuses.id'
+				])
 			->where([
 				'InstitutionClassStudents.institution_class_id'=>$entity->id
-			]);
+			])
+			->select(['student_status' => 'StudentStatuses.name'])
+			->autoFields(true);
 		$this->fields['students']['data']['students'] = $students->toArray();
 
 		return $entity;
@@ -314,8 +323,8 @@ class InstitutionClassesTable extends AppTable {
 		$Sections = $this->InstitutionSections;
 
 		$institutionId = $this->institutionId;
-		$periodOption = ['' => '-- Select Period --'];
-		$academicPeriodOptions = $this->AcademicPeriods->getlist();
+		$periodOption = ['' => '-- ' . __('Select Period') .' --'];
+		$academicPeriodOptions = $this->AcademicPeriods->getlist(['isEditable'=>true]);
 		$academicPeriodOptions = $periodOption + $academicPeriodOptions;
 
 		if ($this->request->is(['post', 'put']) && $this->request->data($this->aliasField('academic_period_id'))) {
@@ -434,7 +443,7 @@ class InstitutionClassesTable extends AppTable {
 				->contain(['Users'])
 				->where(['Staff.institution_id'=>$this->institutionId])
 				->toArray();
-		$teachers = [0=>'-- Select Teacher or Leave Blank --'];
+		$teachers = [0=>'-- ' . __('Select Teacher or Leave Blank') . ' --'];
 		foreach ($query as $key => $value) {
 			if ($value->has('user')) {
 				$teachers[$value->user->id] = $value->user->name;
@@ -564,8 +573,22 @@ class InstitutionClassesTable extends AppTable {
 	 */
 	public function editAfterAction(Event $event, Entity $entity) {
 		$this->_selectedAcademicPeriodId = $entity->academic_period_id;
-
-		$students = $entity->institution_class_students;
+		$InstitutionClassStudentsTable = $this->InstitutionClassStudents;
+		$students = $InstitutionClassStudentsTable->find()->contain(['Users.Genders'])
+			->innerJoin(['InstitutionSectionStudent' => 'institution_section_students'], [
+					'InstitutionSectionStudent.institution_section_id = '.$InstitutionClassStudentsTable->aliasField('institution_section_id'),
+					'InstitutionSectionStudent.student_id = '.$InstitutionClassStudentsTable->aliasField('student_id')
+				])
+			->innerJoin(['StudentStatuses' => 'student_statuses'], [
+					'InstitutionSectionStudent.student_status_id = '. 'StudentStatuses.id'
+				])
+			->where([
+				'InstitutionClassStudents.institution_class_id'=>$entity->id
+			])
+			->select(['student_status' => 'StudentStatuses.name'])
+			->autoFields(true)
+			->toArray()
+			;
 		$collection = new Collection($students);
 		$recordedStudentIds = (new Collection($collection->toArray()))->combine('student_id', 'status')->toArray();
 		$teacherOptions = $this->getTeacherOptions();
@@ -680,13 +703,14 @@ class InstitutionClassesTable extends AppTable {
 			$classId = $entity->toArray()['institution_sections'][0]['id'];
 		}
 		if (strtolower($persona)=='students') {
-			$userData = $this->Institutions->Students->find()->contain(['Users.Genders'])->where(['student_id'=>$id])->first();
+			$userData = $this->Institutions->Students->find()->contain(['Users.Genders', 'StudentStatuses'])->where(['student_id'=>$id])->first();
 			$data = [
 				'id'=>$this->getExistingRecordId($id, $entity, $persona),
 				'student_id'=>$id,
 				'institution_class_id'=>$entity->id,
 				'institution_section_id'=>$classId,
 				'status'=>1,
+				'student_status' => $userData->student_status->name,
 				'user'=>[]
 			];
 			if (!empty($requestData)) {
