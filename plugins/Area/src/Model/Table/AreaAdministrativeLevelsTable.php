@@ -14,6 +14,7 @@ class AreaAdministrativeLevelsTable extends ControllerActionTable {
 		$this->belongsTo('Countries', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'area_administrative_id']);
 		$this->hasMany('Areas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'area_administrative_level_id']);
 		$this->addBehavior('RestrictAssociatedDelete');
+		// $this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {

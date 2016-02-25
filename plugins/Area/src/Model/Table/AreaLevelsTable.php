@@ -5,13 +5,16 @@ use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\Network\Request;
 use Cake\Event\Event;
+use Cake\ORM\Entity;
 use App\Model\Table\ControllerActionTable;
+use Cake\ORM\TableRegistry;
 
 class AreaLevelsTable extends ControllerActionTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->hasMany('Areas', ['className' => 'Area.Areas', 'foreign_key' => 'area_level_id']);
 		$this->addBehavior('RestrictAssociatedDelete');
+		// $this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
@@ -21,6 +24,14 @@ class AreaLevelsTable extends ControllerActionTable {
 	public function addEditBeforeAction(Event $event, ArrayObject $extra) {
 		$this->fields['level']['type'] = 'hidden';
 	}
+
+	// To fix institution_area_level_id in configitem
+	// public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+	// 	$ConfigItemsTable = TableRegistry::get('ConfigItems');
+	// 	$transferedValue = $this->request->data[$this->alias()]['convert_to'];
+	// 	$ConfigItemsTable->updateAll(['default_value' => $transferedValue], ['type' => 'Institution', 'code' => 'Institution_area_level_id', 'default_value' => $entity->id]);
+	// 	$ConfigItemsTable->updateAll(['value' => $transferedValue], ['type' => 'Institution', 'code' => 'Institution_area_level_id', 'value' => $entity->id]);
+	// }
 
 	public function onUpdateFieldLevel(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
