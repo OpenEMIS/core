@@ -445,6 +445,9 @@ trait MessagesTrait {
 			'noResultTypes' => 'You need to configure Result Types under Training Course.',
 			'noTrainees' => 'No Available Trainees'
 		],
+		'CustomForms' => [
+			'notSupport' => 'Not supported in this form.'
+		],
 
 		// Validation Messages
 		'Institution' => [
