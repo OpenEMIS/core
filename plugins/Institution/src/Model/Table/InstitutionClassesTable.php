@@ -2,6 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+use stdClass;
 
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -949,6 +950,26 @@ class InstitutionClassesTable extends AppTable {
 			}
 		}
 		return $studentOptions;
+	}
+
+	public function onGetTeachers(Event $event, Entity $entity) {
+		if ($entity->has('teachers')) {
+			foreach ($entity->teachers as $key => $value) {
+				// was unable to remove virtual properties using ->virtualProperties() (like 'name') on the fly, therefore using std class
+				$entity->teachers[$key] = new stdClass();
+				if ($this->action == 'view') {
+					$entity->teachers[$key]->name = $event->subject()->Html->link($value->name_with_id , [
+						'plugin' => 'Institution',
+						'controller' => 'Institutions',
+						'action' => 'StaffUser',
+						'view',
+						$value->id
+					]);
+				} else if ($this->action == 'index') {
+					$entity->teachers[$key]->name = $value->name_with_id;
+				}
+			}
+		}
 	}
 
 }
