@@ -2,212 +2,177 @@
 namespace CustomField\Model\Table;
 
 use ArrayObject;
-use App\Model\Table\AppTable;
-use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\ORM\Query;
+use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
+use App\Model\Table\AppTable;
+use App\Model\Traits\OptionsTrait;
 
 class CustomFieldsTable extends AppTable {
-	private $_contain = ['CustomFieldOptions', 'CustomTableColumns', 'CustomTableRows'];
-	protected $_fieldOrder = ['field_type', 'name', 'is_mandatory', 'is_unique'];
-	protected $_fieldFormat = ['OpenEMIS'];
+	use OptionsTrait;
+	const MANDATORY_NO = 0;
+	const UNIQUE_NO = 0;
+
+	protected $fieldTypeFormat = ['OpenEMIS'];
+	private $fieldTypes = [];
+	private $fieldTypeOptions = [];
+	private $CustomFieldTypes = null;
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->belongsTo('CustomFieldTypes', ['className' => 'CustomField.CustomFieldTypes', 'foreignKey' => 'field_type']);
-		$this->hasMany('CustomFieldOptions', ['className' => 'CustomField.CustomFieldOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('CustomTableColumns', ['className' => 'CustomField.CustomTableColumns', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('CustomTableRows', ['className' => 'CustomField.CustomTableRows', 'dependent' => true, 'cascadeCallbacks' => true]);
+		// belongsTo: CustomFieldTypes is not needed as code is store instead of id
+		$this->hasMany('CustomFieldOptions', ['className' => 'CustomField.CustomFieldOptions', 'dependent' => true]);
+		$this->hasMany('CustomTableColumns', ['className' => 'CustomField.CustomTableColumns', 'dependent' => true]);
+		$this->hasMany('CustomTableRows', ['className' => 'CustomField.CustomTableRows', 'dependent' => true]);
+		$this->hasMany('CustomFieldValues', ['className' => 'CustomField.CustomFieldValues', 'dependent' => true]);
+		$this->hasMany('CustomTableCells', ['className' => 'CustomField.CustomTableCells', 'dependent' => true]);
 		$this->belongsToMany('CustomForms', [
 			'className' => 'CustomField.CustomForms',
-			'joinTable' => 'custom_form_fields',
+			'joinTable' => 'custom_forms_fields',
 			'foreignKey' => 'custom_field_id',
 			'targetForeignKey' => 'custom_form_id'
 		]);
 
-		$this->addBehavior('CustomField.FieldType');
-		$this->addBehavior('CustomField.Mandatory');
-		$this->addBehavior('CustomField.Unique');
+		// Each field type will have one behavior attached
+		$this->addBehavior('CustomField.SetupText');
+		$this->addBehavior('CustomField.SetupNumber');
+		$this->addBehavior('CustomField.SetupTextarea');
+		$this->addBehavior('CustomField.SetupDropdown');
+		$this->addBehavior('CustomField.SetupCheckbox');
+		$this->addBehavior('CustomField.SetupTable');
+		// $this->addBehavior('CustomField.SetupDate');
+		// $this->addBehavior('CustomField.SetupTime');
+		// $this->addBehavior('CustomField.SetupStudentList');
+		// End
+
+		$this->CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
+		$this->fieldTypeOptions = $this->CustomFieldTypes->getFieldTypeList($this->fieldTypeFormat, $this->fieldTypes);
 	}
 
-	public function viewBeforeAction(Event $event) {
-		$this->setFieldOrder();
+	public function onGetIsMandatory(Event $event, Entity $entity) {
+		$isMandatory = $this->CustomFieldTypes->findByCode($entity->field_type)->first()->is_mandatory;
+		return $isMandatory == 1 ? ($entity->is_mandatory == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>') : '<i class="fa fa-minus"></i>';
 	}
 
-	public function viewEditBeforeQuery(Event $event, Query $query) {
-		$query->contain(['CustomFieldOptions']);
-		$query->contain([
-		    'CustomTableColumns' => function ($q) {
-		       return $q
-		       		->find('visible');
-		    }
-		]);
-		$query->contain([
-		    'CustomTableRows' => function ($q) {
-		       return $q
-		       		->find('visible');
-		    }
-		]);
+	public function onGetIsUnique(Event $event, Entity $entity) {
+		$isUnique = $this->CustomFieldTypes->findByCode($entity->field_type)->first()->is_unique;
+		return $isUnique == 1 ? ($entity->is_unique == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>') : '<i class="fa fa-minus"></i>';
+	}
+
+	public function beforeAction(Event $event) {
+		$this->ControllerAction->field('params', ['visible' => false]);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
-		$this->loadBehavior($entity->field_type);
-		return $entity;
-	}
-
-	public function addEditBeforeAction(Event $event) {
-		//Setup fields
-		list($fieldTypeOptions, , $mandatoryOptions, , $uniqueOptions) = array_values($this->getSelectOptions());
-
-		$this->fields['field_type']['type'] = 'select';
-		$this->fields['field_type']['options'] = $fieldTypeOptions;
-		$this->fields['field_type']['onChangeReload'] = 'changeType';
-		$this->fields['field_type']['labelKey'] = 'general';
-
-		$this->fields['is_mandatory']['type'] = 'select';
-		$this->fields['is_mandatory']['options'] = $mandatoryOptions;
-		$this->fields['is_mandatory']['labelKey'] = 'general';
-
-		$this->fields['is_unique']['type'] = 'select';
-		$this->fields['is_unique']['options'] = $uniqueOptions;
-		$this->fields['is_unique']['labelKey'] = 'general';
-
-		$this->setFieldOrder();
-
-		if ($this->request->is(['post', 'put'])) {
-			$selectedFieldType = $this->request->data($this->aliasField('field_type'));
-			$this->loadBehavior($selectedFieldType);
-		}
-
-		$this->ControllerAction->field('field_type');
-	}
-
-	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$fieldKey = Inflector::singularize($this->_table) . '_id';
-
-		// Update all visible to 0 in here instead of in beforeSave()
-		$this->CustomFieldOptions->updateAll(
-			['visible' => 0],
-			[$fieldKey => $entity->id]
-		);
-		$this->CustomTableColumns->updateAll(
-			['visible' => 0],
-			[$fieldKey => $entity->id]
-		);
-		$this->CustomTableRows->updateAll(
-			['visible' => 0],
-			[$fieldKey => $entity->id]
-		);
-		// End
-
-		// To handle when delete all field_options or table_columns or table_rows
-		if (!array_key_exists('custom_field_options', $data[$this->alias()])) {
-			$data[$this->alias()]['custom_field_options'] = [];
-			$entity->custom_field_options = [];
-		}
-		if (!array_key_exists('custom_table_columns', $data[$this->alias()])) {
-			$data[$this->alias()]['custom_table_columns'] = [];
-			$entity->custom_table_columns = [];
-		}
-		if (!array_key_exists('custom_table_rows', $data[$this->alias()])) {
-			$data[$this->alias()]['custom_table_rows'] = [];
-			$entity->custom_table_rows = [];
-		}
-		// End
-
-		// Mark all visible to dirty in order to save properly
-		if (isset($entity->custom_field_options)) {
-			foreach ($entity->custom_field_options as $colKey => $colObj) {
-				$entity->custom_field_options[$colKey]->dirty('visible', true);
-			}
-		}
-		if (isset($entity->custom_table_columns)) {
-			foreach ($entity->custom_table_columns as $colKey => $colObj) {
-				$entity->custom_table_columns[$colKey]->dirty('visible', true);
-			}
-		}
-		if (isset($entity->custom_table_rows)) {
-			foreach ($entity->custom_table_rows as $rowKey => $rowObj) {
-				$entity->custom_table_rows[$rowKey]->dirty('visible', true);
-			}
-		}
-		// End
-
-		//Required by patchEntity for associated data
-		$newOptions = [];
-		$newOptions['associated'] = $this->_contain;
-
-		$arrayOptions = $options->getArrayCopy();
-		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
-		$options->exchangeArray($arrayOptions);
+		$this->setupFields($entity);
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity) {
-		//Initialize field values
-		list(, $selectedFieldType, , $selectedMandatory, , $selectedUnique) = array_values($this->getSelectOptions());
+		$selectedFieldType = key($this->fieldTypeOptions);
 		$entity->field_type = $selectedFieldType;
-		$entity->is_mandatory = $selectedMandatory;
-		$entity->is_unique = $selectedUnique;
-		$this->loadBehavior($selectedFieldType);
-
-		return $entity;
+		$this->request->query['field_type'] = $entity->field_type;
 	}
 
 	public function editOnInitialize(Event $event, Entity $entity) {
-		$this->loadBehavior($entity->field_type);
-		return $entity;
+		$this->request->query['field_type'] = $entity->field_type;
 	}
 
-	public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$request = $this->request;
-		if (array_key_exists($this->alias(), $request->data)) {
-			if (array_key_exists('custom_field_options', $request->data[$this->alias()])) {
-				unset($data[$this->alias()]['custom_field_options']);
-			}
-			if (array_key_exists('custom_table_columns', $request->data[$this->alias()])) {
-				unset($data[$this->alias()]['custom_table_columns']);
-			}
-			if (array_key_exists('custom_table_rows', $request->data[$this->alias()])) {
-				unset($data[$this->alias()]['custom_table_rows']);
-			}
-		}
+	public function addEditAfterAction(Event $event, Entity $entity) {
+		$this->setupFields($entity);
 	}
 
 	public function onUpdateFieldFieldType(Event $event, array $attr, $action, Request $request) {
-		if ($action == 'edit') {
+		if ($action == 'view') {
+		} else if ($action == 'add') {
+			$fieldTypeOptions = $this->fieldTypeOptions;
+			$selectedFieldType = $this->queryString('field_type', $fieldTypeOptions);
+
+			$attr['type'] = 'select';
+			$attr['options'] = $fieldTypeOptions;
+			$attr['onChangeReload'] = 'changeType';
+		} else if ($action == 'edit') {
+			$fieldTypeOptions = $this->fieldTypeOptions;
+			$selectedFieldType = $request->query('field_type');
+
 			$attr['type'] = 'readonly';
+			$attr['value'] = $selectedFieldType;
+			$attr['attr']['value'] = $fieldTypeOptions[$selectedFieldType];
 		}
 
 		return $attr;
 	}
 
-	public function getSelectOptions() {
-		//Return all required options and their key
-		$fieldTypeOptions = $this->getFieldTypeList($this->_fieldFormat);
-        $selectedFieldType = key($fieldTypeOptions);
+	public function onUpdateFieldIsMandatory(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'view') {
+		} else if ($action == 'add' || $action == 'edit') {
+			$selectedFieldType = $request->query('field_type');
+			$mandatoryOptions = $this->getSelectOptions('general.yesno');
+			$isMandatory = $this->CustomFieldTypes->findByCode($selectedFieldType)->first()->is_mandatory;
 
-        $mandatoryOptions = $this->getMandatoryList();
-        $selectedMandatory = key($mandatoryOptions);
+			if ($isMandatory) {
+				$attr['type'] = 'select';
+				$attr['options'] = $mandatoryOptions;
+			} else {
+				$attr['type'] = 'hidden';
+				$attr['value'] = self::MANDATORY_NO;
+			}
+		}
 
-        $uniqueOptions = $this->getUniqueList();
-        $selectedUnique = key($uniqueOptions);
-
-		return compact('fieldTypeOptions', 'selectedFieldType', 'mandatoryOptions', 'selectedMandatory', 'uniqueOptions', 'selectedUnique');
+		return $attr;
 	}
 
-	public function setFieldOrder() {
-		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	public function onUpdateFieldIsUnique(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'view') {
+		} else if ($action == 'add' || $action == 'edit') {
+			$selectedFieldType = $request->query('field_type');
+			$uniqueOptions = $this->getSelectOptions('general.yesno');
+			$isUnique = $this->CustomFieldTypes->findByCode($selectedFieldType)->first()->is_unique;
+
+			if ($isUnique) {
+				$attr['type'] = 'select';
+				$attr['options'] = $uniqueOptions;
+			} else {
+				$attr['type'] = 'hidden';
+				$attr['value'] = self::UNIQUE_NO;
+			}
+		}
+
+		return $attr;
 	}
 
-	public function loadBehavior($selectedFieldType) {
-		$this->fields['is_mandatory']['visible'] = $this->getMandatoryVisibility($selectedFieldType);
-		$this->fields['is_unique']['visible'] = $this->getUniqueVisibility($selectedFieldType);
-		$this->addBehavior(
-			'CustomField.'.Inflector::camelize(strtolower($selectedFieldType)),
-			['setup' => true]
-		);
+	public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$request = $this->request;
+		unset($request->query['field_type']);
+
+		if ($request->is(['post', 'put'])) {
+			if (array_key_exists($this->alias(), $request->data)) {
+				if (array_key_exists('field_type', $request->data[$this->alias()])) {
+					$this->request->query['field_type'] = $request->data[$this->alias()]['field_type'];
+				}
+			}
+		}
+	}
+
+	private function setupFields(Entity $entity) {
+		$this->ControllerAction->field('field_type');
+		$this->ControllerAction->field('is_mandatory');
+		$this->ControllerAction->field('is_unique');
+
+		// trigger event to add required fields for different field type
+		$fieldType = Inflector::camelize(strtolower($entity->field_type));
+		$event = $this->dispatchEvent('Setup.set' . $fieldType . 'Elements', [$entity], $this);
+		if ($event->isStopped()) { return $event->result; }
+
+		$this->ControllerAction->setFieldOrder(['field_type', 'name', 'is_mandatory', 'is_unique']);
+	}
+
+	public function setFieldTypes($type) {
+		$this->fieldTypes[$type] = $type;
+	}
+
+	public function getFieldTypes() {
+		return $this->fieldTypes;
 	}
 }
