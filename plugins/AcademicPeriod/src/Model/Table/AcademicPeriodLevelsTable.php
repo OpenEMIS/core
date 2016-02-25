@@ -26,11 +26,15 @@ class AcademicPeriodLevelsTable extends ControllerActionTable {
 
 	public function afterAction(Event $event, ArrayObject $extra) {
 		$this->field('editable', ['visible' => false]);
-		$this->field('editable_display', ['visible' => in_array($this->action, ['index', 'view'])]);
 	}
 
-	public function onGetEditableDisplay(Event $event, Entity $entity) {
-		return $entity->editable == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		if (!$entity->editable) {
+			$toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+			unset($toolbarButtonsArray['edit']);
+			unset($toolbarButtonsArray['remove']);
+			$extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+		}
 	}
 
 	public function onUpdateFieldLevel(Event $event, array $attr, $action, Request $request) {
