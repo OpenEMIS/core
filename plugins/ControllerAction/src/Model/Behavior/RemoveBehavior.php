@@ -252,6 +252,7 @@ class RemoveBehavior extends Behavior {
 		$foreignKey = $association->foreignKey();
 		$targetForeignKey = $association->targetForeignKey();
 
+		// POCOR-2601: Will have to review this part again as code has risk of injection
 		// List of the target foreign keys for subqueries
 		$targetForeignKeys = $modelAssociationTable->find()
 			->select([$modelAssociationTable->aliasField($targetForeignKey)])
@@ -260,8 +261,8 @@ class RemoveBehavior extends Behavior {
 		// List of id in the junction table to be deleted
 		$idNotToUpdate = $modelAssociationTable->find()
 			->where([
-				$modelAssociationTable->aliasField($foreignKey) => $from,
-				$modelAssociationTable->aliasField($targetForeignKey).' IN ('.$targetForeignKeys.')'
+				$modelAssociationTable->aliasField($assoc->foreignKey()).' = '.$transferFrom,
+				$modelAssociationTable->aliasField($assoc->targetForeignKey()).' IN ('.$targetForeignKeys.')'
 			])
 			->select(['target' => $assoc->targetForeignKey()]);
 
