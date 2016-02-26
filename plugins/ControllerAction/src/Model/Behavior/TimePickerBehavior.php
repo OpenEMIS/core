@@ -21,17 +21,16 @@ use Cake\ORM\Behavior;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 
+use ControllerAction\Model\Traits\PickerTrait;
+
 class TimePickerBehavior extends Behavior {
+	use PickerTrait;
+	
 	public function beforeSave(Event $event, Entity $entity) {
 		foreach ($this->config() as $field) {
 			if (!empty($entity->$field)) {
 				$entity->$field = $this->convertForTimePicker($entity->$field);				
 			}
 		}
-	}
-
-	public function convertForTimePicker($data) {
-		$format = 'H:i:s';
-		return date($format, strtotime($data));
 	}
 }
