@@ -9,25 +9,18 @@ use CustomField\Model\Behavior\RenderBehavior;
 use Cake\I18n\Time;
 
 use Cake\View\Helper\IdGeneratorTrait;
+use ControllerAction\Model\Traits\PickerTrait;
 
 class RenderTimeBehavior extends RenderBehavior {
 	use IdGeneratorTrait;
+	use PickerTrait;
 
 	public function initialize(array $config) {
         parent::initialize($config);
     }
 
-    public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$newEvent = [
-			'ControllerAction.Model.onUpdateIncludes' => 'onUpdateIncludes'
-		];
-		$events = array_merge($events, $newEvent);
-		return $events;
-	}
-
 	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
-		if (!$this->_table->hasBehavior('ControllerAction.TimePicker')) {
+		if (!$this->_table->hasBehavior('TimePicker')) {
 			$this->_table->addBehavior('ControllerAction.TimePicker');
 		}
 
@@ -35,8 +28,8 @@ class RenderTimeBehavior extends RenderBehavior {
 		if (array_key_exists('custom_field_values', $dataArray)) {
 			foreach ($dataArray['custom_field_values'] as $key => $value) {
 				if (array_key_exists('time_value', $value)) {
-					if ($dataArray['custom_field_values'][$key]['field_type'] == 'DATE') {
-						$convertedTime = $this->_table->convertForTimePicker($dataArray['custom_field_values'][$key]['time_value']);
+					if ($dataArray['custom_field_values'][$key]['field_type'] == $this->fieldTypeCode) {
+						$convertedTime = $this->convertForTimePicker($dataArray['custom_field_values'][$key]['time_value']);
 						$data['custom_field_values'][$key]['time_value'] = (!empty($convertedTime))? $convertedTime: $data['custom_field_values'][$key]['time_value'];
 					}
 				}

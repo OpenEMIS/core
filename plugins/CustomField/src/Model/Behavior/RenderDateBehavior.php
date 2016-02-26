@@ -9,25 +9,18 @@ use CustomField\Model\Behavior\RenderBehavior;
 use Cake\I18n\Time;
 
 use Cake\View\Helper\IdGeneratorTrait;
+use ControllerAction\Model\Traits\PickerTrait;
 
 class RenderDateBehavior extends RenderBehavior {
 	use IdGeneratorTrait;
+	use PickerTrait;
 
 	public function initialize(array $config) {
         parent::initialize($config);
     }
 
-    public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$newEvent = [
-			'ControllerAction.Model.onUpdateIncludes' => 'onUpdateIncludes'
-		];
-		$events = array_merge($events, $newEvent);
-		return $events;
-	}
-
 	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
-		if (!$this->_table->hasBehavior('ControllerAction.DatePicker')) {
+		if (!$this->_table->hasBehavior('DatePicker')) {
 			$this->_table->addBehavior('ControllerAction.DatePicker');
 		}
 
@@ -35,8 +28,8 @@ class RenderDateBehavior extends RenderBehavior {
 		if (array_key_exists('custom_field_values', $dataArray)) {
 			foreach ($dataArray['custom_field_values'] as $key => $value) {
 				if (array_key_exists('date_value', $value)) {
-					if ($dataArray['custom_field_values'][$key]['field_type'] == 'DATE') {
-						$convertedDate = $this->_table->convertForDatePicker($dataArray['custom_field_values'][$key]['date_value']);
+					if ($dataArray['custom_field_values'][$key]['field_type'] == $this->fieldTypeCode) {
+						$convertedDate = $this->convertForDatePicker($dataArray['custom_field_values'][$key]['date_value']);
 						$data['custom_field_values'][$key]['date_value'] = (!empty($convertedDate))? $convertedDate: $data['custom_field_values'][$key]['date_value'];
 					}
 				}
