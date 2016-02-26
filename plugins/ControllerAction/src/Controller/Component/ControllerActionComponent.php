@@ -1298,6 +1298,7 @@ class ControllerActionComponent extends Component {
 								} else if ($assoc->type() == 'manyToMany') {
 									$modelAssociationTable = $assoc->junction();
 
+									// POCOR-2601: Will have to review this part again as code has risk of injection
 									// List of the target foreign keys for subqueries
 									$targetForeignKeys = $modelAssociationTable->find()
 										->select([$modelAssociationTable->aliasField($assoc->targetForeignKey())])
@@ -1308,7 +1309,7 @@ class ControllerActionComponent extends Component {
 									// List of id in the junction table to be deleted
 									$idNotToUpdate = $modelAssociationTable->find()
 										->where([
-											$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferFrom,
+											$modelAssociationTable->aliasField($assoc->foreignKey()).' = '.$transferFrom,
 											$modelAssociationTable->aliasField($assoc->targetForeignKey()).' IN ('.$targetForeignKeys.')'
 										])
 										->select(['target' => $assoc->targetForeignKey()]);
