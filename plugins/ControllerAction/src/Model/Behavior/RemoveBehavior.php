@@ -252,37 +252,30 @@ class RemoveBehavior extends Behavior {
 		$foreignKey = $association->foreignKey();
 		$targetForeignKey = $association->targetForeignKey();
 
-		// POCOR-2601: Will have to review this part again as code has risk of injection
 		// List of the target foreign keys for subqueries
 		$targetForeignKeys = $modelAssociationTable->find()
-			->select([$modelAssociationTable->aliasField($targetForeignKey)])
-			->where([$modelAssociationTable->aliasField($foreignKey).' = '.$to]);
-
-		// List of id in the junction table to be deleted
-		$idNotToUpdate = $modelAssociationTable->find()
+			->select(['target' => $modelAssociationTable->aliasField($assoc->targetForeignKey())])
 			->where([
-				$modelAssociationTable->aliasField($assoc->foreignKey()).' = '.$transferFrom,
-				$modelAssociationTable->aliasField($assoc->targetForeignKey()).' IN ('.$targetForeignKeys.')'
-			])
-			->select(['target' => $assoc->targetForeignKey()]);
+				$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferTo
+			]);
 
 		$notUpdateQuery = $modelAssociationTable->query()
 			->select(['target_foreign_key' => 'TargetTable.target'])
-			->from(['TargetTable' => $idNotToUpdate]);
+			->from(['TargetTable' => $targetForeignKeys]);
 
 		$condition = [];
 
-		$idNotToUpdateArr = $idNotToUpdate->toArray();
-
-		if (empty($idNotToUpdateArr)) {
-			$condition = [$foreignKey => $from];
-		} else {
-			$condition = [$foreignKey => $from, $assoc->targetForeignKey().' NOT IN ' => $notUpdateQuery];
-		}
+		$condition = [
+			$assoc->foreignKey() => $transferFrom, 
+			'NOT' => [
+				$assoc->foreignKey() => $transferFrom,
+				$assoc->targetForeignKey().' IN ' => $notUpdateQuery
+			]
+		];
 		
 		// Update all transfer records
 		$modelAssociationTable->updateAll(
-			[$foreignKey => $to],
+			[$assoc->foreignKey() => $transferTo],
 			$condition
 		);
 	}
