@@ -149,3 +149,9 @@ a.btn-green:hover {
 .rtl .table {
     border-collapse: collapse !important;
 }
+
+/* Main Navigation */
+
+.rtl .nav-level-1 a {
+    padding: 10px 10px 10px 25px !important;
+}
