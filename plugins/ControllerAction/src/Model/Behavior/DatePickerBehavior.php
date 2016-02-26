@@ -25,7 +25,11 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\I18n\Time;
 
+use ControllerAction\Model\Traits\PickerTrait;
+
 class DatePickerBehavior extends Behavior {
+	use PickerTrait;
+
 	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
 		foreach ($this->config() as $field) {
 			if (!empty($data[$field])) {
@@ -34,21 +38,6 @@ class DatePickerBehavior extends Behavior {
 					$data[$field] = (!empty($convertedDate))? $convertedDate: $data[$field];
 				}
 			}
-		}
-	}
-
-	public function convertForDatePicker($data) {
-		$format = 'Y-m-d';
-		// to handle both d-m-y and d-m-Y because datepicker and cake doesnt validate
-		$dateObj = date_create_from_format("d-m-Y",$data);
-		if ($dateObj === false) {
-			$dateObj = date_create_from_format("d-m-y",$data);
-		}
-		if ($dateObj !== false) {
-			return $dateObj->format($format);
-		} else {
-			// failure
-			return null;
 		}
 	}
 }
