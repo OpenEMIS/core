@@ -1283,7 +1283,7 @@ class ControllerActionComponent extends Component {
 						}
 					}
 
-					if ($process($model, $transferFrom, $deleteOptions)) {
+					// if ($process($model, $transferFrom, $deleteOptions)) {
 						$id = $request->data[$primaryKey];
 						$transferOptions = new ArrayObject([]);
 
@@ -1298,35 +1298,26 @@ class ControllerActionComponent extends Component {
 								} else if ($assoc->type() == 'manyToMany') {
 									$modelAssociationTable = $assoc->junction();
 
-									// POCOR-2601: Will have to review this part again as code has risk of injection
 									// List of the target foreign keys for subqueries
 									$targetForeignKeys = $modelAssociationTable->find()
-										->select([$modelAssociationTable->aliasField($assoc->targetForeignKey())])
+										->select(['target' => $modelAssociationTable->aliasField($assoc->targetForeignKey())])
 										->where([
-											$modelAssociationTable->aliasField($assoc->foreignKey()).' = '.$transferTo
+											$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferTo
 										]);
-
-									// List of id in the junction table to be deleted
-									$idNotToUpdate = $modelAssociationTable->find()
-										->where([
-											$modelAssociationTable->aliasField($assoc->foreignKey()).' = '.$transferFrom,
-											$modelAssociationTable->aliasField($assoc->targetForeignKey()).' IN ('.$targetForeignKeys.')'
-										])
-										->select(['target' => $assoc->targetForeignKey()]);
 
 									$notUpdateQuery = $modelAssociationTable->query()
 										->select(['target_foreign_key' => 'TargetTable.target'])
-										->from(['TargetTable' => $idNotToUpdate]);
+										->from(['TargetTable' => $targetForeignKeys]);
 
 									$condition = [];
 
-									$idNotToUpdateArr = $idNotToUpdate->toArray();
-
-									if (empty($idNotToUpdateArr)) {
-										$condition = [$assoc->foreignKey() => $transferFrom];
-									} else {
-										$condition = [$assoc->foreignKey() => $transferFrom, $assoc->targetForeignKey().' NOT IN ' => $notUpdateQuery];
-									}
+									$condition = [
+										$assoc->foreignKey() => $transferFrom, 
+										'NOT' => [
+											$assoc->foreignKey() => $transferFrom,
+											$assoc->targetForeignKey().' IN ' => $notUpdateQuery
+										]
+									];
 									
 									// Update all transfer records
 									$modelAssociationTable->updateAll(
@@ -1348,9 +1339,9 @@ class ControllerActionComponent extends Component {
 
 						$transferProcess($associations, $transferFrom, $transferTo, $model);
 						$this->Alert->success('general.delete.success');
-					} else {
-						$this->Alert->error('general.delete.failed');
-					}
+					// } else {
+					// 	$this->Alert->error('general.delete.failed');
+					// }
 					return $this->controller->redirect($this->url('index'));
 				}
 			}
