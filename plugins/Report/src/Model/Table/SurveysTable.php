@@ -60,12 +60,40 @@ class SurveysTable extends AppTable  {
 		$requestData = json_decode($settings['process']['params']);
 		$surveyFormId = $requestData->survey_form;
 		$academicPeriodId = $requestData->academic_period_id;
+
+		$WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
+		$status = $WorkflowStatusesTable->WorkflowModels->getWorkflowStatusSteps('Institution.InstitutionSurveys', 'NOT_COMPLETED');
+		$notCompleteStatus = $status[0]['step_id'];
+
+		$InstitutionsTable = $this->Institutions;
+		// Query to insert missing security role records
+		$insertMissingRecords = $InstitutionsTable->find()
+			->where(['NOT EXISTS ('.
+				$this->find()->where([
+					$this->aliasField('academic_period_id') => $academicPeriodId,
+					$this->aliasField('survey_form_id') => $surveyFormId,
+					$this->aliasField('institution_id') => $InstitutionsTable->aliasField('id')
+				])
+			.')'])
+			->select([
+				'status_id' => intval($notCompleteStatus),
+				'academic_period_id' => intval($academicPeriodId), 
+				'survey_form_id' => intval($surveyFormId),
+				'security_group_id' => 'Institutions.security_group_id',
+				'institution_id' => $InstitutionsTable->aliasField('id'),
+				'created_user_id' => intval(1),
+				'created' => $InstitutionsTable->find()->func()->now()
+			]);
+		$this->query()
+			->insert(['status_id', 'academic_period_id', 'survey_form_id', 'institution_id', 'created_user_id', 'created'])
+			->values($insertMissingRecords)
+			->execute();
+
 		$status = $requestData->status;
 		$configCondition = $this->getCondition();
 		$condition = [
 			$this->aliasField('academic_period_id') => $academicPeriodId
 		];
-		$WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
 		$surveyStatuses = $WorkflowStatusesTable->getWorkflowSteps($status);
 
 		
