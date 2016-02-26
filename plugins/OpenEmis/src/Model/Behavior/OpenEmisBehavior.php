@@ -49,7 +49,7 @@ class OpenEmisBehavior extends Behavior {
 		if ($action == 'index') $form = true; // deprecated
 		$this->_table->controller->set('form', $form); // deprecated
 
-		$this->initializeButtons($extra); 
+		$this->initializeButtons($extra);
 	}
 
 	public function afterAction(Event $event, ArrayObject $extra) {
@@ -84,22 +84,6 @@ class OpenEmisBehavior extends Behavior {
 		$model->controller->set('action', $this->_table->action);
 		$model->controller->set('indexElements', []);
 		// end deprecated
-
-		if ($model->action == 'view') {
-			if ($model->actions('remove') != 'transfer') {
-				$toolbarButtons['remove']['url'] = $model->url('remove');
-				$toolbarButtons['remove']['type'] = 'button';
-				$toolbarButtons['remove']['label'] = '<i class="fa fa-trash"></i>';
-				$toolbarButtons['remove']['attr'] = $extra['toolbarAttr'];
-				$toolbarButtons['remove']['attr']['title'] = __('Delete');
-				$toolbarButtons['remove']['attr']['data-toggle'] = 'modal';
-				$toolbarButtons['remove']['attr']['data-target'] = '#delete-modal';
-				$toolbarButtons['remove']['attr']['field-target'] = '#recordId';
-				$toolbarButtons['remove']['attr']['field-value'] = $extra['entity']->{$model->primaryKey()};
-				$toolbarButtons['remove']['attr']['onclick'] = 'ControllerAction.fieldMapping(this)';
-			}
-		}
-		unset($extra['toolbarAttr']);
 
 		if (array_key_exists('toolbarButtons', $extra)) {
 			$toolbarButtons = $extra['toolbarButtons'];
