@@ -36,6 +36,7 @@ class StaffTable extends AppTable {
 			'fieldKey' => 'staff_custom_field_id',
 			'tableColumnKey' => 'staff_custom_table_column_id',
 			'tableRowKey' => 'staff_custom_table_row_id',
+			'fieldClass' => ['className' => 'StaffCustomField.StaffCustomFields'],
 			'formKey' => 'staff_custom_form_id',
 			'filterKey' => 'staff_custom_filter_id',
 			'formFieldClass' => ['className' => 'StaffCustomField.StaffCustomFormsFields'],
