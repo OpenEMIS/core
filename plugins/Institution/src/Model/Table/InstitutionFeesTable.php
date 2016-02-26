@@ -36,8 +36,9 @@ class InstitutionFeesTable extends ControllerActionTable {
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 
 		$this->hasMany('InstitutionFeeTypes', ['className' => 'Institution.InstitutionFeeTypes', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('StudentFees', ['className' => 'Institution.StudentFeesAbstract', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StudentFees', ['className' => 'Institution.StudentFeesAbstract']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
+		$this->addBehavior('RestrictAssociatedDelete', ['message' => 'InstitutionFees.fee_payments_exists']);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -67,6 +68,7 @@ class InstitutionFeesTable extends ControllerActionTable {
 			];
 		}
 	}
+
 
 /******************************************************************************************************************
 **
@@ -263,29 +265,6 @@ class InstitutionFeesTable extends ControllerActionTable {
 ** field specific methods
 **
 ******************************************************************************************************************/
-	public function onBeforeDelete(Event $event, ArrayObject $deleteOptions, $id, ArrayObject $extra) {
-		$idKey = $this->aliasField($this->primaryKey());
-		if ($this->exists([$idKey => $id])) {
-			$query = $this->find()
-				->contain(['StudentFees'])
-				->where([$idKey => $id])
-				->first();
-
-			if ($query->has('student_fees') && count($query->student_fees)>0) {
-				$this->Alert->error('InstitutionFees.fee_payments_exists');
-				$event->stopPropagation();
-				$action = $this->url('index');
-				return $this->controller->redirect($action);
-			}
-		}
-	}
-
-
-/******************************************************************************************************************
-**
-** field specific methods
-**
-******************************************************************************************************************/
 	public function onGetEducationProgramme(Event $event, Entity $entity) {
 		return $entity->education_grade->education_programme->name;
 	}
@@ -355,5 +334,6 @@ class InstitutionFeesTable extends ControllerActionTable {
 			$data[$this->alias()]['total'] = $total;
 		}
 	}
+	
 	
 }
