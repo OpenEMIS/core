@@ -17,13 +17,14 @@ class AreasController extends AppController
 		parent::initialize();
 
 		$this->ControllerAction->models = [
-			'Levels' => ['className' => 'Area.AreaLevels', 'options' => ['deleteStrategy' => 'transfer']],
 			'Areas' => ['className' => 'Area.Areas', 'options' => ['deleteStrategy' => 'transfer']],
-			'AdministrativeLevels' => ['className' => 'Area.AreaAdministrativeLevels', 'options' => ['deleteStrategy' => 'transfer']],
 			'Administratives' => ['className' => 'Area.AreaAdministratives', 'options' => ['deleteStrategy' => 'transfer']]
 		];
 		$this->loadComponent('Paginator');
 	}
+
+    public function Levels() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Area.AreaLevels']); }
+    public function AdministrativeLevels() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Area.AreaAdministrativeLevels']); }
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);

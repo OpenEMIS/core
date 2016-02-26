@@ -14,7 +14,13 @@ ALTER TABLE `staff_custom_forms_fields` DROP `section`;
 ALTER TABLE `infrastructure_custom_forms_fields` DROP `section`;
 
 -- custom_modules
+UPDATE `custom_modules` SET `supported_field_types` = 'TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,TABLE,STUDENT_LIST' WHERE `model` = 'Institution.Institutions';
+UPDATE `custom_modules` SET `supported_field_types` = 'TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,TABLE' WHERE `model` = 'Student.Students';
+UPDATE `custom_modules` SET `supported_field_types` = 'TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,TABLE' WHERE `model` = 'Staff.Staff';
 UPDATE `custom_modules` SET `supported_field_types` = NULL, `visible` = 0 WHERE `model` = 'Institution.InstitutionInfrastructures';
+
+-- custom_field_types
+UPDATE `custom_field_types` SET `visible` = 0 WHERE `code` IN ('DATE', 'TIME');
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2445';
