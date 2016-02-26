@@ -20,10 +20,6 @@ class RenderDateBehavior extends RenderBehavior {
     }
 
 	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
-		if (!$this->_table->hasBehavior('DatePicker')) {
-			$this->_table->addBehavior('ControllerAction.DatePicker');
-		}
-
 		$dataArray = $data->getArrayCopy();
 		if (array_key_exists('custom_field_values', $dataArray)) {
 			foreach ($dataArray['custom_field_values'] as $key => $value) {
