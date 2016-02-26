@@ -34,7 +34,7 @@ class SetupTimeBehavior extends SetupBehavior {
 			'rule' => ['compareTime', 'range_end_time', true],
 			'provider' => 'table',
 			'on' => function ($context) {
-				return $context['data']['field_type'] == 'TIME' && $context['data']['time_range'] == 'between';
+				return $context['data']['field_type'] == $this->fieldTypeCode && $context['data']['time_range'] == 'between';
 			}
 		]);
     }
@@ -115,7 +115,7 @@ class SetupTimeBehavior extends SetupBehavior {
 	}
 
 	public function beforeSave(Event $event, Entity $entity) {
-		if ($entity->field_type == 'TIME') {
+		if ($entity->field_type == $this->fieldTypeCode) {
 			$paramsArray = [];
 			$range_start_time = ($entity->has('range_start_time'))? $entity->range_start_time: null;
 			$range_end_time = ($entity->has('range_end_time'))? $entity->range_end_time: null;

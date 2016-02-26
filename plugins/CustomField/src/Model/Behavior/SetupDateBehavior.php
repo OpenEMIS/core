@@ -33,7 +33,7 @@ class SetupDateBehavior extends SetupBehavior {
 			'rule' => ['compareDate', 'range_end_date', true],
 			'provider' => 'table',
 			'on' => function ($context) {
-				return $context['data']['field_type'] == 'DATE' && $context['data']['date_range'] == 'between';
+				return $context['data']['field_type'] == $this->fieldTypeCode && $context['data']['date_range'] == 'between';
 			}
 		]);
     }
@@ -113,7 +113,7 @@ class SetupDateBehavior extends SetupBehavior {
 	}
 
 	public function beforeSave(Event $event, Entity $entity) {
-		if ($entity->field_type == 'DATE') {
+		if ($entity->field_type == $this->fieldTypeCode) {
 			$paramsArray = [];
 			$range_start_date = ($entity->has('range_start_date'))? $entity->range_start_date: null;
 			$range_end_date = ($entity->has('range_end_date'))? $entity->range_end_date: null;
