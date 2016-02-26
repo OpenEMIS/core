@@ -3,14 +3,18 @@ namespace Student\Model\Table;
 
 use ArrayObject;
 use Cake\Event\Event;
-use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Network\Request;
+use Cake\ORM\Entity;
+use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
+use Cake\Network\Request;
 use Cake\Validation\Validator;
-use App\Model\Table\AppTable;
+use App\Model\Traits\MessagesTrait;
+use App\Model\Table\ControllerActionTable;
 
-class StudentFeesTable extends AppTable {
+class StudentFeesTable extends ControllerActionTable {
+	use MessagesTrait;
+
 	public $currency;
 	public $studentId;
 	private $_conditions = [];
@@ -25,14 +29,24 @@ class StudentFeesTable extends AppTable {
 
 		$this->hasMany('InstitutionFeeTypes', ['className' => 'Institution.InstitutionFeeTypes', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StudentFeesAbstract', ['className' => 'Institution.StudentFeesAbstract', 'dependent' => true, 'cascadeCallbacks' => true]);
+		
+		if ($this->behaviors()->has('ControllerAction')) {
+            $this->behaviors()->get('ControllerAction')->config([
+                'actions' => [
+					'index' => true, 
+					'view' => true, 
+					'add' => false, 
+					'edit' => false, 
+					'remove' => false,
+					'search' => false,
+					'reorder' => false
+				],
+            ]);
+        }
 	}
 
-	public function validationDefault(Validator $validator) {
-		return $validator;
-	}
-
-	public function beforeAction() {
-		$session = $this->request->session();
+	public function beforeAction(Event $event, ArrayObject $extra) {
+		$session = $this->Session;
 		if ($this->controller->name == 'Directories') {
 			$this->studentId = $session->read('Directory.Directories.id');
 		} else {
@@ -53,20 +67,20 @@ class StudentFeesTable extends AppTable {
 			$this->_conditions['educationGradeIds'][$value->education_grade_id] = '';
 		}
 
-    	$this->ControllerAction->field('total',	 			['visible' => false]);
+    	$this->field('total',	 			['visible' => false]);
 
-    	$this->ControllerAction->field('institution_id', 		['visible' => true]);
-    	$this->ControllerAction->field('academic_period_id', 	['visible' => true]);
-    	$this->ControllerAction->field('education_grade_id', 	['visible' => true]);
+    	$this->field('institution_id', 		['visible' => true]);
+    	$this->field('academic_period_id', 	['visible' => true]);
+    	$this->field('education_grade_id', 	['visible' => true]);
 
-    	$this->ControllerAction->field('total_fee', 		['type' => 'float', 'visible' => ['index'=>true]]);
-    	$this->ControllerAction->field('amount_paid', 		['type'=>'float', 'visible' => ['index'=>true]]);
-    	$this->ControllerAction->field('outstanding_fee', 	['type' => 'float', 'visible' => true]);
+    	$this->field('total_fee', 		['type' => 'float', 'visible' => ['index'=>true]]);
+    	$this->field('amount_paid', 		['type'=>'float', 'visible' => ['index'=>true]]);
+    	$this->field('outstanding_fee', 	['type' => 'float', 'visible' => true]);
 
-    	$this->ControllerAction->field('fee_types', ['type' => 'element', 'element' => 'Institution.Fees/fee_types', 'currency' => $this->currency, 'non-editable'=>true, 'visible' => ['view'=>true]]);
-    	$this->ControllerAction->field('payments', ['type' => 'element', 'element' => 'Student.Fees/payments', 'currency' => $this->currency, 'visible' => ['view'=>true]]);
+    	$this->field('fee_types', ['type' => 'element', 'element' => 'Institution.Fees/fee_types', 'currency' => $this->currency, 'non-editable'=>true, 'visible' => ['view'=>true]]);
+    	$this->field('payments', ['type' => 'element', 'element' => 'Student.Fees/payments', 'currency' => $this->currency, 'visible' => ['view'=>true]]);
 
-		$this->ControllerAction->setFieldOrder([
+		$this->setFieldOrder([
    			'institution_id', 'academic_period_id', 'education_grade_id', 'total_fee', 'amount_paid', 'outstanding_fee'
 		]);
 
@@ -78,7 +92,7 @@ class StudentFeesTable extends AppTable {
 ** index action methods
 **
 ******************************************************************************************************************/
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		$query
 			->contain([
 				'EducationGrades.EducationProgrammes',
@@ -106,15 +120,11 @@ class StudentFeesTable extends AppTable {
 
 	}
 
-	private function setupTabElements() {
+	public function indexAfterAction(Event $event, ResultSet $resultSet, ArrayObject $extra) {
 		$options = ['type' => 'student'];
 		$tabElements = $this->controller->getFinanceTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', 'Fees');
-	}
-
-	public function indexAfterAction(Event $event, $data) {
-		$this->setupTabElements();
+		$this->controller->set('selectedAction', 'StudentFees');
 	}
 
 
@@ -124,48 +134,33 @@ class StudentFeesTable extends AppTable {
 **
 ******************************************************************************************************************/
 	public function viewBeforeQuery(Event $event, Query $query) {
-		if (isset($event->subject->url('view')[1])) {
+		if (isset($this->request->pass[1])) {
 			$query
 			->contain([
 				'EducationGrades.EducationProgrammes',
 				'InstitutionFeeTypes.FeeTypes',
-				// 'StudentFeesAbstract.CreatedBy'
 			])
-			// ->where([
-			// 	$this->aliasField('institution_id') . ' IN ' => array_keys($this->_conditions['institutionIds']),
-			// 	$this->aliasField('academic_period_id') . ' IN ' => array_keys($this->_conditions['academicPeriodIds']),
-			// 	$this->aliasField('education_grade_id') . ' IN ' => array_keys($this->_conditions['educationGradeIds'])
-			// ])
-			// ->join([
-			// 	[
-			// 		'type' => 'left',
-			// 		'table' => 'student_fees',
-			// 		'alias' => 'StudentFeesAbstract',
-			// 		'conditions' => [
-			// 			'StudentFeesAbstract.institution_fee_id' => $event->subject->url('view')[1],
-			// 			'StudentFeesAbstract.student_id' => $this->studentId
-			// 		]
-			// 	]
-			// ])
 			->group(['StudentFees.id'])
 			;
-			// pr($query->sql());die;
 		}
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$feeTypes = [];
+		$amount = 0.00;
     	foreach ($entity->institution_fee_types as $key=>$obj) {
-    		$feeTypes[] = [
+    		$feeTypes[$obj->fee_type->order] = [
     			'id' => $obj->id,
     			'type' => $obj->fee_type->name,
 				'fee_type_id' => $obj->fee_type_id,
 				'amount' => number_format(floatval($obj->amount), 2)
 			];
+			$amount = (float)$amount + (float)$obj->amount;
     	}
+    	ksort($feeTypes);
 
 		$this->fields['fee_types']['data'] = $feeTypes;
-		$this->fields['fee_types']['total'] = $this->onGetTotalFee($event, $entity);
+		$this->fields['fee_types']['total'] = $this->currency.' '.number_format($amount, 2);
 
     	$StudentFeesAbstract = TableRegistry::get('Institution.StudentFeesAbstract');
     	$fields = $StudentFeesAbstract->fields;
@@ -177,7 +172,7 @@ class StudentFeesTable extends AppTable {
     	$this->fields['payments']['data'] = $this->getPaymentRecords($entity);
     	$this->fields['payments']['total'] = $this->onGetAmountPaid($event, $entity);
 
-		$this->ControllerAction->setFieldOrder([
+		$this->setFieldOrder([
 			'institution_id', 'academic_period_id', 'education_grade_id', 'fee_types', 'payments', 'outstanding_fee'
 		]);
 
@@ -245,12 +240,7 @@ class StudentFeesTable extends AppTable {
 			])
 		->toArray()
 		;
-		// pr($entityRecords);die;
-		// // foreach ($entityRecords as $key => $value) {
-		// // 	$entityRecords[$key]->amount = number_format((float)$entityRecords[$key]->amount, 2);
-		// // }
 		return $entityRecords;
-		// pr($entity);die;
 	}
 
 }

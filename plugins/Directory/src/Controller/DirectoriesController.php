@@ -49,7 +49,6 @@ class DirectoriesController extends AppController {
 			'StudentBehaviours' 	=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
 			'StudentResults' 		=> ['className' => 'Student.Results', 'actions' => ['index']],
 			'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],
-			'StudentFees' 			=> ['className' => 'Student.StudentFees', 'actions' => ['index', 'view']],
 			'StudentBankAccounts'	=> ['className' => 'User.BankAccounts'],
 			'StudentAwards' 		=> ['className' => 'User.Awards'],
 
@@ -81,6 +80,10 @@ class DirectoriesController extends AppController {
 
 		$this->set('contentHeader', 'Directories');
 	}
+
+	// CAv4
+	public function StudentFees() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentFees']); }
+	// End
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
