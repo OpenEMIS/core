@@ -100,11 +100,10 @@ class InstitutionFeesTable extends ControllerActionTable {
 
 		$this->controller->set('selectedOption', $selectedOption);
 		$this->controller->set(compact('academicPeriodOptions'));
-
-		$toolbarElements = [
-			['name' => 'Institution.Fees/controls', 'data' => [], 'options' => []]
-		];
-		$this->controller->set('toolbarElements', $toolbarElements);
+		$extra['elements']['custom'] = [
+			'name' => 'Institution.Fees/controls', 
+			'order' => 0
+        ];
 
 		$academicPeriodId = $selectedOption;
 		$query
@@ -334,6 +333,6 @@ class InstitutionFeesTable extends ControllerActionTable {
 			$data[$this->alias()]['total'] = $total;
 		}
 	}
-	
+
 	
 }

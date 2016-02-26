@@ -41,12 +41,20 @@ class StudentFeesTable extends ControllerActionTable {
 		$this->belongsTo('AcademicPeriods',	['className' => 'AcademicPeriod.AcademicPeriods']);
 
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
-	}
-
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-		return $events;
+		
+		if ($this->behaviors()->has('ControllerAction')) {
+            $this->behaviors()->get('ControllerAction')->config([
+                'actions' => [
+					'index' => true, 
+					'view' => true, 
+					'edit' => true, 
+					'add' => false, 
+					'remove' => false,
+					'search' => false,
+					'reorder' => false
+				],
+            ]);
+        }
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
@@ -58,22 +66,22 @@ class StudentFeesTable extends ControllerActionTable {
     	$this->StudentFeesAbstract = TableRegistry::get('Institution.StudentFeesAbstract');
 		$this->InstitutionFees = TableRegistry::get('Institution.InstitutionFees');
 
-    	$this->field('institution_id', ['visible' => false]);
-    	$this->field('student_status_id', ['visible' => false]);
-    	$this->field('education_grade_id', ['visible' => ['view'=>true, 'edit'=>true]]);
-    	$this->field('academic_period_id', ['visible' => ['view'=>true, 'edit'=>true]]);
-    	$this->field('start_date', ['visible' => false]);
-    	$this->field('end_date', ['visible' => false]);
+    	$this->field('institution_id', 		['visible' => false]);
+    	$this->field('student_status_id', 	['visible' => false]);
+    	$this->field('education_grade_id', 	['visible' => ['view'=>true, 'edit'=>true]]);
+    	$this->field('academic_period_id', 	['visible' => ['view'=>true, 'edit'=>true]]);
+    	$this->field('start_date', 			['visible' => false]);
+    	$this->field('end_date', 			['visible' => false]);
 
     	$this->field('openemis_no', 		['type' => 'string', 	'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
-    	$this->field('student_id', 		['type' => 'string',	'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
-    	$this->field('total_fee', 		['type' => 'float',		'visible' => ['index'=>true, 'edit'=>true]]);
+    	$this->field('student_id', 			['type' => 'string',	'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
+    	$this->field('total_fee', 			['type' => 'float',		'visible' => ['index'=>true, 'edit'=>true]]);
     	$this->field('amount_paid', 		['type' => 'float', 	'visible' => ['index'=>true, 'edit'=>true]]);
     	$this->field('outstanding_fee', 	['type' => 'float', 	'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
 
-    	$this->field('education_programme', ['type' => 'string', 		'visible' => ['view'=>true, 'edit'=>true]]);
-    	$this->field('fee_types', ['type' => 'element', 'element' => 'Institution.Fees/fee_types', 'currency' => $this->currency, 'non-editable'=>true, 'visible' => ['view'=>true, 'edit'=>true]]);
-    	$this->field('payments', ['type' => 'element', 'element' => 'Institution.Fees/payments', 'currency' => $this->currency, 'visible' => ['view'=>true, 'edit'=>true]]);
+    	$this->field('education_programme', ['type' => 'string', 	'visible' => ['view'=>true, 'edit'=>true]]);
+    	$this->field('fee_types', 			['type' => 'element', 'element' => 'Institution.Fees/fee_types', 'currency' => $this->currency, 'non-editable'=>true, 'visible' => ['view'=>true, 'edit'=>true]]);
+    	$this->field('payments', 			['type' => 'element', 'element' => 'Institution.Fees/payments', 'currency' => $this->currency, 'visible' => ['view'=>true, 'edit'=>true]]);
 
     	$this->StudentFeesAbstract->fields['id'] = array_merge($this->StudentFeesAbstract->fields['id'], ['type' => 'hidden', 'tableHeader' => __(''), 'attr'=>['label' => false, 'name'=>'']]);
     	$this->StudentFeesAbstract->fields['created_user_id'] = array_merge($this->StudentFeesAbstract->fields['created_user_id'], ['type' => 'disabled', 'tableHeader' => __('Created By'), 'attr'=>['label' => false, 'name'=>'']]);
@@ -173,8 +181,6 @@ class StudentFeesTable extends ControllerActionTable {
 			'options' => [],
 	         'order' => 0
         ];
-		unset($extra['toolbarButtons']['add']);
-		unset($extra['toolbarButtons']['search']);
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
@@ -300,7 +306,6 @@ class StudentFeesTable extends ControllerActionTable {
 	    	return false;
     	}
 
-		$extra['toolbarButtons']['back']['url'] = $extra['indexButtons']['view']['url'];
 	}
 
     private function _addActionSetup(Event $event, Entity $entity) {
@@ -450,6 +455,20 @@ class StudentFeesTable extends ControllerActionTable {
 			return $this->controller->redirect($this->url('view', true));
 		}
 	}
+
+	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		$extra['toolbarButtons']['back']['url'] = $extra['indexButtons']['view']['url'];
+		$extra['toolbarButtons']['back']['label'] = '<i class="fa kd-back"></i>';
+		$extra['toolbarButtons']['back']['attr'] = [
+							'class' => 'btn btn-xs btn-default',
+                            'data-toggle' => 'tooltip',
+                            'data-placement' => 'bottom',
+                            'escape' => false,
+                            'title' => 'Back'
+                        ];
+        $this->controller->viewVars['backButton']['url'] = $extra['indexButtons']['view']['url'];
+	}
+
 
 /******************************************************************************************************************
 **
