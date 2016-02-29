@@ -9,34 +9,34 @@ use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
-class InstitutionClassStudentsTable extends AppTable {
+class InstitutionSubjectStudentsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
-		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
+		$this->belongsTo('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects']);
 		$this->belongsTo('InstitutionSections', ['className' => 'Institution.InstitutionSections']);
 	}
 
-	public function getMaleCountBySubject($classId) {
+	public function getMaleCountBySubject($subjectId) {
 		$gender_id = 1; // male
 		$count = $this
 			->find()
 			->contain('Users')
 			->where([$this->Users->aliasField('gender_id') => $gender_id])
-			->where([$this->aliasField('institution_class_id') => $classId])
+			->where([$this->aliasField('institution_subject_id') => $subjectId])
 			->count()
 		;
 		return $count;
 	}
 
-	public function getFemaleCountBySubject($classId) {
+	public function getFemaleCountBySubject($subjectId) {
 		$gender_id = 2; // female
 		$count = $this
 			->find()
 			->contain('Users')
 			->where([$this->Users->aliasField('gender_id') => $gender_id])
-			->where([$this->aliasField('institution_class_id') => $classId])
+			->where([$this->aliasField('institution_subject_id') => $subjectId])
 			->count()
 		;
 		return $count;
@@ -45,10 +45,10 @@ class InstitutionClassStudentsTable extends AppTable {
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
 		//PHPOE-2338 - implement afterDelete to delete records in AssessmentItemResultsTable
 		// find related sections and grades
-		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-		$institutionClassData = $InstitutionClasses->find()
+		$InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+		$institutionClassData = $InstitutionSubjects->find()
 			->contain('InstitutionSections.InstitutionSectionGrades')
-			->where([$InstitutionClasses->aliasField($InstitutionClasses->primaryKey()) => $entity->institution_class_id])
+			->where([$InstitutionSubjects->aliasField($InstitutionSubjects->primaryKey()) => $entity->institution_subject_id])
 			->first()
 			;
 		$gradeArray = [];
