@@ -8,7 +8,7 @@ use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
-class InstitutionSectionStudentsTable extends AppTable {
+class InstitutionClassStudentsTable extends AppTable {
 	
 	// For reports
 	private $assessmentItemResults = [];
@@ -17,10 +17,10 @@ class InstitutionSectionStudentsTable extends AppTable {
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
-		$this->belongsTo('InstitutionSections', ['className' => 'Institution.InstitutionSections']);
+		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('StudentStatuses',	['className' => 'Student.StudentStatuses']);
-		$this->hasMany('InstitutionSectionGrades', ['className' => 'Institution.InstitutionSectionGrade']);
+		$this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
 	}
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
@@ -33,7 +33,7 @@ class InstitutionSectionStudentsTable extends AppTable {
 		];
 
 		$fields[] = [
-			'key' => 'InstitutionSections.institution_id',
+			'key' => 'InstitutionClasses.institution_id',
 			'field' => 'institution_id',
 			'type' => 'string',
 			'label' => '',
@@ -66,7 +66,7 @@ class InstitutionSectionStudentsTable extends AppTable {
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
     	$query
-    		->contain(['InstitutionSections.Institutions'])
+    		->contain(['InstitutionClasses.Institutions'])
     		->select(['code' => 'Institutions.code', 'institution_id' => 'Institutions.name']);
     }
 
@@ -96,71 +96,34 @@ class InstitutionSectionStudentsTable extends AppTable {
     	return '';
     }
 
-	public function getMaleCountBySection($sectionId) {
+	public function getMaleCountBySection($classId) {
 		$gender_id = 1; // male
 		$count = $this
 			->find()
 			->contain('Users')
 			->where([$this->Users->aliasField('gender_id') => $gender_id])
-			->where([$this->aliasField('institution_section_id') => $sectionId])
+			->where([$this->aliasField('institution_class_id') => $classId])
 			->count()
 		;
 		return $count;
 	}
 
-	public function getFemaleCountBySection($sectionId) {
+	public function getFemaleCountBySection($classId) {
 		$gender_id = 2; // female
 		$count = $this
 			->find()
 			->contain('Users')
 			->where([$this->Users->aliasField('gender_id') => $gender_id])
-			->where([$this->aliasField('institution_section_id') => $sectionId])
+			->where([$this->aliasField('institution_class_id') => $classId])
 			->count()
 		;
 		return $count;
 	}
 
-	// public function autoInsertSectionStudent($data) {
-	// 	$securityUserId = $data['student_id'];
-	// 	$selectedGradeId = $data['education_grade_id'];
-	// 	$selectedSectionId = $data['institution_section_id'];
-	// 	$studentStatusId = $data['student_status_id'];
-
-	// 	if(!empty($selectedSectionId)) {
-	// 		$autoInsertData = $this->newEntity();
-
-	// 		$existingData = $this
-	// 			->find()
-	// 			->where(
-	// 				[
-	// 					$this->aliasField('student_id') => $securityUserId,
-	// 					$this->aliasField('education_grade_id') => $selectedGradeId,
-	// 					$this->aliasField('institution_section_id') => $selectedSectionId
-	// 				]
-	// 			)
-	// 			->first()
-	// 		;
-
-	// 		if(!empty($existingData)) {
-	// 			$existingData = $existingData->toArray();
-	// 			$autoInsertData->id = $existingData['id'];	
-	// 		}
-			
-	// 		$autoInsertData->student_id = $securityUserId;
-	// 		$autoInsertData->education_grade_id = $selectedGradeId;
-	// 		$autoInsertData->institution_section_id = $selectedSectionId;
-	// 		$autoInsertData->student_status_id = $studentStatusId;
-
-	// 		if ($this->save($autoInsertData)) {
-	// 			$this->_autoInsertSubjectStudent($data);
-	// 		}
-	// 	}
-	// }
-
-	public function autoInsertSectionStudent($data) {
+	public function autoInsertClassStudent($data) {
 		$studentId = $data['student_id'];
 		$gradeId = $data['education_grade_id'];
-		$classId = $data['institution_section_id'];
+		$classId = $data['institution_class_id'];
 
 		$entity = $this->newEntity($data);
 
@@ -170,7 +133,7 @@ class InstitutionSectionStudentsTable extends AppTable {
 				[
 					$this->aliasField('student_id') => $studentId,
 					$this->aliasField('education_grade_id') => $gradeId,
-					$this->aliasField('institution_section_id') => $classId
+					$this->aliasField('institution_class_id') => $classId
 				]
 			)
 			->first()
@@ -185,7 +148,7 @@ class InstitutionSectionStudentsTable extends AppTable {
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
 		if ($entity->isNew()) {
 			$data = [
-				'institution_section_id' => $entity->institution_section_id,
+				'institution_class_id' => $entity->institution_class_id,
 				'student_id' => $entity->student_id
 			];
 			$this->_autoInsertSubjectStudent($data);
@@ -193,38 +156,38 @@ class InstitutionSectionStudentsTable extends AppTable {
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
-		// PHPOE-2338 - implement afterDelete in InstitutionSectionStudentsTable.php to delete from InstitutionClassStudentsTable
+		// PHPOE-2338 - implement afterDelete in InstitutionClassStudentsTable.php to delete from InstitutionSubjectStudentsTable
 		$this->_autoDeleteSubjectStudent($entity);
 	}
 
 	private function _autoDeleteSubjectStudent(Entity $entity) {
-		$InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
-		$deleteClassStudent = $InstitutionClassStudentsTable->find()
+		$InstitutionSubjectStudentsTable = TableRegistry::get('Institution.InstitutionSubjectStudents');
+		$deleteSubjectStudent = $InstitutionSubjectStudentsTable->find()
 			->where([
-				$InstitutionClassStudentsTable->aliasField('student_id') => $entity->student_id,
-				$InstitutionClassStudentsTable->aliasField('institution_section_id') => $entity->institution_section_id
+				$InstitutionSubjectStudentsTable->aliasField('student_id') => $entity->student_id,
+				$InstitutionSubjectStudentsTable->aliasField('institution_class_id') => $entity->institution_class_id
 			])
 			->toArray();
-			foreach ($deleteClassStudent as $key => $value) {
-				$InstitutionClassStudentsTable->delete($value);
+			foreach ($deleteSubjectStudent as $key => $value) {
+				$InstitutionSubjectStudentsTable->delete($value);
 			}
 	}
 
 	private function _autoInsertSubjectStudent($data) {
-		$Classes = TableRegistry::get('Institution.InstitutionSections');
-		$Subjects = TableRegistry::get('Institution.InstitutionClasses');
-		$SubjectStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+		$Classes = TableRegistry::get('Institution.InstitutionClasses');
+		$Subjects = TableRegistry::get('Institution.InstitutionSubjects');
+		$SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
 
 		$record = $Classes->find()
 			->contain([
-				'InstitutionClasses.InstitutionClassStudents', 
-				'InstitutionClasses.InstitutionSections'
+				'InstitutionSubjects.InstitutionSubjectStudents', 
+				'InstitutionSubjects.InstitutionClasses'
 			])->where([
-				$Classes->aliasField('id') => $data['institution_section_id']
+				$Classes->aliasField('id') => $data['institution_class_id']
 			])->first();
 
-		foreach ($record->institution_classes as $class) {
-			$student = $Subjects->createVirtualEntity($data['student_id'], $class, 'students');
+		foreach ($record->institution_subjects as $subject) {
+			$student = $Subjects->createVirtualEntity($data['student_id'], $subject, 'students');
 			$SubjectStudents->save($student);
 		}
 
