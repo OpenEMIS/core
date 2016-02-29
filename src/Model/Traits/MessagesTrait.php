@@ -129,13 +129,13 @@ trait MessagesTrait {
 			'location' => 'Location',
 			'institution' => 'Institution',
 		],
-		'InstitutionSections' => [
+		'InstitutionClasses' => [
 			'noClasses' => 'No Classes',
 			'students' => 'Students',
 			'education_programme' => 'Education Programme',
 			'education_grade' => 'Education Grade',
 			'staff_id' => 'Home Room Teacher',
-			'section' => 'Class',
+			'class' => 'Class',
 			'single_grade_field' => 'Single Grade Classes',
 			'multi_grade_field' => 'Class Grades',
 			'emptyName' => 'Class name should not be empty',
@@ -454,7 +454,7 @@ trait MessagesTrait {
 		'Institution' => [
 			'Institutions' => [
 				'noActiveInstitution' => 'There is no active institution',
-				'noSubjectsInSection' => 'There are no subjects in the assigned grade',
+				'noSubjectsInClass' => 'There are no subjects in the assigned grade',
 				'noSubjectSelected' => 'There is no subject selected',
 				'noProgrammes' => 'There is no programme set for this institution',
 				'noSections' => 'There is no class under the selected academic period',

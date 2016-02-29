@@ -19,9 +19,25 @@ CREATE TABLE `institution_subject_students` LIKE `z_1694_institution_class_stude
 INSERT INTO `institution_subject_students` SELECT * FROM `z_1694_institution_class_students`;
 ALTER TABLE `institution_subject_students` CHANGE `institution_class_id` `institution_subject_id` INT(11) NOT NULL;
 
-
-
 ALTER TABLE `institution_section_classes` RENAME `z_1694_institution_section_classes`;
-CREATE TABLE `institution_section_subjects` LIKE `z_1694_institution_section_classes`;
-INSERT INTO `institution_section_subjects` SELECT * FROM `z_1694_institution_section_classes`;
-ALTER TABLE `institution_section_subjects` CHANGE `institution_class_id` `institution_subject_id` INT(11) NOT NULL;
+CREATE TABLE `institution_class_subjects` LIKE `z_1694_institution_section_classes`;
+INSERT INTO `institution_class_subjects` SELECT * FROM `z_1694_institution_section_classes`;
+ALTER TABLE `institution_class_subjects` 
+	CHANGE `institution_class_id` `institution_subject_id` INT(11) NOT NULL,
+	CHANGE `institution_section_id` `institution_class_id` INT(11) NOT NULL;
+
+ALTER TABLE `institution_sections` RENAME `z_1694_institution_sections`;
+CREATE TABLE `institution_classes` LIKE `z_1694_institution_sections`;
+INSERT INTO `institution_classes` SELECT * FROM `z_1694_institution_sections`;
+ALTER TABLE `institution_classes` CHANGE `section_number` `class_number` INT(11) NULL DEFAULT NULL;
+
+ALTER TABLE `institution_section_grades` RENAME `z_1694_institution_section_grades`;
+CREATE TABLE `institution_class_grades` LIKE `z_1694_institution_section_grades`;
+INSERT INTO `institution_class_grades` SELECT * FROM `z_1694_institution_section_grades`;
+ALTER TABLE `institution_class_grades` CHANGE `institution_section_id` `institution_class_id` INT(11) NOT NULL;
+
+ALTER TABLE `institution_section_students` RENAME `z_1694_institution_section_students`;
+CREATE TABLE `institution_class_students` LIKE `z_1694_institution_section_students`;
+INSERT INTO `institution_class_students` SELECT * FROM `z_1694_institution_section_students`;
+ALTER TABLE `institution_class_students` CHANGE `institution_section_id` `institution_class_id` INT(11) NOT NULL;
+

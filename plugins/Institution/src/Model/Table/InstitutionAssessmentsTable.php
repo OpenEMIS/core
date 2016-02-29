@@ -78,7 +78,7 @@ class InstitutionAssessmentsTable extends AppTable {
 		$academicPeriodId = $this->AcademicPeriods->getCurrent();
 
     	// Get list of classes in the institution
-		$classOptions = $this->Classes->getSectionOptions($academicPeriodId, $institutionId);
+		$classOptions = $this->Classes->getClassOptions($academicPeriodId, $institutionId);
 		// Class assessments
 		$classAssessments = $this->getClassAssessments($institutionId, $academicPeriodId);
 		$sheetTable = TableRegistry::get('Institution.InstitutionSectionStudents');

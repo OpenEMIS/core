@@ -9,11 +9,11 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
-class InstitutionSectionSubjectsTable extends AppTable {
+class InstitutionClassSubjectsTable extends AppTable {
 	
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('InstitutionSections', ['className' => 'Institution.InstitutionSections']);
-		$this->belongsTo('InstitutionSubjects',  ['className' => 'Institution.InstitutionSubjects']);
+		$this->belongsTo('InstitutionClasses',  ['className' => 'Institution.InstitutionClasses']);
 	}
 }

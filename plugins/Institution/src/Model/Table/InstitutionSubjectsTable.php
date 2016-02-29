@@ -30,15 +30,15 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 		$this->belongsTo('Institutions', 				['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('EducationSubjects', 			['className' => 'Education.EducationSubjects']);
 		
-		$this->hasMany('InstitutionSectionSubjects', ['className' => 'Institution.InstitutionSectionSubjects']);
+		$this->hasMany('InstitutionClassSubjects', ['className' => 'Institution.InstitutionClassSubjects']);
 		$this->hasMany('InstitutionSubjectStudents', 	['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true]);
 		$this->hasMany('InstitutionSubjectStaff', 	['className' => 'Institution.InstitutionSubjectStaff']);
 
-		$this->belongsToMany('InstitutionSections', [
-			'className' => 'Institution.InstitutionSections',
-			'joinTable' => 'institution_section_subjects',
+		$this->belongsToMany('InstitutionClasses', [
+			'className' => 'Institution.InstitutionClasses',
+			'joinTable' => 'institution_class_subjects',
 			'foreignKey' => 'institution_subject_id',
-			'targetForeignKey' => 'institution_section_id'
+			'targetForeignKey' => 'institution_class_id'
 		]);
 
 		$this->belongsToMany('Teachers', [
@@ -60,14 +60,14 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 		// this behavior restricts current user to see All Subjects or My Subjects
 		$this->addBehavior('Security.InstitutionSubject');
 		
-		// $this->belongsToMany('InstitutionSections', ['through' => 'InstitutionSectionSubjects']);
+		// $this->belongsToMany('InstitutionClasses', ['through' => 'InstitutionClassSubjects']);
 
 		/**
 		 * Short cuts 
 		 */
 		$this->InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
-		$this->InstitutionSections = TableRegistry::get('Institution.InstitutionSections');
-		$this->InstitutionSectionGrades = TableRegistry::get('Institution.InstitutionSectionGrades');
+		$this->InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+		$this->InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
@@ -153,7 +153,7 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 **
 ******************************************************************************************************************/
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
-		$Sections = $this->InstitutionSections;
+		$Classes = $this->InstitutionClasses;
 		$Subjects = $this;
 
 		$academicPeriodOptions = $this->AcademicPeriods->getList();
@@ -161,12 +161,12 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 
 		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
-			'callable' => function($id) use ($Sections, $institutionId) {
-				return $Sections->findByInstitutionIdAndAcademicPeriodId($institutionId, $id)->count();
+			'callable' => function($id) use ($Classes, $institutionId) {
+				return $Classes->findByInstitutionIdAndAcademicPeriodId($institutionId, $id)->count();
 			}
 		]);
 
-		$classOptions = $Sections->find('list')
+		$classOptions = $Classes->find('list')
 									->where([
 										'academic_period_id'=>$this->_selectedAcademicPeriodId, 
 										'institution_id'=>$institutionId
@@ -183,11 +183,11 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 				$query = $Subjects->find()
 									->join([
 										[
-											'table' => 'institution_section_subjects',
-											'alias' => 'InstitutionSectionSubjects',
+											'table' => 'institution_class_subjects',
+											'alias' => 'InstitutionClassSubjects',
 											'conditions' => [
-												'InstitutionSectionSubjects.institution_subject_id = ' . $Subjects->aliasField('id'),
-												'InstitutionSectionSubjects.institution_section_id' => $id
+												'InstitutionClassSubjects.institution_subject_id = ' . $Subjects->aliasField('id'),
+												'InstitutionClassSubjects.institution_class_id' => $id
 											]
 										]
 									])
@@ -215,11 +215,11 @@ class InstitutionSubjectsTable extends ControllerActionTable {
     	return $query
 			->join([
 				[
-					'table' => 'institution_section_subjects',
-					'alias' => 'InstitutionSectionSubjects',
+					'table' => 'institution_class_subjects',
+					'alias' => 'InstitutionClassSubjects',
 					'conditions' => [
-						'InstitutionSectionSubjects.institution_subject_id = InstitutionSubjects.id',
-						'InstitutionSectionSubjects.institution_section_id' => $this->selectedClassId
+						'InstitutionClassSubjects.institution_subject_id = InstitutionSubjects.id',
+						'InstitutionClassSubjects.institution_class_id' => $this->selectedClassId
 					]
 				]
 			])
@@ -261,7 +261,7 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 
 	public function viewBeforeQuery(Event $event, Query $query) {
 		$query->contain([
-			'InstitutionSectionSubjects.InstitutionSections',
+			'InstitutionClassSubjects.InstitutionClasses',
 			'Teachers',
 			'InstitutionSubjectStaff'
 		]);
@@ -269,9 +269,9 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$classes = [];
-		foreach ($entity->institution_section_subjects as $key => $value) {
-			if (is_object($value->institution_section)) {
-				$classes[] = $value->institution_section->name;
+		foreach ($entity->institution_class_subjects as $key => $value) {
+			if (is_object($value->institution_class)) {
+				$classes[] = $value->institution_class->name;
 			}
 		}
 		$entity->class_name = implode(', ', $classes);
@@ -279,12 +279,12 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 			->InstitutionSubjectStudents
 			->find()
 			->matching('Users.Genders')
-			->innerJoin(['InstitutionSectionStudent' => 'institution_section_students'], [
-					'InstitutionSectionStudent.institution_section_id = '.$this->InstitutionSubjectStudents->aliasField('institution_section_id'),
-					'InstitutionSectionStudent.student_id = '.$this->InstitutionSubjectStudents->aliasField('student_id')
+			->innerJoin(['InstitutionClassStudent' => 'institution_class_students'], [
+					'InstitutionClassStudent.institution_class_id = '.$this->InstitutionSubjectStudents->aliasField('institution_class_id'),
+					'InstitutionClassStudent.student_id = '.$this->InstitutionSubjectStudents->aliasField('student_id')
 				])
 			->innerJoin(['StudentStatuses' => 'student_statuses'], [
-					'InstitutionSectionStudent.student_status_id = '. 'StudentStatuses.id'
+					'InstitutionClassStudent.student_status_id = '. 'StudentStatuses.id'
 				])
 			->where([
 				'InstitutionSubjectStudents.institution_subject_id'=>$entity->id
@@ -322,7 +322,7 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 			'academic_period_id', 'class_name', 'subjects',
 		]);
 
-		$Sections = $this->InstitutionSections;
+		$Classes = $this->InstitutionClasses;
 
 		$institutionId = $this->institutionId;
 		$periodOption = ['' => '-- ' . __('Select Period') .' --'];
@@ -335,23 +335,23 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 
 		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
-			'callable' => function($id) use ($Sections, $institutionId) {
-				return $Sections->findByInstitutionIdAndAcademicPeriodId($institutionId, $id)->count();
+			'callable' => function($id) use ($Classes, $institutionId) {
+				return $Classes->findByInstitutionIdAndAcademicPeriodId($institutionId, $id)->count();
 			}
 		]);
 
-		$classOptions = $Sections->find('list')
+		$classOptions = $Classes->find('list')
 									->where([
 										'academic_period_id'=>$this->_selectedAcademicPeriodId, 
 										'institution_id'=>$this->institutionId
 									])
 									->toArray();
-		$SectionGrades = $this->InstitutionSectionGrades;
+		$ClassGrades = $this->InstitutionClassGrades;
 		$this->selectedClassId = $this->postString('class_name', $classOptions);
 		$this->advancedSelectOptions($classOptions, $this->selectedClassId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
-			'callable' => function($id) use ($SectionGrades) {
-				return $SectionGrades->findByInstitutionSectionId($id)->count();
+			'callable' => function($id) use ($ClassGrades) {
+				return $ClassGrades->findByInstitutionClassId($id)->count();
 			}
 		]);
 
@@ -374,10 +374,10 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 						'education_subject_id' => $row['education_subject_id'],
 						'academic_period_id' => $commonData['academic_period_id'],
 						'institution_id' => $commonData['institution_id'],
-						'institution_section_subjects' => [
+						'institution_class_subjects' => [
 							[
 								'status' => 1,
-								'institution_section_id' => $commonData['class_name']
+								'institution_class_id' => $commonData['class_name']
 							]
 						]
 					];
@@ -401,8 +401,8 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 				}
 			}
 		} else {
-			// $this->log(__FILE__.' @ '.__LINE__.': noSubjectsInSection', 'debug');
-			$error = 'Institution.Institutions.noSubjectsInSection';
+			// $this->log(__FILE__.' @ '.__LINE__.': noSubjectsInClass', 'debug');
+			$error = 'Institution.Institutions.noSubjectsInClass';
 		}
 		return [$error, $subjects, $data];
 	}
@@ -490,7 +490,7 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 			'Teachers',
 			'InstitutionSubjectStaff',
 			'InstitutionSubjectStudents.Users.Genders',
-			'InstitutionSectionSubjects'
+			'InstitutionClassSubjects'
 		]);
 	}
 
@@ -577,12 +577,12 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 		$this->_selectedAcademicPeriodId = $entity->academic_period_id;
 		$InstitutionSubjectStudentsTable = $this->InstitutionSubjectStudents;
 		$students = $InstitutionSubjectStudentsTable->find()->contain(['Users.Genders'])
-			->innerJoin(['InstitutionSectionStudent' => 'institution_section_students'], [
-					'InstitutionSectionStudent.institution_section_id = '.$InstitutionSubjectStudentsTable->aliasField('institution_section_id'),
-					'InstitutionSectionStudent.student_id = '.$InstitutionSubjectStudentsTable->aliasField('student_id')
+			->innerJoin(['InstitutionClassStudent' => 'institution_class_students'], [
+					'InstitutionClassStudent.institution_class_id = '.$InstitutionSubjectStudentsTable->aliasField('institution_class_id'),
+					'InstitutionClassStudent.student_id = '.$InstitutionSubjectStudentsTable->aliasField('student_id')
 				])
 			->innerJoin(['StudentStatuses' => 'student_statuses'], [
-					'InstitutionSectionStudent.student_status_id = '. 'StudentStatuses.id'
+					'InstitutionClassStudent.student_status_id = '. 'StudentStatuses.id'
 				])
 			->where([
 				'InstitutionSubjectStudents.institution_subject_id'=>$entity->id
@@ -699,10 +699,10 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 **
 ******************************************************************************************************************/
 	public function createVirtualEntity($id, $entity, $persona, $requestData = false) {
-		if (isset($entity->toArray()['institution_section_subjects'])) {
-			$classId = $entity->toArray()['institution_section_subjects'][0]['institution_section_id'];
+		if (isset($entity->toArray()['institution_class_subjects'])) {
+			$classId = $entity->toArray()['institution_class_subjects'][0]['institution_class_id'];
 		} else {
-			$classId = $entity->toArray()['institution_sections'][0]['id'];
+			$classId = $entity->toArray()['institution_classes'][0]['id'];
 		}
 		if (strtolower($persona)=='students') {
 			$userData = $this->Institutions->Students->find()->contain(['Users.Genders', 'StudentStatuses'])->where(['student_id'=>$id])->first();
@@ -710,7 +710,7 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 				'id'=>$this->getExistingRecordId($id, $entity, $persona),
 				'student_id'=>$id,
 				'institution_subject_id'=>$entity->id,
-				'institution_section_id'=>$classId,
+				'institution_class_id'=>$classId,
 				'status'=>1,
 				'student_status' => $userData->student_status->name,
 				'user'=>[]
@@ -729,7 +729,7 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 				'id'=>$this->getExistingRecordId($id, $entity, $persona),
 				'staff_id'=>$id,
 				'institution_subject_id'=>$entity->id,
-				'institution_section_id'=>$classId,
+				'institution_class_id'=>$classId,
 				'status'=>1,
 				'user'=>[]
 			];
@@ -781,11 +781,11 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 	}
 	
 	public function getSubjectOptions($listOnly=false) {
-		$Grade = $this->InstitutionSectionGrades;
+		$Grade = $this->InstitutionClassGrades;
 		$gradeOptions = $Grade->find()
 							->contain('EducationGrades')
 							->where([
-								$Grade->aliasField('institution_section_id') => $this->selectedClassId,
+								$Grade->aliasField('institution_class_id') => $this->selectedClassId,
 								$Grade->aliasField('status') => 1
 							])
 							->toArray();
@@ -820,15 +820,15 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 			$data = $subjects;
 		}
 		if (empty($data)) {
-			// $this->log(__FILE__.' @ '.__LINE__.': noSubjectsInSection', 'debug');
-			$this->Alert->warning('Institution.Institutions.noSubjectsInSection');
+			// $this->log(__FILE__.' @ '.__LINE__.': noSubjectsInClass', 'debug');
+			$this->Alert->warning('Institution.Institutions.noSubjectsInClass');
 		}
 		return $data;
 	}
 
 	private function getExistedSubjects($listOnly=false) {
 		$subjects = $this
-			->InstitutionSectionSubjects
+			->InstitutionClassSubjects
 			->find()
 			->contain([
 				'InstitutionSubjects'=>[
@@ -837,8 +837,8 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 				],
 			])
 			->where([
-				'InstitutionSectionSubjects.institution_section_id' => $this->selectedClassId,
-				'InstitutionSectionSubjects.status' => 1
+				'InstitutionClassSubjects.institution_class_id' => $this->selectedClassId,
+				'InstitutionClassSubjects.status' => 1
 			])
 			->toArray();
 		if ($listOnly) {
@@ -887,10 +887,10 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 
 	/**
 	 * Changed in PHPOE-1780 test fail re-work. major modification.
-	 * Previously, the grades where populated based on a selected sectionId/classId.
+	 * Previously, the grades where populated based on a selected classId.
 	 * Those students who matched one of the grades will be included in the list.
 	 *
-	 * Since there will be more than one section where a subject could be linked to, the logic is changed to populate
+	 * Since there will be more than one class where a subject could be linked to, the logic is changed to populate
 	 * students using a longer route to obtain the grades for the current academic period.
 	 * student_status_id = 1 is also included.
 	 * @var integer
@@ -900,10 +900,10 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 	 */
 	protected function getStudentsOptions($entity, $includedStudents = []) {
 		// from $entity, you can get the subject_id which you can use it to retrieve the list of grade_id from education_grades_subjects
-		// from the list of grade_ids, you will use it to find the list of students from institution_section_students using grade_id and the section keys as conditions 
+		// from the list of grade_ids, you will use it to find the list of students from institution_class_students using grade_id and the class keys as conditions 
 		$classKeys = [];
-		foreach ($entity->institution_section_subjects as $sectionSubjects) {
-			$classKeys[] = $sectionSubjects->institution_section_id;
+		foreach ($entity->institution_class_subjects as $classSubjects) {
+			$classKeys[] = $classSubjects->institution_class_id;
 		}
 		$EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
 		$grades = $EducationGradesSubjects
@@ -917,9 +917,9 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 			])
 			->toArray();
 
-		$Students = TableRegistry::get('Institution.InstitutionSectionStudents');
+		$Students = TableRegistry::get('Institution.InstitutionClassStudents');
 		$conditions = [
-			$Students->aliasField('institution_section_id').' IN' => $classKeys,
+			$Students->aliasField('institution_class_id').' IN' => $classKeys,
 			$Students->aliasField('education_grade_id').' IN' => $grades
 		];
 		/**
