@@ -959,6 +959,10 @@ class ValidationBehavior extends Behavior {
 		return !strrpos($field," ");
 	}
 
+	public static function checkUsername($field, array $globalData) {
+		return (filter_var($field, FILTER_VALIDATE_EMAIL)) || ctype_alnum($field);
+	}
+
 	public static function checkDateRange($field, array $globalData) {
 		$systemDateFormat = TableRegistry::get('ConfigItems')->value('date_format');
 		$model = $globalData['providers']['table'];
