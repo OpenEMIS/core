@@ -1,32 +1,3 @@
--- POCOR-2601
--- db_patches
-INSERT INTO `db_patches` VALUES ('POCOR-2601', NOW());
-
--- security_users
-
-UPDATE `security_users`
-SET `address_area_id` = NULL
-WHERE `security_users`.`address_area_id` NOT IN (SELECT id FROM area_administratives);
-
-UPDATE `security_users`
-SET `birthplace_area_id` = NULL
-WHERE `security_users`.`birthplace_area_id` NOT IN (SELECT id FROM area_administratives);
-
--- institutions
-
-UPDATE `institutions`
-SET area_id = (SELECT id FROM areas WHERE parent_id = -1 LIMIT 1)
-WHERE area_id NOT IN (SELECT id FROM areas);
-
-UPDATE `institutions`
-SET area_administrative_id = NULL
-WHERE area_administrative_id NOT IN (SELECT id FROM area_administratives);
-
--- security_group_areas
-DELETE FROM `security_group_areas`
-WHERE area_id NOT IN (SELECT id FROM areas);
-
-
 -- POCOR-2445
 -- db_patches
 INSERT INTO `db_patches` VALUES ('POCOR-2445', NOW());
@@ -62,6 +33,42 @@ INSERT INTO `db_patches` VALUES ('POCOR-2446', NOW());
 
 UPDATE custom_field_types SET visible = 1 WHERE code = 'DATE';
 UPDATE custom_field_types SET visible = 1 WHERE code = 'TIME';
+
+
+-- POCOR-2601
+-- db_patches
+INSERT INTO `db_patches` VALUES ('POCOR-2601', NOW());
+
+-- security_users
+
+UPDATE `security_users`
+SET `address_area_id` = NULL
+WHERE `security_users`.`address_area_id` NOT IN (SELECT id FROM area_administratives);
+
+UPDATE `security_users`
+SET `birthplace_area_id` = NULL
+WHERE `security_users`.`birthplace_area_id` NOT IN (SELECT id FROM area_administratives);
+
+-- institutions
+
+UPDATE `institutions`
+SET area_id = (SELECT id FROM areas WHERE parent_id = -1 LIMIT 1)
+WHERE area_id NOT IN (SELECT id FROM areas);
+
+UPDATE `institutions`
+SET area_administrative_id = NULL
+WHERE area_administrative_id NOT IN (SELECT id FROM area_administratives);
+
+-- security_group_areas
+DELETE FROM `security_group_areas`
+WHERE area_id NOT IN (SELECT id FROM areas);
+
+
+-- POCOR-2608
+-- db_patches
+INSERT INTO `db_patches` VALUES ('POCOR-2608', NOW());
+
+UPDATE labels SET field = 'staff_id' WHERE module = 'InstitutionSections' AND field = 'security_user_id' AND module_name = 'Institutions -> Classes';
 
 
 -- 3.4.15
