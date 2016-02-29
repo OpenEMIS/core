@@ -482,42 +482,4 @@ class StaffAbsencesTable extends AppTable {
 			}
 		}
 	}
-
-	public function _getSelectOptions() {
-		//Return all required options and their key
-		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$Staff = TableRegistry::get('Institution.Staff');
-		$institutionId = $this->Session->read('Institution.Institutions.id');
-
-		// Academic Period
-		$periodOptions = $AcademicPeriod->getList(['isEditable'=>true]);
-
-		$selectedPeriod = $this->request->data[$this->alias()]['academic_period_id'];
-		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
-			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStaff')),
-			'callable' => function($id) use ($Staff, $institutionId) {
-				return $Staff
-					->find()
-					->where([$Staff->aliasField('institution_id') => $institutionId])
-					->find('academicPeriod', ['academic_period_id' => $id])
-					->count();
-			}
-		]);
-		// End
-
-		$this->request->data[$this->alias()]['academic_period_id'] = $selectedPeriod;
-
-		// Staff
-		$staffOptions = $Staff
-			->find()
-			->where([$Staff->aliasField('institution_id') => $institutionId])
-			->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
-			->contain(['Users'])
-			->find('list', ['keyField' => 'staff_id', 'valueField' => 'staff_name'])
-			->toArray();
-		$selectedStaff = !is_null($this->request->query('staff')) ? $this->request->query('staff') : key($staffOptions);
-		// End
-
-		return compact('periodOptions', 'selectedPeriod', 'staffOptions', 'selectedStaff');
-	}
 }
