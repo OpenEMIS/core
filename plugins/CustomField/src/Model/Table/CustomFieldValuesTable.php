@@ -62,6 +62,40 @@ class CustomFieldValuesTable extends AppTable {
 					}
 			    }
 			])
+			// DATE validation
+			->allowEmpty('date_value', function ($context) {
+				if (array_key_exists('mandatory', $context['data'])) {
+					return !$context['data']['mandatory'];
+				}
+
+				return true;
+			})
+			->add('date_value', 'ruleCheckDateRange', [
+				'rule' => ['checkDateRange'],
+				'provider' => 'table',
+				'on' => function ($context) {
+					if (array_key_exists('params', $context['data'])) {
+						return !empty($context['data']['params']);
+					}
+			    }
+			])	
+			// TIME validation
+			->allowEmpty('time_value', function ($context) {
+				if (array_key_exists('mandatory', $context['data'])) {
+					return !$context['data']['mandatory'];
+				}
+
+				return true;
+			})
+			->add('time_value', 'ruleCheckTimeRange', [
+				'rule' => ['checkTimeRange'],
+				'provider' => 'table',
+				'on' => function ($context) {
+					if (array_key_exists('params', $context['data'])) {
+						return !empty($context['data']['params']);
+					}
+			    }
+			])
 			;
 
 		return $validator;
