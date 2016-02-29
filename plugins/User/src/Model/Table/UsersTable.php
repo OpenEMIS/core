@@ -435,8 +435,9 @@ class UsersTable extends AppTable {
 					'rule' => 'validateUnique',
 					'provider' => 'table',
 				],
-				'ruleAlphanumeric' => [
-				    'rule' => 'alphanumeric',
+				'ruleCheckUsername' => [
+					'rule' => 'checkUsername',
+					'provider' => 'table',
 				]
 			])
 			->allowEmpty('username')
@@ -482,8 +483,9 @@ class UsersTable extends AppTable {
 					'rule' => 'validateUnique',
 					'provider' => 'table',
 				],
-				'ruleAlphanumeric' => [
-				    'rule' => 'alphanumeric',
+				'ruleCheckUsername' => [
+					'rule' => 'checkUsername',
+					'provider' => 'table',
 				]
 			])
 			->allowEmpty('username')
@@ -505,7 +507,7 @@ class UsersTable extends AppTable {
 		$thisModel->setValidationCode('last_name.ruleCheckIfStringGotNoNumber', 'User.Users');
 		$thisModel->setValidationCode('openemis_no.ruleUnique', 'User.Users');
 		$thisModel->setValidationCode('username.ruleUnique', 'User.Users');
-		$thisModel->setValidationCode('username.ruleAlphanumeric', 'User.Users');
+		$thisModel->setValidationCode('username.ruleCheckUsername', 'User.Users');
 		$thisModel->setValidationCode('password.ruleNoSpaces', 'User.Users');
 		$thisModel->setValidationCode('password.ruleMinLength', 'User.Users');
 		$thisModel->setValidationCode('date_of_birth.ruleValidDate', 'User.Users');
