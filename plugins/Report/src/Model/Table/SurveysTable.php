@@ -62,29 +62,28 @@ class SurveysTable extends AppTable  {
 		$academicPeriodId = $requestData->academic_period_id;
 
 		$WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
-		$status = $WorkflowStatusesTable->WorkflowModels->getWorkflowStatusSteps('Institution.InstitutionSurveys', 'NOT_COMPLETED');
-		$notCompleteStatus = $status[0]['step_id'];
+		$status = $WorkflowStatusesTable->WorkflowModels->getWorkflowStatusSteps('Institutions > Survey > Forms', 'NOT_COMPLETED');
+		$notCompleteStatus = $status[key($status)];
 
 		$InstitutionsTable = $this->Institutions;
 		// Query to insert missing security role records
 		$insertMissingRecords = $InstitutionsTable->find()
 			->where(['NOT EXISTS ('.
 				$this->find()->where([
-					$this->aliasField('academic_period_id') => $academicPeriodId,
-					$this->aliasField('survey_form_id') => $surveyFormId,
-					$this->aliasField('institution_id') => $InstitutionsTable->aliasField('id')
+					$this->aliasField('academic_period_id').' = '.$academicPeriodId,
+					$this->aliasField('survey_form_id').' = '.$surveyFormId,
+					$this->aliasField('institution_id').' = '.$InstitutionsTable->aliasField('id')
 				])
 			.')'])
 			->select([
 				'status_id' => intval($notCompleteStatus),
 				'academic_period_id' => intval($academicPeriodId), 
 				'survey_form_id' => intval($surveyFormId),
-				'security_group_id' => 'Institutions.security_group_id',
 				'institution_id' => $InstitutionsTable->aliasField('id'),
 				'created_user_id' => intval(1),
 				'created' => $InstitutionsTable->find()->func()->now()
 			]);
-		$this->query()
+		$insertMissingRecords = $this->query()
 			->insert(['status_id', 'academic_period_id', 'survey_form_id', 'institution_id', 'created_user_id', 'created'])
 			->values($insertMissingRecords)
 			->execute();
@@ -168,17 +167,8 @@ class SurveysTable extends AppTable  {
 			if (isset($this->request->data[$this->alias()]['feature'])) {
 				$feature = $this->request->data[$this->alias()]['feature'];
 				if ($feature == $this->registryAlias()) {
-					$surveyFormOptions = $this
-						->find('list', [
-							'keyField' => 'id',
-							'valueField' => 'name'
-						])
-						->contain(['SurveyForms'])
-						->select(['id' => 'SurveyForms.id', 'name' => 'SurveyForms.name'])
-						->group([ 
-							$this->aliasField('survey_form_id')
-						])
-						->where([$this->aliasField('status_id').' IS NOT ' => -1])
+					$surveyFormOptions = $this->SurveyForms
+						->find('list')
 						->toArray();
 					$attr['options'] = $surveyFormOptions;
 					$attr['onChangeReload'] = true;
@@ -200,20 +190,16 @@ class SurveysTable extends AppTable  {
 				$feature = $this->request->data[$this->alias()]['feature'];
 				$surveyForm = $this->request->data[$this->alias()]['survey_form'];
 				if ($feature == $this->registryAlias() && !empty($surveyForm)) {
-					$academicPeriodOptions = $this
+					$SurveyStatusTable = $this->SurveyForms->surveyStatuses;
+					$academicPeriodOptions = $SurveyStatusTable
 						->find('list', [
-							'keyField' => 'id',
-							'valueField' => 'name'
+							'keyField' => 'academic_id',
+							'valueField' => 'academic_name'
 						])
-						->contain(['AcademicPeriods'])
-						->select(['id' => 'AcademicPeriods.id', 'name' => 'AcademicPeriods.name'])
+						->matching('AcademicPeriods')
+						->select(['academic_id' => 'AcademicPeriods.id', 'academic_name' => 'AcademicPeriods.name'])
 						->where([
-							$this->aliasField('survey_form_id') => $surveyForm,
-							$this->aliasField('status_id').' IS NOT ' => -1
-						])
-						->group([
-							$this->aliasField('survey_form_id'), 
-							$this->aliasField('academic_period_id')
+							$SurveyStatusTable->aliasField('survey_form_id') => $surveyForm,
 						])
 						->order(['AcademicPeriods.order'])
 						->toArray();
@@ -245,25 +231,6 @@ class SurveysTable extends AppTable  {
 					$surveyStatuses = $this->Workflow->getWorkflowStatuses('Institution.InstitutionSurveys');
 					$attr['type'] = 'select';
 					$surveyTable = $this;
-					$arrayKeys = array_keys($surveyStatuses);
-		
-					$this->advancedSelectOptions($surveyStatuses, $this->request->data[$this->alias()]['status'], [
-						'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSurveys')),
-						'callable' => function($id) use ($surveyTable, $surveyForm, $academicPeriodId) {
-
-							$statuses = $this->Workflow->getWorkflowSteps($id);
-
-							$query = $surveyTable
-								->find()
-								->where([
-									$surveyTable->aliasField('survey_form_id').'='.$surveyForm,
-									$surveyTable->aliasField('academic_period_id').'='.$academicPeriodId,
-									$surveyTable->aliasField('status_id').' IN ' => array_keys($statuses)
-								])
-								->count();
-							return $query;
-						}
-					]);
 					$attr['options'] = $surveyStatuses;
 					return $attr;
 				}
