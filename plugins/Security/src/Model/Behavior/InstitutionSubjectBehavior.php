@@ -93,7 +93,7 @@ class InstitutionSubjectBehavior extends Behavior {
 	// Function to check MySubjects edit permission is set
 	public function checkMySubjectsEditPermission() {
 		$AccessControl = $this->_table->AccessControl;
-		$mySubjectsEditPermission = $AccessControl->check(['Institutions', 'Classes', 'edit']);
+		$mySubjectsEditPermission = $AccessControl->check(['Institutions', 'Subjects', 'edit']);
 		if ($mySubjectsEditPermission) {
 			return true;
 		} else {
@@ -163,11 +163,11 @@ class InstitutionSubjectBehavior extends Behavior {
 						// second condition if the current user is the homeroom teacher of the subject class
 						'EXISTS (
 							SELECT 1
-							FROM institution_section_subjects
-							JOIN institution_sections
-							ON institution_sections.id = institution_section_subjects.institution_section_id
-							AND institution_sections.staff_id = ' . $userId . '
-							WHERE institution_section_subjects.institution_subject_id = ' . $this->_table->aliasField('id') .
+							FROM institution_class_subjects
+							JOIN institution_classes
+							ON institution_classes.id = institution_class_subjects.institution_class_id
+							AND institution_classes.staff_id = ' . $userId . '
+							WHERE institution_class_subjects.institution_subject_id = ' . $this->_table->aliasField('id') .
 						')'
 					]
 				]);

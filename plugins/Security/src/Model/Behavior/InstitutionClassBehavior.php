@@ -74,7 +74,7 @@ class InstitutionClassBehavior extends Behavior {
 	// Function to check MyClass edit permission is set
 	public function checkMyClassesEditPermission() {
 		$AccessControl = $this->_table->AccessControl;
-		$myClassesEditPermission = $AccessControl->check(['Institutions', 'Sections', 'edit']);
+		$myClassesEditPermission = $AccessControl->check(['Institutions', 'Classes', 'edit']);
 		if ($myClassesEditPermission) {
 			return true;
 		} else {

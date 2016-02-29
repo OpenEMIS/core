@@ -307,10 +307,10 @@ class NavigationComponent extends Component {
 					'params' => ['plugin' => 'Institution']
 				],
 
-				'Institutions.Sections' => [
+				'Institutions.Classes' => [
 					'title' => 'Classes',
 					'parent' => 'Institution.Academic',
-					'selected' => ['Institution.Sections'],
+					'selected' => ['Institution.Classes'],
 					'params' => ['plugin' => 'Institution']
 				],
 
