@@ -846,7 +846,8 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 			foreach ($subjects as $key => $value) {
 				$subjectList[$value->institution_subject->education_subject->id] = [
 					'name' => $value->institution_subject->name,
-					'subject_name' => $value->institution_subject->education_subject->name
+					'subject_name' => $value->institution_subject->education_subject->name,
+					'teachers' => $value->institution_subject->teachers
 				];
 			}
 			$data = $subjectList;
