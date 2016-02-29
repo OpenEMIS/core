@@ -1005,6 +1005,16 @@ trait MessagesTrait {
 			]
 		],
 		'CustomField' => [
+			'text' => [
+				'minLength' => 'Text must be at least %d characters',
+				'maxLength' => 'Text must not exceed %d characters',
+				'range' => 'Text must be between %d and %d'
+			],
+			'number' => [
+				'minValue' => 'Number must not lesser than %d',
+				'maxValue' => 'Number must not greater than %d',
+				'range' => 'Number must be between %d and %d'
+			],
 			'date' => [
 				'earlier' => 'Date should be earlier than or equal to %s',
 				'later' => 'Date should be later than or equal to %s',

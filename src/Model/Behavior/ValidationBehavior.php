@@ -963,6 +963,54 @@ class ValidationBehavior extends Behavior {
 		return (filter_var($field, FILTER_VALIDATE_EMAIL)) || ctype_alnum($field);
 	}
 
+	public static function validateCustomText($field, array $globalData) {
+		if (array_key_exists('params', $globalData['data']) && !empty($globalData['data']['params'])) {
+			$model = $globalData['providers']['table'];
+			$params = json_decode($globalData['data']['params'], true);
+			foreach ($params as $key => $value) {
+				if ($key == 'min_length' && strlen($field) < $value) {
+					return $model->getMessage('CustomField.text.minLength', ['sprintf' => $value]);
+				}
+				if ($key == 'max_length' && strlen($field) > $value) {
+					return $model->getMessage('CustomField.text.maxLength', ['sprintf' => $value]);
+				}
+				if ($key == 'range' && is_array($value)) {
+					if (array_key_exists('lower', $value) && array_key_exists('upper', $value)) {
+						if (strlen($field) < $value['lower'] || strlen($field) > $value['upper']) {
+							return $model->getMessage('CustomField.text.range', ['sprintf' => [$value['lower'], $value['upper']]]);
+						}
+					}
+				}
+			}
+
+			return true;
+		}
+	}
+
+	public static function validateCustomNumber($field, array $globalData) {
+		if (array_key_exists('params', $globalData['data']) && !empty($globalData['data']['params'])) {
+			$model = $globalData['providers']['table'];
+			$params = json_decode($globalData['data']['params'], true);
+			foreach ($params as $key => $value) {
+				if ($key == 'min_value' && $field < $value) {
+					return $model->getMessage('CustomField.number.minValue', ['sprintf' => $value]);
+				}
+				if ($key == 'max_value' && $field > $value) {
+					return $model->getMessage('CustomField.number.maxValue', ['sprintf' => $value]);
+				}
+				if ($key == 'range' && is_array($value)) {
+					if (array_key_exists('lower', $value) && array_key_exists('upper', $value)) {
+						if ($field < $value['lower'] || $field > $value['upper']) {
+							return $model->getMessage('CustomField.number.range', ['sprintf' => [$value['lower'], $value['upper']]]);
+						}
+					}
+				}
+			}
+
+			return true;
+		}
+	}
+
 	public static function checkDateRange($field, array $globalData) {
 		$systemDateFormat = TableRegistry::get('ConfigItems')->value('date_format');
 		$model = $globalData['providers']['table'];
