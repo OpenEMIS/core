@@ -252,7 +252,7 @@ class DirectoriesTable extends AppTable {
 	public function beforeAction(Event $event) {
 		if ($this->action == 'add') {
 			if ($this->controller->name != 'Students') {
-				$this->ControllerAction->field('user_type', ['type' => 'select']);
+				$this->ControllerAction->field('user_type', ['type' => 'select', 'after' => 'photo_content']);
 			} else {
 				$this->request->data[$this->alias()]['user_type'] = self::GUARDIAN;
 			}
@@ -268,6 +268,7 @@ class DirectoriesTable extends AppTable {
 						'fieldKey' => 'student_custom_field_id',
 						'tableColumnKey' => 'student_custom_table_column_id',
 						'tableRowKey' => 'student_custom_table_row_id',
+						'fieldClass' => ['className' => 'StudentCustomField.StudentCustomFields'],
 						'formKey' => 'student_custom_form_id',
 						'filterKey' => 'student_custom_filter_id',
 						'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
@@ -285,6 +286,7 @@ class DirectoriesTable extends AppTable {
 						'fieldKey' => 'staff_custom_field_id',
 						'tableColumnKey' => 'staff_custom_table_column_id',
 						'tableRowKey' => 'staff_custom_table_row_id',
+						'fieldClass' => ['className' => 'StaffCustomField.StaffCustomFields'],
 						'formKey' => 'staff_custom_form_id',
 						'filterKey' => 'staff_custom_filter_id',
 						'formFieldClass' => ['className' => 'StaffCustomField.StaffCustomFormsFields'],
@@ -521,14 +523,15 @@ class DirectoriesTable extends AppTable {
 				$InstitutionStudentTable->aliasField('created').' END) DESC'])
 				->first();
 
+			$value = '';
+			$name = '';
 			if (!empty($studentInstitutions)) {
 				$value = $studentInstitutions->student_status_name;
-			} else {
-				$value = '';
+				$name = $studentInstitutions->name;
 			}
 			$entity->student_status_name = $value;
-
-			return $studentInstitutions->name;
+			
+			return $name;
 		}
 
 		$staffInstitutions = [];

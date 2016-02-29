@@ -221,6 +221,42 @@ class ValidationBehavior extends Behavior {
 		}
 	}
 
+	public static function compareTime($field, $compareField, $equals, array $globalData) {
+		$type = self::_getFieldType($compareField);
+		$startTime = strtotime($field);
+		if($compareField) {
+			$options = ['equals' => $equals, 'reverse' => false, 'type' => $type];
+			$result = self::doCompareTimes($startTime, $compareField, $options, $globalData);
+			if (!is_bool($result)) {
+				return $result;
+			} else {
+				return (!$result) ? __(Inflector::humanize($compareField).' should be on a later '.$type) : true;
+			}
+		} else {
+			return true;
+		}
+	}
+
+	protected static function doCompareTimes($timeOne, $compareField, $options, $globalData) {
+		$equals = $options['equals'];
+		$reverse = $options['reverse'];
+		$timeTwo = $globalData['data'][$compareField];
+		$timeTwo = strtotime($timeTwo);
+		if($equals) {
+			if ($reverse) {
+				return $timeOne >= $timeTwo;
+			} else {
+				return $timeTwo >= $timeOne;
+			}
+		} else {
+			if ($reverse) {
+				return $timeOne > $timeTwo;
+			} else {
+				return $timeTwo > $timeOne;
+			}
+		}
+	}
+
 	public static function compareWithInstitutionDateOpened($field, array $globalData) {
 		$model = $globalData['providers']['table'];
 		$startDate = new DateTime($field);
@@ -927,4 +963,35 @@ class ValidationBehavior extends Behavior {
 		return (filter_var($field, FILTER_VALIDATE_EMAIL)) || ctype_alnum($field);
 	}
 
+	public static function checkDateRange($field, array $globalData) {
+		$systemDateFormat = TableRegistry::get('ConfigItems')->value('date_format');
+		$model = $globalData['providers']['table'];
+		$params = (!empty($globalData['data']['params']))? json_decode($globalData['data']['params'],true): [];
+
+		if (array_key_exists('range_start_date', $params) && array_key_exists('range_end_date', $params)) {
+			return (strtotime($field) < strtotime($params['range_start_date']) || strtotime($field) > strtotime($params['range_end_date']))? $model->getMessage('CustomField.date.between', ['sprintf' => [date($systemDateFormat, strtotime($params['range_start_date'])), date($systemDateFormat, strtotime($params['range_end_date']))]]): true;
+		} else if (array_key_exists('range_start_date', $params)) {
+			return (strtotime($field) < strtotime($params['range_start_date']))? $model->getMessage('CustomField.date.later', ['sprintf' => date($systemDateFormat, strtotime($params['range_start_date']))]): true;
+		} else if (array_key_exists('range_end_date', $params)) {
+			return (strtotime($field) > strtotime($params['range_end_date']))? $model->getMessage('CustomField.date.earlier', ['sprintf' => date($systemDateFormat, strtotime($params['range_end_date']))]): true;
+		} else {
+			return true;
+		}
+	}
+
+	public static function checkTimeRange($field, array $globalData) {
+		$systemTimeFormat = TableRegistry::get('ConfigItems')->value('time_format');
+		$model = $globalData['providers']['table'];
+		$params = (!empty($globalData['data']['params']))? json_decode($globalData['data']['params'],true): [];
+
+		if (array_key_exists('range_start_time', $params) && array_key_exists('range_end_time', $params)) {
+			return (strtotime($field) < strtotime($params['range_start_time']) || strtotime($field) > strtotime($params['range_end_time']))? $model->getMessage('CustomField.time.between', ['sprintf' => [date($systemTimeFormat, strtotime($params['range_start_time'])), date($systemTimeFormat, strtotime($params['range_end_time']))]]): true;
+		} else if (array_key_exists('range_start_time', $params)) {;
+			return (strtotime($field) < strtotime($params['range_start_time']))? $model->getMessage('CustomField.time.later', ['sprintf' => [date($systemTimeFormat, strtotime($params['range_start_time']))]]): true;
+		} else if (array_key_exists('range_end_time', $params)) {
+			return (strtotime($field) > strtotime($params['range_end_time']))? $model->getMessage('CustomField.time.earlier', ['sprintf' => [date($systemTimeFormat, strtotime($params['range_end_time']))]]): true;
+		} else {
+			return true;
+		}
+	}
 }
