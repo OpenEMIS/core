@@ -35,5 +35,12 @@ UPDATE custom_field_types SET visible = 0 WHERE code = 'DATE';
 UPDATE custom_field_types SET visible = 0 WHERE code = 'TIME';
 
 
+-- POCOR-2608
+UPDATE labels SET field = 'security_user_id' WHERE module = 'InstitutionSections' AND field = 'staff_id' AND module_name = 'Institutions -> Classes';
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2608';
+
+
 -- 3.4.14
 UPDATE config_items SET value = '3.4.14' WHERE code = 'db_version';
