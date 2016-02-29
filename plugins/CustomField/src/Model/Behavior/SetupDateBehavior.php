@@ -112,11 +112,12 @@ class SetupDateBehavior extends SetupBehavior {
 		}
 	}
 
-	public function beforeSave(Event $event, Entity $entity) {
-		if ($entity->field_type == $this->fieldTypeCode) {
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$model = $this->_table;
+		if ($data[$model->alias()]['field_type'] == $this->fieldTypeCode) {
 			$paramsArray = [];
-			$range_start_date = ($entity->has('range_start_date'))? $entity->range_start_date: null;
-			$range_end_date = ($entity->has('range_end_date'))? $entity->range_end_date: null;
+			$range_start_date = (array_key_exists('range_start_date', $data[$model->alias()]))? $data[$model->alias()]['range_start_date']: null;
+			$range_end_date = (array_key_exists('range_end_date', $data[$model->alias()]))? $data[$model->alias()]['range_end_date']: null;
 
 			if (!empty($range_start_date)) {
 				$paramsArray['range_start_date'] = $range_start_date;
@@ -126,13 +127,11 @@ class SetupDateBehavior extends SetupBehavior {
 			}
 
 			if (!empty($paramsArray)) {
-				$entity->params = json_encode($paramsArray);
+				$data[$model->alias()]['params'] = json_encode($paramsArray);
 			} else {
-				$entity->params = '';
+				$data[$model->alias()]['params'] = '';
 			}
 		}
-		
 	}
-
 
 }
