@@ -79,7 +79,6 @@ class StaffAttendancesTable extends AppTable {
 		$endDate = $AcademicPeriodTable->get($this->request->query['academic_period_id'])->end_date->format('Y-m-d');
 		$months = $AcademicPeriodTable->generateMonthsByDates($startDate, $endDate);
 		$institutionId = $this->Session->read('Institution.Institutions.id');
-		$academicPeriodId = $this->request->query['academic_period_id'];
 		foreach ($months as $month) {
 			$year = $month['year'];
 			$sheetName = $month['month']['inString'].' '.$year;
@@ -159,7 +158,16 @@ class StaffAttendancesTable extends AppTable {
 				$endTime = new Time ($endTimeAbsent);
 				$endTimeAbsent = $endTime->format('h:i A');
 				if ($absenceCodeList[$absenceObj['absence_type_id']] == 'LATE') {
-					$timeStr = sprintf(__($absenceObj['absence_type_name']) . ' - (%s - %s)' , $startTimeAbsent, $endTimeAbsent);
+					$secondsLate = intval($endTime->toUnixString()) - intval($startTime->toUnixString());
+					$minutesLate = $secondsLate / 60;
+					$hoursLate = floor($minutesLate / 60);
+					if ($hoursLate > 0) {
+						$minutesLate = $minutesLate - ($hoursLate * 60);
+						$lateString = $hoursLate.' '.__('Hour').' '.$minutesLate.' '.__('Minute');
+					} else {
+						$lateString = $minutesLate.' '.__('Minute');
+					}
+					$timeStr = sprintf(__($absenceObj['absence_type_name']) . ' - (%s)' , $lateString);
 				} else {
 					$timeStr = sprintf(__('Absent') . ' - ' . $absenceObj['absence_reason']. ' (%s - %s)' , $startTimeAbsent, $endTimeAbsent);
 				}
@@ -409,7 +417,26 @@ class StaffAttendancesTable extends AppTable {
 				$obj = $StaffAbsenceReasons->findById($reasonId)->first();
 				$html .= $obj['name'];
 			} else {
-				$html .= '<i class="fa fa-minus"></i>';
+				if (!empty($entity['StaffAbsences']['absence_type_id'])) {
+					if ($this->absenceCodeList[$entity['StaffAbsences']['absence_type_id']] == 'LATE') {
+						$startTime = new Time ($entity['StaffAbsences']['start_time']);
+						$endTime = new Time ($entity['StaffAbsences']['end_time']);
+						$secondsLate = intval($endTime->toUnixString()) - intval($startTime->toUnixString());
+						$minutesLate = $secondsLate / 60;
+						$hoursLate = floor($minutesLate / 60);
+						if ($hoursLate > 0) {
+							$minutesLate = $minutesLate - ($hoursLate * 60);
+							$lateString = $hoursLate.' '.__('Hour').' '.$minutesLate.' '.__('Minute');
+						} else {
+							$lateString = $minutesLate.' '.__('Minute');
+						}
+						$html .= $lateString;
+					} else {
+						$html .= '<i class="fa fa-minus"></i>';
+					}
+				} else {
+					$html .= '<i class="fa fa-minus"></i>';
+				}
 			}
 		}
 

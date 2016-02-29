@@ -15,6 +15,8 @@ ALTER TABLE `institution_staff_absences`
 DROP COLUMN `absence_type_id`,
 DROP INDEX `absence_type_id` ;
 
+DROP TABLE `z_2562_institution_staff_absences`;
+
 -- institution_student_absences
 ALTER TABLE `institution_student_absences` 
 CHANGE COLUMN `start_time` `start_time` VARCHAR(15) NULL DEFAULT NULL COMMENT '' ,
@@ -28,6 +30,12 @@ SET `institution_student_absences`.`start_time` = `z_2562_institution_student_ab
 ALTER TABLE `institution_student_absences` 
 DROP COLUMN `absence_type_id`,
 DROP INDEX `absence_type_id` ;
+
+DROP TABLE `z_2562_institution_student_absences`;
+
+-- labels
+DELETE FROM `labels` WHERE `field` = 'absence_type_id' AND `module` = 'StaffAbsences';
+DELETE FROM `labels` WHERE `field` = 'absence_type_id' AND `module` = 'InstitutionStudentAbsences';
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2562';
