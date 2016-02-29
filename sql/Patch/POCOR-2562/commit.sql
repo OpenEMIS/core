@@ -9,8 +9,8 @@ CREATE TABLE `absence_types` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-INSERT INTO `absence_types` (`code`, `name`) VALUES ('EXCUSED', 'Excused');
-INSERT INTO `absence_types` (`code`, `name`) VALUES ('UNEXCUSED', 'Unexcused');
+INSERT INTO `absence_types` (`code`, `name`) VALUES ('EXCUSED', 'Absence - Excused');
+INSERT INTO `absence_types` (`code`, `name`) VALUES ('UNEXCUSED', 'Absence - Unexcused');
 INSERT INTO `absence_types` (`code`, `name`) VALUES ('LATE', 'Late');
 
 -- institution_staff_absences
@@ -77,3 +77,7 @@ WHERE student_absence_reason_id = 0;
 
 ALTER TABLE `institution_student_absences` 
 CHANGE COLUMN `absence_type_id` `absence_type_id` INT(11) NOT NULL COMMENT '' ;
+
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffAbsences', 'absence_type_id', 'Institutions -> Staff -> Absences', 'Type', 1, 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'InstitutionStudentAbsences', 'absence_type_id', 'Institutions -> Students -> Absences', 'Type', 1, 1, NOW());
+

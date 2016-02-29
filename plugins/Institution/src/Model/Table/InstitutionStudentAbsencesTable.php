@@ -142,7 +142,22 @@ class InstitutionStudentAbsencesTable extends AppTable {
 				$value = sprintf('%s (%s)', $startDate, __('full day'));
 			}
 		} else {
-			$value = sprintf('%s (%s - %s)', $startDate, $this->formatTime($entity->start_time), $this->formatTime($entity->end_time));
+			if ($this->absenceCodeList[$entity->absence_type_id] == 'LATE') {
+				$endTime = $entity->end_time;
+				$startTime = $entity->start_time;
+				$secondsLate = intval($endTime->toUnixString()) - intval($startTime->toUnixString());
+				$minutesLate = $secondsLate / 60;
+				$hoursLate = floor($minutesLate / 60);
+				if ($hoursLate > 0) {
+					$minutesLate = $minutesLate - ($hoursLate * 60);
+					$lateString = $hoursLate.' '.__('Hour').' '.$minutesLate.' '.__('Minute');
+				} else {
+					$lateString = $minutesLate.' '.__('Minute');
+				}
+				$value = sprintf('%s (%s)', $startDate, $lateString);
+			} else {
+				$value = sprintf('%s (%s - %s)', $startDate, $this->formatTime($entity->start_time), $this->formatTime($entity->end_time));
+			}
 		}
 		
 		return $value;
@@ -391,7 +406,9 @@ class InstitutionStudentAbsencesTable extends AppTable {
 
 	public function onUpdateFieldAbsenceTypeId(Event $event, array $attr, $action, $request) {
 		if ($action == 'add' || $action == 'edit') {
-			$absenceTypeOptions = $attr['options'];
+			foreach ($attr['options'] as $key => $value) {
+				$absenceTypeOptions[$key] = __($value);
+			}
 			if (!isset($request->data[$this->alias()]['absence_type_id'])) {
 				$request->data[$this->alias()]['absence_type_id'] = key($absenceTypeOptions);
 			}
