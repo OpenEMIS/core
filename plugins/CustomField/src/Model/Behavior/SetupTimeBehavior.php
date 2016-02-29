@@ -114,11 +114,12 @@ class SetupTimeBehavior extends SetupBehavior {
 		}
 	}
 
-	public function beforeSave(Event $event, Entity $entity) {
-		if ($entity->field_type == $this->fieldTypeCode) {
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$model = $this->_table;
+		if ($data[$model->alias()]['field_type'] == $this->fieldTypeCode) {
 			$paramsArray = [];
-			$range_start_time = ($entity->has('range_start_time'))? $entity->range_start_time: null;
-			$range_end_time = ($entity->has('range_end_time'))? $entity->range_end_time: null;
+			$range_start_time = (array_key_exists('range_start_time', $data[$model->alias()]))? $data[$model->alias()]['range_start_time']: null;
+			$range_end_time = (array_key_exists('range_end_time', $data[$model->alias()]))? $data[$model->alias()]['range_end_time']: null;
 
 			if (!empty($range_start_time)) {
 				$paramsArray['range_start_time'] = $range_start_time;
@@ -128,9 +129,9 @@ class SetupTimeBehavior extends SetupBehavior {
 			}
 
 			if (!empty($paramsArray)) {
-				$entity->params = json_encode($paramsArray);
+				$data[$model->alias()]['params'] = json_encode($paramsArray);
 			} else {
-				$entity->params = '';
+				$data[$model->alias()]['params'] = '';
 			}
 		}
 	}
