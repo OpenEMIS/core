@@ -5,7 +5,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 
-class InstitutionClass extends Entity
+class InstitutionSubject extends Entity
 {
 	protected $_virtual = ['male_students', 'female_students', 
     'teachers', 
@@ -13,12 +13,12 @@ class InstitutionClass extends Entity
 	
     protected function _getMaleStudents() {
         $gender_id = 1; // male
-        $table = TableRegistry::get('Institution.InstitutionClassStudents');
+        $table = TableRegistry::get('Institution.InstitutionSubjectStudents');
         $count = $table
                     ->find()
                     ->contain('Users')
                     ->where(['Users.gender_id' => $gender_id])
-                    ->where([$table->aliasField('institution_class_id') => $this->id])
+                    ->where([$table->aliasField('institution_subject_id') => $this->id])
                     ->where([$table->aliasField('status') .' > 0'])
                     ->count()
         ;
@@ -27,12 +27,12 @@ class InstitutionClass extends Entity
 
     protected function _getFemaleStudents() {
         $gender_id = 2; // female
-        $table = TableRegistry::get('Institution.InstitutionClassStudents');
+        $table = TableRegistry::get('Institution.InstitutionSubjectStudents');
         $count = $table
                     ->find()
                     ->contain('Users')
                     ->where(['Users.gender_id' => $gender_id])
-                    ->where([$table->aliasField('institution_class_id') => $this->id])
+                    ->where([$table->aliasField('institution_subject_id') => $this->id])
                     ->where([$table->aliasField('status') .' > 0'])
                     ->count();
         return $count;
@@ -41,11 +41,11 @@ class InstitutionClass extends Entity
     // protected function _getTeachers() {
     //     pr($this);die;
         // $value = '';
-        // $table = TableRegistry::get('Institution.InstitutionClassStaff');
+        // $table = TableRegistry::get('Institution.InstitutionSubjectStaff');
         // $rawList = $table
         //             ->find()
         //             ->contain('Users')
-        //             ->where([$table->aliasField('institution_class_id') => $this->id])
+        //             ->where([$table->aliasField('institution_subject_id') => $this->id])
         //             ->where([$table->aliasField('status') .' > 0'])
         //             ->toArray();
         // $list = [];
@@ -72,7 +72,7 @@ class InstitutionClass extends Entity
 
     // protected function _getSectionName() {
         // $value = 'mmm';
-    //     if ($this->has('institution_section_classes')) {
+    //     if ($this->has('institution_section_subjects')) {
     //         if ($this->has('institution_section')) {
     //             $value = $this->education_subject->code;
     //         } else {
