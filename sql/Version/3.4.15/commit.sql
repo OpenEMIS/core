@@ -61,7 +61,7 @@ UPDATE `custom_field_types` SET `visible` = 1 WHERE `code` IN ('DATE', 'TIME');
 INSERT INTO `db_patches` VALUES ('POCOR-2446', NOW());
 
 UPDATE custom_field_types SET visible = 1 WHERE code = 'DATE';
-UPDATE custom_field_types SET visible = 1 WHERE code = 'TIME';You have new mail in /var/spool/mail/shasanuddin
+UPDATE custom_field_types SET visible = 1 WHERE code = 'TIME';
 
 
 -- 3.4.15
