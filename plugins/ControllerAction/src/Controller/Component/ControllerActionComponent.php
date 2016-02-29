@@ -1283,7 +1283,7 @@ class ControllerActionComponent extends Component {
 						}
 					}
 
-					// if ($process($model, $transferFrom, $deleteOptions)) {
+					if ($process($model, $transferFrom, $deleteOptions)) {
 						$id = $request->data[$primaryKey];
 						$transferOptions = new ArrayObject([]);
 
@@ -1339,9 +1339,9 @@ class ControllerActionComponent extends Component {
 
 						$transferProcess($associations, $transferFrom, $transferTo, $model);
 						$this->Alert->success('general.delete.success');
-					// } else {
-					// 	$this->Alert->error('general.delete.failed');
-					// }
+					} else {
+						$this->Alert->error('general.delete.failed');
+					}
 					return $this->controller->redirect($this->url('index'));
 				}
 			}
