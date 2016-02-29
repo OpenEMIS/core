@@ -135,7 +135,16 @@ class StudentAttendancesTable extends AppTable {
 				$endTime = new Time ($endTimeAbsent);
 				$endTimeAbsent = $endTime->format('h:i A');
 				if ($absenceCodeList[$absenceObj['absence_type_id']] == 'LATE') {
-					$timeStr = sprintf(__($absenceObj['absence_type_name']) . ' - (%s - %s)' , $startTimeAbsent, $endTimeAbsent);
+					$secondsLate = intval($endTime->toUnixString()) - intval($startTime->toUnixString());
+					$minutesLate = $secondsLate / 60;
+					$hoursLate = floor($minutesLate / 60);
+					if ($hoursLate > 0) {
+						$minutesLate = $minutesLate - ($hoursLate * 60);
+						$lateString = $hoursLate.' '.__('Hour').' '.$minutesLate.' '.__('Minute');
+					} else {
+						$lateString = $minutesLate.' '.__('Minute');
+					}
+					$timeStr = sprintf(__($absenceObj['absence_type_name']) . ' - (%s)' , $lateString);
 				} else {
 					$timeStr = sprintf(__('Absent') . ' - ' . $absenceObj['absence_reason']. ' (%s - %s)' , $startTimeAbsent, $endTimeAbsent);
 				}
@@ -227,6 +236,7 @@ class StudentAttendancesTable extends AppTable {
 		$this->ControllerAction->field('institution_section_id', ['visible' => false]);
 		$this->ControllerAction->field('education_grade_id', ['visible' => false]);
 		$this->ControllerAction->field('status', ['visible' => false]);
+		$this->ControllerAction->field('student_status_id', ['visible' => false]);
 	}
 
 	// Event: ControllerAction.Model.afterAction
@@ -398,7 +408,26 @@ class StudentAttendancesTable extends AppTable {
 				$obj = $StudentAbsenceReasons->findById($reasonId)->first();
 				$html .= $obj['name'];
 			} else {
-				$html .= '<i class="fa fa-minus"></i>';
+				if (!empty($entity['StudentAbsences']['absence_type_id'])) {
+					if ($this->absenceCodeList[$entity['StudentAbsences']['absence_type_id']] == 'LATE') {
+						$startTime = new Time ($entity['StudentAbsences']['start_time']);
+						$endTime = new Time ($entity['StudentAbsences']['end_time']);
+						$secondsLate = intval($endTime->toUnixString()) - intval($startTime->toUnixString());
+						$minutesLate = $secondsLate / 60;
+						$hoursLate = floor($minutesLate / 60);
+						if ($hoursLate > 0) {
+							$minutesLate = $minutesLate - ($hoursLate * 60);
+							$lateString = $hoursLate.' '.__('Hour').' '.$minutesLate.' '.__('Minute');
+						} else {
+							$lateString = $minutesLate.' '.__('Minute');
+						}
+						$html .= $lateString;
+					} else {
+						$html .= '<i class="fa fa-minus"></i>';
+					}
+				} else {
+					$html .= '<i class="fa fa-minus"></i>';
+				}
 			}
 		}
 
