@@ -175,7 +175,7 @@ class UserGroupsTable extends AppTable {
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
-		$query->contain(['Areas.Levels', 'Institutions', 'Users', 'Roles']);
+		$query->contain(['Areas.AreaLevels', 'Institutions', 'Users', 'Roles']);
 	}
 
 	public function onGetAreaTableElement(Event $event, $action, $entity, $attr, $options=[]) {
@@ -191,7 +191,7 @@ class UserGroupsTable extends AppTable {
 			if (!empty($associated[$key])) {
 				foreach ($associated[$key] as $i => $obj) {
 					$rowData = [];
-					$rowData[] = [$obj->level->name, ['autocomplete-exclude' => $obj->id]];
+					$rowData[] = [$obj->area_level->name, ['autocomplete-exclude' => $obj->id]];
 					$rowData[] = $obj->code;
 					$rowData[] = $obj->name;
 					$tableCells[] = $rowData;
@@ -213,7 +213,7 @@ class UserGroupsTable extends AppTable {
 					foreach ($associated[$key] as $i => $obj) {
 						$this->request->data[$alias][$key][] = [
 							'id' => $obj->id,
-							'_joinData' => ['level' => $obj->level->name, 'code' => $obj->code, 'area_id' => $obj->id, 'name' => $obj->name]
+							'_joinData' => ['level' => $obj->area_level->name, 'code' => $obj->code, 'area_id' => $obj->id, 'name' => $obj->name]
 						];
 					}
 				}
