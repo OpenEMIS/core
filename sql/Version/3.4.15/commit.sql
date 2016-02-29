@@ -56,6 +56,14 @@ UPDATE `custom_modules` SET `supported_field_types` = 'TEXT,NUMBER,TEXTAREA,DROP
 UPDATE `custom_field_types` SET `visible` = 1 WHERE `code` IN ('DATE', 'TIME');
 
 
+-- POCOR-2446
+-- db_patches
+INSERT INTO `db_patches` VALUES ('POCOR-2446', NOW());
 
+UPDATE custom_field_types SET visible = 1 WHERE code = 'DATE';
+UPDATE custom_field_types SET visible = 1 WHERE code = 'TIME';You have new mail in /var/spool/mail/shasanuddin
+
+
+-- 3.4.15
 -- db_version
 UPDATE config_items SET value = '3.4.15' WHERE code = 'db_version';
