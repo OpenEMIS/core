@@ -146,7 +146,7 @@ trait MessagesTrait {
 			'maximumStudentsReached' => 'Reached the maximum number of students allowed in a class',
 			'education_grade_options_empty' => 'No available Grades for the selected period'
 		],
-		'InstitutionClasses' => [
+		'InstitutionSubjects' => [
 			'noGrades' => 'No Grades Assigned',
 			'noSections' => 'No Classes',
 			'noClasses' => 'No Classes',
