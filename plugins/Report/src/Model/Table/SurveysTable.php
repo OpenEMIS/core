@@ -60,8 +60,8 @@ class SurveysTable extends AppTable  {
 		$requestData = json_decode($settings['process']['params']);
 		$surveyFormId = $requestData->survey_form;
 		$academicPeriodId = $requestData->academic_period_id;
+		$WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
 		if (!empty($academicPeriodId)) {
-			$WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
 			$status = $WorkflowStatusesTable->WorkflowModels->getWorkflowStatusSteps('Institutions > Survey > Forms', 'NOT_COMPLETED');
 			$notCompleteStatus = $status[key($status)];
 
@@ -96,8 +96,8 @@ class SurveysTable extends AppTable  {
 		$condition = [
 			$this->aliasField('academic_period_id') => $academicPeriodId
 		];
-		$surveyStatuses = $WorkflowStatusesTable->getWorkflowSteps($status);
 
+		$surveyStatuses = $WorkflowStatusesTable->getWorkflowSteps($status);
 		
 		$this->surveyStatuses = $WorkflowStatusesTable->getWorkflowStepStatusNameMappings('Institution.InstitutionSurveys');
 		
