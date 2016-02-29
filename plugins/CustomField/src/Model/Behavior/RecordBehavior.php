@@ -46,7 +46,7 @@ class RecordBehavior extends Behavior {
 	];
 
 	// value for these field types will be saved on custom_field_values
-	private $fieldValueArray = ['TEXT', 'NUMBER', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX'];
+	private $fieldValueArray = ['TEXT', 'NUMBER', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'DATE', 'TIME'];
 
 	private $CustomFieldValues = null;
 	private $CustomTableCells = null;
@@ -90,8 +90,8 @@ class RecordBehavior extends Behavior {
 		$this->_table->addBehavior('CustomField.RenderDropdown');
 		$this->_table->addBehavior('CustomField.RenderCheckbox');
 		$this->_table->addBehavior('CustomField.RenderTable');
-		// $this->_table->addBehavior('CustomField.RenderDate');
-		// $this->_table->addBehavior('CustomField.RenderTime');
+		$this->_table->addBehavior('CustomField.RenderDate');
+		$this->_table->addBehavior('CustomField.RenderTime');
 		// $this->_table->addBehavior('CustomField.RenderStudentList');
 
 		// If tabSection is not set, added to handle Section Header
@@ -141,6 +141,7 @@ class RecordBehavior extends Behavior {
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
     	$alias = $this->_table->alias();
+
     	if (array_key_exists('custom_field_values', $data[$alias])) {
 			$values = $data[$alias]['custom_field_values'];
 			$fieldValues = $this->_table->array_column($values, $this->config('fieldKey'));
@@ -154,6 +155,7 @@ class RecordBehavior extends Behavior {
 						$data[$alias]['custom_field_values'][$key]['field_type'] = $f->field_type;
 						$data[$alias]['custom_field_values'][$key]['mandatory'] = $f->is_mandatory;
 						$data[$alias]['custom_field_values'][$key]['unique'] = $f->is_unique;
+						$data[$alias]['custom_field_values'][$key]['params'] = $f->params;
 					}
 				}
 			}

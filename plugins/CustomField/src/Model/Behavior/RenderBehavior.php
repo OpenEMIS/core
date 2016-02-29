@@ -26,7 +26,8 @@ class RenderBehavior extends Behavior {
     	$events = parent::implementedEvents();
     	$eventMap = [
             'Render.'.'process'.$this->fieldType.'Values' => 'process'.$this->fieldType.'Values',
-            'Render.'.'onSave' => 'onSave'
+            'Render.'.'onSave' => 'onSave',
+            'ControllerAction.Model.onUpdateIncludes' => 'onUpdateIncludes'
         ];
 
         foreach ($eventMap as $event => $method) {
