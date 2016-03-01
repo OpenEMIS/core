@@ -73,7 +73,7 @@ class SetupTextBehavior extends SetupBehavior {
 			}
 		}
 
-		$ruleOptions = ['' => __('-- Select Rule --')] + $this->ruleOptions;
+		$ruleOptions = ['' => __('No Validation')] + $this->ruleOptions;
 		$selectedRule = $model->queryString('text_rule', $ruleOptions);
 
 		$model->ControllerAction->field('validation_rule', [
