@@ -3,11 +3,12 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 
+use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
+use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Collection\Collection;
 
@@ -234,6 +235,15 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 		// pr($query->toArray());die;
 	}
 
+	public function indexAfterAction(Event $event, ResultSet $data, ArrayObject $extra) {
+
+		if (isset($extra[$this->aliasField('notice')]) && !empty($extra[$this->aliasField('notice')])) {
+			$this->Alert->warning($extra[$this->aliasField('notice')], ['reset'=>true]);
+			unset($extra[$this->aliasField('notice')]);
+		}
+
+	}
+
 
 /******************************************************************************************************************
 **
@@ -302,7 +312,7 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 ** add action methods
 **
 ******************************************************************************************************************/
-	public function addBeforeAction(Event $event) {
+	public function addBeforeAction(Event $event, ArrayObject $extra) {
 		if ($this->_selectedAcademicPeriodId == -1) {
 			return $this->controller->redirect([
 				'plugin' => $this->controller->plugin, 
@@ -364,7 +374,11 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 		$commonData = $data['InstitutionSubjects'];
 		$error = false;
 		$subjects = false;
-		if (isset($data['MultiSubjects']) && count($data['MultiSubjects'])>0) {
+		$subjectOptions = $this->getSubjectOptions();
+		$existedSubjects = $this->getExistedSubjects(true);
+		if (count($subjectOptions) == count($existedSubjects)) {
+			$error = $this->aliasField('allSubjectsAlreadyAdded');
+		} else if (isset($data['MultiSubjects']) && count($data['MultiSubjects'])>0) {
 			foreach ($data['MultiSubjects'] as $key=>$row) {
 				if (isset($row['education_subject_id']) && isset($row['institution_subject_staff'])) {
 					$subjectSelected = true;
@@ -387,7 +401,7 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 				}
 			}
 			if (!$subjects) {
-				$error = 'Institution.Institutions.noSubjectSelected';
+				$error = $this->aliasField('noSubjectSelected');
 			} else {
 				$subjects = $model->newEntities($subjects);
 				/**
@@ -402,42 +416,61 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 			}
 		} else {
 			// $this->log(__FILE__.' @ '.__LINE__.': noSubjectsInClass', 'debug');
-			$error = 'Institution.Institutions.noSubjectsInClass';
+			$error = $this->aliasField('noSubjectsInClass');
 		}
 		return [$error, $subjects, $data];
 	}
 
-	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
-		$process = function ($model, $entity) use ($data) {
+	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra) {
+		$process = function ($model, $entity) use ($data, $extra) {
 			list($error, $subjects, $data) = $model->prepareEntityObjects($model, $data);
 			if (!$error && $subjects) {
 				foreach ($subjects as $subject) {
 			    	$model->save($subject);
 				}
+				$extra[$this->aliasField('notice')] = 'passed';
 				return true;
 			} else {
-				$model->log($error, 'debug');
-				if (is_array($error)) {
-					$model->Alert->error('general.add.failed');
+				if ($error == $this->aliasField('allSubjectsAlreadyAdded')) {
+					$extra[$this->aliasField('notice')] = $this->aliasField('allSubjectsAlreadyAdded');
+					return true;
 				} else {
-					/**
-					 * unset all field validation except for "institution_id" to trigger validation error in ControllerActionComponent
-					 */
-					foreach ($model->fields as $value) {
-						if ($value['field'] != 'institution_id') {
-							$model->validator()->remove($value['field']);
+					$model->log($error, 'debug');
+					if (is_array($error)) {
+						$model->Alert->error('general.add.failed');
+					} else {
+						/**
+						 * unset all field validation except for "institution_id" to trigger validation error in ControllerActionComponent
+						 */
+						foreach ($model->fields as $value) {
+							if ($value['field'] != 'institution_id') {
+								$model->validator()->remove($value['field']);
+							}
 						}
+						$model->Alert->error($error);
 					}
-					$model->Alert->error($error);
+					$model->request->data = $data;
+					return false;
 				}
-				$model->request->data = $data;
-				return false;
 			}
 		};
 		return $process;
 	}
 
-	public function addAfterAction(Event $event, Entity $entity) {
+	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra) {
+		if (isset($extra[$this->aliasField('notice')]) && !empty($extra[$this->aliasField('notice')])) {
+			$notice = $extra[$this->aliasField('notice')];
+			unset($extra[$this->aliasField('notice')]);
+			if ($notice=='passed') {
+				$this->Alert->success('general.add.success', ['reset'=>true]);
+			} else {
+				$this->Alert->warning($notice, ['reset'=>true]);
+			}
+			return $this->controller->redirect($this->url('index', 'QUERY'));
+		}
+	}
+
+	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$query = $this
 				->Institutions
 				->Staff
@@ -458,7 +491,6 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 			'subjects' => $subjects,
 			'existedSubjects' => $existedSubjects
 		];
-		return $entity;
 	}
 
 
@@ -467,7 +499,7 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 ** edit action methods
 **
 ******************************************************************************************************************/
-	public function editBeforeAction(Event $event) {
+	public function editBeforeAction(Event $event, ArrayObject $extra) {
 		if ($this->_selectedAcademicPeriodId == -1) {
 			return $this->controller->redirect([
 				'plugin' => $this->controller->plugin, 
@@ -476,14 +508,14 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 			]);
 		}
 
-		$this->ControllerAction->setFieldOrder([
+		$this->setFieldOrder([
 			'name', 'no_of_seats', 
 			'academic_period_id', 'education_subject_id', 
 			'teachers', 'students',
 		]);
 	}
 
-	public function editBeforeQuery(Event $event, Query $query) {
+	public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		$query->contain([
 			'AcademicPeriods', 
 			'EducationSubjects',
@@ -494,7 +526,7 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 		]);
 	}
 
-	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
 		// pr($entity);
 		// pr($data);
 		/**
@@ -573,7 +605,7 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 	 * Changed in PHPOE-1780 test fail re-work. major modification.
 	 * @var [type]
 	 */
-	public function editAfterAction(Event $event, Entity $entity) {
+	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$this->_selectedAcademicPeriodId = $entity->academic_period_id;
 		$InstitutionSubjectStudentsTable = $this->InstitutionSubjectStudents;
 		$students = $InstitutionSubjectStudentsTable->find()->contain(['Users.Genders'])

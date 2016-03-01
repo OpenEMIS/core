@@ -57,7 +57,7 @@ class OpenEmisBehavior extends Behavior {
 		
 		if ($model->action == 'index' || $model->action == 'view') {
 			$modal = [];
-			$modal['title'] = $model->alias();
+			$modal['title'] = $model->getHeader($model->alias());
 			$modal['content'] = __('All associated information related to this record will also be removed.');
 			$modal['content'] .= '<br><br>';
 			$modal['content'] .= __('Are you sure you want to delete this record?');
@@ -89,7 +89,9 @@ class OpenEmisBehavior extends Behavior {
 			$toolbarButtons = $extra['toolbarButtons'];
 			if ($model->action == 'view' && $model->actions('remove') != 'transfer') {
 				// not checking existence of entity in $extra so that errors will be shown if entity is removed unexpectedly
-				$toolbarButtons['remove']['attr']['field-value'] = $extra['entity']->{$model->primaryKey()};
+				if (array_key_exists('remove', $toolbarButtons)) {
+					$toolbarButtons['remove']['attr']['field-value'] = $extra['entity']->{$model->primaryKey()};
+				}
 			}
 			$model->controller->set('toolbarButtons', $toolbarButtons);
 		}
@@ -246,7 +248,7 @@ class OpenEmisBehavior extends Behavior {
 				$toolbarButtons['edit']['attr']['title'] = __('Edit');
 			}
 
-			if ($model->actions('remove') != 'transfer') {
+			if ($model->actions('remove') && $model->actions('remove') != 'transfer') {
 				$toolbarButtons['remove']['url'] = $model->url('remove');
 				$toolbarButtons['remove']['type'] = 'button';
 				$toolbarButtons['remove']['label'] = '<i class="fa fa-trash"></i>';

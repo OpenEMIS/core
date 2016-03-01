@@ -13,7 +13,7 @@ class InstitutionClassSubjectsTable extends AppTable {
 	
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->belongsTo('InstitutionSections', ['className' => 'Institution.InstitutionSections']);
-		$this->belongsTo('InstitutionClasses',  ['className' => 'Institution.InstitutionClasses']);
+		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
+		$this->belongsTo('InstitutionSubjects',  ['className' => 'Institution.InstitutionSubjects']);
 	}
 }
