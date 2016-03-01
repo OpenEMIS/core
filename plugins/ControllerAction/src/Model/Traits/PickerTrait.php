@@ -19,6 +19,6 @@ trait PickerTrait {
 
 	protected function convertForTimePicker($data) {
 		$format = 'H:i:s';
-		return date($format, strtotime($data));
+		return (!empty($data))? date($format, strtotime($data)): null;
 	}
 }
