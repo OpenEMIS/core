@@ -82,7 +82,8 @@ trait MessagesTrait {
 			'type' => 'Type',
 			'amount' => 'Amount',
 			'total' => 'Total',
-			'notTransferrable' => 'No other alternative options available to convert records.'
+			'notTransferrable' => 'No other alternative options available to convert records.',
+			'validationRules' => 'Validation Rules',
 		],
 		'fileUpload' => [
 			'single' => '*File size should not be larger than 2MB.',

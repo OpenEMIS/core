@@ -31,7 +31,9 @@ class SetupBehavior extends Behavior {
             'ControllerAction.Model.addEdit.onAddOption' => 'addEditOnAddOption',
             'ControllerAction.Model.addEdit.onAddColumn' => 'addEditOnAddColumn',
             'ControllerAction.Model.addEdit.onAddRow' => 'addEditOnAddRow',
-            'ControllerAction.Model.addEdit.beforePatch' => 'addEditBeforePatch'
+            'ControllerAction.Model.addEdit.beforePatch' => 'addEditBeforePatch',
+            'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
+            'ControllerAction.Model.edit.afterQuery' => 'editAfterQuery',
         ];
 
         foreach ($eventMap as $event => $method) {

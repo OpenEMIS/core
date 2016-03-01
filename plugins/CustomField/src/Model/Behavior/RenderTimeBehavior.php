@@ -24,9 +24,11 @@ class RenderTimeBehavior extends RenderBehavior {
 		if (array_key_exists('custom_field_values', $dataArray)) {
 			foreach ($dataArray['custom_field_values'] as $key => $value) {
 				if (array_key_exists('time_value', $value)) {
-					if ($dataArray['custom_field_values'][$key]['field_type'] == $this->fieldTypeCode) {
-						$convertedTime = $this->convertForTimePicker($dataArray['custom_field_values'][$key]['time_value']);
-						$data['custom_field_values'][$key]['time_value'] = (!empty($convertedTime))? $convertedTime: $data['custom_field_values'][$key]['time_value'];
+					if (array_key_exists('field_type', $dataArray['custom_field_values'][$key])) {
+						if ($dataArray['custom_field_values'][$key]['field_type'] == $this->fieldTypeCode) {
+							$convertedTime = $this->convertForTimePicker($dataArray['custom_field_values'][$key]['time_value']);
+							$data['custom_field_values'][$key]['time_value'] = (!empty($convertedTime))? $convertedTime: $data['custom_field_values'][$key]['time_value'];
+						}
 					}
 				}
 			}
