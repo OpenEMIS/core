@@ -14,9 +14,9 @@ class SetupNumberBehavior extends SetupBehavior {
         parent::initialize($config);
 
         $this->ruleOptions = [
-			'min_value' => __('Number must not lesser than (Minimum Value)'),
-			'max_value' => __('Number must not greater than (Maximum Value)'),
-			'range' => __('Number must be between (Lower Limit) and (Upper Limit))')
+			'min_value' => __('Should not be lesser than'),
+			'max_value' => __('Should not be greater than'),
+			'range' => __('In between (inclusive)')
 		];
     }
 
@@ -58,7 +58,7 @@ class SetupNumberBehavior extends SetupBehavior {
 			}
 		}
 
-		$ruleOptions = ['' => __('-- Select Rule --')] + $this->ruleOptions;
+		$ruleOptions = ['' => __('No Validation')] + $this->ruleOptions;
 		$selectedRule = $model->queryString('number_rule', $ruleOptions);
 
 		$model->ControllerAction->field('validation_rule', [
