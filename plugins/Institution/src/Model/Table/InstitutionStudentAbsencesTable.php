@@ -445,7 +445,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		$periodOptions = $AcademicPeriod->getList(['isEditable'=>true]);
 		$selectedPeriod = $this->queryString('period', $periodOptions);
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
-			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
 			'callable' => function($id) use ($Sections, $institutionId) {
 				return $Sections
 					->find()

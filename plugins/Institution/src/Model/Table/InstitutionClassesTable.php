@@ -59,7 +59,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 			->add('name', 'ruleUnique', [
 	        		'rule' => 'uniqueNamePerAcademicPeriod',
 	        		'provider' => 'table',
-	        		'message' => 'Class name has to be unique'
+	        		// 'message' => 'Class name has to be unique'
 			    ])
 			;
 		return $validator;
