@@ -262,6 +262,7 @@ class DirectoriesTable extends AppTable {
 
 			switch ($userType) {
 				case self::STUDENT:
+					$this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 					$this->addBehavior('CustomField.Record', [
 						'model' => 'Student.Students',
 						'behavior' => 'Student',
@@ -277,9 +278,9 @@ class DirectoriesTable extends AppTable {
 						'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
 						'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]
 					]);
-					$this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 					break;
 				case self::STAFF:
+					$this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 					$this->addBehavior('CustomField.Record', [
 						'model' => 'Staff.Staff',
 						'behavior' => 'Staff',
@@ -295,7 +296,6 @@ class DirectoriesTable extends AppTable {
 						'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
 						'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true]
 					]);
-					$this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 					break;
 			}	
 		}
