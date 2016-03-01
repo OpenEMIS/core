@@ -96,7 +96,7 @@ class InstitutionQualityVisitsTable extends AppTable {
 			}
 			$selectedPeriod = $this->queryString('period', $periodOptions);
 			$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
-				'message' => '{{label}} - ' . $this->getMessage('general.noClasses'),
+				'message' => '{{label}} - ' . $this->getMessage('general.noSubjects'),
 				'callable' => function($id) use ($Classes, $institutionId) {
 					return $Classes
 						->find()
