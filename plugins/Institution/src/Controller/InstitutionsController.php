@@ -148,8 +148,8 @@ class InstitutionsController extends AppController  {
 
 			$alias = $model->alias;
 			// temporary fix for renaming Sections and Classes
-			if ($alias == 'Sections') $alias = 'Classes';
-			else if ($alias == 'Classes') $alias = 'Subjects';
+			// if ($alias == 'Sections') $alias = 'Classes';
+			// else if ($alias == 'Classes') $alias = 'Subjects';
 
 			$crumbTitle = $model->getHeader($alias);
 			$crumbOptions = [];
