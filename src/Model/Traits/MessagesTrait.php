@@ -159,7 +159,10 @@ trait MessagesTrait {
 			'teachers' => 'Teachers',
 			'teacherOrTeachers' => 'Teacher(s)',
 			'studentRemovedFromInstitution' => 'This student was removed from the institution earlier',
-			'noSubjects' => 'There are no available Education Subjects.',
+			'noSubjects' => 'There are no available Education Subjects',
+			'allSubjectsAlreadyAdded' => 'All Subjects for the assigned grade already added previously',
+			'noSubjectsInClass' => 'There are no subjects in the assigned grade',
+			'noSubjectSelected' => 'There is no subject selected',
 		],
 		'InstitutionFees' => [
 			'fee_types' => 'Fee Types',
@@ -483,7 +486,7 @@ trait MessagesTrait {
 				'emptySecurityUserId' => 'Home Room Teacher should not be empty',
 				'emptyNameSecurityUserId' => 'Class name and Home Room Teacher should not be empty',
 				'name' => [
-					'uniqueNamePerAcademicPeriod' => 'Class name has to be unique',
+					'ruleUniqueNamePerAcademicPeriod' => 'Class name has to be unique',
 				],
 			],
 
