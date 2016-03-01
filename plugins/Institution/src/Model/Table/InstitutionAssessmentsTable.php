@@ -681,7 +681,7 @@ class InstitutionAssessmentsTable extends AppTable {
 		}
 
 		if (empty($classOptions)) {
-	  		$this->Alert->warning($this->aliasField('noSections'));
+	  		$this->Alert->warning($this->aliasField('noClasses'));
 	  	} else {
 	  		$selectedClass = $this->queryString('class', $classOptions);
 			$this->advancedSelectOptions($classOptions, $selectedClass);

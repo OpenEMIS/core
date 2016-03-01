@@ -448,7 +448,7 @@ class StudentAttendancesTable extends AppTable {
 		$selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
 
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
-			'message' => '{{label}} - ' . $this->getMessage('general.noSections'),
+			'message' => '{{label}} - ' . $this->getMessage('general.noClasses'),
 			'callable' => function($id) use ($Sections, $institutionId) {
 				return $Sections->findByInstitutionIdAndAcademicPeriodId($institutionId, $id)->count();
 			}
@@ -602,7 +602,7 @@ class StudentAttendancesTable extends AppTable {
 			$this->ControllerAction->field('type');
 			$this->ControllerAction->field('reason');
 
-			$this->Alert->warning('StudentAttendances.noSections');
+			$this->Alert->warning('StudentAttendances.noClasses');
 		}
 	}
 
