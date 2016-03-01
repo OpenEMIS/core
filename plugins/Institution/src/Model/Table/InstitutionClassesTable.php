@@ -120,7 +120,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 
 		$this->field('male_students', ['type' => 'integer', 'visible' => ['index'=>true]]);
 		$this->field('female_students', ['type' => 'integer', 'visible' => ['index'=>true]]);
-		$this->field('classes', ['label' => 'Subjects', 'override' => true, 'type' => 'integer', 'visible' => ['index'=>true]]);
+		$this->field('subjects', ['override' => true, 'type' => 'integer', 'visible' => ['index'=>true]]);
 
 		$this->field('students', [
 			'label' => '',
@@ -144,7 +144,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 		]);
 
 		$this->setFieldOrder([
-			'name', 'staff_id', 'male_students', 'female_students', 'classes',
+			'name', 'staff_id', 'male_students', 'female_students', 'subjects',
 		]);
 
 	}
