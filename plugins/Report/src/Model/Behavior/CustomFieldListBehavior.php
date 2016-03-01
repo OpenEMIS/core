@@ -194,6 +194,7 @@ class CustomFieldListBehavior extends Behavior {
 			$tableCellData = $tableCellData->getArrayCopy();
 			return $tableCellData;
 		}
+		return [];
 	}
 
 
