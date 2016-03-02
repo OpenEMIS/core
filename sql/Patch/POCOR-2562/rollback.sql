@@ -9,7 +9,8 @@ CHANGE COLUMN `end_time` `end_time` VARCHAR(15) NULL DEFAULT NULL COMMENT '' ;
 UPDATE `institution_staff_absences`
 INNER JOIN `z_2562_institution_staff_absences` ON `z_2562_institution_staff_absences`.`id` = `institution_staff_absences`.`id`
 SET `institution_staff_absences`.`start_time` = `z_2562_institution_staff_absences`.`start_time`, 
-`institution_staff_absences`.`end_time` = `z_2562_institution_staff_absences`.`end_time`;
+`institution_staff_absences`.`end_time` = `z_2562_institution_staff_absences`.`end_time`,
+`institution_staff_absences`.`staff_absence_reason_id` = `institution_staff_absences`.`staff_absence_reason_id`;
 
 ALTER TABLE `institution_staff_absences` 
 DROP COLUMN `absence_type_id`,
@@ -25,7 +26,8 @@ CHANGE COLUMN `end_time` `end_time` VARCHAR(15) NULL DEFAULT NULL COMMENT '' ;
 UPDATE `institution_student_absences`
 INNER JOIN `z_2562_institution_student_absences` ON `z_2562_institution_student_absences`.`id` = `institution_student_absences`.`id`
 SET `institution_student_absences`.`start_time` = `z_2562_institution_student_absences`.`start_time`, 
-`institution_student_absences`.`end_time` = `z_2562_institution_student_absences`.`end_time`;
+`institution_student_absences`.`end_time` = `z_2562_institution_student_absences`.`end_time`,
+`institution_student_absences`.`student_absence_reason_id` = `z_2562_institution_student_absences`.`student_absence_reason_id`;
 
 ALTER TABLE `institution_student_absences` 
 DROP COLUMN `absence_type_id`,
