@@ -1,14 +1,6 @@
 -- db_patches
 INSERT INTO `db_patches` VALUES ('POCOR-2609', NOW());
 
--- backup_reference_table
-DROP TABLE IF EXISTS `z_2609_backup_reference_table`;
-CREATE TABLE `z_2609_backup_reference_table` (
-  `reference_table` varchar(100) NOT NULL,
-  `backup_table` varchar(100) NOT NULL,
-  PRIMARY KEY (`reference_table`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
 -- procedures
 DROP PROCEDURE IF EXISTS patchOrder;
 DROP PROCEDURE IF EXISTS tmpRefTable;
@@ -45,31 +37,6 @@ BEGIN
 	DECLARE CONTINUE HANDLER FOR NOT FOUND SET flag = 1;
 
 	OPEN system_cursor;
-
-	SET @dropTableRecord = CONCAT('DROP TABLE IF EXISTS `z_2609_', updateTblName,'`');
-	PREPARE dropTableRecord FROM @dropTableRecord;
-	EXECUTE dropTableRecord;
-    DEALLOCATE PREPARE dropTableRecord;
-  
-	SET @createTableRecord = CONCAT(
-		'CREATE TABLE `z_2609_', updateTblName,'` (
-			`id` varchar(36) NOT NULL,
-			`order` int(3) NOT NULL,
-			PRIMARY KEY (`id`)
-		) ENGINE=InnoDB DEFAULT CHARSET=utf8');
-	PREPARE createTableRecord FROM @createTableRecord;
-	EXECUTE createTableRecord;
-    DEALLOCATE PREPARE createTableRecord;
-  
-	SET @insertRecord = CONCAT('INSERT INTO `z_2609_', updateTblName,'` SELECT `id`, `order` FROM `', updateTblName,'`');
-	PREPARE insertRecord FROM @insertRecord;
-	EXECUTE insertRecord;
-    DEALLOCATE PREPARE insertRecord;
-    
-    SET @insertBackupRecord = CONCAT('INSERT INTO `z_2609_backup_reference_table` (reference_table, backup_table) VALUES (\'',updateTblName,'\', \'z_2609_',updateTblName,'\')');
-	PREPARE insertBackupRecord FROM @insertBackupRecord;
-	EXECUTE insertBackupRecord;
-    DEALLOCATE PREPARE insertBackupRecord;
 
 	forloop : LOOP
 		FETCH system_cursor INTO filterId;
@@ -154,31 +121,6 @@ BEGIN
     IF flag = 1 THEN
       LEAVE forloop;
 	END IF;
-
-	SET @dropTableRecord = CONCAT('DROP TABLE IF EXISTS `z_2609_', tblName,'`');
-	PREPARE dropTableRecord FROM @dropTableRecord;
-	EXECUTE dropTableRecord;
-    DEALLOCATE PREPARE dropTableRecord;
-  
-	SET @createTableRecord = CONCAT(
-	  'CREATE TABLE `z_2609_', tblName,'` (
-		`id` VARCHAR(36) NOT NULL,
-		`order` int(3) NOT NULL,
-		PRIMARY KEY (`id`)
-	  ) ENGINE=InnoDB DEFAULT CHARSET=utf8');
-	PREPARE createTableRecord FROM @createTableRecord;
-	EXECUTE createTableRecord;
-    DEALLOCATE PREPARE createTableRecord;
-
-	SET @insertRecord = CONCAT('INSERT INTO `z_2609_', tblName,'` SELECT `id`, `order` FROM `', tblName,'`');
-	PREPARE insertRecord FROM @insertRecord;
-	EXECUTE insertRecord;
-    DEALLOCATE PREPARE insertRecord;
-    
-    SET @insertBackupRecord = CONCAT('INSERT IGNORE INTO `z_2609_backup_reference_table` (reference_table, backup_table) VALUES (\'',tblName,'\', \'z_2609_',tblName,'\')');
-	PREPARE insertBackupRecord FROM @insertBackupRecord;
-	EXECUTE insertBackupRecord;
-    DEALLOCATE PREPARE insertBackupRecord;
     
     SET @rank = 0;
     SET @updateRecord = CONCAT('UPDATE `', tblName,'` SET `order`=@rank:=@rank+1  ORDER BY `order`');
@@ -322,31 +264,6 @@ BEGIN
 	DECLARE CONTINUE HANDLER FOR NOT FOUND SET flag = 1;
 
 	OPEN system_cursor;
-
-	SET @dropTableRecord = CONCAT('DROP TABLE IF EXISTS `z_2609_', updateTblName,'`');
-	PREPARE dropTableRecord FROM @dropTableRecord;
-	EXECUTE dropTableRecord;
-    DEALLOCATE PREPARE dropTableRecord;
-  
-	SET @createTableRecord = CONCAT(
-		'CREATE TABLE `z_2609_', updateTblName,'` (
-			`id` int(11) NOT NULL,
-			`order` int(3) NOT NULL,
-			PRIMARY KEY (`id`)
-		) ENGINE=InnoDB DEFAULT CHARSET=utf8');
-	PREPARE createTableRecord FROM @createTableRecord;
-	EXECUTE createTableRecord;
-    DEALLOCATE PREPARE createTableRecord;
-  
-	SET @insertRecord = CONCAT('INSERT INTO `z_2609_', updateTblName,'` SELECT `id`, `order` FROM `', updateTblName,'`');
-	PREPARE insertRecord FROM @insertRecord;
-	EXECUTE insertRecord;
-    DEALLOCATE PREPARE insertRecord;
-    
-    SET @insertBackupRecord = CONCAT('INSERT INTO `z_2609_backup_reference_table` (reference_table, backup_table) VALUES (\'',updateTblName,'\', \'z_2609_',updateTblName,'\')');
-	PREPARE insertBackupRecord FROM @insertBackupRecord;
-	EXECUTE insertBackupRecord;
-    DEALLOCATE PREPARE insertBackupRecord;
 
 	forloop : LOOP
 		FETCH system_cursor INTO filterId;
