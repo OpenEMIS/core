@@ -37,5 +37,11 @@ DROP TABLE `z_2562_institution_student_absences`;
 DELETE FROM `labels` WHERE `field` = 'absence_type_id' AND `module` = 'StaffAbsences';
 DELETE FROM `labels` WHERE `field` = 'absence_type_id' AND `module` = 'InstitutionStudentAbsences';
 
+-- student_absence_reasons
+DROP TABLE `student_absence_reasons`;
+
+-- staff_absence_reasons
+DROP TABLE `staff_absence_reasons`;
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2562';
