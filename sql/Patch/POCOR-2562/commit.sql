@@ -81,3 +81,78 @@ CHANGE COLUMN `absence_type_id` `absence_type_id` INT(11) NOT NULL COMMENT '' ;
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffAbsences', 'absence_type_id', 'Institutions -> Staff -> Absences', 'Type', 1, 1, NOW());
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'InstitutionStudentAbsences', 'absence_type_id', 'Institutions -> Students -> Absences', 'Type', 1, 1, NOW());
 
+-- staff_absence_reasons
+CREATE TABLE `staff_absence_reasons` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `order` int(3) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `editable` int(1) NOT NULL DEFAULT '1',
+  `default` int(1) NOT NULL DEFAULT '0',
+  `international_code` varchar(50) DEFAULT NULL,
+  `national_code` varchar(50) DEFAULT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+SET @reorder = 0;
+INSERT INTO `staff_absence_reasons`
+SELECT 
+	@reorder:=@reorder+1 as id, 
+	`field_option_values`.`name`, 
+	@reorder as `order`, 
+	`field_option_values`.`visible`, 
+	`field_option_values`.`editable`, 
+	`field_option_values`.`default`, 
+	`field_option_values`.`international_code`, 
+	`field_option_values`.`national_code`, 
+	`field_option_values`.`modified_user_id`, 
+	`field_option_values`.`modified`, 
+	`field_option_values`.`created_user_id`, 
+	`field_option_values`.`created` 
+FROM `field_option_values` 
+INNER JOIN `field_options` 
+	ON `field_options`.`id` = `field_option_values`.`field_option_id` 
+    AND `field_options`.`code` = 'StaffAbsenceReasons' 
+    AND `field_options`.`plugin` = 'FieldOption'
+Order By `field_option_values`.`order`;
+
+-- student_absence_reasons
+CREATE TABLE `student_absence_reasons` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `order` int(3) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `editable` int(1) NOT NULL DEFAULT '1',
+  `default` int(1) NOT NULL DEFAULT '0',
+  `international_code` varchar(50) DEFAULT NULL,
+  `national_code` varchar(50) DEFAULT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+SET @studentReasonOrder = 0;
+INSERT INTO `student_absence_reasons`
+SELECT 
+	@studentReasonOrder:=@studentReasonOrder+1 as id, 
+	`field_option_values`.`name`, @studentReasonOrder as `order`, 
+	`field_option_values`.`visible`, `field_option_values`.`editable`, 
+	`field_option_values`.`default`, 
+	`field_option_values`.`international_code`, 
+	`field_option_values`.`national_code`, 
+	`field_option_values`.`modified_user_id`, 
+	`field_option_values`.`modified`, 
+	`field_option_values`.`created_user_id`, 
+	`field_option_values`.`created`
+FROM `field_option_values`
+INNER JOIN `field_options` 
+	ON `field_options`.`id` = `field_option_values`.`field_option_id` 
+    AND `field_options`.`code` = 'StudentAbsenceReasons' 
+    AND `field_options`.`plugin` = 'FieldOption'
+Order By `field_option_values`.`order`;
