@@ -19,11 +19,11 @@ use App\Model\Traits\MessagesTrait;
 class InstitutionClassesTable extends ControllerActionTable {
 	use MessagesTrait;
 
-	protected $institutionId = 0;
-	protected $numberOfClasses = 1;
-	protected $selectedGradeType = 'single';
-	protected $selectedAcademicPeriodId = -1;
-	protected $selectedEducationGradeId = 0;
+	public $institutionId = 0;
+	public $numberOfClasses = 1;
+	public $selectedGradeType = 'single';
+	public $selectedAcademicPeriodId = -1;
+	public $selectedEducationGradeId = 0;
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -144,6 +144,13 @@ class InstitutionClassesTable extends ControllerActionTable {
 		$this->setFieldOrder([
 			'name', 'staff_id', 'male_students', 'female_students', 'subjects',
 		]);
+
+		$gradeBehaviors = ['Institution.SingleGrade', 'Institution.MultiGrade'];
+		foreach ($gradeBehaviors as $key => $behavior) {
+			if ($this->hasBehavior($behavior)) {
+				$this->removeBehavior($behavior);
+			}
+		}
 
 	}
 
@@ -394,98 +401,13 @@ class InstitutionClassesTable extends ControllerActionTable {
 		/**
 		 * add/edit form setup
 		 */
-		$staffOptions = $this->getStaffOptions('add');
 		if ($this->selectedGradeType == 'single') {
-	    	if (array_key_exists($this->alias(), $this->request->data)) {
-		    	$_data = $this->request->data[$this->alias()];
-				$this->selectedEducationGradeId = $_data['education_grade'];
-				$this->numberOfClasses = $_data['number_of_classes'];
-				/**
-				 * PHPOE-2090, check if selected academic_period_id changes
-				 */
-				$this->selectedAcademicPeriodId = $_data['academic_period_id'];
-			}
-
-			/**
-			 * education_grade field setup
-			 * PHPOE-1867 - Changed the population of grades from InstitutionGradesTable
-			 */
-			$gradeOptions = [];
-			if (!empty($this->selectedAcademicPeriodId)) {
-				$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->selectedAcademicPeriodId);
-			}
-			if ($this->selectedEducationGradeId != 0) {
-				if (!array_key_exists($this->selectedEducationGradeId, $gradeOptions)) {
-					$this->selectedEducationGradeId = key($gradeOptions);
-				}
-			} else {
-				$this->selectedEducationGradeId = key($gradeOptions);
-			}
-			$this->field('education_grade', [
-				'type' => 'select',
-				'options' => $gradeOptions,
-				'onChangeReload' => true,
-				'attr' => [
- 					'empty' => ((empty($gradeOptions)) ? $this->Alert->getMessage($this->aliasField('education_grade_options_empty')) : '')
-				]
-			]);
-
-			$numberOfClassesOptions = $this->numberOfClassesOptions();
-			$this->field('number_of_classes', [
-				'type' => 'select', 
-				'options' => $numberOfClassesOptions,
-				'onChangeReload' => true
-			]);
-
-			$grade = [];
-			if ($this->InstitutionClassGrades->EducationGrades->exists(['id' => $this->selectedEducationGradeId])) {
-				$grade = $this->InstitutionClassGrades->EducationGrades->get($this->selectedEducationGradeId, [
-				    'contain' => ['EducationProgrammes']
-				])->toArray();
-			}
-
-			$this->field('single_grade_field', [
-				'type' => 'element', 
-				'element' => 'Institution.Classes/single_grade',
-				'data' => [	'numberOfClasses'=>$this->numberOfClasses,
-				 			'staffOptions'=>$staffOptions,
-				 			'existedClasses'=>$this->getExistedClasses(),
-				 			'grade'=>$grade	
-				]
-			]);
-
-			$this->fields['name']['visible'] = false;
-			$this->fields['students']['visible'] = false;
-			$this->fields['staff_id']['visible'] = false;
-			$this->fields['staff_id']['type'] = 'hidden';
-			$this->setFieldOrder([
-				'academic_period_id', 'education_grade', 'institution_shift_id', 'class_number', 'number_of_classes', 'single_grade_field'
-			]);
-
+			$this->addBehavior('Institution.SingleGrade');
     	} else {
-			/**
-			 * PHPOE-2090, check if selected academic_period_id changes
-			 */
-	    	if (array_key_exists($this->alias(), $this->request->data)) {
-		    	$_data = $this->request->data[$this->alias()];
-				$this->selectedAcademicPeriodId = $_data['academic_period_id'];
-			}
-
-			$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->selectedAcademicPeriodId, false);
-			$this->field('multi_grade_field', [
-				'type' => 'element', 
-				'element' => 'Institution.Classes/multi_grade',
-				'model' => $this->alias(),
-				'field' => 'multi_grade_field',
-				'data' => $gradeOptions
-			]);
-			$this->fields['staff_id']['options'] = $staffOptions;
-			$this->fields['students']['visible'] = false;
-			$this->setFieldOrder([
-				'academic_period_id', 'name', 'institution_shift_id', 'staff_id', 'multi_grade_field'
-			]);
-
+			$this->addBehavior('Institution.MultiGrade');
     	}
+
+    	$this->gradeAddBeforeAction($event, $extra);
 
 		$this->Navigation->substituteCrumb(ucwords(strtolower($this->action)), ucwords(strtolower($this->action)).' '.ucwords(strtolower($this->selectedGradeType)).' Grade');
 
@@ -500,6 +422,13 @@ class InstitutionClassesTable extends ControllerActionTable {
 			],
 		];
         $this->controller->set('tabElements', $tabElements);
+	}
+
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
+		if ($this->selectedGradeType != 'single') {
+			$this->addBehavior('Institution.MultiGrade');
+	    	$this->gradeAddBeforePatch($event, $entity, $requestData, $patchOptions, $extra);
+		}
 	}
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
@@ -709,24 +638,6 @@ class InstitutionClassesTable extends ControllerActionTable {
 			unset($InstitutionClassSubjects);
         }
         return true;
-	}
-
-	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		if ($this->selectedGradeType != 'single') {
-			if (isset($data['InstitutionClasses']['institution_class_grades']) && count($data['InstitutionClasses']['institution_class_grades'])>0) {
-				foreach($data['InstitutionClasses']['institution_class_grades'] as $key => $row) {
-					$data['InstitutionClasses']['institution_class_grades'][$key]['status'] = 1;
-				}
-			} else {
-				/**
-				 * set institution_id to empty to trigger validation error in ControllerActionComponent
-				 */
-				$data['InstitutionClasses']['institution_id'] = '';
-				$errorMessage = 'Institution.'.$this->alias().'.noGrade';
-				$data['MultiClasses'] = $errorMessage;
-				$this->Alert->error($errorMessage);
-			}
-		}
 	}
 
 	public function addAfterAction(Event $event, Entity $entity) {
@@ -988,7 +899,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 **
 ******************************************************************************************************************/
 
-	protected function getClassGradeOptions($entity) {
+	public function getClassGradeOptions($entity) {
 		$Grade = $this->InstitutionClassGrades;
 		$gradeOptions = $Grade->find()
 							->contain('EducationGrades')
@@ -1009,7 +920,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 	 * @param  [type] $classEntity [description]
 	 * @return [type]                [description]
 	 */
-	protected function getStudentsOptions($classEntity) {
+	public function getStudentsOptions($classEntity) {
 		
 		$academicPeriodObj = $this->AcademicPeriods->get($this->selectedAcademicPeriodId);
 		$classGradeObjects = $classEntity->institution_class_grades;
@@ -1076,7 +987,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 		return $studentOptions;
 	}
 
-	protected function getStaffOptions($action='edit') {
+	public function getStaffOptions($action='edit') {
 		if (in_array($action, ['edit', 'add'])) {
 			$options = [0=>'-- ' . __('Select Teacher or Leave Blank') . ' --'];
 		} else {
@@ -1107,7 +1018,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 		return $options;
 	}
 
-	private function numberOfClassesOptions() {
+	public function numberOfClassesOptions() {
 		$total = 10;
 		$options = [];
 		for($i=1; $i<=$total; $i++){
@@ -1117,7 +1028,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 		return $options;
 	}
 	
-	private function getExistedClasses() {
+	public function getExistedClasses() {
 		$classesByGrade = $this->InstitutionClassGrades
 			->find('list', [
 				'keyField'=>'id',
@@ -1144,7 +1055,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 		return $data;
 	}
 
-	protected function createVirtualStudentEntity($id, $entity) {
+	public function createVirtualStudentEntity($id, $entity) {
 		$InstitutionStudentsTable = $this->Institutions->Students;
 		$userData = $InstitutionStudentsTable->find()
 			->contain(['Users'=>['Genders'], 'StudentStatuses', 'EducationGrades'])
@@ -1173,7 +1084,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 		return $student;
 	}
 
-	protected function getExistingRecordId($securityId, $entity) {
+	public function getExistingRecordId($securityId, $entity) {
 		$id = Text::uuid();
 		foreach ($entity->institution_class_students as $student) {
 			if ($student->student_id == $securityId) {
@@ -1183,7 +1094,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 		return $id;
 	}
 
-	private function getAcademicPeriodOptions() {
+	public function getAcademicPeriodOptions() {
 		$InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
 		$conditions = array(
 			'InstitutionGrades.institution_id' => $this->institutionId
