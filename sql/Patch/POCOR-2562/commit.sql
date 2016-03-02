@@ -179,3 +179,6 @@ INNER JOIN `field_options`
     AND (`field_options`.`code` = 'StaffAbsenceReasons' OR `field_options`.`code` = 'StudentAbsenceReasons')
     AND `field_options`.`plugin` = 'FieldOption'
 SET `field_option_values`.`visible` = 0;
+
+UPDATE `field_options` SET `params`='{\"model\":\"FieldOptions.StaffAbsenceReasons\"}' WHERE `code`='StaffAbsenceReasons' AND `plugin` = 'FieldOptions';
+UPDATE `field_options` SET `params`='{\"model\":\"FieldOptions.StudentAbsenceReasons\"}' WHERE `code`='StudentAbsenceReasons' AND `plugin` = 'FieldOptions';

@@ -53,5 +53,8 @@ INNER JOIN `field_options`
     AND `field_options`.`plugin` = 'FieldOption'
 SET `field_option_values`.`visible` = 1;
 
+UPDATE `field_options` SET `params`=NULL WHERE `code`='StaffAbsenceReasons' AND `plugin` = 'FieldOptions';
+UPDATE `field_options` SET `params`=NULL WHERE `code`='StudentAbsenceReasons' AND `plugin` = 'FieldOptions';
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2562';
