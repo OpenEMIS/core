@@ -43,6 +43,7 @@ class StudentsTable extends AppTable {
 			'fieldKey' => 'student_custom_field_id',
 			'tableColumnKey' => 'student_custom_table_column_id',
 			'tableRowKey' => 'student_custom_table_row_id',
+			'fieldClass' => ['className' => 'StudentCustomField.StudentCustomFields'],
 			'formKey' => 'student_custom_form_id',
 			'filterKey' => 'student_custom_filter_id',
 			'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
