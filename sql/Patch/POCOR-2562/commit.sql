@@ -17,7 +17,7 @@ INSERT INTO `absence_types` (`code`, `name`) VALUES ('LATE', 'Late');
 CREATE TABLE `z_2562_institution_staff_absences` LIKE `institution_staff_absences`;
 
 INSERT INTO `z_2562_institution_staff_absences`
-SELECT * FROM `institution_staff_absences` WHERE start_time IS NOT NULL OR end_time IS NOT NULL;
+SELECT * FROM `institution_staff_absences`;
 
 UPDATE `institution_staff_absences`
 SET start_time = str_to_date(start_time, '%h:%i %p'), end_time = str_to_date(end_time, '%h:%i %p');
@@ -49,7 +49,7 @@ CHANGE COLUMN `absence_type_id` `absence_type_id` INT(11) NOT NULL COMMENT '' ;
 CREATE TABLE `z_2562_institution_student_absences` LIKE `institution_student_absences`;
 
 INSERT INTO `z_2562_institution_student_absences`
-SELECT * FROM `institution_student_absences` WHERE start_time IS NOT NULL OR end_time IS NOT NULL;
+SELECT * FROM `institution_student_absences`;
 
 UPDATE `institution_student_absences`
 SET start_time = str_to_date(start_time, '%h:%i %p'), end_time = str_to_date(end_time, '%h:%i %p');
@@ -101,21 +101,21 @@ CREATE TABLE `staff_absence_reasons` (
 SET @reorder = 0;
 INSERT INTO `staff_absence_reasons`
 SELECT 
-	@reorder:=@reorder+1 as id, 
-	`field_option_values`.`name`, 
-	@reorder as `order`, 
-	`field_option_values`.`visible`, 
-	`field_option_values`.`editable`, 
-	`field_option_values`.`default`, 
-	`field_option_values`.`international_code`, 
-	`field_option_values`.`national_code`, 
-	`field_option_values`.`modified_user_id`, 
-	`field_option_values`.`modified`, 
-	`field_option_values`.`created_user_id`, 
-	`field_option_values`.`created` 
+  `field_option_values`.`id`,
+  `field_option_values`.`name`, 
+  @reorder:=@reorder+1 as `order`, 
+  `field_option_values`.`visible`, 
+  `field_option_values`.`editable`, 
+  `field_option_values`.`default`, 
+  `field_option_values`.`international_code`, 
+  `field_option_values`.`national_code`, 
+  `field_option_values`.`modified_user_id`, 
+  `field_option_values`.`modified`, 
+  `field_option_values`.`created_user_id`, 
+  `field_option_values`.`created` 
 FROM `field_option_values` 
 INNER JOIN `field_options` 
-	ON `field_options`.`id` = `field_option_values`.`field_option_id` 
+  ON `field_options`.`id` = `field_option_values`.`field_option_id` 
     AND `field_options`.`code` = 'StaffAbsenceReasons' 
     AND `field_options`.`plugin` = 'FieldOption'
 Order By `field_option_values`.`order`;
@@ -140,19 +140,35 @@ CREATE TABLE `student_absence_reasons` (
 SET @studentReasonOrder = 0;
 INSERT INTO `student_absence_reasons`
 SELECT 
-	@studentReasonOrder:=@studentReasonOrder+1 as id, 
-	`field_option_values`.`name`, @studentReasonOrder as `order`, 
-	`field_option_values`.`visible`, `field_option_values`.`editable`, 
-	`field_option_values`.`default`, 
-	`field_option_values`.`international_code`, 
-	`field_option_values`.`national_code`, 
-	`field_option_values`.`modified_user_id`, 
-	`field_option_values`.`modified`, 
-	`field_option_values`.`created_user_id`, 
-	`field_option_values`.`created`
+  `field_option_values`.`id`,
+  `field_option_values`.`name`, 
+  @studentReasonOrder:=@studentReasonOrder+1 as `order`, 
+  `field_option_values`.`visible`, 
+  `field_option_values`.`editable`, 
+  `field_option_values`.`default`, 
+  `field_option_values`.`international_code`, 
+  `field_option_values`.`national_code`, 
+  `field_option_values`.`modified_user_id`, 
+  `field_option_values`.`modified`, 
+  `field_option_values`.`created_user_id`, 
+  `field_option_values`.`created`
 FROM `field_option_values`
 INNER JOIN `field_options` 
-	ON `field_options`.`id` = `field_option_values`.`field_option_id` 
+  ON `field_options`.`id` = `field_option_values`.`field_option_id` 
     AND `field_options`.`code` = 'StudentAbsenceReasons' 
     AND `field_options`.`plugin` = 'FieldOption'
 Order By `field_option_values`.`order`;
+
+UPDATE `institution_staff_absences` INNER JOIN `staff_absence_reasons` 
+  ON `institution_staff_absences`.`staff_absence_reason_id` = `staff_absence_reasons`.`id`
+SET  `institution_staff_absences`.`staff_absence_reason_id` = `staff_absence_reasons`.`order`;
+
+UPDATE `staff_absence_reasons`
+SET `id` = `order`;
+
+UPDATE `institution_student_absences` INNER JOIN `student_absence_reasons` 
+  ON `institution_student_absences`.`student_absence_reason_id` = `student_absence_reasons`.`id`
+SET  `institution_student_absences`.`student_absence_reason_id` = `student_absence_reasons`.`order`;
+
+UPDATE `student_absence_reasons`
+SET `id` = `order`;
