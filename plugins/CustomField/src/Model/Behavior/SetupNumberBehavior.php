@@ -20,12 +20,30 @@ class SetupNumberBehavior extends SetupBehavior {
 		];
     }
 
-	public function buildValidator(Event $event, Validator $validator, $name) {
-    	$validator->notEmpty('minimum_value');
-    	$validator->notEmpty('maximum_value');
-    	$validator->notEmpty('lower_limit');
-    	$validator->notEmpty('upper_limit');
+	public function addBeforeAction(Event $event) {
+    	$model = $this->_table;
+    	$fieldTypes = $model->getFieldTypes();
+    	$selectedFieldType = !empty($model->request->data($model->aliasField('field_type'))) ? $model->request->data($model->aliasField('field_type')) : key($fieldTypes);
+
+    	if ($selectedFieldType == $this->fieldTypeCode) {
+    		$this->buildNumberValidator();
+    	}
     }
+
+    public function editAfterQuery(Event $event, Entity $entity) {
+    	if ($entity->field_type == $this->fieldTypeCode) {
+    		$this->buildNumberValidator();
+    	}
+    }
+
+	private function buildNumberValidator() {
+		$validator = $this->_table->validator();
+		$validator
+			->notEmpty('minimum_value')
+    		->notEmpty('maximum_value')
+    		->notEmpty('lower_limit')
+    		->notEmpty('upper_limit');
+	}
 
     public function onSetNumberElements(Event $event, Entity $entity) {
 		$model = $this->_table;
@@ -98,49 +116,49 @@ class SetupNumberBehavior extends SetupBehavior {
 		}
     }
 
-	public function addEditOnChangeRule(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$model = $this->_table;
-		$request = $model->request;
-		unset($request->query['number_rule']);
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
+		if (array_key_exists('validation_rule', $data)) {
+			if ($data['field_type'] == $this->fieldTypeCode) {
+				$model = $this->_table;
+				$request = $model->request;
+				unset($request->query['number_rule']);
 
-		if ($request->is(['post', 'put'])) {
-			if (array_key_exists($model->alias(), $request->data)) {
-				if (array_key_exists('validation_rule', $request->data[$model->alias()])) {
-					$selectedRule = $request->data[$model->alias()]['validation_rule'];
+				if (!empty($data['validation_rule'])) {
+					$selectedRule = $data['validation_rule'];
 					$request->query['number_rule'] = $selectedRule;
+					$params = [];
+
+					switch ($selectedRule) {
+						case 'min_value':
+							if (array_key_exists('minimum_value', $data) && !empty($data['minimum_value'])) {
+								$params['min_value'] = $data['minimum_value'];
+							}
+							break;
+						case 'max_value':
+							if (array_key_exists('maximum_value', $data) && !empty($data['maximum_value'])) {
+								$params['max_value'] = $data['maximum_value'];
+							}
+							break;
+						case 'range':
+							$lowerLimit = array_key_exists('lower_limit', $data) ? $data['lower_limit']: null;
+							$upperLimit = array_key_exists('upper_limit', $data) ? $data['upper_limit']: null;
+
+							if (!empty($lowerLimit) && !empty($upperLimit)) {
+	    						$params['range'] = [
+									'lower' => $data['lower_limit'],
+									'upper' => $data['upper_limit']
+								];
+	    					}
+							break;
+						default:
+							break;
+					}
+
+					$data['params'] = json_encode($params, JSON_UNESCAPED_UNICODE);
+				} else {
+					$data['params'] = '';
 				}
 			}
-		}
-	}
-
-	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-    	$model = $this->_table;
-    	if ($data[$model->alias()]['field_type'] == $this->fieldTypeCode) {
-    		if (array_key_exists('validation_rule', $data[$model->alias()]) && !empty($data[$model->alias()]['validation_rule'])) {
-    			$params = [];
-
-    			$selectedRule = $data[$model->alias()]['validation_rule'];
-    			switch ($selectedRule) {
-					case 'min_value':
-						$params['min_value'] = $data[$model->alias()]['minimum_value'];
-						break;
-					case 'max_value':
-						$params['max_value'] = $data[$model->alias()]['maximum_value'];
-						break;
-					case 'range':
-						$params['range'] = [
-							'lower' => $data[$model->alias()]['lower_limit'],
-							'upper' => $data[$model->alias()]['upper_limit']
-						];
-						break;
-					default:
-						break;
-				}
-
-    			$data[$model->alias()]['params'] = json_encode($params, JSON_UNESCAPED_UNICODE);
-	    	} else {
-	    		$data[$model->alias()]['params'] = '';
-	    	}
 		}
 	}
 }
