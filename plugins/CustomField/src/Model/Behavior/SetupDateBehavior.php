@@ -137,13 +137,13 @@ class SetupDateBehavior extends SetupBehavior {
 		}
 	}
 
-	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
 		$model = $this->_table;
-		if (array_key_exists('validation_rules_date', $data[$model->alias()])) {
-			if ($data[$model->alias()]['field_type'] == $this->fieldTypeCode) {
+		if (array_key_exists('validation_rules_date', $data)) {
+			if ($data['field_type'] == $this->fieldTypeCode) {
 				$paramsArray = [];
-				$start_date = (array_key_exists('start_date', $data[$model->alias()]))? $data[$model->alias()]['start_date']: null;
-				$end_date = (array_key_exists('end_date', $data[$model->alias()]))? $data[$model->alias()]['end_date']: null;
+				$start_date = (array_key_exists('start_date', $data))? $data['start_date']: null;
+				$end_date = (array_key_exists('end_date', $data))? $data['end_date']: null;
 
 				if (!empty($start_date)) {
 					$paramsArray['start_date'] = $start_date;
@@ -153,9 +153,9 @@ class SetupDateBehavior extends SetupBehavior {
 				}
 
 				if (!empty($paramsArray)) {
-					$data[$model->alias()]['params'] = json_encode($paramsArray);
+					$data['params'] = json_encode($paramsArray);
 				} else {
-					$data[$model->alias()]['params'] = '';
+					$data['params'] = '';
 				}
 			}
 		}		
