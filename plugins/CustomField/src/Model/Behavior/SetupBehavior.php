@@ -27,12 +27,10 @@ class SetupBehavior extends Behavior {
             'Setup.'.'set'.$this->fieldType.'Elements' => 'onSet'.$this->fieldType.'Elements',
             'ControllerAction.Model.viewEdit.beforeQuery' => 'viewEditBeforeQuery',
             'ControllerAction.Model.addEdit.onChangeType' => 'addEditOnChangeType',
-            'ControllerAction.Model.addEdit.onChangeRule' => 'addEditOnChangeRule',
             'ControllerAction.Model.addEdit.onAddOption' => 'addEditOnAddOption',
             'ControllerAction.Model.addEdit.onAddColumn' => 'addEditOnAddColumn',
             'ControllerAction.Model.addEdit.onAddRow' => 'addEditOnAddRow',
-            'ControllerAction.Model.addEdit.beforePatch' => 'addEditBeforePatch',
-            'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
+			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
             'ControllerAction.Model.edit.afterQuery' => 'editAfterQuery',
         ];
 
