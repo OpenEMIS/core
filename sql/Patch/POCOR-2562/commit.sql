@@ -172,3 +172,10 @@ SET  `institution_student_absences`.`student_absence_reason_id` = `student_absen
 
 UPDATE `student_absence_reasons`
 SET `id` = `order`;
+
+UPDATE `field_option_values` 
+INNER JOIN `field_options` 
+  ON `field_options`.`id` = `field_option_values`.`field_option_id`
+    AND (`field_options`.`code` = 'StaffAbsenceReasons' OR `field_options`.`code` = 'StudentAbsenceReasons')
+    AND `field_options`.`plugin` = 'FieldOption'
+SET `field_option_values`.`visible` = 0;
