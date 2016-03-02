@@ -23,7 +23,7 @@ class SetupNumberBehavior extends SetupBehavior {
 	public function addBeforeAction(Event $event) {
     	$model = $this->_table;
     	$fieldTypes = $model->getFieldTypes();
-    	$selectedFieldType = !empty($model->request->data($model->aliasField('field_type'))) ? $model->request->data($model->aliasField('field_type')) : key($fieldTypes);
+    	$selectedFieldType = isset($model->request->data[$model->alias()]['field_type']) ? $model->request->data[$model->alias()]['field_type'] : key($fieldTypes);
 
     	if ($selectedFieldType == $this->fieldTypeCode) {
     		$this->buildNumberValidator();
