@@ -7,10 +7,6 @@ ALTER TABLE `infrastructure_custom_fields` DROP `params`;
 ALTER TABLE `survey_questions` DROP `params`;
 
 -- drop params column from xxx_custom_forms_fields
-ALTER TABLE `custom_forms_fields` DROP `section`;
-ALTER TABLE `institution_custom_forms_fields` DROP `section`;
-ALTER TABLE `student_custom_forms_fields` DROP `section`;
-ALTER TABLE `staff_custom_forms_fields` DROP `section`;
 ALTER TABLE `infrastructure_custom_forms_fields` DROP `section`;
 
 -- custom_modules
