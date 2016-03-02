@@ -29,9 +29,6 @@ var Reorder = {
 
 		// Sortable on tbody
 		var url = $(obj).closest('table').attr('url');
-		var sPageURL = window.location.search.substring(1);
-		url = url + '?' + sPageURL;
-		console.log(url);
 		var tbody = $(obj).closest('tbody');
 		tbody.sortable({
 			forcePlaceholderSize: true,	
