@@ -138,24 +138,26 @@ class SetupTimeBehavior extends SetupBehavior {
 		}
 	}
 
-	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
 		$model = $this->_table;
-		if ($data[$model->alias()]['field_type'] == $this->fieldTypeCode) {
-			$paramsArray = [];
-			$start_time = (array_key_exists('start_time', $data[$model->alias()]))? $data[$model->alias()]['start_time']: null;
-			$end_time = (array_key_exists('end_time', $data[$model->alias()]))? $data[$model->alias()]['end_time']: null;
+		if (array_key_exists('validation_rules_time', $data)) {
+			if ($data['field_type'] == $this->fieldTypeCode) {
+				$paramsArray = [];
+				$start_time = (array_key_exists('start_time', $data))? $data['start_time']: null;
+				$end_time = (array_key_exists('end_time', $data))? $data['end_time']: null;
 
-			if (!empty($start_time)) {
-				$paramsArray['start_time'] = $start_time;
-			}
-			if (!empty($end_time)) {
-				$paramsArray['end_time'] = $end_time;
-			}
+				if (!empty($start_time)) {
+					$paramsArray['start_time'] = $start_time;
+				}
+				if (!empty($end_time)) {
+					$paramsArray['end_time'] = $end_time;
+				}
 
-			if (!empty($paramsArray)) {
-				$data[$model->alias()]['params'] = json_encode($paramsArray);
-			} else {
-				$data[$model->alias()]['params'] = '';
+				if (!empty($paramsArray)) {
+					$data['params'] = json_encode($paramsArray);
+				} else {
+					$data['params'] = '';
+				}
 			}
 		}
 	}
