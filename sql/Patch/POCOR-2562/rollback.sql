@@ -45,5 +45,13 @@ DROP TABLE `student_absence_reasons`;
 -- staff_absence_reasons
 DROP TABLE `staff_absence_reasons`;
 
+-- field_option_values
+UPDATE `field_option_values` 
+INNER JOIN `field_options` 
+  ON `field_options`.`id` = `field_option_values`.`field_option_id`
+    AND (`field_options`.`code` = 'StaffAbsenceReasons' OR `field_options`.`code` = 'StudentAbsenceReasons')
+    AND `field_options`.`plugin` = 'FieldOption'
+SET `field_option_values`.`visible` = 1;
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2562';
