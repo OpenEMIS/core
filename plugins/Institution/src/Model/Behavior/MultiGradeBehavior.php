@@ -16,7 +16,7 @@ use Cake\Collection\Collection;
 
 use ControllerAction\Model\Traits\EventTrait;
 
-class SingleGradeBehavior extends Behavior {
+class MultiGradeBehavior extends Behavior {
 	use EventTrait;
 
 	public function implementedEvents() {
@@ -34,72 +34,45 @@ class SingleGradeBehavior extends Behavior {
     public function gradeAddBeforeAction(Event $event, ArrayObject $extra) {
     	$model = $this->_table;
 
+    	/**
+		 * PHPOE-2090, check if selected academic_period_id changes
+		 */
     	if (array_key_exists($model->alias(), $model->request->data)) {
 	    	$modelData = $model->request->data[$model->alias()];
-			$model->selectedEducationGradeId = $modelData['education_grade'];
-			$model->numberOfClasses = $modelData['number_of_classes'];
-			/**
-			 * PHPOE-2090, check if selected academic_period_id changes
-			 */
 			$model->selectedAcademicPeriodId = $modelData['academic_period_id'];
 		}
 
-		/**
-		 * education_grade field setup
-		 * PHPOE-1867 - Changed the population of grades from InstitutionGradesTable
-		 */
-		$gradeOptions = [];
-		if (!empty($model->selectedAcademicPeriodId)) {
-			$gradeOptions = $model->Institutions->InstitutionGrades->getGradeOptions($model->institutionId, $model->selectedAcademicPeriodId);
-		}
-		if ($model->selectedEducationGradeId != 0) {
-			if (!array_key_exists($model->selectedEducationGradeId, $gradeOptions)) {
-				$model->selectedEducationGradeId = key($gradeOptions);
+		$gradeOptions = $model->Institutions->InstitutionGrades->getGradeOptions($model->institutionId, $model->selectedAcademicPeriodId, false);
+		$model->field('multi_grade_field', [
+			'type' => 'element',
+			'data' => $gradeOptions,
+			'model' => $model->alias(),
+			'field' => 'multi_grade_field',
+			'element' => 'Institution.Classes/multi_grade',
+		]);
+		$model->fields['students']['visible'] = false;
+		$model->fields['staff_id']['options'] = $model->getStaffOptions('add');
+		$model->setFieldOrder([
+			'academic_period_id', 'name', 'institution_shift_id', 'staff_id', 'multi_grade_field'
+		]);
+
+	}
+
+	public function gradeAddBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
+		$model = $this->_table;
+		if (isset($requestData[$model->alias()]['institution_class_grades']) && count($requestData[$model->alias()]['institution_class_grades'])>0) {
+			foreach($requestData[$model->alias()]['institution_class_grades'] as $key => $row) {
+				$requestData[$model->alias()]['institution_class_grades'][$key]['status'] = 1;
 			}
 		} else {
-			$model->selectedEducationGradeId = key($gradeOptions);
+			/**
+			 * set institution_id to empty to trigger validation error in ControllerActionComponent
+			 */
+			$requestData[$model->alias()]['institution_id'] = '';
+			$errorMessage = 'Institution.'.$model->alias().'.noGrade';
+			$requestData['MultiClasses'] = $errorMessage;
+			$model->Alert->error($errorMessage);
 		}
-		$model->field('education_grade', [
-			'type' => 'select',
-			'options' => $gradeOptions,
-			'onChangeReload' => true,
-			'attr' => [
-					'empty' => ((empty($gradeOptions)) ? $model->Alert->getMessage($model->aliasField('education_grade_options_empty')) : '')
-			]
-		]);
-
-		$numberOfClassesOptions = $model->numberOfClassesOptions();
-		$model->field('number_of_classes', [
-			'type' => 'select', 
-			'options' => $numberOfClassesOptions,
-			'onChangeReload' => true
-		]);
-
-		$grade = [];
-		if ($model->InstitutionClassGrades->EducationGrades->exists(['id' => $model->selectedEducationGradeId])) {
-			$grade = $model->InstitutionClassGrades->EducationGrades->get($model->selectedEducationGradeId, [
-			    'contain' => ['EducationProgrammes']
-			])->toArray();
-		}
-
-		$model->field('single_grade_field', [
-			'type' 		=> 'element', 
-			'element' 	=> 'Institution.Classes/single_grade',
-			'data' 		=> [	'numberOfClasses' 	=> $model->numberOfClasses,
-					 			'staffOptions' 		=> $model->getStaffOptions('add'),
-					 			'existedClasses' 	=> $model->getExistedClasses(),
-					 			'grade' 			=> $grade
-			]
-		]);
-
-		$model->fields['name']['visible'] = false;
-		$model->fields['students']['visible'] = false;
-		$model->fields['staff_id']['visible'] = false;
-		$model->fields['staff_id']['type'] = 'hidden';
-		$model->setFieldOrder([
-			'academic_period_id', 'education_grade', 'institution_shift_id', 'class_number', 'number_of_classes', 'single_grade_field'
-		]);
-
 	}
 
 	public function gradeAddBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
