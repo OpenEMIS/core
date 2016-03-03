@@ -77,6 +77,11 @@ UPDATE `field_options` SET `params`=NULL WHERE `code`='StudentAbsenceReasons' AN
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2562';
 
 
+-- POCOR-2609
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2609';
+
+
 -- POCOR-2603
 DELETE FROM labels WHERE module = 'Accounts' AND field = 'password';
 DELETE FROM labels WHERE module = 'Accounts' AND field = 'retype_password';
