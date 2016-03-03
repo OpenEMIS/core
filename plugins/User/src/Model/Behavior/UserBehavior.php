@@ -336,12 +336,7 @@ class UserBehavior extends Behavior {
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
 		if ($field == 'identity') {
 			$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
-			$identity = $IdentityType
-							   ->find()
-							   ->contain(['FieldOptions'])
-							   ->where(['FieldOptions.code' => 'IdentityTypes'])
-							   ->order(['IdentityTypes.default DESC'])
-							   ->first();
+			$identity = $IdentityType->getDefaultEntity();
 
 			if ($identity) {
 				$value = $identity->name;
