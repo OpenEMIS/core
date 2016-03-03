@@ -87,9 +87,7 @@ class FieldOptionBehavior extends Behavior {
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
 		// only perform for v4
 		if ($this->_table->hasBehavior('ControllerAction')) {
-			if ($entity->has('default') && $entity->default == 1 &&
-				$entity->has($this->_table->primaryKey())
-				) {
+			if ($entity->has('default') && $entity->default == 1) {
 				$this->_table->updateAll(['default' => 0], [$this->_table->primaryKey().' != ' => $entity->{$this->_table->primaryKey()}]);
 			}
 		}
