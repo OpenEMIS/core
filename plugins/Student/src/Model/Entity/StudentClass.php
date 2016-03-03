@@ -4,15 +4,17 @@ namespace Student\Model\Entity;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
+use Cake\Datasource\Exception\InvalidPrimaryKeyException;
+use Cake\Log\Log;
 
 class StudentClass extends Entity
 {
-	protected $_virtual = ['academic_period', 'institution', 'education_subject', 'homeroom_teacher_name'];
-
+	protected $_virtual = ['academic_period', 'institution', 'homeroom_teacher_name', 'education_grade'];
+	
     protected function _getAcademicPeriod() {
     	$name = '';
-    	if ($this->has('institution_section') && $this->institution_section->has('academic_period_id')) {
-    		$data = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($this->institution_section->academic_period_id)->toArray();
+    	if ($this->has('institution_class') && $this->institution_class->has('academic_period_id')) {
+    		$data = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($this->institution_class->academic_period_id)->toArray();
     		if (!empty($data)) {
     			$name = $data['name'];
     		}
@@ -22,8 +24,8 @@ class StudentClass extends Entity
 
 	protected function _getInstitution() {
     	$name = '';
-    	if ($this->has('institution_section') && $this->institution_section->has('institution_id')) {
-    		$data = TableRegistry::get('Institution.Institutions')->get($this->institution_section->institution_id)->toArray();
+    	if ($this->has('institution_class') && $this->institution_class->has('institution_id')) {
+    		$data = TableRegistry::get('Institution.Institutions')->get($this->institution_class->institution_id)->toArray();
     		if (!empty($data)) {
     			$name = $data['name'];
     		}
@@ -33,29 +35,42 @@ class StudentClass extends Entity
 
 	protected function _getHomeroomTeacherName() {
     	$name = '';
-        $institution_section_id = $this->institution_section_id;
-        if($this->has('institution_section')) { // && $this->institution_section->has('staff')){
-            $InstitutionSections = TableRegistry::get('Institution.InstitutionSections');
-            $InstitutionSection = $InstitutionSections
-                    ->find()
-                    ->contain(['Staff'])
-                    ->where(['InstitutionSections.id' => $institution_section_id])
-                    ->first();  
-   
-             if(!empty($InstitutionSection->staff))
-                $name = $InstitutionSection->staff->name;
+        $teacherId = $this->institution_class->security_user_id;
+        if (!empty($teacherId)) {
+            $Users = TableRegistry::get('Security.Users');
+            try {
+                $user = $Users->get($teacherId);
+                $name = $user->name;
+            } catch (InvalidPrimaryKeyException $ex) {
+                Log::write('error', $ex->getMessage());
+            }
         }
     	return $name;
 	}
-	protected function _getEducationSubject() {
-		$name = '';
-		if ($this->has('institution_class') && $this->institution_class->has('education_subject_id')) {
-			$data = TableRegistry::get('Education.EducationSubjects')->get($this->institution_class->education_subject_id)->toArray();
-			if (!empty($data)) {
-    			$name = $data['name'];
+
+	protected function _getEducationGrade() {
+    	$name = '';
+
+    	if ($this->has('institution_class_id')) {
+    		$InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+    		$data = $InstitutionClassGrades
+    			->find()
+    			->where([
+                    $InstitutionClassGrades->aliasField('institution_class_id') => $this->institution_class_id
+                ])
+    			->contain(['EducationGrades'=>['EducationProgrammes'=>['EducationCycles']]])
+    		;
+    		$result = '';
+    		foreach ($data->toArray() as $key => $value) {
+    			$cycleName = $value->education_grade->education_programme->education_cycle->name;
+	    		$programmeName = $value->education_grade->education_programme->name;
+	    		$gradeName = $value->education_grade->name;
+	    		$result .= sprintf('%s - %s - %s', $cycleName, $programmeName, $gradeName).'<br>';
     		}
-		}
-		return $name;
+    		return $result;
+    	}
+
+    	return $name;
 	}
 
 }

@@ -6,9 +6,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\ResultSet;
-use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
 
 class InstitutionSubjectBehavior extends Behavior {
 	public function implementedEvents() {
