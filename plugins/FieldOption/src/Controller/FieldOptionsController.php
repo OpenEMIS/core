@@ -6,6 +6,7 @@ use FieldOption\Controller\AppController;
 use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
+use Cake\ORM\TableRegistry;
 
 class FieldOptionsController extends AppController {
 	public function initialize() {
