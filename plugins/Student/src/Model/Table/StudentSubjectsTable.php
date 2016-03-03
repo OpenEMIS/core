@@ -6,45 +6,41 @@ use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 
-class StudentSectionsTable extends AppTable {
+class StudentSubjectsTable extends AppTable {
 	public function initialize(array $config) {
-		$this->table('institution_section_students');
+		$this->table('institution_subject_students');
+
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
-		$this->belongsTo('InstitutionSections', ['className' => 'Institution.InstitutionSections']);
-		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-		$this->belongsTo('StudentStatuses',	['className' => 'Student.StudentStatuses']);
-
-		$this->hasMany('InstitutionSectionGrade', ['className' => 'Institution.InstitutionSectionGrade', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->belongsTo('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects']);
+		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
 	}
 
 	public function indexBeforeAction(Event $event) {
-		$this->fields['education_grade_id']['visible'] = false;
+		$this->fields['status']['visible'] = false;
 
 		$this->ControllerAction->addField('academic_period', []);
 		$this->ControllerAction->addField('institution', []);
-		$this->ControllerAction->addField('education_grade', []);
-		$this->ControllerAction->addField('homeroom_teacher_name', []);
-
+		$this->ControllerAction->addField('educationSubject', []);
+		
 		$order = 0;
 		$this->ControllerAction->setFieldOrder('academic_period', $order++);
 		$this->ControllerAction->setFieldOrder('institution', $order++);
-		$this->ControllerAction->setFieldOrder('education_grade', $order++);
-		$this->ControllerAction->setFieldOrder('institution_section_id', $order++);
-		$this->ControllerAction->setFieldOrder('homeroom_teacher_name', $order++);
+		$this->ControllerAction->setFieldOrder('institution_class_id', $order++);
+		$this->ControllerAction->setFieldOrder('institution_subject_id', $order++);
+		$this->ControllerAction->setFieldOrder('educationSubject', $order++);
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		parent::onUpdateActionButtons($event, $entity, $buttons);
-
 		if (array_key_exists('view', $buttons)) {
-			$institutionId = $entity->institution_section->institution_id;
+			$institutionId = $entity->institution_class->institution_id;
 			$url = [
 				'plugin' => 'Institution', 
 				'controller' => 'Institutions', 
-				'action' => 'Sections',
-				'view', $entity->institution_section->id,
+				'action' => 'Classes',
+				'view', $entity->institution_class->id,
 				'institution_id' => $institutionId,
 			];
 			$buttons['view']['url'] = $url;
@@ -56,10 +52,7 @@ class StudentSectionsTable extends AppTable {
 		$options['type'] = 'student';
 		$tabElements = $this->controller->getAcademicTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
-		$alias = 'Sections';
-		if ($this->controller->name == 'Directories') {
-			$alias = 'Classes';	
-		}
+		$alias = 'Subjects';
 		$this->controller->set('selectedAction', $alias);
 	}
 

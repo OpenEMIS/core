@@ -145,7 +145,11 @@ trait MessagesTrait {
 			'emptySecurityUserIdName' => 'Class name and Home Room Teacher should not be empty',
 			'stopDeleteWhenStudentExists' => 'Delete is not allowed as students still exists in class',
 			'maximumStudentsReached' => 'Reached the maximum number of students allowed in a class',
-			'education_grade_options_empty' => 'No available Grades for the selected period'
+			'education_grade_options_empty' => 'No available Grades for the selected period',
+			'noTeacherAssigned' => 'No Teacher Assigned',
+			'selectTeacherOrLeaveBlank' => 'Select Teacher or Leave Blank',
+			'singleGrade' => 'Single Grade',
+			'multiGrade' => 'Multi Grade'
 		],
 		'InstitutionSubjects' => [
 			'noGrades' => 'No Grades Assigned',
