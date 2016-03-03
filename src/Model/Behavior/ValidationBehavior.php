@@ -1016,12 +1016,12 @@ class ValidationBehavior extends Behavior {
 		$model = $globalData['providers']['table'];
 		$params = (!empty($globalData['data']['params']))? json_decode($globalData['data']['params'],true): [];
 
-		if (array_key_exists('range_start_date', $params) && array_key_exists('range_end_date', $params)) {
-			return (strtotime($field) < strtotime($params['range_start_date']) || strtotime($field) > strtotime($params['range_end_date']))? $model->getMessage('CustomField.date.between', ['sprintf' => [date($systemDateFormat, strtotime($params['range_start_date'])), date($systemDateFormat, strtotime($params['range_end_date']))]]): true;
-		} else if (array_key_exists('range_start_date', $params)) {
-			return (strtotime($field) < strtotime($params['range_start_date']))? $model->getMessage('CustomField.date.later', ['sprintf' => date($systemDateFormat, strtotime($params['range_start_date']))]): true;
-		} else if (array_key_exists('range_end_date', $params)) {
-			return (strtotime($field) > strtotime($params['range_end_date']))? $model->getMessage('CustomField.date.earlier', ['sprintf' => date($systemDateFormat, strtotime($params['range_end_date']))]): true;
+		if (array_key_exists('start_date', $params) && array_key_exists('end_date', $params)) {
+			return (strtotime($field) < strtotime($params['start_date']) || strtotime($field) > strtotime($params['end_date']))? $model->getMessage('CustomField.date.between', ['sprintf' => [date($systemDateFormat, strtotime($params['start_date'])), date($systemDateFormat, strtotime($params['end_date']))]]): true;
+		} else if (array_key_exists('start_date', $params)) {
+			return (strtotime($field) < strtotime($params['start_date']))? $model->getMessage('CustomField.date.later', ['sprintf' => date($systemDateFormat, strtotime($params['start_date']))]): true;
+		} else if (array_key_exists('end_date', $params)) {
+			return (strtotime($field) > strtotime($params['end_date']))? $model->getMessage('CustomField.date.earlier', ['sprintf' => date($systemDateFormat, strtotime($params['end_date']))]): true;
 		} else {
 			return true;
 		}
@@ -1032,12 +1032,12 @@ class ValidationBehavior extends Behavior {
 		$model = $globalData['providers']['table'];
 		$params = (!empty($globalData['data']['params']))? json_decode($globalData['data']['params'],true): [];
 
-		if (array_key_exists('range_start_time', $params) && array_key_exists('range_end_time', $params)) {
-			return (strtotime($field) < strtotime($params['range_start_time']) || strtotime($field) > strtotime($params['range_end_time']))? $model->getMessage('CustomField.time.between', ['sprintf' => [date($systemTimeFormat, strtotime($params['range_start_time'])), date($systemTimeFormat, strtotime($params['range_end_time']))]]): true;
-		} else if (array_key_exists('range_start_time', $params)) {;
-			return (strtotime($field) < strtotime($params['range_start_time']))? $model->getMessage('CustomField.time.later', ['sprintf' => [date($systemTimeFormat, strtotime($params['range_start_time']))]]): true;
-		} else if (array_key_exists('range_end_time', $params)) {
-			return (strtotime($field) > strtotime($params['range_end_time']))? $model->getMessage('CustomField.time.earlier', ['sprintf' => [date($systemTimeFormat, strtotime($params['range_end_time']))]]): true;
+		if (array_key_exists('start_time', $params) && array_key_exists('end_time', $params)) {
+			return (strtotime($field) < strtotime($params['start_time']) || strtotime($field) > strtotime($params['end_time']))? $model->getMessage('CustomField.time.between', ['sprintf' => [date($systemTimeFormat, strtotime($params['start_time'])), date($systemTimeFormat, strtotime($params['end_time']))]]): true;
+		} else if (array_key_exists('start_time', $params)) {;
+			return (strtotime($field) < strtotime($params['start_time']))? $model->getMessage('CustomField.time.later', ['sprintf' => [date($systemTimeFormat, strtotime($params['start_time']))]]): true;
+		} else if (array_key_exists('end_time', $params)) {
+			return (strtotime($field) > strtotime($params['end_time']))? $model->getMessage('CustomField.time.earlier', ['sprintf' => [date($systemTimeFormat, strtotime($params['end_time']))]]): true;
 		} else {
 			return true;
 		}

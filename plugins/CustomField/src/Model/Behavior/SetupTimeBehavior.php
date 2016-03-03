@@ -16,29 +16,53 @@ class SetupTimeBehavior extends SetupBehavior {
         parent::initialize($config);
 
         $this->rangeValidationOptions = [
-			'no' => __('No Range Validation'),
+			'no' => __('No Validation'),
 			'earlier' => __('Should not be earlier than'),
 			'later' => __('Should not be later than'),
 			'between' => __('In between (inclusive)')
 		];
 
-        $this->_table->addBehavior('ControllerAction.TimePicker', ['range_start_time', 'range_end_time']);
+        $this->_table->addBehavior('ControllerAction.TimePicker', ['start_time', 'end_time']);
     }
 
-    public function buildValidator(Event $event, Validator $validator, $name) {
-    	$validator->notEmpty('time_range');
-		$validator->notEmpty('range_start_time');
-		$validator->notEmpty('range_end_time');
+	public function editAfterQuery(Event $event, Entity $entity) {
+		$fieldType = '';
+		if (!empty($this->_table->request->data)) {
+			$fieldType = (array_key_exists('field_type', $this->_table->request->data[$this->_table->alias()]))? $this->_table->request->data[$this->_table->alias()]['field_type']: null;
+		} else {
+			if (!empty($entity)) {
+				$fieldType = $entity->field_type;
+			}
+		}
 
-		$validator->add('range_start_time', 'ruleCompareTime', [
-			'rule' => ['compareTime', 'range_end_time', true],
+		if (isset($fieldType) && $fieldType == 'TIME') {
+			$this->addTimeValidation();
+		}
+	}
+
+	public function addBeforeAction(Event $event) {
+		if ($this->_table->request->is('POST')) {
+			$fieldType = (array_key_exists('field_type', $this->_table->request->data[$this->_table->alias()]))? $this->_table->request->data[$this->_table->alias()]['field_type']: null;
+			if ($fieldType == 'TIME') {
+				$this->addTimeValidation();
+			}
+		}
+	}
+
+	private function addTimeValidation() {
+		$validator = $this->_table->validator();
+		$validator->notEmpty('validation_rules_time');
+		$validator->notEmpty('start_time');
+		$validator->notEmpty('end_time');
+
+		$validator->add('start_time', 'ruleCompareTime', [
+			'rule' => ['compareTime', 'end_time', true],
 			'provider' => 'table',
 			'on' => function ($context) {
-				return $context['data']['field_type'] == $this->fieldTypeCode && $context['data']['time_range'] == 'between';
+				return $context['data']['field_type'] == $this->fieldTypeCode && $context['data']['validation_rules_time'] == 'between';
 			}
 		]);
-    }
-
+	}
 
     public function onSetTimeElements(Event $event, Entity $entity) {
     	$fieldType = strtolower($this->fieldTypeCode);
@@ -51,48 +75,48 @@ class SetupTimeBehavior extends SetupBehavior {
     	}
 
 		if (!empty($this->_table->request->data)) {
-			$selectedRangeValidation = (array_key_exists($this->_table->alias(), $this->_table->request->data) && array_key_exists('time_range', $this->_table->request->data[$this->_table->alias()]))? $this->_table->request->data[$this->_table->alias()]['time_range']: null;
+			$selectedRangeValidation = (array_key_exists($this->_table->alias(), $this->_table->request->data) && array_key_exists('validation_rules_time', $this->_table->request->data[$this->_table->alias()]))? $this->_table->request->data[$this->_table->alias()]['validation_rules_time']: null;
 		} else {
-			if (array_key_exists('range_start_time', $paramsArray) && array_key_exists('range_end_time', $paramsArray)) {
+			if (array_key_exists('start_time', $paramsArray) && array_key_exists('end_time', $paramsArray)) {
 				$selectedRangeValidation = 'between';
-			} else if (array_key_exists('range_start_time', $paramsArray)) {
+			} else if (array_key_exists('start_time', $paramsArray)) {
 				$selectedRangeValidation = 'earlier';
-			} else if (array_key_exists('range_end_time', $paramsArray)) {
+			} else if (array_key_exists('end_time', $paramsArray)) {
 				$selectedRangeValidation = 'later';
 			} else {
 				$selectedRangeValidation = 'no';
 			}
 		}
 
-		$this->_table->ControllerAction->field('time_range', ['options' => $this->rangeValidationOptions, 'onChangeReload' => true, 'after' => 'is_mandatory', 'default' => $selectedRangeValidation]);
+		$this->_table->ControllerAction->field('validation_rules_time', ['options' => $this->rangeValidationOptions, 'onChangeReload' => true, 'after' => 'is_mandatory', 'default' => $selectedRangeValidation, 'attr' => ['required' => 'required', 'label' => $this->_table->getMessage('general.validationRules')]]);
 
 		if (!empty($selectedRangeValidation)) {
 			switch ($selectedRangeValidation) {
 				case 'earlier':
-					$options = ['type' => 'time', 'after' => 'time_range', 'null' => false];
-					if (array_key_exists('range_start_time', $paramsArray)) {
-						$options['value'] = $paramsArray['range_start_time'];
+					$options = ['type' => 'time', 'after' => 'validation_rules_time', 'null' => false];
+					if (array_key_exists('start_time', $paramsArray)) {
+						$options['value'] = $paramsArray['start_time'];
 					}
-					$this->_table->ControllerAction->field('range_start_time', $options);
+					$this->_table->ControllerAction->field('start_time', $options);
 					break;
 				case 'later':
-					$options = ['type' => 'time', 'after' => 'time_range', 'null' => false];
-					if (array_key_exists('range_end_time', $paramsArray)) {
-						$options['value'] = $paramsArray['range_end_time'];
+					$options = ['type' => 'time', 'after' => 'validation_rules_time', 'null' => false];
+					if (array_key_exists('end_time', $paramsArray)) {
+						$options['value'] = $paramsArray['end_time'];
 					}
-        			$this->_table->ControllerAction->field('range_end_time', $options);
+        			$this->_table->ControllerAction->field('end_time', $options);
 					break;
 				case 'between':
-					$options = ['type' => 'time', 'after' => 'time_range', 'null' => false];
-					if (array_key_exists('range_start_time', $paramsArray)) {
-						$options['value'] = $paramsArray['range_start_time'];
+					$options = ['type' => 'time', 'after' => 'validation_rules_time', 'null' => false];
+					if (array_key_exists('start_time', $paramsArray)) {
+						$options['value'] = $paramsArray['start_time'];
 					}
-					$this->_table->ControllerAction->field('range_start_time', $options);
-					$options = ['type' => 'time', 'after' => 'range_start_time', 'null' => false];
-					if (array_key_exists('range_end_time', $paramsArray)) {
-						$options['value'] = $paramsArray['range_end_time'];
+					$this->_table->ControllerAction->field('start_time', $options);
+					$options = ['type' => 'time', 'after' => 'start_time', 'null' => false];
+					if (array_key_exists('end_time', $paramsArray)) {
+						$options['value'] = $paramsArray['end_time'];
 					}
-        			$this->_table->ControllerAction->field('range_end_time', $options);
+        			$this->_table->ControllerAction->field('end_time', $options);
 					break;
 				case 'no': default:
 					// no code required
@@ -101,37 +125,39 @@ class SetupTimeBehavior extends SetupBehavior {
 		}
 	}
 
-	public function onGetTimeRange(Event $event, Entity $entity) {
+	public function onGetValidationRulesTime(Event $event, Entity $entity) {
 		$paramsArray = (!empty($entity->params))? json_decode($entity->params, true): [];
-		if (array_key_exists('range_start_time', $paramsArray) && array_key_exists('range_end_time', $paramsArray)) {
-			return $this->rangeValidationOptions['between'].' '.$this->_table->formatTime(new Time($paramsArray['range_start_time'])).' - '.$this->_table->formatTime(new Time($paramsArray['range_end_time']));
-		} else if (array_key_exists('range_start_time', $paramsArray)) {
-			return $this->rangeValidationOptions['earlier'].' '.$this->_table->formatTime(new Time($paramsArray['range_start_time']));
-		} else if (array_key_exists('range_end_time', $paramsArray)) {
-			return $this->rangeValidationOptions['later'].' '.$this->_table->formatTime(new Time($paramsArray['range_end_time']));
+		if (array_key_exists('start_time', $paramsArray) && array_key_exists('end_time', $paramsArray)) {
+			return $this->rangeValidationOptions['between'].' '.$this->_table->formatTime(new Time($paramsArray['start_time'])).' - '.$this->_table->formatTime(new Time($paramsArray['end_time']));
+		} else if (array_key_exists('start_time', $paramsArray)) {
+			return $this->rangeValidationOptions['earlier'].' '.$this->_table->formatTime(new Time($paramsArray['start_time']));
+		} else if (array_key_exists('end_time', $paramsArray)) {
+			return $this->rangeValidationOptions['later'].' '.$this->_table->formatTime(new Time($paramsArray['end_time']));
 		} else {
 			return $this->rangeValidationOptions['no'];
 		}
 	}
 
-	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
 		$model = $this->_table;
-		if ($data[$model->alias()]['field_type'] == $this->fieldTypeCode) {
-			$paramsArray = [];
-			$range_start_time = (array_key_exists('range_start_time', $data[$model->alias()]))? $data[$model->alias()]['range_start_time']: null;
-			$range_end_time = (array_key_exists('range_end_time', $data[$model->alias()]))? $data[$model->alias()]['range_end_time']: null;
+		if (array_key_exists('validation_rules_time', $data)) {
+			if ($data['field_type'] == $this->fieldTypeCode) {
+				$paramsArray = [];
+				$start_time = (array_key_exists('start_time', $data))? $data['start_time']: null;
+				$end_time = (array_key_exists('end_time', $data))? $data['end_time']: null;
 
-			if (!empty($range_start_time)) {
-				$paramsArray['range_start_time'] = $range_start_time;
-			}
-			if (!empty($range_end_time)) {
-				$paramsArray['range_end_time'] = $range_end_time;
-			}
+				if (!empty($start_time)) {
+					$paramsArray['start_time'] = $start_time;
+				}
+				if (!empty($end_time)) {
+					$paramsArray['end_time'] = $end_time;
+				}
 
-			if (!empty($paramsArray)) {
-				$data[$model->alias()]['params'] = json_encode($paramsArray);
-			} else {
-				$data[$model->alias()]['params'] = '';
+				if (!empty($paramsArray)) {
+					$data['params'] = json_encode($paramsArray);
+				} else {
+					$data['params'] = '';
+				}
 			}
 		}
 	}

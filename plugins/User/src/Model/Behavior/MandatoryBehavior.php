@@ -38,7 +38,7 @@ class MandatoryBehavior extends Behavior {
 		$events = parent::implementedEvents();
 		$newEvent = [
 			'ControllerAction.Model.add.onInitialize' => 'addOnInitialize',
-			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
+			'ControllerAction.Model.addEdit.beforePatch' => 'addEditBeforePatch',
 			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
 			'ControllerAction.Model.add.onChangeNationality' => 'addOnChangeNationality',
 			'ControllerAction.Model.onUpdateFieldContactType' => 'onUpdateFieldContactType',
@@ -128,42 +128,44 @@ class MandatoryBehavior extends Behavior {
 
 	}
 
-	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$newOptions = [];
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		if ($this->_table->action == 'add') {
+			$newOptions = [];
 
-		$newOptions['associated'] = ['Identities', 'Nationalities', 'SpecialNeeds', 'Contacts'];
+			$newOptions['associated'] = ['Identities', 'Nationalities', 'SpecialNeeds', 'Contacts'];
 
-		foreach ($this->_info as $key => $value) {
-			// default validation is 'Mandatory'
-			if ($value == 'Non-Mandatory') {
-				$newOptions['associated'][$key] = ['validate' => 'NonMandatory'];
-				// also need to remove the data if the field is empty
-				$tableName = Inflector::tableize($key);
+			foreach ($this->_info as $key => $value) {
+				// default validation is 'Mandatory'
+				if ($value == 'Non-Mandatory') {
+					$newOptions['associated'][$key] = ['validate' => 'NonMandatory'];
+					// also need to remove the data if the field is empty
+					$tableName = Inflector::tableize($key);
 
-				if (array_key_exists($tableName, $data[$this->_table->alias()])) {
-					if (array_key_exists(0, $data[$this->_table->alias()][$tableName])) {
-						// going to check all fields.. if something is empty(form fill incomplete).. the data will not be removed and not saved
-						$incompleteField = false;
-						foreach ($data[$this->_table->alias()][$tableName][0] as $ckey => $check) {
-							if (empty($check)) {
-								$incompleteField = true;
+					if (array_key_exists($tableName, $data[$this->_table->alias()])) {
+						if (array_key_exists(0, $data[$this->_table->alias()][$tableName])) {
+							// going to check all fields.. if something is empty(form fill incomplete).. the data will not be removed and not saved
+							$incompleteField = false;
+							foreach ($data[$this->_table->alias()][$tableName][0] as $ckey => $check) {
+								if (empty($check)) {
+									$incompleteField = true;
+								}
+							}
+							if ($incompleteField) {
+								unset($data[$this->_table->alias()][$tableName]);
 							}
 						}
-						if ($incompleteField) {
-							unset($data[$this->_table->alias()][$tableName]);
-						}
+					}
+				} else {
+					if ($value != 'Excluded') {
+						$newOptions['associated'][] = $key;
 					}
 				}
-			} else {
-				if ($value != 'Excluded') {
-					$newOptions['associated'][] = $key;
-				}
 			}
-		}
 
-		$arrayOptions = $options->getArrayCopy();
-		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
-		$options->exchangeArray($arrayOptions);
+			$arrayOptions = $options->getArrayCopy();
+			$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
+			$options->exchangeArray($arrayOptions);
+		}
 	}
 
 	public function addOnChangeNationality(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
