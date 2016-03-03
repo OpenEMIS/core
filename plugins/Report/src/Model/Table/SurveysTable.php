@@ -28,6 +28,7 @@ class SurveysTable extends AppTable  {
 			'formKey' => 'survey_form_id',
 			'formFilterClass' => null,
 			'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 	}
 

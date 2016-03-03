@@ -86,7 +86,12 @@ class OpenEmisBehavior extends Behavior {
 		// end deprecated
 
 		if (array_key_exists('toolbarButtons', $extra)) {
-			$model->controller->set('toolbarButtons', $extra['toolbarButtons']);
+			$toolbarButtons = $extra['toolbarButtons'];
+			if ($model->action == 'view' && $model->actions('remove') != 'transfer') {
+				// not checking existence of entity in $extra so that errors will be shown if entity is removed unexpectedly
+				$toolbarButtons['remove']['attr']['field-value'] = $extra['entity']->{$model->primaryKey()};
+			}
+			$model->controller->set('toolbarButtons', $toolbarButtons);
 		}
 		if (array_key_exists('indexButtons', $extra)) {
 			$model->controller->set('indexButtons', $extra['indexButtons']);
@@ -136,9 +141,17 @@ class OpenEmisBehavior extends Behavior {
 		$model = $this->_table;
 		if ($model->request->is('delete')) {
 			if ($extra['result']) {
-				$model->Alert->success('general.delete.success');
+				if (isset($extra['Alert']['message'])) {
+					$model->Alert->success($extra['Alert']['message']);
+				} else {
+					$model->Alert->success('general.delete.success');
+				}
 			} else {
-				$model->Alert->error('general.delete.failed');
+				if (isset($extra['Alert']['message'])) {
+					$model->Alert->error($extra['Alert']['message']);
+				} else {
+					$model->Alert->error('general.delete.failed');
+				}
 			}
 		}
 	}
@@ -174,6 +187,7 @@ class OpenEmisBehavior extends Behavior {
 			'data-placement' => 'bottom',
 			'escape' => false
 		];
+
 		$indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
 
 		$action = $model->action;
@@ -241,7 +255,7 @@ class OpenEmisBehavior extends Behavior {
 				$toolbarButtons['remove']['attr']['data-toggle'] = 'modal';
 				$toolbarButtons['remove']['attr']['data-target'] = '#delete-modal';
 				$toolbarButtons['remove']['attr']['field-target'] = '#recordId';
-				// $toolbarButtons['remove']['attr']['field-value'] = $extra['entity']->{$model->primaryKey()};
+				$toolbarButtons['remove']['attr']['field-value'] = $extra['entity']->{$model->primaryKey()};
 				$toolbarButtons['remove']['attr']['onclick'] = 'ControllerAction.fieldMapping(this)';
 			}
 		} else if ($action == 'transfer') {
