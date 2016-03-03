@@ -15,7 +15,7 @@ class InstitutionSubjectStudentsTable extends AppTable {
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects']);
-		$this->belongsTo('InstitutionSections', ['className' => 'Institution.InstitutionSections']);
+		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
 	}
 
 	public function getMaleCountBySubject($subjectId) {
@@ -44,18 +44,18 @@ class InstitutionSubjectStudentsTable extends AppTable {
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
 		//PHPOE-2338 - implement afterDelete to delete records in AssessmentItemResultsTable
-		// find related sections and grades
+		// find related classes and grades
 		$InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
 		$institutionClassData = $InstitutionSubjects->find()
-			->contain('InstitutionSections.InstitutionSectionGrades')
+			->contain('InstitutionClasses.InstitutionClassGrades')
 			->where([$InstitutionSubjects->aliasField($InstitutionSubjects->primaryKey()) => $entity->institution_subject_id])
 			->first()
 			;
 		$gradeArray = [];
-		if (!empty($institutionClassData->institution_sections)) {
-			foreach ($institutionClassData->institution_sections as $skey => $svalue) {
-				if (!empty($svalue->institution_section_grades)) {
-					foreach ($svalue->institution_section_grades as $gkey => $gvalue) {
+		if (!empty($institutionClassData->institution_classes)) {
+			foreach ($institutionClassData->institution_classes as $skey => $svalue) {
+				if (!empty($svalue->institution_class_grades)) {
+					foreach ($svalue->institution_class_grades as $gkey => $gvalue) {
 						$gradeArray[] = $gvalue->education_grade_id;
 					}
 				}
