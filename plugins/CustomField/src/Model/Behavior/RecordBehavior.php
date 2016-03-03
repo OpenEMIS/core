@@ -10,6 +10,7 @@ use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\ORM\Table;
 use Cake\Log\Log;
+use Cake\I18n\Time;
 
 class RecordBehavior extends Behavior {
 	protected $_defaultConfig = [
@@ -159,6 +160,12 @@ class RecordBehavior extends Behavior {
 					}
 				}
 			}
+		}
+
+		$arrayOptions = $options->getArrayCopy();
+		if (!empty($arrayOptions)) {
+			$arrayOptions = array_merge_recursive($arrayOptions, ['associated' => ['CustomFieldValues', 'CustomTableCells']]);
+			$options->exchangeArray($arrayOptions);
 		}
     }
 
@@ -705,8 +712,8 @@ class RecordBehavior extends Behavior {
 
 		// Set the fetched field values to avoid multiple call to the database
 		$fieldValues = $this->getFieldValue($entity->id) + $tableCellValues;
-		ksort($fieldValues);
-		$this->_fieldValues = $fieldValues;
+		ksort($fieldValues);	
+		$this->_fieldValues = $fieldValues;	
 	}
 
 	private function getTableCellValues($tableCustomFieldIds, $recordId) {
@@ -728,6 +735,7 @@ class RecordBehavior extends Behavior {
 			$tableCellData = $tableCellData->getArrayCopy();
 			return $tableCellData;
 		}
+		return [];
 	}
 
 	// Model.excel.onExcelRenderCustomField
@@ -850,7 +858,7 @@ class RecordBehavior extends Behavior {
 	private function date($data, $fieldInfo, $options=[]) {
 		if (isset($data[$fieldInfo['id']])) {
 			$date = date_create_from_format('Y-m-d', $data[$fieldInfo['id']]);
-			return $this->_table->formatDate($date);
+			return $this->_table->formatDate(new Time($date));
 		} else {
 			return '';
 		}
@@ -859,7 +867,7 @@ class RecordBehavior extends Behavior {
 	private function time($data, $fieldInfo, $options=[]) {
 		if (isset($data[$fieldInfo['id']])) {
 			$time = date_create_from_format('G:i:s', $data[$fieldInfo['id']]);
-			return $this->_table->formatTime($date);
+			return $this->_table->formatTime(new Time($time));
 		} else {
 			return '';
 		}

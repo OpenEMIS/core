@@ -1,6 +1,9 @@
 v3.4.15
+- Survey Table type questions will now be displayed in Reports
 - Fixed a bug that caused loading animation to appear on the wrong position
 - Fixed a bug that display wrong validation message when importing students to schools
+- Fixed a bug that caused 404 error page when approving Dropout requests
+- New API to query students by Identity type and number
 
 v3.4.14
 - Users can now import trainees to Training Sessions using excel spreadsheet
