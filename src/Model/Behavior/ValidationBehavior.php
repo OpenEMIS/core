@@ -640,14 +640,13 @@ class ValidationBehavior extends Behavior {
 		if (is_null($dateOfBirth)) return $validationErrorMsg;
 
 		$EducationGrades = TableRegistry::get('Education.EducationGrades');
-		$educationGradeQuery = $EducationGrades->find()
-			->select(['EducationCycles.name', 'EducationCycles.admission_age', 'EducationCycles.id'])
+		$gradeEntity = $EducationGrades->find()
 			->contain('EducationProgrammes.EducationCycles')
 			->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $educationGradeId])
 			->first()
 			;
-		$admissionAge = $educationGradeQuery->EducationCycles->admission_age;
-		$cycleId = $educationGradeQuery->EducationCycles->id;
+		$admissionAge = $gradeEntity->education_programme->education_cycle->admission_age;
+		$programmeId = $gradeEntity->education_programme_id;
 		
 		$birthYear = $dateOfBirth->format('Y');
 		$nowYear = Time::now()->format('Y');
@@ -658,24 +657,21 @@ class ValidationBehavior extends Behavior {
 		$enrolmentMaximumAge = $admissionAge + $ConfigItems->value('admission_age_plus');
 
 		// PHPOE-2284 - 'instead of defining admission age at grade level, please make sure the allowed age range changes according to the grade.'
-		$EducationGrades = TableRegistry::get('Education.EducationGrades');
-		$gradeInCycleList = $EducationGrades->find('list')
-			->contain('EducationProgrammes.EducationCycles')
-			->where(['EducationCycles.id' => $cycleId])
-			->find('order');
+		// PHPOE-2691 - 'instead of populating the list of grades by education cycle which is its grandparent, populate the list by its parent instead which is education programme.'
+		$gradeList = $EducationGrades->find('list')
+			->where([$EducationGrades->aliasField('education_programme_id') => $programmeId])
+			->find('order')
+			->toArray()
+			;
 
 		$yearIncrement = 0;
-		foreach ($gradeInCycleList as $key => $value) {
+		foreach ($gradeList as $key => $value) {
 			if ($key == $educationGradeId) break;
 			$yearIncrement++;
 		}
 
 		$enrolmentMinimumAge += $yearIncrement;
 		$enrolmentMaximumAge += $yearIncrement;
-
-		// pr('enrolmentMinimumAge: '.$enrolmentMinimumAge);
-		// pr('enrolmentMaximumAge: '.$enrolmentMaximumAge);
-		// pr('ageOfStudent: '.$ageOfStudent);
 
 		return ($ageOfStudent<=$enrolmentMaximumAge) && ($ageOfStudent>=$enrolmentMinimumAge)? true: $validationErrorMsg;	
 	}
