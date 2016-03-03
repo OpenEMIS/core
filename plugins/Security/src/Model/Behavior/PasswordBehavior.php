@@ -69,7 +69,7 @@ class PasswordBehavior extends Behavior {
 		$validator->add($this->targetField, [
 			'ruleCheckLength' => [
 				'rule'	=> ['lengthBetween', $passwordMinLength, 50],
-				'message' => $this->_table->getMessage('User.Users.password.ruleCheckLength', ['vsprintf' => [$passwordMinLength,50]]),
+				'message' => $this->_table->getMessage('User.Users.password.ruleCheckLength', ['sprintf' => [$passwordMinLength,50]]),
 				'last' => true
 			]
 		]);
