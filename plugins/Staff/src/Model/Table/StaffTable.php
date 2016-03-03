@@ -284,8 +284,8 @@ class StaffTable extends AppTable {
 		$studentTabElements = [
 			'Employments' => ['text' => __('Employments')],
 			'Positions' => ['text' => __('Positions')],
-			'Sections' => ['text' => __('Classes')],
-			'Classes' => ['text' => __('Subjects')],
+			'Classes' => ['text' => __('Classes')],
+			'Subjects' => ['text' => __('Subjects')],
 			'Absences' => ['text' => __('Absences')],
 			'Leaves' => ['text' => __('Leaves')],
 			'Behaviours' => ['text' => __('Behaviours')],
