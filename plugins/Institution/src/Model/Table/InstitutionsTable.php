@@ -86,6 +86,7 @@ class InstitutionsTable extends AppTable  {
 			'fieldKey' => 'institution_custom_field_id',
 			'tableColumnKey' => 'institution_custom_table_column_id',
 			'tableRowKey' => 'institution_custom_table_row_id',
+			'fieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFields'],
 			'formKey' => 'institution_custom_form_id',
 			'filterKey' => 'institution_custom_filter_id',
 			'formFieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFields'],
@@ -202,7 +203,6 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('created', ['visible' => false]);
 		$this->ControllerAction->field('created_user_id', ['visible' => false]);
 
-		$this->ControllerAction->field('institution_type_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_locality_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_ownership_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_status_id', ['type' => 'select']);
@@ -509,6 +509,10 @@ class InstitutionsTable extends AppTable  {
 		]);
 	}
 
+	public function addOnInitialize(Event $event, Entity $entity) {
+		list(, $selectedType) = array_values($this->getTypeOptions());
+		$entity->institution_type_id = $selectedType;
+	}
 
 /******************************************************************************************************************
 **
@@ -535,6 +539,9 @@ class InstitutionsTable extends AppTable  {
 		]);
 	}
 
+	public function addEditAfterAction(Event $event, Entity $entity) {
+		$this->ControllerAction->field('institution_type_id', ['type' => 'select']);
+	}
 
 /******************************************************************************************************************
 **
@@ -571,9 +578,35 @@ class InstitutionsTable extends AppTable  {
 
 	public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add' || $action == 'edit') {
-			$attr['onChangeReload'] = true;
+			list($typeOptions, $selectedType) = array_values($this->getTypeOptions());
+
+			$attr['options'] = $typeOptions;
+			$attr['onChangeReload'] = 'changeType';
 		}
 
 		return $attr;
+	}
+
+	public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$request = $this->request;
+		unset($request->query['type']);
+
+		if ($request->is(['post', 'put'])) {
+			if (array_key_exists($this->alias(), $request->data)) {
+				if (array_key_exists('institution_type_id', $request->data[$this->alias()])) {
+					$selectedType = $request->data[$this->alias()]['institution_type_id'];
+					$request->query['type'] = $selectedType;
+					$entity->institution_type_id = $selectedType;
+				}
+			}
+		}
+	}
+
+	public function getTypeOptions() {
+		$typeOptions = $this->Types->getList()->toArray();
+		$selectedType = $this->queryString('type', $typeOptions);
+		$this->advancedSelectOptions($typeOptions, $selectedType);
+
+		return compact('typeOptions', 'selectedType');
 	}
 }
