@@ -28,8 +28,6 @@ class StudentsController extends AppController {
 			'Guardians' 		=> ['className' => 'Student.Guardians'],
 			'GuardianUser' 		=> ['className' => 'Student.GuardianUser', 'actions' => ['add', 'view', 'edit']],
 			'Programmes' 		=> ['className' => 'Student.Programmes', 'actions' => ['index', 'view']],
-			'Classes'			=> ['className' => 'Student.StudentClasses', 'actions' => ['index', 'view']],
-			'Subjects' 			=> ['className' => 'Student.StudentSubjects', 'actions' => ['index', 'view']],
 			'Absences' 			=> ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
 			'Behaviours' 		=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
 			'Results' 			=> ['className' => 'Student.Results', 'actions' => ['index']],
@@ -54,6 +52,11 @@ class StudentsController extends AppController {
 
 		$this->set('contentHeader', 'Students');
 	}
+
+	// CAv4
+	public function Classes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']); }
+	public function Subjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']); }
+	// End
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
@@ -200,6 +203,10 @@ class StudentsController extends AppController {
 				return $this->redirect(['action' => 'index']);
 			}
 		}
+	}
+
+	public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra) {
+		$this->beforePaginate($event, $model, $query, $extra);
 	}
 
 	public function excel($id=0) {
