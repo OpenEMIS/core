@@ -13,6 +13,7 @@ use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\UserTrait;
 use Cake\Datasource\Exception\RecordNotFoundException;
 
+// this file is used solely for Preferences/Users
 class UsersTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('security_users');
@@ -58,7 +59,7 @@ class UsersTable extends AppTable {
 		$tabElements = $this->controller->getUserTabElements();
 
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', 'Account');
+		$this->controller->set('selectedAction', 'General');
 	}
 
 	public function viewBeforeAction(Event $event) {
@@ -88,12 +89,12 @@ class UsersTable extends AppTable {
 	}
 
 	public function password() {
-		$this->controller->set('selectedAction', 'Password');
-		$userId = $this->Auth->user('id');
-		$entity = $this->get($userId);
-		$entity->password = '';
+		$this->controller->set('selectedAction', 'Account');
 
-		$this->ControllerAction->field('username', ['type' => 'readonly']);
+		$userId = $this->Auth->user('id');
+		$this->ControllerAction->edit($userId);
+
+		$this->ControllerAction->field('username', ['visible' => true, 'type' => 'readonly']);
 		$this->ControllerAction->field('openemis_no', ['visible' => false]);
 		$this->ControllerAction->field('first_name', ['visible' => false]);
 		$this->ControllerAction->field('middle_name', ['visible' => false]);
@@ -105,39 +106,6 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('new_password', ['type' => 'password', 'order' => 60, 'attr' => ['value' => '']]);
 		$this->ControllerAction->field('retype_password', ['type' => 'password', 'order' => 61, 'attr' => ['value' => '']]);
 
-		$request = $this->request;
-		if ($request->is(['post', 'put'])) {
-			$request->data['username'] = $request->data[$this->alias()]['username'];
-			$request->data['password'] = $request->data[$this->alias()]['password'];
-
-			$user = $this->Auth->identify();
-			if ($user != false) {
-				$newPassword = $request->data[$this->alias()]['new_password'];
-				$retypePassword = $request->data[$this->alias()]['retype_password'];
-
-				if ($newPassword === $retypePassword) {
-					if (strlen($newPassword) >= 6) {
-						$entity->password = $newPassword;
-						if ($this->save($entity)) {
-							$this->Alert->success('general.edit.success');
-							$action = ['plugin' => false, 'controller' => $this->controller->name, 'action' => 'Users', 'view', $entity->id];
-							return $this->controller->redirect($action);
-						} else {
-							$this->Alert->error('general.error');
-						}
-					} else {
-						$this->Alert->error('User.Users.password.ruleMinLength');
-					}
-				} else {
-					$this->Alert->error('User.Users.retype_password.ruleCompare');
-				}
-			} else {
-				$this->Alert->error('User.Users.password.ruleChangePassword');
-			}
-		}
-
-		// pr($entity);
-		$this->controller->set('data', $entity);
 		$this->ControllerAction->renderView('/ControllerAction/edit');
 	}
 
@@ -174,8 +142,35 @@ class UsersTable extends AppTable {
 
 	public function validationDefault(Validator $validator) {
 		$BaseUsers = TableRegistry::get('User.Users');
-		return $BaseUsers->setUserValidation($validator, $this);
+		return $BaseUsers->setUserValidation($validator, $this);		
 	}
+
+	public function validationPassword(Validator $validator) {
+		$retypeCompareField = 'new_password';
+
+		$this->setValidationCode('username.ruleUnique', 'User.Accounts');
+		$this->setValidationCode('username.ruleAlphanumeric', 'User.Accounts');
+		$this->setValidationCode('retype_password.ruleCompare', 'User.Accounts');
+		return $validator
+			->add('username', [
+				'ruleUnique' => [
+					'rule' => 'validateUnique',
+					'provider' => 'table',
+				],
+				'ruleAlphanumeric' => [
+				    'rule' => 'alphanumeric',
+				]
+			])
+			// password validation now in behavior
+			->add('retype_password' , [
+				'ruleCompare' => [
+					'rule' => ['comparePasswords', $retypeCompareField],
+					'on' => 'update'
+				]
+			])
+			;
+	}
+
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();

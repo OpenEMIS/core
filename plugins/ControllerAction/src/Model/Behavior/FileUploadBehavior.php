@@ -87,7 +87,9 @@ class FileUploadBehavior extends Behavior {
 			'ControllerAction.Model.addEdit.beforePatch' => 'addEditBeforePatch',
 			'ControllerAction.Model.edit.beforePatch' => 'editBeforePatch',
 			'ControllerAction.Model.edit.beforeAction' => 'editBeforeAction',
-			'ControllerAction.Model.afterAction' => 'afterAction'
+			'ControllerAction.Model.afterAction' => 'afterAction',
+			'ControllerAction.Model.add.onInitialize' => 'addOnInitialize',
+			'ControllerAction.Model.edit.onInitialize' => 'editOnInitialize',
 		];
 		$events = array_merge($events,$newEvent);
 		return $events;
@@ -99,6 +101,18 @@ class FileUploadBehavior extends Behavior {
 ** ControllerActionComponent events
 **
 ******************************************************************************************************************/
+	public function addOnInitialize(Event $event, Entity $entity) {
+		$model = $this->_table;
+		$session = $model->request->session();
+		$session->delete($model->registryAlias().'.parseUpload');
+	}
+
+	public function editOnInitialize(Event $event, Entity $entity) {
+		$model = $this->_table;
+		$session = $model->request->session();
+		$session->delete($model->registryAlias().'.parseUpload');
+	}
+
 	public function afterAction(Event $event) {
 		if (isset($this->_table->fields[$this->config('content')])) {
 			// pr();
@@ -132,7 +146,7 @@ class FileUploadBehavior extends Behavior {
 		$contentEditable = $this->config('contentEditable');
 		$fileContentFieldRules = $this->_table->validator()->field($fileContentField);
 		$model = $this->_table;
-
+		$session = $model->request->session();
 		$file = isset($data[$model->alias()][$fileContentField]) ? $data[$model->alias()][$fileContentField] : [];
 
 		if ($entity->isNew()) {
@@ -140,7 +154,9 @@ class FileUploadBehavior extends Behavior {
 		
 				if ($this->uploadedFileIsAllowed($file)) {
 					if ($this->uploadedFileSizeIsAcceptable($file)) {
-						$data = $this->parseUploadInput($data, $file);
+						$parseUploadData = $this->parseUpload($file);
+						$session->write($model->registryAlias().'.parseUpload', $parseUploadData);
+						$data = $this->parseUploadInput($data, $parseUploadData);
 					} else {
 						$entity->errors($fileContentField, ['File size should not be more than ' . $this->config('size')]);
 						unset($data[$model->alias()][$fileContentField]);
@@ -150,10 +166,24 @@ class FileUploadBehavior extends Behavior {
 					unset($data[$model->alias()][$fileContentField]);
 				}
 		
+			} elseif ($fileContentFieldRules->isEmptyAllowed() && !empty($file) ) {
+				if ($session->check($model->registryAlias().'.parseUpload')) {
+					$parseUploadData = $session->read($model->registryAlias().'.parseUpload');
+					$data = $this->parseUploadInput($data, $parseUploadData);
+				} else {
+					if (isset($data[$model->alias()][$fileNameField])) {
+						unset($data[$model->alias()][$fileNameField]);
+					}
+					if (isset($data[$model->alias()][$fileContentField])) {
+						unset($data[$model->alias()][$fileContentField]);
+					}
+				}
 			} elseif ($fileContentFieldRules->isEmptyAllowed()) {
+				$session->delete($model->registryAlias().'.parseUpload');
 				$this->unsetProperties($entity, $data);
 			} else {
 				// pr('should throw an error here');
+				$session->delete($model->registryAlias().'.parseUpload');
 				$entity->errors($fileContentField, ['File attachment is required']);
 				unset($data[$model->alias()][$fileContentField]);
 			}
@@ -163,7 +193,9 @@ class FileUploadBehavior extends Behavior {
 					// pr('parseUploadInput');
 					if ($this->uploadedFileIsAllowed($file)) {
 						if ($this->uploadedFileSizeIsAcceptable($file)) {
-							$data = $this->parseUploadInput($data, $file);
+							$parseUploadData = $this->parseUpload($file);
+							$session->write($model->registryAlias().'.parseUpload', $parseUploadData);
+							$data = $this->parseUploadInput($data, $parseUploadData);
 						} else {
 							$entity->errors($fileContentField, ['File size should not be more than ' . $this->config('size')]);
 							unset($data[$model->alias()][$fileContentField]);
@@ -175,13 +207,25 @@ class FileUploadBehavior extends Behavior {
 
 				} elseif ($fileContentFieldRules->isEmptyAllowed() && !empty($file) ) {
 					// pr('content allowed to be empty');
-					$this->unsetProperties($entity, $data);
+					// $this->unsetProperties($entity, $data);
+					if ($session->check($model->registryAlias().'.parseUpload')) {
+						$parseUploadData = $session->read($model->registryAlias().'.parseUpload');
+						$data = $this->parseUploadInput($data, $parseUploadData);
+					} else {
+						if (isset($data[$model->alias()][$fileNameField])) {
+							unset($data[$model->alias()][$fileNameField]);
+						}
+						if (isset($data[$model->alias()][$fileContentField])) {
+							unset($data[$model->alias()][$fileContentField]);
+						}
+					}
 				} elseif ($fileContentFieldRules->isEmptyAllowed()) {
 					/**
 					 * columns set as nullable in db
 					 */
-					$data[$model->alias()][$fileNameField] = null;
-					$data[$model->alias()][$fileContentField] = null;
+					$parseUploadData = $this->parseUpload();
+					$session->write($model->registryAlias().'.parseUpload', $parseUploadData);
+					$data = $this->parseUploadInput($data, $parseUploadData);
 				} else {
 					/**
 					 * columns set as NOT nullable in db
@@ -287,18 +331,28 @@ class FileUploadBehavior extends Behavior {
 		return $isValid;
 	}
 
-	private function parseUploadInput($data, $file) {
+	private function parseUpload($file=null) {
+		if (!is_null($file)) {
+			if ($this->config('useDefaultName')) {
+				$fileName = $file['name'];
+			} else {
+				$pathInfo = pathinfo($file['name']);
+				$fileName = uniqid() . '.' . $pathInfo['extension'];
+			}
+			$fileContent = file_get_contents($file['tmp_name']);
+		} else {
+			$fileName = null;
+			$fileContent = null;
+		}
+		return ['fileName' => $fileName, 'fileContent' => $fileContent];
+	}
+
+	private function parseUploadInput($data, $nameContentArray) {
 		$fileNameField = $this->config('name');
 		$fileContentField = $this->config('content');
 		$model = $this->_table;
-
-		if ($this->config('useDefaultName')) {
-			$data[$model->alias()][$fileNameField] = $file['name'];
-		} else {
-			$pathInfo = pathinfo($file['name']);
-			$data[$model->alias()][$fileNameField] = uniqid() . '.' . $pathInfo['extension'];
-		}
-		$data[$model->alias()][$fileContentField] = file_get_contents($file['tmp_name']);
+		$data[$model->alias()][$fileNameField] = $nameContentArray['fileName'];
+		$data[$model->alias()][$fileContentField] = $nameContentArray['fileContent'];
 		return $data;
 	}
 

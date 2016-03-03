@@ -6,6 +6,7 @@ use FieldOption\Controller\AppController;
 use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
+use Cake\ORM\TableRegistry;
 
 class FieldOptionsController extends AppController {
 	public function initialize() {
@@ -43,6 +44,8 @@ class FieldOptionsController extends AppController {
 				"$controller.Languages" 					=> "$controller.%s",
 				"$controller.LicenseTypes" 					=> "$controller.%s",
 				"$controller.SpecialNeedTypes" 				=> "$controller.%s",
+				"$controller.StaffAbsenceReasons" 			=> "$controller.%s",
+				"$controller.StudentAbsenceReasons" 		=> "$controller.%s"
 			]
 		]);
 	}
@@ -94,6 +97,6 @@ class FieldOptionsController extends AppController {
 	public function Languages() { $this->ControllerAction->process(['alias' => __FUNCTION__, 					'className' => 'Languages']); }
 	public function LicenseTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 				'className' => 'FieldOption.LicenseTypes']); }
 	public function SpecialNeedTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 			'className' => 'FieldOption.SpecialNeedTypes']); }
-
-
+	public function StaffAbsenceReasons() { $this->ControllerAction->process(['alias' => __FUNCTION__, 			'className' => 'FieldOption.StaffAbsenceReasons']); }
+	public function StudentAbsenceReasons() { $this->ControllerAction->process(['alias' => __FUNCTION__, 		'className' => 'FieldOption.StudentAbsenceReasons']); }
 }
