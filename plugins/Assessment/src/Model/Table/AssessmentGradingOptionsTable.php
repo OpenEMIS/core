@@ -17,7 +17,11 @@ class AssessmentGradingOptionsTable extends AppTable {
 		parent::initialize($config);
 
 		$this->belongsTo('AssessmentGradingTypes', ['className' => 'Assessment.AssessmentGradingTypes']);
-		$this->addBehavior('Reorder', ['filter' => 'assessment_grading_type_id']);
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+				'filter' => 'assessment_grading_type_id',
+			]);
+		}
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
