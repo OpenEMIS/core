@@ -1,11 +1,27 @@
+v3.4.16
+- Added Class names to Student Report in Institutions
+- Add new Absence Type - Late
+- Fixed a bug that caused 404 error page when access Maps
+- Area Administrative and Area Education is now properly translated
+- Fixed a bug on Institutions -> Students -> Add that caused incorrect calculation of admission age
+
+v3.4.15
+- Survey Table type questions will now be displayed in Reports
+- Fixed a bug that caused loading animation to appear on the wrong position
+- Fixed a bug that display wrong validation message when importing students to schools
+- Fixed a bug that caused 404 error page when approving Dropout requests
+- New API to query students by Identity type and number
+
 v3.4.14
+- Users can now import trainees to Training Sessions using excel spreadsheet
 - Fixed a bug that caused Staff Career tabs not navigating to the correct page
-- User should be able to search for Student/Staff Absences.
+- When accessing Attendance, date will always default to current week and day now
+- Fixed a bug that caused search not working properly in Attendance
 - Added hyperlinks to OpenEMIS ID/Name field in various pages to link to user profile
 - Fixed a bug that caused student import to class successfully when using a class code that is not in the same academic period
 - Implemented the link between Qualification Specializations and Education Subjects
 - Fixed a bug that caused sorting to refresh advanced search results
-- 
+- Fixed a bug that caused 404 error page when access Administration -> Administrative Boundaries
 
 v3.4.13
 - Class column in Institutions -> Students can be sortable now
