@@ -24,6 +24,8 @@ class StudentAttendancesTable extends AppTable {
 	private $dataCount = null;
 	private $_absenceData = [];
 	const PRESENT = 0;
+	private $absenceList;
+	private $absenceCodeList;
 
 	public function initialize(array $config) {
 		$this->table('institution_section_students');
@@ -41,7 +43,6 @@ class StudentAttendancesTable extends AppTable {
 			'pages' => ['index']
 		]);
 		$this->addBehavior('Import.ImportLink');
-
 		$AbsenceTypesTable = TableRegistry::get('Institution.AbsenceTypes');
 		$this->absenceList = $AbsenceTypesTable->getAbsenceTypeList();
 		$this->absenceCodeList = $AbsenceTypesTable->getCodeList();
