@@ -124,14 +124,32 @@ class StudentsTable extends AppTable {
 		if ($periodId > 0) {
 			$query->where([$this->aliasField('academic_period_id') => $periodId]);
 		}
+		$query->leftJoin(['SectionStudents' => 'institution_section_students'], [
+				'SectionStudents.student_id = '.$this->aliasField('student_id'), 
+				'SectionStudents.education_grade_id = '.$this->aliasField('education_grade_id'),
+				'SectionStudents.student_status_id = '.$this->aliasField('student_status_id')
+			])->leftJoin(['Sections' => 'institution_sections'], [
+				'Sections.id = SectionStudents.institution_section_id', 
+				'Sections.institution_id = '.$this->aliasField('institution_id'),
+				'Sections.academic_period_id = '.$this->aliasField('academic_period_id')
+			])->select(['institution_section_name' => 'Sections.name']);
 	}
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+		$fieldCopy = $fields->getArrayCopy();
+		$newFields = [];
 
-		foreach ($fields as $key => $field) {
-			if ($field['field'] == 'institution_id') {
-				unset($fields[$key]);
-				break;
+		foreach ($fieldCopy as $key => $field) {
+			if ($field['field'] != 'institution_id') {
+			$newFields[] = $field;
+				if ($field['field'] == 'education_grade_id') {
+					$newFields[] = [
+						'key' => 'StudentClasses.institution_section_id',
+						'field' => 'institution_section_name',
+						'type' => 'string',
+						'label' => ''
+					];
+				}
 			}
 		}
 		
@@ -184,7 +202,7 @@ class StudentsTable extends AppTable {
 			'label' => __('Nationalities')
 		];
 
-		$newFields = array_merge($extraField, $fields->getArrayCopy());
+		$newFields = array_merge($extraField, $newFields);
 		$fields->exchangeArray($newFields);
 	}
 
@@ -847,6 +865,9 @@ class StudentsTable extends AppTable {
 				->find('list')
 				->where([$conditions])
 				->toArray();
+			foreach ($options as $key => $value) {
+				$options[$key] = __($value);
+			}
 			$attr['options'] = $options;
 		}
 		return $attr;

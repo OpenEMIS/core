@@ -82,7 +82,8 @@ trait MessagesTrait {
 			'type' => 'Type',
 			'amount' => 'Amount',
 			'total' => 'Total',
-			'notTransferrable' => 'No other alternative options available to convert records.'
+			'notTransferrable' => 'No other alternative options available to convert records.',
+			'validationRules' => 'Validation Rules',
 		],
 		'fileUpload' => [
 			'single' => '*File size should not be larger than 2MB.',
@@ -364,10 +365,13 @@ trait MessagesTrait {
 			'reconfirm' => 'Please review the information before proceeding with the operation',
 			'noStudentSelected' => 'There are no students selected',
 			'noAvailableGrades' => 'No Available Grades in this Institution',
+			'noAvailableAcademicPeriod' => 'No Available Academic Periods',
 			'noNextGradeOrNextPeriod' => 'Next grade in the Education Structure is not available in this Institution or no Next Academic Period defined',
 			'savingPromotionError' => 'Some selected students record were not updated succesfully',
 			'successGraduated' => 'Students have graduated',
 			'successOthers' => 'Students status changed successfully',
+			'noNextAcademicPeriod' => 'There is no next academic period for the promotion.',
+			'pendingRequest' => 'There is a pending student status change request at the moment.'
 		],
 		'StudentTransfer' => [
 			'noGrades' => 'No Available Grades',
@@ -396,6 +400,7 @@ trait MessagesTrait {
 		],
 		'DropoutRequests' => [
 			'request' => 'Dropout request hsa been submitted successfully.',
+			'notEligible' =>  'This student is not eligible for this action. Please reject this request.'
 		],
 		'StudentDropout' => [
 			'exists' => 'Student has already dropped out from the school.',
@@ -440,6 +445,9 @@ trait MessagesTrait {
 		'TrainingSessionResults' => [
 			'noResultTypes' => 'You need to configure Result Types under Training Course.',
 			'noTrainees' => 'No Available Trainees'
+		],
+		'CustomForms' => [
+			'notSupport' => 'Not supported in this form.'
 		],
 
 		// Validation Messages
@@ -614,13 +622,17 @@ trait MessagesTrait {
 					'ruleNotBlank' => 'Please enter a valid username',
 					'ruleNoSpaces' => 'Only alphabets and numbers are allowed',
 					'ruleUnique' => 'This username is already in use.',
-					'ruleAlphanumeric' => 'Please enter an alphanumeric username',
+					'ruleCheckUsername' => 'Invalid username. Usernames must contain only alphabets and/or digits. Username can also be a valid email',
 				],
 				'password' => [
 					'ruleChangePassword' => 'Incorrect password.',
 					'ruleCheckUsernameExists' => 'Please enter a valid password',
 					'ruleMinLength' => 'Password must be at least 6 characters',
-					'ruleNoSpaces' => 'Password should not contain spaces'	
+					'ruleNoSpaces' => 'Password should not contain spaces',
+					'ruleCheckNumberExists' => 'Password should contain at least 1 number',
+					'ruleCheckUppercaseExists' => 'Password should contain at least 1 uppercase character',
+					'ruleCheckNonAlphaExists' => 'Password should contain at least 1 non-alphanumeric character',
+					'ruleCheckLength' => 'Password length should be between %s to %s',
 				],
 				'retype_password' => [
 					'ruleChangePassword' => 'Please confirm your new password',
@@ -643,7 +655,7 @@ trait MessagesTrait {
 					'ruleNotBlank' => 'Please enter a valid username',
 					'ruleNoSpaces' => 'Only alphabets and numbers are allowed',
 					'ruleUnique' => 'This username is already in use.',
-					'ruleAlphanumeric' => 'Please enter an alphanumeric username',
+					'ruleCheckUsername' => 'Invalid username. Usernames must contain only alphabets and/or digits. Username can also be a valid email',
 				],
 				'password' => [
 					'ruleChangePassword' => 'Incorrect password.',
@@ -998,9 +1010,34 @@ trait MessagesTrait {
 				'reportName' => 'Students Out of School'
 			]
 		],
+		'CustomField' => [
+			'text' => [
+				'minLength' => 'Text should be at least %d characters',
+				'maxLength' => 'Text should not be exceed %d characters',
+				'range' => 'Text should be between %d and %d characters'
+			],
+			'number' => [
+				'minValue' => 'Number should not be lesser than %d',
+				'maxValue' => 'Number should not be greater than %d',
+				'range' => 'Number should be between %d and %d'
+			],
+			'date' => [
+				'earlier' => 'Date should be earlier than or equal to %s',
+				'later' => 'Date should be later than or equal to %s',
+				'between' => 'Date should be between %s and %s (inclusive)'
+			],
+			'time' => [
+				'earlier' => 'Time should be earlier than or equal to %s',
+				'later' => 'Time should be later than or equal to %s',
+				'between' => 'Time should be between %s and %s (inclusive)'
+			]
+		],
+
 	];
 
-	public function getMessage($code) {
+	public function getMessage($code, $options = []) {
+		$sprintf = (array_key_exists('sprintf', $options))? $options['sprintf']: [];
+
 		$index = explode('.', $code);
 		$message = $this->messages;
 		foreach ($index as $i) {
@@ -1016,6 +1053,7 @@ trait MessagesTrait {
 				}
 			}
 		}
-		return !is_array($message) ? __($message) : $message;
+
+		return !is_array($message) ? vsprintf(__($message), $sprintf) : $message;
 	}
 }
