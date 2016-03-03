@@ -89,13 +89,35 @@ class InstitutionClassesTable extends ControllerActionTable {
 		}
 	}
 
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['ControllerAction.Model.delete.afterAction'] = ['callable' => 'deleteAfterAction', 'priority' => 10];
+		return $events;
+	}
+
 	public function beforeAction(Event $event, ArrayObject $extra) {
+		$query = $this->request->query;
 		$this->institutionId = $this->Session->read('Institution.Institutions.id');
 		$academicPeriodOptions = $this->getAcademicPeriodOptions();
 		if ($this->action == 'index') {
-			if (empty($this->request->query['academic_period_id'])) {
-				$this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+			if (empty($query['academic_period_id'])) {
+				$query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
 			}
+		} else if ($this->action == 'add') {
+	    	if (array_key_exists('grade_type', $query)) {
+	    		$this->selectedGradeType = $query['grade_type'];
+	    	}
+			$gradeBehaviors = ['Institution.SingleGrade', 'Institution.MultiGrade'];
+			foreach ($gradeBehaviors as $key => $behavior) {
+				if ($this->hasBehavior($behavior)) {
+					$this->removeBehavior($behavior);
+				}
+			}
+			if ($this->selectedGradeType == 'single') {
+				$this->addBehavior('Institution.SingleGrade');
+	    	} else {
+				$this->addBehavior('Institution.MultiGrade');
+	    	}
 		}
 		if (array_key_exists($this->alias(), $this->request->data)) {
 			$this->selectedAcademicPeriodId = $this->postString('academic_period_id', $academicPeriodOptions);
@@ -145,13 +167,6 @@ class InstitutionClassesTable extends ControllerActionTable {
 			'name', 'staff_id', 'male_students', 'female_students', 'subjects',
 		]);
 
-		$gradeBehaviors = ['Institution.SingleGrade', 'Institution.MultiGrade'];
-		foreach ($gradeBehaviors as $key => $behavior) {
-			if ($this->hasBehavior($behavior)) {
-				$this->removeBehavior($behavior);
-			}
-		}
-
 	}
 
 
@@ -160,15 +175,23 @@ class InstitutionClassesTable extends ControllerActionTable {
 ** delete action methods
 **
 ******************************************************************************************************************/
-	public function onBeforeDelete(Event $event, ArrayObject $deleteOptions, $id, ArrayObject $extra) {
+	public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		$errorMessage = $this->aliasField('stopDeleteWhenStudentExists');
+		if (isset($extra['errorMessage']) && $extra['errorMessage']==$errorMessage) {
+			$this->Alert->warning($errorMessage, ['reset'=>true]);
+		}
+	}
+
+	public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra) {
 		$Students = $this->InstitutionClassStudents;
-		$conditions = [$Students->aliasField($Students->foreignKey()) => $id];
+		$conditions = [$Students->aliasField($Students->foreignKey()) => $entity->id];
 		if ($Students->exists($conditions)) {
-			$this->Alert->warning($this->aliasField('stopDeleteWhenStudentExists'));
+			$extra['errorMessage'] = $this->aliasField('stopDeleteWhenStudentExists');
 			$event->stopPropagation();
 			return $this->controller->redirect($this->url('index'));
 		}
 	}
+
 
 /******************************************************************************************************************
 **
@@ -321,7 +344,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 ** view action methods
 **
 ******************************************************************************************************************/
-    public function viewBeforeAction(Event $event) {
+    public function viewBeforeAction(Event $event, ArrayObject $extra) {
 		if ($this->selectedAcademicPeriodId == -1) {
 			return $this->controller->redirect([
 				'plugin' => $this->controller->plugin, 
@@ -339,7 +362,6 @@ class InstitutionClassesTable extends ControllerActionTable {
     		if (array_key_exists('education_grade_id', $query)) {
 	    		unset($action['education_grade_id']);
     		}
-    		// $action = $this->buttons['view']['url'];
 			$this->controller->redirect($action);
     	}
 
@@ -349,7 +371,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 
 	}
 
-	public function viewEditBeforeQuery(Event $event, Query $query) {
+	public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		$query->contain([
 			'InstitutionClassStudents.StudentStatuses',
 			'AcademicPeriods',
@@ -361,7 +383,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 		]);
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$this->fields['students']['data']['students'] = $entity->institution_class_students;
 		$this->fields['education_grades']['data']['grades'] = $entity->institution_class_grades;
 
@@ -374,7 +396,9 @@ class InstitutionClassesTable extends ControllerActionTable {
 ** add action methods
 **
 ******************************************************************************************************************/
+	// selected grade_type behavior's addBeforeAction will be called later
     public function addBeforeAction(Event $event, ArrayObject $extra) {
+    	// pr('model beforeAction');    	
 		$query = $this->request->query;
     	if (array_key_exists('academic_period_id', $query) || array_key_exists('education_grade_id', $query)) {
     		$action = $this->url('add');
@@ -386,10 +410,10 @@ class InstitutionClassesTable extends ControllerActionTable {
     		}
 			$this->controller->redirect($action);
     	}
-    	if (array_key_exists('grade_type', $query)) {
-    		$this->selectedGradeType = $query['grade_type'];
-    	}
-
+		if (array_key_exists($this->alias(), $this->request->data)) {
+			$academicPeriodOptions = $this->getAcademicPeriodOptions();
+			$this->selectedAcademicPeriodId = $this->postString('academic_period_id', $academicPeriodOptions);
+		}
 		if ($this->selectedAcademicPeriodId == -1) {
 			return $this->controller->redirect([
 				'plugin' => $this->controller->plugin, 
@@ -398,124 +422,24 @@ class InstitutionClassesTable extends ControllerActionTable {
 			]);
 		}
 
-		/**
-		 * add/edit form setup
-		 */
-		if ($this->selectedGradeType == 'single') {
-			$this->addBehavior('Institution.SingleGrade');
-    	} else {
-			$this->addBehavior('Institution.MultiGrade');
-    	}
-
-    	$this->gradeAddBeforeAction($event, $extra);
-
 		$this->Navigation->substituteCrumb(ucwords(strtolower($this->action)), ucwords(strtolower($this->action)).' '.ucwords(strtolower($this->selectedGradeType)).' Grade');
 
 		$tabElements = [
 			'single' => [
-				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Classes', $this->action, 'grade_type'=>'single'],
+				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Classes', 'add', 'grade_type'=>'single'],
 				'text' => __('Single Grade')
 			],
 			'multi' => [
-				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Classes', $this->action, 'grade_type'=>'multi'],
+				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Classes', 'add', 'grade_type'=>'multi'],
 				'text' => __('Multi Grade')
 			],
 		];
         $this->controller->set('tabElements', $tabElements);
 	}
 
-	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
-		if ($this->selectedGradeType != 'single') {
-			$this->addBehavior('Institution.MultiGrade');
-	    	$this->gradeAddBeforePatch($event, $entity, $requestData, $patchOptions, $extra);
-		}
-	}
-
-	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
-		if ($this->selectedGradeType == 'single') {
-			$process = function ($model, $entity) use ($data) {
-				$commonData = $data['InstitutionClasses'];
-				/**
-				 * PHPOE-2090, check if grade is empty as it is mandatory
-				 */
-				if (!empty($commonData['education_grade'])) {
-					foreach($data['MultiClasses'] as $key => $row) {
-						$data['MultiClasses'][$key]['institution_shift_id'] = $commonData['institution_shift_id'];
-						$data['MultiClasses'][$key]['institution_id'] = $commonData['institution_id'];
-						$data['MultiClasses'][$key]['academic_period_id'] = $commonData['academic_period_id'];
-						$data['MultiClasses'][$key]['institution_class_grades'][0] = [
-								'education_grade_id' => $commonData['education_grade'],
-								'status' => 1
-							];
-					}
-					$classes = $model->newEntities($data['MultiClasses']);
-					$error = false;
-					foreach ($classes as $key=>$class) {
-					    if ($class->errors()) {
-					    	$error = $class->errors();
-					    	$data['MultiClasses'][$key]['errors'] = $error;
-					    }
-					}
-					/**
-					 * attempt to prevent memory leak
-					 */
-					unset($key);
-					unset($class);
-					if (!$error) {
-						foreach ($classes as $class) {
-							$model->save($class);
-					    }
-						unset($class);
-						return true;
-					} else {
-						$errorMessage='';
-						foreach ($error as $key=>$value) {
-							$errorMessage .= Inflector::classify($key);
-						}
-						unset($value);
-						$model->log($error, 'debug');
-						/**
-						 * unset all field validation except for "name" to trigger validation error in ControllerActionComponent
-						 */
-						foreach ($model->fields as $value) {
-							if ($value['field'] != 'name') {
-								$model->validator()->remove($value['field']);
-							}
-						}
-						unset($value);
-						$model->fields['single_grade_field']['data']['classes'] = $classes;
-						$model->request->data['MultiClasses'] = $data['MultiClasses'];
-						return false;
-					}
-				} else {
-					$model->Alert->error('Institution.'.$model->alias().'.noGrade');
-					return false;
-				}
-			};
-		} else {
-			$process = function ($model, $entity) use ($data) {
-				$error = false;
-				if (array_key_exists('MultiClasses', $data)) {
-					$error = [$data['MultiClasses']=>0];
-				}
-				if (!$error) {
-					return $model->save($entity);
-				} else {
-					$errorMessage='';
-					foreach ($error as $key=>$value) {
-						$errorMessage .= Inflector::classify($key);
-					}
-					unset($value);
-					$model->log($error, 'debug');
-					return false;
-				}
-			};			
-		}
-		return $process;
-	}
-
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-        if ($entity->isNew()) {
+        $errors = $entity->errors();
+        if (empty($errors)) {
 			/**
 			 * using the entity->id (class id), find the list of grades from (institution_class_grades) linked to this class
 			 */
@@ -550,7 +474,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 					->toArray();
 			unset($EducationGrades);
 			unset($grades);
-			
+
 			$educationSubjects = [];
 			if (count($educationGradeSubjects)>0) {
 				foreach ($educationGradeSubjects as $gradeSubject) {
@@ -571,7 +495,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 			/**
 			 * for each education subjects, find the primary key of institution_classes using (entity->academic_period_id and institution_id and education_subject_id)
 			 */
-			$InstitutionSubjects = TableRegistry::get('Institution.InstitutionClasses');
+			$InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
 			$institutionSubjects = $InstitutionSubjects->find('list', [
 				    'keyField' => 'id',
 				    'valueField' => 'education_subject_id'
@@ -586,31 +510,29 @@ class InstitutionClassesTable extends ControllerActionTable {
 			foreach ($institutionSubjects as $key => $value) {
 				$institutionSubjectsIds[$value][] = $key;
 			}
-			unset($institutionSubjects);	
+			unset($institutionSubjects);
 
 			/**
 			 * using the list of primary keys, search institution_class_subjects (InstitutionClassSubjects) to check for existing records
 			 * if found, don't insert, 
-			 * else create a record in institution_classes (InstitutionSubjects)
+			 * else create a record in institution_subjects (InstitutionSubjects)
 			 * and link to the subject in institution_class_subjects (InstitutionClassSubjects) with status 1
 			 */
 			$InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
 			$newSchoolSubjects = [];
 
 			foreach ($educationSubjects as $key=>$educationSubject) {
-				$getExistingRecord = false;
-				if (empty($institutionSubjects)) {
-					if (array_key_exists($key, $institutionSubjectsIds)) {
-						$getExistingRecord = $InstitutionClassSubjects->find()
-							->where([
-								$InstitutionClassSubjects->aliasField('institution_class_id') => $entity->id,
-								$InstitutionClassSubjects->aliasField('institution_class_id').' IN' => $institutionSubjectsIds[$key],
-							])
-							->select(['id'])
-							->first();
-					}
+				$existingSchoolSubjects = false;
+				if (array_key_exists($key, $institutionSubjectsIds)) {
+					$existingSchoolSubjects = $InstitutionClassSubjects->find()
+						->where([
+							$InstitutionClassSubjects->aliasField('institution_class_id') => $entity->id,
+							$InstitutionClassSubjects->aliasField('institution_class_id').' IN' => $institutionSubjectsIds[$key],
+						])
+						->select(['id'])
+						->first();
 				}
-				if (!$getExistingRecord) {
+				if (!$existingSchoolSubjects) {
 					$newSchoolSubjects[$key] = [
 						'name' => $educationSubject['name'],
 						'institution_id' => $entity->institution_id,
@@ -637,7 +559,6 @@ class InstitutionClassesTable extends ControllerActionTable {
 			unset($InstitutionSubjects);
 			unset($InstitutionClassSubjects);
         }
-        return true;
 	}
 
 	public function addAfterAction(Event $event, Entity $entity) {
@@ -650,7 +571,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 ** edit action methods
 **
 ******************************************************************************************************************/
-	public function editBeforeAction(Event $event) {
+	public function editBeforeAction(Event $event, ArrayObject $extra) {
 		if ($this->selectedAcademicPeriodId == -1) {
 			return $this->controller->redirect([
 				'plugin' => $this->controller->plugin, 
@@ -664,11 +585,11 @@ class InstitutionClassesTable extends ControllerActionTable {
 		]);
 	}
 
-	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
 		/**
 		 * System is unable to cope if there are too many students to be added.
 		 * Temporarily extend the server's max_execution_time to 60 seconds.
-		 * @todo  Changed the way to save huge hasMany records.
+		 * @todo  Change the way to save huge hasMany records.
 		 */
 		ini_set('max_execution_time', 60);
 
@@ -678,14 +599,14 @@ class InstitutionClassesTable extends ControllerActionTable {
 		 */
 		foreach($entity->institution_class_students as $key => $record) {
 			$k = $record->student_id;
-			if (array_key_exists('institution_class_students', $data[$this->alias()])) {
-				if (!array_key_exists($k, $data[$this->alias()]['institution_class_students'])) {			
+			if (array_key_exists('institution_class_students', $requestData[$this->alias()])) {
+				if (!array_key_exists($k, $requestData[$this->alias()]['institution_class_students'])) {			
 					// PHPOE-2338 - status no longer used, record will be deleted instead
 				} else {
-					$data[$this->alias()]['institution_class_students'][$k]['id'] = $record->id;
+					$requestData[$this->alias()]['institution_class_students'][$k]['id'] = $record->id;
 				}
 			} else {
-				$data[$this->alias()]['institution_class_students'] = [];
+				$requestData[$this->alias()]['institution_class_students'] = [];
 				// PHPOE-2338 - status no longer used, record will be deleted instead
 			}
 		}
@@ -752,9 +673,15 @@ class InstitutionClassesTable extends ControllerActionTable {
 			/**
 			 * Just unset the record from studentOptions on first page load
 			 */
-			foreach ($entity->institution_class_students as $row) {
-				if (array_key_exists($row->student_id, $studentOptions)) {
-					unset($studentOptions[$row->student_id]);
+			foreach ($students as $key => $student) {
+				if (array_key_exists($student->student_id, $studentOptions)) {
+					unset($studentOptions[$student->student_id]);
+				}
+				// POCOR-1694 - when there are new students added but the form submit fails validation,
+				// the new students entity will not have security_users data and will produce notices.
+				// Attach user data if it does not exists in the student entity
+				if (!$student->has('user')) {
+					$students[$key] = $this->createVirtualStudentEntity($student->student_id, $entity);
 				}
 			}
 		}
@@ -765,8 +692,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 		$this->fields['students']['data']['studentOptions'] = $studentOptions;
 	}
 
-	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
-
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
 		$currentInstitutionClassStudents = $entity->institution_class_students;
 		$currentStudentIds = [];
 		foreach ($currentInstitutionClassStudents as $key => $value) {
@@ -795,7 +721,6 @@ class InstitutionClassesTable extends ControllerActionTable {
 				}
 			}
 		}
-		
 	}
 
 
@@ -857,13 +782,8 @@ class InstitutionClassesTable extends ControllerActionTable {
 				$attr['options'] = $this->getStaffOptions('edit');
 			}
 
-		} elseif ($action == 'add') {
-
-			// $attr['type'] = 'select';
-
 		} elseif (in_array($action, ['view', 'index'])) {
 
-			// $attr['type'] = 'select';
 			if ($this->selectedAcademicPeriodId > -1) {
 				$attr['options'] = $this->getStaffOptions('view');
 			}
@@ -898,7 +818,6 @@ class InstitutionClassesTable extends ControllerActionTable {
 ** essential functions
 **
 ******************************************************************************************************************/
-
 	public function getClassGradeOptions($entity) {
 		$Grade = $this->InstitutionClassGrades;
 		$gradeOptions = $Grade->find()
@@ -1058,7 +977,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 	public function createVirtualStudentEntity($id, $entity) {
 		$InstitutionStudentsTable = $this->Institutions->Students;
 		$userData = $InstitutionStudentsTable->find()
-			->contain(['Users'=>['Genders'], 'StudentStatuses', 'EducationGrades'])
+			->contain(['Users' => ['Genders'], 'StudentStatuses', 'EducationGrades'])
 			->where([
 				$InstitutionStudentsTable->aliasField('student_id') => $id,
 				$InstitutionStudentsTable->aliasField('academic_period_id') => $entity->academic_period_id,
@@ -1067,14 +986,14 @@ class InstitutionClassesTable extends ControllerActionTable {
 			->first();
 
 		$data = [
-			'id'=>$this->getExistingRecordId($id, $entity),
-			'student_id'=>$id,
-			'institution_class_id'=>$entity->id,
+			'id' => $this->getExistingRecordId($id, $entity),
+			'student_id' => $id,
+			'institution_class_id' => $entity->id,
 			'education_grade_id'=>  $userData->education_grade_id,
 			'student_status_id' => $userData->student_status_id,
 			'education_grade' => [],
 			'student_status' => [],
-			'user'=>[]
+			'user' => []
 		];
 		$student = $this->InstitutionClassStudents->newEntity();
 		$student = $this->InstitutionClassStudents->patchEntity($student, $data);
@@ -1147,5 +1066,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 		$multiGradeData = $this->find('list', $multiGradeOptions);
 		return $multiGradeData->toArray();
 	}
+
+	
 }
 	
