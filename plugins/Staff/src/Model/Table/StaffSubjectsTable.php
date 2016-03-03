@@ -10,17 +10,16 @@ use Cake\ORM\ResultSet;
 use App\Model\Traits\MessagesTrait;
 use App\Model\Table\ControllerActionTable;
 
-class StaffClassesTable extends ControllerActionTable {
+class StaffSubjectsTable extends ControllerActionTable {
 	use MessagesTrait;
 
 	public function initialize(array $config) {
-		$this->table('institution_classes');
+		$this->table('institution_subject_staff');
 		parent::initialize($config);
-
+		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-		$this->belongsTo('InstitutionShifts', ['className' => 'Institution.InstitutionShifts']);
+		$this->belongsTo('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects']);
+		$this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		if ($this->hasBehavior('ControllerAction')) {
 			$this->toggle('add', false);
@@ -31,18 +30,22 @@ class StaffClassesTable extends ControllerActionTable {
 		}
 	}
 
-	// Academic Period	Institution	Grade	Class	Male Students	Female Students
 	public function indexBeforeAction(Event $event, ArrayObject $extra) {
-		$this->fields['class_number']['visible'] = false;
-		$this->fields['institution_shift_id']['visible'] = false;
+		$this->fields['status']['visible'] = false;
 
+		$this->field('academic_period', []);
+		$this->field('institution', []);
+		$this->field('institution_class', []);
+		$this->field('educationSubject', []);
 		$this->field('male_students', []);
 		$this->field('female_students', []);
 		
 		$this->setFieldOrder([
-			'academic_period_id',
-			'institution_id',
-			'name',
+			'academic_period',
+			'institution',
+			'institution_class',
+			'institution_subject_id',
+			'educationSubject',
 			'male_students',
 			'female_students'
 		]);
@@ -50,32 +53,31 @@ class StaffClassesTable extends ControllerActionTable {
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		$query->contain([
-			'AcademicPeriods',
-			'Institutions',
+			'InstitutionSubjects'
 		]);
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 		if (array_key_exists('view', $buttons)) {
-			$institutionId = $entity->institution->id;
+			$institutionId = $entity->institution_subject->institution_id;
 			$url = [
 				'plugin' => 'Institution', 
 				'controller' => 'Institutions', 
-				'action' => 'Classes',
-				'view', $entity->id,
+				'action' => 'Subjects',
+				'view', $entity->institution_subject->id,
 				'institution_id' => $institutionId,
 			];
 			$buttons['view']['url'] = $url;
 		}
 		return $buttons;
 	}
-	
+
 	public function indexAfterAction(Event $event, ResultSet $data, ArrayObject $extra) {
 		$options = ['type' => 'staff'];
 		$tabElements = $this->controller->getCareerTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', 'Classes');
+		$this->controller->set('selectedAction', 'Subjects');
+	
 	}
-
 }

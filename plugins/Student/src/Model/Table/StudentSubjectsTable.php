@@ -30,7 +30,7 @@ class StudentSubjectsTable extends ControllerActionTable {
 		}
 	}
 
-	public function indexBeforeAction(Event $event) {
+	public function indexBeforeAction(Event $event, ArrayObject $extra) {
 		$this->fields['status']['visible'] = false;
 
 		$this->field('academic_period', []);
@@ -72,8 +72,7 @@ class StudentSubjectsTable extends ControllerActionTable {
 		$options = ['type' => 'student'];
 		$tabElements = $this->controller->getAcademicTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
-		$alias = 'Subjects';
-		$this->controller->set('selectedAction', $alias);
+		$this->controller->set('selectedAction', 'Subjects');
 	}
 
 }

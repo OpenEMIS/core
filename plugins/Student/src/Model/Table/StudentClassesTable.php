@@ -76,8 +76,7 @@ class StudentClassesTable extends ControllerActionTable {
 		$options = ['type' => 'student'];
 		$tabElements = $this->controller->getAcademicTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
-		$alias = 'Classes';
-		$this->controller->set('selectedAction', $alias);
+		$this->controller->set('selectedAction', 'Classes');
 	}
 
 }
