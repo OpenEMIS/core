@@ -18,7 +18,6 @@ class StaffAccountTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator = $this->getAccountValidation($validator);
 		return $validator;
 	}
 
