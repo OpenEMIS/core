@@ -45,6 +45,42 @@ class AccountBehavior extends Behavior {
 		]);
 	}
 
+	public function getAccountValidation(Validator $validator) {
+		$this->_table->setValidationCode('username.ruleUnique', 'User.Accounts');
+		$this->_table->setValidationCode('username.ruleCheckUsername', 'User.Accounts');
+		$this->_table->setValidationCode('password.ruleNoSpaces', 'User.Accounts');
+		$this->_table->setValidationCode('password.ruleMinLength', 'User.Accounts');
+		$this->_table->setValidationCode('retype_password.ruleCompare', 'User.Accounts');
+		return $validator
+			->requirePresence('gender_id', 'create')
+			->add('username', [
+				'ruleUnique' => [
+					'rule' => 'validateUnique',
+					'provider' => 'table',
+				],
+				'ruleCheckUsername' => [
+					'rule' => 'checkUsername',
+					'provider' => 'table',
+				]
+			])
+			->add('password' , [
+				'ruleNoSpaces' => [
+					'rule' => 'checkNoSpaces'
+				],
+				'ruleMinLength' => [
+					'rule' => ['minLength', 6],
+					'on' => 'update'
+				]
+			])
+			->add('retype_password' , [
+				'ruleCompare' => [
+					'rule' => ['comparePasswords', 'password'],
+					'on' => 'update'
+				]
+			])
+			;
+	}
+
 	private function setupTabElements($entity) {
 		if ($this->userRole == 'Preferences') return; // has its own setupTabElements
 		$id = !is_null($this->_table->request->query('id')) ? $this->_table->request->query('id') : 0;
