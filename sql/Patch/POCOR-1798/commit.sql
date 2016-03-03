@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS `employment_types` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 SELECT `id` INTO @fieldOptionId FROM `field_options` WHERE `code` = 'EmploymentTypes';
+UPDATE field_options SET params = '{"model":"FieldOption.EmploymentTypes"}' WHERE id = @fieldOptionId;
 INSERT INTO employment_types (`id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created` ) SELECT `id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM field_option_values WHERE field_option_id = @fieldOptionId;
 
 -- Converting Extracurricular Types
@@ -46,6 +47,7 @@ CREATE TABLE IF NOT EXISTS `extracurricular_types` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 SELECT `id` INTO @fieldOptionId FROM `field_options` WHERE `code` = 'ExtracurricularTypes';
+UPDATE field_options SET params = '{"model":"FieldOption.ExtracurricularTypes"}' WHERE id = @fieldOptionId;
 INSERT INTO extracurricular_types (`id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created` ) SELECT `id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM field_option_values WHERE field_option_id = @fieldOptionId;
 
 -- Converting Identity Types
@@ -69,6 +71,7 @@ CREATE TABLE IF NOT EXISTS `identity_types` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 SELECT `id` INTO @fieldOptionId FROM `field_options` WHERE `code` = 'IdentityTypes';
+UPDATE field_options SET params = '{"model":"FieldOption.IdentityTypes"}' WHERE id = @fieldOptionId;
 INSERT INTO identity_types (`id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created` ) SELECT `id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM field_option_values WHERE field_option_id = @fieldOptionId;
 
 -- Converting Languages
@@ -92,6 +95,7 @@ CREATE TABLE IF NOT EXISTS `languages` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 SELECT `id` INTO @fieldOptionId FROM `field_options` WHERE `code` = 'Languages';
+UPDATE field_options SET params = '{"model":"Languages"}' WHERE id = @fieldOptionId;
 INSERT INTO languages (`id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created` ) SELECT `id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM field_option_values WHERE field_option_id = @fieldOptionId;
 
 -- Converting License Types
@@ -115,6 +119,7 @@ CREATE TABLE IF NOT EXISTS `license_types` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 SELECT `id` INTO @fieldOptionId FROM `field_options` WHERE `code` = 'LicenseTypes';
+UPDATE field_options SET params = '{"model":"FieldOption.LicenseTypes"}' WHERE id = @fieldOptionId;
 INSERT INTO license_types (`id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created` ) SELECT `id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM field_option_values WHERE field_option_id = @fieldOptionId;
 
 -- Converting Special Need Types
@@ -138,6 +143,7 @@ CREATE TABLE IF NOT EXISTS `special_need_types` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 SELECT `id` INTO @fieldOptionId FROM `field_options` WHERE `code` = 'SpecialNeedTypes';
+UPDATE field_options SET params = '{"model":"FieldOption.SpecialNeedTypes"}' WHERE id = @fieldOptionId;
 INSERT INTO special_need_types (`id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created` ) SELECT `id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM field_option_values WHERE field_option_id = @fieldOptionId;
 
 
