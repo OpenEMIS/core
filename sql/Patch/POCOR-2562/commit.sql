@@ -58,10 +58,9 @@ ALTER TABLE `institution_student_absences`
 CHANGE COLUMN `start_time` `start_time` TIME NULL DEFAULT NULL COMMENT '' ,
 CHANGE COLUMN `end_time` `end_time` TIME NULL DEFAULT NULL COMMENT '' ;
 
-
 ALTER TABLE `institution_student_absences` 
 ADD COLUMN `absence_type_id` INT NULL DEFAULT 0 AFTER `institution_id`,
-ADD INDEX `absence_type_id` (`absence_type_id` ASC)  COMMENT '';
+ADD INDEX `absence_type_id` (`absence_type_id`);
 
 UPDATE institution_student_absences
 SET absence_type_id = (
