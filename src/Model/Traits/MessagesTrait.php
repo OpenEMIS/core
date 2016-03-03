@@ -82,7 +82,8 @@ trait MessagesTrait {
 			'type' => 'Type',
 			'amount' => 'Amount',
 			'total' => 'Total',
-			'notTransferrable' => 'No other alternative options available to convert records.'
+			'notTransferrable' => 'No other alternative options available to convert records.',
+			'validationRules' => 'Validation Rules',
 		],
 		'fileUpload' => [
 			'single' => '*File size should not be larger than 2MB.',
@@ -1012,14 +1013,14 @@ trait MessagesTrait {
 		],
 		'CustomField' => [
 			'text' => [
-				'minLength' => 'Text must be at least %d characters',
-				'maxLength' => 'Text must not exceed %d characters',
-				'range' => 'Text must be between %d and %d'
+				'minLength' => 'Text should be at least %d characters',
+				'maxLength' => 'Text should not be exceed %d characters',
+				'range' => 'Text should be between %d and %d characters'
 			],
 			'number' => [
-				'minValue' => 'Number must not lesser than %d',
-				'maxValue' => 'Number must not greater than %d',
-				'range' => 'Number must be between %d and %d'
+				'minValue' => 'Number should not be lesser than %d',
+				'maxValue' => 'Number should not be greater than %d',
+				'range' => 'Number should be between %d and %d'
 			],
 			'date' => [
 				'earlier' => 'Date should be earlier than or equal to %s',

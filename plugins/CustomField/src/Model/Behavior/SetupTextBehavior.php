@@ -14,12 +14,46 @@ class SetupTextBehavior extends SetupBehavior {
         parent::initialize($config);
 
         $this->ruleOptions = [
-			'input_mask' => __('Custom Validation')
+        	'length' => __('Length Validation'),
+        	'input_mask' => __('Custom Validation')
 		];
     }
 
-    public function buildValidator(Event $event, Validator $validator, $name) {
-    	$validator->notEmpty('validation_format');
+    public function addBeforeAction(Event $event) {
+    	$model = $this->_table;
+    	$fieldTypes = $model->getFieldTypes();
+    	$selectedFieldType = isset($model->request->data[$model->alias()]['field_type']) ? $model->request->data[$model->alias()]['field_type'] : key($fieldTypes);
+
+    	if ($selectedFieldType == $this->fieldTypeCode) {
+    		$this->buildTextValidator();
+    	}
+    }
+
+    public function editAfterQuery(Event $event, Entity $entity) {
+    	if ($entity->field_type == $this->fieldTypeCode) {
+    		$this->buildTextValidator();
+    	}
+    }
+
+    private function buildTextValidator() {
+		$validator = $this->_table->validator();
+		$validator
+	    	->allowEmpty('minimum_length', function ($context) {
+				if (array_key_exists('maximum_length', $context['data'])) {
+					return strlen($context['data']['maximum_length']);
+				}
+
+				return false;
+			})
+			->allowEmpty('maximum_length', function ($context) {
+				if (array_key_exists('minimum_length', $context['data'])) {
+					return strlen($context['data']['minimum_length']);
+				}
+
+				return false;
+			})
+	    	->notEmpty('validation_format')
+	    	;
     }
 
 	public function onSetTextElements(Event $event, Entity $entity) {
@@ -30,7 +64,17 @@ class SetupTextBehavior extends SetupBehavior {
 				// view / edit
 				if ($entity->has('params') && !empty($entity->params)) {
 					$params = json_decode($entity->params, true);
-					if (array_key_exists('input_mask', $params)) {
+					if (array_key_exists('min_length', $params)) {
+						$model->request->query['text_rule'] = 'length';
+						$entity->minimum_length = $params['min_length'];
+					} else if (array_key_exists('max_length', $params)) {
+						$model->request->query['text_rule'] = 'length';
+						$entity->maximum_length = $params['max_length'];
+					} else if (array_key_exists('range', $params)) {
+						$model->request->query['text_rule'] = 'length';
+						$entity->minimum_length = $params['range']['lower'];
+						$entity->maximum_length = $params['range']['upper'];
+					} else if (array_key_exists('input_mask', $params)) {
 						$model->request->query['text_rule'] = 'input_mask';
 						$entity->validation_format = $params['input_mask'];
 					}
@@ -46,7 +90,7 @@ class SetupTextBehavior extends SetupBehavior {
 			}
 		}
 
-		$ruleOptions = ['' => __('-- Select Rule --')] + $this->ruleOptions;
+		$ruleOptions = ['' => __('No Validation')] + $this->ruleOptions;
 		$selectedRule = $model->queryString('text_rule', $ruleOptions);
 
 		$model->ControllerAction->field('validation_rule', [
@@ -54,11 +98,21 @@ class SetupTextBehavior extends SetupBehavior {
 			'options' => $ruleOptions,
 			'default' => $selectedRule,
 			'value' => $selectedRule,
-			'onChangeReload' => 'changeRule',
+			'onChangeReload' => true,
 			'after' => 'is_unique'
 		]);
 
 		switch ($selectedRule) {
+			case 'length':
+				$model->ControllerAction->field('minimum_length', [
+		        	'type' => 'integer',
+		        	'after' => 'validation_rule'
+		        ]);
+		        $model->ControllerAction->field('maximum_length', [
+		        	'type' => 'integer',
+		        	'after' => 'minimum_length'
+		        ]);
+				break;
 			case 'input_mask':
 				$fieldType = strtolower($this->fieldTypeCode);
 				$model->ControllerAction->addField('validation_reference', [
@@ -78,36 +132,48 @@ class SetupTextBehavior extends SetupBehavior {
 		}
 	}
 
-	public function addEditOnChangeRule(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$model = $this->_table;
-		$request = $model->request;
-		unset($request->query['text_rule']);
+	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
+		if (array_key_exists('validation_rule', $data)) {
+			if ($data['field_type'] == $this->fieldTypeCode) {
+				$model = $this->_table;
+				$request = $model->request;
+				unset($request->query['text_rule']);
 
-		if ($request->is(['post', 'put'])) {
-			if (array_key_exists($model->alias(), $request->data)) {
-				if (array_key_exists('validation_rule', $request->data[$model->alias()])) {
-					$selectedRule = $request->data[$model->alias()]['validation_rule'];
+				if (!empty($data['validation_rule'])) {
+					$selectedRule = $data['validation_rule'];
 					$request->query['text_rule'] = $selectedRule;
+					$params = [];
+
+					switch ($selectedRule) {
+	    				case 'length':
+	    					$minLength = array_key_exists('minimum_length', $data) ? $data['minimum_length']: null;
+							$maxLength = array_key_exists('maximum_length', $data) ? $data['maximum_length']: null;
+
+	    					if (!empty($minLength) && !empty($maxLength)) {
+	    						$params['range'] = [
+	    							'lower' => $minLength,
+	    							'upper' => $maxLength
+	    						];
+	    					} else if (!empty($minLength) && empty($maxLength)) {
+								$params['min_length'] = $minLength;
+	    					} else if (empty($minLength) && !empty($maxLength)) {
+								$params['max_length'] = $maxLength;
+	    					}
+	    					break;
+						case 'input_mask':
+							if (array_key_exists('validation_format', $data) && !empty($data['validation_format'])) {
+								$params['input_mask'] = $data['validation_format'];
+							}
+							break;
+						default:
+							break;
+					}
+
+					$data['params'] = json_encode($params, JSON_UNESCAPED_UNICODE);
+				} else {
+					$data['params'] = '';
 				}
 			}
-		}
-	}
-
-	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-    	$model = $this->_table;
-    	if ($data[$model->alias()]['field_type'] == $this->fieldTypeCode) {
-    		if (array_key_exists('validation_rule', $data[$model->alias()]) && !empty($data[$model->alias()]['validation_rule'])) {
-	    		if (array_key_exists('validation_format', $data[$model->alias()])) {
-	    			$params = [];
-	    			$validationFormat = $data[$model->alias()]['validation_format'];
-	    			if (!empty($validationFormat)) {
-	    				$params['input_mask'] = $validationFormat;
-	    			}
-	    			$data[$model->alias()]['params'] = json_encode($params, JSON_UNESCAPED_UNICODE);
-	    		}
-	    	} else {
-	    		$data[$model->alias()]['params'] = '';
-	    	}
 		}
 	}
 }
