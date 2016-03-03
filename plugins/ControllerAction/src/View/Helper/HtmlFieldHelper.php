@@ -563,10 +563,24 @@ class HtmlFieldHelper extends Helper {
 				}
 			}
 		} else if ($action == 'edit') {
-			$attr['id'] = $attr['model'] . '_' . $field;
+
+			if (!isset($attr['id'])) {
+				$attr['id'] = $attr['model'] . '_' . $field;
+			}
+			
 			if (array_key_exists('fieldName', $attr)) {
 				$attr['id'] = $this->_domId($attr['fieldName']);
 			}
+			$model = split('\.', $attr['model']);
+			$newModel = '';
+			foreach($model as $part) {
+				if (empty($newModel)) {
+					$newModel = $part;
+				} else {
+					$newModel .= '['.$part.']';
+				}
+			}
+			$attr['model'] = $newModel;
 			$attr['time_options'] = array_merge($_options, $attr['time_options']);
 
 			if (!array_key_exists('value', $attr)) {
