@@ -98,7 +98,7 @@ trait ControllerActionV4Trait {
 						$hasDefaultField = false;
 						$defaultValue = false;
 						$optionsArray = [];
-						foreach ($query->toArray() as $okey => $ovalue) {
+						foreach ($queryData as $okey => $ovalue) {
 							$optionsArray[$ovalue->id] = $ovalue->name;
 							if ($ovalue->has('default')) {
 								$hasDefaultField = true;
