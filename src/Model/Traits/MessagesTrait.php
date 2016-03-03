@@ -628,7 +628,11 @@ trait MessagesTrait {
 					'ruleChangePassword' => 'Incorrect password.',
 					'ruleCheckUsernameExists' => 'Please enter a valid password',
 					'ruleMinLength' => 'Password must be at least 6 characters',
-					'ruleNoSpaces' => 'Password should not contain spaces'	
+					'ruleNoSpaces' => 'Password should not contain spaces',
+					'ruleCheckNumberExists' => 'Password should contain at least 1 number',
+					'ruleCheckUppercaseExists' => 'Password should contain at least 1 uppercase character',
+					'ruleCheckNonAlphaExists' => 'Password should contain at least 1 non-alphanumeric character',
+					'ruleCheckLength' => 'Password length should be between %s to %s',
 				],
 				'retype_password' => [
 					'ruleChangePassword' => 'Please confirm your new password',
@@ -1048,6 +1052,7 @@ trait MessagesTrait {
 				}
 			}
 		}
+
 		return !is_array($message) ? vsprintf(__($message), $sprintf) : $message;
 	}
 }

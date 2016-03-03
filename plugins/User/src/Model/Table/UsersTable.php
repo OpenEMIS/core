@@ -58,8 +58,6 @@ class UsersTable extends AppTable {
 
 		$this->addBehavior('Area.Areapicker');
 		$this->addBehavior('User.AdvancedNameSearch');
-
-		
 	}
 
 	public function implementedEvents() {
@@ -442,14 +440,7 @@ class UsersTable extends AppTable {
 			])
 			->allowEmpty('username')
 			->allowEmpty('password')
-			->add('password' , [
-				'ruleNoSpaces' => [
-					'rule' => 'checkNoSpaces'
-				],
-				'ruleMinLength' => [
-					'rule' => ['minLength', 6]
-				]
-			])
+			// password validation now in behavior
 			->add('address', [])
 			->allowEmpty('photo_content')
 			;
@@ -489,15 +480,8 @@ class UsersTable extends AppTable {
 				]
 			])
 			->allowEmpty('username')
+			// password validation now in behavior
 			->allowEmpty('password')
-			->add('password' , [
-				'ruleNoSpaces' => [
-					'rule' => 'checkNoSpaces'
-				],
-				'ruleMinLength' => [
-					'rule' => ['minLength', 6]
-				]
-			])
 			->allowEmpty('photo_content')
 			;
 
@@ -507,6 +491,7 @@ class UsersTable extends AppTable {
 		$thisModel->setValidationCode('last_name.ruleCheckIfStringGotNoNumber', 'User.Users');
 		$thisModel->setValidationCode('openemis_no.ruleUnique', 'User.Users');
 		$thisModel->setValidationCode('username.ruleUnique', 'User.Users');
+		$thisModel->setValidationCode('username.ruleAlphanumeric', 'User.Users');
 		$thisModel->setValidationCode('username.ruleCheckUsername', 'User.Users');
 		$thisModel->setValidationCode('password.ruleNoSpaces', 'User.Users');
 		$thisModel->setValidationCode('password.ruleMinLength', 'User.Users');
