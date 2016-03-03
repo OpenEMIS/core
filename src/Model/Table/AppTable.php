@@ -234,6 +234,7 @@ class AppTable extends Table {
 			if ($this->endsWith($field, '_id') && $this->endsWith($label, ' Id')) {
 				$label = str_replace(' Id', '', $label);
 			}
+			$label = __($label);
 		}
 		if (substr($label, -1) == ')') {
 			$label = $label.' ';
