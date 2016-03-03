@@ -232,7 +232,6 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 		->find('byClasses')
 		->contain(['Teachers'])
 		->where([$this->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId]);
-		// pr($query->toArray());die;
 	}
 
 	public function indexAfterAction(Event $event, ResultSet $data, ArrayObject $extra) {
@@ -250,7 +249,7 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 ** view action methods
 **
 ******************************************************************************************************************/
-    public function viewBeforeAction(Event $event) {
+    public function viewBeforeAction(Event $event, ArrayObject $extra) {
 		if ($this->_selectedAcademicPeriodId == -1) {
 			return $this->controller->redirect([
 				'plugin' => $this->controller->plugin, 
@@ -269,7 +268,7 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 		]);
 	}
 
-	public function viewBeforeQuery(Event $event, Query $query) {
+	public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		$query->contain([
 			'InstitutionClassSubjects.InstitutionClasses',
 			'Teachers',
@@ -277,7 +276,7 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 		]);
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$classes = [];
 		foreach ($entity->institution_class_subjects as $key => $value) {
 			if (is_object($value->institution_class)) {
