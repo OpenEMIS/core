@@ -28,13 +28,13 @@ class StudentAttendancesTable extends AppTable {
 	private $absenceCodeList;
 
 	public function initialize(array $config) {
-		$this->table('institution_section_students');
+		$this->table('institution_class_students');
 		$config['Modified'] = false;
 		$config['Created'] = false;
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
-		$this->belongsTo('InstitutionSections', ['className' => 'Institution.InstitutionSections']);
+		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('StudentStatuses',	['className' => 'Student.StudentStatuses']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
@@ -49,8 +49,8 @@ class StudentAttendancesTable extends AppTable {
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
-		$sectionId = $this->request->query['section_id'];
-		$query->where([$this->aliasField('institution_section_id') => $sectionId]);
+		$classId = $this->request->query['class_id'];
+		$query->where([$this->aliasField('institution_class_id') => $classId]);
 	}
 
 	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
@@ -60,7 +60,7 @@ class StudentAttendancesTable extends AppTable {
 		$endDate = $AcademicPeriodTable->get($academicPeriodId)->end_date->format('Y-m-d');
 		$months = $AcademicPeriodTable->generateMonthsByDates($startDate, $endDate);
 		$institutionId = $this->Session->read('Institution.Institutions.id');
-		$sectionId = $this->request->query['section_id'];
+		$classId = $this->request->query['class_id'];
 
 		foreach ($months as $month) {
 			$year = $month['year'];
@@ -77,7 +77,7 @@ class StudentAttendancesTable extends AppTable {
 				'startDate' => $startDate,
 				'endDate' => $endDate,
 				'institutionId' => $institutionId,
-				'sectionId' => $sectionId,
+				'classId' => $classId,
 				'orientation' => 'landscape'
  			];
 		}
@@ -119,7 +119,7 @@ class StudentAttendancesTable extends AppTable {
 		$endDate = $dayIndex[count($dayIndex)-1];
 
 		// Set data into a temporary variable
-		$this->_absenceData = $this->getData($startDate, $endDate, $sheet['institutionId'], $sheet['sectionId']);
+		$this->_absenceData = $this->getData($startDate, $endDate, $sheet['institutionId'], $sheet['classId']);
 	}
 
 	public function onExcelRenderAttendance(Event $event, Entity $entity, array $attr) {
@@ -158,7 +158,7 @@ class StudentAttendancesTable extends AppTable {
 		}
 	}
 
-	public function getData($monthStartDay, $monthEndDay, $institutionId, $sectionId) {		
+	public function getData($monthStartDay, $monthEndDay, $institutionId, $classId) {		
 		$StudentAbsenceTable = TableRegistry::get('Institution.InstitutionStudentAbsences');
 
 		$absenceData = $StudentAbsenceTable->find('all')
@@ -169,10 +169,10 @@ class StudentAttendancesTable extends AppTable {
 				$StudentAbsenceTable->aliasField('end_date').' <= ' => $monthEndDay,
 			])
 			->innerJoin(
-				['InstitutionSectionStudents' => 'institution_section_students'],
+				['InstitutionClassStudents' => 'institution_class_students'],
 				[
-					'InstitutionSectionStudents.student_id = '.$StudentAbsenceTable->aliasField('student_id'),
-					'InstitutionSectionStudents.institution_section_id' => $sectionId
+					'InstitutionClassStudents.student_id = '.$StudentAbsenceTable->aliasField('student_id'),
+					'InstitutionClassStudents.institution_class_id' => $classId
 				]
 			)
 			->select([
@@ -234,7 +234,7 @@ class StudentAttendancesTable extends AppTable {
 
 		$this->ControllerAction->field('openemis_no');
 		$this->ControllerAction->field('student_id');
-		$this->ControllerAction->field('institution_section_id', ['visible' => false]);
+		$this->ControllerAction->field('institution_class_id', ['visible' => false]);
 		$this->ControllerAction->field('education_grade_id', ['visible' => false]);
 		$this->ControllerAction->field('status', ['visible' => false]);
 		$this->ControllerAction->field('student_status_id', ['visible' => false]);
@@ -517,14 +517,14 @@ class StudentAttendancesTable extends AppTable {
 			$this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
 		}
 		
-		$Sections = TableRegistry::get('Institution.InstitutionSections');
+		$Classes = TableRegistry::get('Institution.InstitutionClasses');
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
 
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 			'message' => '{{label}} - ' . $this->getMessage('general.noClasses'),
-			'callable' => function($id) use ($Sections, $institutionId) {
-				return $Sections->findByInstitutionIdAndAcademicPeriodId($institutionId, $id)->count();
+			'callable' => function($id) use ($Classes, $institutionId) {
+				return $Classes->findByInstitutionIdAndAcademicPeriodId($institutionId, $id)->count();
 			}
 		]);
 		// End setup periods
@@ -629,22 +629,22 @@ class StudentAttendancesTable extends AppTable {
 			$this->controller->set(compact('dayOptions', 'selectedDay'));
 			// End setup days
 
-			// Setup section options
+			// Setup class options
 			$userId = $this->Auth->user('id');
 			$AccessControl = $this->AccessControl;
-			$sectionOptions = $Sections
+			$classOptions = $Classes
 				->find('list')
 				->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl]) // restrict user to see own class if permission is set
 				->where([
-					$Sections->aliasField('institution_id') => $institutionId, 
-					$Sections->aliasField('academic_period_id') => $selectedPeriod
+					$Classes->aliasField('institution_id') => $institutionId, 
+					$Classes->aliasField('academic_period_id') => $selectedPeriod
 				])
 				->toArray();
 
-			$selectedSection = $this->queryString('section_id', $sectionOptions);
-			$this->advancedSelectOptions($sectionOptions, $selectedSection);
-			$this->controller->set(compact('sectionOptions', 'selectedSection'));
-			// End setup sections
+			$selectedClass = $this->queryString('class_id', $classOptions);
+			$this->advancedSelectOptions($classOptions, $selectedClass);
+			$this->controller->set(compact('classOptions', 'selectedClass'));
+			// End setup classes
 
 			$settings['pagination'] = false;
 
@@ -684,16 +684,16 @@ class StudentAttendancesTable extends AppTable {
 			$query
 				->contain(['Users'])
 				->find('withAbsence', ['date' => $this->selectedDate])
-				->innerJoin(['InstitutionSections' => 'institution_sections'], [
-					'InstitutionSections.id = '.$this->aliasField('institution_section_id')
+				->innerJoin(['InstitutionClasses' => 'institution_classes'], [
+					'InstitutionClasses.id = '.$this->aliasField('institution_class_id')
 				])
 				->innerJoin(['InstitutionStudents' => 'institution_students'], [
-					'InstitutionStudents.academic_period_id = InstitutionSections.academic_period_id',
-					'InstitutionStudents.institution_id = InstitutionSections.institution_id',
+					'InstitutionStudents.academic_period_id = InstitutionClasses.academic_period_id',
+					'InstitutionStudents.institution_id = InstitutionClasses.institution_id',
 					'InstitutionStudents.education_grade_id = '. $this->aliasField('education_grade_id'),
 					'InstitutionStudents.student_id = '. $this->aliasField('student_id'),
 				])
-				->where([$this->aliasField('institution_section_id') => $selectedSection])
+				->where([$this->aliasField('institution_class_id') => $selectedClass])
 				->where($conditions);
 
 			if ($selectedDay == -1) {
