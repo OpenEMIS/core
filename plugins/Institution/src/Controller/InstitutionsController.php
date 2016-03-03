@@ -23,15 +23,14 @@ class InstitutionsController extends AppController  {
 			'History' 			=> ['className' => 'Institution.InstitutionActivities', 'actions' => ['search', 'index']],
 
 			'Programmes' 		=> ['className' => 'Institution.InstitutionGrades'],
-			// 'Sections' 			=> ['className' => 'Institution.InstitutionSections'],
-			// 'Classes' 			=> ['className' => 'Institution.InstitutionClasses'],
 			'Infrastructures' 	=> ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'transfer']],
 
 			'Staff' 			=> ['className' => 'Institution.Staff'],
 			'StaffUser' 		=> ['className' => 'Institution.StaffUser', 'actions' => ['add', 'view', 'edit']],
 			'StaffAccount' 		=> ['className' => 'Institution.StaffAccount', 'actions' => ['view', 'edit']],
-			'StaffAbsences' 	=> ['className' => 'Institution.StaffAbsences'],
 			'StaffAttendances' 	=> ['className' => 'Institution.StaffAttendances', 'actions' => ['index']],
+			'StaffAbsences' 	=> ['className' => 'Institution.StaffAbsences'],
+
 			'StaffBehaviours' 	=> ['className' => 'Institution.StaffBehaviours'],
 
 			'Students' 			=> ['className' => 'Institution.Students'],
@@ -77,6 +76,7 @@ class InstitutionsController extends AppController  {
 	public function Shifts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionShifts']); }
 	public function Classes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionClasses']); }
 	public function Subjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionSubjects']); }
+	// public function StaffAbsences() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
 	// End
 
 	public function beforeFilter(Event $event) {
