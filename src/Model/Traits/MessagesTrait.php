@@ -82,7 +82,8 @@ trait MessagesTrait {
 			'type' => 'Type',
 			'amount' => 'Amount',
 			'total' => 'Total',
-			'notTransferrable' => 'No other alternative options available to convert records.'
+			'notTransferrable' => 'No other alternative options available to convert records.',
+			'validationRules' => 'Validation Rules',
 		],
 		'fileUpload' => [
 			'single' => '*File size should not be larger than 2MB.',
@@ -445,6 +446,9 @@ trait MessagesTrait {
 			'noResultTypes' => 'You need to configure Result Types under Training Course.',
 			'noTrainees' => 'No Available Trainees'
 		],
+		'CustomForms' => [
+			'notSupport' => 'Not supported in this form.'
+		],
 
 		// Validation Messages
 		'Institution' => [
@@ -618,7 +622,7 @@ trait MessagesTrait {
 					'ruleNotBlank' => 'Please enter a valid username',
 					'ruleNoSpaces' => 'Only alphabets and numbers are allowed',
 					'ruleUnique' => 'This username is already in use.',
-					'ruleAlphanumeric' => 'Please enter an alphanumeric username',
+					'ruleCheckUsername' => 'Invalid username. Usernames must contain only alphabets and/or digits. Username can also be a valid email',
 				],
 				'password' => [
 					'ruleChangePassword' => 'Incorrect password.',
@@ -651,7 +655,7 @@ trait MessagesTrait {
 					'ruleNotBlank' => 'Please enter a valid username',
 					'ruleNoSpaces' => 'Only alphabets and numbers are allowed',
 					'ruleUnique' => 'This username is already in use.',
-					'ruleAlphanumeric' => 'Please enter an alphanumeric username',
+					'ruleCheckUsername' => 'Invalid username. Usernames must contain only alphabets and/or digits. Username can also be a valid email',
 				],
 				'password' => [
 					'ruleChangePassword' => 'Incorrect password.',
@@ -1005,10 +1009,33 @@ trait MessagesTrait {
 				'reportName' => 'Students Out of School'
 			]
 		],
+		'CustomField' => [
+			'text' => [
+				'minLength' => 'Text should be at least %d characters',
+				'maxLength' => 'Text should not be exceed %d characters',
+				'range' => 'Text should be between %d and %d characters'
+			],
+			'number' => [
+				'minValue' => 'Number should not be lesser than %d',
+				'maxValue' => 'Number should not be greater than %d',
+				'range' => 'Number should be between %d and %d'
+			],
+			'date' => [
+				'earlier' => 'Date should be earlier than or equal to %s',
+				'later' => 'Date should be later than or equal to %s',
+				'between' => 'Date should be between %s and %s (inclusive)'
+			],
+			'time' => [
+				'earlier' => 'Time should be earlier than or equal to %s',
+				'later' => 'Time should be later than or equal to %s',
+				'between' => 'Time should be between %s and %s (inclusive)'
+			]
+		],
+
 	];
 
-	public function getMessage($code, $params = []) {
-		$vsprintfParams = (array_key_exists('vsprintf', $params))? $params['vsprintf']: [];
+	public function getMessage($code, $options = []) {
+		$sprintf = (array_key_exists('sprintf', $options))? $options['sprintf']: [];
 
 		$index = explode('.', $code);
 		$message = $this->messages;
@@ -1025,8 +1052,7 @@ trait MessagesTrait {
 				}
 			}
 		}
-		return !is_array($message) ? __(
-			vsprintf($message, $vsprintfParams)
-			) : $message;
+
+		return !is_array($message) ? vsprintf(__($message), $sprintf) : $message;
 	}
 }

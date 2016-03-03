@@ -254,31 +254,28 @@ class RemoveBehavior extends Behavior {
 
 		// List of the target foreign keys for subqueries
 		$targetForeignKeys = $modelAssociationTable->find()
-			->select([$modelAssociationTable->aliasField($targetForeignKey)])
-			->where([$modelAssociationTable->aliasField($foreignKey) => $to]);
-
-		// List of id in the junction table to be deleted
-		$idNotToUpdate = $modelAssociationTable->find('list',[
-				'keyField' => 'id',
-				'valueField' => 'id'
-			])
+			->select(['target' => $modelAssociationTable->aliasField($assoc->targetForeignKey())])
 			->where([
-				$modelAssociationTable->aliasField($foreignKey) => $from,
-				$modelAssociationTable->aliasField($targetForeignKey).' IN' => $targetForeignKeys
-			])
-			->toArray();
+				$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferTo
+			]);
+
+		$notUpdateQuery = $modelAssociationTable->query()
+			->select(['target_foreign_key' => 'TargetTable.target'])
+			->from(['TargetTable' => $targetForeignKeys]);
 
 		$condition = [];
 
-		if (empty($idNotToUpdate)) {
-			$condition = [$foreignKey => $from];
-		} else {
-			$condition = [$foreignKey => $from, 'id NOT IN' => $idNotToUpdate];
-		}
+		$condition = [
+			$assoc->foreignKey() => $transferFrom, 
+			'NOT' => [
+				$assoc->foreignKey() => $transferFrom,
+				$assoc->targetForeignKey().' IN ' => $notUpdateQuery
+			]
+		];
 		
 		// Update all transfer records
 		$modelAssociationTable->updateAll(
-			[$foreignKey => $to],
+			[$assoc->foreignKey() => $transferTo],
 			$condition
 		);
 	}
