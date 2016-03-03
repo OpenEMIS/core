@@ -1,3 +1,9 @@
+v3.4.16
+- Added Class names to Student Report in Institutions
+- Fixed a bug that caused 404 error page when access Maps
+- Area Administrative and Area Education is now properly translated
+- Fixed a bug on Institutions -> Students -> Add that caused incorrect calculation of admission age
+
 v3.4.15
 - Survey Table type questions will now be displayed in Reports
 - Fixed a bug that caused loading animation to appear on the wrong position
