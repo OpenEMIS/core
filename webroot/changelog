@@ -1,3 +1,6 @@
+v3.4.16
+- Added Class names to Student Report in Institutions
+
 v3.4.15
 - Survey Table type questions will now be displayed in Reports
 - Fixed a bug that caused loading animation to appear on the wrong position
