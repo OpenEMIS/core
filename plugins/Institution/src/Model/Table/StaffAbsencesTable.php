@@ -199,6 +199,7 @@ class StaffAbsencesTable extends AppTable {
 	public function editOnInitialize(Event $event, Entity $entity) {
 		$this->request->query['staff'] = $entity->staff_id;
 		$this->request->query['full_day'] = $entity->full_day;
+		$this->request->data[$this->alias()]['full_day'] = $entity->full_day;
 		$this->request->data[$this->alias()]['absence_type_id'] = $entity->absence_type_id;
 		$this->request->data[$this->alias()]['start_date'] = $entity->start_date;
 	}
