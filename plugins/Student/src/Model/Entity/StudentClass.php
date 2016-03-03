@@ -1,11 +1,10 @@
 <?php
 namespace Student\Model\Entity;
 
+use Cake\Log\Log;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\ORM\Query;
 use Cake\Datasource\Exception\InvalidPrimaryKeyException;
-use Cake\Log\Log;
 
 class StudentClass extends Entity
 {
