@@ -87,7 +87,9 @@ class FileUploadBehavior extends Behavior {
 			'ControllerAction.Model.addEdit.beforePatch' => 'addEditBeforePatch',
 			'ControllerAction.Model.edit.beforePatch' => 'editBeforePatch',
 			'ControllerAction.Model.edit.beforeAction' => 'editBeforeAction',
-			'ControllerAction.Model.afterAction' => 'afterAction'
+			'ControllerAction.Model.afterAction' => 'afterAction',
+			'ControllerAction.Model.add.onInitialize' => 'addOnInitialize',
+			'ControllerAction.Model.edit.onInitialize' => 'editOnInitialize',
 		];
 		$events = array_merge($events,$newEvent);
 		return $events;
@@ -99,17 +101,24 @@ class FileUploadBehavior extends Behavior {
 ** ControllerActionComponent events
 **
 ******************************************************************************************************************/
+	public function addOnInitialize(Event $event, Entity $entity) {
+		$model = $this->_table;
+		$session = $model->request->session();
+		$session->delete($model->registryAlias().'.parseUpload');
+	}
+
+	public function editOnInitialize(Event $event, Entity $entity) {
+		$model = $this->_table;
+		$session = $model->request->session();
+		$session->delete($model->registryAlias().'.parseUpload');
+	}
+
 	public function afterAction(Event $event) {
 		if (isset($this->_table->fields[$this->config('content')])) {
 			// pr();
 			$comment = '* File size should not be larger than ' . $this->config('size');
 			$comment .= '<br/>* Format Supported: ' . $this->fileTypesForView();
 			$this->_table->fields[$this->config('content')]['comment'] = $comment ;
-		}
-		$model = $this->_table;
-		if (!isset($model->request->data['submit'])) {
-			$session = $model->request->session();
-			$session->delete($model->registryAlias().'.parseUpload');
 		}
 	}
 
@@ -125,12 +134,6 @@ class FileUploadBehavior extends Behavior {
 				unset($data[$this->_table->aliasField($this->config('content'))]);
 			}	
 		}
-    }
-
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-    	$model = $this->_table;
-		$session = $model->request->session();
-		$session->delete($model->registryAlias().'.parseUpload');
     }
 
 	/**

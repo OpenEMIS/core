@@ -257,7 +257,6 @@ class OpenEmisBehavior extends Behavior {
 				$toolbarButtons['remove']['attr']['data-toggle'] = 'modal';
 				$toolbarButtons['remove']['attr']['data-target'] = '#delete-modal';
 				$toolbarButtons['remove']['attr']['field-target'] = '#recordId';
-				$toolbarButtons['remove']['attr']['field-value'] = $extra['entity']->{$model->primaryKey()};
 				$toolbarButtons['remove']['attr']['onclick'] = 'ControllerAction.fieldMapping(this)';
 			}
 		} else if ($action == 'transfer') {
