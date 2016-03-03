@@ -84,6 +84,17 @@ class FieldOptionBehavior extends Behavior {
 		return $events;
 	}
 
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		// only perform for v4
+		if ($this->_table->hasBehavior('ControllerAction')) {
+			if ($entity->has('default') && $entity->default == 1 &&
+				$entity->has($this->_table->primaryKey())
+				) {
+				$this->_table->updateAll(['default' => 0], [$this->_table->primaryKey().' != ' => $entity->{$this->_table->primaryKey()}]);
+			}
+		}
+	}
+
 	private function buildFieldOptions() {
 		$model = TableRegistry::get('FieldOption.FieldOptions');
 		$fieldOptions = [];
