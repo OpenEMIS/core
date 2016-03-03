@@ -13,6 +13,11 @@ class InfrastructureTypesTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('Levels', ['className' => 'Infrastructure.InfrastructureLevels', 'foreignKey' => 'infrastructure_level_id']);
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+				'filter' => 'infrastructure_level_id',
+			]);
+		}
 	}
 
 	public function afterAction(Event $event) {
