@@ -398,7 +398,6 @@ class InstitutionClassesTable extends ControllerActionTable {
 ******************************************************************************************************************/
 	// selected grade_type behavior's addBeforeAction will be called later
     public function addBeforeAction(Event $event, ArrayObject $extra) {
-    	// pr('model beforeAction');    	
 		$query = $this->request->query;
     	if (array_key_exists('academic_period_id', $query) || array_key_exists('education_grade_id', $query)) {
     		$action = $this->url('add');
@@ -427,11 +426,11 @@ class InstitutionClassesTable extends ControllerActionTable {
 		$tabElements = [
 			'single' => [
 				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Classes', 'add', 'grade_type'=>'single'],
-				'text' => __('Single Grade')
+				'text' => $this->getMessage($this->aliasField('singleGrade'))
 			],
 			'multi' => [
 				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Classes', 'add', 'grade_type'=>'multi'],
-				'text' => __('Multi Grade')
+				'text' => $this->getMessage($this->aliasField('multiGrade'))
 			],
 		];
         $this->controller->set('tabElements', $tabElements);
@@ -795,20 +794,23 @@ class InstitutionClassesTable extends ControllerActionTable {
 
 	public function onGetStaffId(Event $event, Entity $entity) {
 		if ($this->action == 'view') {
-			return $event->subject()->Html->link($entity->staff->name_with_id , [
-				'plugin' => 'Institution',
-				'controller' => 'Institutions',
-				'action' => 'StaffUser',
-				'view',
-				$entity->staff->id
-			]);
+			if ($entity->has('staff')) {
+				return $event->subject()->Html->link($entity->staff->name_with_id , [
+					'plugin' => 'Institution',
+					'controller' => 'Institutions',
+					'action' => 'StaffUser',
+					'view',
+					$entity->staff->id
+				]);
+			} else {
+				return $this->getMessage($this->aliasField('noTeacherAssigned'));
+			}
 		} else {
 			if ($entity->has('staff')) {
 				return $entity->staff->name_with_id;
 			} else {
-				return __('No Teacher Assigned');
-			}
-			
+				return $this->getMessage($this->aliasField('noTeacherAssigned'));
+			}			
 		}		
 	}
 
@@ -908,9 +910,9 @@ class InstitutionClassesTable extends ControllerActionTable {
 
 	public function getStaffOptions($action='edit') {
 		if (in_array($action, ['edit', 'add'])) {
-			$options = [0=>'-- ' . __('Select Teacher or Leave Blank') . ' --'];
+			$options = [0 => '-- ' . $this->getMessage($this->aliasField('selectTeacherOrLeaveBlank')) . ' --'];
 		} else {
-			$options = [0=>'No Teacher Assigned'];
+			$options = [0 => $this->getMessage($this->aliasField('noTeacherAssigned'))];
 		}
 
 		if (!empty($this->selectedAcademicPeriodId)) {
@@ -1069,4 +1071,3 @@ class InstitutionClassesTable extends ControllerActionTable {
 
 	
 }
-	

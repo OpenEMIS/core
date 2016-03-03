@@ -3,26 +3,24 @@ namespace Security\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Query;
-use Cake\ORM\Behavior;
-use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\ORM\Entity;
+use Cake\ORM\Behavior;
+use Cake\ORM\ResultSet;
+use Cake\Event\Event;
 
 class InstitutionClassBehavior extends Behavior {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		// priority has to be set at 100 so that Institutions->indexBeforePaginate will be triggered first
-		$events['ControllerAction.Model.index.beforePaginate'] = ['callable' => 'indexBeforePaginate', 'priority' => 100];
+		$events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 100];
 		// set the priority of the action button to be after the academic period behavior
-		$events['Model.custom.onUpdateActionButtons'] = ['callable' => 'onUpdateActionButtons', 'priority' => 101];
-		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		$events['ControllerAction.Model.index.afterAction'] = ['callable' => 'indexAfterAction', 'priority' => 101];
 		$events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
 		$events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
 		return $events;
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
 			$userId = $this->_table->Auth->user('id');
 			$AccessControl = $this->_table->AccessControl;
@@ -30,12 +28,12 @@ class InstitutionClassBehavior extends Behavior {
 		}
 	}
 
-	public function editAfterAction(Event $event, Entity $entity) {
+	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		if (!$this->checkAllClassesEditPermission()) {
 			if ($this->checkMyClassesEditPermission()) {
 				$userId = $this->_table->Auth->user('id');
 				if ($userId != $entity->staff_id) {
-					$urlParams = $this->_table->ControllerAction->url('view');
+					$urlParams = $this->_table->url('view');
 					$event->stopPropagation();
 					$this->_table->Alert->error('security.noAccess');
 					return $this->_table->controller->redirect($urlParams);
@@ -55,20 +53,21 @@ class InstitutionClassBehavior extends Behavior {
 		return $query;
 	}
 
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-		$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
-		// Remove the edit function if the user does not have the right to access that page
-		if (!$this->checkAllClassesEditPermission()) {
-			if ($this->checkMyClassesEditPermission()) {
-				$userId = $this->_table->Auth->user('id');
-				if ($userId != $entity->staff_id) {
-					if (isset($buttons['edit'])) {
-						unset($buttons['edit']);
-						return $buttons;
-					}
-				}
-			}
-		}
+	// public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+	public function indexAfterAction(Event $event, ResultSet $data, ArrayObject $extra) {
+		// $buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
+		// // Remove the edit function if the user does not have the right to access that page
+		// if (!$this->checkAllClassesEditPermission()) {
+		// 	if ($this->checkMyClassesEditPermission()) {
+		// 		$userId = $this->_table->Auth->user('id');
+		// 		if ($userId != $entity->staff_id) {
+		// 			if (isset($buttons['edit'])) {
+		// 				unset($buttons['edit']);
+		// 				return $buttons;
+		// 			}
+		// 		}
+		// 	}
+		// }
 	}
 
 	// Function to check MyClass edit permission is set
@@ -93,12 +92,9 @@ class InstitutionClassBehavior extends Behavior {
 		}
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$this->_table->request->data[$this->_table->alias()]['staff_id'] = $entity->staff_id;
-	}
-
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		switch ($action) {
+		switch ($this->_table->action) {
 			case 'view':
 				// If all classes can edit, then skip the removal of the button
 				if (!$this->checkAllClassesEditPermission()) {
@@ -108,8 +104,11 @@ class InstitutionClassBehavior extends Behavior {
 						$entityUserId = $this->_table->request->data[$this->_table->alias()]['staff_id'];
 						// Remove the edit button from those records who does not belong to the user
 						if ($userId != $entityUserId) {
-							if (isset($toolbarButtons['edit'])) {
-								unset($toolbarButtons['edit']);
+							if (isset($extra['toolbarButtons']) && isset($extra['toolbarButtons']['edit'])) {
+								unset($extra['toolbarButtons']['edit']);
+							}
+							if (isset($extra['toolbarButtons']) && isset($extra['toolbarButtons']['remove'])) {
+								unset($extra['toolbarButtons']['remove']);
 							}
 						}
 					}
@@ -117,4 +116,5 @@ class InstitutionClassBehavior extends Behavior {
 				break;
 		}
 	}
+
 }
