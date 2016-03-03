@@ -959,6 +959,19 @@ class ValidationBehavior extends Behavior {
 		return !strrpos($field," ");
 	}
 
+	// move to
+	public static function checkNumberExists($field, array $globalData) {
+		return (!empty(preg_match('#\d#',$field)));
+	}
+
+	public static function checkUppercaseExists($field, array $globalData) {
+		return (!empty(preg_match('/[A-Z]/',$field)));
+	}
+
+	public static function checkNonAlphanumericExists($field, array $globalData) {
+		return !ctype_alnum($field);
+	}
+
 	public static function checkUsername($field, array $globalData) {
 		return (filter_var($field, FILTER_VALIDATE_EMAIL)) || ctype_alnum($field);
 	}
@@ -1041,5 +1054,6 @@ class ValidationBehavior extends Behavior {
 		} else {
 			return true;
 		}
+
 	}
 }
