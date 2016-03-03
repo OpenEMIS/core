@@ -203,6 +203,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 	public function editOnInitialize(Event $event, Entity $entity) {
 		$this->request->query['student'] = $entity->student_id;
 		$this->request->query['full_day'] = $entity->full_day;
+		$this->request->data[$this->alias()]['full_day'] = $entity->full_day;
 		$this->request->data[$this->alias()]['absence_type_id'] = $entity->absence_type_id;
 	}
 
