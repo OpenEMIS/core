@@ -44,7 +44,7 @@ class CustomFieldsTable extends AppTable {
 		$this->addBehavior('CustomField.SetupTable');
 		$this->addBehavior('CustomField.SetupDate');
 		$this->addBehavior('CustomField.SetupTime');
-		// $this->addBehavior('CustomField.SetupStudentList');
+		$this->addBehavior('CustomField.SetupStudentList');
 		// End
 
 		$this->CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');

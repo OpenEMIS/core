@@ -957,13 +957,13 @@ class ValidationBehavior extends Behavior {
 
 	// move to
 	public static function checkNumberExists($field, array $globalData) {
-		$result = preg_match('#\d#',$field);
-		return (!empty($result));
+		$match = preg_match('#\d#', $field);
+		return !empty($match);
 	}
 
 	public static function checkUppercaseExists($field, array $globalData) {
-		$result = preg_match('/[A-Z]/',$field);
-		return (!empty($result));
+		$match = preg_match('/[A-Z]/', $field);
+		return !empty($match);
 	}
 
 	public static function checkNonAlphanumericExists($field, array $globalData) {
