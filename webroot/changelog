@@ -1,4 +1,5 @@
 v3.4.16
+- Fixed a bug that caused field options default value not selected, also added a '-- Select --' option if no default value is set
 - Added Class names to Student Report in Institutions
 - Add new Absence Type - Late
 - Fixed a bug that caused 404 error page when access Maps
