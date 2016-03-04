@@ -10,7 +10,6 @@ use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
 
 class QualificationsTable extends ControllerActionTable {
-// class QualificationsTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('staff_qualifications');
 		parent::initialize($config);

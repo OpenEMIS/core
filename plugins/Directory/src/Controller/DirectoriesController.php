@@ -57,7 +57,6 @@ class DirectoriesController extends AppController {
 			// Staff
 			'StaffEmployments'		=> ['className' => 'Staff.Employments'],
 			'StaffSalaries'			=> ['className' => 'Staff.Salaries'],
-			// 'StaffQualifications'	=> ['className' => 'Staff.Qualifications'],
 			'StaffPositions'		=> ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
 			'StaffSections'			=> ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
 			'StaffClasses'			=> ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
