@@ -530,12 +530,7 @@ class UsersTable extends AppTable {
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
 		if ($field == 'default_identity_type') {
 			$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
-			$defaultIdentity = $IdentityType
-							   ->find()
-							   ->contain(['FieldOptions'])
-							   ->where(['FieldOptions.code' => 'IdentityTypes'])
-							   ->order(['IdentityTypes.default DESC'])
-							   ->first();
+			$defaultIdentity = $IdentityType->getDefaultEntity();
 			if ($defaultIdentity)
 				$value = $defaultIdentity->name;
 
