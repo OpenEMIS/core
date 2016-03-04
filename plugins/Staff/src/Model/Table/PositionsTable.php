@@ -16,6 +16,7 @@ class PositionsTable extends AppTable {
 		$this->belongsTo('StaffStatuses', ['className' => 'FieldOption.StaffStatuses']);
 		$this->belongsTo('InstitutionPositions', ['className' => 'Institution.InstitutionPositions']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+		$this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
 	}
 
 	public function indexBeforeAction(Event $event) {

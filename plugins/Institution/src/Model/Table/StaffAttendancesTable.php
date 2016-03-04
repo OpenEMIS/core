@@ -35,6 +35,7 @@ class StaffAttendancesTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'staff_id']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->addBehavior('AcademicPeriod.Period');
+		$this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
 		$this->addBehavior('Excel', [
 			'excludes' => [
 				'start_date', 
