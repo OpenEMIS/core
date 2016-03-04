@@ -60,8 +60,7 @@ class SurveyFormsTable extends CustomFormsTable {
     }
 
 	public function afterAction(Event $event){
-		// unset($this->fields['custom_fields']);
-		$this->ControllerAction->setFieldOrder(['custom_module_id', 'code', 'name', 'description']);
+		$this->ControllerAction->setFieldOrder(['custom_module_id', 'code', 'name', 'description', 'custom_fields']);
 	}
 
 	public function addBeforeAction(Event $event) {
