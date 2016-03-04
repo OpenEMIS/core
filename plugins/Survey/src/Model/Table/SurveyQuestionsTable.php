@@ -19,7 +19,6 @@ class SurveyQuestionsTable extends CustomFieldsTable {
 		$this->hasMany('CustomTableRows', ['className' => 'Survey.SurveyTableRows', 'foreignKey' => 'survey_question_id', 'dependent' => true]);
 		$this->hasMany('CustomFieldValues', ['className' => 'Institution.InstitutionSurveyAnswers', 'dependent' => true]);
 		$this->hasMany('CustomTableCells', ['className' => 'Institution.InstitutionSurveyTableCells', 'dependent' => true]);
-		$this->hasMany('SurveyQuestionParams', ['className' => 'Survey.SurveyQuestionParams', 'foreignKey' => 'survey_question_id', 'dependent' => true]);
 		$this->belongsToMany('CustomForms', [
 			'className' => 'Survey.SurveyForms',
 			'joinTable' => 'survey_forms_questions',
