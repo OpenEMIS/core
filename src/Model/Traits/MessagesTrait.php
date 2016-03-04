@@ -1036,17 +1036,19 @@ trait MessagesTrait {
 
 	public function getMessage($code, $options = []) {
 		$sprintf = (array_key_exists('sprintf', $options))? $options['sprintf']: [];
+		$defaultMessage = (array_key_exists('defaultMessage', $options))? $options['defaultMessage']: true;
 
-		$index = explode('.', $code);
-		$message = $this->messages;
-		foreach ($index as $i) {
-			if (isset($message[$i])) {
-				$message = $message[$i];
-			} else {
-				//check whether label exists in cache
-				$Labels = TableRegistry::get('Labels');
-				$message = Cache::read($code, $Labels->getDefaultConfig());
-				if($message === false) {
+		$Labels = TableRegistry::get('Labels');
+		$message = Cache::read($code, $Labels->getDefaultConfig());
+
+		if ($message == false) {
+			$message = $this->messages;
+			$index = explode('.', $code);
+			foreach ($index as $i) {
+				if (isset($message[$i])) {
+					$message = $message[$i];
+				} else {
+					if (!$defaultMessage) return false;
 					$message = '[Message Not Found]';
 					break;
 				}
