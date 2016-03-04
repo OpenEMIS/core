@@ -57,7 +57,7 @@ class DirectoriesController extends AppController {
 			// Staff
 			'StaffEmployments'		=> ['className' => 'Staff.Employments'],
 			'StaffSalaries'			=> ['className' => 'Staff.Salaries'],
-			'StaffQualifications'	=> ['className' => 'Staff.Qualifications'],
+			// 'StaffQualifications'	=> ['className' => 'Staff.Qualifications'],
 			'StaffPositions'		=> ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
 			'StaffSections'			=> ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
 			'StaffClasses'			=> ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
@@ -81,6 +81,10 @@ class DirectoriesController extends AppController {
 
 		$this->set('contentHeader', 'Directories');
 	}
+
+	// CAv4
+	public function StaffQualifications() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Qualifications']); }
+	// End
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
@@ -229,6 +233,10 @@ class DirectoriesController extends AppController {
 				return $this->redirect(['action' => 'index']);
 			}
 		}
+	}
+
+	public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra) {
+		$this->beforePaginate($event, $model, $query, $extra);
 	}
 
 	public function excel($id=0) {
