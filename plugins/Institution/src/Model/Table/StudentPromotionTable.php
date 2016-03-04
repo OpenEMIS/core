@@ -262,6 +262,10 @@ class StudentPromotionTable extends AppTable {
 				$options[$statusesCode['PROMOTED']] = $studentStatusesList[$statusesCode['PROMOTED']];
 			}
 			$options[$statusesCode['REPEATED']] = $studentStatusesList[$statusesCode['REPEATED']];
+
+			foreach ($options as $key => $value) {
+				$options[$key] = __($value);
+			}
 			$attr['options'] = $options;
 			$attr['onChangeReload'] = true;
 			if (empty($request->data[$this->alias()]['student_status_id']) || !array_key_exists($request->data[$this->alias()]['student_status_id'], $options)) {
