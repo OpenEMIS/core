@@ -317,7 +317,7 @@ CALL patchOrder('student_custom_table_rows', 'student_custom_field_id');
 
 -- staff_custom_forms_fields
 CALL tmpRefTable('student_custom_forms');
-CALL patchOrder('student_custom_forms_fields', 'student_custom_field_id');
+CALL patchOrder('student_custom_forms_fields', 'student_custom_form_id');
 
 -- survey_question_choices
 CALL tmpRefTable('survey_questions');
