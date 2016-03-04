@@ -3,6 +3,7 @@ namespace User\Controller;
 use Cake\Event\Event;
 use DateTime;
 use Cake\ORM\TableRegistry;
+use Cake\Log\Log;
 
 class UsersController extends AppController {
 	public function initialize() {
@@ -73,6 +74,37 @@ class UsersController extends AppController {
 
 		// To remove inactive staff security group users records
 		$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
-		$InstitutionStaffTable->removeInactiveStaffSecurityRole();
+		$InstitutionStaffTable->removeIndividualStaffSecurityRole($user['id']);
+		$this->startInactiveRoleRemoval();
+		$this->shellErrorRecovery();
+	}
+
+	private function startInactiveRoleRemoval() {
+		$cmd = ROOT . DS . 'bin' . DS . 'cake InactiveRoleRemoval';
+		$logs = ROOT . DS . 'logs' . DS . 'RemoveInactiveRoles.log & echo $!';
+		$shellCmd = $cmd . ' >> ' . $logs;
+
+		try {
+			$pid = exec($shellCmd);
+			Log::write('debug', $shellCmd);
+		} catch(\Exception $ex) {
+			Log::write('error', __METHOD__ . ' exception when removing inactive roles : '. $ex);
+		}
+	}
+
+	private function shellErrorRecovery() {
+		$SystemProcesses = TableRegistry::get('SystemProcesses');
+		$processes = $SystemProcesses->getErrorProcesses();
+		foreach ($processes as $process) {
+			$id = $process['id'];
+			$model = $process['model'];
+			$params = $process['params'];
+			$eventName = $process['callable_event'];
+			$executedCount = $process['executed_count'];
+			$modelTable = TableRegistry::get($model);
+			if (!empty($eventName)) {
+				$event = $modelTable->dispatchEvent('Shell.'.$eventName, [$id, $executedCount, $params]);
+			}
+		}
 	}
 }
