@@ -24,7 +24,6 @@ class StaffController extends AppController {
 			'SpecialNeeds'		=> ['className' => 'User.SpecialNeeds'],
 			'Awards'			=> ['className' => 'User.Awards'],
 			'Attachments'		=> ['className' => 'User.Attachments'],
-			'Qualifications'	=> ['className' => 'Staff.Qualifications'],
 			'Positions'			=> ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
 			'Sections'			=> ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
 			'Classes'			=> ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
@@ -60,6 +59,10 @@ class StaffController extends AppController {
 
 		$this->set('contentHeader', 'Staff');
 	}
+
+	// CAv4
+	public function Qualifications() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Qualifications']); }
+	// End
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
@@ -189,6 +192,10 @@ class StaffController extends AppController {
 				return $this->redirect(['action' => 'index']);
 			}
 		}
+	}
+
+	public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra) {
+		$this->beforePaginate($event, $model, $query, $extra);
 	}
 
 	public function excel($id=0) {
