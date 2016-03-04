@@ -561,7 +561,7 @@ class StudentFeesTable extends AppTable {
 			$toolbarButtons['add'] = $toolbarButtons['back'];
 			$toolbarButtons['add']['url'] = $buttons['add']['url'];
 			$toolbarButtons['add']['label'] = '<i class="fa kd-add"></i>';
-			$toolbarButtons['add']['attr']['title'] = 'Add New Payment';
+			$toolbarButtons['add']['attr']['title'] = __('Add New Payment');
 		} else if ($action == 'add') {
 			$toolbarButtons['back']['url'] = $buttons['view']['url'];
 		}
