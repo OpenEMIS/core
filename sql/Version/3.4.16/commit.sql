@@ -372,6 +372,7 @@ INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `cod
 (uuid(), 'StaffAccount', 'retype_password', 'Institution -> Staff -> Accounts', 'Retype New Password', NULL, NULL, 1, 1, now())
 ;
 
+
 -- POCOR-2609
 -- db_patches
 INSERT INTO `db_patches` VALUES ('POCOR-2609', NOW());
@@ -692,7 +693,7 @@ CALL patchOrder('student_custom_table_rows', 'student_custom_field_id');
 
 -- staff_custom_forms_fields
 CALL tmpRefTable('student_custom_forms');
-CALL patchOrder('student_custom_forms_fields', 'student_custom_field_id');
+CALL patchOrder('student_custom_forms_fields', 'student_custom_form_id');
 
 -- survey_question_choices
 CALL tmpRefTable('survey_questions');
