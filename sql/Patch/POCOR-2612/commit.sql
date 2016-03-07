@@ -26,6 +26,27 @@ CREATE TABLE `system_processes` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+-- staff_position_titles
+CREATE TABLE `z_2612_staff_position_titles` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `security_role_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `security_role_id` (`security_role_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+INSERT INTO `z_2612_staff_position_titles`
+SELECT `id`, `security_role_id` FROM `staff_position_titles` WHERE `security_role_id` = 0;
+
+UPDATE `staff_position_titles` SET security_role_id = (
+	SELECT id FROM security_roles WHERE name = 'Staff'
+)
+WHERE security_role_id = 0 AND type=0;
+
+UPDATE `staff_position_titles` SET security_role_id = (
+	SELECT id FROM security_roles WHERE name = 'Teacher'
+)
+WHERE security_role_id = 0 AND type=1;
+
 -- patch security_group_user_id
 
 CREATE TABLE `z_2612_security_group_users` LIKE `security_group_users`;
