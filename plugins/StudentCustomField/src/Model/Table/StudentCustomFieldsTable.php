@@ -6,9 +6,11 @@ use CustomField\Model\Table\CustomFieldsTable;
 class StudentCustomFieldsTable extends CustomFieldsTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->hasMany('CustomFieldOptions', ['className' => 'StudentCustomField.StudentCustomFieldOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('CustomTableColumns', ['className' => 'StudentCustomField.StudentCustomTableColumns', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('CustomTableRows', ['className' => 'StudentCustomField.StudentCustomTableRows', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('CustomFieldOptions', ['className' => 'StudentCustomField.StudentCustomFieldOptions', 'dependent' => true]);
+		$this->hasMany('CustomTableColumns', ['className' => 'StudentCustomField.StudentCustomTableColumns', 'dependent' => true]);
+		$this->hasMany('CustomTableRows', ['className' => 'StudentCustomField.StudentCustomTableRows', 'dependent' => true]);
+		$this->hasMany('CustomFieldValues', ['className' => 'StudentCustomField.StudentCustomFieldValues', 'dependent' => true]);
+		$this->hasMany('CustomTableCells', ['className' => 'StudentCustomField.StudentCustomTableCells', 'dependent' => true]);
 		$this->belongsToMany('CustomForms', [
 			'className' => 'StudentCustomField.StudentCustomForms',
 			'joinTable' => 'student_custom_forms_fields',
