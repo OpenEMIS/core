@@ -6,6 +6,14 @@ DROP INDEX `security_group_user_id` ;
 -- role_update_progresses
 DROP TABLE `role_update_processes`;
 
+-- staff_position_titles
+UPDATE `staff_position_titles` 
+INNER JOIN `z_2612_staff_position_titles`
+	ON `z_2612_staff_position_titles`.`id` = `staff_position_titles`.`id`
+SET `staff_position_titles`.`security_role_id` = `z_2612_staff_position_titles`.`security_role_id`;
+
+DROP TABLE `z_2612_staff_position_titles`;
+
 -- security_group_users
 DROP TABLE `security_group_users`;
 ALTER TABLE `z_2612_security_group_users` 
