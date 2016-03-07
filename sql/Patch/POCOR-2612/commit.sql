@@ -68,7 +68,7 @@ SELECT
     NOW(),
     `InstitutionStaff`.`id` as institution_staff_id
 FROM `institution_staff` `InstitutionStaff`
-INNER JOIN `Institutions`
+INNER JOIN `institutions` `Institutions`
     ON `Institutions`.`id` = `InstitutionStaff`.`institution_id`
 INNER JOIN `institution_positions` `Positions`
     ON `Positions`.`id` = `InstitutionStaff`.`institution_position_id`
