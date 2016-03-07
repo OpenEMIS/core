@@ -21,13 +21,9 @@ class StaffSubjectsTable extends ControllerActionTable {
 		$this->belongsTo('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects']);
 		$this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-		if ($this->hasBehavior('ControllerAction')) {
-			$this->toggle('add', false);
-			$this->toggle('edit', false);
-			$this->toggle('remove', false);
-			$this->toggle('search', false);
-			$this->toggle('reorder', false);
-		}
+		$this->toggle('add', false);
+		$this->toggle('edit', false);
+		$this->toggle('remove', false);
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra) {

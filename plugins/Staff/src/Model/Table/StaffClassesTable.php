@@ -22,13 +22,9 @@ class StaffClassesTable extends ControllerActionTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('InstitutionShifts', ['className' => 'Institution.InstitutionShifts']);
 
-		if ($this->hasBehavior('ControllerAction')) {
-			$this->toggle('add', false);
-			$this->toggle('edit', false);
-			$this->toggle('remove', false);
-			$this->toggle('search', false);
-			$this->toggle('reorder', false);
-		}
+		$this->toggle('add', false);
+		$this->toggle('edit', false);
+		$this->toggle('remove', false);
 	}
 
 	// Academic Period	Institution	Grade	Class	Male Students	Female Students
