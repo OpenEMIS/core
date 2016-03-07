@@ -96,7 +96,7 @@ class InstitutionClassStudentsTable extends AppTable {
     	return '';
     }
 
-	public function getMaleCountBySection($classId) {
+	public function getMaleCountByClass($classId) {
 		$gender_id = 1; // male
 		$count = $this
 			->find()
@@ -108,7 +108,7 @@ class InstitutionClassStudentsTable extends AppTable {
 		return $count;
 	}
 
-	public function getFemaleCountBySection($classId) {
+	public function getFemaleCountByClass($classId) {
 		$gender_id = 2; // female
 		$count = $this
 			->find()
