@@ -37,7 +37,7 @@ class StaffPositionTitlesTable extends ControllerActionTable {
 	public function indexBeforeAction(Event $event, ArrayObject $extra) {
 		if ($this->Session->check('StaffPositionTitles.error')) {
 			$this->Alert->error($this->Session->read('StaffPositionTitles.error'), ['reset' => true]);
-			$this->Session->delete('StaffPositionTitles.inProgress');
+			$this->Session->delete('StaffPositionTitles.error');
 		}
 		$this->field('type', ['after' => 'name']);
 		$this->field('security_role_id', ['after' => 'type']);
