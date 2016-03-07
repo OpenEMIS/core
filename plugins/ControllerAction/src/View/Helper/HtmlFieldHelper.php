@@ -48,6 +48,16 @@ class HtmlFieldHelper extends Helper {
 		return $this->_View->element($element, $attr);
 	}
 
+	public function viewSet($element, $attr) {
+		if (!is_null($this->_View->get($element))) {
+			$options = $this->_View->get($element);
+			$options[] = $attr;
+			$this->_View->set($element, $options);
+		} else {
+			$this->_View->set($element, [$attr]);
+		}
+	}
+
 	public function dispatchEvent($subject, $eventKey, $method=null, $params=[]) {
 		$eventMap = $subject->implementedEvents();
 		$event = new Event($eventKey, $this, $params);
@@ -550,13 +560,28 @@ class HtmlFieldHelper extends Helper {
 			}
 		} else if ($action == 'edit') {
 			$attr['id'] = $attr['model'] . '_' . $field;
-			$attr['time_options'] = array_merge($_options, $attr['time_options']);
-			if (!is_null($value)) {
-				$attr['value'] = date('h:i A', strtotime($value));
-				$attr['time_options']['defaultTime'] = $attr['value'];
-			} else if ($attr['default_time']) {
-				$attr['time_options']['defaultTime'] = date('h:i A');
+			if (array_key_exists('fieldName', $attr)) {
+				$attr['id'] = $this->_domId($attr['fieldName']);
 			}
+			$attr['time_options'] = array_merge($_options, $attr['time_options']);
+
+			if (!array_key_exists('value', $attr)) {
+				if (!is_null($value)) {
+					$attr['value'] = date('h:i A', strtotime($value));
+					$attr['time_options']['defaultTime'] = $attr['value'];
+				} else if ($attr['default_time']) {
+					$attr['time_options']['defaultTime'] = date('h:i A');
+				}
+			} else {
+				if ($attr['value'] instanceof Time) {
+					$attr['value'] = $attr['value']->format('h:i A');
+					$attr['time_options']['defaultTime'] = $attr['value'];
+				} else {
+					$attr['value'] = date('h:i A', strtotime($attr['value']));
+					$attr['time_options']['defaultTime'] = $attr['value'];
+				}
+			}
+
 			if (!is_null($this->_View->get('timepicker'))) {
 				$timepickers = $this->_View->get('timepicker');
 				$timepickers[] = $attr;
