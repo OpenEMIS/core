@@ -124,15 +124,15 @@ class StudentsTable extends AppTable {
 		if ($periodId > 0) {
 			$query->where([$this->aliasField('academic_period_id') => $periodId]);
 		}
-		$query->leftJoin(['SectionStudents' => 'institution_section_students'], [
-				'SectionStudents.student_id = '.$this->aliasField('student_id'), 
-				'SectionStudents.education_grade_id = '.$this->aliasField('education_grade_id'),
-				'SectionStudents.student_status_id = '.$this->aliasField('student_status_id')
-			])->leftJoin(['Sections' => 'institution_sections'], [
-				'Sections.id = SectionStudents.institution_section_id', 
-				'Sections.institution_id = '.$this->aliasField('institution_id'),
-				'Sections.academic_period_id = '.$this->aliasField('academic_period_id')
-			])->select(['institution_section_name' => 'Sections.name']);
+		$query->leftJoin(['ClassStudents' => 'institution_class_students'], [
+				'ClassStudents.student_id = '.$this->aliasField('student_id'), 
+				'ClassStudents.education_grade_id = '.$this->aliasField('education_grade_id'),
+				'ClassStudents.student_status_id = '.$this->aliasField('student_status_id')
+			])->leftJoin(['Classes' => 'institution_classes'], [
+				'Classes.id = ClassStudents.institution_class_id', 
+				'Classes.institution_id = '.$this->aliasField('institution_id'),
+				'Classes.academic_period_id = '.$this->aliasField('academic_period_id')
+			])->select(['institution_class_name' => 'Classes.name']);
 	}
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
@@ -144,8 +144,8 @@ class StudentsTable extends AppTable {
 			$newFields[] = $field;
 				if ($field['field'] == 'education_grade_id') {
 					$newFields[] = [
-						'key' => 'StudentClasses.institution_section_id',
-						'field' => 'institution_section_name',
+						'key' => 'StudentClasses.institution_class_id',
+						'field' => 'institution_class_name',
 						'type' => 'string',
 						'label' => ''
 					];

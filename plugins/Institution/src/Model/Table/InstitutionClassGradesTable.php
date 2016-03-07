@@ -16,7 +16,7 @@ class InstitutionClassGradesTable extends AppTable {
 		return $validator;
 	}
 
-	public function getGradesBySection($classId) {
+	public function getGradesByClass($classId) {
 		$this->unbindModel(array('belongsTo' => array('EducationGrade')));
 		$data = $this->find('all', array(
 			'fields' => array('InstitutionClassGrade.id', 'EducationCycle.name', 'EducationProgramme.name', 'EducationGrade.name', 'EducationGrade.id'),
