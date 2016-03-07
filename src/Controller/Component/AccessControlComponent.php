@@ -241,10 +241,11 @@ class AccessControlComponent extends Component {
 
 		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 		$data = $SecurityGroupUsers
-		->find()
-		->contain(['SecurityRoles', 'SecurityGroups'])
-		->where([$SecurityGroupUsers->aliasField('security_user_id') => $userId])
-		->all();
+			->find()
+			->contain(['SecurityRoles', 'SecurityGroups'])
+			->where([$SecurityGroupUsers->aliasField('security_user_id') => $userId])
+			->group([$SecurityGroupUsers->aliasField('security_group_id'), $SecurityGroupUsers->aliasField('security_role_id')])
+			->all();
 
 		return $data;
 	}

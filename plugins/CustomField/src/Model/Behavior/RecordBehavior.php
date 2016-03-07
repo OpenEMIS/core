@@ -221,17 +221,20 @@ class RecordBehavior extends Behavior {
 				// also delete previously saved records with empty value
 				if (isset($entity->id)) {
 					$id = $entity->id;
-					if (!empty($settings['deleteFieldIds'])) {
+					$deleteFieldIds = $settings['deleteFieldIds'];
+
+					if (!empty($deleteFieldIds)) {
 						$this->CustomFieldValues->deleteAll([
 							$this->CustomFieldValues->aliasField($settings['recordKey']) => $id,
-							$this->CustomFieldValues->aliasField($settings['fieldKey'] . ' IN ') => $settings['deleteFieldIds']
+							$this->CustomFieldValues->aliasField($settings['fieldKey'] . ' IN ') => $deleteFieldIds
 						]);
-		            }
 
-					// when edit always delete all the cell values before reinsert
-		            $this->CustomTableCells->deleteAll([
-		                $this->CustomTableCells->aliasField($settings['recordKey']) => $id
-		            ]);
+						// when edit always delete all the cell values before reinsert
+			            $this->CustomTableCells->deleteAll([
+			                $this->CustomTableCells->aliasField($settings['recordKey']) => $id,
+			                $this->CustomTableCells->aliasField($settings['fieldKey'] . ' IN ') => $deleteFieldIds
+			            ]);
+		            }
 				}
 
 				// repatch $entity for saving, turn off validation
