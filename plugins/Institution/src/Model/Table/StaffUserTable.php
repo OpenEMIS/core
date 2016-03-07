@@ -23,23 +23,14 @@ class StaffUserTable extends UserTable {
 		if ($this->Session->check($sessionKey)) {
 			$positionData = $this->Session->read($sessionKey);
 			$positionData['staff_id'] = $entity->id;
-			$role = $positionData['role'];
 			$institutionId = $positionData['institution_id'];
 
 			$Staff = TableRegistry::get('Institution.Staff');
 			$staffEntity = $Staff->newEntity($positionData, ['validate' => 'AllowEmptyName']);
-			if ($Staff->save($staffEntity)) {
-				if ($role > 0) {
-					$institutionEntity = TableRegistry::get('Institution.Institutions')->get($institutionId);
-					$obj = [
-						'id' => Text::uuid(),
-						'security_group_id' => $institutionEntity->security_group_id, 
-						'security_role_id' => $role, 
-						'security_user_id' => $entity->id
-					];
-					$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-					$GroupUsers->save($GroupUsers->newEntity($obj));
-				}
+			$savedEntity = $Staff->save($staffEntity);
+			if ($savedEntity) {
+				$StaffTable = TableRegistry::get('Institution.Staff');
+				$StaffTable->addStaffRole($savedEntity);
 			} else {
 				$errors = $staffEntity->errors();
 				if (isset($errors['institution_position_id']['ruleCheckFTE'])) {
