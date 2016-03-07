@@ -29,6 +29,12 @@ class TransferApprovalsTable extends AppTable {
 		$this->belongsTo('StudentTransferReasons', ['className' => 'FieldOption.StudentTransferReasons']);
 	}
 
+	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+		$validator->notEmpty('institution_class');
+		return $validator;
+	}
+
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
@@ -85,19 +91,16 @@ class TransferApprovalsTable extends AppTable {
 				$newData['end_date'] = $entity->end_date->format('Y-m-d');
 				$newEntity = $Students->newEntity($newData);
 				if ($Students->save($newEntity)) {
-					// Add student into a class if the class is specified
 					$classId = $data[$this->alias()]['institution_class'];
-					if (!empty($classId)) {
-						$InstitutionClassStudentsTable = TableRegistry::get('Institutions.InstitutionSectionStudents');
-						$institutionClassStudentObj = [
-							'student_id' => $newEntity->student_id,
-							'institution_section_id' => $classId,
-							'education_grade_id' => $newEntity->education_grade_id,
-							'student_status_id' => $newEntity->student_status_id
-						];
-						$institutionClassStudentEntity = $InstitutionClassStudentsTable->newEntity($institutionClassStudentObj);
-						$InstitutionClassStudentsTable->save($institutionClassStudentEntity);
-					}
+					$InstitutionClassStudentsTable = TableRegistry::get('Institutions.InstitutionSectionStudents');
+					$institutionClassStudentObj = [
+						'student_id' => $newEntity->student_id,
+						'institution_section_id' => $classId,
+						'education_grade_id' => $newEntity->education_grade_id,
+						'student_status_id' => $newEntity->student_status_id
+					];
+					$institutionClassStudentEntity = $InstitutionClassStudentsTable->newEntity($institutionClassStudentObj);
+					$InstitutionClassStudentsTable->save($institutionClassStudentEntity);
 
 					$this->Alert->success('TransferApprovals.approve');
 					$existingStudentEntity = $Students->find()->where([
@@ -222,7 +225,7 @@ class TransferApprovalsTable extends AppTable {
 		if (count($listOfClasses) == 0) {
 			$options = ['' => __('No Available Classes')];
 		} else {
-			$options = ['' => '-- '.__('Select Class').' --'] + $listOfClasses;
+			$options = $listOfClasses;
 		}
 		$attr['options'] = $options;
 		return $attr;
