@@ -19,5 +19,5 @@ echo $this->Html->script('app/app');
 //JS use in Core
 echo $this->Html->script('app');
 echo $this->Html->script('app.table');
-
+echo $this->Html->script('config');
 

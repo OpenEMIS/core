@@ -13,7 +13,8 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.1.12
+ControllerActionComponent - Current Version 3.1.13
+3.1.13 (Thed) - added new event editAfterQuery to modified $entity after query is executed
 3.1.12 (Zack) - added new event onGetConvertOptions to add additional condition to the query to generate the convert options for delete and transfer
 3.1.11 (Zack) - added logic to reorder() to swap the order of the list that is pass over with the original list
 3.1.10 (Thed) - added new event onDeleteTransfer
@@ -1016,6 +1017,12 @@ class ControllerActionComponent extends Component {
 
 			$entity = $query->first();
 
+			// Event: editAfterQuery
+			$this->debug(__METHOD__, ': Event -> ControllerAction.Model.edit.afterQuery');
+			$event = $this->dispatchEvent($this->model, 'ControllerAction.Model.edit.afterQuery', null, [$entity]);
+			if ($event->isStopped()) { return $event->result; }
+			// End Event
+
 			if (empty($entity)) {
 				$this->Alert->warning('general.notExists');
 				return $this->controller->redirect($this->url('index'));
@@ -1300,29 +1307,24 @@ class ControllerActionComponent extends Component {
 
 									// List of the target foreign keys for subqueries
 									$targetForeignKeys = $modelAssociationTable->find()
-										->select([$modelAssociationTable->aliasField($assoc->targetForeignKey())])
+										->select(['target' => $modelAssociationTable->aliasField($assoc->targetForeignKey())])
 										->where([
 											$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferTo
 										]);
 
-									// List of id in the junction table to be deleted
-									$idNotToUpdate = $modelAssociationTable->find('list',[
-											'keyField' => 'id',
-											'valueField' => 'id'
-										])
-										->where([
-											$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferFrom,
-											$modelAssociationTable->aliasField($assoc->targetForeignKey()).' IN' => $targetForeignKeys
-										])
-										->toArray();
+									$notUpdateQuery = $modelAssociationTable->query()
+										->select(['target_foreign_key' => 'TargetTable.target'])
+										->from(['TargetTable' => $targetForeignKeys]);
 
 									$condition = [];
 
-									if (empty($idNotToUpdate)) {
-										$condition = [$assoc->foreignKey() => $transferFrom];
-									} else {
-										$condition = [$assoc->foreignKey() => $transferFrom, 'id NOT IN' => $idNotToUpdate];
-									}
+									$condition = [
+										$assoc->foreignKey() => $transferFrom, 
+										'NOT' => [
+											$assoc->foreignKey() => $transferFrom,
+											$assoc->targetForeignKey().' IN ' => $notUpdateQuery
+										]
+									];
 									
 									// Update all transfer records
 									$modelAssociationTable->updateAll(
