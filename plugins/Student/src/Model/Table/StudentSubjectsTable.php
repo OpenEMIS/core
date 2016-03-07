@@ -20,14 +20,10 @@ class StudentSubjectsTable extends ControllerActionTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects']);
 		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
-
-		if ($this->hasBehavior('ControllerAction')) {
-			$this->toggle('add', false);
-			$this->toggle('edit', false);
-			$this->toggle('remove', false);
-			$this->toggle('search', false);
-			$this->toggle('reorder', false);
-		}
+		
+		$this->toggle('add', false);
+		$this->toggle('edit', false);
+		$this->toggle('remove', false);
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra) {
