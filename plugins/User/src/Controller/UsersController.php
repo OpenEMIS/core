@@ -14,7 +14,19 @@ class UsersController extends AppController {
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 
-		$this->Auth->allow(['login', 'logout', 'postLogin', 'login_remote']);
+		$this->Auth->allow(['login', 'logout', 'postLogin', 'login_remote', 'patchPasswords']);
+	}
+
+	public function patchPasswords() {
+		$this->autoRender = false;
+		$script = 'password';
+
+		$consoleDir = ROOT . DS . 'bin' . DS;
+		$cmd = sprintf("%scake %s %s", $consoleDir, $script, 'User.Users');
+		$nohup = '%s > %slogs/'.$script.'.log & echo $!';
+		$shellCmd = sprintf($nohup, $cmd, ROOT.DS);
+		\Cake\Log\Log::write('debug', $shellCmd);
+		exec($shellCmd);
 	}
 
 	public function login() {

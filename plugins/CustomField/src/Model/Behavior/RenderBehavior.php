@@ -25,6 +25,7 @@ class RenderBehavior extends Behavior {
     public function implementedEvents() {
     	$events = parent::implementedEvents();
     	$eventMap = [
+            'Render.'.'format'.$this->fieldType.'Entity' => 'format'.$this->fieldType.'Entity',
             'Render.'.'process'.$this->fieldType.'Values' => 'process'.$this->fieldType.'Values',
             'Render.'.'onSave' => 'onSave',
             'ControllerAction.Model.onUpdateIncludes' => 'onUpdateIncludes'
