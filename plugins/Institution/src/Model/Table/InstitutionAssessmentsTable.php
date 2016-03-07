@@ -51,7 +51,7 @@ class InstitutionAssessmentsTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
-		$this->addBehavior('Excel', ['excludes' => ['status', 'education_grade_id', 'institution_section_id']]);
+		$this->addBehavior('Excel', ['excludes' => ['status', 'education_grade_id', 'institution_class_id']]);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -81,14 +81,14 @@ class InstitutionAssessmentsTable extends AppTable {
 		$classOptions = $this->Classes->getClassOptions($academicPeriodId, $institutionId);
 		// Class assessments
 		$classAssessments = $this->getClassAssessments($institutionId, $academicPeriodId);
-		$sheetTable = TableRegistry::get('Institution.InstitutionSectionStudents');
+		$sheetTable = TableRegistry::get('Institution.InstitutionClassStudents');
 
 		foreach($classAssessments as $classId => $assessments) {
 	    	// Main sheet table
 	    	$sheets[] = [
 				'name' => $classOptions[$classId],
 				'table' => $sheetTable,
-				'query' => $sheetTable->find()->where([$sheetTable->aliasField('institution_section_id') => $classId]),
+				'query' => $sheetTable->find()->where([$sheetTable->aliasField('institution_class_id') => $classId]),
 				'orientation' => 'landscape',
 				'institutionId' => $institutionId,
 				'academicPeriodId' => $academicPeriodId,
@@ -102,7 +102,7 @@ class InstitutionAssessmentsTable extends AppTable {
 			$sheets[] = [
 				'name' => __('No Classes for '.$academicPeriodName),
 				'table' => $sheetTable,
-				'query' => $sheetTable->find()->where([$sheetTable->aliasField('institution_section_id') => 0]),
+				'query' => $sheetTable->find()->where([$sheetTable->aliasField('institution_class_id') => 0]),
 				'orientation' => 'landscape',
 				'institutionId' => $institutionId,
 				'academicPeriodId' => $academicPeriodId,
@@ -116,22 +116,22 @@ class InstitutionAssessmentsTable extends AppTable {
     public function getClassAssessments($institutionId, $academicPeriodId, $classId=null) {
     	$condition = [];
     	if (!(is_null($classId))) {
-    		$condition = ['InstitutionSections.id' => $classId];
+    		$condition = ['InstitutionClasses.id' => $classId];
     	}
 
     	$results = $this
     		->find()
-    		->matching('Assessments.EducationGrades.InstitutionSectionStudents.InstitutionSections')
+    		->matching('Assessments.EducationGrades.InstitutionClassStudents.InstitutionClasses')
     		->where([
     			$this->aliasField('institution_id') => $institutionId, 
     			$this->aliasField('academic_period_id') => $academicPeriodId,
-    			'Assessments.education_grade_id = InstitutionSectionStudents.education_grade_id',
-    			'InstitutionSections.institution_id' => $institutionId, 
-    			'InstitutionSections.academic_period_id' => $academicPeriodId, 
+    			'Assessments.education_grade_id = InstitutionClassStudents.education_grade_id',
+    			'InstitutionClasses.institution_id' => $institutionId, 
+    			'InstitutionClasses.academic_period_id' => $academicPeriodId, 
     			$this->aliasField('status') => self::COMPLETED,
     		])
     		->where($condition)
-    		->select(['class' => 'InstitutionSections.id', 'assessment' => 'Assessments.id'])
+    		->select(['class' => 'InstitutionClasses.id', 'assessment' => 'Assessments.id'])
     		->group(['class', 'assessment'])
     		->hydrate(false)
     		->toArray();
@@ -296,13 +296,13 @@ class InstitutionAssessmentsTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-		$this->Classes = TableRegistry::get('Institution.InstitutionSections');
-		$this->ClassGrades = TableRegistry::get('Institution.InstitutionSectionGrades');
-		$this->ClassSubjects = TableRegistry::get('Institution.InstitutionSectionClasses');
+		$this->Classes = TableRegistry::get('Institution.InstitutionClasses');
+		$this->ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+		$this->ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
 
-		$this->Subjects = TableRegistry::get('Institution.InstitutionClasses');
-		$this->SubjectStaff = TableRegistry::get('Institution.InstitutionClassStaff');
-		$this->SubjectStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+		$this->Subjects = TableRegistry::get('Institution.InstitutionSubjects');
+		$this->SubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+		$this->SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
 
 		$this->AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
 		$this->AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
@@ -601,29 +601,29 @@ class InstitutionAssessmentsTable extends AppTable {
 			->innerJoin(
 				[$this->ClassGrades->alias() => $this->ClassGrades->table()],
 				[
-					$this->ClassGrades->aliasField('institution_section_id = ') . $this->Classes->aliasField('id'),
+					$this->ClassGrades->aliasField('institution_class_id = ') . $this->Classes->aliasField('id'),
 					$this->ClassGrades->aliasField('education_grade_id') => $selectedGrade
 				]
 			)
 			->innerJoin(
 				[$this->ClassSubjects->alias() => $this->ClassSubjects->table()],
 				[
-					$this->ClassSubjects->aliasField('institution_section_id = ') . $this->Classes->aliasField('id')
+					$this->ClassSubjects->aliasField('institution_class_id = ') . $this->Classes->aliasField('id')
 				]
 			)
 			->innerJoin(
 				[$this->Subjects->alias() => $this->Subjects->table()],
 				[
-					$this->Subjects->aliasField('id = ') . $this->ClassSubjects->aliasField('institution_class_id'),
+					$this->Subjects->aliasField('id = ') . $this->ClassSubjects->aliasField('institution_subject_id'),
 					$this->Subjects->aliasField('education_subject_id IN') => $this->educationSubjectIds
 				]
 			)
 			->where($_conditions);
 
 		$AllClasses = $this->AccessControl->check(['Institutions', 'AllClasses', 'index']);
-		$MyClasses = $this->AccessControl->check(['Institutions', 'Sections', 'index']);
+		$MyClasses = $this->AccessControl->check(['Institutions', 'Classes', 'index']);
 		$AllSubjects = $this->AccessControl->check(['Institutions', 'AllSubjects', 'index']);
-		$MySubjects = $this->AccessControl->check(['Institutions', 'Classes', 'index']);
+		$MySubjects = $this->AccessControl->check(['Institutions', 'Subjects', 'index']);
 
 		if ($this->AccessControl->isAdmin() || $AllClasses == true || ($MyClasses == false && $MySubjects == false)) {
 			// Superadmin
@@ -650,7 +650,7 @@ class InstitutionAssessmentsTable extends AppTable {
 					$query->innerJoin(
 						[$this->SubjectStaff->alias() => $this->SubjectStaff->table()],
 						[
-							$this->SubjectStaff->aliasField('institution_class_id = ') . $this->Subjects->aliasField('id'),
+							$this->SubjectStaff->aliasField('institution_subject_id = ') . $this->Subjects->aliasField('id'),
 							$this->SubjectStaff->aliasField('staff_id') => $this->userId, // subject teacher
 							$this->SubjectStaff->aliasField('status') => 1
 						]
@@ -669,7 +669,7 @@ class InstitutionAssessmentsTable extends AppTable {
 					$query->innerJoin(
 						[$this->SubjectStaff->alias() => $this->SubjectStaff->table()],
 						[
-							$this->SubjectStaff->aliasField('institution_class_id = ') . $this->Subjects->aliasField('id'),
+							$this->SubjectStaff->aliasField('institution_subject_id = ') . $this->Subjects->aliasField('id'),
 							$this->SubjectStaff->aliasField('staff_id') => $this->userId, // subject teacher
 							$this->SubjectStaff->aliasField('status') => 1
 						]
@@ -712,8 +712,8 @@ class InstitutionAssessmentsTable extends AppTable {
 			->innerJoin(
 				[$this->ClassSubjects->alias() => $this->ClassSubjects->table()],
 				[
-					$this->ClassSubjects->aliasField('institution_class_id = ') . $this->Subjects->aliasField('id'),
-					$this->ClassSubjects->aliasField('institution_section_id') => $selectedClass
+					$this->ClassSubjects->aliasField('institution_subject_id = ') . $this->Subjects->aliasField('id'),
+					$this->ClassSubjects->aliasField('institution_class_id') => $selectedClass
 				]
 			)
 			->where([
@@ -723,9 +723,9 @@ class InstitutionAssessmentsTable extends AppTable {
 			]);
 
 		$AllClasses = $this->AccessControl->check(['Institutions', 'AllClasses', 'index']);
-		$MyClasses = $this->AccessControl->check(['Institutions', 'Sections', 'index']);
+		$MyClasses = $this->AccessControl->check(['Institutions', 'Classes', 'index']);
 		$AllSubjects = $this->AccessControl->check(['Institutions', 'AllSubjects', 'index']);
-		$MySubjects = $this->AccessControl->check(['Institutions', 'Classes', 'index']);
+		$MySubjects = $this->AccessControl->check(['Institutions', 'Subjects', 'index']);
 
 		if ($this->AccessControl->isAdmin() || $AllSubjects == true || ($MyClasses == false && $MySubjects == false)) {
 			// Superadmin
@@ -744,7 +744,7 @@ class InstitutionAssessmentsTable extends AppTable {
 						$query->innerJoin(
 							[$this->SubjectStaff->alias() => $this->SubjectStaff->table()],
 							[
-								$this->SubjectStaff->aliasField('institution_class_id = ') . $this->Subjects->aliasField('id'),
+								$this->SubjectStaff->aliasField('institution_subject_id = ') . $this->Subjects->aliasField('id'),
 								$this->SubjectStaff->aliasField('staff_id') => $this->userId, // subject teacher
 								$this->SubjectStaff->aliasField('status') => 1
 							]
@@ -762,7 +762,7 @@ class InstitutionAssessmentsTable extends AppTable {
 					$query->innerJoin(
 						[$this->SubjectStaff->alias() => $this->SubjectStaff->table()],
 						[
-							$this->SubjectStaff->aliasField('institution_class_id = ') . $this->Subjects->aliasField('id'),
+							$this->SubjectStaff->aliasField('institution_subject_id = ') . $this->Subjects->aliasField('id'),
 							$this->SubjectStaff->aliasField('staff_id') => $this->userId, // subject teacher
 							$this->SubjectStaff->aliasField('status') => 1
 						]
@@ -784,7 +784,7 @@ class InstitutionAssessmentsTable extends AppTable {
 					return $SubjectStudents
 						->find()
 						->where([
-							$SubjectStudents->aliasField('institution_class_id') => $id,
+							$SubjectStudents->aliasField('institution_subject_id') => $id,
 							$SubjectStudents->aliasField('status') => 1
 						])
 						->count();
@@ -870,7 +870,7 @@ class InstitutionAssessmentsTable extends AppTable {
 					]
 				)
 				->where([
-					$this->SubjectStudents->aliasField('institution_class_id') => $selectedSubject,
+					$this->SubjectStudents->aliasField('institution_subject_id') => $selectedSubject,
 					$this->SubjectStudents->aliasField('status') => 1
 				])
 				->autoFields(true);
