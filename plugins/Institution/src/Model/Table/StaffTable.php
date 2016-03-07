@@ -45,7 +45,7 @@ class StaffTable extends AppTable {
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 
 		$this->addBehavior('Excel', [
-			'excludes' => ['start_year', 'end_year'], 
+			'excludes' => ['start_year', 'end_year', 'security_group_user_id'], 
 			'pages' => ['index']
 		]);
 
@@ -482,6 +482,7 @@ class StaffTable extends AppTable {
 		$this->ControllerAction->field('staff_type_id', ['type' => 'select', 'visible' => ['index' => false, 'view' => true, 'edit' => true]]);
 		$this->ControllerAction->field('staff_status_id', ['type' => 'select']);
 		$this->ControllerAction->field('staff_id');
+		$this->ControllerAction->field('security_group_user_id', ['visible' => false]);
 		
 		if ($this->action == 'index') {
 			$InstitutionArray = [];
