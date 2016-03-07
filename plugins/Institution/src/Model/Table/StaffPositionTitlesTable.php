@@ -162,7 +162,7 @@ class StaffPositionTitlesTable extends ControllerActionTable {
 					'security_group_user_id' => $InstitutionStaffTable->aliasField('security_group_user_id'),
 					'staff_id' => $InstitutionStaffTable->aliasField('staff_id')
 				])
-				->limit(10)
+				->limit(1000)
 				->page(1);
 			
 			$updateSubQuery = $this->query()
