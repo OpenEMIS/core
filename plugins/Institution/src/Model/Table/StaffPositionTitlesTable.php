@@ -7,11 +7,17 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Session;
+<<<<<<< HEAD
 use Cake\Log\Log;
 
+=======
+use ControllerAction\Model\Traits\UtilityTrait;
+>>>>>>> origin_ssh/POCOR-2604-dev
 use App\Model\Table\ControllerActionTable;
 
 class StaffPositionTitlesTable extends ControllerActionTable {
+	use UtilityTrait;
+
 	public function initialize(array $config) {
         $this->addBehavior('ControllerAction.FieldOption');
         $this->table('staff_position_titles');
@@ -29,8 +35,10 @@ class StaffPositionTitlesTable extends ControllerActionTable {
 			'options' => $this->getSelectOptions('Staff.position_types'),
 			'after' => 'name'
 		]);
-
-		$extra['roleList'] = ['' => '-- '.__('Select Role').' --'] + $this->SecurityRoles->getSystemRolesList();
+		$systemRolesList = ['' => '-- '.__('Select Role').' --'] + $this->SecurityRoles->getSystemRolesList();
+		$selected = '';
+		$this->advancedSelectOptions($systemRolesList, $selected);
+		$extra['roleList'] = $systemRolesList;
 		$this->field('security_role_id', ['after' => 'type', 'options' => $extra['roleList']]);
 	}
 
