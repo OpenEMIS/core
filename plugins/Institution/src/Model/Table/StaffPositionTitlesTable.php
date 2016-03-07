@@ -7,12 +7,8 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Session;
-<<<<<<< HEAD
 use Cake\Log\Log;
-
-=======
 use ControllerAction\Model\Traits\UtilityTrait;
->>>>>>> origin_ssh/POCOR-2604-dev
 use App\Model\Table\ControllerActionTable;
 
 class StaffPositionTitlesTable extends ControllerActionTable {
