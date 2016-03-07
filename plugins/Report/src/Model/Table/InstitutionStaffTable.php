@@ -23,7 +23,7 @@ class InstitutionStaffTable extends AppTable  {
 
 		$this->addBehavior('Report.ReportList');
 		$this->addBehavior('Excel', [
-			'excludes' => ['start_year', 'end_year', 'FTE'], 
+			'excludes' => ['start_year', 'end_year', 'FTE', 'security_group_user_id'], 
 			'pages' => false
 		]);
 	}

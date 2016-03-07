@@ -25,7 +25,7 @@ class InstitutionStaffOnLeaveTable extends AppTable  {
 
 		$this->addBehavior('Report.ReportList');
 		$this->addBehavior('Excel', [
-			'excludes' => ['start_year', 'end_year', 'academic_period_id'], 
+			'excludes' => ['start_year', 'end_year', 'academic_period_id', 'security_group_user_id'], 
 			'pages' => false
 		]);
 	}
