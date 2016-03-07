@@ -46,7 +46,8 @@ class IndexBehavior extends Behavior {
 			try {
 				$data = $model->Paginator->paginate($query, $extra['options']);
 			} catch (NotFoundException $e) {
-				$this->log($e->getMessage(), 'debug');
+				Log::write('debug', $e->getMessage());
+				// $this->log($e->getMessage(), 'debug');
 				$action = $model->url('index', 'QUERY');
 				if (array_key_exists('page', $action)) {
 					unset($action['page']);
