@@ -643,10 +643,10 @@ class StaffTable extends AppTable {
 		$startDate = (!empty($entity->start_date))? $entity->start_date->format('Y-m-d'): null;
 		$endDate = (!empty($entity->end_date))? $entity->end_date->format('Y-m-d'): null;
 			
-		$InstitutionSections = TableRegistry::get('Institution.InstitutionSections');
+		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
 
 		// Deleting a staff-to-position record in a school removes all records related to the staff in the school (i.e. remove him from classes/subjects) falling between end date and start date of his assignment in the position.
-		$sectionsInPosition = $InstitutionSections->find()
+		$classesInPosition = $InstitutionClasses->find()
 			->where(
 				['staff_id' => $staffId, 'institution_id' => $institutionId]
 			)
@@ -663,22 +663,22 @@ class StaffTable extends AppTable {
 				return $q->where($overlapDateCondition);
 			})
 			;
-		$sectionArray = [];
-		foreach ($sectionsInPosition as $key => $value) {
-			$sectionArray[] = $value->id;
+		$classArray = [];
+		foreach ($classesInPosition as $key => $value) {
+			$classArray[] = $value->id;
 		}
-		if (!empty($sectionArray)) {
-			$InstitutionSections->updateAll(
+		if (!empty($classArray)) {
+			$InstitutionClasses->updateAll(
 				['staff_id' => 0],
-				['id IN ' => $sectionArray]
+				['id IN ' => $classArray]
 			);
 		}
 		// delete the staff from subjects		
-		// find classes that matched the start-end date then delete from class_staff that matches staff id and classes returned from previous 
+		// find subjects that matched the start-end date then delete from subject_staff that matches staff id and subjects returned from previous 
 
-		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');	
-		$classesDuringStaffPeriod = $InstitutionClasses->find()
-			->where([$InstitutionClasses->aliasField('institution_id') => $institutionId])
+		$InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');	
+		$subjectsDuringStaffPeriod = $InstitutionSubjects->find()
+			->where([$InstitutionSubjects->aliasField('institution_id') => $institutionId])
 			->matching('AcademicPeriods', function ($q) use ($startDate, $endDate) {
 				$overlapDateCondition = [];
 				if (empty($endDate)) {
@@ -692,9 +692,9 @@ class StaffTable extends AppTable {
 				return $q->where($overlapDateCondition);
 			})
 			;
-		$classIdsDuringStaffPeriod = [];
-		foreach ($classesDuringStaffPeriod as $key => $value) {
-			$classIdsDuringStaffPeriod[] = $value->id;
+		$subjectIdsDuringStaffPeriod = [];
+		foreach ($subjectsDuringStaffPeriod as $key => $value) {
+			$subjectIdsDuringStaffPeriod[] = $value->id;
 		}
 
 		// Staff behavior associated to institution must be deleted.
@@ -724,11 +724,11 @@ class StaffTable extends AppTable {
 			$InstitutionRubrics->delete($value);
 		}
 
-		$InstitutionClassStaff = TableRegistry::get('Institution.InstitutionClassStaff');
+		$InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
 
-		$InstitutionClassStaff->deleteAll([
-			$InstitutionClassStaff->aliasField('staff_id') => $staffId,
-			$InstitutionClassStaff->aliasField('institution_class_id') . ' IN ' => $classIdsDuringStaffPeriod
+		$InstitutionSubjectStaff->deleteAll([
+			$InstitutionSubjectStaff->aliasField('staff_id') => $staffId,
+			$InstitutionSubjectStaff->aliasField('institution_subject_id') . ' IN ' => $subjectIdsDuringStaffPeriod
 		]);
 
 		// If the staff changes his FTE in a position, a new record for the same position needs to be created. The end date of the previous position record is automatically set to the start date of the new position record.

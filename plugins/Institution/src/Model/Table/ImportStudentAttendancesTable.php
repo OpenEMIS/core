@@ -93,10 +93,10 @@ class ImportStudentAttendancesTable extends AppTable {
 							])
 							// ->join([
 							// 	'InstitutionClasseStudents' => [
-							// 		'table' => 'institution_site_section_students',
-							// 		'alias' => 'InstitutionClasseStudents',
+							// 		'table' => 'institution_class_students',
+							// 		'alias' => 'InstitutionClassStudents',
 							// 		// 'type' => 'LEFT',
-							// 		'conditions' => 'InstitutionClasseStudents.student_id = '.$this->Students->aliasField('student_id'),
+							// 		'conditions' => 'InstitutionClassStudents.student_id = '.$this->Students->aliasField('student_id'),
 							// 	],
 							// ])
 							->order(['EducationGrades.order'])

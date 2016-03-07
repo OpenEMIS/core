@@ -9,7 +9,7 @@ class InstitutionSubject extends Entity
 {
 	protected $_virtual = ['male_students', 'female_students', 
     'teachers', 
-    'education_subject_code', 'section_name'];
+    'education_subject_code', 'class_name'];
 	
     protected function _getMaleStudents() {
         $gender_id = 1; // male
@@ -70,10 +70,10 @@ class InstitutionSubject extends Entity
         return $value;
     }
 
-    // protected function _getSectionName() {
+    // protected function _getClassName() {
         // $value = 'mmm';
-    //     if ($this->has('institution_section_subjects')) {
-    //         if ($this->has('institution_section')) {
+    //     if ($this->has('institution_class_subjects')) {
+    //         if ($this->has('institution_class')) {
     //             $value = $this->education_subject->code;
     //         } else {
     //             $table = TableRegistry::get('Education.EducationSubjects');
