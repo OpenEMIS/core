@@ -22,21 +22,14 @@ class PositionsTable extends ControllerActionTable {
 		$this->belongsTo('StaffStatuses', ['className' => 'FieldOption.StaffStatuses']);
 		$this->belongsTo('InstitutionPositions', ['className' => 'Institution.InstitutionPositions']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-<<<<<<< HEAD
-
-		if ($this->hasBehavior('ControllerAction')) {
-			$this->toggle('add', false);
-			$this->toggle('edit', false);
-			$this->toggle('remove', false);
-			$this->toggle('search', false);
-			$this->toggle('reorder', false);
-		}
-=======
 		$this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
->>>>>>> bfbe8ced58205497c300c05a25ba9c3aca0c4732
+
+		$this->toggle('add', false);
+		$this->toggle('edit', false);
+		$this->toggle('remove', false);
 	}
 
-	public function indexBeforeAction(Event $event) {
+	public function indexBeforeAction(Event $event, ArrayObject $extra) {
 		$this->fields['start_year']['visible'] = false;
 		$this->fields['end_year']['visible'] = false;
 		$this->fields['FTE']['visible'] = false;
