@@ -3,9 +3,6 @@ ALTER TABLE `institution_staff`
 DROP COLUMN `security_group_user_id`,
 DROP INDEX `security_group_user_id` ;
 
--- role_update_progresses
-DROP TABLE `role_update_processes`;
-
 -- staff_position_titles
 UPDATE `staff_position_titles` 
 INNER JOIN `z_2612_staff_position_titles`
