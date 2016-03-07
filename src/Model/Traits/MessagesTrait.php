@@ -214,7 +214,7 @@ trait MessagesTrait {
 				'success' => 'The record has been rejected successfully.',
 				'failed' => 'The record is not rejected due to errors encountered.'
 			],
-			'section' => 'Class',
+			'class' => 'Class',
 			'noAccess' => 'You do not have access to this Class.'
 		],
 		'InstitutionRubrics' => [
