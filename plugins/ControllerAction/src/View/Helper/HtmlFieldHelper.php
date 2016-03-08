@@ -243,6 +243,17 @@ class HtmlFieldHelper extends Helper {
 							if (is_array($opt) && isset($opt['text'])) {
 								$opt['text'] = __($opt['text']);
 								$list[$key] = $opt;
+							} else if (is_array($opt)) {
+								$subList = [];
+								foreach ($opt as $k => $subOption) {
+									if (is_array($subOption) && isset($subOption['text'])) {
+										$subOption['text'] = __($subOption['text']);
+										$subList[$k] = $subOption;
+									} else {
+										$subList[$k] = __($subOption);
+									}
+								}
+								$list[__($key)] = $subList;
 							} else {
 								$list[$key] = __($opt);
 							}
