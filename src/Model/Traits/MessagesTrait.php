@@ -303,6 +303,10 @@ trait MessagesTrait {
 			'add_to_section' => 'Add to Section',
 			'notSupport' => 'Not supported in this form.'
 		],
+		'StaffPositionTitles' => [
+			'inProgress' => 'Update of staff position title roles is in process, please try again later.',
+			'error' => 'There is an error in the update of the title record, please try again later.'
+		],
 		'time' => [
 			'start' => 'Start Time',
 			'end' => 'End Time',
