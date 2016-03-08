@@ -203,13 +203,13 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('created', ['visible' => false]);
 		$this->ControllerAction->field('created_user_id', ['visible' => false]);
 
-		$this->ControllerAction->field('institution_locality_id', ['type' => 'select']);
-		$this->ControllerAction->field('institution_ownership_id', ['type' => 'select']);
-		$this->ControllerAction->field('institution_status_id', ['type' => 'select']);
-		$this->ControllerAction->field('institution_sector_id', ['type' => 'select']);
-		$this->ControllerAction->field('institution_provider_id', ['type' => 'select']);
-		$this->ControllerAction->field('institution_gender_id', ['type' => 'select']);
-		$this->ControllerAction->field('institution_network_connectivity_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_locality_id', ['type' => 'select', 'translate' => true]);
+		$this->ControllerAction->field('institution_ownership_id', ['type' => 'select', 'translate' => true]);
+		$this->ControllerAction->field('institution_status_id', ['type' => 'select', 'translate' => true]);
+		$this->ControllerAction->field('institution_sector_id', ['type' => 'select', 'translate' => true]);
+		$this->ControllerAction->field('institution_provider_id', ['type' => 'select', 'translate' => true]);
+		$this->ControllerAction->field('institution_gender_id', ['type' => 'select', 'translate' => true]);
+		$this->ControllerAction->field('institution_network_connectivity_id', ['type' => 'select', 'translate' => true]);
 		$this->ControllerAction->field('area_administrative_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives', 'displayCountry' => false]);
 		$this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
 
@@ -540,7 +540,7 @@ class InstitutionsTable extends AppTable  {
 	}
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
-		$this->ControllerAction->field('institution_type_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_type_id', ['type' => 'select', 'translate' => true]);
 	}
 
 /******************************************************************************************************************
