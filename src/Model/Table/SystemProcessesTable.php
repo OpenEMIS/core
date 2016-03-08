@@ -32,7 +32,8 @@ class SystemProcessesTable extends ControllerActionTable {
 			'model' => $model,
 			'params' => $params
 		];
-		$this->save($this->newEntity($newArr));
+		$entity = $this->save($this->newEntity($newArr));
+		return $entity->id;
 	}
 
 	public function updatePid($systemProcessId, $pid) {
