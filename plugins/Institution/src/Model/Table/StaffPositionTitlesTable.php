@@ -7,6 +7,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Session;
+use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -34,8 +35,29 @@ class StaffPositionTitlesTable extends ControllerActionTable {
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra) {
+		if ($this->Session->check('StaffPositionTitles.error')) {
+			$this->Alert->error($this->Session->read('StaffPositionTitles.error'), ['reset' => true]);
+			$this->Session->delete('StaffPositionTitles.error');
+		}
 		$this->field('type', ['after' => 'name']);
 		$this->field('security_role_id', ['after' => 'type']);
+	}
+
+	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		$titleId = $entity->id;
+		$errorProcess = $this->checkIfError($titleId);
+		if ($this->checkIfRunning($titleId)) {
+			$urlParams = $this->url('index');
+			$this->Session->write('StaffPositionTitles.error', 'StaffPositionTitles.inProgress');
+			$event->stopPropagation();
+			return $this->controller->redirect($urlParams);
+		} else if ($errorProcess) {
+			$urlParams = $this->url('index');
+			$event = $this->dispatchEvent('Shell.shellRestartUpdateRole', [$errorProcess['id'], $errorProcess['executed_count'], $errorProcess['params']]);
+			$this->Session->write('StaffPositionTitles.error', 'StaffPositionTitles.error');
+			$event->stopPropagation();
+			return $this->controller->redirect($urlParams);
+		}
 	}
 
 	public function onGetType(Event $event, Entity $entity) {
@@ -49,138 +71,116 @@ class StaffPositionTitlesTable extends ControllerActionTable {
 			$newRoleId = $entity->security_role_id;
 			$titleId = $entity->id;
 
-			$this->securityRolesUpdates($oldRoleId, $newRoleId, $titleId);
-			$this->securityRolesDeletes();
-			$this->securityRolesInserts();
+			$this->startUpdateRoles($newRoleId, $titleId);
 		}
 	}
 
-	private function securityRolesUpdates($oldRoleId, $newRoleId, $titleId) {
-		$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+	private function startUpdateRoles($newRoleId, $titleId, $systemProcessId = null, $executedCount = null) {
+		$cmd = ROOT . DS . 'bin' . DS . 'cake UpdateStaffRoles '.$newRoleId.' '.$titleId;
 
-		$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
-		$subQuery = $InstitutionStaffTable->find()
-			->select([
-				'security_group_user_id' => 'SecurityGroupUsers.id'
-			])
-			->innerJoin(['Institutions' => 'institutions'], [
-				'Institutions.id = '.$InstitutionStaffTable->aliasField('institution_id')
-			])
-			->innerJoin(['Positions' => 'institution_positions'], [
-				'Positions.id = '.$InstitutionStaffTable->aliasField('institution_position_id')
-			])
-			->innerJoin(['StaffPositionTitles' => 'staff_position_titles'], [
-				'StaffPositionTitles.id = Positions.staff_position_title_id',
-				'StaffPositionTitles.id' => $titleId
-			])
-			->innerJoin(['SecurityGroupUsers' => 'security_group_users'], [
-				'SecurityGroupUsers.security_user_id = '.$InstitutionStaffTable->aliasField('staff_id'),
-				'SecurityGroupUsers.security_role_id' => $oldRoleId,
-				'SecurityGroupUsers.security_group_id = Institutions.security_group_id'
-			]);
+		if (!is_null($systemProcessId)) {
+			$cmd .= ' '.$systemProcessId;
+			$cmd .= ' '.$executedCount;
+		}
 
-		// Query to update security role id
-		$securityGroupUserIdQuery = $this->query()
-			->select(['security_group_user_id' => 'GroupUsers.security_group_user_id'])
-			->from(['GroupUsers' => $subQuery]);
+		$logs = ROOT . DS . 'logs' . DS . 'UpdateStaffRoles.log & echo $!';
+		$shellCmd = $cmd . ' >> ' . $logs;
 
-		$SecurityGroupUsersTable->updateAll(
-			['security_role_id' => $newRoleId],
-			['id IN ' => $securityGroupUserIdQuery]
-		);
+		try {
+			$pid = exec($shellCmd);
+			Log::write('debug', $shellCmd);
+		} catch(\Exception $ex) {
+			Log::write('error', __METHOD__ . ' exception when removing inactive roles : '. $ex);
+		}
 	}
 
-	private function securityRolesDeletes() {
-		$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
-
-		// Query to delete duplicate records
-		$duplicateRecordQuery = $SecurityGroupUsersTable->find()
-			->select([
-				'id' => $SecurityGroupUsersTable->aliasField('id'),
-				'counter' => 1
-			])
-			->group([
-				$SecurityGroupUsersTable->aliasField('security_user_id'),
-				$SecurityGroupUsersTable->aliasField('security_group_id'),
-				$SecurityGroupUsersTable->aliasField('security_role_id')
-			])
-			->having(['COUNT(counter) > 1'])
-			;
-
-		$deleteDuplicateQuery = $this->query()
-			->select(['security_group_user_id' => 'GroupUsers.id'])
-			->from(['GroupUsers' => $duplicateRecordQuery]);
-
-		$SecurityGroupUsersTable->deleteAll(['id IN ' => $deleteDuplicateQuery]);
-
-		$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
-
-		// Query to delete the wrong records
-		$deleteWrongRecordsQuery = $InstitutionStaffTable->find()
-			->innerJoin(['Institutions' => 'institutions'], [
-				'Institutions.id = '.$InstitutionStaffTable->aliasField('institution_id')
-			])
-			->innerJoin(['Positions' => 'institution_positions'], [
-				'Positions.id = '.$InstitutionStaffTable->aliasField('institution_position_id')
-			])
-			->innerJoin(['StaffPositionTitles' => 'staff_position_titles'], [
-				'StaffPositionTitles.id = Positions.staff_position_title_id',
-			])
-			->innerJoin(['SecurityGroupUsers' => 'security_group_users'], [
-				'SecurityGroupUsers.security_user_id = Staff.staff_id',
-				'SecurityGroupUsers.security_role_id = StaffPositionTitles.security_role_id',
-				'SecurityGroupUsers.security_group_id = Institutions.security_group_id'
-			])
-			->select([
-				'security_group_user_id' => 'SecurityGroupUsers.id'
-			]);
-
-		$deleteQuery = $this->query()
-			->select(['security_group_user_id' => 'GroupUsers.security_group_user_id'])
-			->from(['GroupUsers' => $deleteWrongRecordsQuery]);
-		$SecurityGroupUsersTable->deleteAll(['id NOT IN' => $deleteQuery]);
+	public function checkIfRunning($titleId) {
+		$SystemProcesses = TableRegistry::get('SystemProcesses');
+		$runningProcess = $SystemProcesses->getRunningProcesses('Institution.StaffPositionTitles');
+		foreach ($runningProcess as $process) {
+			$param = json_decode($process['params']);
+			if ($param->titleId == $titleId) {
+				return true;
+			}
+		}
+		return false;
 	}
 
-	private function securityRolesInserts() {
+	public function checkIfError($titleId) {
+		$SystemProcesses = TableRegistry::get('SystemProcesses');
+		$runningProcess = $SystemProcesses->getErrorProcesses('Institution.StaffPositionTitles');
+		foreach ($runningProcess as $process) {
+			$param = json_decode($process['params']);
+			if ($param->titleId == $titleId) {
+				return $process;
+			}
+		}
+		return false;
+	}
+
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Shell.shellRestartUpdateRole'] = 'shellRestartUpdateRole';
+		return $events;
+	}
+
+	public function shellRestartUpdateRole(Event $event, $systemProcessId, $executedCount, $params) {
+		$decodedParam = json_decode($params);
+		$newRoleId = $decodedParam->newRoleId;
+		$titleId = $decodedParam->titleId;
+		if (!$this->checkIfRunning($titleId)) {
+			$entity = $this->find()->where([$this->aliasField('id') => $titleId])->first();
+			if (!empty($entity) && $entity->security_role_id == $newRoleId) {
+				$this->startUpdateRoles($newRoleId, $titleId, $systemProcessId, $executedCount);
+			}
+		}
+	}
+
+	public function securityRolesUpdates($newRoleId, $titleId) {
 		$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
 		$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
-		$session = new Session();
-		$userId = $session->read('Auth.User.id');
 
-		// Query to insert missing security role records
-		$insertMissingRecords = $InstitutionStaffTable->find()
-			->innerJoin(['Institutions' => 'institutions'], [
-				'Institutions.id = '.$InstitutionStaffTable->aliasField('institution_id')
-			])
-			->innerJoin(['Positions' => 'institution_positions'], [
-				'Positions.id = '.$InstitutionStaffTable->aliasField('institution_position_id')
-			])
-			->innerJoin(['StaffPositionTitles' => 'staff_position_titles'], [
-				'StaffPositionTitles.id = Positions.staff_position_title_id',
-				'StaffPositionTitles.security_role_id <> ' => 0
-			])
-			->where([
-				'NOT EXISTS('.
-					$SecurityGroupUsersTable->find()
-						->where([
-							$SecurityGroupUsersTable->aliasField('security_user_id').' = '.$InstitutionStaffTable->aliasField('staff_id'),
-							$SecurityGroupUsersTable->aliasField('security_group_id').' = Institutions.security_group_id',
-							$SecurityGroupUsersTable->aliasField('security_role_id').' = StaffPositionTitles.security_role_id'
-						])
-				.')'
-			])
-			->select([
-				'security_group_user_id' => 'uuid()',
-				'security_user_id' => $InstitutionStaffTable->aliasField('staff_id'), 
-				'security_role_id' => 'StaffPositionTitles.security_role_id',
-				'security_group_id' => 'Institutions.security_group_id',
-				'created_user_id' => intval($userId),
-				'created' => $InstitutionStaffTable->find()->func()->now()
-			]);
+		while (true) {
+			$subQuery = $InstitutionStaffTable->find()
+				->innerJoinWith('Positions.StaffPositionTitles', function($q) use ($titleId) {
+					return $q->where(['StaffPositionTitles.id' => $titleId]);
+				})
+				->innerJoinWith('SecurityGroupUsers')
+				->where([
+					$InstitutionStaffTable->aliasField('security_group_user_id').' IS NOT NULL', 
+					'SecurityGroupUsers.security_role_id <> ' => $newRoleId
+				])
+				->where([
+					'OR' => [
+						[function ($exp) use ($InstitutionStaffTable) {
+							return $exp->gte($InstitutionStaffTable->aliasField('end_date'), $InstitutionStaffTable->find()->func()->now('date'));
+						}],
+						[$InstitutionStaffTable->aliasField('end_date').' IS NULL']
+					]
+				])
+				->select([
+					'security_group_user_id' => $InstitutionStaffTable->aliasField('security_group_user_id'),
+					'staff_id' => $InstitutionStaffTable->aliasField('staff_id')
+				])
+				->limit(1000)
+				->page(1);
+			
+			$updateSubQuery = $this->query()
+				->select(['security_group_user_id' => 'GroupUsers.security_group_user_id', 'staff_id' => 'GroupUsers.staff_id'])
+				->from(['GroupUsers' => $subQuery]);
 
-		$SecurityGroupUsersTable->query()
-			->insert(['id', 'security_user_id', 'security_role_id', 'security_group_id', 'created_user_id', 'created'])
-			->values($insertMissingRecords)
-			->execute();
+			$resultSet = $updateSubQuery->all();
+
+			if ($resultSet->count() == 0) {
+				break;
+			} else {
+				foreach ($resultSet as $entity) {
+					Log::write('debug', __FUNCTION__ . ' - Updating roles for user_id (' . $entity->staff_id . ')');
+					$SecurityGroupUsersTable->updateAll(
+						['security_role_id' => $newRoleId], 
+						['id' => $entity->security_group_user_id]);
+				}
+			}
+		}
 	}
 }
