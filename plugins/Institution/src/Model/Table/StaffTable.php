@@ -178,27 +178,29 @@ class StaffTable extends AppTable {
 	}
 
 	public function addStaffRole($staffEntity) {
-		// every staff record in school will be linked to a security role record in security_group_users
-		$securityGroupId = $this->Institutions->get($staffEntity->institution_id)->security_group_id;
-		$securityRoleId = $this->Positions->find()
-			->where([
-				$this->Positions->aliasField('id') => $staffEntity->institution_position_id
-			])
-			->matching('StaffPositionTitles.SecurityRoles')
-			->select(['security_role_id' => 'SecurityRoles.id'])
-			->first()
-			->security_role_id;
+		if (empty($staffEntity->security_group_user_id)) {
+			// every staff record in school will be linked to a security role record in security_group_users
+			$securityGroupId = $this->Institutions->get($staffEntity->institution_id)->security_group_id;
+			$securityRoleId = $this->Positions->find()
+				->where([
+					$this->Positions->aliasField('id') => $staffEntity->institution_position_id
+				])
+				->matching('StaffPositionTitles.SecurityRoles')
+				->select(['security_role_id' => 'SecurityRoles.id'])
+				->first()
+				->security_role_id;
 
-		$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
-		$securityGroupUsersRecord = [
-			'security_role_id' => $securityRoleId,
-			'security_group_id' => $securityGroupId,
-			'security_user_id' => $staffEntity->staff_id
-		];
+			$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+			$securityGroupUsersRecord = [
+				'security_role_id' => $securityRoleId,
+				'security_group_id' => $securityGroupId,
+				'security_user_id' => $staffEntity->staff_id
+			];
 
-		$newSecurityGroupEntity = $SecurityGroupUsersTable->newEntity($securityGroupUsersRecord);
-		$entity = $SecurityGroupUsersTable->save($newSecurityGroupEntity);
-		$this->updateSecurityGroupUserId($staffEntity, $entity->id);
+			$newSecurityGroupEntity = $SecurityGroupUsersTable->newEntity($securityGroupUsersRecord);
+			$entity = $SecurityGroupUsersTable->save($newSecurityGroupEntity);
+			$this->updateSecurityGroupUserId($staffEntity, $entity->id);
+		}
 	}
 
 	public function removeStaffRole($staffEntity) {
