@@ -60,8 +60,8 @@ class UserCascadeBehavior extends Behavior {
 
 		// will update this table to set value to 0 instead of deleting
 		$excludes = ['institution_classes'];
-		$fields = ['security_user_id', 'student_id', 'staff_id', 'guardian_id'];
-		// pr('show sql');
+		$fields = ['security_user_id', 'student_id', 'staff_id', 'guardian_id', 'trainee_id'];
+		pr('show sql');
 		foreach ($tables as $key => $table) {
 			try {
 				$tableObj = TableRegistry::get($table);
