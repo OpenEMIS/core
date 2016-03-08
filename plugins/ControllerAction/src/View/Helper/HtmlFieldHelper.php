@@ -237,8 +237,20 @@ class HtmlFieldHelper extends Helper {
 						// 	}
 						// }
 					}
+					if (isset($attr['translate']) && $attr['translate']) {
+						$list = [];
+						foreach ($attr['options'] as $key => $opt) {
+							if (is_array($opt) && isset($opt['text'])) {
+								$opt['text'] = __($opt['text']);
+								$list[$key] = $opt;
+							} else {
+								$list[$key] = __($opt);
+							}
+						}
+						$attr['options'] = $list;
+					}
+					$options['options'] = $attr['options'];
 				}
-				$options['options'] = $attr['options'];
 			}
 			if (isset($attr['attr'])) {
 				$options = array_merge($options, $attr['attr']);
