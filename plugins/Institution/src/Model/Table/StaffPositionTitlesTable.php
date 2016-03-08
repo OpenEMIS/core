@@ -37,7 +37,7 @@ class StaffPositionTitlesTable extends ControllerActionTable {
 	public function indexBeforeAction(Event $event, ArrayObject $extra) {
 		if ($this->Session->check('StaffPositionTitles.error')) {
 			$this->Alert->error($this->Session->read('StaffPositionTitles.error'), ['reset' => true]);
-			$this->Session->delete('StaffPositionTitles.inProgress');
+			$this->Session->delete('StaffPositionTitles.error');
 		}
 		$this->field('type', ['after' => 'name']);
 		$this->field('security_role_id', ['after' => 'type']);
@@ -162,7 +162,7 @@ class StaffPositionTitlesTable extends ControllerActionTable {
 					'security_group_user_id' => $InstitutionStaffTable->aliasField('security_group_user_id'),
 					'staff_id' => $InstitutionStaffTable->aliasField('staff_id')
 				])
-				->limit(10)
+				->limit(1000)
 				->page(1);
 			
 			$updateSubQuery = $this->query()
