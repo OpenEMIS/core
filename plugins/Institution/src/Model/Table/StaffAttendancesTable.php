@@ -35,6 +35,7 @@ class StaffAttendancesTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'staff_id']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->addBehavior('AcademicPeriod.Period');
+		$this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
 		$this->addBehavior('Excel', [
 			'excludes' => [
 				'start_date', 
@@ -45,7 +46,8 @@ class StaffAttendancesTable extends AppTable {
 				'staff_type_id',
 				'staff_status_id',
 				'institution_id',
-				'institution_position_id'
+				'institution_position_id',
+				'security_group_user_id'
 			],
 			'pages' => ['index']
 		]);
@@ -202,6 +204,7 @@ class StaffAttendancesTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
+		$this->fields['security_group_user_id']['visible'] = false;
 		$tabElements = [
 			'Attendance' => [
 				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffAttendances'],
