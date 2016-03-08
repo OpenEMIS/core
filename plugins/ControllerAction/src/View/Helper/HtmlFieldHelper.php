@@ -237,7 +237,7 @@ class HtmlFieldHelper extends Helper {
 						// 	}
 						// }
 					}
-					if (isset($attr['translate']) && $attr['translate']) {
+					if (!isset($attr['translate']) || (isset($attr['translate']) && !$attr['translate'])) {
 						$list = [];
 						foreach ($attr['options'] as $key => $opt) {
 							if (is_array($opt) && isset($opt['text'])) {
