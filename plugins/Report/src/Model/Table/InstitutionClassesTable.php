@@ -10,7 +10,7 @@ use App\Model\Table\AppTable;
 
 class InstitutionClassesTable extends AppTable  {
 	public function initialize(array $config) {
-		$this->table('institution_sections');
+		$this->table('institution_classes');
 		parent::initialize($config);
 
 		$this->belongsTo('AcademicPeriods', 		['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -18,7 +18,7 @@ class InstitutionClassesTable extends AppTable  {
 		$this->belongsTo('InstitutionShifts', 		['className' => 'Institution.InstitutionShifts',	'foreignKey' => 'institution_shift_id']);
 		$this->belongsTo('Institutions', 			['className' => 'Institution.Institutions', 		'foreignKey' => 'institution_id']);
 		
-		$this->addBehavior('Excel', ['excludes' => ['section_number']]);
+		$this->addBehavior('Excel', ['excludes' => ['class_number']]);
 		$this->addBehavior('Report.ReportList');
 	}
 

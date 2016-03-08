@@ -22,7 +22,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
 		$this->belongsTo('AcademicPeriods', 		['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('Institutions', 			['className' => 'Institution.Institutions', 			'foreignKey' => 'institution_id']);
 		$this->belongsTo('LocationInstitutions',	['className' => 'Institution.LocationInstitutions']);
-		$this->hasMany('InstitutionSections', 		['className' => 'Institution.InstitutionSections', 	'foreignKey' => 'institution_shift_id']);
+		$this->hasMany('InstitutionClasses', 		['className' => 'Institution.InstitutionClasses', 	'foreignKey' => 'institution_shift_id']);
 		$this->addBehavior('OpenEmis.Autocomplete');
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		

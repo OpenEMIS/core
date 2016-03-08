@@ -75,12 +75,12 @@ class StudentUserTable extends UserTable {
 					$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
 					return $this->controller->redirect($action);
 					// if ($class > 0) {
-					// 	$sectionData = [];
-					// 	$sectionData['student_id'] = $entity->id;
-					// 	$sectionData['education_grade_id'] = $academicData['education_grade_id'];
-					// 	$sectionData['institution_section_id'] = $class;
-					// 	$InstitutionSectionStudents = TableRegistry::get('Institution.InstitutionSectionStudents');
-					// 	$InstitutionSectionStudents->autoInsertSectionStudent($sectionData);
+					// 	$classData = [];
+					// 	$classData['student_id'] = $entity->id;
+					// 	$classData['education_grade_id'] = $academicData['education_grade_id'];
+					// 	$classData['institution_class_id'] = $class;
+					// 	$InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+					// 	$InstitutionClassStudents->autoInsertClassStudent($classData);
 					// }
 				}
 				//  else {

@@ -7,5 +7,5 @@ use Cake\ORM\Query;
 
 class Student extends Entity
 {
-	// protected $_virtual = ['male_students', 'female_students', 'teachers', 'education_subject_code', 'section_name'];
+	// protected $_virtual = ['male_students', 'female_students', 'teachers', 'education_subject_code', 'class_name'];
 }
