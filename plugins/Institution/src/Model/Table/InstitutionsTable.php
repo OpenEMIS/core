@@ -540,7 +540,7 @@ class InstitutionsTable extends AppTable  {
 	}
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
-		$this->ControllerAction->field('institution_type_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_type_id', ['type' => 'select', 'translate' => true]);
 	}
 
 /******************************************************************************************************************
