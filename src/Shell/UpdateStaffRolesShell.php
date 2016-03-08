@@ -21,7 +21,8 @@ class UpdateStaffRolesShell extends Shell {
 	}
 
  	public function main() {
-		$this->out('Initialize Update Staff Roles Shell PID: '.getmypid());
+ 		$pid = getmypid();
+		$this->out('Initialize Update Staff Roles Shell PID: '.$pid);
 		$newRoleId = $this->args[0];
 		$titleId = $this->args[1];
 		$systemProcessId = isset($this->args[2]) ? $this->args[2] : null;
@@ -37,27 +38,28 @@ class UpdateStaffRolesShell extends Shell {
 		$param = json_encode($param);
 		$SystemProcesses = TableRegistry::get('SystemProcesses');
 		if (!is_null($systemProcessId)) {
-			$SystemProcesses->updatePid($systemProcessId, getmypid());
+			$SystemProcesses->updatePid($systemProcessId, $pid);
 		} else {
-			$SystemProcesses->addProcess($name, getmypid(), $processModel, $eventName, $param);
+			$systemProcessId = $SystemProcesses->addProcess($name, $pid, $processModel, $eventName, $param);
 		}
 
+		$SystemProcesses->updateProcess($systemProcessId, null, self::RUNNING, ++$executedCount);
+		$processInfo = date('d-m-Y H:i:s') . ' : Update Staff Roles';
+		$this->out($processInfo . ' - Start Update Records PID:'.$pid);
+		
 		try {
-			$SystemProcesses->updateProcess($name, getmypid(), $processModel, null, self::RUNNING, ++$executedCount);
-			$processInfo = date('d-m-Y H:i:s') . ' : Update Staff Roles';
-			$this->out($processInfo . ' - Start Update Records PID:'.getmypid());
-
 			$model->securityRolesUpdates($newRoleId, $titleId);
 			$processInfo = date('d-m-Y H:i:s') . ' : Update Staff Roles';
-			$this->out($processInfo . ' - Update Records PID:'.getmypid());
+			$this->out($processInfo . ' - Update Records PID:'.$pid);
 
 			$processInfo = date('d-m-Y H:i:s') . ' : Update Staff Roles';
-			$this->out($processInfo . ' - End Update Records PID:'.getmypid());
-			$SystemProcesses->updateProcess($name, getmypid(), $processModel, Time::now());
+			$this->out($processInfo . ' - End Update Records PID:'.$pid);
+			$SystemProcesses->updateProcess($systemProcessId, Time::now(), self::COMPLETED);
+		
 		} catch (\Exception $e) {
-			$this->out('Initialize Update Staff Roles Shell PID: '.getmypid());
+			$this->out('Initialize Update Staff Roles Shell PID: '.$pid);
 			$this->out($e->getMessage());
-			$SystemProcesses->updateProcess($name, getmypid(), $processModel, self::ERROR);
+			$SystemProcesses->updateProcess($systemProcessId, Time::now(), self::ERROR);
 		}
 	}
 }
