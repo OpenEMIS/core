@@ -19,7 +19,7 @@ class ImportStudentsTable extends AppTable {
 	private $gradesInInstitution;
 	private $systemDateFormat;
 	private $studentStatusId;
-	private $availableSections;
+	private $availableClasses;
 
 	public function initialize(array $config) {
 		$this->table('import_mapping');
@@ -157,15 +157,15 @@ class ImportStudentsTable extends AppTable {
 		unset($data[$columnOrder]);
 	}
 
-	public function onImportPopulateInstitutionSectionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+	public function onImportPopulateInstitutionClassesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
 		try {
 			$institution = $this->Institutions->get($this->institutionId);
-			$modelData = $this->populateInstitutionSectionsData();
+			$modelData = $this->populateInstitutionClassesData();
 
 			$institutionNameLabel = $this->getExcelLabel('Imports', 'institution_name');
 			$academicPeriodCodeLabel = $this->getExcelLabel('Imports', 'period_code');
 			$classNameLabel = $this->getExcelLabel($lookupModel, 'name');
-			$classCodeLabel = $this->getExcelLabel('Imports', 'institution_sections_code');
+			$classCodeLabel = $this->getExcelLabel('Imports', 'institution_classes_code');
 			
 			// unset($data[$sheetName]);
 			$sheetName = $this->getExcelLabel('Imports', $lookupModel);
@@ -197,14 +197,14 @@ class ImportStudentsTable extends AppTable {
 
 	}
 
-	private function populateInstitutionSectionsData() {
+	private function populateInstitutionClassesData() {
 		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$availableAcademicPeriods = $AcademicPeriods->getAvailableAcademicPeriods(false);
 
-		$InstitutionSections = TableRegistry::get('Institution.InstitutionSections');
+		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
 		$modelData = [];
 		foreach ($availableAcademicPeriods as $key=>$value) {
-			$modelData[$value->code] = $InstitutionSections->getSectionOptions($value->id, $this->institutionId);
+			$modelData[$value->code] = $InstitutionClasses->getClassOptions($value->id, $this->institutionId);
 		}
 		return $modelData;
 	}
@@ -304,13 +304,13 @@ class ImportStudentsTable extends AppTable {
 		}
 
 		if (!empty($tempRow['class']) || $tempRow['class']!=0) {
-			if (empty($this->availableSections)) {
-				$this->availableSections = $this->populateInstitutionSectionsData();
+			if (empty($this->availableClasses)) {
+				$this->availableClasses = $this->populateInstitutionClassesData();
 			}
-			$this->availableSections;
+			$this->availableClasses;
 			$selectedClassIdFound = null;
-			if (!empty($this->availableSections)) {
-				foreach($this->availableSections as $periodCode=>$periodClasses) {
+			if (!empty($this->availableClasses)) {
+				foreach($this->availableClasses as $periodCode=>$periodClasses) {
 					if (!empty($periodClasses)) {
 						foreach($periodClasses as $id=>$name) {
 							if ($id == $tempRow['class']) {

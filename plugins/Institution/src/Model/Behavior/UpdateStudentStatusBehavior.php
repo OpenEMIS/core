@@ -21,19 +21,19 @@ class UpdateStudentStatusBehavior extends Behavior {
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-		$InstitutionSectionStudentsTable = TableRegistry::get('Institution.InstitutionSectionStudents');
-		$institutionSectionStudentRecord = $InstitutionSectionStudentsTable->find()
-			->matching('InstitutionSections')
+		$InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
+		$institutionClassStudentRecord = $InstitutionClassStudentsTable->find()
+			->matching('InstitutionClasses')
 			->where([
-				'InstitutionSections.institution_id' => $entity->institution_id,
-				'InstitutionSections.academic_period_id' => $entity->academic_period_id,
-				$InstitutionSectionStudentsTable->aliasField('education_grade_id') => $entity->education_grade_id,
-				$InstitutionSectionStudentsTable->aliasField('student_id') => $entity->student_id,
+				'InstitutionClasses.institution_id' => $entity->institution_id,
+				'InstitutionClasses.academic_period_id' => $entity->academic_period_id,
+				$InstitutionClassStudentsTable->aliasField('education_grade_id') => $entity->education_grade_id,
+				$InstitutionClassStudentsTable->aliasField('student_id') => $entity->student_id,
 			])->first();
 
-		if (!empty($institutionSectionStudentRecord)) {
-			$institutionSectionStudentRecord->student_status_id = $entity->student_status_id;
-			$InstitutionSectionStudentsTable->save($institutionSectionStudentRecord);
+		if (!empty($institutionClassStudentRecord)) {
+			$institutionClassStudentRecord->student_status_id = $entity->student_status_id;
+			$InstitutionClassStudentsTable->save($institutionClassStudentRecord);
 		}
 	}
 }

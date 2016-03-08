@@ -62,7 +62,7 @@ class StudentsTable extends AppTable {
 			'institution_student_age' => [
 				'_function' => 'getNumberOfStudentsByAge'
 			],
-			'institution_section_student_grade' => [
+			'institution_class_student_grade' => [
 				'_function' => 'getNumberOfStudentsByGradeByInstitution'
 			]
 		]);
@@ -124,15 +124,15 @@ class StudentsTable extends AppTable {
 		if ($periodId > 0) {
 			$query->where([$this->aliasField('academic_period_id') => $periodId]);
 		}
-		$query->leftJoin(['SectionStudents' => 'institution_section_students'], [
-				'SectionStudents.student_id = '.$this->aliasField('student_id'), 
-				'SectionStudents.education_grade_id = '.$this->aliasField('education_grade_id'),
-				'SectionStudents.student_status_id = '.$this->aliasField('student_status_id')
-			])->leftJoin(['Sections' => 'institution_sections'], [
-				'Sections.id = SectionStudents.institution_section_id', 
-				'Sections.institution_id = '.$this->aliasField('institution_id'),
-				'Sections.academic_period_id = '.$this->aliasField('academic_period_id')
-			])->select(['institution_section_name' => 'Sections.name']);
+		$query->leftJoin(['ClassStudents' => 'institution_class_students'], [
+				'ClassStudents.student_id = '.$this->aliasField('student_id'), 
+				'ClassStudents.education_grade_id = '.$this->aliasField('education_grade_id'),
+				'ClassStudents.student_status_id = '.$this->aliasField('student_status_id')
+			])->leftJoin(['Classes' => 'institution_classes'], [
+				'Classes.id = ClassStudents.institution_class_id', 
+				'Classes.institution_id = '.$this->aliasField('institution_id'),
+				'Classes.academic_period_id = '.$this->aliasField('academic_period_id')
+			])->select(['institution_class_name' => 'Classes.name']);
 	}
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
@@ -144,8 +144,8 @@ class StudentsTable extends AppTable {
 			$newFields[] = $field;
 				if ($field['field'] == 'education_grade_id') {
 					$newFields[] = [
-						'key' => 'StudentClasses.institution_section_id',
-						'field' => 'institution_section_name',
+						'key' => 'StudentClasses.institution_class_id',
+						'field' => 'institution_class_name',
 						'type' => 'string',
 						'label' => ''
 					];
@@ -270,7 +270,7 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->field('student_status_id', ['order' => 100]);
 		$this->fields['start_date']['visible'] = false;
 		$this->fields['end_date']['visible'] = false;
-		$this->fields['class']['sort'] = ['field' => 'InstitutionSections.name'];
+		$this->fields['class']['sort'] = ['field' => 'InstitutionClasses.name'];
 		
 		$StudentStatusesTable = $this->StudentStatuses;
 		$status = $StudentStatusesTable->findCodeList();
@@ -403,7 +403,7 @@ class StudentsTable extends AppTable {
 		$institutionId = $session->read('Institution.Institutions.id');
 		$query->find('withClass', ['institution_id' => $institutionId, 'period_id' => $selectedAcademicPeriod]);
 
-		$sortList = ['openemis_no', 'first_name', 'InstitutionSections.name'];
+		$sortList = ['openemis_no', 'first_name', 'InstitutionClasses.name'];
 		if (array_key_exists('sortWhitelist', $options)) {
 			$sortList = array_merge($options['sortWhitelist'], $sortList);
 		}
@@ -423,8 +423,8 @@ class StudentsTable extends AppTable {
 		$institutionId = $options['institution_id'];
 		$periodId = $options['period_id'];
 
-		$ClassStudents = TableRegistry::get('Institution.InstitutionSectionStudents');
-		$Classes = TableRegistry::get('Institution.InstitutionSections');
+		$ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+		$Classes = TableRegistry::get('Institution.InstitutionClasses');
 
 		return $query
 			->select([$Classes->aliasField('name')])
@@ -439,7 +439,7 @@ class StudentsTable extends AppTable {
 			->leftJoin(
 				[$Classes->alias() => $Classes->table()],
 				[
-					$Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_section_id'),
+					$Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id'),
 					$Classes->aliasField('academic_period_id') => $periodId,
 					$Classes->aliasField('institution_id') => $institutionId
 				]
@@ -477,13 +477,13 @@ class StudentsTable extends AppTable {
 		$educationGradeId = $entity->education_grade->id;
 		$institutionId = $entity->institution_id;
 
-		$ClassStudents = TableRegistry::get('Institution.InstitutionSectionStudents');
+		$ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
 		$class = $ClassStudents->find()
 		->select(['class.name'])
 		->innerJoin(
-			['class' => 'institution_sections'],
+			['class' => 'institution_classes'],
 			[
-				'class.id = ' . $ClassStudents->aliasField('institution_section_id'),
+				'class.id = ' . $ClassStudents->aliasField('institution_class_id'),
 				'class.academic_period_id' => $academicPeriodId,
 				'class.institution_id' => $institutionId
 			]
@@ -518,7 +518,7 @@ class StudentsTable extends AppTable {
 				['query' => $this->dashboardQuery, 'key' => __('Age')]);
 
 			// Get Grades
-			$InstitutionArray[__('Grade')] = $this->getDonutChart('institution_section_student_grade', 
+			$InstitutionArray[__('Grade')] = $this->getDonutChart('institution_class_student_grade', 
 				['query' => $this->dashboardQuery, 'key' => __('Grade')]);
 
 			$indexDashboard = 'dashboard';
@@ -543,11 +543,11 @@ class StudentsTable extends AppTable {
 	public function addAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('student_name');
 
-		list($periodOptions, $selectedPeriod, $gradeOptions, $selectedGrade, $sectionOptions, $selectedSection) = array_values($this->_getSelectOptions());
+		list($periodOptions, $selectedPeriod, $gradeOptions, $selectedGrade, $classOptions, $selectedClass) = array_values($this->_getSelectOptions());
 
 		$this->ControllerAction->field('academic_period_id', ['options' => $periodOptions]);
 		$this->ControllerAction->field('education_grade_id', ['options' => $gradeOptions]);
-		$this->ControllerAction->field('class', ['options' => $sectionOptions]);
+		$this->ControllerAction->field('class', ['options' => $classOptions]);
 
 		if ($selectedPeriod != 0) {
 			$period = $this->AcademicPeriods->get($selectedPeriod);
@@ -722,13 +722,13 @@ class StudentsTable extends AppTable {
 			if ($StudentStatuses->get($entity->student_status_id)->code == 'CURRENT') {
 				// to automatically add the student into a specific class when the student is successfully added to a school
 				if ($entity->has('class') && $entity->class > 0) {
-					$sectionData = [];
-					$sectionData['student_id'] = $entity->student_id;
-					$sectionData['education_grade_id'] = $entity->education_grade_id;
-					$sectionData['institution_section_id'] = $entity->class;
-					$sectionData['student_status_id'] = $entity->student_status_id;
-					$InstitutionSectionStudents = TableRegistry::get('Institution.InstitutionSectionStudents');
-					$InstitutionSectionStudents->autoInsertSectionStudent($sectionData);
+					$classData = [];
+					$classData['student_id'] = $entity->student_id;
+					$classData['education_grade_id'] = $entity->education_grade_id;
+					$classData['institution_class_id'] = $entity->class;
+					$classData['student_status_id'] = $entity->student_status_id;
+					$InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+					$InstitutionClassStudents->autoInsertClassStudent($classData);
 				}
 
 				// the logic below is to set all pending admission applications to rejected status once the student is successfully enrolled in a school
@@ -959,7 +959,7 @@ class StudentsTable extends AppTable {
 		//Return all required options and their key
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$Grades = TableRegistry::get('Institution.InstitutionGrades');
-		$InstitutionSections = TableRegistry::get('Institution.InstitutionSections');
+		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 
 		// Academic Period
@@ -982,8 +982,8 @@ class StudentsTable extends AppTable {
 
 		// Grade
 		$gradeOptions = [];
-		$sectionOptions = ['0' => __('-- ' . __('Select Class') . ' --')];
-		$selectedSection = 0;
+		$classOptions = ['0' => __('-- ' . __('Select Class') . ' --')];
+		$selectedClass = 0;
 
 		if ($selectedPeriod != 0) {
 			$data = $Grades->find()
@@ -1000,12 +1000,12 @@ class StudentsTable extends AppTable {
 			$this->advancedSelectOptions($gradeOptions, $selectedGrade, []);
 			// End
 			
-			// section
-			$sectionOptions = $sectionOptions + $InstitutionSections->getSectionOptions($selectedPeriod, $institutionId, $selectedGrade);
+			// class
+			$classOptions = $classOptions + $InstitutionClasses->getClassOptions($selectedPeriod, $institutionId, $selectedGrade);
 			// End
 		}
 		
-		return compact('periodOptions', 'selectedPeriod', 'gradeOptions', 'selectedGrade', 'sectionOptions', 'selectedSection');
+		return compact('periodOptions', 'selectedPeriod', 'gradeOptions', 'selectedGrade', 'classOptions', 'selectedClass');
 	}
 	
 	// Start PHPOE-1897
