@@ -167,6 +167,11 @@ class AreasController extends AppController
 				->order([$Table->aliasField('order')])
 				->where($condition)
 				->toArray();
+			$newList = [];
+			foreach ($list as $key => $area) {
+				$newList[$key] = __($area);
+			}
+			$list = $newList;
 
 			switch($tableName){
 				case "Area.AreaAdministratives":
