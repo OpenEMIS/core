@@ -266,7 +266,8 @@ class StudentAttendancesTable extends AppTable {
 		]);
 
 		if ($timeError) {
-			$html .= '<i class="fa fa-exclamation-circle fa-lg table-tooltip icon-red" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" style="float:left;"></i>';
+			$error = $this->getMessage('StudentAttendances.lateTime');
+			$html .= '&nbsp;<i class="fa fa-exclamation-circle fa-lg table-tooltip icon-red" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="'.$error.'"></i>';
 		}
 		
 		return $html;
@@ -898,7 +899,7 @@ class StudentAttendancesTable extends AppTable {
 									$this->log($entity->errors(), 'debug');
 								}
 							} else {
-								$this->Alert->error('StudentAttendances.lateTime', ['reset' => true]);
+								$this->Alert->error('general.edit.failed', ['reset' => true]);
 							}
 						}
 					}
