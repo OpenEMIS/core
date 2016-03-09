@@ -9,6 +9,8 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
 use Cake\ORM\TableRegistry;
+use Cake\Log\Log;
+use Cake\Datasource\Exception\RecordNotFoundException;
 
 class PermissionsTable extends AppTable {
 	private $operations = ['_view', '_edit', '_add', '_delete', '_execute'];
@@ -31,6 +33,17 @@ class PermissionsTable extends AppTable {
 			}
 		}
 		return $flag;
+	}
+
+	public function afterAction(Event $event, ArrayObject $entity) {
+		$plugin = __($this->controller->plugin);
+		$id = $this->request->pass[1];
+		try {
+			$name = $this->SecurityRoles->get($id)->name;
+			$this->controller->set('contentHeader', $plugin.' - '.$name);
+		} catch (RecordNotFoundException $e) {
+			Log::write('error', $e->getMessage());
+		}
 	}
 
 	public function beforeAction(Event $event) {
