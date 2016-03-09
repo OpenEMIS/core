@@ -358,7 +358,11 @@ class StudentAttendancesTable extends AppTable {
 			$unexcusedDisplay = 'display: none;';
 			$lateDisplay = 'display: none;';
 			$absenceCodeList = $this->absenceCodeList;
-			$reasonId = 0;
+			if (empty($entity->StudentAbsences['student_absence_reason_id'])) {
+				$reasonId = 0;
+			} else {
+				$reasonId = $entity->StudentAbsences['student_absence_reason_id'];
+			}
 			if (empty($entity->StudentAbsences['id'])) {
 				$presentDisplay = '';	// PRESENT
 			} else {
@@ -396,7 +400,11 @@ class StudentAttendancesTable extends AppTable {
 						break;
 					case $codeAbsenceType['LATE']:
 						$html .= '<span class="type_'.$id.'" id="type_'.$id.'_'.$key.'" style="'.$lateDisplay.'">';
-							$html .= '<i class="fa fa-minus"></i>';
+							$options = ['type' => 'select', 'label' => false, 'options' => $this->reasonOptions];
+							if ($reasonId != 0) {
+								$options['value'] = $reasonId;
+							}
+							$html .= $Form->input($fieldPrefix.".late_student_absence_reason_id", $options);
 						$html .= '</span>';
 						break;
 				}
@@ -837,7 +845,7 @@ class StudentAttendancesTable extends AppTable {
 						if ($obj['absence_type_id'] == $codeAbsenceType['UNEXCUSED']) {
 							$obj['student_absence_reason_id'] = 0;
 						} else if ($obj['absence_type_id'] == $codeAbsenceType['LATE']) {
-							$obj['student_absence_reason_id'] = 0;
+							$obj['student_absence_reason_id'] = $obj['late_student_absence_reason_id'];
 							$obj['full_day'] = 0;
 							$configItemsTable =  TableRegistry::get('ConfigItems');
 							if (!isset($obj['start_time'])) {
@@ -848,6 +856,8 @@ class StudentAttendancesTable extends AppTable {
 							}
 							$endTime = Time::parseTime($obj['late_time']);
 							$obj['end_time'] = $endTime;
+
+
 						}
 
 						if ($obj['absence_type_id'] == self::PRESENT) {
