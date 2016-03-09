@@ -164,7 +164,7 @@ class TrainingNeedsTable extends AppTable {
 
 			if ($selectedType == self::CATALOGUE) {
 				$courseOptions = $this->Training->getCourseList();
-				$selectedCourse = $this->queryString('course', $courseOptions);
+				$selectedCourse = (array_key_exists('course', $this->request->query) && array_key_exists($this->request->query['course'], $courseOptions))? $this->request->query['course']: null;
 				if (!is_null($selectedCourse)) {
 					$this->course = $this->Courses
 						->find()
@@ -265,6 +265,7 @@ class TrainingNeedsTable extends AppTable {
 	public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$request = $this->request;
 		unset($request->query['type']);
+		unset($request->query['course']);
 
 		if ($request->is(['post', 'put'])) {
 			if (array_key_exists($this->alias(), $request->data)) {
