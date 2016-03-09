@@ -55,34 +55,3 @@
 .ui-widget input:focus {
     outline: none !important;
 }
-
-/*@media (min-width: 485px) and (max-width: 1055px){
-    .form-horizontal .ui-autocomplete-input {
-        width: 60% !important;
-    }
-}
-
-@media (max-width: 545px) {
-    .form-label,
-    .form-input {
-        width: 100%;
-        border-right: 0;
-        padding: 0 20px;
-    }
-    .form-label:after {
-        display: none;
-    }
-    .form-input {
-        width: 100% !important;
-    }
-    .form-horizontal .input-inline-btn,
-    .form-horizontal input[type="string"],
-    .form-horizontal input[type="number"],
-    .form-horizontal textarea,
-    .form-horizontal input[disabled],
-    .form-horizontal .chosen-container,
-    .form-horizontal .input-group,
-    .fileinput {
-        width: 100% !important;
-    }
-}*/
