@@ -93,7 +93,7 @@ class RecordBehavior extends Behavior {
 		$this->_table->addBehavior('CustomField.RenderTable');
 		$this->_table->addBehavior('CustomField.RenderDate');
 		$this->_table->addBehavior('CustomField.RenderTime');
-		// $this->_table->addBehavior('CustomField.RenderStudentList');
+		$this->_table->addBehavior('CustomField.RenderStudentList');
 
 		// If tabSection is not set, added to handle Section Header
 		if (!$this->config('tabSection')) {
@@ -221,17 +221,20 @@ class RecordBehavior extends Behavior {
 				// also delete previously saved records with empty value
 				if (isset($entity->id)) {
 					$id = $entity->id;
-					if (!empty($settings['deleteFieldIds'])) {
+					$deleteFieldIds = $settings['deleteFieldIds'];
+
+					if (!empty($deleteFieldIds)) {
 						$this->CustomFieldValues->deleteAll([
 							$this->CustomFieldValues->aliasField($settings['recordKey']) => $id,
-							$this->CustomFieldValues->aliasField($settings['fieldKey'] . ' IN ') => $settings['deleteFieldIds']
+							$this->CustomFieldValues->aliasField($settings['fieldKey'] . ' IN ') => $deleteFieldIds
 						]);
-		            }
 
-					// when edit always delete all the cell values before reinsert
-		            $this->CustomTableCells->deleteAll([
-		                $this->CustomTableCells->aliasField($settings['recordKey']) => $id
-		            ]);
+						// when edit always delete all the cell values before reinsert
+			            $this->CustomTableCells->deleteAll([
+			                $this->CustomTableCells->aliasField($settings['recordKey']) => $id,
+			                $this->CustomTableCells->aliasField($settings['fieldKey'] . ' IN ') => $deleteFieldIds
+			            ]);
+		            }
 				}
 
 				// repatch $entity for saving, turn off validation
@@ -452,9 +455,10 @@ class RecordBehavior extends Behavior {
 
 			foreach ($customFields as $key => $obj) {
 				$customField = $obj->custom_field;
+				$fieldTypeCode = $customField->field_type;
 
 				// only apply for field type store in custom_field_values
-				if (in_array($customField->field_type, $this->fieldValueArray)) {
+				if (in_array($fieldTypeCode, $this->fieldValueArray)) {
 					$fieldId = $customField->id;
 
 					if (array_key_exists($fieldId, $values)) {
@@ -468,12 +472,22 @@ class RecordBehavior extends Behavior {
 							'time_value' => null,
 							$this->config('fieldKey') => $fieldId,
 							$this->config('recordKey') => $entity->id,
-							'custom_field' => null // to-do
+							'custom_field' => null // set after data is patched else will lost
 						];
 						$valueEntity = $this->CustomFieldValues->newEntity($valueData, ['validate' => false]);
 						$valueEntity->custom_field = $customField;
 						$fieldValues[] = $valueEntity;
 					}
+				} else {
+					$fieldType = Inflector::camelize(strtolower($fieldTypeCode));
+					$settings = new ArrayObject([
+						'fieldKey' => $this->config('fieldKey'),
+						'formKey' => $this->config('formKey'),
+						'customField' => $customField
+					]);
+
+					$event = $model->dispatchEvent('Render.format'.$fieldType.'Entity', [$entity, $settings], $model);
+					if ($event->isStopped()) { return $event->result; }
 				}
 			}
     	}
@@ -608,7 +622,8 @@ class RecordBehavior extends Behavior {
 					'type' => 'custom_'. strtolower($fieldType),
 					'attr' => [
 						'label' => $customField->name,
-						'fieldKey' => $this->config('fieldKey')
+						'fieldKey' => $this->config('fieldKey'),
+						'formKey' => $this->config('formKey')
 					],
 					'valueClass' => $valueClass,
 					'customField' => $customField,

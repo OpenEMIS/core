@@ -7,6 +7,7 @@ use Cake\ORM\Behavior;
 class SetupBehavior extends Behavior {
 	protected $fieldTypeCode;
 	protected $fieldType;
+	protected $inputLimits;
 
 	public function initialize(array $config) {
         parent::initialize($config);
@@ -19,6 +20,10 @@ class SetupBehavior extends Behavior {
 		$this->_table->setFieldTypes($code);
 		$this->fieldTypeCode = $code;
 		$this->fieldType = $class;
+		$this->inputLimits = [
+			'text_value' => ['max' => 250],
+			'number_value' => ['min' => -2147483648, 'max' => 2147483647]
+		];
     }
 
     public function implementedEvents() {
