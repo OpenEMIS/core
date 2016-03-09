@@ -271,13 +271,20 @@ class StaffAttendancesTable extends AppTable {
 
 	// Event: ControllerAction.Model.onGetOpenemisNo
 	public function onGetOpenemisNo(Event $event, Entity $entity) {
-		return $event->subject()->Html->link($entity->user->openemis_no , [
+		$sessionPath = 'Users.staff_absences.';
+		$timeError = $this->Session->read($sessionPath.$entity->staff_id.'.timeError');
+		$this->Session->delete($sessionPath.$entity->staff_id.'.timeError');
+		$html = $event->subject()->Html->link($entity->user->openemis_no , [
 			'plugin' => 'Institution',
 			'controller' => 'Institutions',
 			'action' => 'StaffUser',
 			'view',
 			$entity->user->id
 		]);
+		if ($timeError) {
+			$html .= '<i class="fa fa-exclamation-circle fa-lg table-tooltip icon-red" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" style="float:left;"></i>';
+		}
+		return $html;
 	}
 
 	// Event: ControllerAction.Model.onGetType
@@ -306,6 +313,7 @@ class StaffAttendancesTable extends AppTable {
 			$configItemsTable =  TableRegistry::get('ConfigItems');
 			$attr['value'] = $configItemsTable->value('start_time');
 			$attr['default_time'] = false;
+			$attr['null'] = true;
 			if (empty($entity->StaffAbsences['id'])) {
 				$options['value'] = self::PRESENT;
 				$html .= $Form->input($fieldPrefix.".absence_type_id", $options);
@@ -325,7 +333,7 @@ class StaffAttendancesTable extends AppTable {
 			$attr['model'] = $fieldPrefix;
 			$attr['id'] = 'late_time_'.$id;
 			$attr['label'] = false;
-			$attr['null'] = true;
+			
 			$time = $HtmlField->time('edit', $entity, $attr);
 			$html .= '<div id="late_time__'.$id.'" class="late_time__'.$id.'_'.$codeAbsenceTypeList['LATE'].'" style="'.$displayTime.'width:100px">'.$time.'</div>';
 			
@@ -780,10 +788,12 @@ class StaffAttendancesTable extends AppTable {
 			$StaffAbsences = TableRegistry::get('Institution.StaffAbsences');
 			$alias = Inflector::underscore($StaffAbsences->alias());
 			$codeAbsenceType = array_flip($this->absenceCodeList);
+			$error = false;
 
 			if (array_key_exists($StaffAbsences->Users->alias(), $requestData)) {
 				if (array_key_exists($alias, $requestData[$StaffAbsences->Users->alias()])) {
 					foreach ($requestData[$StaffAbsences->Users->alias()][$alias] as $key => $obj) {
+						$timeError = false;
 						$obj['academic_period_id'] = $requestQuery['academic_period_id'];
 						if ($obj['absence_type_id'] == $codeAbsenceType['UNEXCUSED']) {
 							$obj['staff_absence_reason_id'] = 0;
@@ -797,8 +807,17 @@ class StaffAttendancesTable extends AppTable {
 							} else {
 								$obj['start_time'] = new Time ($obj['start_time']);
 							}
+							$startTime = $obj['start_time'];
 							$endTime = Time::parseTime($obj['late_time']);
 							$obj['end_time'] = $endTime;
+
+							$startTimestamp = intval($startTime->toUnixString());
+							$endTimestamp = intval($endTime->toUnixString());
+							if ($startTimestamp > $endTimestamp) {
+								$timeError = true;
+								$error = true;
+								$this->Session->write($StaffAbsences->Users->alias().'.'.$alias.'.'.$key.'.timeError', true);
+							}
 						}
 
 						if ($obj['absence_type_id'] == self::PRESENT) {
@@ -808,10 +827,14 @@ class StaffAttendancesTable extends AppTable {
 								]);
 							}
 						} else {
-							$entity = $StaffAbsences->newEntity($obj);
-							if ($StaffAbsences->save($entity)) {
+							if (!$timeError) {
+								$entity = $StaffAbsences->newEntity($obj);
+								if ($StaffAbsences->save($entity)) {
+								} else {
+									$this->log($entity->errors(), 'debug');
+								}
 							} else {
-								$this->log($entity->errors(), 'debug');
+								$this->Alert->error('StaffAttendances.lateTime', ['reset' => true]);
 							}
 						}
 					}
@@ -821,7 +844,7 @@ class StaffAttendancesTable extends AppTable {
 		$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => $this->alias];
 		$url = array_merge($url, $this->request->query, $this->request->pass);
 		$url[0] = 'index';
-		if (isset($url['mode'])) {
+		if (isset($url['mode']) && !$error) {
 			unset($url['mode']);
 		}
 
