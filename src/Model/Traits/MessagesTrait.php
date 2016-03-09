@@ -266,7 +266,8 @@ trait MessagesTrait {
 			'systemRoles' => 'System Roles'
 		],
 		'StudentAttendances' => [
-			'noSections' => 'No Available Classes'
+			'noSections' => 'No Available Classes',
+			'lateTime' => 'Late time should not be earlier than start time.'
 		],
 		'InstitutionStudentAbsences' => [
 			'noSections' => 'No Available Classes',
@@ -274,7 +275,8 @@ trait MessagesTrait {
 			'notEnrolled' => 'Not able to add absence record as this student is no longer enrolled in the institution.',
 		],
 		'StaffAttendances' => [
-			'noStaff' => 'No Available Staff'
+			'noStaff' => 'No Available Staff',
+			'lateTime' => 'Late time should not be earlier than start time.'
 		],
 		'StaffAbsences' => [
 			'noStaff' => 'No Available Staff'
