@@ -385,7 +385,6 @@ class HtmlFieldHelper extends Helper {
 				$tmp_file_read = $data[$attr['field']];
 			}
 
-<<<<<<< HEAD
 			if (!is_resource($tmp_file_read)) {
 				$src = (!empty($tmp_file_read)) ? '<img id="existingImage" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode( $tmp_file_read ).'"/>' : $defaultImgView;
 				$showRemoveButton = (!empty($tmp_file)) ? true : false; 
@@ -393,22 +392,6 @@ class HtmlFieldHelper extends Helper {
 				$tmp_file_read = stream_get_contents($tmp_file_read);
 				$src = (!empty($tmp_file_read)) ? '<img id="existingImage" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode( $tmp_file_read ).'"/>' : $defaultImgView;
 				$showRemoveButton = true;
-=======
-			$tmp_file = ((is_array($data[$attr['field']])) && (file_exists($data[$attr['field']]['tmp_name']))) ? $data[$attr['field']]['tmp_name'] : "";
-			$tmp_file_read = (!empty($tmp_file)) ? file_get_contents($tmp_file) : ""; 
-
-			$src = (!empty($tmp_file_read)) ? '<img id="existingImage" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode( $tmp_file_read ).'"/>' : $defaultImgView;
-			$showRemoveButton = (!empty($tmp_file)) ? true : false; 
-
-			if(!is_array($data[$attr['field']])) {
-				if (is_resource($data[$attr['field']])) {
-					$imageContent = !is_null($data[$attr['field']]) ? stream_get_contents($data[$attr['field']]) : "";
-				} else {
-					$imageContent = !is_null($data[$attr['field']]) ? $data[$attr['field']] : "";
-				}
-				$src = (!empty($imageContent)) ? '<img id="existingImage" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode( $imageContent ).'"/>' : $defaultImgView;
-				$showRemoveButton = true;	
->>>>>>> origin_ssh/POCOR-2387-dev
 			}
 
 			header('Content-Type: image/jpeg'); 
