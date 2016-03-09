@@ -1,4 +1,8 @@
-/* PANEL TOOLBAR v.1.0.11 */
+/* PANEL TOOLBAR v.1.0.12 */
+
+.scrolltabs.panel-accordion .tab-content {
+    padding: 0 !important;
+}
 
 .toolbar-responsive {
     min-height: 0.01%;
@@ -20,7 +24,7 @@ accordion .panel-default {
 }
 
 .panel-toolbar {
-    margin-top: 3px;
+    margin-top: -1px;
     margin-bottom: 20px;
     border-left: 1px solid #DDD !important;
     border-right: 1px solid #DDD !important;
