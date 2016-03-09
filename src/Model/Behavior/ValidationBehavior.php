@@ -968,6 +968,10 @@ class ValidationBehavior extends Behavior {
 		return (!empty(preg_match('/[A-Z]/',$field)));
 	}
 
+	public static function checkLowercaseExists($field, array $globalData) {
+		return (!empty(preg_match('/[a-z]/',$field)));
+	}
+
 	public static function checkNonAlphanumericExists($field, array $globalData) {
 		return !ctype_alnum($field);
 	}
