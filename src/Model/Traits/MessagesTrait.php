@@ -631,6 +631,7 @@ trait MessagesTrait {
 					'ruleNoSpaces' => 'Password should not contain spaces',
 					'ruleCheckNumberExists' => 'Password should contain at least 1 number',
 					'ruleCheckUppercaseExists' => 'Password should contain at least 1 uppercase character',
+					'ruleCheckLowercaseExists' => 'Password should contain at least 1 lowercase character',
 					'ruleCheckNonAlphaExists' => 'Password should contain at least 1 non-alphanumeric character',
 					'ruleCheckLength' => 'Password length should be between %s to %s',
 				],

@@ -36,6 +36,7 @@ class PasswordBehavior extends Behavior {
 
 		$passwordMinLength = $ConfigItems->value('password_min_length');
 		$passwordHasUppercase = $ConfigItems->value('password_has_uppercase');
+		$passwordHasLowercase = $ConfigItems->value('password_has_lowercase');
 		$passwordHasNumber = $ConfigItems->value('password_has_number');
 		$passwordHasNonAlpha = $ConfigItems->value('password_has_non_alpha');
 
@@ -87,6 +88,15 @@ class PasswordBehavior extends Behavior {
 				'ruleCheckUppercaseExists' => [
 					'rule' => 'checkUppercaseExists',
 					'message' => $this->_table->getMessage('User.Users.password.ruleCheckUppercaseExists'),
+					'provider' => 'custom'
+				]
+			]);
+		}
+		if ($passwordHasLowercase) {
+			$validator->add($this->targetField, [
+				'ruleCheckLowercaseExists' => [
+					'rule' => 'checkLowercaseExists',
+					'message' => $this->_table->getMessage('User.Users.password.ruleCheckLowercaseExists'),
 					'provider' => 'custom'
 				]
 			]);
