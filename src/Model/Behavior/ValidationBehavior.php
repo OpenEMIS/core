@@ -994,7 +994,8 @@ class ValidationBehavior extends Behavior {
 	}
 
 	public static function checkLowercaseExists($field, array $globalData) {
-		return (!empty(preg_match('/[a-z]/',$field)));
+		$match = preg_match('/[a-z]/', $field);
+		return !empty($match);
 	}
 
 	public static function checkNonAlphanumericExists($field, array $globalData) {
