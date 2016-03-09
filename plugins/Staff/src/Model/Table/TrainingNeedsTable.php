@@ -192,7 +192,7 @@ class TrainingNeedsTable extends AppTable {
 			list(, $selectedType) = array_values($this->_getSelectOptions());
 
 			if ($selectedType == self::CATALOGUE) {
-				$attr['type'] = 'readonly';
+				$attr['attr']['disabled'] = 'disabled';
 				if (!is_null($this->course)) {
 					$attr['value'] = $this->course->code;
 					$attr['attr']['value'] = $this->course->code;
@@ -208,7 +208,7 @@ class TrainingNeedsTable extends AppTable {
 			list(, $selectedType) = array_values($this->_getSelectOptions());
 
 			if ($selectedType == self::CATALOGUE) {
-				$attr['type'] = 'readonly';
+				$attr['attr']['disabled'] = 'disabled';
 				if (!is_null($this->course)) {
 					$attr['value'] = $this->course->name;
 					$attr['attr']['value'] = $this->course->name;
