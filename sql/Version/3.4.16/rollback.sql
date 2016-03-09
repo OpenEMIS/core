@@ -39,6 +39,14 @@ UPDATE labels SET field_name = 'Removable' WHERE module = 'WorkflowSteps' AND mo
 DELETE FROM `db_patches` WHERE  `issue` = 'POCOR-2208';
 
 
+-- POCOR-2540
+-- drop description from workflow_actions
+ALTER TABLE `workflow_actions` DROP `description`;
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2540';
+
+
 -- POCOR-2562
 -- absence_types
 DROP TABLE IF EXISTS `absence_types`;

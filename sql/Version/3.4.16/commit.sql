@@ -176,6 +176,14 @@ INSERT INTO `db_patches` VALUES ('POCOR-2208', NOW());
 UPDATE labels SET field_name = 'Deletable' WHERE module = 'WorkflowSteps' AND module_name = 'Workflow -> Steps' AND field_name = 'Removable';
 
 
+-- POCOR-2540
+-- db_patches
+INSERT INTO `db_patches` VALUES ('POCOR-2540', NOW());
+
+-- add description to workflow_actions
+ALTER TABLE `workflow_actions` ADD `description` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL AFTER `name`;
+
+
 -- POCOR-2562
 -- db_patches
 INSERT INTO `db_patches` VALUES ('POCOR-2562', NOW());
