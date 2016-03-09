@@ -450,7 +450,7 @@ class StaffAbsencesTable extends AppTable {
 		$selectedAbsenceType = $request->data[$this->alias()]['absence_type_id'];
 		if (!empty($selectedAbsenceType)) {
 			$absenceType = $this->absenceCodeList[$selectedAbsenceType];
-			if ($absenceType == 'UNEXCUSED' || $absenceType == 'LATE') {
+			if ($absenceType == 'UNEXCUSED') {
 				$attr['type'] = 'hidden';
 				$attr['attr']['value'] = 0;
 			}

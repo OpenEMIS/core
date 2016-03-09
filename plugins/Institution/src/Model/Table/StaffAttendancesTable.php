@@ -369,7 +369,12 @@ class StaffAttendancesTable extends AppTable {
 			$unexcusedDisplay = 'display: none;';
 			$lateDisplay = 'display: none;';
 			$absenceCodeList = $this->absenceCodeList;
-			$reasonId = 0;
+			if (empty($entity->StaffAbsences['staff_absence_reason_id'])) {
+				$reasonId = 0;
+			} else {
+				$reasonId = $entity->StaffAbsences['staff_absence_reason_id'];
+			}
+			
 			if (empty($entity->StaffAbsences['id'])) {
 				$presentDisplay = '';	// PRESENT
 			} else {
@@ -407,7 +412,11 @@ class StaffAttendancesTable extends AppTable {
 						break;
 					case $codeAbsenceType['LATE']:
 						$html .= '<span class="type_'.$id.'" id="type_'.$id.'_'.$key.'" style="'.$lateDisplay.'">';
-						$html .= '<i class="fa fa-minus"></i>';
+							$options = ['type' => 'select', 'label' => false, 'options' => $this->reasonOptions];
+							if ($reasonId != 0) {
+								$options['value'] = $reasonId;
+							}
+							$html .= $Form->input($fieldPrefix.".late_staff_absence_reason_id", $options);
 						$html .= '</span>';
 						break;
 				}
@@ -420,26 +429,7 @@ class StaffAttendancesTable extends AppTable {
 				$obj = $StaffAbsenceReasons->findById($reasonId)->first();
 				$html .= $obj['name'];
 			} else {
-				if (!empty($entity['StaffAbsences']['absence_type_id'])) {
-					if ($this->absenceCodeList[$entity['StaffAbsences']['absence_type_id']] == 'LATE') {
-						$startTime = new Time ($entity['StaffAbsences']['start_time']);
-						$endTime = new Time ($entity['StaffAbsences']['end_time']);
-						$secondsLate = intval($endTime->toUnixString()) - intval($startTime->toUnixString());
-						$minutesLate = $secondsLate / 60;
-						$hoursLate = floor($minutesLate / 60);
-						if ($hoursLate > 0) {
-							$minutesLate = $minutesLate - ($hoursLate * 60);
-							$lateString = $hoursLate.' '.__('Hour').' '.$minutesLate.' '.__('Minute');
-						} else {
-							$lateString = $minutesLate.' '.__('Minute');
-						}
-						$html .= $lateString;
-					} else {
-						$html .= '<i class="fa fa-minus"></i>';
-					}
-				} else {
-					$html .= '<i class="fa fa-minus"></i>';
-				}
+				$html .= '<i class="fa fa-minus"></i>';
 			}
 		}
 
@@ -798,7 +788,7 @@ class StaffAttendancesTable extends AppTable {
 						if ($obj['absence_type_id'] == $codeAbsenceType['UNEXCUSED']) {
 							$obj['staff_absence_reason_id'] = 0;
 						} else if ($obj['absence_type_id'] == $codeAbsenceType['LATE']) {
-							$obj['staff_absence_reason_id'] = 0;
+							$obj['staff_absence_reason_id'] = $obj['late_staff_absence_reason_id'];
 							$obj['full_day'] = 0;
 							$configItemsTable =  TableRegistry::get('ConfigItems');
 							if (!isset($obj['start_time'])) {
