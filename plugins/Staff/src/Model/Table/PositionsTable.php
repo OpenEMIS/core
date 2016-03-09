@@ -16,6 +16,7 @@ class PositionsTable extends AppTable {
 		$this->belongsTo('StaffStatuses', ['className' => 'FieldOption.StaffStatuses']);
 		$this->belongsTo('InstitutionPositions', ['className' => 'Institution.InstitutionPositions']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+		$this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -23,6 +24,7 @@ class PositionsTable extends AppTable {
 		$this->fields['end_year']['visible'] = false;
 		$this->fields['FTE']['visible'] = false;
 		$this->fields['staff_type_id']['visible'] = false;
+		$this->fields['security_group_user_id']['visible'] = false;
 
 		$order = 0;
 		$this->ControllerAction->setFieldOrder('institution_id', $order++);
