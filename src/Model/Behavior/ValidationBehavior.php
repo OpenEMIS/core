@@ -165,6 +165,33 @@ class ValidationBehavior extends Behavior {
 	}
 
 	/**
+	 * To check end time is earlier than start time
+	 * @param  mixed   $field        current field value
+	 * @param  string  $compareField name of the field to compare
+	 * @param  int  $absenceTypeId The absence type id to validate for
+	 * @param  array   $globalData   "huge global data". This array consists of
+	 *                               - newRecord [boolean]: states whether the given record is a new record
+	 *                               - data 	 [array]  : the model's fields values
+	 *                               - field 	 [string] : current field name
+	 *                               - providers [object] : consists of provider objects and the current table object
+	 * 
+	 * @return [type]                [description]
+	 */
+
+	public static function compareAbsenceTimeReverse($field, $compareField, $absenceTypeId, array $globalData) {
+		$type = self::_getFieldType($compareField);
+		
+		$endTime = new DateTime($field);
+		if($compareField && $globalData['data']['absence_type_id'] == $absenceTypeId) {
+			$options = ['equals' => true, 'reverse' => true, 'type' => $type];
+			$result = self::doCompareDates($endTime, $compareField, $options, $globalData);
+			return $result;
+		} else {
+			return true;
+		}
+	}
+
+	/**
 	 * To check start date is earlier than end date from start date field
 	 * @param  mixed   $field        current field value
 	 * @param  string  $compareField name of the field to compare
@@ -640,14 +667,13 @@ class ValidationBehavior extends Behavior {
 		if (is_null($dateOfBirth)) return $validationErrorMsg;
 
 		$EducationGrades = TableRegistry::get('Education.EducationGrades');
-		$educationGradeQuery = $EducationGrades->find()
-			->select(['EducationCycles.name', 'EducationCycles.admission_age', 'EducationCycles.id'])
+		$gradeEntity = $EducationGrades->find()
 			->contain('EducationProgrammes.EducationCycles')
 			->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $educationGradeId])
 			->first()
 			;
-		$admissionAge = $educationGradeQuery->EducationCycles->admission_age;
-		$cycleId = $educationGradeQuery->EducationCycles->id;
+		$admissionAge = $gradeEntity->education_programme->education_cycle->admission_age;
+		$programmeId = $gradeEntity->education_programme_id;
 		
 		$birthYear = $dateOfBirth->format('Y');
 		$nowYear = Time::now()->format('Y');
@@ -658,24 +684,21 @@ class ValidationBehavior extends Behavior {
 		$enrolmentMaximumAge = $admissionAge + $ConfigItems->value('admission_age_plus');
 
 		// PHPOE-2284 - 'instead of defining admission age at grade level, please make sure the allowed age range changes according to the grade.'
-		$EducationGrades = TableRegistry::get('Education.EducationGrades');
-		$gradeInCycleList = $EducationGrades->find('list')
-			->contain('EducationProgrammes.EducationCycles')
-			->where(['EducationCycles.id' => $cycleId])
-			->find('order');
+		// PHPOE-2691 - 'instead of populating the list of grades by education cycle which is its grandparent, populate the list by its parent instead which is education programme.'
+		$gradeList = $EducationGrades->find('list')
+			->where([$EducationGrades->aliasField('education_programme_id') => $programmeId])
+			->find('order')
+			->toArray()
+			;
 
 		$yearIncrement = 0;
-		foreach ($gradeInCycleList as $key => $value) {
+		foreach ($gradeList as $key => $value) {
 			if ($key == $educationGradeId) break;
 			$yearIncrement++;
 		}
 
 		$enrolmentMinimumAge += $yearIncrement;
 		$enrolmentMaximumAge += $yearIncrement;
-
-		// pr('enrolmentMinimumAge: '.$enrolmentMinimumAge);
-		// pr('enrolmentMaximumAge: '.$enrolmentMaximumAge);
-		// pr('ageOfStudent: '.$ageOfStudent);
 
 		return ($ageOfStudent<=$enrolmentMaximumAge) && ($ageOfStudent>=$enrolmentMinimumAge)? true: $validationErrorMsg;	
 	}
@@ -961,11 +984,13 @@ class ValidationBehavior extends Behavior {
 
 	// move to
 	public static function checkNumberExists($field, array $globalData) {
-		return (!empty(preg_match('#\d#',$field)));
+		$match = preg_match('#\d#', $field);
+		return !empty($match);
 	}
 
 	public static function checkUppercaseExists($field, array $globalData) {
-		return (!empty(preg_match('/[A-Z]/',$field)));
+		$match = preg_match('/[A-Z]/', $field);
+		return !empty($match);
 	}
 
 	public static function checkLowercaseExists($field, array $globalData) {

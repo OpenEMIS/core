@@ -37,12 +37,70 @@ class SetupNumberBehavior extends SetupBehavior {
     }
 
 	private function buildNumberValidator() {
+		$min = $this->inputLimits['number_value']['min'];
+    	$max = $this->inputLimits['number_value']['max'];
+
 		$validator = $this->_table->validator();
 		$validator
 			->notEmpty('minimum_value')
+			->add('minimum_value', 'validateLower', [
+				'rule' => function ($value, $context) use ($min) {
+					return intval($value) >= $min;
+				},
+				'message' => vsprintf(__('This field cannot be less than %d'), [$min])
+			])
+			->add('minimum_value', 'validateUpper', [
+				'rule' => function ($value, $context) use ($max) {
+					return intval($value) <= $max;
+				},
+				'message' => vsprintf(__('This field cannot be more than %d'), [$max])
+			])
     		->notEmpty('maximum_value')
+    		->add('maximum_value', 'validateLower', [
+				'rule' => function ($value, $context) use ($min) {
+					return intval($value) >= $min;
+				},
+				'message' => vsprintf(__('This field cannot be less than %d'), [$min])
+			])
+			->add('maximum_value', 'validateUpper', [
+				'rule' => function ($value, $context) use ($max) {
+					return intval($value) <= $max;
+				},
+				'message' => vsprintf(__('This field cannot be more than %d'), [$max])
+			])
     		->notEmpty('lower_limit')
-    		->notEmpty('upper_limit');
+    		->add('lower_limit', 'validateLower', [
+				'rule' => function ($value, $context) use ($min) {
+					return intval($value) >= $min;
+				},
+				'message' => vsprintf(__('This field cannot be less than %d'), [$min])
+			])
+			->add('lower_limit', 'validateUpper', [
+				'rule' => function ($value, $context) use ($max) {
+					return intval($value) <= $max;
+				},
+				'message' => vsprintf(__('This field cannot be more than %d'), [$max])
+			])
+			->add('lower_limit', 'comparison', [
+				'rule' => function ($value, $context) {
+					return intval($value) <= intval($context['data']['upper_limit']);
+				},
+				'message' => __('Lower Limit cannot be more than the Upper Limit.')
+			])
+    		->notEmpty('upper_limit')
+    		->add('upper_limit', 'validateLower', [
+				'rule' => function ($value, $context) use ($min) {
+					return intval($value) >= $min;
+				},
+				'message' => vsprintf(__('This field cannot be less than %d'), [$min])
+			])
+			->add('upper_limit', 'validateUpper', [
+				'rule' => function ($value, $context) use ($max) {
+					return intval($value) <= $max;
+				},
+				'message' => vsprintf(__('This field cannot be more than %d'), [$max])
+			])
+			;
 	}
 
     public function onSetNumberElements(Event $event, Entity $entity) {
@@ -117,8 +175,8 @@ class SetupNumberBehavior extends SetupBehavior {
     }
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
-		if (array_key_exists('validation_rule', $data)) {
-			if ($data['field_type'] == $this->fieldTypeCode) {
+		if (isset($data['field_type']) && $data['field_type'] == $this->fieldTypeCode) {
+			if (isset($data['validation_rule'])) {
 				$model = $this->_table;
 				$request = $model->request;
 				unset($request->query['number_rule']);
@@ -130,12 +188,16 @@ class SetupNumberBehavior extends SetupBehavior {
 
 					switch ($selectedRule) {
 						case 'min_value':
-							if (array_key_exists('minimum_value', $data) && !empty($data['minimum_value'])) {
+							$minValue = array_key_exists('minimum_value', $data) ? $data['minimum_value']: null;
+
+							if (!is_null($minValue)) {
 								$params['min_value'] = $data['minimum_value'];
 							}
 							break;
 						case 'max_value':
-							if (array_key_exists('maximum_value', $data) && !empty($data['maximum_value'])) {
+							$maxValue = array_key_exists('maximum_value', $data) ? $data['maximum_value']: null;
+
+							if (!is_null($maxValue)) {
 								$params['max_value'] = $data['maximum_value'];
 							}
 							break;
@@ -143,7 +205,7 @@ class SetupNumberBehavior extends SetupBehavior {
 							$lowerLimit = array_key_exists('lower_limit', $data) ? $data['lower_limit']: null;
 							$upperLimit = array_key_exists('upper_limit', $data) ? $data['upper_limit']: null;
 
-							if (!empty($lowerLimit) && !empty($upperLimit)) {
+							if (!is_null($lowerLimit) && !is_null($upperLimit)) {
 	    						$params['range'] = [
 									'lower' => $data['lower_limit'],
 									'upper' => $data['upper_limit']

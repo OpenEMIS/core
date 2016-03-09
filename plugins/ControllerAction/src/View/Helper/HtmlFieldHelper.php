@@ -377,17 +377,21 @@ class HtmlFieldHelper extends Helper {
 			$defaultImgView = $this->table->getDefaultImgView();
 			
 			$showRemoveButton = false;
+			if (isset($data[$attr['field']]['tmp_name'])) {
+				$tmp_file = ((is_array($data[$attr['field']])) && (file_exists($data[$attr['field']]['tmp_name']))) ? $data[$attr['field']]['tmp_name'] : "";
+				$tmp_file_read = (!empty($tmp_file)) ? file_get_contents($tmp_file) : ""; 
+			} else {
+				$tmp_file = true;
+				$tmp_file_read = $data[$attr['field']];
+			}
 
-			$tmp_file = ((is_array($data[$attr['field']])) && (file_exists($data[$attr['field']]['tmp_name']))) ? $data[$attr['field']]['tmp_name'] : "";
-			$tmp_file_read = (!empty($tmp_file)) ? file_get_contents($tmp_file) : ""; 
-
-			$src = (!empty($tmp_file_read)) ? '<img id="existingImage" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode( $tmp_file_read ).'"/>' : $defaultImgView;
-			$showRemoveButton = (!empty($tmp_file)) ? true : false; 
-
-			if(!is_array($data[$attr['field']])) {
-			  $imageContent = !is_null($data[$attr['field']]) ? stream_get_contents($data[$attr['field']]) : "";
-			  $src = (!empty($imageContent)) ? '<img id="existingImage" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode( $imageContent ).'"/>' : $defaultImgView;
-			  $showRemoveButton = true;	
+			if (!is_resource($tmp_file_read)) {
+				$src = (!empty($tmp_file_read)) ? '<img id="existingImage" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode( $tmp_file_read ).'"/>' : $defaultImgView;
+				$showRemoveButton = (!empty($tmp_file)) ? true : false; 
+			} else {
+				$tmp_file_read = stream_get_contents($tmp_file_read);
+				$src = (!empty($tmp_file_read)) ? '<img id="existingImage" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode( $tmp_file_read ).'"/>' : $defaultImgView;
+				$showRemoveButton = true;
 			}
 
 			header('Content-Type: image/jpeg'); 
@@ -559,10 +563,24 @@ class HtmlFieldHelper extends Helper {
 				}
 			}
 		} else if ($action == 'edit') {
-			$attr['id'] = $attr['model'] . '_' . $field;
+
+			if (!isset($attr['id'])) {
+				$attr['id'] = $attr['model'] . '_' . $field;
+			}
+			
 			if (array_key_exists('fieldName', $attr)) {
 				$attr['id'] = $this->_domId($attr['fieldName']);
 			}
+			$model = split('\.', $attr['model']);
+			$newModel = '';
+			foreach($model as $part) {
+				if (empty($newModel)) {
+					$newModel = $part;
+				} else {
+					$newModel .= '['.$part.']';
+				}
+			}
+			$attr['model'] = $newModel;
 			$attr['time_options'] = array_merge($_options, $attr['time_options']);
 
 			if (!array_key_exists('value', $attr)) {

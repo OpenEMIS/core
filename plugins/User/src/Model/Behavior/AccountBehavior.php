@@ -198,23 +198,24 @@ class AccountBehavior extends Behavior {
 	public function onGetRoleTableElement(Event $event, $action, $entity, $attr, $options=[]) {
 		$tableHeaders = [__('Groups'), __('Roles')];
 		$tableCells = [];
-		$alias = $this->_table->alias();
 		$key = 'roles';
-
-		$Group = TableRegistry::get('Security.SecurityGroups');
-
 		if ($action == 'view') {
-			$associated = $entity->extractOriginal([$key]);
-			if (!empty($associated[$key])) {
-				foreach ($associated[$key] as $i => $obj) {
-					$groupId = $obj['_joinData']->security_group_id;
-					$groupEntity = $Group->get($groupId);
-
-					$rowData = [];
-					$rowData[] = $groupEntity->name;
-					$rowData[] = $obj->name;
-					$tableCells[] = $rowData;
-				}
+			$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+			$groupUserRecords = $GroupUsers->find()
+				->matching('SecurityGroups')
+				->matching('SecurityRoles')
+				->where([$GroupUsers->aliasField('security_user_id') => $entity->id])
+				->group([
+					$GroupUsers->aliasField('security_group_id'), 
+					$GroupUsers->aliasField('security_role_id')
+				])
+				->select(['group_name' => 'SecurityGroups.name', 'role_name' => 'SecurityRoles.name'])
+				->all();
+			foreach ($groupUserRecords as $obj) {
+				$rowData = [];
+				$rowData[] = $obj->group_name;
+				$rowData[] = $obj->role_name;
+				$tableCells[] = $rowData;
 			}
 		}
 		$attr['tableHeaders'] = $tableHeaders;
