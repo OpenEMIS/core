@@ -52,6 +52,7 @@ class StaffAbsencesTable extends AppTable {
 		$this->setValidationCode('start_date.ruleNoOverlappingAbsenceDate', 'Institution.Absences');
 		$this->setValidationCode('start_date.ruleInAcademicPeriod', 'Institution.Absences');
 		$this->setValidationCode('end_date.ruleCompareDateReverse', 'Institution.Absences');
+		$codeList = array_flip($this->absenceCodeList);
 		$validator
 			->add('start_date', [
 				'ruleNoOverlappingAbsenceDate' => [
@@ -60,6 +61,9 @@ class StaffAbsencesTable extends AppTable {
 			])
 			->add('end_date', 'ruleCompareDateReverse', [
 				'rule' => ['compareDateReverse', 'start_date', true]
+			])
+			->add('end_time', 'ruleCompareAbsenceTimeReverse', [
+				'rule' => ['compareAbsenceTimeReverse', 'start_time', $codeList['LATE']]
 			]);
 		return $validator;
 	}
