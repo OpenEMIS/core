@@ -517,7 +517,19 @@ trait MessagesTrait {
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				],
+				
 			],
+			'StaffAbsences' => [
+				'end_time' => [
+					'ruleCompareAbsenceTimeReverse' => 'End Time should not be earlier than Start Time'
+				]
+			],
+			'InstitutionStudentAbsences' => [
+				'end_time' => [
+					'ruleCompareAbsenceTimeReverse' => 'End Time should not be earlier than Start Time'
+				]
+			],
+
 			'InstitutionStudents' => [
 				'academicPeriod' => 'You need to configure Academic Periods first.',
 				'educationProgrammeId' => 'You need to configure Education Programmes first.',
