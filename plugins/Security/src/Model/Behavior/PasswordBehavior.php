@@ -46,8 +46,9 @@ class PasswordBehavior extends Behavior {
 					'rule' => 'validateUnique',
 					'provider' => 'table',
 				],
-				'ruleAlphanumeric' => [
-				    'rule' => 'alphanumeric',
+				'ruleCheckUsername' => [
+					'rule' => 'checkUsername',
+					'provider' => 'table',
 				]
 			])
 			// password validation now in behavior
@@ -59,7 +60,7 @@ class PasswordBehavior extends Behavior {
 			])
 			;
 		$this->_table->setValidationCode('username.ruleUnique', 'User.Accounts');
-		$this->_table->setValidationCode('username.ruleAlphanumeric', 'User.Accounts');
+		$this->_table->setValidationCode('username.ruleCheckUsername', 'User.Accounts');
 		$this->_table->setValidationCode('retype_password.ruleCompare', 'User.Accounts');
 		
 		if ($this->passwordAllowEmpty) {
