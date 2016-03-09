@@ -162,41 +162,35 @@ class UsersTable extends AppTable {
 		$alias = $this->alias();
 		$key = 'roles';
 
-		$Group = TableRegistry::get('Security.SecurityGroups');
-		$Group->hasOne('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'security_group_id']);
-
 		if ($action == 'view') {
-			$associated = $entity->extractOriginal([$key]);
-			if (!empty($associated[$key])) {
-				foreach ($associated[$key] as $i => $obj) {
-					$groupId = $obj['_joinData']->security_group_id;
-					$groupEntity = $Group->find()
-						->where([$Group->aliasField('id') => $groupId])
-						->contain('Institutions')
-						->first()
-						;
-
-					$rowData = [];
-					if ($groupEntity) {
-						$url = [
-							'plugin' => $this->controller->plugin,
-							'controller' => $this->controller->name,
-							'view',
-							$groupEntity->id
-						];
-						if (!empty($groupEntity->institution)) {
-							$url['action'] = 'SystemGroups';
-						} else {
-							$url['action'] = 'UserGroups';
-						}
-						$rowData[] = $event->subject()->Html->link($groupEntity->name, $url);
-					} else {
-						$rowData[] = '';
-					}
-
-					$rowData[] = $obj->name; // role name
-					$tableCells[] = $rowData;
+			$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+			$groupUserRecords = $GroupUsers->find()
+				->matching('SecurityGroups')
+				->matching('SecurityRoles')
+				->where([$GroupUsers->aliasField('security_user_id') => $entity->id])
+				->group([
+					$GroupUsers->aliasField('security_group_id'), 
+					$GroupUsers->aliasField('security_role_id')
+				])
+				->select(['group_name' => 'SecurityGroups.name', 'role_name' => 'SecurityRoles.name', 'group_id' => 'SecurityGroups.id'])
+				->all();
+			foreach ($groupUserRecords as $obj) {
+				$rowData = [];
+				$url = [
+					'plugin' => $this->controller->plugin,
+					'controller' => $this->controller->name,
+					'view',
+					$obj->group_id
+				];
+				if (!empty($groupEntity->institution)) {
+					$url['action'] = 'SystemGroups';
+				} else {
+					$url['action'] = 'UserGroups';
 				}
+				$rowData[] = $event->subject()->Html->link($obj->group_name, $url);
+
+				$rowData[] = $obj->role_name; // role name
+				$tableCells[] = $rowData;
 			}
 		}
 		$attr['tableHeaders'] = $tableHeaders;
