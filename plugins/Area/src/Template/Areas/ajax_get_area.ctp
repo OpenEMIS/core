@@ -22,7 +22,6 @@
 					'label' => __($name),
 					'url' => $url,
 					'onchange' => 'Area.reload(this)',
-					'options' => $obj->list,
 					'disabled' => false,
 					'default' => $obj->selectedId,
 					'form-error' => $formError,
@@ -31,6 +30,9 @@
 
 				if (isset($obj['readonly'])) {
 					$options['readonly'] = $obj['readonly'];
+					$options['value'] = $obj->list[0];
+				} else {
+					$options['options'] = $obj->list;
 				}
 				echo $this->Form->input($name, $options);
 			}
