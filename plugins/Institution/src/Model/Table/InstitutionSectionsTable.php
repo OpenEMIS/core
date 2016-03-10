@@ -113,7 +113,7 @@ class InstitutionSectionsTable extends AppTable {
 		$this->ControllerAction->field('academic_period_id', ['type' => 'select', 'visible' => ['view'=>true, 'edit'=>true]]);
 		$this->ControllerAction->field('institution_shift_id', ['type' => 'select', 'visible' => ['view'=>true, 'edit'=>true]]);
 
-		$this->ControllerAction->field('staff_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
+		$this->ControllerAction->field('staff_id', ['type' => 'select', 'options' => [], 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
 
 		$this->ControllerAction->field('male_students', ['type' => 'integer', 'visible' => ['index'=>true]]);
 		$this->ControllerAction->field('female_students', ['type' => 'integer', 'visible' => ['index'=>true]]);
@@ -952,7 +952,7 @@ class InstitutionSectionsTable extends AppTable {
 			// $attr['type'] = 'select';
 
 		} elseif (in_array($action, ['view', 'index'])) {
-			$attr['options'] = [];
+
 			// $attr['type'] = 'select';
 			if ($this->_selectedAcademicPeriodId > -1) {
 				$attr['options'] = $this->getStaffOptions('view');
