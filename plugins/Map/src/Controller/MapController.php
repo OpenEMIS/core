@@ -26,35 +26,79 @@ class MapController extends AppController {
 		$defaultZoom = $Config->value('google_map_zoom');
 
 		$model = TableRegistry::get('Institution.Institutions');
-		$institutions = $model->find('all')
-							->toArray()
-							;
 		$InstitutionTypes = TableRegistry::get('Institution.Types');
 		$institutionTypes = $InstitutionTypes->getList()->toArray();
-
-		$institutionByType = [];
-		$institutionTypeTotal = [];
-		$institutionCollection = new Collection($institutions);
-		$totalKnownType = 0;
-		foreach ($institutionTypes as $id=>$type) {
-
-			$filtered = $institutionCollection->filter(function ($value, $key, $iterator) use ($id) {
-			    return $value->institution_type_id == $id;
-			});
-			$institutionByType[$id] = $filtered->toArray();
-			$institutionTypeTotal[$id] = count($filtered->toArray());
-			$totalKnownType = $totalKnownType + $institutionTypeTotal[$id];
-
-		}
-	
-		$filtered = $institutionCollection->filter(function ($value, $key, $iterator) use ($institutionTypes) {
-			return !array_key_exists($value->institution_type_id, $institutionTypes);
-		});
 		$institutionTypes['default'] = 'Unknown';
-		$institutionByType['default'] = $filtered->toArray();
-		$institutionTypeTotal['default'] = count($filtered->toArray());
-	
-		$iconColors = [
+		$institutionByType = new ArrayObject;
+		$totalInstitutions = 0;
+		foreach ($institutionTypes as $id=>$type) {
+			if ($id=='default') {
+				$condition = [$model->aliasField('institution_type_id') .' NOT IN ' => array_keys($institutionTypes)];
+			} else {
+				$condition = [$model->aliasField('institution_type_id') => $id];
+			}
+			$numberOfInstitutions = $model->find('all')->where($condition)->count();
+			if ($numberOfInstitutions>100) {
+				$pages = ceil($numberOfInstitutions / 100);
+				$bufferArray = new ArrayObject;
+				for ($pageNumber=1; $pageNumber<$pages+1; $pageNumber++) {
+					$buffer = $model->connection()
+									->newQuery()
+									->select([
+										'id',
+										'institution_type_id',
+										'code',
+										'name',
+										'address',
+										'postal_code',
+										'longitude',
+										'latitude'
+									])
+									->from('`' . $model->table() . '` AS `' . $model->alias() . '`')
+									->where($condition)
+									->limit(100)
+		    						->page($pageNumber)
+		    						->execute()
+		    						->fetchAll('assoc')
+		    						;
+	    			$count = $bufferArray->count();
+	    			foreach ($buffer as $key => $value) {
+						$bufferArray->offsetSet(($count + $key), $value);
+	    			}
+	    			unset($buffer);
+	    			unset($count);
+	    			unset($key);
+	    			unset($value);
+				}
+				$institutionByType->offsetSet($id, $bufferArray);
+				$institutionTypeTotal[$id] = $bufferArray->count();
+				$totalInstitutions = $totalInstitutions + $bufferArray->count();
+				unset($bufferArray);
+			} else {
+				$buffer = $model->connection()
+								->newQuery()
+								->select([
+									'id',
+									'institution_type_id',
+									'code',
+									'name',
+									'address',
+									'postal_code',
+									'longitude',
+									'latitude'
+								])
+								->from('`' . $model->table() . '` AS `' . $model->alias() . '`')
+								->where($condition)
+								->execute()
+	    						->fetchAll('assoc');
+				$institutionByType->offsetSet($id, new ArrayObject($buffer));
+				$institutionTypeTotal[$id] = count($buffer);
+				$totalInstitutions = $totalInstitutions + count($buffer);
+				unset($buffer);
+			}
+		}
+
+		$iconColors = new ArrayObject([
 			'#DD1B4F',
 			'#336600',
 			'#0B0BF2',
@@ -65,16 +109,13 @@ class MapController extends AppController {
 			'#0ABE17',
 			'#FF00CC',
 			'#993366'
-		];
-		$iconColors = new ArrayObject($iconColors);
-		if ( count($institutionTypes) > count($iconColors) ) {
+		]);
+		if ( count($institutionTypes) > $iconColors->count() ) {
 			$this->generateRandomColorHex( count($institutionTypes), $iconColors );
 		}
 
-		$this->set( 'model', $model );
 		$this->set( 'iconColors', $iconColors->getArrayCopy() );
-		$this->set( 'institutions', $institutions );
-		$this->set( 'totalInstitutions', count($institutions) );
+		$this->set( 'totalInstitutions', $totalInstitutions );
 		$this->set( 'institutionTypes', $institutionTypes );
 		$this->set( 'institutionByType', $institutionByType );
 		$this->set( 'institutionTypeTotal', $institutionTypeTotal );

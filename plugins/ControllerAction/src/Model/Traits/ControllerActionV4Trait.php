@@ -4,6 +4,7 @@ namespace ControllerAction\Model\Traits;
 use ArrayObject;
 
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Controller\Exception\MissingActionException;
 
@@ -68,6 +69,22 @@ trait ControllerActionV4Trait {
 						$model->fields[$key]['attr']['empty'] = $this->Alert->getMessage('general.select.noOptions');
 					}
 				}
+
+				// for automatic adding of '-- Select --' if there are no '' value fields in dropdown
+				$addSelect = true;
+				if (array_key_exists('select', $attr)) {
+					if ($attr['select'] === false) {
+						$addSelect = false;
+					}
+				}
+				if ($addSelect) {
+					if (is_array($attr['options'])) {
+						// need to check if options has any ''
+						if (!array_key_exists('', $attr['options'])) {
+							$model->fields[$key]['options'] = ['' => __('-- Select --')] + $attr['options'];
+						}
+					}
+				}
 			}
 
 			// make field sortable by default if it is a string data-type
@@ -82,7 +99,7 @@ trait ControllerActionV4Trait {
 				if ($model->isForeignKey($key)) {
 					$associatedObject = $model->getAssociatedModel($key);
 					
-					$query = $associatedObject->find('list');
+					$query = $associatedObject->find();
 					
 					// need to include associated object
 					$event = new Event('ControllerAction.Model.onPopulateSelectOptions', $this, [$query]);
@@ -92,8 +109,27 @@ trait ControllerActionV4Trait {
 						$query = $event->result;
 					}
 
-					if (is_object($query)) {
-						$model->fields[$key]['options'] = $query->toArray();
+					if ($query instanceof Query) {
+						$queryData = $query->toArray();
+						$hasDefaultField = false;
+						$defaultValue = false;
+						$optionsArray = [];
+						foreach ($queryData as $okey => $ovalue) {
+							$optionsArray[$ovalue->id] = $ovalue->name;
+							if ($ovalue->has('default')) {
+								$hasDefaultField = true;
+								if ($ovalue->default) {
+									$defaultValue = $ovalue->id;
+								}
+							}
+						}
+
+						if (!empty($defaultValue)) {
+							$this->model->fields[$key]['default'] = $defaultValue;
+						}
+						$optionsArray = ['' => __('-- Select --')] + $optionsArray;
+
+						$model->fields[$key]['options'] = $optionsArray;
 					} else {
 						$model->fields[$key]['options'] = $query;
 					}
