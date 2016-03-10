@@ -197,9 +197,7 @@ class MandatoryBehavior extends Behavior {
 	public function onUpdateFieldContactType(Event $event, array $attr, $action, $request) {
 		if (!empty($this->_info)) {
 			if (array_key_exists('Contacts', $this->_info)) {
-				if ($this->_info['Contacts'] == 'Non-Mandatory') {
-					$attr['empty'] = 'Select';
-				}
+				$attr['empty'] = 'Select';
 			}
 		}
 
@@ -225,9 +223,7 @@ class MandatoryBehavior extends Behavior {
 	public function onUpdateFieldNationality(Event $event, array $attr, $action, $request) {
 		if (!empty($this->_info)) {
 			if (array_key_exists('Nationalities', $this->_info)) {
-				if ($this->_info['Nationalities'] == 'Non-Mandatory') {
-					$attr['empty'] = 'Select';
-				}
+				$attr['empty'] = 'Select';
 			}
 		}
 
@@ -245,9 +241,7 @@ class MandatoryBehavior extends Behavior {
 	public function onUpdateFieldIdentityType(Event $event, array $attr, $action, $request) {
 		if (!empty($this->_info)) {
 			if (array_key_exists('Identities', $this->_info)) {
-				if ($this->_info['Identities'] == 'Non-Mandatory') {
-					$attr['empty'] = 'Select';
-				}
+				$attr['empty'] = 'Select';
 			}
 		}
 
@@ -268,9 +262,7 @@ class MandatoryBehavior extends Behavior {
 	public function onUpdateFieldSpecialNeed(Event $event, array $attr, $action, $request) {
 		if (!empty($this->_info)) {
 			if (array_key_exists('SpecialNeeds', $this->_info)) {
-				if ($this->_info['SpecialNeeds'] == 'Non-Mandatory') {
-					$attr['empty'] = 'Select';
-				}
+				$attr['empty'] = 'Select';
 			}
 		}
 
