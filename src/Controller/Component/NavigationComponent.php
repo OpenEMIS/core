@@ -16,6 +16,12 @@ class NavigationComponent extends Component {
 		$this->action = $this->request->params['action'];
 	}
 
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Controller.initialize'] = ['callable' => 'beforeFilter', 'priority' => '11'];
+		return $events;
+	}
+
 	public function addCrumb($title, $options=array()) {
 		$item = array(
 			'title' => __($title),

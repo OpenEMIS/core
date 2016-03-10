@@ -62,17 +62,31 @@ class AccessControlComponent extends Component {
 		}
 	}
 
-	public function buildPermissions() {
-		$this->Session->delete('Permissions'); // remove all permission first
-
+	public function buildPermissions($params = []) {
+		if (isset($params['delete'])) {
+			$this->Session->delete('Permissions.'.$params['delete']);
+		} else {
+			$this->Session->delete('Permissions'); // remove all permission first
+		}
+		
 		$operations = $this->config('operations');
 		$separator = $this->config('separator');
 		$userId = $this->Auth->user('id');
 		$GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
+		$conditions = [];
+		if (isset($params['securityGroupIds'])) {
+			$conditions = [
+				$GroupRoles->aliasField('security_group_id').' IN ' => $params['securityGroupIds']	
+			];
+		}
+
 		$SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
 		$roles = $GroupRoles->find()
 			->contain(['SecurityRoles'])
-			->where([$GroupRoles->aliasField('security_user_id') => $userId])
+			->where([
+				$GroupRoles->aliasField('security_user_id') => $userId, 
+				$conditions
+			])
 			->group([$GroupRoles->aliasField('security_role_id')])
 			->all();
 		;
