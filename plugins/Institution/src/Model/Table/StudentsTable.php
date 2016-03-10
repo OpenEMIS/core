@@ -982,7 +982,7 @@ class StudentsTable extends AppTable {
 
 		// Grade
 		$gradeOptions = [];
-		$sectionOptions = ['0' => __('-- ' . __('Select Class') . ' --')];
+		$sectionOptions = [];
 		$selectedSection = 0;
 
 		if ($selectedPeriod != 0) {
