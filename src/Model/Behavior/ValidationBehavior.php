@@ -118,6 +118,9 @@ class ValidationBehavior extends Behavior {
         	}
         	$condition['OR'] = $areaCondition;
 
+			if (count($areasByUser) == 0) {
+				$condition = ['FALSE'];        	
+			}
 	        $isChild = $Areas->find()
 	        	->where([$Areas->aliasField('id') => $check])
 	        	->where($condition)
