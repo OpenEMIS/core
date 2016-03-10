@@ -89,17 +89,14 @@ class InstitutionBankAccountsTable extends AppTable {
 				$this->_selectedBankId = $entity->bank_branch->bank->id;
 			}
 		} else {
-
 			// 1st instance of add
-			reset($this->_bankOptions);
-			$this->_selectedBankId = key($this->_bankOptions);
+			$this->_selectedBankId = '';
 		}
 		$bankBranches = $this->BankBranches
 			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
 			->where(['bank_id'=>$this->_selectedBankId])
 			->toArray();
 		$this->fields['bank_branch_id']['options'] = $bankBranches;
-
 	}
 
 
@@ -142,6 +139,9 @@ class InstitutionBankAccountsTable extends AppTable {
 			->where(['bank_id'=>$this->_selectedBankId])
 			->toArray();
 		$attr['options'] = $bankBranches;
+		if (empty($bankBranches)) {
+			$attr['empty'] = 'Select';
+		}
 		return $attr;
 	}
 

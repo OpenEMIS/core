@@ -14,6 +14,11 @@ class ContactTypesTable extends AppTable {
 		$this->belongsTo('ContactOptions', ['className' => 'User.ContactOptions']);
 		$this->hasMany('Contacts', ['className' => 'User.Contacts', 'foreignKey' => 'contact_type_id'])
 		;
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+				'filter' => 'contact_option_id',
+			]);
+		}
 	}
 
 	public function findWithContactOptions(Query $query, array $options) {

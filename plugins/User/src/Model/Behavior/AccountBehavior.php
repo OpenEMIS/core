@@ -2,6 +2,7 @@
 namespace User\Model\Behavior;
 
 use ArrayObject;
+
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
@@ -13,14 +14,18 @@ use Cake\Validation\Validator;
 class AccountBehavior extends Behavior {
 	private $isInstitution = false;
 	private $userRole = null;
+	private $targetField = 'password';
+	private $passwordAllowEmpty = false;
 
 	public function initialize(array $config) {
 		$this->_table->table('security_users');
 		$this->_table->entityClass('User.User');
 		parent::initialize($config);
-		// is_institution
+
 		$this->userRole = (array_key_exists('userRole', $config))? $config['userRole']: null;
-		$this->isInstitution = (array_key_exists('isInstitution', $config))? $config['isInstitution']: null;
+		$this->targetField = (array_key_exists('targetField', $config))? $config['targetField']: $this->targetField;
+		$this->passwordAllowEmpty = (array_key_exists('passwordAllowEmpty', $config))? $config['passwordAllowEmpty']: $this->passwordAllowEmpty;
+		$this->isInstitution = (array_key_exists('isInstitution', $config))? $config['isInstitution']: $this->isInstitution;
 
 		$this->_table->belongsToMany('Roles', [
 			'className' => 'Security.SecurityRoles',
@@ -29,6 +34,14 @@ class AccountBehavior extends Behavior {
 			'targetForeignKey' => 'security_role_id',
 			'through' => 'Security.SecurityGroupUsers',
 			'dependent' => true
+		]);
+
+		$checkOwnPassword = ($this->userRole == 'Preferences');
+		$this->_table->addBehavior('Security.Password', [
+			'field' => $this->targetField,
+			'checkOwnPassword' => $checkOwnPassword,
+			'passwordAllowEmpty' => $this->passwordAllowEmpty,
+			'createRetype' => true,
 		]);
 	}
 
@@ -69,6 +82,7 @@ class AccountBehavior extends Behavior {
 	}
 
 	private function setupTabElements($entity) {
+		if ($this->userRole == 'Preferences') return; // has its own setupTabElements
 		$id = !is_null($this->_table->request->query('id')) ? $this->_table->request->query('id') : 0;
 
 		$options = [
@@ -107,7 +121,6 @@ class AccountBehavior extends Behavior {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity)  {
-		$this->_table->ControllerAction->field('retype_password', ['type' => 'password', 'attr' => ['value' => '']]);
 		$this->_table->ControllerAction->setFieldOrder(['username', 'password', 'retype_password']);
 
 		$this->afterActionCode($event, $entity);
@@ -115,7 +128,7 @@ class AccountBehavior extends Behavior {
 
 	// called manually cos need to use $entity
 	private function afterActionCode(Event $event, Entity $entity) {
-		$fieldsNeeded = ['username','password', 'roles', 'retype_password'];
+		$fieldsNeeded = ['username','password', 'roles', 'new_password', 'retype_password'];
 		foreach ($this->_table->fields as $key => $value) {
 			if (!in_array($key, $fieldsNeeded)) {
 				$this->_table->fields[$key]['visible'] = false;
@@ -127,9 +140,14 @@ class AccountBehavior extends Behavior {
 		$this->_table->ControllerAction->field('last_login', ['visible' => ['view' => true, 'edit' => false]]);
 		$this->_table->ControllerAction->field('password', ['type' => 'password', 'visible' => ['view' => false, 'edit' => true], 'attr' => ['value' => '', 'autocomplete' => 'off']]);
 
+		$orderFields = [];
+		foreach ($fieldsNeeded as $key => $value) {
+			if (array_key_exists($value, $this->_table->fields)) {
+				$orderFields[] = $value;
+			}
+		}
 
-
-		$this->_table->ControllerAction->setFieldOrder(['username', 'password']);
+		$this->_table->ControllerAction->setFieldOrder($orderFields);
 
 		if (strtolower($this->_table->action) != 'index') {
 			if (!$this->isInstitution) {
@@ -143,8 +161,6 @@ class AccountBehavior extends Behavior {
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
-		// $events['ControllerAction.Model.afterAction'] = 'afterAction';
-		$events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
 		$events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
 		$events['ControllerAction.Model.view.beforeQuery'] = 'viewBeforeQuery';
 		$events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
@@ -162,6 +178,8 @@ class AccountBehavior extends Behavior {
 			}
 		}
 	}
+
+	
 
 	public function viewBeforeQuery(Event $event, Query $query) {
 		$options['auto_contain'] = false;
@@ -205,4 +223,7 @@ class AccountBehavior extends Behavior {
 
 		return $event->subject()->renderElement('User.Accounts/' . $key, ['attr' => $attr]);
 	}
+
+	
+	
 }
