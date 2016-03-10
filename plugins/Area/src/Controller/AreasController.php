@@ -8,10 +8,12 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use ControllerAction\Model\Traits\UtilityTrait;
+use App\Model\Traits\MessagesTrait;
 
 class AreasController extends AppController
 {
 	use UtilityTrait;
+	use MessagesTrait;
 
 	public function initialize() {
 		parent::initialize();
@@ -210,7 +212,7 @@ class AreasController extends AppController
 		foreach ($pathToUnset as $arrIndex) {
 			if (count($path) == count($pathToUnset)) {
 				if ($firstItem) {
-					$path[$arrIndex]['list'] = ['0' => __('No Access to Areas')];
+					$path[$arrIndex]['list'] = ['0' => $this->getMessage('Areas.noAccessToAreas')];
 					$path[$arrIndex]['readonly'] = true;
 					$firstItem = false;
 					continue;

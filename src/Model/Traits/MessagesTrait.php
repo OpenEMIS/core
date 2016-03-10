@@ -6,6 +6,9 @@ use Cake\Log\Log;
 
 trait MessagesTrait {
 	public $messages = [
+		'Areas' => [
+			'noAccessToAreas' => 'You do not have access to any areas',
+		],
 		'Attachments' => [
 			'date_on_file' => 'Date On File',
 		],
