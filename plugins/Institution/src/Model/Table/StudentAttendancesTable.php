@@ -253,14 +253,24 @@ class StudentAttendancesTable extends AppTable {
 	}
 
 	// Event: ControllerAction.Model.onGetOpenemisNo
-	public function onGetOpenemisNo(Event $event, Entity $entity) {
-		return $event->subject()->Html->link($entity->user->openemis_no , [
+	public function onGetOpenemisNo(Event $event, Entity $entity) {		
+		$sessionPath = 'Users.institution_student_absences.';
+		$timeError = $this->Session->read($sessionPath.$entity->student_id.'.timeError');
+		$this->Session->delete($sessionPath.$entity->student_id.'.timeError');
+		$html = $event->subject()->Html->link($entity->user->openemis_no , [
 			'plugin' => 'Institution',
 			'controller' => 'Institutions',
 			'action' => 'StudentUser',
 			'view',
 			$entity->user->id
 		]);
+
+		if ($timeError) {
+			$error = $this->getMessage('StudentAttendances.lateTime');
+			$html .= '&nbsp;<i class="fa fa-exclamation-circle fa-lg table-tooltip icon-red" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="'.$error.'"></i>';
+		}
+		
+		return $html;
 	}
 
 	// Event: ControllerAction.Model.onGetType
@@ -282,16 +292,19 @@ class StudentAttendancesTable extends AppTable {
 			$absenceCodeList = $this->absenceCodeList;
 			$codeAbsenceTypeList = array_flip($absenceCodeList);
 			$options = [
+				'error' => true,
 				'type' => 'select', 
 				'label' => false, 
 				'options' => $this->typeOptions, 
-				'onChange' => '$(".type_'.$id.'").hide();$("#type_'.$id.'_"+$(this).val()).show();$("#late_time__'.$id.'").hide();$(".late_time__'.$id.'_"+$(this).val()).show();'
+				'onChange' => '$(".type_'.$id.'").hide();$("#type_'.$id.'_"+$(this).val()).show();$("#late_time__'.$id.'").hide();$(".late_time__'.$id.'_"+$(this).val()).show();',
 			];
 			$displayTime = 'display:none;';
 			$HtmlField = $event->subject()->HtmlField;
 			$configItemsTable =  TableRegistry::get('ConfigItems');
 			$attr['value'] = $configItemsTable->value('start_time');
 			$attr['default_time'] = false;
+			$attr['null'] = true;
+			
 			if (empty($entity->StudentAbsences['id'])) {
 				$options['value'] = self::PRESENT;
 				$html .= $Form->input($fieldPrefix.".absence_type_id", $options);
@@ -304,14 +317,16 @@ class StudentAttendancesTable extends AppTable {
 					$displayTime = '';
 					$endTime = new Time ($entity->StudentAbsences['end_time']);
 					$attr['value'] = $endTime->format('h:i A');
+					
 				}
+
 			}
 			$attr['time_options']['defaultTime'] = $attr['value'];
 			$attr['field'] = 'late_time';
 			$attr['model'] = $fieldPrefix;
 			$attr['id'] = 'late_time_'.$id;
 			$attr['label'] = false;
-			$attr['null'] = true;
+			
 			$time = $HtmlField->time('edit', $entity, $attr);
 			$html .= '<div id="late_time__'.$id.'" class="late_time__'.$id.'_'.$codeAbsenceTypeList['LATE'].'" style="'.$displayTime.'width:100px">'.$time.'</div>';
 
@@ -358,7 +373,11 @@ class StudentAttendancesTable extends AppTable {
 			$unexcusedDisplay = 'display: none;';
 			$lateDisplay = 'display: none;';
 			$absenceCodeList = $this->absenceCodeList;
-			$reasonId = 0;
+			if (empty($entity->StudentAbsences['student_absence_reason_id'])) {
+				$reasonId = 0;
+			} else {
+				$reasonId = $entity->StudentAbsences['student_absence_reason_id'];
+			}
 			if (empty($entity->StudentAbsences['id'])) {
 				$presentDisplay = '';	// PRESENT
 			} else {
@@ -396,7 +415,11 @@ class StudentAttendancesTable extends AppTable {
 						break;
 					case $codeAbsenceType['LATE']:
 						$html .= '<span class="type_'.$id.'" id="type_'.$id.'_'.$key.'" style="'.$lateDisplay.'">';
-							$html .= '<i class="fa fa-minus"></i>';
+							$options = ['type' => 'select', 'label' => false, 'options' => $this->reasonOptions];
+							if ($reasonId != 0) {
+								$options['value'] = $reasonId;
+							}
+							$html .= $Form->input($fieldPrefix.".late_student_absence_reason_id", $options);
 						$html .= '</span>';
 						break;
 				}
@@ -829,15 +852,17 @@ class StudentAttendancesTable extends AppTable {
 			$StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
 			$alias = Inflector::underscore($StudentAbsences->alias());
 			$codeAbsenceType = array_flip($this->absenceCodeList);
+			$error = false;
 
 			if (array_key_exists($StudentAbsences->Users->alias(), $requestData)) {
 				if (array_key_exists($alias, $requestData[$StudentAbsences->Users->alias()])) {
 					foreach ($requestData[$StudentAbsences->Users->alias()][$alias] as $key => $obj) {
+						$timeError = false;
 						$obj['academic_period_id'] = $requestQuery['academic_period_id'];
 						if ($obj['absence_type_id'] == $codeAbsenceType['UNEXCUSED']) {
 							$obj['student_absence_reason_id'] = 0;
 						} else if ($obj['absence_type_id'] == $codeAbsenceType['LATE']) {
-							$obj['student_absence_reason_id'] = 0;
+							$obj['student_absence_reason_id'] = $obj['late_student_absence_reason_id'];
 							$obj['full_day'] = 0;
 							$configItemsTable =  TableRegistry::get('ConfigItems');
 							if (!isset($obj['start_time'])) {
@@ -846,8 +871,18 @@ class StudentAttendancesTable extends AppTable {
 							} else {
 								$obj['start_time'] = new Time ($obj['start_time']);
 							}
+							$startTime = $obj['start_time'];
 							$endTime = Time::parseTime($obj['late_time']);
 							$obj['end_time'] = $endTime;
+
+							$startTimestamp = intval($startTime->toUnixString());
+							$endTimestamp = intval($endTime->toUnixString());
+
+							if ($startTimestamp > $endTimestamp) {
+								$timeError = true;
+								$error = true;
+								$this->Session->write($StudentAbsences->Users->alias().'.'.$alias.'.'.$key.'.timeError', true);
+							}
 						}
 
 						if ($obj['absence_type_id'] == self::PRESENT) {
@@ -857,10 +892,14 @@ class StudentAttendancesTable extends AppTable {
 								]);
 							}
 						} else {
-							$entity = $StudentAbsences->newEntity($obj);
-							if ($StudentAbsences->save($entity)) {
+							if (!$timeError) {
+								$entity = $StudentAbsences->newEntity($obj);
+								if ($StudentAbsences->save($entity)) {
+								} else {
+									$this->log($entity->errors(), 'debug');
+								}
 							} else {
-								$this->log($entity->errors(), 'debug');
+								$this->Alert->error('general.edit.failed', ['reset' => true]);
 							}
 						}
 					}
@@ -870,7 +909,7 @@ class StudentAttendancesTable extends AppTable {
 		$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => $this->alias];
 		$url = array_merge($url, $this->request->query, $this->request->pass);
 		$url[0] = 'index';
-		if (isset($url['mode'])) {
+		if (isset($url['mode']) && !$error) {
 			unset($url['mode']);
 		}
 

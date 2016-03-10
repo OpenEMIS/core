@@ -273,6 +273,7 @@ trait MessagesTrait {
 		],
 		'StudentAttendances' => [
 			'noClasses' => 'No Available Classes'
+			'lateTime' => 'Late time should not be earlier than start time.'
 		],
 		'InstitutionStudentAbsences' => [
 			'noClasses' => 'No Available Classes',
@@ -280,7 +281,8 @@ trait MessagesTrait {
 			'notEnrolled' => 'Not able to add absence record as this student is no longer enrolled in the institution.',
 		],
 		'StaffAttendances' => [
-			'noStaff' => 'No Available Staff'
+			'noStaff' => 'No Available Staff',
+			'lateTime' => 'Late time should not be earlier than start time.'
 		],
 		'StaffAbsences' => [
 			'noStaff' => 'No Available Staff'
@@ -524,7 +526,19 @@ trait MessagesTrait {
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				],
+				
 			],
+			'StaffAbsences' => [
+				'end_time' => [
+					'ruleCompareAbsenceTimeReverse' => 'End Time should not be earlier than Start Time'
+				]
+			],
+			'InstitutionStudentAbsences' => [
+				'end_time' => [
+					'ruleCompareAbsenceTimeReverse' => 'End Time should not be earlier than Start Time'
+				]
+			],
+
 			'InstitutionStudents' => [
 				'academicPeriod' => 'You need to configure Academic Periods first.',
 				'educationProgrammeId' => 'You need to configure Education Programmes first.',
@@ -645,6 +659,7 @@ trait MessagesTrait {
 					'ruleNoSpaces' => 'Password should not contain spaces',
 					'ruleCheckNumberExists' => 'Password should contain at least 1 number',
 					'ruleCheckUppercaseExists' => 'Password should contain at least 1 uppercase character',
+					'ruleCheckLowercaseExists' => 'Password should contain at least 1 lowercase character',
 					'ruleCheckNonAlphaExists' => 'Password should contain at least 1 non-alphanumeric character',
 					'ruleCheckLength' => 'Password length should be between %s to %s',
 				],

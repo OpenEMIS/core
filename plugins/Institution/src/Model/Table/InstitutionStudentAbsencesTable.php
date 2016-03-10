@@ -84,6 +84,8 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		$this->setValidationCode('start_date.ruleNoOverlappingAbsenceDate', 'Institution.Absences');
 		$this->setValidationCode('start_date.ruleInAcademicPeriod', 'Institution.Absences');
 		$this->setValidationCode('end_date.ruleCompareDateReverse', 'Institution.Absences');
+
+		$codeList = array_flip($this->absenceCodeList);
 		$validator
 			->add('start_date', [
 				'ruleNoOverlappingAbsenceDate' => [
@@ -96,7 +98,11 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			])
 			->add('end_date', 'ruleCompareDateReverse', [
 				'rule' => ['compareDateReverse', 'start_date', true]
-			]);
+			])
+			->add('end_time', 'ruleCompareAbsenceTimeReverse', [
+				'rule' => ['compareAbsenceTimeReverse', 'start_time', $codeList['LATE']]
+			])
+			;
 		return $validator;
 	}
 
@@ -425,7 +431,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		$selectedAbsenceType = $request->data[$this->alias()]['absence_type_id'];
 		if (!empty($selectedAbsenceType)) {
 			$absenceType = $this->absenceCodeList[$selectedAbsenceType];
-			if ($absenceType == 'UNEXCUSED' || $absenceType == 'LATE') {
+			if ($absenceType == 'UNEXCUSED') {
 				$attr['type'] = 'hidden';
 				$attr['attr']['value'] = 0;
 			}

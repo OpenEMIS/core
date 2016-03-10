@@ -39,15 +39,20 @@ class SingleGradeBehavior extends Behavior {
 		 * add form setup
 		 */
     	$model = $this->_table;
+    	$request = $model->request;
+    	$institutionId = $extra['institution_id'];
+    	$selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
+    	$selectedEducationGradeId = $extra['selectedEducationGradeId'];
+    	$numberOfClasses = 1;
 
-    	if (array_key_exists($model->alias(), $model->request->data)) {
-	    	$modelData = $model->request->data[$model->alias()];
-			$model->selectedEducationGradeId = $modelData['education_grade'];
-			$model->numberOfClasses = $modelData['number_of_classes'];
+    	if ($request->is(['post']) && array_key_exists($model->alias(), $request->data)) {
+	    	$modelData = $request->data[$model->alias()];
+			$selectedEducationGradeId = $modelData['education_grade'];
+			$numberOfClasses = $modelData['number_of_classes'];
 			/**
 			 * PHPOE-2090, check if selected academic_period_id changes
 			 */
-			$model->selectedAcademicPeriodId = $modelData['academic_period_id'];
+			$selectedAcademicPeriodId = $modelData['academic_period_id'];
 		}
 
 		/**
@@ -55,45 +60,44 @@ class SingleGradeBehavior extends Behavior {
 		 * PHPOE-1867 - Changed the population of grades from InstitutionGradesTable
 		 */
 		$gradeOptions = [];
-		if (!empty($model->selectedAcademicPeriodId)) {
-			$gradeOptions = $model->Institutions->InstitutionGrades->getGradeOptions($model->institutionId, $model->selectedAcademicPeriodId);
+		if (!empty($selectedAcademicPeriodId)) {
+			$gradeOptions = $model->Institutions->InstitutionGrades->getGradeOptions($institutionId, $selectedAcademicPeriodId);
 		}
-		if ($model->selectedEducationGradeId != 0) {
-			if (!array_key_exists($model->selectedEducationGradeId, $gradeOptions)) {
-				$model->selectedEducationGradeId = key($gradeOptions);
+		if ($selectedEducationGradeId > 0) {
+			if (!array_key_exists($selectedEducationGradeId, $gradeOptions)) {
+				$selectedEducationGradeId = key($gradeOptions);
 			}
 		} else {
-			$model->selectedEducationGradeId = key($gradeOptions);
+			$selectedEducationGradeId = key($gradeOptions);
 		}
 		$model->field('education_grade', [
 			'type' => 'select',
 			'options' => $gradeOptions,
 			'onChangeReload' => true,
 			'attr' => [
-					'empty' => ((empty($gradeOptions)) ? $model->Alert->getMessage($model->aliasField('education_grade_options_empty')) : '')
+				'empty' => ((empty($gradeOptions)) ? $model->Alert->getMessage($model->aliasField('education_grade_options_empty')) : '')
 			]
 		]);
 
-		$numberOfClassesOptions = $model->numberOfClassesOptions();
 		$model->field('number_of_classes', [
 			'type' => 'select', 
-			'options' => $numberOfClassesOptions,
+			'options' => $this->numberOfClassesOptions(),
 			'onChangeReload' => true
 		]);
 
 		$grade = [];
-		if ($model->InstitutionClassGrades->EducationGrades->exists(['id' => $model->selectedEducationGradeId])) {
-			$grade = $model->InstitutionClassGrades->EducationGrades->get($model->selectedEducationGradeId, [
-			    'contain' => ['EducationProgrammes']
-			])->toArray();
+		if ($model->InstitutionClassGrades->EducationGrades->exists(['id' => $selectedEducationGradeId])) {
+			$grade = $model->InstitutionClassGrades->EducationGrades->get($selectedEducationGradeId)->toArray();
+		} else {
+
 		}
 
 		$model->field('single_grade_field', [
 			'type' 		=> 'element', 
 			'element' 	=> 'Institution.Classes/single_grade',
-			'data' 		=> [	'numberOfClasses' 	=> $model->numberOfClasses,
-					 			'staffOptions' 		=> $model->getStaffOptions('add'),
-					 			'existedClasses' 	=> $model->getExistedClasses(),
+			'data' 		=> [	'numberOfClasses' 	=> $numberOfClasses,
+					 			'staffOptions' 		=> $model->getStaffOptions('add', $selectedAcademicPeriodId, $institutionId),
+					 			'existedClasses' 	=> $model->getExistedClasses($institutionId, $selectedAcademicPeriodId, $selectedEducationGradeId),
 					 			'grade' 			=> $grade
 			]
 		]);
@@ -187,5 +191,14 @@ class SingleGradeBehavior extends Behavior {
 		}
 	}
 
+	private function numberOfClassesOptions() {
+		$total = 10;
+		$options = [];
+		for($i=1; $i<=$total; $i++){
+			$options[$i] = $i;
+		}
+		
+		return $options;
+	}
 }
 	
