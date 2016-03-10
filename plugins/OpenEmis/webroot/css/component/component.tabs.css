@@ -25,6 +25,7 @@
     border-bottom: 1px solid #DDD;
 }
 
+.ng-tabs ul,
 .scroll_tabs_container div.scroll_tab_inner {
     height: 30px;
     padding: 0;
@@ -32,6 +33,19 @@
     border-top-left-radius: 3px;
     -webkit-border-top-right-radius: 3px;
     border-top-right-radius: 3px;
+}
+
+.ng-tabs ul li a {
+    margin: 0 2px 0 0 !important;    
+    padding: 4px !important;
+}
+
+.ng-tabs ul li:active a {
+    padding: 4px 0 !important;
+}
+
+.chrome .ng-tabs .nav-tabs > li.active > a {
+    padding: 6px 0 !important;
 }
 
 .scroll_tabs_container div.scroll_tab_inner span {
