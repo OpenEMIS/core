@@ -39,16 +39,20 @@ class MultiGradeBehavior extends Behavior {
 		 * add form setup
 		 */
     	$model = $this->_table;
+    	$request = $model->request;
+    	$institutionId = $extra['institution_id'];
+    	$selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
+    	$selectedEducationGradeId = $extra['selectedEducationGradeId'];
 
     	/**
 		 * PHPOE-2090, check if selected academic_period_id changes
 		 */
-    	if (array_key_exists($model->alias(), $model->request->data)) {
-	    	$modelData = $model->request->data[$model->alias()];
-			$model->selectedAcademicPeriodId = $modelData['academic_period_id'];
+    	if (array_key_exists($model->alias(), $request->data)) {
+	    	$modelData = $request->data[$model->alias()];
+			$selectedAcademicPeriodId = $modelData['academic_period_id'];
 		}
 
-		$gradeOptions = $model->Institutions->InstitutionGrades->getGradeOptions($model->institutionId, $model->selectedAcademicPeriodId, false);
+		$gradeOptions = $model->Institutions->InstitutionGrades->getGradeOptions($institutionId, $selectedAcademicPeriodId, false);
 		$model->field('multi_grade_field', [
 			'type' => 'element',
 			'data' => $gradeOptions,
@@ -57,7 +61,7 @@ class MultiGradeBehavior extends Behavior {
 			'element' => 'Institution.Classes/multi_grade',
 		]);
 		$model->fields['students']['visible'] = false;
-		$model->fields['staff_id']['options'] = $model->getStaffOptions('add');
+		$model->fields['staff_id']['options'] = $model->getStaffOptions('add', $selectedAcademicPeriodId, $institutionId);
 		$model->setFieldOrder([
 			'academic_period_id', 'name', 'institution_shift_id', 'staff_id', 'multi_grade_field'
 		]);

@@ -27,11 +27,7 @@ class StaffUserTable extends UserTable {
 
 			$Staff = TableRegistry::get('Institution.Staff');
 			$staffEntity = $Staff->newEntity($positionData, ['validate' => 'AllowEmptyName']);
-			$savedEntity = $Staff->save($staffEntity);
-			if ($savedEntity) {
-				$StaffTable = TableRegistry::get('Institution.Staff');
-				$StaffTable->addStaffRole($savedEntity);
-			} else {
+			if (!$Staff->save($staffEntity)) {
 				$errors = $staffEntity->errors();
 				if (isset($errors['institution_position_id']['ruleCheckFTE'])) {
 					$this->Alert->error('Institution.InstitutionStaff.noFTE', ['reset' => true]);
