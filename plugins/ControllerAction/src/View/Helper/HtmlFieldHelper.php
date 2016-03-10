@@ -203,7 +203,7 @@ class HtmlFieldHelper extends Helper {
 		$field = $attr['field'];
 		if ($action == 'index' || $action == 'view') {
 			if (!empty($attr['options'])) {
-				if (empty($data->$field)) {
+				if ($data->$field == '') {
 					return '';
 				} else {
 					if (array_key_exists($data->$field, $attr['options'])) {
