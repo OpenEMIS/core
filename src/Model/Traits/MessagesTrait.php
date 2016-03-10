@@ -272,7 +272,7 @@ trait MessagesTrait {
 			'systemRoles' => 'System Roles'
 		],
 		'StudentAttendances' => [
-			'noClasses' => 'No Available Classes'
+			'noClasses' => 'No Available Classes',
 			'lateTime' => 'Late time should not be earlier than start time.'
 		],
 		'InstitutionStudentAbsences' => [

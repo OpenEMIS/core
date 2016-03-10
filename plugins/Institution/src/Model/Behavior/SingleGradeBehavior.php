@@ -76,13 +76,15 @@ class SingleGradeBehavior extends Behavior {
 			'onChangeReload' => true,
 			'attr' => [
 				'empty' => ((empty($gradeOptions)) ? $model->Alert->getMessage($model->aliasField('education_grade_options_empty')) : '')
-			]
+			],
+			'select' => false
 		]);
 
 		$model->field('number_of_classes', [
 			'type' => 'select', 
 			'options' => $this->numberOfClassesOptions(),
-			'onChangeReload' => true
+			'onChangeReload' => true,
+			'select' => false
 		]);
 
 		$grade = [];
