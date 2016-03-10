@@ -6,6 +6,7 @@ v3.4.16
 - Fixed a bug that caused 404 error page when access Maps
 - Area Administrative and Area Education is now properly translated
 - Fixed a bug on Institutions -> Students -> Add that caused incorrect calculation of admission age
+- Fixed a bug that caused out of memory issue when accessing classes without a valid programme set in the school
 
 v3.4.15
 - Survey Table type questions will now be displayed in Reports
