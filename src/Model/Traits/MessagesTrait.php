@@ -266,7 +266,8 @@ trait MessagesTrait {
 			'systemRoles' => 'System Roles'
 		],
 		'StudentAttendances' => [
-			'noSections' => 'No Available Classes'
+			'noSections' => 'No Available Classes',
+			'lateTime' => 'Late time should not be earlier than start time.'
 		],
 		'InstitutionStudentAbsences' => [
 			'noSections' => 'No Available Classes',
@@ -274,7 +275,8 @@ trait MessagesTrait {
 			'notEnrolled' => 'Not able to add absence record as this student is no longer enrolled in the institution.',
 		],
 		'StaffAttendances' => [
-			'noStaff' => 'No Available Staff'
+			'noStaff' => 'No Available Staff',
+			'lateTime' => 'Late time should not be earlier than start time.'
 		],
 		'StaffAbsences' => [
 			'noStaff' => 'No Available Staff'
@@ -302,6 +304,10 @@ trait MessagesTrait {
 			'add_question' => 'Add Question',
 			'add_to_section' => 'Add to Section',
 			'notSupport' => 'Not supported in this form.'
+		],
+		'StaffPositionTitles' => [
+			'inProgress' => 'Update of staff position title roles is in process, please try again later.',
+			'error' => 'There is an error in the update of the title record, please try again later.'
 		],
 		'time' => [
 			'start' => 'Start Time',
@@ -511,7 +517,19 @@ trait MessagesTrait {
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				],
+				
 			],
+			'StaffAbsences' => [
+				'end_time' => [
+					'ruleCompareAbsenceTimeReverse' => 'End Time should not be earlier than Start Time'
+				]
+			],
+			'InstitutionStudentAbsences' => [
+				'end_time' => [
+					'ruleCompareAbsenceTimeReverse' => 'End Time should not be earlier than Start Time'
+				]
+			],
+
 			'InstitutionStudents' => [
 				'academicPeriod' => 'You need to configure Academic Periods first.',
 				'educationProgrammeId' => 'You need to configure Education Programmes first.',
@@ -631,6 +649,7 @@ trait MessagesTrait {
 					'ruleNoSpaces' => 'Password should not contain spaces',
 					'ruleCheckNumberExists' => 'Password should contain at least 1 number',
 					'ruleCheckUppercaseExists' => 'Password should contain at least 1 uppercase character',
+					'ruleCheckLowercaseExists' => 'Password should contain at least 1 lowercase character',
 					'ruleCheckNonAlphaExists' => 'Password should contain at least 1 non-alphanumeric character',
 					'ruleCheckLength' => 'Password length should be between %s to %s',
 				],
