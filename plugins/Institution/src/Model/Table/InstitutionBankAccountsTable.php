@@ -139,6 +139,9 @@ class InstitutionBankAccountsTable extends AppTable {
 			->where(['bank_id'=>$this->_selectedBankId])
 			->toArray();
 		$attr['options'] = $bankBranches;
+		if (empty($bankBranches)) {
+			$attr['empty'] = 'Select';
+		}
 		return $attr;
 	}
 
