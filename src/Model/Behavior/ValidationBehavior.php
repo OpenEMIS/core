@@ -165,6 +165,33 @@ class ValidationBehavior extends Behavior {
 	}
 
 	/**
+	 * To check end time is earlier than start time
+	 * @param  mixed   $field        current field value
+	 * @param  string  $compareField name of the field to compare
+	 * @param  int  $absenceTypeId The absence type id to validate for
+	 * @param  array   $globalData   "huge global data". This array consists of
+	 *                               - newRecord [boolean]: states whether the given record is a new record
+	 *                               - data 	 [array]  : the model's fields values
+	 *                               - field 	 [string] : current field name
+	 *                               - providers [object] : consists of provider objects and the current table object
+	 * 
+	 * @return [type]                [description]
+	 */
+
+	public static function compareAbsenceTimeReverse($field, $compareField, $absenceTypeId, array $globalData) {
+		$type = self::_getFieldType($compareField);
+		
+		$endTime = new DateTime($field);
+		if($compareField && $globalData['data']['absence_type_id'] == $absenceTypeId) {
+			$options = ['equals' => true, 'reverse' => true, 'type' => $type];
+			$result = self::doCompareDates($endTime, $compareField, $options, $globalData);
+			return $result;
+		} else {
+			return true;
+		}
+	}
+
+	/**
 	 * To check start date is earlier than end date from start date field
 	 * @param  mixed   $field        current field value
 	 * @param  string  $compareField name of the field to compare
@@ -963,6 +990,11 @@ class ValidationBehavior extends Behavior {
 
 	public static function checkUppercaseExists($field, array $globalData) {
 		$match = preg_match('/[A-Z]/', $field);
+		return !empty($match);
+	}
+
+	public static function checkLowercaseExists($field, array $globalData) {
+		$match = preg_match('/[a-z]/', $field);
 		return !empty($match);
 	}
 

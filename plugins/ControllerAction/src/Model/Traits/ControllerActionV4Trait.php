@@ -69,6 +69,22 @@ trait ControllerActionV4Trait {
 						$model->fields[$key]['attr']['empty'] = $this->Alert->getMessage('general.select.noOptions');
 					}
 				}
+
+				// for automatic adding of '-- Select --' if there are no '' value fields in dropdown
+				$addSelect = true;
+				if (array_key_exists('select', $attr)) {
+					if ($attr['select'] === false) {
+						$addSelect = false;
+					}
+				}
+				if ($addSelect) {
+					if (is_array($attr['options'])) {
+						// need to check if options has any ''
+						if (!array_key_exists('', $attr['options'])) {
+							$model->fields[$key]['options'] = ['' => __('-- Select --')] + $attr['options'];
+						}
+					}
+				}
 			}
 
 			// make field sortable by default if it is a string data-type
