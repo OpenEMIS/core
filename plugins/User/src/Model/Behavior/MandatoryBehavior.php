@@ -87,12 +87,14 @@ class MandatoryBehavior extends Behavior {
 
 		if (empty($defaultIdentityType)) {
 			$IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
-
-			$defaultIdentityType = $IdentityTypes->find()
+			$defaultIdentityTypeEntity = $IdentityTypes->find()
 				->where([$IdentityTypes->aliasField('default') => 1])
 				->first();
+			if (!empty($defaultIdentityTypeEntity)) {
+				$defaultIdentityType = $defaultIdentityTypeEntity->id;
+			}
 		}
-		
+
 		$this->_table->fields['identity_type']['default'] = $defaultIdentityType;
 
 		return $entity;
