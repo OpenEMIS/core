@@ -948,16 +948,15 @@ class InstitutionSectionsTable extends AppTable {
 			}
 
 		} elseif ($action == 'add') {
-
-			// $attr['type'] = 'select';
-
+			$attr['options'] = [];
+			if ($this->_selectedAcademicPeriodId > -1) {
+				$attr['options'] = $this->getStaffOptions('add');
+			}
 		} elseif (in_array($action, ['view', 'index'])) {
 			$attr['options'] = [];
-			// $attr['type'] = 'select';
 			if ($this->_selectedAcademicPeriodId > -1) {
 				$attr['options'] = $this->getStaffOptions('view');
-			}
-			
+			}	
 		}
 
 		return $attr;
@@ -1078,10 +1077,12 @@ class InstitutionSectionsTable extends AppTable {
 	}
 
 	protected function getStaffOptions($action='edit') {
-		if (in_array($action, ['edit', 'add'])) {
+		if (in_array($action, ['edit'])) {
 			$options = [0=>'-- ' . __('Select Teacher or Leave Blank') . ' --'];
-		} else {
+		} else if (in_array($action, ['view', 'index'])) {
 			$options = [0=>'No Teacher Assigned'];
+		} else {
+			$options = [];
 		}
 
 		if (!empty($this->_selectedAcademicPeriodId)) {
