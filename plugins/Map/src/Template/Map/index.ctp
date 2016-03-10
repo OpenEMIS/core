@@ -52,7 +52,7 @@ $this->start('panelBody');
 				</div>
 				
 				<?php 
-				$colorCount++;
+					$colorCount++;
 				endforeach;
 				?>
 			
@@ -67,9 +67,18 @@ $this->start('panelBody');
 
 	<!-- <div class="hidden"> -->
 		<?php
-			$json = json_encode($institutionByType);
+			unset($centerLat);
+			unset($centerLng);
+			unset($defaultZoom);
+			unset($institutionTypes);
+			unset($iconColors);
+			unset($colorCount);
+			unset($key);
+			unset($type);
+			$jsonOptions = JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT;
+			$json = json_encode($institutionByType, $jsonOptions);
 			echo '<script>';
-			echo 'var institutionsData = ';print_r($json);
+			echo '	var institutionsData = ';print_r($json);
 			echo '</script>';
 		?>
 	<!-- </div> -->
@@ -91,21 +100,21 @@ $this->start('panelBody');
 
 				<tbody id="markers" >
 					
-					<?php foreach ($institutions as $institution): ?>
+					<?php //foreach ($institutions as $institution): ?>
 						<?php //pr($institution);die; ?>
-						<tr class="marker" data-id="<?php echo $institution->id ?>">
+						<tr class="marker" data-id="<?php //echo $institution->id ?>">
 
-							<td class="code"><?php echo $institution->code ?></td>
-							<td class="name"><?php echo $institution->name ?></td>
-							<td class="type"><?php echo $institution->institution_type_id ?></td>
-							<td class="address"><?php echo $institution->address ?></td>
-							<td class="postal_code"><?php echo $institution->postal_code ?></td>
-							<td class="longitude"><?php echo $institution->longitude ?></td>
-							<td class="latitude"><?php echo $institution->latitude ?></td>
+							<td class="code"><?php //echo $institution->code ?></td>
+							<td class="name"><?php //echo $institution->name ?></td>
+							<td class="type"><?php //echo $institution->institution_type_id ?></td>
+							<td class="address"><?php //echo $institution->address ?></td>
+							<td class="postal_code"><?php //echo $institution->postal_code ?></td>
+							<td class="longitude"><?php //echo $institution->longitude ?></td>
+							<td class="latitude"><?php //echo $institution->latitude ?></td>
 						
 						</tr>
 					
-					<?php endforeach; ?>
+					<?php //endforeach; ?>
 
 				</tbody>
 
