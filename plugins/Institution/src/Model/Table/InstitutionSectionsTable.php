@@ -952,7 +952,7 @@ class InstitutionSectionsTable extends AppTable {
 			// $attr['type'] = 'select';
 
 		} elseif (in_array($action, ['view', 'index'])) {
-
+			$attr['options'] = [];
 			// $attr['type'] = 'select';
 			if ($this->_selectedAcademicPeriodId > -1) {
 				$attr['options'] = $this->getStaffOptions('view');
