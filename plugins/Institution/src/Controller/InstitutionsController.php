@@ -8,10 +8,13 @@ use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
+use ControllerAction\Model\Traits\UtilityTrait;
 
 use Institution\Controller\AppController;
 
 class InstitutionsController extends AppController  {
+	use UtilityTrait;
+
 	public $activeObj = null;
 
 	public function initialize() {
@@ -110,16 +113,57 @@ class InstitutionsController extends AppController  {
 			$id = 0;
 			if (isset($this->request->pass[0]) && (in_array($action, ['view', 'edit', 'dashboard']))) {
 				$id = $this->request->pass[0];
+				$session->write('Institution.Institutions.id', $id);
+				
 			} else if ($session->check('Institution.Institutions.id')) {
 				$id = $session->read('Institution.Institutions.id');
 			}
 			if (!empty($id)) {
+				// build permission here
 				$this->activeObj = $this->Institutions->get($id);
-				$name = $this->activeObj->name;
-				if ($action == 'dashboard' || $action == 'edit') {
-					$session->write('Institution.Institutions.id', $id);
-					$session->write('Institution.Institutions.name', $name);
+				if (!$this->AccessControl->isAdmin()){
+					$userId = $this->Auth->user('id');
+					$areaId = $this->activeObj->area_id;
+					$Areas = TableRegistry::get('Area.Areas');
+					$path = $Areas->find('path', ['for' => $areaId])->toArray();
+					$parentArea = reset($path);
+					$institutionArea = end($path);
+
+					$SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+					$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+
+					$securityGroupIds = $SecurityGroupAreas->find()
+						->innerJoinWith('Areas')
+						->innerJoinWith('SecurityGroups.Users')
+						->where([
+							'Areas.lft >= ' => $parentArea->lft,
+							'Areas.lft <= ' => $institutionArea->lft,
+							'Areas.rght <= ' => $parentArea->rght,
+							'Areas.rght <= ' => $institutionArea->rght,
+							'Users.id' => $userId
+						])
+						->union(
+							$SecurityGroupInstitutions->find()
+							->innerJoinWith('SecurityGroups.Users')
+							->where([
+								$SecurityGroupInstitutions->aliasField('institution_id') => $id,
+								'Users.id' => $userId
+							])
+							->select([$SecurityGroupInstitutions->aliasField('security_group_id')])
+							->distinct([$SecurityGroupInstitutions->aliasField('security_group_id')])
+						)
+						->select([$SecurityGroupAreas->aliasField('security_group_id')])
+						->distinct([$SecurityGroupAreas->aliasField('security_group_id')])
+						->hydrate(false)
+						->toArray();
+					$params = [
+						'delete' => 'Institutions',
+						'securityGroupIds' => $this->array_column($securityGroupIds, 'security_group_id')
+					];
+					$this->AccessControl->buildPermissions($params);
 				}
+				$name = $this->activeObj->name;
+				$session->write('Institution.Institutions.name', $name);
 				if ($action == 'view') {
 					$header = $name .' - '.__('Overview');
 				} else {
@@ -248,40 +292,34 @@ class InstitutionsController extends AppController  {
 		$this->autoRender = false;
 	}
 
-	public function dashboard() {
-		if ($this->activeObj) {
-			$id = $this->activeObj->id;
-			$this->ControllerAction->model->action = $this->request->action;
+	public function dashboard($id) {
+		$this->ControllerAction->model->action = $this->request->action;
 
-			// $highChartDatas = ['{"chart":{"type":"column","borderWidth":1},"xAxis":{"title":{"text":"Position Type"},"categories":["Non-Teaching","Teaching"]},"yAxis":{"title":{"text":"Total"}},"title":{"text":"Number Of Staff"},"subtitle":{"text":"For Year 2015-2016"},"series":[{"name":"Male","data":[0,2]},{"name":"Female","data":[0,1]}]}'];
-			$highChartDatas = [];
+		// $highChartDatas = ['{"chart":{"type":"column","borderWidth":1},"xAxis":{"title":{"text":"Position Type"},"categories":["Non-Teaching","Teaching"]},"yAxis":{"title":{"text":"Total"}},"title":{"text":"Number Of Staff"},"subtitle":{"text":"For Year 2015-2016"},"series":[{"name":"Male","data":[0,2]},{"name":"Female","data":[0,1]}]}'];
+		$highChartDatas = [];
 
-			//Students By Year
-			$params = array(
-				'conditions' => array('institution_id' => $id)
-			);
-			$InstitutionStudents = TableRegistry::get('Institution.Students');
-			$highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_year', $params);
-			
-			//Students By Grade for current year
-			$params = array(
-				'conditions' => array('institution_id' => $id)
-			);
+		//Students By Year
+		$params = array(
+			'conditions' => array('institution_id' => $id)
+		);
+		$InstitutionStudents = TableRegistry::get('Institution.Students');
+		$highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_year', $params);
+		
+		//Students By Grade for current year
+		$params = array(
+			'conditions' => array('institution_id' => $id)
+		);
 
-			$highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_grade', $params);
+		$highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_grade', $params);
 
-			//Staffs By Position for current year
-			$params = array(
-				'conditions' => array('institution_id' => $id)
-			);
-			$InstitutionStaff = TableRegistry::get('Institution.Staff');
-			$highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff', $params);
+		//Staffs By Position for current year
+		$params = array(
+			'conditions' => array('institution_id' => $id)
+		);
+		$InstitutionStaff = TableRegistry::get('Institution.Staff');
+		$highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff', $params);
 
-			$this->set('highChartDatas', $highChartDatas);
-
-		} else {
-			return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
-		}
+		$this->set('highChartDatas', $highChartDatas);
 	}
 
 	//autocomplete used for InstitutionSiteShift
