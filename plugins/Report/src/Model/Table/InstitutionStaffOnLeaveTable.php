@@ -19,12 +19,13 @@ class InstitutionStaffOnLeaveTable extends AppTable  {
 		$this->belongsTo('Institutions',	['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('StaffTypes',		['className' => 'FieldOption.StaffTypes']);
 		$this->belongsTo('StaffStatuses',	['className' => 'FieldOption.StaffStatuses']);
+		$this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
 		$this->belongsTo('Leaves',	['className' => 'Staff.Leaves']);
 
 
 		$this->addBehavior('Report.ReportList');
 		$this->addBehavior('Excel', [
-			'excludes' => ['start_year', 'end_year', 'academic_period_id'], 
+			'excludes' => ['start_year', 'end_year', 'academic_period_id', 'security_group_user_id'], 
 			'pages' => false
 		]);
 	}
