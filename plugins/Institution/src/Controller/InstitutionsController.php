@@ -8,12 +8,10 @@ use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
-use ControllerAction\Model\Traits\UtilityTrait;
 
 use Institution\Controller\AppController;
 
 class InstitutionsController extends AppController  {
-	use UtilityTrait;
 
 	public $activeObj = null;
 
