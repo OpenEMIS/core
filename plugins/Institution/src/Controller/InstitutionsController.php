@@ -82,7 +82,8 @@ class InstitutionsController extends AppController  {
 	
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
-		$events['Controller.Navigation.onUpdateNavigationRoles'] = 'onUpdateNavigationRoles';
+		$events['Controller.Navigation.onUpdateRoles'] = 'onUpdateRoles';
+		$events['Controller.SecurityAuthorize.onUpdateRoles'] = 'onUpdateRoles';
 		return $events;
 	}
 
@@ -142,7 +143,7 @@ class InstitutionsController extends AppController  {
 		$this->set('contentHeader', $header);
 	}
 
-	public function onUpdateNavigationRoles($Event) {
+	public function onUpdateRoles($Event) {
 		$session = $this->request->session();
 		if (!$this->AccessControl->isAdmin() && $session->check('Institution.Institutions.id')){
 			$userId = $this->Auth->user('id');
