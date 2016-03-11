@@ -16,7 +16,7 @@ class SecurityAuthorize extends BaseAuthorize {
 
 			// Set for roles belonging to the controller
 			$roles = [];
-			$event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', [], $this);
+			$event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
 	    	if ($event->result) {
 	    		$roles = $event->result;	
 	    	}

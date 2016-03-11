@@ -71,6 +71,14 @@ class TrainingNeedsTable extends AppTable {
 			;
 	}
 
+	public function onWorkflowUpdateRoles(Event $event) {
+		if (!$this->AccessControl->isAdmin() && $this->Session->check('Institution.Institutions.id') && $this->controller->name == 'Institutions') {
+			$userId = $this->Auth->user('id');
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+			return $this->Institutions->getInstitutionRoles($userId, $institutionId);
+		}
+	}
+
 	public function onGetType(Event $event, Entity $entity) {
 		list($typeOptions) = array_values($this->_getSelectOptions());
 		$currentAction = $this->ControllerAction->action();
