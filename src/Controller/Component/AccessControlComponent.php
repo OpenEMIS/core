@@ -80,23 +80,11 @@ class AccessControlComponent extends Component {
 		return $isChanged;
 	}
 
-	public function buildPermissions($params = []) {
-		if (isset($params['delete'])) {
-			$this->Session->delete('Permissions.'.$params['delete']);
-		} else {
-			$this->Session->delete('Permissions'); // remove all permission first
-		}
-		
+	public function buildPermissions() {
 		$operations = $this->config('operations');
 		$separator = $this->config('separator');
 		$userId = $this->Auth->user('id');
 		$GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
-		$conditions = [];
-		if (isset($params['securityGroupIds'])) {
-			$conditions = [
-				$GroupRoles->aliasField('security_group_id').' IN ' => $params['securityGroupIds']	
-			];
-		}
 
 		$SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
 		$roles = $GroupRoles->find()
@@ -155,10 +143,7 @@ class AccessControlComponent extends Component {
 				}
 			}
 		}
-
-		if (!isset($params['delete'])) {
-			$this->Session->write('Permissions.lastModified', $lastModified);
-		}
+		$this->Session->write('Permissions.lastModified', $lastModified);
 	}
 
 	public function addPermission($permission, $roleId) {
