@@ -88,7 +88,7 @@ class NavigationComponent extends Component {
 		$linkOnly = [];
 
 		$roles = [];
-		$event = $this->controller->dispatchEvent('Controller.Navigation.onUpdateNavigationRoles', [], $this);
+		$event = $this->controller->dispatchEvent('Controller.Navigation.onUpdateRoles', [], $this);
     	if ($event->result) {
     		$roles = $event->result;	
     	}
