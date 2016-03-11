@@ -79,6 +79,12 @@ class InstitutionsController extends AppController  {
 	public function Positions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionPositions']); }
 	public function Shifts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionShifts']); }
 	// End
+	
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Controller.Navigation.onUpdateNavigationRoles'] = 'onUpdateNavigationRoles';
+		return $events;
+	}
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
@@ -119,16 +125,6 @@ class InstitutionsController extends AppController  {
 				$id = $session->read('Institution.Institutions.id');
 			}
 			if (!empty($id)) {
-				// build permission here
-				
-				if (!$this->AccessControl->isAdmin()){
-					$userId = $this->Auth->user('id');
-					$institutionPermission = $session->read('Permissions.InstitutionId');
-					if ($institutionPermission != $id || $this->AccessControl->isChanged($userId)) {
-					$this->setInstitutionPermission($userId, $id);
-					}
-				}
-
 				$this->activeObj = $this->Institutions->get($id);
 				$name = $this->activeObj->name;
 				$session->write('Institution.Institutions.name', $name);
@@ -146,7 +142,17 @@ class InstitutionsController extends AppController  {
 		$this->set('contentHeader', $header);
 	}
 
-	private function setInstitutionPermission($userId, $institutionId) {
+	public function onUpdateNavigationRoles($Event) {
+		$session = $this->request->session();
+		if (!$this->AccessControl->isAdmin() && $session->check('Institution.Institutions.id')){
+			$userId = $this->Auth->user('id');
+			$institutionId = $session->read('Institution.Institutions.id');
+			$groupIds = $this->getSecurityGroupId($userId, $institutionId);
+			return $this->AccessControl->getRolesByUserAndGroup($groupIds, $userId);
+		}
+	}
+
+	private function getSecurityGroupId($userId, $institutionId) {
 		$institutionEntity = $this->Institutions->get($institutionId);
 
 		// Get parent of the area and the current area
@@ -171,32 +177,20 @@ class InstitutionsController extends AppController  {
 			])
 			->union(
 				$SecurityGroupInstitutions->find()
-				->innerJoinWith('SecurityGroups.Users')
-				->where([
-					$SecurityGroupInstitutions->aliasField('institution_id') => $institutionId,
-					'Users.id' => $userId
-				])
-				->select([$SecurityGroupInstitutions->aliasField('security_group_id')])
-				->distinct([$SecurityGroupInstitutions->aliasField('security_group_id')])
+					->innerJoinWith('SecurityGroups.Users')
+					->where([
+						$SecurityGroupInstitutions->aliasField('institution_id') => $institutionId,
+						'Users.id' => $userId
+					])
+					->select([$SecurityGroupInstitutions->aliasField('security_group_id')])
+					->distinct([$SecurityGroupInstitutions->aliasField('security_group_id')])
 			)
 			->select([$SecurityGroupAreas->aliasField('security_group_id')])
 			->distinct([$SecurityGroupAreas->aliasField('security_group_id')])
 			->hydrate(false)
 			->toArray();
-
-		// Setting the parameters
-		$params = [
-			'delete' => 'Institutions',
-			'securityGroupIds' => $this->array_column($securityGroupIds, 'security_group_id')
-		];
-
-		// Rebuild permission for the institution
-		$this->AccessControl->buildPermissions($params);
-		
-		// Set the id of the institution so that it will only run if the institution id does not match the institution
-		// or if it is not set
-		$session = $this->request->session();
-		$session->write('Permissions.InstitutionId', $institutionId);
+		$securityGroupIds = $this->array_column($securityGroupIds, 'security_group_id');
+		return $securityGroupIds;
 	}
 
 	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {

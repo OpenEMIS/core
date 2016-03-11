@@ -101,8 +101,7 @@ class AccessControlComponent extends Component {
 		$SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
 		$roles = $GroupRoles->find()
 			->where([
-				$GroupRoles->aliasField('security_user_id') => $userId, 
-				$conditions
+				$GroupRoles->aliasField('security_user_id').'='.$userId
 			])
 			->group([$GroupRoles->aliasField('security_role_id')])
 			->select(['security_role_id' => $GroupRoles->aliasField('security_role_id')]);
@@ -175,7 +174,7 @@ class AccessControlComponent extends Component {
 		}
 	}
 	
-	public function check($url=[], $roleId=0) {
+	public function check($url=[], $roleIds=[]) {
 		$superAdmin = $this->Auth->user('super_admin');
 
 		if ($superAdmin) {
@@ -207,9 +206,16 @@ class AccessControlComponent extends Component {
 		// pr($permissionKey);
 		
 		if ($this->Session->check($permissionKey)) {
-			if ($roleId != 0) {
+			if (!empty($roleIds)) {
 				$roles = $this->Session->read($permissionKey);
-				return in_array($roleId, $roles);
+				if (!isset($roles[0])) {
+					if (isset($roles['index'])) {
+						$roles = $roles['index'];
+					} else {
+						$roles = [];
+					}
+				}
+				return array_intersect($roleIds, $roles);
 			} else {
 				// Log::write('debug', $permissionKey);
 				return true;
@@ -279,10 +285,30 @@ class AccessControlComponent extends Component {
 		return $ignored;
 	}
 
-	public function getRolesByUser($userId = null) {
+	public function getRolesByUserAndGroup($groupIds, $userId = null) {
 		if (is_null($userId)) {
 			$userId = $this->Auth->user('id');
 		}
+		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+		$securityRoles = $SecurityGroupUsers
+			->find('list', [
+				'keyField' => 'security_role_id',
+				'valueField' => 'security_role_id'
+			])
+			->contain(['SecurityRoles', 'SecurityGroups'])
+			->where([
+				$SecurityGroupUsers->aliasField('security_user_id') => $userId,
+				$SecurityGroupUsers->aliasField('security_group_id').' IN ' => $groupIds
+			])
+			->group([$SecurityGroupUsers->aliasField('security_role_id')])
+			->select([$SecurityGroupUsers->aliasField('security_role_id')])
+			->hydrate(false)
+			->toArray();
+		return $securityRoles;
+	}
+
+	public function getRolesByUser($userId = null) {
+		
 
 		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 		$data = $SecurityGroupUsers
