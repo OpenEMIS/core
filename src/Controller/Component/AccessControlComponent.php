@@ -215,7 +215,7 @@ class AccessControlComponent extends Component {
 						$roles = [];
 					}
 				}
-				return array_intersect($roleIds, $roles);
+				return count(array_intersect($roleIds, $roles)) > 0;
 			} else {
 				// Log::write('debug', $permissionKey);
 				return true;
