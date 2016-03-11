@@ -87,6 +87,12 @@ class NavigationComponent extends Component {
 	public function checkPermissions(array &$navigations) {
 		$linkOnly = [];
 
+		$roles = [];
+		$event = $this->controller->dispatchEvent('Controller.Navigation.onUpdateNavigationRoles', [], $this);
+    	if ($event->result) {
+    		$roles = $event->result;	
+    	}
+
 		// Unset the children
 		foreach ($navigations as $key => $value) {
 			if (isset($value['link']) && !$value['link']) {
@@ -97,12 +103,11 @@ class NavigationComponent extends Component {
 					$params = $value['params'];
 				}
 				$url = $this->getLink($key, $params);
-				if (!$this->AccessControl->check($url)) {
+				if (!$this->AccessControl->check($url, $roles)) {
 					unset($navigations[$key]);
 				}
 			}
 		}
-
 		// unset the parents if there is no children
 		$linkOnly = array_reverse($linkOnly);
 		foreach ($linkOnly as $link) {
