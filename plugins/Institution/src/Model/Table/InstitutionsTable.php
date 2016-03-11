@@ -588,14 +588,16 @@ class InstitutionsTable extends AppTable  {
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-		$userId = $this->Auth->user('id');
-		$institutionId = $entity->id;
-		$securityGroups = $this->getSecurityGroupId($userId, $institutionId);
-		$securityRoles = $this->AccessControl->getRolesByUserAndGroup($securityGroups, $userId);
-		foreach ($buttons as $key => $b) {
-			$url = $this->ControllerAction->url($key);
-			if (!$this->AccessControl->check($url, $securityRoles)) {
-				unset($buttons[$key]);
+		if (!$this->AccessControl->isAdmin()) {
+			$userId = $this->Auth->user('id');
+			$institutionId = $entity->id;
+			$securityGroups = $this->getSecurityGroupId($userId, $institutionId);
+			$securityRoles = $this->AccessControl->getRolesByUserAndGroup($securityGroups, $userId);
+			foreach ($buttons as $key => $b) {
+				$url = $this->ControllerAction->url($key);
+				if (!$this->AccessControl->check($url, $securityRoles)) {
+					unset($buttons[$key]);
+				}
 			}
 		}
 		return $buttons;
