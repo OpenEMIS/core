@@ -279,7 +279,10 @@ class ImportStudentsTable extends AppTable {
 		$institutionGrade = $this->InstitutionGrades
 								->find()
 								->contain('EducationGrades.EducationProgrammes.EducationCycles')
-								->where([$this->InstitutionGrades->aliasField('education_grade_id') => $tempRow['education_grade_id']])
+								->where([
+									$this->InstitutionGrades->aliasField('education_grade_id') => $tempRow['education_grade_id'],
+									$this->InstitutionGrades->aliasField('institution_id') => $this->institutionId
+								])
 								;
 		if ($institutionGrade->isEmpty()) {
 			$rowInvalidCodeCols['education_grade_id'] = __('No matching education grade.');
