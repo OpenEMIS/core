@@ -13,6 +13,7 @@ class MandatoryBehavior extends Behavior {
 	protected $_userRole;
 	protected $_info;
 	protected $_roleFields;
+	protected $_currentNationality;
 
 	public function initialize(array $config) {
 		$this->_userRole = (array_key_exists('userRole', $config))? $config['userRole']: null;
@@ -75,16 +76,26 @@ class MandatoryBehavior extends Behavior {
 
 	public function addOnInitialize(Event $event, Entity $entity) { 
 		$Countries = TableRegistry::get('FieldOption.Countries');
-		$defaultCountry = $Countries->getDefaultEntity();
-		
-		$this->fields['nationality']['default'] = $defaultCountry->id;
-
-		$defaultIdentityType = $defaultCountry->identity_type_id;
-		if (is_null($defaultIdentityType)) {
-			$IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
-			$defaultIdentityType = $IdentityTypes->getDefaultValue();
+		$defaultCountry = $Countries->find()
+			->where([$Countries->aliasField('default') => 1])
+			->first();
+		if (!empty($defaultCountry)) {
+			// if default nationality can be found
+			$this->_table->fields['nationality']['default'] = $defaultCountry->id;
+			$defaultIdentityType = $defaultCountry->identity_type_id;
 		}
-		$this->fields['identity_type']['default'] = $defaultIdentityType;
+
+		if (empty($defaultIdentityType)) {
+			$IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+			$defaultIdentityTypeEntity = $IdentityTypes->find()
+				->where([$IdentityTypes->aliasField('default') => 1])
+				->first();
+			if (!empty($defaultIdentityTypeEntity)) {
+				$defaultIdentityType = $defaultIdentityTypeEntity->id;
+			}
+		}
+
+		$this->_table->fields['identity_type']['default'] = $defaultIdentityType;
 
 		return $entity;
 	}
@@ -172,10 +183,13 @@ class MandatoryBehavior extends Behavior {
 		$Countries = TableRegistry::get('FieldOption.Countries');
 		$countryId = $data[$this->_table->alias()]['nationalities'][0]['country_id'];
 		$country = $Countries->findById($countryId)->first();
-		$defaultIdentityType = $country->identity_type_id;
-		if (is_null($defaultIdentityType)) {
+		$defaultIdentityType = (!empty($country))? $country->identity_type_id: null;
+		if (empty($defaultIdentityType)) {
 			$IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
-			$defaultIdentityType = $IdentityTypes->getDefaultValue();
+			$defaultIdentityType = $IdentityTypes->find()
+				->where([$IdentityTypes->aliasField('default') => 1])
+				->first();
+			$defaultIdentityType = (!empty($defaultIdentityType))? $defaultIdentityType->id: null;
 		}
 		
 		$this->_table->fields['nationality']['default'] = $data[$this->_table->alias()]['nationalities'][0]['country_id'];
@@ -234,6 +248,7 @@ class MandatoryBehavior extends Behavior {
 		$attr['options'] = $nationalityOptions;
 		$attr['onChangeReload'] = 'changeNationality';
 		$attr['fieldName'] = $this->_table->alias().'.nationalities.0.country_id';
+		// default is set in addOnInitialize
 
 		return $attr;
 	}
@@ -245,10 +260,13 @@ class MandatoryBehavior extends Behavior {
 			}
 		}
 
-		$identityTypeOptions = TableRegistry::get('FieldOption.IdentityTypes')->getList();
+		$IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+		$identityTypeOptions = $IdentityTypes->getList();
 		$attr['type'] = 'select';
 		$attr['fieldName'] = $this->_table->alias().'.identities.0.identity_type_id';
 		$attr['options'] = $identityTypeOptions->toArray();
+		// default is set in addOnInitialize
+
 		return $attr;
 	}
 
@@ -266,7 +284,16 @@ class MandatoryBehavior extends Behavior {
 			}
 		}
 
-		$specialNeedOptions = TableRegistry::get('FieldOption.SpecialNeedTypes')->getList();
+		$SpecialNeedTypes = TableRegistry::get('FieldOption.SpecialNeedTypes');
+		$specialNeedOptions = $SpecialNeedTypes->getList();
+
+		$defaultEntity = $SpecialNeedTypes->find()
+			->where([$SpecialNeedTypes->aliasField('default') => 1])
+			->first();
+		if (!empty($defaultEntity)) {
+			$attr['default'] = $defaultEntity->id;
+		}
+
 		$attr['type'] = 'select';
 		$attr['fieldName'] = $this->_table->alias().'.special_needs.0.special_need_type_id';
 		$attr['options'] = $specialNeedOptions->toArray();
