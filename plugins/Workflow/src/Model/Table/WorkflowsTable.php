@@ -29,10 +29,20 @@ class WorkflowsTable extends AppTable {
 	const YES = 1;
 	const NO = 0;
 
+	private $filterClass = [
+		'className' => 'FieldOption.FieldOptionValues',
+		'joinTable' => 'workflows_filters',
+		'foreignKey' => 'workflow_id',
+		'targetForeignKey' => 'filter_id',
+		'through' => 'Workflow.WorkflowsFilters',
+		'dependent' => true
+	];
+
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('WorkflowModels', ['className' => 'Workflow.WorkflowModels']);
 		$this->hasMany('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps', 'dependent' => true, 'cascadeCallbacks' => true]);
+		// $this->belongsToMany('Filters', $this->filterClass);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -289,21 +299,7 @@ class WorkflowsTable extends AppTable {
 		$paramsPass = $this->ControllerAction->paramsPass();
 		$workflowId = current($paramsPass);
 		$selectedModel = $this->get($workflowId)->workflow_model_id;
-
-		$filterClass = [
-			'className' => 'FieldOption.FieldOptionValues',
-			'joinTable' => 'workflows_filters',
-			'foreignKey' => 'workflow_id',
-			'targetForeignKey' => 'filter_id',
-			'through' => 'Workflow.WorkflowsFilters',
-			'dependent' => true
-		];
-
-		$filter = $this->WorkflowModels->get($selectedModel)->filter;
-		if (!is_null($filter)) {
-			$filterClass['className'] = $filter;
-		}
-		$this->belongsToMany('Filters', $filterClass);
+		$this->addAssociation($selectedModel);
 
 		$query
 			->matching('WorkflowModels')
@@ -573,7 +569,7 @@ class WorkflowsTable extends AppTable {
 			$this->advancedSelectOptions($modelOptions, $selectedModel);
 
 			$attr['options'] = $modelOptions;
-			$attr['onChangeReload'] = true;
+			$attr['onChangeReload'] = 'changeModel';
     	} else if ($action == 'edit') {
     		$workflowModel = $attr['attr']['workflowModel'];
 
@@ -596,7 +592,12 @@ class WorkflowsTable extends AppTable {
 
     public function onUpdateFieldFilters(Event $event, array $attr, $action, $request) {
     	if ($action == 'view') {
-    		// no action
+    		$workflowModel = $attr['attr']['workflowModel'];
+    		$filter = $workflowModel->filter;
+    		list($plugin, $modelAlias) = explode('.', $filter, 2);
+    		$labelText = Inflector::underscore(Inflector::singularize($modelAlias));
+
+    		$attr['attr']['label'] = __(Inflector::humanize($labelText));
     	} else if ($action == 'add' || $action == 'edit') {
     		$workflowModel = $attr['attr']['workflowModel'];
     		$selectedModel = $workflowModel->id;
@@ -647,7 +648,6 @@ class WorkflowsTable extends AppTable {
 			}
 			// End
 
-			$attr['type'] = 'chosenSelect';
 			$attr['placeholder'] = __('Select ') . __(Inflector::humanize($labelText));
 			$attr['options'] = $filterOptions;
 			$attr['attr']['label'] = __(Inflector::humanize($labelText));
@@ -679,6 +679,8 @@ class WorkflowsTable extends AppTable {
 
 			$filter = $workflowModel->filter;
 			if (!empty($filter)) {
+				$this->filterClass['className'] = $filter;
+				$this->belongsToMany('Filters', $this->filterClass);
 				$showFilters = false;
 
 				$workflows = $this
@@ -739,5 +741,13 @@ class WorkflowsTable extends AppTable {
 		$fieldOrder[] = 'code';
 		$fieldOrder[] = 'name';
 		$this->ControllerAction->setFieldOrder($fieldOrder);
+	}
+
+	public function addAssociation($selectedModel) {
+		$filter = $this->WorkflowModels->get($selectedModel)->filter;
+		if (!is_null($filter)) {
+			$this->filterClass['className'] = $filter;
+		}
+		$this->belongsToMany('Filters', $this->filterClass);
 	}
 }
