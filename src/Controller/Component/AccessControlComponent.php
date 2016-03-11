@@ -33,33 +33,51 @@ class AccessControlComponent extends Component {
 			} else {
 				// check if permission is updated and rebuild
 				$userId = $this->Auth->user('id');
-				$SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
-				$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-
-				$roles = $SecurityGroupUsers
-					->find('list', ['keyField' => 'security_role_id', 'valueField' => 'security_role_id'])
-					->where([$SecurityGroupUsers->aliasField('security_user_id') => $userId])
-					->toArray();
-
-				$entity = $SecurityRoleFunctions
-					->find()
-					->where([$SecurityRoleFunctions->aliasField('security_role_id') . ' IN' => $roles])
-					->order([$SecurityRoleFunctions->aliasField('modified') => 'DESC'])
-					->first();
-
-				if (!is_null($entity)) {
-					$lastModified = $this->Session->read('Permissions.lastModified');
-
-					if (is_null($lastModified)) {
-						$this->buildPermissions();
-					} else {
-						if (!is_null($entity->modified) && $entity->modified->gt($lastModified)) {
-							$this->buildPermissions();
-						}
-					}
+				if ($this->isChanged($userId)) {
+					$this->buildPermissions();
 				}
 			}
 		}
+	}
+
+	public function isChanged($userId) {
+		$isChanged = false;
+		$SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
+		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+
+		$roles = $SecurityGroupUsers
+			->find()
+			->select([$SecurityGroupUsers->aliasField('security_role_id')])
+			->where([$SecurityGroupUsers->aliasField('security_user_id') => $userId]);
+
+		$selectedColumns = [
+			'modified' => '(
+				CASE 
+					WHEN '.$SecurityRoleFunctions->aliasField('modified').' > '.$SecurityRoleFunctions->aliasField('created').' 
+					THEN '.$SecurityRoleFunctions->aliasField('modified').' 
+					ELSE '.$SecurityRoleFunctions->aliasField('created').' 
+					END
+				)'
+		];
+
+		$entity = $SecurityRoleFunctions
+			->find()
+			// ->select($selectedColumns)
+			->where([$SecurityRoleFunctions->aliasField('security_role_id') . ' IN' => $roles])
+			->order(['modified' => 'DESC'])
+			->first();
+
+		if (!is_null($entity)) {
+			$lastModified = $this->Session->read('Permissions.lastModified');
+			if (is_null($lastModified)) {
+				$isChanged = true;
+			} else {
+				if (!is_null($entity->modified) && $entity->modified->gt($lastModified)) {
+					$isChanged = true;
+				}
+			}
+		}
+		return $isChanged;
 	}
 
 	public function buildPermissions($params = []) {
@@ -94,6 +112,15 @@ class AccessControlComponent extends Component {
 		$lastModified = null;
 		foreach ($roles as $role) { // for each role in user
 			$roleId = $role->security_role_id;
+			$selectedColumns = [
+				'modified' => '(
+					CASE 
+						WHEN '.$SecurityRoleFunctions->aliasField('modified').' > '.$SecurityRoleFunctions->aliasField('created').' 
+						THEN '.$SecurityRoleFunctions->aliasField('modified').' 
+						ELSE '.$SecurityRoleFunctions->aliasField('created').' 
+						END
+					)'
+			];
 			$functions = $SecurityRoleFunctions->find()
 				->contain(['SecurityFunctions'])
 				->where([$SecurityRoleFunctions->aliasField('security_role_id') => $roleId])
@@ -128,7 +155,9 @@ class AccessControlComponent extends Component {
 			}
 		}
 
-		$this->Session->write('Permissions.lastModified', $lastModified);
+		if (!isset($params['delete'])) {
+			$this->Session->write('Permissions.lastModified', $lastModified);
+		}
 	}
 
 	public function addPermission($permission, $roleId) {

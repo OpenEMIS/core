@@ -120,48 +120,16 @@ class InstitutionsController extends AppController  {
 			}
 			if (!empty($id)) {
 				// build permission here
-				$this->activeObj = $this->Institutions->get($id);
+				
 				if (!$this->AccessControl->isAdmin()){
 					$userId = $this->Auth->user('id');
-					$areaId = $this->activeObj->area_id;
-					$Areas = TableRegistry::get('Area.Areas');
-					$path = $Areas->find('path', ['for' => $areaId])->toArray();
-					$parentArea = reset($path);
-					$institutionArea = end($path);
-
-					$SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
-					$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
-
-					$securityGroupIds = $SecurityGroupAreas->find()
-						->innerJoinWith('Areas')
-						->innerJoinWith('SecurityGroups.Users')
-						->where([
-							'Areas.lft >= ' => $parentArea->lft,
-							'Areas.lft <= ' => $institutionArea->lft,
-							'Areas.rght <= ' => $parentArea->rght,
-							'Areas.rght <= ' => $institutionArea->rght,
-							'Users.id' => $userId
-						])
-						->union(
-							$SecurityGroupInstitutions->find()
-							->innerJoinWith('SecurityGroups.Users')
-							->where([
-								$SecurityGroupInstitutions->aliasField('institution_id') => $id,
-								'Users.id' => $userId
-							])
-							->select([$SecurityGroupInstitutions->aliasField('security_group_id')])
-							->distinct([$SecurityGroupInstitutions->aliasField('security_group_id')])
-						)
-						->select([$SecurityGroupAreas->aliasField('security_group_id')])
-						->distinct([$SecurityGroupAreas->aliasField('security_group_id')])
-						->hydrate(false)
-						->toArray();
-					$params = [
-						'delete' => 'Institutions',
-						'securityGroupIds' => $this->array_column($securityGroupIds, 'security_group_id')
-					];
-					$this->AccessControl->buildPermissions($params);
+					$institutionPermission = $session->read('Permissions.InstitutionId');
+					if ($institutionPermission != $id || $this->AccessControl->isChanged($userId)) {
+					$this->setInstitutionPermission($userId, $id);
+					}
 				}
+
+				$this->activeObj = $this->Institutions->get($id);
 				$name = $this->activeObj->name;
 				$session->write('Institution.Institutions.name', $name);
 				if ($action == 'view') {
@@ -176,6 +144,60 @@ class InstitutionsController extends AppController  {
 		}
 
 		$this->set('contentHeader', $header);
+	}
+
+	private function setInstitutionPermission($userId, $institutionId) {
+		pr('here');
+		$institutionEntity = $this->Institutions->get($institutionId);
+
+		// Get parent of the area and the current area
+		$areaId = $institutionEntity->area_id;
+		$Areas = $this->Institutions->Areas;
+		$path = $Areas->find('path', ['for' => $areaId])->toArray();
+		$parentArea = reset($path);
+		$institutionArea = end($path);
+
+		// Getting the security groups
+		$SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+		$securityGroupIds = $SecurityGroupAreas->find()
+			->innerJoinWith('Areas')
+			->innerJoinWith('SecurityGroups.Users')
+			->where([
+				'Areas.lft >= ' => $parentArea->lft,
+				'Areas.lft <= ' => $institutionArea->lft,
+				'Areas.rght <= ' => $parentArea->rght,
+				'Areas.rght <= ' => $institutionArea->rght,
+				'Users.id' => $userId
+			])
+			->union(
+				$SecurityGroupInstitutions->find()
+				->innerJoinWith('SecurityGroups.Users')
+				->where([
+					$SecurityGroupInstitutions->aliasField('institution_id') => $institutionId,
+					'Users.id' => $userId
+				])
+				->select([$SecurityGroupInstitutions->aliasField('security_group_id')])
+				->distinct([$SecurityGroupInstitutions->aliasField('security_group_id')])
+			)
+			->select([$SecurityGroupAreas->aliasField('security_group_id')])
+			->distinct([$SecurityGroupAreas->aliasField('security_group_id')])
+			->hydrate(false)
+			->toArray();
+
+		// Setting the parameters
+		$params = [
+			'delete' => 'Institutions',
+			'securityGroupIds' => $this->array_column($securityGroupIds, 'security_group_id')
+		];
+
+		// Rebuild permission for the institution
+		$this->AccessControl->buildPermissions($params);
+		
+		// Set the id of the institution so that it will only run if the institution id does not match the institution
+		// or if it is not set
+		$session = $this->request->session();
+		$session->write('Permissions.InstitutionId', $institutionId);
 	}
 
 	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
