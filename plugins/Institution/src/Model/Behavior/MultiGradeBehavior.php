@@ -9,8 +9,8 @@ use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
-use Cake\Utility\Inflector;
 use Cake\Utility\Text;
+use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\Collection\Collection;
 
@@ -69,18 +69,22 @@ class MultiGradeBehavior extends Behavior {
 
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
 		$model = $this->_table;
+		$request = $this->_table->request;
+		$education_grades = $request->data($model->aliasField('education_grades'));
+		pr($patchOptions);pr($request->data($model->aliasField('education_grades')));pr($requestData);die;
 		$selected = [];
-		if (isset($requestData[$model->alias()]['institution_class_grades']) && count($requestData[$model->alias()]['institution_class_grades'])>0) {
-			foreach($requestData[$model->alias()]['institution_class_grades'] as $key => $row) {
-				$requestData[$model->alias()]['institution_class_grades'][$key]['status'] = 1;
-				$selected[] = $requestData[$model->alias()]['institution_class_grades'][$key]['education_grade_id'];
+		if (isset($education_grades) && count($education_grades)>0) {
+			foreach($education_grades as $key => $row) {
+				// $requestData[$model->alias()]['education_grades'][$key]['_joinData']['id'] = Text::uuid();
+				// $requestData[$model->alias()]['education_grades'][$key]['_joinData']['institution_class_id'] = 1;
+				$selected[] = $row['_joinData']['education_grade_id'];
 			}
 		} else {
 			/**
 			 * set institution_id to empty to trigger validation error in ControllerActionComponent
 			 */
 			$requestData[$model->alias()]['institution_id'] = '';
-			$errorMessage = 'Institution.'.$model->alias().'.noGrade';
+			$errorMessage = 'Institution.'.$model->aliasField('noGrade');
 			$requestData['errorMessage'] = $errorMessage;
 		}
 		$model->fields['multi_grade_field']['selected'] = $selected;
