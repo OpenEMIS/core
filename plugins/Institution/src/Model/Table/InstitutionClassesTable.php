@@ -30,11 +30,18 @@ class InstitutionClassesTable extends ControllerActionTable {
 		$this->hasMany('InstitutionClassGrades', 	['className' => 'Institution.InstitutionClassGrades', 'dependent' => true]);
 		$this->hasMany('InstitutionClassStudents', 	['className' => 'Institution.InstitutionClassStudents', 'dependent' => true]);
 
+		$this->belongsToMany('EducationGrades', [
+			'className' => 'Education.EducationGrades',
+			'joinTable' => 'institution_class_grades',
+			'foreignKey' => 'institution_class_id',
+			'targetForeignKey' => 'education_grade_id'
+		]);
+
 		$this->belongsToMany('InstitutionSubjects', [
 			'className' => 'Institution.InstitutionSubjects',
 			'joinTable' => 'institution_class_subjects',
 			'foreignKey' => 'institution_class_id',
-			'targetForeignKey' => 'institution_class_id'
+			'targetForeignKey' => 'institution_subject_id'
 		]);
 
 		/**
@@ -497,15 +504,16 @@ class InstitutionClassesTable extends ControllerActionTable {
 			'AcademicPeriods',
 			'InstitutionShifts',
 			'Staff',
-			'InstitutionClassGrades.EducationGrades',
+			'EducationGrades',
 			'InstitutionClassStudents.Users.Genders',
 			'InstitutionClassStudents.EducationGrades'
 		]);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		// pr($entity);
 		$this->fields['students']['data']['students'] = $entity->institution_class_students;
-		$this->fields['education_grades']['data']['grades'] = $entity->institution_class_grades;
+		$this->fields['education_grades']['data']['grades'] = $entity->education_grades;
 
 		$academicPeriodOptions = $this->getAcademicPeriodOptions($entity->institution_id);
 	}
@@ -798,10 +806,10 @@ class InstitutionClassesTable extends ControllerActionTable {
 	private function getStudentsOptions($classEntity) {
 		$academicPeriodId = $classEntity->academic_period_id;
 		$academicPeriodObj = $this->AcademicPeriods->get($academicPeriodId);
-		$classGradeObjects = $classEntity->institution_class_grades;
+		$classGradeObjects = $classEntity->education_grades;
 		$classGrades = [];
 		foreach ($classGradeObjects as $key=>$value) {
-			$classGrades[] = $value->education_grade_id;
+			$classGrades[] = $value->id;
 		}
 
 		/**
