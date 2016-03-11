@@ -147,7 +147,6 @@ class InstitutionsController extends AppController  {
 	}
 
 	private function setInstitutionPermission($userId, $institutionId) {
-		pr('here');
 		$institutionEntity = $this->Institutions->get($institutionId);
 
 		// Get parent of the area and the current area
