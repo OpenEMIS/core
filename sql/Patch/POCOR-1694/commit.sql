@@ -37,6 +37,8 @@ ALTER TABLE `institution_section_grades` RENAME `z_1694_institution_section_grad
 CREATE TABLE `institution_class_grades` LIKE `z_1694_institution_section_grades`;
 INSERT INTO `institution_class_grades` SELECT * FROM `z_1694_institution_section_grades`;
 ALTER TABLE `institution_class_grades` CHANGE `institution_section_id` `institution_class_id` INT(11) NOT NULL;
+ALTER TABLE `institution_class_grades` CHANGE `id` `id` CHAR(36) NOT NULL;
+ALTER TABLE `institution_class_grades` DROP `status`;
 
 ALTER TABLE `institution_section_students` RENAME `z_1694_institution_section_students`;
 CREATE TABLE `institution_class_students` LIKE `z_1694_institution_section_students`;
