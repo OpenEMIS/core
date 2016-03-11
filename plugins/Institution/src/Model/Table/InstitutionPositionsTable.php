@@ -45,6 +45,14 @@ class InstitutionPositionsTable extends AppTable {
 			;
 	}
 
+	public function onWorkflowUpdateRoles(Event $event) {
+		if (!$this->AccessControl->isAdmin() && $this->Session->check('Institution.Institutions.id') && $this->controller->name == 'Institutions') {
+			$userId = $this->Auth->user('id');
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+			return $this->Institutions->getInstitutionRoles($userId, $institutionId);
+		}
+	}
+
 	public function beforeAction(Event $event, ArrayObject $extra) {
 		$this->field('position_no', ['visible' => true]);
 		$this->field('staff_position_title_id', [
@@ -276,4 +284,11 @@ class InstitutionPositionsTable extends AppTable {
 			->contain(['StaffPositionTitles', 'Institutions', 'StaffPositionGrades']);
 	}
 
+	public function onWorkflowUpdateRoles(Event $event) {
+		if (!$this->AccessControl->isAdmin() && $this->Session->check('Institution.Institutions.id')) {
+			$userId = $this->Auth->user('id');
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+			return $this->Institutions->getInstitutionRoles($userId, $institutionId);
+		}
+	}
 }

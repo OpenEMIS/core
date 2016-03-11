@@ -270,30 +270,10 @@ class AccessControlComponent extends Component {
 		return $ignored;
 	}
 
-	public function getRolesByUserAndGroup($groupIds, $userId = null) {
+	public function getRolesByUser($userId = null) {
 		if (is_null($userId)) {
 			$userId = $this->Auth->user('id');
 		}
-		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-		$securityRoles = $SecurityGroupUsers
-			->find('list', [
-				'keyField' => 'security_role_id',
-				'valueField' => 'security_role_id'
-			])
-			->contain(['SecurityRoles', 'SecurityGroups'])
-			->where([
-				$SecurityGroupUsers->aliasField('security_user_id') => $userId,
-				$SecurityGroupUsers->aliasField('security_group_id').' IN ' => $groupIds
-			])
-			->group([$SecurityGroupUsers->aliasField('security_role_id')])
-			->select([$SecurityGroupUsers->aliasField('security_role_id')])
-			->hydrate(false)
-			->toArray();
-		return $securityRoles;
-	}
-
-	public function getRolesByUser($userId = null) {
-		
 
 		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 		$data = $SecurityGroupUsers
