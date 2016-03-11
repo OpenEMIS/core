@@ -509,11 +509,6 @@ class InstitutionsTable extends AppTable  {
 		]);
 	}
 
-	public function addOnInitialize(Event $event, Entity $entity) {
-		list(, $selectedType) = array_values($this->getTypeOptions());
-		$entity->institution_type_id = $selectedType;
-	}
-
 /******************************************************************************************************************
 **
 ** addEdit action methods
@@ -578,9 +573,9 @@ class InstitutionsTable extends AppTable  {
 
 	public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add' || $action == 'edit') {
-			list($typeOptions, $selectedType) = array_values($this->getTypeOptions());
+			// list($typeOptions, $selectedType) = array_values($this->getTypeOptions());
 
-			$attr['options'] = $typeOptions;
+			// $attr['options'] = $typeOptions;
 			$attr['onChangeReload'] = 'changeType';
 		}
 
@@ -589,13 +584,11 @@ class InstitutionsTable extends AppTable  {
 
 	public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$request = $this->request;
-		unset($request->query['type']);
 
 		if ($request->is(['post', 'put'])) {
 			if (array_key_exists($this->alias(), $request->data)) {
 				if (array_key_exists('institution_type_id', $request->data[$this->alias()])) {
 					$selectedType = $request->data[$this->alias()]['institution_type_id'];
-					$request->query['type'] = $selectedType;
 					$entity->institution_type_id = $selectedType;
 				}
 			}
@@ -604,8 +597,11 @@ class InstitutionsTable extends AppTable  {
 
 	public function getTypeOptions() {
 		$typeOptions = $this->Types->getList()->toArray();
-		$selectedType = $this->queryString('type', $typeOptions);
-		$this->advancedSelectOptions($typeOptions, $selectedType);
+		$selectedType = $this->Types->getDefaultValue();
+
+		// $selectedType = $this->queryString('type', $typeOptions);
+		// $this->advancedSelectOptions($typeOptions, $selectedType);
+		// , ['default' => $typeDefault]
 
 		return compact('typeOptions', 'selectedType');
 	}
