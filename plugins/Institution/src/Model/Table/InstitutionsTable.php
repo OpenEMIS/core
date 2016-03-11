@@ -591,8 +591,7 @@ class InstitutionsTable extends AppTable  {
 		if (!$this->AccessControl->isAdmin()) {
 			$userId = $this->Auth->user('id');
 			$institutionId = $entity->id;
-			$securityGroups = $this->getSecurityGroupId($userId, $institutionId);
-			$securityRoles = $this->AccessControl->getRolesByUserAndGroup($securityGroups, $userId);
+			$securityRoles = $this->getInstitutionRoles($userId, $institutionId);
 			foreach ($buttons as $key => $b) {
 				$url = $this->ControllerAction->url($key);
 				if (!$this->AccessControl->check($url, $securityRoles)) {
@@ -678,6 +677,19 @@ class InstitutionsTable extends AppTable  {
 			->toArray();
 		$securityGroupIds = $this->array_column($securityGroupIds, 'security_group_id');
 		return $securityGroupIds;
+	}
+
+	/**
+	 * To list of roles that are authorised for access to a particular institution
+	 *
+	 * @param integer $userId User Id
+	 * @param integer $institutionId Institution id
+	 * @return array The list of security roles id that the current user for access to the institution
+	 */
+	public function getInstitutionRoles($userId, $institutionId) {
+		$groupIds = $this->getSecurityGroupId($userId, $institutionId);
+		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+		return $SecurityGroupUsers->getRolesByUserAndGroup($groupIds, $userId);
 	}
 
 }
