@@ -148,12 +148,18 @@ class TrainingNeedsTable extends AppTable {
 			if ($selectedType == self::NEED) {
 				$attr['type'] = 'select';
 			} else {
-				$attr['type'] = 'hidden';
-				$attr['attr']['value'] = 0;
+				$attr['visible'] = false;
 			}
 		}
 
 		return $attr;
+	}
+
+	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
+		$dataArray = $data->getArrayCopy();
+		if (array_key_exists('type', $dataArray) && $dataArray['type'] != self::NEED) {
+			$data['training_need_category_id'] = 0;
+		}
 	}
 
 	public function onUpdateFieldCourseId(Event $event, array $attr, $action, Request $request) {
