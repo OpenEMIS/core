@@ -125,7 +125,14 @@ class AppController extends Controller {
 						$roles[] = sprintf("%s (%s)", $obj->security_group->name, $obj->security_role->name);
 					}
 				}
-				$session->write('System.User.roles', implode(', ', $roles));
+				$userRole = implode(', ', $roles);
+				if ($session->check('System.User.roles')) {
+					$sessionUserRole = $session->read('System.User.roles');
+					if ($userRole !== $sessionUserRole) {
+						$this->AccessControl->buildPermissions();
+					}
+				}
+				$session->write('System.User.roles', $userRole);
 			}
 		}
 	}
