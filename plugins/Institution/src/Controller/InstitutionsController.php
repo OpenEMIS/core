@@ -148,50 +148,9 @@ class InstitutionsController extends AppController  {
 		if (!$this->AccessControl->isAdmin() && $session->check('Institution.Institutions.id')){
 			$userId = $this->Auth->user('id');
 			$institutionId = $session->read('Institution.Institutions.id');
-			$groupIds = $this->getSecurityGroupId($userId, $institutionId);
+			$groupIds = $this->Institutions->getSecurityGroupId($userId, $institutionId);
 			return $this->AccessControl->getRolesByUserAndGroup($groupIds, $userId);
 		}
-	}
-
-	private function getSecurityGroupId($userId, $institutionId) {
-		$institutionEntity = $this->Institutions->get($institutionId);
-
-		// Get parent of the area and the current area
-		$areaId = $institutionEntity->area_id;
-		$Areas = $this->Institutions->Areas;
-		$path = $Areas->find('path', ['for' => $areaId])->toArray();
-		$parentArea = reset($path);
-		$institutionArea = end($path);
-
-		// Getting the security groups
-		$SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
-		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
-		$securityGroupIds = $SecurityGroupAreas->find()
-			->innerJoinWith('Areas')
-			->innerJoinWith('SecurityGroups.Users')
-			->where([
-				'Areas.lft >= ' => $parentArea->lft,
-				'Areas.lft <= ' => $institutionArea->lft,
-				'Areas.rght <= ' => $parentArea->rght,
-				'Areas.rght <= ' => $institutionArea->rght,
-				'Users.id' => $userId
-			])
-			->union(
-				$SecurityGroupInstitutions->find()
-					->innerJoinWith('SecurityGroups.Users')
-					->where([
-						$SecurityGroupInstitutions->aliasField('institution_id') => $institutionId,
-						'Users.id' => $userId
-					])
-					->select([$SecurityGroupInstitutions->aliasField('security_group_id')])
-					->distinct([$SecurityGroupInstitutions->aliasField('security_group_id')])
-			)
-			->select([$SecurityGroupAreas->aliasField('security_group_id')])
-			->distinct([$SecurityGroupAreas->aliasField('security_group_id')])
-			->hydrate(false)
-			->toArray();
-		$securityGroupIds = $this->array_column($securityGroupIds, 'security_group_id');
-		return $securityGroupIds;
 	}
 
 	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
