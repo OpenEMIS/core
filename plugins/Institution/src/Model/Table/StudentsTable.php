@@ -15,6 +15,9 @@ use Cake\Utility\Inflector;
 use Cake\ORM\ResultSet;
 
 class StudentsTable extends AppTable {
+	const PENDING_TRANSFER = -2;
+	const PENDING_ADMISSION = -3;
+	const PENDING_DROPOUT = -4;
 
 	private $dashboardQuery = null;
 	
@@ -303,15 +306,15 @@ class StudentsTable extends AppTable {
 		$status = $StudentStatusesTable->findCodeList();
 		$selectedStatus = $this->request->query('status_id');
 		switch ($selectedStatus) {
-			case $status['PENDING_ADMISSION']:
+			case self::PENDING_ADMISSION:
 				$event->stopPropagation();
 				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StudentAdmission']);
 				break;
-			case $status['PENDING_TRANSFER']:
+			case self::PENDING_TRANSFER:
 				$event->stopPropagation();
 				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'TransferRequests']);
 				break;
-			case $status['PENDING_DROPOUT']:
+			case self::PENDING_DROPOUT:
 				$event->stopPropagation();
 				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StudentDropout']);
 		}
@@ -365,6 +368,14 @@ class StudentsTable extends AppTable {
 		$statusOptions = $this->StudentStatuses
 			->find('list')
 			->toArray();
+
+		$pendingStatus = [
+			self::PENDING_TRANSFER => __('Pending Transfer'),
+			self::PENDING_ADMISSION => __('Pending Admission'),
+			self::PENDING_DROPOUT => __('Pending Dropout'),
+		];
+
+		$statusOptions = $statusOptions + $pendingStatus;
 
 		// Academic Periods
 		$academicPeriodOptions = $this->AcademicPeriods->getList();
