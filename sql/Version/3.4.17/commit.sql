@@ -10,5 +10,5 @@ SELECT * FROM student_statuses;
 
 DELETE FROM student_statuses WHERE code = 'PENDING_TRANSFER' OR code = 'PENDING_ADMISSION' OR code = 'PENDING_DROPOUT';
 
---3.4.17
+-- 3.4.17
 UPDATE config_items SET value = '3.4.17' WHERE code = 'db_version';
