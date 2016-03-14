@@ -63,6 +63,34 @@ class StaffTable extends AppTable {
 				'_function' => 'getNumberOfStaffsByQualification'
 			],
 		]);
+
+		/**
+		 * Advance Search Types.
+		 * AdvanceSearchBehavior must be included first before adding other types of advance search.
+		 * If no "belongsTo" relation from the main model is needed, include its foreign key name in AdvanceSearch->exclude options.
+		 */
+		$this->addBehavior('AdvanceSearch', [
+			'exclude' => [
+				'staff_id',
+				'institution_id',
+				'staff_type_id',
+				'staff_status_id',
+				'institution_position_id',
+			]
+		]);
+		$this->addBehavior('User.AdvancedIdentitySearch', [
+			'associatedKey' => $this->aliasField('staff_id')
+		]);
+		$this->addBehavior('User.AdvancedContactNumberSearch', [
+			'associatedKey' => $this->aliasField('staff_id')
+		]);
+		$this->addBehavior('User.AdvancedSpecificNameTypeSearch', [
+			'modelToSearch' => $this->Users
+		]);
+		/**
+		 * End Advance Search Types
+		 */
+		
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -517,7 +545,7 @@ class StaffTable extends AppTable {
 			$InstitutionArray[__('Licenses')] = $table->getDonutChart('institution_staff_licenses', 
 				['query' => $this->dashboardQuery, 'table'=>$this, 'key' => __('Licenses')]);
 
-			$this->controller->viewVars['indexElements'][] = ['name' => 'Institution.Staff/controls', 'data' => [], 'options' => [], 'order' => 2];
+			$this->controller->viewVars['indexElements'][] = ['name' => 'Institution.Staff/controls', 'data' => [], 'options' => [], 'order' => 0];
 			$indexDashboard = 'dashboard';
 			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
 	            'name' => $indexDashboard,
@@ -527,8 +555,17 @@ class StaffTable extends AppTable {
 	            	'modelArray' => $InstitutionArray,
 	            ],
 	            'options' => [],
-	            'order' => 1
+	            'order' => 2
 	        ];
+			foreach ($this->controller->viewVars['indexElements'] as $key => $value) {
+				if ($value['name']=='advanced_search') {
+					$this->controller->viewVars['indexElements'][$key]['order'] = 1;
+				} else if ($value['name']=='OpenEmis.ControllerAction/index') {
+					$this->controller->viewVars['indexElements'][$key]['order'] = 3;
+				} else if ($value['name']=='OpenEmis.pagination') {
+					$this->controller->viewVars['indexElements'][$key]['order'] = 4;
+				}
+			}
 		}
 	}
 
