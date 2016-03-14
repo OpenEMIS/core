@@ -61,6 +61,14 @@ class StaffController extends AppController {
 		$this->set('contentHeader', 'Staff');
 	}
 
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Controller.Navigation.onUpdateRoles'] = 'onNavigationUpdateRoles';
+		$events['Controller.SecurityAuthorize.onUpdateRoles'] = 'onSecurityUpdateRoles';
+		$events['Model.Buttons.onUpdateRoles'] = 'onInitializeButtonUpdateRoles';
+		return $events;
+	}
+
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 		$session = $this->request->session();
@@ -94,6 +102,33 @@ class StaffController extends AppController {
 		}
 		$this->set('contentHeader', $header);
     }
+	
+	private function onUpdateRole() {
+		$session = $this->request->session();
+		if (!$this->AccessControl->isAdmin() && $session->check('Institution.Institutions.id')){
+			$userId = $this->Auth->user('id');
+			$institutionId = $session->read('Institution.Institutions.id');
+			return TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+		}
+	}
+
+	public function onNavigationUpdateRoles(Event $event) {
+		$roles = $this->onUpdateRole();
+		$restrictedTo = [
+			['controller' => 'Institutions'],
+			['controller' => 'Students'],
+			['controller' => 'Staff']
+		];
+		return ['roles' => $roles, 'restrictedTo' => $restrictedTo];
+	}
+
+	public function onSecurityUpdateRoles(Event $event) {
+		return $this->onUpdateRole();
+	}
+
+	public function onInitializeButtonUpdateRoles(Event $event) {
+		return $this->onUpdateRole();
+	}
 
 	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		/**

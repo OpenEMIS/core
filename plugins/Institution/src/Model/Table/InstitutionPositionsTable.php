@@ -276,4 +276,11 @@ class InstitutionPositionsTable extends AppTable {
 			->contain(['StaffPositionTitles', 'Institutions', 'StaffPositionGrades']);
 	}
 
+	public function onWorkflowUpdateRoles(Event $event) {
+		if (!$this->AccessControl->isAdmin() && $this->Session->check('Institution.Institutions.id') && $this->controller->name == 'Institutions') {
+			$userId = $this->Auth->user('id');
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+			return $this->Institutions->getInstitutionRoles($userId, $institutionId);
+		}
+	}
 }
