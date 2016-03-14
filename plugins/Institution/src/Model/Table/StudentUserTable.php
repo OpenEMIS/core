@@ -335,7 +335,7 @@ class StudentUserTable extends UserTable {
 			$this->addDropoutButton($buttons, $toolbarButtons, $attr, $session);
 
 		} else if ($action == 'add') {
-			$toolbarButtons['back']['url'] = $this->request->referer(true);
+			$toolbarButtons['back']['url'] = $this->request->referer();
 			if ($toolbarButtons->offsetExists('export')) {
 				unset($toolbarButtons['export']);
 			}
