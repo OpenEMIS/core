@@ -65,4 +65,21 @@ class SecurityGroupUsersTable extends AppTable {
 			->toArray();
 		return $results;
 	}
+
+	public function getRolesByUserAndGroup($groupIds, $userId) {
+		$securityRoles = $this
+			->find('list', [
+				'keyField' => 'security_role_id',
+				'valueField' => 'security_role_id'
+			])
+			->where([
+				$this->aliasField('security_user_id') => $userId,
+				$this->aliasField('security_group_id').' IN ' => $groupIds
+			])
+			->group([$this->aliasField('security_role_id')])
+			->select([$this->aliasField('security_role_id')])
+			->hydrate(false)
+			->toArray();
+		return $securityRoles;
+	}
 }
