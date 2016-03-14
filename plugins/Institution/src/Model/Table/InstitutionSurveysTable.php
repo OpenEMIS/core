@@ -56,6 +56,7 @@ class InstitutionSurveysTable extends AppTable {
 		$this->addBehavior('Excel', ['pages' => ['view']]);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Import.ImportLink');
+        $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
 	}
 
 	public function implementedEvents() {
@@ -63,21 +64,12 @@ class InstitutionSurveysTable extends AppTable {
     	$events['Model.custom.onUpdateActionButtons'] = 'onUpdateActionButtons';
     	$events['Workflow.getFilterOptions'] = 'getWorkflowFilterOptions';
     	$events['Workflow.getEvents'] = 'getWorkflowEvents';
-    	$events['Workflow.onUpdateRoles'] = 'onWorkflowUpdateRoles';
     	foreach ($this->workflowEvents as $event) {
     		$events[$event['value']] = $event['method'];
     	}
 
     	return $events;
     }
-
-	public function onWorkflowUpdateRoles(Event $event) {
-		if (!$this->AccessControl->isAdmin() && $this->Session->check('Institution.Institutions.id') && $this->controller->name == 'Institutions') {
-			$userId = $this->Auth->user('id');
-			$institutionId = $this->Session->read('Institution.Institutions.id');
-			return $this->Institutions->getInstitutionRoles($userId, $institutionId);
-		}
-	}
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
 		$query
