@@ -72,6 +72,8 @@ class InstitutionsController extends AppController  {
 			'ImportInstitutionSurveys' => ['className' => 'Institution.ImportInstitutionSurveys', 'actions' => ['add']],
 			'ImportStudents' => ['className' => 'Institution.ImportStudents', 'actions' => ['add']],
 		];
+
+		$this->loadComponent('Institution.InstitutionAccessControl');
 	}
 
 	// CAv4
@@ -79,14 +81,6 @@ class InstitutionsController extends AppController  {
 	public function Shifts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionShifts']); }
 	// public function StaffAbsences() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
 	// End
-	
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['Controller.Navigation.onUpdateRoles'] = 'onNavigationUpdateRoles';
-		$events['Controller.SecurityAuthorize.onUpdateRoles'] = 'onSecurityUpdateRoles';
-		$events['Model.Buttons.onUpdateRoles'] = 'onInitializeButtonUpdateRoles';
-		return $events;
-	}
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
@@ -142,33 +136,6 @@ class InstitutionsController extends AppController  {
 		}
 
 		$this->set('contentHeader', $header);
-	}
-
-	private function onUpdateRole() {
-		$session = $this->request->session();
-		if (!$this->AccessControl->isAdmin() && $session->check('Institution.Institutions.id')){
-			$userId = $this->Auth->user('id');
-			$institutionId = $session->read('Institution.Institutions.id');
-			return $this->Institutions->getInstitutionRoles($userId, $institutionId);
-		}
-	}
-
-	public function onNavigationUpdateRoles(Event $event) {
-		$roles = $this->onUpdateRole();
-		$restrictedTo = [
-			['controller' => 'Institutions'],
-			['controller' => 'Students'],
-			['controller' => 'Staff']
-		];
-		return ['roles' => $roles, 'restrictedTo' => $restrictedTo];
-	}
-
-	public function onSecurityUpdateRoles(Event $event) {
-		return $this->onUpdateRole();
-	}
-
-	public function onInitializeButtonUpdateRoles(Event $event) {
-		return $this->onUpdateRole();
 	}
 
 	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {

@@ -34,6 +34,7 @@ class InstitutionPositionsTable extends AppTable {
 			'actions' => ['remove' => 'transfer'],
 			'fields' => ['excludes' => ['modified_user_id', 'created_user_id']]
 		]);
+		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -274,13 +275,5 @@ class InstitutionPositionsTable extends AppTable {
 	public function findWithBelongsTo(Query $query, array $options) {
 		return $query
 			->contain(['StaffPositionTitles', 'Institutions', 'StaffPositionGrades']);
-	}
-
-	public function onWorkflowUpdateRoles(Event $event) {
-		if (!$this->AccessControl->isAdmin() && $this->Session->check('Institution.Institutions.id') && $this->controller->name == 'Institutions') {
-			$userId = $this->Auth->user('id');
-			$institutionId = $this->Session->read('Institution.Institutions.id');
-			return $this->Institutions->getInstitutionRoles($userId, $institutionId);
-		}
 	}
 }

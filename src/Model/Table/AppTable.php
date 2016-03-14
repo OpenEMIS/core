@@ -266,7 +266,7 @@ class AppTable extends Table {
 
 		// Set for roles belonging to the controller
 		$roles = [];
-		$event = $controller->dispatchEvent('Model.Buttons.onUpdateRoles', null, $this);
+		$event = $controller->dispatchEvent('Controller.Buttons.onUpdateRoles', null, $this);
     	if ($event->result) {
     		$roles = $event->result;	
     	}
