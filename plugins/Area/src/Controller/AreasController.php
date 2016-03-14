@@ -8,10 +8,12 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use ControllerAction\Model\Traits\UtilityTrait;
+use App\Model\Traits\MessagesTrait;
 
 class AreasController extends AppController
 {
 	use UtilityTrait;
+	use MessagesTrait;
 
 	public function initialize() {
 		parent::initialize();
@@ -69,8 +71,12 @@ class AreasController extends AppController
 		$condition = [];
 		$accessControlAreaCount = 0;
 		$AccessControl = $this->AccessControl;
-		$Table = TableRegistry::get($tableName);	
-		$areaEntity = $Table->get($id);
+		$Table = TableRegistry::get($tableName);
+		if ($id == 0) {
+			$areaEntity = $Table->find()->first();
+		} else {
+			$areaEntity = $Table->get($id);
+		}
 		$pathId = $areaEntity->id;
 		$hasChildren = false;
 		$formError = $this->request->query('formerror');
@@ -91,7 +97,7 @@ class AreasController extends AppController
 				// Display the list of the areas that are authorised to the user
 				$authorisedArea = $this->AccessControl->getAreasByUser();
 
-				if ($displayCountry !== true) {
+				if ($displayCountry !== true && $displayCountry != 0) {
 					// Using the display country variable here which is passed over from the institution table
 					$areaId = $Table->find()
 						->select([
@@ -125,6 +131,7 @@ class AreasController extends AppController
 						->order([$Table->aliasField('lft')])
 						->toArray());
 				}
+
 				$areaCondition[] = [
 						$Table->aliasField('id').' IN' => $parentIds
 					];
@@ -157,6 +164,7 @@ class AreasController extends AppController
 			if (! $AccessControl->isAdmin() && $tableName == 'Area.Areas') {
 				if (!in_array($obj->id, $parentIds)) {
 					$pathToUnset[] = $count - 1;
+					$count++;
 					continue;
 				}
 			}	
@@ -200,7 +208,16 @@ class AreasController extends AppController
 
 		$path = $path->toArray();
 
+		$firstItem = true;
 		foreach ($pathToUnset as $arrIndex) {
+			if (count($path) == count($pathToUnset)) {
+				if ($firstItem) {
+					$path[$arrIndex]['list'] = ['0' => $this->getMessage('Areas.noAccessToAreas')];
+					$path[$arrIndex]['readonly'] = true;
+					$firstItem = false;
+					continue;
+				}
+			} 
 			unset($path[$arrIndex]);
 		}
 		$levelAssociation = Inflector::underscore(Inflector::singularize($levelAssociation));
