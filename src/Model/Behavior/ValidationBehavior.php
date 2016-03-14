@@ -673,11 +673,22 @@ class ValidationBehavior extends Behavior {
 			->first()
 			;
 		$admissionAge = $gradeEntity->education_programme->education_cycle->admission_age;
+		
+		if (array_key_exists('academic_period_id', $data) && !empty($data['academic_period_id'])) {
+			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			$academicPeriodData = $AcademicPeriods->get($data['academic_period_id']);
+			if (!empty($academicPeriodData)) {
+				$academicStartDate = $academicPeriodData->start_date;
+				$academicStartYear = $academicStartDate->format('Y');
+			}
+		}
+		// academic period not set in form, return false because there is no way to validate
+		if (!isset($academicStartYear)) return $validationErrorMsg;
+
 		$programmeId = $gradeEntity->education_programme_id;
 		
 		$birthYear = $dateOfBirth->format('Y');
-		$nowYear = Time::now()->format('Y');
-		$ageOfStudent = $nowYear - $birthYear;
+		$ageOfStudent = $academicStartYear - $birthYear;
 
 		$ConfigItems = TableRegistry::get('ConfigItems');
 		$enrolmentMinimumAge = $admissionAge - $ConfigItems->value('admission_age_minus');
@@ -699,6 +710,21 @@ class ValidationBehavior extends Behavior {
 
 		$enrolmentMinimumAge += $yearIncrement;
 		$enrolmentMaximumAge += $yearIncrement;
+
+		// // age check
+		// pr('academicStartYear = '.$academicStartYear);
+		// pr('birthYear = '.$birthYear);
+		// pr('ageOfStudent = '.$ageOfStudent);
+
+		// // enrolment check check
+		// pr('enrolmentMinimumAge = '.$enrolmentMinimumAge);
+		// pr('enrolmentMaximumAge = '.$enrolmentMaximumAge);
+
+		if ($enrolmentMinimumAge == $enrolmentMaximumAge) {
+			$validationErrorMsg = $model->getMessage('Institution.Students.student_name.ageHint', ['sprintf' => [$enrolmentMinimumAge]]);
+		} else {
+			$validationErrorMsg = $model->getMessage('Institution.Students.student_name.ageRangeHint', ['sprintf' => [$enrolmentMinimumAge, $enrolmentMaximumAge]]);
+		}
 
 		return ($ageOfStudent<=$enrolmentMaximumAge) && ($ageOfStudent>=$enrolmentMinimumAge)? true: $validationErrorMsg;	
 	}
