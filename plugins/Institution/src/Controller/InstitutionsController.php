@@ -82,6 +82,7 @@ class InstitutionsController extends AppController  {
 		$events = parent::implementedEvents();
 		$events['Controller.Navigation.onUpdateRoles'] = 'onNavigationUpdateRoles';
 		$events['Controller.SecurityAuthorize.onUpdateRoles'] = 'onSecurityUpdateRoles';
+		$events['Model.Buttons.onUpdateRoles'] = 'onInitializeButtonUpdateRoles';
 		return $events;
 	}
 
@@ -150,11 +151,15 @@ class InstitutionsController extends AppController  {
 		}
 	}
 
-	public function onNavigationUpdateRoles($Event) {
+	public function onNavigationUpdateRoles(Event $event) {
 		return $this->onUpdateRole();
 	}
 
-	public function onSecurityUpdateRoles($Event) {
+	public function onSecurityUpdateRoles(Event $event) {
+		return $this->onUpdateRole();
+	}
+
+	public function onInitializeButtonUpdateRoles(Event $event) {
 		return $this->onUpdateRole();
 	}
 
