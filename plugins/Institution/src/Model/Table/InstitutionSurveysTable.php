@@ -56,6 +56,7 @@ class InstitutionSurveysTable extends AppTable {
 		$this->addBehavior('Excel', ['pages' => ['view']]);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Import.ImportLink');
+        $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
 	}
 
 	public function implementedEvents() {
