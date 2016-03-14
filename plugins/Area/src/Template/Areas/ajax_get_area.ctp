@@ -9,24 +9,34 @@
 	}
 
 	$count = 0;
-	foreach ($path as $obj) {
-		$name = $obj->$levelAssociation->name;
-		if (!($tableName=='Area.AreaAdministratives' && $count==0)) {
-			echo $this->Form->input($name, [
-				'class' => $formClass,
-				'div' => false,
-				'data-source' => $tableName,
-				'target-model' => $targetModel,
-				'label' => __($name),
-				'url' => $url,
-				'onchange' => 'Area.reload(this)',
-				'options' => $obj->list,
-				'disabled' => false,
-				'default' => $obj->selectedId,
-				'form-error' => $formError,
-				'display-country' => $displayCountry
-			]);
+
+	if (!empty($path)) {
+		foreach ($path as $obj) {
+			$name = $obj->$levelAssociation->name;
+			if (!($tableName=='Area.AreaAdministratives' && $count==0)) {
+				$options = [
+					'class' => $formClass,
+					'div' => false,
+					'data-source' => $tableName,
+					'target-model' => $targetModel,
+					'label' => __($name),
+					'url' => $url,
+					'onchange' => 'Area.reload(this)',
+					'disabled' => false,
+					'default' => $obj->selectedId,
+					'form-error' => $formError,
+					'display-country' => $displayCountry,
+				];
+
+				if (isset($obj['readonly'])) {
+					$options['readonly'] = $obj['readonly'];
+					$options['value'] = $obj->list[0];
+				} else {
+					$options['options'] = $obj->list;
+				}
+				echo $this->Form->input($name, $options);
+			}
+			$count++;
 		}
-		$count++;
 	}
 ?>

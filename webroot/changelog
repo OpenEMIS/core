@@ -1,3 +1,6 @@
+v.3.4.17
+- Fixed a bug that caused the user not able to upload image properly
+
 v3.4.16
 - Fixed a bug that caused field options default value not selected, also added a '-- Select --' option if no default value is set
 - Added Class names to Student Report in Institutions
