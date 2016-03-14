@@ -110,19 +110,23 @@ class ValidationBehavior extends Behavior {
         	$Areas = TableRegistry::get('Area.Areas');
         	// get areas from security group areas
         	$areasByUser = $SecurityGroupAreas->getAreasByUser($session->read('Auth.User.id'));
-        	foreach($areasByUser as $area) {
-        		$areaCondition[] = [
-					$Areas->aliasField('lft').' >= ' => $area['lft'],
-					$Areas->aliasField('rght').' <= ' => $area['rght']
-				];
-        	}
-        	$condition['OR'] = $areaCondition;
 
-	        $isChild = $Areas->find()
-	        	->where([$Areas->aliasField('id') => $check])
-	        	->where($condition)
-	        	->count();
-	        $isValid = $isChild > 0;
+        	if (count($areasByUser) > 0) {
+				foreach($areasByUser as $area) {
+	        		$areaCondition[] = [
+						$Areas->aliasField('lft').' >= ' => $area['lft'],
+						$Areas->aliasField('rght').' <= ' => $area['rght']
+					];
+	        	}
+	        	$condition['OR'] = $areaCondition;
+
+				$isChild = $Areas->find()
+		        	->where([$Areas->aliasField('id') => $check])
+		        	->where($condition)
+		        	->count();
+
+		        $isValid = $isChild > 0;
+			}
         }
         return $isValid;
     }
