@@ -152,7 +152,13 @@ class InstitutionsController extends AppController  {
 	}
 
 	public function onNavigationUpdateRoles(Event $event) {
-		return $this->onUpdateRole();
+		$roles = $this->onUpdateRole();
+		$restrictedTo = [
+			['controller' => 'Institutions'],
+			['controller' => 'Students'],
+			['controller' => 'Staff']
+		];
+		return ['roles' => $roles, 'restrictedTo' => $restrictedTo];
 	}
 
 	public function onSecurityUpdateRoles(Event $event) {

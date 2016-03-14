@@ -88,13 +88,16 @@ class NavigationComponent extends Component {
 		$linkOnly = [];
 
 		$roles = [];
+		$restrictedTo = [];
 		$event = $this->controller->dispatchEvent('Controller.Navigation.onUpdateRoles', null, $this);
     	if ($event->result) {
-    		$roles = $event->result;	
+    		$roles = $event->result['roles'];
+    		$restrictedTo = $event->result['restrictedTo'];
     	}
 
 		// Unset the children
 		foreach ($navigations as $key => $value) {
+			$rolesRestrictedTo = $roles;
 			if (isset($value['link']) && !$value['link']) {
 				$linkOnly[] = $key;
 			} else {
@@ -103,7 +106,16 @@ class NavigationComponent extends Component {
 					$params = $value['params'];
 				}
 				$url = $this->getLink($key, $params);
-				if (!$this->AccessControl->check($url, $roles)) {
+
+				// Check if the role is only restricted to a certain page
+				foreach ($restrictedTo as $restrictedURL) {
+					if (!array_intersect($url, $restrictedURL)) {
+						$rolesRestrictedTo = [];
+						break;
+					}
+				}
+
+				if (!$this->AccessControl->check($url, $rolesRestrictedTo)) {
 					unset($navigations[$key]);
 				}
 			}
