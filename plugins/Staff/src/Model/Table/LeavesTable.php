@@ -22,6 +22,7 @@ class LeavesTable extends AppTable {
 			'contentEditable' => true,
 			'allowable_file_types' => 'all'
 		]);
+		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -33,19 +34,6 @@ class LeavesTable extends AppTable {
 			])
 			->allowEmpty('file_content')
 		;
-	}
-	public function implementedEvents() {
-		$event = parent::implementedEvents();
-		$event['Workflow.onUpdateRoles'] = 'onWorkflowUpdateRoles';
-		return $event;
-	}
-
-	public function onWorkflowUpdateRoles(Event $event) {
-		if (!$this->AccessControl->isAdmin() && $this->Session->check('Institution.Institutions.id') && $this->controller->name == 'Institutions') {
-			$userId = $this->Auth->user('id');
-			$institutionId = $this->Session->read('Institution.Institutions.id');
-			return $this->Institutions->getInstitutionRoles($userId, $institutionId);
-		}
 	}
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {

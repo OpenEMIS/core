@@ -25,8 +25,6 @@ class AccessControlComponent extends Component {
 		$this->action = $this->request->params['action'];
 		$this->Session = $this->request->session();
 
-		// $this->Session->delete('Permissions');
-		// pr($this->Session->read('Permissions.Securities.Roles.add'));
 		if (!is_null($this->Auth->user()) && $this->Auth->user('super_admin') == 0) {
 			if (!$this->Session->check('Permissions')) {
 				$this->buildPermissions();
@@ -37,11 +35,32 @@ class AccessControlComponent extends Component {
 					$this->buildPermissions();
 				}
 			}
+		} else if ($this->Auth->user('super_admin') == 1) {
+			$this->Session->write('System.User.roles', __('System Administrator'));
 		}
+	}
+
+	private function getUserGroupRole() {
+		$rolesList = $this->getRolesByUser();
+		$roles = [];
+		foreach ($rolesList as $obj) {
+			if (!empty($obj->security_group) && !empty($obj->security_role)) {
+				$roles[] = sprintf("%s (%s)", $obj->security_group->name, $obj->security_role->name);
+			}
+		}
+		return implode('<br/>', $roles);
 	}
 
 	public function isChanged($userId) {
 		$isChanged = false;
+		$userRole = $this->getUserGroupRole();
+		if ($this->Session->check('System.User.roles')) {
+			$sessionUserRole = $this->Session->read('System.User.roles');
+			if ($userRole !== $sessionUserRole) {
+				$isChanged = true;
+			}
+		}
+
 		$SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
 		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 
@@ -143,6 +162,9 @@ class AccessControlComponent extends Component {
 				}
 			}
 		}
+		
+		$userRole = $this->getUserGroupRole();
+		$this->Session->write('System.User.roles', $userRole);
 		$this->Session->write('Permissions.lastModified', $lastModified);
 	}
 

@@ -26,6 +26,7 @@ class TrainingNeedsTable extends AppTable {
 		$this->belongsTo('TrainingRequirements', ['className' => 'Training.TrainingRequirements', 'foreignKey' => 'training_requirement_id']);
 		$this->belongsTo('TrainingPriorities', ['className' => 'Training.TrainingPriorities', 'foreignKey' => 'training_priority_id']);
 		$this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -70,14 +71,6 @@ class TrainingNeedsTable extends AppTable {
 			})
 			->add('type', 'notBlank', ['rule' => 'notBlank'])
 			;
-	}
-
-	public function onWorkflowUpdateRoles(Event $event) {
-		if (!$this->AccessControl->isAdmin() && $this->Session->check('Institution.Institutions.id') && $this->controller->name == 'Institutions') {
-			$userId = $this->Auth->user('id');
-			$institutionId = $this->Session->read('Institution.Institutions.id');
-			return $this->Institutions->getInstitutionRoles($userId, $institutionId);
-		}
 	}
 
 	public function onGetType(Event $event, Entity $entity) {

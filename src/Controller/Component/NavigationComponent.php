@@ -109,9 +109,11 @@ class NavigationComponent extends Component {
 
 				// Check if the role is only restricted to a certain page
 				foreach ($restrictedTo as $restrictedURL) {
-					if (!array_intersect($url, $restrictedURL)) {
-						$rolesRestrictedTo = [];
+					if (count(array_intersect($restrictedURL, $url)) > 0) {
+						$rolesRestrictedTo = $roles;
 						break;
+					} else {
+						$rolesRestrictedTo = [];
 					}
 				}
 
@@ -280,7 +282,7 @@ class NavigationComponent extends Component {
 				'title' => 'Dashboard', 
 				'parent' => 'Institutions.index', 
 				'selected' => ['Institutions.dashboard'],
-				'params' => ['plugin' => 'Institution']
+				'params' => ['plugin' => 'Institution', 0 => $id]
 			],
 
 			'Institution.General' => [
