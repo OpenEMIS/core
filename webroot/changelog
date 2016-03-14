@@ -1,5 +1,6 @@
 v.3.4.17
 - Fixed a bug that caused the user not able to upload image properly
+- Student Admission age calculation now uses the year value from academic period instead of the current year
 
 v3.4.16
 - Fixed a bug that caused field options default value not selected, also added a '-- Select --' option if no default value is set
