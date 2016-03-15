@@ -85,7 +85,9 @@ class StaffUserTable extends UserTable {
 				unset($toolbarButtons['back']);
 			}
 		} else if ($action == 'add') {
-			$toolbarButtons['back']['url'] = $this->request->referer();
+			$backAction = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Staff', 'add'];
+			$toolbarButtons['back']['url'] = $backAction;
+
 			if ($toolbarButtons->offsetExists('export')) {
 				unset($toolbarButtons['export']);
 			}
