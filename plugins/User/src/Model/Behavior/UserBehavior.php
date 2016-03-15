@@ -397,13 +397,16 @@ class UserBehavior extends Behavior {
 			->where([$currModel->aliasField($currModel->primaryKey()) => $id])
 			->first()
 			;
-		$phpResourceFile = $photoData->Users->photo_content;
-		
-		if ($base64Format) {
-			echo base64_encode(stream_get_contents($phpResourceFile));
-		} else {
-			$this->_table->controller->response->type('jpg');
-			$this->_table->controller->response->body(stream_get_contents($phpResourceFile));
+
+		if (!empty($photoData) && $photoData->has('Users') && $photoData->Users->has('photo_content')) {
+			$phpResourceFile = $photoData->Users->photo_content;
+			
+			if ($base64Format) {
+				echo base64_encode(stream_get_contents($phpResourceFile));
+			} else {
+				$this->_table->controller->response->type('jpg');
+				$this->_table->controller->response->body(stream_get_contents($phpResourceFile));
+			}
 		}
 	}
 
