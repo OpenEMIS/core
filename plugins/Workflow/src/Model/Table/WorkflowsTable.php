@@ -82,6 +82,7 @@ class WorkflowsTable extends AppTable {
 		// Only allow one workflow to set as Apply To All
 		$this->setApplyToAll($entity);
 
+		// Remap Workflow Steps
 		$this->resetWorkflowStepId($entity);
 	}
 
@@ -440,7 +441,7 @@ class WorkflowsTable extends AppTable {
 			}
 			// End
 
-			// $modelOptions = ['' => __('-- Select Workflow --')] + $modelOptions;
+			$modelOptions = ['' => __('-- Select Workflow --')] + $modelOptions;
 			$selectedModel = !is_null($request->query('model')) ? $request->query('model') : key($modelOptions);
 			$this->advancedSelectOptions($modelOptions, $selectedModel);
 
@@ -777,97 +778,93 @@ class WorkflowsTable extends AppTable {
 		if (!is_null($filter)) {
 			$statusKey = 'status_id';
 			list($filterPlugin, $filterAlias) = explode(".", $filter, 2);
+			// e.g. staff_leave_type_id, survey_form_id
 			$filterKey = Inflector::underscore(Inflector::singularize($filterAlias)) . '_id';
 
+			// List of affected filter Ids (e.g. Staff Leave Type IDs, Survey Form IDs)
 			$filterIds = [];
+			// List of all Workflow Steps of the Workflows
 			$stepIds = [];
+			// First step of the Workflows or the Default Workflows (Apply To All)
 			$openStepId = null;
+			// IDs of affected records to patch
+			$recordIds = [];
 
-			if ($entity->has('filters')) {
-				foreach ($entity->filters as $key => $obj) {
-					$filterIds[$obj->id] = $obj->id;
-				}
+			$steps = $this->WorkflowSteps
+				->find()
+				->where([
+					$this->WorkflowSteps->aliasField('workflow_id') => $entity->id
+				])
+				->toArray();
 
-				$steps = $this->WorkflowSteps
-					->find()
-					->where([
-						$this->WorkflowSteps->aliasField('workflow_id') => $entity->id
-					])
-					->toArray();
-
-				foreach ($steps as $key => $step) {
-					$stepIds[$step->id] = $step->id;
-					if ($step->stage == self::OPEN) {
-						$openStepId = $step->id;
-					}
+			foreach ($steps as $key => $step) {
+				$stepIds[$step->id] = $step->id;
+				if ($step->stage == self::OPEN) {
+					$openStepId = $step->id;
 				}
 			}
 
 			$subject = TableRegistry::get($model);
-			if (empty($filterIds) && !$entity->isNew()) {
-				$originalFilters = $entity->extractOriginal(['filters']);
-				foreach ($originalFilters['filters'] as $key => $obj) {
-					$filterIds[$obj->id] = $obj->id;
-				}
+			$WorkflowRecords = TableRegistry::get('Workflow.WorkflowRecords');
 
-				$recordIds = $subject
+			if ($entity->has('filters')) {
+				// When edit: If filterIds is clear, fall back to the first step of Default Workflows (Apply To All)
+				if (empty($entity->filters) && !$entity->isNew()) {
+					$originalFilters = $entity->extractOriginal(['filters']);
+					foreach ($originalFilters['filters'] as $key => $obj) {
+						$filterIds[$obj->id] = $obj->id;
+					}
+
+					$recordIds = $subject
 					->find('list', ['keyField' => 'id', 'valueField' => 'id'])
 					->where([
 						$subject->aliasField($filterKey . ' IN ') => $filterIds,
 						$subject->aliasField($statusKey . ' IN ') => $stepIds
 					])
 					->toArray();
+					
+					$Workflows = TableRegistry::get('Workflow.Workflows');
+					$defaultWorkflowId = $this->WorkflowsFilters
+						->find('list', ['keyField' => 'workflow_id', 'valueField' => 'workflow_id'])
+						->matching('Workflows', function ($q) use ($Workflows, $selectedModel) {
+							return $q->where([
+									$Workflows->aliasField('workflow_model_id') => $selectedModel
+								]);
+						})
+						->where([
+							$this->WorkflowsFilters->aliasField('filter_id') => 0
+						])
+						->toArray();
 
-				$Workflows = TableRegistry::get('Workflow.Workflows');
-				$defaultWorkflowId = $this->WorkflowsFilters
-					->find('list', ['keyField' => 'workflow_id', 'valueField' => 'workflow_id'])
-					->matching('Workflows', function ($q) use ($Workflows, $selectedModel) {
-						return $q->where([
-								$Workflows->aliasField('workflow_model_id') => $selectedModel
-							]);
-					})
-					->where([
-						$this->WorkflowsFilters->aliasField('filter_id') => 0
-					])
-					->toArray();
+					$openStepId = $this->WorkflowSteps
+						->find()
+						->where([
+							$this->WorkflowSteps->aliasField('workflow_id') => $defaultWorkflowId,
+							$this->WorkflowSteps->aliasField('stage') => self::OPEN
+						])
+						->first()
+						->id;
+				} else {
+					foreach ($entity->filters as $key => $obj) {
+						$filterIds[$obj->id] = $obj->id;
+					}
 
-				$openStepId = $this->WorkflowSteps
-					->find()
-					->where([
-						$this->WorkflowSteps->aliasField('workflow_id') => $defaultWorkflowId,
-						$this->WorkflowSteps->aliasField('stage') => self::OPEN
-					])
-					->first()
-					->id;
+					$recordIds = $subject
+						->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+						->where([
+							$subject->aliasField($filterKey . ' IN ') => $filterIds,
+							$subject->aliasField($statusKey . ' NOT IN ') => $stepIds
+						])
+						->toArray();
+				}
+			}
 
+			if (!empty($recordIds)) {
 				$subject->updateAll(
 					[$statusKey => $openStepId],
 					['id IN ' => $recordIds]
 				);
 
-				$WorkflowRecords = TableRegistry::get('Workflow.WorkflowRecords');
-				$WorkflowRecords->updateAll(
-					['workflow_step_id' => $openStepId],
-					[
-						'workflow_model_id' => $selectedModel,
-						'model_reference IN ' => $recordIds
-					]
-				);
-			} else {
-				$recordIds = $subject
-					->find('list', ['keyField' => 'id', 'valueField' => 'id'])
-					->where([
-						$subject->aliasField($filterKey . ' IN ') => $filterIds,
-						$subject->aliasField($statusKey . ' NOT IN ') => $stepIds
-					])
-					->toArray();
-
-				$subject->updateAll(
-					[$statusKey => $openStepId],
-					['id IN ' => $recordIds]
-				);
-
-				$WorkflowRecords = TableRegistry::get('Workflow.WorkflowRecords');
 				$WorkflowRecords->updateAll(
 					['workflow_step_id' => $openStepId],
 					[
