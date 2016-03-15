@@ -27,19 +27,27 @@ class InstitutionClassesTable extends ControllerActionTable {
 		$this->belongsTo('InstitutionShifts',		['className' => 'Institution.InstitutionShifts', 	'foreignKey' => 'institution_shift_id']);
 		$this->belongsTo('Institutions', 			['className' => 'Institution.Institutions', 		'foreignKey' => 'institution_id']);
 
-		$this->hasMany('InstitutionClassGrades', 	['className' => 'Institution.InstitutionClassGrades', 'dependent' => true]);
-		$this->hasMany('InstitutionClassStudents', 	['className' => 'Institution.InstitutionClassStudents', 'dependent' => true]);
+		$this->hasMany('ClassGrades', 				['className' => 'Institution.InstitutionClassGrades', 'dependent' => true]);
+		$this->hasMany('ClassStudents', 			['className' => 'Institution.InstitutionClassStudents', 'dependent' => true]);
+		$this->hasMany('SubjectStudents', 			['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true]);
 
 		$this->belongsToMany('EducationGrades', [
 			'className' => 'Education.EducationGrades',
-			'joinTable' => 'institution_class_grades',
+			'through' => 'Institution.InstitutionClassGrades',
 			'foreignKey' => 'institution_class_id',
-			'targetForeignKey' => 'education_grade_id'
+			'targetForeignKey' => 'education_grade_id',
+		]);
+
+		$this->belongsToMany('Students', [
+			'className' => 'User.Users',
+			'through' => 'Institution.InstitutionClassStudents',
+			'foreignKey' => 'institution_class_id',
+			'targetForeignKey' => 'student_id',
 		]);
 
 		$this->belongsToMany('InstitutionSubjects', [
 			'className' => 'Institution.InstitutionSubjects',
-			'joinTable' => 'institution_class_subjects',
+			'through' => 'Institution.InstitutionClassSubjects',
 			'foreignKey' => 'institution_class_id',
 			'targetForeignKey' => 'institution_subject_id'
 		]);
@@ -195,127 +203,10 @@ class InstitutionClassesTable extends ControllerActionTable {
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-        $errors = $entity->errors();
-        if (empty($errors)) {
-			/**
-			 * using the entity->id (class id), find the list of grades from (institution_class_grades) linked to this class
-			 */
-			$grades = [];
-			foreach ($entity->institution_class_grades as $grade) {
-				$grades[] = $grade->education_grade_id;
-			}
-			$EducationGrades = TableRegistry::get('Education.EducationGrades');
-			/**
-			 * from the list of grades, find the list of subjects group by grades in (education_grades_subjects) where visible = 1
-			 */
-			$educationGradeSubjects = $EducationGrades
-					->find()
-					->contain(['EducationSubjects' => function($query) use ($grades) {
-						return $query
-							->join([
-								[
-									'table' => 'education_grades_subjects',
-									'alias' => 'EducationGradesSubjects',
-									'conditions' => [
-										'EducationGradesSubjects.education_grade_id IN' => $grades,
-										'EducationGradesSubjects.education_subject_id = EducationSubjects.id',
-										'EducationGradesSubjects.visible' => 1
-									]
-								]
-							]);
-					}])
-					->where([
-						'EducationGrades.id IN' => $grades,
-						'EducationGrades.visible' => 1
-					])
-					->toArray();
-			unset($EducationGrades);
-			unset($grades);
-
-			$educationSubjects = [];
-			if (count($educationGradeSubjects)>0) {
-				foreach ($educationGradeSubjects as $gradeSubject) {
-					foreach ($gradeSubject->education_subjects as $subject) {
-						if (!isset($educationSubjects[$subject->id])) {
-							$educationSubjects[$subject->id] = [
-								'id' => $subject->id,
-								'name' => $subject->name
-							];
-						}
-					}
-					unset($subject);
-				}
-				unset($gradeSubject);
-			}
-			unset($educationGradeSubjects);	
-
-			/**
-			 * for each education subjects, find the primary key of institution_classes using (entity->academic_period_id and institution_id and education_subject_id)
-			 */
-			$InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
-			$institutionSubjects = $InstitutionSubjects->find('list', [
-				    'keyField' => 'id',
-				    'valueField' => 'education_subject_id'
-				])
-				->where([
-					$InstitutionSubjects->aliasField('academic_period_id') => $entity->academic_period_id,
-					$InstitutionSubjects->aliasField('institution_id') => $entity->institution_id,
-					$InstitutionSubjects->aliasField('education_subject_id').' IN' => array_keys($educationSubjects)
-				])
-				->toArray();
-			$institutionSubjectsIds = [];
-			foreach ($institutionSubjects as $key => $value) {
-				$institutionSubjectsIds[$value][] = $key;
-			}
-			unset($institutionSubjects);
-
-			/**
-			 * using the list of primary keys, search institution_class_subjects (InstitutionClassSubjects) to check for existing records
-			 * if found, don't insert, 
-			 * else create a record in institution_subjects (InstitutionSubjects)
-			 * and link to the subject in institution_class_subjects (InstitutionClassSubjects) with status 1
-			 */
-			$InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
-			$newSchoolSubjects = [];
-
-			foreach ($educationSubjects as $key=>$educationSubject) {
-				$existingSchoolSubjects = false;
-				if (array_key_exists($key, $institutionSubjectsIds)) {
-					$existingSchoolSubjects = $InstitutionClassSubjects->find()
-						->where([
-							$InstitutionClassSubjects->aliasField('institution_class_id') => $entity->id,
-							$InstitutionClassSubjects->aliasField('institution_class_id').' IN' => $institutionSubjectsIds[$key],
-						])
-						->select(['id'])
-						->first();
-				}
-				if (!$existingSchoolSubjects) {
-					$newSchoolSubjects[$key] = [
-						'name' => $educationSubject['name'],
-						'institution_id' => $entity->institution_id,
-						'education_subject_id' => $educationSubject['id'],
-						'academic_period_id' => $entity->academic_period_id,
-						'institution_class_subjects' => [
-							[
-								'status' => 1,
-								'institution_class_id' => $entity->id
-							]
-						]
-					];
-				}
-			}
-
-			if (!empty($newSchoolSubjects)) {
-				$newSchoolSubjects = $InstitutionSubjects->newEntities($newSchoolSubjects);
-				foreach ($newSchoolSubjects as $subject) {
-				    $InstitutionSubjects->save($subject);
-				}
-				unset($subject);
-			}
-			unset($newSchoolSubjects);
-			unset($InstitutionSubjects);
-			unset($InstitutionClassSubjects);
-        }
+		if ($entity->isNew()) {
+			// $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+			$this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
+		}
 	}
 
 
@@ -332,7 +223,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 	}
 
 	public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra) {
-		$Students = $this->InstitutionClassStudents;
+		$Students = $this->ClassStudents;
 		$conditions = [$Students->aliasField($Students->foreignKey()) => $entity->id];
 		if ($Students->exists($conditions)) {
 			$extra['errorMessage'] = $this->aliasField('stopDeleteWhenStudentExists');
@@ -500,19 +391,20 @@ class InstitutionClassesTable extends ControllerActionTable {
 
 	public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		$query->contain([
-			'InstitutionClassStudents.StudentStatuses',
 			'AcademicPeriods',
 			'InstitutionShifts',
-			'Staff',
 			'EducationGrades',
-			'InstitutionClassStudents.Users.Genders',
-			'InstitutionClassStudents.EducationGrades'
+			'Staff',
+			'ClassStudents' => [
+				'Users.Genders',
+				'EducationGrades',
+				'StudentStatuses'
+			],
 		]);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
-		// pr($entity);
-		$this->fields['students']['data']['students'] = $entity->institution_class_students;
+		$this->fields['students']['data']['students'] = $entity->class_students;
 		$this->fields['education_grades']['data']['grades'] = $entity->education_grades;
 
 		$academicPeriodOptions = $this->getAcademicPeriodOptions($entity->institution_id);
@@ -596,31 +488,45 @@ class InstitutionClassesTable extends ControllerActionTable {
 		]);
 	}
 
-	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
-		/**
-		 * System is unable to cope if there are too many students to be added.
-		 * Temporarily extend the server's max_execution_time to 60 seconds.
-		 * @todo  Change the way to save huge hasMany records.
-		 */
-		ini_set('max_execution_time', 60);
+	public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+		$query->contain([
+			'InstitutionSubjects',
+			'SubjectStudents',
+		]);
+	}
 
-		/**
-		 * In students.ctp, we set the student_id as the array keys for easy search and compare.
-		 * Assign back original record's id to the new list so as to preserve id numbers.
-		 */
-		foreach($entity->institution_class_students as $key => $record) {
-			$k = $record->student_id;
-			if (array_key_exists('institution_class_students', $requestData[$this->alias()])) {
-				if (!array_key_exists($k, $requestData[$this->alias()]['institution_class_students'])) {			
-					// PHPOE-2338 - status no longer used, record will be deleted instead
-				} else {
-					$requestData[$this->alias()]['institution_class_students'][$k]['id'] = $record->id;
+	/**
+	 * editBeforePatch is a ControllerAction events to implements additional logics before the request data is patch to an entity
+	 *
+	 * In InstitutionClasses editBeforePatch, subject_students array is being built using class_students and institution_classes data.
+	 * The built subject_students array will be added to request data so that students will be added to subjects through associative save.
+	 * 
+	 * @param  Event       $event        Event object
+	 * @param  Entity      $entity       Entity object
+	 * @param  ArrayObject $requestData  HTTP request data as an ArrayObject
+	 * @param  ArrayObject $patchOptions Options for patching entity as an ArrayObject
+	 * @param  ArrayObject $extra        Extra parameters to be passed to other ControllerAction events as an ArrayObject
+	 */
+	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
+		$data = $requestData[$this->alias()];
+		$subjectStudents = [];
+		if (array_key_exists('class_students', $data)) {
+			foreach ($entity->institution_subjects as $key => $subjectEntity) {
+				foreach ($data['class_students'] as $classStudent) {
+					$subjectStudents[] = [
+						'status' => 1,
+                        'student_id' => $classStudent['student_id'],
+						'institution_subject_id' => $subjectEntity->id,
+                        'institution_class_id' => $classStudent['institution_class_id'],
+                	];
 				}
-			} else {
-				$requestData[$this->alias()]['institution_class_students'] = [];
-				// PHPOE-2338 - status no longer used, record will be deleted instead
 			}
+		} else {
+			$data['class_students'] = [];
 		}
+		$data['subject_students'] = $subjectStudents;
+
+		$requestData[$this->alias()] = $data;
 	}
 
 	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
@@ -630,24 +536,27 @@ class InstitutionClassesTable extends ControllerActionTable {
 		 */
 		$maxNumberOfStudents = 100;
 
-		$students = $entity->institution_class_students;
+		$students = $entity->class_students;
 		$studentOptions = $this->getStudentsOptions($entity);
 		/**
 		 * Check if the request is a page reload
 		 */
 		if (count($this->request->data)>0 && $this->request->data['submit']=='add') {
-			// clear institution_class_students list grab from db
+			// clear class_students list grab from db
 			$existingStudents = $students;
 			$students = [];
 			/**
 			 * Populate records in the UI table & unset the record from studentOptions
 			 */
-			if (array_key_exists('institution_class_students', $this->request->data[$this->alias()])) {
-				foreach ($this->request->data[$this->alias()]['institution_class_students'] as $row) {
+			if (array_key_exists('class_students', $this->request->data[$this->alias()])) {
+				foreach ($this->request->data[$this->alias()]['class_students'] as $row) {
 					if (array_key_exists($row['student_id'], $studentOptions)) {
 						$id = $row['student_id'];
 						if ($id != 0) {
-							$students[] = $this->createVirtualStudentEntity($id, $entity);
+							$virtualStudent = $this->createVirtualStudentEntity($id, $entity);
+							if ($virtualStudent) {
+								$students[] = $virtualStudent;
+							}
 						}
 						unset($studentOptions[$id]);
 					}
@@ -661,7 +570,10 @@ class InstitutionClassesTable extends ControllerActionTable {
 					if ($this->request->data['student_id']>0) {
 						$id = $this->request->data['student_id'];
 						if ($id != 0) {
-							$students[] = $this->createVirtualStudentEntity($id, $entity);
+							$virtualStudent = $this->createVirtualStudentEntity($id, $entity);
+							if ($virtualStudent) {
+								$students[] = $virtualStudent;
+							}
 						}
 						unset($studentOptions[$id]);
 					} else if ($this->request->data['student_id'] == -1) {
@@ -671,7 +583,10 @@ class InstitutionClassesTable extends ControllerActionTable {
 								break;
 							}
 							if ($id > 0) {
-								$students[] = $this->createVirtualStudentEntity($id, $entity);
+								$virtualStudent = $this->createVirtualStudentEntity($id, $entity);
+								if ($virtualStudent) {
+									$students[] = $virtualStudent;
+								}
 								unset($studentOptions[$id]);
 							}
 						}
@@ -692,7 +607,12 @@ class InstitutionClassesTable extends ControllerActionTable {
 				// the new students entity will not have security_users data and will produce notices.
 				// Attach user data if it does not exists in the student entity
 				if (!$student->has('user')) {
-					$students[$key] = $this->createVirtualStudentEntity($student->student_id, $entity);
+					$virtualStudent = $this->createVirtualStudentEntity($student->student_id, $entity);
+					if ($virtualStudent) {
+						$students[$key] = $virtualStudent;
+					} else {
+						unset($students[$key]);
+					}
 				}
 			}
 		}
@@ -709,21 +629,21 @@ class InstitutionClassesTable extends ControllerActionTable {
 	}
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
-		$currentStudentIds = (new Collection($entity->institution_class_students))->extract('student_id')->toArray();
-		$originalStudentIds = (new Collection($entity->getOriginal('institution_class_students')))->extract('student_id')->toArray();
+		$currentStudentIds = (new Collection($entity->class_students))->extract('student_id')->toArray();
+		$originalStudentIds = (new Collection($entity->getOriginal('class_students')))->extract('student_id')->toArray();
 		$removedStudentIds = array_diff($originalStudentIds, $currentStudentIds);
 		
 		if (!empty($removedStudentIds)) {
 			// 'deleteAll will not trigger beforeDelete/afterDelete events. If you need those first load a collection of records and delete them.'
-			$deleteClassStudent = $this->InstitutionClassStudents->find()
+			$classStudentsToBeDeleted = $this->ClassStudents->find()
 				->where([
-					$this->InstitutionClassStudents->aliasField('institution_class_id') => $entity->id,
-					$this->InstitutionClassStudents->aliasField('student_id').' IN ' => $removedStudentIds
+					$this->ClassStudents->aliasField('institution_class_id') => $entity->id,
+					$this->ClassStudents->aliasField('student_id').' IN ' => $removedStudentIds
 				])
 				->toArray()
 				;
-			foreach ($deleteClassStudent as $key => $value) {
-				$this->InstitutionClassStudents->delete($value);
+			foreach ($classStudentsToBeDeleted as $key => $value) {
+				$this->ClassStudents->delete($value);
 			}
 		}
 	}
@@ -783,7 +703,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 **
 ******************************************************************************************************************/
 	public function getClassGradeOptions($entity) {
-		$Grade = $this->InstitutionClassGrades;
+		$Grade = $this->ClassGrades;
 		$gradeOptions = $Grade->find()
 							->contain('EducationGrades')
 							->where([
@@ -848,14 +768,14 @@ class InstitutionClassesTable extends ControllerActionTable {
 	}
 
 	private function attachClassInfo($classEntity, $studentOptions) {
-		$query = $this->InstitutionClassStudents->find()
+		$query = $this->ClassStudents->find()
 					->contain(['InstitutionClasses'])
 					->where([
 						$this->aliasField('institution_id') => $classEntity->institution_id,
 						$this->aliasField('academic_period_id') => $classEntity->academic_period_id,
 					])
 					->where([
-							$this->InstitutionClassStudents->aliasField('student_id').' IN' => array_keys($studentOptions)
+							$this->ClassStudents->aliasField('student_id').' IN' => array_keys($studentOptions)
 						]);
 		$classesWithStudents = $query->toArray();
 
@@ -951,8 +871,8 @@ class InstitutionClassesTable extends ControllerActionTable {
 			'student_status' => [],
 			'user' => []
 		];
-		$student = $this->InstitutionClassStudents->newEntity();
-		$student = $this->InstitutionClassStudents->patchEntity($student, $data);
+		$student = $this->ClassStudents->newEntity();
+		$student = $this->ClassStudents->patchEntity($student, $data);
 		$student->user = $userData->user;
 		$student->student_status = $userData->student_status;
 		$student->education_grade = $userData->education_grade;
@@ -961,7 +881,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 
 	public function getExistingRecordId($securityId, $entity) {
 		$id = Text::uuid();
-		foreach ($entity->institution_class_students as $student) {
+		foreach ($entity->class_students as $student) {
 			if ($student->student_id == $securityId) {
 				$id = $student->id;
 			}
@@ -983,28 +903,28 @@ class InstitutionClassesTable extends ControllerActionTable {
 	 * @return [type]                    [description]
 	 */
 	public function getClassOptions($academicPeriodId, $institutionId, $gradeId=false) {
-		$multiGradeOptions = array(
-			'fields' => array('InstitutionClasses.id', 'InstitutionClasses.name'),
-			'conditions' => array(
+		$multiGradeOptions = [
+			'fields' => ['InstitutionClasses.id', 'InstitutionClasses.name'],
+			'conditions' => [
 				'InstitutionClasses.academic_period_id' => $academicPeriodId,
 				'InstitutionClasses.institution_id' => $institutionId
-			),
-			'order' => array('InstitutionClasses.name')
-		);
+			],
+			'order' => ['InstitutionClasses.name']
+		];
 
 		if($gradeId != false) {
-			$multiGradeOptions['join'] = array(
-				array(
+			$multiGradeOptions['join'] = [
+				[
 					'table' => 'institution_class_grades',
 					'alias' => 'InstitutionClassGrades',
-					'conditions' => array(
+					'conditions' => [
 						'InstitutionClassGrades.institution_class_id = InstitutionClasses.id',
 						'InstitutionClassGrades.education_grade_id = ' . $gradeId,
 						'InstitutionClassGrades.status = 1'
-					)
-				)
-			);
-			$multiGradeOptions['group'] = array('InstitutionClasses.id');
+					]
+				]
+			];
+			$multiGradeOptions['group'] = ['InstitutionClasses.id'];
 		}
 
 		$multiGradeData = $this->find('list', $multiGradeOptions);

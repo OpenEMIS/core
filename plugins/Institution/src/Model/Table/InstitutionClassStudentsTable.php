@@ -5,8 +5,9 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use Cake\I18n\Time;
+use App\Model\Table\AppTable;
 
 class InstitutionClassStudentsTable extends AppTable {
 	
@@ -142,16 +143,41 @@ class InstitutionClassStudentsTable extends AppTable {
 		if (!empty($existingData)) {
 			$entity->id = $existingData->id;
 		}
-		$this->save($entity);
-	}
-
-	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-		if ($entity->isNew()) {
+		if ($this->save($entity)) {
 			$data = [
-				'institution_class_id' => $entity->institution_class_id,
-				'student_id' => $entity->student_id
+				'institution_class_id' => $classId,
+				'student_id' => $studentId
 			];
 			$this->_autoInsertSubjectStudent($data);
+		}
+	}
+
+	private function _autoInsertSubjectStudent($data) {
+		$Classes = TableRegistry::get('Institution.InstitutionClasses');
+		$Subjects = TableRegistry::get('Institution.InstitutionSubjects');
+		$SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+
+		$class = $Classes->find()
+			->contain([
+				'InstitutionSubjects.Students', 
+				'InstitutionSubjects.InstitutionClasses'
+			])->where([
+				$Classes->aliasField('id') => $data['institution_class_id']
+			])->first();
+
+		foreach ($class->institution_subjects as $subject) {
+			// $student = $Subjects->createVirtualEntity($data['student_id'], $subject, 'students');
+			// $SubjectStudents->save($student);
+
+			$subjectStudent = [
+				'status' => 1,
+				'student_id' => $data['student_id'],	
+				'institution_subject_id' => $subject->id,
+				'institution_class_id' => $data['institution_class_id']
+			];
+			$subjectStudentEntity = $SubjectStudents->newEntity();
+			$SubjectStudents->patchEntity($subjectStudentEntity, $subjectStudent);
+			$SubjectStudents->save($subjectStudentEntity);	
 		}
 	}
 
@@ -168,29 +194,9 @@ class InstitutionClassStudentsTable extends AppTable {
 				$InstitutionSubjectStudentsTable->aliasField('institution_class_id') => $entity->institution_class_id
 			])
 			->toArray();
-			foreach ($deleteSubjectStudent as $key => $value) {
-				$InstitutionSubjectStudentsTable->delete($value);
-			}
-	}
-
-	private function _autoInsertSubjectStudent($data) {
-		$Classes = TableRegistry::get('Institution.InstitutionClasses');
-		$Subjects = TableRegistry::get('Institution.InstitutionSubjects');
-		$SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-
-		$record = $Classes->find()
-			->contain([
-				'InstitutionSubjects.InstitutionSubjectStudents', 
-				'InstitutionSubjects.InstitutionClasses'
-			])->where([
-				$Classes->aliasField('id') => $data['institution_class_id']
-			])->first();
-
-		foreach ($record->institution_subjects as $subject) {
-			$student = $Subjects->createVirtualEntity($data['student_id'], $subject, 'students');
-			$SubjectStudents->save($student);
+		foreach ($deleteSubjectStudent as $key => $value) {
+			$InstitutionSubjectStudentsTable->delete($value);
 		}
-
 	}
 
 }

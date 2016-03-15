@@ -3,16 +3,11 @@ namespace Institution\Model\Behavior;
 
 use ArrayObject;
 
-use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
-use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\Utility\Inflector;
-use Cake\Utility\Text;
-use Cake\Validation\Validator;
-use Cake\Collection\Collection;
+use Cake\I18n\Time;
 
 use ControllerAction\Model\Traits\EventTrait;
 
@@ -88,10 +83,8 @@ class SingleGradeBehavior extends Behavior {
 		]);
 
 		$grade = [];
-		if ($model->InstitutionClassGrades->EducationGrades->exists(['id' => $selectedEducationGradeId])) {
-			$grade = $model->InstitutionClassGrades->EducationGrades->get($selectedEducationGradeId)->toArray();
-		} else {
-
+		if ($model->EducationGrades->exists(['id' => $selectedEducationGradeId])) {
+			$grade = $model->EducationGrades->get($selectedEducationGradeId)->toArray();
 		}
 
 		$model->field('single_grade_field', [
@@ -125,9 +118,8 @@ class SingleGradeBehavior extends Behavior {
 					$requestData['MultiClasses'][$key]['institution_shift_id'] = $commonData['institution_shift_id'];
 					$requestData['MultiClasses'][$key]['institution_id'] = $commonData['institution_id'];
 					$requestData['MultiClasses'][$key]['academic_period_id'] = $commonData['academic_period_id'];
-					$requestData['MultiClasses'][$key]['institution_class_grades'][0] = [
-							'education_grade_id' => $commonData['education_grade'],
-							'status' => 1
+					$requestData['MultiClasses'][$key]['education_grades'][0] = [
+							'id' => $commonData['education_grade']
 						];
 				}
 				$classes = $model->newEntities($requestData['MultiClasses']);
@@ -196,7 +188,7 @@ class SingleGradeBehavior extends Behavior {
 	private function numberOfClassesOptions() {
 		$total = 10;
 		$options = [];
-		for($i=1; $i<=$total; $i++){
+		for ($i=1; $i<=$total; $i++) {
 			$options[$i] = $i;
 		}
 		
