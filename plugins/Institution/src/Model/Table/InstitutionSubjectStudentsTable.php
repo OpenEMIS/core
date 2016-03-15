@@ -16,6 +16,19 @@ class InstitutionSubjectStudentsTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects']);
 		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
+
+		$this->belongsTo('ClassStudents', [
+			'className' => 'Institution.InstitutionClassStudents',
+			'foreignKey' => [
+				'institution_class_id',
+				'student_id'
+			],
+			'bindingKey' => [
+				'institution_class_id',
+				'student_id'
+			]
+		]);
+
 	}
 
 	public function getMaleCountBySubject($subjectId) {
