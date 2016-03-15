@@ -393,10 +393,4 @@ class InstitutionsController extends AppController  {
 		return $tabElements;
 	}
 
-	public function getImage($id) {
-		$this->autoRender = false;
-		$this->ControllerAction->autoRender = false;
-		$this->Image->getUserImage($id);
-	}
-
 }
