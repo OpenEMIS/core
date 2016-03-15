@@ -22,6 +22,19 @@ class InstitutionClassStudentsTable extends AppTable {
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('StudentStatuses',	['className' => 'Student.StudentStatuses']);
 		$this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
+
+		$this->hasMany('SubjectStudents', [
+			'className' => 'Institution.InstitutionSubjectStudents',
+			'foreignKey' => [
+				'institution_class_id',
+				'student_id'
+			],
+			'bindingKey' => [
+				'institution_class_id',
+				'student_id'
+			]
+		]);
+
 	}
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
@@ -126,6 +139,7 @@ class InstitutionClassStudentsTable extends AppTable {
 		$gradeId = $data['education_grade_id'];
 		$classId = $data['institution_class_id'];
 
+		$data['subject_students'] = $this->_setSubjectStudentData($data);
 		$entity = $this->newEntity($data);
 
 		$existingData = $this
@@ -143,42 +157,31 @@ class InstitutionClassStudentsTable extends AppTable {
 		if (!empty($existingData)) {
 			$entity->id = $existingData->id;
 		}
-		if ($this->save($entity)) {
-			$data = [
-				'institution_class_id' => $classId,
-				'student_id' => $studentId
-			];
-			$this->_autoInsertSubjectStudent($data);
-		}
+		$this->save($entity);
 	}
 
-	private function _autoInsertSubjectStudent($data) {
+	private function _setSubjectStudentData($data) {
 		$Classes = TableRegistry::get('Institution.InstitutionClasses');
-		$Subjects = TableRegistry::get('Institution.InstitutionSubjects');
-		$SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
 
 		$class = $Classes->find()
 			->contain([
 				'InstitutionSubjects.Students', 
-				'InstitutionSubjects.InstitutionClasses'
+				'InstitutionSubjects.Classes'
 			])->where([
 				$Classes->aliasField('id') => $data['institution_class_id']
 			])->first();
 
+		$subjectStudents = [];
 		foreach ($class->institution_subjects as $subject) {
-			// $student = $Subjects->createVirtualEntity($data['student_id'], $subject, 'students');
-			// $SubjectStudents->save($student);
-
-			$subjectStudent = [
+			$subjectStudents[] = [
 				'status' => 1,
 				'student_id' => $data['student_id'],	
 				'institution_subject_id' => $subject->id,
 				'institution_class_id' => $data['institution_class_id']
 			];
-			$subjectStudentEntity = $SubjectStudents->newEntity();
-			$SubjectStudents->patchEntity($subjectStudentEntity, $subjectStudent);
-			$SubjectStudents->save($subjectStudentEntity);	
 		}
+
+		return $subjectStudents;
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
@@ -194,6 +197,8 @@ class InstitutionClassStudentsTable extends AppTable {
 				$InstitutionSubjectStudentsTable->aliasField('institution_class_id') => $entity->institution_class_id
 			])
 			->toArray();
+
+		// have to delete one by one so that InstitutionSubjectStudents->afterDelete() will be triggered
 		foreach ($deleteSubjectStudent as $key => $value) {
 			$InstitutionSubjectStudentsTable->delete($value);
 		}
