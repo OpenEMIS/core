@@ -55,19 +55,17 @@ class SurveysTable extends AppTable  {
 		}
 	}
 
-	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
-		// Setting request data and modifying fetch condition
-		$requestData = json_decode($settings['process']['params']);
-		$surveyFormId = $requestData->survey_form;
-		$academicPeriodId = $requestData->academic_period_id;
-		$WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
-		if (!empty($academicPeriodId)) {
-			$status = $WorkflowStatusesTable->WorkflowModels->getWorkflowStatusSteps('Institutions > Survey > Forms', 'NOT_COMPLETED');
-			$notCompleteStatus = $status[key($status)];
-
+	public function onExcelAfterHeader(Event $event, ArrayObject $settings) {
+		if ($settings['renderNotComplete']) {
+			$fields = $settings['sheet']['fields'];
+			$requestData = json_decode($settings['process']['params']);
+			$surveyFormId = $requestData->survey_form;
+			$academicPeriodId = $requestData->academic_period_id;
+			$surveyFormName = $this->SurveyForms->get($surveyFormId)->name;
+			$academicPeriodName = $this->AcademicPeriods->get($academicPeriodId)->name;
 			$InstitutionsTable = $this->Institutions;
-			// Query to insert missing security role records
-			$insertMissingRecords = $InstitutionsTable->find()
+			
+			$missingRecords = $InstitutionsTable->find()
 				->where(['NOT EXISTS ('.
 					$this->find()->where([
 						$this->aliasField('academic_period_id').' = '.$academicPeriodId,
@@ -75,23 +73,60 @@ class SurveysTable extends AppTable  {
 						$this->aliasField('institution_id').' = '.$InstitutionsTable->aliasField('id')
 					])
 				.')'])
+				->innerJoinWith('Areas')
+				->leftJoinWith('AreaAdministratives')
 				->select([
-					'status_id' => intval($notCompleteStatus),
-					'academic_period_id' => intval($academicPeriodId), 
-					'survey_form_id' => intval($surveyFormId),
-					'institution_id' => $InstitutionsTable->aliasField('id'),
-					'created_user_id' => intval(1),
-					'created' => $InstitutionsTable->find()->func()->now()
+					'institution_id' => $InstitutionsTable->aliasField('name'),
+					'code' => $InstitutionsTable->aliasField('code'),
+					'area' => 'Areas.name',
+					'area_administrative' => 'AreaAdministratives.name'
 				]);
-			$insertMissingRecords = $this->query()
-				->insert(['status_id', 'academic_period_id', 'survey_form_id', 'institution_id', 'created_user_id', 'created'])
-				->values($insertMissingRecords)
-				->execute();
+
+			$writer = $settings['writer'];
+			$sheetName = $settings['sheet']['name'];
+			$mappingArray = ['status_id', 'academic_period_id', 'survey_form_id', 'institution_id', 'code'];
+
+			foreach ($missingRecords->all() as $record) {
+				$record->academic_period_id = $academicPeriodName;
+				$record->survey_form_id = $surveyFormName;
+				$record->status_id = __('Not Completed');
+
+				$row = [];
+				foreach ($fields as $field) {
+					if (in_array($field['field'], $mappingArray)) {
+						$row[] = $record->$field['field'];
+					} else if ($field['field'] == 'area_id') {
+						$row[] = $record->area;
+					} else if ($field['field'] == 'area_administrative_id') {
+						$row[] = $record->area_administrative;
+					} else {
+						$row[] = '';
+					}
+				}
+				$writer->writeSheetRow($sheetName, $row);
+			}
+			$settings['renderNotComplete'] = false;
+		}
+	}
+
+	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
+
+		// Setting request data and modifying fetch condition
+		$requestData = json_decode($settings['process']['params']);
+		$surveyFormId = $requestData->survey_form;
+		$academicPeriodId = $requestData->academic_period_id;
+		$status = $requestData->status;
+		$WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
+
+		if (!empty($academicPeriodId)) {
+			$surveyStatuses = $WorkflowStatusesTable->WorkflowModels->getWorkflowStatusesCode('Institution.InstitutionSurveys');
+			if ($surveyStatuses[$status] == 'NOT_COMPLETED') {
+				$settings['renderNotComplete'] = true;
+			}
 		} else {
 			$academicPeriodId = 0;
 		}
 
-		$status = $requestData->status;
 		$configCondition = $this->getCondition();
 		$condition = [
 			$this->aliasField('academic_period_id') => $academicPeriodId
