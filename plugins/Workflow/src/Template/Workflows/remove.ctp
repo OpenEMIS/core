@@ -41,23 +41,31 @@ $this->start('panelBody');
 	}
 ?>
 
-<div class="input clearfix">
+<div class="input">
 	<label><?= __('Steps') ?></label>
-	<div class="table-in-view">
-		<table class="table">
-			<thead><?= $this->Html->tableHeaders($stepHeaders) ?></thead>
-			<tbody><?php echo $this->Html->tableCells($stepCells) ?></tbody>
-		</table>
+	<div class="input-form-wrapper">
+		<div class="table-wrapper">
+			<div class="table-in-view">
+				<table class="table">
+					<thead><?= $this->Html->tableHeaders($stepHeaders) ?></thead>
+					<tbody><?php echo $this->Html->tableCells($stepCells) ?></tbody>
+				</table>
+			</div>
+		</div>
 	</div>
 </div>
 
-<div class="input clearfix">
+<div class="input">
 	<label><?= __('Apply To') ?></label>
-	<div class="table-in-view">
-		<table class="table">
-			<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
-			<tbody><?php echo $this->Html->tableCells($tableCells) ?></tbody>
-		</table>
+	<div class="input-form-wrapper">
+		<div class="table-wrapper">
+			<div class="table-in-view">
+				<table class="table">
+					<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
+					<tbody><?php echo $this->Html->tableCells($tableCells) ?></tbody>
+				</table>
+			</div>
+		</div>
 	</div>
 </div>
 
