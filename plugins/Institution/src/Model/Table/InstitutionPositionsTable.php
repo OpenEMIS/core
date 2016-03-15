@@ -12,6 +12,7 @@ use Cake\Validation\Validator;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\ORM\TableRegistry;
 
 class InstitutionPositionsTable extends AppTable {
 	use OptionsTrait;
@@ -90,28 +91,54 @@ class InstitutionPositionsTable extends AppTable {
    		$types = $this->getSelectOptions('Staff.position_types');
 		$titles = new ArrayObject();
 		if (in_array($action, ['add', 'edit'])) {
-			$this->StaffPositionTitles
+
+			$userId = $this->Auth->user('id');
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+			if ($this->AccessControl->isAdmin()) {
+				$userId = null;
+				$roles = [];
+			} else {
+				$roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+			}
+			
+			$staffTitleOptions = $this->StaffPositionTitles
 					->find()
-				    ->where(['id >' => 1])
-				    ->order(['order'])
-				    ->map(function ($row) use ($types, $titles) { // map() is a collection method, it executes the query
-				        $type = array_key_exists($row->type, $types) ? $types[$row->type] : $row->type;
-				        $titles[$type][$row->id] = $row->name;
-				        return $row;
-				    })
-				    ->toArray(); // Also a collections library method
-			$titles = $titles->getArrayCopy();
+					->innerJoinWith('SecurityRoles')
+					->select([
+						'security_role_id' => 'SecurityRoles.id', 
+						'name' => $this->StaffPositionTitles->aliasField('name')])
+					->order([
+						$this->StaffPositionTitles->aliasField('type') => 'DESC', 
+						$this->StaffPositionTitles->aliasField('order'),
+					])
+					->autoFields(true)
+				    ->toArray();
+
+			// Filter by role previlege
+			$SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
+			$roleOptions = $SecurityRolesTable->getRolesOptions($userId, $roles);
+			$roleOptions = array_keys($roleOptions);
+			$staffTitleRoles = $this->array_column($staffTitleOptions, 'security_role_id');
+			$staffTitleOptions = array_intersect_key($staffTitleOptions, array_intersect($staffTitleRoles, $roleOptions));
+
+			// Adding the opt group
+			$types = $this->getSelectOptions('Staff.position_types');
+			$titles = [];
+			foreach ($staffTitleOptions as $title) {
+				$type = __($types[$title->type]);
+				$titles[$type][$title->id] = $title->name;
+			}
 		} else {
 			$titles = $this->StaffPositionTitles
-							->find()
-						    ->where(['id >' => 1])
-						    ->order(['order'])
-						    ->map(function ($row) use ($types) { // map() is a collection method, it executes the query
-						        $row->name_and_type = $row->name . ' - ' . (array_key_exists($row->type, $types) ? $types[$row->type] : $row->type);
-						        return $row;
-						    })
-						    ->combine('id', 'name_and_type') // combine() is another collection method
-						    ->toArray(); // Also a collections library method
+				->find()
+			    ->where(['id >' => 1])
+			    ->order(['order'])
+			    ->map(function ($row) use ($types) { // map() is a collection method, it executes the query
+			        $row->name_and_type = $row->name . ' - ' . (array_key_exists($row->type, $types) ? $types[$row->type] : $row->type);
+			        return $row;
+			    })
+			    ->combine('id', 'name_and_type') // combine() is another collection method
+			    ->toArray(); // Also a collections library method
 		}
 		$attr['options'] = $titles;
 		return $attr;
