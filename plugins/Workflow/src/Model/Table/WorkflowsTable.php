@@ -252,11 +252,13 @@ class WorkflowsTable extends AppTable {
 		$tableHeaders = [__('Feature'), __('No of records')];
 		$tableCells = [];
 
+		// WorkflowsFilters
 		$rowData = [];
 		$rowData[] = $this->WorkflowsFilters->alias();
 		$rowData[] = $this->WorkflowsFilters->find()->where([$this->WorkflowsFilters->aliasField('workflow_id') => $entity->id])->count();
 		$tableCells[] = $rowData;
 
+		// WorkflowRecords
 		$rowData = [];
 		$WorkflowRecords = TableRegistry::get('Workflow.WorkflowRecords');
 		$rowData[] = $WorkflowRecords->alias();
@@ -269,17 +271,27 @@ class WorkflowsTable extends AppTable {
 			->count();
 		$tableCells[] = $rowData;
 
-		$rowData = [];
+		// Staff Leaves / Institution Surveys & Institution Student Surveys
 		$registryAlias = $this->WorkflowModels->get($entity->workflow_model_id)->model;
-		$targetModel = TableRegistry::get($registryAlias);
-		$rowData[] = $targetModel->alias();
-		$rowData[] = $targetModel
-			->find()
-			->where([
-				$targetModel->aliasField('status_id IN') => $stepIds
-			])
-			->count();
-		$tableCells[] = $rowData;
+		
+		$featureList = [];
+		$featureList[] = $registryAlias;
+		if ($registryAlias == 'Institution.InstitutionSurveys') {
+			$featureList[] = 'Student.StudentSurveys';
+		}
+
+		foreach ($featureList as $key => $feature) {
+			$rowData = [];
+			$targetModel = TableRegistry::get($feature);
+			$rowData[] = $targetModel->alias();
+			$rowData[] = $targetModel
+				->find()
+				->where([
+					$targetModel->aliasField('status_id IN') => $stepIds
+				])
+				->count();
+			$tableCells[] = $rowData;	
+		}
 		// End
 
 		$this->controller->set(compact('steps', 'convertStepOptions', 'tableHeaders', 'tableCells'));
