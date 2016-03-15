@@ -96,6 +96,8 @@ class ImportStudentsTable extends AppTable {
 		$tempRow['end_date'] = false;
 		$tempRow['end_year'] = false;
 		$tempRow['institution_id'] = $this->institutionId;
+		// Optional fields which will be validated should be set with a default value on initialisation
+		$tempRow['class'] = 0;
 	}
 
 	public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {
@@ -279,7 +281,10 @@ class ImportStudentsTable extends AppTable {
 		$institutionGrade = $this->InstitutionGrades
 								->find()
 								->contain('EducationGrades.EducationProgrammes.EducationCycles')
-								->where([$this->InstitutionGrades->aliasField('education_grade_id') => $tempRow['education_grade_id']])
+								->where([
+									$this->InstitutionGrades->aliasField('education_grade_id') => $tempRow['education_grade_id'],
+									$this->InstitutionGrades->aliasField('institution_id') => $this->institutionId
+								])
 								;
 		if ($institutionGrade->isEmpty()) {
 			$rowInvalidCodeCols['education_grade_id'] = __('No matching education grade.');
@@ -332,8 +337,6 @@ class ImportStudentsTable extends AppTable {
 				$rowInvalidCodeCols['class'] = __('Selected class does not exists during the selected Academic Period');
 				return false;
 			}
-		} else {
-			$tempRow['class'] = 0;
 		}
 
 		return true;
