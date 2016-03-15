@@ -37,7 +37,7 @@
 				<tbody>
 				<?php 
 				foreach($attr['data']['students'] as $i => $obj) : 
-					// pr($obj->_matchingData['Users']);die;
+					// pr($obj);die;
 					if ($obj->status == 0) continue;
 
 					if ($action=='edit') :
@@ -60,21 +60,21 @@
 					<tr>
 						<?php
 
-						echo $this->Form->hidden("InstitutionSubjects.institution_subject_students.$n.id", [ 'value' => $obj->id ]);
-						echo $this->Form->hidden("InstitutionSubjects.institution_subject_students.$n.student_id", [ 'value' => $n ]);
-						echo $this->Form->hidden("InstitutionSubjects.institution_subject_students.$n.status", [ 'value' => $obj->status ]);
-						echo $this->Form->hidden("InstitutionSubjects.institution_subject_students.$n.institution_subject_id", [ 'value' => $obj->institution_subject_id ]);
-						echo $this->Form->hidden("InstitutionSubjects.institution_subject_students.$n.institution_class_id", [ 'value' => $obj->institution_class_id ]);
+						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.id", [ 'value' => $obj->id ]);
+						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.student_id", [ 'value' => $n ]);
+						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.status", [ 'value' => $obj->status ]);
+						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.institution_subject_id", [ 'value' => $obj->institution_subject_id ]);
+						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.institution_class_id", [ 'value' => $obj->institution_class_id ]);
 
-						echo $this->Form->hidden("InstitutionSubjects.institution_subject_students.$n.user.id", [ 'value' => $n ]);
-						echo $this->Form->hidden("InstitutionSubjects.institution_subject_students.$n.user.openemis_no", [ 'value' => $userData['openemis_no'] ]);
-						echo $this->Form->hidden("InstitutionSubjects.institution_subject_students.$n.user.name", [ 'value' => $userData['name'] ]);
-						echo $this->Form->hidden("InstitutionSubjects.institution_subject_students.$n.user.gender.name", [ 'value' => $userData['gender']['name'] ]);
+						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.user.id", [ 'value' => $n ]);
+						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.user.openemis_no", [ 'value' => $userData['openemis_no'] ]);
+						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.user.name", [ 'value' => $userData['name'] ]);
+						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.user.gender.name", [ 'value' => $userData['gender']['name'] ]);
 						?>
 						<td><?= $userData['openemis_no'] ?></td>
 						<td><?= $userData['name'] ?></td>
 						<td><?= $userData['gender']['name'] ?></td>
-						<td><?= __($obj->student_status) ?></td>
+						<td><?= __($obj->class_student->student_status->name) ?></td>
 						<td> 
 							<?php //if ($attr['data']['isHistoryRecord']): ?>
 							
@@ -95,17 +95,17 @@
 				<?php else:?>
 
 					<tr>
-						<td><?= $this->html->link($obj->_matchingData['Users']->openemis_no , [
+						<td><?= $this->html->link($obj->user->openemis_no , [
 									'plugin' => 'Institution',
 									'controller' => 'Institutions',
 									'action' => 'StudentUser',
 									'view',
-									$obj->_matchingData['Users']->id 
+									$obj->user->id 
 								]) ?>
 						</td>
-						<td><?= $obj->_matchingData['Users']->name ?></td>
-						<td><?= $obj->_matchingData['Genders']->name ?></td>
-						<td><?= __($obj->student_status) ?></td>
+						<td><?= $obj->user->name ?></td>
+						<td><?= $obj->user->gender->name ?></td>
+						<td><?= __($obj->class_student->student_status->name) ?></td>
 					</tr>
 
 				<?php endif;?>
