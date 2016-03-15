@@ -841,12 +841,19 @@ class WorkflowBehavior extends Behavior {
 		if($this->_table->hasBehavior('Workflow')) {
 			$workflowRecord = $this->getRecord($this->_table->registryAlias(), $entity);
 			if (!empty($workflowRecord)) {
+				$statusId = $workflowRecord->workflow_step_id;
 				if ($entity->has('status_id')) {
 					$this->_table->updateAll(
-						['status_id' => $workflowRecord->workflow_step_id],
+						['status_id' => $statusId],
 						['id' => $entity->id]
 					);
 				}
+
+				$subject = $this->_table;
+				// Trigger workflow update status event here
+				$event = $subject->dispatchEvent('Workflow.updateWorkflowStatus', [$entity, $statusId], $subject);
+				if ($event->isStopped()) { return $event->result; }
+				// End
 			}
 		}
 	}
