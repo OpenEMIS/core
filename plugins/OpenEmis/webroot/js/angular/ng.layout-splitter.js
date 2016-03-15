@@ -1,5 +1,6 @@
-//Layout Splitter v.1.0.2
+//Layout Splitter v.1.0.3
 
+// Fixing the issue on first load when left navigation is overlaping the view before the angular has been initialize
 var sheet = (function() {
     // Create the <style> tag
     var style = document.createElement("style");
@@ -20,10 +21,12 @@ var sheet = (function() {
 })();
 
 var pos = (typeof localStorage.lastHandlerPos == 'undefined') ? window.innerWidth * 0.1 : window.innerWidth * localStorage.lastHandlerPos;
-
+if (pos > window.innerWidth) {
+    pos = window.innerWidth * 0.1;
+}
 // console.log(window.innerWidth);
 sheet.insertRule('.left-pane{width:' + pos + 'px;}', 0);
-
+// End fixing on first load.
 
 // Angular Splitter
 angular.module('bgDirectives', [])
@@ -85,8 +88,8 @@ angular.module('bgDirectives', [])
                         var pos = 0;
                         var panelObj = reCalPanelPercentSize();
 
-                        pane1Min = panelObj['pane1Min'];//((pane1.minSizeP / 100) * window.innerWidth) || pane1Min;
-                        pane2Min = panelObj['pane2Min'];//((pane2.minSizeP / 100) * window.innerWidth) || pane2Min;
+                        pane1Min = panelObj['pane1Min']; //((pane1.minSizeP / 100) * window.innerWidth) || pane1Min;
+                        pane2Min = panelObj['pane2Min']; //((pane2.minSizeP / 100) * window.innerWidth) || pane2Min;
 
                         $.each($('.highchart'), function(key, group) {
                             $(group).highcharts().reflow();
@@ -130,20 +133,24 @@ angular.module('bgDirectives', [])
                 }
 
                 function getWidthPixel() {
-                    return (typeof localStorage.lastHandlerPos == 'undefined') ? window.innerWidth * 0.1 : window.innerWidth * localStorage.lastHandlerPos;
+                    var pos = (typeof localStorage.lastHandlerPos == 'undefined') ? window.innerWidth * 0.1 : window.innerWidth * localStorage.lastHandlerPos
+                    if (pos > window.innerWidth) {
+                        pos = window.innerWidth * 0.1;
+                    }
+                    return pos;
                 }
 
                 function disableDrag() {
                     element.unbind('mousemove');
                 }
 
-                function reCalPanelPercentSize(){
+                function reCalPanelPercentSize() {
                     var panelObj = {};
-                    if(!angular.isUndefined(pane1.minSizeP)){
+                    if (!angular.isUndefined(pane1.minSizeP)) {
                         panelObj['pane1Min'] = (pane1.minSizeP / 100) * window.innerWidth;
                     }
 
-                    if(!angular.isUndefined(pane2.minSizeP)){
+                    if (!angular.isUndefined(pane2.minSizeP)) {
                         panelObj['pane2Min'] = (pane2.minSizeP / 100) * window.innerWidth;
                     }
                     return panelObj;
