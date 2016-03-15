@@ -275,9 +275,11 @@ class SecurityRolesTable extends AppTable {
 				$roleInfo = $this->get($role);
 				$query = $this->find('list');
 				if (in_array($roleInfo->security_group_id, $systemGroupIds)) {
+					// For system roles
 					$query = $query->where([$this->aliasField('security_group_id').' IN ' => $systemGroupIds]);
 				} else {
-					$query = $query->where([$this->aliasField('security_group_id') => $role]);
+					// For user roles
+					$query = $query->where([$this->aliasField('security_group_id') => $roleInfo->security_group_id]);
 				}
 
 				$list = $query
