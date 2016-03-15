@@ -919,8 +919,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 					'alias' => 'InstitutionClassGrades',
 					'conditions' => [
 						'InstitutionClassGrades.institution_class_id = InstitutionClasses.id',
-						'InstitutionClassGrades.education_grade_id = ' . $gradeId,
-						'InstitutionClassGrades.status = 1'
+						'InstitutionClassGrades.education_grade_id = ' . $gradeId
 					]
 				]
 			];
