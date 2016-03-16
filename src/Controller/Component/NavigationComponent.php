@@ -307,17 +307,17 @@ class NavigationComponent extends Component {
 					'params' => ['plugin' => 'Institution']
 				],
 
-				'Institutions.Sections' => [
+				'Institutions.Classes' => [
 					'title' => 'Classes',
 					'parent' => 'Institution.Academic',
-					'selected' => ['Institution.Sections'],
+					'selected' => ['Institution.Classes'],
 					'params' => ['plugin' => 'Institution']
 				],
 
-				'Institutions.Classes' => [
+				'Institutions.Subjects' => [
 					'title' => 'Subjects',
 					'parent' => 'Institution.Academic',
-					'selected' => ['Institution.Classes'],
+					'selected' => ['Institution.Subjects'],
 					'params' => ['plugin' => 'Institution']
 				],
 
@@ -471,7 +471,7 @@ class NavigationComponent extends Component {
 				'title' => 'Academic', 
 				'parent' => 'Institutions.Students.index', 
 				'params' => ['plugin' => 'Student'], 
-				'selected' => ['Students.Programmes.index', 'Students.Sections', 'Students.Classes', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.Awards', 
+				'selected' => ['Students.Programmes.index', 'Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.Awards', 
 					'Students.Extracurriculars', 'Institutions.Students.view', 'Institutions.Students.edit']],
 			'Students.BankAccounts' => [
 				'title' => 'Finance', 
@@ -502,7 +502,7 @@ class NavigationComponent extends Component {
 				'title' => 'Career', 
 				'parent' => 'Institutions.Staff.index', 
 				'params' => ['plugin' => 'Staff'], 
-				'selected' => ['Staff.Employments', 'Staff.Positions', 'Staff.Sections', 'Staff.Classes', 'Staff.Absences', 
+				'selected' => ['Staff.Employments', 'Staff.Positions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences', 
 					'Staff.Leaves', 'Staff.Behaviours', 'Staff.Awards', 'Institutions.Staff.edit', 'Institutions.Staff.view',],
 			],
 			'Staff.Qualifications' => [
@@ -566,7 +566,7 @@ class NavigationComponent extends Component {
 					'title' => 'Career',
 					'parent' => 'Directories.Staff',
 					'params' => ['plugin' => 'Directory'],
-					'selected' => ['Directories.StaffEmployments', 'Directories.StaffPositions', 'Directories.StaffSections', 'Directories.StaffClasses', 
+					'selected' => ['Directories.StaffEmployments', 'Directories.StaffPositions', 'Directories.StaffClasses', 'Directories.StaffSubjects',
 						'Directories.StaffAbsences', 'Directories.StaffLeaves', 'Directories.StaffBehaviours', 'Directories.StaffAwards']
 				],
 				'Directories.StaffQualifications' => [
