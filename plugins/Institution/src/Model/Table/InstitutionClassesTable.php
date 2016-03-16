@@ -954,22 +954,32 @@ class InstitutionClassesTable extends AppTable {
 
 	public function onGetTeachers(Event $event, Entity $entity) {
 		if ($entity->has('teachers')) {
+			$resultArray = [];
 			foreach ($entity->teachers as $key => $value) {
-				// was unable to remove virtual properties using ->virtualProperties() (like 'name') on the fly, therefore using std class
-				$entity->teachers[$key] = new stdClass();
-				if ($this->action == 'view') {
-					$entity->teachers[$key]->name = $event->subject()->Html->link($value->name_with_id , [
-						'plugin' => 'Institution',
-						'controller' => 'Institutions',
-						'action' => 'StaffUser',
-						'view',
-						$value->id
-					]);
-				} else if ($this->action == 'index') {
-					$entity->teachers[$key]->name = $value->name_with_id;
+				switch ($this->action) {
+					case 'view':
+						$resultArray[] = $event->subject()->Html->link($value->name_with_id , [
+							'plugin' => 'Institution',
+							'controller' => 'Institutions',
+							'action' => 'StaffUser',
+							'view',
+							$value->id
+						]);
+						break;
+					
+					case 'index':
+						$resultArray[] = $value->name_with_id;
+						break;
+
+					default:
+						$resultArray = null;
+						break;
 				}
 			}
 		}
-	}
 
+		if (is_array($resultArray)) {
+			return implode(', ', $resultArray);
+		}
+	}
 }
