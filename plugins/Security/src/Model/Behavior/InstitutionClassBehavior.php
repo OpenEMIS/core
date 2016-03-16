@@ -28,16 +28,10 @@ class InstitutionClassBehavior extends Behavior {
 		}
 	}
 
-<<<<<<< HEAD
-	public function editAfterAction(Event $event, Entity $entity) {
+	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$action = 'edit';
 		if (!$this->checkAllClassesPermission($action)) {
 			if ($this->checkMyClassesPermission($action)) {
-=======
-	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
-		if (!$this->checkAllClassesEditPermission()) {
-			if ($this->checkMyClassesEditPermission()) {
->>>>>>> origin_ssh/POCOR-1694
 				$userId = $this->_table->Auth->user('id');
 				if ($userId != $entity->staff_id) {
 					$urlParams = $this->_table->url('view');
@@ -65,57 +59,17 @@ class InstitutionClassBehavior extends Behavior {
 		return $query;
 	}
 
-<<<<<<< HEAD
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-		$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
-		// Remove the edit function if the user does not have the right to access that page
-		$action = 'edit';
-		if (!$this->checkAllClassesPermission($action)) {
-			if ($this->checkMyClassesPermission($action)) {
-				$userId = $this->_table->Auth->user('id');
-				if ($userId != $entity->staff_id) {
-					if (isset($buttons['edit'])) {
-						unset($buttons['edit']);
-						return $buttons;
-					}
-				}
-			}
-		}
-=======
-	// public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-	public function indexAfterAction(Event $event, ResultSet $data, ArrayObject $extra) {
-		// $buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
-		// // Remove the edit function if the user does not have the right to access that page
-		// if (!$this->checkAllClassesEditPermission()) {
-		// 	if ($this->checkMyClassesEditPermission()) {
-		// 		$userId = $this->_table->Auth->user('id');
-		// 		if ($userId != $entity->staff_id) {
-		// 			if (isset($buttons['edit'])) {
-		// 				unset($buttons['edit']);
-		// 				return $buttons;
-		// 			}
-		// 		}
-		// 	}
-		// }
->>>>>>> origin_ssh/POCOR-1694
-	}
-
 	// Function to check MyClass permission is set
 	private function checkMyClassesPermission($action) {
 		$AccessControl = $this->_table->AccessControl;
-<<<<<<< HEAD
 		$controller = $this->_table->controller;
 		$roles = [];
 		$event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
     	if ($event->result) {
     		$roles = $event->result;	
     	}
-		$myClassesPermission = $AccessControl->check(['Institutions', 'Sections', $action], $roles);
+		$myClassesPermission = $AccessControl->check(['Institutions', 'Classes', $action], $roles);
 		if ($myClassesPermission) {
-=======
-		$myClassesEditPermission = $AccessControl->check(['Institutions', 'Classes', 'edit']);
-		if ($myClassesEditPermission) {
->>>>>>> origin_ssh/POCOR-1694
 			return true;
 		} else {
 			return false;
@@ -139,26 +93,24 @@ class InstitutionClassBehavior extends Behavior {
 		}
 	}
 
-<<<<<<< HEAD
-	public function viewAfterAction(Event $event, Entity $entity) {
-		$action = 'view';
-		if (!$this->checkAllClassesPermission($action)) {
-			if ($this->checkMyClassesPermission($action)) {
-				$userId = $this->_table->Auth->user('id');
-				if ($userId != $entity->staff_id) {
-					$urlParams = $this->_table->ControllerAction->url('index');
-					$event->stopPropagation();
-					$this->_table->Alert->error('security.noAccess');
-					return $this->_table->controller->redirect($urlParams);
-				}
-			}
-		}
-=======
 	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
->>>>>>> origin_ssh/POCOR-1694
 		$this->_table->request->data[$this->_table->alias()]['staff_id'] = $entity->staff_id;
 		switch ($this->_table->action) {
 			case 'view':
+				// To handle the redirection out of view page if the user does not have permission
+				$action = 'view';
+				if (!$this->checkAllClassesPermission($action)) {
+					if ($this->checkMyClassesPermission($action)) {
+						$userId = $this->_table->Auth->user('id');
+						if ($userId != $entity->staff_id) {
+							$urlParams = $this->_table->ControllerAction->url('index');
+							$event->stopPropagation();
+							$this->_table->Alert->error('security.noAccess');
+							return $this->_table->controller->redirect($urlParams);
+						}
+					}
+				}
+
 				// If all classes can edit, then skip the removal of the button
 				if (!$this->checkAllClassesPermission('edit')) {
 					// If there is no permission to edit my classes
