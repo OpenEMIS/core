@@ -37,6 +37,7 @@ class StudentUserTable extends UserTable {
 		$sessionKey = 'Institution.Students.new';
 		if ($this->Session->check($sessionKey)) {
 			$academicData = $this->Session->read($sessionKey);
+			$data[$this->alias()]['academic_period_id'] = $academicData['academic_period_id'];
 			$data[$this->alias()]['education_grade_id'] = $academicData['education_grade_id'];
 		} else {
 			$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
