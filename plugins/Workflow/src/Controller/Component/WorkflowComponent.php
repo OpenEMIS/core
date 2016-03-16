@@ -51,12 +51,7 @@ class WorkflowComponent extends Component {
 	 */
 	public function getWorkflowStatuses($model) {
 		$WorkflowModelTable = $this->WorkflowModels;
-		return $WorkflowModelTable
-			->find('list')
-			->matching('WorkflowStatuses')
-			->where([$WorkflowModelTable->aliasField('model') => $model])
-			->select(['id' => 'WorkflowStatuses.id', 'name' => 'WorkflowStatuses.name'])
-			->toArray();
+		return $WorkflowModelTable->getWorkflowStatuses($model);
 	}
 
 	/**
