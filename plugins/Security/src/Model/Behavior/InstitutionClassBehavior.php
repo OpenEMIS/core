@@ -31,8 +31,9 @@ class InstitutionClassBehavior extends Behavior {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
-		if (!$this->checkAllClassesEditPermission()) {
-			if ($this->checkMyClassesEditPermission()) {
+		$action = 'edit';
+		if (!$this->checkAllClassesPermission($action)) {
+			if ($this->checkMyClassesPermission($action)) {
 				$userId = $this->_table->Auth->user('id');
 				if ($userId != $entity->staff_id) {
 					$urlParams = $this->_table->ControllerAction->url('view');
@@ -48,18 +49,24 @@ class InstitutionClassBehavior extends Behavior {
 		if (array_key_exists('accessControl', $options)) {
 			$AccessControl = $options['accessControl'];
 			$userId = $options['userId'];
-			if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'])) {
-				$query->where([$this->_table->aliasField('staff_id') => $userId]);
+			$controller = $this->_table->controller;
+			$roles = [];
+			$event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
+			if ($event->result) {
+				$roles = $event->result;	
 			}
-		}
+			if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles)) {
+				$query->where([$this->_table->aliasField('staff_id') => $userId]);
+			}		}
 		return $query;
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
 		// Remove the edit function if the user does not have the right to access that page
-		if (!$this->checkAllClassesEditPermission()) {
-			if ($this->checkMyClassesEditPermission()) {
+		$action = 'edit';
+		if (!$this->checkAllClassesPermission($action)) {
+			if ($this->checkMyClassesPermission($action)) {
 				$userId = $this->_table->Auth->user('id');
 				if ($userId != $entity->staff_id) {
 					if (isset($buttons['edit'])) {
@@ -72,10 +79,16 @@ class InstitutionClassBehavior extends Behavior {
 	}
 
 	// Function to check MyClass edit permission is set
-	public function checkMyClassesEditPermission() {
+	public function checkMyClassesPermission($action) {
 		$AccessControl = $this->_table->AccessControl;
-		$myClassesEditPermission = $AccessControl->check(['Institutions', 'Sections', 'edit']);
-		if ($myClassesEditPermission) {
+		$controller = $this->_table->controller;
+		$roles = [];
+		$event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
+    	if ($event->result) {
+    		$roles = $event->result;	
+    	}
+		$myClassesPermission = $AccessControl->check(['Institutions', 'Sections', $action], $roles);
+		if ($myClassesPermission) {
 			return true;
 		} else {
 			return false;
@@ -83,10 +96,16 @@ class InstitutionClassBehavior extends Behavior {
 	}
 
 	// Function to check AllClass edit permission is set
-	public function checkAllClassesEditPermission() {
+	public function checkAllClassesPermission($action) {
 		$AccessControl = $this->_table->AccessControl;
-		$allClassesEditPermission = $AccessControl->check(['Institutions', 'AllClasses', 'edit']);
-		if ($allClassesEditPermission) {
+		$controller = $this->_table->controller;
+		$roles = [];
+		$event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
+    	if ($event->result) {
+    		$roles = $event->result;	
+    	}
+		$allClassesPermission = $AccessControl->check(['Institutions', 'AllClasses', $action], $roles);
+		if ($allClassesPermission) {
 			return true;
 		} else {
 			return false;
@@ -94,6 +113,18 @@ class InstitutionClassBehavior extends Behavior {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		$action = 'view';
+		if (!$this->checkAllClassesPermission($action)) {
+			if ($this->checkMyClassesPermission($action)) {
+				$userId = $this->_table->Auth->user('id');
+				if ($userId != $entity->staff_id) {
+					$urlParams = $this->_table->ControllerAction->url('index');
+					$event->stopPropagation();
+					$this->_table->Alert->error('security.noAccess');
+					return $this->_table->controller->redirect($urlParams);
+				}
+			}
+		}
 		$this->_table->request->data[$this->_table->alias()]['staff_id'] = $entity->staff_id;
 	}
 
@@ -101,9 +132,9 @@ class InstitutionClassBehavior extends Behavior {
 		switch ($action) {
 			case 'view':
 				// If all classes can edit, then skip the removal of the button
-				if (!$this->checkAllClassesEditPermission()) {
+				if (!$this->checkAllClassesPermission('edit')) {
 					// If there is no permission to edit my classes
-					if ($this->checkMyClassesEditPermission()) {
+					if ($this->checkMyClassesPermission('edit')) {
 						$userId = $this->_table->Auth->user('id');
 						$entityUserId = $this->_table->request->data[$this->_table->alias()]['staff_id'];
 						// Remove the edit button from those records who does not belong to the user
