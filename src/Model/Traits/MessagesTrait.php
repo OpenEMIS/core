@@ -580,7 +580,8 @@ trait MessagesTrait {
 				'student_name' => [
 					'ruleInstitutionStudentId' => 'Student has already been added.',
 					'ruleCheckAdmissionAgeWithEducationCycleGrade' => 'This student does not fall within the allowed age range for this grade.',
-					'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.'
+					'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.',
+					'studentNotExists' => 'Student does not exists in the system'
 				],
 				'class' => [
 					'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'

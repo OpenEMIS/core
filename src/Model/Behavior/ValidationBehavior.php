@@ -494,6 +494,9 @@ class ValidationBehavior extends Behavior {
 		$Students = TableRegistry::get('Institution.Students');
 		$enrolled = false;
 		if (!empty($globalData['data']['academic_period_id'])) {
+			if (empty($globalData['data']['education_grade_id'])) {
+				return false;
+			}
 			$educationSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($globalData['data']['education_grade_id']);
 			$enrolled = $Students->checkIfEnrolledInAllInstitution($globalData['data']['student_id'], $globalData['data']['academic_period_id'], $educationSystemId);
 		}
@@ -657,7 +660,11 @@ class ValidationBehavior extends Behavior {
 				->where([$Students->aliasField($Students->primaryKey()) => $data['student_id']])
 				->first();
 				;
-			$dateOfBirth = ($studentQuery->has('date_of_birth'))? $studentQuery->date_of_birth: null;
+			if ($studentQuery) {
+				$dateOfBirth = ($studentQuery->has('date_of_birth'))? $studentQuery->date_of_birth: null;
+			} else {
+				return $model->getMessage('Institution.Students.student_name.studentNotExists');
+			}
 		} else {
 			// saving for new students
 			$dateOfBirth = new DateTime($field);
