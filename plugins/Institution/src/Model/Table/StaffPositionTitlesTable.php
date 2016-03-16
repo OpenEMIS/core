@@ -31,10 +31,7 @@ class StaffPositionTitlesTable extends ControllerActionTable {
 			'options' => $this->getSelectOptions('Staff.position_types'),
 			'after' => 'name'
 		]);
-		$systemRolesList = ['' => '-- '.__('Select Role').' --'] + $this->SecurityRoles->getSystemRolesList();
-		$selected = '';
-		$this->advancedSelectOptions($systemRolesList, $selected);
-		$extra['roleList'] = $systemRolesList;
+		$extra['roleList'] = $this->SecurityRoles->getSystemRolesList();
 		$this->field('security_role_id', ['after' => 'type', 'options' => $extra['roleList']]);
 	}
 
