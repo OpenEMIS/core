@@ -127,6 +127,43 @@ class InstitutionSubjectBehavior extends Behavior {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		$action = 'view';
+
+		// Check if the staff has access to the subject
+		if (!$this->checkAllSubjectsPermission($action)) {
+			if ($this->checkMySubjectsPermission($action)) {
+				$isFound = false;
+				$userId = $this->_table->Auth->user('id');
+
+				// Homeroom teacher of the class will be able to view the subject
+				if ($entity->has('institution_section_classes')) {
+					foreach ($entity->institution_section_classes as $subject) {
+						if ($subject->has('institution_section')) {
+							if ($subject->institution_section->staff_id == $userId) {
+								$isFound = true;
+								break;
+							}
+						}
+					}
+				}
+
+				// Teachers who are owner of the classes will be able to access the subjects
+				if (!empty($entity->teachers)) {
+					foreach ($entity->teachers as $staff) {
+						if ($userId == $staff->id) {
+							$isFound = true;
+							break;
+						}
+					}
+				}
+			}
+			if (!$isFound) {
+				$urlParams = $this->_table->ControllerAction->url('index');
+				$event->stopPropagation();
+				$this->_table->Alert->error('security.noAccess');
+				return $this->_table->controller->redirect($urlParams);
+			}
+		}
 		$staff = [];
 		if (!empty($entity->teachers)) {
 			$staff = $entity->teachers;
