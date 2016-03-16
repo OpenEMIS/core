@@ -78,8 +78,8 @@ class InstitutionClassBehavior extends Behavior {
 		}
 	}
 
-	// Function to check MyClass edit permission is set
-	public function checkMyClassesPermission($action) {
+	// Function to check MyClass permission is set
+	private function checkMyClassesPermission($action) {
 		$AccessControl = $this->_table->AccessControl;
 		$controller = $this->_table->controller;
 		$roles = [];
@@ -95,8 +95,8 @@ class InstitutionClassBehavior extends Behavior {
 		}
 	}
 
-	// Function to check AllClass edit permission is set
-	public function checkAllClassesPermission($action) {
+	// Function to check AllClass permission is set
+	private function checkAllClassesPermission($action) {
 		$AccessControl = $this->_table->AccessControl;
 		$controller = $this->_table->controller;
 		$roles = [];
