@@ -640,9 +640,7 @@ class InstitutionsTable extends AppTable  {
 		// Get parent of the area and the current area
 		$areaId = $institutionEntity->area_id;
 		$Areas = $this->Areas;
-		$path = $Areas->find('path', ['for' => $areaId])->toArray();
-		$parentArea = reset($path);
-		$institutionArea = end($path);
+		$institutionArea = $Areas->get($areaId);
 
 		// Getting the security groups
 		$SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
@@ -651,10 +649,8 @@ class InstitutionsTable extends AppTable  {
 			->innerJoinWith('Areas')
 			->innerJoinWith('SecurityGroups.Users')
 			->where([
-				'Areas.lft >= ' => $parentArea->lft,
 				'Areas.lft <= ' => $institutionArea->lft,
-				'Areas.rght <= ' => $parentArea->rght,
-				'Areas.rght <= ' => $institutionArea->rght,
+				'Areas.rght >= ' => $institutionArea->rght,
 				'Users.id' => $userId
 			])
 			->union(
