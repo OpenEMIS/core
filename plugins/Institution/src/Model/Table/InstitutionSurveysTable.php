@@ -29,7 +29,7 @@ class InstitutionSurveysTable extends AppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
@@ -66,6 +66,7 @@ class InstitutionSurveysTable extends AppTable {
     	foreach ($this->workflowEvents as $event) {
     		$events[$event['value']] = $event['method'];
     	}
+    	$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
 
     	return $events;
     }
@@ -149,6 +150,55 @@ class InstitutionSurveysTable extends AppTable {
 
     	return $this->workflowEvents;
     }
+
+    // Workbench.Model.onGetList
+	public function onGetWorkbenchList(Event $event, $AccessControl, ArrayObject $data) {
+		if ($AccessControl->check(['Institutions', 'Surveys', 'edit'])) {
+			$institutionIds = $AccessControl->getInstitutionsByUser();
+
+			$statusIds = $event->subject()->Workflow->getStepsByModelCode($this->registryAlias(), 'NOT_COMPLETED');
+			$where = [];
+			$where[$this->aliasField('status_id') . ' IN '] = $statusIds;
+			if (!$AccessControl->isAdmin()) {
+				$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
+			}
+	
+			$resultSet = $this
+				->find()
+				->contain(['Statuses', 'AcademicPeriods', 'SurveyForms', 'Institutions', 'ModifiedUser', 'CreatedUser'])
+				->where($where)
+				->order([
+					$this->aliasField('created')
+				])
+				->toArray();
+
+			foreach ($resultSet as $key => $obj) {
+				$requestTitle = sprintf('%s - %s of %s in %s', $obj->status->name, $obj->survey_form->name, $obj->institution->name, $obj->academic_period->name);
+				$url = [
+					'plugin' => 'Institution',
+					'controller' => 'Institutions',
+					'action' => 'Surveys',
+					'view',
+					'institution_id' => $obj->institution->id,
+					$obj->id
+				];
+
+				if (is_null($obj->modified)) {
+					$receivedDate = $this->formatDate($obj->created);
+				} else {
+					$receivedDate = $this->formatDate($obj->modified);
+				}
+
+				$data[] = [
+					'request_title' => ['title' => $requestTitle, 'url' => $url],
+					'receive_date' => $receivedDate,
+					'due_date' => '<i class="fa fa-minus"></i>',
+					'requester' => $obj->created_user->username,
+					'type' => __('Institution > Survey > Forms')
+				];
+			}
+		}
+	}
 
 	public function onGetDescription(Event $event, Entity $entity) {
 		$surveyFormId = $entity->survey_form->id;
