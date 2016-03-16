@@ -92,8 +92,8 @@ class InstitutionSubjectBehavior extends Behavior {
 		}
 	}
 
-	// Function to check MySubjects edit permission is set
-	public function checkMySubjectsPermission($action) {
+	// Function to check MySubjects permission is set
+	private function checkMySubjectsPermission($action) {
 		$AccessControl = $this->_table->AccessControl;
 		$controller = $this->_table->controller;
 		$roles = [];
@@ -109,8 +109,8 @@ class InstitutionSubjectBehavior extends Behavior {
 		}
 	}
 
-	// Function to check AllSubjects edit permission is set
-	public function checkAllSubjectsPermission($action) {
+	// Function to check AllSubjects permission is set
+	private function checkAllSubjectsPermission($action) {
 		$AccessControl = $this->_table->AccessControl;
 		$controller = $this->_table->controller;
 		$roles = [];
