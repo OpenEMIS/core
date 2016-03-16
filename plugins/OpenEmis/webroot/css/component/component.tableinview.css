@@ -1,4 +1,4 @@
-/* TABLE IN VIEW v.1.0.7 */
+/* TABLE IN VIEW v.1.0.8 */
 
 .input-form-wrapper,
 .input .table-wrapper,
@@ -70,6 +70,16 @@
 .table-in-view .table thead,
 .table-in-view .table thead tr,
 .table-in-view .table tfoot {
+    border-left: 0 !important;
+    border-right: 0 !important;
+}
+
+.table-in-view tfoot td {
+    border-top: 1px solid #DDD !important;
+}
+
+.table-in-view tfoot td {
+    border-bottom: 0 !important;
     border-left: 0 !important;
     border-right: 0 !important;
 }
