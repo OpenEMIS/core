@@ -373,7 +373,7 @@ class ExcelBehavior extends Behavior {
 				}
 			}
 		}	
-		return $value;
+		return __($value);
 	}
 
 	private function isForeignKey($table, $field) {
