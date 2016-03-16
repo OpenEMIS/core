@@ -230,7 +230,7 @@ class ControllerActionComponent extends Component {
 							}
 						}
 
-						if (!empty($defaultValue)) {
+						if (!empty($defaultValue) && !(is_bool($attr['default']) && !$attr['default'])) {
 							$this->model->fields[$key]['default'] = $defaultValue;
 						}
 						$optionsArray = ['' => __('-- Select --')] + $optionsArray;
