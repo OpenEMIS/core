@@ -92,10 +92,10 @@ class TransferApprovalsTable extends AppTable {
 				$newEntity = $Students->newEntity($newData);
 				if ($Students->save($newEntity)) {
 					$classId = $data[$this->alias()]['institution_class'];
-					$InstitutionClassStudentsTable = TableRegistry::get('Institutions.InstitutionSectionStudents');
+					$InstitutionClassStudentsTable = TableRegistry::get('Institutions.InstitutionClassStudents');
 					$institutionClassStudentObj = [
 						'student_id' => $newEntity->student_id,
-						'institution_section_id' => $classId,
+						'institution_class_id' => $classId,
 						'education_grade_id' => $newEntity->education_grade_id,
 						'student_status_id' => $newEntity->student_status_id
 					];
@@ -212,13 +212,13 @@ class TransferApprovalsTable extends AppTable {
 				'keyField' => 'class_id',
 				'valueField' => 'class_name'
 			])
-			->matching('InstitutionSections.InstitutionSectionGrades')
+			->matching('InstitutionClasses.ClassGrades')
 			->where([
-				'InstitutionSectionGrades.education_grade_id' => $educationGradeId,
-				'InstitutionSections.academic_period_id' => $academicPeriodId,
+				'ClassGrades.education_grade_id' => $educationGradeId,
+				'InstitutionClasses.academic_period_id' => $academicPeriodId,
 				$this->Institutions->aliasField('id') => $institutionId
 			])
-			->select(['class_id' => 'InstitutionSections.id', 'class_name' => 'InstitutionSections.name'])
+			->select(['class_id' => 'InstitutionClasses.id', 'class_name' => 'InstitutionClasses.name'])
 			->hydrate(false)
 			->toArray()
 			;
