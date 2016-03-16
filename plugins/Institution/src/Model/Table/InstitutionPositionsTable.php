@@ -34,6 +34,7 @@ class InstitutionPositionsTable extends AppTable {
 			'actions' => ['remove' => 'transfer'],
 			'fields' => ['excludes' => ['modified_user_id', 'created_user_id']]
 		]);
+		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -275,5 +276,4 @@ class InstitutionPositionsTable extends AppTable {
 		return $query
 			->contain(['StaffPositionTitles', 'Institutions', 'StaffPositionGrades']);
 	}
-
 }
