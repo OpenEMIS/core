@@ -13,7 +13,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.1.13
+ControllerActionComponent - Current Version 3.1.15
+3.1.15 (Malcolm) - renderFields() - for automatic adding of '-- Select --' if (there are no '' value fields in dropdown) and $attr['select'] != false (default true)
+3.1.14 (Malcolm) - supported default selection for select boxes - renderFields() edit 
 3.1.13 (Thed) - added new event editAfterQuery to modified $entity after query is executed
 3.1.12 (Zack) - added new event onGetConvertOptions to add additional condition to the query to generate the convert options for delete and transfer
 3.1.11 (Zack) - added logic to reorder() to swap the order of the list that is pass over with the original list
@@ -49,6 +51,7 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
+use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Response;
@@ -171,6 +174,22 @@ class ControllerActionComponent extends Component {
 						$this->model->fields[$key]['attr']['empty'] = $this->Alert->getMessage('general.select.noOptions');
 					}
 				}
+
+				// for automatic adding of '-- Select --' if there are no '' value fields in dropdown
+				$addSelect = true;
+				if (array_key_exists('select', $attr)) {
+					if ($attr['select'] === false) {
+						$addSelect = false;
+					}
+				}
+				if ($addSelect) {
+					if (is_array($attr['options'])) {
+						// need to check if options has any ''
+						if (!array_key_exists('', $attr['options'])) {
+							$this->model->fields[$key]['options'] = ['' => __('-- Select --')] + $attr['options'];
+						}
+					}
+				}
 			}
 
 			// make field sortable by default if it is a string data-type
@@ -187,7 +206,7 @@ class ControllerActionComponent extends Component {
 					// $associatedObject = $this->model->{Inflector::camelize($associatedObjectName)};
 					$associatedObject = $this->getAssociatedBelongsToModel($key);
 					
-					$query = $associatedObject->find('list');
+					$query = $associatedObject->find();
 					
 					$event = new Event('ControllerAction.Model.onPopulateSelectOptions', $this, [$query]);
 					$event = $associatedObject->eventManager()->dispatch($event);
@@ -196,8 +215,27 @@ class ControllerActionComponent extends Component {
 						$query = $event->result;
 					}
 
-					if (is_object($query)) {
-						$this->model->fields[$key]['options'] = $query->toArray();
+					if ($query instanceof Query) {
+						$queryData = $query->toArray();
+						$hasDefaultField = false;
+						$defaultValue = false;
+						$optionsArray = [];
+						foreach ($queryData as $okey => $ovalue) {
+							$optionsArray[$ovalue->id] = $ovalue->name;
+							if ($ovalue->has('default')) {
+								$hasDefaultField = true;
+								if ($ovalue->default) {
+									$defaultValue = $ovalue->id;
+								}
+							}
+						}
+
+						if (!empty($defaultValue)) {
+							$this->model->fields[$key]['default'] = $defaultValue;
+						}
+						$optionsArray = ['' => __('-- Select --')] + $optionsArray;
+
+						$this->model->fields[$key]['options'] = $optionsArray;
 					} else {
 						$this->model->fields[$key]['options'] = $query;
 					}

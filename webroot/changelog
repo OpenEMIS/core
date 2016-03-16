@@ -1,3 +1,13 @@
+v3.4.16
+- Fixed a bug that caused field options default value not selected, also added a '-- Select --' option if no default value is set
+- Added Class names to Student Report in Institutions
+- Added description field for Workflow Actions
+- Add new Absence Type - Late
+- Fixed a bug that caused 404 error page when access Maps
+- Area Administrative and Area Education is now properly translated
+- Fixed a bug on Institutions -> Students -> Add that caused incorrect calculation of admission age
+- Fixed a bug that caused out of memory issue when accessing classes without a valid programme set in the school
+
 v3.4.15
 - Survey Table type questions will now be displayed in Reports
 - Fixed a bug that caused loading animation to appear on the wrong position
