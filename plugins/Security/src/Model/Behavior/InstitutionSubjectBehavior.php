@@ -31,8 +31,9 @@ class InstitutionSubjectBehavior extends Behavior {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
-		if (!$this->checkAllSubjectsEditPermission()) {
-			if ($this->checkMySubjectsEditPermission()) {
+		$action = 'edit';
+		if (!$this->checkAllSubjectsPermission($action)) {
+			if ($this->checkMySubjectsPermission($action)) {
 				$userId = $this->_table->Auth->user('id');
 				if (empty($entity->teachers)) {
 					$urlParams = $this->_table->ControllerAction->url('view');
@@ -61,8 +62,9 @@ class InstitutionSubjectBehavior extends Behavior {
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
 		// Remove the edit function if the user does not have the right to access that page
-		if (!$this->checkAllSubjectsEditPermission()) {
-			if ($this->checkMySubjectsEditPermission()) {
+		$action = 'edit';
+		if (!$this->checkAllSubjectsPermission($action)) {
+			if ($this->checkMySubjectsPermission($action)) {
 				$userId = $this->_table->Auth->user('id');
 				if ($entity->has('teachers')) {
 					if (empty($entity->teachers)) {
@@ -91,9 +93,15 @@ class InstitutionSubjectBehavior extends Behavior {
 	}
 
 	// Function to check MySubjects edit permission is set
-	public function checkMySubjectsEditPermission() {
+	public function checkMySubjectsPermission($action) {
 		$AccessControl = $this->_table->AccessControl;
-		$mySubjectsEditPermission = $AccessControl->check(['Institutions', 'Classes', 'edit']);
+		$controller = $this->_table->controller;
+		$roles = [];
+		$event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
+    	if ($event->result) {
+    		$roles = $event->result;	
+    	}
+		$mySubjectsEditPermission = $AccessControl->check(['Institutions', 'Classes', $action], $roles);
 		if ($mySubjectsEditPermission) {
 			return true;
 		} else {
@@ -102,9 +110,15 @@ class InstitutionSubjectBehavior extends Behavior {
 	}
 
 	// Function to check AllSubjects edit permission is set
-	public function checkAllSubjectsEditPermission() {
+	public function checkAllSubjectsPermission($action) {
 		$AccessControl = $this->_table->AccessControl;
-		$allSubjectsEditPermission = $AccessControl->check(['Institutions', 'AllSubjects', 'edit']);
+		$controller = $this->_table->controller;
+		$roles = [];
+		$event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
+    	if ($event->result) {
+    		$roles = $event->result;	
+    	}
+		$allSubjectsEditPermission = $AccessControl->check(['Institutions', 'AllSubjects', $action], $roles);
 		if ($allSubjectsEditPermission) {
 			return true;
 		} else {
@@ -123,8 +137,8 @@ class InstitutionSubjectBehavior extends Behavior {
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		switch ($action) {
 			case 'view':
-				if (!$this->checkAllSubjectsEditPermission()) {
-					if ($this->checkMySubjectsEditPermission()) {
+				if (!$this->checkAllSubjectsPermission('edit')) {
+					if ($this->checkMySubjectsPermission('edit')) {
 						$userId = $this->_table->Auth->user('id');
 						$staffs = $this->_table->request->data[$this->_table->alias()]['teachers'];
 						$isFound = false;
@@ -149,7 +163,13 @@ class InstitutionSubjectBehavior extends Behavior {
 		if (array_key_exists('accessControl', $options)) {
 			$AccessControl = $options['accessControl'];
 			$userId = $options['userId'];
-			if (!$AccessControl->check(['Institutions', 'AllSubjects', 'index'])) {
+			$controller = $this->_table->controller;
+			$roles = [];
+			$event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
+			if ($event->result) {
+				$roles = $event->result;	
+			}
+			if (!$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles)) {
 				$query->where([
 					'OR' => [
 						// first condition if the current user is a teacher for this subject
