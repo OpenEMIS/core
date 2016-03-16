@@ -32,6 +32,7 @@ class AccessControlComponent extends Component {
 				// check if permission is updated and rebuild
 				$userId = $this->Auth->user('id');
 				if ($this->isChanged($userId)) {
+					pr('here');
 					$this->buildPermissions();
 				}
 			}
@@ -81,7 +82,7 @@ class AccessControlComponent extends Component {
 
 		$entity = $SecurityRoleFunctions
 			->find()
-			->select($selectedColumns)
+			// ->select($selectedColumns)
 			->where([$SecurityRoleFunctions->aliasField('security_role_id') . ' IN' => $roles])
 			->order(['modified' => 'DESC'])
 			->first();
@@ -100,6 +101,7 @@ class AccessControlComponent extends Component {
 	}
 
 	public function buildPermissions() {
+		$this->Session->delete('Permissions'); // remove all permission first
 		$operations = $this->config('operations');
 		$separator = $this->config('separator');
 		$userId = $this->Auth->user('id');
