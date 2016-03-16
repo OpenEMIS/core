@@ -583,10 +583,12 @@ class HtmlFieldHelper extends Helper {
 			$value = $data->$attr['field'];
 			$chosenSelectList = [];
 			if (!empty($value)) {
-				foreach ($value as $obj) {
-					$chosenSelectList[] = $obj->name;
+				if (is_array($value)) {
+					foreach ($value as $obj) {
+						$chosenSelectList[] = $obj->name;
+					}
+					$value = implode(', ', $chosenSelectList);
 				}
-				$value = implode(', ', $chosenSelectList);
 			} else {
 				$value = isset($attr['valueWhenEmpty']) ? $attr['valueWhenEmpty'] : '';
 			}
