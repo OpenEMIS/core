@@ -65,26 +65,16 @@ class ApiSISBComponent extends Component {
 			if ($paramIdentityType=='openemis_no') {
 				$conditions[] = ['Student.openemis_no' => $params['id']];
 			} else {
-				$isNotEmpty = $identity_types->every(function ($record) {
-				    return !(empty(trim($record['national_code'])) || preg_match('/\s/', $record['national_code']) || is_null($record['national_code']));
-				});
-				if ($isNotEmpty) {
-					if (empty($identity_type)) {
-						$result = [
-							'error' => $ApiAuthorizations->getErrorMessage('openemis_identity_type_not_found'),
-						];
-					} else {
-						$conditions[] = [
-							$PersonaIdentities->aliasField('number') => $params['id'],
-							$PersonaIdentities->aliasField('identity_type_id') => key($identity_type)
-						];
-					}
-				} else {
+				if (empty($identity_type)) {
 					$result = [
-						'error' => $ApiAuthorizations->getErrorMessage('openemis_identity_type_config_error'),
+						'error' => $ApiAuthorizations->getErrorMessage('openemis_identity_type_not_found'),
+					];
+				} else {
+					$conditions[] = [
+						$PersonaIdentities->aliasField('number') => $params['id'],
+						$PersonaIdentities->aliasField('identity_type_id') => key($identity_type)
 					];
 				}
-
 			}
 
 			if (isset($result)) { return $result; }
