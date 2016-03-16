@@ -32,7 +32,8 @@ class SystemProcessesTable extends ControllerActionTable {
 			'model' => $model,
 			'params' => $params
 		];
-		$this->save($this->newEntity($newArr));
+		$entity = $this->save($this->newEntity($newArr));
+		return $entity->id;
 	}
 
 	public function updatePid($systemProcessId, $pid) {
@@ -50,14 +51,14 @@ class SystemProcessesTable extends ControllerActionTable {
 			->toArray();
 	}
 
-	public function updateProcess($name, $pid, $model, $endTime = null, $status=SELF::COMPLETED, $executedCount=null) {
+	public function updateProcess($systemProcessId, $endTime = null, $status=SELF::COMPLETED, $executedCount=null) {
 		$variableToUpdate = ['status' => $status, 'end_date' => $endTime];
 		if (!is_null($executedCount)) {
 			$variableToUpdate['executed_count'] = $executedCount;
 		}
 		$this->updateAll(
 			$variableToUpdate, 
-			['model' => $model, 'process_id' => $pid, 'name' => $name]
+			['id' => $systemProcessId]
 		);
 	}
 
