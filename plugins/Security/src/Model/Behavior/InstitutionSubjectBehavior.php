@@ -28,16 +28,10 @@ class InstitutionSubjectBehavior extends Behavior {
 		}
 	}
 
-<<<<<<< HEAD
-	public function editAfterAction(Event $event, Entity $entity) {
+	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$action = 'edit';
 		if (!$this->checkAllSubjectsPermission($action)) {
 			if ($this->checkMySubjectsPermission($action)) {
-=======
-	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
-		if (!$this->checkAllSubjectsEditPermission()) {
-			if ($this->checkMySubjectsEditPermission()) {
->>>>>>> origin_ssh/POCOR-1694
 				$userId = $this->_table->Auth->user('id');
 				if (empty($entity->teachers)) {
 					$urlParams = $this->_table->url('view');
@@ -63,84 +57,16 @@ class InstitutionSubjectBehavior extends Behavior {
 		}
 	}
 
-	// used to be onUpdateActionButtons
-	public function indexAfterAction(Event $event, ResultSet $data, ArrayObject $extra) {
-		// $buttons = $this->_table->indexAfterAction($event, $data, $extra);
-		// Remove the edit function if the user does not have the right to access that page
-<<<<<<< HEAD
-		$action = 'edit';
-		if (!$this->checkAllSubjectsPermission($action)) {
-			if ($this->checkMySubjectsPermission($action)) {
-				$userId = $this->_table->Auth->user('id');
-				if ($entity->has('teachers')) {
-					if (empty($entity->teachers)) {
-						if (isset($buttons['edit'])) {
-							unset($buttons['edit']);
-							return $buttons;
-						}
-					} else {
-						$isFound = false;
-						foreach ($entity->teachers as $staff) {
-							if ($userId == $staff->id) {
-								$isFound = true;
-								break;
-							}
-						}
-						if (! $isFound) {
-							if (isset($buttons['edit'])) {
-								unset($buttons['edit']);
-								return $buttons;
-							}
-						}
-					}
-				}
-			}
-		}
-=======
-		// if (!$this->checkAllSubjectsEditPermission()) {
-		// 	if ($this->checkMySubjectsEditPermission()) {
-				// $userId = $this->_table->Auth->user('id');
-				// if ($entity->has('teachers')) {
-				// 	if (empty($entity->teachers)) {
-				// 		if (isset($extra['indexButtons']['edit'])) {
-				// 			unset($extra['indexButtons']['edit']);
-				// 			// return $extra['indexButtons'];
-				// 		}
-				// 	} else {
-				// 		$isFound = false;
-				// 		foreach ($entity->teachers as $staff) {
-				// 			if ($userId == $staff->id) {
-				// 				$isFound = true;
-				// 				break;
-				// 			}
-				// 		}
-				// 		if (! $isFound) {
-				// 			if (isset($extra['indexButtons']['edit'])) {
-				// 				unset($extra['indexButtons']['edit']);
-				// 				// return $extra['indexButtons'];
-				// 			}
-				// 		}
-				// 	}
-				// }
-		// 	}
-		// }
->>>>>>> origin_ssh/POCOR-1694
-	}
-
 	// Function to check MySubjects permission is set
 	private function checkMySubjectsPermission($action) {
 		$AccessControl = $this->_table->AccessControl;
-<<<<<<< HEAD
 		$controller = $this->_table->controller;
 		$roles = [];
 		$event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
     	if ($event->result) {
     		$roles = $event->result;	
     	}
-		$mySubjectsEditPermission = $AccessControl->check(['Institutions', 'Classes', $action], $roles);
-=======
-		$mySubjectsEditPermission = $AccessControl->check(['Institutions', 'Subjects', 'edit']);
->>>>>>> origin_ssh/POCOR-1694
+		$mySubjectsEditPermission = $AccessControl->check(['Institutions', 'Subjects', $action], $roles);
 		if ($mySubjectsEditPermission) {
 			return true;
 		} else {
@@ -165,8 +91,7 @@ class InstitutionSubjectBehavior extends Behavior {
 		}
 	}
 
-<<<<<<< HEAD
-	public function viewAfterAction(Event $event, Entity $entity) {
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$action = 'view';
 
 		// Check if the staff has access to the subject
@@ -204,21 +129,16 @@ class InstitutionSubjectBehavior extends Behavior {
 				return $this->_table->controller->redirect($urlParams);
 			}
 		}
-=======
-	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
->>>>>>> origin_ssh/POCOR-1694
-		$staff = [];
-		if (!empty($entity->teachers)) {
-			$staff = $entity->teachers;
-		}
-		$this->_table->request->data[$this->_table->alias()]['teachers'] = $staff;
 
 		switch ($this->_table->action) {
 			case 'view':
 				if (!$this->checkAllSubjectsPermission('edit')) {
 					if ($this->checkMySubjectsPermission('edit')) {
 						$userId = $this->_table->Auth->user('id');
-						$staffs = $this->_table->request->data[$this->_table->alias()]['teachers'];
+						$staffs = [];
+						if (!empty($entity->teachers)) {
+							$staffs = $entity->teachers;
+						}
 						$isFound = false;
 						foreach ($staffs as $staff) {
 							if ($userId == $staff->id) {
