@@ -360,32 +360,46 @@ class StaffTable extends AppTable {
 
 	public function onUpdateFieldInstitutionPositionId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
-			$groupId = $this->security_group_id;
+			$positionTable = TableRegistry::get('Institution.InstitutionPositions');
 			$userId = $this->Auth->user('id');
+			$institutionId = $this->Session->read('Institution.Institutions.id');
 			if ($this->AccessControl->isAdmin()) {
 				$userId = null;
+				$roles = [];
+			} else {
+				$roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
 			}
-			$positionTable = TableRegistry::get('Institution.InstitutionPositions');
+			
+			// Filter by active status
 			$activeStatusId = $this->Workflow->getStepsByModelCode($positionTable->registryAlias(), 'ACTIVE');
-			$Roles = TableRegistry::get('Security.SecurityRoles');
-			$roleOptions = $Roles->getPrivilegedRoleOptionsByGroup($groupId, $userId);
-			$securityRoleIds = array_keys($roleOptions);
-			$institutionId = $this->Session->read('Institution.Institutions.id');
-	   		$types = $this->getSelectOptions('Staff.position_types');
-			$positionOptions = new ArrayObject();
-			$this->Positions
+			$staffPositionsOptions = $this->Positions
 					->find()
-					->matching('StaffPositionTitles.SecurityRoles')
-					->where([$this->Positions->aliasField('institution_id') => $institutionId, $this->Positions->aliasField('status_id').' IN ' => $activeStatusId])
-				    ->map(function ($row) use ($types, $positionOptions, $securityRoleIds) { // map() is a collection method, it executes the query
-				        $type = array_key_exists($row->_matchingData['StaffPositionTitles']->type, $types) ? $types[$row->_matchingData['StaffPositionTitles']->type] : $row->_matchingData['StaffPositionTitles']->type;
-				        if (in_array($row->_matchingData['SecurityRoles']->id, $securityRoleIds)) {
-				        	$positionOptions[$type][$row->id] = $row->name;
-				        }
-				        return $row;
-				    })
-				    ->toArray(); // Also a collections library method
-			$attr['options'] = $positionOptions->getArrayCopy();
+					->innerJoinWith('StaffPositionTitles.SecurityRoles')
+					->where([
+						$this->Positions->aliasField('institution_id') => $institutionId, 
+						$this->Positions->aliasField('status_id').' IN ' => $activeStatusId
+					])
+					->select(['security_role_id' => 'SecurityRoles.id', 'type' => 'StaffPositionTitles.type'])
+					->order(['StaffPositionTitles.type' => 'DESC', 'StaffPositionTitles.order'])
+					->autoFields(true)
+				    ->toArray();
+
+			// Filter by role previlege
+			$SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
+			$roleOptions = $SecurityRolesTable->getRolesOptions($userId, $roles);
+			$roleOptions = array_keys($roleOptions);
+			$staffPositionRoles = $this->array_column($staffPositionsOptions, 'security_role_id');
+			$staffPositionsOptions = array_intersect_key($staffPositionsOptions, array_intersect($staffPositionRoles, $roleOptions));
+
+			// Adding the opt group
+			$types = $this->getSelectOptions('Staff.position_types');
+			$options = [];
+			foreach ($staffPositionsOptions as $position) {
+				$type = __($types[$position->type]);
+				$options[$type][$position->id] = $position->name;
+			}
+
+			$attr['options'] = $options;
 		}
 		return $attr;
 	}
