@@ -155,7 +155,13 @@ class InstitutionSurveysTable extends AppTable {
     // Workbench.Model.onGetList
 	public function onGetWorkbenchList(Event $event, $AccessControl, ArrayObject $data) {
 		if ($AccessControl->check(['Institutions', 'Surveys', 'edit'])) {
+			$userId = $event->subject()->Auth->user('id');
 			$institutionIds = $AccessControl->getInstitutionsByUser();
+			
+			$institutionRoles = [];
+			foreach ($institutionIds as $institutionId) {
+				$institutionRoles[$institutionId] = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+			}
 
 			$statusIds = $event->subject()->Workflow->getStepsByModelCode($this->registryAlias(), 'NOT_COMPLETED');
 			$where = [];
@@ -173,30 +179,63 @@ class InstitutionSurveysTable extends AppTable {
 				])
 				->toArray();
 
+			$WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+			$stepRoles = [];
 			foreach ($resultSet as $key => $obj) {
-				$requestTitle = sprintf('%s - %s of %s in %s', $obj->status->name, $obj->survey_form->name, $obj->institution->name, $obj->academic_period->name);
-				$url = [
-					'plugin' => 'Institution',
-					'controller' => 'Institutions',
-					'action' => 'Surveys',
-					'view',
-					'institution_id' => $obj->institution->id,
-					$obj->id
-				];
+				$institutionId = $obj->institution->id;
+				$stepId = $obj->status_id;
+				$roles = $institutionRoles[$institutionId];
 
-				if (is_null($obj->modified)) {
-					$receivedDate = $this->formatDate($obj->created);
-				} else {
-					$receivedDate = $this->formatDate($obj->modified);
+				$hasAccess = false;
+				// Permission
+				if (!array_key_exists($stepId, $stepRoles)) {
+					$workflowRoles = $WorkflowStepsRoles
+						->find('list', ['keyField' => 'security_role_id', 'valueField' => 'security_role_id'])
+						->where([
+							$WorkflowStepsRoles->aliasField('workflow_step_id') => $stepId
+						])
+						->toArray();
+
+					if (!empty($workflowRoles)) {
+						$stepRoles[$stepId] = $workflowRoles;
+					}
 				}
 
-				$data[] = [
-					'request_title' => ['title' => $requestTitle, 'url' => $url],
-					'receive_date' => $receivedDate,
-					'due_date' => '<i class="fa fa-minus"></i>',
-					'requester' => $obj->created_user->username,
-					'type' => __('Institution > Survey > Forms')
-				];
+				if (array_key_exists($stepId, $stepRoles)) {
+					foreach ($stepRoles[$stepId] as $securityRoleId) {
+						if (in_array($securityRoleId, $roles)) {
+							$hasAccess = true;
+							break;
+						}
+					}
+				}
+				// End
+
+				if ($hasAccess) {
+					$requestTitle = sprintf('%s - %s of %s in %s', $obj->status->name, $obj->survey_form->name, $obj->institution->name, $obj->academic_period->name);
+					$url = [
+						'plugin' => 'Institution',
+						'controller' => 'Institutions',
+						'action' => 'Surveys',
+						'view',
+						'institution_id' => $institutionId,
+						$obj->id
+					];
+
+					if (is_null($obj->modified)) {
+						$receivedDate = $this->formatDate($obj->created);
+					} else {
+						$receivedDate = $this->formatDate($obj->modified);
+					}
+
+					$data[] = [
+						'request_title' => ['title' => $requestTitle, 'url' => $url],
+						'receive_date' => $receivedDate,
+						'due_date' => '<i class="fa fa-minus"></i>',
+						'requester' => $obj->created_user->username,
+						'type' => __('Institution > Survey > Forms')
+					];
+				}
 			}
 		}
 	}
