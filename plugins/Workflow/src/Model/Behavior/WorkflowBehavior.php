@@ -11,6 +11,7 @@ use Cake\Event\Event;
 use Cake\Utility\Inflector;
 
 class WorkflowBehavior extends Behavior {
+
 	protected $_defaultConfig = [
 		'model' => null,
 		'models' => [
@@ -570,11 +571,17 @@ class WorkflowBehavior extends Behavior {
 				]);
 
 			if (!$this->_table->AccessControl->isAdmin()) {
-				$roles = $this->_table->AccessControl->getRolesByUser()->toArray();
+				$model = $this->_table;
 				$roleIds = [];
-				foreach ($roles as $key => $role) {
-					$roleIds[$role->security_role_id] = $role->security_role_id;
-				}
+				$event = $model->dispatchEvent('Workflow.onUpdateRoles', null, $this);
+				if ($event->result) {
+		    		$roleIds = $event->result;
+		    	} else {
+					$roles = $this->_table->AccessControl->getRolesByUser()->toArray();
+					foreach ($roles as $key => $role) {
+						$roleIds[$role->security_role_id] = $role->security_role_id;
+					}
+		    	}
 
 				$query
 					->innerJoin(
@@ -682,23 +689,6 @@ class WorkflowBehavior extends Behavior {
 
 		$query = $this->WorkflowSteps
 			->find('list');
-
-		if (!$this->_table->AccessControl->isAdmin()) {
-			$roles = $this->_table->AccessControl->getRolesByUser()->toArray();
-			$roleIds = [];
-			foreach ($roles as $key => $role) {
-				$roleIds[$role->security_role_id] = $role->security_role_id;
-			}
-
-			$WorkflowStepsRoles = $this->WorkflowStepsRoles;
-			$query->innerJoin(
-				[$this->WorkflowStepsRoles->alias() => $this->WorkflowStepsRoles->table()],
-				[
-					$this->WorkflowStepsRoles->aliasField('workflow_step_id = ') . $this->WorkflowSteps->aliasField('id'),
-					$this->WorkflowStepsRoles->aliasField('security_role_id IN') => $roleIds
-				]
-			);
-		}
 
 		if (!empty($this->workflowIds)) {
 			$query->where([
