@@ -60,7 +60,7 @@
         display: block !important;
     }
     .page-header h2:hover + .toolbar {
-        display: block !important;
+        display: inline-block !important;
     }
 }
 

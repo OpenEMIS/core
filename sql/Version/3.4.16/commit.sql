@@ -160,6 +160,11 @@ INSERT INTO `config_items` (`name`, `code`, `type`, `label`, `value`, `default_v
 VALUES
 ('Has at least 1 Uppercase Character', 'password_has_uppercase', 'Password', 'Has Uppercase', '0', '0', 0 , 1 , 'Dropdown', 'yes_no', NULL , NULL , 1 , now());
 
+-- added in after test fail - 'didnt implement lowercase'
+INSERT INTO `config_items` (`name`, `code`, `type`, `label`, `value`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created` )
+VALUES
+('Has at least 1 Lowercase Character', 'password_has_lowercase', 'Password', 'Has Lowercase', '0', '0', 0 , 1 , 'Dropdown', 'yes_no', NULL , NULL , 1 , now());
+
 INSERT INTO `config_items` (`name`, `code`, `type`, `label`, `value`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created` )
 VALUES
 ('Has at least 1 Number', 'password_has_number', 'Password', 'Has Number', '0', '0', 0 , 1 , 'Dropdown', 'yes_no', NULL , NULL , 1 , now());
@@ -174,6 +179,14 @@ VALUES
 INSERT INTO `db_patches` VALUES ('POCOR-2208', NOW());
 
 UPDATE labels SET field_name = 'Deletable' WHERE module = 'WorkflowSteps' AND module_name = 'Workflow -> Steps' AND field_name = 'Removable';
+
+
+-- POCOR-2540
+-- db_patches
+INSERT INTO `db_patches` VALUES ('POCOR-2540', NOW());
+
+-- add description to workflow_actions
+ALTER TABLE `workflow_actions` ADD `description` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL AFTER `name`;
 
 
 -- POCOR-2562
