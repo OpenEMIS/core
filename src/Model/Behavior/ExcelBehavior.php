@@ -93,17 +93,19 @@ class ExcelBehavior extends Behavior {
 		$writer = new \XLSXWriter();
 		$excel = $this;
 
-		$generate = function($writer, $settings) {
-			$this->generate($writer, $settings);
+		$generate = function($settings) {
+			$this->generate($settings);
 		};
 
-		$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$writer, $_settings]);
+		$_settings['writer'] = $writer;
+
+		$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$_settings]);
 		if ($event->isStopped()) { return $event->result; }
 		if (is_callable($event->result)) {
 			$generate = $event->result;
 		}
 		
-		$generate($writer, $_settings);
+		$generate($_settings);
 
 		$filepath = $_settings['path'] . $_settings['file'];
 		$_settings['file_path'] = $filepath;
@@ -115,7 +117,8 @@ class ExcelBehavior extends Behavior {
 		}
 	}
 
-	public function generate($writer, $settings=[]) {
+	public function generate($settings=[]) {
+		$writer = $settings['writer'];
 		$sheets = new ArrayObject();
 
 		// Event to get the sheets. If no sheet is specified, it will be by default one sheet
@@ -208,6 +211,8 @@ class ExcelBehavior extends Behavior {
 				}
 
 				$writer->writeSheetRow($sheetName, $row);
+
+				$this->dispatchEvent($table, $this->eventKey('onExcelAfterHeader'), 'onExcelAfterHeader', [$settings], true);
 
 				// process every page based on the limit
 				for ($pageNo=0; $pageNo<$pages; $pageNo++) {
