@@ -3,26 +3,24 @@ namespace Security\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Query;
-use Cake\ORM\Behavior;
-use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\ORM\Entity;
+use Cake\ORM\Behavior;
+use Cake\ORM\ResultSet;
+use Cake\Event\Event;
 
 class InstitutionSubjectBehavior extends Behavior {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		// priority has to be set at 100 so that Institutions->indexBeforePaginate will be triggered first
-		$events['ControllerAction.Model.index.beforePaginate'] = ['callable' => 'indexBeforePaginate', 'priority' => 100];
+		$events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 100];
 		// set the priority of the action button to be after the academic period behavior
-		$events['Model.custom.onUpdateActionButtons'] = ['callable' => 'onUpdateActionButtons', 'priority' => 101];
-		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		$events['ControllerAction.Model.index.afterAction'] = ['callable' => 'indexAfterAction', 'priority' => 101];
 		$events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
 		$events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
 		return $events;
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
 			$userId = $this->_table->Auth->user('id');
 			$AccessControl = $this->_table->AccessControl;
@@ -30,13 +28,19 @@ class InstitutionSubjectBehavior extends Behavior {
 		}
 	}
 
+<<<<<<< HEAD
 	public function editAfterAction(Event $event, Entity $entity) {
 		$action = 'edit';
 		if (!$this->checkAllSubjectsPermission($action)) {
 			if ($this->checkMySubjectsPermission($action)) {
+=======
+	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		if (!$this->checkAllSubjectsEditPermission()) {
+			if ($this->checkMySubjectsEditPermission()) {
+>>>>>>> origin_ssh/POCOR-1694
 				$userId = $this->_table->Auth->user('id');
 				if (empty($entity->teachers)) {
-					$urlParams = $this->_table->ControllerAction->url('view');
+					$urlParams = $this->_table->url('view');
 					$event->stopPropagation();
 					$this->_table->Alert->error('security.noAccess');
 					return $this->_table->controller->redirect($urlParams);
@@ -49,7 +53,7 @@ class InstitutionSubjectBehavior extends Behavior {
 						}
 					}
 					if (! $isFound) {
-						$urlParams = $this->_table->ControllerAction->url('view');
+						$urlParams = $this->_table->url('view');
 						$event->stopPropagation();
 						$this->_table->Alert->error('security.noAccess');
 						return $this->_table->controller->redirect($urlParams);
@@ -59,9 +63,11 @@ class InstitutionSubjectBehavior extends Behavior {
 		}
 	}
 
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-		$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
+	// used to be onUpdateActionButtons
+	public function indexAfterAction(Event $event, ResultSet $data, ArrayObject $extra) {
+		// $buttons = $this->_table->indexAfterAction($event, $data, $extra);
 		// Remove the edit function if the user does not have the right to access that page
+<<<<<<< HEAD
 		$action = 'edit';
 		if (!$this->checkAllSubjectsPermission($action)) {
 			if ($this->checkMySubjectsPermission($action)) {
@@ -90,11 +96,41 @@ class InstitutionSubjectBehavior extends Behavior {
 				}
 			}
 		}
+=======
+		// if (!$this->checkAllSubjectsEditPermission()) {
+		// 	if ($this->checkMySubjectsEditPermission()) {
+				// $userId = $this->_table->Auth->user('id');
+				// if ($entity->has('teachers')) {
+				// 	if (empty($entity->teachers)) {
+				// 		if (isset($extra['indexButtons']['edit'])) {
+				// 			unset($extra['indexButtons']['edit']);
+				// 			// return $extra['indexButtons'];
+				// 		}
+				// 	} else {
+				// 		$isFound = false;
+				// 		foreach ($entity->teachers as $staff) {
+				// 			if ($userId == $staff->id) {
+				// 				$isFound = true;
+				// 				break;
+				// 			}
+				// 		}
+				// 		if (! $isFound) {
+				// 			if (isset($extra['indexButtons']['edit'])) {
+				// 				unset($extra['indexButtons']['edit']);
+				// 				// return $extra['indexButtons'];
+				// 			}
+				// 		}
+				// 	}
+				// }
+		// 	}
+		// }
+>>>>>>> origin_ssh/POCOR-1694
 	}
 
 	// Function to check MySubjects permission is set
 	private function checkMySubjectsPermission($action) {
 		$AccessControl = $this->_table->AccessControl;
+<<<<<<< HEAD
 		$controller = $this->_table->controller;
 		$roles = [];
 		$event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
@@ -102,6 +138,9 @@ class InstitutionSubjectBehavior extends Behavior {
     		$roles = $event->result;	
     	}
 		$mySubjectsEditPermission = $AccessControl->check(['Institutions', 'Classes', $action], $roles);
+=======
+		$mySubjectsEditPermission = $AccessControl->check(['Institutions', 'Subjects', 'edit']);
+>>>>>>> origin_ssh/POCOR-1694
 		if ($mySubjectsEditPermission) {
 			return true;
 		} else {
@@ -126,6 +165,7 @@ class InstitutionSubjectBehavior extends Behavior {
 		}
 	}
 
+<<<<<<< HEAD
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$action = 'view';
 
@@ -164,15 +204,16 @@ class InstitutionSubjectBehavior extends Behavior {
 				return $this->_table->controller->redirect($urlParams);
 			}
 		}
+=======
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+>>>>>>> origin_ssh/POCOR-1694
 		$staff = [];
 		if (!empty($entity->teachers)) {
 			$staff = $entity->teachers;
 		}
 		$this->_table->request->data[$this->_table->alias()]['teachers'] = $staff;
-	}
 
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		switch ($action) {
+		switch ($this->_table->action) {
 			case 'view':
 				if (!$this->checkAllSubjectsPermission('edit')) {
 					if ($this->checkMySubjectsPermission('edit')) {
@@ -186,8 +227,11 @@ class InstitutionSubjectBehavior extends Behavior {
 							}
 						}
 						if (! $isFound) {
-							if (isset($toolbarButtons['edit'])) {
-								unset($toolbarButtons['edit']);
+							if (isset($extra['toolbarButtons']) && isset($extra['toolbarButtons']['edit'])) {
+								unset($extra['toolbarButtons']['edit']);
+							}
+							if (isset($extra['toolbarButtons']) && isset($extra['toolbarButtons']['remove'])) {
+								unset($extra['toolbarButtons']['remove']);
 							}
 						}
 					}
@@ -212,19 +256,19 @@ class InstitutionSubjectBehavior extends Behavior {
 						// first condition if the current user is a teacher for this subject
 						'EXISTS (
 							SELECT 1 
-							FROM institution_class_staff
-							WHERE institution_class_staff.institution_class_id = ' . $this->_table->aliasField('id') . '
-							AND institution_class_staff.staff_id = ' . $userId . 
+							FROM institution_subject_staff
+							WHERE institution_subject_staff.institution_subject_id = ' . $this->_table->aliasField('id') . '
+							AND institution_subject_staff.staff_id = ' . $userId . 
 						')',
 
 						// second condition if the current user is the homeroom teacher of the subject class
 						'EXISTS (
 							SELECT 1
-							FROM institution_section_classes
-							JOIN institution_sections
-							ON institution_sections.id = institution_section_classes.institution_section_id
-							AND institution_sections.staff_id = ' . $userId . '
-							WHERE institution_section_classes.institution_class_id = ' . $this->_table->aliasField('id') .
+							FROM institution_class_subjects
+							JOIN institution_classes
+							ON institution_classes.id = institution_class_subjects.institution_class_id
+							AND institution_classes.staff_id = ' . $userId . '
+							WHERE institution_class_subjects.institution_subject_id = ' . $this->_table->aliasField('id') .
 						')'
 					]
 				]);
