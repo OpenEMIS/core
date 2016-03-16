@@ -100,6 +100,7 @@ class AccessControlComponent extends Component {
 	}
 
 	public function buildPermissions() {
+		$this->Session->delete('Permissions'); // remove all permission first
 		$operations = $this->config('operations');
 		$separator = $this->config('separator');
 		$userId = $this->Auth->user('id');
