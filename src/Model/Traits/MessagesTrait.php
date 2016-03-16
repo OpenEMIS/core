@@ -6,6 +6,9 @@ use Cake\Log\Log;
 
 trait MessagesTrait {
 	public $messages = [
+		'Areas' => [
+			'noAccessToAreas' => 'You do not have access to any areas',
+		],
 		'Attachments' => [
 			'date_on_file' => 'Date On File',
 		],
@@ -579,7 +582,9 @@ trait MessagesTrait {
 			'Students' => [
 				'student_name' => [
 					'ruleInstitutionStudentId' => 'Student has already been added.',
-					'ruleCheckAdmissionAgeWithEducationCycleGrade' => 'This student does not fall within the allowed age range for this grade.',
+					'ruleCheckAdmissionAgeWithEducationCycleGrade' => 'This student does not fall within the allowed age range for this grade',
+					'ageHint' => 'The student should be %s years old',
+					'ageRangeHint' => 'The student should be between %s to %s years old',
 					'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.'
 				],
 				'class' => [
