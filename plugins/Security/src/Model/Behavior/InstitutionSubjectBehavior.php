@@ -14,7 +14,6 @@ class InstitutionSubjectBehavior extends Behavior {
 		// priority has to be set at 100 so that Institutions->indexBeforePaginate will be triggered first
 		$events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 100];
 		// set the priority of the action button to be after the academic period behavior
-		$events['ControllerAction.Model.index.afterAction'] = ['callable' => 'indexAfterAction', 'priority' => 101];
 		$events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
 		$events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
 		return $events;
@@ -99,15 +98,13 @@ class InstitutionSubjectBehavior extends Behavior {
 			if ($this->checkMySubjectsPermission($action)) {
 				$isFound = false;
 				$userId = $this->_table->Auth->user('id');
-
+				
 				// Homeroom teacher of the class will be able to view the subject
-				if ($entity->has('institution_section_classes')) {
-					foreach ($entity->institution_section_classes as $subject) {
-						if ($subject->has('institution_section')) {
-							if ($subject->institution_section->staff_id == $userId) {
-								$isFound = true;
-								break;
-							}
+				if ($entity->has('classes')) {
+					foreach ($entity->classes as $class) {
+						if ($class->staff_id == $userId) {
+							$isFound = true;
+							break;
 						}
 					}
 				}
