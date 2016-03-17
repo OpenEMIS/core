@@ -13,26 +13,16 @@
 			</table>
 		</div>
 	</div>
-<?php elseif ($ControllerAction['action'] == 'edit') : ?>
+<?php elseif ($ControllerAction['action'] == 'add' || $ControllerAction['action'] == 'edit') : ?>
 	<?php
 		$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
 		$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
+		// pr($tableHeaders);
+		// pr($tableCells);
 	?>
 	<div class="clearfix"></div>
-		<hr>
-		<h3><?= $this->Label->get('Assessments.assessmentItems'); ?></h3>
-		<div class="clearfix">
-			<?= 
-				// pr($options);
-				$this->Form->input($ControllerAction['table']->alias().".new_education_subject_id", [
-					'label' => $this->Label->get('Assessments.addAssessmentItem'),
-					'type' => 'select',
-					'options' => $attr['options'],
-					'value' => 0,
-					'onchange' => "$('#reload').val('addSubject').click();"
-				]);
-			?>
-		</div>
+	<hr>
+	<h3><?= $this->Label->get('Assessments.assessmentItems'); ?></h3>
 
 	<div class="table-wrapper">
 		<div class="table-responsive">
