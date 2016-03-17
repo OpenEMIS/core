@@ -51,6 +51,7 @@ class StudentsController extends AppController {
 		];
 
 		$this->loadComponent('User.Image');
+		$this->loadComponent('Institution.InstitutionAccessControl');
 
 		$this->set('contentHeader', 'Students');
 	}
