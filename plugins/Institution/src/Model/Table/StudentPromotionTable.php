@@ -257,11 +257,11 @@ class StudentPromotionTable extends AppTable {
 
 			// If there is no more next grade in the same education programme then the student may be graduated
 			if (count($nextGrades) == 0) {
-				$options[$statusesCode['GRADUATED']] = $studentStatusesList[$statusesCode['GRADUATED']];
+				$options[$statusesCode['GRADUATED']] = __($studentStatusesList[$statusesCode['GRADUATED']]);
 			} else {
-				$options[$statusesCode['PROMOTED']] = $studentStatusesList[$statusesCode['PROMOTED']];
+				$options[$statusesCode['PROMOTED']] = __($studentStatusesList[$statusesCode['PROMOTED']]);
 			}
-			$options[$statusesCode['REPEATED']] = $studentStatusesList[$statusesCode['REPEATED']];
+			$options[$statusesCode['REPEATED']] = __($studentStatusesList[$statusesCode['REPEATED']]);
 			$attr['options'] = $options;
 			$attr['onChangeReload'] = true;
 			if (empty($request->data[$this->alias()]['student_status_id']) || !array_key_exists($request->data[$this->alias()]['student_status_id'], $options)) {

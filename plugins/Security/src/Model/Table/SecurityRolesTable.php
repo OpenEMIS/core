@@ -266,6 +266,39 @@ class SecurityRolesTable extends AppTable {
 			->toArray();
 	}
 
+	public function getRolesOptions($userId=null, $currentRoles=[]) {
+		$roleOptions = [];
+		$systemGroupIds = [-1, 0];
+
+		if (!is_null($userId)) {
+			foreach ($currentRoles as $role) {
+				$roleInfo = $this->get($role);
+				$query = $this->find('list');
+				if (in_array($roleInfo->security_group_id, $systemGroupIds)) {
+					// For system roles
+					$query = $query->where([$this->aliasField('security_group_id').' IN ' => $systemGroupIds]);
+				} else {
+					// For user roles
+					$query = $query->where([$this->aliasField('security_group_id') => $roleInfo->security_group_id]);
+				}
+
+				$list = $query
+					->where([$this->aliasField('order').' > ' => $roleInfo->order])
+					->order([$this->aliasField('order')])
+					->toArray();
+
+				$roleOptions = $roleOptions + $list;
+			}
+		} else {
+			$roleOptions = $this->find('list')
+				->where([$this->aliasField('security_group_id').' IN ' => $systemGroupIds])
+				->order([$this->aliasField('order')])
+				->toArray();
+		}
+
+		return $roleOptions;
+	}
+
 	// this function will return all roles (system roles & user roles) that has lower
 	// privileges than the current role of the user in a specific group
 	public function getPrivilegedRoleOptionsByGroup($groupId=null, $userId=null, $createUserGroup=false) {
