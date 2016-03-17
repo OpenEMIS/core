@@ -7,9 +7,13 @@ class AssessmentItemResultsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('AssessmentItems', ['className' => 'Assessment.AssessmentItems']);
-		$this->belongsTo('GradingOptions', ['className' => 'Assessment.AssessmentGradingOptions', 'foreignKey' => 'assessment_grading_option_id']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+		$this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
+		$this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+		$this->belongsTo('AssessmentGradingOptions', ['className' => 'Assessment.AssessmentGradingOptions']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+		$this->belongsTo('AssessmentPeriods', ['className' => 'Assessment.AssessmentPeriods']);
 	}
 
 	/**
