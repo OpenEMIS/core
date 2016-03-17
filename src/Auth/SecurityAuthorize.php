@@ -13,6 +13,14 @@ class SecurityAuthorize extends BaseAuthorize {
 		$authorized = false;
 
 		if (!$request->is('ajax')) {
+
+			// Set for roles belonging to the controller
+			$roles = [];
+			$event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
+	    	if ($event->result) {
+	    		$roles = $event->result;	
+	    	}
+
 			if ($AccessControl->isIgnored($controller->name, $action) || $user['super_admin'] == true) {
 				$authorized = true;
 			} else if ($action == 'ComponentAction') { // actions from ControllerActionComponent
@@ -22,15 +30,14 @@ class SecurityAuthorize extends BaseAuthorize {
 				if ($AccessControl->isIgnored($model->registryAlias(), $action)) {
 					$authorized = true;
 				} else {
-					// TODO-jeff: need to check for roles belonging to institutions
 					if (array_key_exists($model->alias, $controller->ControllerAction->models)) {
-						$authorized = $AccessControl->check([$controller->name, $model->alias, $action]);
+						$authorized = $AccessControl->check([$controller->name, $model->alias, $action], $roles);
 					} else {
-						$authorized = $AccessControl->check([$controller->name, $action]);
+						$authorized = $AccessControl->check([$controller->name, $action], $roles);
 					}
 				}
 			} else { // normal actions from Controller
-				$authorized = $AccessControl->check([$controller->name, $action]);
+				$authorized = $AccessControl->check([$controller->name, $action], $roles);
 			}
 
 			if (!$authorized) {
