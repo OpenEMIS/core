@@ -1369,6 +1369,11 @@ class ControllerActionComponent extends Component {
 										[$assoc->foreignKey() => $transferTo],
 										$condition
 									);
+
+									// Delete orphan records
+									$modelAssociationTable->deleteAll(
+										[$assoc->foreignKey() => $transferFrom]
+									);
 								}
 							}
 						};
