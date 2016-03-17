@@ -81,7 +81,9 @@ trait ControllerActionV4Trait {
 					if (is_array($attr['options'])) {
 						// need to check if options has any ''
 						if (!array_key_exists('', $attr['options'])) {
-							$model->fields[$key]['options'] = ['' => __('-- Select --')] + $attr['options'];
+							if ($attr['type'] != 'chosenSelect') {
+								$model->fields[$key]['options'] = ['' => __('-- Select --')] + $attr['options'];
+							}
 						}
 					}
 				}
@@ -127,7 +129,9 @@ trait ControllerActionV4Trait {
 						if (!empty($defaultValue)) {
 							$this->model->fields[$key]['default'] = $defaultValue;
 						}
-						$optionsArray = ['' => __('-- Select --')] + $optionsArray;
+						if ($attr['type'] != 'chosenSelect') {
+							$optionsArray = ['' => __('-- Select --')] + $optionsArray;
+						}
 
 						$model->fields[$key]['options'] = $optionsArray;
 					} else {
