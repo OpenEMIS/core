@@ -127,6 +127,14 @@ class ValidationBehavior extends Behavior {
 
 		        $isValid = $isChild > 0;
 			}
+
+			if (!$globalData['newRecord']) {
+				$institutionId = $globalData['data']['id'];
+				$InstitutionsTable = TableRegistry::get('Institution.Institutions');
+				if ($InstitutionsTable->get($institutionId)->area_id == $check) {
+					$isValid = true;
+				}
+			}
         }
         return $isValid;
     }
