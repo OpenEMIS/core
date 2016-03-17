@@ -38,6 +38,28 @@ class InstitutionPositionsTable extends AppTable {
 		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
 	}
 
+	public function transferAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		$transferredTo = $entity->convert_to;
+		$securityRole = $this->find()
+			->matching('StaffPositionTitles.SecurityRoles')
+			->where([$this->aliasField('id') => $transferredTo])
+			->select(['security_role_id' => 'SecurityRoles.id'])
+			->hydrate(false)
+			->first();
+		$securityRole = $securityRole['security_role_id'];
+
+		$securityGroupUserIds = $this->InstitutionStaff->find()
+			->select([$this->InstitutionStaff->aliasField('security_group_user_id')])
+			->where([$this->InstitutionStaff->aliasField('institution_position_id') => $transferredTo]);
+
+		$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+
+		$SecurityGroupUsersTable->updateAll(
+			['security_role_id' => $securityRole],
+			['id IN ' => $securityGroupUserIds]
+		);
+	}
+
 	public function validationDefault(Validator $validator) {
 		return $validator
 			->add('position_no', 'ruleUnique', [
