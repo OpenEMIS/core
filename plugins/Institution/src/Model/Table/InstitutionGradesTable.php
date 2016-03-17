@@ -9,6 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
+use Cake\I18n\Time;
 
 class InstitutionGradesTable extends AppTable {
 	private $institutionId;
@@ -142,9 +143,35 @@ class InstitutionGradesTable extends AppTable {
 		$Institution = TableRegistry::get('Institution.Institutions');
 		$institution = $Institution->find()->where([$Institution->aliasField($Institution->primaryKey()) => $this->institutionId])->first();
 
-		$this->fields['start_date']['value'] = $institution->date_opened;
-		$this->fields['start_date']['date_options']['startDate'] = $institution->date_opened->format('d-m-Y');
-		$this->fields['end_date']['date_options']['startDate'] = $institution->date_opened->format('d-m-Y');
+		if (empty($institution->date_opened)) {
+			$institution->date_opened = new Time('01-01-1970');
+			$Institution->save($institution);
+		}
+
+		$dateOpened = $institution->date_opened;
+		try{
+			$yearOpened = 1970;
+			if (!empty($institution->year_opened)) {
+				$yearOpened = $institution->year_opened;
+			}
+			$year = $dateOpened->format('Y');
+			if ($yearOpened != $year) {
+				$month = $dateOpened->format('m');
+				$day = $dateOpened->format('d');
+				$dateOpened = new Time($yearOpened.'-'.$month.'-'.$day);
+				$institution->date_opened = $dateOpened;
+				$Institution->save($institution);
+			}
+			$formatDate = $dateOpened->format('d-m-Y');
+		} catch (\Exception $e) {
+			$institution->date_opened = new Time('01-01-1970');
+			$Institution->save($institution);
+			$dateOpened = $institution->date_opened;
+		}
+
+		$this->fields['start_date']['value'] = $dateOpened;
+		$this->fields['start_date']['date_options']['startDate'] = $dateOpened->format('d-m-Y');
+		$this->fields['end_date']['date_options']['startDate'] = $dateOpened->format('d-m-Y');
 	}
 
 
