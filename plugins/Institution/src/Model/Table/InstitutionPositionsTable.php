@@ -37,9 +37,8 @@ class InstitutionPositionsTable extends AppTable {
 		]);
 	}
 
-	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
-		$transferredFrom = $entity->id;
-		$transferredTo = $this->request->data[$this->alias()]['convert_to'];
+	public function transferAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		$transferredTo = $entity->convert_to;
 		$securityRole = $this->find()
 			->matching('StaffPositionTitles.SecurityRoles')
 			->where([$this->aliasField('id') => $transferredTo])
@@ -50,7 +49,7 @@ class InstitutionPositionsTable extends AppTable {
 
 		$securityGroupUserIds = $this->InstitutionStaff->find()
 			->select([$this->InstitutionStaff->aliasField('security_group_user_id')])
-			->where([$this->InstitutionStaff->aliasField('institution_position_id') => $transferredFrom]);
+			->where([$this->InstitutionStaff->aliasField('institution_position_id') => $transferredTo]);
 
 		$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
 
