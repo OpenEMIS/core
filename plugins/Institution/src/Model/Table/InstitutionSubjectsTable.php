@@ -207,6 +207,7 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 			'order' => 3
 		];
 		$extra['selectedClassId'] = $selectedClassId;
+		$extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
 	}
 
     public function findByClasses(Query $query, array $options) {
