@@ -12,6 +12,7 @@ use Cake\Validation\Validator;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\ORM\TableRegistry;
 
 class InstitutionPositionsTable extends AppTable {
 	use OptionsTrait;
@@ -34,6 +35,29 @@ class InstitutionPositionsTable extends AppTable {
 			'actions' => ['remove' => 'transfer'],
 			'fields' => ['excludes' => ['modified_user_id', 'created_user_id']]
 		]);
+	}
+
+	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+		$transferredFrom = $entity->id;
+		$transferredTo = $this->request->data[$this->alias()]['convert_to'];
+		$securityRole = $this->find()
+			->matching('StaffPositionTitles.SecurityRoles')
+			->where([$this->aliasField('id') => $transferredTo])
+			->select(['security_role_id' => 'SecurityRoles.id'])
+			->hydrate(false)
+			->first();
+		$securityRole = $securityRole['security_role_id'];
+
+		$securityGroupUserIds = $this->InstitutionStaff->find()
+			->select([$this->InstitutionStaff->aliasField('security_group_user_id')])
+			->where([$this->InstitutionStaff->aliasField('institution_position_id') => $transferredFrom]);
+
+		$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+
+		$SecurityGroupUsersTable->updateAll(
+			['security_role_id' => $securityRole],
+			['id IN ' => $securityGroupUserIds]
+		);
 	}
 
 	public function validationDefault(Validator $validator) {
