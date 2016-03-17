@@ -12,6 +12,7 @@ use Cake\Utility\Inflector;
 use Institution\Controller\AppController;
 
 class InstitutionsController extends AppController  {
+
 	public $activeObj = null;
 
 	public function initialize() {
@@ -71,6 +72,8 @@ class InstitutionsController extends AppController  {
 			'ImportInstitutionSurveys' => ['className' => 'Institution.ImportInstitutionSurveys', 'actions' => ['add']],
 			'ImportStudents' => ['className' => 'Institution.ImportStudents', 'actions' => ['add']],
 		];
+
+		$this->loadComponent('Institution.InstitutionAccessControl');
 	}
 
 	// CAv4
@@ -112,16 +115,15 @@ class InstitutionsController extends AppController  {
 			$id = 0;
 			if (isset($this->request->pass[0]) && (in_array($action, ['view', 'edit', 'dashboard']))) {
 				$id = $this->request->pass[0];
+				$session->write('Institution.Institutions.id', $id);
+				
 			} else if ($session->check('Institution.Institutions.id')) {
 				$id = $session->read('Institution.Institutions.id');
 			}
 			if (!empty($id)) {
 				$this->activeObj = $this->Institutions->get($id);
 				$name = $this->activeObj->name;
-				if ($action == 'dashboard' || $action == 'edit') {
-					$session->write('Institution.Institutions.id', $id);
-					$session->write('Institution.Institutions.name', $name);
-				}
+				$session->write('Institution.Institutions.name', $name);
 				if ($action == 'view') {
 					$header = $name .' - '.__('Overview');
 				} else {
@@ -250,40 +252,34 @@ class InstitutionsController extends AppController  {
 		$this->autoRender = false;
 	}
 
-	public function dashboard() {
-		if ($this->activeObj) {
-			$id = $this->activeObj->id;
-			$this->ControllerAction->model->action = $this->request->action;
+	public function dashboard($id) {
+		$this->ControllerAction->model->action = $this->request->action;
 
-			// $highChartDatas = ['{"chart":{"type":"column","borderWidth":1},"xAxis":{"title":{"text":"Position Type"},"categories":["Non-Teaching","Teaching"]},"yAxis":{"title":{"text":"Total"}},"title":{"text":"Number Of Staff"},"subtitle":{"text":"For Year 2015-2016"},"series":[{"name":"Male","data":[0,2]},{"name":"Female","data":[0,1]}]}'];
-			$highChartDatas = [];
+		// $highChartDatas = ['{"chart":{"type":"column","borderWidth":1},"xAxis":{"title":{"text":"Position Type"},"categories":["Non-Teaching","Teaching"]},"yAxis":{"title":{"text":"Total"}},"title":{"text":"Number Of Staff"},"subtitle":{"text":"For Year 2015-2016"},"series":[{"name":"Male","data":[0,2]},{"name":"Female","data":[0,1]}]}'];
+		$highChartDatas = [];
 
-			//Students By Year
-			$params = array(
-				'conditions' => array('institution_id' => $id)
-			);
-			$InstitutionStudents = TableRegistry::get('Institution.Students');
-			$highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_year', $params);
-			
-			//Students By Grade for current year
-			$params = array(
-				'conditions' => array('institution_id' => $id)
-			);
+		//Students By Year
+		$params = array(
+			'conditions' => array('institution_id' => $id)
+		);
+		$InstitutionStudents = TableRegistry::get('Institution.Students');
+		$highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_year', $params);
+		
+		//Students By Grade for current year
+		$params = array(
+			'conditions' => array('institution_id' => $id)
+		);
 
-			$highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_grade', $params);
+		$highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_grade', $params);
 
-			//Staffs By Position for current year
-			$params = array(
-				'conditions' => array('institution_id' => $id)
-			);
-			$InstitutionStaff = TableRegistry::get('Institution.Staff');
-			$highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff', $params);
+		//Staffs By Position for current year
+		$params = array(
+			'conditions' => array('institution_id' => $id)
+		);
+		$InstitutionStaff = TableRegistry::get('Institution.Staff');
+		$highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff', $params);
 
-			$this->set('highChartDatas', $highChartDatas);
-
-		} else {
-			return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
-		}
+		$this->set('highChartDatas', $highChartDatas);
 	}
 
 	//autocomplete used for InstitutionSiteShift
