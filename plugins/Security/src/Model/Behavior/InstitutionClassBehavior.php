@@ -14,7 +14,6 @@ class InstitutionClassBehavior extends Behavior {
 		// priority has to be set at 100 so that Institutions->indexBeforePaginate will be triggered first
 		$events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 100];
 		// set the priority of the action button to be after the academic period behavior
-		$events['ControllerAction.Model.index.afterAction'] = ['callable' => 'indexAfterAction', 'priority' => 101];
 		$events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
 		$events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
 		return $events;
