@@ -1,6 +1,7 @@
 <?php 
 namespace Area\Model\Behavior;
 
+use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
@@ -12,7 +13,8 @@ class AreapickerBehavior extends Behavior {
         $events = parent::implementedEvents();
 
 		$events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
-		$events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
+		$events['ControllerAction.Model.edit.afterQuery'] = 'editAfterQuery';
+		$events['ControllerAction.Model.edit.beforePatch'] = 'editBeforePatch';
 
         return $events;
     }
@@ -97,20 +99,22 @@ class AreapickerBehavior extends Behavior {
 		}
 	}
 
-	public function editAfterAction(Event $event, Entity $entity) {
+	public function editAfterQuery(Event $event, Entity $entity) {
 		$userId = $this->_table->Auth->user('id');
 		$areasByUser = $this->_table->AccessControl->getAreasByUser($userId);
+
+		// $areasByUser will always be empty for system groups because system groups are linked directly to schools
 		if (!$this->_table->AccessControl->isAdmin() && empty($areasByUser)) {
 			foreach ($this->_table->fields as $field => $attr) {
 				if ($attr['type'] == 'areapicker' && $attr['source_model'] == 'Area.Areas') {
-					$this->_table->fields[$field]['type'] = 'hidden';
+					$this->_table->fields[$field]['visible'] = false;
 					$targetModel = $attr['source_model'];
 					$areaId = $entity->$field;
 					$list = $this->getAreaLevelName($targetModel, $areaId);
 					$after = $field;
 					foreach ($list as $key => $area) {
 						$this->_table->ControllerAction->field($field.$key, [
-							'type' => 'readonly', 
+							'type' => 'disabled', 
 							'attr' => ['label' => __($area['level']), 'value' => $area['area_name']],
 							'value' => $area['area_name'],
 							'after' => $after
@@ -119,7 +123,18 @@ class AreapickerBehavior extends Behavior {
 					}
 				}
 			}
-		}	
+			$entity->area_restricted = true;
+		}
+	}
+
+	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		// to prevent html injection on area_id
+		if ($entity->has('area_restricted') && $entity->area_restricted == true) {
+			if (array_key_exists('Institutions', $data)) {
+				$data['Institutions']['area_id'] = $entity->area_id;
+				$data['Institutions']['isSystemGroup'] = true; // this flag is to be used in ValidationBehavior->checkAuthorisedArea
+			}
+		}
 	}
 
 	public function getAreaLevelName($targetModel, $areaId) {
