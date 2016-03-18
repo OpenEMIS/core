@@ -218,6 +218,7 @@ class AcademicPeriodsTable extends AppTable {
 
 	public function getYearList($params = []) {
 		$conditions = array_key_exists('conditions', $params) ? $params['conditions'] : [];
+		$withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : false;
 		$isEditable = array_key_exists('isEditable', $params) ? $params['isEditable'] : null;
 
 		$level = $this->Levels
@@ -225,7 +226,7 @@ class AcademicPeriodsTable extends AppTable {
 			->order([$this->Levels->aliasField('level ASC')])
 			->first();
 
-		$list = $this
+		$data = $this
 			->find('list')
 			->find('visible')
 			->find('order')
@@ -233,6 +234,13 @@ class AcademicPeriodsTable extends AppTable {
 			->where([$this->aliasField('academic_period_level_id') => $level->id])
 			->where($conditions)
 			->toArray();
+
+		if ( !$withLevels ) {
+			$list = $data;
+		} else {
+			$list[$level->name] = $data;
+		}
+
 		return $list;
 	}
 
