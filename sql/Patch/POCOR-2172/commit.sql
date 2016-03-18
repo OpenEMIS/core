@@ -29,7 +29,7 @@ INSERT INTO `workflow_steps` (`name`, `stage`, `is_editable`, `is_removable`, `w
 ('Open', 0, 1, 1, @workflowId, 1, NOW()),
 ('Pending Approval', 1, 0, 0, @workflowId, 1, NOW()),
 ('Closed', 2, 0, 0, @workflowId, 1, NOW()),
-('Assigned', NULL, 0, 0, @workflowId, 1, NOW())
+('Assigned', NULL, 0, 0, @workflowId, 1, NOW()),
 ('End of Assignment', NULL, 0, 0, @workflowId, 1, NOW());
 
 SET @openStepId := 0;
@@ -80,7 +80,7 @@ INSERT INTO `workflow_steps` (`name`, `stage`, `is_editable`, `is_removable`, `w
 ('Open', 0, 1, 1, @workflowId, 1, NOW()),
 ('Pending Approval', 1, 0, 0, @workflowId, 1, NOW()),
 ('Closed', 2, 0, 0, @workflowId, 1, NOW()),
-('End of Assignment', NULL, 0, 0, @workflowId, 1, NOW()),
+('End of Assignment', NULL, 0, 0, @workflowId, 1, NOW());
 
 SET @openStepId := 0;
 SET @approvalStepId := 0;
@@ -152,7 +152,7 @@ INSERT INTO `workflow_actions` (`name`, `action`, `visible`, `next_workflow_step
 ('Reject', 1, 0, 0, '', 0, @activeStepId, 1, NOW());
 
 INSERT INTO `workflow_statuses` (`code`, `name`, `is_editable`, `is_removable`, `workflow_model_id`, `created_user_id`, `created`) VALUES
-('END_OF_ASSIGNMENT', 'End of Assignment', 0, 0, @modelId, 1, NOW())
+('END_OF_ASSIGNMENT', 'End of Assignment', 0, 0, @modelId, 1, NOW()),
 ('ASSIGNED', 'Assigned', 0, 0, @modelId, 1, NOW());
 
 SET @activeId := 0;
