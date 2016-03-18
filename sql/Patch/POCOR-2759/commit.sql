@@ -22,6 +22,7 @@ RENAME TABLE `institution_assessments` TO `z_2759_institution_assessments`;
 ALTER TABLE `assessments` ADD `academic_period_id` INT(11) NOT NULL AFTER `type`;
 ALTER TABLE `assessments` DROP `order`;
 ALTER TABLE `assessments` DROP `visible`;
+ALTER TABLE `assessments` CHANGE `type` `type` INT(1) NOT NULL DEFAULT '1' COMMENT '1 -> Non-official, 2 -> Official';
 
 -- assessment_items
 ALTER TABLE `assessment_items` ADD `weight` DECIMAL(6,2) NULL DEFAULT NULL AFTER `id`;

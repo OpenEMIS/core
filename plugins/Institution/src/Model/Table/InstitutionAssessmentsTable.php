@@ -5,7 +5,6 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\ORM\ResultSet;
 use Cake\Event\Event;
 use App\Model\Table\ControllerActionTable;
 
@@ -22,6 +21,9 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 		$this->hasMany('ClassGrades', ['className' => 'Institution.InstitutionClassGrades', 'dependent' => true]);
 		$this->hasMany('ClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'dependent' => true]);
 		$this->hasMany('SubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true]);
+
+		$this->behaviors()->get('ControllerAction')->config('actions.add', false);
+		$this->behaviors()->get('ControllerAction')->config('actions.search', false);
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
@@ -32,6 +34,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra) {
 		$extra['elements']['controls'] = ['name' => 'Institution.Assessment/controls', 'data' => [], 'options' => [], 'order' => 1];
+
 		$this->field('assessment');
 		$this->field('education_grade');
 		$this->field('subjects');
@@ -90,10 +93,10 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 			;
 
 		// Academic Periods
-		$periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-		$periodOptions = ['' => '-- ' . __('Select Period') .' --'] + $periodOptions;
+		$periodOptions = $this->AcademicPeriods->getYearList(['withLevels' => true, 'isEditable' => true]);
 		if (is_null($this->request->query('academic_period_id'))) {
-			$this->request->query['academic_period_id'] = '';
+			// default to current Academic Period
+			$this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
 		}
 		$selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
@@ -185,14 +188,15 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 			])
 			->first();
 		$entity->education_grade = $assessment->education_grade->programme_grade_name;
+		$classId = $entity[$ClassGrades->alias()]['institution_class_id'];
 
 		return $event->subject()->Html->link($assessment->code_name, [
 			'plugin' => $this->controller->plugin,
 			'controller' => $this->controller->name,
 			'action' => $this->alias,
 			'view',
-			$assessment->id,
-			'class_id' => $entity[$ClassGrades->alias()]['institution_class_id']
+			$classId,
+			'assessment_id' => $assessment->id
 		]);
 	}
 }
