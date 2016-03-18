@@ -16,7 +16,7 @@ trait OptionsTrait {
 			],
 			'Assessments' => [
 				'status' => [0 => __('New'), 1 => __('Draft'), 2 => __('Completed')],
-				'types' => [0 => __('Non-Official'), 1 => __('Official')]
+				'types' => [1 => __('Non-Official'), 2 => __('Official')]
 			],
 			'AssessmentItems' => [
 				'mark_types' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades')]
