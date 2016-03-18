@@ -24,7 +24,7 @@ ALTER TABLE `assessments` DROP `order`;
 ALTER TABLE `assessments` DROP `visible`;
 
 -- assessment_items
-ALTER TABLE `assessment_items` ADD `weights` DECIMAL(6,2) NULL DEFAULT NULL AFTER `id`;
+ALTER TABLE `assessment_items` ADD `weight` DECIMAL(6,2) NULL DEFAULT NULL AFTER `id`;
 ALTER TABLE `assessment_items` DROP `pass_mark`;
 ALTER TABLE `assessment_items` DROP `max`;
 ALTER TABLE `assessment_items` DROP `result_type`;
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS `assessment_periods` (
   `end_date` date NOT NULL,
   `date_enabled` date NOT NULL,
   `date_disabled` date NOT NULL,
-  `weights` decimal(6,2) NULL DEFAULT NULL,
+  `weight` decimal(6,2) NULL DEFAULT NULL,
   `assessment_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
