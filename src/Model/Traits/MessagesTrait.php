@@ -6,6 +6,9 @@ use Cake\Log\Log;
 
 trait MessagesTrait {
 	public $messages = [
+		'Areas' => [
+			'noAccessToAreas' => 'You do not have access to any areas',
+		],
 		'Attachments' => [
 			'date_on_file' => 'Date On File',
 		],
@@ -82,7 +85,8 @@ trait MessagesTrait {
 			'type' => 'Type',
 			'amount' => 'Amount',
 			'total' => 'Total',
-			'notTransferrable' => 'No other alternative options available to convert records.'
+			'notTransferrable' => 'No other alternative options available to convert records.',
+			'validationRules' => 'Validation Rules',
 		],
 		'fileUpload' => [
 			'single' => '*File size should not be larger than 2MB.',
@@ -265,7 +269,8 @@ trait MessagesTrait {
 			'systemRoles' => 'System Roles'
 		],
 		'StudentAttendances' => [
-			'noSections' => 'No Available Classes'
+			'noSections' => 'No Available Classes',
+			'lateTime' => 'Late time should not be earlier than start time.'
 		],
 		'InstitutionStudentAbsences' => [
 			'noSections' => 'No Available Classes',
@@ -273,7 +278,8 @@ trait MessagesTrait {
 			'notEnrolled' => 'Not able to add absence record as this student is no longer enrolled in the institution.',
 		],
 		'StaffAttendances' => [
-			'noStaff' => 'No Available Staff'
+			'noStaff' => 'No Available Staff',
+			'lateTime' => 'Late time should not be earlier than start time.'
 		],
 		'StaffAbsences' => [
 			'noStaff' => 'No Available Staff'
@@ -301,6 +307,10 @@ trait MessagesTrait {
 			'add_question' => 'Add Question',
 			'add_to_section' => 'Add to Section',
 			'notSupport' => 'Not supported in this form.'
+		],
+		'StaffPositionTitles' => [
+			'inProgress' => 'Update of staff position title roles is in process, please try again later.',
+			'error' => 'There is an error in the update of the title record, please try again later.'
 		],
 		'time' => [
 			'start' => 'Start Time',
@@ -445,6 +455,9 @@ trait MessagesTrait {
 			'noResultTypes' => 'You need to configure Result Types under Training Course.',
 			'noTrainees' => 'No Available Trainees'
 		],
+		'CustomForms' => [
+			'notSupport' => 'Not supported in this form.'
+		],
 
 		// Validation Messages
 		'Institution' => [
@@ -507,7 +520,19 @@ trait MessagesTrait {
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				],
+				
 			],
+			'StaffAbsences' => [
+				'end_time' => [
+					'ruleCompareAbsenceTimeReverse' => 'End Time should not be earlier than Start Time'
+				]
+			],
+			'InstitutionStudentAbsences' => [
+				'end_time' => [
+					'ruleCompareAbsenceTimeReverse' => 'End Time should not be earlier than Start Time'
+				]
+			],
+
 			'InstitutionStudents' => [
 				'academicPeriod' => 'You need to configure Academic Periods first.',
 				'educationProgrammeId' => 'You need to configure Education Programmes first.',
@@ -557,7 +582,9 @@ trait MessagesTrait {
 			'Students' => [
 				'student_name' => [
 					'ruleInstitutionStudentId' => 'Student has already been added.',
-					'ruleCheckAdmissionAgeWithEducationCycleGrade' => 'This student does not fall within the allowed age range for this grade.',
+					'ruleCheckAdmissionAgeWithEducationCycleGrade' => 'This student does not fall within the allowed age range for this grade',
+					'ageHint' => 'The student should be %s years old',
+					'ageRangeHint' => 'The student should be between %s to %s years old',
 					'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.'
 				],
 				'class' => [
@@ -618,13 +645,18 @@ trait MessagesTrait {
 					'ruleNotBlank' => 'Please enter a valid username',
 					'ruleNoSpaces' => 'Only alphabets and numbers are allowed',
 					'ruleUnique' => 'This username is already in use.',
-					'ruleAlphanumeric' => 'Please enter an alphanumeric username',
+					'ruleCheckUsername' => 'Invalid username. Usernames must contain only alphabets and/or digits. Username can also be a valid email',
 				],
 				'password' => [
 					'ruleChangePassword' => 'Incorrect password.',
 					'ruleCheckUsernameExists' => 'Please enter a valid password',
 					'ruleMinLength' => 'Password must be at least 6 characters',
-					'ruleNoSpaces' => 'Password should not contain spaces'	
+					'ruleNoSpaces' => 'Password should not contain spaces',
+					'ruleCheckNumberExists' => 'Password should contain at least 1 number',
+					'ruleCheckUppercaseExists' => 'Password should contain at least 1 uppercase character',
+					'ruleCheckLowercaseExists' => 'Password should contain at least 1 lowercase character',
+					'ruleCheckNonAlphaExists' => 'Password should contain at least 1 non-alphanumeric character',
+					'ruleCheckLength' => 'Password length should be between %s to %s',
 				],
 				'retype_password' => [
 					'ruleChangePassword' => 'Please confirm your new password',
@@ -647,7 +679,7 @@ trait MessagesTrait {
 					'ruleNotBlank' => 'Please enter a valid username',
 					'ruleNoSpaces' => 'Only alphabets and numbers are allowed',
 					'ruleUnique' => 'This username is already in use.',
-					'ruleAlphanumeric' => 'Please enter an alphanumeric username',
+					'ruleCheckUsername' => 'Invalid username. Usernames must contain only alphabets and/or digits. Username can also be a valid email',
 				],
 				'password' => [
 					'ruleChangePassword' => 'Incorrect password.',
@@ -1001,9 +1033,34 @@ trait MessagesTrait {
 				'reportName' => 'Students Out of School'
 			]
 		],
+		'CustomField' => [
+			'text' => [
+				'minLength' => 'Text should be at least %d characters',
+				'maxLength' => 'Text should not be exceed %d characters',
+				'range' => 'Text should be between %d and %d characters'
+			],
+			'number' => [
+				'minValue' => 'Number should not be lesser than %d',
+				'maxValue' => 'Number should not be greater than %d',
+				'range' => 'Number should be between %d and %d'
+			],
+			'date' => [
+				'earlier' => 'Date should be earlier than or equal to %s',
+				'later' => 'Date should be later than or equal to %s',
+				'between' => 'Date should be between %s and %s (inclusive)'
+			],
+			'time' => [
+				'earlier' => 'Time should be earlier than or equal to %s',
+				'later' => 'Time should be later than or equal to %s',
+				'between' => 'Time should be between %s and %s (inclusive)'
+			]
+		],
+
 	];
 
-	public function getMessage($code) {
+	public function getMessage($code, $options = []) {
+		$sprintf = (array_key_exists('sprintf', $options))? $options['sprintf']: [];
+
 		$index = explode('.', $code);
 		$message = $this->messages;
 		foreach ($index as $i) {
@@ -1019,6 +1076,7 @@ trait MessagesTrait {
 				}
 			}
 		}
-		return !is_array($message) ? __($message) : $message;
+
+		return !is_array($message) ? vsprintf(__($message), $sprintf) : $message;
 	}
 }

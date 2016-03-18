@@ -58,10 +58,8 @@ class DirectoriesTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator = parent::validationDefault($validator);
-		return $validator
-			->allowEmpty('photo_content')
-		;
+		$BaseUsers = TableRegistry::get('User.Users');
+		return $BaseUsers->setUserValidation($validator, $this);
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -262,12 +260,14 @@ class DirectoriesTable extends AppTable {
 
 			switch ($userType) {
 				case self::STUDENT:
+					$this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 					$this->addBehavior('CustomField.Record', [
 						'model' => 'Student.Students',
 						'behavior' => 'Student',
 						'fieldKey' => 'student_custom_field_id',
 						'tableColumnKey' => 'student_custom_table_column_id',
 						'tableRowKey' => 'student_custom_table_row_id',
+						'fieldClass' => ['className' => 'StudentCustomField.StudentCustomFields'],
 						'formKey' => 'student_custom_form_id',
 						'filterKey' => 'student_custom_filter_id',
 						'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
@@ -276,15 +276,16 @@ class DirectoriesTable extends AppTable {
 						'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
 						'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]
 					]);
-					$this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 					break;
 				case self::STAFF:
+					$this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 					$this->addBehavior('CustomField.Record', [
 						'model' => 'Staff.Staff',
 						'behavior' => 'Staff',
 						'fieldKey' => 'staff_custom_field_id',
 						'tableColumnKey' => 'staff_custom_table_column_id',
 						'tableRowKey' => 'staff_custom_table_row_id',
+						'fieldClass' => ['className' => 'StaffCustomField.StaffCustomFields'],
 						'formKey' => 'staff_custom_form_id',
 						'filterKey' => 'staff_custom_filter_id',
 						'formFieldClass' => ['className' => 'StaffCustomField.StaffCustomFormsFields'],
@@ -293,7 +294,6 @@ class DirectoriesTable extends AppTable {
 						'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
 						'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true]
 					]);
-					$this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 					break;
 			}	
 		}

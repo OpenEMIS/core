@@ -9,15 +9,23 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 
 class AdvancedContactNumberSearchBehavior extends Behavior {
+	protected $_defaultConfig = [
+		'associatedKey' => '',
+	];
 
+	public function initialize(array $config) {
+		$associatedKey = $this->config('associatedKey');
+		if (empty($associatedKey)) {
+			$this->config('associatedKey', $this->_table->aliasField('id'));
+		}
+	}
+	
 	public function onBuildQuery(Event $event, Query $query, $advancedSearchHasMany) {
 		if (isset($advancedSearchHasMany['contact_number'])) {
 			$search = $advancedSearchHasMany['contact_number'];
 		} else {
 			$search = '';
 		}
-
-		$alias = $this->_table->alias();
 
 		if (!empty($search)) {
 			$searchString = '%' . $search . '%';
@@ -27,7 +35,7 @@ class AdvancedContactNumberSearchBehavior extends Behavior {
 						'table' => 'user_contacts',
 						'alias' => 'Contacts',
 						'conditions' => [
-							'Contacts.security_user_id = '. $alias . '.id'
+							'Contacts.security_user_id = '. $this->config('associatedKey')
 						]
 					]
 				]);
@@ -49,9 +57,8 @@ class AdvancedContactNumberSearchBehavior extends Behavior {
 	public function onSetupFormField(Event $event, ArrayObject $searchables, $advanceSearchModelData) {
 		$searchables['contact_number'] = [
 			'label' => __('Contact Number'),
-			'value' => isset($advanceSearchModelData['hasMany']) ? $advanceSearchModelData['hasMany']['contact_number'] : '',
+			'value' => (isset($advanceSearchModelData['hasMany']) && isset($advanceSearchModelData['hasMany']['contact_number'])) ? $advanceSearchModelData['hasMany']['contact_number'] : '',
 		];
-		// $this->_table->ControllerAction->field('contact_numbers', ['order' => 52]);
 	}
 
 	public function onGetContactNumbers(Event $event, Entity $entity) {

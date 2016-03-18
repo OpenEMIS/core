@@ -194,6 +194,7 @@ class CustomFieldListBehavior extends Behavior {
 			$tableCellData = $tableCellData->getArrayCopy();
 			return $tableCellData;
 		}
+		return [];
 	}
 
 
@@ -269,19 +270,16 @@ class CustomFieldListBehavior extends Behavior {
 			$configCondition = $this->getCondition();
 			$this->setCondition(array_merge($configCondition, $condition));
 		}
+
+		$SurveyFormsTable = TableRegistry::get('Survey.SurveyForms');
 		
-		return $this->_table
+		return $SurveyFormsTable
 			->find('list', [
 				'keyField' => 'id',
 				'valueField' => 'name'
 			])
-			->contain(['SurveyForms'])
-			->select([
-				'id' => $formKeyAlias,
-				'name' => 'SurveyForms.name'
-			])
-			->where($condition)
-			->group($formKeyAlias)
+			->where([$SurveyFormsTable->aliasField('id') => $formId])
+			->group(['id'])
 			->toArray();
 	}
 

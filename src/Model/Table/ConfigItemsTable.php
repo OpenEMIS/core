@@ -518,4 +518,18 @@ class ConfigItemsTable extends AppTable {
 			'last' => true
 		]
 	];
+
+	private $validatePasswordMinLength = [
+		'num' => [
+			'rule'  => 'numeric',
+			'message' => 'Numeric Value should be between 6 to 50',
+			'last' => true
+		],
+		'bet' => [
+			'rule'	=> ['range', 6, 50],
+			'message' => 'Numeric Value should be between 6 to 50',
+			'last' => true
+		]
+	];
+
 }
