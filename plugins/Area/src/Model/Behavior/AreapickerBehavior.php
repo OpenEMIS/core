@@ -33,7 +33,8 @@ class AreapickerBehavior extends Behavior {
 			$targetTable = TableRegistry::get($targetModel);
 			$condition = [];
 			$areaOptions = $targetTable
-				->find('list');
+				->find('list')
+				->toArray();
 			if ($targetModel == 'Area.AreaAdministratives') {
 				$subQueryForWorldRecord = $targetTable->find()->select([$targetTable->aliasField('id')])->where([$targetTable->aliasField('parent_id') => -1]);
 				$areaOptions = $targetTable
