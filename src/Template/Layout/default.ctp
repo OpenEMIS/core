@@ -50,13 +50,13 @@
 		</bg-pane>
 		
 		<bg-pane class="right-pane pane-container" min-size-p="60">
-			<div class="load-content">
+<!-- 			<div class="load-content">
 				<div class="loader-text">
 					<i class="fa kd-openemis"></i>
 					<div class="loader lt-ie9"></div>
 					<p><?= __('Loading...') ?></p>
 				</div>
-			</div>		
+			</div>	 -->	
 			<?php 
 				echo $this->element('OpenEmis.header');
 				echo $this->fetch('content');
