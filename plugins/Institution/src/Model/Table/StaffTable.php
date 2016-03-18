@@ -76,6 +76,7 @@ class StaffTable extends AppTable {
 				'staff_type_id',
 				'staff_status_id',
 				'institution_position_id',
+				'security_group_user_id'
 			]
 		]);
 		$this->addBehavior('User.AdvancedIdentitySearch', [
