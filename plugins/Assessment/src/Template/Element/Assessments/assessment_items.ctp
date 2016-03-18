@@ -2,87 +2,94 @@
 
 <?php if ($action == 'add' || $action == 'edit') : ?>
 	<style>
-	/*table.table-body-scrollable {
-	    border-spacing: 0;
-	    border: 1px solid #CCC !important;
-	    -webkit-box-shadow: inset 0 -5px 10px rgba(0, 0, 0, 0.08);
-	    -moz-box-shadow: inset 0 -5px 10px rgba(0, 0, 0, 0.08);
-	    box-shadow: inset 0 -5px 10px rgba(0, 0, 0, 0.08);
-	    -webkit-border-radius: 5px;
-	    -moz-border-radius: 5px;
-	    border-radius: 5px;
+		/*table.table-body-scrollable {
+		    border-spacing: 0;
+		    border: 1px solid #CCC !important;
+		    -webkit-box-shadow: inset 0 -5px 10px rgba(0, 0, 0, 0.08);
+		    -moz-box-shadow: inset 0 -5px 10px rgba(0, 0, 0, 0.08);
+		    box-shadow: inset 0 -5px 10px rgba(0, 0, 0, 0.08);
+		    -webkit-border-radius: 5px;
+		    -moz-border-radius: 5px;
+		    border-radius: 5px;
 
-	}
-	table.table-body-scrollable thead,
-	table.table-body-scrollable tbody {
-	    display: block;
-	}
-	table.table-body-scrollable tbody {
-	    height: 250px;
-	    -webkit-overflow-y: scroll;
-	    -ms-overflow-y: scroll;
-	    overflow-y: scroll;
-	}*/
+		}
+		table.table-body-scrollable thead,
+		table.table-body-scrollable tbody {
+		    display: block;
+		}
+		table.table-body-scrollable tbody {
+		    height: 250px;
+		    -webkit-overflow-y: scroll;
+		    -ms-overflow-y: scroll;
+		    overflow-y: scroll;
+		}*/
 
 
-	table.table-body-scrollable  {
-	    width: 100%;
-	    border-spacing: 0;
+		table.table-body-scrollable  {
+		    width: 100%;
+		    border-spacing: 0;
 
-	    border: 1px solid #CCC !important;
-	    -webkit-box-shadow: inset 0 -5px 10px rgba(0, 0, 0, 0.08);
-	    -moz-box-shadow: inset 0 -5px 10px rgba(0, 0, 0, 0.08);
-	    box-shadow: inset 0 -5px 10px rgba(0, 0, 0, 0.08);
-	    -webkit-border-radius: 5px;
-	    -moz-border-radius: 5px;
-	    border-radius: 5px;
+		    border: 1px solid #CCC !important;
+		    -webkit-box-shadow: inset 0 -5px 10px rgba(0, 0, 0, 0.08);
+		    -moz-box-shadow: inset 0 -5px 10px rgba(0, 0, 0, 0.08);
+		    box-shadow: inset 0 -5px 10px rgba(0, 0, 0, 0.08);
+		    -webkit-border-radius: 5px;
+		    -moz-border-radius: 5px;
+		    border-radius: 5px;
+		}
 
-	}
+		/*table.table-body-scrollable thead,
+		table.table-body-scrollable tbody,
+		table.table-body-scrollable tr,
+		table.table-body-scrollable th,
+		table.table-body-scrollable td { display: block; }
 
-	table.table-body-scrollable thead,
-	table.table-body-scrollable tbody,
-	table.table-body-scrollable tr,
-	table.table-body-scrollable th,
-	table.table-body-scrollable td { display: block; }
+		table.table-body-scrollable thead tr {*/
+		    /* fallback */
+		    /*width: 97%;*/
+		    /* minus scroll bar width */
+		    /*width: -webkit-calc(100% - 16px);
+		    width:    -moz-calc(100% - 16px);
+		    width:         calc(100% - 16px);
+		}
 
-	table.table-body-scrollable thead tr {
-	    /* fallback */
-	    width: 97%;
-	    /* minus scroll bar width */
-	    width: -webkit-calc(100% - 16px);
-	    width:    -moz-calc(100% - 16px);
-	    width:         calc(100% - 16px);
-	}
+		table.table-body-scrollable tr:after {*/  /* clearing float */
+		    /*content: ' ';
+		    display: block;
+		    visibility: hidden;
+		    clear: both;
+		}
 
-	table.table-body-scrollable tr:after {  /* clearing float */
-	    content: ' ';
-	    display: block;
-	    visibility: hidden;
-	    clear: both;
-	}
+		table.table-body-scrollable tbody {
+		    height: 100px;
+		    overflow-y: auto;
+		    overflow-x: hidden;
+		}
 
-	table.table-body-scrollable tbody {
-	    height: 100px;
-	    overflow-y: auto;
-	    overflow-x: hidden;
-	}
+		table.table-body-scrollable tbody td,
+		table.table-body-scrollable thead th {
+		    width: 19%;*/  /* 19% is less than (100% / 5 cols) = 20% */
+		    /*float: left;
+		}*/
 
-	table.table-body-scrollable tbody td,
-	table.table-body-scrollable thead th {
-	    width: 19%;  /* 19% is less than (100% / 5 cols) = 20% */
-	    float: left;
-	}
-
+		table .error-message-in-table {
+			min-width: 100px;
+			width: 100%;
+		}
+		table th label.table-header-label {
+		  background-color: transparent;
+		  border: medium none;
+		  margin: 0;
+		  padding: 0;
+		}
 	</style>
 
 
 	<div class="clearfix"></div>
-	<h3><?= $this->Label->get('Assessments.assessmentItems'); ?></h3>
-
 	<div class="table-wrapper">
 		<div class="table-responsive">
-		    <table class="table">
-		    <!-- <table class="table table-body-scrollable"> -->
+		    <!-- <table class="table"> -->
+		    <table class="table table-body-scrollable">
 				<thead>
 					<tr>
 						<?php foreach ($attr['formFields'] as $formField) : ?>
@@ -94,9 +101,12 @@
 								} else {
 									$header = Inflector::humanize(str_replace('_id', '', $formField));
 								}
+								$thClass = (isset($attr['fields'][$formField]['required']) && $attr['fields'][$formField]['required']) ? 'required' : '';
 							?>
-							<th><?= $header ?></th>
-							<th></th>
+							<th class="<?= $thClass ?>"><label class="table-header-label"><?= $header ?></label></th>
+								<?php if ($attr['fields'][$formField]['type']!='readonly') : ?>
+								<th></th>
+								<?php endif; ?>
 							<?php endif; ?>
 						<?php endforeach;?>
 					</tr>
@@ -135,6 +145,10 @@
 									'class'=>$fieldClass,
 									'value'=>$record->$field['field']
 								];
+								if ($field['type']=='readonly') {
+									$field['value'] = $record->$field['field'];
+									$field['attr'] = ['value' => $record->{'get'.(Inflector::camelize($field['field'])).'Name'}($record->$field['field'])];
+								}
 						?>
 							<?php if ($field['type']!='hidden') : ?>
 
@@ -142,17 +156,17 @@
 									<?= $this->HtmlField->{$field['type']}('edit', $record, $field, $options); ?>
 								</td>
 
+								<?php if ($field['type']!='readonly') : ?>
 								<td class="<?= $tdClass ?>">
+									<ul class="error-message error-message-in-table">
 									<?php if ($fieldErrors) : ?>
-										<ul class="error-message">
 										<?php foreach ($fieldErrors as $error) : ?>
 											<li><?= $error ?></li>
 										<?php endforeach ?>
-										</ul>
-									<?php else: ?>
-										&nbsp;
 									<?php endif; ?>
+									</ul>
 								</td>
+								<?php endif; ?>
 
 							<?php else : ?>
 								<?= $this->HtmlField->{$field['type']}('edit', $record, $field, $options);?>
