@@ -11,6 +11,7 @@ echo $this->Html->css('OpenEmis.../plugins/fuelux/css/fuelux');
 echo $this->Html->css('OpenEmis.../plugins/bootstrap/css/bootstrap.min');
 echo $this->Html->css('OpenEmis.../plugins/scrolltabs/css/scrolltabs.css');
 echo $this->Html->css('OpenEmis.../plugins/slider/css/bootstrap-slider');
+echo $this->Html->css('OpenEmis.../plugins/ng-scrolltabs/css/angular-ui-tab-scroll');
 
 echo $this->Resource->css('OpenEmis.master.min');
 

@@ -193,9 +193,8 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 		return $event->subject()->Html->link($assessment->code_name, [
 			'plugin' => $this->controller->plugin,
 			'controller' => $this->controller->name,
-			'action' => $this->alias,
-			'view',
-			$classId,
+			'action' => 'Results',
+			'class_id' => $classId,
 			'assessment_id' => $assessment->id
 		]);
 	}
