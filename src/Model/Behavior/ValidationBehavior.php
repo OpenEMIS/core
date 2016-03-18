@@ -1134,4 +1134,35 @@ class ValidationBehavior extends Behavior {
         return $count<2;
     }
 
+	public static function inParentAcademicPeriod($field, $parentModel, $globalData) {
+		$globalPostData = $parentModel->request->data;
+		$parentPostData = $globalPostData[$parentModel->alias()];
+		$modelPostData = $globalData['data'];
+
+      	if (!empty($parentPostData['academic_period_id']) && !empty($field)) {
+			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			if ($AcademicPeriods->exists($parentPostData['academic_period_id'])) {
+				$periodObj = $AcademicPeriods->get($parentPostData['academic_period_id']);
+				$date = strtotime($field);
+
+				$academicPeriodStartDate = (!is_null($periodObj['start_date'])) ? $periodObj['start_date']->toUnixString() : null;
+				$academicPeriodEndDate = (!is_null($periodObj['end_date'])) ? $periodObj['end_date']->toUnixString() : null;
+
+				$rangecheck = ($date >= $academicPeriodStartDate) && 
+				(is_null($academicPeriodEndDate) ||
+					(!is_null($academicPeriodEndDate) && ($date <= $academicPeriodEndDate))
+				)
+				;
+				return $rangecheck;
+
+			} else {
+				return __('Bad Academic Period Id');
+			}
+		} else if (!empty($parentPostData['academic_period_id'])) {
+			return __('Parent Academic Period Id cannot be empty');
+		}
+
+		return true;
+	}
+
 }

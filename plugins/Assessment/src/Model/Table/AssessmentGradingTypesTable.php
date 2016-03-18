@@ -97,7 +97,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 
 		if (!empty($removedGradingOptionIds)) {
 			$this->GradingOptions->deleteAll([
-				$this->GradingOptions->primaryKey() . ' IN ' => $removedGradingOptionIds
+				$this->GradingOptions->aliasField($this->GradingOptions->primaryKey()) . ' IN ' => $removedGradingOptionIds
 			]);
 		}
 		

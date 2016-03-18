@@ -1,17 +1,15 @@
 <?php
 namespace Assessment\Model\Table;
 
-use App\Model\Table\ControllerActionTable;
-use App\Model\Traits\MessagesTrait;
 use Cake\Validation\Validator;
 
-class AssessmentGradingOptionsTable extends ControllerActionTable {
-	use MessagesTrait;
+class AssessmentGradingOptionsTable extends AssessmentsAppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
 
 		$this->belongsTo('AssessmentGradingTypes', ['className' => 'Assessment.AssessmentGradingTypes']);
+		$this->hasMany('AssessmentItemResults', ['className' => 'Assessment.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
 		// if ($this->behaviors()->has('Reorder')) {
 		// 	$this->behaviors()->get('Reorder')->config([
 		// 		'filter' => 'assessment_grading_type_id',
@@ -19,8 +17,12 @@ class AssessmentGradingOptionsTable extends ControllerActionTable {
 		// }
 		$this->fields['assessment_grading_type_id']['type'] = 'hidden';
 		$this->fields['id']['type'] = 'hidden';
+		$this->fields['code']['required'] = true;
+		$this->fields['name']['required'] = true;
 		$this->fields['max']['attr']['min'] = 0;
+		$this->fields['max']['required'] = true;
 		$this->fields['min']['attr']['min'] = 0;
+		$this->fields['min']['required'] = true;
 	}
 
 	public function getFormFields($action = 'edit') {

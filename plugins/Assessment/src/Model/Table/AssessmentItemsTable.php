@@ -1,14 +1,11 @@
 <?php
 namespace Assessment\Model\Table;
 
+use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use App\Model\Traits\OptionsTrait;
-use App\Model\Traits\MessagesTrait;
-use App\Model\Table\ControllerActionTable;
 
-class AssessmentItemsTable extends ControllerActionTable {
-	use MessagesTrait;
-	use OptionsTrait;
+class AssessmentItemsTable extends AssessmentsAppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -21,10 +18,11 @@ class AssessmentItemsTable extends ControllerActionTable {
 		$this->fields['id']['type'] = 'hidden';
 		$this->fields['education_subject_id']['type'] = 'readonly';
 		$this->fields['academic_period_id']['type'] = 'select';
-		$this->fields['weights']['type'] = 'string';
+		$this->fields['weight']['type'] = 'string';
 
 		$this->fields['assessment_grading_type_id']['type'] = 'select';
 		$this->fields['assessment_grading_type_id']['options'] = $this->GradingTypes->getList()->toArray();
+		$this->fields['assessment_grading_type_id']['required'] = true;
 		$this->fields['grading_type.result_type'] = [
 			'type' => 'string',
 			'field' => 'result_type',
@@ -40,27 +38,44 @@ class AssessmentItemsTable extends ControllerActionTable {
 	}
 
 	public function getFormFields($action = 'edit') {
-		if ($action=='edit' || $action=='add') {
-			return ['education_subject_id'=>'', 'assessment_id'=>'', 'assessment_grading_type_id'=>'', 'weights'=>'', 'id'=>''];
+		if ($action=='add') {
+			return ['education_subject_id'=>'', 'assessment_grading_type_id'=>'', 'weight'=>''];
+		} else if ($action=='edit') {
+			return ['education_subject_id'=>'', 'assessment_id'=>'', 'assessment_grading_type_id'=>'', 'weight'=>'', 'id'=>''];
 		} else {
-			return ['education_subject_id'=>'', 'assessment_grading_type_id'=>'', 'grading_type.result_type'=>'', 'grading_type.pass_mark'=>'', 'grading_type.max'=>'', 'weights'=>''];
+			return ['education_subject_id'=>'', 'assessment_grading_type_id'=>'', 'grading_type.result_type'=>'', 'grading_type.pass_mark'=>'', 'grading_type.max'=>'', 'weight'=>''];
 		}
 	}
 
-	// public function validationDefault(Validator $validator) {
-	// 	$validator
-	// 		->allowEmpty('code')
-	// 		->add('code', 'ruleUniqueCode', [
-	// 		    'rule' => ['checkUniqueCode', 'assessment_grading_type_id'],
-	// 		    'last' => true
-	// 		])
-	// 		->add('code', 'ruleUniqueCodeWithinForm', [
-	// 		    'rule' => ['checkUniqueCodeWithinForm', $this->AssessmentGradingTypes],
-			   
-	// 		])
-	// 		;
-	// 	return $validator;
-	// }
+	public function validationDefault(Validator $validator) {
+		$validator
+			->requirePresence('assessment_id', 'update')
+			->requirePresence('assessment_grading_type_id')
+			;
+		return $validator;
+	}
+
+	public function populateAssessmentItemsArray(Entity $entity, $gradeId) {
+		$EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
+		$gradeSubjects = $EducationGradesSubjects->find()
+			->contain('EducationSubjects')
+			->where([$EducationGradesSubjects->aliasField('education_grade_id') => $gradeId])
+			->toArray();
+
+		$assessmentItems = [];
+		foreach ($gradeSubjects as $key => $gradeSubject) {
+			if (!empty($gradeSubject->education_subject)) {
+				$assessmentItems[] = [
+				    'id' => '',
+				    'assessment_id' => $entity->id,
+					'education_subject_id' => $gradeSubject->education_subject->id,
+				    'assessment_grading_type_id' => '',
+					'weight' => '',
+				];
+			}
+		}
+		return $assessmentItems;
+	}
 
 	/**
 	 *	Function to get the assessment items id and the subject name and the result type
@@ -85,4 +100,5 @@ class AssessmentItemsTable extends ControllerActionTable {
 			->toArray();
 		return $subjectList;
 	}
+
 }

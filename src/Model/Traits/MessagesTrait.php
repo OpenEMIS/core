@@ -1052,17 +1052,29 @@ trait MessagesTrait {
 			]
 		],
 		'Assessment' => [
+			'AssessmentPeriods' => [
+				'code' => [
+					'ruleUniqueCode' => 'Code must be unique',
+					'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form',
+				],
+				'start_date' => [
+					'ruleInParentAcademicPeriod' => 'Date must be within selected academic period start and end date',
+				],
+				'end_date' => [
+					'ruleInParentAcademicPeriod' => 'Date must be within selected academic period start and end date',
+				],
+			],
 			'AssessmentGradingTypes' => [
 				'code' => [
-					'ruleUniqueCode' => 'Code must be unique'
-				]
+					'ruleUniqueCode' => 'Code must be unique',
+				],
 			],
 			'GradingOptions' => [
 				'code' => [
 					'ruleUniqueCode' => 'Code must be unique',
 					'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form',
-				]
-			]
+				],
+			],
 		],
 
 	];
