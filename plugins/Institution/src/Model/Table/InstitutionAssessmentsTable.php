@@ -1,9 +1,15 @@
 <?php
 namespace Institution\Model\Table;
 
-use App\Model\Table\AppTable;
+use ArrayObject;
+use Cake\ORM\Query;
+use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
+use Cake\ORM\ResultSet;
+use Cake\Event\Event;
+use App\Model\Table\ControllerActionTable;
 
-class InstitutionAssessmentsTable extends AppTable {
+class InstitutionAssessmentsTable extends ControllerActionTable {
 	public function initialize(array $config) {
 		$this->table('institution_classes');
 		parent::initialize($config);
@@ -16,5 +22,177 @@ class InstitutionAssessmentsTable extends AppTable {
 		$this->hasMany('ClassGrades', ['className' => 'Institution.InstitutionClassGrades', 'dependent' => true]);
 		$this->hasMany('ClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'dependent' => true]);
 		$this->hasMany('SubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true]);
+	}
+
+	public function beforeAction(Event $event, ArrayObject $extra) {
+		$this->field('class_number', ['visible' => false]);
+		$this->field('staff_id', ['visible' => false]);
+		$this->field('institution_shift_id', ['visible' => false]);
+	}
+
+	public function indexBeforeAction(Event $event, ArrayObject $extra) {
+		$extra['elements']['controls'] = ['name' => 'Institution.Assessment/controls', 'data' => [], 'options' => [], 'order' => 1];
+		$this->field('assessment');
+		$this->field('education_grade');
+		$this->field('subjects');
+		$this->field('male_students');
+		$this->field('female_students');
+
+		$this->setFieldOrder(['assessment', 'academic_period_id', 'education_grade', 'name', 'subjects', 'male_students', 'female_students']);
+	}
+
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+		$session = $this->request->session();
+		$institutionId = $session->read('Institution.Institutions.id');
+		
+		$Classes = TableRegistry::get('Institution.InstitutionClasses');
+		$ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+		$Assessments = TableRegistry::get('Assessment.Assessments');
+		$EducationGrades = TableRegistry::get('Education.EducationGrades');
+		$EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+
+		$query
+			->select([
+				$ClassGrades->aliasField('institution_class_id'),
+				$Assessments->aliasField('id')
+			])
+			->innerJoin(
+				[$ClassGrades->alias() => $ClassGrades->table()],
+				[$ClassGrades->aliasField('institution_class_id = ') . $this->aliasField('id')]
+			)
+			->innerJoin(
+				[$Assessments->alias() => $Assessments->table()],
+				[
+					$Assessments->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+					$Assessments->aliasField('education_grade_id = ') . $ClassGrades->aliasField('education_grade_id')
+				]
+			)
+			->innerJoin(
+				[$EducationGrades->alias() => $EducationGrades->table()],
+				[$EducationGrades->aliasField('id = ') . $Assessments->aliasField('education_grade_id')]
+			)
+			->innerJoin(
+				[$EducationProgrammes->alias() => $EducationProgrammes->table()],
+				[$EducationProgrammes->aliasField('id = ') . $EducationGrades->aliasField('education_programme_id')]
+			)
+			->group([
+				$ClassGrades->aliasField('institution_class_id'),
+				$Assessments->aliasField('id')
+			])
+			->order([
+				$EducationProgrammes->aliasField('order'),
+				$EducationGrades->aliasField('order'),
+				$Assessments->aliasField('code'),
+				$Assessments->aliasField('name'),
+				$this->aliasField('name')
+			])
+			->autoFields(true)
+			;
+
+		// Academic Periods
+		$periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
+		$periodOptions = ['' => '-- ' . __('Select Period') .' --'] + $periodOptions;
+		if (is_null($this->request->query('academic_period_id'))) {
+			$this->request->query['academic_period_id'] = '';
+		}
+		$selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
+		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noAssessments')),
+			'callable' => function($id) use ($Classes, $ClassGrades, $Assessments, $institutionId) {
+				$selectedGrade = $Assessments->get($id)->education_grade_id;
+				return $Classes
+					->find()
+					->innerJoin(
+						[$ClassGrades->alias() => $ClassGrades->table()],
+						[
+							$ClassGrades->aliasField('institution_class_id = ') . $Classes->aliasField('id')
+						]
+					)
+					->innerJoin(
+						[$Assessments->alias() => $Assessments->table()],
+						[
+							$Assessments->aliasField('academic_period_id = ') . $Classes->aliasField('academic_period_id'),
+							$Assessments->aliasField('education_grade_id = ') . $ClassGrades->aliasField('education_grade_id')
+						]
+					)
+					->where([
+						$Classes->aliasField('institution_id') => $institutionId,
+						$Classes->aliasField('academic_period_id') => $id
+					])
+					->count();
+			}
+		]);
+		$this->controller->set(compact('periodOptions', 'selectedPeriod'));
+		// End
+		
+		if (!empty($selectedPeriod)) {
+			$query->where([$this->aliasField('academic_period_id') => $selectedPeriod]);
+
+			// Assessments
+			$assessmentOptions = $Assessments
+				->find('list')
+				->where([$Assessments->aliasField('academic_period_id') => $selectedPeriod])
+				->toArray();
+			$assessmentOptions = ['-1' => __('All Assessments')] + $assessmentOptions;
+			$selectedAssessment = $this->queryString('assessment_id', $assessmentOptions);
+			$this->advancedSelectOptions($assessmentOptions, $selectedAssessment, [
+				'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
+				'callable' => function($id) use ($Classes, $ClassGrades, $Assessments, $institutionId, $selectedPeriod) {
+					if ($id == -1) { return 1; }
+					$selectedGrade = $Assessments->get($id)->education_grade_id;
+					return $Classes
+						->find()
+						->innerJoin(
+							[$ClassGrades->alias() => $ClassGrades->table()],
+							[
+								$ClassGrades->aliasField('institution_class_id = ') . $Classes->aliasField('id'),
+								$ClassGrades->aliasField('education_grade_id') => $selectedGrade
+							]
+						)
+						->where([
+							$Classes->aliasField('institution_id') => $institutionId,
+							$Classes->aliasField('academic_period_id') => $selectedPeriod
+						])
+						->count();
+				}
+			]);
+			$this->controller->set(compact('assessmentOptions', 'selectedAssessment'));
+			// End
+
+			if ($selectedAssessment != '-1') {
+				$query->where([$Assessments->aliasField('id') => $selectedAssessment]);
+			}
+		}
+	}
+
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+		if ($field == 'name') {
+			return __('Class Name');
+		} else {
+			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+		}
+	}
+
+	public function onGetAssessment(Event $event, Entity $entity) {
+		$ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+		$Assessments = TableRegistry::get('Assessment.Assessments');
+
+		$assessment = $Assessments
+			->find()
+			->contain('EducationGrades')
+			->where([
+				$Assessments->aliasField('id') => $entity[$Assessments->alias()]['id']
+			])
+			->first();
+		$entity->education_grade = $assessment->education_grade->programme_grade_name;
+
+		return $event->subject()->Html->link($assessment->code_name, [
+			'plugin' => $this->controller->plugin,
+			'controller' => $this->controller->name,
+			'action' => $this->alias,
+			'view',
+			$assessment->id,
+			'class_id' => $entity[$ClassGrades->alias()]['institution_class_id']
+		]);
 	}
 }
