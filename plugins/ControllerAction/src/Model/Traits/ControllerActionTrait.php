@@ -93,6 +93,9 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.edit.beforeQuery'			=> 'editBeforeQuery',
 		// public function editBeforeQuery(Event $event, Query $query) {}
 
+		'ControllerAction.Model.edit.afterQuery'			=> 'editAfterQuery',
+		// public function editAfterQuery(Event $event, Entity $entity) {}
+
 		'ControllerAction.Model.edit.onInitialize'			=> 'editOnInitialize',
 		// public function editOnInitialize(Event $event, Entity $entity) {}
 

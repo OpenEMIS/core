@@ -19,10 +19,11 @@ class InstitutionStaffTable extends AppTable  {
 		$this->belongsTo('Institutions',	['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('StaffTypes',		['className' => 'FieldOption.StaffTypes']);
 		$this->belongsTo('StaffStatuses',	['className' => 'FieldOption.StaffStatuses']);
+		$this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
 
 		$this->addBehavior('Report.ReportList');
 		$this->addBehavior('Excel', [
-			'excludes' => ['start_year', 'end_year', 'FTE'], 
+			'excludes' => ['start_year', 'end_year', 'FTE', 'security_group_user_id'], 
 			'pages' => false
 		]);
 	}
@@ -91,14 +92,7 @@ class InstitutionStaffTable extends AppTable  {
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
 		$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
-		$identity = $IdentityType
-		   ->find()
-		   ->contain(['FieldOptions'])
-		   ->where([
-		   		'FieldOptions.code' => 'IdentityTypes'
-		   ])
-		   ->order(['IdentityTypes.default DESC'])
-		   ->first();
+		$identity = $IdentityType->getDefaultEntity();
 
 		$settings['identity'] = $identity;
 
