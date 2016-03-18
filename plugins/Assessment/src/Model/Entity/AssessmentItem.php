@@ -8,19 +8,15 @@ class AssessmentItem extends Entity
 {
 	protected $_virtual = [];
 
- //    protected function _getCodeName() {
- //    	return $this->code . ' - ' . $this->name;
-	// }
-
-	protected function _getEducationSubjectId($educationSubjectId) {
+	public function getEducationSubjectIdName($educationSubjectId) {
 		if (!empty($educationSubjectId) && !is_null($educationSubjectId)) {
 			$EducationSubjects = TableRegistry::get('Education.EducationSubjects');
-			$subject = $EducationSubjects->get($educationSubjectId);
-			// pr('chak: '.$educationSubjectId);pr($subject);pr($this);die;
-			// return 'chak';
-			return $subject->code . ' - ' . $subject->name;
-		} else {
-			return '';
+			if ($EducationSubjects->exists([$EducationSubjects->primaryKey() => $educationSubjectId])) {
+				$subject = $EducationSubjects->get($educationSubjectId);
+				return $subject->code . ' - ' . $subject->name;
+			}
 		}
+		return '';
 	}
+	
 }
