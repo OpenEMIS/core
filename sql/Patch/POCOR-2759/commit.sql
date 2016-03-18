@@ -28,11 +28,13 @@ ALTER TABLE `assessment_items` ADD `weight` DECIMAL(6,2) NULL DEFAULT NULL AFTER
 ALTER TABLE `assessment_items` DROP `pass_mark`;
 ALTER TABLE `assessment_items` DROP `max`;
 ALTER TABLE `assessment_items` DROP `result_type`;
+ALTER TABLE `assessment_items` CHANGE `id` `id` CHAR(36) NOT NULL;
 
 -- assessment_item_results
 ALTER TABLE `assessment_item_results` ADD `assessment_id` INT(11) NOT NULL AFTER `assessment_item_id`;
 ALTER TABLE `assessment_item_results` ADD `education_subject_id` INT(11) NOT NULL AFTER `assessment_id`;
 ALTER TABLE `assessment_item_results` ADD `assessment_period_id` INT(11) NOT NULL AFTER `academic_period_id`;
+ALTER TABLE `assessment_item_results` DROP `assessment_item_id`;
 ALTER TABLE `assessment_item_results` CHANGE `marks` `marks` DECIMAL(6,2) NULL DEFAULT NULL;
 ALTER TABLE `assessment_item_results` DROP PRIMARY KEY;
 ALTER TABLE `assessment_item_results`

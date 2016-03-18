@@ -296,7 +296,7 @@ class AcademicPeriodsTable extends AppTable {
 		}
 
 		if ( $withSelect ) {
-			$data = ['' => __('-- Select Period --')] + $data;
+			$data = ['' => '-- ' . __('Select Period') .' --'] + $data;
 		}
 
 		return $data;
