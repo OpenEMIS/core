@@ -82,6 +82,10 @@ class InstitutionsController extends AppController  {
 	// public function StaffAbsences() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
 	// End
 
+	// AngularJS
+	public function Results() {}
+	// End	
+
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 		$this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
