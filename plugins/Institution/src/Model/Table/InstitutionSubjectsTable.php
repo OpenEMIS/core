@@ -563,7 +563,10 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 						 * since student record with its User record attached already exists in the $students array.
 						 */
 						if (!array_key_exists($id, $recordedStudentIds)) {
-							$students[] = $this->createVirtualEntity($id, $entity, 'students');
+							$student = $this->createVirtualEntity($id, $entity, 'students');
+							if ( !empty( $student->user ) ) {
+								$students[] = $student;
+							}
 						}
 						unset($studentOptions[$id]);
 					}
