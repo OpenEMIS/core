@@ -132,6 +132,18 @@ class AreasController extends AppController
 						->toArray());
 				}
 
+				if (!empty($authorisedArea)) {
+					$authorisedAreaId = $Table
+						->find('list', [
+								'keyField' => 'id',
+								'valueField' => 'id'
+							])
+						->where(['OR' => $areaCondition])
+						->toArray();
+				} else {
+					$authorisedAreaId = [];
+				}
+				
 				$areaCondition[] = [
 						$Table->aliasField('id').' IN' => $parentIds
 					];
@@ -162,7 +174,7 @@ class AreasController extends AppController
 		$pathToUnset = [];
 		foreach ($path as $obj) {
 			if (! $AccessControl->isAdmin() && $tableName == 'Area.Areas') {
-				if (!in_array($obj->id, $parentIds)) {
+				if (!in_array($obj->id, $authorisedAreaId) && !in_array($obj->id, $parentIds)) {
 					$pathToUnset[] = $count - 1;
 					$count++;
 					continue;
@@ -202,7 +214,7 @@ class AreasController extends AppController
 
 			if(! ($count == count($path)) || ! $hasChildren){
 				$obj->selectedId = $obj->id;
-			}else{
+			} else{
 				$obj->selectedId = $previousOptionId;
 			}
 			
