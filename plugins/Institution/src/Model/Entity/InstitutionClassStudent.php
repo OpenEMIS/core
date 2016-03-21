@@ -2,13 +2,19 @@
 namespace Institution\Model\Entity;
 
 use Cake\ORM\Entity;
-use Cake\ORM\TableRegistry;
-use Cake\ORM\Query;
 
 class InstitutionClassStudent extends Entity {
-	protected $_virtual = ['name'];
+	protected $_virtual = ['name', 'student_status_name'];
 	
 	protected function _getStudentName() {
 		return $this->user->name_with_id;
+	}
+
+	protected function _getStudentStatusName() {
+		$status = '';
+		if ($this->has('student_status')) {
+			$status = __($obj->student_status->name);
+		}
+		return $status;
 	}
 }
