@@ -10,45 +10,41 @@ use Cake\ORM\ResultSet;
 use App\Model\Traits\MessagesTrait;
 use App\Model\Table\ControllerActionTable;
 
-class StudentClassesTable extends ControllerActionTable {
+class StudentSubjectsTable extends ControllerActionTable {
 	use MessagesTrait;
 
 	public function initialize(array $config) {
-		$this->table('institution_class_students');
+		$this->table('institution_subject_students');
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
+		$this->belongsTo('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects']);
 		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
-		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-		$this->belongsTo('StudentStatuses',	['className' => 'Student.StudentStatuses']);
-
-		$this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades', 'dependent' => true, 'cascadeCallbacks' => true]);
-
+		
 		$this->toggle('add', false);
 		$this->toggle('edit', false);
 		$this->toggle('remove', false);
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra) {
-		$this->fields['education_grade_id']['visible'] = false;
+		$this->fields['status']['visible'] = false;
 
 		$this->field('academic_period', []);
 		$this->field('institution', []);
-		$this->field('education_grade', []);
-		$this->field('homeroom_teacher_name', []);
-
+		$this->field('educationSubject', []);
+		
 		$order = 0;
 		$this->setFieldOrder('academic_period', $order++);
 		$this->setFieldOrder('institution', $order++);
-		$this->setFieldOrder('education_grade', $order++);
 		$this->setFieldOrder('institution_class_id', $order++);
-		$this->setFieldOrder('homeroom_teacher_name', $order++);
+		$this->setFieldOrder('institution_subject_id', $order++);
+		$this->setFieldOrder('educationSubject', $order++);
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		$query->contain([
 			'InstitutionClasses',
-			'StudentStatuses'
+			'InstitutionSubjects'
 		]);
 	}
 
@@ -59,8 +55,8 @@ class StudentClassesTable extends ControllerActionTable {
 			$url = [
 				'plugin' => 'Institution', 
 				'controller' => 'Institutions', 
-				'action' => 'Classes',
-				'view', $entity->institution_class->id,
+				'action' => 'Subjects',
+				'view', $entity->institution_subject->id,
 				'institution_id' => $institutionId,
 			];
 			$buttons['view']['url'] = $url;
@@ -72,7 +68,7 @@ class StudentClassesTable extends ControllerActionTable {
 		$options = ['type' => 'student'];
 		$tabElements = $this->controller->getAcademicTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', 'Classes');
+		$this->controller->set('selectedAction', 'Subjects');
 	}
 
 }
