@@ -74,7 +74,7 @@
 						<td><?= $userData['openemis_no'] ?></td>
 						<td><?= $userData['name'] ?></td>
 						<td><?= $userData['gender']['name'] ?></td>
-						<td><?= __($obj->class_student->student_status->name) ?></td>
+						<td><?= $obj->student_status ?></td>
 						<td> 
 							<?php //if ($attr['data']['isHistoryRecord']): ?>
 							
@@ -105,7 +105,7 @@
 						</td>
 						<td><?= $obj->user->name ?></td>
 						<td><?= $obj->user->gender->name ?></td>
-						<td><?= __($obj->class_student->student_status->name) ?></td>
+						<td><?= $obj->student_status ?></td>
 					</tr>
 
 				<?php endif;?>
