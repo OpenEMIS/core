@@ -147,6 +147,7 @@ class AreasController extends AppController
 				$areaCondition[] = [
 						$Table->aliasField('id').' IN' => $parentIds
 					];
+				$authorisedParentIds = $parentIds;
 				$condition['OR'] = $areaCondition;
 			}
 		}
@@ -187,6 +188,12 @@ class AreasController extends AppController
 				->order([$Table->aliasField('order')])
 				->where($condition)
 				->toArray();
+
+			$objParentIds = $Table
+				->find('list')
+				->where([$Table->aliasField('lft').' < ' => $obj->lft, $Table->aliasField('rght').' > ' => $obj->rght])
+				->toArray();
+
 			$newList = [];
 			foreach ($list as $key => $area) {
 				$newList[$key] = __($area);
@@ -202,7 +209,7 @@ class AreasController extends AppController
 				default:
 					if( $count > 1 ){
 						if (! $AccessControl->isAdmin()) {
-							if (in_array($parentId, $this->array_column($authorisedArea, 'area_id'))) {
+							if (array_intersect($this->array_column($authorisedArea, 'area_id'), array_keys($objParentIds))) {
 								$list = [$previousOptionId => '--'.__('Select Area').'--'] + $list;	
 							}
 						} else {
