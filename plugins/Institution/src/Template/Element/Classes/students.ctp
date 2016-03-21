@@ -52,7 +52,7 @@
 						<td><?= $obj->user->name ?></td>
 						<td><?= __($obj->user->gender->name) ?></td>
 						<td><?= $obj->education_grade->name ?></td>
-						<td><?= __($obj->student_status->name) ?></td>
+						<td><?= $obj->student_status_name ?></td>
 						<td> 
 							<!--<button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemoveAndReload(this)">-->
 							<button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemove(this);">
@@ -76,7 +76,7 @@
 						<td><?= $obj->user->name ?></td>
 						<td><?= $obj->user->gender->name ?></td>
 						<td><?= (is_object($obj->education_grade) ? $obj->education_grade->name : ''); ?></td>
-						<td><?= __($obj->student_status->name) ?></td>
+						<td><?= $obj->student_status_name ?></td>
 					</tr>
 
 				<?php endif;?>
