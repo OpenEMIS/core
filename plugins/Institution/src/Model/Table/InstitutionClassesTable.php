@@ -861,23 +861,26 @@ class InstitutionClassesTable extends ControllerActionTable {
 				$InstitutionStudentsTable->aliasField('institution_id') => $entity->institution_id
 			])
 			->first();
-
-		$data = [
-			'id' => $this->getExistingRecordId($id, $entity),
-			'student_id' => $id,
-			'institution_class_id' => $entity->id,
-			'education_grade_id'=>  $userData->education_grade_id,
-			'student_status_id' => $userData->student_status_id,
-			'education_grade' => [],
-			'student_status' => [],
-			'user' => []
-		];
-		$student = $this->ClassStudents->newEntity();
-		$student = $this->ClassStudents->patchEntity($student, $data);
-		$student->user = $userData->user;
-		$student->student_status = $userData->student_status;
-		$student->education_grade = $userData->education_grade;
-		return $student;
+		if ($userData) {
+			$data = [
+				'id' => $this->getExistingRecordId($id, $entity),
+				'student_id' => $id,
+				'institution_class_id' => $entity->id,
+				'education_grade_id'=>  $userData->education_grade_id,
+				'student_status_id' => $userData->student_status_id,
+				'education_grade' => [],
+				'student_status' => [],
+				'user' => []
+			];
+			$student = $this->ClassStudents->newEntity();
+			$student = $this->ClassStudents->patchEntity($student, $data);
+			$student->user = $userData->user;
+			$student->student_status = $userData->student_status;
+			$student->education_grade = $userData->education_grade;
+			return $student;
+		} else {
+			return null;
+		}
 	}
 
 	public function getExistingRecordId($securityId, $entity) {

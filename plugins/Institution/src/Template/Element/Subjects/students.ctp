@@ -95,16 +95,17 @@
 				<?php else:?>
 
 					<tr>
-						<td><?= $this->html->link($obj->user->openemis_no , [
+						<td>
+							<?= $this->html->link($obj->student_openemis_no, [
 									'plugin' => 'Institution',
 									'controller' => 'Institutions',
 									'action' => 'StudentUser',
 									'view',
-									$obj->user->id 
+									$obj->student_user_id
 								]) ?>
 						</td>
-						<td><?= $obj->user->name ?></td>
-						<td><?= $obj->user->gender->name ?></td>
+						<td><?= $obj->student_name ?></td>
+						<td><?= $obj->student_gender ?></td>
 						<td><?= $obj->student_status ?></td>
 					</tr>
 
