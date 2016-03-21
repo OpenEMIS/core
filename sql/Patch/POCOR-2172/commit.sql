@@ -12,7 +12,52 @@ CREATE TABLE `staff_statuses` (
 INSERT INTO `staff_statuses` (`id`, `code`, `name`) VALUES (1, 'ASSIGNED', 'Assigned');
 INSERT INTO `staff_statuses` (`id`, `code`, `name`) VALUES (2, 'END_OF_ASSIGNMENT', 'End of Assignment');
 
--- For staff_assignment
+-- staff_assignments
+CREATE TABLE `staff_assignments` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  `staff_id` int(11) NOT NULL COMMENT 'links to security_users.id',
+  `status` int(11) NOT NULL,
+  `institution_id` varchar(45) NOT NULL,
+  `institution_position_id` int(11) NOT NULL,
+  `fte` decimal(3,2) NOT NULL,
+  `requesting_institution_id` int(11) DEFAULT NULL,
+  `requesting_position_id` int(11) DEFAULT NULL,
+  `comment` text,
+  `type` int(11) NOT NULL COMMENT '1 -> Staff Assignment, 2 -> Staff Transfer',
+  `updated` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `staff_id` (`staff_id`),
+  KEY `institution_id` (`institution_id`),
+  KEY `institution_position_id` (`institution_position_id`),
+  KEY `requesting_institution_id` (`requesting_institution_id`),
+  KEY `requesting_position_id` (`requesting_position_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- staff_terminations
+CREATE TABLE `staff_terminations` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `status` int(11) NOT NULL,
+  `staff_id` int(11) NOT NULL COMMENT 'links to security_users.id',
+  `institution_position_id` int(11) NOT NULL,
+  `effective_date` date NOT NULL,
+  `updated` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `staff_id` (`staff_id`),
+  KEY `institution_position_id` (`institution_position_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+-- For staff_assignments
 -- workflow_models
 INSERT INTO `workflow_models` (`name`, `model`, `created_user_id`, `created`) 
 VALUES ('Institutions > Staff > Add', 'Institution.StaffAssignment', 1, NOW());
