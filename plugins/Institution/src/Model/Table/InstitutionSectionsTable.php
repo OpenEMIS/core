@@ -945,6 +945,7 @@ class InstitutionSectionsTable extends AppTable {
 
 			if ($this->_selectedAcademicPeriodId > -1) {
 				$attr['options'] = $this->getStaffOptions('edit');
+				$attr['select'] = false;
 			}
 
 		} elseif ($action == 'add') {
@@ -956,6 +957,7 @@ class InstitutionSectionsTable extends AppTable {
 			// $attr['type'] = 'select';
 			if ($this->_selectedAcademicPeriodId > -1) {
 				$attr['options'] = $this->getStaffOptions('view');
+				$attr['select'] = false;
 			}
 			
 		}
