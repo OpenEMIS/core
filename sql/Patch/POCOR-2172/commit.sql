@@ -29,8 +29,7 @@ INSERT INTO `workflow_steps` (`name`, `stage`, `is_editable`, `is_removable`, `w
 ('Open', 0, 1, 1, @workflowId, 1, NOW()),
 ('Pending Approval', 1, 0, 0, @workflowId, 1, NOW()),
 ('Closed', 2, 0, 0, @workflowId, 1, NOW()),
-('Assigned', NULL, 0, 0, @workflowId, 1, NOW()),
-('End of Assignment', NULL, 0, 0, @workflowId, 1, NOW());
+('Assigned', NULL, 0, 0, @workflowId, 1, NOW());
 
 SET @openStepId := 0;
 SET @approvalStepId := 0;
@@ -53,8 +52,8 @@ INSERT INTO `workflow_actions` (`name`, `action`, `visible`, `next_workflow_step
 ('Reject', 1, 0, 0, '', 0, @activeStepId, 1, NOW());
 
 INSERT INTO `workflow_statuses` (`code`, `name`, `is_editable`, `is_removable`, `workflow_model_id`, `created_user_id`, `created`) VALUES
-('ASSIGNED', 'Assigned', 0, 0, @modelId, 1, NOW()),
-('END_OF_ASSIGNMENT', 'End of Assignment', 0, 0, @modelId, 1, NOW());
+('NOT_ASSIGNED', 'Not Assigned', 0, 0, @modelId, 1, NOW()),
+('ASSIGNED', 'Assigned', 0, 0, @modelId, 1, NOW());
 
 SET @activeId := 0;
 SET @inactiveId := 0;
@@ -80,7 +79,7 @@ INSERT INTO `workflow_steps` (`name`, `stage`, `is_editable`, `is_removable`, `w
 ('Open', 0, 1, 1, @workflowId, 1, NOW()),
 ('Pending Approval', 1, 0, 0, @workflowId, 1, NOW()),
 ('Closed', 2, 0, 0, @workflowId, 1, NOW()),
-('End of Assignment', NULL, 0, 0, @workflowId, 1, NOW());
+('Approved', NULL, 0, 0, @workflowId, 1, NOW());
 
 SET @openStepId := 0;
 SET @approvalStepId := 0;
@@ -89,7 +88,7 @@ SET @activeStepId := 0;
 SELECT `id` INTO @openStepId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `name` = 'Open' AND `stage` = 0;
 SELECT `id` INTO @approvalStepId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `name` = 'Pending Approval' AND `stage` = 1;
 SELECT `id` INTO @closedStepId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `name` = 'Closed' AND `stage` = 2;
-SELECT `id` INTO @activeStepId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `name` = 'End of Assignment';
+SELECT `id` INTO @activeStepId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `name` = 'Approved';
 
 INSERT INTO `workflow_actions` (`name`, `action`, `visible`, `next_workflow_step_id`, `event_key`, `comment_required`, `workflow_step_id`, `created_user_id`, `created`) VALUES
 ('Submit For Approval', 0, 1, @approvalStepId, '', 0, @openStepId, 1, NOW()),
@@ -103,11 +102,11 @@ INSERT INTO `workflow_actions` (`name`, `action`, `visible`, `next_workflow_step
 ('Reject', 1, 0, 0, '', 0, @activeStepId, 1, NOW());
 
 INSERT INTO `workflow_statuses` (`code`, `name`, `is_editable`, `is_removable`, `workflow_model_id`, `created_user_id`, `created`) VALUES
-('END_OF_ASSIGNMENT', 'End of Assignment', 0, 0, @modelId, 1, NOW()),
-('PENDING', 'Pending Approval', 0, 0, @modelId, 1, NOW());
+('PENDING', 'Pending', 0, 0, @modelId, 1, NOW()),
+('APPROVED', 'Approved', 0, 0, @modelId, 1, NOW());
 
 SET @activeId := 0;
-SELECT `id` INTO @activeId FROM `workflow_statuses` WHERE `code` = 'END_OF_ASSIGNMENT' AND `workflow_model_id` = @modelId;
+SELECT `id` INTO @activeId FROM `workflow_statuses` WHERE `code` = 'APPROVED' AND `workflow_model_id` = @modelId;
 INSERT INTO `workflow_statuses_steps` (`id`, `workflow_status_id`, `workflow_step_id`) VALUES
 (uuid(), @activeId, @activeStepId);
 -- End Pre-insert
@@ -152,12 +151,12 @@ INSERT INTO `workflow_actions` (`name`, `action`, `visible`, `next_workflow_step
 ('Reject', 1, 0, 0, '', 0, @activeStepId, 1, NOW());
 
 INSERT INTO `workflow_statuses` (`code`, `name`, `is_editable`, `is_removable`, `workflow_model_id`, `created_user_id`, `created`) VALUES
-('END_OF_ASSIGNMENT', 'End of Assignment', 0, 0, @modelId, 1, NOW()),
-('ASSIGNED', 'Assigned', 0, 0, @modelId, 1, NOW());
+('PENDING', 'Pending', 0, 0, @modelId, 1, NOW()),
+('APPROVED', 'Approved', 0, 0, @modelId, 1, NOW());
 
 SET @activeId := 0;
 SET @inactiveId := 0;
-SELECT `id` INTO @activeId FROM `workflow_statuses` WHERE `code` = 'END_OF_ASSIGNMENT' AND `workflow_model_id` = @modelId;
+SELECT `id` INTO @activeId FROM `workflow_statuses` WHERE `code` = 'APPROVED' AND `workflow_model_id` = @modelId;
 INSERT INTO `workflow_statuses_steps` (`id`, `workflow_status_id`, `workflow_step_id`) VALUES
 (uuid(), @activeId, @activeStepId);
 -- End Pre-insert
