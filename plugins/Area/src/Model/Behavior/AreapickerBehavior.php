@@ -33,32 +33,47 @@ class AreapickerBehavior extends Behavior {
 			$targetTable = TableRegistry::get($targetModel);
 			$condition = [];
 			$areaOptions = $targetTable
-				->find('list')
-				->toArray();
-			if ($targetModel == 'Area.AreaAdministratives') {
-				$subQueryForWorldRecord = $targetTable->find()->select([$targetTable->aliasField('id')])->where([$targetTable->aliasField('parent_id') => -1]);
-				$areaOptions = $targetTable
-					->find('list')
+				->find('list');
+
+			// Pick the first found parent of area administrative
+			if ($targetModel == 'Area.AreaAdministratives' && (!isset($attr['displayCountry']) || (isset($attr['displayCountry']) && $attr['displayCountry']))) {
+				$areaOptions = $areaOptions
 					->where([$targetTable->aliasField('parent_id').' <> ' => -1])
-					->order([$targetTable->aliasField('parent_id'), $targetTable->aliasField('order')])
-					->toArray();
+					->order([$targetTable->aliasField('lft')]);
 			}	
+
 			if ($targetModel == 'Area.Areas' && isset($attr['displayCountry'])) {
 				if (!$entity->isNew()) {
 					$options['display-country'] = $entity->area_id;
 				} else {
 					$options['display-country'] = 0;
 				}
-			} else if (isset($attr['displayCountry']) && !$attr['displayCountry']) {
+
+				// Filter the initial area list to show only the authorised area
+				$authorisedArea = $this->_table->AccessControl->getAreasByUser();
+				$areaCondition = [];
+				foreach ($authorisedArea as $area) {
+					$areaCondition[] = [
+						$targetTable->aliasField('lft').' >= ' => $area['lft'],
+						$targetTable->aliasField('rght').' <= ' => $area['rght']
+					];
+				}
+				if (!empty($authorisedArea)) {
+					$areaOptions = $areaOptions
+						->where(['OR' => $areaCondition]);
+				}
+			} 
+			// If there is a restriction on the area administrative's main country to display (Use in Institution only)
+			else if ($targetModel == 'Area.AreaAdministratives' && isset($attr['displayCountry']) && !$attr['displayCountry']) {
 				$options['display-country'] = 0;
 				if ($this->_table->action == 'add') {
-					$areaOptions = $targetTable
-						->find('list')
+					$areaOptions = $areaOptions
 						->where([$targetTable->aliasField('is_main_country') => 1])
-						->order([$targetTable->aliasField('order')])
-						->toArray();
+						->order([$targetTable->aliasField('order')]);
 				}
 			}
+
+			$areaOptions = $areaOptions->toArray();
 			
 			$fieldName = $attr['model'] . '.' . $attr['field'];
 			$options['onchange'] = "Area.reload(this)";
