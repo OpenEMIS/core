@@ -140,7 +140,7 @@ class StaffBehavioursTable extends AppTable {
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 
 		if ($action == 'add') {
-			$periodOptions = ['0' => $this->selectEmpty('period')];
+			$periodOptions = [];
 			$periodOptions = $periodOptions + $AcademicPeriod->getList(['isEditable'=>true]);
 			$selectedPeriod = 0;
 			if ($request->is(['post', 'put'])) {
@@ -166,7 +166,7 @@ class StaffBehavioursTable extends AppTable {
 
 	public function onUpdateFieldStaffId(Event $event, array $attr, $action, $request) {
 		if ($action == 'add') {
-			$staffOptions = ['' => $this->selectEmpty('staff')];
+			$staffOptions = [];
 
 			$selectedPeriod = 0;
 			if ($request->is(['post', 'put'])) {
