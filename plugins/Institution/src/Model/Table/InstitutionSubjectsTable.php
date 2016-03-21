@@ -1056,4 +1056,34 @@ class InstitutionSubjectsTable extends ControllerActionTable {
         }
 	}
 
+	public function onGetTeachers(Event $event, Entity $entity) {
+		if ($entity->has('teachers')) {
+			$resultArray = [];
+			foreach ($entity->teachers as $key => $value) {
+				switch ($this->action) {
+					case 'view':
+						$resultArray[] = $event->subject()->Html->link($value->name_with_id , [
+							'plugin' => 'Institution',
+							'controller' => 'Institutions',
+							'action' => 'StaffUser',
+							'view',
+							$value->id
+						]);
+						break;
+					
+					case 'index':
+						$resultArray[] = $value->name_with_id;
+						break;
+
+					default:
+						$resultArray = null;
+						break;
+				}
+			}
+		}
+
+		if (is_array($resultArray)) {
+			return implode(', ', $resultArray);
+		}
+	} 
 }
