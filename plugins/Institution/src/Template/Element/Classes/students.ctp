@@ -65,16 +65,16 @@
 
 					<tr>
 						<td>
-							<?= $this->html->link($obj->user->openemis_no, [
+							<?= $this->html->link($obj->student_openemis_no, [
 									'plugin' => 'Institution',
 									'controller' => 'Institutions',
 									'action' => 'StudentUser',
 									'view',
-									$obj->user->id
+									$obj->student_user_id
 								]) ?>
 						</td>
-						<td><?= $obj->user->name ?></td>
-						<td><?= $obj->user->gender->name ?></td>
+						<td><?= $obj->student_name ?></td>
+						<td><?= $obj->student_gender ?></td>
 						<td><?= (is_object($obj->education_grade) ? $obj->education_grade->name : ''); ?></td>
 						<td><?= $obj->student_status_name ?></td>
 					</tr>
