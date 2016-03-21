@@ -124,7 +124,7 @@ BEGIN
       LEAVE read_loop;
     END IF;
 
-    SELECT `id` INTO questionId FROM `survey_questions` WHERE `params` = CONCAT('{"survey_form_id":"', surveyFormId, '"}');
+    SELECT MAX(`id`) INTO questionId FROM `survey_questions` WHERE `params` = CONCAT('{"survey_form_id":"', surveyFormId, '"}');
     SELECT MAX(`survey_form_id`) INTO parentFormId FROM `survey_forms_questions` WHERE `survey_question_id` = questionId;
     UPDATE `institution_student_surveys` SET `parent_form_id` = parentFormId WHERE `survey_form_id` = surveyFormId;
 
