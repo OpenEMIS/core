@@ -114,7 +114,7 @@ class AreasController extends AppController
 				}
 
 				$areaCondition = [];
-				$parentIds = [];
+				$authorisedParentIds = [];
 				foreach ($authorisedArea as $area) {
 					$areaCondition[] = [
 						$Table->aliasField('lft').' >= ' => $area['lft'],
@@ -122,7 +122,7 @@ class AreasController extends AppController
 					];
 
 					// Find all parent ids
-					$parentIds = array_merge($parentIds, $Table
+					$authorisedParentIds = array_merge($authorisedParentIds, $Table
 						->find('path', ['for' => $area['area_id']])
 						->find('list', [
 								'keyField' => 'id',
@@ -145,9 +145,9 @@ class AreasController extends AppController
 				}
 				
 				$areaCondition[] = [
-						$Table->aliasField('id').' IN' => $parentIds
+						$Table->aliasField('id').' IN' => $authorisedParentIds
 					];
-				$authorisedParentIds = $parentIds;
+				$authorisedParentIds = $authorisedParentIds;
 				$condition['OR'] = $areaCondition;
 			}
 		}
@@ -171,11 +171,12 @@ class AreasController extends AppController
 			->order([$Table->aliasField('lft')])
 			->all();
 		$count = 1;
-		$prevousOptionId=-1;
+		$prevousOptionId = -1;
 		$pathToUnset = [];
+		$objParentIds = [];
 		foreach ($path as $obj) {
 			if (! $AccessControl->isAdmin() && $tableName == 'Area.Areas') {
-				if (!in_array($obj->id, $authorisedAreaId) && !in_array($obj->id, $parentIds)) {
+				if (!in_array($obj->id, $authorisedAreaId) && !in_array($obj->id, $authorisedParentIds)) {
 					$pathToUnset[] = $count - 1;
 					$count++;
 					continue;
@@ -187,11 +188,6 @@ class AreasController extends AppController
 				->where([$Table->aliasField('parent_id') => $parentId])
 				->order([$Table->aliasField('order')])
 				->where($condition)
-				->toArray();
-
-			$objParentIds = $Table
-				->find('list')
-				->where([$Table->aliasField('lft').' < ' => $obj->lft, $Table->aliasField('rght').' > ' => $obj->rght])
 				->toArray();
 
 			$newList = [];
@@ -209,7 +205,7 @@ class AreasController extends AppController
 				default:
 					if( $count > 1 ){
 						if (! $AccessControl->isAdmin()) {
-							if (array_intersect($this->array_column($authorisedArea, 'area_id'), array_keys($objParentIds))) {
+							if (array_intersect($this->array_column($authorisedArea, 'area_id'), $objParentIds)) {
 								$list = [$previousOptionId => '--'.__('Select Area').'--'] + $list;	
 							}
 						} else {
@@ -218,6 +214,8 @@ class AreasController extends AppController
 					}
 					break;
 			}
+
+			$objParentIds [] = $obj->id;
 
 			if(! ($count == count($path)) || ! $hasChildren){
 				$obj->selectedId = $obj->id;
@@ -232,6 +230,14 @@ class AreasController extends AppController
 
 		$path = $path->toArray();
 
+		$this->unsetUnauthorisedPath($path, $pathToUnset);
+		
+		$levelAssociation = Inflector::underscore(Inflector::singularize($levelAssociation));
+		$this->set(compact('path', 'targetModel', 'tableName', 'formError', 'displayCountry', 'levelAssociation'));
+	}
+
+	// Function to unset the unauthorised path
+	private function unsetUnauthorisedPath(&$path, $pathToUnset) {
 		$firstItem = true;
 		foreach ($pathToUnset as $arrIndex) {
 			if (count($path) == count($pathToUnset)) {
@@ -244,7 +250,5 @@ class AreasController extends AppController
 			} 
 			unset($path[$arrIndex]);
 		}
-		$levelAssociation = Inflector::underscore(Inflector::singularize($levelAssociation));
-		$this->set(compact('path', 'targetModel', 'tableName', 'formError', 'displayCountry', 'levelAssociation'));
 	}
 }
