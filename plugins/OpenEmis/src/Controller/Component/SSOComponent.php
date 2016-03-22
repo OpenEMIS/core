@@ -38,17 +38,12 @@ class SSOComponent extends Component {
 
     	// $this->controller->dispatchEvent('Controller.Auth.beforeAuthenticate', [$extra], $this);
 
-		$ext = $this->controller->request->params['_ext'];
     	$event = $this->controller->dispatchEvent('Controller.Auth.authenticate', [$extra], $this);
     	if ($event->result) {
-    		if ( !in_array($ext, ['json', 'xml']) ) {
-	    		return $this->controller->redirect($this->_config['homePageURL']);
-    		}
+    		return $this->controller->redirect($this->_config['homePageURL']);
     	} else {
-			$this->controller->Auth->logout();
-			if ( !in_array($ext, ['json', 'xml']) ) {
-	    		return $this->controller->redirect($this->_config['homePageURL']);
-    		}
+    		$this->controller->Auth->logout();
+    		return $this->controller->redirect($this->_config['homePageURL']);
     	}
 
     	// $this->controller->dispatchEvent('Controller.Auth.afterAuthenticate', [$extra], $this);

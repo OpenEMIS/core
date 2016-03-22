@@ -594,58 +594,27 @@ class ControllerActionComponent extends Component {
 	}
 
 	public function render() {
-		$ext = $this->request->params['_ext'];
-		if (in_array($ext, ['json', 'xml'])) {
-
-			if (array_key_exists('paging', $this->request->params)) {
-				$this->controller->set('paging', $this->request->params['paging'][$this->model->alias()]);
-			}
-			$this->controller->set('format', $ext);
-			$data = $this->controller->viewVars['data'];
-			if (!($data instanceof \Cake\Network\Response) && !($data instanceof \Cake\ORM\ResultSet)) {
-				foreach ($data->visibleProperties() as $property) {
-					if (is_resource($data->$property)) {
-						$data->$property = base64_encode("data:image/jpeg;base64,".stream_get_contents($data->$property));						
-					}
-				}
-			} else {
-				foreach ($data as $key => $value) {
-					foreach ($value->visibleProperties() as $property) {
-						if (is_resource($value->$property)) {
-							$value->$property = base64_encode("data:image/jpeg;base64,".stream_get_contents($value->$property));						
-						}
-					}
-				}
-			}
-			$this->controller->set('query', $this->request->query);
-			// $this->controller->set('_serialize', ['data', 'paging', 'format', 'query', '_navigations']);
-			$this->controller->set('_serialize', ['data', 'paging', 'query']);
-		
+		if (empty($this->plugin)) {
+			$path = APP . 'Template' . DS . $this->controller->name . DS;
 		} else {
+			$path = ROOT . DS . 'plugins' . DS . $this->plugin . DS . 'src' . DS . 'Template' . DS;
+		}
+		$ctp = $this->ctpFolder . DS . $this->currentAction;
 
-			if (empty($this->plugin)) {
-				$path = APP . 'Template' . DS . $this->controller->name . DS;
-			} else {
-				$path = ROOT . DS . 'plugins' . DS . $this->plugin . DS . 'src' . DS . 'Template' . DS;
-			}
-			$ctp = $this->ctpFolder . DS . $this->currentAction;
-
-			if (file_exists($path . DS . $ctp . '.ctp')) {
-				if ($this->autoRender) {
-					$this->autoRender = false;
-					$this->controller->render($ctp);
-				}
-			}
-
+		if (file_exists($path . DS . $ctp . '.ctp')) {
 			if ($this->autoRender) {
-				if (empty($this->view)) {
-					$view = $this->currentAction == 'add' ? 'edit' : $this->currentAction;
-					$this->controller->render($this->templatePath . $view);
-				} else {
-					$this->controller->render($this->view);
-				}
+				$this->autoRender = false;
+				$this->controller->render($ctp);
 			}
+		}
 
+		if ($this->autoRender) {
+			if (empty($this->view)) {
+				$view = $this->currentAction == 'add' ? 'edit' : $this->currentAction;
+				$this->controller->render($this->templatePath . $view);
+			} else {
+				$this->controller->render($this->view);
+			}
 		}
 	}
 
