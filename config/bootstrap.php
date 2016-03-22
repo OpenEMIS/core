@@ -191,6 +191,7 @@ Plugin::load('Migrations');
 // Essential Plugins
 Plugin::load('OpenEmis', ['autoload' => true]);
 Plugin::load('ControllerAction', ['autoload' => true]);
+Plugin::load('Angular', ['routes' => true, 'autoload' => true]);
 
 // Localizations
 Plugin::load('Localization', ['routes' => true, 'autoload' => true]);
