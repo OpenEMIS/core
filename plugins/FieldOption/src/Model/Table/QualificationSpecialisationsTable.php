@@ -41,11 +41,17 @@ class QualificationSpecialisationsTable extends ControllerActionTable {
 		switch ($action) {
 			 case 'edit': case 'add':
 				$EducationSubjects = TableRegistry::get('Education.EducationSubjects');
-				$subjectOptions = $EducationSubjects
-					->find('list')
+				$subjectData = $EducationSubjects
+					->find()
+					->select([$EducationSubjects->aliasField('name'), $EducationSubjects->aliasField('code')])
 					->find('visible')
 					->find('order')
 					->toArray();
+
+				$subjectOptions = [];
+				foreach ($subjectData as $key => $value) {
+					$subjectOptions[] = $value->code . ' - ' . $value->name;
+				}
 				
 				$attr['type'] = 'chosenSelect';
 				$attr['options'] = $subjectOptions;
