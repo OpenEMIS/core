@@ -79,6 +79,11 @@ class InstitutionsController extends AppController  {
 	// CAv4
 	public function Positions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionPositions']); }
 	public function Shifts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionShifts']); }
+	public function StaffAssignments() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAssignments']); }
+	public function StaffTransferReqests() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferRequests']); }
+	public function StaffTransfers() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransfers']); }
+	public function StaffTerminationRequests() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTerminationRequests']); }
+	public function StaffTerminations() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTerminations']); }
 	// public function StaffAbsences() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
 	// End
 
