@@ -11,6 +11,7 @@ class TranslationsController extends AppController {
 	public function initialize() {
 		parent::initialize();
 		$this->ControllerAction->model('Localization.Translations');
+		$this->Localization->autoCompile(false);
 	}
 
 	public function beforeFilter(Event $event) {
