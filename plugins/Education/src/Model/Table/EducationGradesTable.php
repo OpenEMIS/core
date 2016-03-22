@@ -35,6 +35,12 @@ class EducationGradesTable extends AppTable {
 			'dependent' => false,
 			// 'saveStrategy' => 'append'
 		]);
+
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+				'filter' => 'education_programme_id',
+			]);
+		}
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
