@@ -9,6 +9,7 @@ use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Log\Log;
+use Cake\Validation\Validator;
 
 class InstitutionInfrastructuresTable extends AppTable {
 	private $_fieldOrder = [
@@ -39,6 +40,18 @@ class InstitutionInfrastructuresTable extends AppTable {
 			'fieldValueClass' => ['className' => 'Infrastructure.InfrastructureCustomFieldValues', 'foreignKey' => 'institution_infrastructure_id', 'dependent' => true, 'cascadeCallbacks' => true],
 			'tableCellClass' => ['className' => 'Infrastructure.InfrastructureCustomTableCells', 'foreignKey' => 'institution_infrastructure_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
+	}
+
+	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+		return $validator
+			->add('code', [
+	    		'ruleUnique' => [
+			        'rule' => ['validateUnique', ['scope' => 'institution_id']],
+			        'provider' => 'table'
+			    ]
+		    ])
+		;
 	}
 
 	public function onGetCode(Event $event, Entity $entity) {
@@ -124,6 +137,58 @@ class InstitutionInfrastructuresTable extends AppTable {
 		$this->ControllerAction->field('infrastructure_type_id');
 		$this->ControllerAction->field('infrastructure_ownership_id', ['type' => 'select']);
 		$this->ControllerAction->field('infrastructure_condition_id', ['type' => 'select']);
+
+		$this->fields['infrastructure_level_id']['select'] = false;
+
+		$session = $this->request->session();
+		$institutionId = $session->read('Institution.Institutions.id');
+		$infrastructureLevelId = $this->request->query('level');
+		$parentId = $this->request->query('parent');
+		$this->fields['code']['attr']['default'] = $this->getAutogenerateCode($institutionId, $infrastructureLevelId, $parentId);
+	}
+
+	private function getAutogenerateCode($institutionId, $infrastructureLevelId, $parentId) {
+		// getting suffix of code by counting 
+		$indexData = $this->find()
+			->where([
+				$this->aliasField('institution_id') => $institutionId,
+				$this->aliasField('infrastructure_level_id') => $infrastructureLevelId,
+			])
+			->count();
+		$indexData += 1; // starts counting from 1
+		$indexData = strval($indexData);
+
+		// if 1 character prepend '0'
+		$indexData = (strlen($indexData) == 1)? '0'.$indexData: $indexData;
+		if (empty($parentId)) {
+			// hasParent
+			$institutionData = $this->Institutions->find()
+				->where([
+					$this->Institutions->aliasField($this->Institutions->primaryKey()) => $institutionId
+				])
+				->select([$this->Institutions->aliasField('code')])
+				->first();
+			if (!empty($institutionData)) {
+				return $institutionData->code . $indexData;
+			} else {
+				return $indexData;
+			}
+		} else {
+			// hasParent
+			$parentData = $this->find()
+				->where([
+					$this->aliasField($this->primaryKey()) => $parentId
+				])
+				->first()
+				;
+
+			if (!empty($parentData)) {
+				return $parentData->code . $indexData;
+			} else {
+				// no parent data just return the 
+				return $indexData;
+			}
+		}
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity) {
