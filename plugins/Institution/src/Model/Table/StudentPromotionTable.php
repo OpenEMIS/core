@@ -257,11 +257,11 @@ class StudentPromotionTable extends AppTable {
 
 			// If there is no more next grade in the same education programme then the student may be graduated
 			if (count($nextGrades) == 0) {
-				$options[$statusesCode['GRADUATED']] = $studentStatusesList[$statusesCode['GRADUATED']];
+				$options[$statusesCode['GRADUATED']] = __($studentStatusesList[$statusesCode['GRADUATED']]);
 			} else {
-				$options[$statusesCode['PROMOTED']] = $studentStatusesList[$statusesCode['PROMOTED']];
+				$options[$statusesCode['PROMOTED']] = __($studentStatusesList[$statusesCode['PROMOTED']]);
 			}
-			$options[$statusesCode['REPEATED']] = $studentStatusesList[$statusesCode['REPEATED']];
+			$options[$statusesCode['REPEATED']] = __($studentStatusesList[$statusesCode['REPEATED']]);
 			$attr['options'] = $options;
 			$attr['onChangeReload'] = true;
 			if (empty($request->data[$this->alias()]['student_status_id']) || !array_key_exists($request->data[$this->alias()]['student_status_id'], $options)) {
@@ -365,6 +365,57 @@ class StudentPromotionTable extends AppTable {
 						$this->aliasField('education_grade_id') => $selectedGrade
 					])
 					->toArray();
+
+				if (!empty($students)) {
+					// have to see if these students have pending requests of any kind
+					$StudentAdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+					foreach ($students as $key => $value) {
+						// at this point of time it is getting all requests - (admission requests)
+						$conditions = [
+							'student_id' => $value->student_id, 
+							'status' => $StudentAdmissionTable::NEW_REQUEST,
+							'education_grade_id' => $value->education_grade_id,
+							'institution_id' => $value->institution_id,
+							'type' => $StudentAdmissionTable::ADMISSION
+						];
+
+						$admissionCount = $StudentAdmissionTable->find()
+							->where($conditions)
+							->count();
+
+						// at this point of time it is getting all requests - (transfer requests)
+						$conditions = [
+							'student_id' => $value->student_id, 
+							'status' => $StudentAdmissionTable::NEW_REQUEST,
+							'education_grade_id' => $value->education_grade_id,
+							'previous_institution_id' => $value->institution_id,
+							'type' => $StudentAdmissionTable::TRANSFER,
+						];
+
+						$transferCount = $StudentAdmissionTable->find()
+							->where($conditions)
+							->count();
+
+						$students[$key]->admissionRequestCount = $admissionCount + $transferCount;
+					}
+
+					$StudentDropoutTable = TableRegistry::get('Institution.StudentDropout');
+					foreach ($students as $key => $value) {
+						$conditions = [
+							'student_id' => $value->student_id, 
+							'status' => $StudentDropoutTable::NEW_REQUEST,
+							'education_grade_id' => $value->education_grade_id,
+							'institution_id' => $value->institution_id,
+							'academic_period_id' => $value->academic_period_id,
+						];
+
+						$count = $StudentDropoutTable->find()
+							->where($conditions)
+							->count();
+
+						$students[$key]->dropoutRequestCount = $count;
+					}
+				}
 			}
 			if (empty($students)) {
 				$this->Alert->warning($this->aliasField('noData'));
