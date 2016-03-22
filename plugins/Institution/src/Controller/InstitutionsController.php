@@ -71,6 +71,8 @@ class InstitutionsController extends AppController  {
 		];
 
 		$this->loadComponent('Institution.InstitutionAccessControl');
+
+		$this->attachAngularModules();
 	}
 
 	// CAv4
@@ -140,6 +142,14 @@ class InstitutionsController extends AppController  {
 		}
 
 		$this->set('contentHeader', $header);
+	}
+
+	private function attachAngularModules() {
+		$action = $this->request->action;
+
+		switch ($action) {
+			case 'Results': $this->Angular->addModules(['agGrid', 'institution.module']); break;
+		}
 	}
 
 	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
