@@ -26,6 +26,7 @@ use Cake\I18n\Time;
 
 class LocalizationComponent extends Component {
 	private $defaultLocale = 'en';
+	private $autoCompile = true;
 	private $controller;
 	public $Session;
 	public $showLanguage = true;
@@ -60,73 +61,79 @@ class LocalizationComponent extends Component {
 		} else if ($session->check('System.language')) {
 			$lang = $session->read('System.language');
 		}
-		// $locale = isset($this->languages[$lang]) ? $this->languages[$lang]['locale'] : 'en_US';
-		// I18n::locale($locale);
-		I18n::locale($lang);
 
 		$this->language = $lang;
 		$this->Session = $session;
-		if ($this->controller->name != 'Translations') {
-			$this->updateLocaleFile($lang);
+
+	}
+
+	public function autoCompile($compile = null) {
+		if (is_null($compile)) {
+			return $this->autoCompile;
+		} else {
+			$this->autoCompile = $compile;
 		}
 	}
 
 	private function updateLocaleFile($lang) {
 		if ($this->defaultLocale != $lang) {
-			if ($this->isChange($lang)) {
-				$this->convertPO($lang);
+			$isChanged = $this->isChanged($lang);
+			if ($isChanged) {
+				$this->convertPO($lang, $isChanged);
 			}	
 		}
 	}
 
-	private function isChange($locale) {
-		$change = false;
-		$localeDir = App::path('Locale');
-		$localeDir = $localeDir[0];
-		$fileLocation = $localeDir . $locale . DS . 'default.po';
-		$file = fopen($fileLocation, "r");
-		while (!feof($file)) {
-		   $line = fgets($file);
-		   if (strpos($line, 'PO-Revision-Date: ')) {
-		   		$line = str_replace('"PO-Revision-Date: ', '', $line);
-		   		$line = str_replace('\n"', '', $line);
-		   		try {
-			   		$dateTime = new Time($line);
-			   		$TranslationsTable = TableRegistry::get('Localization.Translations');
-			   		$selectedColumns = [
-						'modified' => '(
-							CASE 
-								WHEN '.$TranslationsTable->aliasField('modified').' > '.$TranslationsTable->aliasField('created').' 
-								THEN '.$TranslationsTable->aliasField('modified').' 
-								ELSE '.$TranslationsTable->aliasField('created').' 
-								END
-							)'
-					];
-			   		$lastModified = $TranslationsTable
-						->find()
-						->select($selectedColumns)
-						->order(['modified' => 'DESC'])
-						->extract('modified')
-						->first();
-					
-					if ($lastModified->gt($dateTime)) {
-						$change = true;
-					}
-				} catch (\Exception $e) {
-					$change = true;
-				}
-		   		break;
-		   }
-		}
-
-		fclose($file);
-		return $change;
+	private function getModifiedDate() {
+		$TranslationsTable = TableRegistry::get('Localization.Translations');
+   		$selectedColumns = [
+			'modified' => '(
+				CASE 
+					WHEN '.$TranslationsTable->aliasField('modified').' > '.$TranslationsTable->aliasField('created').' 
+					THEN '.$TranslationsTable->aliasField('modified').' 
+					ELSE '.$TranslationsTable->aliasField('created').' 
+					END
+				)'
+		];
+   		$lastModified = $TranslationsTable
+			->find()
+			->select($selectedColumns)
+			->order(['modified' => 'DESC'])
+			->extract('modified')
+			->first();
+		return $lastModified;
 	}
 
-	private function convertPO($locale){
+	private function isChanged($locale) {
+		$localeDir = current(App::path('Locale'));
+		$fileLocation = $localeDir . $locale . DS . 'default.po';
+		$lastModified = $this->getModifiedDate();
+		if (file_exists($fileLocation)) {
+			$file = fopen($fileLocation, "r");
+			while (!feof($file)) {
+			   $line = fgets($file);
+			   if (strpos($line, 'PO-Revision-Date: ')) {
+			   		$line = str_replace('"PO-Revision-Date: ', '', $line);
+			   		$line = str_replace('\n"', '', $line);
+			   		try {
+				   		$dateTime = new Time($line);
+						if ($lastModified->eq($dateTime)) {
+							$lastModified = false;
+						}
+					} catch (\Exception $e) {
+						// default will return last modified date
+					}
+			   		break;
+			   }
+			}
+		}
+		fclose($file);
+		return $lastModified;
+	}
+
+	private function convertPO($locale, $lastModified) {
 		$str = "";
-		$localeDir = App::path('Locale');
-		$localeDir = $localeDir[0];
+		$localeDir = current(App::path('Locale'));
 		$fileLocation = $localeDir . $locale . DS . 'default.po';
 		$TranslationsTable = TableRegistry::get('Localization.Translations');
 		$data = $TranslationsTable
@@ -144,7 +151,7 @@ class LocalizationComponent extends Component {
 		$str .= 'msgstr ""'."\n";
 		$str .= '"Project-Id-Version: OpenEMIS Project\n"'."\n";
 		$str .= '"POT-Creation-Date: 2013-01-17 02:33+0000\n"'."\n";
-		$str .= '"PO-Revision-Date: '.date('Y-m-d H:i:sP').'\n"'."\n";
+		$str .= '"PO-Revision-Date: '.$lastModified->format('Y-m-d H:i:sP').'\n"'."\n";
 		$str .= '"Last-Translator: \n"'."\n";
 		$str .= '"Language-Team: \n"'."\n";
 		$str .= '"MIME-Version: 1.0\n"'."\n";
@@ -172,6 +179,14 @@ class LocalizationComponent extends Component {
 
 	// Is called after the controller's beforeFilter method but before the controller executes the current action handler.
 	public function startup(Event $event) {
+
+		// Call to recompile the language if the translation files are affected
+		if ($this->autoCompile()) {
+			$this->updateLocaleFile($this->language);
+		}
+		// Move the I18n::locale setting here so that the update can be instant
+		I18n::locale($this->language);
+		
 		$controller = $this->controller;
 		$htmlLang = $this->language;
 		$languages = $this->languages;
