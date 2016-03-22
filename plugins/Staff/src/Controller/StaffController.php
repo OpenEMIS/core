@@ -57,6 +57,7 @@ class StaffController extends AppController {
 
 		$this->loadComponent('Training.Training');
 		$this->loadComponent('User.Image');
+		$this->loadComponent('Institution.InstitutionAccessControl');
 
 		$this->set('contentHeader', 'Staff');
 	}
@@ -94,7 +95,7 @@ class StaffController extends AppController {
 		}
 		$this->set('contentHeader', $header);
     }
-
+	
 	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		/**
 		 * if student object is null, it means that student.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown

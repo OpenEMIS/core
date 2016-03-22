@@ -13,6 +13,7 @@ class MandatoryBehavior extends Behavior {
 	protected $_userRole;
 	protected $_info;
 	protected $_roleFields;
+	protected $_currentNationality;
 
 	public function initialize(array $config) {
 		$this->_userRole = (array_key_exists('userRole', $config))? $config['userRole']: null;
@@ -38,7 +39,7 @@ class MandatoryBehavior extends Behavior {
 		$events = parent::implementedEvents();
 		$newEvent = [
 			'ControllerAction.Model.add.onInitialize' => 'addOnInitialize',
-			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
+			'ControllerAction.Model.addEdit.beforePatch' => 'addEditBeforePatch',
 			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
 			'ControllerAction.Model.add.onChangeNationality' => 'addOnChangeNationality',
 			'ControllerAction.Model.onUpdateFieldContactType' => 'onUpdateFieldContactType',
@@ -75,16 +76,26 @@ class MandatoryBehavior extends Behavior {
 
 	public function addOnInitialize(Event $event, Entity $entity) { 
 		$Countries = TableRegistry::get('FieldOption.Countries');
-		$defaultCountry = $Countries->getDefaultEntity();
-		
-		$this->fields['nationality']['default'] = $defaultCountry->id;
-
-		$defaultIdentityType = $defaultCountry->identity_type_id;
-		if (is_null($defaultIdentityType)) {
-			$IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
-			$defaultIdentityType = $IdentityTypes->getDefaultValue();
+		$defaultCountry = $Countries->find()
+			->where([$Countries->aliasField('default') => 1])
+			->first();
+		if (!empty($defaultCountry)) {
+			// if default nationality can be found
+			$this->_table->fields['nationality']['default'] = $defaultCountry->id;
+			$defaultIdentityType = $defaultCountry->identity_type_id;
 		}
-		$this->fields['identity_type']['default'] = $defaultIdentityType;
+
+		if (empty($defaultIdentityType)) {
+			$IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+			$defaultIdentityTypeEntity = $IdentityTypes->find()
+				->where([$IdentityTypes->aliasField('default') => 1])
+				->first();
+			if (!empty($defaultIdentityTypeEntity)) {
+				$defaultIdentityType = $defaultIdentityTypeEntity->id;
+			}
+		}
+
+		$this->_table->fields['identity_type']['default'] = $defaultIdentityType;
 
 		return $entity;
 	}
@@ -128,52 +139,57 @@ class MandatoryBehavior extends Behavior {
 
 	}
 
-	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$newOptions = [];
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		if ($this->_table->action == 'add') {
+			$newOptions = [];
 
-		$newOptions['associated'] = ['Identities', 'Nationalities', 'SpecialNeeds', 'Contacts'];
+			$newOptions['associated'] = ['Identities', 'Nationalities', 'SpecialNeeds', 'Contacts'];
 
-		foreach ($this->_info as $key => $value) {
-			// default validation is 'Mandatory'
-			if ($value == 'Non-Mandatory') {
-				$newOptions['associated'][$key] = ['validate' => 'NonMandatory'];
-				// also need to remove the data if the field is empty
-				$tableName = Inflector::tableize($key);
+			foreach ($this->_info as $key => $value) {
+				// default validation is 'Mandatory'
+				if ($value == 'Non-Mandatory') {
+					$newOptions['associated'][$key] = ['validate' => 'NonMandatory'];
+					// also need to remove the data if the field is empty
+					$tableName = Inflector::tableize($key);
 
-				if (array_key_exists($tableName, $data[$this->_table->alias()])) {
-					if (array_key_exists(0, $data[$this->_table->alias()][$tableName])) {
-						// going to check all fields.. if something is empty(form fill incomplete).. the data will not be removed and not saved
-						$incompleteField = false;
-						foreach ($data[$this->_table->alias()][$tableName][0] as $ckey => $check) {
-							if (empty($check)) {
-								$incompleteField = true;
+					if (array_key_exists($tableName, $data[$this->_table->alias()])) {
+						if (array_key_exists(0, $data[$this->_table->alias()][$tableName])) {
+							// going to check all fields.. if something is empty(form fill incomplete).. the data will not be removed and not saved
+							$incompleteField = false;
+							foreach ($data[$this->_table->alias()][$tableName][0] as $ckey => $check) {
+								if (empty($check)) {
+									$incompleteField = true;
+								}
+							}
+							if ($incompleteField) {
+								unset($data[$this->_table->alias()][$tableName]);
 							}
 						}
-						if ($incompleteField) {
-							unset($data[$this->_table->alias()][$tableName]);
-						}
+					}
+				} else {
+					if ($value != 'Excluded') {
+						$newOptions['associated'][] = $key;
 					}
 				}
-			} else {
-				if ($value != 'Excluded') {
-					$newOptions['associated'][] = $key;
-				}
 			}
-		}
 
-		$arrayOptions = $options->getArrayCopy();
-		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
-		$options->exchangeArray($arrayOptions);
+			$arrayOptions = $options->getArrayCopy();
+			$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
+			$options->exchangeArray($arrayOptions);
+		}
 	}
 
 	public function addOnChangeNationality(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$Countries = TableRegistry::get('FieldOption.Countries');
 		$countryId = $data[$this->_table->alias()]['nationalities'][0]['country_id'];
 		$country = $Countries->findById($countryId)->first();
-		$defaultIdentityType = $country->identity_type_id;
-		if (is_null($defaultIdentityType)) {
+		$defaultIdentityType = (!empty($country))? $country->identity_type_id: null;
+		if (empty($defaultIdentityType)) {
 			$IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
-			$defaultIdentityType = $IdentityTypes->getDefaultValue();
+			$defaultIdentityType = $IdentityTypes->find()
+				->where([$IdentityTypes->aliasField('default') => 1])
+				->first();
+			$defaultIdentityType = (!empty($defaultIdentityType))? $defaultIdentityType->id: null;
 		}
 		
 		$this->_table->fields['nationality']['default'] = $data[$this->_table->alias()]['nationalities'][0]['country_id'];
@@ -195,9 +211,7 @@ class MandatoryBehavior extends Behavior {
 	public function onUpdateFieldContactType(Event $event, array $attr, $action, $request) {
 		if (!empty($this->_info)) {
 			if (array_key_exists('Contacts', $this->_info)) {
-				if ($this->_info['Contacts'] == 'Non-Mandatory') {
-					$attr['empty'] = 'Select';
-				}
+				$attr['empty'] = 'Select';
 			}
 		}
 
@@ -223,9 +237,7 @@ class MandatoryBehavior extends Behavior {
 	public function onUpdateFieldNationality(Event $event, array $attr, $action, $request) {
 		if (!empty($this->_info)) {
 			if (array_key_exists('Nationalities', $this->_info)) {
-				if ($this->_info['Nationalities'] == 'Non-Mandatory') {
-					$attr['empty'] = 'Select';
-				}
+				$attr['empty'] = 'Select';
 			}
 		}
 
@@ -236,6 +248,7 @@ class MandatoryBehavior extends Behavior {
 		$attr['options'] = $nationalityOptions;
 		$attr['onChangeReload'] = 'changeNationality';
 		$attr['fieldName'] = $this->_table->alias().'.nationalities.0.country_id';
+		// default is set in addOnInitialize
 
 		return $attr;
 	}
@@ -243,16 +256,17 @@ class MandatoryBehavior extends Behavior {
 	public function onUpdateFieldIdentityType(Event $event, array $attr, $action, $request) {
 		if (!empty($this->_info)) {
 			if (array_key_exists('Identities', $this->_info)) {
-				if ($this->_info['Identities'] == 'Non-Mandatory') {
-					$attr['empty'] = 'Select';
-				}
+				$attr['empty'] = 'Select';
 			}
 		}
 
-		$identityTypeOptions = TableRegistry::get('FieldOption.IdentityTypes')->getList();
+		$IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+		$identityTypeOptions = $IdentityTypes->getList();
 		$attr['type'] = 'select';
 		$attr['fieldName'] = $this->_table->alias().'.identities.0.identity_type_id';
 		$attr['options'] = $identityTypeOptions->toArray();
+		// default is set in addOnInitialize
+
 		return $attr;
 	}
 
@@ -266,13 +280,20 @@ class MandatoryBehavior extends Behavior {
 	public function onUpdateFieldSpecialNeed(Event $event, array $attr, $action, $request) {
 		if (!empty($this->_info)) {
 			if (array_key_exists('SpecialNeeds', $this->_info)) {
-				if ($this->_info['SpecialNeeds'] == 'Non-Mandatory') {
-					$attr['empty'] = 'Select';
-				}
+				$attr['empty'] = 'Select';
 			}
 		}
 
-		$specialNeedOptions = TableRegistry::get('FieldOption.SpecialNeedTypes')->getList();
+		$SpecialNeedTypes = TableRegistry::get('FieldOption.SpecialNeedTypes');
+		$specialNeedOptions = $SpecialNeedTypes->getList();
+
+		$defaultEntity = $SpecialNeedTypes->find()
+			->where([$SpecialNeedTypes->aliasField('default') => 1])
+			->first();
+		if (!empty($defaultEntity)) {
+			$attr['default'] = $defaultEntity->id;
+		}
+
 		$attr['type'] = 'select';
 		$attr['fieldName'] = $this->_table->alias().'.special_needs.0.special_need_type_id';
 		$attr['options'] = $specialNeedOptions->toArray();
