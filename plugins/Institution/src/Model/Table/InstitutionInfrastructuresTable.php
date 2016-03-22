@@ -133,12 +133,10 @@ class InstitutionInfrastructuresTable extends AppTable {
 	}
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
-		$this->ControllerAction->field('infrastructure_level_id');
+		$this->ControllerAction->field('infrastructure_level_id', ['select' => false]);
 		$this->ControllerAction->field('infrastructure_type_id');
 		$this->ControllerAction->field('infrastructure_ownership_id', ['type' => 'select']);
 		$this->ControllerAction->field('infrastructure_condition_id', ['type' => 'select']);
-
-		$this->fields['infrastructure_level_id']['select'] = false;
 
 		$session = $this->request->session();
 		$institutionId = $session->read('Institution.Institutions.id');
