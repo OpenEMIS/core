@@ -10,7 +10,7 @@ class StudentSurveysTable extends AppTable {
 	// Default Status
 	const EXPIRED = -1;
 
-	private $institutionId = null;
+	private $surveyInstitutionId = null;
 	private $studentId = null;
 
 	public function initialize(array $config) {
@@ -30,10 +30,12 @@ class StudentSurveysTable extends AppTable {
 			'fieldKey' => 'survey_question_id',
 			'tableColumnKey' => 'survey_table_column_id',
 			'tableRowKey' => 'survey_table_row_id',
+			'fieldClass' => ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id'],
 			'formKey' => 'survey_form_id',
 			// 'filterKey' => 'custom_filter_id',
+			'formClass' => ['className' => 'Survey.SurveyForms', 'foreignKey' => 'survey_form_id'],
 			'formFieldClass' => ['className' => 'Survey.SurveyFormsQuestions'],
-			// 'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
+			// 'formFilterClass' => ['className' => 'CustomField.CustomFormsFilters'],
 			'recordKey' => 'institution_student_survey_id',
 			'fieldValueClass' => ['className' => 'Student.StudentSurveyAnswers', 'foreignKey' => 'institution_student_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
 			'tableCellClass' => ['className' => 'Student.StudentSurveyTableCells', 'foreignKey' => 'institution_student_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
@@ -58,7 +60,7 @@ class StudentSurveysTable extends AppTable {
 		if ($session->check('Institution.Institutions.id')) {
 			$institutionId = $session->read('Institution.Institutions.id');
 		}
-		$studentId = !is_null($this->request->query('user_id')) ? $this->request->query('user_id') : 0;
+		$studentId = $this->Session->read('Student.Students.id');
 
 		// Build Survey Records
 		$currentAction = $this->ControllerAction->action();
@@ -117,7 +119,7 @@ class StudentSurveysTable extends AppTable {
 		$this->ControllerAction->field('survey_form_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('status_id', ['type' => 'hidden']);
 
-		$this->institutionId = $institutionId;
+		$this->surveyInstitutionId = $institutionId;
 		$this->studentId = $studentId;
 		$this->request->query['period'] = $selectedPeriod;
 		$this->request->query['form'] = $selectedForm;

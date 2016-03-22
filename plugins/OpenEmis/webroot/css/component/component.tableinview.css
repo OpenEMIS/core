@@ -1,19 +1,40 @@
-/* TABLE IN VIEW v.1.0.0 */
+/* TABLE IN VIEW v.1.0.8 */
 
+.input-form-wrapper,
+.input .table-wrapper,
 .table-full-width {
-    width: 70%;
+    display: inline-block;    
+    width: -webkit-calc(80% - 15px);
+    width: -moz-calc(80% - 15px);
+    width: calc(80% - 15px);
+}
+
+.input-form-wrapper .table-in-view,
+.input-form-wrapper .table-wrapper {
+    width: 100% !important;
 }
 
 .table-in-view {
     padding: 0;
-    margin-bottom: 15px;
-    width: 70%;
-    -webkit-border-radius: 3px;
-    border-radius: 3px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
     border-right: 1px solid #CCC;
     border-left: 1px solid #CCC;
     border-bottom: 1px solid #CCC;
     clear: none;
+    overflow-x: scroll;
+    background-image: -webkit-gradient(linear, 0% 50%, 100% 50%, color-stop(0%, #ffffff), color-stop(100%, rgba(255, 255, 255, 0))), -webkit-gradient(linear, 100% 50%, 0% 50%, color-stop(0%, #ffffff), color-stop(100%, rgba(255, 255, 255, 0))), -webkit-gradient(linear, 0% 50%, 100% 50%, color-stop(0%, #dddddd), color-stop(100%, rgba(221, 221, 221, 0))), -webkit-gradient(linear, 100% 50%, 0% 50%, color-stop(0%, #dddddd), color-stop(100%, rgba(221, 221, 221, 0)));
+    background-image: -webkit-linear-gradient(left, #ffffff, rgba(255, 255, 255, 0)), -webkit-linear-gradient(right, #ffffff, rgba(255, 255, 255, 0)), -webkit-linear-gradient(left, #dddddd, rgba(221, 221, 221, 0)), -webkit-linear-gradient(right, #dddddd, rgba(221, 221, 221, 0));
+    background-image: -moz-linear-gradient(left, #ffffff, rgba(255, 255, 255, 0)), -moz-linear-gradient(right, #ffffff, rgba(255, 255, 255, 0)), -moz-linear-gradient(left, #dddddd, rgba(221, 221, 221, 0)), -moz-linear-gradient(right, #dddddd, rgba(221, 221, 221, 0));
+    background-image: -o-linear-gradient(left, #ffffff, rgba(255, 255, 255, 0)), -o-linear-gradient(right, #ffffff, rgba(255, 255, 255, 0)), -o-linear-gradient(left, #dddddd, rgba(221, 221, 221, 0)), -o-linear-gradient(right, #dddddd, rgba(221, 221, 221, 0));
+    background-image: linear-gradient(left, #ffffff, rgba(255, 255, 255, 0)), linear-gradient(right, #ffffff, rgba(255, 255, 255, 0)), linear-gradient(left, #dddddd, rgba(221, 221, 221, 0)), linear-gradient(right, #dddddd, rgba(221, 221, 221, 0));
+    background-position: 0 0, 100% 0, 0 0, 100% 0;
+    background-repeat: no-repeat;
+    background-color: white;
+    background-size: 6em 100%, 6em 100%, 1em 100%, 1em 100%;
+    background-attachment: local, local, scroll, scroll;
+    position: relative;
 }
 
 .table-in-view .btn-default {
@@ -25,6 +46,14 @@
     width: 150px !important;
 }
 
+.table-in-view input {
+    padding-right: 30px;
+}
+
+.table-in-view tbody input {
+    background: transparent;
+}
+
 .table-in-view .btn-reset {
     margin-left: -20px !important;
     padding: 6px 0;
@@ -34,6 +63,10 @@
     margin: 10px;
 }
 
+.input .table-toolbar {
+    margin: 0 !important;
+}
+
 .table-in-view .table thead,
 .table-in-view .table thead tr,
 .table-in-view .table tfoot {
@@ -41,80 +74,77 @@
     border-right: 0 !important;
 }
 
-
-/* For the "inset" look only */
-
-.table-in-view {
-    overflow-y: hidden;
-    overflow-x: scroll;
+.table-in-view tfoot td {
+    border-top: 1px solid #DDD !important;
 }
 
-.table-in-view::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+.table-in-view tfoot td {
+    border-bottom: 0 !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
 }
 
-.table-in-view::-webkit-scrollbar:window-hover {
-    width: 13px;
-    height: 13px;
+.table-in-view .input-select-wrapper {
+    min-width: 100%;
 }
 
-
-/* Track */
-
-::-webkit-scrollbar-track {
-    /*    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); 
+.table-in-view .table >:first-child >:first-child >:first-child,
+.table-in-view .table >:first-child >:first-child >:last-child {
     -webkit-border-radius: 0;
-    border-radius: 0;*/
+    -moz-border-radius: 0;
+    border-radius: 0;
 }
 
-
-/* Handle */
-
-.table-in-view::-webkit-scrollbar-thumb {
-    -webkit-border-radius: 10px;
-    border-radius: 10px;
-    background-color: #6B6B6B;
-    -webkit-box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.1);
-    opacity: 1;
+.table-in-view .table >:first-child >:first-child >:first-child {
+    border-left: 0;
 }
 
-@media (min-width: 100px) and (max-width: 480px) {
-    .table-in-view,
-    .table-full-width {
-        width: 30%;
-        clear: both;
-    }
+.table-in-view .table >:first-child >:first-child >:last-child {
+    border-right: 0;
+}
+
+.table-in-view .table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.table-in-view td.center .icheck-input input,
+.table-in-view td.center .icheck-input {
+    min-width: inherit !important;
+    width: 18px !important;
 }
 
 @media (max-width: 480px) {
     .table-in-view,
-    .table-full-width {
+    .table-full-width,
+    .table-wrapper {
         width: 100% !important;
+        clear: both;
     }
 }
 
-@media (max-width: 510px) {
-    .table-in-view,
-    .table-full-width {
-        width: 100%;
-    }
+
+/* RTL */
+
+.rtl .table-in-view {
+  direction: ltr;
 }
 
-@media (max-width: 825px){
-    .table-in-view {
-        width: 100% !important;
-    }   
+.rtl .table-in-view > table {
+  direction: rtl;
 }
 
-@media (min-width:826px) and (max-width:1260px) {
-    .table-in-view {
-        width: 60% !important;
-    }
+.rtl .table-in-view input {
+    padding-left: 30px;
+    padding-right: 0px !important;
 }
 
-@media (min-width:1261px) and (max-width:1438px) {
-    .table-in-view {
-        width: 70%;
-    }
+.rtl .table-in-view .btn-reset {
+    margin-left: 0 !important;
+    position: absolute;
+    left: 20px;
+}
+
+.rtl .table-in-view table th,
+.rtl .table-in-view table td {
+    position: relative;
 }

@@ -16,7 +16,10 @@ class ImportLinkBehavior extends Behavior {
 	];
 
 	public function initialize(array $config) {
-		// pr($this->_table->ControllerAction);die;
+		$importModel = $this->config('import_model');
+		if (empty($importModel)) {
+			$this->config('import_model', 'Import'.$this->_table->alias());
+		};
 	}
 
 	public function implementedEvents() {
@@ -26,25 +29,56 @@ class ImportLinkBehavior extends Behavior {
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		$customButton = [];
 		switch ($action) {
 			case 'index':
-				$url = $this->_table->request->params;
-				unset($url['_ext']);
-				unset($url['pass']);
-				if (array_key_exists('paging', $url)) {
-					unset($url['paging']);
+				if ($buttons['index']['url']['action']=='Surveys') {
+					break;
 				}
+				$customButton['url'] = $this->_table->request->params;
+				$customButton['url']['action'] = $this->config('import_model');
 
-				$import['url'] = $url;
-				$import['url']['action'] = 'Import'.$this->_table->alias();
-				$import['type'] = 'button';
-				$import['label'] = '<i class="fa kd-import"></i>';
-				$import['attr'] = $attr;
-				$import['attr']['title'] = __('Import');
+				$this->generateImportButton($toolbarButtons, $attr, $customButton);
+				break;
 
-				$toolbarButtons['import'] = $import;
+			case 'view':
+				if ($buttons['view']['url']['action']!='Surveys') {
+					break;
+				}
+				$customButton['url'] = $buttons['view']['url'];
+				$customButton['url']['action'] = 'Import'.$this->_table->alias();
+
+				$this->generateImportButton($toolbarButtons, $attr, $customButton);
 				break;
 		}
+	}
+
+	private function generateImportButton(ArrayObject $toolbarButtons, array $attr, array $customButton) {
+		if (array_key_exists('_ext', $customButton['url'])) {
+			unset($customButton['url']['_ext']);
+		}
+		if (array_key_exists('pass', $customButton['url'])) {
+			unset($customButton['url']['pass']);
+		}
+		if (array_key_exists('paging', $customButton['url'])) {
+			unset($customButton['url']['paging']);
+		}
+		if (array_key_exists('filter', $customButton['url'])) {
+			unset($customButton['url']['filter']);
+		}
+		$customButton['url'][0] = 'add';
+
+		$AccessControl = $this->_table->controller->AccessControl;
+		$permission = $AccessControl->check($customButton['url']);
+		if ($permission) {
+			$customButton['type'] = 'button';
+			$customButton['label'] = '<i class="fa kd-import"></i>';
+			$customButton['attr'] = $attr;
+			$customButton['attr']['title'] = __('Import');
+
+			$toolbarButtons['import'] = $customButton;
+		}
+
 	}
 
 }

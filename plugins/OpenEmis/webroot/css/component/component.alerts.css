@@ -1,14 +1,14 @@
-/* ALERTS v.1.0.0 */
+/* ALERTS v.1.0.2 */
 
 .alert {
     color: #FFF;
-    padding: 4px 8px 3px;
-    margin: 0 0 5px;
+    padding: 10px;
+    margin: 0 0 10px;
 }
 
 .alert-success {
-    background-color: #82B350;
-    border: 1px solid #82B350;
+    background-color: #77B576;
+    border: 1px solid #77B576;
 }
 
 .alert-info {
@@ -34,6 +34,7 @@
 .alert-danger a.close:hover,
 .alert-success a.close:hover {
     opacity: 0.5;
+    text-decoration: none !important;
 }
 
 .alert .close {
