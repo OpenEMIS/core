@@ -1,4 +1,4 @@
-/* HEADINGS v.1.0.1 */
+/* HEADINGS v.1.0.2 */
 
 h1,
 h2,
@@ -8,7 +8,7 @@ h5,
 h6 {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     color: #333;
-    margin-top: 10px;
+    margin: 10px 0;
 }
 
 h1 {
@@ -50,4 +50,8 @@ p {
 
 p.error {
     margin-top: 50px;
+}
+
+em {
+    font-style: italic;
 }

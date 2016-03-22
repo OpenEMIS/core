@@ -25,14 +25,16 @@ class ImportInstitutionsTable extends AppTable {
 		$newEvent = [
 			'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
 			'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
-			'Model.import.onImportPopulateDirectTableData' => 'onImportPopulateDirectTableData',
+			'Model.import.onImportPopulateAreasData' => 'onImportPopulateAreasData',
+			'Model.import.onImportPopulateAreaAdministrativesData' => 'onImportPopulateAreaAdministrativesData',
+			'Model.import.onImportPopulateNetworkConnectivitiesData' => 'onImportPopulateNetworkConnectivitiesData',
 			'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
 		];
 		$events = array_merge($events, $newEvent);
 		return $events;
 	}
 
-	public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes) {
+	public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
 		$columns = new Collection($columns);
 		$filtered = $columns->filter(function ($value, $key, $iterator) {
 		    return $value == 'code';
@@ -41,8 +43,8 @@ class ImportInstitutionsTable extends AppTable {
 		$code = $sheet->getCellByColumnAndRow($codeIndex, $row)->getValue();
 
 		if (in_array($code, $importedUniqueCodes->getArrayCopy())) {
-			$tempRow['duplicates'] = true;
-			return true;
+			$rowInvalidCodeCols['code'] = $this->getExcelLabel('Import', 'duplicate_unique_key');
+			return false;
 		}
 
 		$institution = $this->Institutions->find()->where(['code'=>$code])->first();
@@ -57,29 +59,70 @@ class ImportInstitutionsTable extends AppTable {
 		$importedUniqueCodes[] = $entity->code;
 	}
 
-	public function onImportPopulateDirectTableData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
-		if ($lookupModel == 'Areas') {
-			$order = [$lookupModel.'.area_level_id', $lookupModel.'.order'];
-		} else if ($lookupModel == 'AreaAdministratives') {
-			$order = [$lookupModel.'.area_administrative_level_id', $lookupModel.'.order'];
-		} else {
-			$order = [$lookupModel.'.order'];
-		}
+	public function onImportPopulateAreasData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+		$order = [$lookupModel.'.area_level_id', $lookupModel.'.order'];
 
 		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
 		$selectFields = ['name', $lookupColumn];
 		$modelData = $lookedUpTable->find('all')
-			->select($selectFields)
-			;
-		if ($lookedUpTable->hasField('order')) {
-			$modelData->order($order);
-		}
+								->select($selectFields)
+								->order($order)
+								;
 
 		$translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-		$data[$sheetName][] = [$translatedReadableCol, $translatedCol];
+		$data[$columnOrder]['lookupColumn'] = 2;
+		$data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
 		if (!empty($modelData)) {
 			foreach($modelData->toArray() as $row) {
-				$data[$sheetName][] = [
+				$data[$columnOrder]['data'][] = [
+					$row->name,
+					$row->$lookupColumn
+				];
+			}
+		}
+	}
+
+	public function onImportPopulateAreaAdministrativesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+		$order = [$lookupModel.'.area_administrative_level_id', $lookupModel.'.order'];
+
+		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+		$selectFields = ['name', $lookupColumn];
+		$modelData = $lookedUpTable->find('all')
+								->select($selectFields)
+								->order($order)
+								;
+
+		$translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+		$data[$columnOrder]['lookupColumn'] = 2;
+		$data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
+		if (!empty($modelData)) {
+			foreach($modelData->toArray() as $row) {
+				$data[$columnOrder]['data'][] = [
+					$row->name,
+					$row->$lookupColumn
+				];
+			}
+		}
+	}
+
+	public function onImportPopulateNetworkConnectivitiesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+		// die('onImportPopulateNetworkConnectivitiesData');
+		$order = [$lookupModel.'.order'];
+
+		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+		$selectFields = ['name', $lookupColumn];
+		$modelData = $lookedUpTable->find('all')
+								->select($selectFields)
+								->order($order)
+								;
+
+		$translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+		$translatedCol = $this->getExcelLabel('Import', 'institution_network_connectivity_id');
+		$data[$columnOrder]['lookupColumn'] = 2;
+		$data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
+		if (!empty($modelData)) {
+			foreach($modelData->toArray() as $row) {
+				$data[$columnOrder]['data'][] = [
 					$row->name,
 					$row->$lookupColumn
 				];
@@ -90,4 +133,5 @@ class ImportInstitutionsTable extends AppTable {
 	public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
 		return true;
 	}
+
 }

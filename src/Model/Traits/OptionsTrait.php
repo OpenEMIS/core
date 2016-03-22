@@ -14,9 +14,6 @@ trait OptionsTrait {
 			'Position' => [
 				'types' => ['FULL_TIME' => __('Full-Time'), 'PART_TIME' => __('Part-Time')]
 			],
-			'Absence' => [
-				'types' => ['EXCUSED' => __('Excused'), 'UNEXCUSED' => __('Unexcused')]
-			],
 			'Assessments' => [
 				'mark_types' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades')],
 				'status' => [0 => __('New'), 1 => __('Draft'), 2 => __('Completed')]
@@ -30,6 +27,17 @@ trait OptionsTrait {
 			],
 			'TrainingSessions' => [
 				'trainer_types' => ['INTERNAL' => __('Internal'), 'EXTERNAL' => __('External')]
+			],
+			'TrainingNeeds' => [
+				'types' => ['CATALOGUE' => __('Course Catalogue'), 'NEED' => __('Need Category')]
+			],
+			'Health' => [
+				'blood_types' => [
+					'O+' => 'O+', 'O-' => 'O-',
+					'A+' => 'A+', 'A-' => 'A-',
+					'B+' => 'B+', 'B-' => 'B-',
+					'AB+' => 'AB+', 'AB-' => 'AB-'
+				]
 			]
 		];
 

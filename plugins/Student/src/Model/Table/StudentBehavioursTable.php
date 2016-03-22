@@ -40,4 +40,16 @@ class StudentBehavioursTable extends AppTable {
 		}
 		return $buttons;
 	}
+
+	private function setupTabElements() {
+		$options['type'] = 'student';
+		$tabElements = $this->controller->getAcademicTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$alias = 'Behaviours';
+		$this->controller->set('selectedAction', $alias);
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
+	}
 }

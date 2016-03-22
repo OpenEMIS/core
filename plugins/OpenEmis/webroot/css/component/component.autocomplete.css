@@ -1,12 +1,12 @@
-/* AUTOCOMPLETE v.1.0.0 */
+/* AUTOCOMPLETE v.1.0.2 */
 
 .ui-autocomplete {
-    max-height: 120px !important;
+    max-height: 320px !important;
     overflow: scroll;
 }
 
 .ui-widget-content {
-    background: none;
+    background: none !important;
     background-color: #FFF !important;
     border: 1px solid #CCC !important;
     -webkit-box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
@@ -54,10 +54,4 @@
 
 .ui-widget input:focus {
     outline: none !important;
-}
-
-@media (min-width: 485px) and (max-width: 1055px){
-    .form-horizontal input {
-        width: 60%;
-    }
 }

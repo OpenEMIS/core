@@ -57,6 +57,29 @@ class AttachmentsTable extends AppTable {
 		
     }
 
+	private function setupTabElements() {
+		$options = [
+			'userRole' => '',
+		];
+
+		switch ($this->controller->name) {
+			case 'Students':
+				$options['userRole'] = 'Students';
+				break;
+			case 'Staff':
+				$options['userRole'] = 'Staff';
+				break;
+		}
+
+		$tabElements = $this->controller->getUserTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function afterAction(Event $event) {
+		$this->setupTabElements();
+	}
+
 
 /******************************************************************************************************************
 **
@@ -64,17 +87,10 @@ class AttachmentsTable extends AppTable {
 **
 ******************************************************************************************************************/
     public function viewAfterAction(Event $event, Entity $entity) {
-		$this->fields['name']['type'] = 'download';
-		$this->fields['name']['attr']['url'] = $action = $this->ControllerAction->url('download');//$this->ControllerAction->buttons['download']['url'];
     	
     	$this->fields['created_user_id']['options'] = [$entity->created_user_id => $entity->created_user->name];
     	if (!empty($entity->modified_user_id)) {
 	    	$this->fields['modified_user_id']['options'] = [$entity->modified_user_id => $entity->modified_user->name];
-	    }
-
-	    $viewVars = $this->ControllerAction->vars();
-	    if(!is_null($viewVars['toolbarButtons']['download'])) {
-	    	$viewVars['toolbarButtons']['download']['url'][1] = $entity->id;
 	    }
 
 		return $entity;

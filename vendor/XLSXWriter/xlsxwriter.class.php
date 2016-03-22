@@ -167,7 +167,6 @@ class XLSXWriter
 		{
 			$sheet->cell_formats = array_fill(0, count($row), 'string');
 		}
-
 		$sheet->file_writer->write('<row collapsed="false" customFormat="false" customHeight="false" hidden="false" ht="12.1" outlineLevel="0" r="' . ($sheet->row_count + 1) . '">');
 		foreach ($row as $k => $v) {
 			$this->writeCell($sheet->file_writer, $sheet->row_count, $k, $v, $sheet->cell_formats[$k]);

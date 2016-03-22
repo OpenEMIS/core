@@ -17,16 +17,16 @@ class InstitutionRubricsTable extends AppTable {
 	const COMPLETED = 2;
 
 	public function initialize(array $config) {
-		$this->table('institution_site_quality_rubrics');
+		$this->table('institution_quality_rubrics');
 		parent::initialize($config);
 		
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('RubricTemplates', ['className' => 'Rubric.RubricTemplates']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-		$this->belongsTo('Sections', ['className' => 'Institution.InstitutionSiteSections', 'foreignKey' => 'institution_site_section_id']);
-		$this->belongsTo('Classes', ['className' => 'Institution.InstitutionSiteClasses', 'foreignKey' => 'institution_site_class_id']);
+		$this->belongsTo('Sections', ['className' => 'Institution.InstitutionSections', 'foreignKey' => 'institution_section_id']);
+		$this->belongsTo('Classes', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_class_id']);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->hasMany('InstitutionRubricAnswers', ['className' => 'Institution.InstitutionRubricAnswers', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->addBehavior('Excel', [
 			'excludes' => ['comment'],
@@ -38,9 +38,9 @@ class InstitutionRubricsTable extends AppTable {
 
 	public function beforeAction(Event $event) {
 		$controllerName = $this->controller->name;
-		$reportName = __($controllerName).' - '.__('Rubrics');
+		$reportName = __('Rubrics');
 		$this->controller->Navigation->substituteCrumb($this->alias(), $reportName);
-		$this->controller->set('contentHeader', $reportName);
+		$this->controller->set('contentHeader', __($controllerName).' - '.$reportName);
 		$this->fields = [];
 		$this->ControllerAction->field('feature');
 		$this->ControllerAction->field('format');

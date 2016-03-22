@@ -48,6 +48,16 @@ class HtmlFieldHelper extends Helper {
 		return $this->_View->element($element, $attr);
 	}
 
+	public function viewSet($element, $attr) {
+		if (!is_null($this->_View->get($element))) {
+			$options = $this->_View->get($element);
+			$options[] = $attr;
+			$this->_View->set($element, $options);
+		} else {
+			$this->_View->set($element, [$attr]);
+		}
+	}
+
 	public function dispatchEvent($subject, $eventKey, $method=null, $params=[]) {
 		$eventMap = $subject->implementedEvents();
 		$event = new Event($eventKey, $this, $params);
@@ -193,14 +203,19 @@ class HtmlFieldHelper extends Helper {
 		$field = $attr['field'];
 		if ($action == 'index' || $action == 'view') {
 			if (!empty($attr['options'])) {
-				if (array_key_exists($data->$field, $attr['options'])) {
-					$value = $attr['options'][$data->$field];
-					if (is_array($value)) {
-						$value = __($value['text']);
-					} else {
-						$value = __($value);
+				if ($data->$field == '') {
+					return '';
+				} else {
+					if (array_key_exists($data->$field, $attr['options'])) {
+						$value = $attr['options'][$data->$field];
+						if (is_array($value)) {
+							$value = __($value['text']);
+						} else {
+							$value = __($value);
+						}
 					}
 				}
+				
 			}
 			
 			if (empty($value)) {
@@ -227,8 +242,31 @@ class HtmlFieldHelper extends Helper {
 						// 	}
 						// }
 					}
+					if (!isset($attr['translate']) || (isset($attr['translate']) && !$attr['translate'])) {
+						$list = [];
+						foreach ($attr['options'] as $key => $opt) {
+							if (is_array($opt) && isset($opt['text'])) {
+								$opt['text'] = __($opt['text']);
+								$list[$key] = $opt;
+							} else if (is_array($opt)) {
+								$subList = [];
+								foreach ($opt as $k => $subOption) {
+									if (is_array($subOption) && isset($subOption['text'])) {
+										$subOption['text'] = __($subOption['text']);
+										$subList[$k] = $subOption;
+									} else {
+										$subList[$k] = __($subOption);
+									}
+								}
+								$list[__($key)] = $subList;
+							} else {
+								$list[$key] = __($opt);
+							}
+						}
+						$attr['options'] = $list;
+					}
+					$options['options'] = $attr['options'];
 				}
-				$options['options'] = $attr['options'];
 			}
 			if (isset($attr['attr'])) {
 				$options = array_merge($options, $attr['attr']);
@@ -367,17 +405,21 @@ class HtmlFieldHelper extends Helper {
 			$defaultImgView = $this->table->getDefaultImgView();
 			
 			$showRemoveButton = false;
+			if (isset($data[$attr['field']]['tmp_name'])) {
+				$tmp_file = ((is_array($data[$attr['field']])) && (file_exists($data[$attr['field']]['tmp_name']))) ? $data[$attr['field']]['tmp_name'] : "";
+				$tmp_file_read = (!empty($tmp_file)) ? file_get_contents($tmp_file) : ""; 
+			} else {
+				$tmp_file = true;
+				$tmp_file_read = $data[$attr['field']];
+			}
 
-			$tmp_file = ((is_array($data[$attr['field']])) && (file_exists($data[$attr['field']]['tmp_name']))) ? $data[$attr['field']]['tmp_name'] : "";
-			$tmp_file_read = (!empty($tmp_file)) ? file_get_contents($tmp_file) : ""; 
-
-			$src = (!empty($tmp_file_read)) ? '<img id="existingImage" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode( $tmp_file_read ).'"/>' : $defaultImgView;
-			$showRemoveButton = (!empty($tmp_file)) ? true : false; 
-
-			if(!is_array($data[$attr['field']])) {
-			  $imageContent = !is_null($data[$attr['field']]) ? stream_get_contents($data[$attr['field']]) : "";
-			  $src = (!empty($imageContent)) ? '<img id="existingImage" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode( $imageContent ).'"/>' : $defaultImgView;
-			  $showRemoveButton = true;	
+			if (!is_resource($tmp_file_read)) {
+				$src = (!empty($tmp_file_read)) ? '<img id="existingImage" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode( $tmp_file_read ).'"/>' : $defaultImgView;
+				$showRemoveButton = (!empty($tmp_file)) ? true : false; 
+			} else {
+				$tmp_file_read = stream_get_contents($tmp_file_read);
+				$src = (!empty($tmp_file_read)) ? '<img id="existingImage" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode( $tmp_file_read ).'"/>' : $defaultImgView;
+				$showRemoveButton = true;
 			}
 
 			header('Content-Type: image/jpeg'); 
@@ -425,7 +467,7 @@ class HtmlFieldHelper extends Helper {
 		$_options = [
 			'format' => 'dd-mm-yyyy H:i:s',
 			'todayBtn' => 'linked',
-			'orientation' => 'top auto'
+			'orientation' => 'auto'
 		];
 
 		if (!isset($attr['date_options'])) {
@@ -453,7 +495,7 @@ class HtmlFieldHelper extends Helper {
 		$_options = [
 			'format' => 'dd-mm-yyyy',
 			'todayBtn' => 'linked',
-			'orientation' => 'top auto',
+			'orientation' => 'auto',
 			'autoclose' => true,
 		];
 
@@ -503,7 +545,11 @@ class HtmlFieldHelper extends Helper {
 					$attr['value'] = date('d-m-Y');
 				}
 			} else {
-				$attr['value'] = date('d-m-Y', strtotime($attr['value']));
+				if ($attr['value'] instanceof Time) {
+					$attr['value'] = $attr['value']->format('d-m-Y');
+				} else {
+					$attr['value'] = date('d-m-Y', strtotime($attr['value']));
+				}
 			}
 
 			if (!is_null($this->_View->get('datepicker'))) {
@@ -545,14 +591,43 @@ class HtmlFieldHelper extends Helper {
 				}
 			}
 		} else if ($action == 'edit') {
-			$attr['id'] = $attr['model'] . '_' . $field;
-			$attr['time_options'] = array_merge($_options, $attr['time_options']);
-			if (!is_null($value)) {
-				$attr['value'] = date('h:i A', strtotime($value));
-				$attr['time_options']['defaultTime'] = $attr['value'];
-			} else if ($attr['default_time']) {
-				$attr['time_options']['defaultTime'] = date('h:i A');
+
+			if (!isset($attr['id'])) {
+				$attr['id'] = $attr['model'] . '_' . $field;
 			}
+			
+			if (array_key_exists('fieldName', $attr)) {
+				$attr['id'] = $this->_domId($attr['fieldName']);
+			}
+			$model = split('\.', $attr['model']);
+			$newModel = '';
+			foreach($model as $part) {
+				if (empty($newModel)) {
+					$newModel = $part;
+				} else {
+					$newModel .= '['.$part.']';
+				}
+			}
+			$attr['model'] = $newModel;
+			$attr['time_options'] = array_merge($_options, $attr['time_options']);
+
+			if (!array_key_exists('value', $attr)) {
+				if (!is_null($value)) {
+					$attr['value'] = date('h:i A', strtotime($value));
+					$attr['time_options']['defaultTime'] = $attr['value'];
+				} else if ($attr['default_time']) {
+					$attr['time_options']['defaultTime'] = date('h:i A');
+				}
+			} else {
+				if ($attr['value'] instanceof Time) {
+					$attr['value'] = $attr['value']->format('h:i A');
+					$attr['time_options']['defaultTime'] = $attr['value'];
+				} else {
+					$attr['value'] = date('h:i A', strtotime($attr['value']));
+					$attr['time_options']['defaultTime'] = $attr['value'];
+				}
+			}
+
 			if (!is_null($this->_View->get('timepicker'))) {
 				$timepickers = $this->_View->get('timepicker');
 				$timepickers[] = $attr;
@@ -579,10 +654,12 @@ class HtmlFieldHelper extends Helper {
 			$value = $data->$attr['field'];
 			$chosenSelectList = [];
 			if (!empty($value)) {
-				foreach ($value as $obj) {
-					$chosenSelectList[] = $obj->name;
+				if (is_array($value)) {
+					foreach ($value as $obj) {
+						$chosenSelectList[] = $obj->name;
+					}
+					$value = implode(', ', $chosenSelectList);
 				}
-				$value = implode(', ', $chosenSelectList);
 			} else {
 				$value = isset($attr['valueWhenEmpty']) ? $attr['valueWhenEmpty'] : '';
 			}
@@ -645,7 +722,7 @@ class HtmlFieldHelper extends Helper {
 		return $value;
 	}
 
-	public function autocomplete($action, Entity $data, $attr, &$options=[]){
+	public function autocomplete($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
 		if ($action == 'index' || $action == 'view') {
 			$value = $data->$attr['field'];
@@ -669,6 +746,28 @@ class HtmlFieldHelper extends Helper {
 			$value = $this->_View->element('ControllerAction.autocomplete', ['attr' => $attr, 'options' => $options]);
 		}
 		return $value;
+	}
+
+	public function table($action, Entity $data, $attr, $options=[]) {
+		$html = '
+			<div class="input clearfix">
+				<label>%s</label>
+				<div class="table-wrapper">
+					<div class="table-in-view">
+						<table class="table">
+							<thead>%s</thead>
+							<tbody>%s</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		';
+
+		$headers = $this->Html->tableHeaders($attr['headers']);
+		$cells = $this->Html->tableCells($attr['cells']);
+
+		$html = sprintf($html, $attr['label'], $headers, $cells);
+		return $html;
 	}
 
 	// a template function for creating new elements

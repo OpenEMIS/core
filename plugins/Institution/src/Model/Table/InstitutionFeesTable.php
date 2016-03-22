@@ -12,7 +12,7 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
 class InstitutionFeesTable extends AppTable {
-	public $institutionId = 0;
+	private $institutionId = 0;
 	private $_selectedAcademicPeriodId = 0;
 	private $_academicPeriodOptions = [];
 	private $_gradeOptions = [];
@@ -228,7 +228,13 @@ class InstitutionFeesTable extends AppTable {
 
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$this->cleanFeeTypes($data);
-    }
+		$newOptions = ['InstitutionFeeTypes'=>['validate'=>false]];
+		if (isset($options['associated'])) {
+			$options['associated'] = array_merge($options['associated'], $newOptions);
+		} else {
+			$options['associated'] = $newOptions;
+		}
+	}
 
     public function addAfterAction(Event $event, Entity $entity) {
 		$feeTypes = [];
@@ -301,8 +307,7 @@ class InstitutionFeesTable extends AppTable {
 	}
 
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
-
-		$this->_academicPeriodOptions = $this->AcademicPeriods->getList();
+		$this->_academicPeriodOptions = $this->AcademicPeriods->getList(['isEditable'=>true]);
 		$this->_selectedAcademicPeriodId = $this->postString('academic_period_id');
 		if ($this->_selectedAcademicPeriodId == 0 || is_null($this->_selectedAcademicPeriodId)) {
 			$this->_selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
