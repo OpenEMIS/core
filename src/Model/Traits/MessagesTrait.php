@@ -604,6 +604,11 @@ trait MessagesTrait {
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
 				],
+			],
+			'InstitutionInfrastructures' => [
+				'code' => [
+					'ruleUnique' => 'Please enter a unique code'
+				]
 			]
 		],
 		'User' => [
