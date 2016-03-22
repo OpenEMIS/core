@@ -132,9 +132,22 @@ class AreasController extends AppController
 						->toArray());
 				}
 
+				if (!empty($authorisedArea)) {
+					$authorisedAreaId = $Table
+						->find('list', [
+								'keyField' => 'id',
+								'valueField' => 'id'
+							])
+						->where(['OR' => $areaCondition])
+						->toArray();
+				} else {
+					$authorisedAreaId = [];
+				}
+				
 				$areaCondition[] = [
 						$Table->aliasField('id').' IN' => $parentIds
 					];
+				$authorisedParentIds = $parentIds;
 				$condition['OR'] = $areaCondition;
 			}
 		}
@@ -162,7 +175,7 @@ class AreasController extends AppController
 		$pathToUnset = [];
 		foreach ($path as $obj) {
 			if (! $AccessControl->isAdmin() && $tableName == 'Area.Areas') {
-				if (!in_array($obj->id, $parentIds)) {
+				if (!in_array($obj->id, $authorisedAreaId) && !in_array($obj->id, $parentIds)) {
 					$pathToUnset[] = $count - 1;
 					$count++;
 					continue;
@@ -175,6 +188,12 @@ class AreasController extends AppController
 				->order([$Table->aliasField('order')])
 				->where($condition)
 				->toArray();
+
+			$objParentIds = $Table
+				->find('list')
+				->where([$Table->aliasField('lft').' < ' => $obj->lft, $Table->aliasField('rght').' > ' => $obj->rght])
+				->toArray();
+
 			$newList = [];
 			foreach ($list as $key => $area) {
 				$newList[$key] = __($area);
@@ -190,7 +209,7 @@ class AreasController extends AppController
 				default:
 					if( $count > 1 ){
 						if (! $AccessControl->isAdmin()) {
-							if (in_array($parentId, $this->array_column($authorisedArea, 'area_id'))) {
+							if (array_intersect($this->array_column($authorisedArea, 'area_id'), array_keys($objParentIds))) {
 								$list = [$previousOptionId => '--'.__('Select Area').'--'] + $list;	
 							}
 						} else {
@@ -202,7 +221,7 @@ class AreasController extends AppController
 
 			if(! ($count == count($path)) || ! $hasChildren){
 				$obj->selectedId = $obj->id;
-			}else{
+			} else{
 				$obj->selectedId = $previousOptionId;
 			}
 			
