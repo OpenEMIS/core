@@ -43,14 +43,14 @@ class QualificationSpecialisationsTable extends ControllerActionTable {
 				$EducationSubjects = TableRegistry::get('Education.EducationSubjects');
 				$subjectData = $EducationSubjects
 					->find()
-					->select([$EducationSubjects->aliasField('name'), $EducationSubjects->aliasField('code')])
+					->select([$EducationSubjects->aliasField($EducationSubjects->primaryKey()), $EducationSubjects->aliasField('name'), $EducationSubjects->aliasField('code')])
 					->find('visible')
 					->find('order')
 					->toArray();
 
 				$subjectOptions = [];
 				foreach ($subjectData as $key => $value) {
-					$subjectOptions[] = $value->code . ' - ' . $value->name;
+					$subjectOptions[$value->id] = $value->code . ' - ' . $value->name;
 				}
 				
 				$attr['type'] = 'chosenSelect';
