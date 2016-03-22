@@ -40,8 +40,6 @@ class AppController extends Controller {
 		'OpenEmis.Resource'
 	];
 
-	public $components = ['RequestHandler'];
-
 	/**
 	 * Initialization hook method.
 	 *
