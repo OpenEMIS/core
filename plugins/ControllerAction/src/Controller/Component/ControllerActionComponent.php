@@ -13,7 +13,8 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.1.15
+ControllerActionComponent - Current Version 3.1.16
+3.1.16 (Malcolm) - renderFields() - '-- Select --' is added if ($attr['type'] != 'chosenSelect') 
 3.1.15 (Malcolm) - renderFields() - for automatic adding of '-- Select --' if (there are no '' value fields in dropdown) and $attr['select'] != false (default true)
 3.1.14 (Malcolm) - supported default selection for select boxes - renderFields() edit 
 3.1.13 (Thed) - added new event editAfterQuery to modified $entity after query is executed
@@ -186,7 +187,9 @@ class ControllerActionComponent extends Component {
 					if (is_array($attr['options'])) {
 						// need to check if options has any ''
 						if (!array_key_exists('', $attr['options'])) {
-							$this->model->fields[$key]['options'] = ['' => __('-- Select --')] + $attr['options'];
+							if ($attr['type'] != 'chosenSelect') {
+								$this->model->fields[$key]['options'] = ['' => __('-- Select --')] + $attr['options'];
+							}
 						}
 					}
 				}
@@ -233,8 +236,10 @@ class ControllerActionComponent extends Component {
 						if (!empty($defaultValue)) {
 							$this->model->fields[$key]['default'] = $defaultValue;
 						}
-						$optionsArray = ['' => __('-- Select --')] + $optionsArray;
-
+						if ($attr['type'] != 'chosenSelect') {
+							$optionsArray = ['' => __('-- Select --')] + $optionsArray;
+						}
+						
 						$this->model->fields[$key]['options'] = $optionsArray;
 					} else {
 						$this->model->fields[$key]['options'] = $query;
