@@ -239,7 +239,8 @@ class StudentBehavioursTable extends AppTable {
 		$Classes = TableRegistry::get('Institution.InstitutionSections');
 
 		if ($action == 'add') {
-			$periodOptions = [];
+			$attr['select'] = false;
+			$periodOptions = ['0' => __('-- Select --')];
 			$periodOptions = $periodOptions + $AcademicPeriod->getList(['isEditable'=>true]);
 			$selectedPeriod = 0;
 			if ($request->is(['post', 'put'])) {
@@ -286,7 +287,8 @@ class StudentBehavioursTable extends AppTable {
 				$selectedPeriod = $request->data($this->aliasField('academic_period_id'));
 			}
 
-			$classOptions = [];
+			$attr['select'] = false;
+			$classOptions = ['0' => __('-- Select --')];
 
 			if ($selectedPeriod != 0) {
 				$Classes = TableRegistry::get('Institution.InstitutionSections');
