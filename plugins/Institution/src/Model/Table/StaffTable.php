@@ -364,14 +364,13 @@ class StaffTable extends AppTable {
 			$positionTable = TableRegistry::get('Institution.InstitutionPositions');
 			$userId = $this->Auth->user('id');
 			$institutionId = $this->Session->read('Institution.Institutions.id');
-<<<<<<< HEAD
 
-			// excluding positions where 'InstitutionSiteStaff.end_date is NULL'
+			// // excluding positions where 'InstitutionStaff.end_date is NULL'
 			$excludePositions = $this->Positions->find('list');
-			$excludePositions->matching('InstitutionSiteStaff', function ($q) {
-					return $q->where(['InstitutionSiteStaff.end_date is NULL', 'InstitutionSiteStaff.FTE' => 1]);
+			$excludePositions->matching('InstitutionStaff', function ($q) {
+					return $q->where(['InstitutionStaff.end_date is NULL', 'InstitutionStaff.FTE' => 1]);
 				});
-			$excludePositions->where([$this->Positions->aliasField('institution_site_id') => $institutionId])
+			$excludePositions->where([$this->Positions->aliasField('institution_id') => $institutionId])
 				->toArray()
 				;
 			$excludeArray = [];
@@ -379,20 +378,6 @@ class StaffTable extends AppTable {
 				$excludeArray[] = $value;
 			}
 
-			$positionConditions = [];
-			$positionConditions[$this->Positions->aliasField('institution_site_id')] = $institutionId;
-			if (!empty($excludeArray)) {
-				$positionConditions[$this->Positions->aliasField('id').' NOT IN '] = $excludeArray;
-			}
-
-			$positionOptions = $this->Positions
-			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-			->contain(['StaffPositionTitles'])
-			->where($positionConditions)
-			->toArray();
-
-			$attr['options'] = $positionOptions;
-=======
 			if ($this->AccessControl->isAdmin()) {
 				$userId = null;
 				$roles = [];
@@ -402,13 +387,16 @@ class StaffTable extends AppTable {
 			
 			// Filter by active status
 			$activeStatusId = $this->Workflow->getStepsByModelCode($positionTable->registryAlias(), 'ACTIVE');
+			$positionConditions = [];
+			$positionConditions[$this->Positions->aliasField('institution_id')] = $institutionId;
+			$positionConditions[$this->Positions->aliasField('status_id').' IN '] = $activeStatusId;
+			if (!empty($excludeArray)) {
+				$positionConditions[$this->Positions->aliasField('id').' NOT IN '] = $excludeArray;
+			}
 			$staffPositionsOptions = $this->Positions
 					->find()
 					->innerJoinWith('StaffPositionTitles.SecurityRoles')
-					->where([
-						$this->Positions->aliasField('institution_id') => $institutionId, 
-						$this->Positions->aliasField('status_id').' IN ' => $activeStatusId
-					])
+					->where($positionConditions)
 					->select(['security_role_id' => 'SecurityRoles.id', 'type' => 'StaffPositionTitles.type'])
 					->order(['StaffPositionTitles.type' => 'DESC', 'StaffPositionTitles.order'])
 					->autoFields(true)
@@ -430,7 +418,6 @@ class StaffTable extends AppTable {
 			}
 
 			$attr['options'] = $options;
->>>>>>> f405c1b07ca2fde09826e9d81034893e09edca14
 		}
 		return $attr;
 	}
