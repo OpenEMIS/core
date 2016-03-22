@@ -93,17 +93,19 @@ class ExcelBehavior extends Behavior {
 		$writer = new \XLSXWriter();
 		$excel = $this;
 
-		$generate = function($writer, $settings) {
-			$this->generate($writer, $settings);
+		$generate = function($settings) {
+			$this->generate($settings);
 		};
 
-		$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$writer, $_settings]);
+		$_settings['writer'] = $writer;
+
+		$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$_settings]);
 		if ($event->isStopped()) { return $event->result; }
 		if (is_callable($event->result)) {
 			$generate = $event->result;
 		}
 		
-		$generate($writer, $_settings);
+		$generate($_settings);
 
 		$filepath = $_settings['path'] . $_settings['file'];
 		$_settings['file_path'] = $filepath;
@@ -115,7 +117,8 @@ class ExcelBehavior extends Behavior {
 		}
 	}
 
-	public function generate($writer, $settings=[]) {
+	public function generate($settings=[]) {
+		$writer = $settings['writer'];
 		$sheets = new ArrayObject();
 
 		// Event to get the sheets. If no sheet is specified, it will be by default one sheet
@@ -129,6 +132,8 @@ class ExcelBehavior extends Behavior {
 			];
 		}
 
+		$sheetNameArr = [];
+
 		foreach ($sheets as $sheet) {
 			$table = $sheet['table'];
 			// sheet info added to settings to avoid adding more parameters to event
@@ -141,6 +146,26 @@ class ExcelBehavior extends Behavior {
 
 			$this->dispatchEvent($table, $this->eventKey('onExcelBeforeQuery'), 'onExcelBeforeQuery', [$settings, $query], true);
 			$sheetName = $sheet['name'];
+
+			// Check to make sure the string length does not exceed 31 characters
+			$sheetName = (strlen($sheetName) > 31) ? substr($sheetName,0,27).'....' : $sheetName;
+
+			// Check to make sure that no two sheets has the same name
+			$counter = 1;
+			$initialLength = 0;
+			while (in_array($sheetName, $sheetNameArr)) {
+				if ($counter > 1) {
+					$sheetName = substr($sheetName, 0, $initialLength);
+				} else {
+					$initialLength = strlen($sheetName);
+				}
+				if (strlen($sheetName) > 27) {
+					$sheetName = substr($sheetName,0,27).'('.$counter++.')';
+				} else {	
+					$sheetName = $sheetName.'('.$counter++.')';
+				}
+			}
+			$sheetNameArr[] = $sheetName;
 
 			// if the primary key of the record is given, only generate that record
 			if (array_key_exists('id', $settings)) {
@@ -187,6 +212,8 @@ class ExcelBehavior extends Behavior {
 
 				$writer->writeSheetRow($sheetName, $row);
 
+				$this->dispatchEvent($table, $this->eventKey('onExcelAfterHeader'), 'onExcelAfterHeader', [$settings], true);
+
 				// process every page based on the limit
 				for ($pageNo=0; $pageNo<$pages; $pageNo++) {
 					$resultSet = $query
@@ -202,6 +229,9 @@ class ExcelBehavior extends Behavior {
 
 					// process each row based on the result set
 					foreach ($resultSet as $entity) {
+						
+						$settings['entity'] = $entity;
+
 						$row = [];
 						foreach ($fields as $attr) {
 							$row[] = $this->getValue($entity, $table, $attr);
@@ -213,8 +243,10 @@ class ExcelBehavior extends Behavior {
 						}
 
 						$rowCount++;
-						$this->dispatchEvent($table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount], true);
-						$writer->writeSheetRow($sheetName, $row);
+						$event = $this->dispatchEvent($table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount]);
+						if (!$event->result) {
+							$writer->writeSheetRow($sheetName, $row);
+						}
 					}
 				}
 			} else {
@@ -286,9 +318,9 @@ class ExcelBehavior extends Behavior {
 			if (empty($field['label'])) {
 				$key = explode('.', $field['key']);
 				$module = $key[0];
-
+				$column = $key[1];
 				// Redispatch get label
-				$event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $field['field'], $language], true);
+				$event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $column, $language], true);
 				if (strlen($event->result)) {
 					$field['label'] = $event->result;
 				}
@@ -341,7 +373,7 @@ class ExcelBehavior extends Behavior {
 				}
 			}
 		}	
-		return $value;
+		return __($value);
 	}
 
 	private function isForeignKey($table, $field) {

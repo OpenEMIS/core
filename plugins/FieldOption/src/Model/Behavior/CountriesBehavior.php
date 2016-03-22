@@ -8,6 +8,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use ControllerAction\Model\Traits\UtilityTrait;
+use Cake\ORM\Query;
 
 class CountriesBehavior extends DisplayBehavior {
 	use UtilityTrait;
@@ -46,7 +47,7 @@ class CountriesBehavior extends DisplayBehavior {
 	}
 
 	public function addEditBeforeAction(Event $event) {
-		parent::indexBeforeAction($event);
+		parent::addEditBeforeAction($event);
 
 		$table = TableRegistry::get($this->fieldOptionName);
 		$this->displayAssociatedFields($table);
@@ -91,11 +92,9 @@ class CountriesBehavior extends DisplayBehavior {
 				 		break;
 				 	
 				 	case 'edit':case 'add':
-				 		$options = [0 => __('-- Select Option --')]+$options;
 				 		break;
 				 	
 				 	default:
-				 		$options = [0 => __('-- Select Option --')]+$options;
 				 		break;
 				}
 				$this->_table->ControllerAction->field($attr, ['type' => 'select', 
@@ -110,7 +109,7 @@ class CountriesBehavior extends DisplayBehavior {
 	}
 
 	public function onGetIdentityTypeId(Event $event, Entity $entity) {
-		return $entity->identity_type->name;
+		return ($entity->has('identity_type'))? $entity->identity_type->name: '';
 	}
 
 }

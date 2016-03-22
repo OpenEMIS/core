@@ -22,30 +22,17 @@ class StaffUserTable extends UserTable {
 		$sessionKey = 'Institution.Staff.new';
 		if ($this->Session->check($sessionKey)) {
 			$positionData = $this->Session->read($sessionKey);
-			$positionData['security_user_id'] = $entity->id;
-			$role = $positionData['role'];
-			$institutionId = $positionData['institution_site_id'];
+			$positionData['staff_id'] = $entity->id;
+			$institutionId = $positionData['institution_id'];
 
 			$Staff = TableRegistry::get('Institution.Staff');
 			$staffEntity = $Staff->newEntity($positionData, ['validate' => 'AllowEmptyName']);
-			if ($Staff->save($staffEntity)) {
-				if ($role > 0) {
-					$institutionEntity = TableRegistry::get('Institution.Institutions')->get($institutionId);
-					$obj = [
-						'id' => Text::uuid(),
-						'security_group_id' => $institutionEntity->security_group_id, 
-						'security_role_id' => $role, 
-						'security_user_id' => $entity->id
-					];
-					$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-					$GroupUsers->save($GroupUsers->newEntity($obj));
-				}
-			} else {
+			if (!$Staff->save($staffEntity)) {
 				$errors = $staffEntity->errors();
-				if (isset($errors['institution_site_position_id']['ruleCheckFTE'])) {
-					$this->Alert->error('Institution.InstitutionSiteStaff.noFTE', ['reset' => true]);
+				if (isset($errors['institution_position_id']['ruleCheckFTE'])) {
+					$this->Alert->error('Institution.InstitutionStaff.noFTE', ['reset' => true]);
 				} else {
-					$this->Alert->error('Institution.InstitutionSiteStaff.error', ['reset' => true]);
+					$this->Alert->error('Institution.InstitutionStaff.error', ['reset' => true]);
 				}
 			}
 			$this->Session->delete($sessionKey);
@@ -56,16 +43,23 @@ class StaffUserTable extends UserTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		if (!$this->AccessControl->isAdmin()) {
+			$institutionIds = $this->AccessControl->getInstitutionsByUser();
+			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
+		}
+		$this->Session->write('Staff.Staff.id', $entity->id);
+		$this->Session->write('Staff.Staff.name', $entity->name);
 		$this->setupTabElements($entity);
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
+		$this->Session->write('Staff.Staff.id', $entity->id);
+		$this->Session->write('Staff.Staff.name', $entity->name);
 		$this->setupTabElements($entity);
 	}
 
 	private function setupTabElements($entity) {
 		$id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
-
 		$options = [
 			'userRole' => 'Staff',
 			'action' => $this->action,
@@ -87,12 +81,13 @@ class StaffUserTable extends UserTable {
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($action == 'view') {
-			unset($toolbarButtons['back']);
-			if ($toolbarButtons->offsetExists('export')) {
-				unset($toolbarButtons['export']);
+			if ($toolbarButtons->offsetExists('back')) {
+				unset($toolbarButtons['back']);
 			}
 		} else if ($action == 'add') {
-			$toolbarButtons['back']['url'] = $this->request->referer(true);
+			$backAction = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Staff', 'add'];
+			$toolbarButtons['back']['url'] = $backAction;
+
 			if ($toolbarButtons->offsetExists('export')) {
 				unset($toolbarButtons['export']);
 			}

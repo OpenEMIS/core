@@ -20,6 +20,8 @@ class AppTable extends Table {
 	use LogTrait;
 
 	public function initialize(array $config) {
+		Time::$defaultLocale = 'en_US';
+		
 		$_config = [
 			'Modified' => true,
 			'Created' => true
@@ -31,7 +33,14 @@ class AppTable extends Table {
 		$columns = $schema->columns();
 
 		if (in_array('modified', $columns) || in_array('created', $columns)) {
-			$this->addBehavior('Timestamp');
+			$this->addBehavior('Timestamp', [
+				'events' => [
+            		'Model.beforeSave' => [
+                		'created' => 'new',
+               			'modified' => 'existing'
+           			]
+        		]
+			]);
 		}
 
 		if (in_array('modified_user_id', $columns) && $_config['Modified']) {
@@ -48,6 +57,14 @@ class AppTable extends Table {
 
 		if (in_array('order', $columns)) {
 			$this->addBehavior('Reorder');
+			// to be removed after field_option_values is dropped
+			if ($this->table() == 'field_option_values') {
+				if ($this->behaviors()->has('Reorder')) {
+					$this->behaviors()->get('Reorder')->config([
+						'filter' => 'field_option_id',
+					]);
+				}
+			}
 		}
 
 		$dateFields = [];
@@ -67,6 +84,7 @@ class AppTable extends Table {
 		}
 		$this->addBehavior('Validation');
 		$this->attachWorkflow();
+		$this->addBehavior('Modification');
 	}
 
 	public function attachWorkflow($config=[]) {
@@ -115,7 +133,29 @@ class AppTable extends Table {
 	// Event: 'Model.excel.onFormatDate' ExcelBehavior
 	public function onExcelRenderDate(Event $event, Entity $entity, $attr) {
 		if (!empty($entity->$attr['field'])) {
-			return $this->formatDate($entity->$attr['field']);
+			if ($entity->$attr['field'] instanceof Time) {
+				return $this->formatDate($entity->$attr['field']);
+			} else {
+				if ($entity->$attr['field'] != '0000-00-00') {
+					$date = new Time($entity->$attr['field']);
+					return $this->formatDate($date);
+				} else {
+					return '';
+				}
+			}
+		} else {
+			return $entity->$attr['field'];
+		}
+	}
+
+	public function onExcelRenderDateTime(Event $event, Entity $entity, $attr) {
+		if (!empty($entity->$attr['field'])) {
+			if ($entity->$attr['field'] instanceof Time) {
+				return $this->formatDate($entity->$attr['field']);
+			} else {
+				$date = new Time($entity->$attr['field']);
+				return $this->formatDate($date);
+			}
 		} else {
 			return $entity->$attr['field'];
 		}
@@ -194,13 +234,17 @@ class AppTable extends Table {
 			if ($this->endsWith($field, '_id') && $this->endsWith($label, ' Id')) {
 				$label = str_replace(' Id', '', $label);
 			}
+			$label = __($label);
+		}
+		if (substr($label, -1) == ')') {
+			$label = $label.' ';
 		}
 		return $label;
 	}
 
 	// Event: 'Model.excel.onExcelGetLabel'
 	public function onExcelGetLabel(Event $event, $module, $col, $language) {
-		return $this->getFieldLabel($module, $col, $language);
+		return __($this->getFieldLabel($module, $col, $language));
 	}
 
 	// Event: 'ControllerAction.Model.onInitializeButtons'
@@ -220,6 +264,13 @@ class AppTable extends Table {
 		];
 		$indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
 
+		// Set for roles belonging to the controller
+		$roles = [];
+		$event = $controller->dispatchEvent('Controller.Buttons.onUpdateRoles', null, $this);
+    	if ($event->result) {
+    		$roles = $event->result;	
+    	}
+
 		if ($action != 'index') {
 			$toolbarButtons['back'] = $buttons['back'];
 			$toolbarButtons['back']['type'] = 'button';
@@ -236,7 +287,7 @@ class AppTable extends Table {
 			}
 		}
 		if ($action == 'index') {
-			if ($buttons->offsetExists('add') && $access->check($buttons['add']['url'])) {
+			if ($buttons->offsetExists('add') && $access->check($buttons['add']['url'], $roles)) {
 				$toolbarButtons['add'] = $buttons['add'];
 				$toolbarButtons['add']['type'] = 'button';
 				$toolbarButtons['add']['label'] = '<i class="fa kd-add"></i>';
@@ -261,7 +312,7 @@ class AppTable extends Table {
 			}
 		} else if ($action == 'view') {
 			// edit button
-			if ($buttons->offsetExists('edit') && $access->check($buttons['edit']['url'])) {
+			if ($buttons->offsetExists('edit') && $access->check($buttons['edit']['url'], $roles)) {
 				$toolbarButtons['edit'] = $buttons['edit'];
 				$toolbarButtons['edit']['type'] = 'button';
 				$toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
@@ -288,25 +339,26 @@ class AppTable extends Table {
 			// }
 		}
 
-		if ($buttons->offsetExists('view') && $access->check($buttons['view']['url'])) {
+		if ($buttons->offsetExists('view') && $access->check($buttons['view']['url'], $roles)) {
 			$indexButtons['view'] = $buttons['view'];
 			$indexButtons['view']['label'] = '<i class="fa fa-eye"></i>' . __('View');
 			$indexButtons['view']['attr'] = $indexAttr;
 		}
 
-		if ($buttons->offsetExists('edit') && $access->check($buttons['edit']['url'])) {
+		if ($buttons->offsetExists('edit') && $access->check($buttons['edit']['url'], $roles)) {
 			$indexButtons['edit'] = $buttons['edit'];
 			$indexButtons['edit']['label'] = '<i class="fa fa-pencil"></i>' . __('Edit');
 			$indexButtons['edit']['attr'] = $indexAttr;
 		}
 
-		if ($buttons->offsetExists('remove') && $access->check($buttons['remove']['url'])) {
+		if ($buttons->offsetExists('remove') && $access->check($buttons['remove']['url'], $roles)) {
 			$indexButtons['remove'] = $buttons['remove'];
 			$indexButtons['remove']['label'] = '<i class="fa fa-trash"></i>' . __('Delete');
 			$indexButtons['remove']['attr'] = $indexAttr;
 		}
 
-		if ($buttons->offsetExists('reorder') && $access->check($buttons['edit']['url'])) {
+		if ($buttons->offsetExists('reorder') && $buttons->offsetExists('edit') && $access->check($buttons['edit']['url'], $roles)) {
+		// if ($buttons->offsetExists('reorder') && $access->check($buttons['edit']['url'])) {
 			$controller->set('reorder', true);
 		}
 
@@ -353,24 +405,6 @@ class AppTable extends Table {
 
 	public function findOrder(Query $query, array $options) {
 		return $query->order([$this->aliasField('order') => 'ASC']);
-	}
-	
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		$schema = $this->schema();
-		$columns = $schema->columns();
-		
-		$userId = null;
-		if (isset($_SESSION['Auth']) && isset($_SESSION['Auth']['User'])) {
-			$userId = $_SESSION['Auth']['User']['id'];
-		}
-		if (!is_null($userId)) {
-			if (in_array('modified_user_id', $columns)) {
-				$entity->modified_user_id = $userId;
-			}
-			if (in_array('created_user_id', $columns)) {
-				$entity->created_user_id = $userId;
-			}
-		}
 	}
 
 	public function checkIdInOptions($key, $options) {

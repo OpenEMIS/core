@@ -1,6 +1,7 @@
 <?php
 namespace App\Controller;
 
+use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\ORM\Table;
@@ -23,7 +24,8 @@ class DashboardController extends AppController {
 			'models' => [
 				'Institution.TransferApprovals',
 				'Institution.StudentAdmission',
-				'Institution.StudentDropout'
+				'Institution.StudentDropout',
+				'Institution.InstitutionSurveys'
 			]
 		]);
     }
@@ -35,7 +37,7 @@ class DashboardController extends AppController {
 		$this->set('contentHeader', $header);
     }
 
-    public function onInitialize(Event $event, Table $model) {
+    public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
     	$header = $model->getHeader($model->alias);
     	$this->set('contentHeader', $header);
     }
