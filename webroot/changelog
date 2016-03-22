@@ -1,6 +1,7 @@
 v.3.4.18
 - The name of the Role will now be displayed as part of the header while editing permission for a specific role
 - Fixed a bug that caused user able to link a position title to a security role that is not set as visible
+- Fixed a bug where '-- Select --' option appearing unnecessarily in multiple options select box
 
 v.3.4.17
 - Fixed a bug that caused the user not able to upload image properly
