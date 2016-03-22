@@ -203,11 +203,17 @@ class EducationGradesTable extends AppTable {
 			if (isset($entity->id)) {
 				$form = $event->subject()->Form;
 				// Build Education Subjects options
-				$subjectOptions = $this->EducationSubjects
-					->find('list')
+				$subjectData = $this->EducationSubjects
+					->find()
+					->select([$this->EducationSubjects->aliasField('name'), $this->EducationSubjects->aliasField('code')])
 					->find('visible')
 					->find('order')
 					->toArray();
+
+				$subjectOptions = [];
+				foreach ($subjectData as $key => $value) {
+					$subjectOptions[] = $value->code . ' - ' . $value->name;
+				}
 				// End
 
 				$tableHeaders = [__('Name'), __('Code'), __('Hours Required'), ''];
