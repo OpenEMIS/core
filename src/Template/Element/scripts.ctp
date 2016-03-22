@@ -10,9 +10,6 @@ echo $this->Html->script('doughnutchart/Chart.Doughnut');
 // Slider //
 echo $this->Html->script('app/shared/ngSlider/slider');
 
-// Angular Controller
-echo $this->Html->script('app/app');
-
 // UI-Bootstrap
 echo $this->Html->script('OpenEmis.lib/angular/ui-bootstrap-tpls.min');
 

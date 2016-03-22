@@ -93,6 +93,15 @@ class AppController extends Controller {
 			],
 			'theme' => 'core'
 		]);
+
+		// Angular initialization
+		$this->loadComponent('Angular.Angular', [
+			'app' => 'OE_Core',
+			'modules' => [
+				'bgDirectives', 'ui.bootstrap', 'ui.bootstrap-slider', 'ui.tab.scroll'
+			]
+		]);
+
 		$this->loadComponent('ControllerAction.Alert');
 		$this->loadComponent('AccessControl', [
 			'ignoreList' => [
