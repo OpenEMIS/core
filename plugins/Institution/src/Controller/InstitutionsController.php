@@ -148,7 +148,13 @@ class InstitutionsController extends AppController  {
 		$action = $this->request->action;
 
 		switch ($action) {
-			case 'Results': $this->Angular->addModules(['agGrid', 'institution.module']); break;
+			case 'Results':
+				$this->Angular->addModules([
+					'agGrid',
+					'institution.result.service',
+					'institution.result.controller'
+				]);
+			break;
 		}
 	}
 
