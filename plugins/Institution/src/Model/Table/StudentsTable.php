@@ -708,7 +708,7 @@ class StudentsTable extends AppTable {
 		// Check if student has already been enrolled
 		if (!empty ($studentId)) {
 
-			$pendingAdmissionCode = $this->StudentStatuses->getIdByCode('PENDING_ADMISSION');
+			$pendingAdmissionCode = self::PENDING_ADMISSION;
 			$educationSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($entity->education_grade_id);
 			// Check if the student that is pass over is a pending admission student
 			if ($pendingAdmissionCode == $studentData['student_status_id'] && 
@@ -902,19 +902,15 @@ class StudentsTable extends AppTable {
 
 	public function onUpdateFieldStudentStatusId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
-			// 1 - Enrolled, 9 - Pending Admission
-			$statusesToShow = ['CURRENT', 'PENDING_ADMISSION'];
 			$StudentStatusesTable = $this->StudentStatuses;
 			$conditions = [
-				$StudentStatusesTable->aliasField('code').' IN' => $statusesToShow
+				$StudentStatusesTable->aliasField('code') => 'CURRENT'
 			];
 			$options = $StudentStatusesTable
 				->find('list')
 				->where([$conditions])
 				->toArray();
-			foreach ($options as $key => $value) {
-				$options[$key] = __($value);
-			}
+			$options[self::PENDING_ADMISSION] = 'Pending Admission';
 			$attr['options'] = $options;
 		}
 		return $attr;
