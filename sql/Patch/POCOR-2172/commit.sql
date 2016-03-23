@@ -39,8 +39,8 @@ CREATE TABLE `staff_assignments` (
   KEY `requesting_position_id` (`requesting_position_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
--- staff_terminations
-CREATE TABLE `staff_terminations` (
+-- staff_end_of_assignments
+CREATE TABLE `staff_end_of_assignments` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `status_id` int(11) NOT NULL,
   `staff_id` int(11) NOT NULL COMMENT 'links to security_users.id',
@@ -158,22 +158,22 @@ INSERT INTO `workflow_statuses_steps` (`id`, `workflow_status_id`, `workflow_ste
 (uuid(), @activeId, @activeStepId);
 -- End Pre-insert
 
--- For staff_termination
+-- For staff_end_of_assignment
 -- workflow_models
 INSERT INTO `workflow_models` (`name`, `model`, `created_user_id`, `created`) 
-VALUES ('Institutions > Staff > Termination', 'Institution.StaffTerminations', 1, NOW());
+VALUES ('Institutions > Staff > End of Assignments', 'Institution.StaffEndOfAssignments', 1, NOW());
 
 -- Pre-insert workflow for Institution > Staff
 SET @modelId := 0;
-SELECT `id` INTO @modelId FROM `workflow_models` WHERE `model` = 'Institution.StaffTerminations';
+SELECT `id` INTO @modelId FROM `workflow_models` WHERE `model` = 'Institution.StaffEndOfAssignments';
 INSERT INTO `workflows` (`code`, `name`, `workflow_model_id`, `created_user_id`, `created`) VALUES
-('TERMINATE-STAFF-001', 'Terminate Staff', @modelId, 1, NOW());
+('END-STAFF-001', 'Staff End of Assignments', @modelId, 1, NOW());
 
 SET @workflowId := 0;
-SELECT `id` INTO @workflowId FROM `workflows` WHERE `code` = 'TERMINATE-STAFF-001' AND `workflow_model_id` = @modelId;
+SELECT `id` INTO @workflowId FROM `workflows` WHERE `code` = 'END-STAFF-001' AND `workflow_model_id` = @modelId;
 INSERT INTO `workflow_steps` (`name`, `stage`, `is_editable`, `is_removable`, `workflow_id`, `created_user_id`, `created`) VALUES
 ('Open', 0, 1, 1, @workflowId, 1, NOW()),
-('Pending Termination', 1, 0, 0, @workflowId, 1, NOW()),
+('Pending End of Assignment', 1, 0, 0, @workflowId, 1, NOW()),
 ('Closed', 2, 0, 0, @workflowId, 1, NOW()),
 ('End of Assignment', NULL, 0, 0, @workflowId, 1, NOW());
 

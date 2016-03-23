@@ -86,16 +86,16 @@ class StaffUserTable extends UserTable {
     	// $institutionId = $session->read('Institution.Institutions.id');
     	// $userId = $
     	// $roles = $InstitutionsTable->getInstitutionRoles(,$institutionId);
-    	if ($this->AccessControl->check([$this->controller->name, 'StaffTerminationRequest', 'add'])) {
+    	if ($this->AccessControl->check([$this->controller->name, 'StaffEndOfAssignments', 'add'])) {
     		$id = $session->read('Institution.Staff.id');
-    		$StaffTerminations = TableRegistry::get('Institution.StaffTerminations');
-    		$session->write($StaffTerminations->registryAlias().'.id', $id);
+    		$StaffEndOfAssignments = TableRegistry::get('Institution.StaffEndOfAssignments');
+    		$session->write($StaffEndOfAssignments->registryAlias().'.id', $id);
     		$staff = TableRegistry::get('Institution.Staff')->get($id);
 
-    		$terminationRecords = $StaffTerminations->find()
+    		$terminationRecords = $StaffEndOfAssignments->find()
     			->where([
-    				$StaffTerminations->aliasField('staff_id') => $staff->staff_id, 
-    				$StaffTerminations->aliasField('institution_position_id') => $staff->institution_position_id
+    				$StaffEndOfAssignments->aliasField('staff_id') => $staff->staff_id, 
+    				$StaffEndOfAssignments->aliasField('institution_position_id') => $staff->institution_position_id
     			])
     			->first();
 
@@ -110,14 +110,14 @@ class StaffUserTable extends UserTable {
 				$terminationButton['url'] = [
 					'plugin' => $buttons['back']['url']['plugin'],
 					'controller' => $buttons['back']['url']['controller'],
-					'action' => 'StaffTerminationRequests',
+					'action' => 'StaffEndOfAssignments',
 					'add'
 				];
 			} else {
 				$terminationButton['url'] = [
 					'plugin' => $buttons['back']['url']['plugin'],
 					'controller' => $buttons['back']['url']['controller'],
-					'action' => 'StaffTerminationRequests',
+					'action' => 'StaffEndOfAssignments',
 					'view',
 					$terminationRecords->id
 				];
