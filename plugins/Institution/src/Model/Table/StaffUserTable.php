@@ -11,6 +11,7 @@ use Cake\Utility\Text;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
+use Cake\Network\Session;
 use Staff\Model\Table\StaffTable as UserTable;
 
 class StaffUserTable extends UserTable {
@@ -79,8 +80,62 @@ class StaffUserTable extends UserTable {
     	return $events;
     }
 
+    private function addTerminationButton(ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, Session $session) {
+    	$InstitutionStudentsTable = TableRegistry::get('Institution.Staff');
+    	// $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+    	// $institutionId = $session->read('Institution.Institutions.id');
+    	// $userId = $
+    	// $roles = $InstitutionsTable->getInstitutionRoles(,$institutionId);
+    	if ($this->AccessControl->check([$this->controller->name, 'StaffTerminationRequest', 'add'])) {
+    		$id = $session->read('Institution.Staff.id');
+    		$StaffTerminations = TableRegistry::get('Institution.StaffTerminations');
+    		$session->write($StaffTerminations->registryAlias().'.id', $id);
+    		$staff = TableRegistry::get('Institution.Staff')->get($id);
+
+    		$terminationRecords = $StaffTerminations->find()
+    			->where([
+    				$StaffTerminations->aliasField('staff_id') => $staff->staff_id, 
+    				$StaffTerminations->aliasField('institution_position_id') => $staff->institution_position_id
+    			])
+    			->first();
+
+    		$terminationButton = $buttons['view'];
+			$terminationButton['type'] = 'button';
+			$terminationButton['label'] = '<i class="fa kd-dropout"></i>';
+			$terminationButton['attr'] = $attr;
+			$terminationButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+			$terminationButton['attr']['title'] = __('Staff Termination');
+
+			if (!count($terminationRecords)) {
+				$terminationButton['url'] = [
+					'plugin' => $buttons['back']['url']['plugin'],
+					'controller' => $buttons['back']['url']['controller'],
+					'action' => 'StaffTerminationRequests',
+					'add'
+				];
+			} else {
+				$terminationButton['url'] = [
+					'plugin' => $buttons['back']['url']['plugin'],
+					'controller' => $buttons['back']['url']['controller'],
+					'action' => 'StaffTerminationRequests',
+					'view',
+					$terminationRecords->id
+				];
+			}
+
+			$toolbarButtons['termination'] = $terminationButton;
+    	}
+    	
+    }
+
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($action == 'view') {
+			$id = $this->request->query('id');
+			$this->Session->write('Institution.Staff.id', $id);
+			$session = $this->request->session();
+			$this->addTerminationButton($buttons, $toolbarButtons, $attr, $session);
+
+			// $toolbarButtons['termination'] = $transferButton;
 			if ($toolbarButtons->offsetExists('back')) {
 				unset($toolbarButtons['back']);
 			}
