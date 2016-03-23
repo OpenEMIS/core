@@ -103,30 +103,42 @@ class ValidationBehavior extends Behavior {
         if ($session->read('Auth.User.super_admin') == 1) {
         	$isValid = true;
         } else {
+        	$data = $globalData['data'];
+        	$isSystemGroup = false;
+        	if (!$globalData['newRecord']) { // only applicable for edit mode
+        		if (array_key_exists('isSystemGroup', $data) && $data['isSystemGroup'] == true) {
+	        		$isSystemGroup = true;
+	        	}
+        	}
+
         	$condition = [];
         	$areaCondition = [];
 
-			$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
-        	$Areas = TableRegistry::get('Area.Areas');
-        	// get areas from security group areas
-        	$areasByUser = $SecurityGroupAreas->getAreasByUser($session->read('Auth.User.id'));
+        	if (!$isSystemGroup) {
+        		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+	        	$Areas = TableRegistry::get('Area.Areas');
+	        	// get areas from security group areas
+	        	$areasByUser = $SecurityGroupAreas->getAreasByUser($session->read('Auth.User.id'));
 
-        	if (count($areasByUser) > 0) {
-				foreach($areasByUser as $area) {
-	        		$areaCondition[] = [
-						$Areas->aliasField('lft').' >= ' => $area['lft'],
-						$Areas->aliasField('rght').' <= ' => $area['rght']
-					];
-	        	}
-	        	$condition['OR'] = $areaCondition;
+	        	if (count($areasByUser) > 0) {
+					foreach($areasByUser as $area) {
+		        		$areaCondition[] = [
+							$Areas->aliasField('lft').' >= ' => $area['lft'],
+							$Areas->aliasField('rght').' <= ' => $area['rght']
+						];
+		        	}
+		        	$condition['OR'] = $areaCondition;
 
-				$isChild = $Areas->find()
-		        	->where([$Areas->aliasField('id') => $check])
-		        	->where($condition)
-		        	->count();
+					$isChild = $Areas->find()
+			        	->where([$Areas->aliasField('id') => $check])
+			        	->where($condition)
+			        	->count();
 
-		        $isValid = $isChild > 0;
-			}
+			        $isValid = $isChild > 0;
+				}
+        	} else {
+        		$isValid = true;
+        	}
         }
         return $isValid;
     }
@@ -481,14 +493,14 @@ class ValidationBehavior extends Behavior {
 
 	// Return false if not enrolled in other education system
 	public static function checkInstitutionClassMaxLimit($class_id, array $globalData) {
-		$SectionStudents = TableRegistry::get("Institution.InstitutionSectionStudents");
-		$currentNumberOfStudents = $SectionStudents->find()->where([
-				$SectionStudents->aliasField('institution_section_id') => $class_id,
-				$SectionStudents->aliasField('education_grade_id') => $globalData['data']['education_grade_id']
+		$ClassStudents = TableRegistry::get("Institution.InstitutionClassStudents");
+		$currentNumberOfStudents = $ClassStudents->find()->where([
+				$ClassStudents->aliasField('institution_class_id') => $class_id,
+				$ClassStudents->aliasField('education_grade_id') => $globalData['data']['education_grade_id']
 			])->count();
 		/**
 		 * @todo  add this max limit to config
-		 * This limit value is being used in InstitutionSections->editAfterAction()
+		 * This limit value is being used in InstitutionClasses->editAfterAction()
 		 */
 		return ($currentNumberOfStudents < 100);
 	}

@@ -76,6 +76,7 @@ class StaffTable extends AppTable {
 				'staff_type_id',
 				'staff_status_id',
 				'institution_position_id',
+				'security_group_user_id'
 			]
 		]);
 		$this->addBehavior('User.AdvancedIdentitySearch', [
@@ -363,6 +364,20 @@ class StaffTable extends AppTable {
 			$positionTable = TableRegistry::get('Institution.InstitutionPositions');
 			$userId = $this->Auth->user('id');
 			$institutionId = $this->Session->read('Institution.Institutions.id');
+
+			// // excluding positions where 'InstitutionStaff.end_date is NULL'
+			$excludePositions = $this->Positions->find('list');
+			$excludePositions->matching('InstitutionStaff', function ($q) {
+					return $q->where(['InstitutionStaff.end_date is NULL', 'InstitutionStaff.FTE' => 1]);
+				});
+			$excludePositions->where([$this->Positions->aliasField('institution_id') => $institutionId])
+				->toArray()
+				;
+			$excludeArray = [];
+			foreach ($excludePositions as $key => $value) {
+				$excludeArray[] = $value;
+			}
+
 			if ($this->AccessControl->isAdmin()) {
 				$userId = null;
 				$roles = [];
@@ -372,13 +387,16 @@ class StaffTable extends AppTable {
 			
 			// Filter by active status
 			$activeStatusId = $this->Workflow->getStepsByModelCode($positionTable->registryAlias(), 'ACTIVE');
+			$positionConditions = [];
+			$positionConditions[$this->Positions->aliasField('institution_id')] = $institutionId;
+			$positionConditions[$this->Positions->aliasField('status_id').' IN '] = $activeStatusId;
+			if (!empty($excludeArray)) {
+				$positionConditions[$this->Positions->aliasField('id').' NOT IN '] = $excludeArray;
+			}
 			$staffPositionsOptions = $this->Positions
 					->find()
 					->innerJoinWith('StaffPositionTitles.SecurityRoles')
-					->where([
-						$this->Positions->aliasField('institution_id') => $institutionId, 
-						$this->Positions->aliasField('status_id').' IN ' => $activeStatusId
-					])
+					->where($positionConditions)
 					->select(['security_role_id' => 'SecurityRoles.id', 'type' => 'StaffPositionTitles.type'])
 					->order(['StaffPositionTitles.type' => 'DESC', 'StaffPositionTitles.order'])
 					->autoFields(true)
@@ -637,10 +655,10 @@ class StaffTable extends AppTable {
 		$startDate = (!empty($entity->start_date))? $entity->start_date->format('Y-m-d'): null;
 		$endDate = (!empty($entity->end_date))? $entity->end_date->format('Y-m-d'): null;
 			
-		$InstitutionSections = TableRegistry::get('Institution.InstitutionSections');
+		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
 
 		// Deleting a staff-to-position record in a school removes all records related to the staff in the school (i.e. remove him from classes/subjects) falling between end date and start date of his assignment in the position.
-		$sectionsInPosition = $InstitutionSections->find()
+		$classesInPosition = $InstitutionClasses->find()
 			->where(
 				['staff_id' => $staffId, 'institution_id' => $institutionId]
 			)
@@ -657,22 +675,22 @@ class StaffTable extends AppTable {
 				return $q->where($overlapDateCondition);
 			})
 			;
-		$sectionArray = [];
-		foreach ($sectionsInPosition as $key => $value) {
-			$sectionArray[] = $value->id;
+		$classArray = [];
+		foreach ($classesInPosition as $key => $value) {
+			$classArray[] = $value->id;
 		}
-		if (!empty($sectionArray)) {
-			$InstitutionSections->updateAll(
+		if (!empty($classArray)) {
+			$InstitutionClasses->updateAll(
 				['staff_id' => 0],
-				['id IN ' => $sectionArray]
+				['id IN ' => $classArray]
 			);
 		}
 		// delete the staff from subjects		
-		// find classes that matched the start-end date then delete from class_staff that matches staff id and classes returned from previous 
+		// find subjects that matched the start-end date then delete from subject_staff that matches staff id and subjects returned from previous 
 
-		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');	
-		$classesDuringStaffPeriod = $InstitutionClasses->find()
-			->where([$InstitutionClasses->aliasField('institution_id') => $institutionId])
+		$InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');	
+		$subjectsDuringStaffPeriod = $InstitutionSubjects->find()
+			->where([$InstitutionSubjects->aliasField('institution_id') => $institutionId])
 			->matching('AcademicPeriods', function ($q) use ($startDate, $endDate) {
 				$overlapDateCondition = [];
 				if (empty($endDate)) {
@@ -686,9 +704,9 @@ class StaffTable extends AppTable {
 				return $q->where($overlapDateCondition);
 			})
 			;
-		$classIdsDuringStaffPeriod = [];
-		foreach ($classesDuringStaffPeriod as $key => $value) {
-			$classIdsDuringStaffPeriod[] = $value->id;
+		$subjectIdsDuringStaffPeriod = [];
+		foreach ($subjectsDuringStaffPeriod as $key => $value) {
+			$subjectIdsDuringStaffPeriod[] = $value->id;
 		}
 
 		// Staff behavior associated to institution must be deleted.
@@ -718,11 +736,11 @@ class StaffTable extends AppTable {
 			$InstitutionRubrics->delete($value);
 		}
 
-		$InstitutionClassStaff = TableRegistry::get('Institution.InstitutionClassStaff');
+		$InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
 
-		$InstitutionClassStaff->deleteAll([
-			$InstitutionClassStaff->aliasField('staff_id') => $staffId,
-			$InstitutionClassStaff->aliasField('institution_class_id') . ' IN ' => $classIdsDuringStaffPeriod
+		$InstitutionSubjectStaff->deleteAll([
+			$InstitutionSubjectStaff->aliasField('staff_id') => $staffId,
+			$InstitutionSubjectStaff->aliasField('institution_subject_id') . ' IN ' => $subjectIdsDuringStaffPeriod
 		]);
 
 		// this logic here is to delete the roles from groups when the staff is deleted from the school

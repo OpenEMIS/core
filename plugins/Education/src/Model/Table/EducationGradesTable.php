@@ -20,8 +20,8 @@ class EducationGradesTable extends AppTable {
 		$this->hasMany('Assessments', ['className' => 'Assessment.Assessments']);
 		$this->hasMany('InstitutionFees', ['className' => 'Institution.InstitutionFees']);
 		$this->hasMany('Rubrics', ['className' => 'Institution.InstitutionRubrics']);
-		$this->hasMany('InstitutionSectionGrades', ['className' => 'Institution.InstitutionSectionGrades']);
-		$this->hasMany('InstitutionSectionStudents', ['className' => 'Institution.InstitutionSectionStudents']);
+		$this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
+		$this->hasMany('InstitutionClassStudents', ['className' => 'Institution.InstitutionClassStudents']);
 		$this->hasMany('InstitutionStudents', ['className' => 'Institution.Students']);
 		$this->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission']);
 		$this->hasMany('StudentDropout', ['className' => 'Institution.StudentDropout']);
@@ -203,11 +203,17 @@ class EducationGradesTable extends AppTable {
 			if (isset($entity->id)) {
 				$form = $event->subject()->Form;
 				// Build Education Subjects options
-				$subjectOptions = $this->EducationSubjects
-					->find('list')
+				$subjectData = $this->EducationSubjects
+					->find()
+					->select([$this->EducationSubjects->aliasField($this->EducationSubjects->primaryKey()), $this->EducationSubjects->aliasField('name'), $this->EducationSubjects->aliasField('code')])
 					->find('visible')
 					->find('order')
 					->toArray();
+
+				$subjectOptions = [];
+				foreach ($subjectData as $key => $value) {
+					$subjectOptions[$value->id] = $value->code . ' - ' . $value->name;
+				}
 				// End
 
 				$tableHeaders = [__('Name'), __('Code'), __('Hours Required'), ''];
