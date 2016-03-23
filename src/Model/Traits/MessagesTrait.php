@@ -38,7 +38,7 @@ trait MessagesTrait {
 			'noData' => 'There are no records.',
 			'noRecords' => 'No Record',
 			'select' => [
-				'noOptions' => 'No configured options'
+				'noOptions' => 'No options'
 			],
 			'error' => 'An unexpected error has been encounted. Please contact the administrator for assistance.',
 			'add' => [
