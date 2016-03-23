@@ -6,6 +6,7 @@ v.3.4.18
 - Subject code will now be shown together with subject names in Qualification Specialisation
 - The system will generate codes automatically when adding new infrastructure
 - The system now displays only available positions when adding staff to schools
+- Compilation of Translation files is now done automatically by the system whenever translations are added or modified
 
 v.3.4.17
 - Fixed a bug that caused the user not able to upload image properly
