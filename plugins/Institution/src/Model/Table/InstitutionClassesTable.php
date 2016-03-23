@@ -179,7 +179,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 			'visible' => ['view'=>true]
 		]);
 
-		$this->field('staff_id', ['type' => 'select', 'options' => [], 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
+		$this->field('staff_id', ['type' => 'select', 'options' => [], 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true], 'attr' => ['label' => $this->getMessage($this->aliasField('staff_id'))]]);
 
 		$this->setFieldOrder([
 			'name', 'staff_id', 'male_students', 'female_students', 'subjects',
@@ -200,6 +200,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 				$staffOptions = $this->getStaffOptions($action, $selectedAcademicPeriodId, $institutionId);
 			}
 			$this->fields['staff_id']['options'] = $staffOptions;
+			$this->fields['staff_id']['select'] = false;
 		}
 	}
 
