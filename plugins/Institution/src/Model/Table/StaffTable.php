@@ -22,6 +22,9 @@ use Cake\Log\Log;
 
 class StaffTable extends AppTable {
 	use OptionsTrait;
+	const PENDING_TRANSFER = -2;
+	const PENDING_ASSIGNMENT = -3;
+	const PENDING_TERMINATION = -4;
 
 	private $dashboardQuery = null;
 
@@ -137,6 +140,21 @@ class StaffTable extends AppTable {
 		$this->fields['staff_id']['order'] = 5;
 		$this->fields['institution_position_id']['order'] = 6;
 		$this->fields['FTE']['visible'] = false;
+
+		$selectedStatus = $this->request->query('staff_status_id');
+		switch ($selectedStatus) {
+			case self::PENDING_ASSIGNMENT:
+				$event->stopPropagation();
+				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StaffAssignments']);
+				break;
+			case self::PENDING_TRANSFER:
+				$event->stopPropagation();
+				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StaffTransfers']);
+				break;
+			case self::PENDING_TERMINATION:
+				$event->stopPropagation();
+				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StaffTerminations']);
+		}
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -197,7 +215,13 @@ class StaffTable extends AppTable {
 			$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
 		}
 
-		$this->controller->set(compact('periodOptions', 'positionOptions'));
+		$StaffStatusesTable = TableRegistry::get('Institution.StaffStatuses');
+		$statusOptions = $StaffStatusesTable->find('list')->toArray();
+		// $selectedPeriod = $this->queryString('staff_status_id', $statusesOptions);
+		$statusOptions[self::PENDING_ASSIGNMENT] = __('Pending Assignment');
+		$statusOptions[self::PENDING_TRANSFER] = __('Pending Transfer');
+		$statusOptions[self::PENDING_TERMINATION] = __('Pending Termination');
+		$this->controller->set(compact('periodOptions', 'positionOptions', 'statusOptions'));
 	}
 
 	public function indexAfterPaginate(Event $event, ResultSet $resultSet) {
@@ -410,6 +434,7 @@ class StaffTable extends AppTable {
 			$url = $this->ControllerAction->url('view');
 			$url['action'] = 'StaffUser';
 			$url[1] = $entity['_matchingData']['Users']['id'];
+			$url['id'] = $entity->id;
 			$buttons['view']['url'] = $url;
 		}
 
