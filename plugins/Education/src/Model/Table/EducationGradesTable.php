@@ -205,14 +205,14 @@ class EducationGradesTable extends AppTable {
 				// Build Education Subjects options
 				$subjectData = $this->EducationSubjects
 					->find()
-					->select([$this->EducationSubjects->aliasField('name'), $this->EducationSubjects->aliasField('code')])
+					->select([$this->EducationSubjects->aliasField($this->EducationSubjects->primaryKey()), $this->EducationSubjects->aliasField('name'), $this->EducationSubjects->aliasField('code')])
 					->find('visible')
 					->find('order')
 					->toArray();
 
 				$subjectOptions = [];
 				foreach ($subjectData as $key => $value) {
-					$subjectOptions[] = $value->code . ' - ' . $value->name;
+					$subjectOptions[$value->id] = $value->code . ' - ' . $value->name;
 				}
 				// End
 
