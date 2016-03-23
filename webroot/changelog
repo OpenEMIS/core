@@ -7,6 +7,7 @@ v.3.4.18
 - Fixed a bug where workflow actions not appearing for the configured workflow roles
 - Subject code will now be shown together with subject names in Qualification Specialisation
 - Fixed a bug where '-- Select --' option appearing unnecessarily in multiple options select box
+- Fixed a bug that caused 404 error page when performing search while navigating on other list page
 - The system will generate codes automatically when adding new infrastructure
 - Compilation of Translation files is now done automatically by the system whenever translations are added or modified
 
