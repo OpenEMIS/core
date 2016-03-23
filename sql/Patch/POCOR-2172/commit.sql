@@ -18,7 +18,7 @@ CREATE TABLE `staff_assignments` (
   `start_date` date NOT NULL,
   `end_date` date NOT NULL,
   `staff_id` int(11) NOT NULL COMMENT 'links to security_users.id',
-  `status` int(11) NOT NULL,
+  `status_id` int(11) NOT NULL,
   `institution_id` varchar(45) NOT NULL,
   `institution_position_id` int(11) NOT NULL,
   `fte` decimal(3,2) NOT NULL,
@@ -42,8 +42,9 @@ CREATE TABLE `staff_assignments` (
 -- staff_terminations
 CREATE TABLE `staff_terminations` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `status` int(11) NOT NULL,
+  `status_id` int(11) NOT NULL,
   `staff_id` int(11) NOT NULL COMMENT 'links to security_users.id',
+  `institution_id` int(11) NOT NULL,
   `institution_position_id` int(11) NOT NULL,
   `effective_date` date NOT NULL,
   `updated` int(11) NOT NULL,
@@ -60,11 +61,11 @@ CREATE TABLE `staff_terminations` (
 -- For staff_assignments
 -- workflow_models
 INSERT INTO `workflow_models` (`name`, `model`, `created_user_id`, `created`) 
-VALUES ('Institutions > Staff > Add', 'Institution.StaffAssignment', 1, NOW());
+VALUES ('Institutions > Staff > Add', 'Institution.StaffAssignments', 1, NOW());
 
 -- Pre-insert workflow for Institution > Staff
 SET @modelId := 0;
-SELECT `id` INTO @modelId FROM `workflow_models` WHERE `model` = 'Institution.StaffAssignment';
+SELECT `id` INTO @modelId FROM `workflow_models` WHERE `model` = 'Institution.StaffAssignments';
 INSERT INTO `workflows` (`code`, `name`, `workflow_model_id`, `created_user_id`, `created`) VALUES
 ('ADD-STAFF-001', 'Add Staff', @modelId, 1, NOW());
 
@@ -103,6 +104,7 @@ INSERT INTO `workflow_statuses` (`code`, `name`, `is_editable`, `is_removable`, 
 SET @activeId := 0;
 SET @inactiveId := 0;
 SELECT `id` INTO @activeId FROM `workflow_statuses` WHERE `code` = 'ASSIGNED' AND `workflow_model_id` = @modelId;
+SELECT `id` INTO @inactiveId FROM `workflow_statuses` WHERE `code` = 'NOT_ASSIGNED' AND `workflow_model_id` = @modelId;
 INSERT INTO `workflow_statuses_steps` (`id`, `workflow_status_id`, `workflow_step_id`) VALUES
 (uuid(), @activeId, @activeStepId);
 -- End Pre-insert
@@ -110,11 +112,11 @@ INSERT INTO `workflow_statuses_steps` (`id`, `workflow_status_id`, `workflow_ste
 -- For staff transfer in
 -- workflow_models
 INSERT INTO `workflow_models` (`name`, `model`, `created_user_id`, `created`) 
-VALUES ('Institutions > Staff > Transfer', 'Institution.StaffTransfer', 1, NOW());
+VALUES ('Institutions > Staff > Transfer', 'Institution.StaffTransfers', 1, NOW());
 
 -- Pre-insert workflow for Institution > Staff
 SET @modelId := 0;
-SELECT `id` INTO @modelId FROM `workflow_models` WHERE `model` = 'Institution.StaffTransfer';
+SELECT `id` INTO @modelId FROM `workflow_models` WHERE `model` = 'Institution.StaffTransfers';
 INSERT INTO `workflows` (`code`, `name`, `workflow_model_id`, `created_user_id`, `created`) VALUES
 ('TRANSFER-STAFF-001', 'Transfer Staff', @modelId, 1, NOW());
 
@@ -159,11 +161,11 @@ INSERT INTO `workflow_statuses_steps` (`id`, `workflow_status_id`, `workflow_ste
 -- For staff_termination
 -- workflow_models
 INSERT INTO `workflow_models` (`name`, `model`, `created_user_id`, `created`) 
-VALUES ('Institutions > Staff > Termination', 'Institution.StaffTermination', 1, NOW());
+VALUES ('Institutions > Staff > Termination', 'Institution.StaffTerminations', 1, NOW());
 
 -- Pre-insert workflow for Institution > Staff
 SET @modelId := 0;
-SELECT `id` INTO @modelId FROM `workflow_models` WHERE `model` = 'Institution.StaffTermination';
+SELECT `id` INTO @modelId FROM `workflow_models` WHERE `model` = 'Institution.StaffTerminations';
 INSERT INTO `workflows` (`code`, `name`, `workflow_model_id`, `created_user_id`, `created`) VALUES
 ('TERMINATE-STAFF-001', 'Terminate Staff', @modelId, 1, NOW());
 
