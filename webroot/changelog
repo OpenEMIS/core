@@ -4,6 +4,8 @@ v.3.4.18
 - Fixed a bug where '-- Select --' option appearing unnecessarily in multiple options select box
 - Fixed a bug that caused users in user groups not able to create institutions in their designated areas
 - Subject code will now be shown together with subject names in Qualification Specialisation
+- The system will generate codes automatically when adding new infrastructure
+- The system now displays only available positions when adding staff to schools
 
 v.3.4.17
 - Fixed a bug that caused the user not able to upload image properly
