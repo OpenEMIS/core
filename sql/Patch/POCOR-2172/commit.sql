@@ -12,6 +12,19 @@ CREATE TABLE `staff_statuses` (
 INSERT INTO `staff_statuses` (`id`, `code`, `name`) VALUES (1, 'ASSIGNED', 'Assigned');
 INSERT INTO `staff_statuses` (`id`, `code`, `name`) VALUES (2, 'END_OF_ASSIGNMENT', 'End of Assignment');
 
+CREATE TABLE `z_2172_institution_staff` LIKE `institution_staff`;
+
+INSERT INTO `z_2172_institution_staff`
+SELECT * FROM `institution_staff`;
+
+UPDATE `institution_staff` SET staff_status_id = 1
+WHERE end_date IS NULL OR end_date >= NOW();
+
+UPDATE `institution_staff` SET staff_status_id = 2
+WHERE end_date < NOW();
+
+UPDATE `field_options` SET `visible`='0' WHERE `plugin` = 'FieldOption' AND `code` = 'StaffStatuses';
+
 -- institution_staff_position_profiles
 CREATE TABLE `institution_staff_position_profiles` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
