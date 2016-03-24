@@ -472,7 +472,6 @@ class DirectoriesTable extends AppTable {
 			$isSet = true;
 		}
 
-		// To make sure the navigation component has already read the set value
 		if ($isSet) {
 			$reload = $this->Session->read('Directory.Directories.reload');
 			if (!isset($reload)) {
