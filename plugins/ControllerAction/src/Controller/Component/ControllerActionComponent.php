@@ -799,7 +799,7 @@ class ControllerActionComponent extends Component {
 			return $this->controller->redirect($action);
 		}
 		
-		if ($data->count() == 0) {
+		if ($data instanceof \Cake\Network\Response || (!($data instanceof \Cake\Network\Response) && $data->count() == 0)) {
 			$this->Alert->info('general.noData');
 		}
 
