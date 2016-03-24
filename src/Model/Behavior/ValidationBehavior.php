@@ -157,6 +157,7 @@ class ValidationBehavior extends Behavior {
 	 */
 
 	public static function compareDateReverse($field, $compareField, $equals, array $globalData) {
+
 		$type = self::_getFieldType($compareField);
 		$endDate = new DateTime($field);
 		if($compareField) {

@@ -22,7 +22,10 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 
 	public function validationDefault(Validator $validator) {
 		return $validator
-			->allowEmpty('end_date');
+			->allowEmpty('end_date')
+			->add('end_date', 'ruleCompareDateReverse', [
+		        'rule' => ['compareDateReverse', 'start_date', true]
+	    	]);
 	}
 
 	public function initialize(array $config) {
@@ -45,14 +48,20 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		return $events;
 	}
 
-	public function addAfterSave(Event $event, $requestData, ArrayObject $extra) {
-		$StaffTable = TableRegistry::get('Institution.Staff');
-		$url = $this->url('view');
-		$url['action'] = 'Staff';
-		$url[1] = $requestData['institution_staff_id'];
-		$event->stopPropagation();
-		$this->Session->write('Institution.StaffPositionProfiles.addSuccessful', true);
-		return $this->controller->redirect($url);
+	public function addAfterPatch($event, $entity, $requestData, $patchOptions, $extra) {
+
+	}
+
+	public function addAfterSave(Event $event, $entity, $requestData, ArrayObject $extra) {
+		if (!$entity->errors()) {
+			$StaffTable = TableRegistry::get('Institution.Staff');
+			$url = $this->url('view');
+			$url['action'] = 'Staff';
+			$url[1] = $entity['institution_staff_id'];
+			$event->stopPropagation();
+			$this->Session->write('Institution.StaffPositionProfiles.addSuccessful', true);
+			return $this->controller->redirect($url);
+		}
 	}
 
 	public function workflowBeforeTransition(Event $event, $requestData) {
@@ -101,6 +110,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
     public function onApprove(Event $event, $id, Entity $workflowTransitionEntity) {
     	$data = $this->get($id)->toArray();
     	$newEntity = $this->patchStaffProfile($data);
+    	$InstitutionStaff = TableRegistry::get('Institution.Staff');
     	$InstitutionStaff->save($newEntity);
     }
 
@@ -198,8 +208,8 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		$approvedStatus = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'APPROVED');
 		$staffPositionProfilesRecord = $this->find()
 			->where([
-				$this->aliasField('id') => $staff->institution_staff_id,
-				$this->aliasField('status_id').' IN ' => $approvedStatus
+				$this->aliasField('institution_staff_id') => $staff->id,
+				$this->aliasField('status_id').' NOT IN ' => $approvedStatus
 			])
 			->first();
 		if (empty($staffPositionProfilesRecord)) {
