@@ -173,9 +173,14 @@ class WorkflowsTable extends AppTable {
 		$selectedModel = $this->get($workflowId)->workflow_model_id;
 		$this->addAssociation($selectedModel);
 
-		$query
-			->matching('WorkflowModels')
-			->contain(['Filters']);
+		$query->matching('WorkflowModels');
+
+		if (!is_null($selectedModel)) {
+			$filter = $this->WorkflowModels->get($selectedModel)->filter;
+			if (!is_null($filter)) {
+				$query->contain(['Filters']);
+			}
+		}
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
