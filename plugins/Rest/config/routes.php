@@ -1,9 +1,13 @@
 <?php
 use Cake\Routing\Router;
 
-Router::scope('/rest', ['plugin' => 'Rest', 'controller' => 'Rest'], function ($routes) {
+Router::scope('/rest', ['plugin' => 'Rest'], function ($routes) {
 
     $routes->extensions(['json', 'xml']);
+	$routes->connect(
+			'/doc',
+			['plugin' => 'Rest', 'controller' => 'Doc']
+		);
 	$routes->connect(
 			'/:model',
 			['plugin' => 'Rest', 'controller' => 'Rest', 'action' => 'index', '_method' => 'GET'],
