@@ -55,11 +55,11 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		return $this->controller->redirect($url);
 	}
 
-	public function workflowBeforeTransition(Event $event, $id, Entity $workflowTransitionEntity) {
+	public function workflowBeforeTransition(Event $event, $requestData) {
 		$errors = true;
-		
 		$approved = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'APPROVED');
-		$nextWorkflowStepId = $workflowTransitionEntity->workflow_step_id;
+		$nextWorkflowStepId = $requestData['WorkflowTransitions']['workflow_step_id'];
+		$id = $requestData['WorkflowTransitions']['model_reference'];
 		if (in_array($nextWorkflowStepId, $approved)) {
 			$data = $this->get($id)->toArray();
 	    	$newEntity = $this->patchStaffProfile($data);
@@ -195,10 +195,11 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		}
 		$InstitutionStaff = TableRegistry::get('Institution.Staff');
 		$staff = $InstitutionStaff->get($institutionStaffId);
+		$approvedStatus = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'APPROVED');
 		$staffPositionProfilesRecord = $this->find()
 			->where([
-				$this->aliasField('staff_id') => $staff->staff_id, 
-				$this->aliasField('institution_position_id') => $staff->institution_position_id
+				$this->aliasField('id') => $staff->institution_staff_id,
+				$this->aliasField('status_id').' IN ' => $approvedStatus
 			])
 			->first();
 		if (empty($staffPositionProfilesRecord)) {

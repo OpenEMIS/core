@@ -22,6 +22,9 @@ use Cake\Log\Log;
 
 class StaffTable extends AppTable {
 	use OptionsTrait;
+	const ASSIGNED = 1;
+	const END_OF_ASSIGNMENT = 2;
+
 	const PENDING_PROFILE = -1;
 
 	private $dashboardQuery = null;
@@ -34,7 +37,7 @@ class StaffTable extends AppTable {
 		$this->belongsTo('Positions',		['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
 		$this->belongsTo('Institutions',	['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('StaffTypes',		['className' => 'FieldOption.StaffTypes']);
-		$this->belongsTo('StaffStatuses',	['className' => 'FieldOption.StaffStatuses']);
+		$this->belongsTo('StaffStatuses',	['className' => 'Staff.StaffStatuses']);
 		$this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
 
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
@@ -226,9 +229,7 @@ class StaffTable extends AppTable {
 			$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
 		}
 
-		$StaffStatusesTable = TableRegistry::get('Institution.StaffStatuses');
-		$statusOptions = $StaffStatusesTable->find('list')->toArray();
-		// $selectedPeriod = $this->queryString('staff_status_id', $statusesOptions);
+		$statusOptions = $this->StaffStatuses->find('list')->toArray();
 		$statusOptions[self::PENDING_PROFILE] = __('Pending Profile');
 		$this->controller->set(compact('periodOptions', 'positionOptions', 'statusOptions'));
 	}
@@ -362,12 +363,33 @@ class StaffTable extends AppTable {
 			} else {
 				if (empty($entity->end_date) || $entity->end_date->isToday() || $entity->end_date->isFuture()) {
 					$this->addStaffRole($entity);
+					$this->updateStaffStatus($entity, self::ASSIGNED);
 				} else {
 					$this->removeStaffRole($entity);
+					$this->updateStaffStatus($entity, self::END_OF_ASSIGNMENT);
 				}
 			}
 		} else { // add operation
 			$this->addStaffRole($entity);
+			$this->updateStaffStatus($entity, self::ASSIGNED);
+		}
+	}
+
+	private function updateStaffStatus($entity, $staffStatuses) {
+		$staffStatuses = $this->StaffStatuses->findCodeList();
+		switch ($staffStatuses){
+			case self::ASSIGNED:
+				$this->updateAll(
+					['staff_status_id' => $staffStatuses['END_OF_ASSIGNMENT']],
+					['id' => $entity->id]
+				);
+				break;
+			case self::END_OF_ASSIGNMENT:
+				$this->updateAll(
+					['staff_status_id' => $staffStatuses['ASSIGNED']],
+					['id' => $entity->id]
+				);
+				break;
 		}
 	}
 
@@ -1014,6 +1036,8 @@ class StaffTable extends AppTable {
 						['security_group_user_id' => NULL],
 						[$this->primaryKey() => $entity->id]
 					);
+
+					$this->updateStaffStatus($entity, self::END_OF_ASSIGNMENT);
 				}
 			}
 		}
@@ -1042,6 +1066,7 @@ class StaffTable extends AppTable {
 				['security_group_user_id' => NULL],
 				[$this->primaryKey() => $entity->id]
 			);
+			$this->updateStaffStatus($entity, self::END_OF_ASSIGNMENT);
 		}
 	}
 }
