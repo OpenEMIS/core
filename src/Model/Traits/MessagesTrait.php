@@ -389,6 +389,11 @@ trait MessagesTrait {
 			'noData' => 'There are no available Students for Transfer.',
 			'success' => 'Students have been transferred.'
 		],
+		'StaffPositionProfiles' => [
+			'request' => 'Request for change in Staff Position Profile has been submitted successfully.',
+			'notExists' => 'Staff record no longer exists in the system.',
+			'errorApproval' => 'Record cannot be approved due to errors encountered.',
+		],
 		'UndoStudentStatus' => [
 			'noGrades' => 'No Available Grades',
 			'noStudents' => 'No Available Students',

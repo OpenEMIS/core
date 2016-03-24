@@ -22,9 +22,7 @@ use Cake\Log\Log;
 
 class StaffTable extends AppTable {
 	use OptionsTrait;
-	const PENDING_TRANSFER = -2;
-	const PENDING_ASSIGNMENT = -3;
-	const PENDING_TERMINATION = -4;
+	const PENDING_PROFILE = -1;
 
 	private $dashboardQuery = null;
 
@@ -96,6 +94,12 @@ class StaffTable extends AppTable {
 		
 	}
 
+	public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	return $events;
+    }
+
 	public function validationDefault(Validator $validator) {
 		return $validator
 			->allowEmpty('end_date')
@@ -143,17 +147,24 @@ class StaffTable extends AppTable {
 
 		$selectedStatus = $this->request->query('staff_status_id');
 		switch ($selectedStatus) {
-			case self::PENDING_ASSIGNMENT:
+			case self::PENDING_PROFILE:
 				$event->stopPropagation();
-				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StaffAssignments']);
+				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StaffPositionProfiles']);
 				break;
-			case self::PENDING_TRANSFER:
-				$event->stopPropagation();
-				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StaffTransfers']);
-				break;
-			case self::PENDING_TERMINATION:
-				$event->stopPropagation();
-				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StaffTerminations']);
+		}
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		if ($action == 'view') {
+			if (isset($toolbarButtons['edit'])) {
+				$url = $toolbarButtons['edit']['url'];
+				$staffId = $url[1];
+				unset($url[1]);
+				$url[0] = 'add';
+				$url['institution_staff_id'] = $staffId;
+				$url['action'] = 'StaffPositionProfiles';
+				$toolbarButtons['edit']['url'] = $url;
+			}
 		}
 	}
 
@@ -218,9 +229,7 @@ class StaffTable extends AppTable {
 		$StaffStatusesTable = TableRegistry::get('Institution.StaffStatuses');
 		$statusOptions = $StaffStatusesTable->find('list')->toArray();
 		// $selectedPeriod = $this->queryString('staff_status_id', $statusesOptions);
-		$statusOptions[self::PENDING_ASSIGNMENT] = __('Pending Assignment');
-		$statusOptions[self::PENDING_TRANSFER] = __('Pending Transfer');
-		$statusOptions[self::PENDING_TERMINATION] = __('Pending Termination');
+		$statusOptions[self::PENDING_PROFILE] = __('Pending Profile');
 		$this->controller->set(compact('periodOptions', 'positionOptions', 'statusOptions'));
 	}
 
@@ -609,6 +618,10 @@ class StaffTable extends AppTable {
 	}
 
 	public function viewBeforeAction(Event $event) {
+		if ($this->Session->read('Institution.StaffPositionProfiles.addSuccessful')) {
+			$this->Alert->success('StaffPositionProfiles.request');
+			$this->Session->delete('Institution.StaffPositionProfiles.addSuccessful');
+		}
 		$this->ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
 		$this->ControllerAction->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
 		$i = 10;
