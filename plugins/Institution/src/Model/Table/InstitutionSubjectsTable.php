@@ -1036,7 +1036,7 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 						'institution_id' => $entity->institution_id,
 						'education_subject_id' => $educationSubject['id'],
 						'academic_period_id' => $entity->academic_period_id,
-						'institution_class_subjects' => [
+						'class_subjects' => [
 							[
 								'status' => 1,
 								'institution_class_id' => $entity->id

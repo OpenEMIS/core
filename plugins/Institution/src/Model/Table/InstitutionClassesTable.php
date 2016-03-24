@@ -206,7 +206,6 @@ class InstitutionClassesTable extends ControllerActionTable {
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
 		if ($entity->isNew()) {
-			// $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
 			$this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
 		}
 	}
