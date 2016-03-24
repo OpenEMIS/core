@@ -27,14 +27,10 @@ class RestController extends AppController
  ***************************************************************************************************************************************************/
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
-
-		/**
-		 * Allow public access to these actions
-		 */
-		$this->Auth->allow();
 	}
 
 	public function beforeRender(Event $event) {
+		parent::beforeRender($event);
 		if ($this->_debug) {
 			$_serialize = array_merge(['request_method', 'action'], $this->viewVars['_serialize']);
 			$this->set([
@@ -51,7 +47,6 @@ class RestController extends AppController
  * Controller action functions
  *
  ***************************************************************************************************************************************************/
-	private $_specialParams = ['type'];
 	public function index($model) {
 		$target = $this->_instantiateModel($model);
 		if ($target) {
@@ -59,30 +54,56 @@ class RestController extends AppController
 			$listOnly = false;
 			if (array_key_exists('type', $requestQueries) && $requestQueries['type']=='list') {
 				$listOnly = true;
+	            $keyField = $target->primaryKey();
+	            $valueField = $target->displayField();
+	            $groupField = null;
+				if (array_key_exists('keyfield', $requestQueries)) {
+					$keyField = $requestQueries['keyfield']; 
+				}
+				if (array_key_exists('valuefield', $requestQueries)) {
+					$valueField = $requestQueries['valuefield']; 
+				}
+				if (array_key_exists('groupfield', $requestQueries)) {
+					$groupField = $requestQueries['groupfield']; 
+				}
 			}
 			$limit = 10;
-			if (array_key_exists('type', $requestQueries)) {
+			if (array_key_exists('limit', $requestQueries)) {
 				$limit = $requestQueries['limit'];
 			}
 			$page = 1;
-			if (array_key_exists('type', $requestQueries)) {
+			if (array_key_exists('page', $requestQueries)) {
 				$page = $requestQueries['page'];
 			}
 
 			if ($listOnly) {
-				$query = $target->find('list')->limit($limit)->offset($page);
+				$query = $target->find('list', [
+						            'keyField' => $keyField,
+						            'valueField' => $valueField,
+						            'groupField' => $groupField
+								])->limit($limit)->page($page);
 			} else {
-				$query = $target->find()->limit($limit)->offset($page);
+				$query = $target->find()->limit($limit)->page($page);
 			}
+
 			$conditions = [];
 			if (!empty($requestQueries)) {
 				$conditions = $this->_buildConditions($target, $requestQueries);
 			}
+			$fields = [];
+			if (!empty($requestQueries)) {
+				$fields = $this->_filterSelectFields($target, $requestQueries);
+			}
 			if (is_bool($conditions) && !$conditions) {
-				$this->_setError('Extra query fields declared do not exists in '.$target->registryAlias());
+				$this->_setError('Extra query parameters declared do not exists in '.$target->registryAlias());
+			} else if (is_bool($fields) && !$fields) {
+				$this->_setError('One or more selected fields do not exists in '.$target->registryAlias());
 			} else {
 				if (!empty($conditions)) {
 					$query->where($conditions);
+				}
+				if (!empty($fields)) {
+					$query->select($fields);
 				}
 				if ($listOnly) {
 					$data = $query->toArray();
@@ -98,6 +119,7 @@ class RestController extends AppController
 	    }
 	}
 
+	private $_specialParams = ['type', 'keyfield', 'valuefield', 'groupfield', 'limit', 'page', 'fields'];
 	private function _buildConditions($target, $requestQueries) {
 		$targetColumns = $target->schema()->columns();
 		$conditions = [];
@@ -111,6 +133,20 @@ class RestController extends AppController
 			$conditions[$target->aliasField($requestQueryKey)] = $requestQuery;
 		}
 		return $conditions;
+	}
+
+	private function _filterSelectFields($target, $requestQueries) {
+		$targetColumns = $target->schema()->columns();
+		if (!array_key_exists('fields', $requestQueries)) {
+			return [];
+		}
+		$fields = array_map('trim', explode(',', $requestQueries['fields']));
+		foreach ($fields as $field) {
+			if (!in_array($field, $targetColumns)) {
+				return false;
+			}
+		}
+		return $fields;
 	}
 
 	public function add($model) {
