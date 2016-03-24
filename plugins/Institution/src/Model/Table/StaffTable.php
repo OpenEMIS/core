@@ -322,6 +322,15 @@ class StaffTable extends AppTable {
 		}
 	}
 
+	public function addBeforeSave(Event $event, Entity $entity, $data) {
+		if (!$entity->errors()) {
+			$this->Session->write('Institution.Staff.new', $data[$this->alias()]);
+			$event->stopPropagation();
+			$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffTransfers', 'add'];
+			return $this->controller->redirect($action);
+		}
+	}
+
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
 		$institutionPositionId = $entity->institution_position_id;
 		$staffId = $entity->staff_id;
@@ -470,8 +479,10 @@ class StaffTable extends AppTable {
 		}
 
 		if (isset($buttons['edit'])) {
-			$url = $this->ControllerAction->url('edit');
-			$url[1] = $entity->id;
+			$url = $this->ControllerAction->url('add');
+			$url['action'] = 'StaffPositionProfiles';
+			$url['institution_staff_id'] = $entity->id;
+			$url['action'] = 'StaffPositionProfiles';
 			$buttons['edit']['url'] = $url;
 		}
 
