@@ -10,34 +10,15 @@ $this->start('panelBody');
 		<div class="scrolltabs sticky-content">
 			<scrollable-tabset show-tooltips="false" show-drop-down="false">
 				<uib-tabset justified="true">
-
-					<uib-tab heading="English">
-						<div class="table-wrapper">
-							<div class="table-responsive">
-								<div ng-if="gridOptions" ag-grid="gridOptions" class="ag-fresh"></div>
-							</div>
-						</div>
+					<uib-tab heading="{{subject.id}}" ng-repeat="subject in subjects" ng-click="reloadData(subject)">
 					</uib-tab>
-
-					<uib-tab heading="Mathematics">
-						<div class="table-wrapper">
-							<div class="table-responsive">
-								<div ng-if="gridOptions" ag-grid="gridOptions" class="ag-fresh"></div>
-							</div>
-						</div>
-					</uib-tab>
-
-					<uib-tab heading="Science">
-						<div class="table-wrapper">
-							<div class="table-responsive">
-								<div ng-if="gridOptions" ag-grid="gridOptions" class="ag-fresh"></div>
-							</div>
-						</div>
-					</uib-tab>
-
 				</uib-tabset>
 				<div class="tabs-divider"></div>
 			</scrollable-tabset>
+
+			<div class="table-wrapper">
+				<div ng-if="gridOptions" ag-grid="gridOptions" class="ag-fresh"></div>
+			</div>
 		</div>
 	</div>
 
