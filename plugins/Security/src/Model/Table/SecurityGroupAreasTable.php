@@ -8,7 +8,7 @@ class SecurityGroupAreasTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('Areas', ['className' => 'Area.Areas']);
-		$this->belongsTo('SecurityGroups', ['className' => 'Security.SecurityGroups']);
+		$this->belongsTo('SecurityGroups', ['className' => 'Security.UserGroups']);
 	}
 
 	public function getAreasByUser($userId) {
