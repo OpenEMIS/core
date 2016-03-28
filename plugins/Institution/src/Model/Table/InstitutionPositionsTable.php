@@ -47,8 +47,58 @@ class InstitutionPositionsTable extends AppTable {
 			;
 	}
 
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		if ($entity->has('is_homeroom') && $entity->dirty('is_homeroom')) {
+			$currIsHomeroom = $entity->is_homeroom;
+			// have to find all the staff that is holding this institution position
+			$InstitutionStaffTable = $this->InstitutionStaff;
+			$staffInvolved = $InstitutionStaffTable->find()
+				->where([
+					$InstitutionStaffTable->aliasField('institution_position_id') => $entity->id,
+					$InstitutionStaffTable->aliasField('security_group_user_id IS NOT NULL')
+				])
+				->where([
+					'OR' => [
+						[function ($exp) use ($InstitutionStaffTable) {
+							return $exp->gte($InstitutionStaffTable->aliasField('end_date'), $InstitutionStaffTable->find()->func()->now('date'));
+						}],
+						[$InstitutionStaffTable->aliasField('end_date').' IS NULL']
+					]
+				])
+				;
+			if (!empty($staffInvolved)) {
+				$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+				$SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+				$homeroomSecurityRoleId = $SecurityRoles->getHomeroomRoleId();
+				foreach ($staffInvolved as $key => $value) {
+					$securityGroupId = $this->Institutions->get($value->institution_id)->security_group_id;
+					$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+					$homeRoomData = [
+						'security_role_id' => $homeroomSecurityRoleId,
+						'security_group_id' => $securityGroupId,
+						'security_user_id' => $value->staff_id
+					];
+					if ($currIsHomeroom) {
+						// add 1 homeroom value
+						$newHomeroomEntity = $SecurityGroupUsersTable->newEntity($homeRoomData);
+						$entity = $SecurityGroupUsersTable->save($newHomeroomEntity);
+					} else {
+						// remove homeroom value - find 1 entry and delete it
+						$homeroomEntity = $SecurityGroupUsers->find()
+							->where($homeRoomData)
+							->first();
+						if (!empty($homeroomEntity)) {
+							$SecurityGroupUsers->delete($homeroomEntity);
+						}
+					}
+				}
+			}
+		}
+	}
+
 	public function beforeAction(Event $event, ArrayObject $extra) {
 		$this->field('position_no', ['visible' => true]);
+		$this->field('is_homeroom', ['visible' => true]);
 		$this->field('staff_position_title_id', [
 			'visible' => true,
 			'type' => 'select'
@@ -78,6 +128,11 @@ class InstitutionPositionsTable extends AppTable {
 			$attr['attr']['value'] = $this->getUniquePositionNo();
 			return $attr;
 		}
+	}
+
+	public function onUpdateFieldIsHomeroom(Event $event, array $attr, $action, Request $request) {
+		$attr['options'] = $this->getSelectOptions('general.yesno');
+		return $attr;
 	}
 
 	public function onGetStaffPositionTitleId(Event $event, Entity $entity) {
