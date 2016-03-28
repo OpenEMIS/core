@@ -110,5 +110,13 @@ DELETE FROM `db_patches` WHERE `issue` = 'POCOR-1694';
 --
 
 
+-- POCOR-2675
+ALTER TABLE `institution_positions` DROP `is_homeroom`;
+ALTER TABLE `security_roles` DROP `code`;
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue`='POCOR-2675';
+
+
 -- 3.4.17
 UPDATE config_items SET value = '3.4.17' WHERE code = 'db_version';
