@@ -93,7 +93,7 @@ class InstitutionPositionsTable extends AppTable {
 						}
 					}
 				} catch (InvalidPrimaryKeyException $ex) {
-					Log::write('error', __METHOD__ . ': ' . $this->Institutions->alias() . ' primary key not found (' . $institutionId . ')');
+					Log::write('error', __METHOD__ . ': ' . $this->Institutions->alias() . ' primary key not found (' . $entity->institution_id . ')');
 				}
 			}
 		}
