@@ -10,7 +10,7 @@ use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Validation\Validator;
 
-class StaffTransferRequestsTable extends ControllerActionTable {
+class StaffTransferApprovalsTable extends ControllerActionTable {
 	use OptionsTrait;
 
 	// Type for application
@@ -46,17 +46,17 @@ class StaffTransferRequestsTable extends ControllerActionTable {
 		$this->field('FTE', ['type' => 'select', 'visible' => ['view' => true, 'edit' => true, 'add' => true]]);
 		$this->field('updated', ['visible' => false]);
 		$this->field('comment', ['visible' => ['view' => true, 'edit' => true, 'add' => true]]);
+		$this->field('institution_position_id', ['visible' => false]);
 		$extra['config']['selectedLink'] = ['controller' => 'Institutions', 'action' => 'Staff', 'index'];
 	}
 
-	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$this->field('id', ['type' => 'hidden', 'value' => $entity->id]);
 		$this->field('previous_institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->previous_institution_id)->name]]);
 		$this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->name], 'value' => $entity->institution_id]);
 		$this->field('staff_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->staff_id)->name_with_id]]);
 		$this->field('status', ['type' => 'hidden']);
 		$this->field('type', ['type' => 'hidden']);
-		$this->field('institution_position_id', ['after' => 'staff_id', 'type' => 'select', 'options' => $this->getStaffPositionList()]);
 		$this->field('staff_type_id', ['type' => 'select']);
 		$fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
 		$this->field('FTE', ['type' => 'select', 'options' => $fteOptions, 'value' => $entity->FTE]);
@@ -139,48 +139,21 @@ class StaffTransferRequestsTable extends ControllerActionTable {
 		return '<span class="status highlight">' . $name . '</span>';
 	}
 
-	private function initialiseVariable($entity, $institutionStaffData) {
-		$institutionStaff = $institutionStaffData;
-		if (is_null($institutionStaff)) {
-			return true;
-		}
-		$staffTransfer = $this->find()
-			->where([
-				$this->aliasField('staff_id') => $institutionStaff['staff_id'],
-				$this->aliasField('previous_institution_id') => $institutionStaff['transfer_from'],
-				$this->aliasField('institution_position_id') => $institutionStaff['institution_position_id'],
-				$this->aliasField('status').' <> ' => SELF::NEW_REQUEST,
-				$this->aliasField('type') => SELF::TRANSFER
-			])
-			->first();
-		if (empty($staffTransfer)) {
-			$entity->staff_id = $institutionStaff['staff_id'];
-			$entity->institution_position_id = $institutionStaff['institution_position_id'];
-			$entity->institution_id = $institutionStaff['institution_id'];
-			$entity->start_date = $institutionStaff['start_date'];
-			$entity->staff_type_id = $institutionStaff['staff_type_id'];
-			$entity->FTE = $institutionStaff['FTE'];
-			$entity->previous_institution_id = $institutionStaff['transfer_from'];
-			$entity->status = SELF::NEW_REQUEST;
-			$entity->type = SELF::TRANSFER;
-			return false;
-		} else {
-			return $staffTransfer;
-		}
-	}
+	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+		if ($this->action == 'edit') {
+			// If the status is new application then display the approve and reject button, 
+			// if not remove the button just in case the user gets to access the edit page
+			if ($this->request->data[$this->alias()]['status'] == self::NEW_REQUEST || !($this->AccessControl->check(['Institutions', 'TransferApprovals', 'edit']))) {
+				$buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Approve');
 
-	public function addOnInitialize(Event $event, Entity $entity) {
-		$institutionStaff = $this->Session->read('Institution.Staff.transfer');
-		$addOperation = $this->initialiseVariable($entity, $institutionStaff);
-		if ($addOperation) {
-			if ($addOperation === true) {
-				$url = $this->url('index');
+				$buttons[1] = [
+					'name' => '<i class="fa fa-close"></i> ' . __('Reject'),
+					'attr' => ['class' => 'btn btn-outline btn-cancel', 'div' => false, 'name' => 'submit', 'value' => 'reject']
+				];
 			} else {
-				$url = $this->url('view');
-				$url[1] = $addOperation->id;
+				unset($buttons[0]);
+				unset($buttons[1]);
 			}
-			$event->stopPropagation();
-			return $this->controller->redirect($url);
 		}
 	}
 }
