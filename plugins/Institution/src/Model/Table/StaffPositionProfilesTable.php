@@ -48,10 +48,6 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		return $events;
 	}
 
-	public function addAfterPatch($event, $entity, $requestData, $patchOptions, $extra) {
-
-	}
-
 	public function addAfterSave(Event $event, $entity, $requestData, ArrayObject $extra) {
 		if (!$entity->errors()) {
 			$StaffTable = TableRegistry::get('Institution.Staff');
@@ -114,10 +110,8 @@ class StaffPositionProfilesTable extends ControllerActionTable {
     	$InstitutionStaff->save($newEntity);
     }
 
-    public function patchStaffProfile(array $data) {
-    	$StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+    private function patchStaffProfile(array $data) {
     	$InstitutionStaff = TableRegistry::get('Institution.Staff');
-    	$statuses = $StaffStatuses->findCodeList();
     	$newEntity = null;
 
     	// Get the latest staff record entry
