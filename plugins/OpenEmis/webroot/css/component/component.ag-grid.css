@@ -1,4 +1,4 @@
-/* ANGULARJS GRID v.1.0.0 */
+/* ANGULARJS GRID v.1.0.1 */
 
 .ag-fresh {
     z-index: 2;
@@ -40,8 +40,9 @@
     text-shadow: 1px 1px 0px #FFF;
     font-weight: bold;
     text-align: left;
-    padding: 10px;
+    padding: 10px 35px 10px 10px;
     cursor: pointer;
+    line-height: normal;
 }
 
 .ag-fresh .ag-header-container {
@@ -53,6 +54,18 @@
     border-bottom: 1px solid #DDD !important;
 }
 
+.ag-fresh .ag-header-cell-text {
+    vertical-align: middle;
+}
+
+.ag-fresh .header-icon {
+    color: #999;
+    margin: 0 5px;
+}
+
+.ag-fresh .ag-sort-ascending-icon::after, .ag-sort-descending-icon::after {
+    vertical-align: middle;
+}
 
 /* AG-BODY */
 
@@ -285,6 +298,7 @@
 
 .rtl .ag-fresh .ag-header-cell .ag-header-cell-label {
     text-align: right;
+    padding: 10px 10px 10px 35px;
 }
 
 .rtl .ag-cell {
