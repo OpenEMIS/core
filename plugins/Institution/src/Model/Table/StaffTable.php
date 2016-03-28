@@ -22,13 +22,12 @@ use Cake\Log\Log;
 
 class StaffTable extends AppTable {
 	use OptionsTrait;
-	const ASSIGNED = 1;
-	const END_OF_ASSIGNMENT = 2;
 
 	private $assigned;
 	private $endOfAssignment;
 
 	const PENDING_PROFILE = -1;
+	const PENDING_TRANSFERIN = -2;
 
 	private $dashboardQuery = null;
 
@@ -161,6 +160,10 @@ class StaffTable extends AppTable {
 				$event->stopPropagation();
 				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StaffPositionProfiles']);
 				break;
+			case self::PENDING_TRANSFERIN:
+				$event->stopPropagation();
+				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StaffTransfers']);
+				break;
 		}
 	}
 
@@ -238,6 +241,7 @@ class StaffTable extends AppTable {
 
 		$statusOptions = $this->StaffStatuses->find('list')->toArray();
 		$statusOptions[self::PENDING_PROFILE] = __('Pending Profile');
+		$statusOptions[self::PENDING_TRANSFERIN] = __('Pending Transfer In');
 		$this->controller->set(compact('periodOptions', 'positionOptions', 'statusOptions'));
 	}
 
@@ -331,10 +335,34 @@ class StaffTable extends AppTable {
 
 	public function addBeforeSave(Event $event, Entity $entity, $data) {
 		if (!$entity->errors()) {
-			$this->Session->write('Institution.Staff.new', $data[$this->alias()]);
-			$event->stopPropagation();
-			$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffTransfers', 'add'];
-			return $this->controller->redirect($action);
+			$staffId = $data[$this->alias()]['staff_id'];
+			$startDate = $data[$this->alias()]['start_date'];
+			$startDate = new Time ($startDate);
+			$staffRecord = $this->find()
+				->where([
+					$this->aliasField('staff_id') => $staffId,
+					'OR' => [
+						[$this->aliasField('end_date').' >= ' => $startDate],
+						[$this->aliasField('end_date').' IS NULL']
+					]
+				])
+				->order([$this->aliasField('created') => 'DESC'])
+				->first();
+			if (count($staffRecord)) {
+				// For staff transfer
+				$data[$this->alias()]['institution_id'] = $entity->institution_id;
+				$data[$this->alias()]['transfer_from'] = $staffRecord->institution_id;
+				$this->Session->write('Institution.Staff.transfer', $data[$this->alias()]);
+				$event->stopPropagation();
+				$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffTransferRequests', 'add'];
+				return $this->controller->redirect($action);
+			} else {
+				// For staff assignment
+				// $this->Session->write('Institution.Staff.add', $data[$this->alias()]);
+				// $event->stopPropagation();
+				// $action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffAssignments', 'add'];
+				// return $this->controller->redirect($action);
+			}
 		}
 	}
 

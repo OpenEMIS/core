@@ -81,6 +81,7 @@ class InstitutionsController extends AppController  {
 	public function Shifts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionShifts']); }
 	public function StaffAssignments() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAssignments']); }
 	public function StaffTransfers() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransfers']); }
+	public function StaffTransferRequests() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferRequests']); }
 	public function StaffPositionProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffPositionProfiles']); }
 	// public function StaffAbsences() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
 	// End
