@@ -25,6 +25,9 @@ class StaffTable extends AppTable {
 	const ASSIGNED = 1;
 	const END_OF_ASSIGNMENT = 2;
 
+	private $assigned;
+	private $endOfAssignment;
+
 	const PENDING_PROFILE = -1;
 
 	private $dashboardQuery = null;
@@ -94,6 +97,10 @@ class StaffTable extends AppTable {
 		/**
 		 * End Advance Search Types
 		 */
+
+		$statuses = $this->StaffStatuses->findCodeList();
+		$this->assigned = $statuses['ASSIGNED'];
+		$this->endOfAssignment = $statuses['END_OF_ASSIGNMENT'];
 		
 	}
 
@@ -372,34 +379,23 @@ class StaffTable extends AppTable {
 			} else {
 				if (empty($entity->end_date) || $entity->end_date->isToday() || $entity->end_date->isFuture()) {
 					$this->addStaffRole($entity);
-					$this->updateStaffStatus($entity, self::ASSIGNED);
+					$this->updateStaffStatus($entity, $this->assigned);
 				} else {
 					$this->removeStaffRole($entity);
-					$this->updateStaffStatus($entity, self::END_OF_ASSIGNMENT);
+					$this->updateStaffStatus($entity, $this->endOfAssignment);
 				}
 			}
 		} else { // add operation
 			$this->addStaffRole($entity);
-			$this->updateStaffStatus($entity, self::ASSIGNED);
+			$this->updateStaffStatus($entity, $this->assigned);
 		}
 	}
 
 	private function updateStaffStatus($entity, $staffStatuses) {
-		$staffStatuses = $this->StaffStatuses->findCodeList();
-		switch ($staffStatuses){
-			case self::ASSIGNED:
-				$this->updateAll(
-					['staff_status_id' => $staffStatuses['END_OF_ASSIGNMENT']],
-					['id' => $entity->id]
-				);
-				break;
-			case self::END_OF_ASSIGNMENT:
-				$this->updateAll(
-					['staff_status_id' => $staffStatuses['ASSIGNED']],
-					['id' => $entity->id]
-				);
-				break;
-		}
+		$this->updateAll(
+			['staff_status_id' => $staffStatuses],
+			['id' => $entity->id]
+		);
 	}
 
 	private function updateSecurityGroupUserId($entity, $groupUserId) {
@@ -1048,7 +1044,7 @@ class StaffTable extends AppTable {
 						[$this->primaryKey() => $entity->id]
 					);
 
-					$this->updateStaffStatus($entity, self::END_OF_ASSIGNMENT);
+					$this->updateStaffStatus($entity, $this->endOfAssignment);
 				}
 			}
 		}
@@ -1077,7 +1073,7 @@ class StaffTable extends AppTable {
 				['security_group_user_id' => NULL],
 				[$this->primaryKey() => $entity->id]
 			);
-			$this->updateStaffStatus($entity, self::END_OF_ASSIGNMENT);
+			$this->updateStaffStatus($entity, $this->endOfAssignment);
 		}
 	}
 }
