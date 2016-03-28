@@ -70,27 +70,30 @@ class InstitutionPositionsTable extends AppTable {
 				$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 				$SecurityRoles = TableRegistry::get('Security.SecurityRoles');
 				$homeroomSecurityRoleId = $SecurityRoles->getHomeroomRoleId();
-				foreach ($staffInvolved as $key => $value) {
-					$securityGroupId = $this->Institutions->get($value->institution_id)->security_group_id;
-					$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
-					$homeRoomData = [
-						'security_role_id' => $homeroomSecurityRoleId,
-						'security_group_id' => $securityGroupId,
-						'security_user_id' => $value->staff_id
-					];
-					if ($currIsHomeroom) {
-						// add 1 homeroom value
-						$newHomeroomEntity = $SecurityGroupUsersTable->newEntity($homeRoomData);
-						$entity = $SecurityGroupUsersTable->save($newHomeroomEntity);
-					} else {
-						// remove homeroom value - find 1 entry and delete it
-						$homeroomEntity = $SecurityGroupUsers->find()
-							->where($homeRoomData)
-							->first();
-						if (!empty($homeroomEntity)) {
-							$SecurityGroupUsers->delete($homeroomEntity);
+				try {
+					$securityGroupId = $this->Institutions->get($entity->institution_id)->security_group_id;
+					foreach ($staffInvolved as $key => $value) {
+						$homeRoomData = [
+							'security_role_id' => $homeroomSecurityRoleId,
+							'security_group_id' => $securityGroupId,
+							'security_user_id' => $value->staff_id
+						];
+						if ($currIsHomeroom) {
+							// add 1 homeroom value
+							$newHomeroomEntity = $SecurityGroupUsers->newEntity($homeRoomData);
+							$entity = $SecurityGroupUsers->save($newHomeroomEntity);
+						} else {
+							// remove homeroom value - find 1 entry and delete it
+							$homeroomEntity = $SecurityGroupUsers->find()
+								->where($homeRoomData)
+								->first();
+							if (!empty($homeroomEntity)) {
+								$SecurityGroupUsers->delete($homeroomEntity);
+							}
 						}
 					}
+				} catch (InvalidPrimaryKeyException $ex) {
+					Log::write('error', __METHOD__ . ': ' . $this->Institutions->alias() . ' primary key not found (' . $institutionId . ')');
 				}
 			}
 		}
