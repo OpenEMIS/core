@@ -71,6 +71,7 @@ class SecurityRolesTable extends AppTable {
 		$this->controller->set('selectedAction', $selectedAction);
 
 		$this->ControllerAction->field('security_group_id', ['viewType' => $selectedAction]);
+		$this->ControllerAction->field('code', ['visible' => false]);
 
 		$action = $this->ControllerAction->action();
 		if ($action == 'index' && $selectedAction == 'user') {
@@ -416,5 +417,14 @@ class SecurityRolesTable extends AppTable {
 				$this->aliasField('name') => 'Group Administrator'
 			])
 			->first();
+	}
+
+	public function getHomeroomRoleId() {
+		$homeroomData = $this->find()
+			->select([$this->primaryKey()])
+			->where([$this->aliasField('code') => 'HOMEROOM_TEACHER'])
+			->first();
+
+		return (!empty($homeroomData))? $homeroomData->id: null;
 	}
 }
