@@ -808,7 +808,9 @@ class InstitutionClassesTable extends ControllerActionTable {
 	        $Staff = $this->Institutions->Staff;
 			$query = $Staff->find('all')
 							->find('withBelongsTo')
-							->find('byPositions', ['Institutions.id' => $institutionId, 'type' => 1]) // refer to OptionsTrait for type options
+							->matching('Positions', function ($q) {
+								return $q->where(['Positions.is_homeroom' => 1]);
+							})
 							->find('byInstitution', ['Institutions.id'=>$institutionId])
 							->find('AcademicPeriod', ['academic_period_id'=>$academicPeriodId])
 							;
