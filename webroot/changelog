@@ -1,3 +1,8 @@
+v3.4.18
+- The system will generate codes automatically when adding new infrastructure
+- Fixed a bug on Import that caused the system not able to import students properly
+- Fixed a bug where workflow actions not appearing for the configured workflow roles
+
 v3.4.17.2
 - Compilation of Translation files is now done automatically by the system whenever translations are added or modified
 - Fixed a bug that caused user able to link a position title to a security role that is not set as visible
