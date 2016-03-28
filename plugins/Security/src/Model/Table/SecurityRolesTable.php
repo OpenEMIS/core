@@ -258,6 +258,7 @@ class SecurityRolesTable extends AppTable {
 	public function getSystemRolesList() {
 		$systemRoleGroupIds = [-1,0];
 		return $this->find('list')
+			->find('visible')
 			->where([
 				$this->aliasField('security_group_id').' IN ' => $systemRoleGroupIds
 			])
