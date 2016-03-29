@@ -5,10 +5,12 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Validation\Validator;
+use Cake\ORM\ResultSet;
 
 class StaffTransferRequestsTable extends ControllerActionTable {
 	use OptionsTrait;
@@ -40,27 +42,56 @@ class StaffTransferRequestsTable extends ControllerActionTable {
 	public function beforeAction(Event $event, ArrayObject $extra) {
 		$this->field('status');
 		$this->field('staff_id');
-		$this->field('type', ['visible' => false, 'visible' => ['view' => true, 'edit' => true, 'add' => true]]);
+		$this->field('previous_institution_id', ['after' => 'staff_id']);
+		$this->field('institution_id', ['type' => 'integer', 'after' => 'previous_institution_id', 'visible' => ['index' => true, 'edit' => true, 'view' => true]]);
+		$this->field('institution_position_id', ['after' => 'institution_id', 'visible' => ['edit' => true, 'view' => true]]);
+		$this->field('type', ['visible' => false]);
+		$this->field('staff_type_id', ['after' => 'institution_position_id', 'visible' => ['view' => true, 'edit' => true, 'add' => true]]);
+		$fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
+		$this->field('FTE', ['type' => 'select', 'after' => 'staff_type_id', 'visible' => ['view' => true, 'edit' => true, 'add' => true]]);
+		$this->field('comment', ['after' => 'start_date', 'visible' => ['view' => true, 'edit' => true, 'add' => true]]);
 		$this->field('end_date', ['visible' => false]);
-		$this->field('staff_type_id', ['type' => 'select', 'visible' => ['view' => true, 'edit' => true, 'add' => true]]);
-		$this->field('FTE', ['type' => 'select', 'visible' => ['view' => true, 'edit' => true, 'add' => true]]);
-		$this->field('updated', ['visible' => false]);
-		$this->field('comment', ['visible' => ['view' => true, 'edit' => true, 'add' => true]]);
+		$this->field('update', ['visible' => false]);
 		$extra['config']['selectedLink'] = ['controller' => 'Institutions', 'action' => 'Staff', 'index'];
 	}
 
+	public function indexBeforeAction(Event $event, $extra) {
+    	$toolbarButtons = $extra['toolbarButtons'];
+    	if (isset($toolbarButtons['add'])) {
+    		unset($toolbarButtons['add']);
+    	}
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, $extra) {
+    	$query->where([$this->aliasField('type') => self::TRANSFER]);
+    }
+
 	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$this->field('id', ['type' => 'hidden', 'value' => $entity->id]);
+		$this->field('status', ['type' => 'readonly', 'value' => $entity->status]);
+		$this->field('staff_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->staff_id)->name_with_id]]);
 		$this->field('previous_institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->previous_institution_id)->name]]);
 		$this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->name], 'value' => $entity->institution_id]);
-		$this->field('staff_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->staff_id)->name_with_id]]);
-		$this->field('status', ['type' => 'hidden']);
-		$this->field('type', ['type' => 'hidden']);
-		$this->field('institution_position_id', ['after' => 'staff_id', 'type' => 'select', 'options' => $this->getStaffPositionList()]);
+		$this->field('type', ['type' => 'hidden', 'visible' => true, 'value' => self::TRANSFER]);
+		$this->field('institution_position_id', ['after' => 'institution_id', 'type' => 'select', 'options' => $this->getStaffPositionList()]);
 		$this->field('staff_type_id', ['type' => 'select']);
 		$fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
 		$this->field('FTE', ['type' => 'select', 'options' => $fteOptions, 'value' => $entity->FTE]);
-		
+		$this->field('start_date');
+		$this->field('comment');
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity, $extra) {
+		$toolbarButtons = $extra['toolbarButtons'];
+		$status = $entity->status;
+		switch ($status) {
+			case self::REJECTED:
+			case self::APPROVED:
+				if (isset($toolbarButtons['edit'])) {
+					unset($toolbarButtons['edit']);
+				}
+				break;
+		}
 	}
 
 	private function getStaffPositionList() {
@@ -116,27 +147,52 @@ class StaffTransferRequestsTable extends ControllerActionTable {
     	return $newEntity;
     }
 
-	public function indexBeforeAction(Event $event, $extra) {
-    	$toolbarButtons = $extra['toolbarButtons'];
-    	if (isset($toolbarButtons['add'])) {
-    		unset($toolbarButtons['add']);
+    public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request) {
+    	if ($action == 'edit' || $action == 'add') {
+    		if (isset($this->request->data[$this->alias()]['status'])) {
+    			$status = $this->request->data[$this->alias()]['status'];
+    			$name = '';
+				switch($status) {
+					case self::APPROVED:
+						$name = __('Approved');
+						break;
+					case self::REJECTED:
+						$name = __('Rejected');
+						break;
+					case self::NEW_REQUEST:
+						$name = __('New');
+						break;
+				}
+    			$attr['attr']['value'] = $name;
+    			return $attr;
+    		}
+    		
     	}
+    	
     }
 
 	public function onGetStatus(Event $event, Entity $entity) {
 		$name = '';
 		switch($entity->status) {
-			case SELF::APPROVED:
+			case self::APPROVED:
 				$name = __('Approved');
 				break;
-			case SELF::REJECTED:
+			case self::REJECTED:
 				$name = __('Rejected');
 				break;
-			case SELF::NEW_REQUEST:
+			case self::NEW_REQUEST:
 				$name = __('New');
 				break;
 		}
 		return '<span class="status highlight">' . $name . '</span>';
+	}
+
+	public function onGetFTE(Event $event, Entity $entity) {
+		$value = '100%';
+		if ($entity->FTE < 1) {
+			$value = ($entity->FTE * 100) . '%';
+		}
+		return $value;
 	}
 
 	private function initialiseVariable($entity, $institutionStaffData) {
@@ -149,8 +205,8 @@ class StaffTransferRequestsTable extends ControllerActionTable {
 				$this->aliasField('staff_id') => $institutionStaff['staff_id'],
 				$this->aliasField('previous_institution_id') => $institutionStaff['transfer_from'],
 				$this->aliasField('institution_position_id') => $institutionStaff['institution_position_id'],
-				$this->aliasField('status').' <> ' => SELF::NEW_REQUEST,
-				$this->aliasField('type') => SELF::TRANSFER
+				$this->aliasField('status') => self::NEW_REQUEST,
+				$this->aliasField('type') => self::TRANSFER
 			])
 			->first();
 		if (empty($staffTransfer)) {
@@ -161,12 +217,16 @@ class StaffTransferRequestsTable extends ControllerActionTable {
 			$entity->staff_type_id = $institutionStaff['staff_type_id'];
 			$entity->FTE = $institutionStaff['FTE'];
 			$entity->previous_institution_id = $institutionStaff['transfer_from'];
-			$entity->status = SELF::NEW_REQUEST;
-			$entity->type = SELF::TRANSFER;
+			$entity->status = self::NEW_REQUEST;
+			$this->request->data[$this->alias()]['status'] = self::NEW_REQUEST;
+			$entity->type = self::TRANSFER;
 			return false;
 		} else {
 			return $staffTransfer;
 		}
+	}
+	public function editOnInitialize(Event $event, Entity $entity) {
+		$this->request->data[$this->alias()]['status'] = $entity->status;
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity) {
