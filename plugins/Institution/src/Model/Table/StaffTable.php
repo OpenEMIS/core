@@ -28,6 +28,7 @@ class StaffTable extends AppTable {
 
 	const PENDING_PROFILE = -1;
 	const PENDING_TRANSFERIN = -2;
+	const PENDING_TRANSFEROUT = -3;
 
 	private $dashboardQuery = null;
 
@@ -162,7 +163,11 @@ class StaffTable extends AppTable {
 				break;
 			case self::PENDING_TRANSFERIN:
 				$event->stopPropagation();
-				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StaffTransfers']);
+				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StaffTransferRequests']);
+				break;
+			case self::PENDING_TRANSFEROUT:
+				$event->stopPropagation();
+				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StaffTransferApprovals']);
 				break;
 		}
 	}
@@ -242,6 +247,7 @@ class StaffTable extends AppTable {
 		$statusOptions = $this->StaffStatuses->find('list')->toArray();
 		$statusOptions[self::PENDING_PROFILE] = __('Pending Profile');
 		$statusOptions[self::PENDING_TRANSFERIN] = __('Pending Transfer In');
+		$statusOptions[self::PENDING_TRANSFEROUT] = __('Pending Transfer Out');
 		$this->controller->set(compact('periodOptions', 'positionOptions', 'statusOptions'));
 	}
 
@@ -295,6 +301,8 @@ class StaffTable extends AppTable {
 		$this->ControllerAction->setFieldOrder([
 			'institution_position_id', 'start_date', 'position_type', 'FTE', 'staff_type_id', 'staff_status_id', 'staff_name'
 		]);
+		
+		
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -407,7 +415,9 @@ class StaffTable extends AppTable {
 			} else {
 				if (empty($entity->end_date) || $entity->end_date->isToday() || $entity->end_date->isFuture()) {
 					$this->addStaffRole($entity);
-					$this->updateStaffStatus($entity, $this->assigned);
+					if (!$entity->start_date->isFuture()) {
+						$this->updateStaffStatus($entity, $this->assigned);
+					}
 				} else {
 					$this->removeStaffRole($entity);
 					$this->updateStaffStatus($entity, $this->endOfAssignment);
@@ -415,7 +425,9 @@ class StaffTable extends AppTable {
 			}
 		} else { // add operation
 			$this->addStaffRole($entity);
-			$this->updateStaffStatus($entity, $this->assigned);
+			if (!$entity->start_date->isFuture()) {
+				$this->updateStaffStatus($entity, $this->assigned);
+			}
 		}
 	}
 
@@ -511,6 +523,15 @@ class StaffTable extends AppTable {
 		}
 
 		return $buttons;
+	}
+
+	public function onUpdateFieldStaffStatusId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
+			$attr['type'] = 'hidden';
+			$assignedStatus = $this->StaffStatuses->findCodeList()['ASSIGNED'];
+			$attr['value'] = $assignedStatus;
+			return $attr;
+		}
 	}
 
 	public function onUpdateFieldPositionType(Event $event, array $attr, $action, Request $request) {
