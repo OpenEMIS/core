@@ -122,18 +122,33 @@ class StaffTransferApprovalsTable extends ControllerActionTable {
 	public function onGetStaffId(Event $event, Entity $entity) {
 		$urlParams = $this->url('index');
 		$action = $urlParams['action'];
-		if ($entity->status != self::NEW_REQUEST) {
-			if ($this->AccessControl->check(['Institutions', 'StaffTransferApprovals', 'edit'])) {
-				return $event->subject()->Html->link($entity->user->name, [
+		$page = 'view';
+		if ($entity->status_id == self::NEW_REQUEST) {
+			if ($this->AccessControl->check(['Institutions', 'StaffTransferRequests', 'edit'])) {
+				$page = 'edit';
+			}
+		}
+		return $event->subject()->Html->link($entity->user->name, [
 					'plugin' => $urlParams['plugin'],
 					'controller' => $urlParams['controller'],
 					'action' => $action,
-					'0' => 'view',
+					'0' => $page,
 					'1' => $entity->id
 				]);
-			}
-		}
 	}
+
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+    	$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+    	if ($entity->status_id != self::NEW_REQUEST) {
+    		if (isset($buttons['edit'])) {
+    			unset($buttons['edit']);
+    		}
+    		if (isset($buttons['remove'])) {
+    			unset($buttons['remove']);
+    		}
+    	}
+    	return $buttons;
+    }
 
 	public function indexBeforeAction(Event $event, $extra) {
     	$toolbarButtons = $extra['toolbarButtons'];
@@ -219,6 +234,7 @@ class StaffTransferApprovalsTable extends ControllerActionTable {
 				$name = __('New');
 				break;
 		}
+		$entity->status_id = $entity->status;
 		return '<span class="status highlight">' . $name . '</span>';
 	}
 
