@@ -80,8 +80,8 @@ class InstitutionsController extends AppController  {
 	public function Positions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionPositions']); }
 	public function Shifts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionShifts']); }
 	public function StaffAssignments() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAssignments']); }
-	public function StaffTransfers() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransfers']); }
 	public function StaffTransferRequests() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferRequests']); }
+	public function StaffTransferApprovals() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferApprovals']); }
 	public function StaffPositionProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffPositionProfiles']); }
 	// public function StaffAbsences() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
 	// End
@@ -194,7 +194,7 @@ class InstitutionsController extends AppController  {
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
-					if (in_array($model->alias(), ['TransferRequests'])) {
+					if (in_array($model->alias(), ['TransferRequests', 'StaffTransferApprovals'])) {
 						$exists = $model->exists([
 							$model->aliasField($model->primaryKey()) => $modelId,
 							$model->aliasField('previous_institution_id') => $institutionId

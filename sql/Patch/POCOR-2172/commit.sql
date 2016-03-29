@@ -54,7 +54,7 @@ CREATE TABLE `institution_staff_assignments` (
   `start_date` date NOT NULL,
   `end_date` date NULL,
   `staff_id` int(11) NOT NULL COMMENT 'links to security_users.id',
-  `status_id` int(11) NOT NULL,
+  `status` int(11) NOT NULL,
   `staff_type_id` int(5) NOT NULL,
   `institution_id` varchar(45) NOT NULL,
   `institution_position_id` int(11) NOT NULL,
@@ -62,7 +62,7 @@ CREATE TABLE `institution_staff_assignments` (
   `previous_institution_id` int(11) DEFAULT NULL,
   `comment` text,
   `type` int(11) NOT NULL COMMENT '1 -> Staff Assignment, 2 -> Staff Transfer',
-  `updated` int(11) NOT NULL,
+  `update` int(1) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -73,6 +73,21 @@ CREATE TABLE `institution_staff_assignments` (
   KEY `institution_position_id` (`institution_position_id`),
   KEY `previous_institution_id` (`previous_institution_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- labels
+INSERT INTO `staffworkflow`.`labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferRequests', 'previous_institution_id', 'Institution > StaffTransferRequests', 'Institution Requesting From', 1, 1, NOW());
+INSERT INTO `staffworkflow`.`labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferApprovals', 'institution_id', 'Institution > StaffTransferApprovals', 'Requesting Institution', 1, 1, NOW());
+INSERT INTO `staffworkflow`.`labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferApprovals', 'previous_institution_id', 'Institution > StaffTransferApprovals', 'Institution', 1, 1, NOW());
+
+-- security_functions
+INSERT INTO security_functions(`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) 
+VALUES (1039, 'Transfer Requests', 'Institutions', 'Institutions', 'Staff', 8, 'StaffTransferRequests.index|StaffTransferRequests.view', 'StaffTransferRequests.edit', 'StaffTransferRequests.add', 'StaffTransferRequests.remove', 1039, 1, 1, NOW());
+
+INSERT INTO security_functions(`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) 
+VALUES (1040, 'Transfer Approvals', 'Institutions', 'Institutions', 'Staff', 8, 'StaffTransferApprovals.index|StaffTransferApprovals.view', 'StaffTransferApprovals.edit', 'StaffTransferApprovals.add', 'StaffTransferApprovals.remove', 1040, 1, 1, NOW());
+
+INSERT INTO security_functions(`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) 
+VALUES (1041, 'Staff Position Profile Workflow', 'Institutions', 'Institutions', 'Staff', 8, 'StaffPositionProfiles.index|StaffPositionProfiles.view', 'StaffPositionProfiles.edit', 'StaffPositionProfiles.add', 'StaffPositionProfiles.remove', 1041, 1, 1, NOW());
 
 -- For staff_position_profiles
 -- workflow_models
@@ -86,7 +101,7 @@ INSERT INTO `workflows` (`code`, `name`, `workflow_model_id`, `created_user_id`,
 ('AMEND-STAFF-001', 'Amend Staff Position Profile', @modelId, 1, NOW());
 
 SET @workflowId := 0;
-SELECT `id` INTO @workflowId FROM `workflows` WHERE `code` = 'END-STAFF-001' AND `workflow_model_id` = @modelId;
+SELECT `id` INTO @workflowId FROM `workflows` WHERE `code` = 'AMEND-STAFF-001' AND `workflow_model_id` = @modelId;
 INSERT INTO `workflow_steps` (`name`, `stage`, `is_editable`, `is_removable`, `workflow_id`, `created_user_id`, `created`) VALUES
 ('Open', 0, 1, 1, @workflowId, 1, NOW()),
 ('Pending Approval', 1, 0, 0, @workflowId, 1, NOW()),
