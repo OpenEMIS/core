@@ -146,12 +146,15 @@ class InstitutionInfrastructuresTable extends AppTable {
 	}
 
 	private function getAutogenerateCode($institutionId, $infrastructureLevelId, $parentId) {
+		if (!empty($parentId)) {
+			$conditions[$this->aliasField('parent_id')] = $parentId;
+		} else {
+			$conditions[$this->aliasField('institution_id')] = $institutionId;
+			$conditions[$this->aliasField('infrastructure_level_id')] = $infrastructureLevelId;
+		}
 		// getting suffix of code by counting 
 		$indexData = $this->find()
-			->where([
-				$this->aliasField('institution_id') => $institutionId,
-				$this->aliasField('infrastructure_level_id') => $infrastructureLevelId,
-			])
+			->where($conditions)
 			->count();
 		$indexData += 1; // starts counting from 1
 		$indexData = strval($indexData);
