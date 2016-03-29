@@ -428,7 +428,8 @@ class RestSurveyComponent extends Component {
 				'field_type' => $this->Field->aliasField('field_type'),
 				'default_name' => $this->Field->aliasField('name'),
 				'default_is_mandatory' => $this->Field->aliasField('is_mandatory'),
-				'default_is_unique' => $this->Field->aliasField('is_unique')
+				'default_is_unique' => $this->Field->aliasField('is_unique'),
+				'params' => $this->Field->aliasField('params')
 			])
 			->innerJoin(
 				[$this->Field->alias() => $this->Field->table()],
@@ -480,6 +481,8 @@ class RestSurveyComponent extends Component {
 		$this->_setFieldBindNode($modelNode, $instanceId, 'string', true, $ref);
 		// end setting fixed fields
 
+		$schemaNode = $modelNode->addChild("schema", null, NS_XSD);
+
 		$sectionName = null;
 		foreach ($fields as $key => $field) {
 			// Section
@@ -496,28 +499,106 @@ class RestSurveyComponent extends Component {
 
 			$fieldTypeFunction = '_'.strtolower($field->field_type).'Type';
 			if (method_exists($this, $fieldTypeFunction)) {
-				$this->$fieldTypeFunction($field, $sectionBreakNode, $modelNode, $instanceId, ($key + 1), $fieldNode);
+				$this->$fieldTypeFunction($field, $sectionBreakNode, $modelNode, $instanceId, ($key + 1), $fieldNode, $schemaNode);
 			}
 		}
 		return $xml;
 	}
 
-	private function _textType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode) {
-		$this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
-		$this->_setFieldBindNode($modelNode, $instanceId, 'string', $field->default_is_mandatory, '', $index);
+	private function _setValidationSchema($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode) {
+
 	}
 
-	private function _numberType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode) {
-		$this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
-		$this->_setFieldBindNode($modelNode, $instanceId, 'integer', $field->default_is_mandatory, '', $index);
+	private function _textType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode) {
+		$validationHint = '';
+		if (!empty($field->params)) {
+			$bindType = 'string';
+			$params = json_decode($field->params, true);
+			$validationType = key($params);
+			if (in_array($validationType, ['min_length', 'max_length', 'range'])) {
+				$bindType = 'string' . Inflector::camelize($validationType) . $index;
+				$this->_setFieldBindNode($modelNode, $instanceId, $bindType, $field->default_is_mandatory, '', $index);
+				$simpleType = $schemaNode->addChild('simpleType', null, NS_XSD);
+				$simpleType->addAttribute("name", $bindType);
+				$restriction = $simpleType->addChild('restriction', null, NS_XSD);
+				$restriction->addAttribute("base", "xf:string");
+				if ($validationType!='range') {
+					$condition = $restriction->addChild(Inflector::variable($validationType), null, NS_XSD);
+					$condition->addAttribute("value", $params[$validationType]);
+					if ($validationType=='min_length') {
+						$validationHint = __('Value should be at least '. $params[$validationType].' characters long.');
+					} else if ($validationType=='max_length') {
+						$validationHint = __('Value should not be more than '. $params[$validationType].' characters long.');
+					}
+				} else {
+					$values = [];
+					foreach ($params[$validationType] as $key => $value) {
+						if ($key=='lower') {
+							$condition = $restriction->addChild('minLength', null, NS_XSD);
+						} else {
+							$condition = $restriction->addChild('maxLength', null, NS_XSD);
+						}
+						$condition->addAttribute("value", $value);
+						$values[] = $value;
+					}
+					$validationHint = __('Value should be between '. implode(' and ', $values).' characters long.');
+				}
+			}
+		} else {
+			$bindType = 'string';
+		}
+		$fieldNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
+		if (!empty($validationHint)) {
+			// <xf:hint>Your name should be at least 3 characters long.</xf:hint>
+			$fieldHint = $fieldNode->addChild("hint", htmlspecialchars($validationHint, ENT_QUOTES), NS_XF);
+		} else {
+			$this->_setFieldBindNode($modelNode, $instanceId, $bindType, $field->default_is_mandatory, '', $index);
+		}
 	}
 
-	private function _textareaType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode) {
+	private function _numberType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode) {
+		$validationHint = '';
+		if (!empty($field->params)) {
+			$params = json_decode($field->params, true);
+			$validationType = key($params);
+			if (in_array($validationType, ['min_value', 'max_value', 'range'])) {
+				if ($validationType!='range') {
+					if ($validationType=='min_value') {
+		 				$constraint = ". > ".$params[$validationType];
+						$validationHint = __('Value should be at least '. $params[$validationType]);
+					} else if ($validationType=='max_value') {
+		 				$constraint = ". < ".$params[$validationType];
+						$validationHint = __('Value should not be more than '. $params[$validationType]);
+					}
+				} else {
+					$values = [];
+					$constraint = "";
+					foreach ($params[$validationType] as $key => $value) {
+						if ($key=='lower') {
+							$constraint .= empty($constraint) ? ". > ".$value : " && . > ".$value;
+						} else {
+							$constraint .= empty($constraint) ? ". < ".$value : " && . < ".$value;
+						}
+						$values[] = $value;
+					}
+					$validationHint = __('Value should be between '. implode(' and ', $values));
+				}
+			}
+		}
+		$bindNode = $this->_setFieldBindNode($modelNode, $instanceId, 'integer', $field->default_is_mandatory, '', $index);
+		$fieldNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
+		if (!empty($validationHint)) {
+			$fieldHint = $fieldNode->addChild("hint", htmlspecialchars($validationHint, ENT_QUOTES), NS_XF);
+			$bindNode->addAttribute("constraint", $constraint);
+		}
+	}
+
+	private function _textareaType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode) {
 		$this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'textarea', $instanceId, $index);
 		$this->_setFieldBindNode($modelNode, $instanceId, 'string', $field->default_is_mandatory, '', $index);
 	}
 
-	private function _dropdownType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode) {
+	private function _dropdownType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode) {
 		$dropdownNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'select1', $instanceId, $index);
 
 		$fieldOptionResults = $this->FieldOption
@@ -540,7 +621,7 @@ class RestSurveyComponent extends Component {
 		$this->_setFieldBindNode($modelNode, $instanceId, 'integer', $field->default_is_mandatory, '', $index);
 	}
 
-	private function _checkboxType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode) {
+	private function _checkboxType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode) {
 		$checkboxNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'select', $instanceId, $index);
 
 		$fieldOptionResults = $this->FieldOption
@@ -564,7 +645,7 @@ class RestSurveyComponent extends Component {
 		$this->_setFieldBindNode($modelNode, $instanceId, 'integer', $field->default_is_mandatory, '', $index);
 	}
 
-	private function _tableType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode) {
+	private function _tableType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode) {
 		// To nested table inside xform group
 		$tableBreakNode = $sectionBreakNode->addChild("group", null, NS_XF);
 		$tableBreakNode->addAttribute("ref", $field->field_id);
@@ -597,7 +678,7 @@ class RestSurveyComponent extends Component {
 				$this->TableRow->aliasField($this->fieldKey) => $field->field_id
 			])
 			->all();
-			
+
 		if (!$tableColumnResults->isEmpty() && !$tableRowResults->isEmpty()) {
 			$tableColumns = $tableColumnResults->toArray();
 			$tableRows = $tableRowResults->toArray();
@@ -650,6 +731,7 @@ class RestSurveyComponent extends Component {
 		} else {
 			$bindNode->addAttribute("required", 'false()');
 		}
+		return $bindNode;
 	}
 
 }
