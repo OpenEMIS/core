@@ -452,207 +452,204 @@ class RestSurveyComponent extends Component {
 
 		$headNode = $xml->addChild("head", null, NS_XHTML);
 		$bodyNode = $xml->addChild("body", null, NS_XHTML);
-			$headNode->addChild("title", $title, NS_XHTML);
-				$modelNode = $headNode->addChild("model", null, NS_XF);
-					$instanceNode = $modelNode->addChild("instance", null, NS_XF);
-					$instanceNode->addAttribute("id", $instanceId);
-						$index = 1;
-						$sectionBreakNode = $bodyNode;
+		$headNode->addChild("title", $title, NS_XHTML);
+		$modelNode = $headNode->addChild("model", null, NS_XF);
 
-						$formNode = $instanceNode->addChild($this->Form->alias(), null, NS_OE);
-							$formNode->addAttribute("id", $id);
-						$formNode->addChild('Institutions', null, NS_OE);
-						$formNode->addChild('AcademicPeriods', null, NS_OE);
+		$instanceNode = $modelNode->addChild("instance", null, NS_XF);
+		$instanceNode->addAttribute("id", $instanceId);
+		$formNode = $instanceNode->addChild($this->Form->alias(), null, NS_OE);
+		$formNode->addAttribute("id", $id);
+		$formNode->addChild('Institutions', null, NS_OE);
+		$formNode->addChild('AcademicPeriods', null, NS_OE);
+	
+		$sectionBreakNode = $bodyNode;
+		// set fixed fields
+		$fieldNode = $sectionBreakNode->addChild("input", null, NS_XF);
+		$fieldNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/Institutions");
+		$fieldNode->addAttribute("oe-type", "select");
+		$fieldNode->addChild("label", "Institution", NS_XF);
+		$ref = "instance('" . $instanceId . "')/".$this->Form->alias()."/Institutions";
+		$this->_setFieldBindNode($modelNode, $instanceId, 'string', true, $ref);
+		
+		$fieldNode = $sectionBreakNode->addChild("input", null, NS_XF);
+		$fieldNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/AcademicPeriods");
+		$fieldNode->addAttribute("oe-type", "select");
+		$fieldNode->addAttribute("oe-dependency", "instance('" . $instanceId . "')/".$this->Form->alias()."/Institutions");
+		$fieldNode->addChild("label", "Academic Period", NS_XF);
+		$ref = "instance('" . $instanceId . "')/".$this->Form->alias()."/AcademicPeriods";
+		$this->_setFieldBindNode($modelNode, $instanceId, 'string', true, $ref);
+		// end setting fixed fields
 
-						$bindNode = $modelNode->addChild("bind", null, NS_XF);
-						$bindNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/Institutions");
-						$bindNode->addAttribute("type", 'string');
-						$bindNode->addAttribute("required", 'true()');
-						$bindNode = $modelNode->addChild("bind", null, NS_XF);
-						$bindNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/AcademicPeriods");
-						$bindNode->addAttribute("type", 'string');
-						$bindNode->addAttribute("required", 'true()');
+		$sectionName = null;
+		foreach ($fields as $key => $field) {
+			// Section
+			if ($field->section_name != $sectionName) {
+				$sectionName = $field->section_name;
+				$sectionBreakNode = $bodyNode->addChild("group", null, NS_XF);
+				$sectionBreakNode->addAttribute("ref", $field->form_id . '_' . $field->field_id);
+				$sectionBreakNode->addChild("label", htmlspecialchars($sectionName, ENT_QUOTES), NS_XF);
+			}
+			// End
 
-						$textNode = $sectionBreakNode->addChild("input", null, NS_XF);
-						$textNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/Institutions");
-						$textNode->addAttribute("oe-type", "select");
-							$textNode->addChild("label", "Institution", NS_XF);
-						$textNode = $sectionBreakNode->addChild("input", null, NS_XF);
-						$textNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/AcademicPeriods");
-						$textNode->addAttribute("oe-type", "select");
-						$textNode->addAttribute("oe-dependency", "instance('" . $instanceId . "')/".$this->Form->alias()."/Institutions");
-							$textNode->addChild("label", "Academic Period", NS_XF);
+			$fieldNode = $formNode->addChild($this->Field->alias(), null, NS_OE);
+			$fieldNode->addAttribute("id", $field->field_id);
 
-						$sectionName = null;
-						foreach ($fields as $key => $field) {
-							// fieldName, fieldIsMandatory and fieldIsUnique is get from survey_questions for now. Will need to get from survey_forms_questions in future.
-							$fieldName = $field->default_name;
-							$fieldIsMandatory = $field->default_is_mandatory;
-							$fieldIsUnique = $field->default_is_unique;
-
-							// Section
-							if ($field->section_name != $sectionName) {
-								$sectionName = $field->section_name;
-
-								$sectionBreakNode = $bodyNode->addChild("group", null, NS_XF);
-								$sectionBreakNode->addAttribute("ref", $field->form_id . '_' . $field->field_id);
-								$sectionBreakNode->addChild("label", htmlspecialchars($sectionName, ENT_QUOTES), NS_XF);
-							}
-							// End
-
-							$fieldNode = $formNode->addChild($this->Field->alias(), null, NS_OE);
-								$fieldNode->addAttribute("id", $field->field_id);
-
-								switch($field->field_type) {
-									case 'TEXT':
-										$fieldType = 'string';
-										$textNode = $sectionBreakNode->addChild("input", null, NS_XF);
-										$textNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]");
-											$textNode->addChild("label", htmlspecialchars($fieldName, ENT_QUOTES), NS_XF);
-										break;
-									case 'NUMBER':
-										$fieldType = 'integer';
-										$numberNode = $sectionBreakNode->addChild("input", null, NS_XF);
-										$numberNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]");
-											$numberNode->addChild("label", htmlspecialchars($fieldName, ENT_QUOTES), NS_XF);
-										break;
-									case 'TEXTAREA':
-										$fieldType = 'string';
-										$textareaNode = $sectionBreakNode->addChild("textarea", null, NS_XF);
-										$textareaNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]");
-											$textareaNode->addChild("label", htmlspecialchars($fieldName, ENT_QUOTES), NS_XF);
-										break;
-									case 'DROPDOWN':
-										$fieldType = 'integer';
-										$dropdownNode = $sectionBreakNode->addChild("select1", null, NS_XF);
-										$dropdownNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]");
-											$dropdownNode->addChild("label", htmlspecialchars($fieldName, ENT_QUOTES), NS_XF);
-
-											$fieldOptionResults = $this->FieldOption
-												->find()
-												->find('visible')
-												->find('order')
-												->where([
-													$this->FieldOption->aliasField($this->fieldKey) => $field->field_id
-												])
-												->all();
-
-											if (!$fieldOptionResults->isEmpty()) {
-												$fieldOptions = $fieldOptionResults->toArray();
-												foreach ($fieldOptions as $fieldOption) {
-													$itemNode = $dropdownNode->addChild("item", null, NS_XF);
-														$itemNode->addChild("label", htmlspecialchars($fieldOption->name, ENT_QUOTES), NS_XF);
-														$itemNode->addChild("value", $fieldOption->id, NS_XF);
-												}
-											}
-										break;
-									case 'CHECKBOX':
-										$fieldType = 'integer';
-										$checkboxNode = $sectionBreakNode->addChild("select", null, NS_XF);
-										$checkboxNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]");
-											$checkboxNode->addChild("label", htmlspecialchars($fieldName, ENT_QUOTES), NS_XF);
-
-											$fieldOptionResults = $this->FieldOption
-												->find()
-												->find('visible')
-												->find('order')
-												->where([
-													$this->FieldOption->aliasField($this->fieldKey) => $field->field_id
-												])
-												->all();
-
-											if (!$fieldOptionResults->isEmpty()) {
-												$fieldOptions = $fieldOptionResults->toArray();
-												foreach ($fieldOptions as $fieldOption) {
-													$itemNode = $checkboxNode->addChild("item", null, NS_XF);
-														$itemNode->addChild("label", htmlspecialchars($fieldOption->name, ENT_QUOTES), NS_XF);
-														$itemNode->addChild("value", $fieldOption->id, NS_XF);
-												}
-											}
-										break;
-									case 'TABLE':
-										$fieldType = false;
-										// To nested table inside xform group
-										$tableBreakNode = $sectionBreakNode->addChild("group", null, NS_XF);
-										$tableBreakNode->addAttribute("ref", $field->field_id);
-										$tableBreakNode->addAttribute("oe-type", "table");
-										$tableBreakNode->addChild("label", htmlspecialchars($fieldName, ENT_QUOTES), NS_XF);
-										// End
-
-										$tableNode = $tableBreakNode->addChild("table", null, NS_XHTML);
-										$tableNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]");
-											$tableHeader = $tableNode->addChild("tr", null, NS_XHTML);
-											$tableBody = $tableNode->addChild("tbody", null, NS_XHTML);
-												$xformRepeat = $tableBody->addChild("repeat", null, NS_XF);
-												$xformRepeat->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]"."/".$this->TableRow->alias());
-													$tbodyRow = $xformRepeat->addChild("tr", null, NS_XHTML);
-
-										$tableColumnResults = $this->TableColumn
-											->find()
-											->find('visible')
-											->find('order')
-											->where([
-												$this->TableColumn->aliasField($this->fieldKey) => $field->field_id
-											])
-											->all();
-
-										$tableRowResults = $this->TableRow
-											->find()
-											->find('visible')
-											->find('order')
-											->where([
-												$this->TableRow->aliasField($this->fieldKey) => $field->field_id
-											])
-											->all();
-
-										if (!$tableColumnResults->isEmpty() && !$tableRowResults->isEmpty()) {
-											$tableColumns = $tableColumnResults->toArray();
-											$tableRows = $tableRowResults->toArray();
-
-											foreach ($tableRows as $row => $tableRow) {
-												$rowNode = $fieldNode->addChild($this->TableRow->alias(), null, NS_OE);
-												$rowNode->addAttribute("id", $tableRow->id);
-
-												foreach ($tableColumns as $col => $tableColumn) {
-													if ($col == 0) {
-														$columnNode = $rowNode->addChild($this->TableColumn->alias() . $col, htmlspecialchars($tableRow->name, ENT_QUOTES), NS_OE);
-														$columnNode->addAttribute("id", $col);
-														$cellType = 'output';
-													} else {
-														$columnNode = $rowNode->addChild($this->TableColumn->alias() . $col, null, NS_OE);
-														$columnNode->addAttribute("id", $tableColumn->id);
-														$cellType = 'input';
-													}
-
-													if ($row == 0) {
-														$tableHeader->addChild("th", htmlspecialchars($tableColumn->name, ENT_QUOTES), NS_XHTML);
-														$tbodyColumn = $tbodyRow->addChild("td", null, NS_XHTML);
-															$tbodyCell = $tbodyColumn->addChild($cellType, null, NS_XF);
-																$tbodyCell->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]"."/".$this->TableColumn->alias().$col);
-
-														$bindNode = $modelNode->addChild("bind", null, NS_XF);
-														$bindNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]"."/".$this->TableColumn->alias().$col);
-														$bindNode->addAttribute("type", 'string');
-													}
-												}
-											}
-										}
-										break;
-								}
-
-							if ($fieldType) {
-								$bindNode = $modelNode->addChild("bind", null, NS_XF);
-								$bindNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]");
-								$bindNode->addAttribute("type", $fieldType);
-								if($fieldIsMandatory) {
-									$bindNode->addAttribute("required", 'true()');
-								} else {
-									$bindNode->addAttribute("required", 'false()');
-								}
-							}
-
-							$index++;
-						}
+			$fieldTypeFunction = '_'.strtolower($field->field_type).'Type';
+			if (method_exists($this, $fieldTypeFunction)) {
+				$this->$fieldTypeFunction($field, $sectionBreakNode, $modelNode, $instanceId, ($key + 1), $fieldNode);
+			}
+		}
 		return $xml;
 	}
+
+	private function _textType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode) {
+		$this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
+		$this->_setFieldBindNode($modelNode, $instanceId, 'string', $field->default_is_mandatory, '', $index);
+	}
+
+	private function _numberType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode) {
+		$this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
+		$this->_setFieldBindNode($modelNode, $instanceId, 'integer', $field->default_is_mandatory, '', $index);
+	}
+
+	private function _textareaType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode) {
+		$this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'textarea', $instanceId, $index);
+		$this->_setFieldBindNode($modelNode, $instanceId, 'string', $field->default_is_mandatory, '', $index);
+	}
+
+	private function _dropdownType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode) {
+		$dropdownNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'select1', $instanceId, $index);
+
+		$fieldOptionResults = $this->FieldOption
+			->find()
+			->find('visible')
+			->find('order')
+			->where([
+				$this->FieldOption->aliasField($this->fieldKey) => $field->field_id
+			])
+			->all();
+		if (!$fieldOptionResults->isEmpty()) {
+			$fieldOptions = $fieldOptionResults->toArray();
+			foreach ($fieldOptions as $fieldOption) {
+				$itemNode = $dropdownNode->addChild("item", null, NS_XF);
+					$itemNode->addChild("label", htmlspecialchars($fieldOption->name, ENT_QUOTES), NS_XF);
+					$itemNode->addChild("value", $fieldOption->id, NS_XF);
+			}
+		}
+
+		$this->_setFieldBindNode($modelNode, $instanceId, 'integer', $field->default_is_mandatory, '', $index);
+	}
+
+	private function _checkboxType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode) {
+		$checkboxNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'select', $instanceId, $index);
+
+		$fieldOptionResults = $this->FieldOption
+			->find()
+			->find('visible')
+			->find('order')
+			->where([
+				$this->FieldOption->aliasField($this->fieldKey) => $field->field_id
+			])
+			->all();
+
+		if (!$fieldOptionResults->isEmpty()) {
+			$fieldOptions = $fieldOptionResults->toArray();
+			foreach ($fieldOptions as $fieldOption) {
+				$itemNode = $checkboxNode->addChild("item", null, NS_XF);
+					$itemNode->addChild("label", htmlspecialchars($fieldOption->name, ENT_QUOTES), NS_XF);
+					$itemNode->addChild("value", $fieldOption->id, NS_XF);
+			}
+		}
+
+		$this->_setFieldBindNode($modelNode, $instanceId, 'integer', $field->default_is_mandatory, '', $index);
+	}
+
+	private function _tableType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode) {
+		// To nested table inside xform group
+		$tableBreakNode = $sectionBreakNode->addChild("group", null, NS_XF);
+		$tableBreakNode->addAttribute("ref", $field->field_id);
+		$tableBreakNode->addAttribute("oe-type", "table");
+		$tableBreakNode->addChild("label", htmlspecialchars($field->default_name, ENT_QUOTES), NS_XF);
+		// End
+		// 
+		$tableNode = $tableBreakNode->addChild("table", null, NS_XHTML);
+		$tableNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]");
+			$tableHeader = $tableNode->addChild("tr", null, NS_XHTML);
+			$tableBody = $tableNode->addChild("tbody", null, NS_XHTML);
+				$xformRepeat = $tableBody->addChild("repeat", null, NS_XF);
+				$xformRepeat->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]"."/".$this->TableRow->alias());
+					$tbodyRow = $xformRepeat->addChild("tr", null, NS_XHTML);
+
+		$tableColumnResults = $this->TableColumn
+			->find()
+			->find('visible')
+			->find('order')
+			->where([
+				$this->TableColumn->aliasField($this->fieldKey) => $field->field_id
+			])
+			->all();
+
+		$tableRowResults = $this->TableRow
+			->find()
+			->find('visible')
+			->find('order')
+			->where([
+				$this->TableRow->aliasField($this->fieldKey) => $field->field_id
+			])
+			->all();
+			
+		if (!$tableColumnResults->isEmpty() && !$tableRowResults->isEmpty()) {
+			$tableColumns = $tableColumnResults->toArray();
+			$tableRows = $tableRowResults->toArray();
+			foreach ($tableRows as $row => $tableRow) {
+				$rowNode = $fieldNode->addChild($this->TableRow->alias(), null, NS_OE);
+				$rowNode->addAttribute("id", $tableRow->id);
+
+				foreach ($tableColumns as $col => $tableColumn) {
+					if ($col == 0) {
+						$columnNode = $rowNode->addChild($this->TableColumn->alias() . $col, htmlspecialchars($tableRow->name, ENT_QUOTES), NS_OE);
+						$columnNode->addAttribute("id", $col);
+						$cellType = 'output';
+					} else {
+						$columnNode = $rowNode->addChild($this->TableColumn->alias() . $col, null, NS_OE);
+						$columnNode->addAttribute("id", $tableColumn->id);
+						$cellType = 'input';
+					}
+
+					if ($row == 0) {
+						$tableHeader->addChild("th", htmlspecialchars($tableColumn->name, ENT_QUOTES), NS_XHTML);
+						$tbodyColumn = $tbodyRow->addChild("td", null, NS_XHTML);
+							$tbodyCell = $tbodyColumn->addChild($cellType, null, NS_XF);
+								$tbodyCell->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]"."/".$this->TableColumn->alias().$col);
+
+						$bindNode = $modelNode->addChild("bind", null, NS_XF);
+						$bindNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]"."/".$this->TableColumn->alias().$col);
+						$bindNode->addAttribute("type", 'string');
+					}
+				}
+			}
+		}
+	}
+
+	private function _setCommonAttribute($sectionBreakNode, $fieldName, $fieldType, $instanceId, $index) {
+		$fieldNode = $sectionBreakNode->addChild($fieldType, null, NS_XF);
+		$fieldNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]");
+		$fieldNode->addChild("label", htmlspecialchars($fieldName, ENT_QUOTES), NS_XF);
+		return $fieldNode;
+	}
+
+	private function _setFieldBindNode($modelNode, $instanceId, $bindType, $fieldIsMandatory=false, $ref='', $index='0') {
+		if (empty($ref)) {
+			$ref = "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]";
+		}
+		$bindNode = $modelNode->addChild("bind", null, NS_XF);
+		$bindNode->addAttribute("ref", $ref);
+		$bindNode->addAttribute("type", $bindType);
+		if($fieldIsMandatory) {
+			$bindNode->addAttribute("required", 'true()');
+		} else {
+			$bindNode->addAttribute("required", 'false()');
+		}
+	}
+
 }
