@@ -18,7 +18,7 @@ class InstitutionStaffTable extends AppTable  {
 		$this->belongsTo('Positions',		['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
 		$this->belongsTo('Institutions',	['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('StaffTypes',		['className' => 'FieldOption.StaffTypes']);
-		$this->belongsTo('StaffStatuses',	['className' => 'FieldOption.StaffStatuses']);
+		$this->belongsTo('StaffStatuses',	['className' => 'Staff.StaffStatuses']);
 		$this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
 
 		$this->addBehavior('Report.ReportList');
