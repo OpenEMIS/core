@@ -14,7 +14,6 @@ use Cake\Network\Session;
 use Student\Model\Table\StudentsTable as UserTable;
 
 class StudentUserTable extends UserTable {
-
 	public function initialize(array $config) {
 		parent::initialize($config);
 	}
@@ -50,10 +49,8 @@ class StudentUserTable extends UserTable {
 		if ($this->Session->check($sessionKey)) {
 			$academicData = $this->Session->read($sessionKey);
 			$academicData['student_id'] = $entity->id;
-			// $class = $academicData['class'];
-			// unset($academicData['class']);
 			$StudentStatusesTable = TableRegistry::get('Student.StudentStatuses');
-			$pendingAdmissionCode = $StudentStatusesTable->getIdByCode('PENDING_ADMISSION');
+			$pendingAdmissionCode = $StudentStatusesTable->PENDING_ADMISSION;
 			if ($academicData['student_status_id'] != $pendingAdmissionCode) {
 				$Student = TableRegistry::get('Institution.Students');
 				if (empty($academicData['student_name'])) {
