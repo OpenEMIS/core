@@ -17,7 +17,11 @@ class StudentStatusesTable extends AppTable {
 		$entity = $this->find()
 		->where([$this->aliasField('code') => $code])
 		->first();
-
-		return $entity->id;
+		
+		if ($entity) {
+			return $entity->id;
+		} else {
+			return '';
+		}
 	}
 }

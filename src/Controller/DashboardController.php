@@ -24,7 +24,8 @@ class DashboardController extends AppController {
 			'models' => [
 				'Institution.TransferApprovals',
 				'Institution.StudentAdmission',
-				'Institution.StudentDropout'
+				'Institution.StudentDropout',
+				'Institution.InstitutionSurveys'
 			]
 		]);
     }

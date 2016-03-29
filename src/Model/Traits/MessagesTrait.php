@@ -6,6 +6,9 @@ use Cake\Log\Log;
 
 trait MessagesTrait {
 	public $messages = [
+		'Areas' => [
+			'noAccessToAreas' => 'You do not have access to any areas',
+		],
 		'Attachments' => [
 			'date_on_file' => 'Date On File',
 		],
@@ -35,7 +38,7 @@ trait MessagesTrait {
 			'noData' => 'There are no records.',
 			'noRecords' => 'No Record',
 			'select' => [
-				'noOptions' => 'No configured options'
+				'noOptions' => 'No options'
 			],
 			'error' => 'An unexpected error has been encounted. Please contact the administrator for assistance.',
 			'add' => [
@@ -590,7 +593,9 @@ trait MessagesTrait {
 			'Students' => [
 				'student_name' => [
 					'ruleInstitutionStudentId' => 'Student has already been added.',
-					'ruleCheckAdmissionAgeWithEducationCycleGrade' => 'This student does not fall within the allowed age range for this grade.',
+					'ruleCheckAdmissionAgeWithEducationCycleGrade' => 'This student does not fall within the allowed age range for this grade',
+					'ageHint' => 'The student should be %s years old',
+					'ageRangeHint' => 'The student should be between %s to %s years old',
 					'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.'
 				],
 				'class' => [
@@ -610,6 +615,11 @@ trait MessagesTrait {
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
 				],
+			],
+			'InstitutionInfrastructures' => [
+				'code' => [
+					'ruleUnique' => 'Please enter a unique code'
+				]
 			]
 		],
 		'User' => [

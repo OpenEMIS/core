@@ -2,6 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+use stdClass;
 
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -178,7 +179,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 			'visible' => ['view'=>true]
 		]);
 
-		$this->field('staff_id', ['type' => 'select', 'options' => [], 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
+		$this->field('staff_id', ['type' => 'select', 'options' => [], 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true], 'attr' => ['label' => $this->getMessage($this->aliasField('staff_id'))]]);
 
 		$this->setFieldOrder([
 			'name', 'staff_id', 'male_students', 'female_students', 'subjects',
@@ -199,12 +200,12 @@ class InstitutionClassesTable extends ControllerActionTable {
 				$staffOptions = $this->getStaffOptions($action, $selectedAcademicPeriodId, $institutionId);
 			}
 			$this->fields['staff_id']['options'] = $staffOptions;
+			$this->fields['staff_id']['select'] = false;
 		}
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
 		if ($entity->isNew()) {
-			// $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
 			$this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
 		}
 	}
@@ -860,23 +861,26 @@ class InstitutionClassesTable extends ControllerActionTable {
 				$InstitutionStudentsTable->aliasField('institution_id') => $entity->institution_id
 			])
 			->first();
-
-		$data = [
-			'id' => $this->getExistingRecordId($id, $entity),
-			'student_id' => $id,
-			'institution_class_id' => $entity->id,
-			'education_grade_id'=>  $userData->education_grade_id,
-			'student_status_id' => $userData->student_status_id,
-			'education_grade' => [],
-			'student_status' => [],
-			'user' => []
-		];
-		$student = $this->ClassStudents->newEntity();
-		$student = $this->ClassStudents->patchEntity($student, $data);
-		$student->user = $userData->user;
-		$student->student_status = $userData->student_status;
-		$student->education_grade = $userData->education_grade;
-		return $student;
+		if ($userData) {
+			$data = [
+				'id' => $this->getExistingRecordId($id, $entity),
+				'student_id' => $id,
+				'institution_class_id' => $entity->id,
+				'education_grade_id'=>  $userData->education_grade_id,
+				'student_status_id' => $userData->student_status_id,
+				'education_grade' => [],
+				'student_status' => [],
+				'user' => []
+			];
+			$student = $this->ClassStudents->newEntity();
+			$student = $this->ClassStudents->patchEntity($student, $data);
+			$student->user = $userData->user;
+			$student->student_status = $userData->student_status;
+			$student->education_grade = $userData->education_grade;
+			return $student;
+		} else {
+			return null;
+		}
 	}
 
 	public function getExistingRecordId($securityId, $entity) {
@@ -930,5 +934,4 @@ class InstitutionClassesTable extends ControllerActionTable {
 		return $multiGradeData->toArray();
 	}
 
-	
 }
