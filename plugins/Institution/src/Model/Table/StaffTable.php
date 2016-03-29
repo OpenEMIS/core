@@ -159,11 +159,21 @@ class StaffTable extends AppTable {
 		// Positions
 		$session = $request->session();
 		$institutionId = $session->read('Institution.Institutions.id');
-		$positionData = $this->Positions
-		->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-		->contain(['StaffPositionTitles'])
-		->where([$this->Positions->aliasField('institution_id') => $institutionId])
-		->toArray();
+
+		$StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+		$positionData = $StaffPositionTitles->find('list', 
+				[
+					'keyField' => $StaffPositionTitles->primaryKey(),
+					'valueField' => 'name'
+				]
+			)
+			->matching('Titles', function ($q) use ($institutionId) {
+				return $q->where(['Titles.institution_id' => $institutionId]);
+			})
+			->group([$StaffPositionTitles->aliasField($StaffPositionTitles->primaryKey())])
+			->order([$StaffPositionTitles->aliasField('order')])
+			->toArray()
+			;
 
 		$positionOptions = [0 => __('All Positions')] + $positionData;
 
@@ -189,7 +199,9 @@ class StaffTable extends AppTable {
 
 		$query->find('academicPeriod', ['academic_period_id' => $selectedPeriod]);
 		if ($selectedPosition != 0) {
-			$query->where([$this->aliasField('institution_position_id') => $selectedPosition]);
+			$query->matching('Positions', function ($q) use ($selectedPosition) {
+				return $q->where(['Positions.staff_position_title_id' => $selectedPosition]);
+			});
 		}
 		
 		$search = $this->ControllerAction->getSearchKey();
@@ -197,6 +209,14 @@ class StaffTable extends AppTable {
 			// function from AdvancedNameSearchBehavior
 			$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
 		}
+
+		// start: sort by name
+		$sortList = ['Users.first_name'];
+		if (array_key_exists('sortWhitelist', $options)) {
+			$sortList = array_merge($options['sortWhitelist'], $sortList);
+		}
+		$options['sortWhitelist'] = $sortList;
+		// end: sort by name
 
 		$this->controller->set(compact('periodOptions', 'positionOptions'));
 	}
@@ -607,6 +627,8 @@ class StaffTable extends AppTable {
 		$this->ControllerAction->field('staff_status_id', ['type' => 'select']);
 		$this->ControllerAction->field('staff_id');
 		$this->ControllerAction->field('security_group_user_id', ['visible' => false]);
+
+		$this->fields['staff_id']['sort'] = ['field' => 'Users.first_name'];
 		
 		if ($this->action == 'index') {
 			$InstitutionArray = [];
