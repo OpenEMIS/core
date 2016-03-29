@@ -4,6 +4,8 @@ v3.4.18
 - Fixed a bug where workflow actions not appearing for the configured workflow roles
 - Fixed a bug that caused Nationality and Identity not saved properly when creating a new Student record
 - In Institutions -> Staff list, the position filter now displays the position titles instead of all positions in the institution
+- Fixed a bug that caused 404 error page when adding an Absence record for Staff in an Institution
+- The system will generate codes automatically when adding new infrastructure
 
 v3.4.17.2
 - Compilation of Translation files is now done automatically by the system whenever translations are added or modified
