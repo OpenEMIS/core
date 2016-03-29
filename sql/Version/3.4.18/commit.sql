@@ -293,5 +293,16 @@ INSERT INTO `security_roles` (`name`, `code`, `order`, `visible`, `security_grou
 UPDATE security_roles SET code = 'HOMEROOM_TEACHER' WHERE name = 'Homeroom Teacher';
 
 
+-- POCOR-2749
+-- db_patches
+INSERT INTO `db_patches` VALUES ('POCOR-2749', NOW());
+
+INSERT INTO `translations` (`id`, `code`, `en`, `ar`, `zh`, `es`, `fr`, `ru`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT NULL, NULL, 'Absence - Excused', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, now() FROM dual WHERE NOT EXISTS (SELECT * FROM translations WHERE en = 'Absence - Excused');
+
+INSERT INTO `translations` (`id`, `code`, `en`, `ar`, `zh`, `es`, `fr`, `ru`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT NULL, NULL, 'Absence - Unexcused', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, now() FROM dual WHERE NOT EXISTS (SELECT * FROM translations WHERE en = 'Absence - Unexcused');
+
+INSERT INTO `translations` (`id`, `code`, `en`, `ar`, `zh`, `es`, `fr`, `ru`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT NULL, NULL, 'Late', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, now() FROM dual WHERE NOT EXISTS (SELECT * FROM translations WHERE en = 'Late');
+
+
 -- 3.4.18
 UPDATE config_items SET value = '3.4.18' WHERE code = 'db_version';

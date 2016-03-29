@@ -118,5 +118,10 @@ ALTER TABLE `security_roles` DROP `code`;
 DELETE FROM `db_patches` WHERE `issue`='POCOR-2675';
 
 
+-- POCOR-2749
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2749';
+
+
 -- 3.4.17
 UPDATE config_items SET value = '3.4.17' WHERE code = 'db_version';
