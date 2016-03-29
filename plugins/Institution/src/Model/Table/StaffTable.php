@@ -83,6 +83,7 @@ class StaffTable extends AppTable {
 				'staff_type_id',
 				'staff_status_id',
 				'institution_position_id',
+				'security_group_user_id'
 			]
 		]);
 		$this->addBehavior('User.AdvancedIdentitySearch', [
@@ -463,6 +464,20 @@ class StaffTable extends AppTable {
 			$positionTable = TableRegistry::get('Institution.InstitutionPositions');
 			$userId = $this->Auth->user('id');
 			$institutionId = $this->Session->read('Institution.Institutions.id');
+
+			// // excluding positions where 'InstitutionStaff.end_date is NULL'
+			$excludePositions = $this->Positions->find('list');
+			$excludePositions->matching('InstitutionStaff', function ($q) {
+					return $q->where(['InstitutionStaff.end_date is NULL', 'InstitutionStaff.FTE' => 1]);
+				});
+			$excludePositions->where([$this->Positions->aliasField('institution_id') => $institutionId])
+				->toArray()
+				;
+			$excludeArray = [];
+			foreach ($excludePositions as $key => $value) {
+				$excludeArray[] = $value;
+			}
+
 			if ($this->AccessControl->isAdmin()) {
 				$userId = null;
 				$roles = [];
@@ -472,13 +487,16 @@ class StaffTable extends AppTable {
 			
 			// Filter by active status
 			$activeStatusId = $this->Workflow->getStepsByModelCode($positionTable->registryAlias(), 'ACTIVE');
+			$positionConditions = [];
+			$positionConditions[$this->Positions->aliasField('institution_id')] = $institutionId;
+			$positionConditions[$this->Positions->aliasField('status_id').' IN '] = $activeStatusId;
+			if (!empty($excludeArray)) {
+				$positionConditions[$this->Positions->aliasField('id').' NOT IN '] = $excludeArray;
+			}
 			$staffPositionsOptions = $this->Positions
 					->find()
 					->innerJoinWith('StaffPositionTitles.SecurityRoles')
-					->where([
-						$this->Positions->aliasField('institution_id') => $institutionId, 
-						$this->Positions->aliasField('status_id').' IN ' => $activeStatusId
-					])
+					->where($positionConditions)
 					->select(['security_role_id' => 'SecurityRoles.id', 'type' => 'StaffPositionTitles.type'])
 					->order(['StaffPositionTitles.type' => 'DESC', 'StaffPositionTitles.order'])
 					->autoFields(true)

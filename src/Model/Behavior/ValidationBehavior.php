@@ -103,30 +103,42 @@ class ValidationBehavior extends Behavior {
         if ($session->read('Auth.User.super_admin') == 1) {
         	$isValid = true;
         } else {
+        	$data = $globalData['data'];
+        	$isSystemGroup = false;
+        	if (!$globalData['newRecord']) { // only applicable for edit mode
+        		if (array_key_exists('isSystemGroup', $data) && $data['isSystemGroup'] == true) {
+	        		$isSystemGroup = true;
+	        	}
+        	}
+
         	$condition = [];
         	$areaCondition = [];
 
-			$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
-        	$Areas = TableRegistry::get('Area.Areas');
-        	// get areas from security group areas
-        	$areasByUser = $SecurityGroupAreas->getAreasByUser($session->read('Auth.User.id'));
+        	if (!$isSystemGroup) {
+        		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+	        	$Areas = TableRegistry::get('Area.Areas');
+	        	// get areas from security group areas
+	        	$areasByUser = $SecurityGroupAreas->getAreasByUser($session->read('Auth.User.id'));
 
-        	if (count($areasByUser) > 0) {
-				foreach($areasByUser as $area) {
-	        		$areaCondition[] = [
-						$Areas->aliasField('lft').' >= ' => $area['lft'],
-						$Areas->aliasField('rght').' <= ' => $area['rght']
-					];
-	        	}
-	        	$condition['OR'] = $areaCondition;
+	        	if (count($areasByUser) > 0) {
+					foreach($areasByUser as $area) {
+		        		$areaCondition[] = [
+							$Areas->aliasField('lft').' >= ' => $area['lft'],
+							$Areas->aliasField('rght').' <= ' => $area['rght']
+						];
+		        	}
+		        	$condition['OR'] = $areaCondition;
 
-				$isChild = $Areas->find()
-		        	->where([$Areas->aliasField('id') => $check])
-		        	->where($condition)
-		        	->count();
+					$isChild = $Areas->find()
+			        	->where([$Areas->aliasField('id') => $check])
+			        	->where($condition)
+			        	->count();
 
-		        $isValid = $isChild > 0;
-			}
+			        $isValid = $isChild > 0;
+				}
+        	} else {
+        		$isValid = true;
+        	}
         }
         return $isValid;
     }
