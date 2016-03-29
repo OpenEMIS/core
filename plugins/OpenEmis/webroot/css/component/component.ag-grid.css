@@ -242,6 +242,11 @@
     position: relative;
 }
 
+.ag-height-fixed {
+    height: 600px;
+    min-height: 200px;
+}
+
 
 /* AG-CHECKBOX FILTER */
 

@@ -7,21 +7,14 @@ angular.module('institution.result.controller', ['institution.result.service'])
             $scope.subjects = _subjects;
 
             ResultService.getColumnDefs($scope).then(function successCallback(_columnDef) {
-                $scope.gridOptions = {
-                    columnDefs: _columnDef,
-                    rowData: [],
-                    headerHeight: 38,
-                    rowHeight: 38,
-                    onReady: function() {
-                        $scope.gridOptions.api.sizeColumnsToFit();
-
-                        if (_subjects.length > 0) {
-                            $scope.reloadData(_subjects[0]);
-                        }
-                    }
-                };
+                ResultService.initGrid($scope, _columnDef, _subjects);
             });
         });
+    });
+
+    $scope.$watch('$parent.editMode', function(newValue, oldValue) {
+        $scope.editMode = newValue;
+        // To-do: switch to edit mode
     });
 
     $scope.reloadData = function(_subject) {
