@@ -32,7 +32,7 @@ class StaffAttendancesTable extends AppTable {
 		parent::initialize($config);
 
 		$this->belongsTo('StaffTypes', ['className' => 'FieldOption.StaffTypes']);
-		$this->belongsTo('StaffStatuses', ['className' => 'FieldOption.StaffStatuses']);
+		$this->belongsTo('StaffStatuses', ['className' => 'Staff.StaffStatuses']);
 		$this->belongsTo('InstitutionPositions', ['className' => 'Institution.InstitutionPositions']);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'staff_id']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');

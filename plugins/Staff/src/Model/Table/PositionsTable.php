@@ -13,7 +13,7 @@ class PositionsTable extends AppTable {
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('StaffTypes', ['className' => 'FieldOption.StaffTypes']);
-		$this->belongsTo('StaffStatuses', ['className' => 'FieldOption.StaffStatuses']);
+		$this->belongsTo('StaffStatuses', ['className' => 'Staff.StaffStatuses']);
 		$this->belongsTo('InstitutionPositions', ['className' => 'Institution.InstitutionPositions']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
