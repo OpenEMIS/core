@@ -154,6 +154,7 @@ class InstitutionSurveysTable extends AppTable {
 
     // Workbench.Model.onGetList
 	public function onGetWorkbenchList(Event $event, $AccessControl, ArrayObject $data) {
+		if ($AccessControl->isAdmin()) { return; }
 		$userId = $event->subject()->Auth->user('id');
 		$institutionIds = $AccessControl->getInstitutionsByUser();
 
