@@ -22,6 +22,7 @@ class StudentSurveysTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
+		$this->belongsTo('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'foreignKey' => 'parent_form_id']);
 		$this->addBehavior('Survey.Survey', [
 			'module' => 'Student.StudentSurveys'
 		]);
@@ -117,6 +118,7 @@ class StudentSurveysTable extends AppTable {
 		$this->ControllerAction->field('student_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('survey_form_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('parent_form_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('status_id', ['type' => 'hidden']);
 
 		$this->surveyInstitutionId = $institutionId;

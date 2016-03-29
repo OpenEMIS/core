@@ -397,20 +397,20 @@ class InstitutionRubricsTable extends AppTable {
 						->group([
 							$Classes->aliasField('id')
 						])
-						->contain(['InstitutionClassGrades', 'InstitutionSubjects.InstitutionSubjectStaff'])
+						->contain(['ClassGrades', 'InstitutionSubjects.SubjectStaff'])
 						->all();
 
 					if (!$classResults->isEmpty()) {
 						foreach ($classResults as $class) {
 							$classId = $class->id;
 							$gradeId = 0;
-							foreach ($class->institution_class_grades as $grade) {
+							foreach ($class->class_grades as $grade) {
 								$gradeId = $grade->education_grade_id;
 							}
 
 							foreach ($class->institution_subjects as $subject) {
 								$subjectId = $subject->id;
-								foreach ($subject->institution_subject_staff as $staff) {
+								foreach ($subject->subject_staff as $staff) {
 									$staffId = $staff->staff_id;
 
 									$results = $this

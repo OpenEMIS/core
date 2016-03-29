@@ -363,6 +363,7 @@ class RenderStudentListBehavior extends RenderBehavior {
             $status = $entity->status_id;
             $institutionId = $entity->institution_id;
             $periodId = $entity->academic_period_id;
+            $parentFormId = $entity->{$formKey};
 
             foreach ($entity->institution_student_surveys as $fieldId => $fieldObj) {
                 $formId = $fieldObj[$formKey];
@@ -395,7 +396,8 @@ class RenderStudentListBehavior extends RenderBehavior {
                             'institution_id' => $institutionId,
                             'academic_period_id' => $periodId,
                             $formKey => $formId,
-                            'student_id' => $studentId,
+                            'parent_form_id' => $parentFormId,
+                            'student_id' => $studentId
                         ];
                         // for edit record
                         if (array_key_exists('id', $studentObj)) {
@@ -433,5 +435,17 @@ class RenderStudentListBehavior extends RenderBehavior {
                 }
             }
         }
+    }
+
+    public function updateWorkflowStatus(Event $event, $entity, $statusId) {
+        $StudentSurveys = TableRegistry::get('Student.StudentSurveys');
+        $StudentSurveys->updateAll(
+            ['status_id' => $statusId],
+            [
+                'institution_id' => $entity->institution_id,
+                'academic_period_id' => $entity->academic_period_id,
+                'parent_form_id' => $entity->survey_form_id
+            ]
+        );
     }
 }
