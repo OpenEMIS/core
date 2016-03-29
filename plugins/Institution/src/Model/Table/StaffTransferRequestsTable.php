@@ -195,6 +195,22 @@ class StaffTransferRequestsTable extends ControllerActionTable {
 		return $value;
 	}
 
+	public function onGetStaffId(Event $event, Entity $entity) {
+		$urlParams = $this->url('index');
+		$action = $urlParams['action'];
+		if ($entity->status == self::NEW_REQUEST) {
+			if ($this->AccessControl->check(['Institutions', 'StaffTransferRequests', 'edit'])) {
+				return $event->subject()->Html->link($entity->user->name, [
+					'plugin' => $urlParams['plugin'],
+					'controller' => $urlParams['controller'],
+					'action' => $action,
+					'0' => 'view',
+					'1' => $entity->id
+				]);
+			}
+		}
+	}
+
 	private function initialiseVariable($entity, $institutionStaffData) {
 		$institutionStaff = $institutionStaffData;
 		if (is_null($institutionStaff)) {
