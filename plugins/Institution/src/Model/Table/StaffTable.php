@@ -416,9 +416,7 @@ class StaffTable extends AppTable {
 			} else {
 				if (empty($entity->end_date) || $entity->end_date->isToday() || $entity->end_date->isFuture()) {
 					$this->addStaffRole($entity);
-					if (!$entity->start_date->isFuture()) {
-						$this->updateStaffStatus($entity, $this->assigned);
-					}
+					$this->updateStaffStatus($entity, $this->assigned);
 				} else {
 					$this->removeStaffRole($entity);
 					$this->updateStaffStatus($entity, $this->endOfAssignment);
@@ -426,9 +424,7 @@ class StaffTable extends AppTable {
 			}
 		} else { // add operation
 			$this->addStaffRole($entity);
-			if (!$entity->start_date->isFuture()) {
-				$this->updateStaffStatus($entity, $this->assigned);
-			}
+			$this->updateStaffStatus($entity, $this->assigned);
 		}
 	}
 

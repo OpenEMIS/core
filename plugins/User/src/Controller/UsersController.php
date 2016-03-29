@@ -88,7 +88,6 @@ class UsersController extends AppController {
 		$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
 		$InstitutionStaffTable->removeIndividualStaffSecurityRole($user['id']);
 		$this->startInactiveRoleRemoval();
-		$this->startAddActiveStaff();
 		$this->shellErrorRecovery();
 	}
 
@@ -102,19 +101,6 @@ class UsersController extends AppController {
 			Log::write('debug', $shellCmd);
 		} catch(\Exception $ex) {
 			Log::write('error', __METHOD__ . ' exception when removing inactive roles : '. $ex);
-		}
-	}
-
-	private function startAddActiveStaff() {
-		$cmd = ROOT . DS . 'bin' . DS . 'cake UpdateStaffStatus';
-		$logs = ROOT . DS . 'logs' . DS . 'UpdateStaffStatus.log & echo $!';
-		$shellCmd = $cmd . ' >> ' . $logs;
-
-		try {
-			$pid = exec($shellCmd);
-			Log::write('debug', $shellCmd);
-		} catch(\Exception $ex) {
-			Log::write('error', __METHOD__ . ' exception when updating staff status for active staff : '. $ex);
 		}
 	}
 
