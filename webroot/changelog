@@ -8,6 +8,7 @@ v3.4.18
 - The system will generate codes automatically when adding new infrastructure
 - Fixed translations on Attendance
 - Name column in Institution -> Staff list can now be sorted
+- Added Class as mandatory field in Transfer Approval page
 
 v3.4.17.2
 - Compilation of Translation files is now done automatically by the system whenever translations are added or modified
