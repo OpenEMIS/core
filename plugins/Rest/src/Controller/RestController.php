@@ -67,6 +67,8 @@ class RestController extends AppController
 				$this->_attachFinders($target, $requestQueries, $query);
 			}
 
+			$this->_setupContainments($target, $requestQueries, $query);
+
 			$limit = 10;
 			if (array_key_exists('_limit', $requestQueries)) {
 				$limit = $requestQueries['_limit'];
@@ -79,16 +81,16 @@ class RestController extends AppController
 
 			$conditions = [];
 			if (!empty($requestQueries)) {
-				$conditions = $this->_buildConditions($target, $requestQueries);
+				$conditions = $this->_setupConditions($target, $requestQueries);
 			}
 			$fields = [];
 			if (!empty($requestQueries)) {
 				$fields = $this->_filterSelectFields($target, $requestQueries);
 			}
 			if (is_bool($conditions) && !$conditions) {
-				$this->_setError('Extra query parameters declared do not exists in '.$target->registryAlias());
+				$this->_outputError('Extra query parameters declared do not exists in '.$target->registryAlias());
 			} else if (is_bool($fields) && !$fields) {
-				$this->_setError('One or more selected fields do not exists in '.$target->registryAlias());
+				$this->_outputError('One or more selected fields do not exists in '.$target->registryAlias());
 			} else {
 				if (!empty($conditions)) {
 					$query->where($conditions);
@@ -97,15 +99,21 @@ class RestController extends AppController
 					$query->select($fields);
 				}
 				if ($listOnly) {
-					$data = $query->toArray();
+					try {
+						$data = $query->toArray();
+						$this->_outputData($data);
+					} catch (Exception $e) {
+						$this->_outputError($e->getMessage());
+					}
 				} else {
-					$data = $query->all();
-					$data = $this->_formatBinaryValue($data);
+					try {
+						$data = $query->all();
+						$data = $this->_formatBinaryValue($data);
+						$this->_outputData($data);
+					} catch (Exception $e) {
+						$this->_outputError($e->getMessage());
+					}
 				}
-				$this->set([
-		            'data' => $data,
-		            '_serialize' => ['data']
-		        ]);
 			}
 	    }
 	}
@@ -126,19 +134,40 @@ class RestController extends AppController
 	public function view($model, $id) {
 		$target = $this->_instantiateModel($model);
 		if ($target) {
-			$data = $target->get($id);
-			$data = $this->_formatBinaryValue($data);
-			$this->set([
-	            'data' => $data,
-	            '_serialize' => ['data']
-	        ]);
+			if ($target->exists([$target->aliasField($target->primaryKey()) => $id])) {
+				$requestQueries = $this->request->query;
+	
+				$query = $target->find();
+				$this->_setupContainments($target, $requestQueries, $query);
+
+				$fields = [];
+				if (!empty($requestQueries)) {
+					$fields = $this->_filterSelectFields($target, $requestQueries);
+				}
+				if (is_bool($fields) && !$fields) {
+					$this->_outputError('One or more selected fields do not exists in '.$target->registryAlias());
+				} else {
+					if (!empty($fields)) {
+						$query->select($fields);
+					}
+					try {
+						$data = $query->where([$target->aliasField($target->primaryKey()) => $id]);
+						$data = $this->_formatBinaryValue($data);
+						$this->_outputData($data);
+					} catch (Exception $e) {
+						$this->_outputError($e->getMessage());
+					}
+			    }
+		    } else {
+		    	$this->_outputError('Record does not exists');
+		    }
 	    }
 	}
 
 	public function edit($model, $id) {
 		$target = $this->_instantiateModel($model);
 		if ($target) {
-			if ($target->exists([$target->primaryKey() => $id])) {
+			if ($target->exists([$target->aliasField($target->primaryKey()) => $id])) {
 				$entity = $target->get($id);
 	            $entity = $target->patchEntity($entity, $this->request->data);
 		        if (empty($entity->errors())) {
@@ -149,10 +178,10 @@ class RestController extends AppController
 			            '_serialize' => ['data', 'error']
 			        ]);
 			    } else {
-			    	$this->_setError($entity->errors());
+			    	$this->_outputError($entity->errors());
 			    }
 		    } else {
-		    	$this->_setError('Record does not exists');
+		    	$this->_outputError('Record does not exists');
 		    }
 	    }
 	}
@@ -160,7 +189,7 @@ class RestController extends AppController
 	public function delete($model, $id) {
 		$target = $this->_instantiateModel($model);
 		if ($target) {
-			if ($target->exists([$target->primaryKey() => $id])) {
+			if ($target->exists([$target->aliasField($target->primaryKey()) => $id])) {
 				$entity = $target->get($id);
 		        $message = 'Deleted';
 		        if (!$target->delete($entity)) {
@@ -171,7 +200,7 @@ class RestController extends AppController
 		            '_serialize' => ['result']
 		        ]);
 		    } else {
-		    	$this->_setError('Record does not exists');
+		    	$this->_outputError('Record does not exists');
 		    }
 	    }
 	}
@@ -189,17 +218,24 @@ class RestController extends AppController
 			$data = $target->find('all')->limit('1');
 			return $target;
 		} catch (Exception $e) {
-			$this->_setError();
+			$this->_outputError();
 			return false;
 		}
 	}
 
-	private function _setError($message = 'Requested Plugin.Model does not exists') {
+	private function _outputError($message = 'Requested Plugin-Model does not exists') {
 		$model = str_replace('-', '.', $this->request->params['model']);
 		$this->set([
             'model' => $model,
             'error' => $message,
             '_serialize' => ['request_method', 'action', 'model', 'error']
+        ]);
+	}
+
+	private function _outputData($data) {
+		$this->set([
+            'data' => $data,
+            '_serialize' => ['data']
         ]);
 	}
 
@@ -312,8 +348,8 @@ class RestController extends AppController
 		return $parameters;
 	}
 	
-	private $_specialParams = ['_finder', '_limit', '_page', '_fields'];
-	private function _buildConditions(Table $target, array $requestQueries) {
+	private $_specialParams = ['_finder', '_limit', '_page', '_fields', '_contain'];
+	private function _setupConditions(Table $target, array $requestQueries) {
 		$targetColumns = $target->schema()->columns();
 		$conditions = [];
 		foreach ($requestQueries as $requestQueryKey => $requestQuery) {
@@ -326,6 +362,29 @@ class RestController extends AppController
 			$conditions[$target->aliasField($requestQueryKey)] = $requestQuery;
 		}
 		return $conditions;
+	}
+
+	private function _setupContainments(Table $target, array $requestQueries, Query $query) {
+		if (array_key_exists('_contain', $requestQueries)) {
+			$contains = array_map('trim', explode(',', $requestQueries['_contain']));
+			if (!empty($contains)) {
+				$trueExists = false;
+				foreach ($contains as $key => $contain) {
+					if ($contain=='true') {
+						$trueExists = true;
+						break;
+					}
+				}
+				if ($trueExists) {
+					$contains = [];
+					foreach ($target->associations() as $assoc) {
+						$contains[] = $assoc->name();
+					}
+				}
+				$query->contain($contains);
+			}
+		}
+		return $query;
 	}
 
 	private function _filterSelectFields(Table $target, array $requestQueries) {
