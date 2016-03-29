@@ -352,7 +352,7 @@ class StaffAbsencesTable extends AppTable {
 		}
 		if ($action == 'edit' || $action == 'add') {
 			$selectedAbsenceType = $request->data[$this->alias()]['absence_type_id'];
-			if ($this->absenceCodeList[$selectedAbsenceType] == 'LATE') {
+			if (array_key_exists($selectedAbsenceType, $this->absenceCodeList) && $this->absenceCodeList[$selectedAbsenceType] == 'LATE') {
 				$attr['type'] = 'hidden';
 			}
 		}
@@ -424,7 +424,7 @@ class StaffAbsencesTable extends AppTable {
 
 		if ($action == 'edit' || $action == 'add') {
 			$selectedAbsenceType = $request->data[$this->alias()]['absence_type_id'];
-			if ($this->absenceCodeList[$selectedAbsenceType] == 'LATE') {
+			if (array_key_exists($selectedAbsenceType, $this->absenceCodeList) && $this->absenceCodeList[$selectedAbsenceType] == 'LATE') {
 				$attr['type'] = 'hidden';
 				$attr['attr']['value'] = 0;
 				$this->fields['start_time']['visible'] = true;
