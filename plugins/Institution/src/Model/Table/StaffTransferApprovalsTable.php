@@ -98,7 +98,12 @@ class StaffTransferApprovalsTable extends ControllerActionTable {
 		$this->field('FTE', ['type' => 'readonly', 'options' => $fteOptions, 'value' => $entity->FTE]);
 		$startDate = Time::parse($entity->start_date);
 		$this->field('start_date', ['type' => 'readonly', 'value' => $startDate->format('Y-m-d')]);
-		$this->field('comment');
+		if ($entity->status == self::NEW_REQUEST) {
+			$this->field('comment');
+		} else {
+			$this->field('comment', ['attr' => [ 'disabled' => 'true']]);
+		}
+		
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity, $extra) {
@@ -111,6 +116,22 @@ class StaffTransferApprovalsTable extends ControllerActionTable {
 					unset($toolbarButtons['edit']);
 				}
 				break;
+		}
+	}
+
+	public function onGetStaffId(Event $event, Entity $entity) {
+		$urlParams = $this->url('index');
+		$action = $urlParams['action'];
+		if ($entity->status != self::NEW_REQUEST) {
+			if ($this->AccessControl->check(['Institutions', 'StaffTransferApprovals', 'edit'])) {
+				return $event->subject()->Html->link($entity->user->name, [
+					'plugin' => $urlParams['plugin'],
+					'controller' => $urlParams['controller'],
+					'action' => $action,
+					'0' => 'view',
+					'1' => $entity->id
+				]);
+			}
 		}
 	}
 
