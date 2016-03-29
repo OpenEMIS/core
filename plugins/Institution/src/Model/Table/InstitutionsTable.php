@@ -583,6 +583,7 @@ class InstitutionsTable extends AppTable  {
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 		if (!$this->AccessControl->isAdmin()) {
 			$userId = $this->Auth->user('id');
 			$institutionId = $entity->id;
