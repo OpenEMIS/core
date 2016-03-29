@@ -92,15 +92,14 @@ class TransferApprovalsTable extends AppTable {
 				$newEntity = $Students->newEntity($newData);
 				if ($Students->save($newEntity)) {
 					$classId = $data[$this->alias()]['institution_class'];
-					$InstitutionClassStudentsTable = TableRegistry::get('Institutions.InstitutionClassStudents');
+					$InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
 					$institutionClassStudentObj = [
 						'student_id' => $newEntity->student_id,
 						'institution_class_id' => $classId,
 						'education_grade_id' => $newEntity->education_grade_id,
 						'student_status_id' => $newEntity->student_status_id
 					];
-					$institutionClassStudentEntity = $InstitutionClassStudentsTable->newEntity($institutionClassStudentObj);
-					$InstitutionClassStudentsTable->save($institutionClassStudentEntity);
+					$InstitutionClassStudentsTable->autoInsertClassStudent($institutionClassStudentObj);
 
 					$this->Alert->success('TransferApprovals.approve');
 					$existingStudentEntity = $Students->find()->where([
