@@ -54,7 +54,7 @@ CREATE TABLE `institution_staff_assignments` (
   `start_date` date NOT NULL,
   `end_date` date NULL,
   `staff_id` int(11) NOT NULL COMMENT 'links to security_users.id',
-  `status` int(11) NOT NULL,
+  `status` int(11) NOT NULL COMMENT '0 -> New, 1 -> Approved, 2 -> Rejected (For fixed workflow)',
   `staff_type_id` int(5) NOT NULL,
   `institution_id` varchar(45) NOT NULL,
   `institution_position_id` int(11) NOT NULL,
@@ -75,9 +75,10 @@ CREATE TABLE `institution_staff_assignments` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- labels
-INSERT INTO `staffworkflow`.`labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferRequests', 'previous_institution_id', 'Institution > StaffTransferRequests', 'Institution Requesting From', 1, 1, NOW());
-INSERT INTO `staffworkflow`.`labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferApprovals', 'institution_id', 'Institution > StaffTransferApprovals', 'Requesting Institution', 1, 1, NOW());
-INSERT INTO `staffworkflow`.`labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferApprovals', 'previous_institution_id', 'Institution > StaffTransferApprovals', 'Institution', 1, 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferRequests', 'previous_institution_id', 'Institution > StaffTransferRequests', 'Currently Assigned To', 1, 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferRequests', 'institution_id', 'Institution > StaffTransferRequests', 'Requested By', 1, 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferApprovals', 'previous_institution_id', 'Institution > StaffTransferApprovals', 'Currently Assigned To', 1, 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferApprovals', 'institution_id', 'Institution > StaffTransferApprovals', 'Requested By', 1, 1, NOW());
 
 -- security_functions
 INSERT INTO security_functions(`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) 

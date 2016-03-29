@@ -40,6 +40,21 @@ class StaffTransferRequestsTable extends ControllerActionTable {
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
+		$toolbarButtons = $extra['toolbarButtons'];
+
+		if ($this->action != 'index') {
+			if ($this->Session->check('Institution.Staff.transfer')) {
+				if (isset($toolbarButtons['back'])) {
+					$url = $this->url('add');
+					$url['action'] = 'Staff';
+					$url[0] = 'add';
+					$toolbarButtons['back']['url'] = $url;
+				}
+			}
+		} else {
+			$this->Session->delete('Institution.Staff.transfer');
+		}
+		
 		$this->field('status');
 		$this->field('staff_id');
 		$this->field('previous_institution_id', ['after' => 'staff_id']);
@@ -66,11 +81,13 @@ class StaffTransferRequestsTable extends ControllerActionTable {
     	$query->where([$this->aliasField('type') => self::TRANSFER]);
     }
 
-	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		$staffName = $this->Users->get($entity->staff_id)->name_with_id;
+		$assignedInstitution = $this->Institutions->get($entity->previous_institution_id)->name;
 		$this->field('id', ['type' => 'hidden', 'value' => $entity->id]);
 		$this->field('status', ['type' => 'readonly', 'value' => $entity->status]);
-		$this->field('staff_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->staff_id)->name_with_id]]);
-		$this->field('previous_institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->previous_institution_id)->name]]);
+		$this->field('staff_id', ['type' => 'readonly', 'attr' => ['value' => $staffName]]);
+		$this->field('previous_institution_id', ['type' => 'readonly', 'attr' => ['value' => $assignedInstitution]]);
 		$this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->name], 'value' => $entity->institution_id]);
 		$this->field('type', ['type' => 'hidden', 'visible' => true, 'value' => self::TRANSFER]);
 		$this->field('institution_position_id', ['after' => 'institution_id', 'type' => 'select', 'options' => $this->getStaffPositionList()]);
@@ -78,6 +95,28 @@ class StaffTransferRequestsTable extends ControllerActionTable {
 		$fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
 		$this->field('FTE', ['type' => 'select', 'options' => $fteOptions, 'value' => $entity->FTE]);
 		$this->field('start_date');
+		$this->field('comment');
+	}
+
+	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		$staffName = $this->Users->get($entity->staff_id)->name_with_id;
+		$assignedInstitution = $this->Institutions->get($entity->previous_institution_id)->name;
+		if ($this->action == 'add') {
+			$message = $staffName .' '.__('is currently assigned to').' '. $assignedInstitution;
+    		$this->Alert->info($message, ['type' => 'text']);
+    	}
+
+		$this->field('id', ['type' => 'hidden', 'value' => $entity->id]);
+		$this->field('status', ['type' => 'readonly', 'value' => $entity->status]);
+		$this->field('staff_id', ['type' => 'readonly', 'attr' => ['value' => $staffName]]);
+		$this->field('previous_institution_id', ['type' => 'readonly', 'attr' => ['value' => $assignedInstitution]]);
+		$this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->name], 'value' => $entity->institution_id]);
+		$this->field('type', ['type' => 'hidden', 'visible' => true, 'value' => self::TRANSFER]);
+		$this->field('institution_position_id', ['after' => 'institution_id', 'type' => 'readonly', 'attr' => ['value' => $this->Positions->get($entity->institution_position_id)->name], 'value' => $entity->institution_position_id]);
+		$this->field('staff_type_id', ['type' => 'readonly', 'attr' => ['value' => $this->StaffTypes->get($entity->staff_type_id)->name], 'value' => $entity->staff_type_id]);
+		$fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
+		$this->field('FTE', ['type' => 'readonly', 'options' => $fteOptions, 'value' => $entity->FTE]);
+		$this->field('start_date', ['type' => 'readonly']);
 		$this->field('comment');
 	}
 
@@ -171,6 +210,19 @@ class StaffTransferRequestsTable extends ControllerActionTable {
     	
     }
 
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+    	$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+    	if ($entity->status_id != self::NEW_REQUEST) {
+    		if (isset($buttons['edit'])) {
+    			unset($buttons['edit']);
+    		}
+    		if (isset($buttons['remove'])) {
+    			unset($buttons['remove']);
+    		}
+    	}
+    	return $buttons;
+    }
+
 	public function onGetStatus(Event $event, Entity $entity) {
 		$name = '';
 		switch($entity->status) {
@@ -184,6 +236,7 @@ class StaffTransferRequestsTable extends ControllerActionTable {
 				$name = __('New');
 				break;
 		}
+		$entity->status_id = $entity->status;
 		return '<span class="status highlight">' . $name . '</span>';
 	}
 
@@ -198,17 +251,19 @@ class StaffTransferRequestsTable extends ControllerActionTable {
 	public function onGetStaffId(Event $event, Entity $entity) {
 		$urlParams = $this->url('index');
 		$action = $urlParams['action'];
-		if ($entity->status == self::NEW_REQUEST) {
+		$page = 'view';
+		if ($entity->status_id == self::NEW_REQUEST) {
 			if ($this->AccessControl->check(['Institutions', 'StaffTransferRequests', 'edit'])) {
-				return $event->subject()->Html->link($entity->user->name, [
+				$page = 'edit';
+			}
+		}
+		return $event->subject()->Html->link($entity->user->name, [
 					'plugin' => $urlParams['plugin'],
 					'controller' => $urlParams['controller'],
 					'action' => $action,
-					'0' => 'view',
+					'0' => $page,
 					'1' => $entity->id
 				]);
-			}
-		}
 	}
 
 	private function initialiseVariable($entity, $institutionStaffData) {
@@ -257,6 +312,14 @@ class StaffTransferRequestsTable extends ControllerActionTable {
 			}
 			$event->stopPropagation();
 			return $this->controller->redirect($url);
+		}
+	}
+
+	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+		if ($this->action == 'add') {
+			$url = $this->url('add');
+			$url['action'] = 'Staff';
+			$buttons[1]['url'] = $url;
 		}
 	}
 }
