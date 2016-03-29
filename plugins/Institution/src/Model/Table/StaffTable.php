@@ -249,6 +249,12 @@ class StaffTable extends AppTable {
 		$statusOptions[self::PENDING_PROFILE] = __('Pending Profile');
 		$statusOptions[self::PENDING_TRANSFERIN] = __('Pending Transfer In');
 		$statusOptions[self::PENDING_TRANSFEROUT] = __('Pending Transfer Out');
+
+		$selectedStatus = $this->queryString('staff_status_id', $statusOptions);
+		$this->advancedSelectOptions($statusOptions, $selectedStatus);
+		$request->query['staff_status_id'] = $selectedStatus;
+		$query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
+
 		$this->controller->set(compact('periodOptions', 'positionOptions', 'statusOptions'));
 	}
 
