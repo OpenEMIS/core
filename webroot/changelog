@@ -6,6 +6,7 @@ v3.4.18
 - In Institutions -> Staff list, the position filter now displays the position titles instead of all positions in the institution
 - Fixed a bug that caused 404 error page when adding an Absence record for Staff in an Institution
 - The system will generate codes automatically when adding new infrastructure
+- Fixed translations on Attendance
 
 v3.4.17.2
 - Compilation of Translation files is now done automatically by the system whenever translations are added or modified
