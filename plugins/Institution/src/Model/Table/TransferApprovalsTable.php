@@ -420,7 +420,6 @@ class TransferApprovalsTable extends AppTable {
 					'attr' => ['class' => 'btn btn-outline btn-cancel', 'div' => false, 'name' => 'submit', 'value' => 'reject']
 				];
 			} else {
-				pr($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST);
 				unset($buttons[0]);
 				unset($buttons[1]);
 			}
