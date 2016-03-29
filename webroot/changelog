@@ -1,6 +1,6 @@
 v3.4.18
-- The system will generate codes automatically when adding new infrastructure
 - Fixed a bug on Import that caused the system not able to import students properly
+- Institution Positions can now be identified as a Homeroom position. Only Staff with Homeroom position will be displayed during creation of Class
 - Fixed a bug where workflow actions not appearing for the configured workflow roles
 
 v3.4.17.2
