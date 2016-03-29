@@ -2,6 +2,7 @@ v3.4.18
 - Fixed a bug on Import that caused the system not able to import students properly
 - Institution Positions can now be identified as a Homeroom position. Only Staff with Homeroom position will be displayed during creation of Class
 - Fixed a bug where workflow actions not appearing for the configured workflow roles
+- Fixed a bug that caused Nationality and Identity not saved properly when creating a new Student record
 
 v3.4.17.2
 - Compilation of Translation files is now done automatically by the system whenever translations are added or modified
