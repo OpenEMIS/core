@@ -151,6 +151,7 @@ class InstitutionsController extends AppController  {
 			case 'Results':
 				$this->Angular->addModules([
 					'agGrid',
+					'institution.result.toolbar.controller',
 					'institution.result.service',
 					'institution.result.controller'
 				]);
