@@ -115,7 +115,7 @@ class InstitutionQualityVisitsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldInstitutionSubjectId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'view') {
 		} else if ($action == 'add' || $action == 'edit') {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
