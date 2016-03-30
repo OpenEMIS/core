@@ -211,12 +211,12 @@ UPDATE institution_subject_staff SET `id` = uuid();
 -- end institution_subject_staff
 
 
--- patch institution_subjects_students, recreate table to rebuild index
+-- patch institution_subject_students, recreate table to rebuild index
 
 ALTER TABLE `institution_class_students` RENAME `z_1694_institution_class_students`;
 
-DROP TABLE IF EXISTS `institution_subjects_students`;
-CREATE TABLE IF NOT EXISTS `institution_subjects_students` (
+DROP TABLE IF EXISTS `institution_subject_students`;
+CREATE TABLE IF NOT EXISTS `institution_subject_students` (
   `id` CHAR(36) NOT NULL,
   `status` int(1) NOT NULL,
   `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
@@ -229,18 +229,18 @@ CREATE TABLE IF NOT EXISTS `institution_subjects_students` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-ALTER TABLE `institution_subjects_students`
+ALTER TABLE `institution_subject_students`
   ADD KEY `student_id` (`student_id`),
   ADD KEY `institution_subject_id` (`institution_subject_id`),
   ADD KEY `institution_class_id` (`institution_class_id`);
 
-INSERT INTO `institution_subjects_students` SELECT * FROM `z_1694_institution_class_students`;
-DELETE FROM `institution_subjects_students` WHERE NOT EXISTS (
-	SELECT 1 FROM `security_users` WHERE `security_users`.`id` = `institution_subjects_students`.`student_id`
+INSERT INTO `institution_subject_students` SELECT * FROM `z_1694_institution_class_students`;
+DELETE FROM `institution_subject_students` WHERE NOT EXISTS (
+	SELECT 1 FROM `security_users` WHERE `security_users`.`id` = `institution_subject_students`.`student_id`
 );
-UPDATE institution_subjects_students SET `id` = uuid();
+UPDATE institution_subject_students SET `id` = uuid();
 
--- end institution_subjects_students
+-- end institution_subject_students
 
 -- patch institution_class_subjects, recreate table to rebuild index
 
