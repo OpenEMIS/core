@@ -23,9 +23,11 @@ $this->start('toolbar');
 $this->end();
 
 $this->start('panelBody');
+$session = $this->request->session();
+$institutionId = $session->read('Institution.Institutions.id');
 ?>
 
-	<div ng-controller="ResultController">
+	<div ng-controller="ResultController" ng-init="institution_id=<?= $institutionId; ?>">
 		<div class="scrolltabs sticky-content">
 			<scrollable-tabset show-tooltips="false" show-drop-down="false">
 				<uib-tabset justified="true">
