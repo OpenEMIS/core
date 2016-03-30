@@ -44,6 +44,22 @@ class InstitutionSubjectStudentsTable extends AppTable {
 		$ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
 
 		$query
+			->select([
+				'uuid' => $ItemResults->aliasField('id'),
+				'marks' => $ItemResults->aliasField('marks'),
+				'assessment_period_id' => $ItemResults->aliasField('assessment_period_id'),
+				'student_id' => $this->aliasField('student_id'),
+				'openemis_no' => $Users->aliasField('openemis_no'),
+				'name' => $query->func()->concat([
+					$Users->aliasField('first_name') => 'literal',
+					" ",
+					$Users->aliasField('last_name') => 'literal'
+				]),
+				'first_name' => $Users->aliasField('first_name'),
+				'middle_name' => $Users->aliasField('middle_name'),
+				'third_name' => $Users->aliasField('third_name'),
+				'last_name' => $Users->aliasField('last_name')
+			])
 			->innerJoin(
 				[$InstitutionSubjects->alias() => $InstitutionSubjects->table()],
 				[
@@ -69,6 +85,9 @@ class InstitutionSubjectStudentsTable extends AppTable {
 			->group([
 				$this->aliasField('student_id'),
 				$ItemResults->aliasField('assessment_period_id')
+			])
+			->order([
+				$this->aliasField('student_id')
 			])
 			;
 

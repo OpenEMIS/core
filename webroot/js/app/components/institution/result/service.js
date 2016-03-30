@@ -1,5 +1,5 @@
 angular.module('institution.result.service', [])
-.service('ResultService', function($q, $http, $location) {
+.factory('ResultService', function($q, $http, $location) {
     function initValues(_scope) {
         _scope.class_id = parseInt($location.search()['class_id']);
         _scope.assessment_id = parseInt($location.search()['assessment_id']);
@@ -10,7 +10,7 @@ angular.module('institution.result.service', [])
         var _url = _scope.url('rest/Assessment-Assessments/' + _scope.assessment_id + '.json');
 
         $http({
-            method: 'GET', // 'POST'
+            method: 'GET',
             url: _url,
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -36,7 +36,7 @@ angular.module('institution.result.service', [])
         var _url = _scope.url('rest/Assessment-AssessmentItems.json?_contain=EducationSubjects&assessment_id=' + _scope.assessment_id);
 
         $http({
-            method: 'GET', // 'POST'
+            method: 'GET',
             url: _url,
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -64,13 +64,13 @@ angular.module('institution.result.service', [])
         var _url = _scope.url('rest/Assessment-AssessmentPeriods.json?assessment_id=' + _scope.assessment_id);
 
         $http({
-            method: 'GET', // 'POST'
+            method: 'GET',
             url: _url,
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
             }
         }).then(function successCallback(_response) {
-            var _periods = _response.data.data;
+            _scope.periods = _response.data.data;
             var _filterParams = {
                 cellHeight: 30
             };
@@ -84,11 +84,17 @@ angular.module('institution.result.service', [])
             _columnDefs.push({
                 headerName: "Name",
                 field: "name",
-                filterParams: _filterParams,
-                sort: 'asc'
+                sort: 'asc',
+                filterParams: _filterParams
+            });
+            _columnDefs.push({
+                headerName: "student_id",
+                field: "student_id",
+                hide: true,
+                filterParams: _filterParams
             });
 
-            angular.forEach(_periods, function(_period, key) {
+            angular.forEach(_scope.periods, function(_period, key) {
                 var _columnDef = {};
                 var _headerName = _period.name + " <span class='divider'></span> " + _period.weight;
 
@@ -145,7 +151,9 @@ angular.module('institution.result.service', [])
                 enableFilter: true,
                 suppressMenuHide: true,
                 singleClickEdit: true,
-                onCellValueChanged: cellValueChanged,
+                onCellValueChanged: function(params) {
+                    cellValueChanged(params, _scope);
+                },
                 onReady: function() {
                     _scope.gridOptions.api.refreshView();
                     _scope.gridOptions.api.sizeColumnsToFit();
@@ -178,7 +186,7 @@ angular.module('institution.result.service', [])
         var _url = _scope.url(_urlStr);
 
         $http({
-            method: 'GET', // 'POST'
+            method: 'GET',
             url: _url,
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -186,14 +194,32 @@ angular.module('institution.result.service', [])
         }).then(function successCallback(_response) {
             var _subjectStudents = _response.data.data;
 
+            var studentId = null;
+            var currentStudentId = null;
+            var _studentResults = {};
             var _rowData = [];
             angular.forEach(_subjectStudents, function(_subjectStudent, key) {
-                this.push({
-                    openemis_id: _subjectStudent.user.openemis_no,
-                    name: _subjectStudent.user.name,
-                    total: 0
-                });
+                currentStudentId = parseInt(_subjectStudent.student_id);
+
+                if (studentId != currentStudentId) {
+                    if (studentId != null) {
+                        this.push(_studentResults);   
+                    }
+                    
+                    _studentResults = {
+                        openemis_id: _subjectStudent.openemis_no,
+                        name: _subjectStudent.name,
+                        student_id: currentStudentId,
+                        total: 0
+                    };
+                    studentId = currentStudentId;
+                }
+				_studentResults['period_' + parseInt(_subjectStudent.assessment_period_id)] = parseInt(_subjectStudent.marks);
             }, _rowData);
+
+            if (_studentResults.hasOwnProperty('student_id')) {
+                _rowData.push(_studentResults);
+            }
 
             deferred.resolve(_rowData);
         }, function errorCallback(_error) {
@@ -205,8 +231,48 @@ angular.module('institution.result.service', [])
         return deferred.promise;
     }
 
-    function cellValueChanged(params) {
-        console.log(params);
+    function cellValueChanged(params, _scope) {
+        var _field = params.colDef.field;
+        var _assessmentPeriodId = _field.replace('period_', '');
+
+        var _data = {
+            "marks" : parseInt(params.newValue),
+            "assessment_id" : params.context.assessment_id,
+            "education_subject_id" : params.context.education_subject_id,
+            "student_id" : params.data.student_id,
+            "institution_id" : params.context.institution_id,
+            "academic_period_id" : params.context.academic_period_id,
+            "assessment_period_id" : parseInt(_assessmentPeriodId)
+        };
+
+        setRowData(_scope, _data);
+    }
+
+    function setRowData(_scope, _data) {
+        var deferred = $q.defer();
+        var _url = _scope.url('rest/Assessment-AssessmentItemResults.json');
+
+        $http({
+            method: 'POST',
+            url: _url,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            data: _data
+        }).then(function successCallback(_response) {
+            console.log(_response.data);
+            deferred.resolve(_response.data.data);
+        }, function errorCallback(_error) {
+
+        }, function progressCallback(_response) {
+
+        });
+
+        return deferred.promise;
+    }
+
+    function saveData(_scope) {
+        // To-do: loop through modified data and save
     }
 
     return {
@@ -216,6 +282,8 @@ angular.module('institution.result.service', [])
         getColumnDefs: getColumnDefs,
         initGrid: initGrid,
         getRowData: getRowData,
-        cellValueChanged: cellValueChanged
+        cellValueChanged: cellValueChanged,
+        setRowData: setRowData,
+        saveData: saveData
     }
 });
