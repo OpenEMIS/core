@@ -12,7 +12,7 @@ class WorkBenchComponent extends Component {
 	private $action;
 	private $Session;
 
-	public $components = ['Auth', 'AccessControl'];
+	public $components = ['Auth', 'AccessControl', 'Workflow'];
 
 	public function initialize(array $config) {
 	}

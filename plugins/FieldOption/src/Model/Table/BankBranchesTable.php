@@ -12,6 +12,11 @@ class BankBranchesTable extends AppTable {
 		$this->belongsTo('Banks', ['className' => 'FieldOption.Banks']);
 		$this->hasMany('UserBankAccounts', ['className' => 'User.BankAccounts', 'foreignKey' => 'bank_branch_id']);
 		$this->hasMany('InstitutionBankAccounts', ['className' => 'Institution.InstitutionBankAccounts', 'foreignKey' => 'bank_branch_id']);
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+				'filter' => 'bank_id',
+			]);
+		}
 	}
 
 	public function validationDefault(Validator $validator) {
