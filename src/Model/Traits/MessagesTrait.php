@@ -188,6 +188,7 @@ trait MessagesTrait {
 			'created_user_id' => 'Created By',
 			'comments' => 'Comments',
 			'amount' => 'Amount',
+			'noStudentFees' => 'No Student Fees',
 		],
 		// 'InstitutionStaffAbsences' => [
 		// 	'first_date_absent' => 'First Day Of Absence',
