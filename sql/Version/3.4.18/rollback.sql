@@ -16,9 +16,9 @@ ALTER TABLE `institution_student_surveys` DROP `parent_form_id`;
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2733';
 
 
---
+-- 
 -- POCOR-1694
---
+-- 
 
 DROP TABLE IF EXISTS `institution_class_subjects`;
 ALTER TABLE `z_1694_institution_section_classes` RENAME `institution_section_classes`;
@@ -41,9 +41,9 @@ ALTER TABLE `z_1694_institution_class_staff` RENAME `institution_class_staff`;
 DROP TABLE IF EXISTS `institution_subject_students`;
 ALTER TABLE `z_1694_institution_class_students` RENAME `institution_class_students`;
 
-ALTER TABLE `institution_quality_rubrics`
-        CHANGE `institution_class_id` `institution_section_id` INT(11) NOT NULL,
-        CHANGE `institution_subject_id` `institution_class_id` INT(11) NOT NULL;
+ALTER TABLE `institution_quality_rubrics` 
+	CHANGE `institution_class_id` `institution_section_id` INT(11) NOT NULL,
+	CHANGE `institution_subject_id` `institution_class_id` INT(11) NOT NULL;
 
 ALTER TABLE `institution_quality_visits` CHANGE `institution_subject_id` `institution_class_id` INT(11) NOT NULL;
 
@@ -53,22 +53,22 @@ UPDATE `labels` SET `module`='InstitutionClasses' WHERE `module`='InstitutionSub
 UPDATE `labels` SET `module`='StaffClasses' WHERE `module`='StaffSubjects';
 UPDATE `labels` SET `module`='StudentClasses' WHERE `module`='StudentSubjects';
 UPDATE `labels` SET `field`='institution_section_id'
-WHERE
-        `module` IN (
-                'Absences',
-                'StaffAbsences',
-                'StudentClasses',
-                'StudentSections',
-                'InstitutionRubrics',
-                'InstitutionStudentAbsences'
-        ) AND `field`='institution_class_id';
+WHERE 
+ 	`module` IN (
+		'Absences',
+		'StaffAbsences',
+		'StudentClasses',
+		'StudentSections',
+		'InstitutionRubrics',
+		'InstitutionStudentAbsences'
+ 	) AND `field`='institution_class_id';
 UPDATE `labels` SET `field`='section'
-WHERE
-        `module` IN (
-                'InstitutionStudentAbsences',
-                'StudentBehaviours',
-                'Students'
-        ) AND `field`='class';
+WHERE 
+ 	`module` IN (
+		'InstitutionStudentAbsences',
+		'StudentBehaviours',
+		'Students'
+	) AND `field`='class';
 UPDATE `labels` SET `field`='institution_sections_code' WHERE `module`='Imports' AND `field`='institution_classes_code';
 UPDATE `labels` SET `field`='InstitutionSections' WHERE `module`='Imports' AND `field`='InstitutionClasses';
 UPDATE `labels` SET `field`='number_of_sections' WHERE `module`='InstitutionSections' AND `field`='number_of_classes';
@@ -76,16 +76,16 @@ UPDATE `labels` SET `field`='institution_section' WHERE `module`='StaffClasses' 
 UPDATE `labels` SET `field`='select_section' WHERE `module`='Absences' AND `field`='select_class';
 UPDATE `labels` SET `field`='subjects' WHERE `module`='InstitutionSections' AND `field`='classes';
 UPDATE `labels` SET `field`='institution_class_id'
-WHERE
-        `module` IN (
-                'Absences',
-                'StaffClasses',
-                'StaffAbsences',
-                'StudentClasses',
-                'InstitutionRubrics',
-                'InstitutionQualityVisits',
-                'InstitutionStudentAbsences'
-        ) AND `field`='institution_subject_id';
+WHERE 
+ 	`module` IN (
+ 		'Absences',
+ 		'StaffClasses',
+ 		'StaffAbsences',
+ 		'StudentClasses',
+ 		'InstitutionRubrics',
+ 		'InstitutionQualityVisits',
+ 		'InstitutionStudentAbsences'
+ 	) AND `field`='institution_subject_id';
 
 UPDATE `import_mapping` SET `lookup_model`='InstitutionSections' WHERE `id`=66;
 
@@ -105,9 +105,22 @@ UPDATE `security_functions` SET `_view`='StaffClasses.index', `_edit`=NULL, `_ad
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-1694';
 
---
+-- 
 -- END POCOR-1694
---
+-- 
+
+
+-- POCOR-2675
+ALTER TABLE `institution_positions` DROP `is_homeroom`;
+ALTER TABLE `security_roles` DROP `code`;
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue`='POCOR-2675';
+
+
+-- POCOR-2749
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2749';
 
 
 -- 3.4.17
