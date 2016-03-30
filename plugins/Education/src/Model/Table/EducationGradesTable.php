@@ -35,6 +35,12 @@ class EducationGradesTable extends AppTable {
 			'dependent' => false,
 			// 'saveStrategy' => 'append'
 		]);
+
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+				'filter' => 'education_programme_id',
+			]);
+		}
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
@@ -197,11 +203,17 @@ class EducationGradesTable extends AppTable {
 			if (isset($entity->id)) {
 				$form = $event->subject()->Form;
 				// Build Education Subjects options
-				$subjectOptions = $this->EducationSubjects
-					->find('list')
+				$subjectData = $this->EducationSubjects
+					->find()
+					->select([$this->EducationSubjects->aliasField($this->EducationSubjects->primaryKey()), $this->EducationSubjects->aliasField('name'), $this->EducationSubjects->aliasField('code')])
 					->find('visible')
 					->find('order')
 					->toArray();
+
+				$subjectOptions = [];
+				foreach ($subjectData as $key => $value) {
+					$subjectOptions[$value->id] = $value->code . ' - ' . $value->name;
+				}
 				// End
 
 				$tableHeaders = [__('Name'), __('Code'), __('Hours Required'), ''];
