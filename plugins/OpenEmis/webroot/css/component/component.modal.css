@@ -1,7 +1,12 @@
-/* MODAL v.1.0.1 */
+/* MODAL v.1.0.3 */
+
+.modal-backdrop {
+    z-index: 2000;
+}
 
 .modal-dialog {
     margin: 20% auto !important;
+    z-index: 2001;
 }
 
 .modal-title {
@@ -34,7 +39,10 @@
 
 body > svg,
 .modal .modal-img-svg {
-    display: none;
+    position: absolute;
+    left: -800px;
+    top: -800px;
+    z-index: -99999;
 }
 
 @media (min-width: 100px) and (max-width: 480px) {

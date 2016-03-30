@@ -14,6 +14,12 @@ class EducationCyclesTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('EducationLevels', ['className' => 'Education.EducationLevels']);
 		$this->hasMany('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
+
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+				'filter' => 'education_level_id',
+			]);
+		}
 	}
 
 	public function indexBeforeAction(Event $event) {

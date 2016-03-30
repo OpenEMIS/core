@@ -4,7 +4,6 @@ namespace Infrastructure\Controller;
 use ArrayObject;
 use App\Controller\AppController;
 use Cake\ORM\Table;
-use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 
 class InfrastructuresController extends AppController
