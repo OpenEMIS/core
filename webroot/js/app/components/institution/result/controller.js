@@ -3,11 +3,20 @@ angular.module('institution.result.controller', ['institution.result.service'])
     $scope.gridOptions = null;
 
     angular.element(document).ready(function () {
-        ResultService.getSubjects($scope).then(function successCallback(_subjects) {
-            $scope.subjects = _subjects;
+        // initValues
+        ResultService.initValues($scope);
 
-            ResultService.getColumnDefs($scope).then(function successCallback(_columnDef) {
-                ResultService.initGrid($scope, _columnDef, _subjects);
+        // getAssessment
+        ResultService.getAssessment($scope).then(function successCallback(_assessment) {
+            $scope.assessment = _assessment;
+            // getSubjects
+            ResultService.getSubjects($scope).then(function successCallback(_subjects) {
+                $scope.subjects = _subjects;
+                // getColumnDefs
+                ResultService.getColumnDefs($scope).then(function successCallback(_columnDefs) {
+                    $scope._columnDefs = _columnDefs;
+                    ResultService.initGrid($scope);
+                });
             });
         });
     });
@@ -18,7 +27,9 @@ angular.module('institution.result.controller', ['institution.result.service'])
     });
 
     $scope.reloadData = function(_subject) {
-        ResultService.getRowData($scope, _subject).then(function successCallback(_rowData) {
+        $scope.subject = _subject;
+        // getRowData
+        ResultService.getRowData($scope).then(function successCallback(_rowData) {
             $scope.gridOptions.api.setRowData(_rowData);
         }, function errorCallback(_error) {
             deferred.reject(_error);
