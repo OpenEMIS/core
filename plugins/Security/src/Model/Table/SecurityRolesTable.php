@@ -138,7 +138,8 @@ class SecurityRolesTable extends AppTable {
 				$SecurityGroupsTable = $this->SecurityGroups;
 				$InstitutionsTable = TableRegistry::get('Institution.Institutions');
 				$institutionSecurityGroup = $InstitutionsTable->find('list');
-				$groupOptions = $SecurityGroupsTable->find('list')->where([
+				$groupOptions = $SecurityGroupsTable->find('list')
+					->where([
 						'NOT EXISTS ('.$institutionSecurityGroup->sql().' WHERE '.$InstitutionsTable->aliasField('security_group_id').' = '.$SecurityGroupsTable->aliasField('id').')'
 					])
 					->toArray();
@@ -186,8 +187,8 @@ class SecurityRolesTable extends AppTable {
 				$query->andWhere([$this->aliasField('order').' > ' => $userRole['security_role']['order']]);
 			}		
 		} else {
-			$query
-				->where([$this->aliasField('security_group_id') => $selectedGroup]);
+			$conditions = [$this->aliasField('security_group_id') => $selectedGroup];
+
 			if (!is_null($userId)) {
 				$userRole = $GroupRoles
 				->find()
@@ -198,8 +199,23 @@ class SecurityRolesTable extends AppTable {
 					'SecurityRoles.security_group_id' => $selectedGroup
 				])
 				->first();
-				$query->andWhere([$this->aliasField('order').' > ' => $userRole['security_role']['order']]);
+
+				$conditions = [
+					'OR' => [
+						// show roles that are lower privileges than current user role in selected group
+						[
+							$this->aliasField('security_group_id') => $selectedGroup,
+							$this->aliasField('order').' > ' => $userRole['security_role']['order'],
+						],
+						// also show roles that are created by current user
+						[
+							$this->aliasField('security_group_id') => $selectedGroup,
+							$this->aliasField('created_user_id') => $userId
+						]
+					]
+				];
 			}
+			$query->where($conditions);
 		}
 	}
 
