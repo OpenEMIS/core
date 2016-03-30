@@ -161,14 +161,15 @@ class StaffTable extends AppTable {
 		$institutionId = $session->read('Institution.Institutions.id');
 
 		$StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
-		$positionData = $StaffPositionTitles->find('list', 
-				[
-					'keyField' => $StaffPositionTitles->primaryKey(),
-					'valueField' => 'name'
-				]
-			)
-			->matching('Titles', function ($q) use ($institutionId) {
-				return $q->where(['Titles.institution_id' => $institutionId]);
+		$activeStatusId = $this->Workflow->getStepsByModelCode('Institution.InstitutionPositions', 'ACTIVE');
+
+		$positionData = $StaffPositionTitles->find('list')
+			->matching('Titles', function ($q) use ($institutionId, $activeStatusId) {
+				$q->where([
+					'Titles.institution_id' => $institutionId,
+					'Titles.status_id IN ' => $activeStatusId
+				]);
+				return $q;
 			})
 			->group([$StaffPositionTitles->aliasField($StaffPositionTitles->primaryKey())])
 			->order([$StaffPositionTitles->aliasField('order')])
