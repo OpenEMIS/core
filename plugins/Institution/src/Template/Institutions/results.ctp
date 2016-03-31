@@ -7,17 +7,26 @@ $this->extend('OpenEmis./Layout/Panel');
 $this->start('toolbar');
 ?>
 	<div ng-controller="ToolbarCtrl">
-	<?php
-		$backUrl = [
-			'plugin' => $this->request->params['plugin'],
-		    'controller' => $this->request->params['controller'],
-		    'action' => 'Assessments',
-		    'index'
-		];
-		echo $this->Html->link('<i class="fa kd-back"></i>', $backUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Back'), 'escape' => false]);
-		// echo '<button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title=' . __('Edit') . ' ng-show="!editMode" ng-click="onEditClick()"><i class="fa kd-edit"></i></button>';
-		// echo '<button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title=' . __('Save') . ' ng-show="editMode" ng-click="onSaveClick()"><i class="fa fa-save"></i></button>';
+		<?php
+			$backUrl = [
+				'plugin' => $this->request->params['plugin'],
+			    'controller' => $this->request->params['controller'],
+			    'action' => 'Assessments',
+			    'index'
+			];
+			echo $this->Html->link('<i class="fa kd-back"></i>', $backUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Back'), 'escape' => false, 'ng-show' => '!editMode']);
 		?>
+		<button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="!editMode" ng-click="onEditClick()">
+			<i class="fa kd-edit"></i>
+		</button>
+		<!-- Save button: -->
+		<button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="editMode" ng-click="onBackClick()">
+			<i class="fa kd-back"></i>
+		</button>
+		<button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Save');?>" ng-show="editMode" ng-click="onSaveClick()">
+			<i class="fa fa-save"></i>
+		</button>
+		<!-- End -->
 	</div>
 <?php
 $this->end();

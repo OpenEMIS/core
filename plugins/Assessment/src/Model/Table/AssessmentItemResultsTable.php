@@ -1,7 +1,11 @@
 <?php
 namespace Assessment\Model\Table;
 
+use ArrayObject;
 use App\Model\Table\AppTable;
+use Cake\ORM\Entity;
+use Cake\Event\Event;
+use Cake\Utility\Text;
 
 class AssessmentItemResultsTable extends AppTable {
 	public function initialize(array $config) {
@@ -13,6 +17,10 @@ class AssessmentItemResultsTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('AssessmentPeriods', ['className' => 'Assessment.AssessmentPeriods']);
+	}
+
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+		$entity->id = Text::uuid();
 	}
 
 	/**
