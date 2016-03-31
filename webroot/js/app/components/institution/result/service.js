@@ -95,15 +95,24 @@ angular.module('institution.result.service', [])
             });
 
             angular.forEach(_scope.periods, function(_period, key) {
-                var _columnDef = {};
                 var _headerName = _period.name + " <span class='divider'></span> " + _period.weight;
+                var _columnDef = {
+                    headerName: _headerName,
+                    field: 'period_' + _period.id,
+                    filter: 'number',
+                    cellStyle: function(params) {
+                        if (parseInt(params.value) < 40) {
+                            return {color: 'red'};
+                        } else {
+                            return {color: 'black'};
+                        }
+                    }
+                };
 
-                _columnDef.headerName = _headerName;
-                _columnDef.field = "period_" + _period.id;
-
-                if (_period.editable) {
+                if (_period.editable && _scope.editMode) {
                     _columnDef.headerName += " <i class='fa fa-pencil-square-o fa-lg header-icon'></i>";
                     _columnDef.editable = true;
+                    _columnDef.cellClass = 'ag-cell-highlight';
                 }
 
                 this.push(_columnDef);
@@ -112,6 +121,7 @@ angular.module('institution.result.service', [])
             _columnDefs.push({
                 headerName: "Total",
                 field: "total",
+                'filter': "number",
                 filterParams: _filterParams
             });
 
@@ -129,7 +139,7 @@ angular.module('institution.result.service', [])
         var _subjects = _scope.subjects;
         var _columnDefs = _scope._columnDefs;
 
-        if (_subjects.length > 0) {
+        if (angular.isDefined(_subjects) && _subjects.length > 0) {
             var _subject = _subjects[0];
 
             _scope.gridOptions = {
@@ -157,7 +167,6 @@ angular.module('institution.result.service', [])
                 onReady: function() {
                     _scope.gridOptions.api.refreshView();
                     _scope.gridOptions.api.sizeColumnsToFit();
-
                     _scope.reloadData(_subject);
                 }
             };
@@ -214,7 +223,10 @@ angular.module('institution.result.service', [])
                     };
                     studentId = currentStudentId;
                 }
-				_studentResults['period_' + parseInt(_subjectStudent.assessment_period_id)] = parseInt(_subjectStudent.marks);
+                var marks = parseInt(_subjectStudent.marks);
+                if (!isNaN(marks)) {
+				    _studentResults['period_' + parseInt(_subjectStudent.assessment_period_id)] = parseInt(_subjectStudent.marks);
+                }
             }, _rowData);
 
             if (_studentResults.hasOwnProperty('student_id')) {
@@ -260,7 +272,6 @@ angular.module('institution.result.service', [])
             },
             data: _data
         }).then(function successCallback(_response) {
-            console.log(_response.data);
             deferred.resolve(_response.data.data);
         }, function errorCallback(_error) {
 
@@ -271,8 +282,12 @@ angular.module('institution.result.service', [])
         return deferred.promise;
     }
 
-    function saveData(_scope) {
-        // To-do: loop through modified data and save
+    function switchMode(_scope) {
+        getColumnDefs(_scope).then(function successCallback(_columnDefs) {
+            if (_scope.gridOptions != null) {
+                _scope.gridOptions.api.setColumnDefs(_columnDefs);
+            }
+        });
     }
 
     return {
@@ -284,6 +299,6 @@ angular.module('institution.result.service', [])
         getRowData: getRowData,
         cellValueChanged: cellValueChanged,
         setRowData: setRowData,
-        saveData: saveData
+        switchMode: switchMode
     }
 });
