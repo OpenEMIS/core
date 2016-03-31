@@ -84,6 +84,10 @@
     padding: 10px !important;
 }
 
+.ag-fresh .ag-cell-highlight {
+    background-color: #FFFACD !important;
+}
+
 .ag-fresh .ag-row {
     border-bottom: 1px solid #DDD;
 }

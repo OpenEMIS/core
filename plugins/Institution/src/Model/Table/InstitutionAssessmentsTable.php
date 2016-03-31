@@ -41,7 +41,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 		$this->field('male_students');
 		$this->field('female_students');
 
-		$this->setFieldOrder(['assessment', 'academic_period_id', 'education_grade', 'name', 'subjects', 'male_students', 'female_students']);
+		$this->setFieldOrder(['name', 'assessment', 'academic_period_id', 'education_grade', 'subjects', 'male_students', 'female_students']);
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
@@ -56,8 +56,14 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 
 		$query
 			->select([
-				$ClassGrades->aliasField('institution_class_id'),
-				$Assessments->aliasField('id')
+				'institution_class_id' => $ClassGrades->aliasField('institution_class_id'),
+				'education_grade_id' => $Assessments->aliasField('education_grade_id'),
+				'assessment_id' => $Assessments->aliasField('id'),
+				'assessment' => $query->func()->concat([
+					$Assessments->aliasField('code') => 'literal',
+					" - ",
+					$Assessments->aliasField('name') => 'literal'
+				])
 			])
 			->innerJoin(
 				[$ClassGrades->alias() => $ClassGrades->table()],
@@ -176,26 +182,20 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 		}
 	}
 
-	public function onGetAssessment(Event $event, Entity $entity) {
-		$ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
-		$Assessments = TableRegistry::get('Assessment.Assessments');
-
-		$assessment = $Assessments
-			->find()
-			->contain('EducationGrades')
-			->where([
-				$Assessments->aliasField('id') => $entity[$Assessments->alias()]['id']
-			])
-			->first();
-		$entity->education_grade = $assessment->education_grade->programme_grade_name;
-		$classId = $entity[$ClassGrades->alias()]['institution_class_id'];
-
-		return $event->subject()->Html->link($assessment->code_name, [
+	public function onGetName(Event $event, Entity $entity) {
+		return $event->subject()->Html->link($entity->name, [
 			'plugin' => $this->controller->plugin,
 			'controller' => $this->controller->name,
 			'action' => 'Results',
-			'class_id' => $classId,
-			'assessment_id' => $assessment->id
+			'class_id' => $entity->institution_class_id,
+			'assessment_id' => $entity->assessment_id
 		]);
+	}
+
+	public function onGetEducationGrade(Event $event, Entity $entity) {
+		$EducationGrades = TableRegistry::get('Education.EducationGrades');
+		$grade = $EducationGrades->get($entity->education_grade_id);
+
+		return $grade->programme_grade_name;
 	}
 }

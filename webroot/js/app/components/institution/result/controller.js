@@ -24,6 +24,7 @@ angular.module('institution.result.controller', ['institution.result.service'])
     $scope.$watch('$parent.editMode', function(newValue, oldValue) {
         $scope.editMode = newValue;
         // To-do: switch to edit mode
+        ResultService.switchMode($scope);
     });
 
     $scope.reloadData = function(_subject) {
