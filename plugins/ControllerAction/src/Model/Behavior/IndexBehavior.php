@@ -21,7 +21,7 @@ class IndexBehavior extends Behavior {
 		return $events;
 	}
 
-	public function index(Event $event, ArrayObject $extra) {
+	public function index(Event $mainEvent, ArrayObject $extra) {
 		$model = $this->_table;
 		
 		$extra['pagination'] = true;
@@ -51,7 +51,7 @@ class IndexBehavior extends Behavior {
 				if (array_key_exists('page', $action)) {
 					unset($action['page']);
 				}
-				$event->stopPropagation();
+				$mainEvent->stopPropagation();
 				return $model->controller->redirect($action);
 			}
 		} else {
