@@ -282,11 +282,17 @@ class StaffAbsencesTable extends AppTable {
 					->where([
 						$StaffTable->aliasField('staff_id') => $this->request->data[$this->alias()]['staff_id'], 
 					])
-					->order([$StaffTable->aliasField('end_date')])->first();
+					->order([$StaffTable->aliasField('end_date')])
+					->first();
+			}
+			$dateAttr = ['startDate' => Time::now(), 'endDate' => Time::now()];
+			if (!empty($staffRecord)) {
+				$dateAttr['startDate'] = $staffRecord->start_date;
+				$dateAttr['endDate'] = $staffRecord->end_date;
 			}
 
-			$this->ControllerAction->field('start_date', ['startDate' => $staffRecord->start_date, 'endDate' => $staffRecord->end_date]);
-			$this->ControllerAction->field('end_date', ['startDate' => $staffRecord->start_date, 'endDate' => $staffRecord->end_date]);
+			$this->ControllerAction->field('start_date', $dateAttr);
+			$this->ControllerAction->field('end_date', $dateAttr);
 
 			// Malcolm discussed with Umairah and Thed - will revisit this when default date of htmlhelper is capable of setting 'defaultViewDate' ($entity->start_date = $todayDate; was: causing validation error to disappear)
 			// $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -346,7 +352,7 @@ class StaffAbsencesTable extends AppTable {
 		}
 		if ($action == 'edit' || $action == 'add') {
 			$selectedAbsenceType = $request->data[$this->alias()]['absence_type_id'];
-			if ($this->absenceCodeList[$selectedAbsenceType] == 'LATE') {
+			if (array_key_exists($selectedAbsenceType, $this->absenceCodeList) && $this->absenceCodeList[$selectedAbsenceType] == 'LATE') {
 				$attr['type'] = 'hidden';
 			}
 		}
@@ -418,7 +424,7 @@ class StaffAbsencesTable extends AppTable {
 
 		if ($action == 'edit' || $action == 'add') {
 			$selectedAbsenceType = $request->data[$this->alias()]['absence_type_id'];
-			if ($this->absenceCodeList[$selectedAbsenceType] == 'LATE') {
+			if (array_key_exists($selectedAbsenceType, $this->absenceCodeList) && $this->absenceCodeList[$selectedAbsenceType] == 'LATE') {
 				$attr['type'] = 'hidden';
 				$attr['attr']['value'] = 0;
 				$this->fields['start_time']['visible'] = true;
