@@ -9,6 +9,6 @@ class SecurityGroupInstitutionsTable extends AppTable {
 		$this->table('security_group_institutions');
 		parent::initialize($config);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
-		$this->belongsTo('SecurityGroups', ['className' => 'Security.SecurityGroups']);
+		$this->belongsTo('SecurityGroups', ['className' => 'Security.UserGroups']);
 	}
 }

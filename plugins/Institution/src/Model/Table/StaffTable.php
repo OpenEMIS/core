@@ -159,11 +159,22 @@ class StaffTable extends AppTable {
 		// Positions
 		$session = $request->session();
 		$institutionId = $session->read('Institution.Institutions.id');
-		$positionData = $this->Positions
-		->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-		->contain(['StaffPositionTitles'])
-		->where([$this->Positions->aliasField('institution_id') => $institutionId])
-		->toArray();
+
+		$StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+		$activeStatusId = $this->Workflow->getStepsByModelCode('Institution.InstitutionPositions', 'ACTIVE');
+
+		$positionData = $StaffPositionTitles->find('list')
+			->matching('Titles', function ($q) use ($institutionId, $activeStatusId) {
+				$q->where([
+					'Titles.institution_id' => $institutionId,
+					'Titles.status_id IN ' => $activeStatusId
+				]);
+				return $q;
+			})
+			->group([$StaffPositionTitles->aliasField($StaffPositionTitles->primaryKey())])
+			->order([$StaffPositionTitles->aliasField('order')])
+			->toArray()
+			;
 
 		$positionOptions = [0 => __('All Positions')] + $positionData;
 
@@ -189,7 +200,9 @@ class StaffTable extends AppTable {
 
 		$query->find('academicPeriod', ['academic_period_id' => $selectedPeriod]);
 		if ($selectedPosition != 0) {
-			$query->where([$this->aliasField('institution_position_id') => $selectedPosition]);
+			$query->matching('Positions', function ($q) use ($selectedPosition) {
+				return $q->where(['Positions.staff_position_title_id' => $selectedPosition]);
+			});
 		}
 		
 		$search = $this->ControllerAction->getSearchKey();
@@ -197,6 +210,14 @@ class StaffTable extends AppTable {
 			// function from AdvancedNameSearchBehavior
 			$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
 		}
+
+		// start: sort by name
+		$sortList = ['Users.first_name'];
+		if (array_key_exists('sortWhitelist', $options)) {
+			$sortList = array_merge($options['sortWhitelist'], $sortList);
+		}
+		$options['sortWhitelist'] = $sortList;
+		// end: sort by name
 
 		$this->controller->set(compact('periodOptions', 'positionOptions'));
 	}
@@ -207,17 +228,20 @@ class StaffTable extends AppTable {
 	}
 
 	public function addStaffRole($staffEntity) {
+		$positionEntity = null;
+
 		if (empty($staffEntity->security_group_user_id)) {
 			// every staff record in school will be linked to a security role record in security_group_users
 			$securityGroupId = $this->Institutions->get($staffEntity->institution_id)->security_group_id;
-			$securityRoleId = $this->Positions->find()
+			$positionEntity = $this->Positions->find()
 				->where([
 					$this->Positions->aliasField('id') => $staffEntity->institution_position_id
 				])
 				->matching('StaffPositionTitles.SecurityRoles')
-				->select(['security_role_id' => 'SecurityRoles.id'])
-				->first()
-				->security_role_id;
+				->select(['security_role_id' => 'SecurityRoles.id', 'is_homeroom'])
+				->first();
+
+			$securityRoleId = $positionEntity->security_role_id;
 
 			$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
 			$securityGroupUsersRecord = [
@@ -229,13 +253,72 @@ class StaffTable extends AppTable {
 			$newSecurityGroupEntity = $SecurityGroupUsersTable->newEntity($securityGroupUsersRecord);
 			$entity = $SecurityGroupUsersTable->save($newSecurityGroupEntity);
 			$this->updateSecurityGroupUserId($staffEntity, $entity->id);
+
+			if (!empty($positionEntity) && $positionEntity->is_homeroom) {
+				// add homeroomrole
+				$SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+				$homeroomSecurityRoleId = $SecurityRoles->getHomeroomRoleId();
+				if (!empty($homeroomSecurityRoleId)) {
+					try {
+						$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+						$securityGroupId = $this->Institutions->get($staffEntity->institution_id)->security_group_id;
+						$securityRoleId = $homeroomSecurityRoleId;
+						
+						$securityGroupUsersRecord = [
+							'security_role_id' => $homeroomSecurityRoleId,
+							'security_group_id' => $securityGroupId,
+							'security_user_id' => $staffEntity->staff_id
+						];
+						$newSecurityGroupEntity = $SecurityGroupUsersTable->newEntity($securityGroupUsersRecord);
+						$entity = $SecurityGroupUsersTable->save($newSecurityGroupEntity);
+					} catch (InvalidPrimaryKeyException $ex) {
+						Log::write('error', __METHOD__ . ': ' . $this->Institutions->alias() . ' primary key not found (' . $institutionId . ')');
+					}
+				}
+			}
 		}
 	}
 
+	// IMPORTANT: when editing this method, need to consider impact on removeInactiveStaffSecurityRole()
 	public function removeStaffRole($staffEntity) {
 		$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
-		$SecurityGroupUsersTable->deleteAll([$SecurityGroupUsersTable->primaryKey() => $staffEntity->security_group_user_id]);
+		$affectedRows = $SecurityGroupUsersTable->deleteAll([$SecurityGroupUsersTable->primaryKey() => $staffEntity->security_group_user_id]);
 		$this->updateSecurityGroupUserId($staffEntity, NULL);
+
+		if ($affectedRows) {
+			$positionEntity = $this->Positions->find()
+				->where([
+					$this->Positions->aliasField('id') => $staffEntity->institution_position_id
+				])
+				->matching('StaffPositionTitles.SecurityRoles')
+				->select(['security_role_id' => 'SecurityRoles.id', 'is_homeroom'])
+				->first();
+			if (!empty($positionEntity) && $positionEntity->is_homeroom) {
+				// remove homeroom role
+				// delete 1 entry only
+				$SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+				$homeroomSecurityRoleId = $SecurityRoles->getHomeroomRoleId();
+
+				if (!empty($homeroomSecurityRoleId)) {
+					try {
+						$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+						$securityGroupId = $this->Institutions->get($staffEntity->institution_id)->security_group_id;
+						$deleteEntity = $SecurityGroupUsersTable->find()
+							->where([
+								$SecurityGroupUsersTable->aliasField('security_group_id') => $securityGroupId,
+								$SecurityGroupUsersTable->aliasField('security_user_id') => $staffEntity->staff_id,
+								$SecurityGroupUsersTable->aliasField('security_role_id') => $homeroomSecurityRoleId
+							])
+							->first();
+						if (!empty($deleteEntity)) {
+							$SecurityGroupUsersTable->delete($deleteEntity);
+						}
+					} catch (InvalidPrimaryKeyException $ex) {
+						Log::write('error', __METHOD__ . ': ' . $this->Institutions->alias() . ' primary key not found (' . $institutionId . ')');
+					}
+				}
+			}
+		} 
 	}
 
 	public function addAfterAction(Event $event, Entity $entity) {
@@ -545,6 +628,8 @@ class StaffTable extends AppTable {
 		$this->ControllerAction->field('staff_status_id', ['type' => 'select']);
 		$this->ControllerAction->field('staff_id');
 		$this->ControllerAction->field('security_group_user_id', ['visible' => false]);
+
+		$this->fields['staff_id']['sort'] = ['field' => 'Users.first_name'];
 		
 		if ($this->action == 'index') {
 			$InstitutionArray = [];
@@ -655,10 +740,10 @@ class StaffTable extends AppTable {
 		$startDate = (!empty($entity->start_date))? $entity->start_date->format('Y-m-d'): null;
 		$endDate = (!empty($entity->end_date))? $entity->end_date->format('Y-m-d'): null;
 			
-		$InstitutionSections = TableRegistry::get('Institution.InstitutionSections');
+		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
 
 		// Deleting a staff-to-position record in a school removes all records related to the staff in the school (i.e. remove him from classes/subjects) falling between end date and start date of his assignment in the position.
-		$sectionsInPosition = $InstitutionSections->find()
+		$classesInPosition = $InstitutionClasses->find()
 			->where(
 				['staff_id' => $staffId, 'institution_id' => $institutionId]
 			)
@@ -675,22 +760,22 @@ class StaffTable extends AppTable {
 				return $q->where($overlapDateCondition);
 			})
 			;
-		$sectionArray = [];
-		foreach ($sectionsInPosition as $key => $value) {
-			$sectionArray[] = $value->id;
+		$classArray = [];
+		foreach ($classesInPosition as $key => $value) {
+			$classArray[] = $value->id;
 		}
-		if (!empty($sectionArray)) {
-			$InstitutionSections->updateAll(
+		if (!empty($classArray)) {
+			$InstitutionClasses->updateAll(
 				['staff_id' => 0],
-				['id IN ' => $sectionArray]
+				['id IN ' => $classArray]
 			);
 		}
 		// delete the staff from subjects		
-		// find classes that matched the start-end date then delete from class_staff that matches staff id and classes returned from previous 
+		// find subjects that matched the start-end date then delete from subject_staff that matches staff id and subjects returned from previous 
 
-		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');	
-		$classesDuringStaffPeriod = $InstitutionClasses->find()
-			->where([$InstitutionClasses->aliasField('institution_id') => $institutionId])
+		$InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');	
+		$subjectsDuringStaffPeriod = $InstitutionSubjects->find()
+			->where([$InstitutionSubjects->aliasField('institution_id') => $institutionId])
 			->matching('AcademicPeriods', function ($q) use ($startDate, $endDate) {
 				$overlapDateCondition = [];
 				if (empty($endDate)) {
@@ -704,9 +789,9 @@ class StaffTable extends AppTable {
 				return $q->where($overlapDateCondition);
 			})
 			;
-		$classIdsDuringStaffPeriod = [];
-		foreach ($classesDuringStaffPeriod as $key => $value) {
-			$classIdsDuringStaffPeriod[] = $value->id;
+		$subjectIdsDuringStaffPeriod = [];
+		foreach ($subjectsDuringStaffPeriod as $key => $value) {
+			$subjectIdsDuringStaffPeriod[] = $value->id;
 		}
 
 		// Staff behavior associated to institution must be deleted.
@@ -736,16 +821,17 @@ class StaffTable extends AppTable {
 			$InstitutionRubrics->delete($value);
 		}
 
-		$InstitutionClassStaff = TableRegistry::get('Institution.InstitutionClassStaff');
+		$InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
 
-		$InstitutionClassStaff->deleteAll([
-			$InstitutionClassStaff->aliasField('staff_id') => $staffId,
-			$InstitutionClassStaff->aliasField('institution_class_id') . ' IN ' => $classIdsDuringStaffPeriod
+		$InstitutionSubjectStaff->deleteAll([
+			$InstitutionSubjectStaff->aliasField('staff_id') => $staffId,
+			$InstitutionSubjectStaff->aliasField('institution_subject_id') . ' IN ' => $subjectIdsDuringStaffPeriod
 		]);
 
 		// this logic here is to delete the roles from groups when the staff is deleted from the school
 		try {
 			
+			$securityGroupId = $this->Institutions->get($institutionId)->security_group_id;
 			$this->removeStaffRole($entity);
 
 		} catch (InvalidPrimaryKeyException $ex) {
@@ -986,14 +1072,7 @@ class StaffTable extends AppTable {
 				break;
 			} else {
 				foreach ($resultSet as $entity) {
-					Log::write('debug', __FUNCTION__ . ' - Removing roles for user_id (' . $entity->staff_id . ')');
-					$SecurityGroupUsers->deleteAll([
-						$SecurityGroupUsers->aliasField($SecurityGroupUsers->primaryKey()) => $entity->security_group_user_id
-					]);
-					$this->updateAll(
-						['security_group_user_id' => NULL],
-						[$this->primaryKey() => $entity->id]
-					);
+					$this->removeStaffRole($entity);
 				}
 			}
 		}

@@ -25,7 +25,7 @@ class ImportStudentAttendancesTable extends AppTable {
 	    $this->Students = TableRegistry::get('Institution.Students');
 	    $this->Users = TableRegistry::get('User.Users');
 	    $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$this->InstitutionSections = TableRegistry::get('Institution.InstitutionSections');
+		$this->InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
 	}
 
 	public function beforeAction($event) {
@@ -92,11 +92,11 @@ class ImportStudentAttendancesTable extends AppTable {
 								'Users'
 							])
 							// ->join([
-							// 	'InstitutionSectionStudents' => [
-							// 		'table' => 'institution_site_section_students',
-							// 		'alias' => 'InstitutionSectionStudents',
+							// 	'InstitutionClasseStudents' => [
+							// 		'table' => 'institution_class_students',
+							// 		'alias' => 'InstitutionClassStudents',
 							// 		// 'type' => 'LEFT',
-							// 		'conditions' => 'InstitutionSectionStudents.student_id = '.$this->Students->aliasField('student_id'),
+							// 		'conditions' => 'InstitutionClassStudents.student_id = '.$this->Students->aliasField('student_id'),
 							// 	],
 							// ])
 							->order(['EducationGrades.order'])
