@@ -113,7 +113,7 @@ class AssessmentsTable extends ControllerActionTable {
 		list($programmeOptions, $selectedProgramme, $gradeOptions, $selectedGrade, $academicPeriodOptions, $selectedAcademicPeriod) = array_values($this->_getSelectOptions($entity));
 
 		$this->field('education_programme_id', [
-			'options' => $programmeOptions
+			'options' => $programmeOptions,
 		]);
 		$this->field('education_grade_id', [
 			'options' => $gradeOptions
@@ -195,11 +195,19 @@ class AssessmentsTable extends ControllerActionTable {
 
 		$this->field('education_programme_id', [
 			'options' => $programmeOptions,
-			'value' => $selectedProgramme
+			'value' => $selectedProgramme,
+			'attr' => [
+				'ng-ca-on-change' => true,
+				'ca-on-change-source-url' => 'education-educationgrades.json?_finder=visible,list&education_programme_id=',
+				'ca-on-change-target' => 'education_programme_target',
+			]
 		]);
 		$this->field('education_grade_id', [
 			'options' => $gradeOptions,
-			'value' => $selectedGrade
+			'value' => $selectedGrade,
+			'attr' => [
+				'ca-id' => 'education_programme_target',
+			]			
 		]);
 		$this->field('academic_period_id', [
 			'options' => $academicPeriodOptions,
@@ -228,7 +236,7 @@ class AssessmentsTable extends ControllerActionTable {
 ******************************************************************************************************************/
 
 	public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request) {
-		$attr['onChangeReload'] = 'changeProgramme';
+		// $attr['onChangeReload'] = 'changeProgramme';
 		return $attr;
 	}
 
