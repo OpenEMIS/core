@@ -150,12 +150,13 @@ class TransferRequestsTable extends AppTable {
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
     	if ($this->Session->read($this->registryAlias().'.id')) {
-	    	$id = $this->Session->read('Students.Student.id');
+	    	$id = $this->Session->read('Student.Students.id');
 	    	// $action = $this->ControllerAction->buttons['add']['url'];
 	    	$action = $this->ControllerAction->url('add');
 			$action['action'] = 'StudentUser';
 			$action[0] = 'view';
 			$action[1] = $id;
+			$action['id'] = $this->Session->read($this->registryAlias().'.id');
 	    	$event->stopPropagation();
 	    	return $this->controller->redirect($action);
     	}
@@ -336,12 +337,13 @@ class TransferRequestsTable extends AppTable {
 
 		if ($this->Session->read($this->registryAlias().'.id')) {
 			$Students = TableRegistry::get('Institution.StudentUser');
-			$id = $this->Session->read('Students.Student.id');
+			$id = $this->Session->read('Student.Students.id');
 			// $action = $this->ControllerAction->buttons['edit']['url'];
 			$action = $this->ControllerAction->url('edit');
 			$action['action'] = $Students->alias();
 			$action[0] = 'view';
 			$action[1] = $id;
+			$action['id'] = $this->Session->read($this->registryAlias().'.id');
 			$event->stopPropagation();
 			return $this->controller->redirect($action);
 		}
