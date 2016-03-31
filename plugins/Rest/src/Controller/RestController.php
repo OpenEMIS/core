@@ -151,7 +151,7 @@ class RestController extends AppController
 						$query->select($fields);
 					}
 					try {
-						$data = $query->where([$target->aliasField($target->primaryKey()) => $id]);
+						$data = $query->where([$target->aliasField($target->primaryKey()) => $id])->first();
 						$data = $this->_formatBinaryValue($data);
 						$this->_outputData($data);
 					} catch (Exception $e) {
@@ -263,8 +263,9 @@ class RestController extends AppController
 		foreach ($finders as $key => $finder) {
 			if (substr_count($finder, 'list')>0) {
 
-				$parameters = substr($finder, strpos($finder, '[')+1, -1);
-				if (!empty($parameters)) {
+				$bracketPost = strpos($finder, '[');
+				if ($bracketPost>0) {
+					$parameters = substr($finder, $bracketPost+1, -1);
 					$parameters = explode(';', $parameters);
 				} else {
 					$parameters = [];
