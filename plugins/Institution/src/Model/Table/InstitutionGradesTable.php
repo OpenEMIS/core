@@ -105,6 +105,7 @@ class InstitutionGradesTable extends AppTable {
 						if ($grade['education_grade_id'] != 0) {
 							$error = false;
 
+							// $grade['start_date'] = $startDate;
 							$grade['start_date'] = $startDate;
 							$grade['institution_id'] = $institutionId;
 							if ($entity->has('end_date')) {
@@ -112,6 +113,7 @@ class InstitutionGradesTable extends AppTable {
 							}
 
 							$gradeEntities[$key] = $this->newEntity($grade);
+					pr($grade);pr($gradeEntities[$key]);die;
 							if ($gradeEntities[$key]->errors()) {
 								$error = true;
 							}
