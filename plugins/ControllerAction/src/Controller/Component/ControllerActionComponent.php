@@ -757,7 +757,7 @@ class ControllerActionComponent extends Component {
 		$data = $this->Paginator->paginate($query, $options->getArrayCopy());
 
 		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.index.afterPaginate');
-		$event = new Event('ControllerAction.Model.index.afterPaginate', $this, [$data]);
+		$event = new Event('ControllerAction.Model.index.afterPaginate', $this, [$data, $query]);
 		$event = $this->model->eventManager()->dispatch($event);
 		if ($event->isStopped()) { return $event->result; }
 		if (!empty($event->result)) {
