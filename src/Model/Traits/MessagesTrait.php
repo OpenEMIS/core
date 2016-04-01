@@ -38,7 +38,7 @@ trait MessagesTrait {
 			'noData' => 'There are no records.',
 			'noRecords' => 'No Record',
 			'select' => [
-				'noOptions' => 'No configured options'
+				'noOptions' => 'No options'
 			],
 			'error' => 'An unexpected error has been encounted. Please contact the administrator for assistance.',
 			'add' => [
@@ -188,6 +188,7 @@ trait MessagesTrait {
 			'created_user_id' => 'Created By',
 			'comments' => 'Comments',
 			'amount' => 'Amount',
+			'noStudentFees' => 'No Student Fees',
 		],
 		// 'InstitutionStaffAbsences' => [
 		// 	'first_date_absent' => 'First Day Of Absence',
@@ -603,6 +604,11 @@ trait MessagesTrait {
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
 				],
+			],
+			'InstitutionInfrastructures' => [
+				'code' => [
+					'ruleUnique' => 'Please enter a unique code'
+				]
 			]
 		],
 		'User' => [

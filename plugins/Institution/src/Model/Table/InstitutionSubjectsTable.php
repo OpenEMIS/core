@@ -563,7 +563,10 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 						 * since student record with its User record attached already exists in the $students array.
 						 */
 						if (!array_key_exists($id, $recordedStudentIds)) {
-							$students[] = $this->createVirtualEntity($id, $entity, 'students');
+							$student = $this->createVirtualEntity($id, $entity, 'students');
+							if ( !empty( $student->user ) ) {
+								$students[] = $student;
+							}
 						}
 						unset($studentOptions[$id]);
 					}
@@ -1033,7 +1036,7 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 						'institution_id' => $entity->institution_id,
 						'education_subject_id' => $educationSubject['id'],
 						'academic_period_id' => $entity->academic_period_id,
-						'institution_class_subjects' => [
+						'class_subjects' => [
 							[
 								'status' => 1,
 								'institution_class_id' => $entity->id
@@ -1056,4 +1059,34 @@ class InstitutionSubjectsTable extends ControllerActionTable {
         }
 	}
 
+	public function onGetTeachers(Event $event, Entity $entity) {
+		if ($entity->has('teachers')) {
+			$resultArray = [];
+			foreach ($entity->teachers as $key => $value) {
+				switch ($this->action) {
+					case 'view':
+						$resultArray[] = $event->subject()->Html->link($value->name_with_id , [
+							'plugin' => 'Institution',
+							'controller' => 'Institutions',
+							'action' => 'StaffUser',
+							'view',
+							$value->id
+						]);
+						break;
+					
+					case 'index':
+						$resultArray[] = $value->name_with_id;
+						break;
+
+					default:
+						$resultArray = null;
+						break;
+				}
+			}
+		}
+
+		if (is_array($resultArray)) {
+			return implode(', ', $resultArray);
+		}
+	} 
 }
