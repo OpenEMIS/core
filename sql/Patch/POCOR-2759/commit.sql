@@ -123,7 +123,7 @@ SELECT `id`, `code`, `name`, 0, 0, '', `visible`, `modified_user_id`, `modified`
 -- assessment_periods
 DROP TABLE IF EXISTS `assessment_periods`;
 CREATE TABLE IF NOT EXISTS `assessment_periods` (
-  `id` char(36) NOT NULL AUTO_INCREMENT,
+  `id` char(36) NOT NULL,
   `code` varchar(50) NOT NULL,
   `name` varchar(100) NOT NULL,
   `start_date` date NOT NULL,

@@ -46,7 +46,7 @@ $institutionId = $session->read('Institution.Institutions.id');
 				<div class="tabs-divider"></div>
 			</scrollable-tabset>
 
-			<div class="table-wrapper">
+			<div id="institution-result-table" class="table-wrapper">
 				<div ng-if="gridOptions" ag-grid="gridOptions" class="ag-fresh ag-height-fixed"></div>
 			</div>
 		</div>
