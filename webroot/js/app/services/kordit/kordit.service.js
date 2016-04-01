@@ -1,5 +1,5 @@
 angular.module('kordit.service', [])
-.factory('korditService', ['$sce', '$timeout', '$http', function ($sce, $timeout, $http) {
+.factory('korditService', ['$sce', '$timeout', '$http', '$q', function ($sce, $timeout, $http, $q) {
 
     function _htmlEntities(str) {
         return String(str).replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -42,24 +42,23 @@ angular.module('kordit.service', [])
 
     $http.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
     function _ajax(params) {
+        var deferred = $q.defer();
         var defaultParams = {
             method: 'GET',
-            url: _url,
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
             }
         };
-        // var mergedParams = angular.extend(object1, object2);
         var mergedParams = angular.merge(defaultParams, params);
         $http(mergedParams).then(
             function successCallback(_response) {
-                return response.data;
+                deferred.resolve(_response.data);
             }, function errorCallback(_error) {
-
+                deferred.reject(_error);
             }, function progressCallback(_response) {
-
             }
         );
+        return deferred.promise;
     }
 
     return {
