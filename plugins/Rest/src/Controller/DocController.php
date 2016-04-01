@@ -36,7 +36,7 @@ class DocController extends AppController
  *
  ***************************************************************************************************************************************************/
 	public function index() {
-		$this->getView()->layout(false);
+		$this->viewBuilder()->layout(false);
 	}
 
 
