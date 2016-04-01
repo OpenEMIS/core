@@ -3,8 +3,8 @@ namespace Institution\Model\Entity;
 
 use Cake\ORM\Entity;
 
-class InstitutionClassStudent extends Entity {
-	protected $_virtual = ['name', 'student_status_name', 'student_user_id', 'student_openemis_no', 'student_gender'];
+class InstitutionSubjectStudent extends Entity {
+	protected $_virtual = ['name', 'student_status', 'student_user_id', 'student_openemis_no', 'student_gender'];
 	
 	protected function _getStudentName() {
 		$value = '';
@@ -40,10 +40,12 @@ class InstitutionClassStudent extends Entity {
 		return $value;
 	}
 
-	protected function _getStudentStatusName() {
+	protected function _getStudentStatus() {
 		$value = '';
-		if ($this->has('student_status')) {
-			$value = __($this->student_status->name);
+		if ($this->has('class_student')) {
+			if ($this->class_student->has('student_status')) {
+				$value = __($this->class_student->student_status->name);
+			}
 		}
 		return $value;
 	}
