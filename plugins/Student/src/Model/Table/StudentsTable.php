@@ -332,8 +332,8 @@ class StudentsTable extends AppTable {
 		$studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
 		$studentTabElements = [
 			'Programmes' => ['text' => __('Programmes')],
-			'Sections' => ['text' => __('Classes')],
-			'Classes' => ['text' => __('Subjects')],
+			'Classes' => ['text' => __('Classes')],
+			'Subjects' => ['text' => __('Subjects')],
 			'Absences' => ['text' => __('Absences')],
 			'Behaviours' => ['text' => __('Behaviours')],
 			'Results' => ['text' => __('Results')],

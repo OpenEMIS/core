@@ -303,7 +303,7 @@ class InstitutionGradesTable extends AppTable {
 	}
 
 	/**
-	 * Used by InstitutionSectionsTable & InstitutionClassesTable.
+	 * Used by InstitutionClassesTable & InstitutionSubjectsTable.
 	 * This function resides here instead of inside AcademicPeriodsTable because the first query is to get 'start_date' and 'end_date' 
 	 * of registered Programmes in the Institution. 
 	 * @param  integer $model           		 [description]
