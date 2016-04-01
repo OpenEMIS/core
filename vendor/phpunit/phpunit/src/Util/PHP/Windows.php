@@ -8,16 +8,10 @@
  * file that was distributed with this source code.
  */
 
-use SebastianBergmann\Environment\Runtime;
-
 /**
  * Windows utility for PHP sub-processes.
  *
- * @author     Sebastian Bergmann <sebastian@phpunit.de>
- * @copyright  Sebastian Bergmann <sebastian@phpunit.de>
- * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
- * @link       http://www.phpunit.de/
- * @since      Class available since Release 3.5.12
+ * @since Class available since Release 3.5.12
  */
 class PHPUnit_Util_PHP_Windows extends PHPUnit_Util_PHP_Default
 {
@@ -34,10 +28,8 @@ class PHPUnit_Util_PHP_Windows extends PHPUnit_Util_PHP_Default
      *
      * @see https://bugs.php.net/bug.php?id=51800
      */
-    public function runJob($job, array $settings = array())
+    public function runJob($job, array $settings = [])
     {
-        $runtime = new Runtime;
-
         if (false === $stdout_handle = tmpfile()) {
             throw new PHPUnit_Framework_Exception(
                 'A temporary file could not be created; verify that your TEMP environment variable is writable'
@@ -45,12 +37,12 @@ class PHPUnit_Util_PHP_Windows extends PHPUnit_Util_PHP_Default
         }
 
         $process = proc_open(
-            $runtime->getBinary() . $this->settingsToParameters($settings),
-            array(
-            0 => array('pipe', 'r'),
-            1 => $stdout_handle,
-            2 => array('pipe', 'w')
-            ),
+            $this->getCommand($settings),
+            [
+                0 => ['pipe', 'r'],
+                1 => $stdout_handle,
+                2 => ['pipe', 'w']
+            ],
             $pipes
         );
 
@@ -74,13 +66,15 @@ class PHPUnit_Util_PHP_Windows extends PHPUnit_Util_PHP_Default
 
         $this->cleanup();
 
-        return array('stdout' => $stdout, 'stderr' => $stderr);
+        return ['stdout' => $stdout, 'stderr' => $stderr];
     }
 
     /**
-     * @param  resource                    $pipe
-     * @param  string                      $job
+     * @param resource $pipe
+     * @param string   $job
+     *
      * @throws PHPUnit_Framework_Exception
+     *
      * @since  Method available since Release 3.5.12
      */
     protected function process($pipe, $job)
