@@ -30,12 +30,15 @@ angular.module('institution.result.controller', ['institution.result.service'])
     $scope.reloadData = function(_subject) {
         $scope.subject = _subject;
         // getRowData
+        ResultService.isAppendSpinner(true, 'institution-result-table');
         ResultService.getRowData($scope).then(function successCallback(_rowData) {
+            ResultService.isAppendSpinner(false, 'institution-result-table');
             $scope.gridOptions.api.setRowData(_rowData);
         }, function errorCallback(_error) {
+            ResultService.isAppendSpinner(false, 'institution-result-table');
             deferred.reject(_error);
         }, function progressCallback(_response) {
-
+            ResultService.isAppendSpinner(false, 'institution-result-table');
         });
     };
 });
