@@ -15,11 +15,11 @@
 namespace Cake\Collection;
 
 use ArrayIterator;
-use Cake\Collection\CollectionInterface;
-use Cake\Collection\CollectionTrait;
 use InvalidArgumentException;
 use IteratorIterator;
+use LogicException;
 use Serializable;
+use Traversable;
 
 /**
  * A collection is an immutable list of elements with a handful of functions to
@@ -34,7 +34,7 @@ class Collection extends IteratorIterator implements CollectionInterface, Serial
      * Constructor. You can provide an array or any traversable object
      *
      * @param array|\Traversable $items Items.
-     * @throws InvalidArgumentException If passed incorrect type for items.
+     * @throws \InvalidArgumentException If passed incorrect type for items.
      */
     public function __construct($items)
     {
@@ -42,7 +42,7 @@ class Collection extends IteratorIterator implements CollectionInterface, Serial
             $items = new ArrayIterator($items);
         }
 
-        if (!($items instanceof \Traversable)) {
+        if (!($items instanceof Traversable)) {
             $msg = 'Only an array or \Traversable is allowed for Collection';
             throw new InvalidArgumentException($msg);
         }
@@ -70,6 +70,20 @@ class Collection extends IteratorIterator implements CollectionInterface, Serial
     public function unserialize($collection)
     {
         $this->__construct(unserialize($collection));
+    }
+
+    /**
+     * Throws an exception.
+     *
+     * Issuing a count on a Collection can have many side effects, some making the
+     * Collection unusable after the count operation.
+     *
+     * @return void
+     * @throws \LogicException
+     */
+    public function count()
+    {
+        throw new LogicException('You cannot issue a count on a Collection.');
     }
 
     /**
