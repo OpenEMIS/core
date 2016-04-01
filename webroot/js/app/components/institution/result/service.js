@@ -102,9 +102,9 @@ angular.module('institution.result.service', [])
                     filter: 'number',
                     cellStyle: function(params) {
                         if (parseInt(params.value) < 40) {
-                            return {color: 'red'};
+                            return {color: '#CC5C5C'};
                         } else {
-                            return {color: 'black'};
+                            return {color: '#333'};
                         }
                     }
                 };
