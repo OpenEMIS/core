@@ -1,6 +1,7 @@
 //Controller Action Angular Functions v.1.0.1
-angular.module('caModule', ['ngRoute', 'kordit.service'])
-    .directive('ngCaOnChange', function() {
+angular.module('caModule', ['ngRoute', 'kordit.service', 'ui.bootstrap'])
+// angular.module('caModule', ['kordit.service', 'ui.bootstrap'])
+    .directive('caOnChange', function() {
         // console.log('activated');
         return {
             /**
@@ -21,15 +22,16 @@ angular.module('caModule', ['ngRoute', 'kordit.service'])
                 // orientation: '@'
             },
             // template: '<div class="split-panes {{orientation}}" ng-transclude></div>',
-            controller: ['$scope', '$http', '$routeParams', '$location', 'korditService',  function($scope, $http, $routeParams, $location, korditService) {
-            // controller: ['$scope', '$http', '$location',  function($scope, $http, $location) {
+            // controller: ['$scope', '$http', '$routeParams', '$location', 'korditService',  function($scope, $http, $routeParams, $location, korditService) {
+            // controller: ['$scope', '$http', '$routeParams', '$location', 'korditService',  function($scope, $http, $routeParams, $location, korditService) {
+            controller: ['$scope', 'korditService',  function($scope, korditService) {
 
                 // var httpParams = ($location.absUrl()).split('/Loads/Publishes');
                 // var indexUrl = httpParams[0] + '/Loads/Publishes';
                 // var id = httpParams[1].replace('/edit/', '');
                 // var gatewayUrl = indexUrl + '/gateway/' + id;
 
-                // $scope.calculator.func = 'ajaxGetResults';//serialize
+                $scope.options = {};
                 // $http.post(gatewayUrl, korditService.serialize($scope.calculator), {
                 //         headers: {
                 //             'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
@@ -58,32 +60,49 @@ angular.module('caModule', ['ngRoute', 'kordit.service'])
                 //     });
 
 
-                $http.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
+                // $http.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
                 var apiUrl = "/rest/";
             
                 this.onChange = function(element, attrs) {
-                    // console.log(element.val());
+                    console.log(attrs);
                     var targetUrl = apiUrl + attrs.caOnChangeSourceUrl + element.val();
-                    console.log(targetUrl);
-                    $http.get(targetUrl, {
-                            params: {}
-                        }).
-                        success(function(data, status, headers, config) {
-                            console.log(data);
-                        }).
-                        error(function(data, status, headers, config) {
-                            console.log('error');
+                    // console.log(targetUrl);
+                    var response = korditService.ajax({url:targetUrl});
+                    response  
+                        .then(function(data) {
+                            console.log('Success!', data);
+                        }, function(error) {
+                            console.log('Failure...', error);
                         });
-
-                    // return $scope.panes.length;
                 };
 
             }],
             link: function(scope, element, attrs, controller) {
+                // console.log(angular.element());
+                // <select ng-model="selectedCountry.countryId" ng-options="country.countryId as country.name for country in chooseCountries"></select>
 
                 element.on('change', function(event) {
                     controller.onChange(element, attrs);
                 });
+
+            }
+        };
+    })
+    .directive('caOnChangeTarget', function() {
+        return {
+            // require: ['^^caOnChange'],
+            // template: '<div class="split-panes {{orientation}}" ng-transclude></div>',
+            // controller: ['$scope', '$http', '$routeParams', '$location', 'korditService',  function($scope, $http, $routeParams, $location, korditService) {
+            //     $scope.options = {};
+            // }],
+            // templateUrl: '/assessment/templates/caOnChangeTarget.html',
+            link: function(scope, element, attrs, controller) {
+                // console.log(scope);
+                // <select ng-model="selectedCountry.countryId" ng-options="country.countryId as country.name for country in chooseCountries"></select>
+
+                // element.on('change', function(event) {
+                //     controller.onChange(element, attrs);
+                // });
 
             }
         };
