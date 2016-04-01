@@ -219,7 +219,11 @@ class StudentAdmissionTable extends AppTable {
 
 			$where = [$this->aliasField('status') => 0, $this->aliasField('type') => self::ADMISSION];
 			if (!$AccessControl->isAdmin()) {
-				$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
+				if (!empty($institutionIds)) {
+					$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
+				} else {
+					$where[$this->aliasField('institution_id')] = '-1';
+				}
 			}
 
 			$resultSet = $this
