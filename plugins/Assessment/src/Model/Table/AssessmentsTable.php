@@ -197,16 +197,17 @@ class AssessmentsTable extends ControllerActionTable {
 			'options' => $programmeOptions,
 			'value' => $selectedProgramme,
 			'attr' => [
-				'ng-ca-on-change' => true,
+				'ca-on-change' => true,
 				'ca-on-change-source-url' => 'education-educationgrades.json?_finder=visible,list&education_programme_id=',
-				'ca-on-change-target' => 'education_programme_target',
+				'ca-on-change-target' => 'education_grade_id',
 			]
 		]);
 		$this->field('education_grade_id', [
 			'options' => $gradeOptions,
 			'value' => $selectedGrade,
 			'attr' => [
-				'ca-id' => 'education_programme_target',
+				'ca-id' => 'education_grade_id',
+				'ca-on-change-Target' => true,
 			]			
 		]);
 		$this->field('academic_period_id', [
@@ -241,7 +242,7 @@ class AssessmentsTable extends ControllerActionTable {
 	}
 
 	public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request) {
-		$attr['onChangeReload'] = 'changeGrade';
+		// $attr['onChangeReload'] = 'changeGrade';
 		return $attr;
 	}
 
