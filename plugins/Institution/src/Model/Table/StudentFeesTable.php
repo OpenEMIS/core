@@ -143,7 +143,14 @@ class StudentFeesTable extends AppTable {
 		}
 		$institutionId = $this->institutionId;
 		$this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
-		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId);
+		$selectedOption = $this->queryString('academic_period_id', $academicPeriodOptions);
+		$Fees = $this;
+		$this->advancedSelectOptions($academicPeriodOptions, $selectedOption, [
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudentFees')),
+			'callable' => function($id) use ($Fees, $institutionId) {
+				return $Fees->find()->where(['institution_id'=>$institutionId, 'academic_period_id'=>$id])->count();
+			}
+		]);
 
 		$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($institutionId, $this->_selectedAcademicPeriodId);
 		$this->_selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);

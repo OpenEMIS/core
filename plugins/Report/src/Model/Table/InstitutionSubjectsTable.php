@@ -10,7 +10,7 @@ use App\Model\Table\AppTable;
 
 class InstitutionSubjectsTable extends AppTable  {
 	public function initialize(array $config) {
-		$this->table('institution_classes');
+		$this->table('institution_subjects');
 		parent::initialize($config);
 
 		$this->belongsTo('AcademicPeriods', 			['className' => 'AcademicPeriod.AcademicPeriods']);
