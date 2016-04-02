@@ -1,5 +1,5 @@
 <?php
-namespace Restful\Controller\Component;
+namespace Rest\Controller\Component;
 
 use Cake\Network\Exception\NotFoundException;
 use Cake\ORM\TableRegistry;

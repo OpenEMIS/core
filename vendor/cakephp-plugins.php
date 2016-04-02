@@ -29,7 +29,6 @@ return [
         'OpenEmis' => $baseDir . '/plugins/OpenEmis/',
         'Report' => $baseDir . '/plugins/Report/',
         'Rest' => $baseDir . '/plugins/Rest/',
-        'Restful' => $baseDir . '/plugins/Restful/',
         'Rubric' => $baseDir . '/plugins/Rubric/',
         'Security' => $baseDir . '/plugins/Security/',
         'Staff' => $baseDir . '/plugins/Staff/',

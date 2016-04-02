@@ -1,5 +1,5 @@
 <?php
-namespace Rest\Controller;
+namespace Restfull\Controller;
 
 use Exception;
 use Cake\Event\Event;
