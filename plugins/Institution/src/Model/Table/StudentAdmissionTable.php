@@ -48,8 +48,6 @@ class StudentAdmissionTable extends AppTable {
 
 		$query->where([$this->aliasField('type').' IN' => $typeToShow, $this->aliasField('status').' IN' => $statusToshow]);
 
-
-
 		$search = $this->ControllerAction->getSearchKey();
 		if (!empty($search)) {
 			// function from AdvancedNameSearchBehavior
