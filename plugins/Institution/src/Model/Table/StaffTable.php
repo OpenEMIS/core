@@ -822,7 +822,7 @@ class StaffTable extends AppTable {
 			$InstitutionRubrics->delete($value);
 		}
 
-		if (!empty($activeStatusId)) {
+		if (!empty($subjectIdsDuringStaffPeriod)) {
 			$InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
 			$InstitutionSubjectStaff->deleteAll([
 				$InstitutionSubjectStaff->aliasField('staff_id') => $staffId,

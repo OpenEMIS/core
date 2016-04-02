@@ -126,31 +126,33 @@ class ImportStudentsTable extends AppTable {
 	}
 
 	public function onImportPopulateEducationGradesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
-		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-		$modelData = $lookedUpTable->find('all')
-								->contain(['EducationProgrammes'])
-								->select(['code', 'name', 'EducationProgrammes.name'])
-								->where([
-									$lookedUpTable->aliasField('visible').' = 1'
-								])
-								->order([
-									$lookupModel.'.order',
-									$lookupModel.'.education_programme_id'
-								])
-								->where([
-									$lookedUpTable->aliasField('id').' IN' => $this->gradesInInstitution
-								]);
 		$programmeHeader = $this->getExcelLabel($lookedUpTable, 'education_programme_id');
 		$translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
 		$data[$columnOrder]['lookupColumn'] = 3;
 		$data[$columnOrder]['data'][] = [$programmeHeader, $translatedReadableCol, $translatedCol];
-		if (!empty($modelData)) {
-			foreach($modelData->toArray() as $row) {
-				$data[$columnOrder]['data'][] = [
-					$row->education_programme->name,
-					$row->name,
-					$row->$lookupColumn
-				];
+		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+		if (!empty($this->gradesInInstitution)) {
+			$modelData = $lookedUpTable->find('all')
+									->contain(['EducationProgrammes'])
+									->select(['code', 'name', 'EducationProgrammes.name'])
+									->where([
+										$lookedUpTable->aliasField('visible').' = 1'
+									])
+									->order([
+										$lookupModel.'.order',
+										$lookupModel.'.education_programme_id'
+									])
+									->where([
+										$lookedUpTable->aliasField('id').' IN' => $this->gradesInInstitution
+									]);
+			if (!empty($modelData)) {
+				foreach($modelData->toArray() as $row) {
+					$data[$columnOrder]['data'][] = [
+						$row->education_programme->name,
+						$row->name,
+						$row->$lookupColumn
+					];
+				}
 			}
 		}
 	}
