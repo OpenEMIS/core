@@ -5,6 +5,7 @@ use ArrayObject;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\I18n\Time;
+use Cake\I18n\Date;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Log\LogTrait;

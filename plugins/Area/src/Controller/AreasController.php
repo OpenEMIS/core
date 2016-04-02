@@ -144,11 +144,13 @@ class AreasController extends AppController
 					$authorisedAreaId = [];
 				}
 				
-				$areaCondition[] = [
-						$Table->aliasField('id').' IN' => $authorisedParentIds
-					];
-				$authorisedParentIds = $authorisedParentIds;
-				$condition['OR'] = $areaCondition;
+				if (!empty($authorisedParentIds)) {
+					$areaCondition[] = [
+							$Table->aliasField('id').' IN' => $authorisedParentIds
+						];
+					$authorisedParentIds = $authorisedParentIds;
+					$condition['OR'] = $areaCondition;
+				}
 			}
 		}
 
