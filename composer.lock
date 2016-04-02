@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "0e4ceb57752104b1fe6a298c51093ae1",
-    "content-hash": "0ab0a2082bcc654c73785988716f7cff",
+    "hash": "063ecddf7a5b8c7a3ad9a32a2ad99081",
+    "content-hash": "760235a265171b543d6672bca71baf21",
     "packages": [
         {
             "name": "aura/installer-default",
@@ -252,6 +252,60 @@
                 "time"
             ],
             "time": "2016-03-10 01:50:25"
+        },
+        {
+            "name": "korditpteltd/kd-cakephp-restful",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git",
+                "reference": "0ccd8feeea10b67a6f66f53249b82f8e5db35964"
+            },
+            "require": {
+                "cakephp/cakephp": ">3.0.9 <3.2.7"
+            },
+            "require-dev": {
+                "cakephp/cakephp-codesniffer": "dev-master",
+                "phpunit/phpunit": "4.1.*"
+            },
+            "type": "cakephp-plugin",
+            "extra": {
+                "branch-alias": {
+                    "master": "1.0.1-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Restful\\": "src",
+                    "Restful\\Test\\Fixture\\": "tests\\Fixture"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Cake\\Test\\": "vendor/cakephp/cakephp/tests",
+                    "Restful\\Test\\": "tests"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "authors": [
+                {
+                    "name": "KORDIT PHP DEVELOPERS",
+                    "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/commits/all"
+                }
+            ],
+            "description": "KORDIT CakePHP Restfull Plugin",
+            "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-restful",
+            "keywords": [
+                "cakephp",
+                "kordit",
+                "restful"
+            ],
+            "support": {
+                "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
+            },
+            "time": "2016-04-02 18:09:39"
         },
         {
             "name": "mk-j/php_xlsxwriter",
