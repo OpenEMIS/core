@@ -9,7 +9,8 @@
         "cakephp/cakephp": "3.2.6",
         "mobiledetect/mobiledetectlib": "2.*",
         "PHPOffice/PHPExcel": "dev-master",
-        "mk-j/php_xlsxwriter": "dev-master"
+        "mk-j/php_xlsxwriter": "dev-master",
+        "korditpteltd/kd-cakephp-restful": "*"
     },
     "require-dev": {
         "psy/psysh": "@stable",
@@ -41,5 +42,11 @@
         "post-autoload-dump": "Cake\\Composer\\Installer\\PluginInstaller::postAutoloadDump"
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "repositories":[
+        {
+            "type": "git",
+            "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git"
+        }
+    ]
 }
