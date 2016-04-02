@@ -1,6 +1,6 @@
 <?php
 
-namespace Restful\Controller;
+namespace Restfull\Controller;
 
 use App\Controller\AppController as BaseController;
 
