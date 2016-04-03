@@ -1,9 +1,9 @@
 {
-    "name": "cakephp/app",
-    "description": "CakePHP skeleton app",
-    "homepage": "http://cakephp.org",
+    "name": "korditpteltd/openemis-phpoe",
+    "description": "KORDIT OpenEMIS CORE",
+    "homepage": "https://demo.openemis.org/core",
     "type": "project",
-    "license": "MIT",
+    "license": "GPL-2.0",
     "require": {
         "php": ">=5.4.16",
         "cakephp/cakephp": "3.2.6",

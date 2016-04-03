@@ -12,6 +12,8 @@ class DocController extends AppController
 {
 	public function initialize() {
 		parent::initialize();
+
+		$this->loadComponent('Restful.DocNavigation');
 	}
 
 
@@ -29,19 +31,38 @@ class DocController extends AppController
 		$this->Auth->allow();
 	}
 
+	public function beforeRender(Event $event) {
+		parent::beforeRender($event);
+
+		if (method_exists($this, 'getView')) {
+			$this->getView()->layout('doc');
+		} else {
+			$this->viewBuilder()->layout('doc');
+		}
+		$fopen = fopen(RESTFUL_PLUGIN_PATH . DS . 'VERSION.txt', 'r');
+		$version = fread($fopen, 1024);
+		fclose($fopen);
+		$this->set('version', $version);
+	}
+
 
 /***************************************************************************************************************************************************
  *
  * Controller action functions
  *
  ***************************************************************************************************************************************************/
-	public function index() {
-		if (method_exists($this, 'getView')) {
-			$this->getView()->layout(false);		
-		} else {
-			$this->viewBuilder()->layout(false);		
-		}
-	}
+	public function index() {}
 
+	public function listing() {}
+
+	public function viewing() {}
+
+	public function adding() {}
+
+	public function editing() {}
+
+	public function deleting() {}
+
+	public function curl() {}
 
 }
