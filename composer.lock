@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "063ecddf7a5b8c7a3ad9a32a2ad99081",
-    "content-hash": "760235a265171b543d6672bca71baf21",
+    "hash": "f682ef9e90cff148564a059279017fb5",
+    "content-hash": "ab60b6f8578cb79e679fc3621d75a64b",
     "packages": [
         {
             "name": "aura/installer-default",
@@ -259,7 +259,7 @@
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git",
-                "reference": "0ccd8feeea10b67a6f66f53249b82f8e5db35964"
+                "reference": "23d960b7b806c8c48c5e74aafa49324144e5a23b"
             },
             "require": {
                 "cakephp/cakephp": ">3.0.9 <3.2.7"
@@ -287,7 +287,7 @@
                 }
             },
             "license": [
-                "proprietary"
+                "GPL-2.0"
             ],
             "authors": [
                 {
@@ -305,7 +305,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
             },
-            "time": "2016-04-02 18:09:39"
+            "time": "2016-04-03 17:17:39"
         },
         {
             "name": "mk-j/php_xlsxwriter",

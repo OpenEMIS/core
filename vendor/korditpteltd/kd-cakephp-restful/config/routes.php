@@ -3,50 +3,43 @@ use Cake\Routing\Router;
 
 Router::scope('/restful', ['plugin' => 'Restful'], function ($routes) {
 
-    $routes->extensions(['json', 'xml']);
-	$routes->connect(
-			'/',
-			['plugin' => 'Restful', 'controller' => 'Doc']
-		);
-	$routes->connect(
-			'/doc',
-			['plugin' => 'Restful', 'controller' => 'Doc']
-		);
-	$routes->connect(
-			'/:model',
-			['plugin' => 'Restful', 'controller' => 'Restful', 'action' => 'index', '_method' => 'GET'],
-	        [
-	            'pass' => ['model'],
-	        ]
-		);
-	$routes->connect(
-			'/:model',
-			['plugin' => 'Restful', 'controller' => 'Restful', 'action' => 'add', '_method' => 'POST'],
-	        [
-	            'pass' => ['model'],
-	        ]
-		);
+	$routes->scope('/doc', ['controller' => 'Doc'], function ($routes) {
+			$routes->connect( '/', ['action' => 'index']);
+			$routes->connect( '/index', ['action' => 'index']);
+			$routes->connect( '/listing', ['action' => 'listing']);
+			$routes->connect( '/viewing', ['action' => 'viewing']);
+			$routes->connect( '/adding', ['action' => 'adding']);
+			$routes->connect( '/editing', ['action' => 'editing']);
+			$routes->connect( '/deleting', ['action' => 'deleting']);
+			$routes->connect( '/curl', ['action' => 'curl']);
+		}
+	);
 
-	$routes->connect(
-			'/:model/:id',
-			['plugin' => 'Restful', 'controller' => 'Restful', 'action' => 'view', '_method' => 'GET'],
-	        [
-	            'pass' => ['model', 'id'],
-	        ]
-		);
-	$routes->connect(
-			'/:model/:id',
-			['plugin' => 'Restful', 'controller' => 'Restful', 'action' => 'edit', '_method' => 'PUT'],
-	        [
-	            'pass' => ['model', 'id'],
-	        ]
-		);
-	$routes->connect(
-			'/:model/:id',
-			['plugin' => 'Restful', 'controller' => 'Restful', 'action' => 'delete', '_method' => 'DELETE'],
-	        [
-	            'pass' => ['model', 'id'],
-	        ]
-		);
+	$routes->scope('/', ['controller' => 'Restful'], function ($routes) {
+		    $routes->extensions(['json', 'xml']);
+			$routes->connect( '/', ['action' => 'nothing']);
+			$routes->connect( '/:model',
+				['action' => 'index', '_method' => 'GET'],
+		        ['pass' => ['model']]
+			);
+			$routes->connect( '/:model',
+				['action' => 'add', '_method' => 'POST'],
+		        ['pass' => ['model']]
+			);
+			$routes->connect( '/:model/:id',
+				['action' => 'view', '_method' => 'GET'],
+		        ['pass' => ['model', 'id']]
+			);
+			$routes->connect( '/:model/:id',
+				['action' => 'edit', '_method' => 'PUT'],
+		        ['pass' => ['model', 'id']]
+			);
+			$routes->connect( '/:model/:id',
+				['action' => 'delete', '_method' => 'DELETE'],
+		        ['pass' => ['model', 'id']]
+			);
+
+		}
+	);
 
 });
