@@ -4,7 +4,7 @@
     "type": "cakephp-plugin",
     "keywords": ["kordit", "cakephp", "restful"],
     "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-restful",
-    "license": "proprietary",
+    "license": "GPL-2.0",
     "authors": [
         {
             "name": "KORDIT PHP DEVELOPERS",

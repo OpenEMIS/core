@@ -29,6 +29,10 @@ class RestfulController extends AppController
  ***************************************************************************************************************************************************/
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
+
+	    if (empty($this->request->params['_ext'])) {
+	    	$this->request->params['_ext'] = 'json';
+	    }
 	}
 
 	public function beforeRender(Event $event) {
@@ -49,6 +53,10 @@ class RestfulController extends AppController
  * Controller action functions
  *
  ***************************************************************************************************************************************************/
+	public function nothing() {
+		$this->_outputData([]);
+	}
+
 	public function index($model) {
 		$target = $this->_instantiateModel($model);
 		if ($target) {
@@ -67,7 +75,7 @@ class RestfulController extends AppController
 				$this->_attachFinders($target, $requestQueries, $query);
 			}
 
-			$this->_setupContainments($target, $requestQueries, $query);
+			$containments = $this->_setupContainments($target, $requestQueries, $query);
 
 			$limit = 10;
 			if (array_key_exists('_limit', $requestQueries)) {
@@ -85,7 +93,7 @@ class RestfulController extends AppController
 			}
 			$fields = [];
 			if (!empty($requestQueries)) {
-				$fields = $this->_filterSelectFields($target, $requestQueries);
+				$fields = $this->_filterSelectFields($target, $requestQueries, $containments);
 			}
 			if (is_bool($conditions) && !$conditions) {
 				$this->_outputError('Extra query parameters declared do not exists in '.$target->registryAlias());
@@ -138,11 +146,11 @@ class RestfulController extends AppController
 				$requestQueries = $this->request->query;
 	
 				$query = $target->find();
-				$this->_setupContainments($target, $requestQueries, $query);
+				$containments = $this->_setupContainments($target, $requestQueries, $query);
 
 				$fields = [];
 				if (!empty($requestQueries)) {
-					$fields = $this->_filterSelectFields($target, $requestQueries);
+					$fields = $this->_filterSelectFields($target, $requestQueries, $containments);
 				}
 				if (is_bool($fields) && !$fields) {
 					$this->_outputError('One or more selected fields do not exists in '.$target->registryAlias());
@@ -366,6 +374,7 @@ class RestfulController extends AppController
 	}
 
 	private function _setupContainments(Table $target, array $requestQueries, Query $query) {
+		$contains = [];
 		if (array_key_exists('_contain', $requestQueries)) {
 			$contains = array_map('trim', explode(',', $requestQueries['_contain']));
 			if (!empty($contains)) {
@@ -377,7 +386,6 @@ class RestfulController extends AppController
 					}
 				}
 				if ($trueExists) {
-					$contains = [];
 					foreach ($target->associations() as $assoc) {
 						$contains[] = $assoc->name();
 					}
@@ -385,18 +393,32 @@ class RestfulController extends AppController
 				$query->contain($contains);
 			}
 		}
-		return $query;
+		return $contains;
 	}
 
-	private function _filterSelectFields(Table $target, array $requestQueries) {
+	private function _filterSelectFields(Table $target, array $requestQueries, array $containments=[]) {
 		$targetColumns = $target->schema()->columns();
 		if (!array_key_exists('_fields', $requestQueries)) {
 			return [];
 		}
 		$fields = array_map('trim', explode(',', $requestQueries['_fields']));
-		foreach ($fields as $field) {
+		foreach ($fields as $key => $field) {
 			if (!in_array($field, $targetColumns)) {
 				return false;
+			} else {
+				$fields[$key] = $target->aliasField($field);
+			}
+		}
+		if (!empty($containments)) {
+			foreach ($containments as $key => $name) {
+				foreach ($target->associations() as $assoc) {
+					if ($name == $assoc->name()) {
+						$containmentColumns = $assoc->schema()->columns();
+						foreach ($containmentColumns as $containmentColumn) {
+							$fields[] = $assoc->aliasField($containmentColumn);
+						}
+					}
+				}
 			}
 		}
 		return $fields;
