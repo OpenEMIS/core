@@ -65,7 +65,7 @@ class AreasController extends AppController
 	}
 
 	public function ajaxGetArea($tableName, $targetModel, $id, $displayCountry = true) {
-		$this->getView()->layout('ajax');
+		$this->viewBuilder()->layout('ajax');
 		$rootId = -1; // Root node
 
 		$condition = [];
@@ -144,11 +144,13 @@ class AreasController extends AppController
 					$authorisedAreaId = [];
 				}
 				
-				$areaCondition[] = [
-						$Table->aliasField('id').' IN' => $authorisedParentIds
-					];
-				$authorisedParentIds = $authorisedParentIds;
-				$condition['OR'] = $areaCondition;
+				if (!empty($authorisedParentIds)) {
+					$areaCondition[] = [
+							$Table->aliasField('id').' IN' => $authorisedParentIds
+						];
+					$authorisedParentIds = $authorisedParentIds;
+					$condition['OR'] = $areaCondition;
+				}
 			}
 		}
 

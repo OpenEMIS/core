@@ -460,8 +460,7 @@ class InstitutionsTable extends AppTable  {
 		}
 	}
 
-	public function indexAfterPaginate(Event $event, ResultSet $resultSet) {
-		$query = $resultSet->__debugInfo()['query'];
+	public function indexAfterPaginate(Event $event, ResultSet $resultSet, Query $query) {
 		$this->dashboardQuery = clone $query;
 	}
 
