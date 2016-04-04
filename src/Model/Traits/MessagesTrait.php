@@ -402,6 +402,10 @@ trait MessagesTrait {
 			'notExists' => 'Staff record no longer exists in the system.',
 			'errorApproval' => 'Record cannot be approved due to errors encountered.',
 		],
+		'StaffTransferRequests' => [
+			'alreadyAssigned' => '%s is currently assigned to %s',
+			'confirmRequest' => 'By clicking save, a transfer request will be sent to the school for approval'
+		],
 		'UndoStudentStatus' => [
 			'noGrades' => 'No Available Grades',
 			'noStudents' => 'No Available Students',
