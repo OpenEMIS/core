@@ -258,7 +258,14 @@ class StaffTable extends AppTable {
 			$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
 		}
 
-<<<<<<< HEAD
+		// start: sort by name
+		$sortList = ['Users.first_name'];
+		if (array_key_exists('sortWhitelist', $options)) {
+			$sortList = array_merge($options['sortWhitelist'], $sortList);
+		}
+		$options['sortWhitelist'] = $sortList;
+		// end: sort by name
+
 		$statusOptions = $this->StaffStatuses->find('list')->toArray();
 		$statusOptions[self::PENDING_PROFILE] = __('Pending Profile');
 		$statusOptions[self::PENDING_TRANSFERIN] = __('Pending Transfer In');
@@ -270,17 +277,6 @@ class StaffTable extends AppTable {
 		$query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
 
 		$this->controller->set(compact('periodOptions', 'positionOptions', 'statusOptions'));
-=======
-		// start: sort by name
-		$sortList = ['Users.first_name'];
-		if (array_key_exists('sortWhitelist', $options)) {
-			$sortList = array_merge($options['sortWhitelist'], $sortList);
-		}
-		$options['sortWhitelist'] = $sortList;
-		// end: sort by name
-
-		$this->controller->set(compact('periodOptions', 'positionOptions'));
->>>>>>> origin/master
 	}
 
 	public function indexAfterPaginate(Event $event, ResultSet $resultSet) {
@@ -1194,20 +1190,8 @@ class StaffTable extends AppTable {
 				break;
 			} else {
 				foreach ($resultSet as $entity) {
-<<<<<<< HEAD
-					Log::write('debug', __FUNCTION__ . ' - Removing roles for user_id (' . $entity->staff_id . ')');
-					$SecurityGroupUsers->deleteAll([
-						$SecurityGroupUsers->aliasField($SecurityGroupUsers->primaryKey()) => $entity->security_group_user_id
-					]);
-					$this->updateAll(
-						['security_group_user_id' => NULL],
-						[$this->primaryKey() => $entity->id]
-					);
-
-					$this->updateStaffStatus($entity, $this->endOfAssignment);
-=======
 					$this->removeStaffRole($entity);
->>>>>>> origin/master
+					$this->updateStaffStatus($entity, $this->endOfAssignment);
 				}
 			}
 		}
