@@ -279,8 +279,7 @@ class StaffTable extends AppTable {
 		$this->controller->set(compact('periodOptions', 'positionOptions', 'statusOptions'));
 	}
 
-	public function indexAfterPaginate(Event $event, ResultSet $resultSet) {
-		$query = $resultSet->__debugInfo()['query'];
+	public function indexAfterPaginate(Event $event, ResultSet $resultSet, Query $query) {
 		$this->dashboardQuery = clone $query;
 	}
 
@@ -574,7 +573,9 @@ class StaffTable extends AppTable {
 			$activeStatusId = $this->Workflow->getStepsByModelCode($positionTable->registryAlias(), 'ACTIVE');
 			$positionConditions = [];
 			$positionConditions[$this->Positions->aliasField('institution_id')] = $institutionId;
-			$positionConditions[$this->Positions->aliasField('status_id').' IN '] = $activeStatusId;
+			if (!empty($activeStatusId)) {
+				$positionConditions[$this->Positions->aliasField('status_id').' IN '] = $activeStatusId;
+			}
 			if (!empty($excludeArray)) {
 				$positionConditions[$this->Positions->aliasField('id').' NOT IN '] = $excludeArray;
 			}
@@ -939,12 +940,13 @@ class StaffTable extends AppTable {
 			$InstitutionRubrics->delete($value);
 		}
 
-		$InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
-
-		$InstitutionSubjectStaff->deleteAll([
-			$InstitutionSubjectStaff->aliasField('staff_id') => $staffId,
-			$InstitutionSubjectStaff->aliasField('institution_subject_id') . ' IN ' => $subjectIdsDuringStaffPeriod
-		]);
+		if (!empty($subjectIdsDuringStaffPeriod)) {
+			$InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+			$InstitutionSubjectStaff->deleteAll([
+				$InstitutionSubjectStaff->aliasField('staff_id') => $staffId,
+				$InstitutionSubjectStaff->aliasField('institution_subject_id') . ' IN ' => $subjectIdsDuringStaffPeriod
+			]);
+		}
 
 		// this logic here is to delete the roles from groups when the staff is deleted from the school
 		try {
