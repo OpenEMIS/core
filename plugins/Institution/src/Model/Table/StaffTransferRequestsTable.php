@@ -2,15 +2,17 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+
 use Cake\Event\Event;
-use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Network\Request;
+use Cake\ORM\Entity;
+use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
+use Cake\Network\Request;
+use Cake\Validation\Validator;
+
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
-use Cake\Validation\Validator;
-use Cake\ORM\ResultSet;
 
 class StaffTransferRequestsTable extends ControllerActionTable {
 	use OptionsTrait;
@@ -40,6 +42,8 @@ class StaffTransferRequestsTable extends ControllerActionTable {
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
+		$fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
+		$extra['fteOptions'] = $fteOptions;
 		$toolbarButtons = $extra['toolbarButtons'];
 
 		if ($this->action != 'index') {
@@ -62,7 +66,6 @@ class StaffTransferRequestsTable extends ControllerActionTable {
 		$this->field('institution_position_id', ['after' => 'institution_id', 'visible' => ['edit' => true, 'view' => true]]);
 		$this->field('type', ['visible' => false]);
 		$this->field('staff_type_id', ['after' => 'institution_position_id', 'visible' => ['view' => true, 'edit' => true, 'add' => true]]);
-		$fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
 		$this->field('FTE', ['type' => 'select', 'after' => 'staff_type_id', 'visible' => ['view' => true, 'edit' => true, 'add' => true]]);
 		$this->field('comment', ['after' => 'start_date', 'visible' => ['view' => true, 'edit' => true, 'add' => true]]);
 		$this->field('end_date', ['visible' => false]);
@@ -84,6 +87,8 @@ class StaffTransferRequestsTable extends ControllerActionTable {
 	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$staffName = $this->Users->get($entity->staff_id)->name_with_id;
 		$assignedInstitution = $this->Institutions->get($entity->previous_institution_id)->name;
+		$fteOptions = $extra['fteOptions'];
+
 		$this->field('id', ['type' => 'hidden', 'value' => $entity->id]);
 		$this->field('status', ['type' => 'readonly', 'value' => $entity->status]);
 		$this->field('staff_id', ['type' => 'readonly', 'attr' => ['value' => $staffName]]);
@@ -92,7 +97,6 @@ class StaffTransferRequestsTable extends ControllerActionTable {
 		$this->field('type', ['type' => 'hidden', 'visible' => true, 'value' => self::TRANSFER]);
 		$this->field('institution_position_id', ['after' => 'institution_id', 'type' => 'select', 'options' => $this->getStaffPositionList()]);
 		$this->field('staff_type_id', ['type' => 'select']);
-		$fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
 		$this->field('FTE', ['type' => 'select', 'options' => $fteOptions, 'value' => $entity->FTE]);
 		$this->field('start_date');
 		$this->field('comment');
@@ -101,20 +105,20 @@ class StaffTransferRequestsTable extends ControllerActionTable {
 	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$staffName = $this->Users->get($entity->staff_id)->name_with_id;
 		$assignedInstitution = $this->Institutions->get($entity->previous_institution_id)->name;
-		if ($this->action == 'add') {
-			$message = $staffName .' '.__('is currently assigned to').' '. $assignedInstitution;
-    		$this->Alert->info($message, ['type' => 'text']);
-    	}
+		$fteOptions = $extra['fteOptions'];
 
-		$this->field('id', ['type' => 'hidden', 'value' => $entity->id]);
-		$this->field('status', ['type' => 'readonly', 'value' => $entity->status]);
+		$message = $this->getMessage($this->aliasField('alreadyAssigned'), ['sprintf' => [$staffName, $assignedInstitution]]);
+		$this->Alert->warning($message, ['type' => 'text']);
+		$this->Alert->info($this->aliasField('confirmRequest'));
+		
+		// $this->field('id', ['type' => 'hidden', 'value' => $entity->id]);
+		$this->field('status', ['type' => 'readonly']);
 		$this->field('staff_id', ['type' => 'readonly', 'attr' => ['value' => $staffName]]);
 		$this->field('previous_institution_id', ['type' => 'readonly', 'attr' => ['value' => $assignedInstitution]]);
 		$this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->name], 'value' => $entity->institution_id]);
 		$this->field('type', ['type' => 'hidden', 'visible' => true, 'value' => self::TRANSFER]);
 		$this->field('institution_position_id', ['after' => 'institution_id', 'type' => 'readonly', 'attr' => ['value' => $this->Positions->get($entity->institution_position_id)->name], 'value' => $entity->institution_position_id]);
 		$this->field('staff_type_id', ['type' => 'readonly', 'attr' => ['value' => $this->StaffTypes->get($entity->staff_type_id)->name], 'value' => $entity->staff_type_id]);
-		$fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
 		$this->field('FTE', ['type' => 'readonly', 'options' => $fteOptions, 'value' => $entity->FTE]);
 		$this->field('start_date', ['type' => 'readonly']);
 		$this->field('comment');
@@ -205,9 +209,7 @@ class StaffTransferRequestsTable extends ControllerActionTable {
     			$attr['attr']['value'] = $name;
     			return $attr;
     		}
-    		
     	}
-    	
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
