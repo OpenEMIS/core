@@ -1,7 +1,5 @@
 <?php
 /**
- * Internationalization Management Shell
- *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
  * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
@@ -17,6 +15,9 @@
 namespace Cake\Shell;
 
 use Cake\Console\Shell;
+use Cake\Core\Plugin;
+use Cake\Utility\Inflector;
+use DirectoryIterator;
 
 /**
  * Shell for I18N management.
@@ -42,7 +43,7 @@ class I18nShell extends Shell
         $this->out('<info>I18n Shell</info>');
         $this->hr();
         $this->out('[E]xtract POT file from sources');
-        $this->out('[I]inialize a language from POT file');
+        $this->out('[I]nitialize a language from POT file');
         $this->out('[H]elp');
         $this->out('[Q]uit');
 
@@ -71,12 +72,12 @@ class I18nShell extends Shell
      * Inits PO file from POT file.
      *
      * @param string|null $language Language code to use.
-     * @return void|int
+     * @return int|null
      */
     public function init($language = null)
     {
         if (!$language) {
-            $language = strtolower($this->in('Please specify language code, e.g. `en`, `eng`, `en_US` etc.'));
+            $language = $this->in('Please specify language code, e.g. `en`, `eng`, `en_US` etc.');
         }
         if (strlen($language) < 2) {
             return $this->error('Invalid language code. Valid is `en`, `eng`, `en_US` etc.');
@@ -88,15 +89,15 @@ class I18nShell extends Shell
             $this->_paths = [Plugin::classPath($plugin)];
         }
 
-        $response = $this->in('What folder?', null, rtrim($this->_paths[0], DS) . DS . 'Locale');
-        $sourceFolder = rtrim($response, DS) . DS;
-        $targetFolder = $sourceFolder . $language . DS;
+        $response = $this->in('What folder?', null, rtrim($this->_paths[0], DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'Locale');
+        $sourceFolder = rtrim($response, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        $targetFolder = $sourceFolder . $language . DIRECTORY_SEPARATOR;
         if (!is_dir($targetFolder)) {
             mkdir($targetFolder, 0775, true);
         }
 
         $count = 0;
-        $iterator = new \DirectoryIterator($sourceFolder);
+        $iterator = new DirectoryIterator($sourceFolder);
         foreach ($iterator as $fileinfo) {
             if (!$fileinfo->isFile()) {
                 continue;

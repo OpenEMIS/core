@@ -757,7 +757,7 @@ class ControllerActionComponent extends Component {
 		$data = $this->Paginator->paginate($query, $options->getArrayCopy());
 
 		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.index.afterPaginate');
-		$event = new Event('ControllerAction.Model.index.afterPaginate', $this, [$data]);
+		$event = new Event('ControllerAction.Model.index.afterPaginate', $this, [$data, $query]);
 		$event = $this->model->eventManager()->dispatch($event);
 		if ($event->isStopped()) { return $event->result; }
 		if (!empty($event->result)) {
@@ -1359,21 +1359,23 @@ class ControllerActionComponent extends Component {
 										->select(['target_foreign_key' => 'TargetTable.target'])
 										->from(['TargetTable' => $targetForeignKeys]);
 
-									$condition = [];
+									if (!empty($notUpdateQuery)) {
+										$condition = [];
 
-									$condition = [
-										$assoc->foreignKey() => $transferFrom, 
-										'NOT' => [
-											$assoc->foreignKey() => $transferFrom,
-											$assoc->targetForeignKey().' IN ' => $notUpdateQuery
-										]
-									];
-									
-									// Update all transfer records
-									$modelAssociationTable->updateAll(
-										[$assoc->foreignKey() => $transferTo],
-										$condition
-									);
+										$condition = [
+											$assoc->foreignKey() => $transferFrom, 
+											'NOT' => [
+												$assoc->foreignKey() => $transferFrom,
+												$assoc->targetForeignKey().' IN ' => $notUpdateQuery
+											]
+										];
+										
+										// Update all transfer records
+										$modelAssociationTable->updateAll(
+											[$assoc->foreignKey() => $transferTo],
+											$condition
+										);
+									}
 								}
 							}
 						};
@@ -1443,18 +1445,19 @@ class ControllerActionComponent extends Component {
 			$orderField = $this->orderField;
 			
 			$ids = json_decode($request->data("ids"));
+			if (!empty($ids)) {
+				$originalOrder = $model->find('list')
+					->where([$model->aliasField($primaryKey).' IN ' => $ids])
+					->select(['id' => $model->aliasField($primaryKey), 'name' => $model->aliasField($orderField)])
+					->order([$model->aliasField($orderField)])
+					->toArray();
 
-			$originalOrder = $model->find('list')
-				->where([$model->aliasField($primaryKey).' IN ' => $ids])
-				->select(['id' => $model->aliasField($primaryKey), 'name' => $model->aliasField($orderField)])
-				->order([$model->aliasField($orderField)])
-				->toArray();
+				$originalOrder = array_reverse($originalOrder);
 
-			$originalOrder = array_reverse($originalOrder);
-
-			foreach ($ids as $order => $id) {
-				$orderValue = array_pop($originalOrder);
-				$model->updateAll([$orderField => $orderValue], [$primaryKey => $id]);
+				foreach ($ids as $order => $id) {
+					$orderValue = array_pop($originalOrder);
+					$model->updateAll([$orderField => $orderValue], [$primaryKey => $id]);
+				}
 			}
 		}
 	}

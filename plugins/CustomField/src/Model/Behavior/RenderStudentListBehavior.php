@@ -17,8 +17,8 @@ class RenderStudentListBehavior extends RenderBehavior {
         $CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
         $CustomFields = TableRegistry::get('Survey.SurveyQuestions');
         $CustomFormsFields = TableRegistry::get('Survey.SurveyFormsQuestions');
-        $Sections = TableRegistry::get('Institution.InstitutionSections');
-        $SectionStudents = TableRegistry::get('Institution.InstitutionSectionStudents');
+        $Classes = TableRegistry::get('Institution.InstitutionClasses');
+        $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         $StudentSurveys = TableRegistry::get('Student.StudentSurveys');
         $StudentSurveyAnswers = TableRegistry::get('Student.StudentSurveyAnswers');
 
@@ -38,7 +38,7 @@ class RenderStudentListBehavior extends RenderBehavior {
         $form = $event->subject()->Form;
         $fieldPrefix = $attr['model'] . '.institution_student_surveys.' . $fieldId;
 
-        $sectionOptions = [];
+        $classOptions = [];
         $tableHeaders = [];
         $tableCells = [];
         $cellCount = 0;
@@ -78,24 +78,24 @@ class RenderStudentListBehavior extends RenderBehavior {
                 $periodId = $entity->academic_period_id;
 
                 // Classes Options
-                $sectionQuery = $Sections
+                $classQuery = $Classes
                     ->find('list')
                     ->where([
-                        $Sections->aliasField('institution_id') => $institutionId,
-                        $Sections->aliasField('academic_period_id') => $periodId
+                        $Classes->aliasField('institution_id') => $institutionId,
+                        $Classes->aliasField('academic_period_id') => $periodId
                     ]);
 
                 if ($model->AccessControl->check(['Institutions', 'AllClasses', 'index'])) {
                     // All Classes
-                    $sectionOptions = $sectionQuery->toArray();
-                } else if ($model->AccessControl->check(['Institutions', 'Sections', 'index'])) {
+                    $classOptions = $classQuery->toArray();
+                } else if ($model->AccessControl->check(['Institutions', 'Classes', 'index'])) {
                     // My Classes
                     $userId = $model->Auth->user('id');
-                    $sectionQuery->where([
-                        $Sections->aliasField('staff_id') => $userId
+                    $classQuery->where([
+                        $Classes->aliasField('staff_id') => $userId
                     ]);
 
-                    $sectionOptions = $sectionQuery->toArray();
+                    $classOptions = $classQuery->toArray();
                 }
                 // End
 
@@ -112,25 +112,25 @@ class RenderStudentListBehavior extends RenderBehavior {
                 }
                 // End
 
-                if (!empty($sectionOptions)) {
-                    // Set selectedSection to session and read it back.
-                    $selectedSection = key($sectionOptions);
-                    $sessionKey = "$registryAlias.institution_student_surveys.$fieldId.institution_section";
+                if (!empty($classOptions)) {
+                    // Set selectedClass to session and read it back.
+                    $selectedClass = key($classOptions);
+                    $sessionKey = "$registryAlias.institution_student_surveys.$fieldId.institution_class";
 
                     if ($model->request->is(['get'])) {
                         // Clear session if is not redirect from save
                         $requestQuery = $model->request->query;
-                        if (array_key_exists('field_id', $requestQuery) && array_key_exists('section_id', $requestQuery)) {
+                        if (array_key_exists('field_id', $requestQuery) && array_key_exists('class_id', $requestQuery)) {
                             if ($requestQuery['field_id'] == $fieldId) {
-                                $session->write($sessionKey, $requestQuery['section_id']);
+                                $session->write($sessionKey, $requestQuery['class_id']);
                             }
                         }
                     } else if ($model->request->is(['post', 'put'])) {
                         $requestData = $model->request->data;
                         $submit = isset($requestData['submit']) ? $requestData['submit'] : 'save';
 
-                        if (isset($requestData[$model->alias()]['institution_student_surveys'][$fieldId]['institution_section'])) {
-                            $session->write($sessionKey, $requestData[$model->alias()]['institution_student_surveys'][$fieldId]['institution_section']);
+                        if (isset($requestData[$model->alias()]['institution_student_surveys'][$fieldId]['institution_class'])) {
+                            $session->write($sessionKey, $requestData[$model->alias()]['institution_student_surveys'][$fieldId]['institution_class']);
                         }
 
                         if ($submit == 'save') {
@@ -145,20 +145,20 @@ class RenderStudentListBehavior extends RenderBehavior {
                     }
 
                     if ($session->check($sessionKey)) {
-                        $selectedSection = $session->read($sessionKey);
+                        $selectedClass = $session->read($sessionKey);
                     }
                     // End
-                    $model->advancedSelectOptions($sectionOptions, $selectedSection);
+                    $model->advancedSelectOptions($classOptions, $selectedClass);
 
                     // Students List
-                    $studentQuery = $SectionStudents
+                    $studentQuery = $ClassStudents
                         ->find()
                         ->contain(['Users']);
 
                     if ($action == 'view' || $action == 'edit') {
                         $studentQuery
                             ->where([
-                                $SectionStudents->aliasField('institution_section_id') => $selectedSection
+                                $ClassStudents->aliasField('institution_class_id') => $selectedClass
                         ]);
                     }
 
@@ -264,7 +264,7 @@ class RenderStudentListBehavior extends RenderBehavior {
                         }
                     } else {
                         // No Student for the school in the academic period.
-                        Log::write('debug', $debugInfo . ': Class ID: '.$selectedSection.' has no students.');
+                        Log::write('debug', $debugInfo . ': Class ID: '.$selectedClass.' has no students.');
                     }
                 } else {
                     // No Classes of login user for the school in the academic period.
@@ -279,7 +279,7 @@ class RenderStudentListBehavior extends RenderBehavior {
             Log::write('debug', $debugInfo . ': Student List Survey Form ID is not configured.');
         }
 
-        $attr['attr']['sectionOptions'] = $sectionOptions;
+        $attr['attr']['classOptions'] = $classOptions;
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 
@@ -363,11 +363,12 @@ class RenderStudentListBehavior extends RenderBehavior {
             $status = $entity->status_id;
             $institutionId = $entity->institution_id;
             $periodId = $entity->academic_period_id;
+            $parentFormId = $entity->{$formKey};
 
             foreach ($entity->institution_student_surveys as $fieldId => $fieldObj) {
                 $formId = $fieldObj[$formKey];
                 unset($fieldObj[$formKey]);
-                unset($fieldObj['institution_section']);
+                unset($fieldObj['institution_class']);
 
                 // Logic to delete all answers before re-insert
                 $studentIds = array_keys($fieldObj);
@@ -395,7 +396,8 @@ class RenderStudentListBehavior extends RenderBehavior {
                             'institution_id' => $institutionId,
                             'academic_period_id' => $periodId,
                             $formKey => $formId,
-                            'student_id' => $studentId,
+                            'parent_form_id' => $parentFormId,
+                            'student_id' => $studentId
                         ];
                         // for edit record
                         if (array_key_exists('id', $studentObj)) {
@@ -433,5 +435,17 @@ class RenderStudentListBehavior extends RenderBehavior {
                 }
             }
         }
+    }
+
+    public function updateWorkflowStatus(Event $event, $entity, $statusId) {
+        $StudentSurveys = TableRegistry::get('Student.StudentSurveys');
+        $StudentSurveys->updateAll(
+            ['status_id' => $statusId],
+            [
+                'institution_id' => $entity->institution_id,
+                'academic_period_id' => $entity->academic_period_id,
+                'parent_form_id' => $entity->survey_form_id
+            ]
+        );
     }
 }

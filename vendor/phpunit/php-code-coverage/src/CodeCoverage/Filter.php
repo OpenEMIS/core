@@ -9,101 +9,18 @@
  */
 
 /**
- * Filter for blacklisting and whitelisting of code coverage information.
+ * Filter for whitelisting of code coverage information.
  *
- * @category   PHP
- * @package    CodeCoverage
- * @author     Sebastian Bergmann <sebastian@phpunit.de>
- * @copyright  Sebastian Bergmann <sebastian@phpunit.de>
- * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
- * @link       http://github.com/sebastianbergmann/php-code-coverage
- * @since      Class available since Release 1.0.0
+ * @since Class available since Release 1.0.0
  */
 class PHP_CodeCoverage_Filter
 {
-    /**
-     * Source files that are blacklisted.
-     *
-     * @var array
-     */
-    private $blacklistedFiles = array();
-
     /**
      * Source files that are whitelisted.
      *
      * @var array
      */
-    private $whitelistedFiles = array();
-
-    /**
-     * Adds a directory to the blacklist (recursively).
-     *
-     * @param string $directory
-     * @param string $suffix
-     * @param string $prefix
-     */
-    public function addDirectoryToBlacklist($directory, $suffix = '.php', $prefix = '')
-    {
-        $facade = new File_Iterator_Facade;
-        $files  = $facade->getFilesAsArray($directory, $suffix, $prefix);
-
-        foreach ($files as $file) {
-            $this->addFileToBlacklist($file);
-        }
-    }
-
-    /**
-     * Adds a file to the blacklist.
-     *
-     * @param string $filename
-     */
-    public function addFileToBlacklist($filename)
-    {
-        $this->blacklistedFiles[realpath($filename)] = true;
-    }
-
-    /**
-     * Adds files to the blacklist.
-     *
-     * @param array $files
-     */
-    public function addFilesToBlacklist(array $files)
-    {
-        foreach ($files as $file) {
-            $this->addFileToBlacklist($file);
-        }
-    }
-
-    /**
-     * Removes a directory from the blacklist (recursively).
-     *
-     * @param string $directory
-     * @param string $suffix
-     * @param string $prefix
-     */
-    public function removeDirectoryFromBlacklist($directory, $suffix = '.php', $prefix = '')
-    {
-        $facade = new File_Iterator_Facade;
-        $files  = $facade->getFilesAsArray($directory, $suffix, $prefix);
-
-        foreach ($files as $file) {
-            $this->removeFileFromBlacklist($file);
-        }
-    }
-
-    /**
-     * Removes a file from the blacklist.
-     *
-     * @param string $filename
-     */
-    public function removeFileFromBlacklist($filename)
-    {
-        $filename = realpath($filename);
-
-        if (isset($this->blacklistedFiles[$filename])) {
-            unset($this->blacklistedFiles[$filename]);
-        }
-    }
+    private $whitelistedFiles = [];
 
     /**
      * Adds a directory to the whitelist (recursively).
@@ -170,15 +87,14 @@ class PHP_CodeCoverage_Filter
     {
         $filename = realpath($filename);
 
-        if (isset($this->whitelistedFiles[$filename])) {
-            unset($this->whitelistedFiles[$filename]);
-        }
+        unset($this->whitelistedFiles[$filename]);
     }
 
     /**
      * Checks whether a filename is a real filename.
      *
-     * @param string $filename
+     * @param  string $filename
+     * @return bool
      */
     public function isFile($filename)
     {
@@ -199,12 +115,8 @@ class PHP_CodeCoverage_Filter
     /**
      * Checks whether or not a file is filtered.
      *
-     * When the whitelist is empty (default), blacklisting is used.
-     * When the whitelist is not empty, whitelisting is used.
-     *
-     * @param  string                     $filename
-     * @return boolean
-     * @throws PHP_CodeCoverage_Exception
+     * @param  string $filename
+     * @return bool
      */
     public function isFiltered($filename)
     {
@@ -214,21 +126,7 @@ class PHP_CodeCoverage_Filter
 
         $filename = realpath($filename);
 
-        if (!empty($this->whitelistedFiles)) {
-            return !isset($this->whitelistedFiles[$filename]);
-        }
-
-        return isset($this->blacklistedFiles[$filename]);
-    }
-
-    /**
-     * Returns the list of blacklisted files.
-     *
-     * @return array
-     */
-    public function getBlacklist()
-    {
-        return array_keys($this->blacklistedFiles);
+        return !isset($this->whitelistedFiles[$filename]);
     }
 
     /**
@@ -244,34 +142,12 @@ class PHP_CodeCoverage_Filter
     /**
      * Returns whether this filter has a whitelist.
      *
-     * @return boolean
+     * @return bool
      * @since  Method available since Release 1.1.0
      */
     public function hasWhitelist()
     {
         return !empty($this->whitelistedFiles);
-    }
-
-    /**
-     * Returns the blacklisted files.
-     *
-     * @return array
-     * @since Method available since Release 2.0.0
-     */
-    public function getBlacklistedFiles()
-    {
-        return $this->blacklistedFiles;
-    }
-
-    /**
-     * Sets the blacklisted files.
-     *
-     * @param array $blacklistedFiles
-     * @since Method available since Release 2.0.0
-     */
-    public function setBlacklistedFiles($blacklistedFiles)
-    {
-        $this->blacklistedFiles = $blacklistedFiles;
     }
 
     /**

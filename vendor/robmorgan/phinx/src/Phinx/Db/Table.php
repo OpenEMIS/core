@@ -70,6 +70,11 @@ class Table
     protected $foreignKeys = array();
 
     /**
+     * @var array
+     */
+    protected $data = array();
+
+    /**
      * Class Constuctor.
      *
      * @param string $name Table Name
@@ -275,6 +280,25 @@ class Table
     }
 
     /**
+     * @param $data array of data to be inserted
+     * @return Table
+     */
+    public function setData($data)
+    {
+        $this->data = $data;
+        return $this;
+    }
+
+    /**
+     * Gets the data waiting to be inserted
+     * @return array
+     */
+    public function getData()
+    {
+        return $this->data;
+    }
+
+    /**
      * Resets all of the pending table changes.
      *
      * @return void
@@ -284,6 +308,7 @@ class Table
         $this->setPendingColumns(array());
         $this->setIndexes(array());
         $this->setForeignKeys(array());
+        $this->setData(array());
     }
 
     /**
@@ -376,7 +401,7 @@ class Table
         }
 
         // if the name was omitted use the existing column name
-        if (null === $newColumn->getName() || strlen($newColumn->getName()) == 0) {
+        if (null === $newColumn->getName() || strlen($newColumn->getName()) === 0) {
             $newColumn->setName($columnName);
         }
 
@@ -531,12 +556,40 @@ class Table
      */
     public function addTimestamps()
     {
-        $this->addColumn('created_at', 'timestamp')
+        $this->addColumn('created_at', 'timestamp', array(
+                'default' => 'CURRENT_TIMESTAMP',
+                'update' => ''
+            ))
              ->addColumn('updated_at', 'timestamp', array(
-                 'null'    => true,
-                 'default' => null
+                'null'    => true,
+                'default' => null
              ));
 
+        return $this;
+    }
+
+    /**
+     * Insert data into the table.
+     *
+     * @param $data array of data in the form:
+     *              array(
+     *                  array("col1" => "value1", "col2" => "anotherValue1"),
+     *                  array("col2" => "value2", "col2" => "anotherValue2"),
+     *              )
+     *              or array("col1" => "value1", "col2" => "anotherValue1")
+     *
+     * @return Table
+     */
+    public function insert($data)
+    {
+        // handle array of array situations
+        if (isset($data[0]) && is_array($data[0])) {
+            foreach ($data as $row) {
+                $this->data[] = $row;
+            }
+            return $this;
+        }
+        $this->data[] = $data;
         return $this;
     }
 
@@ -548,6 +601,7 @@ class Table
     public function create()
     {
         $this->getAdapter()->createTable($this);
+        $this->saveData();
         $this->reset(); // reset pending changes
     }
 
@@ -576,7 +630,20 @@ class Table
             $this->getAdapter()->addForeignKey($this, $foreignKey);
         }
 
+        $this->saveData();
         $this->reset(); // reset pending changes
+    }
+
+    /**
+     * Commit the pending data waiting for insertion.
+     *
+     * @return void
+     */
+    public function saveData()
+    {
+        foreach ($this->getData() as $row) {
+            $this->getAdapter()->insert($this, $row);
+        }
     }
 
     /**
