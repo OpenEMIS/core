@@ -20,8 +20,8 @@ class EducationGradesTable extends AppTable {
 		$this->hasMany('Assessments', ['className' => 'Assessment.Assessments']);
 		$this->hasMany('InstitutionFees', ['className' => 'Institution.InstitutionFees']);
 		$this->hasMany('Rubrics', ['className' => 'Institution.InstitutionRubrics']);
-		$this->hasMany('InstitutionSectionGrades', ['className' => 'Institution.InstitutionSectionGrades']);
-		$this->hasMany('InstitutionSectionStudents', ['className' => 'Institution.InstitutionSectionStudents']);
+		$this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
+		$this->hasMany('InstitutionClassStudents', ['className' => 'Institution.InstitutionClassStudents']);
 		$this->hasMany('InstitutionStudents', ['className' => 'Institution.Students']);
 		$this->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission']);
 		$this->hasMany('StudentDropout', ['className' => 'Institution.StudentDropout']);

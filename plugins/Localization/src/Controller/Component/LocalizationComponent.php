@@ -41,6 +41,11 @@ class LocalizationComponent extends Component {
 	];
 	public $components = ['Cookie'];
 
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Controller.initialize'] = 'beforeFilter';
+		return $events;
+	}
 
 	// Is called before the controller's beforeFilter method.
 	public function initialize(array $config) {
@@ -64,7 +69,15 @@ class LocalizationComponent extends Component {
 
 		$this->language = $lang;
 		$this->Session = $session;
+	}
 
+	public function beforeFilter(Event $event) {
+		// Call to recompile the language if the translation files are affected
+		if ($this->autoCompile()) {
+			$this->updateLocaleFile($this->language);
+		}
+		// Move the I18n::locale setting here so that the update can be instant
+		I18n::locale($this->language);
 	}
 
 	public function autoCompile($compile = null) {
@@ -179,14 +192,6 @@ class LocalizationComponent extends Component {
 
 	// Is called after the controller's beforeFilter method but before the controller executes the current action handler.
 	public function startup(Event $event) {
-
-		// Call to recompile the language if the translation files are affected
-		if ($this->autoCompile()) {
-			$this->updateLocaleFile($this->language);
-		}
-		// Move the I18n::locale setting here so that the update can be instant
-		I18n::locale($this->language);
-		
 		$controller = $this->controller;
 		$htmlLang = $this->language;
 		$languages = $this->languages;

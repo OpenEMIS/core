@@ -24,8 +24,6 @@ class InstitutionsController extends AppController  {
 			'History' 			=> ['className' => 'Institution.InstitutionActivities', 'actions' => ['search', 'index']],
 
 			'Programmes' 		=> ['className' => 'Institution.InstitutionGrades'],
-			'Sections' 			=> ['className' => 'Institution.InstitutionSections'],
-			'Classes' 			=> ['className' => 'Institution.InstitutionClasses'],
 			'Infrastructures' 	=> ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'transfer']],
 
 			'Staff' 			=> ['className' => 'Institution.Staff'],
@@ -79,9 +77,14 @@ class InstitutionsController extends AppController  {
 	// CAv4
 	public function Positions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionPositions']); }
 	public function Shifts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionShifts']); }
+<<<<<<< HEAD
 	public function StaffTransferRequests() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferRequests']); }
 	public function StaffTransferApprovals() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferApprovals']); }
 	public function StaffPositionProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffPositionProfiles']); }
+=======
+	public function Classes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionClasses']); }
+	public function Subjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionSubjects']); }
+>>>>>>> origin/master
 	// public function StaffAbsences() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
 	// End
 
@@ -152,10 +155,6 @@ class InstitutionsController extends AppController  {
 			}
 
 			$alias = $model->alias;
-			// temporary fix for renaming Sections and Classes
-			if ($alias == 'Sections') $alias = 'Classes';
-			else if ($alias == 'Classes') $alias = 'Subjects';
-
 			$crumbTitle = $model->getHeader($alias);
 			$crumbOptions = [];
 			if ($action) {
