@@ -197,7 +197,7 @@ class AssessmentsTable extends ControllerActionTable {
 			'options' => $programmeOptions,
 			'value' => $selectedProgramme,
 			'attr' => [
-				'ca-on-change' => true,
+				'ca-on-change-element' => true,
 				'ca-on-change-source-url' => 'education-educationgrades.json?_finder=visible,list&education_programme_id=',
 				'ca-on-change-target' => 'education_grade_id',
 			]
@@ -207,7 +207,7 @@ class AssessmentsTable extends ControllerActionTable {
 			'value' => $selectedGrade,
 			'attr' => [
 				'ca-id' => 'education_grade_id',
-				'ca-on-change-Target' => true,
+				'ca-on-change-target-element' => true,
 			]			
 		]);
 		$this->field('academic_period_id', [
