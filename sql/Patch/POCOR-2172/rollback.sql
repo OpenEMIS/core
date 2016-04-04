@@ -24,7 +24,7 @@ DELETE FROM security_functions WHERE `id` IN (1039, 1040, 1041);
 -- For staff_position_profiles
 -- workflow_models
 SET @workflowId := 0;
-SELECT `id` INTO @workflowId FROM `workflows` WHERE `code` = 'AMEND-STAFF-001' AND `workflow_model_id` = @modelId;
+SELECT `id` INTO @workflowId FROM `workflows` WHERE `code` = 'STAFF-POSITION-PROFILE-01' AND `workflow_model_id` = @modelId;
 DELETE FROM `workflow_steps` WHERE `workflow_id` = @workflowId;
 
 DELETE FROM `workflow_actions` WHERE `workflow_actions`.`id` IN (
@@ -33,9 +33,9 @@ DELETE FROM `workflow_actions` WHERE `workflow_actions`.`id` IN (
 
 SET @modelId := 0;
 SELECT `id` INTO @modelId FROM `workflow_models` WHERE `model` = 'Institution.StaffPositionProfiles';
-DELETE FROM `workflows` WHERE `code` = 'AMEND-STAFF-001' AND `workflow_model_id` = @modelId;
+DELETE FROM `workflows` WHERE `code` = 'STAFF-POSITION-PROFILE-01' AND `workflow_model_id` = @modelId;
 
-DELETE FROM `workflow_models` WHERE `name` = 'Institutions > Staff > Amend Staff Position Profile' AND `model` = 'Institution.StaffPositionProfiles';
+DELETE FROM `workflow_models` WHERE `name` = 'Institutions > Staff > Staff Position Profile' AND `model` = 'Institution.StaffPositionProfiles';
 
 DELETE FROM `workflow_statuses_steps` WHERE `workflow_status_id` IN (
   SELECT `id` FROM `workflow_statuses` WHERE `workflow_model_id` = @modelId

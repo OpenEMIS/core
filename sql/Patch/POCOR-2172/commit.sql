@@ -75,10 +75,10 @@ CREATE TABLE `institution_staff_assignments` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- labels
-INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferRequests', 'previous_institution_id', 'Institution > StaffTransferRequests', 'Currently Assigned To', 1, 1, NOW());
-INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferRequests', 'institution_id', 'Institution > StaffTransferRequests', 'Requested By', 1, 1, NOW());
-INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferApprovals', 'previous_institution_id', 'Institution > StaffTransferApprovals', 'Currently Assigned To', 1, 1, NOW());
-INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferApprovals', 'institution_id', 'Institution > StaffTransferApprovals', 'Requested By', 1, 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferRequests', 'previous_institution_id', 'Institution > Staff Transfer Requests', 'Currently Assigned To', 1, 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferRequests', 'institution_id', 'Institution > Staff Transfer Requests', 'Requested By', 1, 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferApprovals', 'previous_institution_id', 'Institution > Staff Transfer Approvals', 'Currently Assigned To', 1, 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferApprovals', 'institution_id', 'Institution > Staff Transfer Approvals', 'Requested By', 1, 1, NOW());
 
 -- security_functions
 INSERT INTO security_functions(`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) 
@@ -93,16 +93,16 @@ VALUES (1041, 'Staff Position Profile Workflow', 'Institutions', 'Institutions',
 -- For staff_position_profiles
 -- workflow_models
 INSERT INTO `workflow_models` (`name`, `model`, `created_user_id`, `created`) 
-VALUES ('Institutions > Staff > Amend Staff Position Profile', 'Institution.StaffPositionProfiles', 1, NOW());
+VALUES ('Institutions > Staff > Staff Position Profile', 'Institution.StaffPositionProfiles', 1, NOW());
 
 -- Pre-insert workflow for Institution > Staff
 SET @modelId := 0;
 SELECT `id` INTO @modelId FROM `workflow_models` WHERE `model` = 'Institution.StaffPositionProfiles';
 INSERT INTO `workflows` (`code`, `name`, `workflow_model_id`, `created_user_id`, `created`) VALUES
-('AMEND-STAFF-001', 'Amend Staff Position Profile', @modelId, 1, NOW());
+('STAFF-POSITION-PROFILE-01', 'Staff Position Profile', @modelId, 1, NOW());
 
 SET @workflowId := 0;
-SELECT `id` INTO @workflowId FROM `workflows` WHERE `code` = 'AMEND-STAFF-001' AND `workflow_model_id` = @modelId;
+SELECT `id` INTO @workflowId FROM `workflows` WHERE `code` = 'STAFF-POSITION-PROFILE-01' AND `workflow_model_id` = @modelId;
 INSERT INTO `workflow_steps` (`name`, `stage`, `is_editable`, `is_removable`, `workflow_id`, `created_user_id`, `created`) VALUES
 ('Open', 0, 1, 1, @workflowId, 1, NOW()),
 ('Pending Approval', 1, 0, 0, @workflowId, 1, NOW()),
