@@ -7,30 +7,30 @@
 			<table class="table table-checkable table-input">
 				<thead>
 					<tr>
-						<th><?= $this->Label->get('InstitutionSections.section'); ?></th>
-						<th><?= $this->Label->get('InstitutionSections.staff_id'); ?></th>
+						<th><?= $this->Label->get('InstitutionClasses.class'); ?></th>
+						<th><?= $this->Label->get('InstitutionClasses.staff_id'); ?></th>
 					</tr>
 				</thead>
 				
 				<tbody>
 					<?php 
-					$startingSectionNumber = count($attr['data']['existedSections']) + 1;
-					for ($i=0; $i<$attr['data']['numberOfSections']; $i++) :
+					$startingClassNumber = count($attr['data']['existedClasses']) + 1;
+					for ($i=0; $i<$attr['data']['numberOfClasses']; $i++) :
 						$nameIsAvailable = false;
 						do {
 							/**
 							 * In case in the future, a specific arabic locale such as "ar_JO" or "ar_SA" is being used.
 							 */
 							if ($this->ControllerAction->locale() == 'ar' || substr_count($this->ControllerAction->locale(), 'ar_') > 0) {
-								$letter = $this->Label->getArabicLetter($startingSectionNumber);
+								$letter = $this->Label->getArabicLetter($startingClassNumber);
 							} else {
-								$letter = $this->ControllerAction->getColumnLetter($startingSectionNumber);
+								$letter = $this->ControllerAction->getColumnLetter($startingClassNumber);
 							}
 							$defaultName = !empty($attr['data']['grade']) ? sprintf('%s-%s', $attr['data']['grade']['name'], $letter) : "";
-							if (!in_array($defaultName, $attr['data']['existedSections'])) {
+							if (!in_array($defaultName, $attr['data']['existedClasses'])) {
 							    $nameIsAvailable = true;
 							} else {
-								$startingSectionNumber++;
+								$startingClassNumber++;
 							}
 						} while (!$nameIsAvailable);
 					?>
@@ -75,8 +75,8 @@
 								<?php endforeach ?>
 								</ul>
 							<?php endif; ?>
-							<?= $this->Form->hidden(sprintf('MultiClasses.%d.section_number', $i), array(
-								'value' => $startingSectionNumber
+							<?= $this->Form->hidden(sprintf('MultiClasses.%d.class_number', $i), array(
+								'value' => $startingClassNumber
 							));?>
 						</td>
 						
@@ -91,7 +91,7 @@
 						?></td>
 					</tr>
 					<?php 
-						$startingSectionNumber++;
+						$startingClassNumber++;
 					endfor; ?>
 				</tbody>
 			</table>

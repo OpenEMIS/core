@@ -1,3 +1,16 @@
+v3.4.18
+- Fixed a bug on Import that caused the system not able to import students properly
+- Institution Positions can now be identified as a Homeroom position. Only Staff with Homeroom position will be displayed during creation of Class
+- Fixed a bug where workflow actions not appearing for the configured workflow roles
+- Fixed a bug that caused Nationality and Identity not saved properly when creating a new Student record
+- In Institutions -> Staff list, the position filter now displays the position titles instead of all positions in the institution
+- Fixed a bug that caused 404 error page when adding an Absence record for Staff in an Institution
+- The system will generate codes automatically when adding new infrastructure
+- Fixed translations on Attendance
+- Name column in Institution -> Staff list can now be sorted
+- Added Class as mandatory field in Transfer Approval page
+- Fixed a bug that caused user created roles in user groups not displaying
+
 v3.4.17.2
 - Compilation of Translation files is now done automatically by the system whenever translations are added or modified
 - Fixed a bug that caused user able to link a position title to a security role that is not set as visible

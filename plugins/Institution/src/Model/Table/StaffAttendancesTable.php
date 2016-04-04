@@ -672,7 +672,7 @@ class StaffAttendancesTable extends AppTable {
 				$this->ControllerAction->field('reason');
 				$this->_fieldOrder[] = 'type';
 				$this->_fieldOrder[] = 'reason';
-				$typeOptions = [self::PRESENT => 'Present'];
+				$typeOptions = [self::PRESENT => __('Present')];
 				$this->typeOptions = $typeOptions + $this->absenceList;
 
 				$StaffAbsenceReasons = TableRegistry::get('FieldOption.StaffAbsenceReasons');

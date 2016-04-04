@@ -182,8 +182,8 @@ class UndoStudentStatusTable extends AppTable {
 					->order(['EducationProgrammes.order', 'EducationGrades.order'])
 					->toArray();
 				$selectedGrade = $request->query['grade'];
-				$gradeOptions = ['-1' => '-- Select Grade --'] + $gradeOptions;
-
+				$attr['select'] = false;
+				$gradeOptions = ['-1' => '-- Select --'] + $gradeOptions;
 				$Students = $this->Students;
 				$this->advancedSelectOptions($gradeOptions, $selectedGrade, [
 					'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
@@ -239,8 +239,6 @@ class UndoStudentStatusTable extends AppTable {
 				])
 				->toArray();
 			$selectedStatus = $request->query['status'];
-			$statusOptions = ['-1' => '-- Select Status --'] + $statusOptions;
-			$this->advancedSelectOptions($statusOptions, $selectedStatus);
 
 			$attr['options'] = $statusOptions;
 			$attr['onChangeReload'] = 'changeStatus';

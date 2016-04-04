@@ -242,11 +242,7 @@ class RecordBehavior extends Behavior {
 				$data[$model->alias()]['custom_table_cells'] = $settings['tableCells'];
 
 				$requestData = $data->getArrayCopy();
-				$patchOptions['associated'] = [
-					'CustomFieldValues' => ['validate' => false],
-					'CustomTableCells' => ['validate' => false]
-				];
-        		$entity = $model->patchEntity($entity, $requestData, $patchOptions);
+        		$entity = $model->patchEntity($entity, $requestData);
         		// End
 
         		return $model->save($entity);
