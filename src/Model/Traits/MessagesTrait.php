@@ -39,7 +39,7 @@ trait MessagesTrait {
 			'noData' => 'There are no records.',
 			'noRecords' => 'No Record',
 			'select' => [
-				'noOptions' => 'No configured options'
+				'noOptions' => 'No options'
 			],
 			'error' => 'An unexpected error has been encounted. Please contact the administrator for assistance.',
 			'add' => [
@@ -80,8 +80,8 @@ trait MessagesTrait {
 			'description' => 'Description',
 			'default' => 'Default',
 			'reject' => 'Reject',
-			'noSections' => 'No Classes',
-			'noClasses' => 'No Subjects',
+			'noClasses' => 'No Classes',
+			'noSubjects' => 'No Subjects',
 			'noStaff' => 'No Staff',
 			'type' => 'Type',
 			'amount' => 'Amount',
@@ -104,7 +104,7 @@ trait MessagesTrait {
 			'noClassRecords' => 'There are no available Classes',
 			'date_opened' => 'Date Opened',
 			'date_closed' => 'Date Closed',
-			'noSections' => 'No Available Classes'
+			'noClasses' => 'No Available Classes'
 		],
 		'InstitutionStaff' => [
 			'title' => 'Staff',
@@ -124,7 +124,8 @@ trait MessagesTrait {
 			'failedSavingGrades' => 'Failed to save grades',
 			'start_date' => 'Start Date',
 			'end_date' => 'End Date',
-			'education_grade' => 'Education Grades'
+			'education_grade' => 'Education Grades',
+			'allGradesAlreadyAdded' => 'All possible Education Grades for the selected Education Programme already added.'
 		],
 		'InstitutionShifts' => [
 			'start_time' => 'Start Time',
@@ -134,13 +135,13 @@ trait MessagesTrait {
 			'location' => 'Location',
 			'institution' => 'Institution',
 		],
-		'InstitutionSections' => [
+		'InstitutionClasses' => [
 			'noClasses' => 'No Classes',
 			'students' => 'Students',
 			'education_programme' => 'Education Programme',
 			'education_grade' => 'Education Grade',
 			'staff_id' => 'Home Room Teacher',
-			'section' => 'Class',
+			'class' => 'Class',
 			'single_grade_field' => 'Single Grade Classes',
 			'multi_grade_field' => 'Class Grades',
 			'emptyName' => 'Class name should not be empty',
@@ -149,11 +150,14 @@ trait MessagesTrait {
 			'emptySecurityUserIdName' => 'Class name and Home Room Teacher should not be empty',
 			'stopDeleteWhenStudentExists' => 'Delete is not allowed as students still exists in class',
 			'maximumStudentsReached' => 'Reached the maximum number of students allowed in a class',
-			'education_grade_options_empty' => 'No available Grades for the selected period'
+			'education_grade_options_empty' => 'No available Grades for the selected period',
+			'noTeacherAssigned' => 'No Teacher Assigned',
+			'selectTeacherOrLeaveBlank' => 'Select Teacher or Leave Blank',
+			'singleGrade' => 'Single Grade',
+			'multiGrade' => 'Multi Grade'
 		],
-		'InstitutionClasses' => [
+		'InstitutionSubjects' => [
 			'noGrades' => 'No Grades Assigned',
-			'noSections' => 'No Classes',
 			'noClasses' => 'No Classes',
 			'noSubjects' => 'No Subjects',
 			'subjects' => 'Subjects',
@@ -163,8 +167,13 @@ trait MessagesTrait {
 			'teacher' => 'Teacher',
 			'students' => 'Students',
 			'teachers' => 'Teachers',
+			'teacherOrTeachers' => 'Teacher(s)',
 			'studentRemovedFromInstitution' => 'This student was removed from the institution earlier',
-			'noSubjects' => 'There are no available Education Subjects.',
+			'staffRemovedFromInstitution' => 'This staff was removed from the institution earlier',
+			'noSubjects' => 'There are no available Education Subjects',
+			'allSubjectsAlreadyAdded' => 'All Subjects for the assigned grade already added previously',
+			'noSubjectsInClass' => 'There are no subjects in the assigned grade',
+			'noSubjectSelected' => 'There is no subject selected',
 		],
 		'InstitutionFees' => [
 			'fee_types' => 'Fee Types',
@@ -181,6 +190,7 @@ trait MessagesTrait {
 			'created_user_id' => 'Created By',
 			'comments' => 'Comments',
 			'amount' => 'Amount',
+			'noStudentFees' => 'No Student Fees',
 		],
 		// 'InstitutionStaffAbsences' => [
 		// 	'first_date_absent' => 'First Day Of Absence',
@@ -188,8 +198,7 @@ trait MessagesTrait {
 		// ],
 		'InstitutionAssessments' => [
 			'noSubjects' => 'There are no available Education Subjects.',
-			'noSections' => 'No Available Classes',
-			'noClasses' => 'No Available Subjects',
+			'noClasses' => 'No Available Classes',
 			'noStudents' => 'No Available Students',
 			'mark' => 'Mark',
 			'grading' => 'Grading',
@@ -212,7 +221,7 @@ trait MessagesTrait {
 				'success' => 'The record has been rejected successfully.',
 				'failed' => 'The record is not rejected due to errors encountered.'
 			],
-			'section' => 'Class',
+			'class' => 'Class',
 			'noAccess' => 'You do not have access to this Class.'
 		],
 		'InstitutionRubrics' => [
@@ -270,11 +279,11 @@ trait MessagesTrait {
 			'systemRoles' => 'System Roles'
 		],
 		'StudentAttendances' => [
-			'noSections' => 'No Available Classes',
+			'noClasses' => 'No Available Classes',
 			'lateTime' => 'Late time should not be earlier than start time.'
 		],
 		'InstitutionStudentAbsences' => [
-			'noSections' => 'No Available Classes',
+			'noClasses' => 'No Available Classes',
 			'noStudents' => 'No Available Students',
 			'notEnrolled' => 'Not able to add absence record as this student is no longer enrolled in the institution.',
 		],
@@ -345,8 +354,8 @@ trait MessagesTrait {
 		],
 		'InstitutionQualityVisits' => [
 			'noPeriods' => 'No Available Periods',
-			'noSections' => 'No Available Classes',
-			'noClasses' => 'No Available Subjects',
+			'noClasses' => 'No Available Classes',
+			'noSubjects' => 'No Available Subjects',
 			'noStaff' => 'No Available Staff'
 		],
 		'StudentBehaviours' => [
@@ -464,7 +473,7 @@ trait MessagesTrait {
 		'Institution' => [
 			'Institutions' => [
 				'noActiveInstitution' => 'There is no active institution',
-				'noSubjectsInSection' => 'There are no subjects in the assigned grade',
+				'noSubjectsInClass' => 'There are no subjects in the assigned grade',
 				'noSubjectSelected' => 'There is no subject selected',
 				'noProgrammes' => 'There is no programme set for this institution',
 				'noSections' => 'There is no class under the selected academic period',
@@ -489,11 +498,14 @@ trait MessagesTrait {
 				],
 			],
 			
-			'InstitutionSections' => [
+			'InstitutionClasses' => [
 				'noGrade' => 'There is no grade selected',
 				'emptyName' => 'Class name should not be empty',
 				'emptySecurityUserId' => 'Home Room Teacher should not be empty',
 				'emptyNameSecurityUserId' => 'Class name and Home Room Teacher should not be empty',
+				'name' => [
+					'ruleUniqueNamePerAcademicPeriod' => 'Class name has to be unique',
+				],
 			],
 
 			'InstitutionProgrammes' => [
@@ -538,6 +550,7 @@ trait MessagesTrait {
 				'academicPeriod' => 'You need to configure Academic Periods first.',
 				'educationProgrammeId' => 'You need to configure Education Programmes first.',
 				'institutionGrades' => 'You need to configure Institution Grades first.',
+				'classes' => 'You need to configure Classes first.',
 				'sections' => 'You need to configure Classes first.',
 				'studentStatusId' => 'You need to configure Student Statuses first.',
 				'deleteNotEnrolled' => 'You cannot remove a not enrolled student from the institution.',
@@ -605,6 +618,11 @@ trait MessagesTrait {
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
 				],
+			],
+			'InstitutionInfrastructures' => [
+				'code' => [
+					'ruleUnique' => 'Please enter a unique code'
+				]
 			]
 		],
 		'User' => [

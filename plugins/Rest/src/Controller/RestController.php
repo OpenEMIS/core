@@ -1,405 +1,271 @@
 <?php
 namespace Rest\Controller;
 
-use Exception;
+use Cake\Log\Log;
+use Cake\I18n\Time;
 use Cake\Event\Event;
-use Cake\ORM\Table;
-use Cake\ORM\Query;
-use Cake\ORM\Entity;
-use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
+use Cake\Network\Exception\BadRequestException;
 use App\Controller\AppController;
 
 class RestController extends AppController
 {
-	private $_debug = false;
-	public $components = [
-		'RequestHandler'
-	];
+	public $SecurityRestSessions = null;
 
 	public function initialize() {
 		parent::initialize();
+
+		$this->ControllerAction->models = [
+			'Questions' => ['className' => 'Survey.SurveyQuestions'],
+			'Forms' => ['className' => 'Survey.SurveyForms']
+		];
+		$this->loadComponent('Paginator');
+		$this->loadComponent('Rest.RestSurvey', [
+			'models' => [
+				// Administration Table
+				'Module' => 'CustomField.CustomModules',
+				'Field' => 'Survey.SurveyQuestions',
+				'FieldOption' => 'Survey.SurveyQuestionChoices',
+				'TableColumn' => 'Survey.SurveyTableColumns',
+				'TableRow' => 'Survey.SurveyTableRows',
+				'Form' => 'Survey.SurveyForms',
+				'FormField' => 'Survey.SurveyFormsQuestions',
+				// Transaction Table
+				'Record' => 'Institution.InstitutionSurveys',
+				'FieldValue' => 'Institution.InstitutionSurveyAnswers',
+				'TableCell' => 'Institution.InstitutionSurveyTableCells'
+			]
+		]);
+		// $this->Auth->config('authorize', 'xxxx');
+		$this->SecurityRestSessions = TableRegistry::get('SecurityRestSessions');
 	}
 
-
-/***************************************************************************************************************************************************
- *
- * CakePHP events
- *
- ***************************************************************************************************************************************************/
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
-	}
+		$this->Auth->allow();
 
-	public function beforeRender(Event $event) {
-		parent::beforeRender($event);
-		if ($this->_debug) {
-			$_serialize = array_merge(['request_method', 'action'], $this->viewVars['_serialize']);
-			$this->set([
-				'request_method' => $this->request->method(),
-				'action' => $this->request->params['action'],
-	            '_serialize' => $_serialize
-	        ]);
-	    }
-	}
+		if ($this->request->action == 'survey') {
+			$this->autoRender = false;
 
+			$pass = $this->request->params['pass'];
+			$action = null;
 
-/***************************************************************************************************************************************************
- *
- * Controller action functions
- *
- ***************************************************************************************************************************************************/
-	public function index($model) {
-		$target = $this->_instantiateModel($model);
-		if ($target) {
-			$requestQueries = $this->request->query;
-
-			$listOnly = false;
-			if (array_key_exists('_finder', $requestQueries) && substr_count($requestQueries['_finder'], 'list')>0) {
-				$listOnly = true;
-				$query = $this->_parseFindByList($target, $requestQueries);
-			} else {
-				$query = $target->find();
+			if (!empty($pass)) {
+				$action = array_shift($pass);
 			}
 
-			if (array_key_exists('_finder', $requestQueries)) {
-				$this->_attachFieldSpecificFinders($target, $requestQueries, $query);
-				$this->_attachFinders($target, $requestQueries, $query);
-			}
+			if (!is_null($action) && !in_array($action, $this->RestSurvey->allowedActions)) {
+				// actions require authentication
+				// if authentication is required:
+				// 1. check if token exists
+				// 2. check if current time is greater than expiry time
 
-			$this->_setupContainments($target, $requestQueries, $query);
+				$accessToken = '';
+				if ($this->request->is(['post', 'put'])) {
+					$json = [];
 
-			$limit = 10;
-			if (array_key_exists('_limit', $requestQueries)) {
-				$limit = $requestQueries['_limit'];
-			}
-			$page = 1;
-			if (array_key_exists('_page', $requestQueries)) {
-				$page = $requestQueries['_page'];
-			}
-			$query->limit($limit)->page($page);
+					if (array_key_exists('SecurityRestSession', $this->request->data)) {
+						if (array_key_exists('access_token', $this->request->data['SecurityRestSession'])) {
+							$accessToken = $this->request->data['SecurityRestSession']['access_token'];
 
-			$conditions = [];
-			if (!empty($requestQueries)) {
-				$conditions = $this->_setupConditions($target, $requestQueries);
-			}
-			$fields = [];
-			if (!empty($requestQueries)) {
-				$fields = $this->_filterSelectFields($target, $requestQueries);
-			}
-			if (is_bool($conditions) && !$conditions) {
-				$this->_outputError('Extra query parameters declared do not exists in '.$target->registryAlias());
-			} else if (is_bool($fields) && !$fields) {
-				$this->_outputError('One or more selected fields do not exists in '.$target->registryAlias());
-			} else {
-				if (!empty($conditions)) {
-					$query->where($conditions);
-				}
-				if (!empty($fields)) {
-					$query->select($fields);
-				}
-				if ($listOnly) {
-					try {
-						$data = $query->toArray();
-						$this->_outputData($data);
-					} catch (Exception $e) {
-						$this->_outputError($e->getMessage());
+							$confirm = $this->SecurityRestSessions
+								->find()
+								->where([
+									$this->SecurityRestSessions->aliasField('access_token') => $accessToken
+								])
+								->first();
+
+							$current = time();
+
+							if (!empty($confirm)) {
+								$expiry = strtotime($confirm->expiry_date);
+								if ($current > $expiry) {
+									throw new BadRequestException('Custom error message', 408);
+									$json	= ['message' => 'invalid'];
+								} else {
+									$json	= ['message' => 'valid'];
+								}
+							} else {
+								throw new BadRequestException('Custom error message', 408);
+								$json	= ['message' => 'invalid'];
+							}
+						}
 					}
-				} else {
-					try {
-						$data = $query->all();
-						$data = $this->_formatBinaryValue($data);
-						$this->_outputData($data);
-					} catch (Exception $e) {
-						$this->_outputError($e->getMessage());
-					}
+
+					$this->response->body(json_encode($json, JSON_UNESCAPED_UNICODE));
+					$this->response->type('json');
+
+					//return $this->response;
 				}
 			}
-	    }
+		}
 	}
 
-	public function add($model) {
-		$target = $this->_instantiateModel($model);
-		if ($target) {
-			$entity = $target->newEntity($this->request->data);
-	        $target->save($entity);
-	        $this->set([
-	            'data' => $entity,
-	            'error' => $entity->errors(),
-	            '_serialize' => ['data', 'error']
-	        ]);
-	    }
-	}
+	public function survey() {
+		$this->autoRender = false;
+		$pass = $this->request->params['pass'];
+		$action = 'index';
 
-	public function view($model, $id) {
-		$target = $this->_instantiateModel($model);
-		if ($target) {
-			if ($target->exists([$target->aliasField($target->primaryKey()) => $id])) {
-				$requestQueries = $this->request->query;
-	
-				$query = $target->find();
-				$this->_setupContainments($target, $requestQueries, $query);
+		if (!empty($pass)) {
+			$action = array_shift($pass);
+		}
 
-				$fields = [];
-				if (!empty($requestQueries)) {
-					$fields = $this->_filterSelectFields($target, $requestQueries);
-				}
-				if (is_bool($fields) && !$fields) {
-					$this->_outputError('One or more selected fields do not exists in '.$target->registryAlias());
-				} else {
-					if (!empty($fields)) {
-						$query->select($fields);
-					}
-					try {
-						$data = $query->where([$target->aliasField($target->primaryKey()) => $id])->first();
-						$data = $this->_formatBinaryValue($data);
-						$this->_outputData($data);
-					} catch (Exception $e) {
-						$this->_outputError($e->getMessage());
-					}
-			    }
-		    } else {
-		    	$this->_outputError('Record does not exists');
-		    }
-	    }
-	}
-
-	public function edit($model, $id) {
-		$target = $this->_instantiateModel($model);
-		if ($target) {
-			if ($target->exists([$target->aliasField($target->primaryKey()) => $id])) {
-				$entity = $target->get($id);
-	            $entity = $target->patchEntity($entity, $this->request->data);
-		        if (empty($entity->errors())) {
-		        	$target->save($entity);
-			        $this->set([
-			            'data' => $entity,
-			            'error' => $entity->errors(),
-			            '_serialize' => ['data', 'error']
-			        ]);
-			    } else {
-			    	$this->_outputError($entity->errors());
-			    }
-		    } else {
-		    	$this->_outputError('Record does not exists');
-		    }
-	    }
-	}
-
-	public function delete($model, $id) {
-		$target = $this->_instantiateModel($model);
-		if ($target) {
-			if ($target->exists([$target->aliasField($target->primaryKey()) => $id])) {
-				$entity = $target->get($id);
-		        $message = 'Deleted';
-		        if (!$target->delete($entity)) {
-		            $message = 'Error';
-		        }
-				$this->set([
-		            'result'=> $message,
-		            '_serialize' => ['result']
-		        ]);
-		    } else {
-		    	$this->_outputError('Record does not exists');
-		    }
-	    }
-	}
-
-
-/***************************************************************************************************************************************************
- *
- * private functions
- *
- ***************************************************************************************************************************************************/
-	private function _instantiateModel($model) {
-		$model = str_replace('-', '.', $model);
-		$target = TableRegistry::get($model);
-		try {
-			$data = $target->find('all')->limit('1');
-			return $target;
-		} catch (Exception $e) {
-			$this->_outputError();
+		if (method_exists($this->RestSurvey, $action)) {
+			return call_user_func_array(array($this->RestSurvey, $action), $pass);
+		} else {
 			return false;
 		}
 	}
 
-	private function _outputError($message = 'Requested Plugin-Model does not exists') {
-		$model = str_replace('-', '.', $this->request->params['model']);
-		$this->set([
-            'model' => $model,
-            'error' => $message,
-            '_serialize' => ['request_method', 'action', 'model', 'error']
-        ]);
+	public function login() {
+		// $username	= $this->request->data['username'];
+		// $password	= $this->request->data['password'];
+
+		// $password	= AuthComponent::password($password);
+
+		$user = $this->Auth->identify();
+
+		// $check		= $this->SecurityUser->find('first', array(
+		// 	'conditions' => array(
+		// 		'SecurityUser.username' => $username,
+		// 		'SecurityUser.password' => $password
+		// 	)
+		// ));
+		if ($user) {
+			// $data = true;
+			return $user;
+		} else {
+			return false;
+		}
 	}
 
-	private function _outputData($data) {
-		$this->set([
-            'data' => $data,
-            '_serialize' => ['data']
-        ]);
+	public function auth() {
+		$this->autoRender = false;
+		$json = [];
+
+		// We check if request came from a post form
+		if ($this->request->is(['post', 'put'])) {
+			// do the login..
+			$user = $this->login();
+
+			if ($user) {
+				// get all the user details if login is successful.
+				$userID = $user['id'];
+				$accessToken = sha1(time() . $userID);
+				$refreshToken = sha1(time());
+				$json = ['message' => 'success', 'access_token' => $accessToken, 'refresh_token' => $refreshToken];
+
+				// set the values, and save the data
+				$startDate = time() + 3600; // current time + one hour
+                $expiryTime = new Time($startDate);
+				$saveData = [
+					'access_token' => $accessToken,
+					'refresh_token' => $refreshToken,
+					'expiry_date' => $expiryTime
+				];
+
+				$entity = $this->SecurityRestSessions->newEntity($saveData);
+				$this->SecurityRestSessions->save($entity);
+			} else {
+				// if the login is wrong, show the error message.
+				$json = ['message' => 'failure'];
+			}
+		}
+
+		$this->response->body(json_encode($json, JSON_UNESCAPED_UNICODE));
+		$this->response->type('json');
+
+		return $this->response;
 	}
 
-	private function _formatBinaryValue($data) {
-		if ($data instanceof Entity) {
-			foreach ($data->visibleProperties() as $property) {
-				if (is_resource($data->$property)) {
-					$data->$property = base64_encode("data:image/jpeg;base64,".stream_get_contents($data->$property));						
-				}
+	public function refreshToken() {
+		$this->autoRender = false;
+		// This function checks for the existence of both the access and refresh tokens
+		// If found, updates the refresh token, and the expiry time accordingly.
+		$accessToken = '';
+		$refreshToken = '';
+		$json = [];
+
+		if ($this->request->is(['post', 'put'])) {
+			$accessToken = $this->request->data['access_token'];
+			$refreshToken = $this->request->data['refresh_token'];
+
+			$search = $this->SecurityRestSessions
+				->find()
+				->where([
+					$this->SecurityRestSessions->aliasField('access_token') => $accessToken,
+					$this->SecurityRestSessions->aliasField('refresh_token') => $refreshToken
+				])
+				->first();
+
+			if (!empty($search)) {
+				$refreshToken = sha1(time());
+				$startDate = time() + 3600; // current time + one hour
+				$expiryTime = date('Y-m-d H:i:s', $startDate);
+
+				$search->refresh_token = $refreshToken;
+				$search->expiry_date = $expiryTime;
+
+				$this->SecurityRestSessions->save($search);
+				$json = ['message' => 'updated', 'refresh_token' => $refreshToken];
+			} else {
+				throw new BadRequestException('Custom error message', 302);
 			}
 		} else {
-			foreach ($data as $key => $value) {
-				foreach ($value->visibleProperties() as $property) {
-					if (is_resource($value->$property)) {
-						$value->$property = base64_encode("data:image/jpeg;base64,".stream_get_contents($value->$property));						
-					}
-				}
-			}
+			throw new BadRequestException('Custom error message', 400);
 		}
-		return $data;
+
+		$this->response->body(json_encode($json, JSON_UNESCAPED_UNICODE));
+		$this->response->type('json');
+
+		return $this->response;
 	}
 
-	private function _parseFindByList(Table $target, array $requestQueries) {
-		$finders = explode(',', $requestQueries['_finder']);
-		foreach ($finders as $key => $finder) {
-			if (substr_count($finder, 'list')>0) {
+	public function token() {
+		$this->autoRender = false;
+		$accessToken = '';
+		$refreshToken = '';
+		$json = [];
 
-				$bracketPost = strpos($finder, '[');
-				if ($bracketPost>0) {
-					$parameters = substr($finder, $bracketPost+1, -1);
-					$parameters = explode(';', $parameters);
+		if ($this->request->is(['post', 'put'])) {
+			$accessToken = $this->request->data['access_token'];
+			$refreshToken = $this->request->data['refresh_token'];
+
+			$search = $this->SecurityRestSessions
+				->find()
+				->where([
+					$this->SecurityRestSessions->aliasField('access_token') => $accessToken,
+					$this->SecurityRestSessions->aliasField('refresh_token') => $refreshToken
+				])
+				->first();
+
+			// check if the record actually exists. if it does, do the update, else just return fail.
+			// we check if the expiry time has already passed. if it has passed, return error.
+			if (!empty($search)) {
+				$current = time();
+				$expiry = strtotime($search->expiry_date);
+
+				if ($current < $expiry) {
+					$refreshToken = sha1(time());
+					$startDate = time() + 3600; // current time + one hour
+					$expiryTime = date('Y-m-d H:i:s', $startDate);
+
+					$search->refresh_token = $refreshToken;
+					$search->expiry_date = $expiryTime;
+
+					$this->SecurityRestSessions->save($search);
+					$json = ['message' => 'success', 'refresh_token' => $refreshToken];
 				} else {
-					$parameters = [];
+					$json = ['message' => 'token not updated'];
 				}
+			} else {
+				$json = ['message' => 'token not found'];
+			}
+		}
 
-		        $keyField = $target->primaryKey();
-		        $valueField = $target->displayField();
-		        $groupField = null;
-				if (isset($parameters[0]) && !empty($parameters[0])) {
-					$keyField = $parameters[0];
-				}
-				if (isset($parameters[1]) && !empty($parameters[1])) {
-					$valueField = $parameters[1];
-				}
-				if (isset($parameters[2]) && !empty($parameters[2])) {
-					$groupField = $parameters[2];
-				}
-				return $target->find('list', [
-			            'keyField' => $keyField,
-			            'valueField' => $valueField,
-			            'groupField' => $groupField
-					]);
+		$this->response->body(json_encode($json, JSON_UNESCAPED_UNICODE));
+		$this->response->type('json');
 
-			}
-		}
+		return $this->response;
 	}
-	
-	private $_specificFields = ['visible', 'active', 'order', 'editable'];
-	private function _attachFieldSpecificFinders(Table $target, array $requestQueries, Query $query) {
-		$finders = explode(',', $requestQueries['_finder']);
-		foreach ($finders as $key => $finder) {
-			$strlen = (strpos($finder, '[')>0) ? strpos($finder, '[') : strlen($finder);
-			$functionName = strtolower(substr($finder, 0, $strlen));
-			if (in_array($functionName, $this->_specificFields)) {
-				$targetColumns = $target->schema()->columns();
-				if (in_array($functionName, $targetColumns)) {
-					$parameters = $this->_setupFinderParams($finder);
-					if (method_exists($target, 'find'.ucwords($functionName))) {
-						$query->find($functionName, $parameters);
-					}
-				}
-			}
-		}
-		return $query;
-	}
-	
-	private function _attachFinders(Table $target, array $requestQueries, Query $query) {
-		$finders = explode(',', $requestQueries['_finder']);
-		foreach ($finders as $key => $finder) {
-			$strlen = (strpos($finder, '[')>0) ? strpos($finder, '[') : strlen($finder);
-			$functionName = strtolower(substr($finder, 0, $strlen));
-			if (!in_array($functionName, array_merge($this->_specificFields, ['list']))) {
-				$parameters = $this->_setupFinderParams($finder);
-				if (method_exists($target, 'find'.ucwords($functionName))) {
-					$query->find($functionName, $parameters);
-				} else {
-					foreach ($target->behaviors()->loaded() as $behaviorName) {
-						$behavior = $target->behaviors()->get($behaviorName);
-						if (method_exists($behavior, 'find'.ucwords($functionName))) {
-							$query->find($functionName, $parameters);
-						}
-					}
-				}
-			}
-		}
-		return $query;
-	}
-
-	private function _setupFinderParams($finder) {
-		$strlen = (strpos($finder, '[')>0) ? strpos($finder, '[') : strlen($finder);
-		$parameters = substr($finder, $strlen+1, -1);
-		if (!empty($parameters)) {
-			$parameters = explode(';', $parameters);
-			foreach ($parameters as $key => $value) {
-				$buffer = explode(':', $value);
-				$parameters[$buffer[0]] = $buffer[1];
-			}
-		} else {
-			$parameters = [];
-		}
-		return $parameters;
-	}
-	
-	private $_specialParams = ['_finder', '_limit', '_page', '_fields', '_contain'];
-	private function _setupConditions(Table $target, array $requestQueries) {
-		$targetColumns = $target->schema()->columns();
-		$conditions = [];
-		foreach ($requestQueries as $requestQueryKey => $requestQuery) {
-			if (in_array($requestQueryKey, $this->_specialParams)) {
-				continue;
-			}
-			if (!in_array($requestQueryKey, $targetColumns)) {
-				return false;
-			}
-			$conditions[$target->aliasField($requestQueryKey)] = $requestQuery;
-		}
-		return $conditions;
-	}
-
-	private function _setupContainments(Table $target, array $requestQueries, Query $query) {
-		if (array_key_exists('_contain', $requestQueries)) {
-			$contains = array_map('trim', explode(',', $requestQueries['_contain']));
-			if (!empty($contains)) {
-				$trueExists = false;
-				foreach ($contains as $key => $contain) {
-					if ($contain=='true') {
-						$trueExists = true;
-						break;
-					}
-				}
-				if ($trueExists) {
-					$contains = [];
-					foreach ($target->associations() as $assoc) {
-						$contains[] = $assoc->name();
-					}
-				}
-				$query->contain($contains);
-			}
-		}
-		return $query;
-	}
-
-	private function _filterSelectFields(Table $target, array $requestQueries) {
-		$targetColumns = $target->schema()->columns();
-		if (!array_key_exists('_fields', $requestQueries)) {
-			return [];
-		}
-		$fields = array_map('trim', explode(',', $requestQueries['_fields']));
-		foreach ($fields as $field) {
-			if (!in_array($field, $targetColumns)) {
-				return false;
-			}
-		}
-		return $fields;
-	}
-
 }
