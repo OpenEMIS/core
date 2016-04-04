@@ -11,17 +11,23 @@
 namespace SebastianBergmann;
 
 /**
- * @package   Version
- * @author    Sebastian Bergmann <sebastian@phpunit.de>
- * @copyright Sebastian Bergmann <sebastian@phpunit.de>
- * @license   http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
- * @link      http://github.com/sebastianbergmann/version
- * @since     Class available since Release 1.0.0
+ * @since Class available since Release 1.0.0
  */
 class Version
 {
+    /**
+     * @var string
+     */
     private $path;
+
+    /**
+     * @var string
+     */
     private $release;
+
+    /**
+     * @var string
+     */
     private $version;
 
     /**
@@ -63,8 +69,9 @@ class Version
     }
 
     /**
-     * @param  string $path
-     * @return boolean|string
+     * @param string $path
+     *
+     * @return bool|string
      */
     private function getGitInformation($path)
     {
@@ -72,11 +79,26 @@ class Version
             return false;
         }
 
-        $dir = getcwd();
-        chdir($path);
-        $returnCode = 1;
-        $result = @exec('git describe --tags 2>&1', $output, $returnCode);
-        chdir($dir);
+        $process = proc_open(
+            'git describe --tags',
+            [
+                1 => ['pipe', 'w'],
+                2 => ['pipe', 'w'],
+            ],
+            $pipes,
+            $path
+        );
+
+        if (!is_resource($process)) {
+            return false;
+        }
+
+        $result = trim(stream_get_contents($pipes[1]));
+
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+
+        $returnCode = proc_close($process);
 
         if ($returnCode !== 0) {
             return false;

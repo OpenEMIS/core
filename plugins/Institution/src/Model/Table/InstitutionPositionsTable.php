@@ -10,9 +10,10 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
+use Cake\ORM\TableRegistry;
+use Cake\Collection\Collection;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
-use Cake\ORM\TableRegistry;
 
 class InstitutionPositionsTable extends AppTable {
 	use OptionsTrait;
@@ -47,8 +48,61 @@ class InstitutionPositionsTable extends AppTable {
 			;
 	}
 
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		if ($entity->has('is_homeroom') && $entity->dirty('is_homeroom')) {
+			$currIsHomeroom = $entity->is_homeroom;
+			// have to find all the staff that is holding this institution position
+			$InstitutionStaffTable = $this->InstitutionStaff;
+			$staffInvolved = $InstitutionStaffTable->find()
+				->where([
+					$InstitutionStaffTable->aliasField('institution_position_id') => $entity->id,
+					$InstitutionStaffTable->aliasField('security_group_user_id IS NOT NULL')
+				])
+				->where([
+					'OR' => [
+						[function ($exp) use ($InstitutionStaffTable) {
+							return $exp->gte($InstitutionStaffTable->aliasField('end_date'), $InstitutionStaffTable->find()->func()->now('date'));
+						}],
+						[$InstitutionStaffTable->aliasField('end_date').' IS NULL']
+					]
+				])
+				;
+			if (!empty($staffInvolved)) {
+				$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+				$SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+				$homeroomSecurityRoleId = $SecurityRoles->getHomeroomRoleId();
+				try {
+					$securityGroupId = $this->Institutions->get($entity->institution_id)->security_group_id;
+					foreach ($staffInvolved as $key => $value) {
+						$homeRoomData = [
+							'security_role_id' => $homeroomSecurityRoleId,
+							'security_group_id' => $securityGroupId,
+							'security_user_id' => $value->staff_id
+						];
+						if ($currIsHomeroom) {
+							// add 1 homeroom value
+							$newHomeroomEntity = $SecurityGroupUsers->newEntity($homeRoomData);
+							$entity = $SecurityGroupUsers->save($newHomeroomEntity);
+						} else {
+							// remove homeroom value - find 1 entry and delete it
+							$homeroomEntity = $SecurityGroupUsers->find()
+								->where($homeRoomData)
+								->first();
+							if (!empty($homeroomEntity)) {
+								$SecurityGroupUsers->delete($homeroomEntity);
+							}
+						}
+					}
+				} catch (InvalidPrimaryKeyException $ex) {
+					Log::write('error', __METHOD__ . ': ' . $this->Institutions->alias() . ' primary key not found (' . $entity->institution_id . ')');
+				}
+			}
+		}
+	}
+
 	public function beforeAction(Event $event, ArrayObject $extra) {
 		$this->field('position_no', ['visible' => true]);
+		$this->field('is_homeroom', ['visible' => true]);
 		$this->field('staff_position_title_id', [
 			'visible' => true,
 			'type' => 'select'
@@ -78,6 +132,11 @@ class InstitutionPositionsTable extends AppTable {
 			$attr['attr']['value'] = $this->getUniquePositionNo();
 			return $attr;
 		}
+	}
+
+	public function onUpdateFieldIsHomeroom(Event $event, array $attr, $action, Request $request) {
+		$attr['options'] = $this->getSelectOptions('general.yesno');
+		return $attr;
 	}
 
 	public function onGetStaffPositionTitleId(Event $event, Entity $entity) {
@@ -122,7 +181,6 @@ class InstitutionPositionsTable extends AppTable {
 			$staffTitleOptions = array_intersect_key($staffTitleOptions, array_intersect($staffTitleRoles, $roleOptions));
 
 			// Adding the opt group
-			$types = $this->getSelectOptions('Staff.position_types');
 			$titles = [];
 			foreach ($staffTitleOptions as $title) {
 				$type = __($types[$title->type]);
@@ -131,8 +189,8 @@ class InstitutionPositionsTable extends AppTable {
 		} else {
 			$titles = $this->StaffPositionTitles
 				->find()
-			    ->where(['id >' => 1])
-			    ->order(['order'])
+			    ->where([$this->StaffPositionTitles->aliasField('id').' >' => 1])
+			    ->order([$this->StaffPositionTitles->aliasField('order')])
 			    ->map(function ($row) use ($types) { // map() is a collection method, it executes the query
 			        $row->name_and_type = $row->name . ' - ' . (array_key_exists($row->type, $types) ? $types[$row->type] : $row->type);
 			        return $row;

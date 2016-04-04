@@ -52,26 +52,30 @@ class CustomFormsTable extends AppTable {
 				])
 				->toArray();
 
-			$CustomFormsFilters = TableRegistry::get($this->filterClass['through']);
-			$CustomFormsFilters->deleteAll([
-				'OR' => [
-					[
-						$CustomFormsFilters->aliasField($this->filterClass['foreignKey'] . ' IN') => $customFormIds,
-						$CustomFormsFilters->aliasField($this->filterClass['targetForeignKey']) => 0
-					],
-					$CustomFormsFilters->aliasField($this->filterClass['foreignKey']) => $entity->id
-				]
-			]);
+			if (!empty($customFormIds)) {
+				$CustomFormsFilters = TableRegistry::get($this->filterClass['through']);
+				$CustomFormsFilters->deleteAll([
+					'OR' => [
+						[
+							$CustomFormsFilters->aliasField($this->filterClass['foreignKey'] . ' IN') => $customFormIds,
+							$CustomFormsFilters->aliasField($this->filterClass['targetForeignKey']) => 0
+						],
+						$CustomFormsFilters->aliasField($this->filterClass['foreignKey']) => $entity->id
+					]
+				]);
 
-			$filterData = [
-				$this->filterClass['foreignKey'] => $entity->id,
-				$this->filterClass['targetForeignKey'] => 0
-			];
-			$filterEntity = $CustomFormsFilters->newEntity($filterData);
+				$filterData = [
+					$this->filterClass['foreignKey'] => $entity->id,
+					$this->filterClass['targetForeignKey'] => 0
+				];
+				$filterEntity = $CustomFormsFilters->newEntity($filterData);
 
-			if ($CustomFormsFilters->save($filterEntity)) {
+				if ($CustomFormsFilters->save($filterEntity)) {
+				} else {
+					$CustomFormsFilters->log($filterEntity->errors(), 'debug');
+				}
 			} else {
-				$CustomFormsFilters->log($filterEntity->errors(), 'debug');
+				$this->log('customFormIds is empty...', 'debug');
 			}
 		}
 	}

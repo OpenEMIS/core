@@ -5,6 +5,7 @@ use ArrayObject;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\I18n\Time;
+use Cake\I18n\Date;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Log\LogTrait;
@@ -162,7 +163,7 @@ class AppTable extends Table {
 	}
 
 	// Event: 'ControllerAction.Model.onFormatDate'
-	public function onFormatDate(Event $event, Time $dateObject) {
+	public function onFormatDate(Event $event, Date $dateObject) {
 		return $this->formatDate($dateObject);
 	}
 
@@ -171,7 +172,7 @@ class AppTable extends Table {
 	 * @param  Time   $dateObject [description]
 	 * @return [type]             [description]
 	 */
-	public function formatDate(Time $dateObject) {
+	public function formatDate(Date $dateObject) {
 		$ConfigItem = TableRegistry::get('ConfigItems');
 		$format = $ConfigItem->value('date_format');
         $value = '';
@@ -182,8 +183,8 @@ class AppTable extends Table {
 	}
 
 	// Event: 'ControllerAction.Model.onFormatTime'
-	public function onFormatTime(Event $event, Time $dateObject) {
-		return $this->formatTime($dateObject);
+	public function onFormatTime(Event $event, Time $timeObject) {
+		return $this->formatTime($timeObject);
 	}
 
 	/**
@@ -191,19 +192,19 @@ class AppTable extends Table {
 	 * @param  Time   $dateObject [description]
 	 * @return [type]             [description]
 	 */
-	public function formatTime(Time $dateObject) {
+	public function formatTime(Time $timeObject) {
 		$ConfigItem = TableRegistry::get('ConfigItems');
 		$format = $ConfigItem->value('time_format');
 		$value = '';
-        if (is_object($dateObject)) {
-            $value = $dateObject->format($format);
+        if (is_object($timeObject)) {
+            $value = $timeObject->format($format);
         }
 		return $value;
 	}
 
 	// Event: 'ControllerAction.Model.onFormatDateTime'
-	public function onFormatDateTime(Event $event, Time $dateObject) {
-		return $this->formatDateTime($dateObject);
+	public function onFormatDateTime(Event $event, Time $timeObject) {
+		return $this->formatDateTime($timeObject);
 	}
 
 	/**
