@@ -1,24 +1,24 @@
 <?php
 namespace Institution\Model\Table;
 
+use DateTime;
 use ArrayObject;
+
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
-use Cake\Controller\Controller;
+use Cake\Utility\Inflector;
+use Cake\I18n\Date;
+use Cake\I18n\Time;
+use Cake\Log\Log;
+
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
-use Cake\Utility\Inflector;
-use Cake\ORM\ResultSet;
-use Cake\I18n\Time;
-
-use DateTime;
-
-use Cake\Log\Log;
 
 class StaffTable extends AppTable {
 	use OptionsTrait;
@@ -433,9 +433,11 @@ class StaffTable extends AppTable {
 	public function addBeforeSave(Event $event, Entity $entity, $data) {
 		if (!$entity->errors()) {
 			$staffId = $data[$this->alias()]['staff_id'];
-			$startDate = $data[$this->alias()]['start_date'];
-			$startDate = new Time ($startDate);
+			$startDate = new Date($data[$this->alias()]['start_date']);
+
+			// check if staff is already assigned
 			$staffRecord = $this->find()
+				->contain(['Institutions'])
 				->where([
 					$this->aliasField('staff_id') => $staffId,
 					'OR' => [
@@ -445,14 +447,18 @@ class StaffTable extends AppTable {
 				])
 				->order([$this->aliasField('created') => 'DESC'])
 				->first();
-			if (count($staffRecord)) {
+
+			if ($staffRecord) {
 				// For staff transfer
-				$data[$this->alias()]['institution_id'] = $entity->institution_id;
-				$data[$this->alias()]['transfer_from'] = $staffRecord->institution_id;
-				$this->Session->write('Institution.Staff.transfer', $data[$this->alias()]);
-				$event->stopPropagation();
-				$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffTransferRequests', 'add'];
-				return $this->controller->redirect($action);
+				if ($entity->institution_id != $staffRecord->institution_id) {
+					$data[$this->alias()]['institution_id'] = $entity->institution_id;
+					$data[$this->alias()]['previous_institution_id'] = $staffRecord->institution_id;
+					$data[$this->alias()]['transfer_from'] = $staffRecord->institution->name;
+					$this->Session->write('Institution.Staff.transfer', $data[$this->alias()]);
+					$event->stopPropagation();
+					$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffTransferRequests', 'add'];
+					return $this->controller->redirect($action);
+				}
 			} else {
 				// For staff assignment
 				// $this->Session->write('Institution.Staff.add', $data[$this->alias()]);
@@ -722,6 +728,7 @@ class StaffTable extends AppTable {
 
 	public function addOnInitialize(Event $event, Entity $entity) {
 		$this->Session->delete('Institution.Staff.new');
+		$this->Session->delete('Institution.Staff.transfer');
 	}
 
 	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
