@@ -184,6 +184,19 @@ class AssessmentsTable extends ControllerActionTable {
 		$this->_setGenericPatchOptions($patchOptions);
 	}
 
+	public function addNewAssessmentPeriod($id=null) {
+		$entity = $this->newEntity();
+		$assessmentPeriods = [];
+		return $this->AssessmentPeriods->appendAssessmentPeriodsArray($entity, $assessmentPeriods);
+		// if (array_key_exists($this->alias(), $requestData)) {
+		// 	if (array_key_exists('assessment_periods', $requestData[$this->alias()])) {
+		// 		$assessmentPeriods = $requestData[$this->alias()]['assessment_periods'];
+		// 	}
+		// }
+		// $requestData[$this->alias()]['assessment_periods'] = $this->AssessmentPeriods->appendAssessmentPeriodsArray($entity, $assessmentPeriods);
+		// $this->_setGenericPatchOptions($patchOptions);
+	}
+
 
 /******************************************************************************************************************
 **
@@ -196,25 +209,23 @@ class AssessmentsTable extends ControllerActionTable {
 		$this->field('education_programme_id', [
 			'options' => $programmeOptions,
 			'value' => $selectedProgramme,
-			'attr' => [
-				'ca-on-change-element' => true,
-				'ca-on-change-source-url' => 'education-educationgrades.json?_finder=visible,list&education_programme_id=',
-				'ca-on-change-target' => 'education_grade_id',
-			]
 		]);
 		$this->field('education_grade_id', [
 			'options' => $gradeOptions,
 			'value' => $selectedGrade,
-			'attr' => [
-				'ca-id' => 'education_grade_id',
-				'ca-on-change-target-element' => true,
-			]			
 		]);
+		// $this->field('assessment_items', [
+		// 	'type' => 'element',
+		// 	// 'element' => 'Assessment.Assessments/assessment_items',
+		// 	'visible' => ['view'=>true, 'edit'=>true, 'add'=>true],
+		// 	// 'fields' => $this->AssessmentItems->fields,
+		// 	// 'formFields' => array_keys($this->AssessmentItems->getFormFields($this->action))
+		// ]);
 		$this->field('academic_period_id', [
 			'options' => $academicPeriodOptions,
 			'value' => $selectedAcademicPeriod
 		]);
-
+		
 		$this->setFieldOrder([
 			'code', 'name', 'description', 'type', 'subject_section', 'education_programme_id', 'education_grade_id', 'assessment_items', 'period_section', 'academic_period_id', 'assessment_periods',
 		]);
@@ -237,17 +248,29 @@ class AssessmentsTable extends ControllerActionTable {
 ******************************************************************************************************************/
 
 	public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request) {
-		// $attr['onChangeReload'] = 'changeProgramme';
+		$attr['attr'] = [
+			'ca-on-change-element' => true,
+			'ca-on-change-source-url' => '/restful/education-educationgrades.json?_finder=visible,list&education_programme_id=',
+			'ca-on-change-target' => 'education_grade_id',
+		];
 		return $attr;
 	}
 
 	public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request) {
-		// $attr['onChangeReload'] = 'changeGrade';
+		$attr['attr'] = [
+			'ca-id' => 'education_grade_id',
+			'ca-on-change-target-element' => true,
+			'ca-on-change-target-element-template-url' => '/assessment/templates/education_grade_options.html',
+
+			'ca-on-change-element' => 'data',
+			'ca-on-change-source-url' => '/restful/education-educationgradessubjects.json?_finder=visible&_contain=EducationSubjects&_fields=id&education_grade_id=',
+			'ca-on-change-target' => 'assessment_items',
+		];
 		return $attr;
 	}
 
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
-		$attr['attr'] = ['onchange' => "updateDates();"];
+		// $attr['attr'] = ['onchange' => "updateDates();"];
 		return $attr;
 	}
 
@@ -257,6 +280,7 @@ class AssessmentsTable extends ControllerActionTable {
 ** essential methods
 **
 ******************************************************************************************************************/
+
 	private function _setGenericPatchOptions(ArrayObject $patchOptions, $validate = false) {
 		$newOptions = [];
 		if (!$validate) {
