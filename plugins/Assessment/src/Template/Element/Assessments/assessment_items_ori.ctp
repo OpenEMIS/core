@@ -84,6 +84,7 @@
 		}
 	</style>
 
+
 	<div class="clearfix"></div>
 	<div class="table-wrapper">
 		<div class="table-responsive">
@@ -111,8 +112,73 @@
 					</tr>
 				</thead>
 
-				<tbody id="table_assessment_items" ca-id="assessment_items" ca-on-change-target-element ca-on-change-target-element-template-url="/assessment/templates/subjects_list.html">
+				<tbody id='table_assessment_items' >
 					
+					<?php 
+					if (count($data->assessment_items)>0) :
+						// iterate each row
+						foreach ($data->assessment_items as $key => $record) :
+							$rowErrors = $record->errors();
+							if ($rowErrors) {
+								$trClass = 'error';
+							} else {
+								$trClass = '';
+							}
+					?>
+					<tr class="<?= $trClass ?>">
+
+						<?php 
+							// iterate each field in a row
+							foreach ($attr['formFields'] as $i):
+								$field = $attr['fields'][$i];
+								$fieldErrors = $record->errors($field['field']);
+								if ($fieldErrors) {
+									$tdClass = 'error';
+									$fieldClass = 'form-error';
+								} else {
+									$tdClass = '';
+									$fieldClass = '';
+								}
+								$options = [
+									'label'=>false,
+									'name'=>'Assessments[assessment_items]['.$key.']['.$field['field'].']',
+									'class'=>$fieldClass,
+									'value'=>$record->$field['field']
+								];
+								if ($field['type']=='readonly') {
+									$field['value'] = $record->$field['field'];
+									$field['attr'] = ['value' => $record->{'get'.(Inflector::camelize($field['field'])).'Name'}($record->$field['field'])];
+								}
+						?>
+							<?php if ($field['type']!='hidden') : ?>
+
+								<td class="<?= $tdClass ?>">
+									<?= $this->HtmlField->{$field['type']}('edit', $record, $field, $options); ?>
+								</td>
+
+								<?php if ($field['type']!='readonly') : ?>
+								<td class="<?= $tdClass ?>">
+									<ul class="error-message error-message-in-table">
+									<?php if ($fieldErrors) : ?>
+										<?php foreach ($fieldErrors as $error) : ?>
+											<li><?= $error ?></li>
+										<?php endforeach ?>
+									<?php endif; ?>
+									</ul>
+								</td>
+								<?php endif; ?>
+
+							<?php else : ?>
+								<?= $this->HtmlField->{$field['type']}('edit', $record, $field, $options);?>
+							<?php endif; ?>
+						
+						<?php endforeach;?>
+					</tr>
+					<?php 
+						endforeach;
+					endif;
+					?>
+
 				</tbody>
 				
 			</table>

@@ -1,25 +1,95 @@
 //Controller Action Angular Functions v.1.0.1
 angular.module('caModule', ['kordit.service', 'ui.bootstrap'])
-    .controller('caOnChangeCtrl', function(korditService) {
+    .controller('caModuleCtrl', function(korditService) {
 
-        var apiUrl = "/restful/";
-        this.changeOptions = function(scope, element, attrs) {
-            var targetUrl = apiUrl + attrs.caOnChangeSourceUrl + element.val();
+        this.changeOptions = function(scope, elem, attr) {
+            var dataType = attr.caOnChangeElement;
+            var target = attr.caOnChangeTarget;
+            var targetUrl = attr.caOnChangeSourceUrl + elem.val();
             var response = korditService.ajax({url:targetUrl});
             response  
                 .then(function(data) {
    
                     targetOptions = [];
-                    for (var id in data.data) {
-                        targetOptions.push({"id":id, "name":data.data[id]});
+                    if (dataType=='data') {
+                        targetOptions = data.data;
+                    } else {
+                        for (var id in data.data) {
+                            targetOptions.push({"id":id, "name":data.data[id]});
+                        }
                     }
-                    scope.$root.$broadcast('onChangeOptions', targetOptions);
+                    scope.$root.$broadcast('onChangeOptions', target, targetOptions);
                 
                 }, function(error) {
                     console.log('Failure...', error);
                 });
         };
 
+        this.alert = function(scope, elem, attr) {
+            alert('showing off');
+        }
+
+        this.addRow = function(scope, elem, attr) {
+            // console.log('adding row');
+            var target = attr.caOnClickTarget;
+            var targetUrl = attr.caOnClickSourceUrl;// + elem.val();
+            var response = korditService.ajax({url:targetUrl});
+            response  
+                .then(function(data) {
+                    // console.log(data.data);
+                    scope.$root.$broadcast('onClickComplete', 'addRow', target, data.data);
+                
+                }, function(error) {
+                    console.log('Failure...', error);
+                });
+                
+        };
+
+    })
+    .directive('caOnClickElement', function() {
+        return {
+            restrict: 'A',
+            scope: {},
+            controller: 'caModuleCtrl',
+            link: function(scope, elem, attr, caModuleCtrl) {
+
+                elem.on('click', function(event) {
+                    var clickAction = caModuleCtrl[attr.caOnClickElement];
+                    clickAction(scope, elem, attr);
+                });
+
+            }
+        };
+    })
+    .directive('caOnClickTargetElement', function() {
+        return {
+            restrict: 'A',
+            bindToController: {
+              handlers: '='
+            },
+            controllerAs: 'clickTarget',
+            controller: function() {
+
+                this.handlers = {
+                    'addRow': {},
+                    'alert': {}
+                };
+
+                this.registerElement = function(handler, caId) {
+                    this.handlers[handler][caId] = [];
+                };
+
+            },
+            link: function(scope, elem, attr, clickTarget) {
+
+                clickTarget.registerElement(attr.caOnClickTargetHandler, attr.caId);
+
+                scope.$on('onClickComplete', function (event, handler, target, data) {
+                    clickTarget.handlers[handler][target].push(data);
+                })
+
+            }
+        };
     })
     .directive('caOnChangeElement', function() {
         return {
@@ -38,15 +108,11 @@ angular.module('caModule', ['kordit.service', 'ui.bootstrap'])
              */
             restrict: 'A',
             scope: {},
-            bindToController: {
-              targetOptions: '='
-            },
-            controller: 'caOnChangeCtrl',
-            controllerAs: 'viewVars',
-            link: function(scope, element, attrs, caOnChangeCtrl) {
+            controller: 'caModuleCtrl',
+            link: function(scope, elem, attr, caModuleCtrl) {
 
-                element.on('change', function(event) {
-                    caOnChangeCtrl.changeOptions(scope, element, attrs);
+                elem.on('change', function(event) {
+                    caModuleCtrl.changeOptions(scope, elem, attr);
                 });
 
             }
@@ -55,19 +121,35 @@ angular.module('caModule', ['kordit.service', 'ui.bootstrap'])
     .directive('caOnChangeTargetElement', function() {
         return {
             restrict: 'A',
-            scope: {},
             bindToController: {
-              targetOptions: '='
+              elements: '='
             },
-            controller: 'caOnChangeCtrl',
-            controllerAs: 'viewVars',
-            templateUrl: '/assessment/templates/caOnChangeTarget.html',
-            link: function(scope, element, attrs, caOnChangeCtrl) {
+            controllerAs: 'changeTarget',
+            controller: function() {
 
-                scope.targetOptions = [];
+                this.elements = {};
 
-                scope.$on('onChangeOptions', function (event, targetOptions) {
-                    scope.targetOptions = targetOptions;
+                this.registerElement = function(caId) {
+                    this.elements[caId] = [];
+                };
+
+            },
+            templateUrl: function(elem, attr) {
+
+                if (typeof attr.caOnChangeTargetElementTemplateUrl !== 'undefined') {
+                    return attr.caOnChangeTargetElementTemplateUrl;
+                } else {
+                    // attr.caId;
+                    return '/controller_action/templates/caOnChangeTarget.html';
+                }
+
+            },
+            link: function(scope, elem, attr, changeTarget) {
+
+                changeTarget.registerElement(attr.caId);
+
+                scope.$on('onChangeOptions', function (event, target, options) {
+                    changeTarget.elements[target] = options;
                 })
 
             }

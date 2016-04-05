@@ -58,38 +58,28 @@
 						</tr>
 					</thead>
 
-					<tbody id='table_assessment_periods'>
+					<tbody id="table_assessment_periods" ca-id="assessment_periods" ca-on-click-target-element ca-on-click-target-handler="addRow" ca-on-click-target-element-template-url="/assessment/templates/periods_list.html">
 						
-						<?php 
-						if (count($data->assessment_periods)>0) :
-							// iterate each row
-							foreach ($data->assessment_periods as $key => $record) :
-								$rowErrors = $record->errors();
-								if ($rowErrors) {
-									$trClass = 'error';
-								} else {
-									$trClass = '';
-								}
-						?>
-						<tr class="<?= $trClass ?>">
+						<tr ng:repeat="item in clickTarget.handlers.addRow.assessment_periods">
 
 							<?php 
 								// iterate each field in a row
 								foreach ($attr['formFields'] as $formField):
+									$key = 0;
 									$field = $attr['fields'][$formField];
-									$fieldErrors = $record->errors($field['field']);
-									if ($fieldErrors) {
-										$tdClass = 'error';
-										$fieldClass = 'form-error';
-									} else {
+									// $fieldErrors = $record->errors($field['field']);
+									// if ($fieldErrors) {
+									// 	$tdClass = 'error';
+									// 	$fieldClass = 'form-error';
+									// } else {
 										$tdClass = '';
 										$fieldClass = '';
-									}
+									// }
 									$options = [
 										'label'=>false,
 										'name'=>'Assessments[assessment_periods]['.$key.']['.$field['field'].']',
 										'class'=>$fieldClass,
-										'value'=>$record->$field['field']
+										// 'value'=>$record->$field['field']
 									];
 									if ($field['type']=='date') {
 										$field['fieldName'] = 'Assessments[assessment_periods]['.$key.']['.$field['field'].']';
@@ -130,11 +120,8 @@
 								]);
 								?>
 							</td>
+
 						</tr>
-						<?php 
-							endforeach;
-						endif;
-						?>
 
 					</tbody>
 					
