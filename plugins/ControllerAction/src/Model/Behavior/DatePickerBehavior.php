@@ -17,7 +17,6 @@ have received a copy of the GNU General Public License along with this program. 
 namespace ControllerAction\Model\Behavior;
 
 use ArrayObject;
-use Cake\I18n\Date;
 use Cake\Event\Event;
 use Cake\ORM\Behavior;
 use ControllerAction\Model\Traits\PickerTrait;
@@ -28,11 +27,11 @@ class DatePickerBehavior extends Behavior {
 	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
 		foreach ($this->config() as $field) {
 			if (!empty($data[$field])) {
-				if (!$data[$field] instanceof Date) {
+				if (is_object($data[$field])) {
+					$data[$field] = $data[$field]->format('Y-m-d');
+				} else {
 					$convertedDate = $this->convertForDatePicker($data[$field]);
 					$data[$field] = (!empty($convertedDate))? $convertedDate: $data[$field];
-				} else {
-					$data[$field] = $data[$field]->format('Y-m-d');
 				}
 			}
 		}
