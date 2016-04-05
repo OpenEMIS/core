@@ -303,7 +303,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 					$stepRoles[$stepId] = $WorkflowStepsRoles->getRolesByStep($stepId);
 				}
 				// access is true if user roles exists in step roles
-				$hasAccess = count(array_intersect_key($roles, $stepRoles[$stepId])) > 1;
+				$hasAccess = count(array_intersect_key($roles, $stepRoles[$stepId])) > 0;
 				// End
 
 				if ($hasAccess) {
