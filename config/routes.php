@@ -19,6 +19,7 @@
  */
 
 use Cake\Core\Plugin;
+use Cake\Routing\RouteBuilder;
 use Cake\Routing\Router;
 
 /**
@@ -31,7 +32,7 @@ use Cake\Routing\Router;
  * - InflectedRoute
  * - DashedRoute
  *
- * If no call is made to `Router::defaultRouteClass`, the class used is
+ * If no call is made to `Router::defaultRouteClass()`, the class used is
  * `Route` (`Cake\Routing\Route\Route`)
  *
  * Note that `Route` does not do any inflections on URLs which will result in
@@ -41,7 +42,7 @@ use Cake\Routing\Router;
  */
 Router::defaultRouteClass('Route');
 
-Router::scope('/', function ($routes) {
+Router::scope('/', function (RouteBuilder $routes) {
     /**
      * Here, we are connecting '/' (base path) to a controller called 'Pages',
      * its action called 'display', and we pass a param to select the view file
@@ -52,14 +53,14 @@ Router::scope('/', function ($routes) {
     /**
      * ...and connect the rest of 'Pages' controller's URLs.
      */
-    //$routes->connect('/Users/*', ['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+    $routes->connect('/pages/*', ['controller' => 'Pages', 'action' => 'display']);
 
     /**
      * Connect catchall routes for all controllers.
      *
-     * Using the argument `InflectedRoute`, the `fallbacks` method is a shortcut for
-     *    `$routes->connect('/:controller', ['action' => 'index'], ['routeClass' => 'InflectedRoute']);`
-     *    `$routes->connect('/:controller/:action/*', [], ['routeClass' => 'InflectedRoute']);`
+     * Using the argument `DashedRoute`, the `fallbacks` method is a shortcut for
+     *    `$routes->connect('/:controller', ['action' => 'index'], ['routeClass' => 'DashedRoute']);`
+     *    `$routes->connect('/:controller/:action/*', [], ['routeClass' => 'DashedRoute']);`
      *
      * Any route class can be used with this method, such as:
      * - DashedRoute
