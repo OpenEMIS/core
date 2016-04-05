@@ -1,11 +1,12 @@
 <?php
 namespace Assessment\Controller;
 
-use ArrayObject;
-use Cake\ORM\Table;
-use Cake\ORM\Query;
-use Cake\Event\Event;
 use App\Controller\AppController;
+use ArrayObject;
+use Cake\Event\Event;
+use Cake\ORM\Query;
+use Cake\ORM\Table;
+use Cake\ORM\TableRegistry;
 
 class AssessmentsController extends AppController
 {
@@ -57,16 +58,32 @@ class AssessmentsController extends AppController
 
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $this->request->action);
+
+	    if ($this->request->action=='addNewAssessmentPeriod') {
+	    	$this->request->params['_ext'] = 'json';
+	    }
+
 	}
+
+	public $components = [
+		'RequestHandler'
+	];
+
+    public function addNewAssessmentPeriod() {
+    	$Assessments = TableRegistry::get('Assessment.Assessments');
+    	$data = $Assessments->addNewAssessmentPeriod();
+		$this->set([
+			'data' => $data,
+            '_serialize' => ['data']
+        ]);
+    }
 
 	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		$header = __('Assessment');
-
 		$header .= ' - ' . $model->getHeader($model->alias);
 		$this->Navigation->addCrumb('Assessments', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
 		$this->Navigation->addCrumb($model->getHeader($model->alias));
 
 		$this->set('contentHeader', $header);
     }
-
 }
