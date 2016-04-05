@@ -24,8 +24,8 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		return $validator
 			->allowEmpty('end_date')
 			->add('end_date', 'ruleCompareDateReverse', [
-		        'rule' => ['compareDateReverse', 'start_date', true]
-	    	]);
+				'rule' => ['compareDateReverse', 'start_date', true]
+			]);
 	}
 
 	public function initialize(array $config) {
@@ -43,9 +43,9 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		$events['Workflow.getEvents'] = 'getWorkflowEvents';
 		$events['Workflow.beforeTransition'] = 'workflowBeforeTransition';
 		$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
-    	foreach($this->workflowEvents as $event) {
-    		$events[$event['value']] = $event['method'];
-    	}
+		foreach($this->workflowEvents as $event) {
+			$events[$event['value']] = $event['method'];
+		}
 		return $events;
 	}
 
@@ -68,72 +68,72 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		$id = $requestData['WorkflowTransitions']['model_reference'];
 		if (in_array($nextWorkflowStepId, $approved)) {
 			$data = $this->get($id)->toArray();
-	    	$newEntity = $this->patchStaffProfile($data);
-	    	if (is_null($newEntity)) {
-	    		$message = ['StaffPositionProfiles.notExists'];
-	    		$this->Session->write('Institution.StaffPositionProfiles.errors', $message);
-	    	} else if ($newEntity->errors()) {
-	    		$message = [];
-	    		$errors = $newEntity->errors();
-	    		foreach ($errors as $key => $value) {
-	    			$msg = 'Institution.Staff.'.$key;
-	    			if (is_array($value)) {
-	    				foreach ($value as $k => $v) {
-	    					$message[] = $msg.'.'.$k;
-	    				}
-	    			}
-	    		}
-	    		$this->Session->write('Institution.StaffPositionProfiles.errors', $message);
-	    	} else {
-	    		$errors = false;
-	    	}
+			$newEntity = $this->patchStaffProfile($data);
+			if (is_null($newEntity)) {
+				$message = ['StaffPositionProfiles.notExists'];
+				$this->Session->write('Institution.StaffPositionProfiles.errors', $message);
+			} else if ($newEntity->errors()) {
+				$message = [];
+				$errors = $newEntity->errors();
+				foreach ($errors as $key => $value) {
+					$msg = 'Institution.Staff.'.$key;
+					if (is_array($value)) {
+						foreach ($value as $k => $v) {
+							$message[] = $msg.'.'.$k;
+						}
+					}
+				}
+				$this->Session->write('Institution.StaffPositionProfiles.errors', $message);
+			} else {
+				$errors = false;
+			}
 
-	    	if ($errors) {
-	    		$event->stopPropagation();
+			if ($errors) {
+				$event->stopPropagation();
 				$url = $this->url('view');
 				return $this->controller->redirect($url);
-	    	}
-    	}
+			}
+		}
 		
 	}
 
-    public function getWorkflowEvents(Event $event) {
-    	foreach ($this->workflowEvents as $key => $attr) {
-    		$this->workflowEvents[$key]['text'] = __($attr['text']);
-    	}
-    	return $this->workflowEvents;
-    }
+	public function getWorkflowEvents(Event $event) {
+		foreach ($this->workflowEvents as $key => $attr) {
+			$this->workflowEvents[$key]['text'] = __($attr['text']);
+		}
+		return $this->workflowEvents;
+	}
 
-    public function onApprove(Event $event, $id, Entity $workflowTransitionEntity) {
-    	$data = $this->get($id)->toArray();
-    	$newEntity = $this->patchStaffProfile($data);
-    	$InstitutionStaff = TableRegistry::get('Institution.Staff');
-    	$InstitutionStaff->save($newEntity);
-    }
+	public function onApprove(Event $event, $id, Entity $workflowTransitionEntity) {
+		$data = $this->get($id)->toArray();
+		$newEntity = $this->patchStaffProfile($data);
+		$InstitutionStaff = TableRegistry::get('Institution.Staff');
+		$InstitutionStaff->save($newEntity);
+	}
 
-    private function patchStaffProfile(array $data) {
-    	$InstitutionStaff = TableRegistry::get('Institution.Staff');
-    	$newEntity = null;
+	private function patchStaffProfile(array $data) {
+		$InstitutionStaff = TableRegistry::get('Institution.Staff');
+		$newEntity = null;
 
-    	// Get the latest staff record entry
-    	$staffRecord = $InstitutionStaff->find()
-    		->where([
-    			$InstitutionStaff->aliasField('id') => $data['institution_staff_id']
-    		])
-    		->first();
+		// Get the latest staff record entry
+		$staffRecord = $InstitutionStaff->find()
+			->where([
+				$InstitutionStaff->aliasField('id') => $data['institution_staff_id']
+			])
+			->first();
 
-    	// If the record exists
-    	if (!empty($staffRecord)) {
-    		unset($data['created']);
-    		unset($data['created_user_id']);
-    		unset($data['modified']);
-    		unset($data['modified_user_id']);
-    		unset($data['id']);
-    		$newEntity = $InstitutionStaff->patchEntity($staffRecord, $data);
-    	}
+		// If the record exists
+		if (!empty($staffRecord)) {
+			unset($data['created']);
+			unset($data['created_user_id']);
+			unset($data['modified']);
+			unset($data['modified_user_id']);
+			unset($data['id']);
+			$newEntity = $InstitutionStaff->patchEntity($staffRecord, $data);
+		}
 
-    	return $newEntity;
-    }
+		return $newEntity;
+	}
 
 	public function onGetFTE(Event $event, Entity $entity) {
 		$value = '100%';
@@ -247,97 +247,90 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 
    // Workbench.Model.onGetList
 	public function onGetWorkbenchList(Event $event, $AccessControl, ArrayObject $data) {
-		$userId = $event->subject()->Auth->user('id');
-		$institutionIds = $AccessControl->getInstitutionsByUser();
+		$isAdmin = $AccessControl->isAdmin();
 
-		// Array to store security roles in each Institution
-		$institutionRoles = [];
-		foreach ($institutionIds as $institutionId) {
-			$institutionRoles[$institutionId] = $this->Institutions->getInstitutionRoles($userId, $institutionId);
-		}
-		// End
-
-		// Results of all Not Completed survey in all institutions that the login user can access
-		$statusIds = $event->subject()->Workflow->getStepsByModelCode($this->registryAlias(), 'APPROVED');
+		$statusIds = $event->subject()->Workflow->getStepsByModelCode($this->registryAlias(), 'PENDING');
 		$where = [];
-		$where[$this->aliasField('status_id') . ' <> '] = $statusIds;
-		if (!$AccessControl->isAdmin()) {
-			$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
+
+		if (empty($statusIds)) {
+			// returns empty list if there is no status mapping for workflows
+			// otherwise it will return all rows without any conditions which may cause out of memory
+			return [];
+		} else {
+			$where[$this->aliasField('status_id') . ' <> '] = $statusIds;
 		}
 
-		$resultSet = $this
-			->find()
-			->contain(['Statuses', 'Users', 'Institutions', 'ModifiedUser', 'CreatedUser'])
-			->where($where)
-			->order([
-				$this->aliasField('created')
-			])
-			->toArray();
-		// End
+		if ($isAdmin) {
+			return []; // remove this line once workbench pagination is implemented
+		} else {
+			$userId = $event->subject()->Auth->user('id');
+			$institutionIds = $AccessControl->getInstitutionsByUser();
 
-		$WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
-		$stepRoles = [];
-
-		foreach ($resultSet as $key => $obj) {
-			$institutionId = $obj->institution->id;
-			$stepId = $obj->status_id;
-			$roles = array_key_exists($institutionId, $institutionRoles) ? $institutionRoles[$institutionId] : [];
-
-			// Permission
-			$hasAccess = false;
-			// Array to store security roles in each Workflow Step
-			if (!array_key_exists($stepId, $stepRoles)) {
-				$workflowRoles = $WorkflowStepsRoles
-					->find('list', ['keyField' => 'security_role_id', 'valueField' => 'security_role_id'])
-					->where([
-						$WorkflowStepsRoles->aliasField('workflow_step_id') => $stepId
-					])
-					->toArray();
-
-				if (!empty($workflowRoles)) {
-					$stepRoles[$stepId] = $workflowRoles;
-				}
-			}
-
-			if ($AccessControl->isAdmin()) {
-				// to-do: only allow superadmin to see all request after implement pagination for workbench
-				$hasAccess = true;
-			} else {
-				if (array_key_exists($stepId, $stepRoles)) {
-					foreach ($stepRoles[$stepId] as $securityRoleId) {
-						if (in_array($securityRoleId, $roles)) {
-							$hasAccess = true;
-							break;
-						}
-					}
-				}
+			// Array to store security roles in each Institution
+			$institutionRoles = [];
+			foreach ($institutionIds as $institutionId) {
+				$institutionRoles[$institutionId] = $this->Institutions->getInstitutionRoles($userId, $institutionId);
 			}
 			// End
 
-			if ($hasAccess) {
-				$requestTitle = sprintf('%s - %s of %s', $obj->status->name, $obj->user->name, $obj->institution->name);
-				$url = [
-					'plugin' => 'Institution',
-					'controller' => 'Institutions',
-					'action' => 'StaffPositionProfiles',
-					'view',
-					$obj->id,
-					'institution_id' => $institutionId
-				];
+			if (empty($institutionIds)) {
+				return [];
+			} else {
+				$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
+			}
 
-				if (is_null($obj->modified)) {
-					$receivedDate = $this->formatDate($obj->created);
-				} else {
-					$receivedDate = $this->formatDate($obj->modified);
+			$resultSet = $this
+				->find()
+				->contain(['Statuses', 'Users', 'Institutions', 'ModifiedUser', 'CreatedUser'])
+				->where($where)
+				->order([$this->aliasField('created')])
+				->toArray();
+			// End
+
+			$WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+			$stepRoles = [];
+
+			foreach ($resultSet as $key => $obj) {
+				$institutionId = $obj->institution->id;
+				$stepId = $obj->status_id;
+				$roles = $institutionRoles[$institutionId];
+
+				// Permission
+				$hasAccess = false;
+
+				// Array to store security roles in each Workflow Step
+				if (!array_key_exists($stepId, $stepRoles)) {
+					$stepRoles[$stepId] = $WorkflowStepsRoles->getRolesByStep($stepId);
 				}
+				// access is true if user roles exists in step roles
+				$hasAccess = count(array_intersect_key($roles, $stepRoles[$stepId])) > 1;
+				// End
 
-				$data[] = [
-					'request_title' => ['title' => $requestTitle, 'url' => $url],
-					'receive_date' => $receivedDate,
-					'due_date' => '<i class="fa fa-minus"></i>',
-					'requester' => $obj->created_user->username,
-					'type' => __('Institution > Staff > Staff Position Profiles')
-				];
+				if ($hasAccess) {
+					$requestTitle = sprintf('%s - %s of %s', $obj->status->name, $obj->user->name, $obj->institution->name);
+					$url = [
+						'plugin' => 'Institution',
+						'controller' => 'Institutions',
+						'action' => 'StaffPositionProfiles',
+						'view',
+						$obj->id,
+						'institution_id' => $institutionId
+					];
+
+					if (is_null($obj->modified)) {
+						$receivedDate = $this->formatDate($obj->created);
+					} else {
+						$receivedDate = $this->formatDate($obj->modified);
+					}
+
+					$data[] = [
+						'request_title' => ['title' => $requestTitle, 'url' => $url],
+						'receive_date' => $receivedDate,
+						'due_date' => '<i class="fa fa-minus"></i>',
+						'requester' => $obj->created_user->username,
+						'type' => __('Institution > Staff > Staff Position Profiles')
+					];
+				}
 			}
 		}
 	}
