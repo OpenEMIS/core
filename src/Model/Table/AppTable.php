@@ -163,7 +163,7 @@ class AppTable extends Table {
 	}
 
 	// Event: 'ControllerAction.Model.onFormatDate'
-	public function onFormatDate(Event $event, Date $dateObject) {
+	public function onFormatDate(Event $event, $dateObject) {
 		return $this->formatDate($dateObject);
 	}
 
@@ -172,7 +172,7 @@ class AppTable extends Table {
 	 * @param  Time   $dateObject [description]
 	 * @return [type]             [description]
 	 */
-	public function formatDate(Date $dateObject) {
+	public function formatDate($dateObject) {
 		$ConfigItem = TableRegistry::get('ConfigItems');
 		$format = $ConfigItem->value('date_format');
         $value = '';
@@ -183,7 +183,7 @@ class AppTable extends Table {
 	}
 
 	// Event: 'ControllerAction.Model.onFormatTime'
-	public function onFormatTime(Event $event, Time $timeObject) {
+	public function onFormatTime(Event $event, $timeObject) {
 		return $this->formatTime($timeObject);
 	}
 
@@ -192,7 +192,7 @@ class AppTable extends Table {
 	 * @param  Time   $dateObject [description]
 	 * @return [type]             [description]
 	 */
-	public function formatTime(Time $timeObject) {
+	public function formatTime($timeObject) {
 		$ConfigItem = TableRegistry::get('ConfigItems');
 		$format = $ConfigItem->value('time_format');
 		$value = '';
@@ -203,7 +203,7 @@ class AppTable extends Table {
 	}
 
 	// Event: 'ControllerAction.Model.onFormatDateTime'
-	public function onFormatDateTime(Event $event, Time $timeObject) {
+	public function onFormatDateTime(Event $event, $timeObject) {
 		return $this->formatDateTime($timeObject);
 	}
 
@@ -212,7 +212,7 @@ class AppTable extends Table {
 	 * @param  Time   $dateObject [description]
 	 * @return [type]             [description]
 	 */
-	public function formatDateTime(Time $dateObject) {
+	public function formatDateTime($dateObject) {
 		$ConfigItem = TableRegistry::get('ConfigItems');
 		$format = $ConfigItem->value('date_format') . ' - ' . $ConfigItem->value('time_format');
 		$value = '';
@@ -406,20 +406,6 @@ class AppTable extends Table {
 
 	public function findOrder(Query $query, array $options) {
 		return $query->order([$this->aliasField('order') => 'ASC']);
-	}
-
-	public function checkIdInOptions($key, $options) {
-		pr('checkIdInOptions is deprecated, please use queryString instead');
-		if (!empty($options)) {
-			if ($key != 0) {
-				if (!array_key_exists($key, $options)) {
-					$key = key($options);
-				}
-			} else {
-				$key = key($options);
-			}
-		}
-		return $key;
 	}
 
 	public function postString($key) {
