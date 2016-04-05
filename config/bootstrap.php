@@ -65,6 +65,7 @@ use App\Error\AppError;
 try {
     Configure::config('default', new PhpConfig());
     Configure::load('app', 'default', false);
+    Configure::load('app_extra', 'default');
     Configure::load('datasource', 'default', false);
 } catch (\Exception $e) {
     die($e->getMessage() . "\n");
