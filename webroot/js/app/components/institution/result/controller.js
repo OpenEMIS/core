@@ -35,13 +35,18 @@ angular.module('institution.result.controller', ['institution.result.service'])
 
     $scope.$watch('$parent.action', function(newValue, oldValue) {
         if (angular.isDefined(newValue) && angular.isDefined(oldValue) && newValue != oldValue) {
-            console.log('watching: ' + newValue + ' ' + oldValue);
             $scope.action = newValue;
             ResultSvc.switchAction($scope);
         }
     });
 
+    $scope.resizeColumns = function() {
+        $scope.gridOptions.api.refreshView();
+        $scope.gridOptions.api.sizeColumnsToFit();
+    };
+
     $scope.reloadRowData = function(subject) {
+        AlertSvc.reset();
         $scope.subject = subject;
 
         // getRowData
@@ -55,6 +60,10 @@ angular.module('institution.result.controller', ['institution.result.service'])
             console.log(error);
             AlertSvc.warning(error);
         });
+    };
+
+    $scope.setRowData = function(data) {
+        ResultSvc.setRowData(data, $scope);
     };
 
     $scope.cellValueChanged = function(params) {
