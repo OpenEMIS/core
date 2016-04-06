@@ -1,5 +1,5 @@
 angular.module('alert.service', [])
-.factory('AlertSvc', function($rootScope) {
+.service('AlertSvc', function($rootScope) {
     return {
         getMessage: function(message) {
             return message;
@@ -23,6 +23,11 @@ angular.module('alert.service', [])
         info: function(message) {
             $rootScope.class = 'alert-info';
             $rootScope.message = this.getMessage(message);
+        },
+
+        reset: function() {
+            $rootScope.class = '';
+            $rootScope.message = null;
         }
     }
 });

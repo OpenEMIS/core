@@ -14,7 +14,12 @@ angular.module('institution.result.toolbar.controller', ['institution.result.ser
     };
 
     $scope.onSaveClick = function() {
-        $scope.$parent.action = 'view';
-        // ResultSvc.saveRowData($scope);
+        ResultSvc.isAppendSpinner(true, 'institution-result-table');
+        ResultSvc.saveRowData($scope).then(function(_results) {
+        }, function(_errors) {
+        }).finally(function() {
+            ResultSvc.isAppendSpinner(false, 'institution-result-table');
+            $scope.$parent.action = 'view';
+        });
     };
 });
