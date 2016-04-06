@@ -1,11 +1,24 @@
 //Controller Action Angular Functions v.1.0.1
 angular.module('caModule', ['kordit.service', 'ui.bootstrap'])
-    .controller('caModuleCtrl', function(korditService) {
+    .controller('caModuleCtrl', function(korditService, $scope) {
 
-        this.changeOptions = function(scope, elem, attr) {
+        var ctrl = this;
+
+        ctrl.onChangeTargets = {};
+
+        ctrl.registerOnChangeTargets = function(caId) {
+            ctrl.onChangeTargets[caId] = [];
+        };
+
+        $scope.$on('onChangeOptions', function (event, target, options, sourceAttr) {
+            ctrl.onChangeTargets[target] = options;
+            $scope.$broadcast('onChangeCompleteCallback', target, $scope, sourceAttr, ctrl);
+        })
+
+        ctrl.changeOptions = function(scope, id, attr) {
             var dataType = attr.caOnChangeElement;
             var target = attr.caOnChangeTarget;
-            var targetUrl = attr.caOnChangeSourceUrl + elem.val();
+            var targetUrl = attr.caOnChangeSourceUrl + id;
             var response = korditService.ajax({url:targetUrl});
             response  
                 .then(function(data) {
@@ -18,32 +31,31 @@ angular.module('caModule', ['kordit.service', 'ui.bootstrap'])
                             targetOptions.push({"id":id, "name":data.data[id]});
                         }
                     }
-                    scope.$root.$broadcast('onChangeOptions', target, targetOptions);
-                
+                    scope.$emit('onChangeOptions', target, targetOptions, attr);
+                    
                 }, function(error) {
                     console.log('Failure...', error);
                 });
+
         };
 
-        this.alert = function(scope, elem, attr) {
+        ctrl.alert = function(scope, elem, attr) {
             alert('showing off');
         }
 
-        this.addRow = function(scope, elem, attr) {
-            // console.log('adding row');
+        ctrl.addRow = function(scope, elem, attr) {
             var target = attr.caOnClickTarget;
-            var targetUrl = attr.caOnClickSourceUrl;// + elem.val();
+            var targetUrl = attr.caOnClickSourceUrl;
             var response = korditService.ajax({url:targetUrl});
             response  
                 .then(function(data) {
-                    // console.log(data.data);
-                    scope.$root.$broadcast('onClickComplete', 'addRow', target, data.data);
-                
+                    scope.$root.$broadcast('onClickComplete', 'addRow', target, data.data);                
                 }, function(error) {
                     console.log('Failure...', error);
                 });
-                
         };
+
+        // $scope.onReadyFunction = korditService.onReadyFunction;
 
     })
     .directive('caOnClickElement', function() {
@@ -79,6 +91,10 @@ angular.module('caModule', ['kordit.service', 'ui.bootstrap'])
                     this.handlers[handler][caId] = [];
                 };
 
+                this.removeRow = function(caId, index) {
+                    this.handlers.addRow[caId].splice(index, 1);
+                };
+
             },
             link: function(scope, elem, attr, clickTarget) {
 
@@ -112,7 +128,7 @@ angular.module('caModule', ['kordit.service', 'ui.bootstrap'])
             link: function(scope, elem, attr, caModuleCtrl) {
 
                 elem.on('change', function(event) {
-                    caModuleCtrl.changeOptions(scope, elem, attr);
+                    caModuleCtrl.changeOptions(scope, elem.val(), attr);
                 });
 
             }
@@ -121,19 +137,8 @@ angular.module('caModule', ['kordit.service', 'ui.bootstrap'])
     .directive('caOnChangeTargetElement', function() {
         return {
             restrict: 'A',
-            bindToController: {
-              elements: '='
-            },
-            controllerAs: 'changeTarget',
-            controller: function() {
-
-                this.elements = {};
-
-                this.registerElement = function(caId) {
-                    this.elements[caId] = [];
-                };
-
-            },
+            controller: 'caModuleCtrl',
+            controllerAs: 'targetCtrl',
             templateUrl: function(elem, attr) {
 
                 if (typeof attr.caOnChangeTargetElementTemplateUrl !== 'undefined') {
@@ -144,13 +149,9 @@ angular.module('caModule', ['kordit.service', 'ui.bootstrap'])
                 }
 
             },
-            link: function(scope, elem, attr, changeTarget) {
+            link: function(scope, elem, attr, targetCtrl) {
 
-                changeTarget.registerElement(attr.caId);
-
-                scope.$on('onChangeOptions', function (event, target, options) {
-                    changeTarget.elements[target] = options;
-                })
+                targetCtrl.registerOnChangeTargets(attr.caId);
 
             }
         };
