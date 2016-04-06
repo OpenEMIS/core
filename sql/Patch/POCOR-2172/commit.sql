@@ -54,7 +54,7 @@ CREATE TABLE `institution_staff_assignments` (
   `start_date` date NOT NULL,
   `end_date` date NULL,
   `staff_id` int(11) NOT NULL COMMENT 'links to security_users.id',
-  `status` int(11) NOT NULL COMMENT '0 -> New, 1 -> Approved, 2 -> Rejected (For fixed workflow)',
+  `status` int(11) NOT NULL COMMENT '0 -> New, 1 -> Approved, 2 -> Rejected, 3 -> Closed (For fixed workflow)',
   `staff_type_id` int(5) NOT NULL,
   `institution_id` varchar(45) NOT NULL,
   `institution_position_id` int(11) NOT NULL,
@@ -139,3 +139,6 @@ SELECT `id` INTO @activeId FROM `workflow_statuses` WHERE `code` = 'APPROVED' AN
 INSERT INTO `workflow_statuses_steps` (`id`, `workflow_status_id`, `workflow_step_id`) VALUES
 (uuid(), @activeId, @activeStepId);
 -- End Pre-insert
+
+-- add missing index on institution_students
+ALTER TABLE `institution_students` ADD INDEX(`student_status_id`);
