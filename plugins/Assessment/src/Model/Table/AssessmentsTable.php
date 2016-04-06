@@ -48,9 +48,14 @@ class AssessmentsTable extends ControllerActionTable {
 **
 ******************************************************************************************************************/
 	public function beforeAction(Event $event, ArrayObject $extra) {
+		// $this->field('type', [
+		// 	'type' => 'select',
+		// 	'options' => $this->getSelectOptions($this->aliasField('types'))
+		// ]);
 		$this->field('type', [
-			'type' => 'select',
-			'options' => $this->getSelectOptions($this->aliasField('types'))
+			'type' => 'hidden',
+			'value' => 2,
+			'attr' => ['value' => 2]
 		]);
 		$this->field('id', ['type' => 'hidden']);
 		$this->field('assessment_items', [
@@ -64,6 +69,7 @@ class AssessmentsTable extends ControllerActionTable {
 			'type' => 'element',
 			'element' => 'Assessment.Assessments/assessment_periods',
 			'visible' => ['view'=>true, 'edit'=>true, 'add'=>true],
+			'entity' => $this->AssessmentPeriods->newEntity(),
 			'fields' => $this->AssessmentPeriods->fields,
 			'formFields' => array_keys($this->AssessmentPeriods->getFormFields($this->action))
 		]);
@@ -155,6 +161,7 @@ class AssessmentsTable extends ControllerActionTable {
 **
 ******************************************************************************************************************/
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
+		// pr($entity);pr($requestData);die;
 		$this->_setGenericPatchOptions($patchOptions, true);
 	}
 
@@ -240,6 +247,14 @@ class AssessmentsTable extends ControllerActionTable {
 		}
 	}
 
+	// public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra) {
+	// 	pr();
+	// }
+
+	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra) {
+		pr('addBeforeSave');pr($entity);die;
+	}
+
 
 /******************************************************************************************************************
 **
@@ -265,6 +280,7 @@ class AssessmentsTable extends ControllerActionTable {
 			'ca-on-change-element' => 'data',
 			'ca-on-change-source-url' => '/restful/education-educationgradessubjects.json?_finder=visible&_contain=EducationSubjects&_fields=id&education_grade_id=',
 			'ca-on-change-target' => 'assessment_items',
+			// 'ca-on-change-onReady' => ''
 		];
 		return $attr;
 	}

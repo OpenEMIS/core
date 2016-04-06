@@ -35,9 +35,12 @@
 				'type' => 'button',
 				'class' => 'btn btn-default',
 				'aria-expanded' => 'true',
-				'onclick' => "$('#reload').val('newAssessmentPeriod').click();"
+				'ca-on-click-element' => 'addRow',
+				'ca-on-click-source-url' => '/Assessments/addNewAssessmentPeriod',
+				'ca-on-click-target' => 'assessment_periods',
 			]);
 		?>
+			<!-- <span class="loading_img margin-left-10"><img src="<?= $this->Url->build('/')?>open_emis/img/../plugins/autocomplete/img/loader.gif" plugin="false" alt=""></span> -->
 		</div>
 		<div class="table-wrapper full-width">
 			<div class="table-responsive">
@@ -45,80 +48,37 @@
 			    <table class="table table-body-scrollable">
 					<thead>
 						<tr>
+							<th></th>
 							<?php foreach ($attr['formFields'] as $formField) : ?>
 								<?php if ($attr['fields'][$formField]['type']!='hidden') :
 									$thClass = (isset($attr['fields'][$formField]['required']) && $attr['fields'][$formField]['required']) ? 'required' : '';
 								?>
 									<th class="<?= $thClass ?>"><label class="table-header-label"><?= Inflector::humanize(str_replace('_id', '', $formField)) ?></label></th>
-									<th></th>
 								<?php endif; ?>
 							<?php endforeach;?>
 
-							<th class="cell-delete"></th>
+							<th></th>
+							<th class="cell-delete">&nbsp;</th>
 						</tr>
 					</thead>
 
-					<tbody id="table_assessment_periods" ca-id="assessment_periods" ca-on-click-target-element ca-on-click-target-handler="addRow" ca-on-click-target-element-template-url="/assessment/templates/periods_list.html">
+					<tbody id="table_assessment_periods" ca-id="assessment_periods" ca-on-click-target-element ca-on-click-target-handler="addRow" on-ready="onReadyFunction">
 						
-						<tr ng:repeat="item in clickTarget.handlers.addRow.assessment_periods">
+						<tr ng:repeat="(key, period) in clickTarget.handlers.addRow.assessment_periods">
 
-							<?php 
-								// iterate each field in a row
-								foreach ($attr['formFields'] as $formField):
-									$key = 0;
-									$field = $attr['fields'][$formField];
-									// $fieldErrors = $record->errors($field['field']);
-									// if ($fieldErrors) {
-									// 	$tdClass = 'error';
-									// 	$fieldClass = 'form-error';
-									// } else {
-										$tdClass = '';
-										$fieldClass = '';
-									// }
-									$options = [
-										'label'=>false,
-										'name'=>'Assessments[assessment_periods]['.$key.']['.$field['field'].']',
-										'class'=>$fieldClass,
-										// 'value'=>$record->$field['field']
-									];
-									if ($field['type']=='date') {
-										$field['fieldName'] = 'Assessments[assessment_periods]['.$key.']['.$field['field'].']';
-										$field['inputWrapperStyle'] = 'margin-top:2px;margin-bottom:-1px;';
-									}
-							?>
-								<?php if ($field['type']!='hidden') : ?>
+							<td ng:repeat="(fieldname, attr) in period">
+								
+								<input type="{{attr.type}}" id="assessmentperiods-{{fieldname}}" class="form-error" name="Assessments[assessment_periods][{{key}}][{{fieldname}}]" value="{{attr.value}}"/>
+								<span ng:show="attr.type!='hidden'" class="error">
+									<ul ng:show="attr.errors.length>0" class="error-message error-message-in-table">
+										<li ng:repeat="error in attr.errors">{{error}}</li>
+									</ul>
+								</span>
 
-									<td class="<?= $tdClass ?>">
-										<?= $this->HtmlField->{$field['type']}('edit', $record, $field, $options); ?>
-									</td>
+							</td>
 
-									<td class="<?= $tdClass ?>">
-										<ul class="error-message error-message-in-table">
-										<?php if ($fieldErrors) : ?>
-											<?php foreach ($fieldErrors as $error) : ?>
-												<li><?= $error ?></li>
-											<?php endforeach ?>
-										<?php endif; ?>
-										</ul>
-									</td>
-
-								<?php else : ?>
-									<?= $this->HtmlField->{$field['type']}('edit', $record, $field, $options);?>
-								<?php endif; ?>
-							
-							<?php endforeach;?>
-							
 							<td>
-								<?php
-								echo $this->Form->input('<i class="fa fa-trash"></i> <span>'.__('Delete').'</span>', [
-									'label' => false,
-									'type' => 'button',
-									'class' => 'btn btn-dropdown action-toggle btn-single-action',
-									'title' => "Delete",
-									'aria-expanded' => 'true',
-									'onclick' => "jsTable.doRemove(this); "
-								]);
-								?>
+								<button class="btn btn-dropdown action-toggle btn-single-action" title="Delete" aria-expanded="true" type="reset" ng-click="clickTarget.removeRow('assessment_periods', key)"><i class="fa fa-trash"></i> <span><?= __('Delete')?></span></button>
 							</td>
 
 						</tr>

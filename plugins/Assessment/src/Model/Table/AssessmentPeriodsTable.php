@@ -35,12 +35,30 @@ class AssessmentPeriodsTable extends AssessmentsAppTable {
 		}
 	}
 
+	public function addNewAssessmentPeriod() {
+		foreach ($this->fields as $key => $field) {
+			$this->fields[$key]['errors'] = [];
+			$this->fields[$key]['value'] = '';
+		}
+		return [
+		    'id' => $this->fields['id'],
+			'code' => $this->fields['code'],
+		    'name' => $this->fields['name'],
+		    'start_date' => $this->fields['start_date'],
+		    'end_date' => $this->fields['end_date'],
+		    'date_enabled' => $this->fields['date_enabled'],
+		    'date_disabled' => $this->fields['date_disabled'],
+		    'weight' => $this->fields['weight'],
+		    'assessment_id' => $this->fields['assessment_id'],
+		];
+	}
+
 	public function appendAssessmentPeriodsArray(Entity $entity, array $addedAssessmentPeriods = []) {
 		$assessmentPeriods = $addedAssessmentPeriods;
 		$assessmentPeriods[] = [
 		    'id' => '',
-			'code' => '',
-		    'name' => '',
+			'code' => 'codi',
+		    'name' => 'nama',
 		    'start_date' => '',
 		    'end_date' => '',
 		    'date_enabled' => '',

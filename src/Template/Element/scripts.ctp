@@ -19,6 +19,10 @@ echo $this->Html->script('app/services/kordit/kordit.service');
 // HTTP/HTTPS routing functions //
 echo $this->Html->script('app/shared/angularRoute/angular-route.min');
 
+// Assessments specific controller
+echo $this->Html->script('Assessment.administration/assessments');
+echo $this->Html->script('ControllerAction.controller.action');
+
 //Angular Controller
 echo $this->Html->script('app/app');
 

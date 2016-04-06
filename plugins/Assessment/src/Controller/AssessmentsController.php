@@ -70,10 +70,9 @@ class AssessmentsController extends AppController
 	];
 
     public function addNewAssessmentPeriod() {
-    	$Assessments = TableRegistry::get('Assessment.Assessments');
-    	$data = $Assessments->addNewAssessmentPeriod();
-		$this->set([
-			'data' => $data,
+    	$model = TableRegistry::get('Assessment.AssessmentPeriods');
+    	$this->set([
+			'data' => $model->addNewAssessmentPeriod(),
             '_serialize' => ['data']
         ]);
     }
