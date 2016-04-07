@@ -1,4 +1,4 @@
-# CakePHP DebugKit [![Build Status](https://secure.travis-ci.org/cakephp/debug_kit.png?branch=3.0)](http://travis-ci.org/cakephp/debug_kit)
+# CakePHP DebugKit [![Build Status](https://secure.travis-ci.org/cakephp/debug_kit.png?branch=master)](http://travis-ci.org/cakephp/debug_kit)
 
 DebugKit provides a debugging toolbar and enhanced debugging tools for CakePHP applications.
 
@@ -13,20 +13,28 @@ The `master` branch has the following requirements:
 
 ## DebugKit for CakePHP 2.x
 
-If you want DebugKit for your 2.x application, you can use the latest `2.2.y` tag or the 2.2 branch.
+If you want DebugKit for your 2.x application, you can use the latest `2.2.y` tag or the [2.2 branch](https://github.com/cakephp/debug_kit/tree/2.2).
 
 ## Installation
 
-* Install the plugin with composer from your CakePHP Project's ROOT directory (where composer.json file is located)
+* Install the plugin with [Composer](https://getcomposer.org/) from your CakePHP Project's ROOT directory (where the **composer.json** file is located)
 ```sh
 php composer.phar require --dev cakephp/debug_kit "~3.0"
 ```
 
-* Load the plugin
+* [Load the plugin](http://book.cakephp.org/3.0/en/plugins.html#loading-a-plugin)
 ```php
-Plugin::load('DebugKit', ['bootstrap' => true]);
+Plugin::load('DebugKit', ['bootstrap' => true, 'routes' => true]);
 ```
 * Set `'debug' => true,` in `config/app.php`.
+
+##Troubleshooting
+These steps are shown to work in troubleshooting DebugKit installations in 2.2.x
+* You may need to copy DebugKit from `root/Plugin` to `app/Plugin`
+* If you don't have a config/app.php file, the file you are looking for is `Controller/AppController.php`
+* Add `'DebugKit.Toolbar'` to your `$components` array in `Controller/AppController.php`. If there's not a `$components` array, declare `public $components = array();` inside the `AppController` class and add `'DebugKit.Toolbar'` inside of it.
+* Change the `app/Config/bootstrap.php` entry to `CakePlugin::load('DebugKit');`
+
 
 ## Reporting Issues
 

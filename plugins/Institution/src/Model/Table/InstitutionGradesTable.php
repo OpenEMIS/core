@@ -33,6 +33,7 @@ class InstitutionGradesTable extends AppTable {
  			->add('start_date', 'ruleCompareWithInstitutionDateOpened', [
 					'rule' => ['compareWithInstitutionDateOpened']
 				])
+			->requirePresence('programme')
  			;
 		return $validator;
 	}
@@ -85,8 +86,8 @@ class InstitutionGradesTable extends AppTable {
 **
 ******************************************************************************************************************/
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
-		$process = function($model, $entity) use ($data) {
-			$errors = $entity->errors();
+		$errors = $entity->errors();
+		$process = function($model, $entity) use ($data, $errors) {
 			/**
 			 * PHPOE-2117
 			 * Remove 		$this->ControllerAction->field('institution_programme_id', ['type' => 'hidden']);
@@ -95,18 +96,17 @@ class InstitutionGradesTable extends AppTable {
 			 * so if errors array is more than 1, other fields are having an error
 			 */
 			if (empty($errors) || count($errors)==1) {
-				$startDate = $entity->start_date;
-				$institutionId = $entity->institution_id;
 				if ($data->offsetExists('grades')) {
-
+					$gradeIsSelected = false;
 					$error = true;
 					$gradeEntities = [];
 					foreach ($data['grades'] as $key=>$grade) {
 						if ($grade['education_grade_id'] != 0) {
 							$error = false;
+							$gradeIsSelected = true;
 
-							$grade['start_date'] = $startDate;
-							$grade['institution_id'] = $institutionId;
+							$grade['start_date'] = $entity->start_date;
+							$grade['institution_id'] = $entity->institution_id;
 							if ($entity->has('end_date')) {
 								$grade['end_date'] = $entity->end_date;
 							}
@@ -117,8 +117,11 @@ class InstitutionGradesTable extends AppTable {
 							}
 						}
 					}
-					if ($error) {
-						$model->Alert->error('InstitutionGrades.failedSavingGrades');
+					if ($error && $gradeIsSelected) {
+						$model->Alert->error($this->aliasField('failedSavingGrades'));
+						return false;
+					} else if (!$gradeIsSelected) {
+						$model->Alert->error($this->aliasField('noGradeSelected'));
 						return false;
 					} else {
 						foreach ($gradeEntities as $grade) {
@@ -127,15 +130,36 @@ class InstitutionGradesTable extends AppTable {
 						return true;
 					}
 				} else {
-					$model->Alert->error('InstitutionGrades.noGradeSelected');
+					$model->Alert->error($this->aliasField('noGradeSelected'));
 					return false;
 				}
 			} else {
-				$model->Alert->error('InstitutionGrades.noGradeSelected');
+				$model->Alert->error($this->aliasField('noGradeSelected'));
 				return false;
 			}
 		};
-		return $process;
+		if (empty($errors) || count($errors)==1) {
+			$educationGradeCount = $this->EducationGrades->find('list')
+					->find('visible')
+					->find('order')
+					->where([$this->EducationGrades->aliasField('education_programme_id') => $entity->programme])
+					->count();
+			$existingGradeCount = $this->find()
+					->select([$this->EducationGrades->aliasField('name')])
+					->contain([$this->EducationGrades->alias()])
+					->where([
+						$this->EducationGrades->aliasField('education_programme_id') => $entity->programme,
+						$this->aliasField('institution_id') => $entity->institution_id
+					])
+					->count();
+			if ($educationGradeCount == $existingGradeCount) {
+				$this->Alert->warning($this->aliasField('allGradesAlreadyAdded'));
+				$event->stopPropagation();
+				return $this->controller->redirect($this->ControllerAction->url('index'));
+			} else {
+				return $process;
+			}
+		}
 	}
 
 	public function addAfterAction(Event $event, Entity $entity) {
@@ -147,7 +171,11 @@ class InstitutionGradesTable extends AppTable {
 		$this->fields['end_date']['date_options']['startDate'] = $institution->date_opened->format('d-m-Y');
 	}
 
+	public function addOnChangeLevel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$data[$this->alias()]['programme'] = 0;
+	}
 
+	
 /******************************************************************************************************************
 **
 ** edit action methods
@@ -257,10 +285,6 @@ class InstitutionGradesTable extends AppTable {
 ** essential methods
 **
 ******************************************************************************************************************/
-	public function addOnChangeLevel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$data[$this->alias()]['programme'] = 0;
-	}
-
 	public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $listOnly=true) {
 		/**
 		 * PHPOE-2090, changed to find by AcademicPeriod function in PeriodBehavior.php

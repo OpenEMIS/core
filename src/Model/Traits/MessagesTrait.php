@@ -123,7 +123,8 @@ trait MessagesTrait {
 			'failedSavingGrades' => 'Failed to save grades',
 			'start_date' => 'Start Date',
 			'end_date' => 'End Date',
-			'education_grade' => 'Education Grades'
+			'education_grade' => 'Education Grades',
+			'allGradesAlreadyAdded' => 'All possible Education Grades for the selected Education Programme already added.'
 		],
 		'InstitutionShifts' => [
 			'start_time' => 'Start Time',
