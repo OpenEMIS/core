@@ -1,48 +1,7 @@
 <?php
 use Cake\Routing\Router;
 
-Router::scope('/rest', ['plugin' => 'Rest'], function ($routes) {
-
-    $routes->extensions(['json', 'xml']);
-	$routes->connect(
-			'/doc',
-			['plugin' => 'Rest', 'controller' => 'Doc']
-		);
-	$routes->connect(
-			'/:model',
-			['plugin' => 'Rest', 'controller' => 'Rest', 'action' => 'index', '_method' => 'GET'],
-	        [
-	            'pass' => ['model'],
-	        ]
-		);
-	$routes->connect(
-			'/:model',
-			['plugin' => 'Rest', 'controller' => 'Rest', 'action' => 'add', '_method' => 'POST'],
-	        [
-	            'pass' => ['model'],
-	        ]
-		);
-
-	$routes->connect(
-			'/:model/:id',
-			['plugin' => 'Rest', 'controller' => 'Rest', 'action' => 'view', '_method' => 'GET'],
-	        [
-	            'pass' => ['model', 'id'],
-	        ]
-		);
-	$routes->connect(
-			'/:model/:id',
-			['plugin' => 'Rest', 'controller' => 'Rest', 'action' => 'edit', '_method' => 'PUT'],
-	        [
-	            'pass' => ['model', 'id'],
-	        ]
-		);
-	$routes->connect(
-			'/:model/:id',
-			['plugin' => 'Rest', 'controller' => 'Rest', 'action' => 'delete', '_method' => 'DELETE'],
-	        [
-	            'pass' => ['model', 'id'],
-	        ]
-		);
-
+Router::scope('/Rest', ['plugin' => 'Rest'], function ($routes) {
+	Router::connect('/Rest', ['plugin' => 'Rest', 'controller' => 'Rest']);
+	Router::connect('/Rest/:action/*', ['plugin' => 'Rest', 'controller' => 'Rest']);
 });
