@@ -8,7 +8,7 @@ angular.module('institution.result.service', [])
 
         getAssessment: function(scope) {
             var deferred = $q.defer();
-            var url = scope.url('rest/Assessment-Assessments/' + scope.assessment_id + '.json');
+            var url = scope.url('restful/Assessment-Assessments/' + scope.assessment_id + '.json');
 
             $http({
                 method: 'GET',
@@ -20,12 +20,12 @@ angular.module('institution.result.service', [])
                 if (angular.isDefined(response.data.error)) {
                     deferred.reject(response.data.error);
                 } else {
-                    var assessment = response.data.data[0];
+                    var assessment = response.data.data;
 
                     scope.academic_period_id = assessment.academic_period_id;
                     scope.education_grade_id = assessment.education_grade_id;
 
-                    deferred.resolve(assessment);                    
+                    deferred.resolve(assessment);
                 }
             }, function errorCallback(error) {
                 deferred.reject(error);
@@ -38,7 +38,7 @@ angular.module('institution.result.service', [])
 
         getSubjects: function(scope) {
             var deferred = $q.defer();
-            var url = scope.url('rest/Assessment-AssessmentItems.json?_contain=EducationSubjects&assessment_id=' + scope.assessment_id);
+            var url = scope.url('restful/Assessment-AssessmentItems.json?_contain=EducationSubjects&assessment_id=' + scope.assessment_id);
 
             $http({
                 method: 'GET',
@@ -74,7 +74,7 @@ angular.module('institution.result.service', [])
 
         getColumnDefs: function(scope) {
             var deferred = $q.defer();
-            var url = scope.url('rest/Assessment-AssessmentPeriods.json?assessment_id=' + scope.assessment_id);
+            var url = scope.url('restful/Assessment-AssessmentPeriods.json?assessment_id=' + scope.assessment_id);
 
             $http({
                 method: 'GET',
@@ -227,7 +227,7 @@ angular.module('institution.result.service', [])
             // Always reset
             scope.gridOptions.api.setRowData([]);
 
-            var urlStr = 'rest/Institution-InstitutionSubjectStudents.json';
+            var urlStr = 'restful/Institution-InstitutionSubjectStudents.json';
             urlStr += '?_contain=Users';
             urlStr += '&_finder=Results[';
                 urlStr += 'institution_id:' + scope.institution_id;
@@ -316,7 +316,7 @@ angular.module('institution.result.service', [])
 
         setRowData: function(data, scope) {
             var deferred = $q.defer();
-            var url = scope.url('rest/Assessment-AssessmentItemResults.json');
+            var url = scope.url('restful/Assessment-AssessmentItemResults.json');
 
             $http({
                 method: 'POST',
@@ -338,7 +338,7 @@ angular.module('institution.result.service', [])
 
         saveRowData: function(scope) {
             var httpPromises = [];
-            var url = scope.url('rest/Assessment-AssessmentItemResults.json');
+            var url = scope.url('restful/Assessment-AssessmentItemResults.json');
 
             angular.forEach(angular.element('.oe-cell-editable'), function(obj, key) {
                 var paramsContext = angular.element(obj).scope().gridOptions.context;
