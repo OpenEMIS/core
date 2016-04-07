@@ -10,6 +10,7 @@ use Cake\Network\Request;
 use Cake\Collection\Collection;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\HtmlTrait;
+use Cake\View\Helper\UrlHelper;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
@@ -252,7 +253,7 @@ class AssessmentsTable extends ControllerActionTable {
 	// }
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra) {
-		pr('addBeforeSave');pr($entity);die;
+		// pr('addBeforeSave');pr($entity);die;
 	}
 
 
@@ -265,20 +266,21 @@ class AssessmentsTable extends ControllerActionTable {
 	public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request) {
 		$attr['attr'] = [
 			'ca-on-change-element' => true,
-			'ca-on-change-source-url' => '/restful/education-educationgrades.json?_finder=visible,list&education_programme_id=',
+			'ca-on-change-source-url' => '/phpoe/restful/education-educationgrades.json?_finder=visible,list&education_programme_id=',
 			'ca-on-change-target' => 'education_grade_id',
 		];
 		return $attr;
 	}
 
 	public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request) {
+
 		$attr['attr'] = [
 			'ca-id' => 'education_grade_id',
 			'ca-on-change-target-element' => true,
-			'ca-on-change-target-element-template-url' => '/assessment/templates/education_grade_options.html',
+			'ca-on-change-target-element-template-url' => '/phpoe/assessment/templates/education_grade_options.html',
 
 			'ca-on-change-element' => 'data',
-			'ca-on-change-source-url' => '/restful/education-educationgradessubjects.json?_finder=visible&_contain=EducationSubjects&_fields=id&education_grade_id=',
+			'ca-on-change-source-url' => '/phpoe/restful/education-educationgradessubjects.json?_finder=visible&_contain=EducationSubjects&_fields=id&education_grade_id=',
 			'ca-on-change-target' => 'assessment_items',
 			// 'ca-on-change-onReady' => ''
 		];

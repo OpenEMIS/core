@@ -111,7 +111,7 @@
 					</tr>
 				</thead>
 
-				<tbody id="table_assessment_items" ca-id="assessment_items" ca-on-change-target-element ca-on-change-target-element-callback ca-on-change-target-element-template-url="/assessment/templates/subjects_list.html">
+				<tbody id="table_assessment_items" ca-id="assessment_items" ca-on-change-target-element ca-on-change-target-element-callback ca-on-change-target-element-template-url="/phpoe/assessment/templates/subjects_list.html">
 					
 				</tbody>
 				
