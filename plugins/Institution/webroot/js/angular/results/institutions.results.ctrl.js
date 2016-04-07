@@ -1,4 +1,4 @@
-angular.module('institution.result.controller', ['institution.result.service'])
+angular.module('institutions.results.ctrl', ['institutions.results.svc'])
 .controller('ResultCtrl', function($scope, AlertSvc, ResultSvc) {
     $scope.gridOptions = null;
 
