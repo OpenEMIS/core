@@ -1,4 +1,4 @@
-angular.module('institution.result.toolbar.controller', ['institution.result.service'])
+angular.module('institution.result.toolbar.controller', ['institutions.results.svc'])
 .controller('ToolbarCtrl', function($scope, ResultSvc) {
     angular.element(document).ready(function () {
         // default action is view

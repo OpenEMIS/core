@@ -1,4 +1,4 @@
-angular.module('institution.result.service', [])
+angular.module('institutions.results.svc', [])
 .service('ResultSvc', function($q, $http, $location) {
     return {
         initValues: function(scope) {
@@ -343,8 +343,27 @@ angular.module('institution.result.service', [])
             angular.forEach(angular.element('.oe-cell-editable'), function(obj, key) {
                 var paramsContext = angular.element(obj).scope().gridOptions.context;
 
+                var saveData = false;
                 var newValue = parseFloat(obj.value);
                 var oldValue = obj.attributes['oe-original'].value;
+
+                // if (oldValue == 'undefined' && isNaN(newValue)) {
+                //     // console.log('no old value, invalid new value: ' + oldValue + ' xxx ' + newValue);
+                // }
+
+                // if (oldValue == 'undefined' && !isNaN(newValue)) {
+                //     saveData = true;
+                //     // console.log('no old value, valid new value: ' + oldValue + ' xxx ' + newValue);
+                // }
+
+                // if (oldValue != 'undefined' && !isNaN(newValue) && oldValue != newValue) {
+                //     saveData = true;
+                //     // console.log('has old value, valid new value and value changed: ' + oldValue + ' xxx ' + newValue);
+                // }
+
+                // if (oldValue != 'undefined' && isNaN(newValue)) {
+                //     // console.log('has old value, invalid new value, dont save: ' + oldValue + ' xxx ' + newValue);
+                // }
 
                 var data = {
                     "marks" : newValue,
