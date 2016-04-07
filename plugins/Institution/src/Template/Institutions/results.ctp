@@ -1,9 +1,8 @@
+<?= $this->Html->script('app/components/institution/result/toolbar.controller', ['block' => true]); ?>
 <?= $this->Html->script('app/components/alert/service', ['block' => true]); ?>
 <?= $this->Html->script('app/components/alert/controller', ['block' => true]); ?>
-
-<?= $this->Html->script('app/components/institution/result/toolbar.controller', ['block' => true]); ?>
-<?= $this->Html->script('app/components/institution/result/service', ['block' => true]); ?>
-<?= $this->Html->script('app/components/institution/result/controller', ['block' => true]); ?>
+<?= $this->Html->script('Institution.angular/results/institutions.results.svc', ['block' => true]); ?>
+<?= $this->Html->script('Institution.angular/results/institutions.results.ctrl', ['block' => true]); ?>
 
 <?php
 $this->extend('OpenEmis./Layout/Panel');
