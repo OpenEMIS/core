@@ -11,6 +11,6 @@ class AngularController extends AppController {
 	}
 
 	public function app() {
-		$this->getView()->layout(false);
+		$this->viewBuilder()->layout(false);
 	}
 }
