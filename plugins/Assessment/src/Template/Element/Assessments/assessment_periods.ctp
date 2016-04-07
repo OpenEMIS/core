@@ -36,7 +36,7 @@
 				'class' => 'btn btn-default',
 				'aria-expanded' => 'true',
 				'ca-on-click-element' => 'addRow',
-				'ca-on-click-source-url' => '/Assessments/addNewAssessmentPeriod',
+				'ca-on-click-source-url' => '/phpoe/Assessments/addNewAssessmentPeriod',
 				'ca-on-click-target' => 'assessment_periods',
 			]);
 		?>

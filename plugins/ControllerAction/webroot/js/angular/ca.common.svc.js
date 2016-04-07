@@ -1,7 +1,7 @@
-angular.module('kordit.service', [])
-.factory('korditService', ['$sce', '$timeout', '$http', '$q', function ($sce, $timeout, $http, $q) {
+angular.module('ca.common.svc', [])
+.service('caCommonSvc', ['$sce', '$timeout', '$http', '$q', function ($sce, $timeout, $http, $q) {
 
-    function _htmlEntities(str) {
+    this.htmlEntities = function(str) {
         return String(str).replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
@@ -9,7 +9,7 @@ angular.module('kordit.service', [])
      * convert object to URI component for AngularJS POST requests
      * @source http://stackoverflow.com/questions/19254029/angularjs-http-post-does-not-send-data
      */
-    function _serialize(obj) {
+    this.serialize = function (obj) {
         var query = '', name, value, fullSubName, subName, subValue, innerObj, i;
 
         for(name in obj) {
@@ -40,8 +40,8 @@ angular.module('kordit.service', [])
         return query.length ? query.substr(0, query.length - 1) : query;
     };
 
-    $http.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
-    function _ajax(params) {
+    this.ajax = function (params) {
+        $http.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
         var deferred = $q.defer();
         var defaultParams = {
             method: 'GET',
@@ -61,10 +61,5 @@ angular.module('kordit.service', [])
         return deferred.promise;
     }
 
-    return {
-        serialize: _serialize,
-        htmlEntities: _htmlEntities,
-        ajax: _ajax
-    };
 }]);
 
