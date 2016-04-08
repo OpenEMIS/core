@@ -28,7 +28,16 @@
 					<tbody>
 						<?php foreach ($attr['data'] as $i => $student) : ?>
 							<tr>
-								<td><?= $student->_matchingData['Users']->openemis_no; ?></td>
+								<td>
+
+									<?= $this->html->link($student->_matchingData['Users']->openemis_no, [
+										'plugin' => 'Institution',
+										'controller' => 'Institutions',
+										'action' => 'StudentUser',
+										'view',
+										$student->_matchingData['Users']->id
+									]); ?>
+								</td>
 								<td><?= $student->_matchingData['Users']->name; ?></td>
 								<?php if ($resultType == 'MARKS') : ?>
 									<td><?= $student->AssessmentItemResults['marks']; ?></td>

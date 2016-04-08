@@ -49,7 +49,7 @@ class AdvancedPositionSearchBehavior extends Behavior {
 						]
 					]
 				]);
-			$query->orWhere(['Positions.name LIKE' =>  $searchString]);
+			$query->andWhere(['Positions.name LIKE' =>  $searchString]);
 		}
 
 		return $query;

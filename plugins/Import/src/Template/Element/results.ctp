@@ -71,13 +71,9 @@ if(!empty($attr['results']['failedExcelFile'])):
 					<td><?= $row['row_number']; ?></td>
 					<?php 
 					foreach ($row['data'] as $key=>$col):
-						if ($key == count($row['data'])-1) {
-							continue;
-						}
 						echo sprintf('<td>%s</td>', $col);
 					endforeach;
 					?>
-					<td></td>
 				</tr>
 				<?php 
 				endforeach;
