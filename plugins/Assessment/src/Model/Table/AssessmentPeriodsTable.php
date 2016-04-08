@@ -88,5 +88,4 @@ class AssessmentPeriodsTable extends AssessmentsAppTable {
 			;
 		return $validator;
 	}
-
 }

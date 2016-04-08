@@ -5,6 +5,7 @@ echo $this->Html->script('OpenEmis.lib/respond');
 echo $this->Html->script('OpenEmis.lib/jquery/jquery.min');
 echo $this->Html->script('OpenEmis.lib/jquery/jquery-ui.min');
 echo $this->Html->script('OpenEmis.lib/angular/angular.min');
+echo $this->Html->script('OpenEmis.lib/angular/angular-route.min');
 echo $this->Html->script('OpenEmis.angular/ng.layout-splitter');
 echo $this->Html->script('OpenEmis.lib/holder');
 
