@@ -14,11 +14,33 @@ class AssessmentsController extends AppController
 		parent::initialize();
 
 		$this->loadComponent('Paginator');
+		$model = $this->request->action;
+		$action = isset($this->request->pass[0]) ? $this->request->pass[0] : '';
+		if ($model=='Assessments') {
+			switch ($action) {
+				case 'add':
+					$this->Angular->addModules([
+						'kd.module'
+					]);
+				break;
+			}
+		}
     }
 
 	// CAv4
 	public function GradingTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Assessment.AssessmentGradingTypes']); }
-	public function Assessments() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Assessment.Assessments']); }
+	public function Assessments() {
+		$model = $this->request->action;
+		$action = isset($this->request->pass[0]) ? $this->request->pass[0] : '';
+		if ($model=='Assessments') {
+			switch ($action) {
+				case 'add':
+					$this->set('ngController', 'kdCtrl');
+				break;
+			}
+		}
+		$this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Assessment.Assessments']);
+	}
 	// End
 
 	public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra) {
