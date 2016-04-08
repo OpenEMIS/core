@@ -28,8 +28,6 @@ class StudentsController extends AppController {
 			'Guardians' 		=> ['className' => 'Student.Guardians'],
 			'GuardianUser' 		=> ['className' => 'Student.GuardianUser', 'actions' => ['add', 'view', 'edit']],
 			'Programmes' 		=> ['className' => 'Student.Programmes', 'actions' => ['index', 'view']],
-			'Sections'			=> ['className' => 'Student.StudentSections', 'actions' => ['index', 'view']],
-			'Classes' 			=> ['className' => 'Student.StudentClasses', 'actions' => ['index', 'view']],
 			'Absences' 			=> ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
 			'Behaviours' 		=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
 			'Results' 			=> ['className' => 'Student.Results', 'actions' => ['index']],
@@ -51,9 +49,15 @@ class StudentsController extends AppController {
 		];
 
 		$this->loadComponent('User.Image');
+		$this->loadComponent('Institution.InstitutionAccessControl');
 
 		$this->set('contentHeader', 'Students');
 	}
+
+	// CAv4
+	public function Classes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']); }
+	public function Subjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']); }
+	// End
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
@@ -122,9 +126,6 @@ class StudentsController extends AppController {
 			}
 
 			$alias = $model->alias;
-			// temporary fix for renaming Sections and Classes
-			if ($alias == 'Sections') $alias = 'Classes';
-			else if ($alias == 'Classes') $alias = 'Subjects';
 			$this->Navigation->addCrumb($model->getHeader($alias));
 			$header = $header . ' - ' . $model->getHeader($alias);
 
@@ -205,6 +206,10 @@ class StudentsController extends AppController {
 		}
 	}
 
+	public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra) {
+		$this->beforePaginate($event, $model, $query, $extra);
+	}
+
 	public function excel($id=0) {
 		$this->Students->excel($id);
 		$this->autoRender = false;
@@ -238,28 +243,7 @@ class StudentsController extends AppController {
 	}
 
 	public function getAcademicTabElements($options = []) {
-		// $action = (array_key_exists('action', $options))? $options['action']: 'add';
-		$id = (array_key_exists('id', $options))? $options['id']: 0;
-
-		$tabElements = [];
-		$studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
-		$studentTabElements = [
-			'Programmes' => ['text' => __('Programmes')],
-			'Sections' => ['text' => __('Classes')],
-			'Classes' => ['text' => __('Subjects')],
-			'Absences' => ['text' => __('Absences')],
-			'Behaviours' => ['text' => __('Behaviours')],
-			'Results' => ['text' => __('Results')],
-			'Awards' => ['text' => __('Awards')],
-			'Extracurriculars' => ['text' => __('Extracurriculars')],
-		];
-
-		$tabElements = array_merge($tabElements, $studentTabElements);
-
-		foreach ($studentTabElements as $key => $tab) {
-			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
-		}
-		return $tabElements;
+		return TableRegistry::get('Student.Students')->getAcademicTabElements($options);
 	}
 
 	public function getFinanceTabElements($options = []) {
