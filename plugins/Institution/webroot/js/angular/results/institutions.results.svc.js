@@ -343,46 +343,29 @@ angular.module('institutions.results.svc', [])
             angular.forEach(angular.element('.oe-cell-editable'), function(obj, key) {
                 var paramsContext = angular.element(obj).scope().gridOptions.context;
 
-                var saveData = false;
-                var newValue = parseFloat(obj.value);
                 var oldValue = obj.attributes['oe-original'].value;
+                var newValue = (obj.value.length > 0) ? parseFloat(obj.value) : null;
 
-                // if (oldValue == 'undefined' && isNaN(newValue)) {
-                //     // console.log('no old value, invalid new value: ' + oldValue + ' xxx ' + newValue);
-                // }
+                if (!isNaN(newValue) && (oldValue == 'undefined' && newValue != null) || (oldValue != 'undefined' && oldValue != newValue)) {
+                    var data = {
+                        "marks" : newValue,
+                        "assessment_id" : paramsContext.assessment_id,
+                        "education_subject_id" : paramsContext.education_subject_id,
+                        "student_id" : obj.attributes['oe-student'].value,
+                        "institution_id" : paramsContext.institution_id,
+                        "academic_period_id" : paramsContext.academic_period_id,
+                        "assessment_period_id" : parseInt(obj.attributes['oe-period'].value)
+                    };
 
-                // if (oldValue == 'undefined' && !isNaN(newValue)) {
-                //     saveData = true;
-                //     // console.log('no old value, valid new value: ' + oldValue + ' xxx ' + newValue);
-                // }
-
-                // if (oldValue != 'undefined' && !isNaN(newValue) && oldValue != newValue) {
-                //     saveData = true;
-                //     // console.log('has old value, valid new value and value changed: ' + oldValue + ' xxx ' + newValue);
-                // }
-
-                // if (oldValue != 'undefined' && isNaN(newValue)) {
-                //     // console.log('has old value, invalid new value, dont save: ' + oldValue + ' xxx ' + newValue);
-                // }
-
-                var data = {
-                    "marks" : newValue,
-                    "assessment_id" : paramsContext.assessment_id,
-                    "education_subject_id" : paramsContext.education_subject_id,
-                    "student_id" : obj.attributes['oe-student'].value,
-                    "institution_id" : paramsContext.institution_id,
-                    "academic_period_id" : paramsContext.academic_period_id,
-                    "assessment_period_id" : parseInt(obj.attributes['oe-period'].value)
-                };
-
-                httpPromises.push($http({
-                    method: 'POST',
-                    url: url,
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    data: data
-                }));
+                    httpPromises.push($http({
+                        method: 'POST',
+                        url: url,
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        data: data
+                    }));
+                }
             });
 
             return $q.all(httpPromises);
