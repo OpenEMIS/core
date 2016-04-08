@@ -2,12 +2,12 @@
 namespace Staff\Model\Table;
 
 use Cake\ORM\TableRegistry;
-use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\Database\ValueBinder;
+use App\Model\Table\ControllerActionTable;
 
-class LicensesTable extends AppTable {
+class LicensesTable extends ControllerActionTable {
 	public function initialize(array $config) {
 		$this->table('staff_licenses');
 		parent::initialize($config);
