@@ -1,42 +1,13 @@
 <!-- <tr><td>{{targetCtrl.onChangeTargets}}</td></tr> -->
-<!-- sample data -->
-<tr>
-	<td>Code A - Mathematics</td>
-	<td>
-		<div class="input-select-wrapper">
-			<select id="assessmentitems-assessment-grading-type-id" name="Assessments[assessment_items][{{key}}][assessment_grading_type_id]" ca-id="assessment_grading_type_id" ca-on-change-target-element ca-on-change-target-element-template-url="/phpoe/assessment/templates/assessment_grading_type_options.html">
-			</select>
-		</div>
-	</td>
-	<td>&nbsp;</td>
-	<td>
-		<input type="text" id="assessmentitems-weight" class="form-error" name="Assessments[assessment_items][{{key}}][weight]" value=""/>
-	</td>
-	<td>&nbsp;</td>
-</tr>
-<tr>
-	<td>Code B - Sciences</td>
-	<td>
-		<div class="input-select-wrapper">
-			<select id="assessmentitems-assessment-grading-type-id" name="Assessments[assessment_items][{{key}}][assessment_grading_type_id]" ca-id="assessment_grading_type_id" ca-on-change-target-element ca-on-change-target-element-template-url="/phpoe/assessment/templates/assessment_grading_type_options.html">
-			</select>
-		</div>
-	</td>
-	<td>&nbsp;</td>
-	<td>
-		<input type="text" id="assessmentitems-weight" class="form-error" name="Assessments[assessment_items][{{key}}][weight]" value=""/>
-	</td>
-	<td>&nbsp;</td>
-</tr>
-<!-- end sample data -->
 
 <tr class="hidden"><td></td></tr>
-<tr ng:repeat="(key, item) in targetCtrl.onChangeTargets.assessment_items">
+<!-- <tr><td>{{baseUrl}}</td></tr> -->
+<tr ng:repeat="(key, item) in onChangeTargets.assessment_items">
 	<td>{{item.education_subject.code}} - {{item.education_subject.name}}</td>
 	<input type="hidden" id="assessmentitems-education-subject-id" name="Assessments[assessment_items][{{key}}][education_subject_id]" value="{{item.education_subject.id}}"/>
 	<td>
 		<div class="input-select-wrapper">
-			<select id="assessmentitems-assessment-grading-type-id" name="Assessments[assessment_items][{{key}}][assessment_grading_type_id]" ca-id="assessment_grading_type_id" ca-on-change-target-element ca-on-change-target-element-template-url="/phpoe/assessment/templates/assessment_grading_type_options.html">
+			<select id="assessmentitems-assessment-grading-type-id" data-baseUrl="{{baseUrl}}" name="Assessments[assessment_items][{{key}}][assessment_grading_type_id]" kd-id="assessment_grading_type_id" kd-on-change-target-element kd-on-change-target-element-template-url="/{{baseUrl}}/assessment/js/angular/templates/assessment_grading_type_options.html">
 			</select>
 		</div>
 	</td>

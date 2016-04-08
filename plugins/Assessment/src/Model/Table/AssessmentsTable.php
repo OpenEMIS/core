@@ -264,10 +264,11 @@ class AssessmentsTable extends ControllerActionTable {
 ******************************************************************************************************************/
 
 	public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request) {
+
 		$attr['attr'] = [
-			'ca-on-change-element' => true,
-			'ca-on-change-source-url' => '/phpoe/restful/education-educationgrades.json?_finder=visible,list&education_programme_id=',
-			'ca-on-change-target' => 'education_grade_id',
+			'kd-on-change-element' => true,
+			'kd-on-change-source-url' => $request->base . '/restful/education-educationgrades.json?_finder=visible,list&education_programme_id=',
+			'kd-on-change-target' => 'education_grade_id',
 		];
 		return $attr;
 	}
@@ -275,14 +276,13 @@ class AssessmentsTable extends ControllerActionTable {
 	public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request) {
 
 		$attr['attr'] = [
-			'ca-id' => 'education_grade_id',
-			'ca-on-change-target-element' => true,
-			// 'ca-on-change-target-element-template-url' => '/phpoe/assessment/templates/education_grade_options.html',
+			'kd-id' => 'education_grade_id',
+			'kd-on-change-target-element' => true,
+			'kd-on-change-target-element-template-url' => $request->base . '/assessment/js/angular/templates/education_grade_options.html',
 
-			'ca-on-change-element' => 'data',
-			'ca-on-change-source-url' => '/phpoe/restful/education-educationgradessubjects.json?_finder=visible&_contain=EducationSubjects&_fields=id&education_grade_id=',
-			'ca-on-change-target' => 'assessment_items',
-			// 'ca-on-change-onReady' => ''
+			'kd-on-change-element' => 'data',
+			'kd-on-change-source-url' => $request->base . '/restful/education-educationgradessubjects.json?_finder=visible&_contain=EducationSubjects&_fields=id&education_grade_id=',
+			'kd-on-change-target' => 'assessment_items'
 		];
 		return $attr;
 	}
