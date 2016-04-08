@@ -12,7 +12,11 @@ class RubricTemplateOptionsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('RubricTemplates', ['className' => 'Rubric.RubricTemplates']);
-		$this->addBehavior('Reorder', ['filter' => 'rubric_template_id']);
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+				'filter' => 'rubric_template_id',
+			]);
+		}
 	}
 
 	public function validationDefault(Validator $validator) {

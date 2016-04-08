@@ -19,7 +19,7 @@ class ImportStudentsTable extends AppTable {
 	private $gradesInInstitution;
 	private $systemDateFormat;
 	private $studentStatusId;
-	private $availableSections;
+	private $availableClasses;
 
 	public function initialize(array $config) {
 		$this->table('import_mapping');
@@ -96,6 +96,8 @@ class ImportStudentsTable extends AppTable {
 		$tempRow['end_date'] = false;
 		$tempRow['end_year'] = false;
 		$tempRow['institution_id'] = $this->institutionId;
+		// Optional fields which will be validated should be set with a default value on initialisation
+		$tempRow['class'] = 0;
 	}
 
 	public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {
@@ -157,15 +159,15 @@ class ImportStudentsTable extends AppTable {
 		unset($data[$columnOrder]);
 	}
 
-	public function onImportPopulateInstitutionSectionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+	public function onImportPopulateInstitutionClassesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
 		try {
 			$institution = $this->Institutions->get($this->institutionId);
-			$modelData = $this->populateInstitutionSectionsData();
+			$modelData = $this->populateInstitutionClassesData();
 
 			$institutionNameLabel = $this->getExcelLabel('Imports', 'institution_name');
 			$academicPeriodCodeLabel = $this->getExcelLabel('Imports', 'period_code');
 			$classNameLabel = $this->getExcelLabel($lookupModel, 'name');
-			$classCodeLabel = $this->getExcelLabel('Imports', 'institution_sections_code');
+			$classCodeLabel = $this->getExcelLabel('Imports', 'institution_classes_code');
 			
 			// unset($data[$sheetName]);
 			$sheetName = $this->getExcelLabel('Imports', $lookupModel);
@@ -197,14 +199,14 @@ class ImportStudentsTable extends AppTable {
 
 	}
 
-	private function populateInstitutionSectionsData() {
+	private function populateInstitutionClassesData() {
 		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$availableAcademicPeriods = $AcademicPeriods->getAvailableAcademicPeriods(false);
 
-		$InstitutionSections = TableRegistry::get('Institution.InstitutionSections');
+		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
 		$modelData = [];
 		foreach ($availableAcademicPeriods as $key=>$value) {
-			$modelData[$value->code] = $InstitutionSections->getSectionOptions($value->id, $this->institutionId);
+			$modelData[$value->code] = $InstitutionClasses->getClassOptions($value->id, $this->institutionId);
 		}
 		return $modelData;
 	}
@@ -279,7 +281,10 @@ class ImportStudentsTable extends AppTable {
 		$institutionGrade = $this->InstitutionGrades
 								->find()
 								->contain('EducationGrades.EducationProgrammes.EducationCycles')
-								->where([$this->InstitutionGrades->aliasField('education_grade_id') => $tempRow['education_grade_id']])
+								->where([
+									$this->InstitutionGrades->aliasField('education_grade_id') => $tempRow['education_grade_id'],
+									$this->InstitutionGrades->aliasField('institution_id') => $this->institutionId
+								])
 								;
 		if ($institutionGrade->isEmpty()) {
 			$rowInvalidCodeCols['education_grade_id'] = __('No matching education grade.');
@@ -304,25 +309,32 @@ class ImportStudentsTable extends AppTable {
 		}
 
 		if (!empty($tempRow['class']) || $tempRow['class']!=0) {
-			if (empty($this->availableSections)) {
-				$this->availableSections = $this->populateInstitutionSectionsData();
+			if (empty($this->availableClasses)) {
+				$this->availableClasses = $this->populateInstitutionClassesData();
 			}
-			$this->availableSections;
-			$selectedClassIdFound = false;
-			if (!empty($this->availableSections)) {
-				foreach($this->availableSections as $periodClasses) {
+			$this->availableClasses;
+			$selectedClassIdFound = null;
+			if (!empty($this->availableClasses)) {
+				foreach($this->availableClasses as $periodCode=>$periodClasses) {
 					if (!empty($periodClasses)) {
 						foreach($periodClasses as $id=>$name) {
 							if ($id == $tempRow['class']) {
-								$selectedClassIdFound = true;
+								if ($periodCode == $period->code) {
+									$selectedClassIdFound = true;
+								} else {
+									$selectedClassIdFound = false;
+								}
 								break;
 							}
 						}
 					}
 				}
 			}
-			if (!$selectedClassIdFound) {
+			if (is_null($selectedClassIdFound)) {
 				$rowInvalidCodeCols['class'] = __('Selected class does not exists in this institution');
+				return false;
+			} else if (!$selectedClassIdFound) {
+				$rowInvalidCodeCols['class'] = __('Selected class does not exists during the selected Academic Period');
 				return false;
 			}
 		}
