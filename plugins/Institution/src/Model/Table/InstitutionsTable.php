@@ -45,8 +45,8 @@ class InstitutionsTable extends AppTable  {
 
 		$this->hasMany('InstitutionPositions', 				['className' => 'Institution.InstitutionPositions', 'dependent' => true]);
 		$this->hasMany('InstitutionShifts', 				['className' => 'Institution.InstitutionShifts', 'dependent' => true]);
-		$this->hasMany('InstitutionSections', 				['className' => 'Institution.InstitutionSections', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionClasses', 				['className' => 'Institution.InstitutionClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSubjects', 				['className' => 'Institution.InstitutionSubjects', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('Infrastructures',					['className' => 'Institution.InstitutionInfrastructures', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->hasMany('Staff',				 				['className' => 'Institution.Staff', 'dependent' => true]);
@@ -509,11 +509,6 @@ class InstitutionsTable extends AppTable  {
 		]);
 	}
 
-	public function addOnInitialize(Event $event, Entity $entity) {
-		list(, $selectedType) = array_values($this->getTypeOptions());
-		$entity->institution_type_id = $selectedType;
-	}
-
 /******************************************************************************************************************
 **
 ** addEdit action methods
@@ -578,24 +573,38 @@ class InstitutionsTable extends AppTable  {
 
 	public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add' || $action == 'edit') {
-			list($typeOptions, $selectedType) = array_values($this->getTypeOptions());
+			// list($typeOptions, $selectedType) = array_values($this->getTypeOptions());
 
-			$attr['options'] = $typeOptions;
+			// $attr['options'] = $typeOptions;
 			$attr['onChangeReload'] = 'changeType';
 		}
 
 		return $attr;
 	}
 
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+		if (!$this->AccessControl->isAdmin()) {
+			$userId = $this->Auth->user('id');
+			$institutionId = $entity->id;
+			$securityRoles = $this->getInstitutionRoles($userId, $institutionId);
+			foreach ($buttons as $key => $b) {
+				$url = $this->ControllerAction->url($key);
+				if (!$this->AccessControl->check($url, $securityRoles)) {
+					unset($buttons[$key]);
+				}
+			}
+		}
+		return $buttons;
+	}
+
 	public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$request = $this->request;
-		unset($request->query['type']);
 
 		if ($request->is(['post', 'put'])) {
 			if (array_key_exists($this->alias(), $request->data)) {
 				if (array_key_exists('institution_type_id', $request->data[$this->alias()])) {
 					$selectedType = $request->data[$this->alias()]['institution_type_id'];
-					$request->query['type'] = $selectedType;
 					$entity->institution_type_id = $selectedType;
 				}
 			}
@@ -604,9 +613,76 @@ class InstitutionsTable extends AppTable  {
 
 	public function getTypeOptions() {
 		$typeOptions = $this->Types->getList()->toArray();
-		$selectedType = $this->queryString('type', $typeOptions);
-		$this->advancedSelectOptions($typeOptions, $selectedType);
+		$selectedType = $this->Types->getDefaultValue();
+
+		// $selectedType = $this->queryString('type', $typeOptions);
+		// $this->advancedSelectOptions($typeOptions, $selectedType);
+		// , ['default' => $typeDefault]
 
 		return compact('typeOptions', 'selectedType');
 	}
+
+/******************************************************************************************************************
+**
+** Security Functions
+**
+******************************************************************************************************************/
+	
+	/**
+	 * To get the list of security group id for the particular institution and user
+	 *
+	 * @param integer $userId User Id
+	 * @param integer $institutionId Institution id
+	 * @return array The list of security group id that the current user for access to the institution
+	 */
+	public function getSecurityGroupId($userId, $institutionId) {
+		$institutionEntity = $this->get($institutionId);
+
+		// Get parent of the area and the current area
+		$areaId = $institutionEntity->area_id;
+		$Areas = $this->Areas;
+		$institutionArea = $Areas->get($areaId);
+
+		// Getting the security groups
+		$SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+		$securityGroupIds = $SecurityGroupAreas->find()
+			->innerJoinWith('Areas')
+			->innerJoinWith('SecurityGroups.Users')
+			->where([
+				'Areas.lft <= ' => $institutionArea->lft,
+				'Areas.rght >= ' => $institutionArea->rght,
+				'Users.id' => $userId
+			])
+			->union(
+				$SecurityGroupInstitutions->find()
+					->innerJoinWith('SecurityGroups.Users')
+					->where([
+						$SecurityGroupInstitutions->aliasField('institution_id') => $institutionId,
+						'Users.id' => $userId
+					])
+					->select([$SecurityGroupInstitutions->aliasField('security_group_id')])
+					->distinct([$SecurityGroupInstitutions->aliasField('security_group_id')])
+			)
+			->select([$SecurityGroupAreas->aliasField('security_group_id')])
+			->distinct([$SecurityGroupAreas->aliasField('security_group_id')])
+			->hydrate(false)
+			->toArray();
+		$securityGroupIds = $this->array_column($securityGroupIds, 'security_group_id');
+		return $securityGroupIds;
+	}
+
+	/**
+	 * To list of roles that are authorised for access to a particular institution
+	 *
+	 * @param integer $userId User Id
+	 * @param integer $institutionId Institution id
+	 * @return array The list of security roles id that the current user for access to the institution
+	 */
+	public function getInstitutionRoles($userId, $institutionId) {
+		$groupIds = $this->getSecurityGroupId($userId, $institutionId);
+		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+		return $SecurityGroupUsers->getRolesByUserAndGroup($groupIds, $userId);
+	}
+
 }

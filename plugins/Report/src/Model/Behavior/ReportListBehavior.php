@@ -92,7 +92,7 @@ class ReportListBehavior extends Behavior {
 		return $process;
 	}
 
-	public function onExcelGenerate(Event $event, $writer, $settings) {
+	public function onExcelGenerate(Event $event, $settings) {
 		$requestData = json_decode($settings['process']['params']);
 		$locale = $requestData->locale;
 		I18n::locale($locale);

@@ -336,12 +336,7 @@ class UserBehavior extends Behavior {
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
 		if ($field == 'identity') {
 			$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
-			$identity = $IdentityType
-							   ->find()
-							   ->contain(['FieldOptions'])
-							   ->where(['FieldOptions.code' => 'IdentityTypes'])
-							   ->order(['IdentityTypes.default DESC'])
-							   ->first();
+			$identity = $IdentityType->getDefaultEntity();
 
 			if ($identity) {
 				$value = $identity->name;
@@ -396,28 +391,22 @@ class UserBehavior extends Behavior {
 		$this->_table->controller->ControllerAction->autoRender = false;
 
 		$currModel = $this->_table;
-		if ($entity instanceof User) {
-			$photoData = $currModel->find()
-				->select([$currModel->aliasField('photo_content')])
-				->where([$currModel->aliasField($currModel->primaryKey()) => $id])
-				->first()
-				;
-			$phpResourceFile = $photoData->photo_content;
-		} {
-			$photoData = $currModel->find()
-				->contain('Users')
-				->select(['Users.photo_content'])
-				->where([$currModel->aliasField($currModel->primaryKey()) => $id])
-				->first()
-				;
+		$photoData = $currModel->find()
+			->contain('Users')
+			->select(['Users.photo_content'])
+			->where([$currModel->aliasField($currModel->primaryKey()) => $id])
+			->first()
+			;
+
+		if (!empty($photoData) && $photoData->has('Users') && $photoData->Users->has('photo_content')) {
 			$phpResourceFile = $photoData->Users->photo_content;
-		}
-		
-		if ($base64Format) {
-			echo base64_encode(stream_get_contents($phpResourceFile));
-		} else {
-			$this->_table->controller->response->type('jpg');
-			$this->_table->controller->response->body(stream_get_contents($phpResourceFile));
+			
+			if ($base64Format) {
+				echo base64_encode(stream_get_contents($phpResourceFile));
+			} else {
+				$this->_table->controller->response->type('jpg');
+				$this->_table->controller->response->body(stream_get_contents($phpResourceFile));
+			}
 		}
 	}
 

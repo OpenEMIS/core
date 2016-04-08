@@ -1,4 +1,4 @@
-/* NAVIGATION v.1.2.8 */
+/* NAVIGATION v.1.2.9 */
 
 nav {
     border-radius: 0 !important;
@@ -382,6 +382,10 @@ nav {
 
 /* RTL NAVIGATION v.1.2.1 */
 
+.rtl .left-menu {
+    left: 0;
+}
+
 .rtl .left-pane {
     right: 0;
     left: auto;
@@ -394,6 +398,10 @@ nav {
     border-left: 0 !important;
     -ms-overflow-x: hidden !important;
     overflow-x: hidden !important;
+}
+
+.rtl .split-panes.horizontal > .split-pane2 {
+    right: 10%;
 }
 
 .rtl .split-panes.horizontal > .split-handler {
@@ -535,6 +543,9 @@ nav {
         -ms-transform: translate(-50%, -50%);
         -o-transform: translate(-50%, -50%);
         transform: translate(-50%, -50%);
+    }
+    .enable-overflow {
+        overflow: hidden !important;
     }
     .content-overlay {
         position: relative;

@@ -55,19 +55,84 @@ class SurveysTable extends AppTable  {
 		}
 	}
 
+	public function onExcelAfterHeader(Event $event, ArrayObject $settings) {
+		if ($settings['renderNotComplete']) {
+			$fields = $settings['sheet']['fields'];
+			$requestData = json_decode($settings['process']['params']);
+			$surveyFormId = $requestData->survey_form;
+			$academicPeriodId = $requestData->academic_period_id;
+			$surveyFormName = $this->SurveyForms->get($surveyFormId)->name;
+			$academicPeriodName = $this->AcademicPeriods->get($academicPeriodId)->name;
+			$InstitutionsTable = $this->Institutions;
+			
+			$missingRecords = $InstitutionsTable->find()
+				->where(['NOT EXISTS ('.
+					$this->find()->where([
+						$this->aliasField('academic_period_id').' = '.$academicPeriodId,
+						$this->aliasField('survey_form_id').' = '.$surveyFormId,
+						$this->aliasField('institution_id').' = '.$InstitutionsTable->aliasField('id')
+					])
+				.')'])
+				->innerJoinWith('Areas')
+				->leftJoinWith('AreaAdministratives')
+				->select([
+					'institution_id' => $InstitutionsTable->aliasField('name'),
+					'code' => $InstitutionsTable->aliasField('code'),
+					'area' => 'Areas.name',
+					'area_administrative' => 'AreaAdministratives.name'
+				]);
+
+			$writer = $settings['writer'];
+			$sheetName = $settings['sheet']['name'];
+			$mappingArray = ['status_id', 'academic_period_id', 'survey_form_id', 'institution_id', 'code'];
+
+			foreach ($missingRecords->all() as $record) {
+				$record->academic_period_id = $academicPeriodName;
+				$record->survey_form_id = $surveyFormName;
+				$record->status_id = __('Not Completed');
+
+				$row = [];
+				foreach ($fields as $field) {
+					if (in_array($field['field'], $mappingArray)) {
+						$row[] = $record->$field['field'];
+					} else if ($field['field'] == 'area_id') {
+						$row[] = $record->area;
+					} else if ($field['field'] == 'area_administrative_id') {
+						$row[] = $record->area_administrative;
+					} else {
+						$row[] = '';
+					}
+				}
+				$writer->writeSheetRow($sheetName, $row);
+			}
+			$settings['renderNotComplete'] = false;
+		}
+	}
+
 	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
+
 		// Setting request data and modifying fetch condition
 		$requestData = json_decode($settings['process']['params']);
 		$surveyFormId = $requestData->survey_form;
 		$academicPeriodId = $requestData->academic_period_id;
 		$status = $requestData->status;
+		$WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
+
+		if (!empty($academicPeriodId)) {
+			$surveyStatuses = $WorkflowStatusesTable->WorkflowModels->getWorkflowStatusesCode('Institution.InstitutionSurveys');
+			if ($surveyStatuses[$status] == 'NOT_COMPLETED') {
+				$settings['renderNotComplete'] = true;
+			}
+		} else {
+			$academicPeriodId = 0;
+		}
+
 		$configCondition = $this->getCondition();
 		$condition = [
 			$this->aliasField('academic_period_id') => $academicPeriodId
 		];
-		$WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
-		$surveyStatuses = $WorkflowStatusesTable->getWorkflowSteps($status);
 
+		$surveyStatuses = $WorkflowStatusesTable->getWorkflowSteps($status);
 		
 		$this->surveyStatuses = $WorkflowStatusesTable->getWorkflowStepStatusNameMappings('Institution.InstitutionSurveys');
 		
@@ -140,17 +205,8 @@ class SurveysTable extends AppTable  {
 			if (isset($this->request->data[$this->alias()]['feature'])) {
 				$feature = $this->request->data[$this->alias()]['feature'];
 				if ($feature == $this->registryAlias()) {
-					$surveyFormOptions = $this
-						->find('list', [
-							'keyField' => 'id',
-							'valueField' => 'name'
-						])
-						->contain(['SurveyForms'])
-						->select(['id' => 'SurveyForms.id', 'name' => 'SurveyForms.name'])
-						->group([ 
-							$this->aliasField('survey_form_id')
-						])
-						->where([$this->aliasField('status_id').' IS NOT ' => -1])
+					$surveyFormOptions = $this->SurveyForms
+						->find('list')
 						->toArray();
 					$attr['options'] = $surveyFormOptions;
 					$attr['onChangeReload'] = true;
@@ -172,20 +228,16 @@ class SurveysTable extends AppTable  {
 				$feature = $this->request->data[$this->alias()]['feature'];
 				$surveyForm = $this->request->data[$this->alias()]['survey_form'];
 				if ($feature == $this->registryAlias() && !empty($surveyForm)) {
-					$academicPeriodOptions = $this
+					$SurveyStatusTable = $this->SurveyForms->surveyStatuses;
+					$academicPeriodOptions = $SurveyStatusTable
 						->find('list', [
-							'keyField' => 'id',
-							'valueField' => 'name'
+							'keyField' => 'academic_id',
+							'valueField' => 'academic_name'
 						])
-						->contain(['AcademicPeriods'])
-						->select(['id' => 'AcademicPeriods.id', 'name' => 'AcademicPeriods.name'])
+						->matching('AcademicPeriods')
+						->select(['academic_id' => 'AcademicPeriods.id', 'academic_name' => 'AcademicPeriods.name'])
 						->where([
-							$this->aliasField('survey_form_id') => $surveyForm,
-							$this->aliasField('status_id').' IS NOT ' => -1
-						])
-						->group([
-							$this->aliasField('survey_form_id'), 
-							$this->aliasField('academic_period_id')
+							$SurveyStatusTable->aliasField('survey_form_id') => $surveyForm,
 						])
 						->order(['AcademicPeriods.order'])
 						->toArray();
@@ -217,25 +269,6 @@ class SurveysTable extends AppTable  {
 					$surveyStatuses = $this->Workflow->getWorkflowStatuses('Institution.InstitutionSurveys');
 					$attr['type'] = 'select';
 					$surveyTable = $this;
-					$arrayKeys = array_keys($surveyStatuses);
-		
-					$this->advancedSelectOptions($surveyStatuses, $this->request->data[$this->alias()]['status'], [
-						'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSurveys')),
-						'callable' => function($id) use ($surveyTable, $surveyForm, $academicPeriodId) {
-
-							$statuses = $this->Workflow->getWorkflowSteps($id);
-
-							$query = $surveyTable
-								->find()
-								->where([
-									$surveyTable->aliasField('survey_form_id').'='.$surveyForm,
-									$surveyTable->aliasField('academic_period_id').'='.$academicPeriodId,
-									$surveyTable->aliasField('status_id').' IN ' => array_keys($statuses)
-								])
-								->count();
-							return $query;
-						}
-					]);
 					$attr['options'] = $surveyStatuses;
 					return $attr;
 				}

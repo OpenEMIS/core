@@ -29,7 +29,9 @@ class AboutController extends AppController {
 		];
 
 		$this->Navigation->addCrumb($this->name);
-		$this->Navigation->addCrumb($tabElements[$this->request->action]['text']);
+		if ($this->request->action != 'index') {
+			$this->Navigation->addCrumb($tabElements[$this->request->action]['text']);
+		}
 
 		$this->set('tabElements', $tabElements);
 		$this->set('selectedAction', $this->request->action);
