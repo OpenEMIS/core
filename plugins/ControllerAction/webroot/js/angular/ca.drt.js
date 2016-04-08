@@ -1,5 +1,5 @@
 //Controller Action Angular Functions v.1.0.1
-angular.module('ca.drt', [])
+angular.module('ca.drt', ['ngCookies', 'ca.common.svc'])
     .directive('caOnChangeElement', function() {
         return {
             /*
@@ -15,85 +15,121 @@ angular.module('ca.drt', [])
              * 'AEC' - matches either attribute or element or class name
              */ 
             restrict: 'A',
+            // transclude: true,
+            // bindToController: {
+            //     scope: "="
+            // },
             controller: 'caCtrl',
             link: function(scope, elem, attr, caCtrl) {
 
                 elem.on('change', function(event) {
-                    caCtrl.changeOptions(elem.val(), attr);
+                    console.log(caCtrl.onChangeTargets);
+                    if (caCtrl.changeOptions(elem.val(), attr)) {
+                        console.log(caCtrl.onChangeTargets);
+                    }
                 });
 
             }
         };
     })
-    .directive('caOnChangeTargetElement', function() {
-        return {
-            restrict: 'A',
-            controller: 'caCtrl',
-            templateUrl: function(elem, attr) {
+    // .directive('caOnChangeTargetElement', function($cookies, caCommonSvc) {
 
-                if (typeof attr.caOnChangeTargetElementTemplateUrl !== 'undefined') {
-                    return attr.caOnChangeTargetElementTemplateUrl;
-                } else {
-                    // attr.caId;
-                    return '/controller_action/js/angular/templates/caOnChangeTarget.html';
-                }
+    //     // var response = caCommonSvc.ajax({url:targetUrl});
+    //     // response  
+    //     //     .then(function(data) {
 
-            },
-            link: function(scope, elem, attr, caCtrl) {
+    //     //         targetOptions = [];
+    //     //         if (dataType=='data') {
+    //     //             targetOptions = data.data;
+    //     //         } else {
+    //     //             for (var id in data.data) {
+    //     //                 targetOptions.push({"id":id, "name":data.data[id]});
+    //     //             }
+    //     //         }
+    //     //         $scope.onChangeTargets[target] = targetOptions;
+                
+    //     //     }, function(error) {
+    //     //         console.log('Failure...', error);
+    //     //     });
 
-                caCtrl.registerOnChangeTargets(attr.caId);
-                // console.log(scope);
-                // console.log(caCtrl);
-                // scope.$watch
-            }
-        };
-    })
-    .directive('caOnClickElement', function() {
-        return {
-            restrict: 'A',
-            controller: 'caCtrl',
-            link: function(scope, elem, attr, caCtrl) {
+    //     // Retrieving a cookie
+    //     var favoriteCookie = $cookies.get('System');
+    //     console.log(favoriteCookie);
+    //     // var httpParams = ($location.absUrl()).split('/Loads/Publishes');
+    //     // var indexUrl = httpParams[0] + '/Loads/Publishes';
+    //     // var id = httpParams[1].replace('/edit/', '');
+    //     // var gatewayUrl = indexUrl + '/gateway/' + id;
 
-                elem.on('click', function(event) {
-                    var clickAction = caCtrl[attr.caOnClickElement];
-                    clickAction(scope, elem, attr);
-                });
+    //     return {
+    //         restrict: 'A',
+    //         controller: 'caCtrl',
+    //         templateUrl: function(elem, attr) {
 
-            }
-        };
-    })
-    .directive('caOnClickTargetElement', function() {
-        return {
-            restrict: 'A',
-            bindToController: {
-              handlers: '='
-            },
-            controllerAs: 'clickTarget',
-            controller: function() {
+    //             if (typeof attr.caOnChangeTargetElementTemplateUrl !== 'undefined') {
+    //                 return attr.caOnChangeTargetElementTemplateUrl;
+    //             } else {
+    //                 // attr.caId;
+    //                 return '/controller_action/js/angular/templates/caOnChangeTarget.html';
+    //             }
 
-                this.handlers = {
-                    'addRow': {},
-                    'alert': {}
-                };
+    //         },
+    //         link: function(scope, elem, attr, caCtrl) {
 
-                this.registerElement = function(handler, caId) {
-                    this.handlers[handler][caId] = [];
-                };
+    //             caCtrl.registerOnChangeTargets(attr.caId);
+    //             // console.log(scope);
+    //             // console.log(caCtrl);
+    //             // scope.$watch
+    //         }
+    //     };
+    // })
+    // .directive('caOnClickElement', function() {
+    //     return {
+    //         restrict: 'A',
+    //         // require: "^caCtrl"
+    //         transclude: true,
+    //         controller: 'caCtrl',
+    //         link: function(scope, elem, attr, caCtrl) {
 
-                this.removeRow = function(caId, index) {
-                    this.handlers.addRow[caId].splice(index, 1);
-                };
+    //             elem.on('click', function(event) {
+    //                 var clickAction = scope[attr.caOnClickElement];
+    //                 clickAction(scope, elem, attr);
+    //             });
 
-            },
-            link: function(scope, elem, attr, clickTarget) {
+    //         }
+    //     };
+    // })
+    // .directive('caOnClickTargetElement', function() {
+    //     return {
+    //         restrict: 'A',
+    //         bindToController: {
+    //           handlers: '='
+    //         },
+    //         controllerAs: 'clickTarget',
+    //         controller: function() {
 
-                clickTarget.registerElement(attr.caOnClickTargetHandler, attr.caId);
+    //             this.handlers = {
+    //                 'addRow': {},
+    //                 'alert': {}
+    //             };
 
-                scope.$on('onClickComplete', function (event, handler, target, data) {
-                    clickTarget.handlers[handler][target].push(data);
-                })
+    //             this.registerElement = function(handler, caId) {
+    //                 this.handlers[handler][caId] = [];
+    //             };
 
-            }
-        };
-    })
+    //             this.removeRow = function(caId, index) {
+    //                 this.handlers.addRow[caId].splice(index, 1);
+    //             };
+
+    //         },
+    //         link: function(scope, elem, attr, clickTarget) {
+
+    //             clickTarget.registerElement(attr.caOnClickTargetHandler, attr.caId);
+
+    //             scope.$on('onClickComplete', function (event, handler, target, data) {
+    //                 clickTarget.handlers[handler][target].push(data);
+    //             })
+
+    //         }
+    //     };
+    // })
     ;

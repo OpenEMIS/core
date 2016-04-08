@@ -1,5 +1,41 @@
 angular.module('ca.common.svc', [])
-.service('caCommonSvc', ['$sce', '$timeout', '$http', '$q', function ($sce, $timeout, $http, $q) {
+.service('caCommonSvc', ['$http', '$q', function ($http, $q) {
+ 
+    // this.storage.options = {
+    //     element1: {}
+    // };
+
+    this.init = function(scope, ctrlFunctions) {
+        // var defaultFunctions = ['changeOptions', 'func1', 'func2'];
+        // ctrlFunctions = ctrlFunctions || defaultFunctions;
+        // for (func in ctrlFunctions) {
+            scope.changeOptions = this.changeOptions(scope);  
+        // }
+    }
+
+    this.changeOptions = function(id, attr) {
+        // caCommonSvc.changeOptions($scope);
+        // var dataType = attr.caOnChangeElement;
+        // var target = attr.caOnChangeTarget;
+        // var targetUrl = attr.caOnChangeSourceUrl + id;
+        // var response = caCommonSvc.ajax({url:targetUrl});
+        // response  
+        //     .then(function(data) {
+
+        //         targetOptions = [];
+        //         if (dataType=='data') {
+        //             targetOptions = data.data;
+        //         } else {
+        //             for (var id in data.data) {
+        //                 targetOptions.push({"id":id, "name":data.data[id]});
+        //             }
+        //         }
+        //         $scope.onChangeTargets[target] = targetOptions;
+                
+        //     }, function(error) {
+        //         console.log('Failure...', error);
+        //     });
+    };
 
     this.htmlEntities = function(str) {
         return String(str).replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -63,3 +99,27 @@ angular.module('ca.common.svc', [])
 
 }]);
 
+
+
+// CA_Controller.js
+// .inject(CA_Svc);
+// .init() { CA_Svc.init(this); }
+// // .add() { CA_Svc.add(); }
+// // .edit() { CA_Svc.edit(); }
+
+
+// CA_Svc.js
+// .add() {}
+// .edit() {}
+// .onchange() {}
+// .init(ControllerObject) {
+//     ControllerObject.add = function() {
+//         CA_Svc.add();
+//     }
+// }
+
+
+
+// Custom_Controller.js
+// .inject(CA_Svc)
+// .init() { CA_Svc.init(this); }
