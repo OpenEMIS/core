@@ -1,4 +1,4 @@
-/* LOGIN v.1.0.1 */
+/* LOGIN v.1.0.2 */
 
 .body-wrapper {
     width: 100%;
@@ -6,7 +6,7 @@
     position: absolute;
     background-image: url('../../img/login-bg.jpg');
     background-repeat: no-repeat;
-    background-position: top center;
+    background-position: center center;
     background-size: cover;
     margin: 0;
     overflow-y: auto;

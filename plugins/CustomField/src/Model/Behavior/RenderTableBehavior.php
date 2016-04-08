@@ -87,6 +87,7 @@ class RenderTableBehavior extends RenderBehavior {
         $valueKey = $settings['valueKey'];
 
         foreach ($values as $fieldId => $rows) {
+            $settings['deleteFieldIds'][] = $fieldId;
             foreach ($rows as $rowId => $columns) {
                 foreach ($columns as $columnId => $obj) {
                     $cellValue = $obj[$valueKey];

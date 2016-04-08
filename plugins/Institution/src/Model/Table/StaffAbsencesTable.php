@@ -52,6 +52,7 @@ class StaffAbsencesTable extends AppTable {
 		$this->setValidationCode('start_date.ruleNoOverlappingAbsenceDate', 'Institution.Absences');
 		$this->setValidationCode('start_date.ruleInAcademicPeriod', 'Institution.Absences');
 		$this->setValidationCode('end_date.ruleCompareDateReverse', 'Institution.Absences');
+		$codeList = array_flip($this->absenceCodeList);
 		$validator
 			->add('start_date', [
 				'ruleNoOverlappingAbsenceDate' => [
@@ -60,6 +61,9 @@ class StaffAbsencesTable extends AppTable {
 			])
 			->add('end_date', 'ruleCompareDateReverse', [
 				'rule' => ['compareDateReverse', 'start_date', true]
+			])
+			->add('end_time', 'ruleCompareAbsenceTimeReverse', [
+				'rule' => ['compareAbsenceTimeReverse', 'start_time', $codeList['LATE']]
 			]);
 		return $validator;
 	}
@@ -278,11 +282,17 @@ class StaffAbsencesTable extends AppTable {
 					->where([
 						$StaffTable->aliasField('staff_id') => $this->request->data[$this->alias()]['staff_id'], 
 					])
-					->order([$StaffTable->aliasField('end_date')])->first();
+					->order([$StaffTable->aliasField('end_date')])
+					->first();
+			}
+			$dateAttr = ['startDate' => Time::now(), 'endDate' => Time::now()];
+			if (!empty($staffRecord)) {
+				$dateAttr['startDate'] = $staffRecord->start_date;
+				$dateAttr['endDate'] = $staffRecord->end_date;
 			}
 
-			$this->ControllerAction->field('start_date', ['startDate' => $staffRecord->start_date, 'endDate' => $staffRecord->end_date]);
-			$this->ControllerAction->field('end_date', ['startDate' => $staffRecord->start_date, 'endDate' => $staffRecord->end_date]);
+			$this->ControllerAction->field('start_date', $dateAttr);
+			$this->ControllerAction->field('end_date', $dateAttr);
 
 			// Malcolm discussed with Umairah and Thed - will revisit this when default date of htmlhelper is capable of setting 'defaultViewDate' ($entity->start_date = $todayDate; was: causing validation error to disappear)
 			// $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -342,7 +352,7 @@ class StaffAbsencesTable extends AppTable {
 		}
 		if ($action == 'edit' || $action == 'add') {
 			$selectedAbsenceType = $request->data[$this->alias()]['absence_type_id'];
-			if ($this->absenceCodeList[$selectedAbsenceType] == 'LATE') {
+			if (array_key_exists($selectedAbsenceType, $this->absenceCodeList) && $this->absenceCodeList[$selectedAbsenceType] == 'LATE') {
 				$attr['type'] = 'hidden';
 			}
 		}
@@ -414,7 +424,7 @@ class StaffAbsencesTable extends AppTable {
 
 		if ($action == 'edit' || $action == 'add') {
 			$selectedAbsenceType = $request->data[$this->alias()]['absence_type_id'];
-			if ($this->absenceCodeList[$selectedAbsenceType] == 'LATE') {
+			if (array_key_exists($selectedAbsenceType, $this->absenceCodeList) && $this->absenceCodeList[$selectedAbsenceType] == 'LATE') {
 				$attr['type'] = 'hidden';
 				$attr['attr']['value'] = 0;
 				$this->fields['start_time']['visible'] = true;
@@ -450,7 +460,7 @@ class StaffAbsencesTable extends AppTable {
 		$selectedAbsenceType = $request->data[$this->alias()]['absence_type_id'];
 		if (!empty($selectedAbsenceType)) {
 			$absenceType = $this->absenceCodeList[$selectedAbsenceType];
-			if ($absenceType == 'UNEXCUSED' || $absenceType == 'LATE') {
+			if ($absenceType == 'UNEXCUSED') {
 				$attr['type'] = 'hidden';
 				$attr['attr']['value'] = 0;
 			}

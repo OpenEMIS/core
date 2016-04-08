@@ -36,6 +36,8 @@ class SetupTextBehavior extends SetupBehavior {
     }
 
     private function buildTextValidator() {
+    	$max = $this->inputLimits['text_value']['max'];
+
 		$validator = $this->_table->validator();
 		$validator
 	    	->allowEmpty('minimum_length', function ($context) {
@@ -45,6 +47,26 @@ class SetupTextBehavior extends SetupBehavior {
 
 				return false;
 			})
+			->add('minimum_length', 'naturalNumber', [
+				'rule' => 'naturalNumber',
+				'message' => __('This field cannot be less than or equal zero')
+			])
+			->add('minimum_length', 'validateLength', [
+				'rule' => function ($value, $context) use ($max) {
+					return intval($value) <= $max;
+				},
+				'message' => vsprintf(__('This field cannot be more than %d'), [$max])
+			])
+			->add('minimum_length', 'comparison', [
+				'rule' => function ($value, $context) {
+					if (array_key_exists('maximum_length', $context['data']) && strlen($context['data']['maximum_length']) > 0) {
+						return intval($value) <= intval($context['data']['maximum_length']);
+					}
+
+					return true;
+				},
+				'message' => __('Minimum Length cannot be more than the Maximum Length')
+			])
 			->allowEmpty('maximum_length', function ($context) {
 				if (array_key_exists('minimum_length', $context['data'])) {
 					return strlen($context['data']['minimum_length']);
@@ -52,7 +74,23 @@ class SetupTextBehavior extends SetupBehavior {
 
 				return false;
 			})
+			->add('maximum_length', 'naturalNumber', [
+				'rule' => 'naturalNumber',
+				'message' => __('This field cannot be less than or equal zero')
+			])
+			->add('maximum_length', 'validateLength', [
+				'rule' => function ($value, $context) use ($max) {
+					return intval($value) <= $max;
+				},
+				'message' => vsprintf(__('This field cannot be more than %d'), [$max])
+			])
 	    	->notEmpty('validation_format')
+	    	->add('validation_format', 'validateLength', [
+				'rule' => function ($value, $context) use ($max) {
+					return strlen($value) <= $max;
+				},
+				'message' => vsprintf(__('This field cannot be more than %d'), [$max])
+			])
 	    	;
     }
 
@@ -133,8 +171,8 @@ class SetupTextBehavior extends SetupBehavior {
 	}
 
 	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
-		if (array_key_exists('validation_rule', $data)) {
-			if ($data['field_type'] == $this->fieldTypeCode) {
+		if (isset($data['field_type']) && $data['field_type'] == $this->fieldTypeCode) {
+			if (isset($data['validation_rule'])) {
 				$model = $this->_table;
 				$request = $model->request;
 				unset($request->query['text_rule']);
@@ -146,18 +184,18 @@ class SetupTextBehavior extends SetupBehavior {
 
 					switch ($selectedRule) {
 	    				case 'length':
-	    					$minLength = array_key_exists('minimum_length', $data) ? $data['minimum_length']: null;
-							$maxLength = array_key_exists('maximum_length', $data) ? $data['maximum_length']: null;
+	    					$minLength = array_key_exists('minimum_length', $data) && strlen($data['minimum_length']) > 0? $data['minimum_length']: null;
+							$maxLength = array_key_exists('maximum_length', $data) && strlen($data['maximum_length']) > 0 ? $data['maximum_length']: null;
 
-	    					if (!empty($minLength) && !empty($maxLength)) {
+							if (!is_null($minLength) && is_null($maxLength)) {
+								$params['min_length'] = $minLength;
+	    					} else if (is_null($minLength) && !is_null($maxLength)) {
+								$params['max_length'] = $maxLength;
+	    					} else if (!is_null($minLength) && !is_null($maxLength)) {
 	    						$params['range'] = [
 	    							'lower' => $minLength,
 	    							'upper' => $maxLength
 	    						];
-	    					} else if (!empty($minLength) && empty($maxLength)) {
-								$params['min_length'] = $minLength;
-	    					} else if (empty($minLength) && !empty($maxLength)) {
-								$params['max_length'] = $maxLength;
 	    					}
 	    					break;
 						case 'input_mask':
@@ -174,6 +212,7 @@ class SetupTextBehavior extends SetupBehavior {
 					$data['params'] = '';
 				}
 			}
+			
 		}
 	}
 }

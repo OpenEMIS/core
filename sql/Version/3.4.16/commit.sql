@@ -1,3 +1,153 @@
+-- POCOR-1798
+-- db_patches
+INSERT INTO `db_patches` VALUES ('POCOR-1798', NOW());
+
+
+-- Converting Employment Types
+DROP TABLE IF EXISTS `employment_types`;
+CREATE TABLE IF NOT EXISTS `employment_types` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `order` int(3) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `editable` int(1) NOT NULL DEFAULT '1',
+  `default` int(1) NOT NULL DEFAULT '0',
+  `international_code` varchar(50) DEFAULT NULL,
+  `national_code` varchar(50) DEFAULT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `modified_user_id` (`modified_user_id`),
+  INDEX `created_user_id` (`created_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+SELECT `id` INTO @fieldOptionId FROM `field_options` WHERE `code` = 'EmploymentTypes';
+UPDATE field_options SET params = '{"model":"FieldOption.EmploymentTypes"}' WHERE id = @fieldOptionId;
+INSERT INTO employment_types (`id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created` ) SELECT `id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM field_option_values WHERE field_option_id = @fieldOptionId;
+
+-- Converting Extracurricular Types
+DROP TABLE IF EXISTS `extracurricular_types`;
+CREATE TABLE IF NOT EXISTS `extracurricular_types` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `order` int(3) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `editable` int(1) NOT NULL DEFAULT '1',
+  `default` int(1) NOT NULL DEFAULT '0',
+  `international_code` varchar(50) DEFAULT NULL,
+  `national_code` varchar(50) DEFAULT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `modified_user_id` (`modified_user_id`),
+  INDEX `created_user_id` (`created_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+SELECT `id` INTO @fieldOptionId FROM `field_options` WHERE `code` = 'ExtracurricularTypes';
+UPDATE field_options SET params = '{"model":"FieldOption.ExtracurricularTypes"}' WHERE id = @fieldOptionId;
+INSERT INTO extracurricular_types (`id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created` ) SELECT `id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM field_option_values WHERE field_option_id = @fieldOptionId;
+
+-- Converting Identity Types
+DROP TABLE IF EXISTS `identity_types`;
+CREATE TABLE IF NOT EXISTS `identity_types` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `order` int(3) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `editable` int(1) NOT NULL DEFAULT '1',
+  `default` int(1) NOT NULL DEFAULT '0',
+  `international_code` varchar(50) DEFAULT NULL,
+  `national_code` varchar(50) DEFAULT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `modified_user_id` (`modified_user_id`),
+  INDEX `created_user_id` (`created_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+SELECT `id` INTO @fieldOptionId FROM `field_options` WHERE `code` = 'IdentityTypes';
+UPDATE field_options SET params = '{"model":"FieldOption.IdentityTypes"}' WHERE id = @fieldOptionId;
+INSERT INTO identity_types (`id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created` ) SELECT `id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM field_option_values WHERE field_option_id = @fieldOptionId;
+
+-- Converting Languages
+DROP TABLE IF EXISTS `languages`;
+CREATE TABLE IF NOT EXISTS `languages` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `order` int(3) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `editable` int(1) NOT NULL DEFAULT '1',
+  `default` int(1) NOT NULL DEFAULT '0',
+  `international_code` varchar(50) DEFAULT NULL,
+  `national_code` varchar(50) DEFAULT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `modified_user_id` (`modified_user_id`),
+  INDEX `created_user_id` (`created_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+SELECT `id` INTO @fieldOptionId FROM `field_options` WHERE `code` = 'Languages';
+UPDATE field_options SET params = '{"model":"Languages"}' WHERE id = @fieldOptionId;
+INSERT INTO languages (`id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created` ) SELECT `id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM field_option_values WHERE field_option_id = @fieldOptionId;
+
+-- Converting License Types
+DROP TABLE IF EXISTS `license_types`;
+CREATE TABLE IF NOT EXISTS `license_types` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `order` int(3) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `editable` int(1) NOT NULL DEFAULT '1',
+  `default` int(1) NOT NULL DEFAULT '0',
+  `international_code` varchar(50) DEFAULT NULL,
+  `national_code` varchar(50) DEFAULT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `modified_user_id` (`modified_user_id`),
+  INDEX `created_user_id` (`created_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+SELECT `id` INTO @fieldOptionId FROM `field_options` WHERE `code` = 'LicenseTypes';
+UPDATE field_options SET params = '{"model":"FieldOption.LicenseTypes"}' WHERE id = @fieldOptionId;
+INSERT INTO license_types (`id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created` ) SELECT `id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM field_option_values WHERE field_option_id = @fieldOptionId;
+
+-- Converting Special Need Types
+DROP TABLE IF EXISTS `special_need_types`;
+CREATE TABLE IF NOT EXISTS `special_need_types` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `order` int(3) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `editable` int(1) NOT NULL DEFAULT '1',
+  `default` int(1) NOT NULL DEFAULT '0',
+  `international_code` varchar(50) DEFAULT NULL,
+  `national_code` varchar(50) DEFAULT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `modified_user_id` (`modified_user_id`),
+  INDEX `created_user_id` (`created_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+SELECT `id` INTO @fieldOptionId FROM `field_options` WHERE `code` = 'SpecialNeedTypes';
+UPDATE field_options SET params = '{"model":"FieldOption.SpecialNeedTypes"}' WHERE id = @fieldOptionId;
+INSERT INTO special_need_types (`id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created` ) SELECT `id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM field_option_values WHERE field_option_id = @fieldOptionId;
+
+
 -- POCOR-1905
 -- db_patches
 INSERT INTO `db_patches` VALUES ('POCOR-1905', NOW());
@@ -9,6 +159,11 @@ VALUES
 INSERT INTO `config_items` (`name`, `code`, `type`, `label`, `value`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created` )
 VALUES
 ('Has at least 1 Uppercase Character', 'password_has_uppercase', 'Password', 'Has Uppercase', '0', '0', 0 , 1 , 'Dropdown', 'yes_no', NULL , NULL , 1 , now());
+
+-- added in after test fail - 'didnt implement lowercase'
+INSERT INTO `config_items` (`name`, `code`, `type`, `label`, `value`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created` )
+VALUES
+('Has at least 1 Lowercase Character', 'password_has_lowercase', 'Password', 'Has Lowercase', '0', '0', 0 , 1 , 'Dropdown', 'yes_no', NULL , NULL , 1 , now());
 
 INSERT INTO `config_items` (`name`, `code`, `type`, `label`, `value`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created` )
 VALUES
@@ -24,6 +179,14 @@ VALUES
 INSERT INTO `db_patches` VALUES ('POCOR-2208', NOW());
 
 UPDATE labels SET field_name = 'Deletable' WHERE module = 'WorkflowSteps' AND module_name = 'Workflow -> Steps' AND field_name = 'Removable';
+
+
+-- POCOR-2540
+-- db_patches
+INSERT INTO `db_patches` VALUES ('POCOR-2540', NOW());
+
+-- add description to workflow_actions
+ALTER TABLE `workflow_actions` ADD `description` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL AFTER `name`;
 
 
 -- POCOR-2562
@@ -221,6 +384,7 @@ INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `cod
 (uuid(), 'StaffAccount', 'password', 'Institution -> Staff -> Accounts', 'New Password', NULL, NULL, 1, 1, now()),
 (uuid(), 'StaffAccount', 'retype_password', 'Institution -> Staff -> Accounts', 'Retype New Password', NULL, NULL, 1, 1, now())
 ;
+
 
 -- POCOR-2609
 -- db_patches
@@ -542,7 +706,7 @@ CALL patchOrder('student_custom_table_rows', 'student_custom_field_id');
 
 -- staff_custom_forms_fields
 CALL tmpRefTable('student_custom_forms');
-CALL patchOrder('student_custom_forms_fields', 'student_custom_field_id');
+CALL patchOrder('student_custom_forms_fields', 'student_custom_form_id');
 
 -- survey_question_choices
 CALL tmpRefTable('survey_questions');

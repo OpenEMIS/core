@@ -545,6 +545,7 @@ class ImportBehavior extends Behavior {
 		}
 	}
 
+
 /******************************************************************************************************************
 **
 ** Import Functions
@@ -1074,7 +1075,9 @@ class ImportBehavior extends Behavior {
 			
 			// skip a record column which has value defined earlier before this function is called
 			// example; openemis_no
-			if (!empty($tempRow[$columnName])) {
+			// but if the value is 0, it will still proceed
+			// example; class for importing students into an institution default value is 0
+			if (isset($tempRow[$columnName]) && !empty($tempRow[$columnName]) && $tempRow[$columnName]!==0) {
 				continue;
 			}
 			if (!empty($val)) {
@@ -1160,7 +1163,11 @@ class ImportBehavior extends Behavior {
 					$rowInvalidCodeCols[$columnName] = __('This field cannot be left empty');
 				}
 			}
-			$tempRow[$columnName] = $val;
+			$columnDescription = strtolower($mapping[$col]->description);
+			$isOptional = substr_count($columnDescription, 'optional');
+			if (!$isOptional || ($isOptional && !empty($val))) {
+				$tempRow[$columnName] = $val;
+			}
 		}
 		if ($rowPass) {
 			$rowPass = $this->dispatchEvent($this->_table, $this->eventKey('onImportModelSpecificValidation'), 'onImportModelSpecificValidation', [$references, $tempRow, $originalRow, $rowInvalidCodeCols]);
