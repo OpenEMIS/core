@@ -193,6 +193,7 @@ INSERT INTO `z_2526_config_items` SELECT * FROM `config_items` WHERE `code` = 'a
 
 UPDATE `config_items` SET `value` = 'Local' WHERE `code` = 'authentication_type' AND `type` = 'Authentication';
 
+-- POCOR-2535
 -- db_patches
 INSERT INTO `db_patches` VALUES ('PHPOE-2535', NOW());
 
@@ -340,4 +341,5 @@ ALTER TABLE `staff_position_titles`
 CHANGE COLUMN `security_role_id` `security_role_id` INT(11) NOT NULL COMMENT '' ,
 ADD INDEX `security_role_id` (`security_role_id`);
 
+-- DB Version
 UPDATE config_items SET value = '3.4.13' WHERE code = 'db_version';

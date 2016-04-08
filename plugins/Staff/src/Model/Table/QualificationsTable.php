@@ -123,12 +123,13 @@ class QualificationsTable extends AppTable {
 			$attr['noResults'] = 'false';
 			$attr['attr'] = ['placeholder' => __('Institution')];
 			$attr['url'] = ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Qualifications', 'ajaxInstitutionsAutocomplete'];
+
 		}
 		return $attr;
 	}
 
 	public function ajaxInstitutionsAutocomplete() {
-		$this->controller->autoRender = false;
+		$this->controller->autoRender = false;	
 		$this->ControllerAction->autoRender = false;
 
 		if ($this->request->is(['ajax'])) {

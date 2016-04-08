@@ -36,6 +36,7 @@ class StaffTable extends AppTable {
 			'fieldKey' => 'staff_custom_field_id',
 			'tableColumnKey' => 'staff_custom_table_column_id',
 			'tableRowKey' => 'staff_custom_table_row_id',
+			'fieldClass' => ['className' => 'StaffCustomField.StaffCustomFields'],
 			'formKey' => 'staff_custom_form_id',
 			'filterKey' => 'staff_custom_filter_id',
 			'formFieldClass' => ['className' => 'StaffCustomField.StaffCustomFormsFields'],
@@ -46,7 +47,7 @@ class StaffTable extends AppTable {
 		]);
 
 		$this->addBehavior('Excel', [
-			'excludes' => ['photo_name', 'is_student', 'is_staff', 'is_guardian'],
+			'excludes' => ['photo_name', 'is_student', 'is_staff', 'is_guardian', 'super_admin', 'date_of_death' ],
 			'filename' => 'Staff',
 			'pages' => ['view']
 		]);
@@ -73,15 +74,15 @@ class StaffTable extends AppTable {
 			'dependent' => true
 		]);
 
-		// section should never cascade delete
-		$model->hasMany('InstitutionSections', 		['className' => 'Institution.InstitutionSections', 'foreignKey' => 'staff_id']);
+		// class should never cascade delete
+		$model->hasMany('InstitutionClasses', 		['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'staff_id']);
 
 		$model->belongsToMany('Subjects', [
-			'className' => 'Institution.InstitutionClass',
-			'joinTable' => 'institution_class_staff',
+			'className' => 'Institution.InstitutionSubject',
+			'joinTable' => 'institution_subject_staff',
 			'foreignKey' => 'staff_id',
-			'targetForeignKey' => 'institution_class_id',
-			'through' => 'Institution.InstitutionClassStaff',
+			'targetForeignKey' => 'institution_subject_id',
+			'through' => 'Institution.InstitutionSubjectStaff',
 			'dependent' => true
 		]);
 
@@ -188,9 +189,9 @@ class StaffTable extends AppTable {
 
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
 		$process = function($model, $id, $options) {
-			// sections are not to be deleted (cascade delete is not set and need to change id)
-			$InstitutionSections = TableRegistry::get('Institution.InstitutionSections');
-			$InstitutionSections->updateAll(
+			// classes are not to be deleted (cascade delete is not set and need to change id)
+			$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+			$InstitutionClasses->updateAll(
 					['staff_id' => 0],
 					['staff_id' => $id]
 				);
@@ -277,4 +278,25 @@ class StaffTable extends AppTable {
 		return $params;
 	}
 
+	public function getCareerTabElements($options = []) {
+		$tabElements = [];
+		$studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+		$studentTabElements = [
+			'Employments' => ['text' => __('Employments')],
+			'Positions' => ['text' => __('Positions')],
+			'Classes' => ['text' => __('Classes')],
+			'Subjects' => ['text' => __('Subjects')],
+			'Absences' => ['text' => __('Absences')],
+			'Leaves' => ['text' => __('Leaves')],
+			'Behaviours' => ['text' => __('Behaviours')],
+			'Awards' => ['text' => __('Awards')],
+		];
+
+		$tabElements = array_merge($tabElements, $studentTabElements);
+
+		foreach ($studentTabElements as $key => $tab) {
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+		}
+		return $tabElements;
+	}
 }

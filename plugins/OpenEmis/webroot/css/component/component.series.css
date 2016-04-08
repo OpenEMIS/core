@@ -1,4 +1,4 @@
-/* SERIES v.1.0.3 */
+/* SERIES v.1.0.4 */
 
 .sort-binder {
     width: 333px;
@@ -36,7 +36,7 @@
 .sort-wrapper ul {
     padding: 1px 3px 3px 3px;
     border: 2px solid #E2E2E2;
-    height: 125px;
+    height: 125px !important;
     min-width: 160px;
     -ms-overflow-y: auto;
     overflow-y: auto;
