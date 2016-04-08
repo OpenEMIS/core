@@ -277,7 +277,7 @@ class AssessmentsTable extends ControllerActionTable {
 		$attr['attr'] = [
 			'ca-id' => 'education_grade_id',
 			'ca-on-change-target-element' => true,
-			'ca-on-change-target-element-template-url' => '/phpoe/assessment/templates/education_grade_options.html',
+			// 'ca-on-change-target-element-template-url' => '/phpoe/assessment/templates/education_grade_options.html',
 
 			'ca-on-change-element' => 'data',
 			'ca-on-change-source-url' => '/phpoe/restful/education-educationgradessubjects.json?_finder=visible&_contain=EducationSubjects&_fields=id&education_grade_id=',
