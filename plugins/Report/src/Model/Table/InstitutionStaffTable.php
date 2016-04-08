@@ -7,9 +7,12 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
+use App\Model\Traits\OptionsTrait;
 use Cake\ORM\TableRegistry;
 
 class InstitutionStaffTable extends AppTable  {
+	use OptionsTrait;
+
 	public function initialize(array $config) {
 		$this->table('institution_staff');
 		parent::initialize($config);
@@ -63,18 +66,24 @@ class InstitutionStaffTable extends AppTable  {
 			]
 		);
 
-		$query->contain(['Users.Genders', 'Institutions.Areas'])->select([
+		$query->contain(['Users.Genders', 'Institutions.Areas', 'Positions.StaffPositionTitles'])->select([
 			'openemis_no' => 'Users.openemis_no', 
 			'number' => 'Identities.number', 
 			'code' => 'Institutions.code', 
 			'gender_id' => 'Genders.name', 
 			'area_name' => 'Areas.name', 
-			'area_code' => 'Areas.code'
+			'area_code' => 'Areas.code',
+			'position_title_teaching' => 'StaffPositionTitles.type'
 		]);
 	}
 
 	public function onExcelGetFTE(Event $event, Entity $entity) {
 		return $entity->FTE*100;
+	}
+
+	public function onExcelGetPositionTitleTeaching(Event $event, Entity $entity) {
+		$yesno = $this->getSelectOptions('general.yesno');
+		return (array_key_exists($entity->position_title_teaching, $yesno))? $yesno[$entity->position_title_teaching]: '';
 	}
 
 	public function onExcelRenderAge(Event $event, Entity $entity, $attr) {
@@ -166,10 +175,18 @@ class InstitutionStaffTable extends AppTable  {
 			'key' => 'Age',
 			'field' => 'Age',
 			'type' => 'Age',
-			'label' => 'Age',
+			'label' => __('Age'),
 		];
 
 		$newFields = array_merge($extraField, $fields->getArrayCopy());
+
+		$newFields[] = [
+			'key' => 'Positions.position_title_teaching',
+			'field' => 'position_title_teaching',
+			'type' => 'string',
+			'label' => __('Teaching')
+		];
+
 		$fields->exchangeArray($newFields);
 	}
 }
