@@ -24,13 +24,10 @@ class StaffController extends AppController {
 			'SpecialNeeds'		=> ['className' => 'User.SpecialNeeds'],
 			'Awards'			=> ['className' => 'User.Awards'],
 			'Attachments'		=> ['className' => 'User.Attachments'],
-<<<<<<< HEAD
 			'Positions'			=> ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
 			'Sections'			=> ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
 			'Classes'			=> ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
-=======
 			'Qualifications'	=> ['className' => 'Staff.Qualifications'],
->>>>>>> 66363fa8f355099d7974d576e1ed72a3ae4d6888
 			'Absences'			=> ['className' => 'Staff.Absences', 'actions' => ['index', 'view']],
 			'Leaves'			=> ['className' => 'Staff.Leaves'],
 			'Behaviours'		=> ['className' => 'Staff.StaffBehaviours', 'actions' => ['index', 'view']],
@@ -66,13 +63,10 @@ class StaffController extends AppController {
 	}
 
 	// CAv4
-<<<<<<< HEAD
 	public function Qualifications() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Qualifications']); }
-=======
 	public function Positions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Positions']); }
 	public function Classes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffClasses']); }
 	public function Subjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSubjects']); }
->>>>>>> 66363fa8f355099d7974d576e1ed72a3ae4d6888
 	// End
 
 	public function beforeFilter(Event $event) {
