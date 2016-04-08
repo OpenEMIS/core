@@ -1,14 +1,32 @@
 <?php 
 namespace Institution\Model\Behavior;
 
+use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
+use Cake\Network\Request;
 
 class AbsenceBehavior extends Behavior {
 	public function initialize(array $config) {
+		$this->_table->addBehavior('User.AdvancedNameSearch');
+	}
+
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['ControllerAction.Model.index.beforePaginate'] = ['callable' => 'indexBeforePaginate', 'priority' => 5];
+		return $events;
+	}
+
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$options['auto_search'] = false;
+		$search = $this->_table->ControllerAction->getSearchKey();
+		if (!empty($search)) {
+			// function from AdvancedNameSearchBehavior
+			$query = $this->_table->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
+		}
 	}
 
 	public function getAbsenceDaysBySettings($firstDateAbsent, $lastDateAbsent, $settingWeekdays){

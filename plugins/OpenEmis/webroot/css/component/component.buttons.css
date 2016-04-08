@@ -1,4 +1,4 @@
-/* BUTTONS v.1.0.10 */
+/* BUTTONS v.1.0.11 */
 
 .btn-red,
 .btn-blue,
@@ -41,6 +41,13 @@
 
 .btn-green:hover {
     background-color: #529550 !important;
+}
+
+a.btn-red:hover,
+a.btn-blue:hover,
+a.btn-orange:hover,
+a.btn-green:hover {
+    text-decoration: none;
 }
 
 .btn.active,
@@ -208,8 +215,10 @@
     transition: all 0.3s ease;
 }
 
-.btn-single-action {
+.btn-single-action,
+.btn-single-action:hover {
     padding: 4px 10px;
+    text-decoration: none !important;
 }
 
 .btn-single-action span {

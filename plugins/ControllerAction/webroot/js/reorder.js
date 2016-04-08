@@ -54,6 +54,7 @@ var Reorder = {
 					}
 				} else {
 					Reorder.updateOrder();
+					CustomForm.updateSection();
 					SurveyForm.updateSection();
 				}
 			}
