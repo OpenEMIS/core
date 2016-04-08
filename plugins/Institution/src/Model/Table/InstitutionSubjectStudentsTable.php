@@ -4,6 +4,7 @@ namespace Institution\Model\Table;
 use ArrayObject;
 
 use Cake\Event\Event;
+use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
@@ -29,6 +30,68 @@ class InstitutionSubjectStudentsTable extends AppTable {
 			]
 		]);
 
+	}
+
+	public function findResults(Query $query, array $options) {
+		$institutionId = $options['institution_id'];
+		$classId = $options['class_id'];
+		$assessmentId = $options['assessment_id'];
+		$periodId = $options['academic_period_id'];
+		$subjectId = $options['subject_id'];
+
+		$Users = $this->Users;
+		$InstitutionSubjects = $this->InstitutionSubjects;
+		$ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+
+		$query
+			->select([
+				'uuid' => $ItemResults->aliasField('id'),
+				'marks' => $ItemResults->aliasField('marks'),
+				'assessment_period_id' => $ItemResults->aliasField('assessment_period_id'),
+				'student_id' => $this->aliasField('student_id'),
+				'openemis_no' => $Users->aliasField('openemis_no'),
+				'name' => $query->func()->concat([
+					$Users->aliasField('first_name') => 'literal',
+					" ",
+					$Users->aliasField('last_name') => 'literal'
+				]),
+				'first_name' => $Users->aliasField('first_name'),
+				'middle_name' => $Users->aliasField('middle_name'),
+				'third_name' => $Users->aliasField('third_name'),
+				'last_name' => $Users->aliasField('last_name')
+			])
+			->innerJoin(
+				[$InstitutionSubjects->alias() => $InstitutionSubjects->table()],
+				[
+					$InstitutionSubjects->aliasField('id = ') . $this->aliasField('institution_subject_id'),
+					$InstitutionSubjects->aliasField('institution_id') => $institutionId,
+					$InstitutionSubjects->aliasField('academic_period_id') => $periodId,
+					$InstitutionSubjects->aliasField('education_subject_id') => $subjectId
+				]
+			)
+			->leftJoin(
+				[$ItemResults->alias() => $ItemResults->table()],
+				[
+					$ItemResults->aliasField('student_id = ') . $this->aliasField('student_id'),
+					$ItemResults->aliasField('assessment_id') => $assessmentId,
+					$ItemResults->aliasField('institution_id') => $institutionId,
+					$ItemResults->aliasField('academic_period_id') => $periodId,
+					$ItemResults->aliasField('education_subject_id') => $subjectId
+				]
+			)
+			->where([
+				$this->aliasField('institution_class_id') => $classId
+			])
+			->group([
+				$this->aliasField('student_id'),
+				$ItemResults->aliasField('assessment_period_id')
+			])
+			->order([
+				$this->aliasField('student_id')
+			])
+			;
+
+		return $query;
 	}
 
 	public function getMaleCountBySubject($subjectId) {

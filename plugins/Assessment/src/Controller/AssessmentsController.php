@@ -13,12 +13,6 @@ class AssessmentsController extends AppController
 	public function initialize() {
 		parent::initialize();
 
-		// $this->ControllerAction->models = [
-			// 'Assessments'		=> ['className' => 'Assessment.Assessments'],
-			// 'GradingTypes'		=> ['className' => 'Assessment.AssessmentGradingTypes'],
-			// 'GradingOptions'	=> ['className' => 'Assessment.AssessmentGradingOptions'],
-			// 'Status'			=> ['className' => 'Assessment.AssessmentStatuses']
-		// ];
 		$this->loadComponent('Paginator');
     }
 

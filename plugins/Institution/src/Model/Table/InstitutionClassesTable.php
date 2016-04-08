@@ -937,5 +937,4 @@ class InstitutionClassesTable extends ControllerActionTable {
 		$multiGradeData = $this->find('list', $multiGradeOptions);
 		return $multiGradeData->toArray();
 	}
-
 }
