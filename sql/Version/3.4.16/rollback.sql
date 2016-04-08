@@ -1,3 +1,28 @@
+-- POCOR-1798
+DROP TABLE IF EXISTS `employment_types`;
+DROP TABLE IF EXISTS `extracurricular_types`;
+DROP TABLE IF EXISTS `identity_types`;
+DROP TABLE IF EXISTS `languages`;
+DROP TABLE IF EXISTS `license_types`;
+DROP TABLE IF EXISTS `special_need_types`;
+
+SELECT `id` INTO @fieldOptionId FROM `field_options` WHERE `code` = 'EmploymentTypes';
+UPDATE field_options SET params = NULL WHERE id = @fieldOptionId;
+SELECT `id` INTO @fieldOptionId FROM `field_options` WHERE `code` = 'ExtracurricularTypes';
+UPDATE field_options SET params = NULL WHERE id = @fieldOptionId;
+SELECT `id` INTO @fieldOptionId FROM `field_options` WHERE `code` = 'IdentityTypes';
+UPDATE field_options SET params = NULL WHERE id = @fieldOptionId;
+SELECT `id` INTO @fieldOptionId FROM `field_options` WHERE `code` = 'Languages';
+UPDATE field_options SET params = NULL WHERE id = @fieldOptionId;
+SELECT `id` INTO @fieldOptionId FROM `field_options` WHERE `code` = 'LicenseTypes';
+UPDATE field_options SET params = NULL WHERE id = @fieldOptionId;
+SELECT `id` INTO @fieldOptionId FROM `field_options` WHERE `code` = 'SpecialNeedTypes';
+UPDATE field_options SET params = NULL WHERE id = @fieldOptionId;
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue`='POCOR-1798';
+
+
 -- POCOR-1905
 DELETE FROM config_items WHERE code = 'password_min_length';
 DELETE FROM config_items WHERE code = 'password_has_uppercase';
@@ -12,6 +37,14 @@ UPDATE labels SET field_name = 'Removable' WHERE module = 'WorkflowSteps' AND mo
 
 -- db_patches
 DELETE FROM `db_patches` WHERE  `issue` = 'POCOR-2208';
+
+
+-- POCOR-2540
+-- drop description from workflow_actions
+ALTER TABLE `workflow_actions` DROP `description`;
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2540';
 
 
 -- POCOR-2562

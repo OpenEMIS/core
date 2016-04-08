@@ -68,7 +68,7 @@ if (isset($attr['alwaysShowOneButton'])) {
 						$downloadOnClick = "";
 					endif;
 				?>
-				<button class="btn <?= $downloadClass; ?>" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Download Template" type="reset" onclick="<?= $downloadOnClick ?>">
+				<button class="btn <?= $downloadClass; ?>" data-toggle="tooltip" data-container="body" data-placement="bottom" title="<?= __('Download Template') ?>" type="reset" onclick="<?= $downloadOnClick ?>">
 					<i class="fa kd-download"></i>
 				</button>
 				
@@ -80,7 +80,7 @@ if (isset($attr['alwaysShowOneButton'])) {
 						$importOnClick = '';
 					endif;
 				?>
-				<button class="btn <?= $importClass; ?>" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Import" type="reset" onclick="<?= $importOnClick ?>"><i class="fa kd-import"></i></button>
+				<button class="btn <?= $importClass; ?>" data-toggle="tooltip" data-container="body" data-placement="bottom" title="<?= __('Import') ?>" type="reset" onclick="<?= $importOnClick ?>"><i class="fa kd-import"></i></button>
 
 			</div>
 		<?php endif; ?>
@@ -91,8 +91,8 @@ if (isset($attr['alwaysShowOneButton'])) {
 				<span class="fileinput-filename"><?= !empty($attr['value']) ? $attr['value'] : ''; ?></span>
 			</div>
 
-			<a href="#" class="input-group-addon btn fileinput-exists btn-file-cancel" data-dismiss="fileinput" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Remove"><i class="fa fa-close"></i></a>
-			<div class="input-group-addon btn btn-default btn-file" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Browse">
+			<a href="#" class="input-group-addon btn fileinput-exists btn-file-cancel" data-dismiss="fileinput" data-toggle="tooltip" data-container="body" data-placement="bottom" title="<?=__('Remove') ?>"><i class="fa fa-close"></i></a>
+			<div class="input-group-addon btn btn-default btn-file" data-toggle="tooltip" data-container="body" data-placement="bottom" title="<?=__('Browse') ?>">
 				<span class="fileinput-new"><i class="fa fa-folder"></i></span>
 				<span class="fileinput-exists fa fa-folder"></span>
 				<input type="file" name="<?= sprintf($fieldName, $attr['model'], $attr['field']) ?>" class="fa fa-folder">

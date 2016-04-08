@@ -203,14 +203,19 @@ class HtmlFieldHelper extends Helper {
 		$field = $attr['field'];
 		if ($action == 'index' || $action == 'view') {
 			if (!empty($attr['options'])) {
-				if (array_key_exists($data->$field, $attr['options'])) {
-					$value = $attr['options'][$data->$field];
-					if (is_array($value)) {
-						$value = __($value['text']);
-					} else {
-						$value = __($value);
+				if ($data->$field === '') {
+					return '';
+				} else {
+					if (array_key_exists($data->$field, $attr['options'])) {
+						$value = $attr['options'][$data->$field];
+						if (is_array($value)) {
+							$value = __($value['text']);
+						} else {
+							$value = __($value);
+						}
 					}
 				}
+				
 			}
 			
 			if (empty($value)) {
@@ -237,8 +242,31 @@ class HtmlFieldHelper extends Helper {
 						// 	}
 						// }
 					}
+					if (!isset($attr['translate']) || (isset($attr['translate']) && !$attr['translate'])) {
+						$list = [];
+						foreach ($attr['options'] as $key => $opt) {
+							if (is_array($opt) && isset($opt['text'])) {
+								$opt['text'] = __($opt['text']);
+								$list[$key] = $opt;
+							} else if (is_array($opt)) {
+								$subList = [];
+								foreach ($opt as $k => $subOption) {
+									if (is_array($subOption) && isset($subOption['text'])) {
+										$subOption['text'] = __($subOption['text']);
+										$subList[$k] = $subOption;
+									} else {
+										$subList[$k] = __($subOption);
+									}
+								}
+								$list[__($key)] = $subList;
+							} else {
+								$list[$key] = __($opt);
+							}
+						}
+						$attr['options'] = $list;
+					}
+					$options['options'] = $attr['options'];
 				}
-				$options['options'] = $attr['options'];
 			}
 			if (isset($attr['attr'])) {
 				$options = array_merge($options, $attr['attr']);
@@ -626,10 +654,12 @@ class HtmlFieldHelper extends Helper {
 			$value = $data->$attr['field'];
 			$chosenSelectList = [];
 			if (!empty($value)) {
-				foreach ($value as $obj) {
-					$chosenSelectList[] = $obj->name;
+				if (is_array($value)) {
+					foreach ($value as $obj) {
+						$chosenSelectList[] = $obj->name;
+					}
+					$value = implode(', ', $chosenSelectList);
 				}
-				$value = implode(', ', $chosenSelectList);
 			} else {
 				$value = isset($attr['valueWhenEmpty']) ? $attr['valueWhenEmpty'] : '';
 			}

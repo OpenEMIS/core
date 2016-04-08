@@ -60,12 +60,11 @@ class SetupDropdownBehavior extends SetupBehavior {
     	}
 	}
 
-	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-    	$model = $this->_table;
-    	if ($data[$model->alias()]['field_type'] == $this->fieldTypeCode) {
-			if (isset($data[$model->alias()]['is_default']) && !empty($data[$model->alias()]['custom_field_options'])) {
-				$defaultKey = $data[$model->alias()]['is_default'];
-				$data[$model->alias()]['custom_field_options'][$defaultKey]['is_default'] = 1;
+	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
+		if (isset($data['field_type']) && $data['field_type'] == $this->fieldTypeCode) {
+			if (isset($data['is_default']) && !empty($data['custom_field_options'])) {
+				$defaultKey = $data['is_default'];
+				$data['custom_field_options'][$defaultKey]['is_default'] = 1;
 			}
 		}
 	}
