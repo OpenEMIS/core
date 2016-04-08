@@ -7,26 +7,28 @@ echo $this->element('ControllerAction.scripts');
 echo $this->Html->script('doughnutchart/Chart.min');
 echo $this->Html->script('doughnutchart/Chart.Doughnut');
 
-// ui-bootstrap
-echo $this->Html->script('app/shared/angularUI/ui-bootstrap.min');
-
 // Slider //
 echo $this->Html->script('app/shared/ngSlider/slider');
 
-// HTTP/HTTPS routing functions //
-echo $this->Html->script('app/shared/angularRoute/angular-route.min');
+// UI-Bootstrap
+echo $this->Html->script('OpenEmis.lib/angular/ui-bootstrap-tpls.min');
 
-// angular cookies functions //
-echo $this->Html->script('app/shared/angularCookies/angular-cookies.min');
+// Scrollable Tabs
+echo $this->Html->script('OpenEmis.../plugins/ng-scrolltabs/js/angular-ui-tab-scroll');
 
-// Assessments specific controller
+// Ag-Grid
+echo $this->Html->script('OpenEmis.../plugins/ng-agGrid/js/ag-grid.min');
+
+// // HTTP/HTTPS routing functions //
+// echo $this->Html->script('app/shared/angularRoute/angular-route.min');
+
+// // angular cookies functions //
+// echo $this->Html->script('app/shared/angularCookies/angular-cookies.min');
+
+// // Assessments specific controller
 // echo $this->Html->script('Assessment.administration/assessments');
-
-//Angular Controller
-echo $this->Html->script('app/app');
 
 //JS use in Core
 echo $this->Html->script('app');
 echo $this->Html->script('app.table');
 echo $this->Html->script('config');
-

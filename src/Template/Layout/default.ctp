@@ -30,13 +30,14 @@
 
 	echo $this->element('scripts');
 	echo $this->fetch('script');
-		
-	?>
 
+	$angularConfig = $this->Url->build(['plugin' => 'Angular', 'controller' => 'Angular', 'action' => 'app']);
+	?>
+	<script src="<?= $angularConfig ?>"></script>
 </head>
 <?php echo $this->element('OpenEmis.analytics') ?>
 
-<body class='fuelux' ng-app="OE_Styleguide">
+<body class='fuelux' ng-app="OE_Core">
 	
 	<?=  $this->element('OpenEmis.header'); ?>
 
