@@ -1,6 +1,8 @@
-angular.module('ca.common.svc', [])
-.service('caCommonSvc', ['$http', '$q', function ($http, $q) {
+angular.module('kd.common.svc', [])
+.service('kdCommonSvc', ['$http', '$q', function ($http, $q) {
  
+    this.baseUrl = '/';
+    this.ctrl = 'chak';
     // this.storage.options = {
     //     element1: {}
     // };
