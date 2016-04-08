@@ -37,7 +37,7 @@
 </head>
 <?php echo $this->element('OpenEmis.analytics') ?>
 
-<body class='fuelux' ng-app="OE_Core">
+<body class='fuelux' ng-app="OE_Core" ng-controller="AppCtrl">
 	
 	<?=  $this->element('OpenEmis.header'); ?>
 
