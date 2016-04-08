@@ -46,7 +46,7 @@ $institutionId = $session->read('Institution.Institutions.id');
 		</div>
 	</div>
 
-	<div ng-controller="ResultCtrl" ng-init="institution_id=<?= $institutionId; ?>">
+	<div ng-init="institution_id=<?= $institutionId; ?>">
 		<div class="scrolltabs sticky-content">
 			<scrollable-tabset show-tooltips="false" show-drop-down="false">
 				<uib-tabset justified="true">

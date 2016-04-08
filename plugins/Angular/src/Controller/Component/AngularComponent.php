@@ -39,8 +39,10 @@ class AngularComponent extends Component {
 		$session = $this->request->session();
 		$modules = $this->config('modules');
 		if ($this->resetConfig == false) {
-			$modules = $session->read('Angular.modules');
-			$session->write('Angular.modules', $this->config('modules'));
+			if ($session->check('Angular.modules')) {
+				$modules = $session->read('Angular.modules'); // use the modules in session
+			}
+			$session->delete('Angular.modules');
 		}
 		
 		$this->controller->set('ng_app', $app);
