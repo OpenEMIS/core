@@ -1,11 +1,11 @@
 <?php
 namespace Staff\Model\Table;
 
-use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use App\Model\Table\ControllerActionTable;
 
-class MembershipsTable extends AppTable {
+class MembershipsTable extends ControllerActionTable {
 	public function initialize(array $config) {
 		$this->table('staff_memberships');
 		parent::initialize($config);
