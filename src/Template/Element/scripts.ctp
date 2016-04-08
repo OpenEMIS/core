@@ -19,6 +19,10 @@ echo $this->Html->script('OpenEmis.../plugins/ng-scrolltabs/js/angular-ui-tab-sc
 // Ag-Grid
 echo $this->Html->script('OpenEmis.../plugins/ng-agGrid/js/ag-grid.min');
 
+echo $this->Html->script('app/app.ctrl');
+echo $this->Html->script('app/app.svc');
+echo $this->Html->script('app/services/app/kd.orm.svc');
+
 //JS use in Core
 echo $this->Html->script('app');
 echo $this->Html->script('app.table');

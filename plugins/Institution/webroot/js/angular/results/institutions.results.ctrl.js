@@ -1,8 +1,11 @@
-angular.module('institutions.results.ctrl', ['institutions.results.svc'])
+angular.module('institutions.results.ctrl', ['alert.svc', 'institutions.results.svc'])
 .controller('ResultCtrl', function($scope, AlertSvc, ResultSvc) {
+    $scope.message = null;
     $scope.gridOptions = null;
 
     angular.element(document).ready(function () {
+        $scope.action = 'view';
+
         // initValues
         ResultSvc.initValues($scope);
 
@@ -10,7 +13,7 @@ angular.module('institutions.results.ctrl', ['institutions.results.svc'])
         ResultSvc.getAssessment($scope).then(function(assessment) {
             $scope.assessment = assessment;
             // getSubjects
-            ResultSvc.getSubjects($scope).then(function(subjects) {
+            ResultSvc.getSubjects($scope.assessment_id).then(function(subjects) {
                 $scope.subjects = subjects;
                 // getColumnDefs
                 ResultSvc.getColumnDefs($scope).then(function(columnDefs) {
@@ -19,21 +22,22 @@ angular.module('institutions.results.ctrl', ['institutions.results.svc'])
                 }, function(error) {
                     // No Assessment Periods
                     console.log(error);
-                    AlertSvc.warning(error);
+                    AlertSvc.warning($scope, error);
                 });
             }, function(error) {
                 // No Assessment Items
                 console.log(error);
-                AlertSvc.warning(error);
+                AlertSvc.warning($scope, error);
             });
         }, function(error) {
             // No Assessment
             console.log(error);
-            AlertSvc.warning(error);
+            AlertSvc.warning($scope, error);
         });
     });
 
-    $scope.$watch('$parent.action', function(newValue, oldValue) {
+    // $scope.$watch('$parent.action', function(newValue, oldValue) {
+    $scope.$watch('action', function(newValue, oldValue) {
         if (angular.isDefined(newValue) && angular.isDefined(oldValue) && newValue != oldValue) {
             $scope.action = newValue;
             ResultSvc.switchAction($scope);
@@ -46,7 +50,7 @@ angular.module('institutions.results.ctrl', ['institutions.results.svc'])
     };
 
     $scope.reloadRowData = function(subject) {
-        AlertSvc.reset();
+        AlertSvc.reset($scope);
         $scope.subject = subject;
 
         // getRowData
@@ -58,7 +62,7 @@ angular.module('institutions.results.ctrl', ['institutions.results.svc'])
             ResultSvc.isAppendSpinner(false, 'institution-result-table');
             // No Students
             console.log(error);
-            AlertSvc.warning(error);
+            AlertSvc.warning($scope, error);
         });
     };
 
@@ -68,5 +72,23 @@ angular.module('institutions.results.ctrl', ['institutions.results.svc'])
 
     $scope.cellValueChanged = function(params) {
         ResultSvc.cellValueChanged(params, $scope);
+    };
+
+    $scope.onEditClick = function() {
+        $scope.action = 'edit';
+    };
+
+    $scope.onBackClick = function() {
+        $scope.action = 'view';
+    };
+
+    $scope.onSaveClick = function() {
+        ResultSvc.isAppendSpinner(true, 'institution-result-table');
+        ResultSvc.saveRowData($scope).then(function(_results) {
+        }, function(_errors) {
+        }).finally(function() {
+            ResultSvc.isAppendSpinner(false, 'institution-result-table');
+            $scope.action = 'view';
+        });
     };
 });

@@ -1,22 +1,25 @@
 angular.module('institutions.results.svc', [])
-.service('ResultSvc', function($q, $http, $location) {
+.service('ResultSvc', function($q, $http, $location, KdOrmSvc) {
+    var AssessmentsTable = null;
+    var AssessmentItemsTable = null;
+    var AssessmentItemResultsTable = null;
+
     return {
         initValues: function(scope) {
+
             scope.class_id = parseInt($location.search()['class_id']);
             scope.assessment_id = parseInt($location.search()['assessment_id']);
+
+            KdOrmSvc.base(scope.baseUrl);
+            AssessmentsTable = KdOrmSvc.init('Assessment.Assessments');
+            AssessmentItemsTable = KdOrmSvc.init('Assessment.AssessmentItems');
+            AssessmentItemResultsTable = KdOrmSvc.init('Assessment.AssessmentItemResults');
         },
 
         getAssessment: function(scope) {
             var deferred = $q.defer();
-            var url = scope.url('restful/Assessment-Assessments/' + scope.assessment_id + '.json');
 
-            $http({
-                method: 'GET',
-                url: url,
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                }
-            }).then(function successCallback(response) {
+            var success = function(response) {
                 if (angular.isDefined(response.data.error)) {
                     deferred.reject(response.data.error);
                 } else {
@@ -27,26 +30,21 @@ angular.module('institutions.results.svc', [])
 
                     deferred.resolve(assessment);
                 }
-            }, function errorCallback(error) {
-                deferred.reject(error);
-            }, function progressCallback(response) {
+            };
 
-            });
+            var error = function(error) {
+                deferred.reject(error);
+            };
+
+            AssessmentsTable.get(scope.assessment_id).ajax({success: success, error: error});
 
             return deferred.promise;
         },
 
-        getSubjects: function(scope) {
+        getSubjects: function(assessmentId) {
             var deferred = $q.defer();
-            var url = scope.url('restful/Assessment-AssessmentItems.json?_contain=EducationSubjects&assessment_id=' + scope.assessment_id);
 
-            $http({
-                method: 'GET',
-                url: url,
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                }
-            }).then(function successCallback(response) {
+            var success = function(response) {
                 if (angular.isDefined(response.data.error)) {
                     deferred.reject(response.data.error);
                 } else {
@@ -63,11 +61,17 @@ angular.module('institutions.results.svc', [])
                         deferred.reject('You need to configure Assessment Items first');
                     }
                 }
-            }, function errorCallback(error) {
+            };
+            var error = function(error) {
                 deferred.reject(error);
-            }, function progressCallback(response) {
+            };
 
-            });
+            AssessmentItemsTable
+            .select()
+            .contain(['EducationSubjects'])
+            .where({assessment_id: assessmentId})
+            .ajax({success: success, error: error})
+            ;
 
             return deferred.promise;
         },
@@ -221,11 +225,13 @@ angular.module('institutions.results.svc', [])
         getRowData: function(scope) {
             var deferred = $q.defer();
             scope.education_subject_id = scope.subject.id;
-            // update value in context
-            scope.gridOptions.context.education_subject_id = scope.education_subject_id;
+            if (scope.gridOptions != null) {
+                // update value in context
+                scope.gridOptions.context.education_subject_id = scope.education_subject_id;
 
-            // Always reset
-            scope.gridOptions.api.setRowData([]);
+                // Always reset
+                scope.gridOptions.api.setRowData([]);
+            }
 
             var urlStr = 'restful/Institution-InstitutionSubjectStudents.json';
             urlStr += '?_contain=Users';
@@ -338,7 +344,6 @@ angular.module('institutions.results.svc', [])
 
         saveRowData: function(scope) {
             var httpPromises = [];
-            var url = scope.url('restful/Assessment-AssessmentItemResults.json');
 
             angular.forEach(angular.element('.oe-cell-editable'), function(obj, key) {
                 var paramsContext = angular.element(obj).scope().gridOptions.context;
@@ -351,23 +356,15 @@ angular.module('institutions.results.svc', [])
                         "marks" : newValue,
                         "assessment_id" : paramsContext.assessment_id,
                         "education_subject_id" : paramsContext.education_subject_id,
-                        "student_id" : obj.attributes['oe-student'].value,
+                        "student_id" : parseInt(obj.attributes['oe-student'].value),
                         "institution_id" : paramsContext.institution_id,
                         "academic_period_id" : paramsContext.academic_period_id,
                         "assessment_period_id" : parseInt(obj.attributes['oe-period'].value)
                     };
 
-                    httpPromises.push($http({
-                        method: 'POST',
-                        url: url,
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        data: data
-                    }));
+                    httpPromises.push(AssessmentItemResultsTable.save(data));
                 }
             });
-
             return $q.all(httpPromises);
         },
 
