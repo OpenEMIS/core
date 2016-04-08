@@ -8,16 +8,16 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 
 class StudentCascadeDeleteBehavior extends Behavior {
-	private $sectionIds = [];
 	private $classIds = [];
+	private $subjectIds = [];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
-		$this->sectionIds = $this->getSectionIds($entity);
 		$this->classIds = $this->getClassIds($entity);
+		$this->subjectIds = $this->getSubjectIds($entity);
 
 		if ($this->noStudentRecords($entity, true)) { // delete only if student no longer in this grade/academic period
 			$this->deleteClassStudents($entity);
@@ -36,23 +36,23 @@ class StudentCascadeDeleteBehavior extends Behavior {
 	}
 
 	private function deleteClassStudents(Entity $entity) {
-		if (!empty($this->sectionIds)) {
-			$ClassStudents = TableRegistry::get('Institution.InstitutionSectionStudents');
+		if (!empty($this->classIds)) {
+			$ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
 			$ClassStudents->deleteAll([
 				$ClassStudents->aliasField('student_id') => $entity->student_id,
 				$ClassStudents->aliasField('education_grade_id') => $entity->education_grade_id,
-				$ClassStudents->aliasField('institution_section_id IN ') => $this->sectionIds
+				$ClassStudents->aliasField('institution_class_id IN ') => $this->classIds
 			]);
 		}
 	}
 
 	private function deleteSubjectStudents(Entity $entity) {
-		if (!empty($this->classIds)) {
-			$SubjectStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+		if (!empty($this->subjectIds)) {
+			$SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
 			$SubjectStudents->deleteAll([
 				$SubjectStudents->aliasField('student_id') => $entity->student_id,
-				$SubjectStudents->aliasField('institution_section_id IN ') => $this->sectionIds,
-				$SubjectStudents->aliasField('institution_class_id IN ') => $this->classIds
+				$SubjectStudents->aliasField('institution_class_id IN ') => $this->classIds,
+				$SubjectStudents->aliasField('institution_subject_id IN ') => $this->subjectIds
 			]);
 		}
 	}
@@ -223,16 +223,16 @@ class StudentCascadeDeleteBehavior extends Behavior {
 		return $results->isEmpty();
 	}
 
-	private function getSectionIds(Entity $entity) {
-		$Classes = TableRegistry::get('Institution.InstitutionSections');
-		$ClassGrades = TableRegistry::get('Institution.InstitutionSectionGrades');
+	private function getClassIds(Entity $entity) {
+		$Classes = TableRegistry::get('Institution.InstitutionClasses');
+		$ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
 
 		return $Classes
 			->find('list', ['keyField' => 'id', 'valueField' => 'id'])
 			->innerJoin(
 				[$ClassGrades->alias() => $ClassGrades->table()],
 				[
-					$ClassGrades->aliasField('institution_section_id = ') . $Classes->aliasField('id'),
+					$ClassGrades->aliasField('institution_class_id = ') . $Classes->aliasField('id'),
 					$ClassGrades->aliasField('education_grade_id') => $entity->education_grade_id
 				]
 			)
@@ -243,20 +243,20 @@ class StudentCascadeDeleteBehavior extends Behavior {
 			->toArray();
 	}
 
-	private function getClassIds(Entity $entity) {
-		$classIds = [];
+	private function getSubjectIds(Entity $entity) {
+		$subjectIds = [];
 
-		if (!empty($this->sectionIds)) {
-			$Subjects = TableRegistry::get('Institution.InstitutionClasses');
-			$ClassesSubjects = TableRegistry::get('Institution.InstitutionSectionClasses');
+		if (!empty($this->classIds)) {
+			$Subjects = TableRegistry::get('Institution.InstitutionSubjects');
+			$ClassesSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
 
-			$classIds = $Subjects
+			$subjectIds = $Subjects
 				->find('list', ['keyField' => 'id', 'valueField' => 'id'])
 				->innerJoin(
 					[$ClassesSubjects->alias() => $ClassesSubjects->table()],
 					[
-						$ClassesSubjects->aliasField('institution_class_id = ') . $Subjects->aliasField('id'),
-						$ClassesSubjects->aliasField('institution_section_id IN ') => $this->sectionIds
+						$ClassesSubjects->aliasField('institution_subject_id = ') . $Subjects->aliasField('id'),
+						$ClassesSubjects->aliasField('institution_class_id IN ') => $this->classIds
 					]
 				)
 				->where([
@@ -266,6 +266,6 @@ class StudentCascadeDeleteBehavior extends Behavior {
 				->toArray();
 		}
 
-		return $classIds;
+		return $subjectIds;
 	}
 }

@@ -87,7 +87,7 @@ class FieldOptionValuesTable extends AppTable {
 		$this->controller->set('selectedOption', $selectedOption);
 
 		$this->fieldOption = $this->FieldOptions->get($selectedOption);
-		if (method_exists($this->controller, $this->fieldOption->code)) {
+		if (method_exists($this->controller, $this->fieldOption->code) && $this->action != 'reorder') {
 			$params = $this->ControllerAction->paramsQuery();
 			$event->stopPropagation();
 			return $this->controller->redirect(array_merge(['action' => $this->fieldOption->code], $params));

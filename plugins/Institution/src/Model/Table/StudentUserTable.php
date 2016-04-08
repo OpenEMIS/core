@@ -14,7 +14,6 @@ use Cake\Network\Session;
 use Student\Model\Table\StudentsTable as UserTable;
 
 class StudentUserTable extends UserTable {
-
 	public function initialize(array $config) {
 		parent::initialize($config);
 	}
@@ -37,6 +36,7 @@ class StudentUserTable extends UserTable {
 		$sessionKey = 'Institution.Students.new';
 		if ($this->Session->check($sessionKey)) {
 			$academicData = $this->Session->read($sessionKey);
+			$data[$this->alias()]['academic_period_id'] = $academicData['academic_period_id'];
 			$data[$this->alias()]['education_grade_id'] = $academicData['education_grade_id'];
 		} else {
 			$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
@@ -49,10 +49,8 @@ class StudentUserTable extends UserTable {
 		if ($this->Session->check($sessionKey)) {
 			$academicData = $this->Session->read($sessionKey);
 			$academicData['student_id'] = $entity->id;
-			// $class = $academicData['class'];
-			// unset($academicData['class']);
 			$StudentStatusesTable = TableRegistry::get('Student.StudentStatuses');
-			$pendingAdmissionCode = $StudentStatusesTable->getIdByCode('PENDING_ADMISSION');
+			$pendingAdmissionCode = $StudentStatusesTable->PENDING_ADMISSION;
 			if ($academicData['student_status_id'] != $pendingAdmissionCode) {
 				$Student = TableRegistry::get('Institution.Students');
 				if (empty($academicData['student_name'])) {
@@ -75,12 +73,12 @@ class StudentUserTable extends UserTable {
 					$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
 					return $this->controller->redirect($action);
 					// if ($class > 0) {
-					// 	$sectionData = [];
-					// 	$sectionData['student_id'] = $entity->id;
-					// 	$sectionData['education_grade_id'] = $academicData['education_grade_id'];
-					// 	$sectionData['institution_section_id'] = $class;
-					// 	$InstitutionSectionStudents = TableRegistry::get('Institution.InstitutionSectionStudents');
-					// 	$InstitutionSectionStudents->autoInsertSectionStudent($sectionData);
+					// 	$classData = [];
+					// 	$classData['student_id'] = $entity->id;
+					// 	$classData['education_grade_id'] = $academicData['education_grade_id'];
+					// 	$classData['institution_class_id'] = $class;
+					// 	$InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+					// 	$InstitutionClassStudents->autoInsertClassStudent($classData);
 					// }
 				}
 				//  else {
@@ -139,6 +137,8 @@ class StudentUserTable extends UserTable {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
+		$this->Session->write('Student.Students.id', $entity->id);
+		$this->Session->write('Student.Students.name', $entity->name);
 		$this->setupTabElements($entity);
 	}
 
@@ -167,10 +167,9 @@ class StudentUserTable extends UserTable {
     	$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
 		$statuses = $InstitutionStudentsTable->StudentStatuses->findCodeList();
 		$id = $session->read('Institution.Students.id');
-		$studentStatusId = $InstitutionStudentsTable->get($id)->student_status_id;	
+		$student = $InstitutionStudentsTable->get($id);	
 		if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])) {
 			$TransferRequests = TableRegistry::get('Institution.TransferRequests');
-			$StudentPromotion = TableRegistry::get('Institution.StudentPromotion');
 			$studentData = $InstitutionStudentsTable->get($id);
 			$selectedStudent = $studentData->student_id;
 			$selectedPeriod = $studentData->academic_period_id;
@@ -179,16 +178,6 @@ class StudentUserTable extends UserTable {
 
 			// Show Transfer button only if the Student Status is Current
 			$institutionId = $session->read('Institution.Institutions.id');
-			$student = $StudentPromotion
-				->find()
-				->where([
-					$StudentPromotion->aliasField('institution_id') => $institutionId,
-					$StudentPromotion->aliasField('student_id') => $selectedStudent,
-					$StudentPromotion->aliasField('academic_period_id') => $selectedPeriod,
-					$StudentPromotion->aliasField('education_grade_id') => $selectedGrade
-				])
-				->first();
-				
 			$checkIfCanTransfer = $InstitutionStudentsTable->checkIfCanTransfer($student, $institutionId);
 			// End
 
@@ -293,9 +282,30 @@ class StudentUserTable extends UserTable {
 			unset($toolbarButtons['back']);
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$id = $this->request->query('id');
+
+			if (empty($id)) {
+				// if no url param found... query the database to find the latest one
+				// for catering redirections that do not contain institution_student_id url param - POCOR-2511
+				$securityUserId = $this->request->pass[1];
+				$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+				$institutionStudentRecord = $InstitutionStudentsTable->find()
+					->select([$InstitutionStudentsTable->aliasField('id')])
+					->where([
+						$InstitutionStudentsTable->aliasField('student_id') => $securityUserId,
+						$InstitutionStudentsTable->aliasField('institution_id') => $institutionId
+					])
+					->order($InstitutionStudentsTable->aliasField('end_date').' DESC')
+					->first()
+					;
+				$institutionStudentRecord = (!empty($institutionStudentRecord))? $institutionStudentRecord->toArray(): null;
+				$institutionStudentId = (!empty($institutionStudentRecord))? $institutionStudentRecord['id']: null;
+				$id = $institutionStudentId;
+			}
+
 			if (!empty($id)) {
 				$this->Session->write('Institution.Students.id', $id);
-			}
+			} 
+
 			$id = $this->Session->read('Institution.Students.id');
 			$StudentTable = TableRegistry::get('Institution.Students');
 			$studentId = $StudentTable->get($id)->student_id;
@@ -312,7 +322,8 @@ class StudentUserTable extends UserTable {
 			$this->addDropoutButton($buttons, $toolbarButtons, $attr, $session);
 
 		} else if ($action == 'add') {
-			$toolbarButtons['back']['url'] = $this->request->referer(true);
+			$backAction = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
+			$toolbarButtons['back']['url'] = $backAction;
 			if ($toolbarButtons->offsetExists('export')) {
 				unset($toolbarButtons['export']);
 			}

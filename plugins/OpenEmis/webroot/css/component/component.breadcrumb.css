@@ -1,4 +1,4 @@
-/* BREADCRUMB v.1.0.4 */
+/* BREADCRUMB v.1.0.5 */
 
 .breadcrumb {
     clear: both;
@@ -51,11 +51,15 @@
 .treemap-breadcrumb {
     background: none;
     margin: 2px;
-    padding: 8px 10px;
+    padding: 4px;
     height: 35px;
     font-weight: normal;
     font-size: 12px;
     vertical-align: middle;
+}
+
+.scrolltabs ul.treemap-breadcrumb {
+    border-bottom: 0 !important;
 }
 
 .treemap-breadcrumb li a,

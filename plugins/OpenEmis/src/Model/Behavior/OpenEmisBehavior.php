@@ -57,7 +57,7 @@ class OpenEmisBehavior extends Behavior {
 		
 		if ($model->action == 'index' || $model->action == 'view') {
 			$modal = [];
-			$modal['title'] = $model->alias();
+			$modal['title'] = $model->getHeader($model->alias());
 			$modal['content'] = __('All associated information related to this record will also be removed.');
 			$modal['content'] .= '<br><br>';
 			$modal['content'] .= __('Are you sure you want to delete this record?');
@@ -86,7 +86,14 @@ class OpenEmisBehavior extends Behavior {
 		// end deprecated
 
 		if (array_key_exists('toolbarButtons', $extra)) {
-			$model->controller->set('toolbarButtons', $extra['toolbarButtons']);
+			$toolbarButtons = $extra['toolbarButtons'];
+			if ($model->action == 'view' && $model->actions('remove') != 'transfer') {
+				// not checking existence of entity in $extra so that errors will be shown if entity is removed unexpectedly
+				if (array_key_exists('remove', $toolbarButtons)) {
+					$toolbarButtons['remove']['attr']['field-value'] = $extra['entity']->{$model->primaryKey()};
+				}
+			}
+			$model->controller->set('toolbarButtons', $toolbarButtons);
 		}
 		if (array_key_exists('indexButtons', $extra)) {
 			$model->controller->set('indexButtons', $extra['indexButtons']);
@@ -136,9 +143,17 @@ class OpenEmisBehavior extends Behavior {
 		$model = $this->_table;
 		if ($model->request->is('delete')) {
 			if ($extra['result']) {
-				$model->Alert->success('general.delete.success');
+				if (isset($extra['Alert']['message'])) {
+					$model->Alert->success($extra['Alert']['message']);
+				} else {
+					$model->Alert->success('general.delete.success');
+				}
 			} else {
-				$model->Alert->error('general.delete.failed');
+				if (isset($extra['Alert']['message'])) {
+					$model->Alert->error($extra['Alert']['message']);
+				} else {
+					$model->Alert->error('general.delete.failed');
+				}
 			}
 		}
 	}
@@ -174,6 +189,7 @@ class OpenEmisBehavior extends Behavior {
 			'data-placement' => 'bottom',
 			'escape' => false
 		];
+
 		$indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
 
 		$action = $model->action;
@@ -232,7 +248,7 @@ class OpenEmisBehavior extends Behavior {
 				$toolbarButtons['edit']['attr']['title'] = __('Edit');
 			}
 
-			if ($model->actions('remove') != 'transfer') {
+			if ($model->actions('remove') && $model->actions('remove') != 'transfer') {
 				$toolbarButtons['remove']['url'] = $model->url('remove');
 				$toolbarButtons['remove']['type'] = 'button';
 				$toolbarButtons['remove']['label'] = '<i class="fa fa-trash"></i>';
@@ -241,7 +257,6 @@ class OpenEmisBehavior extends Behavior {
 				$toolbarButtons['remove']['attr']['data-toggle'] = 'modal';
 				$toolbarButtons['remove']['attr']['data-target'] = '#delete-modal';
 				$toolbarButtons['remove']['attr']['field-target'] = '#recordId';
-				$toolbarButtons['remove']['attr']['field-value'] = $extra['entity']->{$model->primaryKey()};
 				$toolbarButtons['remove']['attr']['onclick'] = 'ControllerAction.fieldMapping(this)';
 			}
 		} else if ($action == 'transfer') {

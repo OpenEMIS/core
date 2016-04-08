@@ -25,20 +25,17 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\I18n\Time;
 
+use ControllerAction\Model\Traits\PickerTrait;
+
 class DatePickerBehavior extends Behavior {
+	use PickerTrait;
+
 	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
-		$format = 'Y-m-d';
 		foreach ($this->config() as $field) {
 			if (!empty($data[$field])) {
 				if (!$data[$field] instanceof Time) {
-					// to handle both d-m-y and d-m-Y because datepicker and cake doesnt validate
-					$dateObj = date_create_from_format("d-m-Y",$data[$field]);
-					if ($dateObj === false) {
-						$dateObj = date_create_from_format("d-m-y",$data[$field]);
-					}
-					if ($dateObj !== false) {
-						$data[$field] = $dateObj->format($format);
-					}
+					$convertedDate = $this->convertForDatePicker($data[$field]);
+					$data[$field] = (!empty($convertedDate))? $convertedDate: $data[$field];
 				}
 			}
 		}

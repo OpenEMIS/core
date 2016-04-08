@@ -138,5 +138,5 @@ class AdvancedNameSearchBehavior extends Behavior {
 		}
 
 		return $query;
-	}	
+	}
 }

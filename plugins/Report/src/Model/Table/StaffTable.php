@@ -26,6 +26,7 @@ class StaffTable extends AppTable  {
 			'model' => 'Staff.Staff',
 			'formFilterClass' => null,
 			'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 	}
 

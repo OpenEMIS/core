@@ -1,4 +1,4 @@
-/* IE9 v.1.0.1 */
+/* IE9 v.1.0.2 */
 html, body {
 	font-size: 12px;	
 }
@@ -248,6 +248,14 @@ label, button, input, select, textarea {
 }
 
 /* TABS */
+
 .scroll_tabs_container div.scroll_tab_inner span {
     line-height: 30px;
+}
+
+/* INPUT SELECT */
+
+.rtl .input-select-wrapper:before {
+    left: 22px !important;
+    top: 2px;    
 }
