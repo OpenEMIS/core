@@ -131,9 +131,9 @@ class QualificationsTable extends ControllerActionTable {
 		return $attr;
 	}
 
-	public function ajaxInstitutionsAutocomplete() {
-		$this->controller->autoRender = false;	
-		$this->autoRender = false;
+	public function ajaxInstitutionsAutocomplete(Event $mainEvent, ArrayObject $extra) {
+		$this->ControllerAction->autoRender = false;
+		$this->controller->autoRender = false;
 
 		if ($this->request->is(['ajax'])) {
 			$term = trim($this->request->query['term']);
@@ -152,7 +152,7 @@ class QualificationsTable extends ControllerActionTable {
 			}
 
 			echo json_encode($data);
-			die;
+			return true;
 		}
 	}
 
@@ -173,6 +173,7 @@ class QualificationsTable extends ControllerActionTable {
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
     	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	$events['ControllerAction.Model.ajaxInstitutionsAutocomplete'] = 'ajaxInstitutionsAutocomplete';
     	return $events;
     }
 
