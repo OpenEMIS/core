@@ -35,9 +35,9 @@
 				'type' => 'button',
 				'class' => 'btn btn-default',
 				'aria-expanded' => 'true',
-				'ca-on-click-element' => 'addRow',
-				'ca-on-click-source-url' => '/phpoe/Assessments/addNewAssessmentPeriod',
-				'ca-on-click-target' => 'assessment_periods',
+				'kd-on-click-element' => 'addRow',
+				'kd-on-click-source-url' => $this->Url->build('/') . 'Assessments/addNewAssessmentPeriod',
+				'kd-on-click-target' => 'assessment_periods',
 			]);
 		?>
 			<!-- <span class="loading_img margin-left-10"><img src="<?= $this->Url->build('/')?>open_emis/img/../plugins/autocomplete/img/loader.gif" plugin="false" alt=""></span> -->
@@ -64,7 +64,7 @@
 
 					<tbody id="table_assessment_periods" ca-id="assessment_periods" ca-on-click-target-element ca-on-click-target-handler="addRow" on-ready="onReadyFunction">
 						
-						<tr ng:repeat="(key, period) in clickTarget.handlers.addRow.assessment_periods">
+						<tr ng:repeat="(key, period) in onClickTargets.handlers.addRow.assessment_periods">
 
 							<td ng:repeat="(fieldname, attr) in period">
 								
@@ -78,7 +78,7 @@
 							</td>
 
 							<td>
-								<button class="btn btn-dropdown action-toggle btn-single-action" title="Delete" aria-expanded="true" type="reset" ng-click="clickTarget.removeRow('assessment_periods', key)"><i class="fa fa-trash"></i> <span><?= __('Delete')?></span></button>
+								<button class="btn btn-dropdown action-toggle btn-single-action" title="Delete" aria-expanded="true" type="reset" ng-click="onClickTargets.handlers.removeRow('assessment_periods', key)"><i class="fa fa-trash"></i> <span><?= __('Delete')?></span></button>
 							</td>
 
 						</tr>

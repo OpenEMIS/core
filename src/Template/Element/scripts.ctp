@@ -19,19 +19,13 @@ echo $this->Html->script('OpenEmis.../plugins/ng-scrolltabs/js/angular-ui-tab-sc
 // Ag-Grid
 echo $this->Html->script('OpenEmis.../plugins/ng-agGrid/js/ag-grid.min');
 
-// // HTTP/HTTPS routing functions //
-// echo $this->Html->script('app/shared/angularRoute/angular-route.min');
-
-// // angular cookies functions //
-// echo $this->Html->script('app/shared/angularCookies/angular-cookies.min');
-
-// // Assessments specific controller
-// echo $this->Html->script('Assessment.administration/assessments');
-
 echo $this->Html->script('angular/kdModule/controllers/kd.ctrl');
 echo $this->Html->script('angular/kdModule/directives/kd.drt');
 echo $this->Html->script('angular/kdModule/services/kd.common.svc');
 echo $this->Html->script('angular/kdModule/kd.module');
+
+// Assessments specific controller
+echo $this->Html->script('Assessment.angular/assessments/assessmentAdminModule');
 
 //JS use in Core
 echo $this->Html->script('app');

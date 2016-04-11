@@ -74,6 +74,11 @@ class AssessmentsTable extends ControllerActionTable {
 			'fields' => $this->AssessmentPeriods->fields,
 			'formFields' => array_keys($this->AssessmentPeriods->getFormFields($this->action))
 		]);
+		$this->field('education_grade_id', [
+			'type' => 'element',
+			'element' => 'Assessment.Assessments/education_grades',
+			'visible' => ['view'=>true, 'edit'=>true, 'add'=>true],
+		]);
 		$this->field('subject_section', ['type' => 'section', 'title' => __('Subjects'), 'visible' => ['edit'=>true, 'add'=>true]]);
 		$this->field('period_section', ['type' => 'section', 'title' => __('Periods'), 'visible' => ['edit'=>true, 'add'=>true]]);
 	}
@@ -122,9 +127,9 @@ class AssessmentsTable extends ControllerActionTable {
 		$this->field('education_programme_id', [
 			'options' => $programmeOptions,
 		]);
-		$this->field('education_grade_id', [
-			'options' => $gradeOptions
-		]);
+		// $this->field('education_grade_id', [
+		// 	'options' => $gradeOptions
+		// ]);
 		$this->field('academic_period_id', [
 			'options' => $academicPeriodOptions
 		]);
@@ -166,19 +171,19 @@ class AssessmentsTable extends ControllerActionTable {
 		$this->_setGenericPatchOptions($patchOptions, true);
 	}
 
-	public function addEditOnChangeProgramme(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
-		if (empty($requestData[$this->alias()]['education_programme_id'])) {
-			$requestData[$this->alias()]['education_grade_id'] = '';
-			$requestData[$this->alias()]['assessment_items'] = [];
-		}
-		$this->_setGenericPatchOptions($patchOptions);
-	}
+	// public function addEditOnChangeProgramme(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
+	// 	if (empty($requestData[$this->alias()]['education_programme_id'])) {
+	// 		$requestData[$this->alias()]['education_grade_id'] = '';
+	// 		$requestData[$this->alias()]['assessment_items'] = [];
+	// 	}
+	// 	$this->_setGenericPatchOptions($patchOptions);
+	// }
 
-	public function addEditOnChangeGrade(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
-		$extra['items_patched'] = true;
-		$requestData[$this->alias()]['assessment_items'] = $this->AssessmentItems->populateAssessmentItemsArray($entity, $requestData[$this->alias()]['education_grade_id']);
-		$this->_setGenericPatchOptions($patchOptions);
-	}
+	// public function addEditOnChangeGrade(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
+	// 	$extra['items_patched'] = true;
+	// 	$requestData[$this->alias()]['assessment_items'] = $this->AssessmentItems->populateAssessmentItemsArray($entity, $requestData[$this->alias()]['education_grade_id']);
+	// 	$this->_setGenericPatchOptions($patchOptions);
+	// }
 
 	public function addEditOnNewAssessmentPeriod(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
 		$extra['periods_patched'] = true;
@@ -218,10 +223,10 @@ class AssessmentsTable extends ControllerActionTable {
 			'options' => $programmeOptions,
 			'value' => $selectedProgramme,
 		]);
-		$this->field('education_grade_id', [
-			'options' => $gradeOptions,
-			'value' => $selectedGrade,
-		]);
+		// $this->field('education_grade_id', [
+		// 	'options' => $gradeOptions,
+		// 	'value' => $selectedGrade,
+		// ]);
 		// $this->field('assessment_items', [
 		// 	'type' => 'element',
 		// 	// 'element' => 'Assessment.Assessments/assessment_items',
@@ -269,20 +274,6 @@ class AssessmentsTable extends ControllerActionTable {
 			'kd-on-change-element' => true,
 			'kd-on-change-source-url' => $request->base . '/restful/education-educationgrades.json?_finder=visible,list&education_programme_id=',
 			'kd-on-change-target' => 'education_grade_id',
-		];
-		return $attr;
-	}
-
-	public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request) {
-
-		$attr['attr'] = [
-			'kd-id' => 'education_grade_id',
-			'kd-on-change-target-element' => true,
-			'kd-on-change-target-element-template-url' => $request->base . '/assessment/js/angular/templates/education_grade_options.html',
-
-			'kd-on-change-element' => 'data',
-			'kd-on-change-source-url' => $request->base . '/restful/education-educationgradessubjects.json?_finder=visible&_contain=EducationSubjects&_fields=id&education_grade_id=',
-			'kd-on-change-target' => 'assessment_items'
 		];
 		return $attr;
 	}

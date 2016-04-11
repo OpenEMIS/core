@@ -20,7 +20,8 @@ class AssessmentsController extends AppController
 			switch ($action) {
 				case 'add':
 					$this->Angular->addModules([
-						'kd.module'
+						'kd.module',
+						'assessmentAdminModule'
 					]);
 				break;
 			}
@@ -35,7 +36,7 @@ class AssessmentsController extends AppController
 		if ($model=='Assessments') {
 			switch ($action) {
 				case 'add':
-					$this->set('ngController', 'kdCtrl');
+					$this->set('ngController', 'assessmentAdminCtrl');
 				break;
 			}
 		}
