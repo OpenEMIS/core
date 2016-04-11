@@ -1,42 +1,66 @@
 angular.module('kd.common.svc', [])
 .service('kdCommonSvc', ['$http', '$q', function ($http, $q) {
  
-    this.baseUrl = '/';
-    this.ctrl = 'chak';
-    // this.storage.options = {
-    //     element1: {}
-    // };
-
-    this.init = function(scope, ctrlFunctions) {
-        // var defaultFunctions = ['changeOptions', 'func1', 'func2'];
-        // ctrlFunctions = ctrlFunctions || defaultFunctions;
-        // for (func in ctrlFunctions) {
-            scope.changeOptions = this.changeOptions(scope);  
-        // }
+    this.initController = function(scope) {
+        var removeRow = function(kdId, index) {
+            scope.onClickTargets.handlers.addRow[kdId].splice(index, 1);
+        };
+        scope['onChangeTargets'] = {};
+        scope['onClickTargets'] = {
+            'handlers': {
+                'addRow': {},
+                'removeRow': removeRow,
+                'alert': {}
+            },
+        };
     }
 
-    this.changeOptions = function(id, attr) {
-        // caCommonSvc.changeOptions($scope);
-        // var dataType = attr.caOnChangeElement;
-        // var target = attr.caOnChangeTarget;
-        // var targetUrl = attr.caOnChangeSourceUrl + id;
-        // var response = caCommonSvc.ajax({url:targetUrl});
-        // response  
-        //     .then(function(data) {
+    var self = this;
+    this.changeOptions = function(scope, id, attr) {
+        var target = attr.kdOnChangeTarget;
+        var dataType = attr.kdOnChangeElement;
+        var targetUrl = attr.kdOnChangeSourceUrl + id;
+        var response = self.ajax({url:targetUrl});
+        response  
+            .then(function(data) {
 
-        //         targetOptions = [];
-        //         if (dataType=='data') {
-        //             targetOptions = data.data;
-        //         } else {
-        //             for (var id in data.data) {
-        //                 targetOptions.push({"id":id, "name":data.data[id]});
-        //             }
-        //         }
-        //         $scope.onChangeTargets[target] = targetOptions;
-                
-        //     }, function(error) {
-        //         console.log('Failure...', error);
-        //     });
+                targetOptions = [];
+                if (dataType=='data') {
+                    targetOptions = data.data;
+                } else {
+                    for (var id in data.data) {
+                        targetOptions.push({"id":id, "name":data.data[id]});
+                    }
+                }
+                scope.onChangeTargets[target] = targetOptions;
+                if (typeof scope.onChangeTargetsCallback === 'function') {
+                    scope.onChangeTargetsCallback(target);
+                }
+
+            }, function(error) {
+                console.log('Error: ', error);
+            });
+
+    };
+
+    this.addRow = function(scope, elem, attr) {
+        var target = attr.kdOnClickTarget;
+        var targetUrl = attr.kdOnClickSourceUrl;
+        var response = self.ajax({url:targetUrl});
+        response  
+            .then(function(data) {
+                if (typeof scope.onClickTargets.handlers.addRow[target] !== 'undefined') {
+                    scope.onClickTargets.handlers.addRow[target].push(data.data);
+                } else {
+                    scope.onClickTargets.handlers.addRow[target] = [data.data];
+                }
+                if (typeof scope.onClickTargetsCallback === 'function') {
+                    scope.onClickTargetsCallback(target, 'addRow');
+                }
+            
+            }, function(error) {
+                console.log('Failure...', error);
+            });
     };
 
     this.htmlEntities = function(str) {
@@ -78,7 +102,7 @@ angular.module('kd.common.svc', [])
         return query.length ? query.substr(0, query.length - 1) : query;
     };
 
-    this.ajax = function (params) {
+    this.ajax = function (params, success, error) {
         $http.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
         var deferred = $q.defer();
         var defaultParams = {
@@ -100,28 +124,3 @@ angular.module('kd.common.svc', [])
     }
 
 }]);
-
-
-
-// CA_Controller.js
-// .inject(CA_Svc);
-// .init() { CA_Svc.init(this); }
-// // .add() { CA_Svc.add(); }
-// // .edit() { CA_Svc.edit(); }
-
-
-// CA_Svc.js
-// .add() {}
-// .edit() {}
-// .onchange() {}
-// .init(ControllerObject) {
-//     ControllerObject.add = function() {
-//         CA_Svc.add();
-//     }
-// }
-
-
-
-// Custom_Controller.js
-// .inject(CA_Svc)
-// .init() { CA_Svc.init(this); }

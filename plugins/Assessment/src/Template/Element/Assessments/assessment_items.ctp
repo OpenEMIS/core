@@ -111,10 +111,32 @@
 					</tr>
 				</thead>
 
-				<tbody id="table_assessment_items" kd-id="assessment_items" kd-on-change-target-element kd-on-change-target-element-callback kd-on-change-target-element-template-url="<?= $this->request->base ?>/assessment/js/angular/templates/subjects_list.html">
+				<tbody id="table_assessment_items">
 					
+					<tr ng:repeat="(key, item) in onChangeTargets.assessment_items">
+						<td>{{item.education_subject.code}} - {{item.education_subject.name}}</td>
+						<input type="hidden" id="assessmentitems-education-subject-id" name="Assessments[assessment_items][{{key}}][education_subject_id]" value="{{item.education_subject.id}}"/>
+						<td>
+							<div class="input-select-wrapper">
+								<select id="assessmentitems-assessment-grading-type-id" name="Assessments[assessment_items][{{key}}][assessment_grading_type_id]">
+								
+									<option value="">-- Select --</option>
+									<option ng:repeat="option in onChangeTargets.assessment_grading_type_id" value="{{option.id}}">     
+									    {{option.name}}
+									</option>
+
+								</select>
+							</div>
+						</td>
+						<td>&nbsp;</td>
+						<td>
+							<input type="text" id="assessmentitems-weight" class="form-error" name="Assessments[assessment_items][{{key}}][weight]" value=""/>
+						</td>
+						<td>&nbsp;</td>
+					</tr>
+
 				</tbody>
-				
+
 			</table>
 		</div>
 	</div>
