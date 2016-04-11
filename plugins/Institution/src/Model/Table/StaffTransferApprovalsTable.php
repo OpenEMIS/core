@@ -54,17 +54,45 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 
 	public function editOnInitialize(Event $event, Entity $entity) {
 		$this->request->data[$this->alias()]['status'] = $entity->status;
+		$this->request->data['entity'] = $entity;
+		$this->entity = $entity;
 	}
 
 	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		parent::editAfterAction($event, $entity, $extra);
 
 		$staffType = $this->StaffTypes->get($entity->staff_type_id)->name;
+		if (!($entity->start_date instanceof Time)) {
+			$entity->start_date = Time::parse($entity->start_date);
+		}
 		$startDate = $this->formatDate($entity->start_date);
-		$this->field('transfer_type');
+		
 		$this->field('staff_type_id', ['type' => 'readonly', 'attr' => ['value' => __($staffType)]]);		
 		$this->field('FTE', ['type' => 'readonly']);
 		$this->field('start_date', ['type' => 'readonly', 'attr' => ['value' => $startDate]]);
+		$this->field('transfer_type', ['select' => false]);
+
+		$staffId = $entity->staff_id;
+		// $startDate = $start;
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+
+		$InstitutionStaff = TableRegistry::get('Institution.Staff');
+		$staffRecord = $InstitutionStaff->find()
+			->where([
+				$InstitutionStaff->aliasField('institution_id') => $institutionId,
+				$InstitutionStaff->aliasField('staff_id') => $staffId,
+				'OR' => [
+					[$InstitutionStaff->aliasField('end_date').' >= ' => $startDate],
+					[$InstitutionStaff->aliasField('end_date').' IS NULL']
+				]
+			])
+			->order([$InstitutionStaff->aliasField('created') => 'DESC'])
+			->first();
+
+		$this->field('current_FTE', ['attr' => ['value' => $staffRecord->FTE], 'select' => false]);
+		$this->field('current_staff_type_id', ['attr' => ['value' => $staffRecord->staff_type_id], 'select' => false]);
+		$this->field('current_end_date', ['type' => 'date', 'value' => new Time(), 
+			'date_options' => ['startDate' => $staffRecord->start_date->format('d-m-Y'), 'endDate' => $entity->start_date]]);
 		if ($entity->status != self::NEW_REQUEST) {
 			$this->field('comment', ['attr' => [ 'disabled' => 'true']]);
 		}
@@ -76,12 +104,40 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 	}
 
 	// Approval of application
-	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra) {
 		$process = function($model, $entity) {
 			$entity->status = self::APPROVED;
 			return $model->save($entity);
 		};
 		return $process;
+	}
+
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
+		$transferType = $requestData[$this->alias()]['transfer_type'];
+		$staffId = $entity->staff_id;
+		$startDate = $entity->start_date;
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+		$InstitutionStaff = TableRegistry::get('Institution.Staff');
+		$staffRecord = $InstitutionStaff->find()
+			->where([
+				$InstitutionStaff->aliasField('institution_id') => $institutionId,
+				$InstitutionStaff->aliasField('staff_id') => $staffId,
+				'OR' => [
+					[$InstitutionStaff->aliasField('end_date').' >= ' => $startDate],
+					[$InstitutionStaff->aliasField('end_date').' IS NULL']
+				]
+			])
+			->order([$InstitutionStaff->aliasField('created') => 'DESC'])
+			->first();
+		if ($transferType == self::FULL_TRANSFER) {
+			$staffRecord->end_date = new Time($requestData[$this->alias()]['current_end_date']);
+			$InstitutionStaff->save($staffRecord);
+		} else if ($transferType == self::PARTIAL_TRANSFER){
+			$staffRecord->FTE = $requestData[$this->alias()]['current_FTE'];
+			$staffRecord->staff_type_id = $requestData[$this->alias()]['current_staff_type_id'];
+			$InstitutionStaff->save($staffRecord);
+		}
+		// pr($staffRecord);die;
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, $extra) {
@@ -163,6 +219,52 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 	public function onUpdateFieldTransferType(Event $event, array $attr, $action, Request $request) {
 		$options = [self::FULL_TRANSFER => 'Full Transfer', self::PARTIAL_TRANSFER => 'Partial Transfer'];
 		$attr['options'] = $options;
+		$attr['onChangeReload'] = true;
+		if (!isset($request->data[$this->alias()]['transfer_type'])) {
+			$request->data[$this->alias()]['transfer_type'] = key($options);	
+		}
+		
+		return $attr;
+	}
+
+	public function onUpdateFieldCurrentFTE(Event $event, array $attr, $action, Request $request) {
+		$fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
+		$transferType = $request->data[$this->alias()]['transfer_type'];
+		
+		if ($transferType == self::PARTIAL_TRANSFER) {
+			$attr['visible'] = true;
+			$attr['options'] = $fteOptions;
+			$attr['type'] = 'select';
+		} else {
+			$attr['visible'] = false;
+		}
+
+		return $attr;
+	}
+
+	public function onUpdateFieldCurrentStaffTypeId(Event $event, array $attr, $action, Request $request) {
+		$transferType = $request->data[$this->alias()]['transfer_type'];
+		
+		if ($transferType == self::PARTIAL_TRANSFER) {
+			$StaffTypes = TableRegistry::get('FieldOption.StaffTypes');
+			$options = $StaffTypes->getList()->toArray();
+			$attr['visible'] = true;
+			$attr['type'] = 'select';
+			$attr['options'] = $options;
+		} else {
+			$attr['visible'] = false;
+		}
+
+		return $attr;
+	}
+
+	public function onUpdateFieldCurrentEndDate(Event $event, array $attr, $action, Request $request) {
+		$transferType = $request->data[$this->alias()]['transfer_type'];
+		if ($transferType == self::FULL_TRANSFER) {	
+			$attr['visible'] = true;
+		} else {
+			$attr['visible'] = false;
+		}
 		return $attr;
 	}
 
