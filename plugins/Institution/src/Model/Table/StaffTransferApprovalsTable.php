@@ -15,6 +15,10 @@ use App\Model\Table\ControllerActionTable;
 use Institution\Model\Table\StaffTransfer;
 
 class StaffTransferApprovalsTable extends StaffTransfer {
+	// Transfer Type
+	const FULL_TRANSFER = 1;
+	const PARTIAL_TRANSFER = 2;
+
 	public function initialize(array $config) {
 		parent::initialize($config);
 
@@ -57,7 +61,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 
 		$staffType = $this->StaffTypes->get($entity->staff_type_id)->name;
 		$startDate = $this->formatDate($entity->start_date);
-
+		$this->field('transfer_type');
 		$this->field('staff_type_id', ['type' => 'readonly', 'attr' => ['value' => __($staffType)]]);		
 		$this->field('FTE', ['type' => 'readonly']);
 		$this->field('start_date', ['type' => 'readonly', 'attr' => ['value' => $startDate]]);
@@ -156,7 +160,11 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 		}
 	}
 
-	
+	public function onUpdateFieldTransferType(Event $event, array $attr, $action, Request $request) {
+		$options = [self::FULL_TRANSFER => 'Full Transfer', self::PARTIAL_TRANSFER => 'Partial Transfer'];
+		$attr['options'] = $options;
+		return $attr;
+	}
 
 	public function activateStaff() {
 		while (true) {
