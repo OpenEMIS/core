@@ -136,11 +136,47 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 	}
 
 	public function onGetFTE(Event $event, Entity $entity) {
-		$value = '100%';
-		if ($entity->FTE < 1) {
-			$value = ($entity->FTE * 100) . '%';
+		$oldValue = ($entity->institution_staff->FTE * 100). '%';
+		$newValue = '100%';
+		if ($entity->FTE < 1) {	
+			$newValue = ($entity->FTE * 100) . '%';
 		}
-		return $value;
+
+		if ($newValue != $oldValue) {
+			return $oldValue.' -> '.$newValue;
+		} else {
+			return $newValue;
+		}	
+	}
+
+	public function onGetStartDate(Event $event, Entity $entity) {
+		$oldValue = $entity->institution_staff->start_date;
+		$newValue = $entity->start_date;
+		if ($newValue != $oldValue) {
+			return $this->formatDate($oldValue).' -> '.$this->formatDate($newValue);
+		} else {
+			return $newValue;
+		}
+	}
+
+	public function onGetEndDate(Event $event, Entity $entity) {
+		$oldValue = $entity->institution_staff->end_date;
+		$newValue = $entity->end_date;
+		if ($newValue != $oldValue) {
+			return $this->formatDate($oldValue).' -> '.$this->formatDate($newValue);
+		} else {
+			return $newValue;
+		}
+	}
+
+	public function onGetStaffTypeId(Event $event, Entity $entity) {
+		$oldValue = $entity->institution_staff->staff_type->name;
+		$newValue = $entity->staff_type->name;
+		if ($newValue != $oldValue) {
+			return __($oldValue).' -> '.__($newValue);
+		} else {
+			return __($newValue);
+		}
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
@@ -191,6 +227,15 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 			}
 			$this->Session->delete('Institution.StaffPositionProfiles.errors');
 		}
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity, $extra) {
+		$StaffTable = TableRegistry::get('Institution.Staff');
+		$staffEntity = $StaffTable->find()
+			->contain(['StaffTypes'])
+			->where([$StaffTable->aliasField('id') => $entity->institution_staff_id])
+			->first();
+		$entity->institution_staff = $staffEntity;
 	}
 
 	private function initialiseVariable($entity) {
