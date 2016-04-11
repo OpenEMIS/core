@@ -440,6 +440,7 @@ class StaffTable extends AppTable {
 				->contain(['Institutions'])
 				->where([
 					$this->aliasField('staff_id') => $staffId,
+					$this->aliasField('institution_id'). ' <> ' => $entity->institution_id,
 					'OR' => [
 						[$this->aliasField('end_date').' >= ' => $startDate],
 						[$this->aliasField('end_date').' IS NULL']
