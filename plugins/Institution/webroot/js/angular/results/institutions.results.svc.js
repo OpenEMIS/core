@@ -1,34 +1,29 @@
 angular.module('institutions.results.svc', [])
-.service('ResultSvc', function($q, $http, $location, KdOrmSvc) {
-    var AssessmentsTable = null;
-    var AssessmentItemsTable = null;
-    var AssessmentItemResultsTable = null;
+.service('ResultSvc', function($location, $http, $q, KdOrmSvc) {
+    var models = {
+        AssessmentsTable: 'Assessment.Assessments',
+        AssessmentItemsTable: 'Assessment.AssessmentItems',
+        AssessmentPeriodsTable: 'Assessment.AssessmentPeriods',
+        AssessmentItemResultsTable: 'Assessment.AssessmentItemResults',
+        InstitutionSubjectStudentsTable: 'Institution.InstitutionSubjectStudents'
+    };
 
     return {
-        initValues: function(scope) {
-
-            scope.class_id = parseInt($location.search()['class_id']);
-            scope.assessment_id = parseInt($location.search()['assessment_id']);
-
-            KdOrmSvc.base(scope.baseUrl);
-            AssessmentsTable = KdOrmSvc.init('Assessment.Assessments');
-            AssessmentItemsTable = KdOrmSvc.init('Assessment.AssessmentItems');
-            AssessmentItemResultsTable = KdOrmSvc.init('Assessment.AssessmentItemResults');
+        init: function(baseUrl) {
+            KdOrmSvc.base(baseUrl);
+            angular.forEach(models, function(model, key) {
+                window[key] = KdOrmSvc.init(model);
+            });
         },
 
-        getAssessment: function(scope) {
+        getAssessment: function(assessmentId) {
             var deferred = $q.defer();
 
             var success = function(response) {
                 if (angular.isDefined(response.data.error)) {
                     deferred.reject(response.data.error);
                 } else {
-                    var assessment = response.data.data;
-
-                    scope.academic_period_id = assessment.academic_period_id;
-                    scope.education_grade_id = assessment.education_grade_id;
-
-                    deferred.resolve(assessment);
+                    deferred.resolve(response.data.data);
                 }
             };
 
@@ -36,7 +31,7 @@ angular.module('institutions.results.svc', [])
                 deferred.reject(error);
             };
 
-            AssessmentsTable.get(scope.assessment_id).ajax({success: success, error: error});
+            AssessmentsTable.get(assessmentId).ajax({success: success, error: error});
 
             return deferred.promise;
         },
@@ -76,183 +71,121 @@ angular.module('institutions.results.svc', [])
             return deferred.promise;
         },
 
-        getColumnDefs: function(scope) {
+        getPeriods: function(assessmentId) {
             var deferred = $q.defer();
-            var url = scope.url('restful/Assessment-AssessmentPeriods.json?assessment_id=' + scope.assessment_id);
 
-            $http({
-                method: 'GET',
-                url: url,
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                }
-            }).then(function successCallback(response) {
+            var success = function(response) {
                 if (angular.isDefined(response.data.error)) {
                     deferred.reject(response.data.error);
                 } else {
                     var periods = response.data.data;
 
                     if (angular.isObject(periods) && periods.length > 0) {
-                        scope.periods = periods;
-
-                        var filterParams = {
-                            cellHeight: 30
-                        };
-                        var columnDefs = [];
-
-                        columnDefs.push({
-                            headerName: "OpenEMIS ID",
-                            field: "openemis_id",
-                            filterParams: filterParams
-                        });
-                        columnDefs.push({
-                            headerName: "Name",
-                            field: "name",
-                            sort: 'asc',
-                            filterParams: filterParams
-                        });
-                        columnDefs.push({
-                            headerName: "student id",
-                            field: "student_id",
-                            hide: true,
-                            filterParams: filterParams
-                        });
-
-                        var renderTotal = '';
-                        angular.forEach(periods, function(period, key) {
-                            var headerName = period.name + " <span class='divider'></span> " + period.weight;
-                            var periodField = 'period_' + period.id;
-                            if (renderTotal != '') {
-                                renderTotal += ' + ';
-                            }
-                            renderTotal += 'data.' + periodField;
-
-                            var columnDef = {
-                                headerName: headerName,
-                                field: periodField,
-                                filter: 'number',
-                                cellStyle: function(params) {
-                                    if (parseInt(params.value) < 40) {
-                                        return {color: '#CC5C5C'};
-                                    } else {
-                                        return {color: '#333'};
-                                    }
-                                }
-                            };
-
-                            if (scope.action == 'edit' && period.editable) {
-                                columnDef.headerName += " <i class='fa fa-pencil-square-o fa-lg header-icon'></i>";
-                                columnDef.cellClass = 'ag-cell-highlight';
-                                // columnDef.editable = true;
-                                columnDef.cellRenderer = function(params) {
-                                    var inputElement = document.createElement("input");
-
-                                    inputElement.setAttribute('class', 'ag-cell-edit-input oe-cell-editable');
-                                    inputElement.setAttribute('type', 'number');
-                                    inputElement.setAttribute('ng-pattern', '/^[0-9]+(\.[0-9]{1,2})?$/');
-                                    inputElement.setAttribute('step', '0.01');
-                                    inputElement.setAttribute('ng-model', 'data.'+params.colDef.field);
-                                    inputElement.setAttribute('oe-student', parseInt(params.data.student_id));
-                                    inputElement.setAttribute('oe-period', period.id);
-                                    inputElement.setAttribute('oe-original', params.value);
-
-                                    return inputElement;
-                                };
-                            }
-
-                            this.push(columnDef);
-                        }, columnDefs);
-
-                        columnDefs.push({
-                            headerName: "Total",
-                            field: "total",
-                            filter: "number",
-                            cellRenderer: function(params) {
-                                return '{{' + renderTotal + '}}';
-                            },
-                            filterParams: filterParams
-                        });
-
-                        deferred.resolve(columnDefs);
+                        deferred.resolve(periods);
                     } else {
                         deferred.reject('You need to configure Assessment Periods first');
                     }
                 }
-            }, function errorCallback(error) {
-                deferred.reject(error);
-            }, function progressCallback(response) {
+            };
 
-            });
+            var error = function(error) {
+                deferred.reject(error);
+            };
+
+            AssessmentPeriodsTable
+            .select()
+            .where({assessment_id: assessmentId})
+            .ajax({success: success, error: error});
 
             return deferred.promise;
         },
 
-        initGrid: function(scope) {
-            var subjects = scope.subjects;
-            var columnDefs = scope.columnDefs;
-            var subject = subjects[0];
-
-            scope.gridOptions = {
-                context: {
-                    institution_id: scope.institution_id,
-                    class_id: scope.class_id,
-                    assessment_id: scope.assessment_id,
-                    academic_period_id: scope.academic_period_id,
-                    education_grade_id: scope.education_grade_id,
-                    education_subject_id: subject.id
-                },
-                columnDefs: columnDefs,
-                rowData: [],
-                headerHeight: 38,
-                rowHeight: 38,
-                enableColResize: true,
-                enableSorting: true,
-                unSortIcon: true,
-                enableFilter: true,
-                suppressMenuHide: true,
-                singleClickEdit: true,
-                angularCompileRows: true,
-                onCellValueChanged: function(params) {
-                    scope.cellValueChanged(params);
-                },
-                onReady: function() {
-                    scope.resizeColumns();
-                    scope.reloadRowData(subject);
-                }
+        getColumnDefs: function(action, periods) {
+            var filterParams = {
+                cellHeight: 30
             };
+            var columnDefs = [];
+
+            columnDefs.push({
+                headerName: "OpenEMIS ID",
+                field: "openemis_id",
+                filterParams: filterParams
+            });
+            columnDefs.push({
+                headerName: "Name",
+                field: "name",
+                sort: 'asc',
+                filterParams: filterParams
+            });
+            columnDefs.push({
+                headerName: "student id",
+                field: "student_id",
+                hide: true,
+                filterParams: filterParams
+            });
+
+            var renderTotal = '';
+            angular.forEach(periods, function(period, key) {
+                var headerName = period.name + " <span class='divider'></span> " + period.weight;
+                var periodField = 'period_' + period.id;
+                if (renderTotal != '') {
+                    renderTotal += ' + ';
+                }
+                renderTotal += 'data.' + periodField;
+
+                var columnDef = {
+                    headerName: headerName,
+                    field: periodField,
+                    filter: 'number',
+                    cellStyle: function(params) {
+                        if (parseInt(params.value) < 40) {
+                            return {color: '#CC5C5C'};
+                        } else {
+                            return {color: '#333'};
+                        }
+                    }
+                };
+
+                if (action == 'edit' && period.editable) {
+                    columnDef.headerName += " <i class='fa fa-pencil-square-o fa-lg header-icon'></i>";
+                    columnDef.cellClass = 'ag-cell-highlight';
+                    // columnDef.editable = true;
+                    columnDef.cellRenderer = function(params) {
+                        var inputElement = document.createElement("input");
+
+                        inputElement.setAttribute('class', 'ag-cell-edit-input oe-cell-editable');
+                        inputElement.setAttribute('type', 'number');
+                        inputElement.setAttribute('ng-pattern', '/^[0-9]+(\.[0-9]{1,2})?$/');
+                        inputElement.setAttribute('step', '0.01');
+                        inputElement.setAttribute('ng-model', 'data.'+params.colDef.field);
+                        inputElement.setAttribute('oe-student', parseInt(params.data.student_id));
+                        inputElement.setAttribute('oe-period', period.id);
+                        inputElement.setAttribute('oe-original', params.value);
+
+                        return inputElement;
+                    };
+                }
+
+                this.push(columnDef);
+            }, columnDefs);
+
+            columnDefs.push({
+                headerName: "Total",
+                field: "total",
+                filter: "number",
+                cellRenderer: function(params) {
+                    return '{{' + renderTotal + '}}';
+                },
+                filterParams: filterParams
+            });
+
+            return columnDefs;
         },
 
-        getRowData: function(scope) {
+        getRowData: function(institutionId, classId, assessmentId, academicPeriodId, educationSubjectId) {
             var deferred = $q.defer();
-            scope.education_subject_id = scope.subject.id;
-            if (scope.gridOptions != null) {
-                // update value in context
-                scope.gridOptions.context.education_subject_id = scope.education_subject_id;
 
-                // Always reset
-                scope.gridOptions.api.setRowData([]);
-            }
-
-            var urlStr = 'restful/Institution-InstitutionSubjectStudents.json';
-            urlStr += '?_contain=Users';
-            urlStr += '&_finder=Results[';
-                urlStr += 'institution_id:' + scope.institution_id;
-                urlStr += ';class_id:' + scope.class_id;
-                urlStr += ';assessment_id:' + scope.assessment_id;
-                urlStr += ';academic_period_id:' + scope.academic_period_id;
-                urlStr += ';subject_id:' + scope.education_subject_id;
-            urlStr += ']';
-            urlStr += '&institution_class_id=' + scope.class_id;
-
-            var url = scope.url(urlStr);
-
-            $http({
-                method: 'GET',
-                url: url,
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                }
-            }).then(function successCallback(response) {
+            var success = function(response) {
                 if (angular.isDefined(response.data.error)) {
                     deferred.reject(response.data.error);
                 } else {
@@ -263,6 +196,7 @@ angular.module('institutions.results.svc', [])
                         var currentStudentId = null;
                         var studentResults = {};
                         var rowData = [];
+
                         angular.forEach(subjectStudents, function(subjectStudent, key) {
                             currentStudentId = parseInt(subjectStudent.student_id);
 
@@ -281,7 +215,7 @@ angular.module('institutions.results.svc', [])
                             }
                             var marks = parseFloat(subjectStudent.marks);
                             if (!isNaN(marks)) {
-            				    studentResults['period_' + parseInt(subjectStudent.assessment_period_id)] = marks;
+                                studentResults['period_' + parseInt(subjectStudent.assessment_period_id)] = marks;
                             }
                         }, rowData);
 
@@ -294,11 +228,25 @@ angular.module('institutions.results.svc', [])
                         deferred.reject('No Students');
                     }
                 }
-            }, function errorCallback(error) {
-                deferred.reject(error);
-            }, function progressCallback(response) {
+            };
 
-            });
+            var error = function(error) {
+                deferred.reject(error);
+            };
+
+            InstitutionSubjectStudentsTable
+            .select()
+            .contain(['Users'])
+            .find('Results', {
+                institution_id: institutionId,
+                class_id: classId,
+                assessment_id: assessmentId,
+                academic_period_id: academicPeriodId,
+                subject_id: educationSubjectId
+            })
+            .where({institution_class_id: classId})
+            .ajax({success: success, error: error})
+            ;
 
             return deferred.promise;
         },
@@ -342,39 +290,33 @@ angular.module('institutions.results.svc', [])
             return deferred.promise;
         },
 
-        saveRowData: function(scope) {
+        saveRowData: function(assessmentId, educationSubjectId, institutionId, academicPeriodId) {
             var httpPromises = [];
 
             angular.forEach(angular.element('.oe-cell-editable'), function(obj, key) {
-                var paramsContext = angular.element(obj).scope().gridOptions.context;
-
                 var oldValue = obj.attributes['oe-original'].value;
                 var newValue = (obj.value.length > 0) ? parseFloat(obj.value) : null;
 
                 if (!isNaN(newValue) && (oldValue == 'undefined' && newValue != null) || (oldValue != 'undefined' && oldValue != newValue)) {
                     var data = {
                         "marks" : newValue,
-                        "assessment_id" : paramsContext.assessment_id,
-                        "education_subject_id" : paramsContext.education_subject_id,
+                        "assessment_id" : assessmentId,
+                        "education_subject_id" : educationSubjectId,
+                        "institution_id" : institutionId,
+                        "academic_period_id" : academicPeriodId,
                         "student_id" : parseInt(obj.attributes['oe-student'].value),
-                        "institution_id" : paramsContext.institution_id,
-                        "academic_period_id" : paramsContext.academic_period_id,
                         "assessment_period_id" : parseInt(obj.attributes['oe-period'].value)
                     };
 
                     httpPromises.push(AssessmentItemResultsTable.save(data));
                 }
             });
+
             return $q.all(httpPromises);
         },
 
-        switchAction: function(scope) {
-            this.getColumnDefs(scope).then(function(columnDefs) {
-                if (scope.gridOptions != null) {
-                    scope.gridOptions.api.setColumnDefs(columnDefs);
-                    scope.resizeColumns();
-                }
-            });
+        requestQuery: function(key) {
+            return parseInt($location.search()[key]);
         },
 
         isAppendSpinner: function(_isAppend, _querySelector) {
