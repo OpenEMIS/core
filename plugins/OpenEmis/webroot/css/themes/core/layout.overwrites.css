@@ -155,3 +155,52 @@ a.btn-green:hover {
 .rtl .nav-level-1 a {
     padding: 10px 10px 10px 25px !important;
 }
+
+/* Quick Fix for Breadcrumb */
+
+.treemap-breadcrumb li {
+    line-height: 30px;
+    white-space: nowrap;
+}
+
+.treemap-breadcrumb > li + li::before {
+    margin: 4px !important;
+}
+
+.treemap-breadcrumb li a,
+.treemap-breadcrumb li a:hover,
+.treemap-breadcrumb li a:focus {
+    margin: 0 4px;
+}
+
+.rtl .treemap-breadcrumb {
+    font-size: 14px;
+}
+
+.rtl .treemap-breadcrumb > li:after {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.rtl .treemap-breadcrumb > li.active {
+    padding: 0 4px;
+}
+
+.rtl .treemap-breadcrumb li a,
+.rtl .treemap-breadcrumb li a:hover,
+.rtl .treemap-breadcrumb li a:focus {
+    margin: 0 0 0 4px;
+}
+
+p,
+a,
+span,
+.breadcrumb.panel-breadcrumb li {
+    unicode-bidi: plaintext;
+}
+
+@media only screen and (max-width: 800px) {
+    .treemap-breadcrumb {
+        height: auto;
+    }
+}
