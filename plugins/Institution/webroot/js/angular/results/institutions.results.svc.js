@@ -46,9 +46,16 @@ angular.module('institutions.results.svc', [])
                     var items = response.data.data;
 
                     if (angular.isObject(items) && items.length > 0) {
+                        var educationSubject = null;
+
                         var subjects = [];
                         angular.forEach(items, function(item, key) {
-                            this.push(item.education_subject);
+                            educationSubject = item.education_subject;
+                            educationSubject.pass_mark = item.grading_type.pass_mark;
+                            educationSubject.max = item.grading_type.max;
+                            educationSubject.result_type = item.grading_type.result_type;
+
+                            this.push(educationSubject);
                         }, subjects);
 
                         deferred.resolve(subjects);
@@ -63,7 +70,7 @@ angular.module('institutions.results.svc', [])
 
             AssessmentItemsTable
             .select()
-            .contain(['EducationSubjects'])
+            .contain(['EducationSubjects', 'GradingTypes'])
             .where({assessment_id: assessmentId})
             .ajax({success: success, error: error})
             ;
@@ -100,7 +107,7 @@ angular.module('institutions.results.svc', [])
             return deferred.promise;
         },
 
-        getColumnDefs: function(action, periods) {
+        getColumnDefs: function(action, subject, periods) {
             var filterParams = {
                 cellHeight: 30
             };
@@ -124,21 +131,17 @@ angular.module('institutions.results.svc', [])
                 filterParams: filterParams
             });
 
-            var renderTotal = '';
             angular.forEach(periods, function(period, key) {
                 var headerName = period.name + " <span class='divider'></span> " + period.weight;
                 var periodField = 'period_' + period.id;
-                if (renderTotal != '') {
-                    renderTotal += ' + ';
-                }
-                renderTotal += 'data.' + periodField;
+                var weightField = 'weight_' + period.id;
 
                 var columnDef = {
                     headerName: headerName,
                     field: periodField,
                     filter: 'number',
                     cellStyle: function(params) {
-                        if (parseInt(params.value) < 40) {
+                        if (parseFloat(params.value) < subject.pass_mark) {
                             return {color: '#CC5C5C'};
                         } else {
                             return {color: '#333'};
@@ -149,7 +152,6 @@ angular.module('institutions.results.svc', [])
                 if (action == 'edit' && period.editable) {
                     columnDef.headerName += " <i class='fa fa-pencil-square-o fa-lg header-icon'></i>";
                     columnDef.cellClass = 'ag-cell-highlight';
-                    // columnDef.editable = true;
                     columnDef.cellRenderer = function(params) {
                         var inputElement = document.createElement("input");
 
@@ -167,6 +169,13 @@ angular.module('institutions.results.svc', [])
                 }
 
                 this.push(columnDef);
+
+                columnDefs.push({
+                    headerName: "weight of " + period.id,
+                    field: weightField,
+                    hide: true,
+                    filterParams: filterParams
+                });
             }, columnDefs);
 
             columnDefs.push({
@@ -174,7 +183,7 @@ angular.module('institutions.results.svc', [])
                 field: "total",
                 filter: "number",
                 cellRenderer: function(params) {
-                    return '{{' + renderTotal + '}}';
+                    return '{{renderTotal(data)}}';
                 },
                 filterParams: filterParams
             });
@@ -182,7 +191,7 @@ angular.module('institutions.results.svc', [])
             return columnDefs;
         },
 
-        getRowData: function(institutionId, classId, assessmentId, academicPeriodId, educationSubjectId) {
+        getRowData: function(periods, institutionId, classId, assessmentId, academicPeriodId, educationSubjectId) {
             var deferred = $q.defer();
 
             var success = function(response) {
@@ -216,6 +225,8 @@ angular.module('institutions.results.svc', [])
                             var marks = parseFloat(subjectStudent.marks);
                             if (!isNaN(marks)) {
                                 studentResults['period_' + parseInt(subjectStudent.assessment_period_id)] = marks;
+                                // to-do: get weight from periods
+                                studentResults['weight_' + parseInt(subjectStudent.assessment_period_id)] = 1;
                             }
                         }, rowData);
 
