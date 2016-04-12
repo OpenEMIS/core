@@ -177,6 +177,10 @@ a.btn-green:hover {
     font-size: 14px;
 }
 
+.rtl .treemap-breadcrumb li {
+    line-height: 25px;
+}
+
 .rtl .treemap-breadcrumb > li:after {
     margin: 0 !important;
     padding: 0 !important;
