@@ -12,6 +12,16 @@ CREATE TABLE `staff_statuses` (
 INSERT INTO `staff_statuses` (`id`, `code`, `name`) VALUES (1, 'ASSIGNED', 'Assigned');
 INSERT INTO `staff_statuses` (`id`, `code`, `name`) VALUES (2, 'END_OF_ASSIGNMENT', 'End of Assignment');
 
+CREATE TABLE `staff_change_types` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `code` VARCHAR(50) NOT NULL,
+  `name` VARCHAR(50) NOT NULL,
+  PRIMARY KEY (`id`));
+
+INSERT INTO `staff_change_types` (`id`, `code`, `name`) VALUES (1, 'END_OF_ASSIGNMENT', 'End of Assignment');
+INSERT INTO `staff_change_types` (`id`, `code`, `name`) VALUES (2, 'CHANGE_IN_FTE', 'Change in FTE');
+INSERT INTO `staff_change_types` (`id`, `code`, `name`) VALUES (3, 'CHANGE_IN_STAFF_TYPE', 'Change in Staff Type');
+
 CREATE TABLE `z_2172_institution_staff` LIKE `institution_staff`;
 
 INSERT INTO `z_2172_institution_staff`
@@ -29,6 +39,7 @@ UPDATE `field_options` SET `visible`='0' WHERE `plugin` = 'FieldOption' AND `cod
 CREATE TABLE `institution_staff_position_profiles` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `institution_staff_id` int(11) NOT NULL,
+  `staff_change_type_id` int(11) NOT NULL,
   `status_id` int(11) NOT NULL,
   `FTE` decimal(5,2) DEFAULT NULL,
   `start_date` date NOT NULL,
