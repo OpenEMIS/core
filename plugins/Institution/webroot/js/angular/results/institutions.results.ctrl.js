@@ -47,7 +47,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
     $scope.$watch('action', function(newValue, oldValue) {
         if (angular.isDefined(newValue) && angular.isDefined(oldValue) && newValue != oldValue) {
             $scope.action = newValue;
-            $scope.resetColumnDefs($scope.action, $scope.periods);
+            $scope.resetColumnDefs($scope.action, $scope.subject, $scope.periods);
         }
     });
 
@@ -62,7 +62,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
                 education_subject_id: 0
             },
             columnDefs: [],
-            rowData: null,
+            rowData: [],
             headerHeight: 38,
             rowHeight: 38,
             enableColResize: true,
@@ -78,8 +78,8 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
         };
     };
 
-    $scope.resetColumnDefs = function(action, periods) {
-        var columnDefs = InstitutionsResultsSvc.getColumnDefs(action, periods);
+    $scope.resetColumnDefs = function(action, subject, periods) {
+        var columnDefs = InstitutionsResultsSvc.getColumnDefs(action, subject, periods);
         if ($scope.gridOptions != null) {
             $scope.gridOptions.api.setColumnDefs(columnDefs);
             $scope.gridOptions.api.refreshView();
@@ -95,7 +95,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
             // update value in context
             $scope.gridOptions.context.education_subject_id = subject.id;
             // Always reset
-            $scope.gridOptions.api.setRowData(null);
+            $scope.gridOptions.api.setRowData([]);
         }
 
         UtilsSvc.isAppendSpinner(true, 'institution-result-table');
@@ -103,9 +103,9 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
         InstitutionsResultsSvc.getPeriods($scope.assessment_id)
         .then(function(periods) {
             $scope.periods = periods;
-            $scope.resetColumnDefs($scope.action, $scope.periods);
+            $scope.resetColumnDefs($scope.action, $scope.subject, $scope.periods);
 
-            return InstitutionsResultsSvc.getRowData($scope.institution_id, $scope.class_id, $scope.assessment_id, $scope.academic_period_id, $scope.education_subject_id);
+            return InstitutionsResultsSvc.getRowData($scope.periods, $scope.institution_id, $scope.class_id, $scope.assessment_id, $scope.academic_period_id, $scope.education_subject_id);
         }, function(error) {
             // No Assessment Periods
             console.log(error);
@@ -124,6 +124,20 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
         });
     };
 
+    $scope.renderTotal = function(data, totalWeight) {
+        // to-do: dynamic value
+        var total = 0;
+        if (!isNaN(parseFloat(data.period_1)) && !isNaN(parseFloat(data.weight_1))) {
+            total += (data.period_1 * data.weight_1);
+        }
+
+        if (!isNaN(parseFloat(data.period_2)) && !isNaN(parseFloat(data.weight_2))) {
+            total += (data.period_2 * data.weight_2);
+        }
+
+        return total;
+    };
+
     $scope.onEditClick = function() {
         $scope.action = 'edit';
     };
@@ -133,18 +147,25 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
     };
 
     $scope.onSaveClick = function() {
-        UtilsSvc.isAppendSpinner(true, 'institution-result-table');
+        if ($scope.gridOptions != null) {
+            UtilsSvc.isAppendSpinner(true, 'institution-result-table');
 
-        var assessmentId = $scope.gridOptions.context.assessment_id;
-        var educationSubjectId = $scope.gridOptions.context.education_subject_id;
-        var institutionId = $scope.gridOptions.context.institution_id;
-        var academicPeriodId = $scope.gridOptions.context.academic_period_id;
+            var assessmentId = $scope.gridOptions.context.assessment_id;
+            var educationSubjectId = $scope.gridOptions.context.education_subject_id;
+            var institutionId = $scope.gridOptions.context.institution_id;
+            var academicPeriodId = $scope.gridOptions.context.academic_period_id;
 
-        InstitutionsResultsSvc.saveRowData(assessmentId, educationSubjectId, institutionId, academicPeriodId)
-        .then(function(response) {}, function(error) {})
-        .finally(function() {
-            UtilsSvc.isAppendSpinner(false, 'institution-result-table');
+            InstitutionsResultsSvc.saveRowData(assessmentId, educationSubjectId, institutionId, academicPeriodId)
+            .then(function(response) {
+            }, function(error) {
+                console.log(error);
+            })
+            .finally(function() {
+                UtilsSvc.isAppendSpinner(false, 'institution-result-table');
+                $scope.action = 'view';
+            });
+        } else {
             $scope.action = 'view';
-        });
+        }
     };
 });
