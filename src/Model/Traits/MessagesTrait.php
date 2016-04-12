@@ -408,6 +408,9 @@ trait MessagesTrait {
 			'confirmRequest' => 'By clicking save, a transfer request will be sent to the school for approval',
 			'errorApproval' => 'Record cannot be assigned due to errors encountered',
 		],
+		'StaffTransferApprovals' => [
+			'transferType' => 'Please select the transfer type.'
+		],
 		'UndoStudentStatus' => [
 			'noGrades' => 'No Available Grades',
 			'noStudents' => 'No Available Students',
