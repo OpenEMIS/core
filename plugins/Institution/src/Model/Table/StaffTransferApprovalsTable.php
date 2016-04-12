@@ -82,7 +82,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 				$InstitutionStaff->aliasField('institution_id') => $institutionId,
 				$InstitutionStaff->aliasField('staff_id') => $staffId,
 				'OR' => [
-					[$InstitutionStaff->aliasField('end_date').' >= ' => $startDate],
+					[$InstitutionStaff->aliasField('end_date').' >= ' => $entity->start_date],
 					[$InstitutionStaff->aliasField('end_date').' IS NULL']
 				]
 			])
@@ -308,5 +308,17 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 
 		$event->stopPropagation();
 		return $this->controller->redirect(['plugin' => $plugin, 'controller' => $controller, 'action' => $action]);
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity, $extra) {
+		$toolbarButtons = $extra['toolbarButtons'];
+		if ($entity->status == self::APPROVED) {
+			if (isset($toolbarButtons['edit'])) {
+				unset($toolbarButtons['edit']);
+			}
+			if (isset($toolbarButtons['remove'])) {
+				unset($toolbarButtons['remove']);
+			}
+		}
 	}
 }
