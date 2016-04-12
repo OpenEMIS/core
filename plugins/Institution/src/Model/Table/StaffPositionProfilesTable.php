@@ -141,6 +141,10 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		return $newEntity;
 	}
 
+	private function getStyling($oldValue, $newValue) {
+		return '<span class="status past">'.$oldValue.'</span> <span class="transition-arrow"></span> <span class="status highlight">'.$newValue.'</span>';
+	}
+
 	public function onGetFTE(Event $event, Entity $entity) {
 		if ($this->action == 'view') {
 			$oldValue = ($entity->institution_staff->FTE * 100). '%';
@@ -150,7 +154,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 			}
 	
 			if ($newValue != $oldValue) {
-				return '<span class="status past">'.$oldValue.'</span> <span class="transition-arrow"></span> <span class="status highlight">'.$newValue.'</span>';
+				return $this->getStyling($oldValue, $newValue);
 			} else {
 				return $newValue;
 			}	
@@ -162,7 +166,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 			$oldValue = $entity->institution_staff->start_date;
 			$newValue = $entity->start_date;
 			if ($newValue != $oldValue) {
-				return '<span class="status past">'.$this->formatDate($oldValue).'</span> <span class="transition-arrow"></span> <span class="status highlight">'.$this->formatDate($newValue).'</span>';
+				return $this->getStyling($this->formatDate($oldValue), $this->formatDate($newValue));
 			} else {
 				return $newValue;
 			}
@@ -175,9 +179,9 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 			$newValue = $entity->end_date;
 			if ($newValue != $oldValue) {
 				if (!empty($oldValue)) {
-					return '<span class="status past">'.$this->formatDate($oldValue).'</span> <span class="transition-arrow"></span> <span class="status highlight">'.$this->formatDate($newValue).'</span>';
+					return $this->getStyling($this->formatDate($oldValue), $this->formatDate($newValue));
 				} else {
-					return '<span class="status past">'.__('Not Specified').'</span> <span class="transition-arrow"></span> <span class="status highlight">'.$this->formatDate($newValue).'</span>';
+					return $this->getStyling(__('Not Specified'), $this->formatDate($newValue));
 				}
 			} else {
 				return $newValue;
@@ -190,7 +194,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 			$oldValue = $entity->institution_staff->staff_type->name;
 			$newValue = $entity->staff_type->name;
 			if ($newValue != $oldValue) {
-				return '<span class="status past">'.__($oldValue).'</span> <span class="transition-arrow"></span> <span class="status highlight">'.__($newValue).'</span>';
+				return $this->getStyling(__($oldValue), __($newValue));
 			} else {
 				return __($newValue);
 			}
