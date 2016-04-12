@@ -142,50 +142,58 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 	}
 
 	public function onGetFTE(Event $event, Entity $entity) {
-		$oldValue = ($entity->institution_staff->FTE * 100). '%';
-		$newValue = '100%';
-		if ($entity->FTE < 1) {	
-			$newValue = ($entity->FTE * 100) . '%';
+		if ($this->action == 'view') {
+			$oldValue = ($entity->institution_staff->FTE * 100). '%';
+			$newValue = '100%';
+			if ($entity->FTE < 1) {	
+				$newValue = ($entity->FTE * 100) . '%';
+			}
+	
+			if ($newValue != $oldValue) {
+				return '<span class="status past">'.$oldValue.'</span> <span class="transition-arrow"></span> <span class="status highlight">'.$newValue.'</span>';
+			} else {
+				return $newValue;
+			}	
 		}
-
-		if ($newValue != $oldValue) {
-			return $oldValue.' -> '.$newValue;
-		} else {
-			return $newValue;
-		}	
 	}
 
 	public function onGetStartDate(Event $event, Entity $entity) {
-		$oldValue = $entity->institution_staff->start_date;
-		$newValue = $entity->start_date;
-		if ($newValue != $oldValue) {
-			return $this->formatDate($oldValue).' -> '.$this->formatDate($newValue);
-		} else {
-			return $newValue;
+		if ($this->action == 'view') {
+			$oldValue = $entity->institution_staff->start_date;
+			$newValue = $entity->start_date;
+			if ($newValue != $oldValue) {
+				return '<span class="status past">'.$this->formatDate($oldValue).'</span> <span class="transition-arrow"></span> <span class="status highlight">'.$this->formatDate($newValue).'</span>';
+			} else {
+				return $newValue;
+			}
 		}
 	}
 
 	public function onGetEndDate(Event $event, Entity $entity) {
-		$oldValue = $entity->institution_staff->end_date;
-		$newValue = $entity->end_date;
-		if ($newValue != $oldValue) {
-			if (!empty($oldValue)) {
-				return $this->formatDate($oldValue).' -> '.$this->formatDate($newValue);
+		if ($this->action == 'view') {
+			$oldValue = $entity->institution_staff->end_date;
+			$newValue = $entity->end_date;
+			if ($newValue != $oldValue) {
+				if (!empty($oldValue)) {
+					return '<span class="status past">'.$this->formatDate($oldValue).'</span> <span class="transition-arrow"></span> <span class="status highlight">'.$this->formatDate($newValue).'</span>';
+				} else {
+					return '<span class="status past">'.__('Not Specified').'</span> <span class="transition-arrow"></span> <span class="status highlight">'.$this->formatDate($newValue).'</span>';
+				}
 			} else {
-				return __('Not Specified').' -> '.$this->formatDate($newValue);
+				return $newValue;
 			}
-		} else {
-			return $newValue;
 		}
 	}
 
 	public function onGetStaffTypeId(Event $event, Entity $entity) {
-		$oldValue = $entity->institution_staff->staff_type->name;
-		$newValue = $entity->staff_type->name;
-		if ($newValue != $oldValue) {
-			return __($oldValue).' -> '.__($newValue);
-		} else {
-			return __($newValue);
+		if ($this->action == 'view') {
+			$oldValue = $entity->institution_staff->staff_type->name;
+			$newValue = $entity->staff_type->name;
+			if ($newValue != $oldValue) {
+				return '<span class="status past">'.__($oldValue).'</span> <span class="transition-arrow"></span> <span class="status highlight">'.__($newValue).'</span>';
+			} else {
+				return __($newValue);
+			}
 		}
 	}
 
