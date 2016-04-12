@@ -62,6 +62,10 @@ class StaffTransferRequestsTable extends StaffTransfer {
 		return $entity;
 	}
 
+	public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra) {
+		$this->request->data[$this->alias()]['status'] = $entity->status;
+	}
+
 	public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra) {
 		$url = false;
 		if ($this->Session->check('Institution.Staff.transfer')) {
@@ -118,6 +122,69 @@ class StaffTransferRequestsTable extends StaffTransfer {
 			$url = $this->url('add');
 			$url['action'] = 'Staff';
 			$buttons[1]['url'] = $url;
+		} else if ($this->action == 'edit') {
+			if ($this->request->data[$this->alias()]['status'] == self::APPROVED) {
+				$buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Assign');
+				$buttons[0]['attr'] = ['class' => 'btn btn-default btn-save', 'div' => false, 'name' => 'submit', 'value' => 'assign'];
+			}
+		}
+	}
+
+	// Assign of staff
+	public function editOnAssign(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$staffDetail = $data[$this->alias()];
+		$transferRecord = $data[$this->alias()];
+		unset($staffDetail['id']);
+		unset($staffDetail['previous_institution_id']);
+		unset($staffDetail['comment']);
+		$StaffTable = TableRegistry::get('Institution.Staff');
+		$newStaffEntity = $StaffTable->newEntity($staffDetail);
+		if ($newStaffEntity->errors()) {
+			$message = [];
+			$errors = $newStaffEntity->errors();
+			foreach ($errors as $key => $value) {
+				$msg = 'Institution.Staff.'.$key;
+				if (is_array($value)) {
+					foreach ($value as $k => $v) {
+						$message[] = $msg.'.'.$k;
+					}
+				}
+			}
+			$this->Session->write('Institution.StaffTransferRequests.errors', $message);
+		} else {
+			if ($StaffTable->save($newStaffEntity)) {
+				$transferRecord['status'] = self::CLOSED;
+				$transferEntity = $this->newEntity($transferRecord);
+				if ($this->save($transferEntity)) {
+					$url = $this->url('view');
+					$this->Session->write('Institution.StaffTransferRequests.success', true);
+					$this->controller->redirect($url);
+				}
+			}
+		}
+	}
+
+	public function editBeforeAction(Event $event, $extra) {
+		if ($this->Session->check('Institution.StaffTransferRequests.errors')) {
+			$errors = $this->Session->read('Institution.StaffTransferRequests.errors');
+			$this->Alert->error('StaffTransferRequests.errorApproval');
+			foreach ($errors as $error) {
+				$this->Alert->error($error);
+			}
+			$this->Session->delete('Institution.StaffTransferRequests.errors');
+		}
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity, $extra) {
+		if ($this->Session->check('Institution.StaffTransferRequests.success')) {
+			$this->Alert->success('general.add.success');
+			$this->Session->delete('Institution.StaffTransferRequests.success');
+		}
+		$toolbarButtons = $extra['toolbarButtons'];
+		if ($entity->status == self::APPROVED) {
+			if (isset($toolbarButtons['remove'])) {
+				unset($toolbarButtons['remove']);
+			}
 		}
 	}
 }
