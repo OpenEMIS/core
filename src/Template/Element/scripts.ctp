@@ -21,6 +21,7 @@ echo $this->Html->script('OpenEmis.../plugins/ng-agGrid/js/ag-grid.min');
 
 echo $this->Html->script('app/app.ctrl');
 echo $this->Html->script('app/app.svc');
+echo $this->Html->script('app/services/app/utils.svc');
 echo $this->Html->script('app/services/app/kd.orm.svc');
 
 //JS use in Core
