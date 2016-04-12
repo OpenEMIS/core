@@ -1,5 +1,5 @@
 /* 
-Core Overwrites: v.1.0.3
+Core Overwrites: v.1.0.4
 */
 
 
@@ -179,6 +179,7 @@ a.btn-green:hover {
 
 .rtl .treemap-breadcrumb li {
     line-height: 25px;
+    vertical-align: middle;
 }
 
 .rtl .treemap-breadcrumb > li:after {
@@ -188,6 +189,7 @@ a.btn-green:hover {
 
 .rtl .treemap-breadcrumb > li.active {
     padding: 0 4px;
+    line-height: 30px;
 }
 
 .rtl .treemap-breadcrumb li a,
