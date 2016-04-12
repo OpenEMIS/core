@@ -8,6 +8,9 @@ DROP TABLE `z_2172_institution_staff`;
 
 UPDATE `field_options` SET `visible`='1' WHERE `plugin` = 'FieldOption' AND `code` = 'StaffStatuses';
 
+-- staff_change_types
+DROP TABLE `staff_change_types`;
+
 -- institution_staff_position_profiles
 DROP TABLE `institution_staff_position_profiles`;
 
