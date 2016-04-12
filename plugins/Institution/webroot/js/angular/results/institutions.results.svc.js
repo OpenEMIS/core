@@ -1,5 +1,5 @@
 angular.module('institutions.results.svc', [])
-.service('ResultSvc', function($location, $http, $q, KdOrmSvc) {
+.service('InstitutionsResultsSvc', function($http, $q, KdOrmSvc) {
     var models = {
         AssessmentsTable: 'Assessment.Assessments',
         AssessmentItemsTable: 'Assessment.AssessmentItems',
@@ -251,47 +251,8 @@ angular.module('institutions.results.svc', [])
             return deferred.promise;
         },
 
-        cellValueChanged: function(params, scope) {
-            var field = params.colDef.field;
-            var assessmentPeriodId = field.replace('period_', '');
-
-            var data = {
-                "marks" : parseInt(params.newValue),
-                "assessment_id" : params.context.assessment_id,
-                "education_subject_id" : params.context.education_subject_id,
-                "student_id" : params.data.student_id,
-                "institution_id" : params.context.institution_id,
-                "academic_period_id" : params.context.academic_period_id,
-                "assessment_period_id" : parseInt(assessmentPeriodId)
-            };
-
-            this.setRowData(scope, data);
-        },
-
-        setRowData: function(data, scope) {
-            var deferred = $q.defer();
-            var url = scope.url('restful/Assessment-AssessmentItemResults.json');
-
-            $http({
-                method: 'POST',
-                url: url,
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                data: data
-            }).then(function successCallback(response) {
-                deferred.resolve(response.data.data);
-            }, function errorCallback(error) {
-                deferred.reject(error);
-            }, function progressCallback(response) {
-
-            });
-
-            return deferred.promise;
-        },
-
         saveRowData: function(assessmentId, educationSubjectId, institutionId, academicPeriodId) {
-            var httpPromises = [];
+            var promises = [];
 
             angular.forEach(angular.element('.oe-cell-editable'), function(obj, key) {
                 var oldValue = obj.attributes['oe-original'].value;
@@ -308,28 +269,11 @@ angular.module('institutions.results.svc', [])
                         "assessment_period_id" : parseInt(obj.attributes['oe-period'].value)
                     };
 
-                    httpPromises.push(AssessmentItemResultsTable.save(data));
+                    promises.push(AssessmentItemResultsTable.save(data));
                 }
             });
 
-            return $q.all(httpPromises);
-        },
-
-        requestQuery: function(key) {
-            return parseInt($location.search()[key]);
-        },
-
-        isAppendSpinner: function(_isAppend, _querySelector) {
-            var spinnerId = _querySelector + '-spinner';
-            var hasClass = angular.element(document.getElementById(spinnerId)).hasClass('spinner-wrapper');
-            if(_isAppend){
-                if(!hasClass){
-                    var spinnerElement = angular.element('<div id="'+ spinnerId +'" ' + 'class="spinner-wrapper"><div class="spinner-text"><div class="spinner lt-ie9"></div></div></div>');
-                    angular.element(document.getElementById(_querySelector)).prepend(spinnerElement);
-                }        
-            }else{
-                angular.element(document.getElementById(spinnerId)).remove('.spinner-wrapper');
-            }
+            return $q.all(promises);
         }
     }
 });
