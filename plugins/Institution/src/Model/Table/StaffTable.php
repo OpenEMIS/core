@@ -470,6 +470,24 @@ class StaffTable extends AppTable {
 		}
 	}
 
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+		if (!$entity->isNew() && $entity->dirty('FTE')) {
+			$newFTE = $entity->FTE;
+			$newEndDate = $entity->end_date;
+
+			$entity->FTE = $entity->getOriginal('FTE');
+			$entity->newFTE = $newFTE;
+
+			if (empty($newEndDate)) {
+				if ($entity->start_date < date('Y-m-d')) {
+					$entity->end_date = date('Y-m-d');
+				} else {
+					$entity->end_date = $entity->start_date;
+				}
+			}
+		}
+	}
+
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
 		$institutionPositionId = $entity->institution_position_id;
 		$staffId = $entity->staff_id;
@@ -496,18 +514,7 @@ class StaffTable extends AppTable {
 				unset($entity->position);
 				unset($entity->user);
 				$newEntity = $this->newEntity($entity->toArray());
-				if ($this->save($newEntity)) {
-					$url = [
-						'plugin' => 'Institution', 
-						'controller' => 'Institutions', 
-						'action' => 'Staff', 
-						'0' => 'view', 
-						'1' => $newEntity->id
-					];
-					$url = array_merge($url, $this->ControllerAction->params());
-					$event->stopPropagation();
-					return $this->controller->redirect($url);
-				}
+				$this->save($newEntity);
 			} else {
 				if (empty($entity->end_date) || $entity->end_date->isToday() || $entity->end_date->isFuture()) {
 					$this->addStaffRole($entity);
