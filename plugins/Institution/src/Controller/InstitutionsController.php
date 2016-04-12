@@ -85,7 +85,7 @@ class InstitutionsController extends AppController  {
 	// End
 
 	// AngularJS
-	public function Results() { $this->set('ngController', 'ResultCtrl'); }
+	public function Results() { $this->set('ngController', 'InstitutionsResultsCtrl'); }
 	// End	
 
 	public function beforeFilter(Event $event) {
