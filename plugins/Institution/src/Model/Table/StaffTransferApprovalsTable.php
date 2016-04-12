@@ -70,7 +70,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 		$this->field('staff_type_id', ['type' => 'readonly', 'attr' => ['value' => __($staffType)]]);		
 		$this->field('FTE', ['type' => 'readonly']);
 		$this->field('start_date', ['type' => 'readonly', 'attr' => ['value' => $startDate]]);
-		$this->field('transfer_type', ['select' => false]);
+		$this->field('transfer_type');
 
 		$staffId = $entity->staff_id;
 		// $startDate = $start;
@@ -105,14 +105,23 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 
 	// Approval of application
 	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra) {
-		$process = function($model, $entity) {
-			$entity->status = self::APPROVED;
-			return $model->save($entity);
-		};
-		return $process;
+		if (empty($data[$this->alias()]['transfer_type'])) {
+			$extra[$this->aliasField('notice')] = $this->aliasField('transferType'); 
+		} else {
+			$process = function($model, $entity) {
+				$entity->status = self::APPROVED;
+				return $model->save($entity);
+			};
+			return $process;
+		}
+		
 	}
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
+		if (isset($extra[$this->aliasField('notice')])) {
+			$this->Alert->error($extra[$this->aliasField('notice')], ['reset' => true]);
+			return $this->controller->redirect($this->url('edit'));
+		}
 		$transferType = $requestData[$this->alias()]['transfer_type'];
 		$staffId = $entity->staff_id;
 		$startDate = $entity->start_date;
@@ -137,7 +146,6 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 			$staffRecord->staff_type_id = $requestData[$this->alias()]['current_staff_type_id'];
 			$InstitutionStaff->save($staffRecord);
 		}
-		// pr($staffRecord);die;
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, $extra) {
