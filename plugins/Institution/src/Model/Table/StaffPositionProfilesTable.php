@@ -184,7 +184,11 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 					return $this->getStyling(__('Not Specified'), $this->formatDate($newValue));
 				}
 			} else {
-				return $newValue;
+				if (!empty($newValue)) {
+					return $newValue;
+				} else {
+					return __('Not Specified');
+				}
 			}
 		}
 	}
@@ -303,7 +307,11 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 				$attr['type'] = 'hidden';
 				if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
 					$entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
-					$attr['value'] = $entity->end_date->format('Y-m-d');
+					if (!empty($entity->end_date)) {
+						$attr['value'] = $entity->end_date->format('Y-m-d');	
+					} else {
+						$attr['value'] = '';
+					}
 				}
 			}
 		}
@@ -370,8 +378,8 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 	}
 
 	public function editOnInitialize(Event $event, Entity $entity) {
-		$entityClone = clone $entity;
-		$this->Session->write('Institution.StaffPositionProfiles.staffRecord', $entityClone);
+		$staffEntity = TableRegistry::get('Institution.Staff')->get($entity->institution_staff_id);
+		$this->Session->write('Institution.StaffPositionProfiles.staffRecord', $staffEntity);
 		$this->request->data[$this->alias()]['staff_change_type_id'] = $entity->staff_change_type_id;
 	}
 
