@@ -171,6 +171,7 @@ a.btn-green:hover {
 .treemap-breadcrumb li a:hover,
 .treemap-breadcrumb li a:focus {
     margin: 0 4px;
+    height: 32px;
 }
 
 .rtl .treemap-breadcrumb {
