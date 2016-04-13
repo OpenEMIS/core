@@ -26,6 +26,11 @@ class StaffTable extends AppTable {
 	private $assigned;
 	private $endOfAssignment;
 
+	const NEW_REQUEST = 0;
+	const APPROVED = 1;
+	const REJECTED = 2;
+	const CLOSED = 3;
+
 	const PENDING_PROFILE = -1;
 	const PENDING_TRANSFERIN = -2;
 	const PENDING_TRANSFEROUT = -3;
@@ -442,13 +447,28 @@ class StaffTable extends AppTable {
 
 			if ($staffRecord) {
 				// For staff transfer
-				if ($entity->institution_id != $staffRecord->institution_id) {
-					$data[$this->alias()]['institution_id'] = $entity->institution_id;
-					$data[$this->alias()]['previous_institution_id'] = $staffRecord->institution_id;
-					$data[$this->alias()]['transfer_from'] = $staffRecord->institution->name;
-					$this->Session->write('Institution.Staff.transfer', $data[$this->alias()]);
+
+				$StaffTransferRequestsTable = TableRegistry::get('Institution.StaffTransferRequests');
+				$transferRecord = $StaffTransferRequestsTable->find()
+					->where([
+						$StaffTransferRequestsTable->aliasField('staff_id') => $staffId,
+						$StaffTransferRequestsTable->aliasField('status').' NOT IN ' => [self::NEW_REQUEST, self::APPROVED]
+					]);
+
+				if ($transferRecord->count() == 0) {
+					if ($entity->institution_id != $staffRecord->institution_id) {
+						$data[$this->alias()]['institution_id'] = $entity->institution_id;
+						$data[$this->alias()]['previous_institution_id'] = $staffRecord->institution_id;
+						$data[$this->alias()]['transfer_from'] = $staffRecord->institution->name;
+						$this->Session->write('Institution.Staff.transfer', $data[$this->alias()]);
+						$event->stopPropagation();
+						$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffTransferRequests', 'add'];
+						return $this->controller->redirect($action);
+					}
+				} else {
 					$event->stopPropagation();
-					$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffTransferRequests', 'add'];
+					$this->Alert->error('Staff.transferExists');
+					$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Staff', 'add'];
 					return $this->controller->redirect($action);
 				}
 			} else {

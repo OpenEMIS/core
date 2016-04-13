@@ -881,6 +881,7 @@ trait MessagesTrait {
 			],
 		],
 		'Staff' => [
+			'transferExists' => 'There is an existing transfer request for that staff.',
 			'date_of_birth' => 'Date Of Birth',
 			'photo_content' => 'Profile Image',
 			'Qualifications' => [
