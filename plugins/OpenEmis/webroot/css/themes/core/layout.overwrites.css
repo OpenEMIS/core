@@ -210,9 +210,24 @@ span,
     unicode-bidi: plaintext;
 }
 
+.breadcrumb.panel-breadcrumb li {
+    direction: ltr;
+}
+
+.rtl .breadcrumb.panel-breadcrumb li {
+    direction: rtl;
+}
+
 
 /* Fix header more menu icon alignment */
 
 .rtl .more-menu-item i {
     float: right;
+}
+
+
+/* Fix Old Tabs Line Height */
+
+.rtl .horizontal-tabs span a {
+    line-height: 31px;
 }
