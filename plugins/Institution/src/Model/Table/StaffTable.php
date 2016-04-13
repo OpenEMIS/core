@@ -115,7 +115,12 @@ class StaffTable extends AppTable {
 
 	public function validationDefault(Validator $validator) {
 		$validator = $this->buildStaffValidation();
-		return $validator;
+		return $validator
+			->allowEmpty('staff_name')
+			->add('staff_name', 'ruleInstitutionStaffId', [
+				'rule' => ['institutionStaffId'],
+				'on' => 'create'
+			]);
 	}
 
 	public function validationAllowEmptyName(Validator $validator) {

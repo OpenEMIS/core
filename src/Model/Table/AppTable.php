@@ -88,6 +88,19 @@ class AppTable extends Table {
 		$this->addBehavior('Modification');
 	}
 
+	// Function to get the entity property from the entity. If data validation occur,
+	// the invalid value has to be extracted from invalid array
+	// For use in Cake 3.2 and above
+	public function getEntityProperty($entity, $propertyName) {
+		if ($entity->has($propertyName)) {
+			return $entity->$propertyName;
+		} else if (array_key_exists($propertyName, $entity->invalid())) {
+			return $entity->invalid($propertyName);
+		} else {
+			return null;
+		}
+	}
+
 	public function attachWorkflow($config=[]) {
 		// check for session and attach workflow behavior
 		if (isset($_SESSION['Workflow']['Workflows']['models'])) {
