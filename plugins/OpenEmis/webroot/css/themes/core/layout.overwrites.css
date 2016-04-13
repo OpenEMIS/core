@@ -205,17 +205,15 @@ a.btn-green:hover {
 
 p,
 a,
-span,
-.breadcrumb.panel-breadcrumb li {
+.breadcrumb.panel-breadcrumb li,
+.rtl .breadcrumb.panel-breadcrumb li {
     unicode-bidi: plaintext;
+    unicode-bidi: -moz-plaintext;
+    unicode-bidi: -webkit-plaintext;
 }
 
 .breadcrumb.panel-breadcrumb li {
     direction: ltr;
-}
-
-.rtl .breadcrumb.panel-breadcrumb li {
-    direction: rtl;
 }
 
 
