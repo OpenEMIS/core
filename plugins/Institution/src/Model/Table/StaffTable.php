@@ -128,10 +128,29 @@ class StaffTable extends AppTable {
 		if ($periodId > 0) {
 			$query->find('academicPeriod', ['academic_period_id' => $periodId]);
 		}
+		$query->contain(['Positions.StaffPositionTitles'])->select(['position_title_teaching' => 'StaffPositionTitles.type'])->autoFields(true);
 	}
 
 	public function onExcelGetFTE(Event $event, Entity $entity) {
 		return ($entity->FTE * 100) . '%';
+	}
+
+	public function onExcelGetPositionTitleTeaching(Event $event, Entity $entity) {
+		$yesno = $this->getSelectOptions('general.yesno');
+		return (array_key_exists($entity->position_title_teaching, $yesno))? $yesno[$entity->position_title_teaching]: '';
+	}
+
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+		$fieldArray = $fields->getArrayCopy();
+		$extraField[] = [
+			'key' => 'Positions.position_title_teaching',
+			'field' => 'position_title_teaching',
+			'type' => 'string',
+			'label' => __('Teaching')
+		];
+
+		$newFields = array_merge($fieldArray, $extraField);
+		$fields->exchangeArray($newFields);
 	}
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
