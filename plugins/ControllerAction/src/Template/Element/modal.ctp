@@ -1,6 +1,9 @@
 <?php if (isset($modals)) : ?>
 	<?php foreach ($modals as $id => $modal) : ?>
-
+	<?php 
+		$title = isset($modal['title']) ? $modal['title'] : '';
+		$content = isset($modal['content']) ? $modal['content'] : '';
+	?>
 	<div class="modal fade" id="<?= $id ?>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 		<div class="modal-dialog">
 			<div class="modal-content">
@@ -16,15 +19,15 @@
 				?>
 				<div class="modal-header">
 					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<h4 class="modal-title" id="myModalLabel"><?= $modal['title'] ?></h4>
+					<h4 class="modal-title" id="myModalLabel"><?= $title ?></h4>
 				</div>
 
 				<div class="modal-body">
 					<?php
 					if (isset($modal['type']) && $modal['type'] == 'element') {
-						echo $this->element($modal['content']);
+						echo $this->element($content);
 					} else {
-						echo $modal['content'];
+						echo $content;
 					}
 					?>
 				</div>
@@ -37,7 +40,7 @@
 						}
 					}
 					?>
-					<?php if ($modal['cancelButton']) : ?>
+					<?php if (isset($modal['cancelButton']) && $modal['cancelButton']) : ?>
 					<button type="button" class="btn btn-outline" data-dismiss="modal"><?= __('Cancel') ?></button>
 					<?php endif ?>
 				</div>

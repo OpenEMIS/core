@@ -8,6 +8,7 @@ use App\Model\Table\AppTable;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\I18n\Time;
+use Cake\I18n\Date;
 
 class TransferApprovalsTable extends AppTable {
 	const NEW_REQUEST = 0;
@@ -44,7 +45,7 @@ class TransferApprovalsTable extends AppTable {
 
 	public function editOnInitialize(Event $event, Entity $entity) {
 		//set current date to start date
-		$entity->start_date = new Time(date('Y-m-d'));
+		$entity->start_date = new Date();
 
 		// Set all selected values only
 		$this->request->data[$this->alias()]['transfer_status'] = $entity->status;
@@ -332,12 +333,12 @@ class TransferApprovalsTable extends AppTable {
 			$selectedPeriod = $request->data[$this->alias()]['academic_period_id'];
 			$startDate = $request->data[$this->alias()]['start_date'];
 			if (!is_object($startDate)) {
-				$startDate = new Time(date('Y-m-d', strtotime($startDate)));
+				$startDate = new Date(date('Y-m-d', strtotime($startDate)));
 				$request->data[$this->alias()]['start_date'] = $startDate;
 			}
 			$endDate = $request->data[$this->alias()]['end_date'];
 			if (!is_object($endDate)) {
-				$endDate = new Time(date('Y-m-d', strtotime($endDate)));
+				$endDate = new Date(date('Y-m-d', strtotime($endDate)));
 				$request->data[$this->alias()]['end_date'] = $endDate;
 			}
 
@@ -412,7 +413,11 @@ class TransferApprovalsTable extends AppTable {
 
 			$where = [$this->aliasField('status') => 0, $this->aliasField('type') => self::TRANSFER];
 			if (!$AccessControl->isAdmin()) {
-				$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
+				if (!empty($institutionIds)) {
+					$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
+				} else {
+					$where[$this->aliasField('institution_id')] = '-1';
+				}
 			}
 
 			$resultSet = $this
@@ -463,7 +468,6 @@ class TransferApprovalsTable extends AppTable {
 					'attr' => ['class' => 'btn btn-outline btn-cancel', 'div' => false, 'name' => 'submit', 'value' => 'reject']
 				];
 			} else {
-				pr($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST);
 				unset($buttons[0]);
 				unset($buttons[1]);
 			}

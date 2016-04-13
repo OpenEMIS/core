@@ -8,6 +8,22 @@ use Phinx\Db\Adapter\PostgresAdapter;
 class PostgresAdapterTest extends \PHPUnit_Framework_TestCase
 {
     /**
+     * Check if Postgres is enabled in the current PHP
+     *
+     * @return boolean
+     */
+    private static function isPostgresAvailable()
+    {
+        static $available;
+
+        if (is_null($available)) {
+            $available = in_array('pgsql', \PDO::getAvailableDrivers());
+        }
+
+        return $available;
+    }
+
+    /**
      * @var \Phinx\Db\Adapter\PostgresqlAdapter
      */
     private $adapter;
@@ -16,6 +32,10 @@ class PostgresAdapterTest extends \PHPUnit_Framework_TestCase
     {
         if (!TESTS_PHINX_DB_ADAPTER_POSTGRES_ENABLED) {
             $this->markTestSkipped('Postgres tests disabled.  See TESTS_PHINX_DB_ADAPTER_POSTGRES_ENABLED constant.');
+        }
+
+        if (!self::isPostgresAvailable()) {
+            $this->markTestSkipped('Postgres is not available.  Please install php-pdo-pgsql or equivalent package.');
         }
 
         $options = array(
@@ -89,6 +109,13 @@ class PostgresAdapterTest extends \PHPUnit_Framework_TestCase
         $this->adapter->disconnect();
         $this->adapter->connect();
         $this->assertTrue($this->adapter->hasTable($this->adapter->getSchemaTableName()));
+    }
+
+    public function testSchemaTableIsCreatedWithPrimaryKey()
+    {
+        $this->adapter->connect();
+        $table = new \Phinx\Db\Table($this->adapter->getSchemaTableName(), array(), $this->adapter);
+        $this->assertTrue($this->adapter->hasIndex($this->adapter->getSchemaTableName(), array('version')));
     }
 
     public function testQuoteSchemaName()
@@ -193,6 +220,7 @@ class PostgresAdapterTest extends \PHPUnit_Framework_TestCase
               ->save();
         $this->assertTrue($this->adapter->hasIndex('table1', array('email')));
         $this->assertFalse($this->adapter->hasIndex('table1', array('email', 'user_email')));
+        $this->assertTrue($this->adapter->hasIndexByName('table1', 'myemailindex'));
     }
 
     public function testRenameTable()
@@ -261,6 +289,28 @@ class PostgresAdapterTest extends \PHPUnit_Framework_TestCase
             if ($column->getName() == 'default_false') {
                 $this->assertNotNull($column->getDefault());
                 $this->assertEquals('false', $column->getDefault());
+            }
+        }
+    }
+
+    public function testAddDecimalWithPrecisionAndScale()
+    {
+        $table = new \Phinx\Db\Table('table1', array(), $this->adapter);
+        $table->save();
+        $table->addColumn('number', 'decimal', array('precision' => 10, 'scale' => 2))
+            ->addColumn('number2', 'decimal', array('limit' => 12))
+            ->addColumn('number3', 'decimal')
+            ->save();
+        $columns = $this->adapter->getColumns('table1');
+        foreach ($columns as $column) {
+            if ($column->getName() == 'number') {
+                $this->assertEquals("10", $column->getPrecision());
+                $this->assertEquals("2", $column->getScale());
+            }
+
+            if ($column->getName() == 'number2') {
+                $this->assertEquals("12", $column->getPrecision());
+                $this->assertEquals("0", $column->getScale());
             }
         }
     }
@@ -350,7 +400,7 @@ class PostgresAdapterTest extends \PHPUnit_Framework_TestCase
             if ($column->getName() == 'column2') {
                 $this->assertTrue($column->isNull());
             }
-        }        
+        }
     }
 
     public function testChangeColumnWithDefault() {
@@ -415,18 +465,19 @@ class PostgresAdapterTest extends \PHPUnit_Framework_TestCase
     {
         $table = new \Phinx\Db\Table('t', array(), $this->adapter);
         $table->addColumn('column1', 'string')
-              ->addColumn('column2', 'integer')
-              ->addColumn('column3', 'biginteger')
-              ->addColumn('column4', 'text')
-              ->addColumn('column5', 'float')
-              ->addColumn('column6', 'decimal')
-              ->addColumn('column7', 'time')
-              ->addColumn('column8', 'timestamp')
-              ->addColumn('column9', 'date')
-              ->addColumn('column10', 'boolean')
-              ->addColumn('column11', 'datetime')
-              ->addColumn('column12', 'binary')
-              ->addColumn('column13', 'string', array('limit' => 10));
+              ->addColumn('column2', 'integer', array('limit' => PostgresAdapter::INT_SMALL))
+              ->addColumn('column3', 'integer')
+              ->addColumn('column4', 'biginteger')
+              ->addColumn('column5', 'text')
+              ->addColumn('column6', 'float')
+              ->addColumn('column7', 'decimal')
+              ->addColumn('column8', 'time')
+              ->addColumn('column9', 'timestamp')
+              ->addColumn('column10', 'date')
+              ->addColumn('column11', 'boolean')
+              ->addColumn('column12', 'datetime')
+              ->addColumn('column13', 'binary')
+              ->addColumn('column14', 'string', array('limit' => 10));
         $pendingColumns = $table->getPendingColumns();
         $table->save();
         $columns = $this->adapter->getColumns('t');
@@ -817,5 +868,29 @@ class PostgresAdapterTest extends \PHPUnit_Framework_TestCase
                 $this->assertTrue($column->isTimezone(), 'column: ' . $column->getName());
             }
         }
+    }
+
+    public function testInsertData()
+    {
+        $table = new \Phinx\Db\Table('table1', array(), $this->adapter);
+        $table->addColumn('column1', 'string')
+              ->addColumn('column2', 'integer')
+              ->insert(array(
+                  array(
+                      'column1' => 'value1',
+                      'column2' => 1
+                  ),
+                  array(
+                      'column1' => 'value2',
+                      'column2' => 2
+                  )
+              ))
+              ->save();
+
+        $rows = $this->adapter->fetchAll('SELECT * FROM table1');
+        $this->assertEquals('value1', $rows[0]['column1']);
+        $this->assertEquals('value2', $rows[1]['column1']);
+        $this->assertEquals(1, $rows[0]['column2']);
+        $this->assertEquals(2, $rows[1]['column2']);
     }
 }
