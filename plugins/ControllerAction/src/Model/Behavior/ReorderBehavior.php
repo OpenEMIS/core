@@ -34,17 +34,19 @@ class ReorderBehavior extends Behavior {
 			
 			$ids = json_decode($request->data("ids"));
 
-			$originalOrder = $model->find('list')
-				->where([$model->aliasField($primaryKey).' IN ' => $ids])
-				->select(['id' => $model->aliasField($primaryKey), 'name' => $model->aliasField($orderField)])
-				->order([$model->aliasField($orderField)])
-				->toArray();
+			if (!empty($ids)) {
+				$originalOrder = $model->find('list')
+					->where([$model->aliasField($primaryKey).' IN ' => $ids])
+					->select(['id' => $model->aliasField($primaryKey), 'name' => $model->aliasField($orderField)])
+					->order([$model->aliasField($orderField)])
+					->toArray();
 
-			$originalOrder = array_reverse($originalOrder);
+				$originalOrder = array_reverse($originalOrder);
 
-			foreach ($ids as $order => $id) {
-				$orderValue = array_pop($originalOrder);
-				$model->updateAll([$orderField => $orderValue], [$primaryKey => $id]);
+				foreach ($ids as $order => $id) {
+					$orderValue = array_pop($originalOrder);
+					$model->updateAll([$orderField => $orderValue], [$primaryKey => $id]);
+				}
 			}
 		}
 		$event->stopPropagation();
