@@ -1,4 +1,4 @@
-angular.module('<?= $ng_app ?>', <?= $ng_modules ?>).run(function() {
+angular.module('<?= $ng_app ?>', <?= $ng_modules ?>).run(function($rootScope) {
 	angular.baseUrl = '<?= $this->request->base ?>';
 	angular.url = function(url) {
 		return angular.baseUrl + '/' + url;
