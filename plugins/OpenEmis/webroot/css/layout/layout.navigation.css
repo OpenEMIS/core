@@ -1,4 +1,4 @@
-/* NAVIGATION v.1.2.9 */
+/* NAVIGATION v.1.2.10 */
 
 nav {
     border-radius: 0 !important;
@@ -386,6 +386,11 @@ nav {
     left: 0;
 }
 
+.rtl .left-menu li a {
+    font-size: 14px;
+    line-height: 14px !important;
+} 
+
 .rtl .left-pane {
     right: 0;
     left: auto;
@@ -638,6 +643,9 @@ nav {
         padding-left: 65px !important;
     }
     /* RTL */
+    .rtl .left-menu li a {
+        line-height: 30px !important;
+    }
     .rtl .menu-handler {
         left: auto !important;
         right: 0;
