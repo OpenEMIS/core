@@ -7,8 +7,9 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 
-class QualificationsTable extends AppTable {
+class QualificationsTable extends ControllerActionTable {
 	public function initialize(array $config) {
 		$this->table('staff_qualifications');
 		parent::initialize($config);
@@ -30,7 +31,9 @@ class QualificationsTable extends AppTable {
 			->add('graduate_year', 'ruleNumeric', 
 				['rule' => 'numeric']
 			)
-			->notEmpty('institution_name', 'Please enter the institution');
+			->notEmpty('institution_name', 'Please enter the institution')
+			->allowEmpty('file_content')
+			;
 		;
 	}
 
@@ -38,15 +41,15 @@ class QualificationsTable extends AppTable {
 		$this->fields['qualification_level_id']['type'] = 'select';
 		$this->fields['qualification_specialisation_id']['type'] = 'select';
 
-		$this->ControllerAction->field('graduate_year');
-		$this->ControllerAction->field('qualification_institution_id');
+		$this->field('graduate_year');
+		$this->field('qualification_institution_id');
 
 		// temporary disable
-		$this->ControllerAction->field('file_name', 			['visible' => false]);
+		$this->field('file_name', 			['visible' => false]);
 		// file_content is a required field
-		$this->ControllerAction->field('file_content', 			['type' => 'binary', 'visible' => ['edit' => true], 'null'=>false]);
+		$this->field('file_content', 			['type' => 'binary', 'visible' => ['edit' => true]]);
 
-		$this->ControllerAction->field('file_type', 			['type' => 'string', 'visible' => ['index'=>true]]);
+		$this->field('file_type', 			['type' => 'string', 'visible' => ['index'=>true]]);
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -55,27 +58,27 @@ class QualificationsTable extends AppTable {
 		$this->fields['gpa']['visible'] = false;
 
 		$order = 0;
-		$this->ControllerAction->setFieldOrder('graduate_year', $order++);
-		$this->ControllerAction->setFieldOrder('qualification_level_id', $order++);
-		$this->ControllerAction->setFieldOrder('qualification_title', $order++);
-		$this->ControllerAction->setFieldOrder('document_no', $order++);
-		$this->ControllerAction->setFieldOrder('qualification_institution_id', $order++);
+		$this->setFieldOrder('graduate_year', $order++);
+		$this->setFieldOrder('qualification_level_id', $order++);
+		$this->setFieldOrder('qualification_title', $order++);
+		$this->setFieldOrder('document_no', $order++);
+		$this->setFieldOrder('qualification_institution_id', $order++);
 	}
 
 	public function addEditBeforeAction(Event $event) {
 		$this->fields['graduate_year']['type'] = 'string';
 
 		$order = 0;
-		$this->ControllerAction->setFieldOrder('qualification_level_id', $order++);
-		$this->ControllerAction->setFieldOrder('qualification_institution_id', $order++);
-		$this->ControllerAction->setFieldOrder('qualification_institution_country', $order++);
-		$this->ControllerAction->setFieldOrder('qualification_title', $order++);
-		$this->ControllerAction->setFieldOrder('qualification_specialisation_id', $order++);
-		$this->ControllerAction->setFieldOrder('graduate_year', $order++);
-		$this->ControllerAction->setFieldOrder('document_no', $order++);
-		$this->ControllerAction->setFieldOrder('gpa', $order++);
-		$this->ControllerAction->setFieldOrder('file_name', $order++);
-		$this->ControllerAction->setFieldOrder('file_content', $order++);
+		$this->setFieldOrder('qualification_level_id', $order++);
+		$this->setFieldOrder('qualification_institution_id', $order++);
+		$this->setFieldOrder('qualification_institution_country', $order++);
+		$this->setFieldOrder('qualification_title', $order++);
+		$this->setFieldOrder('qualification_specialisation_id', $order++);
+		$this->setFieldOrder('graduate_year', $order++);
+		$this->setFieldOrder('document_no', $order++);
+		$this->setFieldOrder('gpa', $order++);
+		$this->setFieldOrder('file_name', $order++);
+		$this->setFieldOrder('file_content', $order++);
 	}
 
 	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -128,9 +131,9 @@ class QualificationsTable extends AppTable {
 		return $attr;
 	}
 
-	public function ajaxInstitutionsAutocomplete() {
-		$this->controller->autoRender = false;	
+	public function ajaxInstitutionsAutocomplete(Event $mainEvent, ArrayObject $extra) {
 		$this->ControllerAction->autoRender = false;
+		$this->controller->autoRender = false;
 
 		if ($this->request->is(['ajax'])) {
 			$term = trim($this->request->query['term']);
@@ -149,12 +152,12 @@ class QualificationsTable extends AppTable {
 			}
 
 			echo json_encode($data);
-			die;
+			return true;
 		}
 	}
 
 	public function onGetFileType(Event $event, Entity $entity) {
-		return $this->getFileTypeForView($entity->file_name);
+		return (!empty($entity->file_name))? $this->getFileTypeForView($entity->file_name): '';;
 	}
 
 	private function setupTabElements() {
@@ -170,18 +173,25 @@ class QualificationsTable extends AppTable {
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
     	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	$events['ControllerAction.Model.ajaxInstitutionsAutocomplete'] = 'ajaxInstitutionsAutocomplete';
     	return $events;
     }
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {   
 		if ($action == "view") {
-			$toolbarButtons['download']['type'] = 'button';
-			$toolbarButtons['download']['label'] = '<i class="fa kd-download"></i>';
-			$toolbarButtons['download']['attr'] = $attr;
-			$toolbarButtons['download']['attr']['title'] = __('Download');
-			$url = $this->ControllerAction->url('download');
-			if (!empty($url['action'])) {
-				$toolbarButtons['download']['url'] = $url;
+			if (array_key_exists(1, $this->request->params['pass'])) {
+				$filename = $this->get($this->request->params['pass'][1])->file_content;
+			}
+			
+			if (!empty($filename)) {
+				$toolbarButtons['download']['type'] = 'button';
+				$toolbarButtons['download']['label'] = '<i class="fa kd-download"></i>';
+				$toolbarButtons['download']['attr'] = $attr;
+				$toolbarButtons['download']['attr']['title'] = __('Download');
+				$url = $this->url('download');
+				if (!empty($url['action'])) {
+					$toolbarButtons['download']['url'] = $url;
+				}
 			}
 		}
 	}
