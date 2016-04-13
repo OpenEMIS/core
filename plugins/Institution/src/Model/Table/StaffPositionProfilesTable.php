@@ -9,7 +9,7 @@ use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 use Cake\Validation\Validator;
-use Cake\I18n\Time;
+use Cake\I18n\Date;
 
 class StaffPositionProfilesTable extends ControllerActionTable {
 	private $staffChangeTypesList = [];
@@ -304,7 +304,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 			$staffChangeTypes = $this->staffChangeTypesList;
 			if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_IN_FTE']) {
 				$attr['type'] = 'date';
-				$attr['value'] = new Time();
+				$attr['value'] = new Date();
 			} else {
 				$attr['type'] = 'hidden';
 			}

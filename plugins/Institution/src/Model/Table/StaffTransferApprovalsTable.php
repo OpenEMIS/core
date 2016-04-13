@@ -10,6 +10,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Cake\I18n\Time;
+use Cake\I18n\Date;
 
 use App\Model\Table\ControllerActionTable;
 use Institution\Model\Table\StaffTransfer;
@@ -62,7 +63,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 		parent::editAfterAction($event, $entity, $extra);
 
 		$staffType = $this->StaffTypes->get($entity->staff_type_id)->name;
-		if (!($entity->start_date instanceof Time)) {
+		if (!$entity->start_date instanceof Time || !$entity->start_date instanceof Date) {
 			$entity->start_date = Time::parse($entity->start_date);
 		}
 		$startDate = $this->formatDate($entity->start_date);
@@ -91,7 +92,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 
 		$this->field('current_FTE', ['attr' => ['value' => $staffRecord->FTE], 'select' => false]);
 		$this->field('current_staff_type_id', ['attr' => ['value' => $staffRecord->staff_type_id], 'select' => false]);
-		$this->field('current_end_date', ['type' => 'date', 'value' => new Time(), 
+		$this->field('current_end_date', ['type' => 'date', 'value' => new Date(), 
 			'date_options' => ['startDate' => $staffRecord->start_date->format('d-m-Y'), 'endDate' => $entity->start_date]]);
 		if ($entity->status != self::NEW_REQUEST) {
 			$this->field('comment', ['attr' => [ 'disabled' => 'true']]);
