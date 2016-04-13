@@ -66,9 +66,10 @@
 
 					<tbody id="table_assessment_periods" ca-id="assessment_periods" ca-on-click-target-element ca-on-click-target-handler="addRow">
 						
-						<?php pr(json_encode($data->assessment_periods));?>
+						<?php //pr(json_encode($data->assessment_periods));?>
 
-						<div class="hidden" ng-init='onClickTargets.handlers.addRow.assessment_periods = <?php echo json_encode($data->assessment_periods)?>'></div>
+						<div class="hidden" ng-init='errors = <?= json_encode($assessmentPeriodsErrors)?>'></div>
+						<div class="hidden" ng-init='onClickTargets.handlers.addRow.assessment_periods = <?= json_encode($data->assessment_periods)?>'></div>
 						
 						<tr ng:repeat="(key, period) in onClickTargets.handlers.addRow.assessment_periods">
 							
@@ -90,7 +91,12 @@
 									<td>
 										<<?= $type ?> attributes='<?= $attributes ?>'></<?= $type ?>>
 									</td>
-									<?php $this->HtmlField->includes[$type]['include'] = true;?>
+									<?php 
+										if ($type=='datepicker') {
+											$this->HtmlField->includes[$type]['include'] = true;
+											$this->HtmlField->viewSet('datepicker', $attr['fields'][$formField]);
+										}
+									?>
 								<?php endif;?>
 							<?php endforeach;?>
 							<?php $this->HtmlField->includes(null, 'edit'); ?>

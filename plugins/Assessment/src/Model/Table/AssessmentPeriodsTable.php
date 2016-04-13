@@ -35,29 +35,43 @@ class AssessmentPeriodsTable extends AssessmentsAppTable {
 		$this->fields['name']['fieldName'] = "Assessments[assessment_periods][{{key}}][name]";
 		$this->fields['name']['attr']['value'] = "{{showValue(period.name)}}";
 
+		$_options = [
+			'format' => 'dd-mm-yyyy',
+			'todayBtn' => 'linked',
+			'orientation' => 'auto',
+			'autoclose' => true,
+		];
+		$this->fields['start_date']['id'] = "Assessments-assessment_periods-start_date";
 		$this->fields['start_date']['label'] = false;
 		$this->fields['start_date']['required'] = true;
-		$this->fields['start_date']['inputWrapperStyle'] = 'margin-top:1px;margin-bottom:-2px;';
+		// $this->fields['start_date']['inputWrapperStyle'] = 'margin-top:1px;margin-bottom:-2px;';
 		$this->fields['start_date']['fieldName'] = "Assessments[assessment_periods][{{key}}][start_date]";
 		$this->fields['start_date']['attr']['value'] = "{{showValue(period.start_date)}}";
+		$this->fields['start_date']['date_options'] = $_options;
 
+		$this->fields['end_date']['id'] = "Assessments-assessment_periods-end_date";
 		$this->fields['end_date']['label'] = false;
 		$this->fields['end_date']['required'] = true;
-		$this->fields['end_date']['inputWrapperStyle'] = 'margin-top:1px;margin-bottom:-2px;';
+		// $this->fields['end_date']['inputWrapperStyle'] = 'margin-top:1px;margin-bottom:-2px;';
 		$this->fields['end_date']['fieldName'] = "Assessments[assessment_periods][{{key}}][end_date]";
 		$this->fields['end_date']['attr']['value'] = "{{showValue(period.end_date)}}";
+		$this->fields['end_date']['date_options'] = $_options;
 
+		$this->fields['date_enabled']['id'] = "Assessments-assessment_periods-date_enabled";
 		$this->fields['date_enabled']['label'] = false;
 		$this->fields['date_enabled']['required'] = true;
-		$this->fields['date_enabled']['inputWrapperStyle'] = 'margin-top:1px;margin-bottom:-2px;';
+		// $this->fields['date_enabled']['inputWrapperStyle'] = 'margin-top:1px;margin-bottom:-2px;';
 		$this->fields['date_enabled']['fieldName'] = "Assessments[assessment_periods][{{key}}][date_enabled]";
 		$this->fields['date_enabled']['attr']['value'] = "{{showValue(period.date_enabled)}}";
+		$this->fields['date_enabled']['date_options'] = $_options;
 
+		$this->fields['date_disabled']['id'] = "Assessments-assessment_periods-date_disabled";
 		$this->fields['date_disabled']['label'] = false;
 		$this->fields['date_disabled']['required'] = true;
-		$this->fields['date_disabled']['inputWrapperStyle'] = 'margin-top:1px;margin-bottom:-2px;';
+		// $this->fields['date_disabled']['inputWrapperStyle'] = 'margin-top:1px;margin-bottom:-2px;';
 		$this->fields['date_disabled']['fieldName'] = "Assessments[assessment_periods][{{key}}][date_disabled]";
 		$this->fields['date_disabled']['attr']['value'] = "{{showValue(period.date_disabled)}}";
+		$this->fields['date_disabled']['date_options'] = $_options;
 
 	}
 
@@ -93,8 +107,8 @@ class AssessmentPeriodsTable extends AssessmentsAppTable {
 		$assessmentPeriods = $addedAssessmentPeriods;
 		$assessmentPeriods[] = [
 		    'id' => '',
-			'code' => 'codi',
-		    'name' => 'nama',
+			'code' => '',
+		    'name' => '',
 		    'start_date' => '',
 		    'end_date' => '',
 		    'date_enabled' => '',
@@ -108,6 +122,7 @@ class AssessmentPeriodsTable extends AssessmentsAppTable {
 	public function validationDefault(Validator $validator) {
 		$validator
 			->requirePresence('assessment_id', 'update')
+			->requirePresence('name')
 			->add('code', 'ruleUniqueCode', [
 			    'rule' => ['checkUniqueCode', 'assessment_id'],
 			    'last' => true

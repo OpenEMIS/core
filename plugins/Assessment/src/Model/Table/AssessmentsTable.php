@@ -242,6 +242,16 @@ class AssessmentsTable extends ControllerActionTable {
 			'code', 'name', 'description', 'type', 'subject_section', 'education_programme_id', 'education_grade_id', 'assessment_items', 'period_section', 'academic_period_id', 'assessment_periods',
 		]);
 
+		// pr($entity);
+		$assessmentPeriodsErrors = [];
+		foreach ($entity->assessment_periods as $key => $item) {
+			$errors = [];
+			foreach ($item->errors() as $field => $messages) {
+				$errors[$field] = implode('<br/>', $messages);
+			}
+			$assessmentPeriodsErrors[$key] = $errors;
+		}
+		$this->controller->set('assessmentPeriodsErrors', $assessmentPeriodsErrors);
 		if (!array_key_exists('items_patched', $extra)) {
 			if (!empty($selectedGrade)) {
 				$assessmentItems = $this->AssessmentItems->populateAssessmentItemsArray($entity, $selectedGrade);
