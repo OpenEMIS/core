@@ -35,6 +35,13 @@ class StaffTransferRequestsTable extends StaffTransfer {
 		}
 	}
 
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
+
+		return $events;
+	}
+
 	public function indexBeforeQuery(Event $event, Query $query, $extra) {
 		$query->where([$this->aliasField('type') => self::TRANSFER]);
 	}
@@ -126,6 +133,55 @@ class StaffTransferRequestsTable extends StaffTransfer {
 			if ($this->request->data[$this->alias()]['status'] == self::APPROVED) {
 				$buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Assign');
 				$buttons[0]['attr'] = ['class' => 'btn btn-default btn-save', 'div' => false, 'name' => 'submit', 'value' => 'assign'];
+			}
+		}
+	}
+
+	// Workbench.Model.onGetList
+	public function onGetWorkbenchList(Event $event, $AccessControl, ArrayObject $data) {
+		if ($AccessControl->check(['Institutions', 'StaffTransferRequests', 'edit'])) {
+			// $institutionIds = $AccessControl->getInstitutionsByUser(null, ['Dashboard', 'TransferApprovals', 'edit']);
+			$institutionIds = $AccessControl->getInstitutionsByUser();
+			$where = [
+				$this->aliasField('status') => self::APPROVED, 
+				$this->aliasField('type') => self::TRANSFER
+			];
+			if (!$AccessControl->isAdmin()) {
+				$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
+			}
+
+			$resultSet = $this
+				->find()
+				->contain(['Users', 'Institutions', 'PreviousInstitutions', 'ModifiedUser', 'CreatedUser'])
+				->where($where)
+				->order([
+					$this->aliasField('created') => 'DESC'
+				])
+				->toArray();
+
+			foreach ($resultSet as $key => $obj) {
+				$requestTitle = sprintf('Staff Transfer Approved (%s) from %s to %s', $obj->user->name, $obj->previous_institution->name, $obj->institution->name);
+				$url = [
+					'plugin' => false,
+					'controller' => 'Dashboard',
+					'action' => 'StaffTransferRequests',
+					'edit',
+					$obj->id
+				];
+
+				if (is_null($obj->modified)) {
+					$receivedDate = $this->formatDate($obj->created);
+				} else {
+					$receivedDate = $this->formatDate($obj->modified);
+				}
+				
+				$data[] = [
+					'request_title' => ['title' => $requestTitle, 'url' => $url],
+					'receive_date' => $receivedDate,
+					'due_date' => '<i class="fa fa-minus"></i>',
+					'requester' => $obj->created_user->username,
+					'type' => __('Staff Transfer')
+				];
 			}
 		}
 	}
