@@ -27,12 +27,14 @@ class DashboardController extends AppController {
 				'Institution.StudentDropout',
 				'Institution.InstitutionSurveys',
 				'Institution.StaffPositionProfiles',
-				'Institution.StaffTransferApprovals'
+				'Institution.StaffTransferApprovals',
+				'Institution.StaffTransferRequests'
 			]
 		]);
     }
     
 	public function StaffTransferApprovals() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferApprovals']); }
+	public function StaffTransferRequests() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferRequests']); }
 
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
