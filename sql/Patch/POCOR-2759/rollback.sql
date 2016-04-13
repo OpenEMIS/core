@@ -17,5 +17,11 @@ RENAME TABLE `z_2759_assessment_statuses` TO `assessment_statuses`;
 RENAME TABLE `z_2759_assessment_status_periods` TO `assessment_status_periods`;
 RENAME TABLE `z_2759_institution_assessments` TO `institution_assessments`;
 
+DROP TABLE IF EXISTS `institution_subject_students`;
+RENAME TABLE `z_2759_institution_subject_students` TO `institution_subject_students`;
+
+DROP TABLE IF EXISTS `institution_students`;
+RENAME TABLE `z_2759_institution_students` TO `institution_students`;
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2759';
