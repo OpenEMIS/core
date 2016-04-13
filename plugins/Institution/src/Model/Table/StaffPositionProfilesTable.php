@@ -9,6 +9,7 @@ use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 use Cake\Validation\Validator;
+use Cake\I18n\Time;
 
 class StaffPositionProfilesTable extends ControllerActionTable {
 	private $staffChangeTypesList = [];
@@ -22,14 +23,17 @@ class StaffPositionProfilesTable extends ControllerActionTable {
  	];
 
 	public function validationDefault(Validator $validator) {
+		$validator = $this->buildStaffValidation();
 		return $validator
 			->allowEmpty('end_date')
 			->requirePresence('FTE')
 			->requirePresence('staff_change_type_id')
-			->requirePresence('staff_type_id')
-			->add('end_date', 'ruleCompareDateReverse', [
-				'rule' => ['compareDateReverse', 'start_date', true]
-			]);
+			->requirePresence('staff_type_id');
+	}
+
+	public function validationIncludeEffectiveDate(Validator $validator) {
+		$validator = $this->validationDefault($validator);
+		return $validator->requirePresence('effective_date');
 	}
 
 	public function initialize(array $config) {
@@ -42,6 +46,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
 		$this->staffChangeTypesList = $this->StaffChangeTypes->findCodeList();
+		$this->addBehavior('Institution.StaffValidation');
 	}
 
 	public function implementedEvents() {
@@ -217,6 +222,17 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		unset($extra['toolbarButtons']['add']);
 	}
 
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
+		if ($requestData[$this->alias()]['staff_change_type_id'] == $this->staffChangeTypesList['CHANGE_IN_FTE']) {
+			$patchOptions['validate'] = 'IncludeEffectiveDate';
+		}
+		// pr($requestData);die;
+	}
+
+	public function addBeforeSave($event, $entity, $requestData, $extra) {
+		// pr($entity);die;
+	}
+
 	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$toolbarButtons = $extra['toolbarButtons'];
 		$toolbarButtons['back']['url'] = [
@@ -233,12 +249,13 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		$this->field('institution_staff_id', ['visible' => true, 'type' => 'hidden', 'value' => $entity->institution_staff_id]);
 		$this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->name]]);
 		$this->field('staff_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->staff_id)->name_with_id]]);
+		$this->field('start_date', ['type' => 'readonly', 'attr' => ['value' => $this->formatDate($entity->start_date)], 'value' => $entity->start_date->format('Y-m-d')]);
 		$this->field('staff_change_type_id');
 		$this->field('staff_type_id', ['type' => 'select']);
 		$fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
 		$this->field('FTE', ['type' => 'select', 'options' => $fteOptions, 'value' => $entity->FTE]);
-		$this->field('institution_position_id', ['after' => 'staff_id', 'type' => 'readonly', 'attr' => ['value' => $this->Positions->get($entity->institution_position_id)->name]]);
-		$this->field('start_date');
+		$this->field('institution_position_id', ['after' => 'staff_id', 'type' => 'readonly', 'attr' => ['value' => $this->Positions->get($this->getEntityProperty($entity, 'institution_position_id'))->name]]);
+		$this->field('effective_date');
 		$this->field('end_date');
 	}
 
@@ -282,17 +299,14 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldEffectiveDate(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add' || $action == 'edit') {
 			$staffChangeTypes = $this->staffChangeTypesList;
-			if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['END_OF_ASSIGNMENT']) {
+			if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_IN_FTE']) {
 				$attr['type'] = 'date';
+				$attr['value'] = new Time();
 			} else {
 				$attr['type'] = 'hidden';
-				if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
-					$entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
-					$attr['value'] = $entity->start_date->format('Y-m-d');
-				}
 			}
 		}
 		return $attr;
