@@ -58,7 +58,7 @@ CREATE TABLE `institution_staff_position_profiles` (
   KEY `institution_position_id` (`institution_position_id`),
   KEY `staff_id` (`staff_id`),
   KEY `institution_id` (`institution_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 
 -- staff_assignments
 CREATE TABLE `institution_staff_assignments` (
@@ -84,7 +84,7 @@ CREATE TABLE `institution_staff_assignments` (
   KEY `institution_id` (`institution_id`),
   KEY `institution_position_id` (`institution_position_id`),
   KEY `previous_institution_id` (`previous_institution_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 
 -- labels
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferRequests', 'previous_institution_id', 'Institution > Staff Transfer Requests', 'Currently Assigned To', 1, 1, NOW());
