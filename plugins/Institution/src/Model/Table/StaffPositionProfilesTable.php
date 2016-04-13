@@ -183,10 +183,12 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 			$oldValue = $entity->institution_staff->end_date;
 			$newValue = $entity->end_date;
 			if ($newValue != $oldValue) {
-				if (!empty($oldValue)) {
+				if (!empty($oldValue) && !empty($newValue)) {
 					return $this->getStyling($this->formatDate($oldValue), $this->formatDate($newValue));
-				} else {
+				} else if (!empty($newValue)) {
 					return $this->getStyling(__('Not Specified'), $this->formatDate($newValue));
+				} else if (!empty($oldValue)) {
+					return $this->getStyling($this->formatDate($oldValue), __('Not Specified'));
 				}
 			} else {
 				if (!empty($newValue)) {
@@ -225,12 +227,23 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
 		if ($requestData[$this->alias()]['staff_change_type_id'] == $this->staffChangeTypesList['CHANGE_IN_FTE']) {
 			$patchOptions['validate'] = 'IncludeEffectiveDate';
-		}
-		// pr($requestData);die;
-	}
 
-	public function addBeforeSave($event, $entity, $requestData, $extra) {
-		// pr($entity);die;
+			$newFTE = $requestData[$this->alias()]['FTE'];
+			$newEndDate = $requestData[$this->alias()]['effective_date'];
+			$staffRecordEntity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
+			$entity->FTE = $staffRecordEntity->FTE;
+			$entity->newFTE = $newFTE;
+
+			if (empty($newEndDate)) {
+				if ($entity->start_date < date('Y-m-d')) {
+					$requestData[$this->alias()]['end_date'] = date('Y-m-d');
+				} else {
+					$requestData[$this->alias()]['end_date'] = $requestData[$this->alias()]['start_date'];
+				}
+			} else {
+				$requestData[$this->alias()]['end_date'] = $newEndDate;
+			}
+		}		
 	}
 
 	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
