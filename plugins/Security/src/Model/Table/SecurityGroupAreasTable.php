@@ -18,18 +18,21 @@ class SecurityGroupAreasTable extends AppTable {
 		->where([$SecurityGroupUsers->aliasField('security_user_id') => $userId])
 		->toArray();
 
-		$areas = $this
-		->find('all')
-		->distinct(['area_id'])
-		->innerJoin(['AreaAll' => 'areas'], ['AreaAll.id = '.$this->aliasField('area_id')])
-		->innerJoin(['Areas' => 'areas'], [
-			'Areas.lft >= AreaAll.lft',
-			'Areas.rght <= AreaAll.rght'
-		])
-		->select(['area_id', 'lft' => 'Areas.lft', 'rght'=>'Areas.rght'])
-		->where([$this->aliasField('security_group_id') . ' IN ' => $groupIds])
-		->toArray();
-
-		return $areas;
+		if (!empty($groupIds)) { 
+			$areas = $this
+			->find('all')
+			->distinct(['area_id'])
+			->innerJoin(['AreaAll' => 'areas'], ['AreaAll.id = '.$this->aliasField('area_id')])
+			->innerJoin(['Areas' => 'areas'], [
+				'Areas.lft >= AreaAll.lft',
+				'Areas.rght <= AreaAll.rght'
+			])
+			->select(['area_id', 'lft' => 'Areas.lft', 'rght'=>'Areas.rght'])
+			->where([$this->aliasField('security_group_id') . ' IN ' => $groupIds])
+			->toArray();
+			return $areas;
+		} else {
+			return [];
+		}
 	}
 }

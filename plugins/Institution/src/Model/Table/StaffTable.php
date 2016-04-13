@@ -1,27 +1,39 @@
 <?php
 namespace Institution\Model\Table;
 
+use DateTime;
 use ArrayObject;
+
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
-use Cake\Controller\Controller;
+use Cake\Utility\Inflector;
+use Cake\I18n\Date;
+use Cake\I18n\Time;
+use Cake\Log\Log;
+
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
-use Cake\Utility\Inflector;
-use Cake\ORM\ResultSet;
-use Cake\I18n\Time;
-
-use DateTime;
-
-use Cake\Log\Log;
 
 class StaffTable extends AppTable {
 	use OptionsTrait;
+
+	private $assigned;
+	private $endOfAssignment;
+
+	const NEW_REQUEST = 0;
+	const APPROVED = 1;
+	const REJECTED = 2;
+	const CLOSED = 3;
+
+	const PENDING_PROFILE = -1;
+	const PENDING_TRANSFERIN = -2;
+	const PENDING_TRANSFEROUT = -3;
 
 	private $dashboardQuery = null;
 
@@ -33,7 +45,7 @@ class StaffTable extends AppTable {
 		$this->belongsTo('Positions',		['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
 		$this->belongsTo('Institutions',	['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('StaffTypes',		['className' => 'FieldOption.StaffTypes']);
-		$this->belongsTo('StaffStatuses',	['className' => 'FieldOption.StaffStatuses']);
+		$this->belongsTo('StaffStatuses',	['className' => 'Staff.StaffStatuses']);
 		$this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
 
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
@@ -88,31 +100,32 @@ class StaffTable extends AppTable {
 		$this->addBehavior('User.AdvancedSpecificNameTypeSearch', [
 			'modelToSearch' => $this->Users
 		]);
+
+		$this->addBehavior('Institution.StaffValidation');
 		/**
 		 * End Advance Search Types
 		 */
+
+		$statuses = $this->StaffStatuses->findCodeList();
+		$this->assigned = $statuses['ASSIGNED'];
+		$this->endOfAssignment = $statuses['END_OF_ASSIGNMENT'];
 		
 	}
 
+	public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	return $events;
+    }
+
 	public function validationDefault(Validator $validator) {
+		$validator = $this->buildStaffValidation();
 		return $validator
-			->allowEmpty('end_date')
-			->add('end_date', 'ruleCompareDateReverse', [
-		        'rule' => ['compareDateReverse', 'start_date', true]
-	    	])
-	    	->allowEmpty('staff_name')
+			->allowEmpty('staff_name')
 			->add('staff_name', 'ruleInstitutionStaffId', [
 				'rule' => ['institutionStaffId'],
 				'on' => 'create'
-			])
-			->add('start_date', 'ruleStaffExistWithinPeriod', [
-				'rule' => ['checkStaffExistWithinPeriod'],
-				'on' => 'update'
-			])
-			->add('institution_position_id', 'ruleCheckFTE', [
-				'rule' => ['checkFTE'],
-			])
-		;
+			]);
 	}
 
 	public function validationAllowEmptyName(Validator $validator) {
@@ -157,6 +170,36 @@ class StaffTable extends AppTable {
 		$this->fields['staff_id']['order'] = 5;
 		$this->fields['institution_position_id']['order'] = 6;
 		$this->fields['FTE']['visible'] = false;
+
+		$selectedStatus = $this->request->query('staff_status_id');
+		switch ($selectedStatus) {
+			case self::PENDING_PROFILE:
+				$event->stopPropagation();
+				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StaffPositionProfiles']);
+				break;
+			case self::PENDING_TRANSFERIN:
+				$event->stopPropagation();
+				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StaffTransferRequests']);
+				break;
+			case self::PENDING_TRANSFEROUT:
+				$event->stopPropagation();
+				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StaffTransferApprovals']);
+				break;
+		}
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		if ($action == 'view') {
+			if (isset($toolbarButtons['edit'])) {
+				$url = $toolbarButtons['edit']['url'];
+				$staffId = $url[1];
+				unset($url[1]);
+				$url[0] = 'add';
+				$url['institution_staff_id'] = $staffId;
+				$url['action'] = 'StaffPositionProfiles';
+				$toolbarButtons['edit']['url'] = $url;
+			}
+		}
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -238,11 +281,20 @@ class StaffTable extends AppTable {
 		$options['sortWhitelist'] = $sortList;
 		// end: sort by name
 
-		$this->controller->set(compact('periodOptions', 'positionOptions'));
+		$statusOptions = $this->StaffStatuses->find('list')->toArray();
+		$statusOptions[self::PENDING_PROFILE] = __('Pending Profile');
+		$statusOptions[self::PENDING_TRANSFERIN] = __('Pending Transfer In');
+		$statusOptions[self::PENDING_TRANSFEROUT] = __('Pending Transfer Out');
+
+		$selectedStatus = $this->queryString('staff_status_id', $statusOptions);
+		$this->advancedSelectOptions($statusOptions, $selectedStatus);
+		$request->query['staff_status_id'] = $selectedStatus;
+		$query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
+
+		$this->controller->set(compact('periodOptions', 'positionOptions', 'statusOptions'));
 	}
 
-	public function indexAfterPaginate(Event $event, ResultSet $resultSet) {
-		$query = $resultSet->__debugInfo()['query'];
+	public function indexAfterPaginate(Event $event, ResultSet $resultSet, Query $query) {
 		$this->dashboardQuery = clone $query;
 	}
 
@@ -353,6 +405,8 @@ class StaffTable extends AppTable {
 		$this->ControllerAction->setFieldOrder([
 			'institution_position_id', 'start_date', 'position_type', 'FTE', 'staff_type_id', 'staff_status_id', 'staff_name'
 		]);
+		
+		
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -391,6 +445,79 @@ class StaffTable extends AppTable {
 		}
 	}
 
+	public function addBeforeSave(Event $event, Entity $entity, $data) {
+		if (!$entity->errors()) {
+			$staffId = $data[$this->alias()]['staff_id'];
+			$startDate = new Date($data[$this->alias()]['start_date']);
+
+			// check if staff is already assigned
+			$staffRecord = $this->find()
+				->contain(['Institutions'])
+				->where([
+					$this->aliasField('staff_id') => $staffId,
+					$this->aliasField('institution_id'). ' <> ' => $entity->institution_id,
+					'OR' => [
+						[$this->aliasField('end_date').' >= ' => $startDate],
+						[$this->aliasField('end_date').' IS NULL']
+					]
+				])
+				->order([$this->aliasField('created') => 'DESC'])
+				->first();
+
+			if ($staffRecord) {
+				// For staff transfer
+
+				$StaffTransferRequestsTable = TableRegistry::get('Institution.StaffTransferRequests');
+				$transferRecord = $StaffTransferRequestsTable->find()
+					->where([
+						$StaffTransferRequestsTable->aliasField('staff_id') => $staffId,
+						$StaffTransferRequestsTable->aliasField('status').' NOT IN ' => [self::NEW_REQUEST, self::APPROVED]
+					]);
+
+				if ($transferRecord->count() == 0) {
+					if ($entity->institution_id != $staffRecord->institution_id) {
+						$data[$this->alias()]['institution_id'] = $entity->institution_id;
+						$data[$this->alias()]['previous_institution_id'] = $staffRecord->institution_id;
+						$data[$this->alias()]['transfer_from'] = $staffRecord->institution->name;
+						$this->Session->write('Institution.Staff.transfer', $data[$this->alias()]);
+						$event->stopPropagation();
+						$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffTransferRequests', 'add'];
+						return $this->controller->redirect($action);
+					}
+				} else {
+					$event->stopPropagation();
+					$this->Alert->error('Staff.transferExists');
+					$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Staff', 'add'];
+					return $this->controller->redirect($action);
+				}
+			} else {
+				// For staff assignment
+				// $this->Session->write('Institution.Staff.add', $data[$this->alias()]);
+				// $event->stopPropagation();
+				// $action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffAssignments', 'add'];
+				// return $this->controller->redirect($action);
+			}
+		}
+	}
+
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+		if (!$entity->isNew() && $entity->dirty('FTE')) {
+			$newFTE = $entity->FTE;
+			$newEndDate = $entity->end_date;
+
+			$entity->FTE = $entity->getOriginal('FTE');
+			$entity->newFTE = $newFTE;
+
+			if (empty($newEndDate)) {
+				if ($entity->start_date < date('Y-m-d')) {
+					$entity->end_date = date('Y-m-d');
+				} else {
+					$entity->end_date = $entity->start_date;
+				}
+			}
+		}
+	}
+
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
 		$institutionPositionId = $entity->institution_position_id;
 		$staffId = $entity->staff_id;
@@ -417,28 +544,27 @@ class StaffTable extends AppTable {
 				unset($entity->position);
 				unset($entity->user);
 				$newEntity = $this->newEntity($entity->toArray());
-				if ($this->save($newEntity)) {
-					$url = [
-						'plugin' => 'Institution', 
-						'controller' => 'Institutions', 
-						'action' => 'Staff', 
-						'0' => 'view', 
-						'1' => $newEntity->id
-					];
-					$url = array_merge($url, $this->ControllerAction->params());
-					$event->stopPropagation();
-					return $this->controller->redirect($url);
-				}
+				$this->save($newEntity);
 			} else {
 				if (empty($entity->end_date) || $entity->end_date->isToday() || $entity->end_date->isFuture()) {
 					$this->addStaffRole($entity);
+					$this->updateStaffStatus($entity, $this->assigned);
 				} else {
 					$this->removeStaffRole($entity);
+					$this->updateStaffStatus($entity, $this->endOfAssignment);
 				}
 			}
 		} else { // add operation
 			$this->addStaffRole($entity);
+			$this->updateStaffStatus($entity, $this->assigned);
 		}
+	}
+
+	private function updateStaffStatus($entity, $staffStatuses) {
+		$this->updateAll(
+			['staff_status_id' => $staffStatuses],
+			['id' => $entity->id]
+		);
 	}
 
 	private function updateSecurityGroupUserId($entity, $groupUserId) {
@@ -491,7 +617,9 @@ class StaffTable extends AppTable {
 			$activeStatusId = $this->Workflow->getStepsByModelCode($positionTable->registryAlias(), 'ACTIVE');
 			$positionConditions = [];
 			$positionConditions[$this->Positions->aliasField('institution_id')] = $institutionId;
-			$positionConditions[$this->Positions->aliasField('status_id').' IN '] = $activeStatusId;
+			if (!empty($activeStatusId)) {
+				$positionConditions[$this->Positions->aliasField('status_id').' IN '] = $activeStatusId;
+			}
 			if (!empty($excludeArray)) {
 				$positionConditions[$this->Positions->aliasField('id').' NOT IN '] = $excludeArray;
 			}
@@ -530,16 +658,28 @@ class StaffTable extends AppTable {
 			$url = $this->ControllerAction->url('view');
 			$url['action'] = 'StaffUser';
 			$url[1] = $entity['_matchingData']['Users']['id'];
+			$url['id'] = $entity->id;
 			$buttons['view']['url'] = $url;
 		}
 
 		if (isset($buttons['edit'])) {
-			$url = $this->ControllerAction->url('edit');
-			$url[1] = $entity->id;
+			$url = $this->ControllerAction->url('add');
+			$url['action'] = 'StaffPositionProfiles';
+			$url['institution_staff_id'] = $entity->id;
+			$url['action'] = 'StaffPositionProfiles';
 			$buttons['edit']['url'] = $url;
 		}
 
 		return $buttons;
+	}
+
+	public function onUpdateFieldStaffStatusId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
+			$attr['type'] = 'hidden';
+			$assignedStatus = $this->StaffStatuses->findCodeList()['ASSIGNED'];
+			$attr['value'] = $assignedStatus;
+			return $attr;
+		}
 	}
 
 	public function onUpdateFieldPositionType(Event $event, array $attr, $action, Request $request) {
@@ -626,6 +766,7 @@ class StaffTable extends AppTable {
 
 	public function addOnInitialize(Event $event, Entity $entity) {
 		$this->Session->delete('Institution.Staff.new');
+		$this->Session->delete('Institution.Staff.transfer');
 	}
 
 	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -706,6 +847,10 @@ class StaffTable extends AppTable {
 	}
 
 	public function viewBeforeAction(Event $event) {
+		if ($this->Session->read('Institution.StaffPositionProfiles.addSuccessful')) {
+			$this->Alert->success('StaffPositionProfiles.request');
+			$this->Session->delete('Institution.StaffPositionProfiles.addSuccessful');
+		}
 		$this->ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
 		$this->ControllerAction->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
 		$i = 10;
@@ -840,12 +985,13 @@ class StaffTable extends AppTable {
 			$InstitutionRubrics->delete($value);
 		}
 
-		$InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
-
-		$InstitutionSubjectStaff->deleteAll([
-			$InstitutionSubjectStaff->aliasField('staff_id') => $staffId,
-			$InstitutionSubjectStaff->aliasField('institution_subject_id') . ' IN ' => $subjectIdsDuringStaffPeriod
-		]);
+		if (!empty($subjectIdsDuringStaffPeriod)) {
+			$InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+			$InstitutionSubjectStaff->deleteAll([
+				$InstitutionSubjectStaff->aliasField('staff_id') => $staffId,
+				$InstitutionSubjectStaff->aliasField('institution_subject_id') . ' IN ' => $subjectIdsDuringStaffPeriod
+			]);
+		}
 
 		// this logic here is to delete the roles from groups when the staff is deleted from the school
 		try {
@@ -1092,6 +1238,7 @@ class StaffTable extends AppTable {
 			} else {
 				foreach ($resultSet as $entity) {
 					$this->removeStaffRole($entity);
+					$this->updateStaffStatus($entity, $this->endOfAssignment);
 				}
 			}
 		}
@@ -1120,6 +1267,7 @@ class StaffTable extends AppTable {
 				['security_group_user_id' => NULL],
 				[$this->primaryKey() => $entity->id]
 			);
+			$this->updateStaffStatus($entity, $this->endOfAssignment);
 		}
 	}
 }
