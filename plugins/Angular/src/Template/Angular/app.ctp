@@ -1,7 +1,7 @@
-angular.module('<?= $ng_app ?>', <?= $ng_modules ?>).run(function($rootScope) {
-	$rootScope.baseUrl = '<?= $this->request->base ?>';
-	$rootScope.url = function(url) {
-		return $rootScope.baseUrl + '/' + url;
+angular.module('<?= $ng_app ?>', <?= $ng_modules ?>).run(function() {
+	angular.baseUrl = '<?= $this->request->base ?>';
+	angular.url = function(url) {
+		return angular.baseUrl + '/' + url;
 	}
 })
 .config(['$locationProvider', function($locationProvider){

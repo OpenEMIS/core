@@ -10,19 +10,55 @@ class AssessmentPeriodsTable extends AssessmentsAppTable {
 		parent::initialize($config);
 		$this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
 
+		$this->fields['id']['label'] = false;
 		$this->fields['id']['type'] = 'hidden';
+		$this->fields['id']['fieldName'] = "Assessments[assessment_periods][{{key}}][id]";
+		$this->fields['id']['attr']['value'] = "{{showValue(period.id)}}";
+
+		$this->fields['assessment_id']['label'] = false;
 		$this->fields['assessment_id']['type'] = 'hidden';
+		$this->fields['assessment_id']['fieldName'] = "Assessments[assessment_periods][{{key}}][assessment_id]";
+		$this->fields['assessment_id']['attr']['value'] = "{{showValue(period.assessment_id)}}";
+
+		$this->fields['weight']['label'] = false;
 		$this->fields['weight']['type'] = 'string';
+		$this->fields['weight']['fieldName'] = "Assessments[assessment_periods][{{key}}][weight]";
+		$this->fields['weight']['attr']['value'] = "{{showValue(period.weight)}}";
+
+		$this->fields['code']['label'] = false;
 		$this->fields['code']['required'] = true;
+		$this->fields['code']['fieldName'] = "Assessments[assessment_periods][{{key}}][code]";
+		$this->fields['code']['attr']['value'] = "{{showValue(period.code)}}";
+
+		$this->fields['name']['label'] = false;
 		$this->fields['name']['required'] = true;
+		$this->fields['name']['fieldName'] = "Assessments[assessment_periods][{{key}}][name]";
+		$this->fields['name']['attr']['value'] = "{{showValue(period.name)}}";
+
 		$this->fields['start_date']['label'] = false;
 		$this->fields['start_date']['required'] = true;
+		$this->fields['start_date']['inputWrapperStyle'] = 'margin-top:1px;margin-bottom:-2px;';
+		$this->fields['start_date']['fieldName'] = "Assessments[assessment_periods][{{key}}][start_date]";
+		$this->fields['start_date']['attr']['value'] = "{{showValue(period.start_date)}}";
+
 		$this->fields['end_date']['label'] = false;
 		$this->fields['end_date']['required'] = true;
+		$this->fields['end_date']['inputWrapperStyle'] = 'margin-top:1px;margin-bottom:-2px;';
+		$this->fields['end_date']['fieldName'] = "Assessments[assessment_periods][{{key}}][end_date]";
+		$this->fields['end_date']['attr']['value'] = "{{showValue(period.end_date)}}";
+
 		$this->fields['date_enabled']['label'] = false;
 		$this->fields['date_enabled']['required'] = true;
+		$this->fields['date_enabled']['inputWrapperStyle'] = 'margin-top:1px;margin-bottom:-2px;';
+		$this->fields['date_enabled']['fieldName'] = "Assessments[assessment_periods][{{key}}][date_enabled]";
+		$this->fields['date_enabled']['attr']['value'] = "{{showValue(period.date_enabled)}}";
+
 		$this->fields['date_disabled']['label'] = false;
 		$this->fields['date_disabled']['required'] = true;
+		$this->fields['date_disabled']['inputWrapperStyle'] = 'margin-top:1px;margin-bottom:-2px;';
+		$this->fields['date_disabled']['fieldName'] = "Assessments[assessment_periods][{{key}}][date_disabled]";
+		$this->fields['date_disabled']['attr']['value'] = "{{showValue(period.date_disabled)}}";
+
 	}
 
 	public function getFormFields($action = 'edit') {

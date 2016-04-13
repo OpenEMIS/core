@@ -13,6 +13,14 @@ angular.module('kd.common.svc', [])
                 'alert': {}
             },
         };
+        scope.baseUrl = angular.baseUrl;
+        scope.selectedOption = function(elementId, optionId) {
+            var element = angular.element('#'+elementId);
+            return (element.attr('kd-selected-value')==optionId) ? true : false;
+        };
+        scope.showValue = function (value) {
+            return typeof value === "object" ? "" : value;
+        };
     }
 
     var self = this;
@@ -40,7 +48,6 @@ angular.module('kd.common.svc', [])
             }, function(error) {
                 console.log('Error: ', error);
             });
-
     };
 
     this.addRow = function(scope, elem, attr) {
