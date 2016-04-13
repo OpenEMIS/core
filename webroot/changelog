@@ -3,6 +3,7 @@ v3.4.15
 - Added Position Type to Staff reports
 - Fixed a bug that caused System Configurations not showing all items in arabic language
 - Displaying content in Arabic language now uses a larger font size for easier readability
+- Add and remove staff status actions
 
 v3.4.18
 - Fixed a bug on Import that caused the system not able to import students properly
