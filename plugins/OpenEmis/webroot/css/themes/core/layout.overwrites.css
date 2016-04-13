@@ -194,6 +194,15 @@ a.btn-green:hover {
     margin: 0 0 0 4px;
 }
 
+@media only screen and (max-width: 800px) {
+    .treemap-breadcrumb {
+        height: auto;
+    }
+}
+
+
+/* Fix RTL brackets */
+
 p,
 a,
 span,
@@ -201,8 +210,9 @@ span,
     unicode-bidi: plaintext;
 }
 
-@media only screen and (max-width: 800px) {
-    .treemap-breadcrumb {
-        height: auto;
-    }
+
+/* Fix header more menu icon alignment */
+
+.rtl .more-menu-item i {
+    float: right;
 }
