@@ -24,7 +24,6 @@ class AngularController extends AppController {
 			$table = TableRegistry::get($requestAttr['className']);
 			$fields = array_fill_keys(array_keys($table->fields), '');
 			$data = $table->newEntity($fields);
-			// pr($data);
 
 			if (isset($requestAttr['fieldName'])) {
 				$requestAttr['attr']['name'] = $requestAttr['fieldName'];
@@ -32,23 +31,27 @@ class AngularController extends AppController {
 			if (isset($requestAttr['label'])) {
 				$requestAttr['attr']['label'] = $requestAttr['label'];
 			}
-			$_attrDefaults = [
-				'type' => 'string',
-				'model' => $requestAttr['model'],
-				'label' => true
-			];
+			if (isset($requestAttr['required']) && $requestAttr['required']) {
+				$requestAttr['attr']['required'] = $requestAttr['required'];
+			}
+			$requestAttr['attr']['type'] = $requestAttr['type'];
+			$requestAttr['label'] = false;
 
-			$_fieldAttr = array_merge($_attrDefaults, $requestAttr);
-
-			$_type = $_fieldAttr['type'];
-			$_fieldModel = $_fieldAttr['model'];
-			$fieldName = $_fieldModel . '.' . $_fieldAttr['field'];
-			$options = isset($_fieldAttr['attr']) ? $_fieldAttr['attr'] : [];
-					
-			$this->set('_type', $_type);
 			$this->set('data', $data);
-			$this->set('_fieldAttr', $_fieldAttr);
-			$this->set('options', $options);
+			$this->set('_fieldAttr', $requestAttr);
+			$this->set('_type', $requestAttr['type']);
+			$this->set('options', $requestAttr['attr']);
+			$this->set('request', $this->request);
+
+			$context = [
+		           	'schema' => $table->schema(),
+		           	'errors' => '{{errors[key].'.$requestAttr['field'].'}}'
+		        ];
+			$this->set('context', $context);
+
+			if ($requestAttr['type']=='date') {
+				$this->set('datepicker', $requestAttr);
+			}
 		} else {
 			$this->set('_type', null);
 		}
