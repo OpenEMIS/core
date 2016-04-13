@@ -1,4 +1,7 @@
-<?php use Cake\Utility\Inflector;?>
+<?php 
+	use Cake\Utility\Inflector;
+	use Cake\Collection\Collection;
+?>
 
 <?php if ($action == 'add' || $action == 'edit') : ?>
 	<style>
@@ -56,26 +59,41 @@
 									<th class="<?= $thClass ?>"><label class="table-header-label"><?= Inflector::humanize(str_replace('_id', '', $formField)) ?></label></th>
 								<?php endif; ?>
 							<?php endforeach;?>
-
 							<th></th>
 							<th class="cell-delete">&nbsp;</th>
 						</tr>
 					</thead>
 
-					<tbody id="table_assessment_periods" ca-id="assessment_periods" ca-on-click-target-element ca-on-click-target-handler="addRow" on-ready="onReadyFunction">
+					<tbody id="table_assessment_periods" ca-id="assessment_periods" ca-on-click-target-element ca-on-click-target-handler="addRow">
+						
+						<?php pr(json_encode($data->assessment_periods));?>
+
+						<div class="hidden" ng-init='onClickTargets.handlers.addRow.assessment_periods = <?php echo json_encode($data->assessment_periods)?>'></div>
 						
 						<tr ng:repeat="(key, period) in onClickTargets.handlers.addRow.assessment_periods">
+							
+							<td></td>
 
-							<td ng:repeat="(fieldname, attr) in period">
-								
-								<input type="{{attr.type}}" id="assessmentperiods-{{fieldname}}" class="form-error" name="Assessments[assessment_periods][{{key}}][{{fieldname}}]" value="{{attr.value}}"/>
-								<span ng:show="attr.type!='hidden'" class="error">
-									<ul ng:show="attr.errors.length>0" class="error-message error-message-in-table">
-										<li ng:repeat="error in attr.errors">{{error}}</li>
-									</ul>
-								</span>
-
-							</td>
+							<?php 
+								$encodedData = json_encode($attr['entity']);
+								$types = [
+									'string' => 'textbox',
+									'hidden' => 'hidden',
+									'date' => 'datepicker'
+								];
+						        foreach ($attr['formFields'] as $formField) : ?>
+								<?php
+									if (array_key_exists($attr['fields'][$formField]['type'], $types)):
+										$type = $types[$attr['fields'][$formField]['type']];
+										$attributes = json_encode($attr['fields'][$formField]);
+								?>
+									<td>
+										<<?= $type ?> attributes='<?= $attributes ?>'></<?= $type ?>>
+									</td>
+									<?php $this->HtmlField->includes[$type]['include'] = true;?>
+								<?php endif;?>
+							<?php endforeach;?>
+							<?php $this->HtmlField->includes(null, 'edit'); ?>
 
 							<td>
 								<button class="btn btn-dropdown action-toggle btn-single-action" title="Delete" aria-expanded="true" type="reset" ng-click="onClickTargets.handlers.removeRow('assessment_periods', key)"><i class="fa fa-trash"></i> <span><?= __('Delete')?></span></button>
