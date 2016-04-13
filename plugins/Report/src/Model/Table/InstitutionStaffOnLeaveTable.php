@@ -8,6 +8,8 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
+use Cake\I18n\Time;
+use Cake\I18n\Date;
 
 class InstitutionStaffOnLeaveTable extends AppTable  {
 	public function initialize(array $config) {
@@ -36,7 +38,7 @@ class InstitutionStaffOnLeaveTable extends AppTable  {
 
 		$leaveDate = $requestData->leaveDate;
 
-		if (!$data[$field] instanceof Time) {
+		if (!$data[$field] instanceof Time || !$data[$field] instanceof Date) {
 			// to handle both d-m-y and d-m-Y because datepicker and cake doesnt validate
 			$dateObj = date_create_from_format("d-m-Y",$data[$field]);
 			if ($dateObj === false) {
