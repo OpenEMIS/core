@@ -601,9 +601,15 @@ trait MessagesTrait {
 				]
 			],
 			'StaffPositionProfiles' => [
+				'institution_position_id' => [
+					'ruleCheckFTE' => 'No available FTE.',
+				],
+				'start_date' => [
+					'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
+				],
 				'end_date' => [
-					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
-				]
+					'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
+				],
 			],
 			'TransferRequests' => [
 				'end_date' => [

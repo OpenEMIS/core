@@ -95,10 +95,10 @@ class StaffTransferRequestsTable extends StaffTransfer {
 	}
 
 	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
-		$staffName = $this->Users->get($entity->staff_id)->name_with_id;
-		$staffTypeName = $this->StaffTypes->get($entity->staff_type_id)->name;
-		$institutionName = $this->Institutions->get($entity->institution_id)->name;
-		$positionName = $this->Positions->get($entity->institution_position_id)->name;
+		$staffName = $this->Users->get($this->getEntityProperty($entity, 'staff_id'))->name_with_id;
+		$staffTypeName = $this->StaffTypes->get($this->getEntityProperty($entity, 'staff_type_id'))->name;
+		$institutionName = $this->Institutions->get($this->getEntityProperty($entity, 'institution_id'))->name;
+		$positionName = $this->Positions->get($this->getEntityProperty($entity, 'institution_position_id'))->name;
 		
 		$this->field('status', ['type' => 'readonly']);
 		$this->field('staff_id', ['type' => 'readonly', 'attr' => ['value' => $staffName]]);
@@ -112,7 +112,7 @@ class StaffTransferRequestsTable extends StaffTransfer {
 		$this->field('update', ['type' => 'hidden', 'value' => 0, 'visible' => true]);
 		$this->field('type', ['type' => 'hidden', 'visible' => true, 'value' => self::TRANSFER]);
 
-		$message = $this->getMessage($this->aliasField('alreadyAssigned'), ['sprintf' => [$staffName, $entity->transfer_from]]);
+		$message = $this->getMessage($this->aliasField('alreadyAssigned'), ['sprintf' => [$staffName, $this->getEntityProperty($entity, 'transfer_from')]]);
 		$this->Alert->warning($message, ['type' => 'text']);
 		$this->Alert->info($this->aliasField('confirmRequest'));
 	}
