@@ -93,7 +93,7 @@ class AppTable extends Table {
 	// For use in Cake 3.2 and above
 	public function getEntityProperty($entity, $propertyName) {
 		if ($entity->has($propertyName)) {
-			return $entity->$propertyName;
+			return $entity->get($propertyName);
 		} else if (array_key_exists($propertyName, $entity->invalid())) {
 			return $entity->invalid($propertyName);
 		} else {
