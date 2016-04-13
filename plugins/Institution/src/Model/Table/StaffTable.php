@@ -95,6 +95,8 @@ class StaffTable extends AppTable {
 		$this->addBehavior('User.AdvancedSpecificNameTypeSearch', [
 			'modelToSearch' => $this->Users
 		]);
+
+		$this->addBehavior('Institution.StaffValidation');
 		/**
 		 * End Advance Search Types
 		 */
@@ -112,24 +114,8 @@ class StaffTable extends AppTable {
     }
 
 	public function validationDefault(Validator $validator) {
-		return $validator
-			->allowEmpty('end_date')
-			->add('end_date', 'ruleCompareDateReverse', [
-		        'rule' => ['compareDateReverse', 'start_date', true]
-	    	])
-	    	->allowEmpty('staff_name')
-			->add('staff_name', 'ruleInstitutionStaffId', [
-				'rule' => ['institutionStaffId'],
-				'on' => 'create'
-			])
-			->add('start_date', 'ruleStaffExistWithinPeriod', [
-				'rule' => ['checkStaffExistWithinPeriod'],
-				'on' => 'update'
-			])
-			->add('institution_position_id', 'ruleCheckFTE', [
-				'rule' => ['checkFTE'],
-			])
-		;
+		$validator = $this->buildStaffValidation();
+		return $validator;
 	}
 
 	public function validationAllowEmptyName(Validator $validator) {
