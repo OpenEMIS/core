@@ -1,4 +1,4 @@
-/* TOOLBAR WITH INPUTS v.1.0.5 */
+/* TOOLBAR WITH INPUTS v.1.0.6 */
 
 .toolbar-wrapper {
     height: auto;
@@ -58,4 +58,8 @@
 
 .rtl .toolbar-wrapper .form-control {
     padding: 2px 10px 2px 26px !important;
+}
+
+.rtl .toolbar-wrapper .form-control {
+    font-size: 14px;
 }
