@@ -14,5 +14,11 @@ angular.module('assessmentAdminModule', ['kd.common.svc'])
             }
         };
 
+        // var form = angular.element("form[action='" + $scope.baseUrl + "/Assessments/Assessments/add']");
+        // var buttons = form.find('button[type="submit"]');
+        // pr(buttons.attr('type'));
+        // buttons.attr('type', 'reset');
+        // pr(buttons.attr('type'));
+        // button[0].attr
     })
     ;

@@ -42,7 +42,6 @@ class AssessmentsTable extends ControllerActionTable {
         $this->addBehavior('OpenEmis.Section');
 	}
 
-
 /******************************************************************************************************************
 **
 ** cakephp events
