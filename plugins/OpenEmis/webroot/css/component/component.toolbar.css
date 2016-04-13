@@ -1,13 +1,13 @@
-/* TOOLBAR v.1.0.4 */
+/* TOOLBAR v.1.0.6 */
 
 .toolbar {
     display: inline-block;
+    position: absolute;
     background-color: transparent;
     border-left: 1px solid #DDD;
     z-index: 9;
     padding: 4px 10px;
     height: 38px;
-    position: relative;
     font-size: 0px;
 }
 
@@ -132,6 +132,7 @@
     .toolbar {
         padding-left: 0 !important;
         border-left: 0 !important;
+        position: relative;
     }
     .btn-none {
         height: 32px !important;
@@ -234,6 +235,10 @@
     padding: 4px 10px;
 }
 
+.rtl .toolbar i {
+    margin: 0;
+}
+
 .rtl .toolbar-search {
     padding-left: 245px !important;
     padding-right: 10px !important;
@@ -321,9 +326,21 @@
 }
 
 .rtl .button-responsive .btn {
-    padding: 6px 9px 4px 3px;
+    padding: 4px 9px 4px 3px;
 }
 
+.rtl .custom-buttons span.caret-down {
+    position: relative;
+}
+
+.rtl .custom-buttons span.caret-down:after {
+    position: relative;
+    top: -3px;
+}
+
+.rtl .custom-buttons .action-dropdown .dropdown-arrow {
+    left: 38px !important;
+}
 
 /*==========  Non-Mobile First Method  ==========*/
 
@@ -441,6 +458,12 @@
     }
     .rtl .action-toggle {
         margin-bottom: 0 !important;
+    }
+    .rtl .custom-buttons .dropdown-menu .dropdown-arrow {
+        right: 94px !important;
+    }
+    .rtl .custom-buttons .action-dropdown {
+        top: 26px;
     }
 }
 

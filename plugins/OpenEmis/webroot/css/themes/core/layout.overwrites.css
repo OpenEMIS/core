@@ -1,5 +1,5 @@
 /* 
-Core Overwrites: v.1.0.3
+Core Overwrites: v.1.0.4
 */
 
 
@@ -150,8 +150,82 @@ a.btn-green:hover {
     border-collapse: collapse !important;
 }
 
-/* Main Navigation */
 
-.rtl .nav-level-1 a {
-    padding: 10px 10px 10px 25px !important;
+/* Quick Fix for Breadcrumb */
+
+.treemap-breadcrumb li {
+    line-height: 30px;
+    white-space: nowrap;
+}
+
+.treemap-breadcrumb > li + li::before {
+    margin: 4px !important;
+}
+
+.treemap-breadcrumb li a,
+.treemap-breadcrumb li a:hover,
+.treemap-breadcrumb li a:focus {
+    margin: 0 4px;
+    height: 32px;
+}
+
+.rtl .treemap-breadcrumb {
+    font-size: 14px;
+}
+
+.rtl .treemap-breadcrumb li {
+    line-height: 25px;
+    vertical-align: middle;
+}
+
+.rtl .treemap-breadcrumb > li:after {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.rtl .treemap-breadcrumb > li.active {
+    padding: 0 4px;
+    line-height: 30px;
+}
+
+.rtl .treemap-breadcrumb li a,
+.rtl .treemap-breadcrumb li a:hover,
+.rtl .treemap-breadcrumb li a:focus {
+    margin: 0 0 0 4px;
+}
+
+@media only screen and (max-width: 800px) {
+    .treemap-breadcrumb {
+        height: auto;
+    }
+}
+
+
+/* Fix RTL brackets */
+
+p,
+a,
+.breadcrumb.panel-breadcrumb li,
+.rtl .breadcrumb.panel-breadcrumb li {
+    unicode-bidi: plaintext;
+    unicode-bidi: -moz-plaintext;
+    unicode-bidi: -webkit-plaintext;
+}
+
+.breadcrumb.panel-breadcrumb li {
+    direction: ltr;
+}
+
+
+/* Fix header more menu icon alignment */
+
+.rtl .more-menu-item i {
+    float: right;
+}
+
+
+/* Fix Old Tabs Line Height */
+
+.rtl .horizontal-tabs span a {
+    line-height: 31px;
 }
