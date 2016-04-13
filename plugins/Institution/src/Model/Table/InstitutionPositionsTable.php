@@ -10,9 +10,10 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
+use Cake\ORM\TableRegistry;
+use Cake\Collection\Collection;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
-use Cake\ORM\TableRegistry;
 
 class InstitutionPositionsTable extends AppTable {
 	use OptionsTrait;
@@ -180,7 +181,6 @@ class InstitutionPositionsTable extends AppTable {
 			$staffTitleOptions = array_intersect_key($staffTitleOptions, array_intersect($staffTitleRoles, $roleOptions));
 
 			// Adding the opt group
-			$types = $this->getSelectOptions('Staff.position_types');
 			$titles = [];
 			foreach ($staffTitleOptions as $title) {
 				$type = __($types[$title->type]);
@@ -189,8 +189,8 @@ class InstitutionPositionsTable extends AppTable {
 		} else {
 			$titles = $this->StaffPositionTitles
 				->find()
-			    ->where(['id >' => 1])
-			    ->order(['order'])
+			    ->where([$this->StaffPositionTitles->aliasField('id').' >' => 1])
+			    ->order([$this->StaffPositionTitles->aliasField('order')])
 			    ->map(function ($row) use ($types) { // map() is a collection method, it executes the query
 			        $row->name_and_type = $row->name . ' - ' . (array_key_exists($row->type, $types) ? $types[$row->type] : $row->type);
 			        return $row;

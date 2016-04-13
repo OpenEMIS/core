@@ -787,12 +787,12 @@ class ValidationBehavior extends Behavior {
 	}
 
 	public static function noOverlappingAbsenceDate($field, $SearchTable, array $globalData) {
-		if ($globalData['data']['start_date'] instanceof Time) {
+		if ($globalData['data']['start_date'] instanceof Time || $globalData['data']['start_date'] instanceof Date) {
 			$startDate = $globalData['data']['start_date']->format('Y-m-d');
 		} else {
 			$startDate = date('Y-m-d', strtotime($globalData['data']['start_date']));
 		}
-		if ($globalData['data']['end_date'] instanceof Time) {
+		if ($globalData['data']['end_date'] instanceof Time || $globalData['data']['end_date'] instanceof Date) {
 			$endDate = $globalData['data']['end_date']->format('Y-m-d');
 		} else {
 			$endDate = date('Y-m-d', strtotime($globalData['data']['end_date']));
@@ -981,6 +981,8 @@ class ValidationBehavior extends Behavior {
 		// no id this is NOT a add method
 		if (array_key_exists('id', $globalData['data']) && !empty($globalData['data']['id'])) {
 			$identicalPositionHolders->where([$InstitutionStaff->aliasField('id').' != '. $globalData['data']['id']]);
+		} else if (array_key_exists('institution_staff_id', $globalData['data']) && !empty($globalData['data']['institution_staff_id'])) {
+			$identicalPositionHolders->where([$InstitutionStaff->aliasField('id').' != '. $globalData['data']['institution_staff_id']]);
 		}
 
 		$dateCondition = [];

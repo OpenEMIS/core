@@ -769,24 +769,26 @@ class InstitutionClassesTable extends ControllerActionTable {
 	}
 
 	private function attachClassInfo($classEntity, $studentOptions) {
-		$query = $this->ClassStudents->find()
-					->contain(['InstitutionClasses'])
-					->where([
-						$this->aliasField('institution_id') => $classEntity->institution_id,
-						$this->aliasField('academic_period_id') => $classEntity->academic_period_id,
-					])
-					->where([
-							$this->ClassStudents->aliasField('student_id').' IN' => array_keys($studentOptions)
-						]);
-		$classesWithStudents = $query->toArray();
+		if (!empty($studentOptions)) {
+			$query = $this->ClassStudents->find()
+						->contain(['InstitutionClasses'])
+						->where([
+							$this->aliasField('institution_id') => $classEntity->institution_id,
+							$this->aliasField('academic_period_id') => $classEntity->academic_period_id,
+						])
+						->where([
+								$this->ClassStudents->aliasField('student_id').' IN' => array_keys($studentOptions)
+							]);
+			$classesWithStudents = $query->toArray();
 
-		foreach ($classesWithStudents as $student) {
-			if ($student->institution_class_id != $classEntity->id) {
-				if (!isset($studentOptions[$student->institution_class->name])) {
-					$studentOptions[$student->institution_class->name] = ['text' => 'Class '.$student->institution_class->name, 'options' => [], 'disabled' => true];
+			foreach ($classesWithStudents as $student) {
+				if ($student->institution_class_id != $classEntity->id) {
+					if (!isset($studentOptions[$student->institution_class->name])) {
+						$studentOptions[$student->institution_class->name] = ['text' => 'Class '.$student->institution_class->name, 'options' => [], 'disabled' => true];
+					}
+					$studentOptions[$student->institution_class->name]['options'][] = ['value' => $student->student_id, 'text' => $studentOptions[$student->student_id]];
+					unset($studentOptions[$student->student_id]);
 				}
-				$studentOptions[$student->institution_class->name]['options'][] = ['value' => $student->student_id, 'text' => $studentOptions[$student->student_id]];
-				unset($studentOptions[$student->student_id]);
 			}
 		}
 		return $studentOptions;

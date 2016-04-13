@@ -47,7 +47,7 @@ class StudentCascadeDeleteBehavior extends Behavior {
 	}
 
 	private function deleteSubjectStudents(Entity $entity) {
-		if (!empty($this->subjectIds)) {
+		if (!empty($this->subjectIds) && !empty($this->classIds)) {
 			$SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
 			$SubjectStudents->deleteAll([
 				$SubjectStudents->aliasField('student_id') => $entity->student_id,

@@ -263,20 +263,22 @@ class RemoveBehavior extends Behavior {
 			->select(['target_foreign_key' => 'TargetTable.target'])
 			->from(['TargetTable' => $targetForeignKeys]);
 
-		$condition = [];
+		if (!empty($notUpdateQuery)) {
+			$condition = [];
 
-		$condition = [
-			$assoc->foreignKey() => $transferFrom, 
-			'NOT' => [
-				$assoc->foreignKey() => $transferFrom,
-				$assoc->targetForeignKey().' IN ' => $notUpdateQuery
-			]
-		];
-		
-		// Update all transfer records
-		$modelAssociationTable->updateAll(
-			[$assoc->foreignKey() => $transferTo],
-			$condition
-		);
+			$condition = [
+				$assoc->foreignKey() => $transferFrom, 
+				'NOT' => [
+					$assoc->foreignKey() => $transferFrom,
+					$assoc->targetForeignKey().' IN ' => $notUpdateQuery
+				]
+			];
+			
+			// Update all transfer records
+			$modelAssociationTable->updateAll(
+				[$assoc->foreignKey() => $transferTo],
+				$condition
+			);
+		}
 	}
 }
