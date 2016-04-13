@@ -1,5 +1,5 @@
 angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institutions.results.svc'])
-.controller('InstitutionsResultsCtrl', function($scope, UtilsSvc, AlertSvc, InstitutionsResultsSvc) {
+.controller('InstitutionsResultsCtrl', function($scope, $q, UtilsSvc, AlertSvc, InstitutionsResultsSvc) {
     $scope.action = 'view';
     $scope.message = null;
     $scope.gridOptions = null;
@@ -9,7 +9,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
         $scope.assessment_id = UtilsSvc.requestQuery('assessment_id');
 
         // init
-        InstitutionsResultsSvc.init($scope.baseUrl);
+        InstitutionsResultsSvc.init(angular.baseUrl);
 
         UtilsSvc.isAppendLoader(true);
         // getAssessment
@@ -124,20 +124,6 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
         });
     };
 
-    $scope.renderTotal = function(data, totalWeight) {
-        // to-do: dynamic value
-        var total = 0;
-        if (!isNaN(parseFloat(data.period_1)) && !isNaN(parseFloat(data.weight_1))) {
-            total += (data.period_1 * data.weight_1);
-        }
-
-        if (!isNaN(parseFloat(data.period_2)) && !isNaN(parseFloat(data.weight_2))) {
-            total += (data.period_2 * data.weight_2);
-        }
-
-        return total;
-    };
-
     $scope.onEditClick = function() {
         $scope.action = 'edit';
     };
@@ -154,15 +140,24 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
             var educationSubjectId = $scope.gridOptions.context.education_subject_id;
             var institutionId = $scope.gridOptions.context.institution_id;
             var academicPeriodId = $scope.gridOptions.context.academic_period_id;
+            var classId = $scope.gridOptions.context.class_id;
 
             InstitutionsResultsSvc.saveRowData(assessmentId, educationSubjectId, institutionId, academicPeriodId)
             .then(function(response) {
+                var promises = [];
+
+                $scope.gridOptions.api.forEachNode(function(rowNode) {
+                    promises.push(InstitutionsResultsSvc.saveTotal(rowNode.data, classId, institutionId, academicPeriodId, educationSubjectId));
+                });
+
+                return $q.all(promises);
             }, function(error) {
                 console.log(error);
             })
             .finally(function() {
                 UtilsSvc.isAppendSpinner(false, 'institution-result-table');
                 $scope.action = 'view';
+                $scope.onChangeSubject($scope.subject);
             });
         } else {
             $scope.action = 'view';
