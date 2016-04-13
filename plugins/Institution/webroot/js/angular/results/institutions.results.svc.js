@@ -1,5 +1,5 @@
 angular.module('institutions.results.svc', [])
-.service('InstitutionsResultsSvc', function($http, $q, KdOrmSvc) {
+.service('InstitutionsResultsSvc', function($http, $q, $filter, KdOrmSvc) {
     var models = {
         AssessmentsTable: 'Assessment.Assessments',
         AssessmentItemsTable: 'Assessment.AssessmentItems',
@@ -139,14 +139,7 @@ angular.module('institutions.results.svc', [])
                 var columnDef = {
                     headerName: headerName,
                     field: periodField,
-                    filter: 'number',
-                    cellStyle: function(params) {
-                        if (parseFloat(params.value) < subject.pass_mark) {
-                            return {color: '#CC5C5C'};
-                        } else {
-                            return {color: '#333'};
-                        }
-                    }
+                    filter: 'number'
                 };
 
                 if (action == 'edit' && period.editable) {
@@ -159,12 +152,29 @@ angular.module('institutions.results.svc', [])
                         inputElement.setAttribute('type', 'number');
                         inputElement.setAttribute('ng-pattern', '/^[0-9]+(\.[0-9]{1,2})?$/');
                         inputElement.setAttribute('step', '0.01');
-                        inputElement.setAttribute('ng-model', 'data.'+params.colDef.field);
+                        inputElement.setAttribute('ng-model', 'data.' + params.colDef.field);
                         inputElement.setAttribute('oe-student', parseInt(params.data.student_id));
                         inputElement.setAttribute('oe-period', period.id);
-                        inputElement.setAttribute('oe-original', params.value);
+                        inputElement.setAttribute('oe-original', parseFloat(params.value));
 
                         return inputElement;
+                    };
+                } else {
+                    columnDef.cellStyle = function(params) {
+                        if (parseFloat(params.value) < parseFloat(subject.pass_mark)) {
+                            return {color: '#CC5C5C'};
+                        } else {
+                            return {color: '#333'};
+                        }
+                    };
+                    columnDef.valueGetter = function(params) {
+                        var value = params.data[params.colDef.field];
+
+                        if (!isNaN(parseFloat(value))) {
+                            return $filter('number')(value, 2);
+                        } else {
+                            return '';
+                        }
                     };
                 }
 
@@ -173,19 +183,43 @@ angular.module('institutions.results.svc', [])
                 columnDefs.push({
                     headerName: "weight of " + period.id,
                     field: weightField,
-                    hide: true,
-                    filterParams: filterParams
+                    hide: true
                 });
             }, columnDefs);
 
-            columnDefs.push({
-                headerName: "Total",
-                field: "total",
+            var columnDef = {
+                headerName: "Total Mark",
+                field: "total_mark",
                 filter: "number",
-                cellRenderer: function(params) {
-                    return '{{renderTotal(data)}}';
+                valueGetter: function(params) {
+                    var totalMark = 0;
+
+                    for (var key in params.data) {
+                        if (/period_/.test(key) && angular.isNumber(params.data[key])) {
+                            var index = key.replace(/period_(\d+)/, '$1');
+                            totalMark += params.data[key] * (params.data['weight_'+index] / params.data.total_weight);
+                        }
+                    }
+
+                    if (totalMark > 0) {
+                        return $filter('number')(totalMark, 2);
+                    } else {
+                        return '';
+                    }
                 },
                 filterParams: filterParams
+            };
+
+            if (action == 'edit') {
+                columnDef.hide = true;
+            }
+
+            columnDefs.push(columnDef);
+
+            columnDefs.push({
+                headerName: "total weight",
+                field: "total_weight",
+                hide: true
             });
 
             return columnDefs;
@@ -199,6 +233,13 @@ angular.module('institutions.results.svc', [])
                     deferred.reject(response.data.error);
                 } else {
                     var subjectStudents = response.data.data;
+
+                    var totalWeight = 0;
+                    var periodObj = {};
+                    angular.forEach(periods, function(period, key) {
+                        totalWeight += parseFloat(period.weight);
+                        periodObj[period.id] = period;
+                    }, periodObj);
 
                     if (angular.isObject(subjectStudents) && subjectStudents.length > 0) {
                         var studentId = null;
@@ -218,15 +259,21 @@ angular.module('institutions.results.svc', [])
                                     openemis_id: subjectStudent.openemis_no,
                                     name: subjectStudent.name,
                                     student_id: currentStudentId,
-                                    total: 0
+                                    total_mark: null,
+                                    total_weight: totalWeight
                                 };
+
+                                angular.forEach(periods, function(period, key) {
+                                    studentResults['period_' + parseInt(period.id)] = '';
+                                    studentResults['weight_' + parseInt(period.id)] = parseFloat(periodObj[parseInt(period.id)]['weight']);
+                                });
+
                                 studentId = currentStudentId;
                             }
+
                             var marks = parseFloat(subjectStudent.marks);
                             if (!isNaN(marks)) {
                                 studentResults['period_' + parseInt(subjectStudent.assessment_period_id)] = marks;
-                                // to-do: get weight from periods
-                                studentResults['weight_' + parseInt(subjectStudent.assessment_period_id)] = 1;
                             }
                         }, rowData);
 
@@ -269,7 +316,7 @@ angular.module('institutions.results.svc', [])
                 var oldValue = obj.attributes['oe-original'].value;
                 var newValue = (obj.value.length > 0) ? parseFloat(obj.value) : null;
 
-                if (!isNaN(newValue) && (oldValue == 'undefined' && newValue != null) || (oldValue != 'undefined' && oldValue != newValue)) {
+                if (!isNaN(newValue) && (isNaN(oldValue) && newValue != null) || (!isNaN(oldValue) && oldValue != newValue)) {
                     var data = {
                         "marks" : newValue,
                         "assessment_id" : assessmentId,
@@ -285,6 +332,30 @@ angular.module('institutions.results.svc', [])
             });
 
             return $q.all(promises);
+        },
+
+        saveTotal: function(data, classId, institutionId, academicPeriodId, educationSubjectId) {
+            var totalMark = 0;
+
+            for (var key in data) {
+                if (/period_/.test(key) && angular.isNumber(data[key])) {
+                    var index = key.replace(/period_(\d+)/, '$1');
+                    totalMark += data[key] * (data['weight_'+index] / data.total_weight);
+                }
+            }
+
+            totalMark = totalMark ? $filter('number')(totalMark, 2) : null;
+
+            var data = {
+                "total_mark" : totalMark,
+                "student_id" : data.student_id,
+                "institution_class_id" : classId,
+                "institution_id" : institutionId,
+                "academic_period_id" : academicPeriodId,
+                "education_subject_id" : educationSubjectId
+            };
+
+            InstitutionSubjectStudentsTable.save(data);
         }
     }
 });

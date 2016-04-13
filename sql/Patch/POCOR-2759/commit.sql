@@ -165,7 +165,7 @@ CREATE TABLE `institution_subject_students` (
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
+  PRIMARY KEY (`student_id`,`institution_class_id`,`institution_id`,`academic_period_id`,`education_subject_id`),
   INDEX `student_id` (`student_id`),
   INDEX `institution_subject_id` (`institution_subject_id`),
   INDEX `institution_class_id` (`institution_class_id`),
