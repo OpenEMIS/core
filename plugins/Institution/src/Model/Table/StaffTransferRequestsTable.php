@@ -113,6 +113,7 @@ class StaffTransferRequestsTable extends StaffTransfer {
 		$this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $institutionName]]);
 		$this->field('institution_position_id', ['after' => 'institution_id', 'type' => 'readonly', 'attr' => ['value' => $positionName]]);
 		$this->field('staff_type_id', ['type' => 'readonly', 'attr' => ['value' => $staffTypeName]]);
+		$fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
 		$this->field('FTE', ['type' => 'readonly']);
 		$this->field('start_date', ['type' => 'readonly']);
 		$this->field('comment');
