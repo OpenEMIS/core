@@ -244,12 +244,14 @@ class AssessmentsTable extends ControllerActionTable {
 
 		// pr($entity);
 		$assessmentPeriodsErrors = [];
-		foreach ($entity->assessment_periods as $key => $item) {
-			$errors = [];
-			foreach ($item->errors() as $field => $messages) {
-				$errors[$field] = implode('<br/>', $messages);
+		if (!empty($entity->assessment_periods)) {
+			foreach ($entity->assessment_periods as $key => $item) {
+				$errors = [];
+				foreach ($item->errors() as $field => $messages) {
+					$errors[$field] = implode('<br/>', $messages);
+				}
+				$assessmentPeriodsErrors[$key] = $errors;
 			}
-			$assessmentPeriodsErrors[$key] = $errors;
 		}
 		$this->controller->set('assessmentPeriodsErrors', $assessmentPeriodsErrors);
 		if (!array_key_exists('items_patched', $extra)) {
