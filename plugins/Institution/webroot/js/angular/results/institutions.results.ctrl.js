@@ -1,5 +1,5 @@
 angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institutions.results.svc'])
-.controller('InstitutionsResultsCtrl', function($scope, $q, UtilsSvc, AlertSvc, InstitutionsResultsSvc) {
+.controller('InstitutionsResultsCtrl', function($scope, $filter, UtilsSvc, AlertSvc, InstitutionsResultsSvc) {
     $scope.action = 'view';
     $scope.message = null;
     $scope.gridOptions = null;
@@ -71,7 +71,12 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
             enableFilter: true,
             suppressMenuHide: true,
             singleClickEdit: true,
-            angularCompileRows: true,
+            onCellValueChanged: function(params) {
+                if (params.newValue != params.oldValue) {
+                    params.data.total_mark = InstitutionsResultsSvc.calculateTotal(params.data);
+                    $scope.gridOptions.api.refreshView();
+                }
+            },
             onGridReady: function() {
                 $scope.onChangeSubject(subject);
             }
@@ -82,7 +87,6 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
         var columnDefs = InstitutionsResultsSvc.getColumnDefs(action, subject, periods);
         if ($scope.gridOptions != null) {
             $scope.gridOptions.api.setColumnDefs(columnDefs);
-            $scope.gridOptions.api.refreshView();
             $scope.gridOptions.api.sizeColumnsToFit();
         }
     };
@@ -134,7 +138,13 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
 
     $scope.onSaveClick = function() {
         if ($scope.gridOptions != null) {
-            UtilsSvc.isAppendSpinner(true, 'institution-result-table');
+
+            var editablePeriods = {};
+            angular.forEach($scope.periods, function(period, key) {
+                if (period.editable) {
+                    editablePeriods[period.id] = period;
+                }
+            });
 
             var assessmentId = $scope.gridOptions.context.assessment_id;
             var educationSubjectId = $scope.gridOptions.context.education_subject_id;
@@ -142,23 +152,19 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
             var academicPeriodId = $scope.gridOptions.context.academic_period_id;
             var classId = $scope.gridOptions.context.class_id;
 
-            InstitutionsResultsSvc.saveRowData(assessmentId, educationSubjectId, institutionId, academicPeriodId)
-            .then(function(response) {
-                var promises = [];
-
-                $scope.gridOptions.api.forEachNode(function(rowNode) {
-                    promises.push(InstitutionsResultsSvc.saveTotal(rowNode.data, classId, institutionId, academicPeriodId, educationSubjectId));
+            // UtilsSvc.isAppendSpinner(true, 'institution-result-table');
+            $scope.gridOptions.api.forEachNode(function(row) {
+                var studentId = row.data.student_id;
+                InstitutionsResultsSvc.saveRowData(row.data, editablePeriods, studentId, assessmentId, educationSubjectId, institutionId, academicPeriodId)
+                .then(function(response) {
+                    return InstitutionsResultsSvc.saveTotal(row.data, studentId, classId, institutionId, academicPeriodId, educationSubjectId);
+                }, function(error) {
+                    console.log(error);
+                })
+                .finally(function() {
                 });
-
-                return $q.all(promises);
-            }, function(error) {
-                console.log(error);
-            })
-            .finally(function() {
-                UtilsSvc.isAppendSpinner(false, 'institution-result-table');
-                $scope.action = 'view';
-                $scope.onChangeSubject($scope.subject);
             });
+            $scope.action = 'view';
         } else {
             $scope.action = 'view';
         }
