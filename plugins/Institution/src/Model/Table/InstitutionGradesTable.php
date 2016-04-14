@@ -105,6 +105,8 @@ class InstitutionGradesTable extends AppTable {
 							$error = false;
 							$gradeIsSelected = true;
 
+							// need to set programme value since it was marked as required in validationDefault()
+							$grade['programme'] = $entity->programme;
 							$grade['start_date'] = $entity->start_date;
 							$grade['institution_id'] = $entity->institution_id;
 							if ($entity->has('end_date')) {
