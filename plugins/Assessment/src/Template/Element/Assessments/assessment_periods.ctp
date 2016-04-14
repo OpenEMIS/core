@@ -94,7 +94,6 @@
 									<?php 
 										if ($type=='datepicker') {
 											$this->HtmlField->includes[$type]['include'] = true;
-											$this->HtmlField->viewSet('datepicker', $attr['fields'][$formField]);
 										}
 									?>
 								<?php endif;?>

@@ -528,9 +528,11 @@ class HtmlFieldHelper extends Helper {
 				}
 			}
 		} else if ($action == 'edit') {
-			$attr['id'] = $attr['model'] . '_' . $field; 
-			if (array_key_exists('fieldName', $attr)) {
-				$attr['id'] = $this->_domId($attr['fieldName']);
+			if (!array_key_exists('id', $attr)) {
+				$attr['id'] = $attr['model'] . '_' . $field; 
+				if (array_key_exists('fieldName', $attr)) {
+					$attr['id'] = $this->_domId($attr['fieldName']);
+				}
 			}
 
 			$attr['date_options'] = array_merge($_options, $attr['date_options']);

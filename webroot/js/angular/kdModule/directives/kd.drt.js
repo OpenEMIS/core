@@ -65,7 +65,33 @@ angular.module('kd.drt', ['kd.common.svc'])
                 return angular.baseUrl + '/Angular/inputs?attributes='+attr.attributes;
             },
             link: function(scope, elem, attr) {
+                var options = {
+                    format: 'dd-mm-yyyy',
+                    todayBtn: 'linked',
+                    orientation: 'auto',
+                    autoclose: true,
+                    value: ''
+                };
+                if (typeof angular.datepickers === 'undefined') {
+                    angular.datepickers = [];
+                }
+                datepicker = elem.datepicker(options);
+                angular.datepickers.push(datepicker);
 
+                // This is a temp work-around to make datepickers rendered through angular directive to work as expexted.
+                // If the page has a datepicker input rendered through cakephp way,
+                // then this event attachment to document element might collide.
+                // Must re-visit this.
+                var _document = jQuery( document );
+                _document.on('DOMMouseScroll mousewheel scroll', function() {
+                        window.clearTimeout( t );
+                        t = window.setTimeout( function() {
+                            for (var i in angular.datepickers) {
+                                angular.datepickers[i].datepicker('place');
+                            }
+                        });
+                    }
+                );
             }
         };
     })
