@@ -26,7 +26,7 @@ class StaffTable extends AppTable {
 	private $assigned;
 	private $endOfAssignment;
 
-	const NEW_REQUEST = 0;
+	const PENDING = 0;
 	const APPROVED = 1;
 	const REJECTED = 2;
 	const CLOSED = 3;
@@ -263,9 +263,34 @@ class StaffTable extends AppTable {
 		// end: sort by name
 
 		$statusOptions = $this->StaffStatuses->find('list')->toArray();
-		$statusOptions[self::PENDING_PROFILE] = __('Pending Profile');
-		$statusOptions[self::PENDING_TRANSFERIN] = __('Pending Transfer In');
-		$statusOptions[self::PENDING_TRANSFEROUT] = __('Pending Transfer Out');
+
+		$approvedStatus = $this->Workflow->getStepsByModelCode('Institution.StaffPositionProfiles', 'APPROVED');
+		$StaffPositionProfilesTable = TableRegistry::get('Institution.StaffPositionProfiles');
+		$staffPositionProfilesRecordCount = $StaffPositionProfilesTable->find()
+			->where([
+				$StaffPositionProfilesTable->aliasField('institution_id') => $institutionId, 
+				$StaffPositionProfilesTable->aliasField('status_id'). ' NOT IN ' => $approvedStatus
+			])
+			->count();
+
+		$StaffTransferTable = TableRegistry::get('Institution.StaffTransferRequests');
+		$staffTransferInRecord = $StaffTransferTable->find()
+			->where([
+				$StaffTransferTable->aliasField('institution_id') => $institutionId, 
+				$StaffTransferTable->aliasField('status'). ' IN ' => [self::PENDING, self::APPROVED]
+			])
+			->count();
+
+		$staffTransferOutRecord = $StaffTransferTable->find()
+			->where([
+				$StaffTransferTable->aliasField('previous_institution_id') => $institutionId, 
+				$StaffTransferTable->aliasField('status'). ' IN ' => [self::PENDING]
+			])
+			->count();
+
+		$statusOptions[self::PENDING_PROFILE] = __('Pending Change in Assignment'). ' - '. $staffPositionProfilesRecordCount;
+		$statusOptions[self::PENDING_TRANSFERIN] = __('Pending Transfer In'). ' - ' . $staffTransferInRecord;
+		$statusOptions[self::PENDING_TRANSFEROUT] = __('Pending Transfer Out'). ' - ' . $staffTransferOutRecord;
 
 		$selectedStatus = $this->queryString('staff_status_id', $statusOptions);
 		$this->advancedSelectOptions($statusOptions, $selectedStatus);
@@ -452,7 +477,7 @@ class StaffTable extends AppTable {
 				$transferRecord = $StaffTransferRequestsTable->find()
 					->where([
 						$StaffTransferRequestsTable->aliasField('staff_id') => $staffId,
-						$StaffTransferRequestsTable->aliasField('status').' IN ' => [self::NEW_REQUEST, self::APPROVED]
+						$StaffTransferRequestsTable->aliasField('status').' IN ' => [self::PENDING, self::APPROVED]
 					]);
 
 				if ($transferRecord->count() == 0) {

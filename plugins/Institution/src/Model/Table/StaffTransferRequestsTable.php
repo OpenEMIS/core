@@ -147,6 +147,13 @@ class StaffTransferRequestsTable extends StaffTransfer {
 				$this->aliasField('type') => self::TRANSFER
 			];
 			if (!$AccessControl->isAdmin()) {
+				$userId = $event->subject()->Auth->user('id');
+				foreach ($institutionIds as $key => $val) {
+					$roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+					if (!$AccessControl->check(['Institutions', 'StaffTransferRequests', 'edit'], $roles)) {
+						unset($institutionIds[$key]);
+					}
+				}
 				$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
 			}
 
@@ -162,11 +169,12 @@ class StaffTransferRequestsTable extends StaffTransfer {
 			foreach ($resultSet as $key => $obj) {
 				$requestTitle = sprintf('Staff Transfer Approved (%s) from %s to %s', $obj->user->name, $obj->previous_institution->name, $obj->institution->name);
 				$url = [
-					'plugin' => false,
-					'controller' => 'Dashboard',
+					'plugin' => 'Institution',
+					'controller' => 'Institutions',
 					'action' => 'StaffTransferRequests',
 					'edit',
-					$obj->id
+					$obj->id,
+					'institution_id' => $obj->previous_institution_id
 				];
 
 				if (is_null($obj->modified)) {

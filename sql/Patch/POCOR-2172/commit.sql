@@ -86,10 +86,11 @@ CREATE TABLE `institution_staff_assignments` (
 ) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 
 -- labels
-INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferRequests', 'previous_institution_id', 'Institution > Staff Transfer Requests', 'Currently Assigned To', 1, 1, NOW());
-INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferRequests', 'institution_id', 'Institution > Staff Transfer Requests', 'Requested By', 1, 1, NOW());
-INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferApprovals', 'previous_institution_id', 'Institution > Staff Transfer Approvals', 'To Be Approved By', 1, 1, NOW());
-INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferApprovals', 'institution_id', 'Institution > Staff Transfer Approvals', 'Requested By', 1, 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferRequests', 'previous_institution_id', 'Institution -> Staff Transfer Requests', 'Currently Assigned To', 1, 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferRequests', 'institution_id', 'Institution -> Staff Transfer Requests', 'Requested By', 1, 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferApprovals', 'previous_institution_id', 'Institution -> Staff Transfer Approvals', 'To Be Approved By', 1, 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferApprovals', 'institution_id', 'Institution -> Staff Transfer Approvals', 'Requested By', 1, 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffPositionProfiles', 'FTE', 'Institutions -> Staff -> Change in Assignment', 'New FTE', 1, 1, NOW());
 
 -- security_functions
 INSERT INTO security_functions(`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) 
@@ -104,7 +105,7 @@ VALUES (1041, 'Staff Position Profile Workflow', 'Institutions', 'Institutions',
 -- For staff_position_profiles
 -- workflow_models
 INSERT INTO `workflow_models` (`name`, `model`, `created_user_id`, `created`) 
-VALUES ('Institutions > Staff > Staff Position Profile', 'Institution.StaffPositionProfiles', 1, NOW());
+VALUES ('Institutions > Staff > Change in Assignment', 'Institution.StaffPositionProfiles', 1, NOW());
 
 -- Pre-insert workflow for Institution > Staff
 SET @modelId := 0;
@@ -142,13 +143,18 @@ INSERT INTO `workflow_actions` (`name`, `action`, `visible`, `next_workflow_step
 
 INSERT INTO `workflow_statuses` (`code`, `name`, `is_editable`, `is_removable`, `workflow_model_id`, `created_user_id`, `created`) VALUES
 ('PENDING', 'Pending', 0, 0, @modelId, 1, NOW()),
+('CLOSED', 'Closed', 0, 0, @modelId, 1, NOW()),
 ('APPROVED', 'Approved', 0, 0, @modelId, 1, NOW());
 
 SET @activeId := 0;
-SET @inactiveId := 0;
+SET @closeId = 0;
 SELECT `id` INTO @activeId FROM `workflow_statuses` WHERE `code` = 'APPROVED' AND `workflow_model_id` = @modelId;
 INSERT INTO `workflow_statuses_steps` (`id`, `workflow_status_id`, `workflow_step_id`) VALUES
 (uuid(), @activeId, @activeStepId);
+
+SELECT `id` INTO @closeId FROM `workflow_statuses` WHERE `code` = 'CLOSED' AND `workflow_model_id` = @modelId;
+INSERT INTO `workflow_statuses_steps` (`id`, `workflow_status_id`, `workflow_step_id`) VALUES
+(uuid(), @closeId, @closedStepId);
 -- End Pre-insert
 
 -- add missing index on institution_students
