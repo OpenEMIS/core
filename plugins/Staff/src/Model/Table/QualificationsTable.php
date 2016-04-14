@@ -22,6 +22,8 @@ class QualificationsTable extends ControllerActionTable {
 		$this->belongsTo('QualificationSpecialisations', ['className' => 'FieldOption.QualificationSpecialisations']);
 
 		$this->addBehavior('OpenEmis.Autocomplete');
+
+		$this->behaviors()->get('ControllerAction')->config('actions.download.show', true);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -166,33 +168,13 @@ class QualificationsTable extends ControllerActionTable {
 		$this->controller->set('selectedAction', $this->alias());
 	}
 
-	public function afterAction(Event $event) {
+	public function afterAction(Event $event, ArrayObject $extra) {
 		$this->setupTabElements();
 	}
 	
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
-    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
     	$events['ControllerAction.Model.ajaxInstitutionsAutocomplete'] = 'ajaxInstitutionsAutocomplete';
     	return $events;
     }
-
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {   
-		if ($action == "view") {
-			if (array_key_exists(1, $this->request->params['pass'])) {
-				$filename = $this->get($this->request->params['pass'][1])->file_content;
-			}
-			
-			if (!empty($filename)) {
-				$toolbarButtons['download']['type'] = 'button';
-				$toolbarButtons['download']['label'] = '<i class="fa kd-download"></i>';
-				$toolbarButtons['download']['attr'] = $attr;
-				$toolbarButtons['download']['attr']['title'] = __('Download');
-				$url = $this->url('download');
-				if (!empty($url['action'])) {
-					$toolbarButtons['download']['url'] = $url;
-				}
-			}
-		}
-	}
 }
