@@ -62,7 +62,7 @@ class StaffTransferRequestsTable extends StaffTransfer {
 				$this->aliasField('staff_id') => $transfer['staff_id'],
 				$this->aliasField('previous_institution_id') => $transfer['previous_institution_id'],
 				$this->aliasField('institution_position_id') => $transfer['institution_position_id'],
-				$this->aliasField('status') => self::NEW_REQUEST,
+				$this->aliasField('status') => self::PENDING,
 				$this->aliasField('type') => self::TRANSFER
 			])
 			->first();
@@ -88,7 +88,7 @@ class StaffTransferRequestsTable extends StaffTransfer {
 				foreach ($staffTransfer as $key => $value) {
 					$entity->{$key} = $value;
 				}
-				$entity->status = self::NEW_REQUEST;
+				$entity->status = self::PENDING;
 				$entity->type = self::TRANSFER;
 			}
 		} else { // invalid transfer data

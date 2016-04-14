@@ -88,7 +88,7 @@ CREATE TABLE `institution_staff_assignments` (
 -- labels
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferRequests', 'previous_institution_id', 'Institution > Staff Transfer Requests', 'Currently Assigned To', 1, 1, NOW());
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferRequests', 'institution_id', 'Institution > Staff Transfer Requests', 'Requested By', 1, 1, NOW());
-INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferApprovals', 'previous_institution_id', 'Institution > Staff Transfer Approvals', 'Currently Assigned To', 1, 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferApprovals', 'previous_institution_id', 'Institution > Staff Transfer Approvals', 'To Be Approved By', 1, 1, NOW());
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffTransferApprovals', 'institution_id', 'Institution > Staff Transfer Approvals', 'Requested By', 1, 1, NOW());
 
 -- security_functions
