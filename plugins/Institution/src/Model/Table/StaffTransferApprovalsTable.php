@@ -74,9 +74,8 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 		$this->field('transfer_type');
 
 		$staffId = $entity->staff_id;
-		// $startDate = $start;
-		$institutionId = $this->Session->read('Institution.Institutions.id');
 
+		$institutionId = $entity->previous_institution_id;
 		$InstitutionStaff = TableRegistry::get('Institution.Staff');
 		$staffRecord = $InstitutionStaff->find()
 			->where([
