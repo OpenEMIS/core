@@ -72,7 +72,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
             suppressMenuHide: true,
             singleClickEdit: true,
             angularCompileRows: true,
-            onReady: function() {
+            onGridReady: function() {
                 $scope.onChangeSubject(subject);
             }
         };
