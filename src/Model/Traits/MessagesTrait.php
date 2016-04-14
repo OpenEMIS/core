@@ -409,7 +409,9 @@ trait MessagesTrait {
 			'errorApproval' => 'Record cannot be assigned due to errors encountered',
 		],
 		'StaffTransferApprovals' => [
-			'transferType' => 'Please select the transfer type.'
+			'transferType' => 'Please select the transfer type.',
+			'effectiveDate' => 'Please enter an effective date for the partial transfer.',
+			'newFTE' => 'Please select a new FTE for the partial transfer.'
 		],
 		'UndoStudentStatus' => [
 			'noGrades' => 'No Available Grades',

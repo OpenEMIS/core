@@ -17,7 +17,7 @@ use App\Model\Table\ControllerActionTable;
 
 class StaffTransfer extends ControllerActionTable {
 	// Type for application
-	const NEW_REQUEST = 0;
+	const PENDING = 0;
 	const APPROVED = 1;
 	const REJECTED = 2;
 	const CLOSED = 3;
@@ -45,9 +45,9 @@ class StaffTransfer extends ControllerActionTable {
 		$fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
 		
 		$this->field('status');
-		$this->field('staff_id');
-		$this->field('previous_institution_id', ['after' => 'staff_id']);
+		$this->field('previous_institution_id');
 		$this->field('institution_id', ['after' => 'previous_institution_id', 'visible' => ['index' => true, 'edit' => true, 'view' => true]]);
+		$this->field('staff_id');
 		$this->field('institution_position_id', ['after' => 'institution_id', 'visible' => ['edit' => true, 'view' => true]]);
 		$this->field('type', ['visible' => false]);
 		$this->field('staff_type_id', ['after' => 'institution_position_id', 'visible' => ['view' => true, 'edit' => true, 'add' => true]]);
@@ -94,7 +94,7 @@ class StaffTransfer extends ControllerActionTable {
 			self::APPROVED => __('Approved'),
 			self::REJECTED => __('Rejected'),
 			self::CLOSED => __('Closed'),
-			self::NEW_REQUEST => __('New')
+			self::PENDING => __('Pending Approval')
 		];
 
 		$attr['options'] = $statusOptions;
@@ -107,7 +107,7 @@ class StaffTransfer extends ControllerActionTable {
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
     	$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-    	if ($entity->status_id != self::NEW_REQUEST) {
+    	if ($entity->status_id != self::PENDING) {
     		if (isset($buttons['edit'])) {
     			unset($buttons['edit']);
     		}
@@ -124,7 +124,7 @@ class StaffTransfer extends ControllerActionTable {
 			self::APPROVED => __('Approved'),
 			self::REJECTED => __('Rejected'),
 			self::CLOSED => __('Closed'),
-			self::NEW_REQUEST => __('New')
+			self::PENDING => __('Pending Approval')
 		];
 		if (array_key_exists($entity->status, $statusOptions)) {
 			$name = $statusOptions[$entity->status];
@@ -146,7 +146,7 @@ class StaffTransfer extends ControllerActionTable {
 		$urlParams = $this->url('index');
 		$action = $urlParams['action'];
 		$page = 'view';
-		if (in_array($entity->status_id, [self::NEW_REQUEST, self::APPROVED])) {
+		if (in_array($entity->status_id, [self::PENDING, self::APPROVED])) {
 			if ($this->AccessControl->check(['Institutions', 'StaffTransferRequests', 'edit'])) {
 				$page = 'edit';
 			}
