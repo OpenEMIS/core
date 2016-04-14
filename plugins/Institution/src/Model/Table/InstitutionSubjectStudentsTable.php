@@ -49,6 +49,7 @@ class InstitutionSubjectStudentsTable extends AppTable {
 				'marks' => $ItemResults->aliasField('marks'),
 				'assessment_period_id' => $ItemResults->aliasField('assessment_period_id'),
 				'student_id' => $this->aliasField('student_id'),
+				'total_mark' => $this->aliasField('total_mark'),
 				'openemis_no' => $Users->aliasField('openemis_no'),
 				'name' => $query->func()->concat([
 					$Users->aliasField('first_name') => 'literal',

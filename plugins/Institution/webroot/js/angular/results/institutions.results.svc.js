@@ -139,35 +139,8 @@ angular.module('institutions.results.svc', [])
                 var columnDef = {
                     headerName: headerName,
                     field: periodField,
-                    filter: 'number'
-                };
-
-                if (action == 'edit' && period.editable) {
-                    columnDef.headerName += " <i class='fa fa-pencil-square-o fa-lg header-icon'></i>";
-                    columnDef.cellClass = 'oe-cell-highlight';
-                    columnDef.cellRenderer = function(params) {
-                        var inputElement = document.createElement("input");
-
-                        inputElement.setAttribute('class', 'ag-cell-edit-input oe-cell-editable');
-                        inputElement.setAttribute('type', 'number');
-                        inputElement.setAttribute('ng-pattern', '/^[0-9]+(\.[0-9]{1,2})?$/');
-                        inputElement.setAttribute('step', '0.01');
-                        inputElement.setAttribute('ng-model', 'data.' + params.colDef.field);
-                        inputElement.setAttribute('oe-student', parseInt(params.data.student_id));
-                        inputElement.setAttribute('oe-period', period.id);
-                        inputElement.setAttribute('oe-original', parseFloat(params.value));
-
-                        return inputElement;
-                    };
-                } else {
-                    columnDef.cellStyle = function(params) {
-                        if (parseFloat(params.value) < parseFloat(subject.pass_mark)) {
-                            return {color: '#CC5C5C'};
-                        } else {
-                            return {color: '#333'};
-                        }
-                    };
-                    columnDef.valueGetter = function(params) {
+                    filter: 'number',
+                    valueGetter: function(params) {
                         var value = params.data[params.colDef.field];
 
                         if (!isNaN(parseFloat(value))) {
@@ -175,7 +148,14 @@ angular.module('institutions.results.svc', [])
                         } else {
                             return '';
                         }
-                    };
+                    },
+                    filterParams: filterParams
+                };
+
+                if (action == 'edit' && period.editable) {
+                    columnDef.headerName = headerName + " <i class='fa fa-pencil-square-o fa-lg header-icon'></i>";
+                    columnDef.editable = true;
+                    columnDef.cellClass = 'oe-cell-highlight';
                 }
 
                 this.push(columnDef);
@@ -187,34 +167,21 @@ angular.module('institutions.results.svc', [])
                 });
             }, columnDefs);
 
-            var columnDef = {
+            columnDefs.push({
                 headerName: "Total Mark",
                 field: "total_mark",
                 filter: "number",
                 valueGetter: function(params) {
-                    var totalMark = 0;
+                    var value = params.data[params.colDef.field];
 
-                    for (var key in params.data) {
-                        if (/period_/.test(key) && angular.isNumber(params.data[key])) {
-                            var index = key.replace(/period_(\d+)/, '$1');
-                            totalMark += params.data[key] * (params.data['weight_'+index] / params.data.total_weight);
-                        }
-                    }
-
-                    if (totalMark > 0) {
-                        return $filter('number')(totalMark, 2);
+                    if (!isNaN(parseFloat(value))) {
+                        return $filter('number')(value, 2);
                     } else {
                         return '';
                     }
                 },
                 filterParams: filterParams
-            };
-
-            if (action == 'edit') {
-                columnDef.hide = true;
-            }
-
-            columnDefs.push(columnDef);
+            });
 
             columnDefs.push({
                 headerName: "total weight",
@@ -222,7 +189,31 @@ angular.module('institutions.results.svc', [])
                 hide: true
             });
 
+            columnDefs.push({
+                headerName: "is modified",
+                field: "is_dirty",
+                hide: true
+            });
+
             return columnDefs;
+        },
+
+        getStudents: function(institutionId, classId, academicPeriodId, educationSubjectId) {
+            var deferred = $q.defer();
+
+            var success = function(response) {
+                if (angular.isDefined(response.data.error)) {
+                    deferred.reject(response.data.error);
+                } else {
+                    deferred.resolve(response.data.data);
+                }
+            };
+
+            var error = function(error) {
+                deferred.reject(error);
+            };
+
+            return deferred.promise;
         },
 
         getRowData: function(periods, institutionId, classId, assessmentId, academicPeriodId, educationSubjectId) {
@@ -259,7 +250,7 @@ angular.module('institutions.results.svc', [])
                                     openemis_id: subjectStudent.openemis_no,
                                     name: subjectStudent.name,
                                     student_id: currentStudentId,
-                                    total_mark: null,
+                                    total_mark: subjectStudent.total_mark,
                                     total_weight: totalWeight
                                 };
 
@@ -309,46 +300,57 @@ angular.module('institutions.results.svc', [])
             return deferred.promise;
         },
 
-        saveRowData: function(assessmentId, educationSubjectId, institutionId, academicPeriodId) {
+        calculateTotal: function(data) {
+            var totalMark = 0;
+
+            for (var key in data) {
+                if (/period_/.test(key)) {
+                    var index = key.replace(/period_(\d+)/, '$1');
+                    totalMark += data[key] * (data['weight_'+index] / data.total_weight);
+                }
+            }
+
+            if (totalMark > 0) {
+                return $filter('number')(totalMark, 2);
+            } else {
+                return '';
+            }
+        },
+
+        saveRowData: function(row, editablePeriods, studentId, assessmentId, educationSubjectId, institutionId, academicPeriodId) {
             var promises = [];
 
-            angular.forEach(angular.element('.oe-cell-editable'), function(obj, key) {
-                var oldValue = obj.attributes['oe-original'].value;
-                var newValue = (obj.value.length > 0) ? parseFloat(obj.value) : null;
+            angular.forEach(row, function(value, key) {
+                if (/period_/.test(key)) {
+                    var index = key.replace(/period_(\d+)/, '$1');
+                    if (angular.isDefined(editablePeriods[index])) {
+                        var newValue = !isNaN(parseFloat(value)) ? $filter('number')(value, 2) : null;
 
-                if (!isNaN(newValue) && (isNaN(oldValue) && newValue != null) || (!isNaN(oldValue) && oldValue != newValue)) {
-                    var data = {
-                        "marks" : newValue,
-                        "assessment_id" : assessmentId,
-                        "education_subject_id" : educationSubjectId,
-                        "institution_id" : institutionId,
-                        "academic_period_id" : academicPeriodId,
-                        "student_id" : parseInt(obj.attributes['oe-student'].value),
-                        "assessment_period_id" : parseInt(obj.attributes['oe-period'].value)
-                    };
+                        var data = {
+                            "marks" : newValue,
+                            "assessment_id" : assessmentId,
+                            "education_subject_id" : educationSubjectId,
+                            "institution_id" : institutionId,
+                            "academic_period_id" : academicPeriodId,
+                            "student_id" : studentId,
+                            "assessment_period_id" : parseInt(index)
+                        };
 
-                    promises.push(AssessmentItemResultsTable.save(data));
+                        promises.push(AssessmentItemResultsTable.save(data));
+                    }
                 }
             });
 
             return $q.all(promises);
         },
 
-        saveTotal: function(data, classId, institutionId, academicPeriodId, educationSubjectId) {
-            var totalMark = 0;
-
-            for (var key in data) {
-                if (/period_/.test(key) && angular.isNumber(data[key])) {
-                    var index = key.replace(/period_(\d+)/, '$1');
-                    totalMark += data[key] * (data['weight_'+index] / data.total_weight);
-                }
-            }
-
-            totalMark = totalMark ? $filter('number')(totalMark, 2) : null;
+        saveTotal: function(row, studentId, classId, institutionId, academicPeriodId, educationSubjectId) {
+            var totalMark = this.calculateTotal(row);
+            totalMark = !isNaN(parseFloat(totalMark)) ? $filter('number')(totalMark, 2) : null;
 
             var data = {
                 "total_mark" : totalMark,
-                "student_id" : data.student_id,
+                "student_id" : studentId,
                 "institution_class_id" : classId,
                 "institution_id" : institutionId,
                 "academic_period_id" : academicPeriodId,
