@@ -144,7 +144,7 @@ angular.module('institutions.results.svc', [])
 
                 if (action == 'edit' && period.editable) {
                     columnDef.headerName += " <i class='fa fa-pencil-square-o fa-lg header-icon'></i>";
-                    columnDef.cellClass = 'ag-cell-highlight';
+                    columnDef.cellClass = 'oe-cell-highlight';
                     columnDef.cellRenderer = function(params) {
                         var inputElement = document.createElement("input");
 

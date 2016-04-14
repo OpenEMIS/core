@@ -150,7 +150,6 @@ class InstitutionsController extends AppController  {
 		switch ($action) {
 			case 'Results':
 				$this->Angular->addModules([
-					'agGrid',
 					'alert.svc',
 					'institutions.results.ctrl',
 					'institutions.results.svc'

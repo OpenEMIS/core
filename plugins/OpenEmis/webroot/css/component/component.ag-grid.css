@@ -26,12 +26,21 @@
 
 /* AG-HEADER */
 
-.ag-fresh .ag-header-cell {
+.ag-fresh div.ag-header {
+    background: none;
+    border-bottom: 0px;
+}
+
+.ag-fresh .ag-header-row div.ag-header-cell {
     border-top: 0 !important;
     border-bottom: 0 !important;
-    border-color: #DDD !important;
-    border-style: solid !important;
+    border-color: #DDD;
+    border-style: solid;
     position: relative;
+}
+
+.ag-fresh span.ag-header-cell-text {
+    text-shadow: none;
 }
 
 .ag-fresh .ag-header-cell .ag-header-cell-label {
@@ -53,6 +62,83 @@
     border-bottom: 1px solid #DDD !important;
 }
 
+select.ag-filter-select {
+    width: 192px !important;
+    margin: 10px 10px 0px 10px;
+    /*margin: 10px;*/
+    filter: 5px;
+}
+
+/* HIGH TABLE DIRECTIVE (SEVIN) */
+
+.hightable .ag-filter {
+    height: 292px;
+}
+
+.hightable div.ag-menu,
+.hightable div.ag-filter,
+.hightable .ag-filter div {
+    height: auto;
+}
+
+.hightable .ag-menu {
+    border: 0 !important;
+}
+
+.hightable .ag-filter .ag-filter-header-container:first-child {
+    height: 50px;
+}
+
+.hightable .ag-filter .ag-filter-header-container + .ag-filter-header-container {
+    height: 42px;
+}
+
+.hightable .ag-filter .ag-filter-list-viewport {
+    height: 200px;
+}
+
+.hightable .ag-filter .ag-filter-item {
+    /*padding-top: 8px;*/
+    padding-bottom: 16px;
+    width: 200px;
+}
+
+.hightable .ag-header-cell-label {
+    padding: 0px;
+}
+
+.hightable .ag-header-cell-custom-label {
+    width: 100%;
+    height: 100%;
+}
+
+.hightable .ag-header-row div.ag-header-cell {
+    border-left: 0 !important;
+}
+
+.hightable .ag-header-row div.ag-header-cell {
+    border-left: 0 !important;
+}
+
+.hightable .ag-header-icon.ag-header-cell-menu-button:hover {
+    background: transparent;
+}
+
+.hightable .ag-header-icon.ag-header-cell-menu-button:hover:after {
+    color: #ccc;
+}
+
+.hightable .ag-cell:first-child {
+    border-left: 0 !important;
+}
+
+.hightable .ag-overlay-wrapper.ag-overlay-loading-wrapper .spinner-wrapper .spinner-text {
+    height: 70px;
+}
+
+.hightable .ag-overlay-wrapper.ag-overlay-loading-wrapper .spinner-wrapper .spinner-text .loading-percentage {
+    height: 20px;
+}
 
 /* AG-BODY */
 
@@ -128,8 +214,12 @@
     right: -1px;
 }
 
-.ag-header-cell-menu-button svg,
+/*.ag-header-cell-menu-button svg,
 .ag-header-icon {
+    display: none;
+}*/
+
+.ag-header-cell-menu-button svg {
     display: none;
 }
 
@@ -315,7 +405,7 @@
     right: 7px; 
 }
 
-.rtl .ag-filter-value {
+.rtl .ag-filter-value{
     margin-right: 8px;
 }
 
