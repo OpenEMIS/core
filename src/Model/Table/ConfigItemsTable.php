@@ -169,7 +169,8 @@ class ConfigItemsTable extends AppTable {
 						$optionTable = TableRegistry::get('ConfigItemOptions');
 						$options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
 							->where([
-								'ConfigItemOptions.option_type' => $entity->option_type
+								'ConfigItemOptions.option_type' => $entity->option_type,
+								'ConfigItemOptions.visible' => 1
 							])
 							->toArray();
 						$attr['options'] = $options;
