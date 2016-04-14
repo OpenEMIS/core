@@ -23,7 +23,11 @@ class QualificationsTable extends ControllerActionTable {
 
 		$this->addBehavior('OpenEmis.Autocomplete');
 
-		$this->behaviors()->get('ControllerAction')->config('actions.download.show', true);
+		// setting this up to be overridden in viewAfterAction(), this code is required
+		$this->behaviors()->get('ControllerAction')->config(
+			'actions.download.show', 
+			true
+		);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -103,6 +107,15 @@ class QualificationsTable extends ControllerActionTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		// determine if download button is shown
+		$showFunc = function() use ($entity) {
+			$filename = $entity->file_content;
+			return !empty($filename);
+		};
+		$this->behaviors()->get('ControllerAction')->config(
+			'actions.download.show', 
+			$showFunc
+		);
 
 		$this->fields['created_user_id']['options'] = [$entity->created_user_id => $entity->created_user->name];
 		if (!empty($entity->modified_user_id)) {
