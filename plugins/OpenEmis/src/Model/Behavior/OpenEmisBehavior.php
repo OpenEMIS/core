@@ -111,7 +111,17 @@ class OpenEmisBehavior extends Behavior {
 
 				$isDownloadButtonEnabled = $toolbarButtons->offsetExists('download');
 				if ($isDownloadButtonEnabled) {
-					$toolbarButtons['download']['url'][] = $primaryKey;
+					if ($download = $model->actions('download')) {
+						$determineShow = $download['show'];
+						if (is_callable($download['show'])) {
+							$determineShow = $determineShow();
+						}
+					}
+					if ($determineShow) {
+						$toolbarButtons['download']['url'][] = $primaryKey;
+					} else {
+						$toolbarButtons->offsetUnset('download'); // removes download button
+					}
 				}
 			}
 			$model->controller->set('toolbarButtons', $toolbarButtons);
