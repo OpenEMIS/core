@@ -159,3 +159,6 @@ INSERT INTO `workflow_statuses_steps` (`id`, `workflow_status_id`, `workflow_ste
 
 -- add missing index on institution_students
 ALTER TABLE `institution_students` ADD INDEX(`student_status_id`);
+
+-- Set LDAP Authentication to be not visible
+UPDATE config_item_options SET `visible` = 0 WHERE `option_type` = 'authentication_type' AND `option` = 'LDAP';
