@@ -95,9 +95,11 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 		$this->field('current_FTE', ['after' => 'current_institution_position_id', 'type' => 'disabled', 'attr' => ['value' => $staffRecord->FTE]]);
 		$this->field('current_staff_type', ['after' => 'current_FTE', 'type' => 'disabled', 'attr' => ['value' => $staffRecord->staff_type->name]]);
 		$this->field('current_start_date', ['after' => 'current_staff_type', 'type' => 'disabled', 'attr' => ['value' => $this->formatDate($staffRecord->start_date)]]);
-		$this->field('new_FTE', ['attr' => ['value' => $staffRecord->FTE], 'select' => false]);
+		$this->field('new_FTE', ['currentFTE' => $staffRecord->FTE]);
 		$this->field('new_staff_type_id', ['attr' => ['value' => $staffRecord->staff_type_id], 'select' => false]);
 		$this->field('staff_end_date', ['type' => 'date', 'value' => new Date(), 
+			'date_options' => ['startDate' => $staffRecord->start_date->format('d-m-Y'), 'endDate' => $entity->start_date]]);
+		$this->field('effective_date', ['after' => 'new_staff_type_id', 'type' => 'date', 'value' => new Date(), 
 			'date_options' => ['startDate' => $staffRecord->start_date->format('d-m-Y'), 'endDate' => $entity->start_date]]);
 		if ($entity->status != self::PENDING) {
 			$this->field('comment', ['attr' => [ 'disabled' => 'true']]);
@@ -114,11 +116,27 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 		if (empty($data[$this->alias()]['transfer_type'])) {
 			$extra[$this->aliasField('notice')] = $this->aliasField('transferType'); 
 		} else {
-			$process = function($model, $entity) {
-				$entity->status = self::APPROVED;
-				return $model->save($entity);
-			};
-			return $process;
+			$error = false;
+
+			if ($data[$this->alias()]['transfer_type'] == self::PARTIAL_TRANSFER) {
+				if (empty($data[$this->alias()]['effective_date'])) {
+					$extra[$this->aliasField('notice')] = $this->aliasField('effectiveDate');
+					$error = true;
+				}
+
+				if (empty($data[$this->alias()]['new_FTE'])) {
+					$extra[$this->aliasField('notice')] = $this->aliasField('newFTE');
+					$error = true;
+				}
+			} 
+
+			if (!$error) {
+				$process = function($model, $entity) {
+					$entity->status = self::APPROVED;
+					return $model->save($entity);
+				};
+				return $process;
+			}
 		}
 		
 	}
@@ -191,6 +209,13 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 
 			$where = [$this->aliasField('status') => self::PENDING, $this->aliasField('type') => self::TRANSFER];
 			if (!$AccessControl->isAdmin()) {
+				$userId = $event->subject()->Auth->user('id');
+				foreach ($institutionIds as $key => $val) {
+					$roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+					if (!$AccessControl->check(['Institutions', 'StaffTransferApprovals', 'edit'], $roles)) {
+						unset($institutionIds[$key]);
+					}
+				}
 				$where[$this->aliasField('previous_institution_id') . ' IN '] = $institutionIds;
 			}
 
@@ -206,11 +231,12 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 			foreach ($resultSet as $key => $obj) {
 				$requestTitle = sprintf('Transfer of staff (%s) from %s to %s', $obj->user->name, $obj->previous_institution->name, $obj->institution->name);
 				$url = [
-					'plugin' => false,
-					'controller' => 'Dashboard',
+					'plugin' => 'Institution',
+					'controller' => 'Institutions',
 					'action' => 'StaffTransferApprovals',
 					'edit',
-					$obj->id
+					$obj->id,
+					'institution_id' => $obj->previous_institution_id
 				];
 
 				if (is_null($obj->modified)) {
@@ -235,7 +261,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 		$attr['options'] = $options;
 		$attr['onChangeReload'] = true;
 		if (!isset($request->data[$this->alias()]['transfer_type'])) {
-			$request->data[$this->alias()]['transfer_type'] = key($options);	
+			$request->data[$this->alias()]['transfer_type'] = '';	
 		}
 		
 		return $attr;
@@ -250,6 +276,9 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 
 	public function onUpdateFieldNewFTE(Event $event, array $attr, $action, Request $request) {
 		$fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
+		if (isset($fteOptions[strval($attr['currentFTE'])])) {
+			unset($fteOptions[strval($attr['currentFTE'])]);
+		}
 		$transferType = $request->data[$this->alias()]['transfer_type'];
 		
 		if ($transferType == self::PARTIAL_TRANSFER) {
@@ -283,6 +312,21 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 		$transferType = $request->data[$this->alias()]['transfer_type'];
 		if ($transferType == self::FULL_TRANSFER) {	
 			$attr['visible'] = true;
+		} else {
+			$attr['visible'] = false;
+		}
+		return $attr;
+	}
+
+	public function onUpdateFieldEffectiveDate(Event $event, array $attr, $action, Request $request) {
+		$transferType = $request->data[$this->alias()]['transfer_type'];
+		
+		if ($transferType == self::PARTIAL_TRANSFER) {
+			$StaffTypes = TableRegistry::get('FieldOption.StaffTypes');
+			$options = $StaffTypes->getList()->toArray();
+			$attr['visible'] = true;
+			$attr['type'] = 'date';
+			$attr['value'] = new Date();
 		} else {
 			$attr['visible'] = false;
 		}

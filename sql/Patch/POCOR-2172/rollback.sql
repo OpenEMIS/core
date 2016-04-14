@@ -1,3 +1,6 @@
+-- institution_students
+ALTER TABLE `institution_students` DROP INDEX `student_status_id`;
+
 -- staff_statuses
 DROP TABLE `staff_statuses`;
 
@@ -20,6 +23,7 @@ DROP TABLE `institution_staff_assignments`;
 -- labels
 DELETE FROM `labels` WHERE `module` = 'StaffTransferRequests';
 DELETE FROM `labels` WHERE `module` = 'StaffTransferApprovals';
+DELETE FROM `labels` WHERE `module` = 'StaffPositionProfiles';
 
 -- security_functions
 DELETE FROM security_functions WHERE `id` IN (1039, 1040, 1041);
@@ -38,7 +42,7 @@ SET @modelId := 0;
 SELECT `id` INTO @modelId FROM `workflow_models` WHERE `model` = 'Institution.StaffPositionProfiles';
 DELETE FROM `workflows` WHERE `code` = 'STAFF-POSITION-PROFILE-01' AND `workflow_model_id` = @modelId;
 
-DELETE FROM `workflow_models` WHERE `name` = 'Institutions > Staff > Staff Position Profile' AND `model` = 'Institution.StaffPositionProfiles';
+DELETE FROM `workflow_models` WHERE `name` = 'Institutions > Staff > Change in Assignment' AND `model` = 'Institution.StaffPositionProfiles';
 
 DELETE FROM `workflow_statuses_steps` WHERE `workflow_status_id` IN (
   SELECT `id` FROM `workflow_statuses` WHERE `workflow_model_id` = @modelId
