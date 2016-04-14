@@ -56,7 +56,7 @@ angular.module('kd.common.svc', [])
         var response = self.ajax({url:targetUrl});
         response  
             .then(function(data) {
-                if (typeof scope.onClickTargets.handlers.addRow[target] !== 'undefined') {
+                if (typeof scope.onClickTargets.handlers.addRow[target] !== 'undefined' && scope.onClickTargets.handlers.addRow[target] !== null) {
                     scope.onClickTargets.handlers.addRow[target].push(data.data);
                 } else {
                     scope.onClickTargets.handlers.addRow[target] = [data.data];
