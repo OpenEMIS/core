@@ -29,4 +29,4 @@ echo $this->Html->script('OpenEmis.../plugins/scrolltabs/js/jquery.mousewheel');
 echo $this->Html->script('OpenEmis.../plugins/scrolltabs/js/jquery.scrolltabs');
 echo $this->Html->script('OpenEmis.../plugins/slider/js/bootstrap-slider');
 echo $this->Html->script('OpenEmis.../plugins/ng-scrolltabs/js/angular-ui-tab-scroll');
-echo $this->Html->script('OpenEmis.../plugins/ng-agGrid/js/ag-grid.min');
+echo $this->Html->script('OpenEmis.../plugins/ng-agGrid/js/ag-grid');

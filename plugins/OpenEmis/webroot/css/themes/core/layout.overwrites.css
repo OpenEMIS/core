@@ -243,6 +243,11 @@ a,
     vertical-align: middle;
 }
 
+.ag-fresh div.ag-header {
+    background: none;
+    border-bottom: 0px;
+}
+
 .ag-fresh .header-icon {
     color: #999;
     margin: 0 5px;
@@ -256,16 +261,34 @@ a,
     vertical-align: middle;
 }
 
-.ag-fresh .ag-cell-highlight {
-    background-color: #FFFACD !important;
+.ag-fresh .oe-cell-highlight {
+    background-color: #FFF9CA !important;
+    border-color: transparent;
 }
 
 .ag-fresh .ag-cell-edit-input {
-    height: 18px;
-    background-color: #FEF5AD;
+    height: 30px;
+    background-color: #FFF9CA;
     border: 0;
+    width: 100%;
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    right: 0;
+    bottom: 0;
+    padding: 5px;
+    width: 97%;
+}
+ 
+.ag-header-icon {
+    display: inline;
 }
 
+.ag-fresh .ag-header-cell-menu-button {
+    line-height: 16px !important;
+}
+
+.ag-header-cell-menu-button svg,
 .ag-sort-none-icon svg {
     display: none;
 }
@@ -285,6 +308,24 @@ a,
 .ag-height-fixed {
     height: 600px;
     min-height: 200px;
+}
+
+.ag-fresh .ag-header-row div.ag-header-cell {
+    border-color: #DDD;
+    border-style: solid;
+}
+
+.ag-fresh .ag-menu .ag-filter .ag-filter-select {
+    margin: 4px 0 0;
+    border: 0;
+    border-bottom: 1px solid #DDD;
+    border-radius: 0;
+}
+
+.ag-filter select {
+    -webkit-appearance: auto !important;
+    -moz-appearance: auto !important;
+    appearance: auto !important;
 }
 
 .rtl .ag-fresh .ag-header-cell .ag-header-cell-label { 
