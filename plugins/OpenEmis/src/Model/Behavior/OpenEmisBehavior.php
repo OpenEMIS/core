@@ -85,18 +85,46 @@ class OpenEmisBehavior extends Behavior {
 		$model->controller->set('indexElements', []);
 		// end deprecated
 
-		if (array_key_exists('toolbarButtons', $extra)) {
+		$this->attachEntityInfoToToolBar($extra);
+		if ($extra->offsetExists('indexButtons')) {
+			$model->controller->set('indexButtons', $extra['indexButtons']);
+		}
+	}
+
+	private function attachEntityInfoToToolBar($extra) {
+		$model = $this->_table;
+		// further modification on toolbar buttons attributes where entity information will be available
+		if ($extra->offsetExists('toolbarButtons')) {
 			$toolbarButtons = $extra['toolbarButtons'];
-			if ($model->action == 'view' && $model->actions('remove') != 'transfer') {
-				// not checking existence of entity in $extra so that errors will be shown if entity is removed unexpectedly
-				if (array_key_exists('remove', $toolbarButtons)) {
-					$toolbarButtons['remove']['attr']['field-value'] = $extra['entity']->{$model->primaryKey()};
+			$entity = $extra['entity'];
+			$isViewPage = $model->action == 'view';
+
+			if ($isViewPage) {
+				$isDeleteButtonEnabled = $toolbarButtons->offsetExists('remove');
+				$isNotTransferOperation = $model->actions('remove') != 'transfer';
+				$primaryKey = $entity->{$model->primaryKey()};
+				if ($isDeleteButtonEnabled && $isNotTransferOperation) {
+					// not checking existence of entity in $extra so that errors will be shown if entity is removed unexpectedly
+					// to attach primary key to the button attributes for delete operation
+					$toolbarButtons['remove']['attr']['field-value'] = $primaryKey;
+				}
+
+				$isDownloadButtonEnabled = $toolbarButtons->offsetExists('download');
+				if ($isDownloadButtonEnabled) {
+					if ($download = $model->actions('download')) {
+						$determineShow = $download['show'];
+						if (is_callable($download['show'])) {
+							$determineShow = $determineShow();
+						}
+					}
+					if ($determineShow) {
+						$toolbarButtons['download']['url'][] = $primaryKey;
+					} else {
+						$toolbarButtons->offsetUnset('download'); // removes download button
+					}
 				}
 			}
 			$model->controller->set('toolbarButtons', $toolbarButtons);
-		}
-		if (array_key_exists('indexButtons', $extra)) {
-			$model->controller->set('indexButtons', $extra['indexButtons']);
 		}
 	}
 
@@ -259,6 +287,17 @@ class OpenEmisBehavior extends Behavior {
 				$toolbarButtons['remove']['attr']['field-target'] = '#recordId';
 				$toolbarButtons['remove']['attr']['onclick'] = 'ControllerAction.fieldMapping(this)';
 			}
+
+			if ($download = $model->actions('download')) {
+				if ($download['show']) {
+					$toolbarButtons['download']['url'] = $model->url('download', false);
+					$toolbarButtons['download']['type'] = 'button';
+					$toolbarButtons['download']['label'] = '<i class="fa kd-download"></i>';
+					$toolbarButtons['download']['attr'] = $toolbarAttr;
+					$toolbarButtons['download']['attr']['title'] = __('Download');
+				}
+			}
+			
 		} else if ($action == 'transfer') {
 			$toolbarButtons['back']['url'] = $model->url('index', 'QUERY');
 			$toolbarButtons['back']['type'] = 'button';
@@ -316,5 +355,8 @@ class OpenEmisBehavior extends Behavior {
 
 		$extra['toolbarButtons'] = $toolbarButtons;
 		$extra['indexButtons'] = $indexButtons;
+
+		// entity information will be attached to toolbar in afterAction()
+		// refer to attachEntityInfoToToolBar() in afterAction()
 	}
 }
