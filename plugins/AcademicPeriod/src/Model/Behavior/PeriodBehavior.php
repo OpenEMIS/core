@@ -5,6 +5,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\I18n\Time;
+use Cake\I18n\Date;
 
 class PeriodBehavior extends Behavior {
 	public function findAcademicPeriod(Query $query, array $options) {
@@ -15,14 +16,14 @@ class PeriodBehavior extends Behavior {
 			$periodObj = $AcademicPeriods
 				->findById($options['academic_period_id'])
 				->first();
-
-			if ($periodObj->start_date instanceof Time) {
+				
+			if ($periodObj->start_date instanceof Time || $periodObj->start_date instanceof Date) {
 				$startDate = $periodObj->start_date->format('Y-m-d');
 			} else {
 				$startDate = date('Y-m-d', strtotime($periodObj->start_date));
 			}
 
-			if ($periodObj->end_date instanceof Time) {
+			if ($periodObj->end_date instanceof Time || $periodObj->end_date instanceof Date) {
 				$endDate = $periodObj->end_date->format('Y-m-d');
 			} else {
 				$endDate = date('Y-m-d', strtotime($periodObj->end_date));
@@ -52,13 +53,13 @@ class PeriodBehavior extends Behavior {
 			$startDate = $options['start_date'];
 			$endDate = $options['end_date'];
 
-			if ($startDate instanceof Time) {
+			if ($startDate instanceof Time || $startDate instanceof Date) {
 				$startDate = $startDate->format('Y-m-d');
 			} else {
 				$startDate = date('Y-m-d', strtotime($startDate));
 			}
 
-			if ($endDate instanceof Time) {
+			if ($endDate instanceof Time || $endDate instanceof Date) {
 				$endDate = $endDate->format('Y-m-d');
 			} else {
 				$endDate = date('Y-m-d', strtotime($endDate));

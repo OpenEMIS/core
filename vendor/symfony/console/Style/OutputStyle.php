@@ -16,7 +16,7 @@ use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * Decorates output to add console style guide helpers
+ * Decorates output to add console style guide helpers.
  *
  * @author Kevin Bond <kevinbond@gmail.com>
  */
@@ -112,5 +112,37 @@ abstract class OutputStyle implements OutputInterface, StyleInterface
     public function getFormatter()
     {
         return $this->output->getFormatter();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isQuiet()
+    {
+        return $this->output->isQuiet();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isVerbose()
+    {
+        return $this->output->isVerbose();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isVeryVerbose()
+    {
+        return $this->output->isVeryVerbose();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isDebug()
+    {
+        return $this->output->isDebug();
     }
 }

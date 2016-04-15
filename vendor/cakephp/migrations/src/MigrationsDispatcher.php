@@ -13,8 +13,6 @@ namespace Migrations;
 
 use Migrations\Command;
 use Symfony\Component\Console\Application;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Used to register all supported subcommand in order to make
@@ -38,5 +36,6 @@ class MigrationsDispatcher extends Application
         $this->add(new Command\Rollback());
         $this->add(new Command\Status());
         $this->add(new Command\MarkMigrated());
+        $this->add(new Command\Seed());
     }
 }
