@@ -1,4 +1,4 @@
-/* WIZARD v.1.0.6 */
+/* WIZARD v.1.0.7 */
 
 .fuelux .wizard {
     -webkit-box-shadow: none !important;
@@ -395,6 +395,10 @@
 
 /* RTL */
 
+.rtl .step-wrapper {
+    font-size: 14px;
+}
+
 .rtl .fuelux .wizard > ul.steps,
 .rtl .fuelux .wizard > .steps-container > ul.steps {
     right: 0;
@@ -469,10 +473,10 @@
     border-radius: 4px 0 0 0;
 }
 
-.rtl .fuelux .wizard .btn-prev,
+/*.rtl .fuelux .wizard .btn-prev,
 .rtl .fuelux .wizard .btn-next {
     position: relative;
-}
+}*/
 
 .rtl .fuelux .wizard .btn-prev {
     text-align: left;

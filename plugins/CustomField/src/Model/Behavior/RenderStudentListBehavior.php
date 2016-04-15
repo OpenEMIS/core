@@ -372,16 +372,20 @@ class RenderStudentListBehavior extends RenderBehavior {
 
                 // Logic to delete all answers before re-insert
                 $studentIds = array_keys($fieldObj);
-                $surveyIds = $StudentSurveys
-                    ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
-                    ->where([
-                        $StudentSurveys->aliasField('status_id') => $status,
-                        $StudentSurveys->aliasField('institution_id') => $institutionId,
-                        $StudentSurveys->aliasField('academic_period_id') => $periodId,
-                        $StudentSurveys->aliasField($formKey) => $formId,
-                        $StudentSurveys->aliasField('student_id IN ') => $studentIds
-                    ])
-                    ->toArray();
+                $surveyIds = [];
+                if (!empty($studentIds)) {
+                    $surveyIds = $StudentSurveys
+                        ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+                        ->where([
+                            $StudentSurveys->aliasField('status_id') => $status,
+                            $StudentSurveys->aliasField('institution_id') => $institutionId,
+                            $StudentSurveys->aliasField('academic_period_id') => $periodId,
+                            $StudentSurveys->aliasField($formKey) => $formId,
+                            $StudentSurveys->aliasField('student_id IN ') => $studentIds
+                        ])
+                        ->toArray();
+                }
+                
                 if (!empty($surveyIds)) {
                     $StudentSurveyAnswers->deleteAll([
                         $StudentSurveyAnswers->aliasField('institution_student_survey_id IN ') => $surveyIds

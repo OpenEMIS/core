@@ -16,8 +16,8 @@ namespace Cake\View\Widget;
 
 use Cake\View\Form\ContextInterface;
 use Cake\View\StringTemplate;
-use Cake\View\Widget\SelectBoxWidget;
-use Cake\View\Widget\WidgetInterface;
+use DateTime;
+use Exception;
 use RuntimeException;
 
 /**
@@ -218,17 +218,17 @@ class DateTimeWidget implements WidgetInterface
             ];
         }
         try {
-            if (is_string($value)) {
-                $date = new \DateTime($value);
+            if (is_string($value) && !is_numeric($value)) {
+                $date = new DateTime($value);
             } elseif (is_bool($value)) {
-                $date = new \DateTime();
-            } elseif (is_int($value)) {
-                $date = new \DateTime('@' . $value);
+                $date = new DateTime();
+            } elseif (is_int($value) || is_numeric($value)) {
+                $date = new DateTime('@' . $value);
             } elseif (is_array($value)) {
                 $dateArray = [
                     'year' => '', 'month' => '', 'day' => '',
                     'hour' => '', 'minute' => '', 'second' => '',
-                    'meridian' => 'pm',
+                    'meridian' => '',
                 ];
                 $validDate = false;
                 foreach ($dateArray as $key => $dateValue) {
@@ -244,7 +244,7 @@ class DateTimeWidget implements WidgetInterface
                     if (!isset($dateArray['second'])) {
                         $dateArray['second'] = 0;
                     }
-                    if (isset($value['meridian'])) {
+                    if (!empty($value['meridian'])) {
                         $isAm = strtolower($dateArray['meridian']) === 'am';
                         $dateArray['hour'] = $isAm ? $dateArray['hour'] : $dateArray['hour'] + 12;
                     }
@@ -256,12 +256,12 @@ class DateTimeWidget implements WidgetInterface
                     return $dateArray;
                 }
 
-                $date = new \DateTime();
+                $date = new DateTime();
             } else {
                 $date = clone $value;
             }
-        } catch (\Exception $e) {
-            $date = new \DateTime();
+        } catch (Exception $e) {
+            $date = new DateTime();
         }
 
         if (isset($options['minute']['interval'])) {

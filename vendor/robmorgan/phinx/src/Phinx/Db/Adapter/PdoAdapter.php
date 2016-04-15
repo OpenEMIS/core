@@ -139,7 +139,7 @@ abstract class PdoAdapter implements AdapterInterface
      */
     public function getOutput()
     {
-        if (null == $this->output) {
+        if (null === $this->output) {
             $output = new NullOutput();
             $this->setOutput($output);
         }
@@ -330,6 +330,28 @@ abstract class PdoAdapter implements AdapterInterface
     /**
      * {@inheritdoc}
      */
+    public function insert(Table $table, $row)
+    {
+        $this->startCommandTimer();
+        $this->writeCommand('insert', array($table->getName()));
+
+        $sql = sprintf(
+            "INSERT INTO %s ",
+            $this->quoteTableName($table->getName())
+        );
+
+        $columns = array_keys($row);
+        $sql .= "(". implode(', ', array_map(array($this, 'quoteColumnName'), $columns)) . ")";
+        $sql .= " VALUES (" . implode(', ', array_fill(0, count($columns), '?')) . ")";
+
+        $stmt = $this->getConnection()->prepare($sql);
+        $stmt->execute(array_values($row));
+        $this->endCommandTimer();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getVersions()
     {
         $rows = $this->fetchAll(sprintf('SELECT * FROM %s ORDER BY version ASC', $this->getSchemaTableName()));
@@ -392,14 +414,24 @@ abstract class PdoAdapter implements AdapterInterface
     {
         try {
             $options = array(
-                'id' => false
+                'id'          => false,
+                'primary_key' => 'version'
             );
 
             $table = new Table($this->getSchemaTableName(), $options, $this);
-            $table->addColumn('version', 'biginteger')
-                  ->addColumn('start_time', 'timestamp')
-                  ->addColumn('end_time', 'timestamp')
-                  ->save();
+
+            if ($this->getConnection()->getAttribute(\PDO::ATTR_DRIVER_NAME) === 'mysql'
+                && version_compare($this->getConnection()->getAttribute(\PDO::ATTR_SERVER_VERSION), '5.6.0', '>=')) {
+                $table->addColumn('version', 'biginteger', array('limit' => 14))
+                      ->addColumn('start_time', 'timestamp', array('default' => 'CURRENT_TIMESTAMP'))
+                      ->addColumn('end_time', 'timestamp', array('default' => 'CURRENT_TIMESTAMP'))
+                      ->save();
+            } else {
+                $table->addColumn('version', 'biginteger')
+                      ->addColumn('start_time', 'timestamp')
+                      ->addColumn('end_time', 'timestamp')
+                      ->save();
+            }
         } catch (\Exception $exception) {
             throw new \InvalidArgumentException('There was a problem creating the schema table: ' . $exception->getMessage());
         }
@@ -430,6 +462,7 @@ abstract class PdoAdapter implements AdapterInterface
             'timestamp',
             'time',
             'date',
+            'blob',
             'binary',
             'boolean',
             'uuid',
