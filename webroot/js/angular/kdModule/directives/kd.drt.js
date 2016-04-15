@@ -70,7 +70,7 @@ angular.module('kd.drt', ['kd.common.svc'])
                     todayBtn: 'linked',
                     orientation: 'auto',
                     autoclose: true,
-                    value: ''
+                    autoUpdateInput: false
                 };
                 if (typeof angular.datepickers === 'undefined') {
                     angular.datepickers = [];

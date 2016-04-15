@@ -549,9 +549,11 @@ class HtmlFieldHelper extends Helper {
 			} else {
 				if ($attr['value'] instanceof Time) {
 					$attr['value'] = $attr['value']->format('d-m-Y');
-				} else {
+				} else if (!array_key_exists('special_value', $attr)) {
 					$attr['value'] = date('d-m-Y', strtotime($attr['value']));
 				}
+				// else $attr['value'] will be what was set before calling this function when $attr['special_value'] was set to true.
+				// this is added when datepicker input is being used with angularJs scope
 			}
 
 			if (!is_null($this->_View->get('datepicker'))) {
