@@ -93,14 +93,14 @@ INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `vis
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'StaffPositionProfiles', 'FTE', 'Institutions -> Staff -> Change in Assignment', 'New FTE', 1, 1, NOW());
 
 -- security_functions
-INSERT INTO security_functions(`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) 
-VALUES (1039, 'Transfer Requests', 'Institutions', 'Institutions', 'Staff', 8, 'StaffTransferRequests.index|StaffTransferRequests.view', 'StaffTransferRequests.edit', 'StaffTransferRequests.add', 'StaffTransferRequests.remove', 1039, 1, 1, NOW());
+INSERT INTO security_functions(`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`) 
+VALUES (1039, 'Transfer Requests', 'Institutions', 'Institutions', 'Staff', 8, 'StaffTransferRequests.index|StaffTransferRequests.view', 'StaffTransferRequests.remove', 'StaffTransferRequests.edit|StaffTransferRequests.add', 1039, 1, 1, NOW());
+
+INSERT INTO security_functions(`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_execute`, `order`, `visible`, `created_user_id`, `created`) 
+VALUES (1040, 'Transfer Approvals', 'Institutions', 'Institutions', 'Staff', 8, 'StaffTransferApprovals.index|StaffTransferApprovals.view', 'StaffTransferApprovals.edit|StaffTransferApprovals.view', 1040, 1, 1, NOW());
 
 INSERT INTO security_functions(`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) 
-VALUES (1040, 'Transfer Approvals', 'Institutions', 'Institutions', 'Staff', 8, 'StaffTransferApprovals.index|StaffTransferApprovals.view', 'StaffTransferApprovals.edit', 'StaffTransferApprovals.add', 'StaffTransferApprovals.remove', 1040, 1, 1, NOW());
-
-INSERT INTO security_functions(`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) 
-VALUES (1041, 'Staff Position Profile Workflow', 'Institutions', 'Institutions', 'Staff', 8, 'StaffPositionProfiles.index|StaffPositionProfiles.view', 'StaffPositionProfiles.edit', 'StaffPositionProfiles.add', 'StaffPositionProfiles.remove', 1041, 1, 1, NOW());
+VALUES (1041, 'Change in Staff Assignment', 'Institutions', 'Institutions', 'Staff', 8, 'StaffPositionProfiles.index|StaffPositionProfiles.view', 'StaffPositionProfiles.edit', 'StaffPositionProfiles.add', 'StaffPositionProfiles.remove', 1041, 1, 1, NOW());
 
 -- For staff_position_profiles
 -- workflow_models

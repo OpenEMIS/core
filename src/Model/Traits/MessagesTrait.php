@@ -405,7 +405,7 @@ trait MessagesTrait {
 		],
 		'StaffTransferRequests' => [
 			'alreadyAssigned' => '%s is currently assigned to %s',
-			'confirmRequest' => 'By clicking save, a transfer request will be sent to the school for approval',
+			'confirmRequest' => 'By clicking save, a transfer request will be sent to the institution for approval',
 			'errorApproval' => 'Record cannot be assigned due to errors encountered',
 		],
 		'StaffTransferApprovals' => [
