@@ -67,6 +67,7 @@ class LocalAuthComponent extends Component {
 			$labels = TableRegistry::get('Labels');
 			$labels->storeLabelsInCache();
 			if ($this->Auth->authenticationProvider()->needsPasswordRehash()) {
+				// $this->Users = TableRegistry::get('User.Users');
 				$user = $this->Users->get($this->Auth->user('id'));
 				$user->password = $this->request->data('password');
 				$this->Users->save($user);

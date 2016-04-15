@@ -7,6 +7,7 @@ use ArrayObject;
 use PHPExcel_Worksheet;
 use InvalidArgumentException;
 use Cake\I18n\Time;
+use Cake\I18n\Date;
 use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\Entity;
@@ -716,7 +717,7 @@ class ImportBehavior extends Behavior {
 	private function _getReorderedEntityArray( Entity $entity, Array $columns, ArrayObject $originalRow, $systemDateFormat ) {
 		$array = [];
 		foreach ($columns as $col=>$property) {
-			$value = ( $entity->$property instanceof Time ) ? $entity->$property->format( $systemDateFormat ) : $originalRow[$col];
+			$value = ( $entity->$property instanceof Time || $entity->$property instanceof Date ) ? $entity->$property->format( $systemDateFormat ) : $originalRow[$col];
 			$array[] = $value;
 		}
 		return $array;

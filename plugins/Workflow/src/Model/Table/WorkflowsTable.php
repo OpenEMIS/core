@@ -134,13 +134,13 @@ class WorkflowsTable extends AppTable {
 					$value = __('No');
 
 					$filterModel = TableRegistry::get($filter);
-					$filters = $filterModel
-						->getList()
-						->where([
-							$filterModel->aliasField('id IN ') => $filterIds
-						])
-						->toArray();
+					$query = $filterModel->getList();
 
+					if (!empty($filterIds)) {
+						$query->where([$filterModel->aliasField('id IN ') => $filterIds]);
+					}
+
+					$filters = $query->toArray();
 					$entity->filters = $filters;
 				}
 
@@ -588,15 +588,19 @@ class WorkflowsTable extends AppTable {
 						unset($workflowIds[$entity->id]);
 					}
 
-					$filterResults = $this->WorkflowsFilters
-						->find()
-						->where([
-							$this->WorkflowsFilters->aliasField('workflow_id IN ') => $workflowIds,
-							$this->WorkflowsFilters->aliasField('filter_id') => 0
-						])
-						->all();
+					if (!empty(workflowIds)) {
+						$filterResults = $this->WorkflowsFilters
+							->find()
+							->where([
+								$this->WorkflowsFilters->aliasField('workflow_id IN ') => $workflowIds,
+								$this->WorkflowsFilters->aliasField('filter_id') => 0
+							])
+							->all();
 
-					if (!$filterResults->isEmpty()) {
+						if (!$filterResults->isEmpty()) {
+							$showFilters = true;
+						}
+					} else {
 						$showFilters = true;
 					}
 				}
