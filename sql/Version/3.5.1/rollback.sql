@@ -2,6 +2,9 @@
 -- institution_students
 ALTER TABLE `institution_students` DROP INDEX `student_status_id`;
 
+-- config_item_options
+UPDATE config_item_options SET `visible` = 1 WHERE `option_type` = 'authentication_type' AND `option` = 'LDAP';
+
 -- staff_statuses
 DROP TABLE `staff_statuses`;
 
