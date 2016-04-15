@@ -66,7 +66,7 @@
 
 					<tbody id="table_assessment_periods">
 						
-						<?php pr(json_encode($data->assessment_periods));?>
+						<?php //pr(json_encode($data->assessment_periods));?>
 
 						<div class="hidden" ng-init='errors = <?= json_encode($assessmentPeriodsErrors)?>'></div>
 						<div class="hidden" ng-init='onClickTargets.handlers.addRow.assessment_periods = <?= json_encode($data->assessment_periods)?>'></div>
