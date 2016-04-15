@@ -210,7 +210,7 @@ class StaffTransferRequestsTable extends StaffTransfer {
 				$msg = 'Institution.Staff.'.$key;
 				if (is_array($value)) {
 					foreach ($value as $k => $v) {
-						$message[] = $msg.'.'.$k;
+						$message[] = __($v);
 					}
 				}
 			}
@@ -233,7 +233,7 @@ class StaffTransferRequestsTable extends StaffTransfer {
 			$errors = $this->Session->read('Institution.StaffTransferRequests.errors');
 			$this->Alert->error('StaffTransferRequests.errorApproval');
 			foreach ($errors as $error) {
-				$this->Alert->error($error);
+				$this->Alert->error($error, ['type' => 'text']);
 			}
 			$this->Session->delete('Institution.StaffTransferRequests.errors');
 		}
