@@ -236,7 +236,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 				->toArray();
 
 			foreach ($resultSet as $key => $obj) {
-				$requestTitle = sprintf('Transfer of staff (%s) from %s to %s', $obj->user->name, $obj->previous_institution->name, $obj->institution->name);
+				$requestTitle = sprintf('Transfer of staff (%s) from %s to %s', $obj->user->name_with_id, $obj->previous_institution->name, $obj->institution->name);
 				$url = [
 					'plugin' => 'Institution',
 					'controller' => 'Institutions',
