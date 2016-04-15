@@ -108,7 +108,6 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noAssessments')),
 			'callable' => function($id) use ($Classes, $ClassGrades, $Assessments, $institutionId) {
-				$selectedGrade = $Assessments->get($id)->education_grade_id;
 				return $Classes
 					->find()
 					->innerJoin(
