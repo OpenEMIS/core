@@ -123,7 +123,8 @@ trait MessagesTrait {
 			'failedSavingGrades' => 'Failed to save grades',
 			'start_date' => 'Start Date',
 			'end_date' => 'End Date',
-			'education_grade' => 'Education Grades'
+			'education_grade' => 'Education Grades',
+			'allGradesAlreadyAdded' => 'All possible Education Grades for the selected Education Programme already added.'
 		],
 		'InstitutionShifts' => [
 			'start_time' => 'Start Time',
@@ -195,20 +196,8 @@ trait MessagesTrait {
 		// 	'last_date_absent' => 'Last Day Of Absence'
 		// ],
 		'InstitutionAssessments' => [
-			'noSubjects' => 'There are no available Education Subjects.',
-			'noClasses' => 'No Available Classes',
-			'noStudents' => 'No Available Students',
-			'mark' => 'Mark',
-			'grading' => 'Grading',
-			'save' => [
-				'draft' => 'Assessment record has been saved to draft successfully.',
-				'final' => 'Assessment record has been submitted successfully.',
-				'failed' => 'The record is not saved due to errors encountered.',
-			],
-			'reject' => [
-				'success' => 'The record has been rejected successfully.',
-				'failed' => 'The record is not rejected due to errors encountered.'
-			],
+			'noAssessments' => 'No Assessments',
+			'noClasses' => 'No Classes'
 		],
 		'InstitutionSurveys' => [
 			'save' => [

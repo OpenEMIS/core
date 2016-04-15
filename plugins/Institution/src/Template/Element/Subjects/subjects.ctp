@@ -41,7 +41,7 @@
 		    			<?php 
 	    				$attrErrors = [];
 	    				$selectedInForm = false;
-		    			if(!empty($this->request->data) && array_key_exists('MultiSubjects', $this->request->data['MultiSubjects']) && isset($this->request->data['MultiSubjects'][$i])) {
+		    			if(!empty($this->request->data) && array_key_exists('MultiSubjects', $this->request->data) && isset($this->request->data['MultiSubjects'][$i])) {
 		    				$requestData = $this->request->data['MultiSubjects'][$i];
 		    				if ($this->request->data['submit'] == 'save') {
 		    					if (!$selected) {

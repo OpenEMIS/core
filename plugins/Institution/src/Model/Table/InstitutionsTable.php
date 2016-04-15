@@ -47,6 +47,7 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('InstitutionShifts', 				['className' => 'Institution.InstitutionShifts', 'dependent' => true]);
 		$this->hasMany('InstitutionClasses', 				['className' => 'Institution.InstitutionClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionSubjects', 				['className' => 'Institution.InstitutionSubjects', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSubjectStudents', 		['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true]);
 		$this->hasMany('Infrastructures',					['className' => 'Institution.InstitutionInfrastructures', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->hasMany('Staff',				 				['className' => 'Institution.Staff', 'dependent' => true]);
@@ -460,8 +461,7 @@ class InstitutionsTable extends AppTable  {
 		}
 	}
 
-	public function indexAfterPaginate(Event $event, ResultSet $resultSet) {
-		$query = $resultSet->__debugInfo()['query'];
+	public function indexAfterPaginate(Event $event, ResultSet $resultSet, Query $query) {
 		$this->dashboardQuery = clone $query;
 	}
 
