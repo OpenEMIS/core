@@ -17,94 +17,55 @@ angular.module('institutions.results.svc', [])
         },
 
         getAssessment: function(assessmentId) {
-            var deferred = $q.defer();
-
-            var success = function(response) {
-                if (angular.isDefined(response.data.error)) {
-                    deferred.reject(response.data.error);
-                } else {
-                    deferred.resolve(response.data.data);
-                }
-            };
-
-            var error = function(error) {
-                deferred.reject(error);
-            };
-
-            AssessmentsTable.get(assessmentId).ajax({success: success, error: error});
-
-            return deferred.promise;
+            return AssessmentsTable.get(assessmentId).ajax({defer: true});
         },
 
         getSubjects: function(assessmentId) {
-            var deferred = $q.defer();
+            var success = function(response, deferred) {
+                var items = response.data.data;
 
-            var success = function(response) {
-                if (angular.isDefined(response.data.error)) {
-                    deferred.reject(response.data.error);
+                if (angular.isObject(items) && items.length > 0) {
+                    var educationSubject = null;
+
+                    var subjects = [];
+                    angular.forEach(items, function(item, key) {
+                        educationSubject = item.education_subject;
+                        educationSubject.pass_mark = item.grading_type.pass_mark;
+                        educationSubject.max = item.grading_type.max;
+                        educationSubject.result_type = item.grading_type.result_type;
+
+                        this.push(educationSubject);
+                    }, subjects);
+
+                    deferred.resolve(subjects);
                 } else {
-                    var items = response.data.data;
-
-                    if (angular.isObject(items) && items.length > 0) {
-                        var educationSubject = null;
-
-                        var subjects = [];
-                        angular.forEach(items, function(item, key) {
-                            educationSubject = item.education_subject;
-                            educationSubject.pass_mark = item.grading_type.pass_mark;
-                            educationSubject.max = item.grading_type.max;
-                            educationSubject.result_type = item.grading_type.result_type;
-
-                            this.push(educationSubject);
-                        }, subjects);
-
-                        deferred.resolve(subjects);
-                    } else {
-                        deferred.reject('You need to configure Assessment Items first');
-                    }
+                    deferred.reject('You need to configure Assessment Items first');
                 }
             };
-            var error = function(error) {
-                deferred.reject(error);
-            };
 
-            AssessmentItemsTable
+            return AssessmentItemsTable
             .select()
             .contain(['EducationSubjects', 'GradingTypes'])
             .where({assessment_id: assessmentId})
-            .ajax({success: success, error: error})
+            .ajax({success: success, defer: true})
             ;
-
-            return deferred.promise;
         },
 
         getPeriods: function(assessmentId) {
-            var deferred = $q.defer();
+            var success = function(response, deferred) {
+                var periods = response.data.data;
 
-            var success = function(response) {
-                if (angular.isDefined(response.data.error)) {
-                    deferred.reject(response.data.error);
+                if (angular.isObject(periods) && periods.length > 0) {
+                    deferred.resolve(periods);
                 } else {
-                    var periods = response.data.data;
-
-                    if (angular.isObject(periods) && periods.length > 0) {
-                        deferred.resolve(periods);
-                    } else {
-                        deferred.reject('You need to configure Assessment Periods first');
-                    }
-                }
+                    deferred.reject('You need to configure Assessment Periods first');
+                }   
             };
 
-            var error = function(error) {
-                deferred.reject(error);
-            };
-
-            AssessmentPeriodsTable
+            return AssessmentPeriodsTable
             .select()
             .where({assessment_id: assessmentId})
-            .ajax({success: success, error: error});
-
-            return deferred.promise;
+            .ajax({success: success, defer: true});
         },
 
         getColumnDefs: function(action, subject, periods) {
@@ -198,28 +159,8 @@ angular.module('institutions.results.svc', [])
             return columnDefs;
         },
 
-        getStudents: function(institutionId, classId, academicPeriodId, educationSubjectId) {
-            var deferred = $q.defer();
-
-            var success = function(response) {
-                if (angular.isDefined(response.data.error)) {
-                    deferred.reject(response.data.error);
-                } else {
-                    deferred.resolve(response.data.data);
-                }
-            };
-
-            var error = function(error) {
-                deferred.reject(error);
-            };
-
-            return deferred.promise;
-        },
-
         getRowData: function(periods, institutionId, classId, assessmentId, academicPeriodId, educationSubjectId) {
-            var deferred = $q.defer();
-
-            var success = function(response) {
+            var success = function(response, deferred) {
                 if (angular.isDefined(response.data.error)) {
                     deferred.reject(response.data.error);
                 } else {
@@ -251,7 +192,8 @@ angular.module('institutions.results.svc', [])
                                     name: subjectStudent.name,
                                     student_id: currentStudentId,
                                     total_mark: subjectStudent.total_mark,
-                                    total_weight: totalWeight
+                                    total_weight: totalWeight,
+                                    is_dirty: false
                                 };
 
                                 angular.forEach(periods, function(period, key) {
@@ -279,11 +221,7 @@ angular.module('institutions.results.svc', [])
                 }
             };
 
-            var error = function(error) {
-                deferred.reject(error);
-            };
-
-            InstitutionSubjectStudentsTable
+            return InstitutionSubjectStudentsTable
             .select()
             .contain(['Users'])
             .find('Results', {
@@ -294,10 +232,8 @@ angular.module('institutions.results.svc', [])
                 subject_id: educationSubjectId
             })
             .where({institution_class_id: classId})
-            .ajax({success: success, error: error})
+            .ajax({success: success, defer: true})
             ;
-
-            return deferred.promise;
         },
 
         calculateTotal: function(data) {
@@ -317,28 +253,25 @@ angular.module('institutions.results.svc', [])
             }
         },
 
-        saveRowData: function(row, editablePeriods, studentId, assessmentId, educationSubjectId, institutionId, academicPeriodId) {
+        saveRowData: function(results, assessmentId, educationSubjectId, institutionId, academicPeriodId) {
             var promises = [];
 
-            angular.forEach(row, function(value, key) {
-                if (/period_/.test(key)) {
-                    var index = key.replace(/period_(\d+)/, '$1');
-                    if (angular.isDefined(editablePeriods[index])) {
-                        var newValue = !isNaN(parseFloat(value)) ? $filter('number')(value, 2) : null;
+            angular.forEach(results, function(result, studentId) {
+                angular.forEach(result, function(obj, assessmentPeriodId) {
+                    var marks = !isNaN(parseFloat(obj.marks)) ? $filter('number')(obj.marks, 2) : null;
 
-                        var data = {
-                            "marks" : newValue,
-                            "assessment_id" : assessmentId,
-                            "education_subject_id" : educationSubjectId,
-                            "institution_id" : institutionId,
-                            "academic_period_id" : academicPeriodId,
-                            "student_id" : studentId,
-                            "assessment_period_id" : parseInt(index)
-                        };
+                    var data = {
+                        "marks" : marks,
+                        "assessment_id" : assessmentId,
+                        "education_subject_id" : educationSubjectId,
+                        "institution_id" : institutionId,
+                        "academic_period_id" : academicPeriodId,
+                        "student_id" : parseInt(studentId),
+                        "assessment_period_id" : parseInt(assessmentPeriodId)
+                    };
 
-                        promises.push(AssessmentItemResultsTable.save(data));
-                    }
-                }
+                    promises.push(AssessmentItemResultsTable.save(data));
+                });
             });
 
             return $q.all(promises);

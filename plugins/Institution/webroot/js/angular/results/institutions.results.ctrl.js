@@ -2,6 +2,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
 .controller('InstitutionsResultsCtrl', function($scope, $filter, UtilsSvc, AlertSvc, InstitutionsResultsSvc) {
     $scope.action = 'view';
     $scope.message = null;
+    $scope.results = {};
     $scope.gridOptions = null;
 
     angular.element(document).ready(function () {
@@ -73,7 +74,22 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
             singleClickEdit: true,
             onCellValueChanged: function(params) {
                 if (params.newValue != params.oldValue) {
+                    var index = params.colDef.field.replace(/period_(\d+)/, '$1');
+
+                    if (angular.isUndefined($scope.results[params.data.student_id])) {
+                        $scope.results[params.data.student_id] = {};
+                    }
+
+                    if (angular.isUndefined($scope.results[params.data.student_id][index])) {
+                        $scope.results[params.data.student_id][index] = {marks: ''};
+                    }
+
+                    $scope.results[params.data.student_id][index]['marks'] = params.newValue;
+
                     params.data.total_mark = InstitutionsResultsSvc.calculateTotal(params.data);
+                    // marked as dirty
+                    params.data.is_dirty = true;
+                    // Important: to refresh the grid after data is modified
                     $scope.gridOptions.api.refreshView();
                 }
             },
@@ -138,33 +154,33 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
 
     $scope.onSaveClick = function() {
         if ($scope.gridOptions != null) {
-
-            var editablePeriods = {};
-            angular.forEach($scope.periods, function(period, key) {
-                if (period.editable) {
-                    editablePeriods[period.id] = period;
-                }
-            });
-
             var assessmentId = $scope.gridOptions.context.assessment_id;
             var educationSubjectId = $scope.gridOptions.context.education_subject_id;
             var institutionId = $scope.gridOptions.context.institution_id;
             var academicPeriodId = $scope.gridOptions.context.academic_period_id;
             var classId = $scope.gridOptions.context.class_id;
 
-            // UtilsSvc.isAppendSpinner(true, 'institution-result-table');
-            $scope.gridOptions.api.forEachNode(function(row) {
-                var studentId = row.data.student_id;
-                InstitutionsResultsSvc.saveRowData(row.data, editablePeriods, studentId, assessmentId, educationSubjectId, institutionId, academicPeriodId)
-                .then(function(response) {
-                    return InstitutionsResultsSvc.saveTotal(row.data, studentId, classId, institutionId, academicPeriodId, educationSubjectId);
-                }, function(error) {
-                    console.log(error);
-                })
-                .finally(function() {
+            UtilsSvc.isAppendSpinner(true, 'institution-result-table');
+            InstitutionsResultsSvc.saveRowData($scope.results, assessmentId, educationSubjectId, institutionId, academicPeriodId)
+            .then(function(response) {
+                console.log(response);
+            }, function(error) {
+                console.log(error);
+            })
+            .finally(function() {
+                $scope.gridOptions.api.forEachNode(function(row) {
+                    if (row.data.is_dirty) {
+                        InstitutionsResultsSvc.saveTotal(row.data, row.data.student_id, classId, institutionId, academicPeriodId, educationSubjectId);
+                        // reset dirty flag
+                        row.data.is_dirty = false;
+                    }
                 });
+
+                $scope.action = 'view';
+                // reset results object
+                $scope.results = {};
+                UtilsSvc.isAppendSpinner(false, 'institution-result-table');
             });
-            $scope.action = 'view';
         } else {
             $scope.action = 'view';
         }
