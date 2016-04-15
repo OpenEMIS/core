@@ -26,6 +26,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		$validator = $this->buildStaffValidation();
 		return $validator
 			->allowEmpty('end_date')
+			->remove('start_date')
 			->requirePresence('FTE')
 			->requirePresence('staff_change_type_id')
 			->requirePresence('staff_type_id');
@@ -375,7 +376,12 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 			$staffChangeTypes = $this->staffChangeTypesList;
 			if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_IN_FTE']) {
 				$attr['type'] = 'date';
-				$attr['value'] = new Date();
+				if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
+					$entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
+					$startDate = (new Date($entity->start_date))->modify('+1 day');
+					$attr['date_options']['startDate'] = $startDate->format('d-m-Y');	
+				}
+				$attr['value'] = (new Date())->modify('+1 day');
 			} else {
 				$attr['type'] = 'hidden';
 			}
@@ -388,6 +394,10 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 			$staffChangeTypes = $this->staffChangeTypesList;
 			if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['END_OF_ASSIGNMENT']) {
 				$attr['type'] = 'date';
+				if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
+					$entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
+					$attr['date_options']['startDate'] = $entity->start_date->format('d-m-Y');	
+				}
 			} else {
 				$attr['type'] = 'hidden';
 				if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
@@ -517,7 +527,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 
 			foreach ($resultSet as $key => $obj) {
 				$institutionId = $obj->institution->id;
-				$requestTitle = sprintf('%s - %s of %s', $obj->status->name, $obj->user->name, $obj->institution->name);
+				$requestTitle = sprintf('%s - %s of %s', $obj->status->name, $obj->user->name_with_id, $obj->institution->name);
 				$url = [
 					'plugin' => 'Institution',
 					'controller' => 'Institutions',
@@ -589,7 +599,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 				// End
 
 				if ($hasAccess) {
-					$requestTitle = sprintf('%s - %s of %s', $obj->status->name, $obj->user->name, $obj->institution->name);
+					$requestTitle = sprintf('%s - %s of %s', $obj->status->name, $obj->user->name_with_id, $obj->institution->name);
 					$url = [
 						'plugin' => 'Institution',
 						'controller' => 'Institutions',
