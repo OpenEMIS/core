@@ -19,6 +19,7 @@ class AcademicPeriodsTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('Parents', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('Levels', ['className' => 'AcademicPeriod.AcademicPeriodLevels', 'foreignKey' => 'academic_period_level_id']);
+		$this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true]);
 		$this->addBehavior('Tree');
 	}
 
