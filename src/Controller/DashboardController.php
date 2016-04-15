@@ -25,7 +25,10 @@ class DashboardController extends AppController {
 				'Institution.TransferApprovals',
 				'Institution.StudentAdmission',
 				'Institution.StudentDropout',
-				'Institution.InstitutionSurveys'
+				'Institution.InstitutionSurveys',
+				'Institution.StaffPositionProfiles',
+				'Institution.StaffTransferApprovals',
+				'Institution.StaffTransferRequests'
 			]
 		]);
     }

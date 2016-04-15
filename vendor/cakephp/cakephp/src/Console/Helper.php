@@ -14,7 +14,6 @@
  */
 namespace Cake\Console;
 
-use Cake\Console\ConsoleIo;
 use Cake\Core\InstanceConfigTrait;
 
 /**
@@ -34,6 +33,13 @@ abstract class Helper
      * @var array
      */
     protected $_defaultConfig = [];
+
+    /**
+     * ConsoleIo instance.
+     *
+     * @var \Cake\Console\ConsoleIo
+     */
+    protected $_io;
 
     /**
      * Constructor.
