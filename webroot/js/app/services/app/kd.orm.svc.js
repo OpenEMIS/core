@@ -76,18 +76,49 @@ angular.module('kd.orm.svc', [])
 			var success = null;
 			var error = null;
 			var type = 'json';
+            var deferred = null;
+
+            var requireDeferred = settings.defer != undefined && settings.defer == true;
+
+            if (requireDeferred) {
+                deferred = $q.defer();
+            }
 
 			if (settings.type != undefined) {
 				type = settings.type;
 			}
 
-			if (settings.success != undefined) {
+            var hasSuccessCallback = settings.success != undefined;
+
+			if (hasSuccessCallback && !requireDeferred) {
 				success = settings.success;
-			}
+			} else if (hasSuccessCallback && requireDeferred) {
+                success = function(response) {
+                    if (angular.isDefined(response.data.error)) {
+                        deferred.reject(response.data.error);
+                    } else {
+                        settings.success(response, deferred);
+                    }
+                };
+            } else if (!hasSuccessCallback && requireDeferred) {
+                success = function(response) {
+                    if (angular.isDefined(response.data.error)) {
+                        deferred.reject(response.data.error);
+                    } else {
+                        deferred.resolve(response.data.data);
+                    }
+                };
+            }
 			
 			if (settings.error != undefined) {
 				error = settings.error;
-			}
+			} else {
+                if (requireDeferred) {
+                    error = function(error) {
+                        deferred.reject(error);
+                    };
+                }
+            }
 
 			if (settings.method == undefined) {
 				settings.method = this._method;
@@ -103,7 +134,8 @@ angular.module('kd.orm.svc', [])
 				return $http(settings);
 			}
 
-			return $http(settings).then(success, error);
+            var httpResponse = $http(settings).then(success, error);
+            return requireDeferred ? deferred.promise : httpResponse;
         },
 
         toURL: function() {
