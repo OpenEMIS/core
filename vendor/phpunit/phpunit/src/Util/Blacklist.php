@@ -11,18 +11,14 @@
 /**
  * Utility class for blacklisting PHPUnit's own source code files.
  *
- * @author     Sebastian Bergmann <sebastian@phpunit.de>
- * @copyright  Sebastian Bergmann <sebastian@phpunit.de>
- * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
- * @link       http://www.phpunit.de/
- * @since      Class available since Release 4.0.0
+ * @since Class available since Release 4.0.0
  */
 class PHPUnit_Util_Blacklist
 {
     /**
      * @var array
      */
-    public static $blacklistedClassNames = array(
+    public static $blacklistedClassNames = [
         'File_Iterator'                              => 1,
         'PHP_CodeCoverage'                           => 1,
         'PHP_Invoker'                                => 1,
@@ -31,8 +27,6 @@ class PHPUnit_Util_Blacklist
         'PHPUnit_Framework_TestCase'                 => 2,
         'PHPUnit_Extensions_Database_TestCase'       => 2,
         'PHPUnit_Framework_MockObject_Generator'     => 2,
-        'PHPUnit_Extensions_SeleniumTestCase'        => 2,
-        'PHPUnit_Extensions_Story_TestCase'          => 2,
         'Text_Template'                              => 1,
         'Symfony\Component\Yaml\Yaml'                => 1,
         'SebastianBergmann\Diff\Diff'                => 1,
@@ -45,8 +39,9 @@ class PHPUnit_Util_Blacklist
         'Composer\Autoload\ClassLoader'              => 1,
         'Doctrine\Instantiator\Instantiator'         => 1,
         'phpDocumentor\Reflection\DocBlock'          => 1,
-        'Prophecy\Prophet'                           => 1
-    );
+        'Prophecy\Prophet'                           => 1,
+        'DeepCopy\DeepCopy'                          => 1
+    ];
 
     /**
      * @var array
@@ -55,6 +50,7 @@ class PHPUnit_Util_Blacklist
 
     /**
      * @return array
+     *
      * @since  Method available since Release 4.1.0
      */
     public function getBlacklistedDirectories()
@@ -65,7 +61,8 @@ class PHPUnit_Util_Blacklist
     }
 
     /**
-     * @param  string $file
+     * @param string $file
+     *
      * @return bool
      */
     public function isBlacklisted($file)
@@ -88,7 +85,7 @@ class PHPUnit_Util_Blacklist
     private function initialize()
     {
         if (self::$directories === null) {
-            self::$directories = array();
+            self::$directories = [];
 
             foreach (self::$blacklistedClassNames as $className => $parent) {
                 if (!class_exists($className)) {
