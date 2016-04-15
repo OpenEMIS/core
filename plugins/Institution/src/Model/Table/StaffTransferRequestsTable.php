@@ -6,15 +6,23 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
 use App\Model\Table\ControllerActionTable;
 use Institution\Model\Table\StaffTransfer;
+use App\Model\Traits\OptionsTrait;
 
 class StaffTransferRequestsTable extends StaffTransfer {
+	use OptionsTrait;
+
 	public function initialize(array $config) {
 		parent::initialize($config);
+	}
+
+	public function validationDefault(Validator $validation) {
+		return $validation->requirePresence('institution_position_id');
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
@@ -52,6 +60,7 @@ class StaffTransferRequestsTable extends StaffTransfer {
 
 	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		parent::editAfterAction($event, $entity, $extra);
+		$this->field('institution_position_id', ['type' => 'select', 'attr' => ['value' => $this->getEntityProperty($entity, 'institution_position_id')]]);
 		$this->field('staff_type_id', ['type' => 'select']);
 		$this->field('FTE', ['type' => 'select']);
 	}
@@ -124,6 +133,72 @@ class StaffTransferRequestsTable extends StaffTransfer {
 		$this->Alert->info($this->aliasField('confirmRequest'));
 	}
 
+	public function onUpdateFieldInstitutionPositionId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'edit') {
+			$positionTable = TableRegistry::get('Institution.InstitutionPositions');
+			$userId = $this->Auth->user('id');
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+
+			// // excluding positions where 'InstitutionStaff.end_date is NULL'
+			$excludePositions = $this->Positions->find('list');
+			$excludePositions->matching('InstitutionStaff', function ($q) {
+					return $q->where(['InstitutionStaff.end_date is NULL', 'InstitutionStaff.FTE' => 1]);
+				});
+			$excludePositions->where([$this->Positions->aliasField('institution_id') => $institutionId])
+				->toArray()
+				;
+			$excludeArray = [];
+			foreach ($excludePositions as $key => $value) {
+				$excludeArray[] = $value;
+			}
+
+			if ($this->AccessControl->isAdmin()) {
+				$userId = null;
+				$roles = [];
+			} else {
+				$roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+			}
+			
+			// Filter by active status
+			$activeStatusId = $this->Workflow->getStepsByModelCode($positionTable->registryAlias(), 'ACTIVE');
+			$positionConditions = [];
+			$positionConditions[$this->Positions->aliasField('institution_id')] = $institutionId;
+			if (!empty($activeStatusId)) {
+				$positionConditions[$this->Positions->aliasField('status_id').' IN '] = $activeStatusId;
+			}
+			if (!empty($excludeArray)) {
+				$positionConditions[$this->Positions->aliasField('id').' NOT IN '] = $excludeArray;
+			}
+			$staffPositionsOptions = $this->Positions
+					->find()
+					->innerJoinWith('StaffPositionTitles.SecurityRoles')
+					->where($positionConditions)
+					->select(['security_role_id' => 'SecurityRoles.id', 'type' => 'StaffPositionTitles.type'])
+					->order(['StaffPositionTitles.type' => 'DESC', 'StaffPositionTitles.order'])
+					->autoFields(true)
+				    ->toArray();
+
+			// Filter by role previlege
+			$SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
+			$roleOptions = $SecurityRolesTable->getRolesOptions($userId, $roles);
+			$roleOptions = array_keys($roleOptions);
+			$staffPositionRoles = $this->array_column($staffPositionsOptions, 'security_role_id');
+			$staffPositionsOptions = array_intersect_key($staffPositionsOptions, array_intersect($staffPositionRoles, $roleOptions));
+
+			// Adding the opt group
+			$types = $this->getSelectOptions('Staff.position_types');
+			$options = [];
+			foreach ($staffPositionsOptions as $position) {
+				$type = __($types[$position->type]);
+				$options[$type][$position->id] = $position->name;
+			}
+
+			$attr['options'] = $options;
+			return $attr;
+		}
+		
+	}
+
 	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
 		if ($this->action == 'add') {
 			$url = $this->url('add');
@@ -149,7 +224,7 @@ class StaffTransferRequestsTable extends StaffTransfer {
 			if (!$AccessControl->isAdmin()) {
 				$userId = $event->subject()->Auth->user('id');
 				foreach ($institutionIds as $key => $val) {
-					$roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+					$roles = $this->Institutions->getInstitutionRoles($userId, $val);
 					if (!$AccessControl->check(['Institutions', 'StaffTransferRequests', 'edit'], $roles)) {
 						unset($institutionIds[$key]);
 					}
