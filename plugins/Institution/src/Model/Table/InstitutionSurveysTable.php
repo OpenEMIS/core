@@ -161,6 +161,7 @@ class InstitutionSurveysTable extends AppTable {
 		// Array to store security roles in each Institution
 		$institutionRoles = [];
 		foreach ($institutionIds as $institutionId) {
+			$this->buildSurveyRecords($institutionId, $userId);
 			$institutionRoles[$institutionId] = $this->Institutions->getInstitutionRoles($userId, $institutionId);
 		}
 		// End
@@ -427,7 +428,7 @@ class InstitutionSurveysTable extends AppTable {
 		return $attr;
 	}
 
-	public function buildSurveyRecords($institutionId=null) {
+	public function buildSurveyRecords($institutionId=null, $userId=null) {
 		if (is_null($institutionId)) {
 			$session = $this->controller->request->session();
 			if ($session->check('Institution.Institutions.id')) {
@@ -439,6 +440,11 @@ class InstitutionSurveysTable extends AppTable {
 		$todayDate = date("Y-m-d");
 		$SurveyStatuses = $this->SurveyForms->SurveyStatuses;
 		$SurveyStatusPeriods = $this->SurveyForms->SurveyStatuses->SurveyStatusPeriods;
+		$roles = [];
+		if (!is_null($userId)) {
+			$WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+			$roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+		}
 
 		foreach ($surveyForms as $surveyFormId => $surveyForm) {
 			$openStatusId = null;
@@ -451,65 +457,84 @@ class InstitutionSurveysTable extends AppTable {
 					}
 				}
 
-				// Update all New Survey to Expired by Institution Id
-				$this->updateAll(['status_id' => self::EXPIRED],
-					[
-						'institution_id' => $institutionId,
-						'survey_form_id' => $surveyFormId,
-						'status_id' => $openStatusId
-					]
-				);
-
-				$periodResults = $SurveyStatusPeriods
-					->find()
-					->matching($this->AcademicPeriods->alias())
-					->matching($SurveyStatuses->alias(), function($q) use ($SurveyStatuses, $surveyFormId, $todayDate) {
-						return $q
+				$executeInsert = true;
+				if (!is_null($userId) && !$this->AccessControl->isAdmin()) {
+					if (!empty($roles)) {
+						$hasAccess = $WorkflowStepsRoles
+							->find()
 							->where([
-								$SurveyStatuses->aliasField('survey_form_id') => $surveyFormId,
-								$SurveyStatuses->aliasField('date_disabled >=') => $todayDate
-							]);
-					})
-					->all();
-
-				foreach ($periodResults as $obj) {
-					$periodId = $obj->academic_period_id;
-					if (!is_null($institutionId)) {
-						$where = [
-							$this->aliasField('academic_period_id') => $periodId,
-							$this->aliasField('survey_form_id') => $surveyFormId,
-							$this->aliasField('institution_id') => $institutionId
-						];
-
-						$results = $this
-							->find('all')
-							->where($where)
+								$WorkflowStepsRoles->aliasField('workflow_step_id') => $openStatusId,
+								$WorkflowStepsRoles->aliasField('security_role_id IN ') => $roles
+							])
 							->all();
 
-						if ($results->isEmpty()) {
-							// Insert New Survey if not found
-							$surveyData = [
-								'status_id' => $openStatusId,
-								'academic_period_id' => $periodId,
-								'survey_form_id' => $surveyFormId,
-								'institution_id' => $institutionId
+						if ($hasAccess->isEmpty()) {
+							$executeInsert = false;
+						}
+					}
+				}
+
+				if ($executeInsert) {
+					// Update all New Survey to Expired by Institution Id
+					$this->updateAll(['status_id' => self::EXPIRED],
+						[
+							'institution_id' => $institutionId,
+							'survey_form_id' => $surveyFormId,
+							'status_id' => $openStatusId
+						]
+					);
+
+					$periodResults = $SurveyStatusPeriods
+						->find()
+						->matching($this->AcademicPeriods->alias())
+						->matching($SurveyStatuses->alias(), function($q) use ($SurveyStatuses, $surveyFormId, $todayDate) {
+							return $q
+								->where([
+									$SurveyStatuses->aliasField('survey_form_id') => $surveyFormId,
+									$SurveyStatuses->aliasField('date_disabled >=') => $todayDate
+								]);
+						})
+						->all();
+
+					foreach ($periodResults as $obj) {
+						$periodId = $obj->academic_period_id;
+						if (!is_null($institutionId)) {
+							$where = [
+								$this->aliasField('academic_period_id') => $periodId,
+								$this->aliasField('survey_form_id') => $surveyFormId,
+								$this->aliasField('institution_id') => $institutionId
 							];
 
-							$surveyEntity = $this->newEntity($surveyData, ['validate' => false]);
-							if ($this->save($surveyEntity)) {
-							} else {
-								$this->log($surveyEntity->errors(), 'debug');
-							}
-						} else {
-							// Update Expired Survey back to Open
-							$this->updateAll(['status_id' => $openStatusId],
-								[
+							$results = $this
+								->find('all')
+								->where($where)
+								->all();
+
+							if ($results->isEmpty()) {
+								// Insert New Survey if not found
+								$surveyData = [
+									'status_id' => $openStatusId,
 									'academic_period_id' => $periodId,
 									'survey_form_id' => $surveyFormId,
-									'institution_id' => $institutionId,
-									'status_id' => self::EXPIRED
-								]
-							);
+									'institution_id' => $institutionId
+								];
+
+								$surveyEntity = $this->newEntity($surveyData, ['validate' => false]);
+								if ($this->save($surveyEntity)) {
+								} else {
+									$this->log($surveyEntity->errors(), 'debug');
+								}
+							} else {
+								// Update Expired Survey back to Open
+								$this->updateAll(['status_id' => $openStatusId],
+									[
+										'academic_period_id' => $periodId,
+										'survey_form_id' => $surveyFormId,
+										'institution_id' => $institutionId,
+										'status_id' => self::EXPIRED
+									]
+								);
+							}
 						}
 					}
 				}
