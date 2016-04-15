@@ -527,7 +527,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 
 			foreach ($resultSet as $key => $obj) {
 				$institutionId = $obj->institution->id;
-				$requestTitle = sprintf('%s - %s of %s', $obj->status->name, $obj->user->name_with_id, $obj->institution->name);
+				$requestTitle = sprintf('Change in Staff Assignment (%s) of %s', $obj->user->name_with_id, $obj->institution->name);
 				$url = [
 					'plugin' => 'Institution',
 					'controller' => 'Institutions',
@@ -548,7 +548,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 					'receive_date' => $receivedDate,
 					'due_date' => '<i class="fa fa-minus"></i>',
 					'requester' => $obj->created_user->username,
-					'type' => __('Institutions > Staff > Change in Assignment')
+					'type' => __('Change in Staff Assignment')
 				];
 
 			}
@@ -599,7 +599,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 				// End
 
 				if ($hasAccess) {
-					$requestTitle = sprintf('%s - %s of %s', $obj->status->name, $obj->user->name_with_id, $obj->institution->name);
+					$requestTitle = sprintf('Change in Staff Assignment (%s) of %s', $obj->user->name_with_id, $obj->institution->name);
 					$url = [
 						'plugin' => 'Institution',
 						'controller' => 'Institutions',
@@ -620,7 +620,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 						'receive_date' => $receivedDate,
 						'due_date' => '<i class="fa fa-minus"></i>',
 						'requester' => $obj->created_user->username,
-						'type' => __('Institutions > Staff > Change in Assignment')
+						'type' => __('Change in Staff Assignment')
 					];
 				}
 			}
