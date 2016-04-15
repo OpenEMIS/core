@@ -1,4 +1,4 @@
-/* PAGE HEADER v.1.0.4 */
+/* PAGE HEADER v.1.0.5 */
 
 .page-header {
     display: block;
@@ -10,11 +10,13 @@
     background-color: #FFF;
     z-index: 10;
     height: 39px;
+    position: relative;
 }
 
 .page-header h2 {
-    float: left;
-    padding: 8px 12px 8px 0;
+    display: inline-block;
+    position: relative;
+    padding: 8px 24px 8px 0;
     margin: 0;
     max-width: 350px;
     white-space: nowrap;
@@ -37,6 +39,7 @@
         max-width: 100% !important;
         white-space: normal !important;
         text-overflow: unset !important;
+        display: block;
     }
 
     .page-header h2:hover + .toolbar {
@@ -81,6 +84,6 @@
 }
 
 .rtl .page-header h2 {
-    padding: 8px 0 6px 12px;
+    padding: 8px 0 6px 24px;
     float: right;
 }

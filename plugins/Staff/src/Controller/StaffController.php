@@ -24,6 +24,9 @@ class StaffController extends AppController {
 			'SpecialNeeds'		=> ['className' => 'User.SpecialNeeds'],
 			'Awards'			=> ['className' => 'User.Awards'],
 			'Attachments'		=> ['className' => 'User.Attachments'],
+			'Positions'			=> ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
+			'Sections'			=> ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
+			'Classes'			=> ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
 			'Qualifications'	=> ['className' => 'Staff.Qualifications'],
 			'Absences'			=> ['className' => 'Staff.Absences', 'actions' => ['index', 'view']],
 			'Leaves'			=> ['className' => 'Staff.Leaves'],
@@ -60,6 +63,7 @@ class StaffController extends AppController {
 	}
 
 	// CAv4
+	public function Qualifications() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Qualifications']); }
 	public function Positions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Positions']); }
 	public function Classes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffClasses']); }
 	public function Subjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSubjects']); }
