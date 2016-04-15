@@ -9,6 +9,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use Cake\Utility\Text;
 
 class InstitutionSubjectStudentsTable extends AppTable {
 	public function initialize(array $config) {
@@ -17,6 +18,9 @@ class InstitutionSubjectStudentsTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects']);
 		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+		$this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
 
 		$this->belongsTo('ClassStudents', [
 			'className' => 'Institution.InstitutionClassStudents',
@@ -29,7 +33,10 @@ class InstitutionSubjectStudentsTable extends AppTable {
 				'student_id'
 			]
 		]);
+	}
 
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+		$entity->id = Text::uuid();
 	}
 
 	public function findResults(Query $query, array $options) {
