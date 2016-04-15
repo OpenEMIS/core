@@ -1,3 +1,4 @@
+agGrid.initialiseAgGridWithAngular1(angular);
 angular.module('<?= $ng_app ?>', <?= $ng_modules ?>).run(function($rootScope) {
 	angular.baseUrl = '<?= $this->request->base ?>';
 	angular.url = function(url) {
