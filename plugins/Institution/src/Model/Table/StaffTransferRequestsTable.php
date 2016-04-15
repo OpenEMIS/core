@@ -174,7 +174,7 @@ class StaffTransferRequestsTable extends StaffTransfer {
 					'action' => 'StaffTransferRequests',
 					'edit',
 					$obj->id,
-					'institution_id' => $obj->previous_institution_id
+					'institution_id' => $obj->institution_id
 				];
 
 				if (is_null($obj->modified)) {
