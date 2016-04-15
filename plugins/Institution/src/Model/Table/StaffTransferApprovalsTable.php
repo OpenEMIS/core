@@ -61,6 +61,13 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 
 	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		parent::editAfterAction($event, $entity, $extra);
+		if ($entity->status == self::APPROVED) {
+			$url = $this->url('index');
+			if (isset($url[1])) {
+				unset($url[1]);
+			}
+			return $this->controller->redirect($url);
+		}
 
 		$staffType = $this->StaffTypes->get($entity->staff_type_id)->name;
 		if (!$entity->start_date instanceof Time || !$entity->start_date instanceof Date) {
