@@ -9,8 +9,10 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\I18n\Time;
-
+use Cake\I18n\Date;
 use Cake\View\Helper\IdGeneratorTrait;
+
+use Cake\Log\Log;
 
 class HtmlFieldHelper extends Helper {
 	use IdGeneratorTrait;
@@ -536,7 +538,7 @@ class HtmlFieldHelper extends Helper {
 			$attr['date_options'] = array_merge($_options, $attr['date_options']);
 			if (!array_key_exists('value', $attr)) {
 				if (!is_null($value)) {
-					if ($value instanceof Time) {
+					if (is_object($value)) {
 						$attr['value'] = $value->format('d-m-Y');
 					} else {
 						$attr['value'] = date('d-m-Y', strtotime($value));
@@ -545,7 +547,7 @@ class HtmlFieldHelper extends Helper {
 					$attr['value'] = date('d-m-Y');
 				}
 			} else {
-				if ($attr['value'] instanceof Time) {
+				if (is_object($attr['value'])) {
 					$attr['value'] = $attr['value']->format('d-m-Y');
 				} else {
 					$attr['value'] = date('d-m-Y', strtotime($attr['value']));

@@ -15,10 +15,6 @@
 namespace Cake\View;
 
 use Cake\Core\Configure;
-use Cake\Event\EventManager;
-use Cake\Network\Request;
-use Cake\Network\Response;
-use Cake\View\SerializedView;
 
 /**
  * A view class that is used for JSON responses.
@@ -133,7 +129,7 @@ class JsonView extends SerializedView
      *
      * @param array|string|bool $serialize The name(s) of the view variable(s)
      *   that need(s) to be serialized. If true all available view variables.
-     * @return string The serialized data
+     * @return string|false The serialized data, or boolean false if not serializable.
      */
     protected function _serialize($serialize)
     {
@@ -171,10 +167,6 @@ class JsonView extends SerializedView
 
             if (empty($data)) {
                 return null;
-            }
-
-            if (count($data) === 1) {
-                return current($data);
             }
 
             return $data;
