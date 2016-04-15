@@ -1,4 +1,4 @@
-/* HEADINGS v.1.0.2 */
+/* HEADINGS v.1.0.3 */
 
 h1,
 h2,
@@ -12,7 +12,7 @@ h6 {
 }
 
 h1 {
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 400;
 }
 
@@ -54,4 +54,43 @@ p.error {
 
 em {
     font-style: italic;
+}
+
+/* RTL */
+
+.rtl h1 {
+    font-size: 30px;
+    font-weight: 400;
+}
+
+.rtl h2 {
+    font-size: 22px;
+    font-weight: 400;
+}
+
+.rtl h3 {
+    font-size: 20px;
+    font-weight: 400;
+}
+
+.rtl h4 {
+    font-size: 18px;
+    font-weight: 400;
+}
+
+.rtl h5 {
+    font-size: 16px;
+    font-weight: 400;
+}
+
+.rtl h6 {
+    font-size: 15px;
+    font-weight: 400;
+}
+
+.rtl p {
+    font-size: 14px;
+    font-weight: 400;
+    width: 100%;
+    line-height: 1.4em;
 }
