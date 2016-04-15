@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS `assessments` (
   INDEX `education_grade_id` (`education_grade_id`),
   INDEX `modified_user_id` (`modified_user_id`),
   INDEX `created_user_id` (`created_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `assessments` (`id`, `code`, `name`, `description`, `type`, `academic_period_id`, `education_grade_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT `id`, `code`, `name`, `description`, `type`, 0, `education_grade_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS `assessment_items` (
   INDEX `education_subject_id` (`education_subject_id`),
   INDEX `modified_user_id` (`modified_user_id`),
   INDEX `created_user_id` (`created_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `assessment_items` (`id`, `weight`, `assessment_grading_type_id`, `assessment_id`, `education_subject_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT uuid(), NULL, `assessment_grading_type_id`, `assessment_id`, `education_subject_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_2759_assessment_items`;
@@ -76,15 +76,9 @@ CREATE TABLE IF NOT EXISTS `assessment_item_results` (
   `created` datetime NOT NULL,
   PRIMARY KEY (`student_id`,`assessment_id`,`education_subject_id`,`institution_id`,`academic_period_id`,`assessment_period_id`),
   INDEX `assessment_grading_option_id` (`assessment_grading_option_id`),
-  INDEX `student_id` (`student_id`),
-  INDEX `assessment_id` (`assessment_id`),
-  INDEX `education_subject_id` (`education_subject_id`),
-  INDEX `institution_id` (`institution_id`),
-  INDEX `academic_period_id` (`academic_period_id`),
-  INDEX `assessment_period_id` (`assessment_period_id`),
   INDEX `modified_user_id` (`modified_user_id`),
   INDEX `created_user_id` (`created_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 PARTITION BY HASH(`academic_period_id`) PARTITIONS 8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci PARTITION BY HASH(`academic_period_id`) PARTITIONS 8;
 
 INSERT INTO `assessment_item_results` (`id`, `marks`, `assessment_grading_option_id`, `student_id`, `assessment_id`, `education_subject_id`, `institution_id`, `academic_period_id`, `assessment_period_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT uuid(), `AssessmentItemResults`.`marks`, `AssessmentItemResults`.`assessment_grading_option_id`, `AssessmentItemResults`.`student_id`, `AssessmentItems`.`assessment_id`, `AssessmentItems`.`education_subject_id`, `AssessmentItemResults`.`institution_id`, `AssessmentItemResults`.`academic_period_id`, 0, `AssessmentItemResults`.`modified_user_id`, `AssessmentItemResults`.`modified`, `AssessmentItemResults`.`created_user_id`, `AssessmentItemResults`.`created`
@@ -112,10 +106,35 @@ CREATE TABLE IF NOT EXISTS `assessment_grading_types` (
   INDEX `code` (`code`),
   INDEX `modified_user_id` (`modified_user_id`),
   INDEX `created_user_id` (`created_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `assessment_grading_types` (`id`, `code`, `name`, `pass_mark`, `max`, `result_type`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT `id`, `code`, `name`, 0, 0, '', `visible`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_2759_assessment_grading_types`;
+
+-- assessment_grading_options
+RENAME TABLE `assessment_grading_options` TO `z_2759_assessment_grading_options`;
+
+DROP TABLE IF EXISTS `assessment_grading_options`;
+CREATE TABLE IF NOT EXISTS `assessment_grading_options` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `code` varchar(50) DEFAULT NULL,
+  `name` varchar(80) NOT NULL,
+  `min` decimal(6,2) DEFAULT NULL,
+  `max` decimal(6,2) DEFAULT NULL,
+  `order` int(3) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `assessment_grading_type_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `assessment_grading_type_id` (`assessment_grading_type_id`),
+  INDEX `modified_user_id` (`modified_user_id`),
+  INDEX `created_user_id` (`created_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `assessment_grading_options` SELECT * FROM `z_2759_assessment_grading_options`;
 
 -- assessment_periods
 DROP TABLE IF EXISTS `assessment_periods`;
@@ -137,7 +156,7 @@ CREATE TABLE IF NOT EXISTS `assessment_periods` (
   INDEX `assessment_id` (`assessment_id`),
   INDEX `modified_user_id` (`modified_user_id`),
   INDEX `created_user_id` (`created_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Backup tables
 RENAME TABLE `assessment_statuses` TO `z_2759_assessment_statuses`;
@@ -166,51 +185,14 @@ CREATE TABLE `institution_subject_students` (
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
   PRIMARY KEY (`student_id`,`institution_class_id`,`institution_id`,`academic_period_id`,`education_subject_id`),
-  INDEX `student_id` (`student_id`),
+  UNIQUE (`id`),
   INDEX `institution_subject_id` (`institution_subject_id`),
-  INDEX `institution_class_id` (`institution_class_id`),
-  INDEX `institution_id` (`institution_id`),
-  INDEX `academic_period_id` (`academic_period_id`),
-  INDEX `education_subject_id` (`education_subject_id`),
   INDEX `modified_user_id` (`modified_user_id`),
   INDEX `created_user_id` (`created_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `institution_subject_students` (`id`, `status`, `total_mark`, `student_id`, `institution_subject_id`, `institution_class_id`, `institution_id`, `academic_period_id`, `education_subject_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT uuid(), `InstitutionSubjectStudents`.`status`, NULL, `InstitutionSubjectStudents`.`student_id`, `InstitutionSubjectStudents`.`institution_subject_id`, `InstitutionSubjectStudents`.`institution_class_id`, `InstitutionSubjects`.`institution_id`, `InstitutionSubjects`.`academic_period_id`, `InstitutionSubjects`.`education_subject_id`, `InstitutionSubjectStudents`.`modified_user_id`, `InstitutionSubjectStudents`.`modified`, `InstitutionSubjectStudents`.`created_user_id`, `InstitutionSubjectStudents`.`created`
 FROM `z_2759_institution_subject_students` AS `InstitutionSubjectStudents`
 INNER JOIN `institution_subjects` AS `InstitutionSubjects`
 ON `InstitutionSubjects`.`id` = `InstitutionSubjectStudents`.`institution_subject_id`;
-
--- institution_students
-RENAME TABLE `institution_students` TO `z_2759_institution_students`;
-
-DROP TABLE IF EXISTS `institution_students`;
-CREATE TABLE `institution_students` (
-  `id` char(36) NOT NULL,
-  `student_status_id` int(11) NOT NULL,
-  `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
-  `education_grade_id` int(11) NOT NULL,
-  `academic_period_id` int(11) NOT NULL,
-  `start_date` date NOT NULL,
-  `start_year` int(4) NOT NULL,
-  `end_date` date NOT NULL,
-  `end_year` int(4) NOT NULL,
-  `final_result` decimal(6,2) DEFAULT NULL,
-  `institution_id` int(11) NOT NULL,
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  INDEX `student_status_id` (`student_status_id`),
-  INDEX `student_id` (`student_id`),
-  INDEX `education_grade_id` (`education_grade_id`),
-  INDEX `academic_period_id` (`academic_period_id`),
-  INDEX `institution_id` (`institution_id`),
-  INDEX `modified_user_id` (`modified_user_id`),
-  INDEX `created_user_id` (`created_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-INSERT INTO `institution_students` (`id`, `student_status_id`, `student_id`, `education_grade_id`, `academic_period_id`, `start_date`, `start_year`, `end_date`, `end_year`, `final_result`, `institution_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-SELECT `id`, `student_status_id`, `student_id`, `education_grade_id`, `academic_period_id`, `start_date`, `start_year`, `end_date`, `end_year`, NULL, `institution_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_2759_institution_students`;
