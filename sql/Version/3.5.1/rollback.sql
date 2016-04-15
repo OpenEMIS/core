@@ -58,5 +58,14 @@ DELETE FROM `workflow_statuses` WHERE `workflow_model_id` = @modelId;
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2172';
 
 
+-- POCOR-2786
+-- security_users
+UPDATE `security_users` INNER JOIN `z_2786_security_users` ON `z_2786_security_users`.`id` = `security_users`.`id`
+SET `security_users`.`date_of_birth` = `z_2786_security_users`.`date_of_birth`, `security_users`.`gender_id` = `z_2786_security_users`.`gender_id`;
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2786';
+
+
 -- 3.5.1
 UPDATE config_items SET value = '3.4.18' WHERE code = 'db_version';
