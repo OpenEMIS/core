@@ -155,7 +155,7 @@ class PermissionsTable extends AppTable {
 			$permissions = $request->data($this->alias());
 			if (!empty($permissions)) {
 				foreach ($permissions as $row) {
-					$defaultData = ['_view' => 0, '_edit' => 0, '_add' => 0, '_delete' => 0, '_execute' => 0, 'security_role_id' => $roleId];
+					$defaultData = ['_view' => '0', '_edit' => '0', '_add' => '0', '_delete' => '0', '_execute' => '0', 'security_role_id' => $roleId];
 					$entity = $this->newEntity(array_merge($defaultData, $row));
 					$this->save($entity);
 				}
