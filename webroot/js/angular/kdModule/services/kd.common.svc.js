@@ -25,6 +25,9 @@ angular.module('kd.common.svc', [])
 
     var self = this;
     this.changeOptions = function(scope, id, attr) {
+        var spinnerParent = attr.kdOnChangeSpinnerParent || 0;
+        self.appendSpinner(spinnerParent);
+
         var target = attr.kdOnChangeTarget;
         var dataType = attr.kdOnChangeElement;
         var targetUrl = attr.kdOnChangeSourceUrl + id;
@@ -45,12 +48,17 @@ angular.module('kd.common.svc', [])
                     scope.onChangeTargetsCallback(target);
                 }
 
+                self.removeSpinner(spinnerParent);
+            
             }, function(error) {
                 console.log('Error: ', error);
             });
     };
 
     this.addRow = function(scope, elem, attr) {
+        var spinnerParent = attr.kdOnClickSpinnerParent || 0;
+        self.appendSpinner(spinnerParent);
+
         var target = attr.kdOnClickTarget;
         var targetUrl = attr.kdOnClickSourceUrl;
         var response = self.ajax({url:targetUrl});
@@ -64,6 +72,8 @@ angular.module('kd.common.svc', [])
                 if (typeof scope.onClickTargetsCallback === 'function') {
                     scope.onClickTargetsCallback(target, 'addRow');
                 }
+
+                self.removeSpinner(spinnerParent);
             
             }, function(error) {
                 console.log('Failure...', error);
@@ -128,6 +138,22 @@ angular.module('kd.common.svc', [])
             }
         );
         return deferred.promise;
+    }
+
+    this.appendSpinner = function(_querySelector) {
+        _querySelector = _querySelector || 'content-main-form';
+        var spinnerId = _querySelector + '-spinner';
+        var hasClass = angular.element(document.getElementById(spinnerId)).hasClass('spinner-wrapper');
+        if (!hasClass) {
+            var spinnerElement = angular.element('<div id="'+ spinnerId +'" ' + 'class="spinner-wrapper"><div class="spinner-text"><div class="spinner lt-ie9"></div></div></div>');
+            angular.element(document.getElementById(_querySelector)).prepend(spinnerElement);
+        }
+    }
+
+    this.removeSpinner = function(_querySelector) {
+        _querySelector = _querySelector || 'content-main-form';
+        var spinnerId = _querySelector + '-spinner';
+        angular.element(document.getElementById(spinnerId)).remove('.spinner-wrapper');
     }
 
 }]);

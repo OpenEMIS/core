@@ -41,13 +41,13 @@
 				'kd-on-click-element' => 'addRow',
 				'kd-on-click-source-url' => $this->Url->build('/') . 'Assessments/addNewAssessmentPeriod',
 				'kd-on-click-target' => 'assessment_periods',
+				'kd-on-click-spinner-parent' => 'table_assessment_periods',
 			]);
 		?>
 			<!-- <span class="loading_img margin-left-10"><img src="<?= $this->Url->build('/')?>open_emis/img/../plugins/autocomplete/img/loader.gif" plugin="false" alt=""></span> -->
 		</div>
 		<div class="table-wrapper full-width">
 			<div class="table-responsive">
-			    <!-- <table class="table"> -->
 			    <table class="table table-body-scrollable">
 					<thead>
 						<tr>
@@ -64,13 +64,12 @@
 						</tr>
 					</thead>
 
-					<tbody id="table_assessment_periods" ca-id="assessment_periods" ca-on-click-target-element ca-on-click-target-handler="addRow">
+					<tbody id="table_assessment_periods">
 						
-						<?php //pr(json_encode($data->assessment_periods));?>
+						<?php pr(json_encode($data->assessment_periods));?>
 
 						<div class="hidden" ng-init='errors = <?= json_encode($assessmentPeriodsErrors)?>'></div>
 						<div class="hidden" ng-init='onClickTargets.handlers.addRow.assessment_periods = <?= json_encode($data->assessment_periods)?>'></div>
-						
 						<tr ng:repeat="(key, period) in onClickTargets.handlers.addRow.assessment_periods">
 							
 							<td></td>
@@ -88,7 +87,8 @@
 										$type = $types[$attr['fields'][$formField]['type']];
 										$attributes = json_encode($attr['fields'][$formField]);
 								?>
-									<td>
+
+									<td class="<?= ($type=='hidden') ? $type : ''?>">
 										<<?= $type ?> attributes='<?= $attributes ?>'></<?= $type ?>>
 									</td>
 									<?php 
@@ -96,13 +96,16 @@
 											$this->HtmlField->includes[$type]['include'] = true;
 										}
 									?>
+
 								<?php endif;?>
 							<?php endforeach;?>
-							<?php $this->HtmlField->includes(null, 'edit'); ?>
-
+							
 							<td>
 								<button class="btn btn-dropdown action-toggle btn-single-action" title="Delete" aria-expanded="true" type="reset" ng-click="onClickTargets.handlers.removeRow('assessment_periods', key)"><i class="fa fa-trash"></i> <span><?= __('Delete')?></span></button>
+								<div class="error-message"></div>
 							</td>
+
+							<td>&nbsp;</td>
 
 						</tr>
 
@@ -112,13 +115,6 @@
 			</div>
 		</div>
 	</div>
-
-	<script>
-		function updateDates() {
-			// var startDates = $('#table_assessment_periods').find('td .updateOnPeriodChanged');
-			// console.log(startDates);
-		}
-	</script>
 
 <?php else : ?>
 

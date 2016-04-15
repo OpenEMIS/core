@@ -35,33 +35,16 @@ class AssessmentPeriodsTable extends AssessmentsAppTable {
 		$this->fields['name']['fieldName'] = "Assessments[assessment_periods][{{key}}][name]";
 		$this->fields['name']['attr']['value'] = "{{showValue(period.name)}}";
 
-		$this->fields['start_date']['id'] = "Assessments-assessment_periods-{{key}}-start_date-chak";
-		$this->fields['start_date']['label'] = false;
-		$this->fields['start_date']['required'] = true;
-		// $this->fields['start_date']['inputWrapperStyle'] = 'margin-top:1px;margin-bottom:-2px;';
-		$this->fields['start_date']['fieldName'] = "Assessments[assessment_periods][{{key}}][start_date]";
-		$this->fields['start_date']['attr']['value'] = "{{showValue(period.start_date)}}";
-
-		$this->fields['end_date']['id'] = "Assessments-assessment_periods-{{key}}-end_date";
-		$this->fields['end_date']['label'] = false;
-		$this->fields['end_date']['required'] = true;
-		// $this->fields['end_date']['inputWrapperStyle'] = 'margin-top:1px;margin-bottom:-2px;';
-		$this->fields['end_date']['fieldName'] = "Assessments[assessment_periods][{{key}}][end_date]";
-		$this->fields['end_date']['attr']['value'] = "{{showValue(period.end_date)}}";
-
-		$this->fields['date_enabled']['id'] = "Assessments-assessment_periods-{{key}}-date_enabled";
-		$this->fields['date_enabled']['label'] = false;
-		$this->fields['date_enabled']['required'] = true;
-		// $this->fields['date_enabled']['inputWrapperStyle'] = 'margin-top:1px;margin-bottom:-2px;';
-		$this->fields['date_enabled']['fieldName'] = "Assessments[assessment_periods][{{key}}][date_enabled]";
-		$this->fields['date_enabled']['attr']['value'] = "{{showValue(period.date_enabled)}}";
-
-		$this->fields['date_disabled']['id'] = "Assessments-assessment_periods-{{key}}-date_disabled";
-		$this->fields['date_disabled']['label'] = false;
-		$this->fields['date_disabled']['required'] = true;
-		// $this->fields['date_disabled']['inputWrapperStyle'] = 'margin-top:1px;margin-bottom:-2px;';
-		$this->fields['date_disabled']['fieldName'] = "Assessments[assessment_periods][{{key}}][date_disabled]";
-		$this->fields['date_disabled']['attr']['value'] = "{{showValue(period.date_disabled)}}";
+		foreach (['start_date', 'end_date', 'date_enabled', 'date_disabled'] as $datefield) {
+			$this->fields[$datefield]['id'] = "Assessments-assessment_periods-{{key}}-".$datefield;
+			$this->fields[$datefield]['label'] = false;
+			$this->fields[$datefield]['required'] = true;
+			// $this->fields[$datefield]['inputWrapperStyle'] = 'margin-top:1px;margin-bottom:-2px;';
+			$this->fields[$datefield]['fieldName'] = "Assessments[assessment_periods][{{key}}][".$datefield."]";
+			$this->fields[$datefield]['value'] = "{{showDateValue(period.".$datefield.")}}";
+			$this->fields[$datefield]['special_value'] = true;
+			$this->fields[$datefield]['default_date'] = false;
+		}
 
 	}
 

@@ -113,15 +113,24 @@
 
 				<tbody id="table_assessment_items">
 					
+					<?php //pr($data->assessment_items);?>
+
+					<div class="hidden" ng-init='assessmentItems = <?= json_encode($data->assessment_items)?>'></div>
 					<tr ng:repeat="(key, item) in onChangeTargets.assessment_items">
+
+						<?php if ($action == 'edit'):?>
+						<input type="hidden" id="assessmentitems-id" name="Assessments[assessment_items][{{key}}][id]" value="{{assessmentItems[key].id}}"/>
+						<input type="hidden" id="assessmentitems-assessment-id" name="Assessments[assessment_items][{{key}}][assessment_id]" value="{{assessmentItems[key].assessment_id}}"/>
+						<?php endif;?>
+
 						<td>{{item.education_subject.code}} - {{item.education_subject.name}}</td>
 						<input type="hidden" id="assessmentitems-education-subject-id" name="Assessments[assessment_items][{{key}}][education_subject_id]" value="{{item.education_subject.id}}"/>
 						<td>
 							<div class="input-select-wrapper">
-								<select id="assessmentitems-assessment-grading-type-id" name="Assessments[assessment_items][{{key}}][assessment_grading_type_id]">
+								<select id="assessmentitems-{{key}}-assessment-grading-type-id" kd-selected-value="{{assessmentItems[key].assessment_grading_type_id}}" name="Assessments[assessment_items][{{key}}][assessment_grading_type_id]">
 								
-									<option value="">-- Select --</option>
-									<option ng:repeat="option in onChangeTargets.assessment_grading_type_id" value="{{option.id}}">     
+									<option value=""><?= __('-- Select --')?></option>
+									<option ng:repeat="option in onChangeTargets.assessment_grading_type_id" value="{{option.id}}" ng-selected="selectedOption('assessmentitems-{{key}}-assessment-grading-type-id', option.id)">     
 									    {{option.name}}
 									</option>
 
@@ -130,7 +139,7 @@
 						</td>
 						<td>&nbsp;</td>
 						<td>
-							<input type="text" id="assessmentitems-weight" class="form-error" name="Assessments[assessment_items][{{key}}][weight]" value=""/>
+							<input type="text" id="assessmentitems-weight" class="form-error" name="Assessments[assessment_items][{{key}}][weight]" value="{{assessmentItems[key].weight}}"/>
 						</td>
 						<td>&nbsp;</td>
 					</tr>
