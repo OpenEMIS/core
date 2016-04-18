@@ -451,22 +451,26 @@ class StudentTransferTable extends AppTable {
 				->group($this->aliasField('student_id'));
 
 			if ($selectedClass != -1) {
-				$studentQuery = $studentQuery
-					->innerJoin(['InstitutionClasses' => 'institution_classes'], 
-						[
-							'InstitutionClasses.institution_id = '.$this->aliasField('institution_id'),
-							'InstitutionClasses.academic_period_id = '.$this->aliasField('academic_period_id'),
-						])
-					->innerJoin(['InstitutionClassStudents' => 'institution_class_students'],
-						[
-							'InstitutionClassStudents.institution_class_id = InstitutionClasses.id',
-							'InstitutionClassStudents.education_grade_id = '.$this->aliasField('education_grade_id'),
-							'InstitutionClassStudents.student_id = '.$this->aliasField('student_id') 
-						])
-					->where(['InstitutionClasses.id' => $selectedClass])
-					->select(['institution_class_id' => 'InstitutionClasses.id', 'institution_class_name' => 'InstitutionClasses.name'])
-					->autoFields(true);
+				$where = ['InstitutionClasses.id' => $selectedClass];
+			} else {
+				$where = [];
 			}
+
+			$studentQuery = $studentQuery
+				->leftJoin(['InstitutionClassStudents' => 'institution_class_students'],
+					[
+						'InstitutionClassStudents.education_grade_id = '.$this->aliasField('education_grade_id'),
+						'InstitutionClassStudents.student_id = '.$this->aliasField('student_id')
+					])
+				->leftJoin(['InstitutionClasses' => 'institution_classes'], 
+					[	
+						'InstitutionClassStudents.institution_class_id = InstitutionClasses.id',
+						'InstitutionClasses.institution_id = '.$this->aliasField('institution_id'),
+						'InstitutionClasses.academic_period_id = '.$this->aliasField('academic_period_id'),
+					])
+				->where($where)
+				->select(['institution_class_id' => 'InstitutionClasses.id', 'institution_class_name' => 'InstitutionClasses.name'])
+				->autoFields(true);
 
 	  		$students = $studentQuery->toArray();
 	  	}
