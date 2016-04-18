@@ -155,18 +155,35 @@ class InstitutionSurveysTable extends AppTable {
     // Workbench.Model.onGetList
 	public function onGetWorkbenchList(Event $event, $AccessControl, ArrayObject $data) {
 		if ($AccessControl->isAdmin()) { return; }
+		$WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+		$statusIds = $event->subject()->Workflow->getStepsByModelCode($this->registryAlias(), 'NOT_COMPLETED');
 		$userId = $event->subject()->Auth->user('id');
 		$institutionIds = $AccessControl->getInstitutionsByUser();
 
 		// Array to store security roles in each Institution
 		$institutionRoles = [];
 		foreach ($institutionIds as $institutionId) {
-			$institutionRoles[$institutionId] = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+			$roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+			$institutionRoles[$institutionId] = $roles;
+
+			// logic to pre-insert survey in school only when user's roles is configured to access the step
+			foreach ($statusIds as $key => $statusId) {
+				$hasWorkflowRoles = $WorkflowStepsRoles
+					->find()
+					->where([
+						$WorkflowStepsRoles->aliasField('workflow_step_id') => $statusId,
+						$WorkflowStepsRoles->aliasField('security_role_id IN ') => $roles
+					])
+					->all();
+
+				if (!$hasWorkflowRoles->isEmpty()) {
+					$this->buildSurveyRecords($institutionId);
+				}
+			}
 		}
 		// End
 
 		// Results of all Not Completed survey in all institutions that the login user can access
-		$statusIds = $event->subject()->Workflow->getStepsByModelCode($this->registryAlias(), 'NOT_COMPLETED');
 		$where = [];
 		if (!empty($statusIds)) {
 			$where[$this->aliasField('status_id') . ' IN '] = $statusIds;
