@@ -361,4 +361,61 @@ class InstitutionPositionsTable extends AppTable {
 		return $query
 			->contain(['StaffPositionTitles', 'Institutions', 'StaffPositionGrades']);
 	}
+
+	public function getInstitutionPositions($institutionId, $userId) {
+
+			// // excluding positions where 'InstitutionStaff.end_date is NULL'
+			$excludePositions = $this->find('list');
+			$excludePositions->matching('InstitutionStaff', function ($q) {
+					return $q->where(['InstitutionStaff.end_date is NULL', 'InstitutionStaff.FTE' => 1]);
+				});
+			$excludePositions->where([$this->aliasField('institution_id') => $institutionId])
+				->toArray()
+				;
+			$excludeArray = [];
+			foreach ($excludePositions as $key => $value) {
+				$excludeArray[] = $value;
+			}
+
+			if ($this->AccessControl->isAdmin()) {
+				$userId = null;
+				$roles = [];
+			} else {
+				$roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+			}
+			
+			// Filter by active status
+			$activeStatusId = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'ACTIVE');
+			$positionConditions = [];
+			$positionConditions[$this->aliasField('institution_id')] = $institutionId;
+			if (!empty($activeStatusId)) {
+				$positionConditions[$this->aliasField('status_id').' IN '] = $activeStatusId;
+			}
+			if (!empty($excludeArray)) {
+				$positionConditions[$this->aliasField('id').' NOT IN '] = $excludeArray;
+			}
+			$staffPositionsOptions = $this
+					->find()
+					->innerJoinWith('StaffPositionTitles.SecurityRoles')
+					->where($positionConditions)
+					->select(['security_role_id' => 'SecurityRoles.id', 'type' => 'StaffPositionTitles.type'])
+					->order(['StaffPositionTitles.type' => 'DESC', 'StaffPositionTitles.order'])
+					->autoFields(true)
+				    ->toArray();
+
+			// Filter by role previlege
+			$SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
+			$roleOptions = $SecurityRolesTable->getRolesOptions($userId, $roles);
+			$roleOptions = array_keys($roleOptions);
+			$staffPositionRoles = $this->array_column($staffPositionsOptions, 'security_role_id');
+			$staffPositionsOptions = array_intersect_key($staffPositionsOptions, array_intersect($staffPositionRoles, $roleOptions));
+
+			// Adding the opt group
+			$types = $this->getSelectOptions('Staff.position_types');
+			$options = [];
+			foreach ($staffPositionsOptions as $position) {
+				$type = __($types[$position->type]);
+				$options[$type][$position->id] = $position->name;
+			}
+	}
 }
