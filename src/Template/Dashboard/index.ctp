@@ -40,7 +40,7 @@ $this->start('panelBody');
 </div>
 
 <div class="row dashboard-container">
-	<div id="workbench">
+	<div id="workbench" style="max-height: 400px;">
 		<h5><?php echo __('Workbench'); ?></h5>
 		<div class="dashboard-content">
 			<table class="table">
