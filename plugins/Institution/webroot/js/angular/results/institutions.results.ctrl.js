@@ -15,7 +15,9 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
         UtilsSvc.isAppendLoader(true);
         // getAssessment
         InstitutionsResultsSvc.getAssessment($scope.assessment_id)
-        .then(function(assessment) {
+        .then(function(response) {
+            var assessment = response.data;
+
             $scope.assessment = assessment;
             $scope.academic_period_id = assessment.academic_period_id;
             $scope.education_grade_id = assessment.education_grade_id;
