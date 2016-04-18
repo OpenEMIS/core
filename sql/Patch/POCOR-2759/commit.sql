@@ -195,4 +195,14 @@ INSERT INTO `institution_subject_students` (`id`, `status`, `total_mark`, `stude
 SELECT uuid(), `InstitutionSubjectStudents`.`status`, NULL, `InstitutionSubjectStudents`.`student_id`, `InstitutionSubjectStudents`.`institution_subject_id`, `InstitutionSubjectStudents`.`institution_class_id`, `InstitutionSubjects`.`institution_id`, `InstitutionSubjects`.`academic_period_id`, `InstitutionSubjects`.`education_subject_id`, `InstitutionSubjectStudents`.`modified_user_id`, `InstitutionSubjectStudents`.`modified`, `InstitutionSubjectStudents`.`created_user_id`, `InstitutionSubjectStudents`.`created`
 FROM `z_2759_institution_subject_students` AS `InstitutionSubjectStudents`
 INNER JOIN `institution_subjects` AS `InstitutionSubjects`
-ON `InstitutionSubjects`.`id` = `InstitutionSubjectStudents`.`institution_subject_id`;
+ON `InstitutionSubjects`.`id` = `InstitutionSubjectStudents`.`institution_subject_id`
+GROUP BY 
+  `InstitutionSubjectStudents`.`student_id`, 
+  `InstitutionSubjectStudents`.`institution_class_id`, 
+  `InstitutionSubjects`.`institution_id`,
+  `InstitutionSubjects`.`academic_period_id`, 
+  `InstitutionSubjects`.`education_subject_id`
+;
+
+
+
