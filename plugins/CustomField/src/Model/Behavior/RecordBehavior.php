@@ -11,6 +11,7 @@ use Cake\Utility\Inflector;
 use Cake\ORM\Table;
 use Cake\Log\Log;
 use Cake\I18n\Time;
+use Cake\I18n\Date;
 
 class RecordBehavior extends Behavior {
 	protected $_defaultConfig = [
@@ -871,7 +872,7 @@ class RecordBehavior extends Behavior {
 	private function date($data, $fieldInfo, $options=[]) {
 		if (isset($data[$fieldInfo['id']])) {
 			$date = date_create_from_format('Y-m-d', $data[$fieldInfo['id']]);
-			return $this->_table->formatDate(new Time($date));
+			return $this->_table->formatDate(new Date($date));
 		} else {
 			return '';
 		}
