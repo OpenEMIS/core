@@ -1,4 +1,4 @@
-v3.4.15
+v3.5.1
 - Attachment is now an optional field in Staff Qualifications
 - Added Position Type to Staff reports
 - Fixed a bug that caused System Configurations not showing all items in arabic language
