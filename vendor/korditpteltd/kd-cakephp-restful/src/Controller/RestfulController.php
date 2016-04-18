@@ -77,16 +77,6 @@ class RestfulController extends AppController
 
 			$containments = $this->_setupContainments($target, $requestQueries, $query);
 
-			$limit = 10;
-			if (array_key_exists('_limit', $requestQueries)) {
-				$limit = $requestQueries['_limit'];
-			}
-			$page = 1;
-			if (array_key_exists('_page', $requestQueries)) {
-				$page = $requestQueries['_page'];
-			}
-			$query->limit($limit)->page($page);
-
 			$conditions = [];
 			if (!empty($requestQueries)) {
 				$conditions = $this->_setupConditions($target, $requestQueries);
@@ -106,21 +96,26 @@ class RestfulController extends AppController
 				if (!empty($fields)) {
 					$query->select($fields);
 				}
-				if ($listOnly) {
-					try {
+
+				if (array_key_exists('_limit', $requestQueries)) {
+					$limit = $requestQueries['_limit'];
+					$page = 1;
+					if (array_key_exists('_page', $requestQueries)) {
+						$page = $requestQueries['_page'];
+					}
+					$query->limit($limit)->page($page);
+				}
+
+				try {
+					$data = [];
+					if ($listOnly) {
 						$data = $query->toArray();
-						$this->_outputData($data);
-					} catch (Exception $e) {
-						$this->_outputError($e->getMessage());
+					} else {
+						$data = $this->_formatBinaryValue($query->all());
 					}
-				} else {
-					try {
-						$data = $query->all();
-						$data = $this->_formatBinaryValue($data);
-						$this->_outputData($data);
-					} catch (Exception $e) {
-						$this->_outputError($e->getMessage());
-					}
+					$this->_outputData($data);
+				} catch (Exception $e) {
+					$this->_outputError($e->getMessage());
 				}
 			}
 	    }
