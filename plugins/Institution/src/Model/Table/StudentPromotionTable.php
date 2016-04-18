@@ -398,11 +398,7 @@ class StudentPromotionTable extends AppTable {
 
 		if (!is_null($currentData)) {
 			$selectedGrade = $currentData['grade_to_promote'];
-			if (!empty($currentData['institution_class'])) {
-				$where = ['InstitutionClasses.id' => $currentData['institution_class']];
-			} else {
-				$where = [];
-			}
+			
 			$students = [];
 			if (!is_null($selectedGrade)) {
 				$studentStatuses = $this->statuses;
@@ -414,22 +410,26 @@ class StudentPromotionTable extends AppTable {
 						$this->aliasField('academic_period_id') => $selectedPeriod,
 						$this->aliasField('student_status_id') => $studentStatuses['CURRENT'],
 						$this->aliasField('education_grade_id') => $selectedGrade
-					])
-					->innerJoin(['InstitutionClasses' => 'institution_classes'], 
-						[
-							'InstitutionClasses.institution_id = '.$this->aliasField('institution_id'),
-							'InstitutionClasses.academic_period_id = '.$this->aliasField('academic_period_id'),
-						])
-					->innerJoin(['InstitutionClassStudents' => 'institution_class_students'],
-						[
-							'InstitutionClassStudents.institution_class_id = InstitutionClasses.id',
-							'InstitutionClassStudents.education_grade_id = '.$this->aliasField('education_grade_id'),
-							'InstitutionClassStudents.student_id = '.$this->aliasField('student_id') 
-						])
-					->where($where)
-					->select(['institution_class_id' => 'InstitutionClasses.id', 'institution_class_name' => 'InstitutionClasses.name'])
-					->autoFields(true);
+					]);
 					
+				
+				if (!empty($currentData['institution_class'])) {
+					$students = $students
+						->innerJoin(['InstitutionClasses' => 'institution_classes'], 
+							[
+								'InstitutionClasses.institution_id = '.$this->aliasField('institution_id'),
+								'InstitutionClasses.academic_period_id = '.$this->aliasField('academic_period_id'),
+							])
+						->innerJoin(['InstitutionClassStudents' => 'institution_class_students'],
+							[
+								'InstitutionClassStudents.institution_class_id = InstitutionClasses.id',
+								'InstitutionClassStudents.education_grade_id = '.$this->aliasField('education_grade_id'),
+								'InstitutionClassStudents.student_id = '.$this->aliasField('student_id') 
+							])
+						->where(['InstitutionClasses.id' => $currentData['institution_class']])
+						->select(['institution_class_id' => 'InstitutionClasses.id', 'institution_class_name' => 'InstitutionClasses.name'])
+						->autoFields(true);
+				}
 
 				if ($students->count() > 0) {
 					// have to see if these students have pending requests of any kind
