@@ -1,4 +1,4 @@
-angular.module('institutions.results.svc', [])
+angular.module('institutions.results.svc', ['kd.orm.svc'])
 .service('InstitutionsResultsSvc', function($http, $q, $filter, KdOrmSvc) {
     var models = {
         AssessmentsTable: 'Assessment.Assessments',
@@ -30,9 +30,7 @@ angular.module('institutions.results.svc', [])
                     var subjects = [];
                     angular.forEach(items, function(item, key) {
                         educationSubject = item.education_subject;
-                        educationSubject.pass_mark = item.grading_type.pass_mark;
-                        educationSubject.max = item.grading_type.max;
-                        educationSubject.result_type = item.grading_type.result_type;
+                        educationSubject.grading_type = item.grading_type;
 
                         this.push(educationSubject);
                     }, subjects);
@@ -45,7 +43,7 @@ angular.module('institutions.results.svc', [])
 
             return AssessmentItemsTable
             .select()
-            .contain(['EducationSubjects', 'GradingTypes'])
+            .contain(['EducationSubjects', 'GradingTypes.GradingOptions'])
             .where({assessment_id: assessmentId})
             .ajax({success: success, defer: true})
             ;
@@ -69,6 +67,9 @@ angular.module('institutions.results.svc', [])
         },
 
         getColumnDefs: function(action, subject, periods) {
+            var minMark = 0;
+            var maxMark = subject.grading_type.max;
+
             var filterParams = {
                 cellHeight: 30
             };
@@ -101,6 +102,13 @@ angular.module('institutions.results.svc', [])
                     headerName: headerName,
                     field: periodField,
                     filter: 'number',
+                    cellStyle: function(params) {
+                        if (!isNaN(parseFloat(params.value)) && parseFloat(params.value) < subject.grading_type.pass_mark) {
+                            return {color: '#CC5C5C'};
+                        } else {
+                            return {color: '#333'};
+                        }
+                    },
                     valueGetter: function(params) {
                         var value = params.data[params.colDef.field];
 
@@ -117,6 +125,15 @@ angular.module('institutions.results.svc', [])
                     columnDef.headerName = headerName + " <i class='fa fa-pencil-square-o fa-lg header-icon'></i>";
                     columnDef.editable = true;
                     columnDef.cellClass = 'oe-cell-highlight';
+                    columnDef.newValueHandler = function(params) {
+                        var valueAsFloat = parseFloat(params.newValue);
+
+                        if (params.newValue.length > 0 && (isNaN(valueAsFloat) || (valueAsFloat < minMark || valueAsFloat > maxMark))) {
+                            params.data[params.colDef.field] = '';
+                        } else {
+                            params.data[params.colDef.field] = params.newValue;
+                        }
+                    };
                 }
 
                 this.push(columnDef);
@@ -236,6 +253,25 @@ angular.module('institutions.results.svc', [])
             ;
         },
 
+        getGrading: function(subject, marks) {
+            var gradingOptions = subject.grading_type.grading_options;
+            var gradingResults = {
+                id: null,
+                code: '',
+                name: ''
+            };
+
+            angular.forEach(gradingOptions, function(gradingOption, key) {
+                if (marks >= gradingOption.min && marks <= gradingOption.max) {
+                    this.id = gradingOption.id;
+                    this.code = gradingOption.code;
+                    this.name = gradingOption.name;
+                }
+            }, gradingResults);
+
+            return gradingResults;
+        },
+
         calculateTotal: function(data) {
             var totalMark = 0;
 
@@ -253,15 +289,21 @@ angular.module('institutions.results.svc', [])
             }
         },
 
-        saveRowData: function(results, assessmentId, educationSubjectId, institutionId, academicPeriodId) {
+        saveRowData: function(subject, results, assessmentId, educationSubjectId, institutionId, academicPeriodId) {
             var promises = [];
 
             angular.forEach(results, function(result, studentId) {
                 angular.forEach(result, function(obj, assessmentPeriodId) {
                     var marks = !isNaN(parseFloat(obj.marks)) ? $filter('number')(obj.marks, 2) : null;
+                    var gradingOptionId = null;
+                    if (marks != null) {
+                        var gradingObj = this.getGrading(subject, marks);
+                        gradingOptionId = gradingObj.id;
+                    }
 
                     var data = {
                         "marks" : marks,
+                        "assessment_grading_option_id" : gradingOptionId,
                         "assessment_id" : assessmentId,
                         "education_subject_id" : educationSubjectId,
                         "institution_id" : institutionId,
@@ -271,8 +313,8 @@ angular.module('institutions.results.svc', [])
                     };
 
                     promises.push(AssessmentItemResultsTable.save(data));
-                });
-            });
+                }, this);
+            }, this);
 
             return $q.all(promises);
         },
