@@ -503,9 +503,7 @@ class StudentTransferTable extends AppTable {
     }
 
 	public function addOnChangeClass(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		unset($this->request->query['education_grade_id']);
-		unset($this->request->query['next_academic_period_id']);
-		unset($this->request->query['next_education_grade_id']);
+		unset($this->request->query['institution_class']);
 
 		if ($this->request->is(['post', 'put'])) {
 			if (array_key_exists($this->alias(), $data)) {
@@ -518,6 +516,7 @@ class StudentTransferTable extends AppTable {
 
     public function addOnChangeGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		unset($this->request->query['education_grade_id']);
+		unset($this->request->query['institution_class']);
 		unset($this->request->query['next_academic_period_id']);
 		unset($this->request->query['next_education_grade_id']);
 
