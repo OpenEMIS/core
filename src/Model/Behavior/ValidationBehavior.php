@@ -1209,4 +1209,7 @@ class ValidationBehavior extends Behavior {
 		return true;
 	}
 
+	public static function checkMinNotMoreThanMax($minValue, array $globalData) {
+        return intVal($minValue) <= intVal($globalData['data']['max']);
+    }
 }

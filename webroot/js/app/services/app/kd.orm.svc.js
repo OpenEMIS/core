@@ -12,6 +12,7 @@ angular.module('kd.orm.svc', [])
         _finder: [],
         _where: {},
         _order: [],
+        _limit: 0,
         _page: 0,
 
         className: function(className) {
@@ -30,6 +31,7 @@ angular.module('kd.orm.svc', [])
             this._contain = [];
             this._finder = [];
             this._where = {};
+            this._limit = 0;
             this._page = 0;
             this._method = 'GET';
         },
@@ -71,6 +73,11 @@ angular.module('kd.orm.svc', [])
 
         order: function(order) {
             this._order = order;
+            return this;
+        },
+
+        limit: function(limit) {
+            this._limit = limit;
             return this;
         },
 
@@ -163,6 +170,7 @@ angular.module('kd.orm.svc', [])
                     this.push(key + '=' + value);
                 }, params);
             }
+            params.push('_limit=' + this._limit);
             if (this._page > 0) {
                 params.push('_page=' + this._page);
             }

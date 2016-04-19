@@ -97,12 +97,15 @@ class RestfulController extends AppController
 					$query->select($fields);
 				}
 
+				$limit = 30;
+				$page = 1;
 				if (array_key_exists('_limit', $requestQueries)) {
 					$limit = $requestQueries['_limit'];
-					$page = 1;
 					if (array_key_exists('_page', $requestQueries)) {
 						$page = $requestQueries['_page'];
 					}
+				}
+				if ($limit > 0) {
 					$query->limit($limit)->page($page);
 				}
 
