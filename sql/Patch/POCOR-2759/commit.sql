@@ -84,7 +84,14 @@ INSERT INTO `assessment_item_results` (`id`, `marks`, `assessment_grading_option
 SELECT uuid(), `AssessmentItemResults`.`marks`, `AssessmentItemResults`.`assessment_grading_option_id`, `AssessmentItemResults`.`student_id`, `AssessmentItems`.`assessment_id`, `AssessmentItems`.`education_subject_id`, `AssessmentItemResults`.`institution_id`, `AssessmentItemResults`.`academic_period_id`, 0, `AssessmentItemResults`.`modified_user_id`, `AssessmentItemResults`.`modified`, `AssessmentItemResults`.`created_user_id`, `AssessmentItemResults`.`created`
 FROM `z_2759_assessment_item_results` AS `AssessmentItemResults`
 INNER JOIN `z_2759_assessment_items` AS `AssessmentItems`
-ON `AssessmentItems`.`id` = `AssessmentItemResults`.`assessment_item_id`;
+ON `AssessmentItems`.`id` = `AssessmentItemResults`.`assessment_item_id`
+GROUP BY 
+  `AssessmentItemResults`.`student_id`, 
+  `AssessmentItems`.`assessment_id`,
+  `AssessmentItems`.`education_subject_id`,
+  `AssessmentItemResults`.`institution_id`,
+  `AssessmentItemResults`.`academic_period_id`
+;
 
 -- assessment_grading_types
 RENAME TABLE `assessment_grading_types` TO `z_2759_assessment_grading_types`;
