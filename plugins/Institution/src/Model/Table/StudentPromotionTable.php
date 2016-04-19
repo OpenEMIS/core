@@ -28,6 +28,7 @@ class StudentPromotionTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 		$this->addBehavior('Institution.UpdateStudentStatus');
+		$this->addBehavior('Institution.ClassStudents');
 	}
 
 	public function implementedEvents() {
@@ -259,7 +260,7 @@ class StudentPromotionTable extends AppTable {
 					$currentData = $this->Session->read($sessionKey);
 				}
 				$institutionClassId = $currentData['institution_class'];
-				if (empty($institutionClassId)) {
+				if ($institutionClassId == -1) {
 					$attr['type'] = 'readonly';
 					$attr['attr']['value'] = __('All Classes');
 				} else {
@@ -283,7 +284,10 @@ class StudentPromotionTable extends AppTable {
 						'ClassStudents.education_grade_id' => $educationGradeId
 					])
 					->toArray();
-				$options = ['' => __('All Classes')] + $classes;
+				$options = ['-1' => __('All Classes')] + $classes;
+				if (empty($request->data[$this->alias()]['institution_class'])) {
+					$request->data[$this->alias()]['institution_class'] = key($options);
+				}
 				$attr['options'] = $options;
 				$attr['select'] = false;
 				$attr['onChangeReload'] = true;
@@ -402,6 +406,12 @@ class StudentPromotionTable extends AppTable {
 			$students = [];
 			if (!is_null($selectedGrade)) {
 				$studentStatuses = $this->statuses;
+				$selectedClass = $currentData['institution_class'];
+
+				if ($selectedClass == -1) {
+					$selectedClass = '';
+				}
+
 				$students = $this->find()
 					->matching('Users')
 					->matching('EducationGrades')
@@ -410,26 +420,10 @@ class StudentPromotionTable extends AppTable {
 						$this->aliasField('academic_period_id') => $selectedPeriod,
 						$this->aliasField('student_status_id') => $studentStatuses['CURRENT'],
 						$this->aliasField('education_grade_id') => $selectedGrade
-					]);
-					
-				
-				if (!empty($currentData['institution_class'])) {
-					$students = $students
-						->innerJoin(['InstitutionClasses' => 'institution_classes'], 
-							[
-								'InstitutionClasses.institution_id = '.$this->aliasField('institution_id'),
-								'InstitutionClasses.academic_period_id = '.$this->aliasField('academic_period_id'),
-							])
-						->innerJoin(['InstitutionClassStudents' => 'institution_class_students'],
-							[
-								'InstitutionClassStudents.institution_class_id = InstitutionClasses.id',
-								'InstitutionClassStudents.education_grade_id = '.$this->aliasField('education_grade_id'),
-								'InstitutionClassStudents.student_id = '.$this->aliasField('student_id') 
-							])
-						->where(['InstitutionClasses.id' => $currentData['institution_class']])
-						->select(['institution_class_id' => 'InstitutionClasses.id', 'institution_class_name' => 'InstitutionClasses.name'])
-						->autoFields(true);
-				}
+					])
+					->find('studentClasses', ['institution_class_id' => $selectedClass])
+					->select(['institution_class_id' => 'InstitutionClasses.id', 'institution_class_name' => 'InstitutionClasses.name'])
+					->autoFields(true);
 
 				if ($students->count() > 0) {
 					// have to see if these students have pending requests of any kind
