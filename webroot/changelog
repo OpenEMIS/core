@@ -1,5 +1,6 @@
 v3.5.2
 - Improved UI on Results data entry
+- Fixed a bug that caused surveys not showing in workbench for school principal
 
 v3.5.1
 - Attachment is now an optional field in Staff Qualifications
