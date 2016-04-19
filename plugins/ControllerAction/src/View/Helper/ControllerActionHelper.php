@@ -48,6 +48,7 @@ class ControllerActionHelper extends Helper {
 
 	public function getFormOptions() {
 		$options = [
+			'id' => 'content-main-form',
 			'class' => 'form-horizontal',
 			'novalidate' => true
 		];
