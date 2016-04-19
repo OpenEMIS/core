@@ -1,7 +1,44 @@
-v.3.4.17
+v3.5.1
+- Attachment is now an optional field in Staff Qualifications
+- Added Position Type to Staff reports
+- Fixed a bug that caused System Configurations not showing all items in arabic language
+- Displaying content in Arabic language now uses a larger font size for easier readability
+- Implemented Staff Change in Assignment Workflow and Staff Transfer Workflow
+
+v3.4.18
+- Fixed a bug on Import that caused the system not able to import students properly
+- Institution Positions can now be identified as a Homeroom position. Only Staff with Homeroom position will be displayed during creation of Class
+- Fixed a bug where workflow actions not appearing for the configured workflow roles
+- Fixed a bug that caused Nationality and Identity not saved properly when creating a new Student record
+- In Institutions -> Staff list, the position filter now displays the position titles instead of all positions in the institution
+- Fixed a bug that caused 404 error page when adding an Absence record for Staff in an Institution
+- The system will generate codes automatically when adding new infrastructure
+- Fixed translations on Attendance
+- Name column in Institution -> Staff list can now be sorted
+- Added Class as mandatory field in Transfer Approval page
+- Fixed a bug that caused user created roles in user groups not displaying
+
+v3.4.17.2
+- Compilation of Translation files is now done automatically by the system whenever translations are added or modified
+- Fixed a bug that caused user able to link a position title to a security role that is not set as visible
+- Fixed a bug that caused edit and delete not functioning properly on Institution list page
+- Subject code will now be shown together with subject names in Qualification Specialisation
+- Fixed a bug that caused 404 error page when performing search while navigating on other list page
+- Fixed a bug where '-- Select --' option appearing unnecessarily in multiple options select box
+- Username can only be modified by Administrator now
+- The system now displays only available positions when adding staff to schools
+- The name of the Role will now be displayed as part of the header while editing permission for a specific role
+- Fixed a bug that caused users in user groups not able to create institutions in their designated areas
+
+v3.4.17
 - Fixed a bug that caused the user not able to upload image properly
 - Student Admission age calculation now uses the year value from academic period instead of the current year
 - Gender is now properly translated
+- Accessing Institutions features will now check for permissions of the correct role that is assigned to that user for that selected institution
+- Added Advanced Search for Student and Staff in Institutions
+- Fixed a bug that caused the user not able to upload image properly
+- Survey reports now include "Not Completed" surveys correctly
+- Fixed a bug that caused positions not showing up when accessed by users in user groups
 
 v3.4.16
 - Fixed a bug that caused field options default value not selected, also added a '-- Select --' option if no default value is set

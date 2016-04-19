@@ -45,8 +45,8 @@ class InstitutionsTable extends AppTable  {
 
 		$this->hasMany('InstitutionPositions', 				['className' => 'Institution.InstitutionPositions', 'dependent' => true]);
 		$this->hasMany('InstitutionShifts', 				['className' => 'Institution.InstitutionShifts', 'dependent' => true]);
-		$this->hasMany('InstitutionSections', 				['className' => 'Institution.InstitutionSections', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionClasses', 				['className' => 'Institution.InstitutionClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSubjects', 				['className' => 'Institution.InstitutionSubjects', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('Infrastructures',					['className' => 'Institution.InstitutionInfrastructures', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->hasMany('Staff',				 				['className' => 'Institution.Staff', 'dependent' => true]);
@@ -460,8 +460,7 @@ class InstitutionsTable extends AppTable  {
 		}
 	}
 
-	public function indexAfterPaginate(Event $event, ResultSet $resultSet) {
-		$query = $resultSet->__debugInfo()['query'];
+	public function indexAfterPaginate(Event $event, ResultSet $resultSet, Query $query) {
 		$this->dashboardQuery = clone $query;
 	}
 
@@ -583,6 +582,7 @@ class InstitutionsTable extends AppTable  {
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 		if (!$this->AccessControl->isAdmin()) {
 			$userId = $this->Auth->user('id');
 			$institutionId = $entity->id;

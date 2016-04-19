@@ -32,7 +32,7 @@ class StaffAttendancesTable extends AppTable {
 		parent::initialize($config);
 
 		$this->belongsTo('StaffTypes', ['className' => 'FieldOption.StaffTypes']);
-		$this->belongsTo('StaffStatuses', ['className' => 'FieldOption.StaffStatuses']);
+		$this->belongsTo('StaffStatuses', ['className' => 'Staff.StaffStatuses']);
 		$this->belongsTo('InstitutionPositions', ['className' => 'Institution.InstitutionPositions']);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'staff_id']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
@@ -672,7 +672,7 @@ class StaffAttendancesTable extends AppTable {
 				$this->ControllerAction->field('reason');
 				$this->_fieldOrder[] = 'type';
 				$this->_fieldOrder[] = 'reason';
-				$typeOptions = [self::PRESENT => 'Present'];
+				$typeOptions = [self::PRESENT => __('Present')];
 				$this->typeOptions = $typeOptions + $this->absenceList;
 
 				$StaffAbsenceReasons = TableRegistry::get('FieldOption.StaffAbsenceReasons');

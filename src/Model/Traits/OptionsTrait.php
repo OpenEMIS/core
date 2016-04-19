@@ -52,14 +52,4 @@ trait OptionsTrait {
 		}
 		return $options;
 	}
-
-	public function selectEmpty($code) {
-		$codes = [
-			'period' => 'Period',
-			'class' => 'Class',
-			'student' => 'Student',
-			'staff' => 'Staff'
-		];
-		return '-- ' . __('Select ' . $codes[$code]) . ' --';
-	}
 }
