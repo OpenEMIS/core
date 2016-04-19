@@ -369,6 +369,7 @@ class StudentPromotionTable extends AppTable {
 			$options = array_intersect_key($listOfInstitutionGrades, $listOfGrades);
 
 			if (count($options) == 0) {
+				$attr['select'] = false;
 				$options = [0 => $this->getMessage($this->aliasField('noAvailableGrades'))];
 			}
 			$attr['type'] = 'select';
@@ -523,6 +524,28 @@ class StudentPromotionTable extends AppTable {
 			}
 			$nextAcademicPeriodId = isset($data[$this->alias()]['next_academic_period_id']) ? $data[$this->alias()]['next_academic_period_id'] : 0;
 			$educationGradeId = isset($data[$this->alias()]['education_grade_id']) ? $data[$this->alias()]['education_grade_id'] : 0;
+
+			// list of grades available to promote to
+			$listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($data[$this->alias()]['grade_to_promote']);
+
+			// list of grades available in the institution
+			$listOfInstitutionGrades = $this->InstitutionGrades
+				->find('list', [
+					'keyField' => 'education_grade_id', 
+					'valueField' => 'education_grade.programme_grade_name'])
+				->contain(['EducationGrades.EducationProgrammes'])
+				->where([$this->InstitutionGrades->aliasField('institution_id') => $this->institutionId])
+				->order(['EducationProgrammes.order', 'EducationGrades.order'])
+				->toArray();
+
+			// Only display the options that are available in the institution and also linked to the current programme
+			$options = array_intersect_key($listOfInstitutionGrades, $listOfGrades);
+			if (count($options) > 0 && empty($educationGradeId)) {
+				$this->Alert->error($this->alias().'.selectNextGrade');
+				$url = $this->ControllerAction->url('add');
+				$event->stopPropagation();
+				return $this->controller->redirect($url);
+			}
 			
 			if ($nextAcademicPeriodId == 0 && $educationGradeId != 0) {
 				$this->Alert->warning($this->alias().'.noNextAcademicPeriod');
