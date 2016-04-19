@@ -86,8 +86,8 @@ SELECT uuid(), `AssessmentItemResults`.`marks`, `AssessmentItemResults`.`assessm
 FROM `z_2759_assessment_item_results` AS `AssessmentItemResults`
 INNER JOIN `z_2759_assessment_items` AS `AssessmentItems`
 ON `AssessmentItems`.`id` = `AssessmentItemResults`.`assessment_item_id`
-GROUP BY 
-  `AssessmentItemResults`.`student_id`, 
+GROUP BY
+  `AssessmentItemResults`.`student_id`,
   `AssessmentItems`.`assessment_id`,
   `AssessmentItems`.`education_subject_id`,
   `AssessmentItemResults`.`institution_id`,
@@ -102,8 +102,8 @@ CREATE TABLE IF NOT EXISTS `assessment_grading_types` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `code` varchar(50) DEFAULT NULL,
   `name` varchar(80) NOT NULL,
-  `pass_mark` decimal(6,2) NOT NULL,
-  `max` decimal(6,2) NOT NULL,
+  `pass_mark` int(5) NOT NULL,
+  `max` int(5) NOT NULL,
   `result_type` varchar(20) NOT NULL,
   `visible` int(1) NOT NULL DEFAULT '1',
   `modified_user_id` int(11) DEFAULT NULL,
@@ -127,8 +127,8 @@ CREATE TABLE IF NOT EXISTS `assessment_grading_options` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `code` varchar(50) DEFAULT NULL,
   `name` varchar(80) NOT NULL,
-  `min` decimal(6,2) DEFAULT NULL,
-  `max` decimal(6,2) DEFAULT NULL,
+  `min` int(5) DEFAULT NULL,
+  `max` int(5) DEFAULT NULL,
   `order` int(3) NOT NULL,
   `visible` int(1) NOT NULL DEFAULT '1',
   `assessment_grading_type_id` int(11) NOT NULL,
@@ -204,11 +204,11 @@ SELECT uuid(), `InstitutionSubjectStudents`.`status`, NULL, `InstitutionSubjectS
 FROM `z_2759_institution_subject_students` AS `InstitutionSubjectStudents`
 INNER JOIN `institution_subjects` AS `InstitutionSubjects`
 ON `InstitutionSubjects`.`id` = `InstitutionSubjectStudents`.`institution_subject_id`
-GROUP BY 
-  `InstitutionSubjectStudents`.`student_id`, 
-  `InstitutionSubjectStudents`.`institution_class_id`, 
+GROUP BY
+  `InstitutionSubjectStudents`.`student_id`,
+  `InstitutionSubjectStudents`.`institution_class_id`,
   `InstitutionSubjects`.`institution_id`,
-  `InstitutionSubjects`.`academic_period_id`, 
+  `InstitutionSubjects`.`academic_period_id`,
   `InstitutionSubjects`.`education_subject_id`
 ;
 
