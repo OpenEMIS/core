@@ -1,7 +1,7 @@
 <?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
 
 <?php if ($action == 'reconfirm') : ?>
-	<div class="input clearfix">
+	<div class="input clearfix required">
 		<label><?= isset($attr['label']) ? __($attr['label']) : __($attr['field']) ?></label>
 		<div class="input-form-wrapper">
 			<div class="table-in-view">
@@ -38,7 +38,7 @@
 		</div>
 	</div>
 <?php elseif ($action == 'add') : ?>
-	<div class="input clearfix">
+	<div class="input clearfix required">
 		<label><?= isset($attr['label']) ? __($attr['label']) : __($attr['field']) ?></label>
 		<div class="input-form-wrapper">
 			<div class="table-in-view">

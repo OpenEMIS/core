@@ -45,6 +45,8 @@ class StudentTransferTable extends AppTable {
 
 	public function validationDefault(Validator $validator) {
 		return $validator
+			->requirePresence('current_academic_period_id')
+			->requirePresence('class')
 			->requirePresence('education_grade_id')
 			->notEmpty('education_grade_id', 'This field is required.')
 			->requirePresence('next_academic_period_id')
@@ -96,7 +98,7 @@ class StudentTransferTable extends AppTable {
 		$this->ControllerAction->field('academic_period_id');
 		$this->ControllerAction->field('current_academic_period_id');
 		$this->ControllerAction->field('education_grade_id');
-		$this->ControllerAction->field('institution_class');
+		$this->ControllerAction->field('class');
 		$this->ControllerAction->field('next_academic_period_id');
 		$this->ControllerAction->field('next_education_grade_id');
 		$this->ControllerAction->field('next_institution_id');
@@ -104,7 +106,7 @@ class StudentTransferTable extends AppTable {
 		$this->ControllerAction->field('students');
 
 		$this->ControllerAction->setFieldOrder([
-			'academic_period_id', 'current_academic_period_id', 'education_grade_id', 'institution_class',
+			'academic_period_id', 'current_academic_period_id', 'education_grade_id', 'class',
 			'next_academic_period_id', 'next_education_grade_id', 'next_institution_id', 'student_transfer_reason_id'
 		]);
     }
@@ -456,7 +458,8 @@ class StudentTransferTable extends AppTable {
 				->find('studentClasses', ['institution_class_id' => $selectedClass])
 				->select(['institution_class_id' => 'InstitutionClasses.id', 'institution_class_name' => 'InstitutionClasses.name'])
 				->autoFields(true)
-				->group($this->aliasField('student_id'));
+				->group($this->aliasField('student_id'))
+				->order(['Users.first_name']);
 
 	  		$students = $studentQuery->toArray();
 	  	}
@@ -476,7 +479,7 @@ class StudentTransferTable extends AppTable {
 		return $attr;
     }
 
-    public function onUpdateFieldInstitutionClass(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request) {
     	$institutionClass = TableRegistry::get('Institution.InstitutionClasses');
 		$institutionId = $this->institutionId;
 		$selectedPeriod = $request->query('academic_period_id');
@@ -508,7 +511,7 @@ class StudentTransferTable extends AppTable {
 		if ($this->request->is(['post', 'put'])) {
 			if (array_key_exists($this->alias(), $data)) {
 				if (array_key_exists('institution_class', $data[$this->alias()])) {
-					$this->request->query['institution_class'] = $data[$this->alias()]['institution_class'];
+					$this->request->query['institution_class'] = $data[$this->alias()]['class'];
 				}
 			}
 		}
