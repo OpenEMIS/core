@@ -13,7 +13,8 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.1.15
+ControllerActionComponent - Current Version 3.1.16
+3.1.16 (Malcolm) - renderFields() - '-- Select --' is added if ($attr['type'] != 'chosenSelect') 
 3.1.15 (Malcolm) - renderFields() - for automatic adding of '-- Select --' if (there are no '' value fields in dropdown) and $attr['select'] != false (default true)
 3.1.14 (Malcolm) - supported default selection for select boxes - renderFields() edit 
 3.1.13 (Thed) - added new event editAfterQuery to modified $entity after query is executed
@@ -186,7 +187,9 @@ class ControllerActionComponent extends Component {
 					if (is_array($attr['options'])) {
 						// need to check if options has any ''
 						if (!array_key_exists('', $attr['options'])) {
-							$this->model->fields[$key]['options'] = ['' => __('-- Select --')] + $attr['options'];
+							if ($attr['type'] != 'chosenSelect') {
+								$this->model->fields[$key]['options'] = ['' => __('-- Select --')] + $attr['options'];
+							}
 						}
 					}
 				}
@@ -233,8 +236,10 @@ class ControllerActionComponent extends Component {
 						if (!empty($defaultValue)) {
 							$this->model->fields[$key]['default'] = $defaultValue;
 						}
-						$optionsArray = ['' => __('-- Select --')] + $optionsArray;
-
+						if ($attr['type'] != 'chosenSelect') {
+							$optionsArray = ['' => __('-- Select --')] + $optionsArray;
+						}
+						
 						$this->model->fields[$key]['options'] = $optionsArray;
 					} else {
 						$this->model->fields[$key]['options'] = $query;
@@ -752,7 +757,7 @@ class ControllerActionComponent extends Component {
 		$data = $this->Paginator->paginate($query, $options->getArrayCopy());
 
 		$this->debug(__METHOD__, ': Event -> ControllerAction.Model.index.afterPaginate');
-		$event = new Event('ControllerAction.Model.index.afterPaginate', $this, [$data]);
+		$event = new Event('ControllerAction.Model.index.afterPaginate', $this, [$data, $query]);
 		$event = $this->model->eventManager()->dispatch($event);
 		if ($event->isStopped()) { return $event->result; }
 		if (!empty($event->result)) {
@@ -799,7 +804,7 @@ class ControllerActionComponent extends Component {
 			return $this->controller->redirect($action);
 		}
 		
-		if ($data->count() == 0) {
+		if ($data instanceof \Cake\Network\Response || (!($data instanceof \Cake\Network\Response) && $data->count() == 0)) {
 			$this->Alert->info('general.noData');
 		}
 
@@ -1354,21 +1359,23 @@ class ControllerActionComponent extends Component {
 										->select(['target_foreign_key' => 'TargetTable.target'])
 										->from(['TargetTable' => $targetForeignKeys]);
 
-									$condition = [];
+									if (!empty($notUpdateQuery)) {
+										$condition = [];
 
-									$condition = [
-										$assoc->foreignKey() => $transferFrom, 
-										'NOT' => [
-											$assoc->foreignKey() => $transferFrom,
-											$assoc->targetForeignKey().' IN ' => $notUpdateQuery
-										]
-									];
-									
-									// Update all transfer records
-									$modelAssociationTable->updateAll(
-										[$assoc->foreignKey() => $transferTo],
-										$condition
-									);
+										$condition = [
+											$assoc->foreignKey() => $transferFrom, 
+											'NOT' => [
+												$assoc->foreignKey() => $transferFrom,
+												$assoc->targetForeignKey().' IN ' => $notUpdateQuery
+											]
+										];
+										
+										// Update all transfer records
+										$modelAssociationTable->updateAll(
+											[$assoc->foreignKey() => $transferTo],
+											$condition
+										);
+									}
 								}
 							}
 						};
@@ -1438,18 +1445,19 @@ class ControllerActionComponent extends Component {
 			$orderField = $this->orderField;
 			
 			$ids = json_decode($request->data("ids"));
+			if (!empty($ids)) {
+				$originalOrder = $model->find('list')
+					->where([$model->aliasField($primaryKey).' IN ' => $ids])
+					->select(['id' => $model->aliasField($primaryKey), 'name' => $model->aliasField($orderField)])
+					->order([$model->aliasField($orderField)])
+					->toArray();
 
-			$originalOrder = $model->find('list')
-				->where([$model->aliasField($primaryKey).' IN ' => $ids])
-				->select(['id' => $model->aliasField($primaryKey), 'name' => $model->aliasField($orderField)])
-				->order([$model->aliasField($orderField)])
-				->toArray();
+				$originalOrder = array_reverse($originalOrder);
 
-			$originalOrder = array_reverse($originalOrder);
-
-			foreach ($ids as $order => $id) {
-				$orderValue = array_pop($originalOrder);
-				$model->updateAll([$orderField => $orderValue], [$primaryKey => $id]);
+				foreach ($ids as $order => $id) {
+					$orderValue = array_pop($originalOrder);
+					$model->updateAll([$orderField => $orderValue], [$primaryKey => $id]);
+				}
 			}
 		}
 	}

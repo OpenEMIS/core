@@ -5,6 +5,7 @@ use ArrayObject;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\I18n\Time;
+use Cake\I18n\Date;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Log\LogTrait;
@@ -87,6 +88,19 @@ class AppTable extends Table {
 		$this->addBehavior('Modification');
 	}
 
+	// Function to get the entity property from the entity. If data validation occur,
+	// the invalid value has to be extracted from invalid array
+	// For use in Cake 3.2 and above
+	public function getEntityProperty($entity, $propertyName) {
+		if ($entity->has($propertyName)) {
+			return $entity->get($propertyName);
+		} else if (array_key_exists($propertyName, $entity->invalid())) {
+			return $entity->invalid($propertyName);
+		} else {
+			return null;
+		}
+	}
+
 	public function attachWorkflow($config=[]) {
 		// check for session and attach workflow behavior
 		if (isset($_SESSION['Workflow']['Workflows']['models'])) {
@@ -133,11 +147,11 @@ class AppTable extends Table {
 	// Event: 'Model.excel.onFormatDate' ExcelBehavior
 	public function onExcelRenderDate(Event $event, Entity $entity, $attr) {
 		if (!empty($entity->$attr['field'])) {
-			if ($entity->$attr['field'] instanceof Time) {
+			if ($entity->$attr['field'] instanceof Time || $entity->$attr['field'] instanceof Date) {
 				return $this->formatDate($entity->$attr['field']);
 			} else {
 				if ($entity->$attr['field'] != '0000-00-00') {
-					$date = new Time($entity->$attr['field']);
+					$date = new Date($entity->$attr['field']);
 					return $this->formatDate($date);
 				} else {
 					return '';
@@ -150,7 +164,7 @@ class AppTable extends Table {
 
 	public function onExcelRenderDateTime(Event $event, Entity $entity, $attr) {
 		if (!empty($entity->$attr['field'])) {
-			if ($entity->$attr['field'] instanceof Time) {
+			if ($entity->$attr['field'] instanceof Time || $entity->$attr['field'] instanceof Date) {
 				return $this->formatDate($entity->$attr['field']);
 			} else {
 				$date = new Time($entity->$attr['field']);
@@ -162,7 +176,7 @@ class AppTable extends Table {
 	}
 
 	// Event: 'ControllerAction.Model.onFormatDate'
-	public function onFormatDate(Event $event, Time $dateObject) {
+	public function onFormatDate(Event $event, $dateObject) {
 		return $this->formatDate($dateObject);
 	}
 
@@ -171,7 +185,7 @@ class AppTable extends Table {
 	 * @param  Time   $dateObject [description]
 	 * @return [type]             [description]
 	 */
-	public function formatDate(Time $dateObject) {
+	public function formatDate($dateObject) {
 		$ConfigItem = TableRegistry::get('ConfigItems');
 		$format = $ConfigItem->value('date_format');
         $value = '';
@@ -182,8 +196,8 @@ class AppTable extends Table {
 	}
 
 	// Event: 'ControllerAction.Model.onFormatTime'
-	public function onFormatTime(Event $event, Time $dateObject) {
-		return $this->formatTime($dateObject);
+	public function onFormatTime(Event $event, $timeObject) {
+		return $this->formatTime($timeObject);
 	}
 
 	/**
@@ -191,19 +205,19 @@ class AppTable extends Table {
 	 * @param  Time   $dateObject [description]
 	 * @return [type]             [description]
 	 */
-	public function formatTime(Time $dateObject) {
+	public function formatTime($timeObject) {
 		$ConfigItem = TableRegistry::get('ConfigItems');
 		$format = $ConfigItem->value('time_format');
 		$value = '';
-        if (is_object($dateObject)) {
-            $value = $dateObject->format($format);
+        if (is_object($timeObject)) {
+            $value = $timeObject->format($format);
         }
 		return $value;
 	}
 
 	// Event: 'ControllerAction.Model.onFormatDateTime'
-	public function onFormatDateTime(Event $event, Time $dateObject) {
-		return $this->formatDateTime($dateObject);
+	public function onFormatDateTime(Event $event, $timeObject) {
+		return $this->formatDateTime($timeObject);
 	}
 
 	/**
@@ -211,7 +225,7 @@ class AppTable extends Table {
 	 * @param  Time   $dateObject [description]
 	 * @return [type]             [description]
 	 */
-	public function formatDateTime(Time $dateObject) {
+	public function formatDateTime($dateObject) {
 		$ConfigItem = TableRegistry::get('ConfigItems');
 		$format = $ConfigItem->value('date_format') . ' - ' . $ConfigItem->value('time_format');
 		$value = '';
@@ -405,20 +419,6 @@ class AppTable extends Table {
 
 	public function findOrder(Query $query, array $options) {
 		return $query->order([$this->aliasField('order') => 'ASC']);
-	}
-
-	public function checkIdInOptions($key, $options) {
-		pr('checkIdInOptions is deprecated, please use queryString instead');
-		if (!empty($options)) {
-			if ($key != 0) {
-				if (!array_key_exists($key, $options)) {
-					$key = key($options);
-				}
-			} else {
-				$key = key($options);
-			}
-		}
-		return $key;
 	}
 
 	public function postString($key) {

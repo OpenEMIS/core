@@ -140,13 +140,11 @@ class StaffBehavioursTable extends AppTable {
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 
 		if ($action == 'add') {
-			$periodOptions = ['0' => $this->selectEmpty('period')];
-			$periodOptions = $periodOptions + $AcademicPeriod->getList(['isEditable'=>true]);
+			$periodOptions = $AcademicPeriod->getList(['isEditable'=>true]);
 			$selectedPeriod = 0;
 			if ($request->is(['post', 'put'])) {
 				$selectedPeriod = $request->data($this->aliasField('academic_period_id'));
 			}
-			$this->advancedSelectOptions($periodOptions, $selectedPeriod);
 
 			$attr['options'] = $periodOptions;
 			$attr['onChangeReload'] = 'changePeriod';
@@ -166,7 +164,7 @@ class StaffBehavioursTable extends AppTable {
 
 	public function onUpdateFieldStaffId(Event $event, array $attr, $action, $request) {
 		if ($action == 'add') {
-			$staffOptions = ['' => $this->selectEmpty('staff')];
+			$staffOptions = [];
 
 			$selectedPeriod = 0;
 			if ($request->is(['post', 'put'])) {
@@ -176,7 +174,7 @@ class StaffBehavioursTable extends AppTable {
 			if (!empty($selectedPeriod)) {
 				$institutionId = $this->Session->read('Institution.Institutions.id');
 				$Staff = TableRegistry::get('Institution.Staff');
-				$staffOptions = $staffOptions + $Staff
+				$staffOptions = $Staff
 				->find('list', ['keyField' => 'staff_id', 'valueField' => 'name'])
 				->matching('Users')
 				->find('academicPeriod', ['academic_period_id' => $selectedPeriod])

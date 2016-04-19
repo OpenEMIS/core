@@ -11,6 +11,7 @@ use Cake\Utility\Inflector;
 use Cake\ORM\Table;
 use Cake\Log\Log;
 use Cake\I18n\Time;
+use Cake\I18n\Date;
 
 class RecordBehavior extends Behavior {
 	protected $_defaultConfig = [
@@ -242,11 +243,7 @@ class RecordBehavior extends Behavior {
 				$data[$model->alias()]['custom_table_cells'] = $settings['tableCells'];
 
 				$requestData = $data->getArrayCopy();
-				$patchOptions['associated'] = [
-					'CustomFieldValues' => ['validate' => false],
-					'CustomTableCells' => ['validate' => false]
-				];
-        		$entity = $model->patchEntity($entity, $requestData, $patchOptions);
+        		$entity = $model->patchEntity($entity, $requestData);
         		// End
 
         		return $model->save($entity);
@@ -381,37 +378,39 @@ class RecordBehavior extends Behavior {
 			$customFormIds = $customFormQuery
 				->toArray();
 
-			$query = $this->CustomFormsFields
-				->find('all')
-				->find('order')
-				->where([
-					$this->CustomFormsFields->aliasField($this->config('formKey') . ' IN') => $customFormIds
-				])
-				->group([
-					$this->CustomFormsFields->aliasField($this->config('fieldKey'))
-				]);
-
-			if ($withContain) {
-				if (is_array($withContain)) {
-					$query->contain($withContain);
-				} else {
-					$query->contain([
-						'CustomFields.CustomFieldOptions' => function($q) {
-							return $q
-								->find('visible')
-								->find('order');
-						},
-						'CustomFields.CustomTableColumns' => function ($q) {
-					       return $q
-					       		->find('visible')
-					       		->find('order');
-					    },
-						'CustomFields.CustomTableRows' => function ($q) {
-					       return $q
-					       		->find('visible')
-					       		->find('order');
-					    }
+			if (!empty($customFormIds)) {
+				$query = $this->CustomFormsFields
+					->find('all')
+					->find('order')
+					->where([
+						$this->CustomFormsFields->aliasField($this->config('formKey') . ' IN') => $customFormIds
+					])
+					->group([
+						$this->CustomFormsFields->aliasField($this->config('fieldKey'))
 					]);
+
+				if ($withContain) {
+					if (is_array($withContain)) {
+						$query->contain($withContain);
+					} else {
+						$query->contain([
+							'CustomFields.CustomFieldOptions' => function($q) {
+								return $q
+									->find('visible')
+									->find('order');
+							},
+							'CustomFields.CustomTableColumns' => function ($q) {
+						       return $q
+						       		->find('visible')
+						       		->find('order');
+						    },
+							'CustomFields.CustomTableRows' => function ($q) {
+						       return $q
+						       		->find('visible')
+						       		->find('order');
+						    }
+						]);
+					}
 				}
 			}
 		}
@@ -873,7 +872,7 @@ class RecordBehavior extends Behavior {
 	private function date($data, $fieldInfo, $options=[]) {
 		if (isset($data[$fieldInfo['id']])) {
 			$date = date_create_from_format('Y-m-d', $data[$fieldInfo['id']]);
-			return $this->_table->formatDate(new Time($date));
+			return $this->_table->formatDate(new Date($date));
 		} else {
 			return '';
 		}

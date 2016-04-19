@@ -3,6 +3,7 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 use Cake\I18n\Time;
+use Cake\I18n\Date;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
@@ -150,12 +151,13 @@ class TransferRequestsTable extends AppTable {
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
     	if ($this->Session->read($this->registryAlias().'.id')) {
-	    	$id = $this->Session->read('Students.Student.id');
+	    	$id = $this->Session->read('Student.Students.id');
 	    	// $action = $this->ControllerAction->buttons['add']['url'];
 	    	$action = $this->ControllerAction->url('add');
 			$action['action'] = 'StudentUser';
 			$action[0] = 'view';
 			$action[1] = $id;
+			$action['id'] = $this->Session->read($this->registryAlias().'.id');
 	    	$event->stopPropagation();
 	    	return $this->controller->redirect($action);
     	}
@@ -186,13 +188,13 @@ class TransferRequestsTable extends AppTable {
 		$entity->academic_period_id = $student->academic_period_id;
 		$entity->education_grade_id = $student->education_grade_id;
 		$entity->student_status_id = $studentData->student_status_id;
-		if ($student->start_date instanceof Time) {
+		if ($student->start_date instanceof Time || $student->start_date instanceof Date) {
 			$entity->start_date = $student->start_date->format('Y-m-d');
 		} else {
 			$entity->start_date = date('Y-m-d', strtotime($student->start_date));
 		}
 
-		if ($student->end_date instanceof Time) {
+		if ($student->end_date instanceof Time || $student->end_date instanceof Date) {
 			$entity->end_date = $student->end_date->format('Y-m-d');
 		} else {
 			$entity->end_date = date('Y-m-d', strtotime($student->end_date));
@@ -336,12 +338,13 @@ class TransferRequestsTable extends AppTable {
 
 		if ($this->Session->read($this->registryAlias().'.id')) {
 			$Students = TableRegistry::get('Institution.StudentUser');
-			$id = $this->Session->read('Students.Student.id');
+			$id = $this->Session->read('Student.Students.id');
 			// $action = $this->ControllerAction->buttons['edit']['url'];
 			$action = $this->ControllerAction->url('edit');
 			$action['action'] = $Students->alias();
 			$action[0] = 'view';
 			$action[1] = $id;
+			$action['id'] = $this->Session->read($this->registryAlias().'.id');
 			$event->stopPropagation();
 			return $this->controller->redirect($action);
 		}
@@ -406,7 +409,7 @@ class TransferRequestsTable extends AppTable {
 
 			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			$selectedAcademicPeriodData = $AcademicPeriods->get($this->selectedAcademicPeriod);
-			if ($selectedAcademicPeriodData->start_date instanceof Time) {
+			if ($selectedAcademicPeriodData->start_date instanceof Time || $selectedAcademicPeriodData->start_date instanceof Date) {
 				$academicPeriodStartDate = $selectedAcademicPeriodData->start_date->format('Y-m-d');
 			} else {
 				$academicPeriodStartDate = date('Y-m-d', $selectedAcademicPeriodData->start_date);
@@ -466,7 +469,7 @@ class TransferRequestsTable extends AppTable {
 
 					$academicPeriodStartDate = $studentInfo->academic_period->start_date;
 
-					if ($studentInfo->academic_period->start_date instanceof Time) {
+					if ($studentInfo->academic_period->start_date instanceof Time || $studentInfo->academic_period->start_date instanceof Date) {
 						$academicPeriodStartDate = $studentInfo->academic_period->start_date->format('Y-m-d');
 					} else {
 						$academicPeriodStartDate = date('Y-m-d', strtotime($studentInfo->academic_period->start_date));
