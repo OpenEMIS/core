@@ -153,41 +153,28 @@ class InstitutionSurveysTable extends AppTable {
     }
 
     // Workbench.Model.onGetList
-	public function onGetWorkbenchList(Event $event, $AccessControl, ArrayObject $data) {
-		$isAdmin = $AccessControl->isAdmin();
+	public function onGetWorkbenchList(Event $event, $isAdmin, $institutionRoles, ArrayObject $data) {
 		// Results of all Not Completed survey in all institutions that the login user can access
 		$statusIds = $event->subject()->Workflow->getStepsByModelCode($this->registryAlias(), 'NOT_COMPLETED');
-
-		$where = [];
-		if (empty($statusIds)) {
-			// returns empty list if there is no status mapping for workflows
-			// otherwise it will return all rows without any conditions which may cause out of memory
-			return [];
-		} else {
-			$where[$this->aliasField('status_id') . ' IN '] = $statusIds;
-		}
 
 		if ($isAdmin) {
 			return []; // remove this line once workbench pagination is implemented
 		} else {
-			$WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
-			$userId = $event->subject()->Auth->user('id');
-			$institutionIds = $AccessControl->getInstitutionsByUser();
-
-			if (empty($institutionIds)) { // if user don't have access to any school, then return empty list
+			$where = [];
+			// returns empty list if there is no status mapping for workflows OR if the user does not have access to any schools
+			// Should never return all rows without any conditions because it may cause out of memory error
+			if (empty($statusIds) || empty($institutionRoles)) {
 				return [];
 			} else {
-				$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
+				$where[$this->aliasField('status_id') . ' IN '] = $statusIds;
+				$where[$this->aliasField('institution_id') . ' IN '] = array_keys($institutionRoles);
 			}
 
-			// Array to store security roles in each Institution
-			$institutionRoles = [];
+			$WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+
 			// Array to store security roles in each Workflow Step
 			$stepRoles = [];
-			foreach ($institutionIds as $institutionId) {
-				$roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
-				$institutionRoles[$institutionId] = $roles;
-
+			foreach ($institutionRoles as $institutionId => $roles) {
 				foreach ($statusIds as $key => $statusId) {
 					if (!array_key_exists($statusId, $stepRoles)) {
 						$stepRoles[$statusId] = $WorkflowStepsRoles->getRolesByStep($statusId);
