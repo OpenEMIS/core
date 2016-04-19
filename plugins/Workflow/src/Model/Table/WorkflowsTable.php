@@ -588,7 +588,7 @@ class WorkflowsTable extends AppTable {
 						unset($workflowIds[$entity->id]);
 					}
 
-					if (!empty(workflowIds)) {
+					if (!empty($workflowIds)) {
 						$filterResults = $this->WorkflowsFilters
 							->find()
 							->where([
