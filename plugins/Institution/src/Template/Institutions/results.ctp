@@ -6,7 +6,6 @@
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('toolbar');
 ?>
-	<!-- Show buttons when action is view: -->
 	<?php
 		$backUrl = [
 			'plugin' => $this->request->params['plugin'],
@@ -16,19 +15,22 @@ $this->start('toolbar');
 		];
 		echo $this->Html->link('<i class="fa kd-back"></i>', $backUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Back'), 'escape' => false, 'ng-show' => 'action == \'view\'']);
 	?>
-	<button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="action == 'view'" ng-click="onEditClick()">
-		<i class="fa kd-edit"></i>
-	</button>
-	<!-- End -->
+	<?php if ($_edit) : ?>
+		<!-- Show buttons when action is view: -->
+		<button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="action == 'view'" ng-click="onEditClick()">
+			<i class="fa kd-edit"></i>
+		</button>
+		<!-- End -->
 
-	<!-- Show buttons when action is edit: -->
-	<button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="action == 'edit'" ng-click="onBackClick()">
-		<i class="fa kd-back"></i>
-	</button>
-	<button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Save');?>" ng-show="action == 'edit'" ng-click="onSaveClick()">
-		<i class="fa fa-save"></i>
-	</button>
-	<!-- End -->
+		<!-- Show buttons when action is edit: -->
+		<button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="action == 'edit'" ng-click="onBackClick()">
+			<i class="fa kd-back"></i>
+		</button>
+		<button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Save');?>" ng-show="action == 'edit'" ng-click="onSaveClick()">
+			<i class="fa fa-save"></i>
+		</button>
+		<!-- End -->
+	<?php endif; ?>
 <?php
 $this->end();
 
