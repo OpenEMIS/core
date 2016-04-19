@@ -154,6 +154,7 @@ class InstitutionSurveysTable extends AppTable {
 
     // Workbench.Model.onGetList
 	public function onGetWorkbenchList(Event $event, $AccessControl, ArrayObject $data) {
+		if ($AccessControl->isAdmin()) { return; }
 		$userId = $event->subject()->Auth->user('id');
 		$institutionIds = $AccessControl->getInstitutionsByUser();
 
@@ -167,9 +168,16 @@ class InstitutionSurveysTable extends AppTable {
 		// Results of all Not Completed survey in all institutions that the login user can access
 		$statusIds = $event->subject()->Workflow->getStepsByModelCode($this->registryAlias(), 'NOT_COMPLETED');
 		$where = [];
-		$where[$this->aliasField('status_id') . ' IN '] = $statusIds;
+		if (!empty($statusIds)) {
+			$where[$this->aliasField('status_id') . ' IN '] = $statusIds;
+		}
 		if (!$AccessControl->isAdmin()) {
-			$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
+			if (!empty($institutionIds)) {
+				$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
+			} else {
+				// if user is not admin, user should not be able to access any school
+				$where[$this->aliasField('institution_id')] = '-1';
+			}
 		}
 
 		$resultSet = $this

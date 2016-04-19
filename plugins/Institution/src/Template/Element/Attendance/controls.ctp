@@ -1,4 +1,4 @@
-<?php if (!empty($periodOptions) || !empty($weekOptions) || !empty($dayOptions) || !empty($sectionOptions)) : ?>
+<?php if (!empty($periodOptions) || !empty($weekOptions) || !empty($dayOptions) || !empty($classOptions)) : ?>
 	<div class="toolbar-responsive panel-toolbar">
 		<div class="toolbar-wrapper">
 			<?php
@@ -15,7 +15,7 @@
 					$dataNamedGroup = [];
 					if (!empty($this->request->query)) {
 						foreach ($this->request->query as $key => $value) {
-							if (in_array($key, ['period_id', 'week', 'day', 'section_id'])) continue;
+							if (in_array($key, ['period_id', 'week', 'day', 'class_id'])) continue;
 							echo $this->Form->hidden($key, [
 								'value' => $value,
 								'data-named-key' => $key
@@ -76,20 +76,20 @@
 						echo $this->Form->input('days', $inputOptions);
 					}
 
-					if (!empty($sectionOptions)) {
+					if (!empty($classOptions)) {
 						$inputOptions = [
 							'class' => 'form-control',
 							'label' => false,
-							'options' => $sectionOptions,
+							'options' => $classOptions,
 							'url' => $baseUrl,
-							'data-named-key' => 'section_id',
+							'data-named-key' => 'class_id',
 							'escape' => false
 						];
 						if (!empty($dataNamedGroup)) {
 							$inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
-							$dataNamedGroup[] = 'section_id';
+							$dataNamedGroup[] = 'class_id';
 						}
-						echo $this->Form->input('sections', $inputOptions);
+						echo $this->Form->input('classes', $inputOptions);
 					}
 				} else {
 					$baseUrl = $this->Url->build([
@@ -132,13 +132,13 @@
 						));
 					}
 
-					if (!empty($sectionOptions)) {
-						echo $this->Form->input('sections', array(
+					if (!empty($classOptions)) {
+						echo $this->Form->input('classes', array(
 							'class' => 'form-control',
 							'label' => false,
-							'options' => $sectionOptions,
+							'options' => $classOptions,
 							'url' => $baseUrl,
-							'data-named-key' => 'section_id',
+							'data-named-key' => 'class_id',
 							'data-named-group' => 'academic_period_id,week,day'
 						));
 					}

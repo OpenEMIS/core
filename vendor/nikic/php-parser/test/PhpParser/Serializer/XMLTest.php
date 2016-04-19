@@ -113,7 +113,7 @@ CODE;
     </scalar:array>
    </subNode:params>
    <subNode:returnType>
-     <scalar:null/>
+    <scalar:null/>
    </subNode:returnType>
    <subNode:stmts>
     <scalar:array>
@@ -147,9 +147,10 @@ CODE;
 </AST>
 XML;
 
-        $parser     = new PhpParser\Parser(new PhpParser\Lexer);
+        $parser     = new PhpParser\Parser\Php7(new PhpParser\Lexer);
         $serializer = new XML;
 
+        $code = str_replace("\r\n", "\n", $code);
         $stmts = $parser->parse($code);
         $this->assertXmlStringEqualsXmlString($xml, $serializer->serialize($stmts));
     }
