@@ -48,7 +48,7 @@ class RecordBehavior extends Behavior {
 	];
 
 	// value for these field types will be saved on custom_field_values
-	private $fieldValueArray = ['TEXT', 'NUMBER', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'DATE', 'TIME'];
+	private $fieldValueArray = ['TEXT', 'NUMBER', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'DATE', 'TIME', 'COORDINATES'];
 
 	private $CustomFieldValues = null;
 	private $CustomTableCells = null;
