@@ -31,6 +31,15 @@ class StudentPromotionTable extends AppTable {
 		$this->addBehavior('Institution.ClassStudents');
 	}
 
+	public function validationDefault(Validator $validator) {
+		return $validator
+			->requirePresence('from_academic_period_id')
+			->requirePresence('next_academic_period_id')
+			->requirePresence('grade_to_promote')
+			->requirePresence('education_grade_id')
+			->requirePresence('class');
+	}
+
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
@@ -57,12 +66,12 @@ class StudentPromotionTable extends AppTable {
 		$this->ControllerAction->field('from_academic_period_id', ['attr' => ['label' => $this->getMessage($this->aliasField('fromAcademicPeriod'))]]);
 		$this->ControllerAction->field('next_academic_period_id', ['attr' => ['label' => $this->getMessage($this->aliasField('toAcademicPeriod'))]]);
 		$this->ControllerAction->field('grade_to_promote', ['attr' => ['label' => $this->getMessage($this->aliasField('fromGrade'))]]);
-		$this->ControllerAction->field('institution_class');
+		$this->ControllerAction->field('class');
 		$this->ControllerAction->field('student_status_id', ['attr' => ['label' => $this->getMessage($this->aliasField('status'))]]);
 		$this->ControllerAction->field('education_grade_id', ['attr' => ['label' => $this->getMessage($this->aliasField('toGrade'))]]);
 		$this->ControllerAction->field('students');
 		
-		$this->ControllerAction->setFieldOrder(['from_academic_period_id', 'next_academic_period_id', 'grade_to_promote', 'institution_class', 'student_status_id', 'education_grade_id','students']);
+		$this->ControllerAction->setFieldOrder(['from_academic_period_id', 'next_academic_period_id', 'grade_to_promote', 'class', 'student_status_id', 'education_grade_id','students']);
 	}
 
 	public function onUpdateFieldFromAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
@@ -250,7 +259,7 @@ class StudentPromotionTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldInstitutionClass(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request) {
 		$institutionClass = TableRegistry::get('Institution.InstitutionClasses');
 		switch ($action) {
 			
@@ -259,7 +268,7 @@ class StudentPromotionTable extends AppTable {
 				if ($this->Session->check($sessionKey)) {
 					$currentData = $this->Session->read($sessionKey);
 				}
-				$institutionClassId = $currentData['institution_class'];
+				$institutionClassId = $currentData['class'];
 				if ($institutionClassId == -1) {
 					$attr['type'] = 'readonly';
 					$attr['attr']['value'] = __('All Classes');
@@ -285,8 +294,8 @@ class StudentPromotionTable extends AppTable {
 					])
 					->toArray();
 				$options = ['-1' => __('All Classes')] + $classes;
-				if (empty($request->data[$this->alias()]['institution_class'])) {
-					$request->data[$this->alias()]['institution_class'] = key($options);
+				if (empty($request->data[$this->alias()]['class'])) {
+					$request->data[$this->alias()]['class'] = key($options);
 				}
 				$attr['options'] = $options;
 				$attr['select'] = false;
@@ -407,7 +416,7 @@ class StudentPromotionTable extends AppTable {
 			$students = [];
 			if (!is_null($selectedGrade)) {
 				$studentStatuses = $this->statuses;
-				$selectedClass = $currentData['institution_class'];
+				$selectedClass = $currentData['class'];
 
 				if ($selectedClass == -1) {
 					$selectedClass = '';
@@ -424,6 +433,7 @@ class StudentPromotionTable extends AppTable {
 					])
 					->find('studentClasses', ['institution_class_id' => $selectedClass])
 					->select(['institution_class_id' => 'InstitutionClasses.id', 'institution_class_name' => 'InstitutionClasses.name'])
+					->order(['Users.first_name'])
 					->autoFields(true);
 
 				if ($students->count() > 0) {
@@ -512,62 +522,64 @@ class StudentPromotionTable extends AppTable {
 	}
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
-		if (array_key_exists($this->alias(), $data)) {
-			$selectedStudent = false;
-			if (array_key_exists('students', $data[$this->alias()])) {
-				foreach ($data[$this->alias()]['students'] as $key => $value) {
-					if ($value['selected'] != 0) {
-						$selectedStudent = true;
-						break;
+		if (!$entity->errors()) {
+			if (array_key_exists($this->alias(), $data)) {
+				$selectedStudent = false;
+				if (array_key_exists('students', $data[$this->alias()])) {
+					foreach ($data[$this->alias()]['students'] as $key => $value) {
+						if ($value['selected'] != 0) {
+							$selectedStudent = true;
+							break;
+						}
 					}
 				}
-			}
-			$nextAcademicPeriodId = isset($data[$this->alias()]['next_academic_period_id']) ? $data[$this->alias()]['next_academic_period_id'] : 0;
-			$educationGradeId = isset($data[$this->alias()]['education_grade_id']) ? $data[$this->alias()]['education_grade_id'] : 0;
+				$nextAcademicPeriodId = isset($data[$this->alias()]['next_academic_period_id']) ? $data[$this->alias()]['next_academic_period_id'] : 0;
+				$educationGradeId = isset($data[$this->alias()]['education_grade_id']) ? $data[$this->alias()]['education_grade_id'] : 0;
 
-			// list of grades available to promote to
-			$listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($data[$this->alias()]['grade_to_promote']);
+				// list of grades available to promote to
+				$listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($data[$this->alias()]['grade_to_promote']);
 
-			// list of grades available in the institution
-			$listOfInstitutionGrades = $this->InstitutionGrades
-				->find('list', [
-					'keyField' => 'education_grade_id', 
-					'valueField' => 'education_grade.programme_grade_name'])
-				->contain(['EducationGrades.EducationProgrammes'])
-				->where([$this->InstitutionGrades->aliasField('institution_id') => $this->institutionId])
-				->order(['EducationProgrammes.order', 'EducationGrades.order'])
-				->toArray();
+				// list of grades available in the institution
+				$listOfInstitutionGrades = $this->InstitutionGrades
+					->find('list', [
+						'keyField' => 'education_grade_id', 
+						'valueField' => 'education_grade.programme_grade_name'])
+					->contain(['EducationGrades.EducationProgrammes'])
+					->where([$this->InstitutionGrades->aliasField('institution_id') => $this->institutionId])
+					->order(['EducationProgrammes.order', 'EducationGrades.order'])
+					->toArray();
 
-			// Only display the options that are available in the institution and also linked to the current programme
-			$options = array_intersect_key($listOfInstitutionGrades, $listOfGrades);
-			if (count($options) > 0 && empty($educationGradeId)) {
-				$this->Alert->error($this->alias().'.selectNextGrade');
-				$url = $this->ControllerAction->url('add');
-				$event->stopPropagation();
-				return $this->controller->redirect($url);
-			}
-			
-			if ($nextAcademicPeriodId == 0 && $educationGradeId != 0) {
-				$this->Alert->warning($this->alias().'.noNextAcademicPeriod');
-				$url = $this->ControllerAction->url('add');
-				$event->stopPropagation();
-				return $this->controller->redirect($url);
-			} else {
-				if ($selectedStudent) {
-					// redirects to confirmation page
-					$url = $this->ControllerAction->url('reconfirm');
-					$this->currentEntity = $entity;
-					$session = $this->Session;
-					$session->write($this->registryAlias().'.confirm', $entity);
-					$session->write($this->registryAlias().'.confirmData', $data);
-					$this->currentEvent = $event;
-					$event->stopPropagation();
-					return $this->controller->redirect($url);
-				} else {
-					$this->Alert->warning($this->alias().'.noStudentSelected');
+				// Only display the options that are available in the institution and also linked to the current programme
+				$options = array_intersect_key($listOfInstitutionGrades, $listOfGrades);
+				if (count($options) > 0 && empty($educationGradeId)) {
+					$this->Alert->error($this->alias().'.selectNextGrade');
 					$url = $this->ControllerAction->url('add');
 					$event->stopPropagation();
 					return $this->controller->redirect($url);
+				}
+				
+				if ($nextAcademicPeriodId == 0 && $educationGradeId != 0) {
+					$this->Alert->warning($this->alias().'.noNextAcademicPeriod');
+					$url = $this->ControllerAction->url('add');
+					$event->stopPropagation();
+					return $this->controller->redirect($url);
+				} else {
+					if ($selectedStudent) {
+						// redirects to confirmation page
+						$url = $this->ControllerAction->url('reconfirm');
+						$this->currentEntity = $entity;
+						$session = $this->Session;
+						$session->write($this->registryAlias().'.confirm', $entity);
+						$session->write($this->registryAlias().'.confirmData', $data);
+						$this->currentEvent = $event;
+						$event->stopPropagation();
+						return $this->controller->redirect($url);
+					} else {
+						$this->Alert->warning($this->alias().'.noStudentSelected');
+						$url = $this->ControllerAction->url('add');
+						$event->stopPropagation();
+						return $this->controller->redirect($url);
+					}
 				}
 			}
 		}
@@ -695,16 +707,16 @@ class StudentPromotionTable extends AppTable {
 
 		$this->ControllerAction->field('from_academic_period_id', ['type' => 'readonly', 'attr' => ['label' => $this->getMessage($this->aliasField('fromAcademicPeriod'))]]);
 		$this->ControllerAction->field('grade_to_promote', ['type' => 'readonly', 'attr' => ['label' => $this->getMessage($this->aliasField('fromGrade'))]]);
-		$this->ControllerAction->field('institution_class');
+		$this->ControllerAction->field('class');
 		$this->ControllerAction->field('next_academic_period_id', ['type' => 'readonly', 'attr' => ['label' => $this->getMessage($this->aliasField('toAcademicPeriod'))]]);
 		$this->ControllerAction->field('student_status', ['type' => 'readonly', 'attr' => ['label' => $this->getMessage($this->aliasField('status'))]]);
 		$statuses = $this->statuses;
 		$this->ControllerAction->field('students', ['type' => 'readonly']);
 		if (!in_array($currentData[$this->alias()]['student_status_id'], [$statuses['REPEATED']])) {
 			$this->ControllerAction->field('next_grade', ['type' => 'readonly', 'attr' => ['label' => $this->getMessage($this->aliasField('toGrade'))]]);
-			$this->ControllerAction->setFieldOrder(['from_academic_period_id', 'next_academic_period_id', 'grade_to_promote', 'institution_class', 'student_status', 'next_grade',  'students']);
+			$this->ControllerAction->setFieldOrder(['from_academic_period_id', 'next_academic_period_id', 'grade_to_promote', 'class', 'student_status', 'next_grade',  'students']);
 		} else {
-			$this->ControllerAction->setFieldOrder(['from_academic_period_id', 'next_academic_period_id', 'grade_to_promote', 'institution_class', 'student_status',  'students']);
+			$this->ControllerAction->setFieldOrder(['from_academic_period_id', 'next_academic_period_id', 'grade_to_promote', 'class', 'student_status',  'students']);
 		}
 
 		if ($currentEntity && !empty($currentEntity)) {
