@@ -1,5 +1,6 @@
 v3.5.2
 - Improved UI on Results data entry
+- Added Weights to Assessment Items and Assessment Periods for calculating results
 - Fixed a bug that caused surveys not showing in workbench for school principal
 
 v3.5.1
