@@ -12,6 +12,7 @@
 							<th><?= __('OpenEmis ID') ?></th>
 							<th><?= __('Student') ?></th>
 							<th><?= __('Status') ?></th>
+							<th><?= __('Class') ?></th>
 						</tr>
 					</thead>
 					<?php if (isset($attr['data'])) : ?>
@@ -33,6 +34,7 @@
 									<td><?= $obj->_matchingData['Users']->openemis_no ?></td>
 									<td><?= $obj->_matchingData['Users']->name ?></td>
 									<td><?= $attr['attr']['statusOptions'][$obj->student_status_id ]?></td>
+									<td><?= $obj->institution_class_name ?></td>
 								</tr>
 							<?php endforeach ?>
 						</tbody>
