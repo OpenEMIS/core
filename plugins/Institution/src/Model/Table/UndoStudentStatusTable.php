@@ -49,7 +49,6 @@ class UndoStudentStatusTable extends AppTable {
 
 	public function validationDefault(Validator $validator) {
 		return $validator
-			
 			->requirePresence('class');
 	}
 
@@ -76,7 +75,11 @@ class UndoStudentStatusTable extends AppTable {
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		$studentIds = [];
-		if (!$entity->errors()) {
+		$errors = $entity->errors();
+		if (isset($errors['student_id'])) {
+			unset($errors['student_id']);
+		}
+		if ($entity->errors()) {
 			if (array_key_exists($this->alias(), $data)) {
 				if (array_key_exists('students', $data[$this->alias()])) {
 					foreach ($data[$this->alias()]['students'] as $key => $obj) {
@@ -142,21 +145,21 @@ class UndoStudentStatusTable extends AppTable {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$Grades = $this->Grades;
 
-			$periodOptions = $this->AcademicPeriods->getList();
-			if (empty($request->query['period'])) {
-				$request->query['period'] = $this->AcademicPeriods->getCurrent();
-			}
-			$selectedPeriod = $this->queryString('period', $periodOptions);
-			$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
-				'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
-				'callable' => function($id) use ($Grades, $institutionId) {
-					return $Grades
-						->find()
-						->where([$Grades->aliasField('institution_id') => $institutionId])
-						->find('academicPeriod', ['academic_period_id' => $id])
-						->count();
-				}
-			]);
+			$periodOptions = $this->AcademicPeriods->getYearList();
+			// if (empty($request->query['period'])) {
+			// 	$request->query['period'] = $this->AcademicPeriods->getCurrent();
+			// }
+			// $selectedPeriod = null;
+			// $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+			// 	'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
+			// 	'callable' => function($id) use ($Grades, $institutionId) {
+			// 		return $Grades
+			// 			->find()
+			// 			->where([$Grades->aliasField('institution_id') => $institutionId])
+			// 			->find('academicPeriod', ['academic_period_id' => $id])
+			// 			->count();
+			// 	}
+			// ]);
 
 			$attr['options'] = $periodOptions;
 			$attr['onChangeReload'] = 'changePeriod';
@@ -180,9 +183,8 @@ class UndoStudentStatusTable extends AppTable {
 		} else if ($action == 'add' || $action == 'edit') {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$selectedPeriod = $request->query('period');
-
 			$gradeOptions = [];
-			if (!is_null($selectedPeriod)) {
+			if (!empty($selectedPeriod)) {
 				$gradeOptions = $this->Grades
 					->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade.programme_grade_name'])
 					->contain(['EducationGrades.EducationProgrammes'])
