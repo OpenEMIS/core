@@ -530,9 +530,11 @@ class HtmlFieldHelper extends Helper {
 				}
 			}
 		} else if ($action == 'edit') {
-			$attr['id'] = $attr['model'] . '_' . $field; 
-			if (array_key_exists('fieldName', $attr)) {
-				$attr['id'] = $this->_domId($attr['fieldName']);
+			if (!array_key_exists('id', $attr)) {
+				$attr['id'] = $attr['model'] . '_' . $field; 
+				if (array_key_exists('fieldName', $attr)) {
+					$attr['id'] = $this->_domId($attr['fieldName']);
+				}
 			}
 
 			$attr['date_options'] = array_merge($_options, $attr['date_options']);
@@ -549,9 +551,11 @@ class HtmlFieldHelper extends Helper {
 			} else {
 				if (is_object($attr['value'])) {
 					$attr['value'] = $attr['value']->format('d-m-Y');
-				} else {
+				} else if (!array_key_exists('special_value', $attr)) {
 					$attr['value'] = date('d-m-Y', strtotime($attr['value']));
 				}
+				// else $attr['value'] will be what was set before calling this function when $attr['special_value'] was set to true.
+				// this is added when datepicker input is being used with angularJs scope
 			}
 
 			if (!is_null($this->_View->get('datepicker'))) {

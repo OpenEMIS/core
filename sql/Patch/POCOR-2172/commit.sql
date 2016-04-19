@@ -2,6 +2,7 @@
 INSERT INTO `db_patches` VALUES('POCOR-2172', NOW());
 
 -- staff_statuses
+DROP TABLE IF EXISTS `staff_statuses`;
 CREATE TABLE `staff_statuses` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `code` varchar(100) NOT NULL,
