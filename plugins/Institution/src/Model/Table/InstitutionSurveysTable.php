@@ -182,25 +182,23 @@ class InstitutionSurveysTable extends AppTable {
 
 			// Array to store security roles in each Institution
 			$institutionRoles = [];
+			// Array to store security roles in each Workflow Step
+			$stepRoles = [];
 			foreach ($institutionIds as $institutionId) {
 				$roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
 				$institutionRoles[$institutionId] = $roles;
 
-				// logic to pre-insert survey in school only when user's roles is configured to access the step
-				if (!empty($roles)) {
-					foreach ($statusIds as $key => $statusId) {
-						$hasWorkflowRoles = $WorkflowStepsRoles
-							->find()
-							->where([
-								$WorkflowStepsRoles->aliasField('workflow_step_id') => $statusId,
-								$WorkflowStepsRoles->aliasField('security_role_id IN ') => $roles
-							])
-							->all();
-
-						if (!$hasWorkflowRoles->isEmpty()) {
-							$this->buildSurveyRecords($institutionId);
-						}
+				foreach ($statusIds as $key => $statusId) {
+					if (!array_key_exists($statusId, $stepRoles)) {
+						$stepRoles[$statusId] = $WorkflowStepsRoles->getRolesByStep($statusId);
 					}
+
+					// logic to pre-insert survey in school only when user's roles is configured to access the step
+					$hasAccess = count(array_intersect_key($roles, $stepRoles[$statusId])) > 0;
+					if ($hasAccess) {
+						$this->buildSurveyRecords($institutionId);
+					}
+					// End
 				}
 			}
 			// End
@@ -213,18 +211,12 @@ class InstitutionSurveysTable extends AppTable {
 				->toArray();
 			// End
 
-			$stepRoles = [];
-
 			foreach ($resultSet as $key => $obj) {
 				$institutionId = $obj->institution->id;
 				$stepId = $obj->status_id;
 				$roles = $institutionRoles[$institutionId];
 
 				// Permission
-				// Array to store security roles in each Workflow Step
-				if (!array_key_exists($stepId, $stepRoles)) {
-					$stepRoles[$stepId] = $WorkflowStepsRoles->getRolesByStep($stepId);
-				}
 				// access is true if user roles exists in step roles
 				$hasAccess = count(array_intersect_key($roles, $stepRoles[$stepId])) > 0;
 				// End
