@@ -40,6 +40,7 @@ class StudentTransferTable extends AppTable {
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
+		$this->addBehavior('Institution.ClassStudents');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -423,6 +424,10 @@ class StudentTransferTable extends AppTable {
 			$Students = $this->Students;
 	    	$statuses = $this->statuses;
 
+	    	if ($selectedClass == -1) {
+				$selectedClass = '';
+			}
+
 	    	$studentQuery = $this
 	    		->find()
 	    		->matching('Users')
@@ -448,29 +453,10 @@ class StudentTransferTable extends AppTable {
 					$StudentAdmission->aliasField('student_id IS') => NULL,
 					$Students->aliasField('student_id IS') => NULL
 				])
-				->group($this->aliasField('student_id'));
-
-			if ($selectedClass != -1) {
-				$where = ['InstitutionClasses.id' => $selectedClass];
-			} else {
-				$where = [];
-			}
-
-			$studentQuery = $studentQuery
-				->leftJoin(['InstitutionClassStudents' => 'institution_class_students'],
-					[
-						'InstitutionClassStudents.education_grade_id = '.$this->aliasField('education_grade_id'),
-						'InstitutionClassStudents.student_id = '.$this->aliasField('student_id')
-					])
-				->leftJoin(['InstitutionClasses' => 'institution_classes'], 
-					[	
-						'InstitutionClassStudents.institution_class_id = InstitutionClasses.id',
-						'InstitutionClasses.institution_id = '.$this->aliasField('institution_id'),
-						'InstitutionClasses.academic_period_id = '.$this->aliasField('academic_period_id'),
-					])
-				->where($where)
+				->find('studentClasses', ['institution_class_id' => $selectedClass])
 				->select(['institution_class_id' => 'InstitutionClasses.id', 'institution_class_name' => 'InstitutionClasses.name'])
-				->autoFields(true);
+				->autoFields(true)
+				->group($this->aliasField('student_id'));
 
 	  		$students = $studentQuery->toArray();
 	  	}
