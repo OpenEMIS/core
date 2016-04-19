@@ -86,6 +86,7 @@ class RecordBehavior extends Behavior {
 		$this->CustomFormsFields = TableRegistry::get($this->config('formFieldClass.className'));
 		$this->CustomFormsFilters = TableRegistry::get($this->config('formFilterClass.className'));
 
+		// Each field type will have one behavior attached
 		$this->_table->addBehavior('CustomField.RenderText');
 		$this->_table->addBehavior('CustomField.RenderNumber');
 		$this->_table->addBehavior('CustomField.RenderTextarea');
@@ -95,6 +96,8 @@ class RecordBehavior extends Behavior {
 		$this->_table->addBehavior('CustomField.RenderDate');
 		$this->_table->addBehavior('CustomField.RenderTime');
 		$this->_table->addBehavior('CustomField.RenderStudentList');
+		$this->_table->addBehavior('CustomField.RenderCoordinates');
+		// End
 
 		// If tabSection is not set, added to handle Section Header
 		if (!$this->config('tabSection')) {
