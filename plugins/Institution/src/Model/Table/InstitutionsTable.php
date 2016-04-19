@@ -68,7 +68,6 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('StudentDropout', 					['className' => 'Institution.StudentDropout', 'dependent' => true]);
 		$this->hasMany('TransferApprovals', 				['className' => 'Institution.TransferApprovals', 'dependent' => true, 'foreignKey' => 'previous_institution_id']);
 		$this->hasMany('AssessmentItemResults', 			['className' => 'Institution.AssessmentItemResults', 'dependent' => true]);
-		$this->hasMany('InstitutionAssessments', 			['className' => 'Institution.InstitutionAssessments', 'dependent' => true]);
 		$this->hasMany('InstitutionRubrics', 				['className' => 'Institution.InstitutionRubrics', 'dependent' => true]);
 		$this->hasMany('InstitutionQualityVisits', 			['className' => 'Institution.InstitutionQualityVisits', 'dependent' => true]);
 		$this->hasMany('StudentSurveys', 					['className' => 'Student.StudentSurveys', 'dependent' => true]);
