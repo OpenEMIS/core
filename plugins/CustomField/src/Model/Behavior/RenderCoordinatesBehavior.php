@@ -37,10 +37,6 @@ class RenderCoordinatesBehavior extends RenderBehavior {
         $value = '';
 
         $fieldType = strtolower($this->fieldTypeCode);
-        // $checkboxOptions = [];
-        // foreach ($attr['customField']['custom_field_options'] as $key => $obj) {
-        //     $checkboxOptions[$obj->id] = $obj->name;
-        // }
 
         // for edit
         $fieldId = $attr['customField']->id;
@@ -57,10 +53,6 @@ class RenderCoordinatesBehavior extends RenderBehavior {
         }
         // End
 
-        // $checkedValues = [];
-        // if (!is_null($savedValue)) {
-        //     $checkedValues =  $savedValue;
-        // }
         if ($action == 'view') {
             // if (is_array($checkedValues) && !empty($checkedValues)) {
             //     $answers = [];
@@ -74,22 +66,8 @@ class RenderCoordinatesBehavior extends RenderBehavior {
 
             $html = '';
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
-
-            // foreach ($checkboxOptions as $key => $value) {
-            //     $html .= '<div class="input">';
-            //         $option = ['label' => false, 'class' => 'icheck-input'];
-            //         if (!empty($checkedValues)) {
-            //             if (in_array($key, $checkedValues)) {
-            //                 $option['checked'] = true;
-            //             }
-            //         }
-            //         $html .= $form->checkbox("$fieldPrefix.number_value.$key", $option);
-            //         $html .= '<label class="selection-label">'. $value .'</label>';
-            //     $html .= '</div>';
-            // }
-            // $html .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
-
-            // $attr['output'] = $html;
+            $attr['fieldPrefix'] = $fieldPrefix;
+            $attr['form'] = $form;
             $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
         }
 
@@ -98,11 +76,11 @@ class RenderCoordinatesBehavior extends RenderBehavior {
     }
 
     public function processCoordinatesValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
-        // $settings['valueKey'] = 'number_value';
+        $settings['valueKey'] = 'text_value';
 
-        // $fieldKey = $settings['fieldKey'];
-        // $valueKey = $settings['valueKey'];
-        // $customValue = $settings['customValue'];
+        $fieldKey = $settings['fieldKey'];
+        $valueKey = $settings['valueKey'];
+        $customValue = $settings['customValue'];
 
         // $settings['deleteFieldIds'][] = $customValue[$fieldKey];
         // $checkboxValues = $customValue[$valueKey];
