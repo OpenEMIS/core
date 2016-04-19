@@ -34,85 +34,84 @@ class RenderCoordinatesBehavior extends RenderBehavior {
 	}
 
 	public function onGetCustomCoordinatesElement(Event $event, $action, $entity, $attr, $options=[]) {
-		$value = '';
-		// $_options = [
-		// 	'defaultTime' => false
-		// ];
+        $value = '';
 
-		// $fieldId = $attr['customField']->id;
-  //       $fieldValues = $attr['customFieldValues'];
+        $fieldType = strtolower($this->fieldTypeCode);
+        // $checkboxOptions = [];
+        // foreach ($attr['customField']['custom_field_options'] as $key => $obj) {
+        //     $checkboxOptions[$obj->id] = $obj->name;
+        // }
 
-  //       $savedId = null;
-  //       $savedValue = null;
-		// if (!empty($fieldValues) && array_key_exists($fieldId, $fieldValues)) {
-  //           if (isset($fieldValues[$fieldId]['id'])) {
-  //               $savedId = $fieldValues[$fieldId]['id'];
-  //           }
-  //           if (isset($fieldValues[$fieldId]['text_value'])) {
-  //               $savedValue = $fieldValues[$fieldId]['text_value'];
-  //           }
-  //       }
+        // for edit
+        $fieldId = $attr['customField']->id;
+        $fieldValues = $attr['customFieldValues'];
+        $savedId = null;
+        $savedValue = null;
+        if (!empty($fieldValues) && array_key_exists($fieldId, $fieldValues)) {
+            if (isset($fieldValues[$fieldId]['id'])) {
+                $savedId = $fieldValues[$fieldId]['id'];
+            }
+            if (isset($fieldValues[$fieldId]['text_value'])) {
+                $savedValue = $fieldValues[$fieldId]['text_value'];
+            }
+        }
+        // End
 
-		// if ($action == 'index' || $action == 'view') {
-		// 	return (!empty($savedValue))? $this->_table->formatTime(new Time($savedValue)): '';
-		// } else if ($action == 'edit') {
-		// 	$fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
-		// 	$attr['fieldName'] = $fieldPrefix.".text_value"; 
+        // $checkedValues = [];
+        // if (!is_null($savedValue)) {
+        //     $checkedValues =  $savedValue;
+        // }
+        if ($action == 'view') {
+            // if (is_array($checkedValues) && !empty($checkedValues)) {
+            //     $answers = [];
+            //     foreach ($checkedValues as $checkedValue) {
+            //         $answers[] = $checkboxOptions[$checkedValue];
+            //     }
+            //     $value = implode(', ', $answers);
+            // }
+        } else if ($action == 'edit') {
+            $form = $event->subject()->Form;
 
-		// 	if (!isset($attr['time_options'])) {
-		// 		$attr['time_options'] = [];
-		// 	}
-		// 	if (!isset($attr['default_time'])) {
-		// 		$attr['default_time'] = true;
-		// 	}
+            $html = '';
+            $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
-		// 	$attr['id'] = $attr['model'] . '_' . $attr['field']; 
-		// 	$attr['time_options'] = array_merge($_options, $attr['time_options']);
+            // foreach ($checkboxOptions as $key => $value) {
+            //     $html .= '<div class="input">';
+            //         $option = ['label' => false, 'class' => 'icheck-input'];
+            //         if (!empty($checkedValues)) {
+            //             if (in_array($key, $checkedValues)) {
+            //                 $option['checked'] = true;
+            //             }
+            //         }
+            //         $html .= $form->checkbox("$fieldPrefix.number_value.$key", $option);
+            //         $html .= '<label class="selection-label">'. $value .'</label>';
+            //     $html .= '</div>';
+            // }
+            // $html .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
 
-		// // 	$defaultDate = false;
-		// // 	if (!isset($attr['default_date'])) {
-		// // 		$attr['default_date'] = $defaultDate;
-		// // 	}
+            // $attr['output'] = $html;
+            $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
+        }
 
-		// 	if (!array_key_exists('value', $attr)) {
-		// 		if (!is_null($savedValue)) {
-		// 			$attr['value'] = date('h:i A', strtotime($savedValue));
-		// 			$attr['time_options']['defaultTime'] = $attr['value'];
-		// 		} else if ($attr['default_time']) {
-		// 			$attr['value'] = date('h:i A');
-		// 			$attr['time_options']['defaultTime'] = $attr['value'];
-		// 		}
-		// 	} else {
-		// 		if ($attr['value'] instanceof Time) {
-		// 			$attr['value'] = $attr['value']->format('h:i A');
-		// 			$attr['time_options']['defaultTime'] = $attr['value'];
-		// 		} else {
-		// 			$attr['value'] = date('h:i A', strtotime($attr['value']));
-		// 			$attr['time_options']['defaultTime'] = $attr['value'];
-		// 		}
-		// 	}
-
-		// 	$attr['null'] = !$attr['customField']['is_mandatory'];
-		// 	$event->subject()->viewSet('timepicker', $attr);
-		// 	$value = $event->subject()->renderElement('ControllerAction.bootstrap-timepicker/timepicker_input', ['attr' => $attr]);
-
-		// 	$form = $event->subject()->Form;
-		// 	$value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
-  //           if (!is_null($savedId)) {
-  //               $value .= $form->hidden($fieldPrefix.".id", ['value' => $savedId]);
-  //           }
-		// }
-
-  //       $event->stopPropagation();
+        $event->stopPropagation();
         return $value;
     }
 
-    public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
-    	// $includes['timepicker']['include'] = true;
-    }
-
     public function processCoordinatesValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
-        $settings['valueKey'] = 'text_value';
-        $this->processValues($entity, $data, $settings);
+        // $settings['valueKey'] = 'number_value';
+
+        // $fieldKey = $settings['fieldKey'];
+        // $valueKey = $settings['valueKey'];
+        // $customValue = $settings['customValue'];
+
+        // $settings['deleteFieldIds'][] = $customValue[$fieldKey];
+        // $checkboxValues = $customValue[$valueKey];
+        // foreach ($checkboxValues as $checkboxKey => $checked) {
+        //     $customValue[$valueKey] = $checkboxKey;
+        //     $settings['customValue'] = $customValue;
+        //     if ($checked) {
+        //         $this->processValues($entity, $data, $settings);
+        //     }
+        // }
     }
 }
