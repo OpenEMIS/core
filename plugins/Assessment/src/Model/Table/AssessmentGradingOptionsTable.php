@@ -29,7 +29,7 @@ class AssessmentGradingOptionsTable extends AssessmentsAppTable {
 		if ($action=='edit') {
 			return ['code'=>'', 'name'=>'', 'min'=>'', 'max'=>'', 'assessment_grading_type_id'=>'', 'id'=>''];
 		} else {
-			return ['code'=>'', 'name'=>'', 'min'=>'', 'max'=>'', 'visible'=>''];
+			return ['code'=>'', 'name'=>'', 'min'=>'', 'max'=>''];
 		}
 	}
 
@@ -44,8 +44,19 @@ class AssessmentGradingOptionsTable extends AssessmentsAppTable {
 			    'rule' => ['checkUniqueCodeWithinForm', $this->AssessmentGradingTypes],
 			   
 			])
+			->add('min', 'ruleNotMoreThanMax', [
+			    'rule' => ['checkMinNotMoreThanMax'],
+			])
+			->add('max', 'ruleNotMoreThanGradingTypeMax', [
+			    'rule' => ['checkNotMoreThanGradingTypeMax', $this->AssessmentGradingTypes],
+			    'provider' => 'table'
+			])
 			;
 		return $validator;
 	}
 
+	public static function checkNotMoreThanGradingTypeMax($maxValue, $AssessmentGradingTypes, array $globalData) {
+		$formData = $AssessmentGradingTypes->request->data[$AssessmentGradingTypes->alias()];
+        return intVal($maxValue) <= intVal($formData['max']);
+    }
 }
