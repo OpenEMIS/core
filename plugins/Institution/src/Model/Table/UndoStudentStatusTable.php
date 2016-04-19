@@ -42,6 +42,7 @@ class UndoStudentStatusTable extends AppTable {
 		$this->addBehavior('Institution.UndoGraduated', $settings);
 		$this->addBehavior('Institution.UndoPromoted', $settings);
 		$this->addBehavior('Institution.UndoRepeated', $settings);
+		$this->addBehavior('Institution.ClassStudents');
 		// End
 	}
 
@@ -282,7 +283,6 @@ class UndoStudentStatusTable extends AppTable {
 
 	public function onUpdateFieldStudents(Event $event, array $attr, $action, Request $request) {
 		$data = [];
-		$model = $this->Students;
 
 		if ($action == 'reconfirm') {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
@@ -292,35 +292,24 @@ class UndoStudentStatusTable extends AppTable {
 			$student_ids = $request->data[$this->alias()]['student_ids'];
 			$selectedClass = $request->query('class');
 
-			$data = $model
+			if ($selectedClass == -1) {
+				$selectedClass = '';
+			}
+
+			$data = $this
 				->find()
 	    		->matching('Users')
 	    		->matching('EducationGrades')
 	    		->where([
-	    			$model->aliasField('institution_id') => $institutionId,
-	    			$model->aliasField('academic_period_id') =>  $selectedPeriod,
-	    			$model->aliasField('education_grade_id') => $selectedGrade,
-	    			$model->aliasField('student_status_id') => $selectedStatus,
-	    			$model->aliasField('student_id IN') => $student_ids
-	    		]);
-			
-			if ($selectedClass != -1) {
-				$data = $data
-					->innerJoin(['InstitutionClasses' => 'institution_classes'], 
-						[
-							'InstitutionClasses.institution_id = '.$model->aliasField('institution_id'),
-							'InstitutionClasses.academic_period_id = '.$model->aliasField('academic_period_id'),
-						])
-					->innerJoin(['InstitutionClassStudents' => 'institution_class_students'],
-						[
-							'InstitutionClassStudents.institution_class_id = InstitutionClasses.id',
-							'InstitutionClassStudents.education_grade_id = '.$model->aliasField('education_grade_id'),
-							'InstitutionClassStudents.student_id = '.$model->aliasField('student_id') 
-						])
-					->where(['InstitutionClasses.id' => $selectedClass])
-					->select(['institution_class_id' => 'InstitutionClasses.id', 'institution_class_name' => 'InstitutionClasses.name'])
-					->autoFields(true);
-			}
+	    			$this->aliasField('institution_id') => $institutionId,
+	    			$this->aliasField('academic_period_id') =>  $selectedPeriod,
+	    			$this->aliasField('education_grade_id') => $selectedGrade,
+	    			$this->aliasField('student_status_id') => $selectedStatus,
+	    			$this->aliasField('student_id IN') => $student_ids
+	    		])
+	    		->find('studentClasses', ['institution_class_id' => $selectedClass])
+				->select(['institution_class_id' => 'InstitutionClasses.id', 'institution_class_name' => 'InstitutionClasses.name'])
+				->autoFields(true);
 
 			$this->dataCount = $data->count();
 		} else if ($action == 'add' || $action == 'edit') {
@@ -332,34 +321,23 @@ class UndoStudentStatusTable extends AppTable {
 
 			if (!is_null($selectedPeriod) && $selectedGrade != -1 && $selectedStatus != -1) {
 
-				$data = $model
+				if ($selectedClass == -1) {
+					$selectedClass = '';
+				}
+
+				$data = $this
 					->find()
 		    		->matching('Users')
 		    		->matching('EducationGrades')
 		    		->where([
-		    			$model->aliasField('institution_id') => $institutionId,
-		    			$model->aliasField('academic_period_id') =>  $selectedPeriod,
-		    			$model->aliasField('education_grade_id') => $selectedGrade,
-		    			$model->aliasField('student_status_id') => $selectedStatus
-		    		]);
-
-				if ($selectedClass != -1) {
-					$data = $data
-						->innerJoin(['InstitutionClasses' => 'institution_classes'], 
-							[
-								'InstitutionClasses.institution_id = '.$model->aliasField('institution_id'),
-								'InstitutionClasses.academic_period_id = '.$model->aliasField('academic_period_id'),
-							])
-						->innerJoin(['InstitutionClassStudents' => 'institution_class_students'],
-							[
-								'InstitutionClassStudents.institution_class_id = InstitutionClasses.id',
-								'InstitutionClassStudents.education_grade_id = '.$model->aliasField('education_grade_id'),
-								'InstitutionClassStudents.student_id = '.$model->aliasField('student_id') 
-							])
-						->where(['InstitutionClasses.id' => $selectedClass])
-						->select(['institution_class_id' => 'InstitutionClasses.id', 'institution_class_name' => 'InstitutionClasses.name'])
-						->autoFields(true);
-				}
+		    			$this->aliasField('institution_id') => $institutionId,
+		    			$this->aliasField('academic_period_id') =>  $selectedPeriod,
+		    			$this->aliasField('education_grade_id') => $selectedGrade,
+		    			$this->aliasField('student_status_id') => $selectedStatus
+		    		])
+		    		->find('studentClasses', ['institution_class_id' => $selectedClass])
+					->select(['institution_class_id' => 'InstitutionClasses.id', 'institution_class_name' => 'InstitutionClasses.name'])
+					->autoFields(true);
 
 		    	// update students count here and show / hide form buttons in onGetFormButtons()
 		    	$this->dataCount = $data->count();
