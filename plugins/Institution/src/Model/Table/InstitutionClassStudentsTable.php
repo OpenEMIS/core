@@ -177,7 +177,10 @@ class InstitutionClassStudentsTable extends AppTable {
 				'status' => 1,
 				'student_id' => $data['student_id'],	
 				'institution_subject_id' => $subject->id,
-				'institution_class_id' => $data['institution_class_id']
+				'institution_class_id' => $data['institution_class_id'],
+				'institution_id' => $data['institution_id'],
+				'academic_period_id' => $data['academic_period_id'],
+				'education_subject_id' => $subject->education_subject_id,
 			];
 		}
 
