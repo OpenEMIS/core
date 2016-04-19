@@ -1108,11 +1108,20 @@ trait MessagesTrait {
 				'code' => [
 					'ruleUniqueCode' => 'Code must be unique',
 				],
+				'pass_mark' => [
+					'ruleNotMoreThanMax' => 'Min value cannot be more than max value',
+				],
 			],
 			'GradingOptions' => [
 				'code' => [
 					'ruleUniqueCode' => 'Code must be unique',
 					'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form',
+				],
+				'min' => [
+					'ruleNotMoreThanMax' => 'Min value cannot be more than max value',
+				],
+				'max' => [
+					'ruleNotMoreThanGradingTypeMax' => 'Grading Option max value cannot be more than Grading Type max value',
 				],
 			],
 		],
