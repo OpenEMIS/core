@@ -11,6 +11,7 @@
 							<th><?= __('OpenEmis ID') ?></th>
 							<th><?= __('Student') ?></th>
 							<th><?= __('Current Grade') ?></th>
+							<th><?= __('Class') ?></th>
 						</tr>
 					</thead>
 					<?php if (isset($attr['data'])) : ?>
@@ -27,6 +28,7 @@
 									</td>
 									<td><?= $obj->_matchingData['Users']->name ?></td>
 									<td><?= $obj->_matchingData['EducationGrades']->programme_grade_name ?></td>
+									<td><?= $obj->institution_class_name ?></td>
 								</tr>
 							<?php endforeach ?>
 						</tbody>
@@ -47,6 +49,7 @@
 							<th><?= __('OpenEmis ID') ?></th>
 							<th><?= __('Student') ?></th>
 							<th><?= __('Current Grade') ?></th>
+							<th><?= __('Class') ?></th>
 						</tr>
 					</thead>
 					<?php if (isset($attr['data'])) : ?>
@@ -69,6 +72,7 @@
 									<td><?= $obj->_matchingData['Users']->openemis_no ?></td>
 									<td><?= $obj->_matchingData['Users']->name ?></td>
 									<td><?= $obj->_matchingData['EducationGrades']->programme_grade_name ?></td>
+									<td><?= $obj->institution_class_name ?></td>
 								</tr>
 							<?php endforeach ?>
 						</tbody>
