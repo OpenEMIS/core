@@ -36,8 +36,9 @@ class WorkBenchComponent extends Component {
 				if (!$isAdmin) {
 					$institutionIds = $this->AccessControl->getInstitutionsByUser();
 					$userId = $this->Auth->user('id');
+					$Institutions = TableRegistry::get('Institution.Institutions');
 					foreach ($institutionIds as $institutionId) {
-						$roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+						$roles = $Institutions->getInstitutionRoles($userId, $institutionId);
 						$institutionRoles[$institutionId] = $roles;
 					}
 				}
