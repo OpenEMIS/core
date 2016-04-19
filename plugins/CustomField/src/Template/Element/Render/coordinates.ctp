@@ -1,7 +1,20 @@
-<?php if ($ControllerAction['action'] == 'index') : ?>
-<?php else : ?>
+
 	<div class="input">
 		<label><?= $attr['attr']['label']; ?></label>
-		<div class="input-selection"><?= isset($attr['output']) ? $attr['output'] : ''; ?></div>
+		<?php
+			$options = [
+				'type' => 'string',
+				'label' => false,
+				'placeholder' => __('Latitude'),
+	            'required' => true,
+	            'templates' => [
+	            	'inputContainer' => '{{content}}',
+	            ],
+	            'style' => 'width:12%;margin-right:1%;'
+			];
+			echo $attr['form']->input($attr['fieldPrefix'].".latitude", $options);
+
+			$options['placeholder'] = __('Longitude');
+			echo $attr['form']->input($attr['fieldPrefix'].".longitude", $options);
+		?>
 	</div>
-<?php endif ?>
