@@ -79,7 +79,7 @@ class AccessControlComponent extends Component {
 				)'
 		];
 
-		if (!empty($roles)) {
+		if ($roles->all()->count() > 0) {
 			$entity = $SecurityRoleFunctions
 				->find()
 				->select($selectedColumns)
@@ -125,8 +125,8 @@ class AccessControlComponent extends Component {
 					END
 				)'
 		];
-
-		if (!empty($roles)) {
+		
+		if ($roles->all()->count() > 0) {
 			$lastModified = $SecurityRoleFunctions->find()
 				->select($selectedColumns)
 				->where([$SecurityRoleFunctions->aliasField('security_role_id') . ' IN' => $roles])
@@ -171,7 +171,7 @@ class AccessControlComponent extends Component {
 			$this->Session->write('System.User.roles', $userRole);
 			$this->Session->write('Permissions.lastModified', $lastModified);
 		} else {
-			$this->Session->write('System.User.roles', []);
+			$this->Session->write('System.User.roles', '');
 			$this->Session->write('Permissions.lastModified', '');
 		}
 	}
