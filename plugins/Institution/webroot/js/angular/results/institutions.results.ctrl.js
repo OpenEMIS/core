@@ -152,6 +152,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
 
     $scope.onBackClick = function() {
         $scope.action = 'view';
+        $scope.onChangeSubject($scope.subject);
     };
 
     $scope.onSaveClick = function() {
@@ -163,7 +164,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
             var classId = $scope.gridOptions.context.class_id;
 
             UtilsSvc.isAppendSpinner(true, 'institution-result-table');
-            InstitutionsResultsSvc.saveRowData($scope.results, assessmentId, educationSubjectId, institutionId, academicPeriodId)
+            InstitutionsResultsSvc.saveRowData($scope.subject, $scope.results, assessmentId, educationSubjectId, institutionId, academicPeriodId)
             .then(function(response) {
                 console.log(response);
             }, function(error) {
