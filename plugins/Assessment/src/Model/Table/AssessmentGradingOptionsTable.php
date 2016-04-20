@@ -44,12 +44,22 @@ class AssessmentGradingOptionsTable extends AssessmentsAppTable {
 			    'rule' => ['checkUniqueCodeWithinForm', $this->AssessmentGradingTypes],
 			   
 			])
-			->add('min', 'ruleNotMoreThanMax', [
-			    'rule' => ['checkMinNotMoreThanMax'],
+			->add('min', [
+				'ruleNotMoreThanMax' => [
+			    	'rule' => ['checkMinNotMoreThanMax'],
+				],
+				'ruleIsDecimal' => [
+				    'rule' => ['decimal', 2],
+				]
 			])
-			->add('max', 'ruleNotMoreThanGradingTypeMax', [
-			    'rule' => ['checkNotMoreThanGradingTypeMax', $this->AssessmentGradingTypes],
-			    'provider' => 'table'
+			->add('max', [
+				'ruleNotMoreThanGradingTypeMax' => [
+				    'rule' => ['checkNotMoreThanGradingTypeMax', $this->AssessmentGradingTypes],
+				    'provider' => 'table'
+				],
+				'ruleIsDecimal' => [
+				    'rule' => ['decimal', 2],
+				]
 			])
 			;
 		return $validator;

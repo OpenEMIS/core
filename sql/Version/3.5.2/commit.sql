@@ -86,8 +86,8 @@ SELECT uuid(), `AssessmentItemResults`.`marks`, `AssessmentItemResults`.`assessm
 FROM `z_2759_assessment_item_results` AS `AssessmentItemResults`
 INNER JOIN `z_2759_assessment_items` AS `AssessmentItems`
 ON `AssessmentItems`.`id` = `AssessmentItemResults`.`assessment_item_id`
-GROUP BY
-  `AssessmentItemResults`.`student_id`,
+GROUP BY 
+  `AssessmentItemResults`.`student_id`, 
   `AssessmentItems`.`assessment_id`,
   `AssessmentItems`.`education_subject_id`,
   `AssessmentItemResults`.`institution_id`,
@@ -102,8 +102,8 @@ CREATE TABLE IF NOT EXISTS `assessment_grading_types` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `code` varchar(50) DEFAULT NULL,
   `name` varchar(80) NOT NULL,
-  `pass_mark` int(5) NOT NULL,
-  `max` int(5) NOT NULL,
+  `pass_mark` decimal(6,2) NOT NULL, 
+  `max` decimal(6,2) NOT NULL,
   `result_type` varchar(20) NOT NULL,
   `visible` int(1) NOT NULL DEFAULT '1',
   `modified_user_id` int(11) DEFAULT NULL,
@@ -127,8 +127,8 @@ CREATE TABLE IF NOT EXISTS `assessment_grading_options` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `code` varchar(50) DEFAULT NULL,
   `name` varchar(80) NOT NULL,
-  `min` int(5) DEFAULT NULL,
-  `max` int(5) DEFAULT NULL,
+  `min` decimal(6,2) DEFAULT NULL,
+  `max` decimal(6,2) DEFAULT NULL,
   `order` int(3) NOT NULL,
   `visible` int(1) NOT NULL DEFAULT '1',
   `assessment_grading_type_id` int(11) NOT NULL,
@@ -204,13 +204,157 @@ SELECT uuid(), `InstitutionSubjectStudents`.`status`, NULL, `InstitutionSubjectS
 FROM `z_2759_institution_subject_students` AS `InstitutionSubjectStudents`
 INNER JOIN `institution_subjects` AS `InstitutionSubjects`
 ON `InstitutionSubjects`.`id` = `InstitutionSubjectStudents`.`institution_subject_id`
-GROUP BY
-  `InstitutionSubjectStudents`.`student_id`,
-  `InstitutionSubjectStudents`.`institution_class_id`,
+GROUP BY 
+  `InstitutionSubjectStudents`.`student_id`, 
+  `InstitutionSubjectStudents`.`institution_class_id`, 
   `InstitutionSubjects`.`institution_id`,
-  `InstitutionSubjects`.`academic_period_id`,
+  `InstitutionSubjects`.`academic_period_id`, 
   `InstitutionSubjects`.`education_subject_id`
 ;
+
+-- security_functions
+UPDATE `security_functions` SET `_view` = 'Assessments.index|Results.index', `_edit` = 'Results.edit' WHERE `id` = 1015;
+
+-- patch grading types - result_type, pass_mark and max
+UPDATE assessment_grading_types
+JOIN (
+  SELECT assessment_grading_type_id, pass_mark, max, result_type
+  FROM z_2759_assessment_items
+  GROUP BY assessment_grading_type_id
+) a ON a.assessment_grading_type_id = assessment_grading_types.id
+SET assessment_grading_types.pass_mark = a.pass_mark,
+assessment_grading_types.max = a.max,
+assessment_grading_types.result_type = a.result_type;
+
+-- patch assessments
+
+DROP PROCEDURE IF EXISTS patchAssessments;
+DELIMITER $$
+
+CREATE PROCEDURE patchAssessments()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE assessmentId, newAssessmentId, newAssessmentPeriodId, periodId, statusId, currentPeriodId INT(11);
+  DECLARE assessmentName VARCHAR(100);
+  DECLARE periodStart, periodEnd, enabledDate, disabledDate date;
+  
+  DECLARE cursor_assessments CURSOR FOR
+      SELECT 
+      assessments.id, assessments.name, ap.id, astat.id, 
+      ap.start_date, ap.end_date, astat.date_enabled, astat.date_disabled
+      FROM assessments
+      LEFT JOIN z_2759_assessment_statuses astat ON astat.assessment_id = assessments.id
+      LEFT JOIN z_2759_assessment_status_periods asp ON asp.assessment_status_id = astat.id
+      LEFT JOIN academic_periods ap ON ap.id = asp.academic_period_id
+      GROUP BY assessments.id, ap.id
+      ORDER BY ap.start_date DESC
+      ;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cursor_assessments;
+
+  UPDATE assessments SET academic_period_id = 0;
+  UPDATE assessment_item_results SET assessment_period_id = 0;
+  TRUNCATE TABLE assessment_periods;
+
+  read_loop: LOOP
+    FETCH cursor_assessments INTO assessmentId, assessmentName, periodId, statusId, periodStart, periodEnd, enabledDate, disabledDate;
+    IF done THEN
+      LEAVE read_loop;
+    END IF;
+
+    IF periodId IS NULL THEN
+      UPDATE assessments SET academic_period_id = (
+        select id from academic_periods order by start_date desc limit 1
+      )
+      WHERE assessments.id = assessmentId;
+    ELSE
+      SELECT academic_period_id INTO currentPeriodId
+      FROM assessments
+      WHERE assessments.id = assessmentId;
+
+      IF currentPeriodId = 0 THEN
+        UPDATE assessments SET academic_period_id = periodId
+        WHERE assessments.id = assessmentId;
+
+        INSERT INTO assessment_periods
+        SELECT
+        NULL,
+        '',
+        assessmentName,
+        periodStart,
+        periodEnd,
+        enabledDate,
+        disabledDate,
+        20,
+        assessmentId,
+        null, null, 1, now()
+        FROM z_2759_assessment_statuses
+        WHERE z_2759_assessment_statuses.id = statusId;
+
+        SELECT LAST_INSERT_ID() INTO newAssessmentPeriodId;
+
+        UPDATE assessment_item_results
+        SET assessment_period_id = newAssessmentPeriodId
+        WHERE academic_period_id = periodId
+        AND assessment_id = assessmentId;
+      ELSE
+        INSERT INTO assessments
+        SELECT
+        NULL,
+        code,
+        name,
+        description,
+        type,
+        periodId,
+        education_grade_id,
+        modified_user_id,
+        modified,
+        -1,
+        created
+        FROM assessments
+        WHERE assessments.id = assessmentId;
+
+        SELECT LAST_INSERT_ID() INTO newAssessmentId;
+
+        INSERT INTO assessment_periods
+        SELECT
+        NULL,
+        '',
+        assessmentName,
+        periodStart,
+        periodEnd,
+        enabledDate,
+        disabledDate,
+        20,
+        newAssessmentId,
+        assessmentId, null, -1, now()
+        FROM z_2759_assessment_statuses
+        WHERE z_2759_assessment_statuses.id = statusId;
+
+        SELECT LAST_INSERT_ID() INTO newAssessmentPeriodId;
+
+        UPDATE assessment_item_results
+        SET assessment_period_id = newAssessmentPeriodId,
+        assessment_id = newAssessmentId
+        WHERE academic_period_id = periodId AND assessment_id = assessmentId;
+      END IF;
+
+    END IF;
+
+    UPDATE assessments SET created_user_id = 1 WHERE created_user_id = -1;
+    UPDATE assessment_periods SET created_user_id = 1 WHERE created_user_id = -1;
+    UPDATE assessment_periods SET modified_user_id = null WHERE modified is NULL;
+
+  END LOOP read_loop;
+
+  CLOSE cursor_assessments;
+END
+$$
+
+DELIMITER ;
+
+CALL patchAssessments;
 
 
 -- 3.5.2
