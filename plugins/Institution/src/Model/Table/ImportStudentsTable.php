@@ -242,7 +242,7 @@ class ImportStudentsTable extends AppTable {
 		if (empty($tempRow['start_date'])) {
 			$rowInvalidCodeCols['start_date'] = __('No start date specified');
 			return false;
-		} else if (!($tempRow['start_date'] instanceof Time || $tempRow['start_date'] instanceof Date)) {
+		} else if (!$tempRow['start_date'] instanceof Time && !$tempRow['start_date'] instanceof Date) {
 			$rowInvalidCodeCols['start_date'] = __('Unknown date format');
 			return false;
 		}
@@ -263,12 +263,12 @@ class ImportStudentsTable extends AppTable {
 			$rowInvalidCodeCols['start_date'] = __('Start date is not within selected academic period');
 			return false;
 		}
-		if (!($period->start_date instanceof Time || $period->start_date instanceof Date)) {
+		if (!$period->start_date instanceof Time && !$period->start_date instanceof Date) {
 			$rowInvalidCodeCols['academic_period_id'] = __('Please check the selected academic period start date in Administration');
 			return false;
 		}
 		$periodStartDate = $period->start_date->toUnixString();
-		if (!($period->end_date instanceof Time || $period->end_date instanceof Date))  {
+		if (!$period->end_date instanceof Time && !$period->end_date instanceof Date)  {
 			$rowInvalidCodeCols['academic_period_id'] = __('Please check the selected academic period end date in Administration');
 			return false;
 		}
@@ -295,13 +295,13 @@ class ImportStudentsTable extends AppTable {
 		}
 
 		$institutionGrade = $institutionGrade->first();
-		if (!($institutionGrade->start_date instanceof Time || $institutionGrade->start_date instanceof Date)) {
+		if (!$institutionGrade->start_date instanceof Time && !$institutionGrade->start_date instanceof Date) {
 			$rowInvalidCodeCols['education_grade_id'] = __('Please check the selected education grade start date at the institution');
 			return false;
 		}
 
 		$gradeStartDate = $institutionGrade->start_date->toUnixString();
-		$gradeEndDate = (!empty($institutionGrade->end_date) && !($institutionGrade->end_date instanceof Time || $institutionGrade->end_date instanceof Date)) ? $institutionGrade->end_date->toUnixString() : '';
+		$gradeEndDate = (!empty($institutionGrade->end_date) && !$institutionGrade->end_date instanceof Time && !$institutionGrade->end_date instanceof Date) ? $institutionGrade->end_date->toUnixString() : '';
 		if (!empty($gradeEndDate) && $gradeEndDate < $periodEndDate) {
 			$rowInvalidCodeCols['education_grade_id'] = __('Selected education grade will end before academic period ends');
 			return false;
