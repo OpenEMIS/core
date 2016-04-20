@@ -7,6 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\I18n\Time;
+use Cake\Utility\Text;
 use App\Model\Table\AppTable;
 
 class InstitutionClassStudentsTable extends AppTable {
@@ -79,6 +80,10 @@ class InstitutionClassStudentsTable extends AppTable {
     		}
     	}
     }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+		$entity->id = Text::uuid();
+	}
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
     	$query
