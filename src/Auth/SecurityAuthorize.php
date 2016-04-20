@@ -12,7 +12,7 @@ class SecurityAuthorize extends BaseAuthorize {
 		$AccessControl = $controller->AccessControl;
 		$authorized = false;
 
-		if (!$request->is('ajax')) {
+		if (!$request->is('ajax') && $request->params['_ext'] != 'json') {
 
 			// Set for roles belonging to the controller
 			$roles = [];
