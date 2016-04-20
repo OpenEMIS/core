@@ -79,7 +79,7 @@ class UndoStudentStatusTable extends AppTable {
 		if (isset($errors['student_id'])) {
 			unset($errors['student_id']);
 		}
-		if ($entity->errors()) {
+		if (!$errors) {
 			if (array_key_exists($this->alias(), $data)) {
 				if (array_key_exists('students', $data[$this->alias()])) {
 					foreach ($data[$this->alias()]['students'] as $key => $obj) {
@@ -95,7 +95,6 @@ class UndoStudentStatusTable extends AppTable {
 
 			if (empty($studentIds)) {
 				$this->Alert->warning('general.notSelected', ['reset' => true]);
-				$url = $this->ControllerAction->url('add');
 			} else {
 				$data[$this->alias()]['student_ids'] = $studentIds;
 				// redirects to confirmation page
@@ -105,10 +104,9 @@ class UndoStudentStatusTable extends AppTable {
 				$session->write($this->registryAlias().'.confirm', $entity);
 				$session->write($this->registryAlias().'.confirmData', $data->getArrayCopy());
 				$this->Alert->success('UndoStudentStatus.success', ['reset' => true]);
+				$event->stopPropagation();
+				return $this->controller->redirect($url);
 			}
-
-			$event->stopPropagation();
-			return $this->controller->redirect($url);
 		}
 	}
 
@@ -124,7 +122,9 @@ class UndoStudentStatusTable extends AppTable {
 				break;
 			case 'reconfirm':
 				$buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Confirm');
-				$buttons[1]['url'] = $this->ControllerAction->url('add');
+				$cancelUrl = $this->ControllerAction->url('add');
+				$cancelUrl = array_diff_key($cancelUrl, $this->request->query);
+				$buttons[1]['url'] = $cancelUrl;
 				break;
 		}
 	}
@@ -192,27 +192,22 @@ class UndoStudentStatusTable extends AppTable {
 					->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
 					->order(['EducationProgrammes.order', 'EducationGrades.order'])
 					->toArray();
-				$selectedGrade = $request->query['grade'];
-				$attr['select'] = false;
-				$gradeOptions = ['-1' => '-- Select --'] + $gradeOptions;
-				$Students = $this->Students;
-				$this->advancedSelectOptions($gradeOptions, $selectedGrade, [
-					'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
-					'callable' => function($id) use ($Students, $institutionId, $selectedPeriod) {
-						if ($id == -1) {
-							return 1;
-						} else {
-							return $Students
-								->find()
-								->where([
-									'institution_id' => $institutionId,
-									'academic_period_id' => $selectedPeriod,
-									'education_grade_id' => $id
-								])
-								->count();
-						}
-					}
-				]);
+				$selectedGrade = $request->query('grade');
+				$gradeOptions = $gradeOptions;
+				// $Students = $this->Students;
+				// $this->advancedSelectOptions($gradeOptions, $selectedGrade, [
+				// 	'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
+				// 	'callable' => function($id) use ($Students, $institutionId, $selectedPeriod) {
+				// 			return $Students
+				// 				->find()
+				// 				->where([
+				// 					'institution_id' => $institutionId,
+				// 					'academic_period_id' => $selectedPeriod,
+				// 					'education_grade_id' => $id
+				// 				])
+				// 				->count();
+				// 	}
+				// ]);
 			}
 
 			$attr['options'] = $gradeOptions;
