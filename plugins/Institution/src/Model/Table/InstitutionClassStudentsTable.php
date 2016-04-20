@@ -21,6 +21,8 @@ class InstitutionClassStudentsTable extends AppTable {
 		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('StudentStatuses',	['className' => 'Student.StudentStatuses']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
 
 		$this->hasMany('SubjectStudents', [
