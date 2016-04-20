@@ -1110,6 +1110,10 @@ trait MessagesTrait {
 				],
 				'pass_mark' => [
 					'ruleNotMoreThanMax' => 'Min value cannot be more than max value',
+					'ruleIsDecimal' => 'Value is not a valid decimal',
+				],
+				'max' => [
+					'ruleIsDecimal' => 'Value is not a valid decimal',
 				],
 			],
 			'GradingOptions' => [
@@ -1119,9 +1123,11 @@ trait MessagesTrait {
 				],
 				'min' => [
 					'ruleNotMoreThanMax' => 'Min value cannot be more than max value',
+					'ruleIsDecimal' => 'Value is not a valid decimal',
 				],
 				'max' => [
 					'ruleNotMoreThanGradingTypeMax' => 'Grading Option max value cannot be more than Grading Type max value',
+					'ruleIsDecimal' => 'Value is not a valid decimal',
 				],
 			],
 		],
