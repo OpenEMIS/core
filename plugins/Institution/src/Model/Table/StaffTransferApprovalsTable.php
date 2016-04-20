@@ -74,7 +74,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 		}
 
 		$staffType = $this->StaffTypes->get($entity->staff_type_id)->name;
-		if (!($entity->start_date instanceof Time || $entity->start_date instanceof Date)) {
+		if (!$entity->start_date instanceof Time && !$entity->start_date instanceof Date) {
 			$entity->start_date = Time::parse($entity->start_date);
 		}
 		$startDate = $this->formatDate($entity->start_date);

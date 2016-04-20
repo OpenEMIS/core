@@ -82,7 +82,9 @@ class InstitutionClassStudentsTable extends AppTable {
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		$entity->id = Text::uuid();
+    	if ($entity->isNew()) {
+    		$entity->id = Text::uuid();
+    	}
 	}
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
