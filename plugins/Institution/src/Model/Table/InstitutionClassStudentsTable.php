@@ -138,7 +138,6 @@ class InstitutionClassStudentsTable extends AppTable {
 		$studentId = $data['student_id'];
 		$gradeId = $data['education_grade_id'];
 		$classId = $data['institution_class_id'];
-
 		$data['subject_students'] = $this->_setSubjectStudentData($data);
 		$entity = $this->newEntity($data);
 

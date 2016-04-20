@@ -39,6 +39,12 @@ class UndoStudentStatusTable extends AppTable {
 			'statuses' => $this->statuses
 		];
 
+		$this->institutionId = $this->Session->read('Institution.Institutions.id');
+
+		$this->institutionClasses = $institutionClassTable->find('list')
+			->where([$institutionClassTable->aliasField('institution_id') => $this->institutionId])
+			->toArray();
+
 		$this->addBehavior('Institution.UndoCurrent', $settings);
 		$this->addBehavior('Institution.UndoGraduated', $settings);
 		$this->addBehavior('Institution.UndoPromoted', $settings);
@@ -146,20 +152,18 @@ class UndoStudentStatusTable extends AppTable {
 			$Grades = $this->Grades;
 
 			$periodOptions = $this->AcademicPeriods->getYearList();
-			// if (empty($request->query['period'])) {
-			// 	$request->query['period'] = $this->AcademicPeriods->getCurrent();
-			// }
-			// $selectedPeriod = null;
-			// $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
-			// 	'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
-			// 	'callable' => function($id) use ($Grades, $institutionId) {
-			// 		return $Grades
-			// 			->find()
-			// 			->where([$Grades->aliasField('institution_id') => $institutionId])
-			// 			->find('academicPeriod', ['academic_period_id' => $id])
-			// 			->count();
-			// 	}
-			// ]);
+			$selectedPeriod = null;
+			$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+				'selectOption' => false,
+				'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
+				'callable' => function($id) use ($Grades, $institutionId) {
+					return $Grades
+						->find()
+						->where([$Grades->aliasField('institution_id') => $institutionId])
+						->find('academicPeriod', ['academic_period_id' => $id])
+						->count();
+				}
+			]);
 
 			$attr['options'] = $periodOptions;
 			$attr['onChangeReload'] = 'changePeriod';
@@ -194,20 +198,21 @@ class UndoStudentStatusTable extends AppTable {
 					->toArray();
 				$selectedGrade = $request->query('grade');
 				$gradeOptions = $gradeOptions;
-				// $Students = $this->Students;
-				// $this->advancedSelectOptions($gradeOptions, $selectedGrade, [
-				// 	'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
-				// 	'callable' => function($id) use ($Students, $institutionId, $selectedPeriod) {
-				// 			return $Students
-				// 				->find()
-				// 				->where([
-				// 					'institution_id' => $institutionId,
-				// 					'academic_period_id' => $selectedPeriod,
-				// 					'education_grade_id' => $id
-				// 				])
-				// 				->count();
-				// 	}
-				// ]);
+				$Students = $this->Students;
+				$this->advancedSelectOptions($gradeOptions, $selectedGrade, [
+					'selectOption' => false,
+					'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
+					'callable' => function($id) use ($Students, $institutionId, $selectedPeriod) {
+							return $Students
+								->find()
+								->where([
+									'institution_id' => $institutionId,
+									'academic_period_id' => $selectedPeriod,
+									'education_grade_id' => $id
+								])
+								->count();
+					}
+				]);
 			}
 
 			$attr['options'] = $gradeOptions;
@@ -313,7 +318,7 @@ class UndoStudentStatusTable extends AppTable {
 	    			$this->aliasField('student_id IN') => $student_ids
 	    		])
 	    		->find('studentClasses', ['institution_class_id' => $selectedClass])
-				->select(['institution_class_id' => 'InstitutionClasses.id', 'institution_class_name' => 'InstitutionClasses.name'])
+				->select(['institution_class_id' => 'InstitutionClassStudents.institution_class_id'])
 				->order(['Users.first_name'])
 				->autoFields(true);
 
@@ -342,7 +347,7 @@ class UndoStudentStatusTable extends AppTable {
 		    			$this->aliasField('student_status_id') => $selectedStatus
 		    		])
 		    		->find('studentClasses', ['institution_class_id' => $selectedClass])
-					->select(['institution_class_id' => 'InstitutionClasses.id', 'institution_class_name' => 'InstitutionClasses.name'])
+					->select(['institution_class_id' => 'InstitutionClassStudents.institution_class_id'])
 					->order(['Users.first_name'])
 					->autoFields(true);
 
@@ -369,6 +374,7 @@ class UndoStudentStatusTable extends AppTable {
     	$attr['type'] = 'element';
 		$attr['element'] = 'Institution.UndoStudentStatus/students';
 		$attr['data'] = $data;
+		$attr['classOptions'] = $this->institutionClasses;
 
 		return $attr;
 	}

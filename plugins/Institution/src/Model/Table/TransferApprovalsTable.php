@@ -98,7 +98,9 @@ class TransferApprovalsTable extends AppTable {
 						'student_id' => $newEntity->student_id,
 						'institution_class_id' => $classId,
 						'education_grade_id' => $newEntity->education_grade_id,
-						'student_status_id' => $newEntity->student_status_id
+						'student_status_id' => $newEntity->student_status_id.
+						'institution_id' => $newSchoolId,
+						'academic_period_id' => $periodId
 					];
 					$InstitutionClassStudentsTable->autoInsertClassStudent($institutionClassStudentObj);
 

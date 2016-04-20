@@ -14,18 +14,14 @@ class ClassStudentsBehavior extends Behavior {
 			->leftJoin(['InstitutionClassStudents' => 'institution_class_students'],
 				[	
 					'InstitutionClassStudents.education_grade_id = '.$model->aliasField('education_grade_id'),
-					'InstitutionClassStudents.student_id = '.$model->aliasField('student_id') 
-				])
-			->leftJoin(['InstitutionClasses' => 'institution_classes'], 
-				[
-					'InstitutionClassStudents.institution_class_id = InstitutionClasses.id',
-					'InstitutionClasses.institution_id = '.$model->aliasField('institution_id'),
-					'InstitutionClasses.academic_period_id = '.$model->aliasField('academic_period_id'),
+					'InstitutionClassStudents.student_id = '.$model->aliasField('student_id'),
+					'InstitutionClassStudents.institution_id = '.$model->aliasField('institution_id'),
+					'InstitutionClassStudents.academic_period_id = '.$model->aliasField('academic_period_id'),
 				]);
 
 		if (array_key_exists('institution_class_id', $options)) {
 			if (!empty($options['institution_class_id'])) {
-				$query->where(['InstitutionClasses.id' => $options['institution_class_id']]);
+				$query->where(['InstitutionClassStudents.institution_class_id' => $options['institution_class_id']]);
 			}
 		}
 		return $query;
