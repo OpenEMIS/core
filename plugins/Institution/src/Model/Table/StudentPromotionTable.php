@@ -347,19 +347,54 @@ class StudentPromotionTable extends AppTable {
 				$selectedPeriod = $request->query('from_period');
 				$educationGradeId = $request->query('grade_to_promote');
 				$classes = [];
+				$options = ['-1' => __('All Classes')];
 				if (!empty($selectedPeriod) && $selectedPeriod != -1 && !empty($educationGradeId) && $educationGradeId != -1) {			
 					$classes = $institutionClass
 						->find('list')
-						->leftJoinWith('ClassStudents')
+						->leftJoinWith('ClassGrades')
 						->where([
 							$institutionClass->aliasField('academic_period_id') => $selectedPeriod,
 							$institutionClass->aliasField('institution_id') => $institutionId,
-							'ClassStudents.education_grade_id' => $educationGradeId
+							'ClassGrades.education_grade_id' => $educationGradeId
 						])
 						->toArray();
-										
+					$options = $options + $classes;
+					$selectedClass = $request->query('class');
+					if (empty($selectedClass)) {
+						if (!empty($classes)) {
+							$selectedClass = key($classes);
+						}		
+					}
+					$studentStatuses = $this->statuses;
+					$model = $this;
+
+					$this->advancedSelectOptions($options, $selectedClass, [
+							'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
+							'callable' => function($id) use ($model, $institutionId, $selectedPeriod, $educationGradeId, $studentStatuses) {
+								if ($id == -1) {
+									return true;
+								}
+								return $model->find()
+									->innerJoin(['InstitutionClassStudents' => 'institution_class_students'],
+										[	
+											'InstitutionClassStudents.education_grade_id = '.$model->aliasField('education_grade_id'),
+											'InstitutionClassStudents.student_id = '.$model->aliasField('student_id'),
+											'InstitutionClassStudents.institution_id = '.$model->aliasField('institution_id'),
+											'InstitutionClassStudents.academic_period_id = '.$model->aliasField('academic_period_id'),
+										]
+									)
+									->where([
+										$this->aliasField('institution_id') => $institutionId,
+										$this->aliasField('academic_period_id') => $selectedPeriod,
+										$this->aliasField('student_status_id') => $studentStatuses['CURRENT'],
+										$this->aliasField('education_grade_id') => $educationGradeId,
+										'InstitutionClassStudents.institution_class_id' => $id
+									])
+									->count();
+							}
+						]);
+					$request->query['class'] = $selectedClass;
 				}
-				$options = ['-1' => __('All Classes')] + $classes;
 				$attr['options'] = $options;
 				$attr['select'] = false;
 				$attr['onChangeReload'] = 'changeClass';
