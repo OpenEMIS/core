@@ -39,18 +39,20 @@ class UndoStudentStatusTable extends AppTable {
 			'statuses' => $this->statuses
 		];
 
-		$this->institutionId = $this->Session->read('Institution.Institutions.id');
-
-		$this->institutionClasses = $institutionClassTable->find('list')
-			->where([$institutionClassTable->aliasField('institution_id') => $this->institutionId])
-			->toArray();
-
 		$this->addBehavior('Institution.UndoCurrent', $settings);
 		$this->addBehavior('Institution.UndoGraduated', $settings);
 		$this->addBehavior('Institution.UndoPromoted', $settings);
 		$this->addBehavior('Institution.UndoRepeated', $settings);
 		$this->addBehavior('Institution.ClassStudents');
 		// End
+	}
+
+	public function beforeAction(Event $event) {
+		$institutionClassTable = TableRegistry::get('Institution.InstitutionClasses');
+		$this->institutionId = $this->Session->read('Institution.Institutions.id');
+		$this->institutionClasses = $institutionClassTable->find('list')
+			->where([$institutionClassTable->aliasField('institution_id') => $this->institutionId])
+			->toArray();
 	}
 
 	public function validationDefault(Validator $validator) {
