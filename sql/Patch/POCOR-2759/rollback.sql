@@ -23,5 +23,8 @@ RENAME TABLE `z_2759_institution_assessments` TO `institution_assessments`;
 DROP TABLE IF EXISTS `institution_subject_students`;
 RENAME TABLE `z_2759_institution_subject_students` TO `institution_subject_students`;
 
+-- security_functions
+UPDATE `security_functions` SET `_view` = 'Assessments.index|Assessments.view', `_edit` = 'Assessments.edit' WHERE `id` = 1015;
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2759';
