@@ -28,7 +28,7 @@
 									</td>
 									<td><?= $obj->_matchingData['Users']->name ?></td>
 									<td><?= $obj->_matchingData['EducationGrades']->programme_grade_name ?></td>
-									<td><?= $obj->institution_class_name ?></td>
+									<td><?= isset($attr['classOptions'][$obj->institution_class_id]) ? $attr['classOptions'][$obj->institution_class_id] : '' ?></td>
 								</tr>
 							<?php endforeach ?>
 						</tbody>
@@ -72,7 +72,7 @@
 									<td><?= $obj->_matchingData['Users']->openemis_no ?></td>
 									<td><?= $obj->_matchingData['Users']->name ?></td>
 									<td><?= $obj->_matchingData['EducationGrades']->programme_grade_name ?></td>
-									<td><?= $obj->institution_class_name ?></td>
+									<td><?= isset($attr['classOptions'][$obj->institution_class_id]) ? $attr['classOptions'][$obj->institution_class_id] : '' ?></td>
 								</tr>
 							<?php endforeach ?>
 						</tbody>
