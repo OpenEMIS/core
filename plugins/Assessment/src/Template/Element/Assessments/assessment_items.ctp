@@ -187,6 +187,9 @@
 							} else {
 								$record = $item;
 							}
+							if ($field['field']=='education_subject_id') {
+								$field['value'] = $record->education_subject_name;
+							}
 					?>
 	
 						<td><?= $this->HtmlField->{$field['type']}('view', $record, $field, ['label'=>false, 'name'=>'']); ?></td>

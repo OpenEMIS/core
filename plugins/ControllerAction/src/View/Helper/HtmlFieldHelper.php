@@ -11,6 +11,7 @@ use Cake\Utility\Inflector;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
 use Cake\View\Helper\IdGeneratorTrait;
+use Cake\View\NumberHelper;
 
 use Cake\Log\Log;
 
@@ -19,7 +20,7 @@ class HtmlFieldHelper extends Helper {
 
 	public $table = null;
 
-	public $helpers = ['Html', 'Form', 'Url'];
+	public $helpers = ['Html', 'Form', 'Url', 'Number'];
 
 	public $includes = [
 		'datepicker' => [
@@ -146,6 +147,17 @@ class HtmlFieldHelper extends Helper {
 				$fieldName = $attr['fieldName'];
 			}
 			$value = $this->Form->input($fieldName, $options);
+		}
+		return $value;
+	}
+
+	public function decimal($action, Entity $data, $attr, $options=[]) {
+		$value = '';
+		if ($action == 'index' || $action == 'view') {
+			$value = $this->Number->precision($data->$attr['field'], 2);
+		} else if ($action == 'edit') {
+			$options['value'] = $this->Number->precision($data->$attr['field'], 2);
+			$value = $this->string($action, $data, $attr, $options);
 		}
 		return $value;
 	}
