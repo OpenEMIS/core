@@ -19,25 +19,22 @@ CREATE TABLE `institution_class_students` (
   `created` DATETIME NOT NULL COMMENT '',
   PRIMARY KEY (`student_id`, `institution_class_id`, `education_grade_id`),
   UNIQUE INDEX `id` (`id`),
-  INDEX `student_id` (`student_id`),
-  INDEX `institution_class_id` (`institution_class_id`),
-  INDEX `education_grade_id` (`education_grade_id`),
   INDEX `academic_period_id` (`academic_period_id`),
   INDEX `institution_id` (`institution_id`),
   INDEX `student_status_id` (`student_status_id`)
-)ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_unicode_ci;
+)ENGINE=InnoDB COLLATE utf8mb4_unicode_ci;
 
 INSERT IGNORE INTO institution_class_students
 SELECT `z_2863_institution_class_students`.`id`, 
-	`z_2863_institution_class_students`.`student_id`, 
-	`z_2863_institution_class_students`.`institution_class_id`, 
-	`z_2863_institution_class_students`.`education_grade_id`, 
-	`institution_classes`.`academic_period_id`, 
-	`institution_classes`.`institution_id`, 
-	`z_2863_institution_class_students`.`student_status_id`,
-	`z_2863_institution_class_students`.`modified_user_id`, 
-	`z_2863_institution_class_students`.`modified`, 
-	`z_2863_institution_class_students`.`created_user_id`, 
-	`z_2863_institution_class_students`.`created` 
+  `z_2863_institution_class_students`.`student_id`, 
+  `z_2863_institution_class_students`.`institution_class_id`, 
+  `z_2863_institution_class_students`.`education_grade_id`, 
+  `institution_classes`.`academic_period_id`, 
+  `institution_classes`.`institution_id`, 
+  `z_2863_institution_class_students`.`student_status_id`,
+  `z_2863_institution_class_students`.`modified_user_id`, 
+  `z_2863_institution_class_students`.`modified`, 
+  `z_2863_institution_class_students`.`created_user_id`, 
+  `z_2863_institution_class_students`.`created` 
 FROM `z_2863_institution_class_students` 
 INNER JOIN `institution_classes` ON `z_2863_institution_class_students`.`institution_class_id` = `institution_classes`.`id`;
