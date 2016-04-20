@@ -212,8 +212,7 @@ class StudentTransferTable extends AppTable {
 				->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
 				->toArray();
 
-
-			$selectedGrade = $this->queryString('education_grade_id', $gradeOptions);
+			$selectedGrade = $request->query('education_grade_id');
 			$this->advancedSelectOptions($gradeOptions, $selectedGrade, [
 				'selectOption' => false,
 				'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
@@ -489,18 +488,25 @@ class StudentTransferTable extends AppTable {
 
 		$classes = $institutionClass
 			->find('list')
-			->leftJoinWith('ClassStudents')
+			->innerJoinWith('ClassGrades')
 			->where([
 				$institutionClass->aliasField('academic_period_id') => $selectedPeriod,
 				$institutionClass->aliasField('institution_id') => $institutionId,
-				'ClassStudents.education_grade_id' => $educationGradeId
+				'ClassGrades.education_grade_id' => $educationGradeId
 			])
 			->toArray();
 		$options = ['-1' => __('All Classes')] + $classes;
 
-		if (!isset($request->query['institution_class'])) {
-			$request->query['institution_class'] = key($options);
+		$selectedClass = $request->query('institution_class');
+		if (empty($selectedClass)) {
+			if (!empty($classes)) {
+				$selectedClass = key($classes);
+			}		
 		}
+
+		$this->advancedSelectOptions($options, $selectedClass);
+		$request->query['institution_class'] = $selectedClass;
+
 		$attr['options'] = $options;
 		$attr['select'] = false;
 		$attr['onChangeReload'] = 'changeClass';

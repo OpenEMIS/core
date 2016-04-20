@@ -279,14 +279,23 @@ class UndoStudentStatusTable extends AppTable {
 			$selectedGrade = $request->query('grade');
 			
 			$institutionClassRecords = $InstitutionClasses->find('list')
-				->innerJoinWith('ClassStudents')
+				->innerJoinWith('ClassGrades')
 				->where([
 					$InstitutionClasses->aliasField('institution_id') => $institutionId, 
 					$InstitutionClasses->aliasField('academic_period_id') => $selectedPeriod,
-					'ClassStudents.education_grade_id' => $selectedGrade
+					'ClassGrades.education_grade_id' => $selectedGrade
 				])
 				->toArray();
 			$options = ['-1' => __('All Classes')] + $institutionClassRecords;
+			$selectedClass = $request->query('class');
+			if (empty($selectedClass)) {
+				if (!empty($classes)) {
+					$selectedClass = key($classes);
+				}		
+			}
+
+			$this->advancedSelectOptions($options, $selectedClass);
+			$request->query['class'] = $selectedClass;
 			$attr['options'] = $options;
 			$attr['onChangeReload'] = 'changeClass';
 		}
