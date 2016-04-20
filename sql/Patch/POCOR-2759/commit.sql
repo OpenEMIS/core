@@ -101,8 +101,8 @@ CREATE TABLE IF NOT EXISTS `assessment_grading_types` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `code` varchar(50) DEFAULT NULL,
   `name` varchar(80) NOT NULL,
-  `pass_mark` int(5) NOT NULL, 
-  `max` int(5) NOT NULL,
+  `pass_mark` decimal(6,2) NOT NULL, 
+  `max` decimal(6,2) NOT NULL,
   `result_type` varchar(20) NOT NULL,
   `visible` int(1) NOT NULL DEFAULT '1',
   `modified_user_id` int(11) DEFAULT NULL,
@@ -126,8 +126,8 @@ CREATE TABLE IF NOT EXISTS `assessment_grading_options` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `code` varchar(50) DEFAULT NULL,
   `name` varchar(80) NOT NULL,
-  `min` int(5) DEFAULT NULL,
-  `max` int(5) DEFAULT NULL,
+  `min` decimal(6,2) DEFAULT NULL,
+  `max` decimal(6,2) DEFAULT NULL,
   `order` int(3) NOT NULL,
   `visible` int(1) NOT NULL DEFAULT '1',
   `assessment_grading_type_id` int(11) NOT NULL,
@@ -211,6 +211,19 @@ GROUP BY
   `InstitutionSubjects`.`education_subject_id`
 ;
 
+-- security_functions
+UPDATE `security_functions` SET `_view` = 'Assessments.index|Results.index', `_edit` = 'Results.edit' WHERE `id` = 1015;
+
+-- patch grading types - result_type, pass_mark and max
+UPDATE assessment_grading_types
+JOIN (
+  SELECT assessment_grading_type_id, pass_mark, max, result_type
+  FROM z_2759_assessment_items
+  GROUP BY assessment_grading_type_id
+) a ON a.assessment_grading_type_id = assessment_grading_types.id
+SET assessment_grading_types.pass_mark = a.pass_mark,
+assessment_grading_types.max = a.max,
+assessment_grading_types.result_type = a.result_type;
 
 -- patch assessments
 
@@ -342,5 +355,5 @@ DELIMITER ;
 
 CALL patchAssessments;
 
--- security_functions
-UPDATE `security_functions` SET `_view` = 'Assessments.index|Results.index', `_edit` = 'Results.edit' WHERE `id` = 1015;
+
+
