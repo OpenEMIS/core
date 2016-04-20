@@ -7,7 +7,7 @@ angular.module('assessmentAdminModule', ['kd.common.svc'])
             if (target == 'assessment_items') {
                 var attr = {
                     'kdOnChangeElement': true,
-                    'kdOnChangeSourceUrl': $scope.baseUrl + '/restful/assessment-assessmentgradingtypes.json?_finder=visible,list',
+                    'kdOnChangeSourceUrl': $scope.baseUrl + '/restful/Assessment-AssessmentGradingTypes.json?_finder=visible,list',
                     'kdOnChangeTarget': 'assessment_grading_type_id'
                 }
                 kdCommonSvc.changeOptions($scope, '', attr);
