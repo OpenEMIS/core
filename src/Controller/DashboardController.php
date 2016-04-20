@@ -26,6 +26,7 @@ class DashboardController extends AppController {
 				'Institution.StudentAdmission' => ['version' => 1],
 				'Institution.StudentDropout' => ['version' => 1],
 				'Institution.InstitutionSurveys' => ['version' => 2],
+				'Institution.InstitutionPositions' => ['version' => 2],
 				'Institution.StaffPositionProfiles' => ['version' => 1],
 				'Institution.StaffTransferApprovals' => ['version' => 1],
 				'Institution.StaffTransferRequests' => ['version' => 1]

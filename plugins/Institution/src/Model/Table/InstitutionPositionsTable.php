@@ -39,6 +39,13 @@ class InstitutionPositionsTable extends AppTable {
 		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
 	}
 
+	public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
+
+    	return $events;
+    }
+
 	public function validationDefault(Validator $validator) {
 		return $validator
 			->add('position_no', 'ruleUnique', [
@@ -417,5 +424,76 @@ class InstitutionPositionsTable extends AppTable {
 				$type = __($types[$position->type]);
 				$options[$type][$position->id] = $position->name;
 			}
+	}
+
+	// Workbench.Model.onGetList
+	public function onGetWorkbenchList(Event $event, $isAdmin, $institutionRoles, ArrayObject $data) {
+		$activestatusIds = $event->subject()->Workflow->getStepsByModelCode($this->registryAlias(), 'ACTIVE');
+		$inactivestatusIds = $event->subject()->Workflow->getStepsByModelCode($this->registryAlias(), 'INACTIVE');
+		$statusIds = array_merge($activestatusIds, $inactivestatusIds);
+
+		if ($isAdmin) {
+			return []; // remove this line once workbench pagination is implemented
+		} else {
+			$where = [];
+			if (empty($institutionRoles)) {
+				return [];
+			} else {
+				$where[$this->aliasField('institution_id') . ' IN '] = array_keys($institutionRoles);
+			}
+			if (!empty($statusIds)) {
+				$where[$this->aliasField('status_id') . ' NOT IN '] = $statusIds;
+			}
+
+			$resultSet = $this
+				->find()
+				->contain(['Statuses', 'StaffPositionTitles', 'StaffPositionGrades', 'Institutions', 'ModifiedUser', 'CreatedUser'])
+				->where($where)
+				->order([$this->aliasField('created')])
+				->toArray();
+
+			$WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+			// Array to store security roles in each Workflow Step
+			$stepRoles = [];
+			foreach ($resultSet as $key => $obj) {
+				$institutionId = $obj->institution->id;
+				$stepId = $obj->status_id;
+				$roles = $institutionRoles[$institutionId];
+
+				// Permission
+				if (!array_key_exists($stepId, $stepRoles)) {
+					$stepRoles[$stepId] = $WorkflowStepsRoles->getRolesByStep($stepId);
+				}
+				// access is true if user roles exists in step roles
+				$hasAccess = count(array_intersect_key($roles, $stepRoles[$stepId])) > 0;
+				// End
+
+				if ($hasAccess) {
+					$requestTitle = sprintf('%s - %s with %s of %s', $obj->status->name, $obj->staff_position_title->name, $obj->staff_position_grade->name, $obj->institution->name);
+					$url = [
+						'plugin' => 'Institution',
+						'controller' => 'Institutions',
+						'action' => 'Positions',
+						'view',
+						$obj->id,
+						'institution_id' => $institutionId
+					];
+
+					if (is_null($obj->modified)) {
+						$receivedDate = $this->formatDate($obj->created);
+					} else {
+						$receivedDate = $this->formatDate($obj->modified);
+					}
+
+					$data[] = [
+						'request_title' => ['title' => $requestTitle, 'url' => $url],
+						'receive_date' => $receivedDate,
+						'due_date' => '<i class="fa fa-minus"></i>',
+						'requester' => $obj->created_user->username,
+						'type' => __('Institution > Positions')
+					];
+				}
+			}
+		}
 	}
 }
