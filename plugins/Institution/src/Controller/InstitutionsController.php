@@ -89,7 +89,7 @@ class InstitutionsController extends AppController  {
 
 	// AngularJS
 	public function Results() {
-		$this->set('_edit', $this->AccessControl->check(['Institutions', 'Assessments', 'edit']));
+		$this->set('_edit', $this->AccessControl->check(['Institutions', 'Results', 'edit']));
 		$this->set('ngController', 'InstitutionsResultsCtrl');
 	}
 	// End

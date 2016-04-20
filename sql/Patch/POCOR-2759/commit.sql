@@ -342,3 +342,5 @@ DELIMITER ;
 
 CALL patchAssessments;
 
+-- security_functions
+UPDATE `security_functions` SET `_view` = 'Assessments.index|Results.index', `_edit` = 'Results.edit' WHERE `id` = 1015;
