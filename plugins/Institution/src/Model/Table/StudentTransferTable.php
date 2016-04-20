@@ -27,6 +27,7 @@ class StudentTransferTable extends AppTable {
 	private $StudentAdmission = null;
 	private $Students = null;
 
+	private $institutionClasses = null;
 	private $institutionId = null;
 	private $currentPeriod = null;
 	private $statuses = [];	// Student Status
@@ -78,9 +79,8 @@ class StudentTransferTable extends AppTable {
 		$this->GradeStudents = TableRegistry::get('Institution.StudentTransfer');
 		$this->StudentAdmission = TableRegistry::get('Institution.StudentAdmission');
 	    $this->Students = TableRegistry::get('Institution.Students');
-
+	    $institutionClassTable = TableRegistry::get('Institution.InstitutionClasses');
 		$this->institutionId = $this->Session->read('Institution.Institutions.id');
-
 		$this->institutionClasses = $institutionClassTable->find('list')
 			->where([$institutionClassTable->aliasField('institution_id') => $this->institutionId])
 			->toArray();
