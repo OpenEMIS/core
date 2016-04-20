@@ -1,7 +1,7 @@
 <?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
 
 <?php if ($action == 'reconfirm') : ?>
-	<div class="input clearfix">
+	<div class="input clearfix required">
 		<label><?= isset($attr['label']) ? __($attr['label']) : __($attr['field']) ?></label>
 		<div class="input-form-wrapper">
 			<div class="table-in-view">
@@ -11,6 +11,7 @@
 							<th><?= __('OpenEmis ID') ?></th>
 							<th><?= __('Student') ?></th>
 							<th><?= __('Current Grade') ?></th>
+							<th><?= __('Class') ?></th>
 						</tr>
 					</thead>
 					<?php if (isset($attr['data'])) : ?>
@@ -27,6 +28,7 @@
 									</td>
 									<td><?= $obj->_matchingData['Users']->name ?></td>
 									<td><?= $obj->_matchingData['EducationGrades']->programme_grade_name ?></td>
+									<td><?= isset($attr['classOptions'][$obj->institution_class_id]) ? $attr['classOptions'][$obj->institution_class_id] : '' ?></td>
 								</tr>
 							<?php endforeach ?>
 						</tbody>
@@ -36,7 +38,7 @@
 		</div>
 	</div>
 <?php elseif ($action == 'add') : ?>
-	<div class="input clearfix">
+	<div class="input clearfix required">
 		<label><?= isset($attr['label']) ? __($attr['label']) : __($attr['field']) ?></label>
 		<div class="input-form-wrapper">
 			<div class="table-in-view">
@@ -47,6 +49,7 @@
 							<th><?= __('OpenEmis ID') ?></th>
 							<th><?= __('Student') ?></th>
 							<th><?= __('Current Grade') ?></th>
+							<th><?= __('Class') ?></th>
 						</tr>
 					</thead>
 					<?php if (isset($attr['data'])) : ?>
@@ -69,6 +72,7 @@
 									<td><?= $obj->_matchingData['Users']->openemis_no ?></td>
 									<td><?= $obj->_matchingData['Users']->name ?></td>
 									<td><?= $obj->_matchingData['EducationGrades']->programme_grade_name ?></td>
+									<td><?= isset($attr['classOptions'][$obj->institution_class_id]) ? $attr['classOptions'][$obj->institution_class_id] : '' ?></td>
 								</tr>
 							<?php endforeach ?>
 						</tbody>
