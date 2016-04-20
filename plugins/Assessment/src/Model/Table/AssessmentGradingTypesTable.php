@@ -28,8 +28,16 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 			->add('code', 'ruleUniqueCode', [
 			    'rule' => ['checkUniqueCode', null]
 			])
-			->add('pass_mark', 'ruleNotMoreThanMax', [
-			    'rule' => ['checkMinNotMoreThanMax'],
+			->add('pass_mark', [
+				'ruleNotMoreThanMax' => [
+			    	'rule' => ['checkMinNotMoreThanMax'],
+				],
+				'ruleIsDecimal' => [
+				    'rule' => ['decimal', 2],
+				]
+			])
+			->add('max', 'ruleIsDecimal', [
+			    'rule' => ['decimal', 2],
 			])
 			;
 		return $validator;
