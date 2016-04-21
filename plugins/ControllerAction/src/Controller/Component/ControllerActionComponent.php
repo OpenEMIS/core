@@ -14,6 +14,7 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
 ControllerActionComponent - Current Version 3.1.16
+3.1.17 (Malcolm) - buildDefaultValidation() - Added condition '&& strlen($attr['default']) == 0' when it comes to determining whether should automatically add 'notBlank' and 'requirePresence' validations
 3.1.16 (Malcolm) - renderFields() - '-- Select --' is added if ($attr['type'] != 'chosenSelect') 
 3.1.15 (Malcolm) - renderFields() - for automatic adding of '-- Select --' if (there are no '' value fields in dropdown) and $attr['select'] != false (default true)
 3.1.14 (Malcolm) - supported default selection for select boxes - renderFields() edit 
@@ -383,7 +384,11 @@ class ControllerActionComponent extends Component {
 					}
 				} else { // field not presence in validator
 					if (array_key_exists('null', $attr)) {
-						if ($attr['null'] === false && $key !== 'id' && !in_array($key, $this->ignoreFields)) {
+                        if ($attr['null'] === false // not nullable
+                            && strlen($attr['default']) == 0 // don't have a default value in database
+                            && $key !== 'id' // not a primary key
+                            && !in_array($key, $this->ignoreFields) // fields not excluded
+                        ) {
 							$validator->add($key, 'notBlank', ['rule' => 'notBlank']);
 							if ($this->isForeignKey($key)) {
 								$validator->requirePresence($key);
@@ -392,8 +397,6 @@ class ControllerActionComponent extends Component {
 					}
 				}
 			}
-			// pr('buildDefaultValidation');
-			// pr($validator);
 		}
 	}
 
