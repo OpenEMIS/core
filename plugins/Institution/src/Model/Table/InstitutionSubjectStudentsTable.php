@@ -36,7 +36,9 @@ class InstitutionSubjectStudentsTable extends AppTable {
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		$entity->id = Text::uuid();
+		if ($entity->isNew()) {
+			$entity->id = Text::uuid();
+		}
 	}
 
 	public function findResults(Query $query, array $options) {
@@ -159,7 +161,7 @@ class InstitutionSubjectStudentsTable extends AppTable {
 			;
 
 		if (!empty($gradeArray)) {
-			$deleteAssessmentItemResults->matching('AssessmentItems.Assessments', function ($q) use ($gradeArray) {
+			$deleteAssessmentItemResults->matching('Assessments', function ($q) use ($gradeArray) {
 			    return $q->where(['Assessments.education_grade_id IN ' => $gradeArray]);
 			})
 			;
