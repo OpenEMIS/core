@@ -240,19 +240,17 @@ angular.module('institutions.results.svc', ['kd.orm.svc'])
 
             if (allowEdit) {
                 cols = angular.merge(cols, {
+                    cellClass: 'oe-cell-highlight',
                     cellRenderer: function(params) {
                         if (params.value.length == 0) {
                             params.value = 0;
                         }
-                        var editing = false;
 
-                        var eCell = document.createElement('span');
-                        var eLabel = document.createTextNode(gradingOptions[params.value]['name']);
-                        eCell.setAttribute("class", "oe-editable");
+                        var eCell = document.createElement('div');
+                        eCell.setAttribute("class", "oe-cell-editable oe-select-wrapper");
                         eCell.setAttribute("oe-student", params.data.student_id);
                         eCell.setAttribute("oe-period", period.id);
                         eCell.setAttribute("oe-oldValue", params.value);
-                        eCell.appendChild(eLabel);
 
                         var eSelect = document.createElement("select");
 
@@ -269,50 +267,37 @@ angular.module('institutions.results.svc', ['kd.orm.svc'])
 
                         eSelect.value = params.value;
 
-                        eCell.addEventListener('click', function () {
-                            if (!editing) {
-                                eCell.removeChild(eLabel);
-                                eCell.appendChild(eSelect);
-                                eSelect.focus();
-                                editing = true;
-                            }
-                        });
-
-                        eSelect.addEventListener('blur', function () {
-                            if (editing) {
-                                editing = false;
-                                eCell.removeChild(eSelect);
-                                eCell.setAttribute("oe-newValue", eSelect.value);
-                                eCell.appendChild(eLabel);
-                            }
-                        });
-
                         eSelect.addEventListener('change', function () {
-                            if (editing) {
-                                editing = false;
-                                var newValue = eSelect.value;
-                                params.data[params.colDef.field] = newValue;
-                                eLabel.nodeValue = gradingOptions[newValue]['name'];
-                                eCell.removeChild(eSelect);
-                                eCell.setAttribute("oe-newValue", eSelect.value);
-                                eCell.appendChild(eLabel);
-                            }
+                            var newValue = eSelect.value;
+                            params.data[params.colDef.field] = newValue;
+                            eCell.setAttribute("oe-newValue", eSelect.value);
                         });
+
+                        eCell.appendChild(eSelect);
 
                         return eCell;
-                    }
+                    },
+                    suppressMenu: true
                 });
             } else {
                 cols = angular.merge(cols, {
                     cellRenderer: function(params) {
-                        var cellValue = (params.value.length != 0 && params.value != 0) ? gradingOptions[params.value]['name'] : '';
+                        var cellValue = '';
+                        if (params.value.length != 0 && params.value != 0) {
+                            cellValue = gradingOptions[params.value]['name'];
+                            if (gradingOptions[params.value]['code'].length > 0) {
+                                cellValue = gradingOptions[params.value]['code'] + ' - ' + cellValue;
+                            }
+                        }
+                        // var cellValue = (params.value.length != 0 && params.value != 0) ? gradingOptions[params.value]['name'] : '';
 
-                        var eCell = document.createElement('span');
+                        var eCell = document.createElement('div');
                         var eLabel = document.createTextNode(cellValue);
                         eCell.appendChild(eLabel);
 
                         return eCell;
-                    }
+                    },
+                    suppressMenu: true
                 });
             }
 
