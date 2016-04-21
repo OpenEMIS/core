@@ -1103,6 +1103,14 @@ trait MessagesTrait {
 				'end_date' => [
 					'ruleInParentAcademicPeriod' => 'Date must be within selected academic period start and end date',
 				],
+				'weight' => [
+					'ruleIsDecimal' => 'Value is not a valid decimal',
+				],
+			],
+			'AssessmentItems' => [
+				'weight' => [
+					'ruleIsDecimal' => 'Value is not a valid decimal',
+				],
 			],
 			'AssessmentGradingTypes' => [
 				'code' => [
