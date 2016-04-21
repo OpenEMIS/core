@@ -367,6 +367,10 @@ a,
     appearance: auto !important;
 }
 
+.ag-header-cell-filtered .ag-header-icon {
+    display: block !important;
+}
+
 .rtl .ag-fresh .ag-header-cell .ag-header-cell-label { 
     padding: 10px 10px 10px 35px;
 }
