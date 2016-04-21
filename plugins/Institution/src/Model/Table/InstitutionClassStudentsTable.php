@@ -7,6 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\I18n\Time;
+use Cake\Utility\Text;
 use App\Model\Table\AppTable;
 
 class InstitutionClassStudentsTable extends AppTable {
@@ -140,6 +141,7 @@ class InstitutionClassStudentsTable extends AppTable {
 		$classId = $data['institution_class_id'];
 
 		$data['subject_students'] = $this->_setSubjectStudentData($data);
+        $data['id'] = Text::uuid();
 		$entity = $this->newEntity($data);
 
 		$existingData = $this
