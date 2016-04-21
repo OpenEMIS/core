@@ -35,10 +35,11 @@ CREATE TABLE IF NOT EXISTS `z_2786_institution_students` (
   `end_date` date NOT NULL,
   `end_year` int(4) NOT NULL,
   `institution_id` int(11) NOT NULL,
+  `created` date NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_unicode_ci;
 
-INSERT IGNORE INTO `z_2786_institution_students` (`id`, `student_id`, `education_grade_id`, `academic_period_id`, `start_date`, `start_year`, `end_date`, `end_year`, `institution_id`)
+INSERT IGNORE INTO `z_2786_institution_students` (`id`, `student_id`, `education_grade_id`, `academic_period_id`, `start_date`, `start_year`, `end_date`, `end_year`, `institution_id`, `created`)
 SELECT `institution_students`.`id`, 
     `institution_students`.`student_id`, 
     `institution_students`.`education_grade_id`, 
@@ -47,24 +48,14 @@ SELECT `institution_students`.`id`,
     `institution_students`.`start_year`, 
     `institution_students`.`end_date`, 
     `institution_students`.`end_year`, 
-    `institution_students`.`institution_id` 
+    `institution_students`.`institution_id`,
+    `institution_students`.`created`
 FROM `institution_students`
 INNER JOIN `academic_periods` ON `institution_students`.`academic_period_id` = `academic_periods`.`id`
-WHERE `institution_students`.`start_date` < `academic_periods`.`start_date`;
-
-INSERT IGNORE INTO `z_2786_institution_students` (`id`, `student_id`, `education_grade_id`, `academic_period_id`, `start_date`, `start_year`, `end_date`, `end_year`, `institution_id`)
-SELECT `institution_students`.`id`, 
-    `institution_students`.`student_id`, 
-    `institution_students`.`education_grade_id`, 
-    `institution_students`.`academic_period_id`, 
-    `institution_students`.`start_date`, 
-    `institution_students`.`start_year`, 
-    `institution_students`.`end_date`, 
-    `institution_students`.`end_year`, 
-    `institution_students`.`institution_id` 
-FROM `institution_students`
-INNER JOIN `academic_periods` ON `institution_students`.`academic_period_id` = `academic_periods`.`id`
-WHERE `institution_students`.`end_date` > `academic_periods`.`end_date`;
+WHERE `institution_students`.`start_date` < `academic_periods`.`start_date` 
+    OR `institution_students`.`end_date` > `academic_periods`.`end_date`
+    OR `institution_students`.`created` = '0000-00-00'
+    OR `institution_students`.`created` > NOW();
 
 UPDATE `institution_students` 
 INNER JOIN `academic_periods` 
@@ -81,3 +72,8 @@ SET `institution_students`.`end_date` = `academic_periods`.`end_date`;
 UPDATE `institution_students`
 SET `institution_students`.`end_year` = YEAR(`institution_students`.`end_date`), 
     `institution_students`.`start_year` = YEAR(`institution_students`.`start_date`);
+
+UPDATE `institution_students`
+SET `institution_students`.`created` = '2016-01-01'
+WHERE `institution_students`.`created` = '0000-00-00'
+    OR `institution_students`.`created` > NOW();
