@@ -163,7 +163,7 @@ class HtmlFieldHelper extends Helper {
 	public function decimal($action, Entity $data, $attr, $options=[]) {
 		$value = '';
 		if ($action == 'index' || $action == 'view') {
-			$value = $data->$attr['field'];
+			$value = $data->{$attr['field']};
 		} else if ($action == 'edit') {
 			$value = $this->string($action, $data, $attr, $options);
 		}
@@ -344,7 +344,6 @@ class HtmlFieldHelper extends Helper {
 		} else if ($action == 'edit') {
 			$options['type'] = 'hidden';
 			if (array_key_exists('value', $attr)) {
-				pr($attr['value']);
 				$options['value'] = $attr['value'];
 			}
 			$fieldName = $attr['model'] . '.' . $attr['field'];
@@ -381,22 +380,25 @@ class HtmlFieldHelper extends Helper {
 		} else if ($action == 'edit') {
 			$options['type'] = 'text';
 			$options['disabled'] = 'disabled';
+			$field = $attr['field'];
+			$invalid = $data->invalid();
+
 			if (isset($attr['options']) && !isset($attr['attr']['value'])) {
-				if (!empty($data->invalid()) && isset($data->invalid()[$attr['field']])) {
-					$options['value'] = $attr['options'][$data->invalid($attr['field'])];
+				if (!empty($invalid) && array_key_exists($field, $invalid)) {
+					$options['value'] = $attr['options'][$data->invalid($field)];
 				} else {
-					$options['value'] = $attr['options'][$data->$attr['field']];
+					$options['value'] = $attr['options'][$data->{$field}];
 				}
 			} elseif (isset($attr['attr']['value'])) {
 				$options['value'] = $attr['attr']['value'];
 			} else {
-				if (!empty($data->invalid()) && isset($data->invalid()[$attr['field']])) {
-					$options['value'] = $data->invalid($attr['field']);
+				if (!empty($invalid) && array_key_exists($field, $invalid)) {
+					$options['value'] = $data->invalid($field);
 				} else {
-					$options['value'] = $data->$attr['field'];
+					$options['value'] = $data->{$field};
 				}
 			}
-			$fieldName = $attr['model'] . '.' . $attr['field'];
+			$fieldName = $attr['model'] . '.' . $field;
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
 			}
@@ -511,7 +513,8 @@ class HtmlFieldHelper extends Helper {
 		}
 
 		$field = $attr['field'];
-		if (!empty($data->invalid()) && isset($data->invalid()[$field])) {
+		$invalid = $data->invalid();
+		if (!empty($invalid) && array_key_exists($field, $invalid)) {
 			$value = $data->invalid($field);
 		} else {
 			$value = $data->$field;
@@ -556,8 +559,9 @@ class HtmlFieldHelper extends Helper {
 		if (!isset($attr['default_date'])) {
 			$attr['default_date'] = $defaultDate;
 		}
-		
-		if (!empty($data->invalid()) && isset($data->invalid()[$field])) {
+
+		$invalid = $data->invalid();
+		if (!empty($invalid) && array_key_exists($field, $invalid)) {
 			$value = $data->invalid($field);
 		} else {
 			$value = $data->$field;
@@ -627,7 +631,8 @@ class HtmlFieldHelper extends Helper {
 		}
 
 		$field = $attr['field'];
-		if (!empty($data->invalid()) && isset($data->invalid()[$field])) {
+		$invalid = $data->invalid();
+		if (!empty($invalid) && array_key_exists($field, $invalid)) {
 			$value = $data->invalid($field);
 		} else {
 			$value = $data->$field;
