@@ -10,14 +10,9 @@ class AssessmentGradingOptionsTable extends AssessmentsAppTable {
 
 		$this->belongsTo('AssessmentGradingTypes', ['className' => 'Assessment.AssessmentGradingTypes']);
 		$this->hasMany('AssessmentItemResults', ['className' => 'Assessment.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
-		// if ($this->behaviors()->has('Reorder')) {
-		// 	$this->behaviors()->get('Reorder')->config([
-		// 		'filter' => 'assessment_grading_type_id',
-		// 	]);
-		// }
+
 		$this->fields['assessment_grading_type_id']['type'] = 'hidden';
 		$this->fields['id']['type'] = 'hidden';
-		$this->fields['code']['required'] = true;
 		$this->fields['name']['required'] = true;
 		$this->fields['max']['attr']['min'] = 0;
 		$this->fields['max']['required'] = true;
@@ -44,12 +39,13 @@ class AssessmentGradingOptionsTable extends AssessmentsAppTable {
 			    'rule' => ['checkUniqueCodeWithinForm', $this->AssessmentGradingTypes],
 			   
 			])
+			->requirePresence('name')
 			->add('min', [
 				'ruleNotMoreThanMax' => [
 			    	'rule' => ['checkMinNotMoreThanMax'],
 				],
 				'ruleIsDecimal' => [
-				    'rule' => ['decimal', 2],
+				    'rule' => ['decimal', null],
 				]
 			])
 			->add('max', [
@@ -58,7 +54,7 @@ class AssessmentGradingOptionsTable extends AssessmentsAppTable {
 				    'provider' => 'table'
 				],
 				'ruleIsDecimal' => [
-				    'rule' => ['decimal', 2],
+				    'rule' => ['decimal', null],
 				]
 			])
 			;
