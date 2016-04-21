@@ -178,7 +178,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
 
             // Logic to build $scope.results for Grades type
             if ($scope.resultType == resultTypes.GRADES) {
-                angular.forEach(angular.element('.oe-editable'), function(obj, key) {
+                angular.forEach(angular.element('.oe-cell-editable'), function(obj, key) {
                     if (angular.isDefined(obj.attributes['oe-newValue'])) {
                         var studentId = obj.attributes['oe-student'].value;
                         var periodId = obj.attributes['oe-period'].value;
