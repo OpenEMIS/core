@@ -51,6 +51,10 @@ class AssessmentItemsTable extends AssessmentsAppTable {
 		$validator
 			->requirePresence('assessment_id', 'update')
 			->requirePresence('assessment_grading_type_id')
+			->allowEmpty('weight')
+			->add('weight', 'ruleIsDecimal', [
+			    'rule' => ['decimal', null],
+			])
 			;
 		return $validator;
 	}
