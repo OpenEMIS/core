@@ -82,6 +82,8 @@ class EditBehavior extends Behavior {
 					$request->data = $requestData->getArrayCopy();
 					if ($extra['patchEntity']) {
 						$entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
+						$event = $model->dispatchEvent('ControllerAction.Model.edit.afterPatch', $params, $this);
+						if ($event->isStopped()) { return $event->result; }
 					}
 
 					$process = function ($model, $entity) {
