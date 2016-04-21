@@ -7,13 +7,23 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use CustomField\Model\Behavior\RenderBehavior;
 
-use Cake\View\Helper\IdGeneratorTrait;
-
 class RenderCoordinatesBehavior extends RenderBehavior {
-	use IdGeneratorTrait;
 
-	public function initialize(array $config) {
-        parent::initialize($config);
+    // assign values for validation
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
+        $dataArray = $data->getArrayCopy();
+        if (array_key_exists('custom_field_values', $dataArray)) {
+            foreach ($dataArray['custom_field_values'] as $key => $value) {
+                if (array_key_exists('field_type', $dataArray['custom_field_values'][$key])) {
+                    if ($dataArray['custom_field_values'][$key]['field_type'] == 'COORDINATES') {
+                        $data['custom_field_values'][$key]['coordinates_value'] = [
+                            'latitude' => $dataArray['custom_field_values'][$key]['latitude'],
+                            'longitude' => $dataArray['custom_field_values'][$key]['longitude']
+                        ];
+                    }
+                }
+            }
+        }
     }
 
 	public function onGetCustomCoordinatesElement(Event $event, $action, $entity, $attr, $options=[]) {
@@ -34,8 +44,15 @@ class RenderCoordinatesBehavior extends RenderBehavior {
             }
         }
 
+        $errors = [];
         if ($action == 'view') {
-        
+
+            if (!is_null($savedValue)) {
+                $values = json_decode($savedValue);
+            } else {
+                $values = null;
+            }        
+            
         } else if ($action == 'edit') {
 
             $form = $event->subject()->Form;
@@ -43,16 +60,21 @@ class RenderCoordinatesBehavior extends RenderBehavior {
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
             $attr['fieldPrefix'] = $fieldPrefix;
             $attr['form'] = $form;
+            $postData = $entity->custom_field_values[($attr['attr']['seq'] - 1)];
+            if (!empty($postData->dirty())) {
+                $values = ($postData->invalid('coordinates_value')) ? json_decode(json_encode($postData->invalid('coordinates_value'))) : json_decode(json_encode($postData->coordinates_value));
+            } elseif (!is_null($savedValue)) {
+                $values = json_decode($savedValue);
+            } else {
+                $values = null;
+            }
+            if (!empty($postData)) {
+                $errors = $postData->errors('coordinates_value');
+            }
 
         }
 
-        if (!is_null($savedValue)) {
-            $values = json_decode($savedValue);
-        } else {
-            $values = null;
-        }
-        
-        $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['action' => $action, 'values' => $values, 'id' => $savedId, 'attr' => $attr]);
+        $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['action' => $action, 'values' => $values, 'errors' => $errors, 'id' => $savedId, 'attr' => $attr]);
 
         $event->stopPropagation();
         return $value;

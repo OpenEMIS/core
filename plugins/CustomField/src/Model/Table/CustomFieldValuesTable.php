@@ -119,21 +119,13 @@ class CustomFieldValuesTable extends AppTable {
 			    }
 			])
 			// COORDINATES validation
-			->allowEmpty('latitude', function ($context) {
-				if (array_key_exists('mandatory', $context['data'])) {
-					return !$context['data']['mandatory'];
-				}
-
-				return true;
-			})
-			->add('text_value', 'ruleTestCheck', [
-				'rule' => ['testCheck'],
-				'provider' => 'table',
-				'on' => function ($context) {
-					if (array_key_exists('params', $context['data'])) {
-						return !empty($context['data']['params']);
-					}
-			    }
+			->add('coordinates_value', 'latitude', [
+				'rule' => ['latIsValid'],
+				'provider' => 'table'
+			])
+			->add('coordinates_value', 'longitude', [
+				'rule' => ['lngIsValid'],
+				'provider' => 'table'
 			])
 			;
 
