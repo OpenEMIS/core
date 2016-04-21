@@ -98,10 +98,6 @@ class AssessmentsTable extends ControllerActionTable {
 ** edit action methods
 **
 ******************************************************************************************************************/
-    public function editAfterQuery(Event $event, Entity $entity, ArrayObject $extra) {
-        $this->_setupFields($entity);
-    }
-
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
         $newPeriodIds = (new Collection($entity->assessment_periods))->extract('id')->toArray();
         $oldPeriodIds = (new Collection($entity->getOriginal('assessment_periods')))->extract('id')->toArray();
@@ -125,11 +121,20 @@ class AssessmentsTable extends ControllerActionTable {
 
 /******************************************************************************************************************
 **
-** add action methods
+** addEdit action methods
 **
 ******************************************************************************************************************/
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
         $this->_setupFields($entity);
+    }
+
+    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
+        $data = $requestData[$this->alias()];
+        if (!empty($data['id'])) {
+            foreach ($data['assessment_periods'] as $key => $value) {
+                $requestData[$this->alias()]['assessment_periods'][$key]['assessment_id'] = $data['id'];
+            }
+        }
     }
 
 
@@ -260,5 +265,4 @@ class AssessmentsTable extends ControllerActionTable {
 
         return compact('programmeOptions', 'selectedProgramme', 'gradeOptions', 'selectedGrade', 'academicPeriodOptions', 'selectedAcademicPeriod');
     }
-
 }
