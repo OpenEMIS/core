@@ -109,6 +109,10 @@ class AssessmentPeriodsTable extends AssessmentsAppTable {
 			->add('end_date', 'ruleInParentAcademicPeriod', [
 			    'rule' => ['inParentAcademicPeriod', $this->Assessments],
 			])
+			->allowEmpty('weight')
+			->add('weight', 'ruleIsDecimal', [
+			    'rule' => ['decimal', null],
+			])
 			;
 		return $validator;
 	}
