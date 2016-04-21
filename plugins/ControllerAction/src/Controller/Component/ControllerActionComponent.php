@@ -385,7 +385,7 @@ class ControllerActionComponent extends Component {
                 } else { // field not presence in validator
                     if (array_key_exists('null', $attr)) {
                         if ($attr['null'] === false // not nullable
-                            && strlen($attr['default']) == 0 // don't have a default value in database
+                            && (array_key_exists('default', $attr) && strlen($attr['default']) == 0) // don't have a default value in database
                             && $key !== 'id' // not a primary key
                             && !in_array($key, $this->ignoreFields) // fields not excluded
                         ) {

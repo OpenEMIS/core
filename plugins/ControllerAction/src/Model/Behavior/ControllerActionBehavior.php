@@ -66,7 +66,7 @@ class ControllerActionBehavior extends Behavior {
                 if (array_key_exists('null', $attr)) {
                     $ignoreFields = $this->config('fields.excludes');
                     if ($attr['null'] === false // not nullable
-                        && strlen($attr['default']) == 0 // don't have a default value in database
+                        && (array_key_exists('default', $attr) && strlen($attr['default']) == 0) // don't have a default value in database
                         && $col !== 'id' // not a primary key
                         && !in_array($col, $ignoreFields) // fields not excluded
                     ) {
