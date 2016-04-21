@@ -16,7 +16,7 @@ class AngularController extends AppController {
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 
-		$this->Auth->allow(['app']);
+		$this->Auth->allow(['app', 'inputs']);
 	}
 
 	public function app() {
