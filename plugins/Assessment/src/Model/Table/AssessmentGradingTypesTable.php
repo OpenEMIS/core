@@ -33,11 +33,11 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 			    	'rule' => ['checkMinNotMoreThanMax'],
 				],
 				'ruleIsDecimal' => [
-				    'rule' => ['decimal', 2],
+				    'rule' => ['decimal', null],
 				]
 			])
 			->add('max', 'ruleIsDecimal', [
-			    'rule' => ['decimal', 2],
+			    'rule' => ['decimal', null],
 			])
 			;
 		return $validator;
