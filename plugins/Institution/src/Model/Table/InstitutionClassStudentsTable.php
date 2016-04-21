@@ -7,6 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\I18n\Time;
+use Cake\Utility\Text;
 use App\Model\Table\AppTable;
 
 class InstitutionClassStudentsTable extends AppTable {
@@ -21,6 +22,8 @@ class InstitutionClassStudentsTable extends AppTable {
 		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('StudentStatuses',	['className' => 'Student.StudentStatuses']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
 
 		$this->hasMany('SubjectStudents', [
@@ -77,6 +80,12 @@ class InstitutionClassStudentsTable extends AppTable {
     		}
     	}
     }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+    	if ($entity->isNew()) {
+    		$entity->id = Text::uuid();
+    	}
+	}
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
     	$query
@@ -138,7 +147,6 @@ class InstitutionClassStudentsTable extends AppTable {
 		$studentId = $data['student_id'];
 		$gradeId = $data['education_grade_id'];
 		$classId = $data['institution_class_id'];
-
 		$data['subject_students'] = $this->_setSubjectStudentData($data);
 		$entity = $this->newEntity($data);
 
