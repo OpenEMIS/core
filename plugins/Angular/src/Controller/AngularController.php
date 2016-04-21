@@ -16,7 +16,7 @@ class AngularController extends AppController {
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 
-		$this->Auth->allow(['app']);
+		$this->Auth->allow(['app', 'inputs']);
 	}
 
 	public function app() {
@@ -51,7 +51,7 @@ class AngularController extends AppController {
 
 			$context = [
 		           	'schema' => $table->schema(),
-		           	'errors' => '{{errors[key].'.$requestAttr['field'].'}}'
+		           	'errors' => '{{errors.'.$requestAttr['model'].'[key].'.$requestAttr['field'].'}}'
 		        ];
 			$this->set('context', $context);
 
