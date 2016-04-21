@@ -61,6 +61,14 @@ class HtmlFieldHelper extends Helper {
 		}
 	}
 
+	private function patchInvalidFields($data, $field, $options) {
+		$invalid = $data->invalid();
+		if (!empty($invalid) && array_key_exists($field, $invalid)) {
+			$options['value'] = $data->invalid($field);
+		}
+		return $options;
+	}
+
 	public function dispatchEvent($subject, $eventKey, $method=null, $params=[]) {
 		$eventMap = $subject->implementedEvents();
 		$event = new Event($eventKey, $this, $params);
@@ -146,13 +154,7 @@ class HtmlFieldHelper extends Helper {
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
 			}
-			if (!array_key_exists('value', $options) || empty($options['value'])) {
-				if (!empty($data->invalid()) && isset($data->invalid()[$attr['field']])) {
-					$options['value'] = $data->invalid($attr['field']);
-				} else {
-					$options['value'] = $data->$attr['field'];
-				}
-			}
+			$options = $this->patchInvalidFields($data, $attr['field'], $options);
 			$value = $this->Form->input($fieldName, $options);
 		}
 		return $value;
@@ -181,13 +183,7 @@ class HtmlFieldHelper extends Helper {
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
 			}
-			if (!array_key_exists('value', $options) || empty($options['value'])) {
-				if (!empty($data->invalid()) && isset($data->invalid()[$attr['field']])) {
-					$options['value'] = $data->invalid($attr['field']);
-				} else {
-					$options['value'] = $data->$attr['field'];
-				}
-			}
+			$options = $this->patchInvalidFields($data, $attr['field'], $options);
 			$value = $this->Form->input($fieldName, $options);
 		}
 		return $value;
@@ -203,13 +199,7 @@ class HtmlFieldHelper extends Helper {
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
 			}
-			if (!array_key_exists('value', $options) || empty($options['value'])) {
-				if (!empty($data->invalid()) && isset($data->invalid()[$attr['field']])) {
-					$options['value'] = $data->invalid($attr['field']);
-				} else {
-					$options['value'] = $data->$attr['field'];
-				}
-			}
+			$options = $this->patchInvalidFields($data, $attr['field'], $options);
 			$value = $this->Form->input($fieldName, $options);
 		}
 		return $value;
@@ -227,13 +217,7 @@ class HtmlFieldHelper extends Helper {
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
 			}
-			if (!array_key_exists('value', $options) || empty($options['value'])) {
-				if (!empty($data->invalid()) && isset($data->invalid()[$attr['field']])) {
-					$options['value'] = $data->invalid($attr['field']);
-				} else {
-					$options['value'] = $data->$attr['field'];
-				}
-			}
+			$options = $this->patchInvalidFields($data, $attr['field'], $options);
 			$value = $this->Form->input($fieldName, $options);
 		}
 		return $value;
@@ -347,13 +331,7 @@ class HtmlFieldHelper extends Helper {
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
 			}
-			if (!array_key_exists('value', $options) || empty($options['value'])) {
-				if (!empty($data->invalid()) && isset($data->invalid()[$attr['field']])) {
-					$options['value'] = $data->invalid($attr['field']);
-				} else {
-					$options['value'] = $data->$attr['field'];
-				}
-			}
+			$options = $this->patchInvalidFields($data, $attr['field'], $options);
 			$value = $this->Form->input($fieldName, $options);
 		}
 		return $value;
@@ -366,19 +344,14 @@ class HtmlFieldHelper extends Helper {
 		} else if ($action == 'edit') {
 			$options['type'] = 'hidden';
 			if (array_key_exists('value', $attr)) {
+				pr($attr['value']);
 				$options['value'] = $attr['value'];
 			}
 			$fieldName = $attr['model'] . '.' . $attr['field'];
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
 			}
-			if (!array_key_exists('value', $options) || empty($options['value'])) {
-				if (!empty($data->invalid()) && isset($data->invalid()[$attr['field']])) {
-					$options['value'] = $data->invalid($attr['field']);
-				} else {
-					$options['value'] = $data->$attr['field'];
-				}
-			}
+			$options = $this->patchInvalidFields($data, $attr['field'], $options);
 			$value = $this->Form->input($fieldName, $options);
 		}
 		return $value;
