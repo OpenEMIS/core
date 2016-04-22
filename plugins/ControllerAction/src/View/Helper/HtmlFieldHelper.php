@@ -62,9 +62,11 @@ class HtmlFieldHelper extends Helper {
 	}
 
 	private function patchInvalidFields($data, $field, $options) {
-		$invalid = $data->invalid();
-		if (!empty($invalid) && array_key_exists($field, $invalid)) {
-			$options['value'] = $data->invalid($field);
+		if (!is_null($data)) {
+			$invalid = $data->invalid();
+			if (!empty($invalid) && array_key_exists($field, $invalid)) {
+				$options['value'] = $data->invalid($field);
+			}
 		}
 		return $options;
 	}
