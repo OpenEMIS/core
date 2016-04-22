@@ -1,3 +1,11 @@
+v3.5.2
+- Added Weights to Assessment Items and Assessment Periods for calculating results
+- Improved UI on Results data entry
+- Position workflow items will now appear on workbench	
+- Fixed a bug that caused surveys not showing in workbench for school principal
+- Fixed a bug that caused 404 error in Classes -> Add when an academic period with no available grades is selected
+- Fixed a bug that prevent user from creating new students in institution	
+
 v3.5.1
 - Attachment is now an optional field in Staff Qualifications
 - Added Position Type to Staff reports

@@ -17,6 +17,7 @@ trait MessagesTrait {
 			'noGradingTypes' => 'You need to configure Grading Types first.',
 			'addAssessmentItem' => 'Add Assessment Item',
 			'assessmentItems' => 'Assessment Items',
+			'assessmentPeriods' => 'Assessment Periods',
 		],
 		'CustomGroups' => [
 			'custom_modules' => 'Module'
@@ -196,20 +197,8 @@ trait MessagesTrait {
 		// 	'last_date_absent' => 'Last Day Of Absence'
 		// ],
 		'InstitutionAssessments' => [
-			'noSubjects' => 'There are no available Education Subjects.',
-			'noClasses' => 'No Available Classes',
-			'noStudents' => 'No Available Students',
-			'mark' => 'Mark',
-			'grading' => 'Grading',
-			'save' => [
-				'draft' => 'Assessment record has been saved to draft successfully.',
-				'final' => 'Assessment record has been submitted successfully.',
-				'failed' => 'The record is not saved due to errors encountered.',
-			],
-			'reject' => [
-				'success' => 'The record has been rejected successfully.',
-				'failed' => 'The record is not rejected due to errors encountered.'
-			],
+			'noAssessments' => 'No Assessments',
+			'noClasses' => 'No Classes'
 		],
 		'InstitutionSurveys' => [
 			'save' => [
@@ -1101,6 +1090,54 @@ trait MessagesTrait {
 				'later' => 'Time should be later than or equal to %s',
 				'between' => 'Time should be between %s and %s (inclusive)'
 			]
+		],
+		'Assessment' => [
+			'AssessmentPeriods' => [
+				'code' => [
+					'ruleUniqueCode' => 'Code must be unique',
+					'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form',
+				],
+				'start_date' => [
+					'ruleInParentAcademicPeriod' => 'Date must be within selected academic period start and end date',
+				],
+				'end_date' => [
+					'ruleInParentAcademicPeriod' => 'Date must be within selected academic period start and end date',
+				],
+				'weight' => [
+					'ruleIsDecimal' => 'Value is not a valid decimal',
+				],
+			],
+			'AssessmentItems' => [
+				'weight' => [
+					'ruleIsDecimal' => 'Value is not a valid decimal',
+				],
+			],
+			'AssessmentGradingTypes' => [
+				'code' => [
+					'ruleUniqueCode' => 'Code must be unique',
+				],
+				'pass_mark' => [
+					'ruleNotMoreThanMax' => 'Min value cannot be more than max value',
+					'ruleIsDecimal' => 'Value is not a valid decimal',
+				],
+				'max' => [
+					'ruleIsDecimal' => 'Value is not a valid decimal',
+				],
+			],
+			'GradingOptions' => [
+				'code' => [
+					'ruleUniqueCode' => 'Code must be unique',
+					'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form',
+				],
+				'min' => [
+					'ruleNotMoreThanMax' => 'Min value cannot be more than max value',
+					'ruleIsDecimal' => 'Value is not a valid decimal',
+				],
+				'max' => [
+					'ruleNotMoreThanGradingTypeMax' => 'Grading Option max value cannot be more than Grading Type max value',
+					'ruleIsDecimal' => 'Value is not a valid decimal',
+				],
+			],
 		],
 
 	];
