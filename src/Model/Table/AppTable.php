@@ -386,29 +386,32 @@ class AppTable extends Table {
 		$controller->set(compact('toolbarButtons', 'indexButtons'));
 	}
 
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-		$primaryKey = $this->primaryKey();
-		$id = $entity->$primaryKey;
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+        $primaryKey = $this->primaryKey();
 
-		if (array_key_exists('view', $buttons)) {
-			$buttons['view']['url'][1] = $id;
-		}
-		if (array_key_exists('edit', $buttons)) {
-			$buttons['edit']['url'][1] = $id;
-		}
-		if (array_key_exists('remove', $buttons)) {
-			if ($buttons['remove']['strategy'] == 'cascade') {
-				$buttons['remove']['attr']['data-toggle'] = 'modal';
-				$buttons['remove']['attr']['data-target'] = '#delete-modal';
-				$buttons['remove']['attr']['field-target'] = '#recordId';
-				$buttons['remove']['attr']['field-value'] = $id;
-				$buttons['remove']['attr']['onclick'] = 'ControllerAction.fieldMapping(this)';
-			} else {
-				$buttons['remove']['url'][1] = $id;
-			}
-		}
-		return $buttons;
-	}
+        if (!is_array($primaryKey)) {
+            $id = $entity->$primaryKey;
+            if (array_key_exists('view', $buttons)) {
+                $buttons['view']['url'][1] = $id;
+            }
+            if (array_key_exists('edit', $buttons)) {
+                $buttons['edit']['url'][1] = $id;
+            }
+
+            if (array_key_exists('remove', $buttons)) {
+                if ($buttons['remove']['strategy'] == 'cascade') {
+                    $buttons['remove']['attr']['data-toggle'] = 'modal';
+                    $buttons['remove']['attr']['data-target'] = '#delete-modal';
+                    $buttons['remove']['attr']['field-target'] = '#recordId';
+                    $buttons['remove']['attr']['field-value'] = $id;
+                    $buttons['remove']['attr']['onclick'] = 'ControllerAction.fieldMapping(this)';
+                } else {
+                    $buttons['remove']['url'][1] = $id;
+                }
+            }
+        }
+        return $buttons;
+    }
 
 	public function findVisible(Query $query, array $options) {
 		return $query->where([$this->aliasField('visible') => 1]);
