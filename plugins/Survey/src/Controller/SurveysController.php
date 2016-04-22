@@ -18,6 +18,7 @@ class SurveysController extends AppController
 			'Status' => ['className' => 'Survey.SurveyStatuses']
 		];
 		$this->loadComponent('Paginator');
+		$this->attachAngularModules();
     }
 
     public function beforeFilter(Event $event) {
@@ -40,6 +41,24 @@ class SurveysController extends AppController
 
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $this->request->action);
+	}
+
+	public function Rules() {
+		$this->set('ngController', 'SurveyRulesCtrl');
+	}
+
+	private function attachAngularModules() {
+		$action = $this->request->action;
+
+		switch ($action) {
+			case 'Rules':
+				$this->Angular->addModules([
+					'alert.svc',
+					'survey.rules.ctrl',
+					'survey.rules.svc'
+				]);
+				break;
+		}
 	}
 
 	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
