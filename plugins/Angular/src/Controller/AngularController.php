@@ -29,7 +29,7 @@ class AngularController extends AppController {
 		if (is_array($requestAttr)) {
 			$table = TableRegistry::get($requestAttr['className']);
 			$fields = array_fill_keys(array_keys($table->fields), '');
-			$data = $table->newEntity($fields);
+			$data = $table->newEntity($fields, ['validate' => false]);
 
 			if (isset($requestAttr['fieldName'])) {
 				$requestAttr['attr']['name'] = $requestAttr['fieldName'];
