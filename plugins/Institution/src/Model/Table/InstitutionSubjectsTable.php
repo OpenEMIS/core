@@ -473,10 +473,15 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 		foreach($entity->subject_students as $key => $record) {
 			$k = $record->student_id;
 			if (array_key_exists('subject_students', $data[$this->alias()])) {
-				if (!array_key_exists($k, $data[$this->alias()]['subject_students'])) {			
+				if (!array_key_exists($k, $data[$this->alias()]['subject_students'])) {
 					$data[$this->alias()]['subject_students'][$k] = [
 						'id' => $record->id,
-						'status' => 0 
+						'status' => 0,
+						'student_id' => $k,
+						'institution_class_id' => $record->institution_class_id,
+						'institution_id' => $record->institution_id,
+						'academic_period_id' => $record->academic_period_id,
+						'education_subject_id' => $record->education_subject_id
 					];
 				} else {
 					$data[$this->alias()]['subject_students'][$k]['id'] = $record->id;
@@ -484,10 +489,16 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 			} else {
 				$data[$this->alias()]['subject_students'][$k] = [
 					'id' => $record->id,
-					'status' => 0 
+					'status' => 0,
+					'student_id' => $k,
+					'institution_class_id' => $record->institution_class_id,
+					'institution_id' => $record->institution_id,
+					'academic_period_id' => $record->academic_period_id,
+					'education_subject_id' => $record->education_subject_id
 				];
 			}
 		}
+
 		$checkedStaff = [];
 		foreach($entity->subject_staff as $key => $record) {
 			$k = $record->staff_id;
@@ -637,7 +648,7 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 		 */
 		$this->fields['education_subject_id']['type'] = 'readonly';
 		$this->fields['education_subject_id']['attr']['value'] = $this->EducationSubjects->get($entity->education_subject_id)->name;
-	
+
 		return $entity;
 	}
 
@@ -705,11 +716,14 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 			$classId = $entity->toArray()['institution_classes'][0]['id'];
 		}
 		$data = [
-			'id'=>$this->getExistingRecordId($id, $entity, $persona),
-			'student_id'=>$id,
-			'institution_subject_id'=>$entity->id,
-			'institution_class_id'=>$classId,
-			'status'=>1,
+			'id' => $this->getExistingRecordId($id, $entity, $persona),
+			'student_id' => $id,
+			'institution_subject_id' => $entity->id,
+			'institution_class_id' => $classId,
+			'institution_id' => $entity->institution_id,
+			'academic_period_id' => $entity->academic_period_id,
+			'education_subject_id' => $entity->education_subject_id,
+			'status' => 1
 		];
 		if (strtolower($persona)=='students') {
 			$userData = $this->Institutions->Students->find()->contain(['Users.Genders', 'StudentStatuses'])->where(['student_id'=>$id])->first();
