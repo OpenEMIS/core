@@ -69,6 +69,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
             rowData: [],
             headerHeight: 38,
             rowHeight: 38,
+            minColWidth: 200,
             enableColResize: false,
             enableSorting: true,
             unSortIcon: true,
@@ -115,8 +116,11 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
             return false;
         } else {
             if ($scope.gridOptions != null) {
-                $scope.gridOptions.api.setColumnDefs(response.data);
-                $scope.gridOptions.api.sizeColumnsToFit();
+                $scope.gridOptions.api.setColumnDefs(response.data);                
+                console.log(Object.keys(response.data).length);
+                if (Object.keys(response.data).length < 15) {
+                    $scope.gridOptions.api.sizeColumnsToFit();
+                }
             }
 
             return true;
