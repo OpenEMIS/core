@@ -48,7 +48,7 @@ class RecordBehavior extends Behavior {
 	];
 
 	// value for these field types will be saved on custom_field_values
-	private $fieldValueArray = ['TEXT', 'NUMBER', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'DATE', 'TIME'];
+	private $fieldValueArray = ['TEXT', 'NUMBER', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'DATE', 'TIME', 'FILE'];
 
 	private $CustomFieldValues = null;
 	private $CustomTableCells = null;
@@ -94,6 +94,7 @@ class RecordBehavior extends Behavior {
 		$this->_table->addBehavior('CustomField.RenderTable');
 		$this->_table->addBehavior('CustomField.RenderDate');
 		$this->_table->addBehavior('CustomField.RenderTime');
+		$this->_table->addBehavior('CustomField.RenderFile');
 		$this->_table->addBehavior('CustomField.RenderStudentList');
 
 		// If tabSection is not set, added to handle Section Header
