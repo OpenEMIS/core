@@ -77,13 +77,17 @@ class AssessmentsTable extends ControllerActionTable {
 **
 ******************************************************************************************************************/
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
-        $query->contain([
+        $contain = [
             'AssessmentItems.EducationSubjects',
-            'AssessmentItems.GradingTypes',
             'AssessmentPeriods',
             'EducationGrades',
             'AcademicPeriods'
-        ]);
+        ];
+
+        if ($this->action == 'view') {
+            $contain[] = 'AssessmentItems.GradingTypes';
+        }
+        $query->contain($contain);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
