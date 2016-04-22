@@ -515,11 +515,13 @@ class HtmlFieldHelper extends Helper {
 		}
 
 		$field = $attr['field'];
-		$invalid = $data->invalid();
-		if (!empty($invalid) && array_key_exists($field, $invalid)) {
-			$value = $data->invalid($field);
-		} else {
-			$value = $data->$field;
+		if (!is_null($data)) {
+			$invalid = $data->invalid();
+			if (!empty($invalid) && array_key_exists($field, $invalid)) {
+				$value = $data->invalid($field);
+			} else {
+				$value = $data->$field;
+			}
 		}
 
 		if ($action == 'index' || $action == 'view') {
@@ -562,11 +564,13 @@ class HtmlFieldHelper extends Helper {
 			$attr['default_date'] = $defaultDate;
 		}
 
-		$invalid = $data->invalid();
-		if (!empty($invalid) && array_key_exists($field, $invalid)) {
-			$value = $data->invalid($field);
-		} else {
-			$value = $data->$field;
+		if (!is_null($data)) {
+			$invalid = $data->invalid();
+			if (!empty($invalid) && array_key_exists($field, $invalid)) {
+				$value = $data->invalid($field);
+			} else {
+				$value = $data->$field;
+			}
 		}
 		
 		if ($action == 'index' || $action == 'view') {
@@ -633,11 +637,14 @@ class HtmlFieldHelper extends Helper {
 		}
 
 		$field = $attr['field'];
-		$invalid = $data->invalid();
-		if (!empty($invalid) && array_key_exists($field, $invalid)) {
-			$value = $data->invalid($field);
-		} else {
-			$value = $data->$field;
+
+		if (!is_null($data)) {
+			$invalid = $data->invalid();
+			if (!empty($invalid) && array_key_exists($field, $invalid)) {
+				$value = $data->invalid($field);
+			} else {
+				$value = $data->$field;
+			}
 		}
 
 		if ($action == 'index' || $action == 'view') {
