@@ -1128,6 +1128,88 @@ class ValidationBehavior extends Behavior {
 		} else {
 			return true;
 		}
-
 	}
+
+	public static function checkUniqueCode($code, $groupField, array $globalData) {
+		$model = $globalData['providers']['table'];
+		$count = 0;
+		if (is_null($groupField) || empty($groupField) || !$groupField) {
+	    	if (!$globalData['newRecord']) {
+		      	$count =  $model->find()
+				      		->where([
+				      			$model->aliasField('id') .' != ' => $globalData['data']['id'],
+				      			$model->aliasField('code') => $code,
+				      		])
+				      		->count();
+			} else {
+		      	$count =  $model->find()
+				      		->where([$model->aliasField('code') => $code])
+				      		->count();
+			}
+	    } else {
+	    	if (!$globalData['newRecord']) {
+		      	$count =  $model->find()
+				      		->where([
+				      			$model->aliasField('id') .' != ' => $globalData['data']['id'],
+				      			$model->aliasField('code') => $code,
+				      			$model->aliasField($groupField) => $globalData['data'][$groupField],
+				      		])
+				      		->count();
+			}
+	    }
+        return $count==0;
+    }
+
+	public static function checkUniqueCodeWithinForm($code, $parentModel, array $globalData) {
+		$model = $globalData['providers']['table'];
+		$count = 0;
+		$modelAssociation = null;
+		foreach ($parentModel->associations() as $assoc) {
+			if ($assoc->name()==$model->alias()) {
+				$modelAssociation = $assoc;
+				break;
+			}
+		}
+      	foreach ($parentModel->request->data[$parentModel->alias()][$modelAssociation->property()] as $key => $value) {
+      		if ($value['code']==$code) {
+      			$count++;
+      		}
+      	}
+        return $count<2;
+    }
+
+	public static function inParentAcademicPeriod($field, $parentModel, $globalData) {
+		$globalPostData = $parentModel->request->data;
+		$parentPostData = $globalPostData[$parentModel->alias()];
+		$modelPostData = $globalData['data'];
+
+      	if (!empty($parentPostData['academic_period_id']) && !empty($field)) {
+			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			if ($AcademicPeriods->exists($parentPostData['academic_period_id'])) {
+				$periodObj = $AcademicPeriods->get($parentPostData['academic_period_id']);
+				$date = strtotime($field);
+
+				$academicPeriodStartDate = (!is_null($periodObj['start_date'])) ? $periodObj['start_date']->toUnixString() : null;
+				$academicPeriodEndDate = (!is_null($periodObj['end_date'])) ? $periodObj['end_date']->toUnixString() : null;
+
+				$rangecheck = ($date >= $academicPeriodStartDate) && 
+				(is_null($academicPeriodEndDate) ||
+					(!is_null($academicPeriodEndDate) && ($date <= $academicPeriodEndDate))
+				)
+				;
+				return $rangecheck;
+
+			} else {
+				return __('Bad Academic Period Id');
+			}
+		} else if (!empty($parentPostData['academic_period_id'])) {
+			return __('Parent Academic Period Id cannot be empty');
+		}
+
+		return true;
+	}
+
+	public static function checkMinNotMoreThanMax($minValue, array $globalData) {
+        return intVal($minValue) <= intVal($globalData['data']['max']);
+    }
 }
