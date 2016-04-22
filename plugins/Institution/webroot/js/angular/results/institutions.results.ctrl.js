@@ -69,11 +69,13 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
             rowData: [],
             headerHeight: 38,
             rowHeight: 38,
-            enableColResize: true,
+            enableColResize: false,
             enableSorting: true,
             unSortIcon: true,
             enableFilter: true,
             suppressMenuHide: true,
+            suppressCellSelection: true,
+            suppressMovableColumns: true,
             singleClickEdit: true,
             onCellValueChanged: function(params) {
                 if (params.newValue != params.oldValue) {
