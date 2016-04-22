@@ -233,6 +233,19 @@ a,
 
 /* Ag-Grid Overwrites */
 
+.ag-fresh {
+    overflow: hidden;
+}
+
+.ag-fresh .ag-root {
+    min-height: 200px;
+}
+
+.ag-height-fixed {
+    height: 100%;
+    min-height: 200px;
+}
+
 .ag-fresh .ag-header-cell .ag-header-cell-label {
     padding: 10px 35px 10px 10px;
     cursor: pointer;
@@ -245,11 +258,6 @@ a,
 
 .ag-fresh .ag-cell {
     padding: 8px !important;
-}
-
-.ag-fresh .ag-cell,
-.ag-fresh .ag-header-cell-text {
-    font-size: 14px;
 }
 
 .ag-fresh .ag-cell-focus {
@@ -311,9 +319,15 @@ a,
 }
 
 .ag-fresh .ag-header-cell-menu-button {
-    line-height: 15px !important;
+    line-height: 14px !important;
     z-index: 1;
     background-color: #F6F6F6;
+}
+
+.ag-fresh .ag-header-cell-menu-button,
+.ag-header-icon .ag-sort-ascending-icon,
+.ag-header-icon .ag-sort-descending-icon {
+    display: inline !important;
 }
 
 .ag-fresh .ag-header-cell-menu-button:hover {
@@ -363,11 +377,6 @@ a,
     content: "\f0dc";
 }
 
-.ag-height-fixed {
-    height: 600px;
-    min-height: 200px;
-}
-
 .ag-fresh .ag-header-row div.ag-header-cell {
     border-color: #DDD;
     border-style: solid;
@@ -386,16 +395,17 @@ a,
     appearance: auto !important;
 }
 
-.ag-header-cell-filtered .ag-header-icon {
-    display: block !important;
-}
-
 .ag-fresh .ag-cell:last-child {
     border-right: 1px dotted #DDD !important;
 }
 
 .ag-fresh .ag-header-cell:last-child {
     border-right: 1px solid #DDD !important;
+}
+
+.rtl .ag-fresh .ag-cell,
+.rtl .ag-fresh .ag-header-cell-text {
+    font-size: 14px;
 }
 
 .rtl .ag-fresh .ag-header-cell .ag-header-cell-label { 
@@ -418,7 +428,8 @@ a,
     float: right;
 }
 
-.rtl .ag-sort-descending-icon:after, .ag-sort-none-icon:after, 
+.rtl .ag-sort-descending-icon:after, 
+.rtl .ag-sort-none-icon:after, 
 .rtl .ag-fresh .oe-cell-editable.oe-select-wrapper:after, 
 .rtl .ag-fresh .ag-filter div div:after,
 .rtl .ag-sort-ascending-icon:after, 
@@ -435,4 +446,8 @@ a,
 
 .rtl .ag-fresh .ag-menu {
     margin-left: 212px;
+}
+
+.rtl .ag-fresh .ag-header-cell-menu-button {
+    float: left;
 }
