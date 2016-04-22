@@ -12,4 +12,12 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
 
 		$this->removeBehavior('Reorder');
 	}
+
+	public function findDropDownQuestions(Query $query, array $options)
+	{
+		$query
+			->matching('CustomFields', function ($q) {
+				return $q->where(['field_type' => 'DROPDOWN']);
+			});
+	}
 }
