@@ -56,6 +56,7 @@ class InstitutionSubjectStudentsTable extends AppTable {
 			->select([
 				'uuid' => $ItemResults->aliasField('id'),
 				'marks' => $ItemResults->aliasField('marks'),
+				'grading_option_id' => $ItemResults->aliasField('assessment_grading_option_id'),
 				'assessment_period_id' => $ItemResults->aliasField('assessment_period_id'),
 				'student_id' => $this->aliasField('student_id'),
 				'total_mark' => $this->aliasField('total_mark'),

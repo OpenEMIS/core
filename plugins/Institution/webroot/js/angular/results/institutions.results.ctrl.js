@@ -2,6 +2,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
 .controller('InstitutionsResultsCtrl', function($scope, $filter, UtilsSvc, AlertSvc, InstitutionsResultsSvc) {
     $scope.action = 'view';
     $scope.message = null;
+    $scope.resultType = null;
     $scope.results = {};
     $scope.gridOptions = null;
 
@@ -68,11 +69,13 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
             rowData: [],
             headerHeight: 38,
             rowHeight: 38,
-            enableColResize: true,
+            enableColResize: false,
             enableSorting: true,
             unSortIcon: true,
             enableFilter: true,
             suppressMenuHide: true,
+            suppressCellSelection: true,
+            suppressMovableColumns: true,
             singleClickEdit: true,
             onCellValueChanged: function(params) {
                 if (params.newValue != params.oldValue) {
@@ -102,10 +105,21 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
     };
 
     $scope.resetColumnDefs = function(action, subject, periods) {
-        var columnDefs = InstitutionsResultsSvc.getColumnDefs(action, subject, periods);
-        if ($scope.gridOptions != null) {
-            $scope.gridOptions.api.setColumnDefs(columnDefs);
-            $scope.gridOptions.api.sizeColumnsToFit();
+        var response = InstitutionsResultsSvc.getColumnDefs(action, subject, periods);
+
+        if (angular.isDefined(response.error)) {
+            // No Grading Options
+            console.log(response.error);
+            AlertSvc.warning($scope, response.error);
+
+            return false;
+        } else {
+            if ($scope.gridOptions != null) {
+                $scope.gridOptions.api.setColumnDefs(response.data);
+                $scope.gridOptions.api.sizeColumnsToFit();
+            }
+
+            return true;
         }
     };
 
@@ -113,6 +127,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
         AlertSvc.reset($scope);
         $scope.subject = subject;
         $scope.education_subject_id = subject.id;
+        $scope.resultType = subject.grading_type.result_type;
         if ($scope.gridOptions != null) {
             // update value in context
             $scope.gridOptions.context.education_subject_id = subject.id;
@@ -125,13 +140,17 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
         InstitutionsResultsSvc.getPeriods($scope.assessment_id)
         .then(function(periods) {
             $scope.periods = periods;
-            $scope.resetColumnDefs($scope.action, $scope.subject, $scope.periods);
-
-            return InstitutionsResultsSvc.getRowData($scope.periods, $scope.institution_id, $scope.class_id, $scope.assessment_id, $scope.academic_period_id, $scope.education_subject_id);
+            return $scope.resetColumnDefs($scope.action, $scope.subject, $scope.periods);
         }, function(error) {
             // No Assessment Periods
             console.log(error);
             AlertSvc.warning($scope, error);
+        })
+        // resetColumnDefs
+        .then(function(response) {
+            if (response) {
+                return InstitutionsResultsSvc.getRowData($scope.resultType, $scope.periods, $scope.institution_id, $scope.class_id, $scope.assessment_id, $scope.academic_period_id, $scope.education_subject_id);
+            }
         })
         // getRowData
         .then(function(rows) {
@@ -157,6 +176,32 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
 
     $scope.onSaveClick = function() {
         if ($scope.gridOptions != null) {
+            var resultTypes = InstitutionsResultsSvc.getResultTypes();
+
+            // Logic to build $scope.results for Grades type
+            if ($scope.resultType == resultTypes.GRADES) {
+                angular.forEach(angular.element('.oe-cell-editable'), function(obj, key) {
+                    if (angular.isDefined(obj.attributes['oe-newValue'])) {
+                        var studentId = obj.attributes['oe-student'].value;
+                        var periodId = obj.attributes['oe-period'].value;
+                        var oldValue = obj.attributes['oe-oldValue'].value;
+                        var newValue = obj.attributes['oe-newValue'].value;
+
+                        if (newValue != oldValue) {
+                            if (angular.isUndefined($scope.results[studentId])) {
+                                $scope.results[studentId] = {};
+                            }
+
+                            if (angular.isUndefined($scope.results[studentId][periodId])) {
+                                $scope.results[studentId][periodId] = {gradingOptionId: ''};
+                            }
+
+                            $scope.results[studentId][periodId]['gradingOptionId'] = newValue;
+                        }
+                    }
+                });
+            }
+
             var assessmentId = $scope.gridOptions.context.assessment_id;
             var educationSubjectId = $scope.gridOptions.context.education_subject_id;
             var institutionId = $scope.gridOptions.context.institution_id;
@@ -170,13 +215,16 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
                 console.log(error);
             })
             .finally(function() {
-                $scope.gridOptions.api.forEachNode(function(row) {
-                    if (row.data.is_dirty) {
-                        InstitutionsResultsSvc.saveTotal(row.data, row.data.student_id, classId, institutionId, academicPeriodId, educationSubjectId);
-                        // reset dirty flag
-                        row.data.is_dirty = false;
-                    }
-                });
+                // Only Marks type will run this logic to update total_mark
+                if ($scope.resultType == resultTypes.MARKS) {
+                    $scope.gridOptions.api.forEachNode(function(row) {
+                        if (row.data.is_dirty) {
+                            InstitutionsResultsSvc.saveTotal(row.data, row.data.student_id, classId, institutionId, academicPeriodId, educationSubjectId);
+                            // reset dirty flag
+                            row.data.is_dirty = false;
+                        }
+                    });
+                }
 
                 $scope.action = 'view';
                 // reset results object
