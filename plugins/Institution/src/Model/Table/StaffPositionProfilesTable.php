@@ -220,9 +220,12 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		$extra['config']['selectedLink'] = ['controller' => 'Institutions', 'action' => 'Staff', 'index'];
 	}
 
-	public function indexBeforeAction(Event $event, ArrayObject $extra) {
+	public function indexBeforeAction(Event $event, ArrayObject $extra)
+	{
 		$this->Session->delete('Institution.StaffPositionProfiles.viewBackUrl');
-		unset($extra['toolbarButtons']['add']);
+		if (isset($extra['toolbarButtons']['add'])) {
+			unset($extra['toolbarButtons']['add']);
+		}
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {

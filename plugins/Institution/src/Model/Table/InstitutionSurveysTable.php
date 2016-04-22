@@ -153,106 +153,86 @@ class InstitutionSurveysTable extends AppTable {
     }
 
     // Workbench.Model.onGetList
-	public function onGetWorkbenchList(Event $event, $AccessControl, ArrayObject $data) {
-		if ($AccessControl->isAdmin()) { return; }
-		$userId = $event->subject()->Auth->user('id');
-		$institutionIds = $AccessControl->getInstitutionsByUser();
-
-		// Array to store security roles in each Institution
-		$institutionRoles = [];
-		foreach ($institutionIds as $institutionId) {
-			$institutionRoles[$institutionId] = $this->Institutions->getInstitutionRoles($userId, $institutionId);
-		}
-		// End
-
+	public function onGetWorkbenchList(Event $event, $isAdmin, $institutionRoles, ArrayObject $data) {
 		// Results of all Not Completed survey in all institutions that the login user can access
 		$statusIds = $event->subject()->Workflow->getStepsByModelCode($this->registryAlias(), 'NOT_COMPLETED');
-		$where = [];
-		if (!empty($statusIds)) {
-			$where[$this->aliasField('status_id') . ' IN '] = $statusIds;
-		}
-		if (!$AccessControl->isAdmin()) {
-			if (!empty($institutionIds)) {
-				$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
+
+		if ($isAdmin) {
+			return []; // remove this line once workbench pagination is implemented
+		} else {
+			$where = [];
+			// returns empty list if there is no status mapping for workflows OR if the user does not have access to any schools
+			// Should never return all rows without any conditions because it may cause out of memory error
+			if (empty($statusIds) || empty($institutionRoles)) {
+				return [];
 			} else {
-				// if user is not admin, user should not be able to access any school
-				$where[$this->aliasField('institution_id')] = '-1';
+				$where[$this->aliasField('status_id') . ' IN '] = $statusIds;
+				$where[$this->aliasField('institution_id') . ' IN '] = array_keys($institutionRoles);
 			}
-		}
 
-		$resultSet = $this
-			->find()
-			->contain(['Statuses', 'AcademicPeriods', 'SurveyForms', 'Institutions', 'ModifiedUser', 'CreatedUser'])
-			->where($where)
-			->order([
-				$this->aliasField('created')
-			])
-			->toArray();
-		// End
+			$WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
 
-		$WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
-		$stepRoles = [];
-
-		foreach ($resultSet as $key => $obj) {
-			$institutionId = $obj->institution->id;
-			$stepId = $obj->status_id;
-			$roles = array_key_exists($institutionId, $institutionRoles) ? $institutionRoles[$institutionId] : [];
-
-			// Permission
-			$hasAccess = false;
 			// Array to store security roles in each Workflow Step
-			if (!array_key_exists($stepId, $stepRoles)) {
-				$workflowRoles = $WorkflowStepsRoles
-					->find('list', ['keyField' => 'security_role_id', 'valueField' => 'security_role_id'])
-					->where([
-						$WorkflowStepsRoles->aliasField('workflow_step_id') => $stepId
-					])
-					->toArray();
-
-				if (!empty($workflowRoles)) {
-					$stepRoles[$stepId] = $workflowRoles;
-				}
-			}
-
-			if ($AccessControl->isAdmin()) {
-				// to-do: only allow superadmin to see all request after implement pagination for workbench
-				// $hasAccess = true;
-			} else {
-				if (array_key_exists($stepId, $stepRoles)) {
-					foreach ($stepRoles[$stepId] as $securityRoleId) {
-						if (in_array($securityRoleId, $roles)) {
-							$hasAccess = true;
-							break;
-						}
+			$stepRoles = [];
+			foreach ($institutionRoles as $institutionId => $roles) {
+				foreach ($statusIds as $key => $statusId) {
+					if (!array_key_exists($statusId, $stepRoles)) {
+						$stepRoles[$statusId] = $WorkflowStepsRoles->getRolesByStep($statusId);
 					}
+
+					// logic to pre-insert survey in school only when user's roles is configured to access the step
+					$hasAccess = count(array_intersect_key($roles, $stepRoles[$statusId])) > 0;
+					if ($hasAccess) {
+						$this->buildSurveyRecords($institutionId);
+					}
+					// End
 				}
 			}
 			// End
 
-			if ($hasAccess) {
-				$requestTitle = sprintf('%s - %s of %s in %s', $obj->status->name, $obj->survey_form->name, $obj->institution->name, $obj->academic_period->name);
-				$url = [
-					'plugin' => 'Institution',
-					'controller' => 'Institutions',
-					'action' => 'Surveys',
-					'view',
-					$obj->id,
-					'institution_id' => $institutionId
-				];
+			$resultSet = $this
+				->find()
+				->contain(['Statuses', 'AcademicPeriods', 'SurveyForms', 'Institutions', 'ModifiedUser', 'CreatedUser'])
+				->where($where)
+				->order([$this->aliasField('created')])
+				->toArray();
+			// End
 
-				if (is_null($obj->modified)) {
-					$receivedDate = $this->formatDate($obj->created);
-				} else {
-					$receivedDate = $this->formatDate($obj->modified);
+			foreach ($resultSet as $key => $obj) {
+				$institutionId = $obj->institution->id;
+				$stepId = $obj->status_id;
+				$roles = $institutionRoles[$institutionId];
+
+				// Permission
+				// access is true if user roles exists in step roles
+				$hasAccess = count(array_intersect_key($roles, $stepRoles[$stepId])) > 0;
+				// End
+
+				if ($hasAccess) {
+					$requestTitle = sprintf('%s - %s of %s in %s', $obj->status->name, $obj->survey_form->name, $obj->institution->name, $obj->academic_period->name);
+					$url = [
+						'plugin' => 'Institution',
+						'controller' => 'Institutions',
+						'action' => 'Surveys',
+						'view',
+						$obj->id,
+						'institution_id' => $institutionId
+					];
+
+					if (is_null($obj->modified)) {
+						$receivedDate = $this->formatDate($obj->created);
+					} else {
+						$receivedDate = $this->formatDate($obj->modified);
+					}
+
+					$data[] = [
+						'request_title' => ['title' => $requestTitle, 'url' => $url],
+						'receive_date' => $receivedDate,
+						'due_date' => '<i class="fa fa-minus"></i>',
+						'requester' => $obj->created_user->username,
+						'type' => __('Institution > Survey > Forms')
+					];
 				}
-
-				$data[] = [
-					'request_title' => ['title' => $requestTitle, 'url' => $url],
-					'receive_date' => $receivedDate,
-					'due_date' => '<i class="fa fa-minus"></i>',
-					'requester' => $obj->created_user->username,
-					'type' => __('Institution > Survey > Forms')
-				];
 			}
 		}
 	}
@@ -457,6 +437,8 @@ class InstitutionSurveysTable extends AppTable {
 						break;
 					}
 				}
+
+
 
 				// Update all New Survey to Expired by Institution Id
 				$this->updateAll(['status_id' => self::EXPIRED],
