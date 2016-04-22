@@ -2,29 +2,6 @@
 
 <?php if ($action == 'add' || $action == 'edit') : ?>
     <style>
-        /*table.table-body-scrollable {
-            border-spacing: 0;
-            border: 1px solid #CCC !important;
-            -webkit-box-shadow: inset 0 -5px 10px rgba(0, 0, 0, 0.08);
-            -moz-box-shadow: inset 0 -5px 10px rgba(0, 0, 0, 0.08);
-            box-shadow: inset 0 -5px 10px rgba(0, 0, 0, 0.08);
-            -webkit-border-radius: 5px;
-            -moz-border-radius: 5px;
-            border-radius: 5px;
-
-        }
-        table.table-body-scrollable thead,
-        table.table-body-scrollable tbody {
-            display: block;
-        }
-        table.table-body-scrollable tbody {
-            height: 250px;
-            -webkit-overflow-y: scroll;
-            -ms-overflow-y: scroll;
-            overflow-y: scroll;
-        }*/
-
-
         table.table-body-scrollable  {
             width: 100%;
             border-spacing: 0;
@@ -37,40 +14,6 @@
             -moz-border-radius: 5px;
             border-radius: 5px;
         }
-
-        /*table.table-body-scrollable thead,
-        table.table-body-scrollable tbody,
-        table.table-body-scrollable tr,
-        table.table-body-scrollable th,
-        table.table-body-scrollable td { display: block; }
-
-        table.table-body-scrollable thead tr {*/
-            /* fallback */
-            /*width: 97%;*/
-            /* minus scroll bar width */
-            /*width: -webkit-calc(100% - 16px);
-            width:    -moz-calc(100% - 16px);
-            width:         calc(100% - 16px);
-        }
-
-        table.table-body-scrollable tr:after {*/  /* clearing float */
-            /*content: ' ';
-            display: block;
-            visibility: hidden;
-            clear: both;
-        }
-
-        table.table-body-scrollable tbody {
-            height: 100px;
-            overflow-y: auto;
-            overflow-x: hidden;
-        }
-
-        table.table-body-scrollable tbody td,
-        table.table-body-scrollable thead th {
-            width: 19%;*/  /* 19% is less than (100% / 5 cols) = 20% */
-            /*float: left;
-        }*/
 
         table .error-message-in-table {
             min-width: 100px;
@@ -87,7 +30,6 @@
     <div class="clearfix"></div>
     <div class="table-wrapper">
         <div class="table-responsive">
-            <!-- <table class="table"> -->
             <table class="table table-body-scrollable">
                 <thead>
                     <tr>
