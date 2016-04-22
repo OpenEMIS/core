@@ -22,6 +22,7 @@ class AppTable extends Table {
 
 	public function initialize(array $config) {
 		Time::$defaultLocale = 'en_US';
+		Date::$defaultLocale = 'en_US';
 		
 		$_config = [
 			'Modified' => true,
