@@ -127,11 +127,11 @@ class ImportStudentsTable extends AppTable {
 	}
 
 	public function onImportPopulateEducationGradesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
 		$programmeHeader = $this->getExcelLabel($lookedUpTable, 'education_programme_id');
 		$translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
 		$data[$columnOrder]['lookupColumn'] = 3;
 		$data[$columnOrder]['data'][] = [$programmeHeader, $translatedReadableCol, $translatedCol];
-		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
 		if (!empty($this->gradesInInstitution)) {
 			$modelData = $lookedUpTable->find('all')
 									->contain(['EducationProgrammes'])

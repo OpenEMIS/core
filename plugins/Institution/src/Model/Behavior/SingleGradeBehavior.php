@@ -58,20 +58,24 @@ class SingleGradeBehavior extends Behavior {
 		if (!empty($selectedAcademicPeriodId)) {
 			$gradeOptions = $model->Institutions->InstitutionGrades->getGradeOptions($institutionId, $selectedAcademicPeriodId);
 		}
-		if ($selectedEducationGradeId > 0) {
-			if (!array_key_exists($selectedEducationGradeId, $gradeOptions)) {
-				$selectedEducationGradeId = key($gradeOptions);
-			}
-		} else {
-			$selectedEducationGradeId = key($gradeOptions);
-		}
+
+        if (!empty($gradeOptions)) {
+            if ($selectedEducationGradeId > 0) {
+                if (!array_key_exists($selectedEducationGradeId, $gradeOptions)) {
+                    $selectedEducationGradeId = key($gradeOptions);
+                }
+            } else {
+                $selectedEducationGradeId = key($gradeOptions);
+            }
+        } else {
+            $gradeOptions[''] = $model->Alert->getMessage($model->aliasField('education_grade_options_empty'));
+            $selectedEducationGradeId = 0;
+        }
+		
 		$model->field('education_grade', [
 			'type' => 'select',
 			'options' => $gradeOptions,
 			'onChangeReload' => true,
-			'attr' => [
-				'empty' => ((empty($gradeOptions)) ? $model->Alert->getMessage($model->aliasField('education_grade_options_empty')) : '')
-			],
 			'select' => false
 		]);
 

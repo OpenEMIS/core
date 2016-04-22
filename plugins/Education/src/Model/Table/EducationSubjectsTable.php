@@ -8,6 +8,7 @@ class EducationSubjectsTable extends ControllerActionTable {
 		parent::initialize($config);
 		$this->addBehavior('Education.Setup');
 		$this->hasMany('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects', 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true]);
 		$this->belongsToMany('EducationGrades', [
 			'className' => 'Education.EducationGrades',
 			'joinTable' => 'education_grades_subjects',
