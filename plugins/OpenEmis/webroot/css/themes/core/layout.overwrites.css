@@ -246,6 +246,11 @@ a,
     min-height: 200px;
 }
 
+.rtl .ag-fresh div.ag-header,
+.rtl .ag-body-viewport {
+    direction: ltr !important;
+}
+
 .ag-fresh .ag-header-cell .ag-header-cell-label {
     padding: 10px 35px 10px 10px;
     cursor: pointer;
