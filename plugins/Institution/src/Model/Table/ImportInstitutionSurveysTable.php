@@ -13,6 +13,7 @@ use Cake\Collection\Collection;
 use Cake\Network\Request;
 use Cake\Controller\Component;
 use App\Model\Table\AppTable;
+use Cake\I18n\Time;
 
 class ImportInstitutionSurveysTable extends AppTable {
 	const RECORD_QUESTION = 2;
@@ -388,13 +389,13 @@ class ImportInstitutionSurveysTable extends AppTable {
 						case 'TIME':
 							$originalRow[$colCount] = $cellValue;
 							if (is_numeric($cellValue)) {
-								$cellValue = date('Y-m-d', \PHPExcel_Shared_Date::ExcelToPHP($cellValue));
+								$cellValue = date('Y-m-d h:i:s A', \PHPExcel_Shared_Date::ExcelToPHP($cellValue));
 								// converts val to Time object so that this field will pass 'validDate' check since
 								// different model has different date format checking. Example; user->date_of_birth is using dmY while others using Y-m-d,
 								// so it is best to convert the date here instead of adjusting individual model's date validation format
 								try {
 									$cellValue = new Time($cellValue);
-									if ($fieldType->field_type == 'DATE') {
+									if ($fieldType == 'DATE') {
 										$originalRow[$colCount] = $cellValue->format($systemDateFormat);
 									} else {
 										$originalRow[$colCount] = $cellValue->format($systemTimeFormat);
