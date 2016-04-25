@@ -111,17 +111,18 @@ class StudentsTable extends AppTable {
 			])
 			->add('academic_period_id', [
 			])
-			->add('student_name', 'ruleInstitutionStudentId', [
-				'rule' => ['institutionStudentId'],
+			->add('student_name', 'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem', [
+				'rule' => ['studentNotEnrolledInAnyInstitutionAndSameEducationSystem', []],
+				'on' => 'create',
+				'last' => true
+			])
+			->add('student_name', 'ruleStudentNotCompletedGrade', [
+				'rule' => ['studentNotCompletedGrade'],
 				'on' => 'create',
 				'last' => true
 			])
 			->add('student_name', 'ruleCheckAdmissionAgeWithEducationCycleGrade', [
 				'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
-				'on' => 'create'
-			])
-			->add('student_name', 'ruleStudentEnrolledInOthers', [
-				'rule' => ['checkEnrolledInOtherInstitution'],
 				'on' => 'create'
 			])
 			->add('class', 'ruleClassMaxLimit', [
@@ -282,6 +283,16 @@ class StudentsTable extends AppTable {
 
 	// Start PHPOE-2123
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+        // POCOR-2884 - If id cannot be found, return a successful deletion message
+        $primaryKey = $this->primaryKey();
+        $idKey = $this->aliasField($primaryKey);
+        if (!$this->exists([$idKey => $id])) {
+            $process = function() use ($id, $options) {
+                return true;
+            };
+            return $process;
+        }
+
 		// Another check to check before deletion. In case of concurrency issue.
 		$status = $this->get($id)->student_status_id;
 		$studentStatuses = $this->StudentStatuses->findCodeList();
@@ -320,45 +331,73 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	/**
-     * Method to check if the student is enrolled in all institution within a particular
-     * education system in the academic period
-     *
-     * @param integer $studentId The student identitifier (id)
-     * @param integer $academicPeriodId The selected academic period id
-     * @param integer $systemId The education system id to check
-     * @return bool True if the student is enrolled in the same education system in that academic period
-     */
-	public function checkIfEnrolledInAllInstitution($studentId, $academicPeriodId, $systemId) {
-		$EducationGradesTable = TableRegistry::get('Education.EducationGrades');
-		$conditions = [
-			$this->aliasField('student_id') => $studentId,
-			$this->aliasField('academic_period_id') => $academicPeriodId,
-			$this->aliasField('student_status_id') => $this->StudentStatuses->getIdByCode('CURRENT')
-		];
+	// returns error message if validation false
+	public function validateEnrolledInAnyInstitution($studentId, $systemId, $options = []) {
+		$newOptions['getInstitutions'] = true;
+		$options = array_merge($options, $newOptions);
 
-		if (is_null($academicPeriodId)) {
-			$conditions = [
-				$this->aliasField('student_id') => $studentId,
-				$this->aliasField('student_status_id') => $this->StudentStatuses->getIdByCode('CURRENT')
-			];
+		// targetInstitutionId is used to determine the error message, whether it is enrolled in 'this' or 'other' institution
+		$targetInstitutionId = (array_key_exists('targetInstitutionId', $options))? $options['targetInstitutionId']: null;
+
+		$enrolledInstitutionIds = $this->enrolledInAnyInstitution($studentId, $systemId, $options);
+
+		if (is_array($enrolledInstitutionIds) && !empty($enrolledInstitutionIds)) {
+			if (!empty($targetInstitutionId) && in_array($targetInstitutionId, $enrolledInstitutionIds)) {
+				// 'Student is already enrolled in target school.'
+				return $this->getMessage('Institution.Students.student_name.ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem.inTargetSchool');
+			} else {
+				// 'Student is already enrolled in another school.'
+				return $this->getMessage('Institution.Students.student_name.ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem.inAnotherSchool');
+			}
+		} else {
+			return false;
 		}
+	}
 
-		$gradeIds = $this->find('list', [
-					'keyField' => 'education_grade_id',
-					'valueField' => 'education_grade_id'
-				])
-				->where([$conditions])
-				->toArray();
+	private function enrolledInAnyInstitution($studentId, $systemId, $options = []) {
+		$newOptions['select'] = ['institution_id', 'education_grade_id'];
+		$options = array_merge($options, $newOptions);
+		$getInstitutions = (array_key_exists('getInstitutions', $options))? $options['getInstitutions']: false;
+		
+		$EducationGradesTable = TableRegistry::get('Education.EducationGrades');
 
-		$educationSystemId = [];
-		foreach ($gradeIds as $grade) {
-			$eduSystemId = $EducationGradesTable->getEducationSystemId($grade);
-			if (!in_array($systemId, $educationSystemId)) {
-				$educationSystemId[] = $eduSystemId;
+		$enrolledRecords = $this->getEnrolledRecords($studentId, $options)->toArray();
+
+		$existingRecordsInSameSystem = [];
+		foreach ($enrolledRecords as $key => $value) {
+			$enrolledRecords[$key]->education_system_id = $EducationGradesTable->getEducationSystemId($value->education_grade_id);
+			if ($value->education_system_id == $systemId) {
+				$existingRecordsInSameSystem[] = $value;
 			}
 		}
-		return in_array($systemId, $educationSystemId);
+
+		// returns a true/false if !getInstitutions else returns an array of institution_ids
+		if (!$getInstitutions) {
+			return !empty($existingRecordsInSameSystem);
+		} else {
+			$institutionIds = [];
+			foreach ($existingRecordsInSameSystem as $key => $value) {
+				$institutionIds[$value->institution_id] = $value->institution_id;
+			}
+			return $institutionIds;
+		}
+	}
+
+	private function getEnrolledRecords($studentId, $options = []) {
+		$selectParams = (array_key_exists('select', $options))? $options['select']: null;
+		$excludeInstitutions = (array_key_exists('excludeInstitutions', $options))? $options['excludeInstitutions']: null;
+	
+		$conditions = [
+			$this->aliasField('student_id') => $studentId,
+			$this->aliasField('student_status_id') => $this->StudentStatuses->getIdByCode('CURRENT')
+		];
+		if (!empty($excludeInstitutions)) {
+			$conditions[$this->aliasField('institution_id').' NOT IN '] = $excludeInstitutions;
+		}
+		$result = $this->find()
+			->where([$conditions]);
+		if (!empty($selectParams)) {$result->select($selectParams);}
+		return $result;
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -704,60 +743,67 @@ class StudentsTable extends AppTable {
 		$studentExist = 0;
 		$studentId = $entity->student_id;
 
-		// Check if student has already been enrolled
 		if (!empty ($studentId)) {
 			$StudentStatusesTable = $this->StudentStatuses;
 			$pendingAdmissionCode = $StudentStatusesTable->PENDING_ADMISSION;
-			$educationSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($entity->education_grade_id);
 			// Check if the student that is pass over is a pending admission student
-			if ($pendingAdmissionCode == $studentData['student_status_id'] && 
-				!$this->checkIfEnrolledInAllInstitution($studentId, $studentData['academic_period_id'], $educationSystemId)) {
+			if ($pendingAdmissionCode == $studentData['student_status_id']) { 
+				// validation is handled by $this (institution_student), no need to add any more validation - except checking if there is already a pending admission
 
 				// Check if the student is a new record in the admission table, if the record exist as an approved record or rejected record, that record should
 				// be retained for auditing purposes as the student may be approved in the first place, then remove from the institution for some reason, then added back
-				$studentExist = $AdmissionTable->find()
-					->where([
-							$AdmissionTable->aliasField('status') => 0,
-							$AdmissionTable->aliasField('student_id') => $studentId,
-							$AdmissionTable->aliasField('institution_id') => $studentData['institution_id'],
-							$AdmissionTable->aliasField('academic_period_id') => $studentData['academic_period_id'],
-							$AdmissionTable->aliasField('education_grade_id') => $studentData['education_grade_id'],
-							$AdmissionTable->aliasField('type') => 1
-						])
-					->count();
-				// Check if the student is already added to the student admission table
-				if ($studentExist == 0) {
-					$process = function ($model, $entity) use ($studentData, $AdmissionTable, $studentId) {
-						$admissionStatus = 1;
-						$entityData = [
-							'start_date' => $studentData['start_date'],
-							'end_date' => $studentData['end_date'],
-							'student_id' => $studentId,
-							'status' => 0,
-							'institution_id' => $studentData['institution_id'],
-							'academic_period_id' => $studentData['academic_period_id'],
-							'education_grade_id' => $studentData['education_grade_id'],
-							'previous_institution_id' => 0,
-							'student_transfer_reason_id' => 0,
-							'type' => $admissionStatus,
-						];
 
-						$admissionEntity = $AdmissionTable->newEntity($entityData);
-						if( $AdmissionTable->save($admissionEntity) ){
-							return true;
-						} else {
-							$AdmissionTable->log($admissionEntity->errors(), 'debug');
-							return false;
-						}
-					};
-					return $process;
-				} else {
+				if (!empty($entity->errors())) {
+					// stop student admission request save process, validation is handled by $this
 					$process = function ($model, $entity){
 						return false;
 					};
-					$this->Alert->error('StudentAdmission.existsInRecord');
 					return $process;
-				}			
+				} else {
+					$studentExist = $AdmissionTable->find()
+						->where([
+								$AdmissionTable->aliasField('status') => 0,
+								$AdmissionTable->aliasField('student_id') => $studentId,
+								$AdmissionTable->aliasField('institution_id') => $studentData['institution_id'],
+								$AdmissionTable->aliasField('academic_period_id') => $studentData['academic_period_id'],
+								$AdmissionTable->aliasField('education_grade_id') => $studentData['education_grade_id'],
+								$AdmissionTable->aliasField('type') => 1
+							])
+						->count();
+					// Check if the student is already added to the student admission table
+					if ($studentExist == 0) {
+						$process = function ($model, $entity) use ($studentData, $AdmissionTable, $studentId) {
+							$admissionStatus = 1;
+							$entityData = [
+								'start_date' => $studentData['start_date'],
+								'end_date' => $studentData['end_date'],
+								'student_id' => $studentId,
+								'status' => 0,
+								'institution_id' => $studentData['institution_id'],
+								'academic_period_id' => $studentData['academic_period_id'],
+								'education_grade_id' => $studentData['education_grade_id'],
+								'previous_institution_id' => 0,
+								'student_transfer_reason_id' => 0,
+								'type' => $admissionStatus,
+							];
+
+							$admissionEntity = $AdmissionTable->newEntity($entityData);
+							if( $AdmissionTable->save($admissionEntity) ){
+								return true;
+							} else {
+								$AdmissionTable->log($admissionEntity->errors(), 'debug');
+								return false;
+							}
+						};
+						return $process;
+					} else {
+						$process = function ($model, $entity){
+							return false;
+						};
+						$this->Alert->error('StudentAdmission.existsInRecord');
+						return $process;
+					}
+				}
 			}
 		}
 	}
@@ -1171,33 +1217,44 @@ class StudentsTable extends AppTable {
 	}
 
 	public function checkIfCanTransfer($student, $institutionId) {
+		$gradeId = ($student->has('education_grade_id'))? $student->education_grade_id: null;
+		$studentId = ($student->has('student_id'))? $student->student_id: null;
+		if (empty($gradeId) || empty($studentId)) {
+			// missing critical parameter - grade, student_id - cant transfer
+			return false;
+		}
+
 		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 		$studentStatusList = array_flip($StudentStatuses->findCodeList());
 		
 		$checkIfCanTransfer = (in_array($studentStatusList[$student->student_status_id], ['CURRENT', 'PROMOTED', 'GRADUATED']));
+
+		// check ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem && ruleStudentNotCompletedGrade
+		$newSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($gradeId);
+		$validateEnrolledInAnyInstitutionResult = $this->validateEnrolledInAnyInstitution($studentId, $newSystemId, ['excludeInstitutions' => $institutionId]);
+		if ($checkIfCanTransfer) {
+			if (!empty($validateEnrolledInAnyInstitutionResult) || 
+				$this->completedGrade($gradeId, $student->id)) {
+				$checkIfCanTransfer = false;
+			}
+		}
+		
+		// additional logic for PROMOTED
 		if ($checkIfCanTransfer && $studentStatusList[$student->student_status_id] == 'PROMOTED') {
 			//'Promoted' status - this feature will be available if the student is at the last grade that the school offers
 			// Education Grades
 			$InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
-
 			$EducationGrades = TableRegistry::get('Education.EducationGrades');
-
-			$systemId = $EducationGrades->getEducationSystemId($student->education_grade_id);
-	    	// Check all academic period for enrol
-	    	$academicPeriodId = null;
-	    	$studentId = $student->student_id;
-	    	if ($this->checkIfEnrolledInAllInstitution($studentId, $academicPeriodId, $systemId)) {
-	    		return false;
-	    	}
 
 			$studentEducationGrade = $EducationGrades
 				->find()
-				->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $student->education_grade_id])
+				->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $gradeId])
 				->first();
 
 			$currentProgrammeGrades = $EducationGrades
 				->find('list', [
 					'keyField' => 'id',
+
 					'valueField' => 'programme_grade_name'
 				])
 				->find('visible')
@@ -1232,10 +1289,9 @@ class StudentsTable extends AppTable {
 				->toArray()
 				;
 				
+			// if there are more advanced grades available to the student, the student cannot transfer
 			if (count(array_intersect_key($moreAdvancedEducationGrades, $advancedGradeOptionsLeft))>0) {
 				$checkIfCanTransfer = false;
-			} else {
-				$checkIfCanTransfer = true;
 			}
 		}
 		return $checkIfCanTransfer;
@@ -1489,5 +1545,22 @@ class StudentsTable extends AppTable {
 		$params['dataSet'] = $dataSet;
 
 		return $params;
+	}
+
+	public function completedGrade($educationGradeId, $studentId) {
+		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+
+		$statuses = $StudentStatuses->findCodeList();
+		$completedGradeCount = $this->find()
+			->where([
+				$this->aliasField('education_grade_id') => $educationGradeId,
+				$this->aliasField('student_id') => $studentId,
+				$this->aliasField('student_status_id').' IN ' => [$statuses['GRADUATED'], $statuses['PROMOTED']]
+			])
+			// ;pr($completedGradeCount->toArray());die;
+			->count()
+			;
+
+		return !($completedGradeCount == 0);
 	}
 }
