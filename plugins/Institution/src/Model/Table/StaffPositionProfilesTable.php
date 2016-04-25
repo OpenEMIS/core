@@ -381,7 +381,8 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 				$attr['type'] = 'date';
 				if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
 					$entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
-					$startDate = (new Date($entity->start_date))->modify('+1 day');
+					$startDateClone = clone ($entity->start_date);
+					$startDate = $startDateClone->modify('+1 day');
 					$attr['date_options']['startDate'] = $startDate->format('d-m-Y');	
 				}
 				$attr['value'] = (new Date())->modify('+1 day');
