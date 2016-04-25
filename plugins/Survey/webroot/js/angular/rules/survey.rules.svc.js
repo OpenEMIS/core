@@ -1,6 +1,5 @@
-angular.module('institutions.results.svc', ['kd.orm.svc'])
-.service('InstitutionsResultsSvc', function($http, $q, $filter, KdOrmSvc) {
-    const resultTypes = {MARKS: 'MARKS', GRADES: 'GRADES'};
+angular.module('survey.rules.svc', ['kd.orm.svc'])
+.service('SurveyRulesSvc', function($http, $q, $filter, KdOrmSvc) {
 
     var models = {
         SurveyFormsTable: 'Survey.SurveyForms',
@@ -20,7 +19,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc'])
         getSurveyForm: function() {
             return SurveyFormsTable
             .select()
-            .ajax({success: success, defer: true})
+            .ajax({defer: true})
             ;
         },
 

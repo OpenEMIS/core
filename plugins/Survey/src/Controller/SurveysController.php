@@ -6,6 +6,7 @@ use App\Controller\AppController;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\Event\Event;
+use Cake\Utility\Inflector;
 
 class SurveysController extends AppController
 {
@@ -33,18 +34,28 @@ class SurveysController extends AppController
 				'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Forms'],
 				'text' => __('Forms')
 			],
+			'Rules' => [
+				'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Rules'],
+				'text' => __('Rules')
+			],
 			'Status' => [
 				'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Status'],
 				'text' => __('Status')
 			]
 		];
-
+		$name = $this->name;
+		$action = $this->request->action;
+		$actionName = __(Inflector::humanize($action));
+		$header = $name .' - '.$actionName;
+		$this->Navigation->addCrumb(__($name), ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $action]);
+		$this->Navigation->addCrumb($actionName);
+		$this->set('contentHeader', $header);
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $this->request->action);
 	}
 
 	public function Rules() {
-		$this->set('ngController', 'SurveyRulesCtrl');
+		$this->set('ngController', 'SurveyRulesCtrl as SurveyRulesController');
 	}
 
 	private function attachAngularModules() {
@@ -62,10 +73,8 @@ class SurveysController extends AppController
 	}
 
 	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
-		$header = __('Survey');
 
-		$header .= ' - ' . $model->getHeader($model->alias);
-		$this->Navigation->addCrumb('Survey', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
+		
 		$this->Navigation->addCrumb($model->getHeader($model->alias));
 
 		$this->set('contentHeader', $header);
