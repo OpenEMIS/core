@@ -15,12 +15,13 @@
 namespace Cake\Database\Driver;
 
 use Cake\Database\Dialect\SqliteDialectTrait;
+use Cake\Database\Driver;
 use Cake\Database\Query;
 use Cake\Database\Statement\PDOStatement;
 use Cake\Database\Statement\SqliteStatement;
 use PDO;
 
-class Sqlite extends \Cake\Database\Driver
+class Sqlite extends Driver
 {
 
     use PDODriverTrait;
@@ -54,6 +55,7 @@ class Sqlite extends \Cake\Database\Driver
         $config = $this->_config;
         $config['flags'] += [
             PDO::ATTR_PERSISTENT => $config['persistent'],
+            PDO::ATTR_EMULATE_PREPARES => false,
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
         ];
 
@@ -94,5 +96,13 @@ class Sqlite extends \Cake\Database\Driver
             $result->bufferResults(false);
         }
         return $result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function supportsDynamicConstraints()
+    {
+        return false;
     }
 }

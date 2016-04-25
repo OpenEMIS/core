@@ -7,6 +7,7 @@ use ArrayObject;
 use PHPExcel_Worksheet;
 use InvalidArgumentException;
 use Cake\I18n\Time;
+use Cake\I18n\Date;
 use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\Entity;
@@ -545,6 +546,7 @@ class ImportBehavior extends Behavior {
 		}
 	}
 
+
 /******************************************************************************************************************
 **
 ** Import Functions
@@ -715,7 +717,7 @@ class ImportBehavior extends Behavior {
 	private function _getReorderedEntityArray( Entity $entity, Array $columns, ArrayObject $originalRow, $systemDateFormat ) {
 		$array = [];
 		foreach ($columns as $col=>$property) {
-			$value = ( $entity->$property instanceof Time ) ? $entity->$property->format( $systemDateFormat ) : $originalRow[$col];
+			$value = ( $entity->$property instanceof Time || $entity->$property instanceof Date ) ? $entity->$property->format( $systemDateFormat ) : $originalRow[$col];
 			$array[] = $value;
 		}
 		return $array;
@@ -1074,7 +1076,9 @@ class ImportBehavior extends Behavior {
 			
 			// skip a record column which has value defined earlier before this function is called
 			// example; openemis_no
-			if (!empty($tempRow[$columnName])) {
+			// but if the value is 0, it will still proceed
+			// example; class for importing students into an institution default value is 0
+			if (isset($tempRow[$columnName]) && !empty($tempRow[$columnName]) && $tempRow[$columnName]!==0) {
 				continue;
 			}
 			if (!empty($val)) {
@@ -1160,7 +1164,11 @@ class ImportBehavior extends Behavior {
 					$rowInvalidCodeCols[$columnName] = __('This field cannot be left empty');
 				}
 			}
-			$tempRow[$columnName] = $val;
+			$columnDescription = strtolower($mapping[$col]->description);
+			$isOptional = substr_count($columnDescription, 'optional');
+			if (!$isOptional || ($isOptional && !empty($val))) {
+				$tempRow[$columnName] = $val;
+			}
 		}
 		if ($rowPass) {
 			$rowPass = $this->dispatchEvent($this->_table, $this->eventKey('onImportModelSpecificValidation'), 'onImportModelSpecificValidation', [$references, $tempRow, $originalRow, $rowInvalidCodeCols]);

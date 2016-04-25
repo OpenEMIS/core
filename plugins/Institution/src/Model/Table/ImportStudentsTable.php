@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Collection\Collection;
 use Cake\I18n\Time;
+use Cake\I18n\Date;
 use Cake\Network\Request;
 use Cake\Controller\Component;
 use Cake\Datasource\Exception\RecordNotFoundException;
@@ -19,7 +20,7 @@ class ImportStudentsTable extends AppTable {
 	private $gradesInInstitution;
 	private $systemDateFormat;
 	private $studentStatusId;
-	private $availableSections;
+	private $availableClasses;
 
 	public function initialize(array $config) {
 		$this->table('import_mapping');
@@ -96,6 +97,8 @@ class ImportStudentsTable extends AppTable {
 		$tempRow['end_date'] = false;
 		$tempRow['end_year'] = false;
 		$tempRow['institution_id'] = $this->institutionId;
+		// Optional fields which will be validated should be set with a default value on initialisation
+		$tempRow['class'] = 0;
 	}
 
 	public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {
@@ -125,30 +128,32 @@ class ImportStudentsTable extends AppTable {
 
 	public function onImportPopulateEducationGradesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
 		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-		$modelData = $lookedUpTable->find('all')
-								->contain(['EducationProgrammes'])
-								->select(['code', 'name', 'EducationProgrammes.name'])
-								->where([
-									$lookedUpTable->aliasField('visible').' = 1'
-								])
-								->order([
-									$lookupModel.'.order',
-									$lookupModel.'.education_programme_id'
-								])
-								->where([
-									$lookedUpTable->aliasField('id').' IN' => $this->gradesInInstitution
-								]);
 		$programmeHeader = $this->getExcelLabel($lookedUpTable, 'education_programme_id');
 		$translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
 		$data[$columnOrder]['lookupColumn'] = 3;
 		$data[$columnOrder]['data'][] = [$programmeHeader, $translatedReadableCol, $translatedCol];
-		if (!empty($modelData)) {
-			foreach($modelData->toArray() as $row) {
-				$data[$columnOrder]['data'][] = [
-					$row->education_programme->name,
-					$row->name,
-					$row->$lookupColumn
-				];
+		if (!empty($this->gradesInInstitution)) {
+			$modelData = $lookedUpTable->find('all')
+									->contain(['EducationProgrammes'])
+									->select(['code', 'name', 'EducationProgrammes.name'])
+									->where([
+										$lookedUpTable->aliasField('visible').' = 1'
+									])
+									->order([
+										$lookupModel.'.order',
+										$lookupModel.'.education_programme_id'
+									])
+									->where([
+										$lookedUpTable->aliasField('id').' IN' => $this->gradesInInstitution
+									]);
+			if (!empty($modelData)) {
+				foreach($modelData->toArray() as $row) {
+					$data[$columnOrder]['data'][] = [
+						$row->education_programme->name,
+						$row->name,
+						$row->$lookupColumn
+					];
+				}
 			}
 		}
 	}
@@ -157,15 +162,15 @@ class ImportStudentsTable extends AppTable {
 		unset($data[$columnOrder]);
 	}
 
-	public function onImportPopulateInstitutionSectionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+	public function onImportPopulateInstitutionClassesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
 		try {
 			$institution = $this->Institutions->get($this->institutionId);
-			$modelData = $this->populateInstitutionSectionsData();
+			$modelData = $this->populateInstitutionClassesData();
 
 			$institutionNameLabel = $this->getExcelLabel('Imports', 'institution_name');
 			$academicPeriodCodeLabel = $this->getExcelLabel('Imports', 'period_code');
 			$classNameLabel = $this->getExcelLabel($lookupModel, 'name');
-			$classCodeLabel = $this->getExcelLabel('Imports', 'institution_sections_code');
+			$classCodeLabel = $this->getExcelLabel('Imports', 'institution_classes_code');
 			
 			// unset($data[$sheetName]);
 			$sheetName = $this->getExcelLabel('Imports', $lookupModel);
@@ -197,14 +202,14 @@ class ImportStudentsTable extends AppTable {
 
 	}
 
-	private function populateInstitutionSectionsData() {
+	private function populateInstitutionClassesData() {
 		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$availableAcademicPeriods = $AcademicPeriods->getAvailableAcademicPeriods(false);
 
-		$InstitutionSections = TableRegistry::get('Institution.InstitutionSections');
+		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
 		$modelData = [];
 		foreach ($availableAcademicPeriods as $key=>$value) {
-			$modelData[$value->code] = $InstitutionSections->getSectionOptions($value->id, $this->institutionId);
+			$modelData[$value->code] = $InstitutionClasses->getClassOptions($value->id, $this->institutionId);
 		}
 		return $modelData;
 	}
@@ -237,7 +242,7 @@ class ImportStudentsTable extends AppTable {
 		if (empty($tempRow['start_date'])) {
 			$rowInvalidCodeCols['start_date'] = __('No start date specified');
 			return false;
-		} else if (!$tempRow['start_date'] instanceof Time) {
+		} else if (!$tempRow['start_date'] instanceof Time || !$tempRow['start_date'] instanceof Date) {
 			$rowInvalidCodeCols['start_date'] = __('Unknown date format');
 			return false;
 		}
@@ -258,12 +263,12 @@ class ImportStudentsTable extends AppTable {
 			$rowInvalidCodeCols['start_date'] = __('Start date is not within selected academic period');
 			return false;
 		}
-		if (!$period->start_date instanceof Time) {
+		if (!$period->start_date instanceof Time || !$period->start_date instanceof Date) {
 			$rowInvalidCodeCols['academic_period_id'] = __('Please check the selected academic period start date in Administration');
 			return false;
 		}
 		$periodStartDate = $period->start_date->toUnixString();
-		if (!$period->end_date instanceof Time) {
+		if (!$period->end_date instanceof Time || !$period->end_date instanceof Date) {
 			$rowInvalidCodeCols['academic_period_id'] = __('Please check the selected academic period end date in Administration');
 			return false;
 		}
@@ -279,7 +284,10 @@ class ImportStudentsTable extends AppTable {
 		$institutionGrade = $this->InstitutionGrades
 								->find()
 								->contain('EducationGrades.EducationProgrammes.EducationCycles')
-								->where([$this->InstitutionGrades->aliasField('education_grade_id') => $tempRow['education_grade_id']])
+								->where([
+									$this->InstitutionGrades->aliasField('education_grade_id') => $tempRow['education_grade_id'],
+									$this->InstitutionGrades->aliasField('institution_id') => $this->institutionId
+								])
 								;
 		if ($institutionGrade->isEmpty()) {
 			$rowInvalidCodeCols['education_grade_id'] = __('No matching education grade.');
@@ -287,13 +295,13 @@ class ImportStudentsTable extends AppTable {
 		}
 
 		$institutionGrade = $institutionGrade->first();
-		if (!$institutionGrade->start_date instanceof Time) {
+		if (!$institutionGrade->start_date instanceof Time || !$institutionGrade->start_date instanceof Date) {
 			$rowInvalidCodeCols['education_grade_id'] = __('Please check the selected education grade start date at the institution');
 			return false;
 		}
 
 		$gradeStartDate = $institutionGrade->start_date->toUnixString();
-		$gradeEndDate = (!empty($institutionGrade->end_date) && (!$institutionGrade->end_date instanceof Time)) ? $institutionGrade->end_date->toUnixString() : '';
+		$gradeEndDate = (!empty($institutionGrade->end_date) && (!$institutionGrade->end_date instanceof Time || !$institutionGrade->end_date instanceof Date)) ? $institutionGrade->end_date->toUnixString() : '';
 		if (!empty($gradeEndDate) && $gradeEndDate < $periodEndDate) {
 			$rowInvalidCodeCols['education_grade_id'] = __('Selected education grade will end before academic period ends');
 			return false;
@@ -304,13 +312,13 @@ class ImportStudentsTable extends AppTable {
 		}
 
 		if (!empty($tempRow['class']) || $tempRow['class']!=0) {
-			if (empty($this->availableSections)) {
-				$this->availableSections = $this->populateInstitutionSectionsData();
+			if (empty($this->availableClasses)) {
+				$this->availableClasses = $this->populateInstitutionClassesData();
 			}
-			$this->availableSections;
+			$this->availableClasses;
 			$selectedClassIdFound = null;
-			if (!empty($this->availableSections)) {
-				foreach($this->availableSections as $periodCode=>$periodClasses) {
+			if (!empty($this->availableClasses)) {
+				foreach($this->availableClasses as $periodCode=>$periodClasses) {
 					if (!empty($periodClasses)) {
 						foreach($periodClasses as $id=>$name) {
 							if ($id == $tempRow['class']) {
@@ -332,8 +340,6 @@ class ImportStudentsTable extends AppTable {
 				$rowInvalidCodeCols['class'] = __('Selected class does not exists during the selected Academic Period');
 				return false;
 			}
-		} else {
-			$tempRow['class'] = 0;
 		}
 
 		return true;
