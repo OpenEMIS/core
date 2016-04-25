@@ -87,7 +87,7 @@ class QualificationsTable extends ControllerActionTable {
 		$this->setFieldOrder('file_content', $order++);
 	}
 
-	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
 		$alias = $this->alias();
 		if (empty($data[$alias]['qualification_institution_id'])) {
 			if (!empty($data[$alias]['institution_name'])) {
