@@ -641,25 +641,18 @@ class StudentPromotionTable extends AppTable {
 				$nextAcademicPeriodId = isset($data[$this->alias()]['next_academic_period_id']) ? $data[$this->alias()]['next_academic_period_id'] : 0;
 				$educationGradeId = isset($data[$this->alias()]['education_grade_id']) ? $data[$this->alias()]['education_grade_id'] : 0;
 				
-				if ($nextAcademicPeriodId == 0 && $educationGradeId != 0) {
-					$this->Alert->warning($this->alias().'.noNextAcademicPeriod');
-					$url = $this->ControllerAction->url('add');
+				if ($selectedStudent) {
+					// redirects to confirmation page
+					$url = $this->ControllerAction->url('reconfirm');
+					$this->currentEntity = $entity;
+					$session = $this->Session;
+					$session->write($this->registryAlias().'.confirm', $entity);
+					$session->write($this->registryAlias().'.confirmData', $data);
+					$this->currentEvent = $event;
 					$event->stopPropagation();
 					return $this->controller->redirect($url);
 				} else {
-					if ($selectedStudent) {
-						// redirects to confirmation page
-						$url = $this->ControllerAction->url('reconfirm');
-						$this->currentEntity = $entity;
-						$session = $this->Session;
-						$session->write($this->registryAlias().'.confirm', $entity);
-						$session->write($this->registryAlias().'.confirmData', $data);
-						$this->currentEvent = $event;
-						$event->stopPropagation();
-						return $this->controller->redirect($url);
-					} else {
-						$this->Alert->warning($this->alias().'.noStudentSelected');
-					}
+					$this->Alert->warning($this->alias().'.noStudentSelected');
 				}
 			}
 		}
