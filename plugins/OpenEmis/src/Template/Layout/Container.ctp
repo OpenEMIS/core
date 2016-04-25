@@ -19,9 +19,16 @@
 	if (isset($indexElements) && array_key_exists('advanced_search', $indexElements)) {
 		$toolbarClass[] = 'toolbar-search-adv';
 	}
+
+	// For Angular
+	if (isset($ngController)) {
+		$ngController = 'ng-controller="'.$ngController.'"';
+	} else {
+		$ngController = '';
+	}
 ?>
 
-<div class="content-wrapper">
+<div class="content-wrapper" <?= $ngController; ?>>
 
 	<?= $this->element('OpenEmis.breadcrumbs') ?>
 

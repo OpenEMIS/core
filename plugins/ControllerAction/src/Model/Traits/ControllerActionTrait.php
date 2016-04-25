@@ -93,11 +93,17 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.edit.beforeQuery'			=> 'editBeforeQuery',
 		// public function editBeforeQuery(Event $event, Query $query) {}
 
+		'ControllerAction.Model.edit.afterQuery'			=> 'editAfterQuery',
+		// public function editAfterQuery(Event $event, Entity $entity) {}
+
 		'ControllerAction.Model.edit.onInitialize'			=> 'editOnInitialize',
 		// public function editOnInitialize(Event $event, Entity $entity) {}
 
 		'ControllerAction.Model.edit.beforePatch'			=> 'editBeforePatch',
 		// public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {}
+
+		'ControllerAction.Model.edit.afterPatch'			=> 'editAfterPatch',
+		// public function editAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {}
 
 		'ControllerAction.Model.edit.beforeSave'			=> 'editBeforeSave', // you can overwrite this function to implement your own saving logic
 		// public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) { return function() {}; }

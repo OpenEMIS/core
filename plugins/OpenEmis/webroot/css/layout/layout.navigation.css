@@ -1,4 +1,4 @@
-/* NAVIGATION v.1.2.8 */
+/* NAVIGATION v.1.2.10 */
 
 nav {
     border-radius: 0 !important;
@@ -382,6 +382,15 @@ nav {
 
 /* RTL NAVIGATION v.1.2.1 */
 
+.rtl .left-menu {
+    left: 0;
+}
+
+.rtl .left-menu li a {
+    font-size: 14px;
+    line-height: 14px !important;
+} 
+
 .rtl .left-pane {
     right: 0;
     left: auto;
@@ -394,6 +403,10 @@ nav {
     border-left: 0 !important;
     -ms-overflow-x: hidden !important;
     overflow-x: hidden !important;
+}
+
+.rtl .split-panes.horizontal > .split-pane2 {
+    right: 10%;
 }
 
 .rtl .split-panes.horizontal > .split-handler {
@@ -536,6 +549,9 @@ nav {
         -o-transform: translate(-50%, -50%);
         transform: translate(-50%, -50%);
     }
+    .enable-overflow {
+        overflow: hidden !important;
+    }
     .content-overlay {
         position: relative;
         height: 100%;
@@ -627,6 +643,9 @@ nav {
         padding-left: 65px !important;
     }
     /* RTL */
+    .rtl .left-menu li a {
+        line-height: 30px !important;
+    }
     .rtl .menu-handler {
         left: auto !important;
         right: 0;

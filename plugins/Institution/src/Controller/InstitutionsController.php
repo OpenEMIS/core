@@ -12,6 +12,7 @@ use Cake\Utility\Inflector;
 use Institution\Controller\AppController;
 
 class InstitutionsController extends AppController  {
+
 	public $activeObj = null;
 
 	public function initialize() {
@@ -23,15 +24,14 @@ class InstitutionsController extends AppController  {
 			'History' 			=> ['className' => 'Institution.InstitutionActivities', 'actions' => ['search', 'index']],
 
 			'Programmes' 		=> ['className' => 'Institution.InstitutionGrades'],
-			'Sections' 			=> ['className' => 'Institution.InstitutionSections'],
-			'Classes' 			=> ['className' => 'Institution.InstitutionClasses'],
 			'Infrastructures' 	=> ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'transfer']],
 
 			'Staff' 			=> ['className' => 'Institution.Staff'],
 			'StaffUser' 		=> ['className' => 'Institution.StaffUser', 'actions' => ['add', 'view', 'edit']],
 			'StaffAccount' 		=> ['className' => 'Institution.StaffAccount', 'actions' => ['view', 'edit']],
-			'StaffAbsences' 	=> ['className' => 'Institution.StaffAbsences'],
 			'StaffAttendances' 	=> ['className' => 'Institution.StaffAttendances', 'actions' => ['index']],
+			'StaffAbsences' 	=> ['className' => 'Institution.StaffAbsences'],
+
 			'StaffBehaviours' 	=> ['className' => 'Institution.StaffBehaviours'],
 
 			'Students' 			=> ['className' => 'Institution.Students'],
@@ -42,7 +42,6 @@ class InstitutionsController extends AppController  {
 			'StudentAttendances'=> ['className' => 'Institution.StudentAttendances', 'actions' => ['index']],
 			'AttendanceExport'	=> ['className' => 'Institution.AttendanceExport', 'actions' => ['excel']],
 			'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
-			'Assessments' 		=> ['className' => 'Institution.InstitutionAssessments', 'actions' => ['index', 'view', 'edit', 'remove']],
 			'Promotion' 		=> ['className' => 'Institution.StudentPromotion', 'actions' => ['add']],
 			'Transfer' 			=> ['className' => 'Institution.StudentTransfer', 'actions' => ['index', 'add']],
 			'TransferApprovals' => ['className' => 'Institution.TransferApprovals', 'actions' => ['edit', 'view']],
@@ -70,11 +69,29 @@ class InstitutionsController extends AppController  {
 			'ImportInstitutionSurveys' => ['className' => 'Institution.ImportInstitutionSurveys', 'actions' => ['add']],
 			'ImportStudents' => ['className' => 'Institution.ImportStudents', 'actions' => ['add']],
 		];
+
+		$this->loadComponent('Institution.InstitutionAccessControl');
+
+		$this->attachAngularModules();
 	}
 
 	// CAv4
 	public function Positions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionPositions']); }
 	public function Shifts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionShifts']); }
+	public function StaffTransferRequests() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferRequests']); }
+	public function StaffTransferApprovals() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferApprovals']); }
+	public function StaffPositionProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffPositionProfiles']); }
+	public function Classes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionClasses']); }
+	public function Subjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionSubjects']); }
+	public function Assessments() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionAssessments']); }
+	// public function StaffAbsences() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
+	// End
+
+	// AngularJS
+	public function Results() {
+		$this->set('_edit', $this->AccessControl->check(['Institutions', 'Results', 'edit']));
+		$this->set('ngController', 'InstitutionsResultsCtrl');
+	}
 	// End
 
 	public function beforeFilter(Event $event) {
@@ -110,16 +127,15 @@ class InstitutionsController extends AppController  {
 			$id = 0;
 			if (isset($this->request->pass[0]) && (in_array($action, ['view', 'edit', 'dashboard']))) {
 				$id = $this->request->pass[0];
+				$session->write('Institution.Institutions.id', $id);
+				
 			} else if ($session->check('Institution.Institutions.id')) {
 				$id = $session->read('Institution.Institutions.id');
 			}
 			if (!empty($id)) {
 				$this->activeObj = $this->Institutions->get($id);
 				$name = $this->activeObj->name;
-				if ($action == 'dashboard' || $action == 'edit') {
-					$session->write('Institution.Institutions.id', $id);
-					$session->write('Institution.Institutions.name', $name);
-				}
+				$session->write('Institution.Institutions.name', $name);
 				if ($action == 'view') {
 					$header = $name .' - '.__('Overview');
 				} else {
@@ -134,6 +150,20 @@ class InstitutionsController extends AppController  {
 		$this->set('contentHeader', $header);
 	}
 
+	private function attachAngularModules() {
+		$action = $this->request->action;
+
+		switch ($action) {
+			case 'Results':
+				$this->Angular->addModules([
+					'alert.svc',
+					'institutions.results.ctrl',
+					'institutions.results.svc'
+				]);
+			break;
+		}
+	}
+
 	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		if (!is_null($this->activeObj)) {
 			$session = $this->request->session();
@@ -145,10 +175,6 @@ class InstitutionsController extends AppController  {
 			}
 
 			$alias = $model->alias;
-			// temporary fix for renaming Sections and Classes
-			if ($alias == 'Sections') $alias = 'Classes';
-			else if ($alias == 'Classes') $alias = 'Subjects';
-
 			$crumbTitle = $model->getHeader($alias);
 			$crumbOptions = [];
 			if ($action) {
@@ -186,7 +212,7 @@ class InstitutionsController extends AppController  {
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
-					if (in_array($model->alias(), ['TransferRequests'])) {
+					if (in_array($model->alias(), ['TransferRequests', 'StaffTransferApprovals'])) {
 						$exists = $model->exists([
 							$model->aliasField($model->primaryKey()) => $modelId,
 							$model->aliasField('previous_institution_id') => $institutionId
@@ -248,40 +274,34 @@ class InstitutionsController extends AppController  {
 		$this->autoRender = false;
 	}
 
-	public function dashboard() {
-		if ($this->activeObj) {
-			$id = $this->activeObj->id;
-			$this->ControllerAction->model->action = $this->request->action;
+	public function dashboard($id) {
+		$this->ControllerAction->model->action = $this->request->action;
 
-			// $highChartDatas = ['{"chart":{"type":"column","borderWidth":1},"xAxis":{"title":{"text":"Position Type"},"categories":["Non-Teaching","Teaching"]},"yAxis":{"title":{"text":"Total"}},"title":{"text":"Number Of Staff"},"subtitle":{"text":"For Year 2015-2016"},"series":[{"name":"Male","data":[0,2]},{"name":"Female","data":[0,1]}]}'];
-			$highChartDatas = [];
+		// $highChartDatas = ['{"chart":{"type":"column","borderWidth":1},"xAxis":{"title":{"text":"Position Type"},"categories":["Non-Teaching","Teaching"]},"yAxis":{"title":{"text":"Total"}},"title":{"text":"Number Of Staff"},"subtitle":{"text":"For Year 2015-2016"},"series":[{"name":"Male","data":[0,2]},{"name":"Female","data":[0,1]}]}'];
+		$highChartDatas = [];
 
-			//Students By Year
-			$params = array(
-				'conditions' => array('institution_id' => $id)
-			);
-			$InstitutionStudents = TableRegistry::get('Institution.Students');
-			$highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_year', $params);
-			
-			//Students By Grade for current year
-			$params = array(
-				'conditions' => array('institution_id' => $id)
-			);
+		//Students By Year
+		$params = array(
+			'conditions' => array('institution_id' => $id)
+		);
+		$InstitutionStudents = TableRegistry::get('Institution.Students');
+		$highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_year', $params);
+		
+		//Students By Grade for current year
+		$params = array(
+			'conditions' => array('institution_id' => $id)
+		);
 
-			$highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_grade', $params);
+		$highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_grade', $params);
 
-			//Staffs By Position for current year
-			$params = array(
-				'conditions' => array('institution_id' => $id)
-			);
-			$InstitutionStaff = TableRegistry::get('Institution.Staff');
-			$highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff', $params);
+		//Staffs By Position for current year
+		$params = array(
+			'conditions' => array('institution_id' => $id)
+		);
+		$InstitutionStaff = TableRegistry::get('Institution.Staff');
+		$highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff', $params);
 
-			$this->set('highChartDatas', $highChartDatas);
-
-		} else {
-			return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
-		}
+		$this->set('highChartDatas', $highChartDatas);
 	}
 
 	//autocomplete used for InstitutionSiteShift

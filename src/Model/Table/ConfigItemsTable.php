@@ -64,17 +64,16 @@ class ConfigItemsTable extends AppTable {
 		$typeOptions = array_keys($this->find('list', ['keyField' => 'type', 'valueField' => 'type'])->order('type')->toArray());
 
 		$selectedType = $this->queryString('type', $typeOptions);
-		$this->advancedSelectOptions($typeOptions, $selectedType);
-		$buffer = $typeOptions;
 
+		$buffer = $typeOptions;
 		foreach ($buffer as $key => $value) {
-			$result = $this->find()->where([$this->aliasField('type') => $value['text'], $this->aliasField('visible') => 1])->count();
+			$result = $this->find()->where([$this->aliasField('type') => $value, $this->aliasField('visible') => 1])->count();
 			if (!$result) {
 				unset($typeOptions[$key]);
 			}
 		}
-		$this->request->query['type_value'] = $typeOptions[$selectedType]['text'];
-		
+		$this->request->query['type_value'] = $typeOptions[$selectedType];
+		$this->advancedSelectOptions($typeOptions, $selectedType);
 		$this->controller->set('typeOptions', $typeOptions);
 	}
 
@@ -169,7 +168,8 @@ class ConfigItemsTable extends AppTable {
 						$optionTable = TableRegistry::get('ConfigItemOptions');
 						$options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
 							->where([
-								'ConfigItemOptions.option_type' => $entity->option_type
+								'ConfigItemOptions.option_type' => $entity->option_type,
+								'ConfigItemOptions.visible' => 1
 							])
 							->toArray();
 						$attr['options'] = $options;
@@ -518,4 +518,18 @@ class ConfigItemsTable extends AppTable {
 			'last' => true
 		]
 	];
+
+	private $validatePasswordMinLength = [
+		'num' => [
+			'rule'  => 'numeric',
+			'message' => 'Numeric Value should be between 6 to 50',
+			'last' => true
+		],
+		'bet' => [
+			'rule'	=> ['range', 6, 50],
+			'message' => 'Numeric Value should be between 6 to 50',
+			'last' => true
+		]
+	];
+
 }

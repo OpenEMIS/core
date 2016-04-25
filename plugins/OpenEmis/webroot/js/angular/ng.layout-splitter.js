@@ -1,5 +1,6 @@
-//Layout Splitter v.1.0.1
+//Layout Splitter v.1.0.3
 
+// Fixing the issue on first load when left navigation is overlaping the view before the angular has been initialize
 var sheet = (function() {
     // Create the <style> tag
     var style = document.createElement("style");
@@ -19,14 +20,13 @@ var sheet = (function() {
     return style.sheet;
 })();
 
-pos = localStorage.lastHandlerPos;
-
-if (typeof pos == 'undefined') {
+var pos = (typeof localStorage.lastHandlerPos == 'undefined') ? window.innerWidth * 0.1 : window.innerWidth * localStorage.lastHandlerPos;
+if (pos > window.innerWidth) {
     pos = window.innerWidth * 0.1;
 }
 // console.log(window.innerWidth);
 sheet.insertRule('.left-pane{width:' + pos + 'px;}', 0);
-
+// End fixing on first load.
 
 // Angular Splitter
 angular.module('bgDirectives', [])
@@ -56,26 +56,20 @@ angular.module('bgDirectives', [])
                 var vertical = scope.orientation == 'vertical';
                 var pane1Min = pane1.minSize || 0;
                 var pane2Min = pane2.minSize || 0;
-
                 var bodyDir = getComputedStyle(document.body).direction;
                 var affectedDir = (bodyDir == 'ltr') ? 'left' : 'right';
-
-                pane1Min = ((pane1.minSizeP / 100) * window.innerWidth) || pane1Min;
-                pane2Min = ((pane2.minSizeP / 100) * window.innerWidth) || pane2Min;
                 var drag = false;
 
                 pane1.elem.after(handler);
+                var screenWidth = window.innerWidth;
 
-                if (!angular.isUndefined(localStorage.lastHandlerPos) && window.innerWidth > 1024) {
-                    pos = localStorage.lastHandlerPos;
+                if (!angular.isUndefined(localStorage.lastHandlerPos) && screenWidth > 1024) {
+                    pos = getWidthPixel();
 
                     handler.css(affectedDir, pos + 'px');
                     pane1.elem.css('width', pos + 'px');
                     pane2.elem.css(affectedDir, pos + 'px');
-                }
-                else {
-                    var screenWidth = window.innerWidth;
-
+                } else {
                     if (screenWidth <= 1024) {
                         handler.css(affectedDir, '0px');
                         pane1.elem.css('width', pos + 'px');
@@ -86,11 +80,16 @@ angular.module('bgDirectives', [])
                 enableDrag();
 
                 function enableDrag() {
+
                     element.bind('mousemove', function(ev) {
                         if (!drag) return;
 
                         var bounds = element[0].getBoundingClientRect();
                         var pos = 0;
+                        var panelObj = reCalPanelPercentSize();
+
+                        pane1Min = panelObj['pane1Min']; //((pane1.minSizeP / 100) * window.innerWidth) || pane1Min;
+                        pane2Min = panelObj['pane2Min']; //((pane2.minSizeP / 100) * window.innerWidth) || pane2Min;
 
                         $.each($('.highchart'), function(key, group) {
                             $(group).highcharts().reflow();
@@ -128,13 +127,33 @@ angular.module('bgDirectives', [])
                             handler.css(affectedDir, pos + 'px');
                             pane1.elem.css('width', pos + 'px');
                             pane2.elem.css(affectedDir, pos + 'px');
-                            localStorage.lastHandlerPos = pos;
+                            localStorage.lastHandlerPos = pos / window.innerWidth;
                         }
                     });
                 }
 
-                function disableDrag(){
+                function getWidthPixel() {
+                    var pos = (typeof localStorage.lastHandlerPos == 'undefined') ? window.innerWidth * 0.1 : window.innerWidth * localStorage.lastHandlerPos
+                    if (pos > window.innerWidth) {
+                        pos = window.innerWidth * 0.1;
+                    }
+                    return pos;
+                }
+
+                function disableDrag() {
                     element.unbind('mousemove');
+                }
+
+                function reCalPanelPercentSize() {
+                    var panelObj = {};
+                    if (!angular.isUndefined(pane1.minSizeP)) {
+                        panelObj['pane1Min'] = (pane1.minSizeP / 100) * window.innerWidth;
+                    }
+
+                    if (!angular.isUndefined(pane2.minSizeP)) {
+                        panelObj['pane2Min'] = (pane2.minSizeP / 100) * window.innerWidth;
+                    }
+                    return panelObj;
                 }
 
                 handler.bind('mousedown', function(ev) {
@@ -148,20 +167,14 @@ angular.module('bgDirectives', [])
 
                 angular.element(window).bind('resize', function(ev) {
                     var screenWidth = window.innerWidth;
-
                     if (screenWidth <= 1024) {
-                        console.log('smaller than 1024');
                         disableDrag();
-                        handler.css(affectedDir, '0px');
-                        pane1.elem.css('width', pos + 'px');
                         pane2.elem.css(affectedDir, '0px');
                     } else {
                         enableDrag();
-                        pos = localStorage.lastHandlerPos;
-
-                        handler.css(affectedDir, '15%');
-                        pane1.elem.css('width', '15%');
-                        pane2.elem.css(affectedDir, '15%');
+                        handler.css(affectedDir, getWidthPixel() + 'px');
+                        pane1.elem.css('width', getWidthPixel() + 'px');
+                        pane2.elem.css(affectedDir, getWidthPixel() + 'px');
                     }
 
                 });
