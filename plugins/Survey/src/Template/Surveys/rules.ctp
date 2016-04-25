@@ -5,33 +5,6 @@
 <?php
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('toolbar');
-?>
-	<?php
-		$backUrl = [
-			'plugin' => $this->request->params['plugin'],
-		    'controller' => $this->request->params['controller'],
-		    'action' => 'Assessments',
-		    'index'
-		];
-		echo $this->Html->link('<i class="fa kd-back"></i>', $backUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Back'), 'escape' => false, 'ng-show' => 'action == \'view\'']);
-	?>
-	<?php if ($_edit) : ?>
-		<!-- Show buttons when action is view: -->
-		<button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="action == 'view'" ng-click="onEditClick()">
-			<i class="fa kd-edit"></i>
-		</button>
-		<!-- End -->
-
-		<!-- Show buttons when action is edit: -->
-		<button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="action == 'edit'" ng-click="onBackClick()">
-			<i class="fa kd-back"></i>
-		</button>
-		<button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Save');?>" ng-show="action == 'edit'" ng-click="onSaveClick()">
-			<i class="fa fa-save"></i>
-		</button>
-		<!-- End -->
-	<?php endif; ?>
-<?php
 $this->end();
 
 $this->start('panelBody');
@@ -41,20 +14,18 @@ $institutionId = $session->read('Institution.Institutions.id');
 	<div class="alert {{class}}" ng-hide="message == null">
 		<a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
 	</div>
-
-	<div ng-init="institution_id=<?= $institutionId; ?>">
-		<div class="scrolltabs sticky-content">
-			<scrollable-tabset show-tooltips="false" show-drop-down="false">
-				<uib-tabset justified="true">
-					<uib-tab heading="{{subject.name}}" ng-repeat="subject in subjects" ng-click="onChangeSubject(subject)">
-					</uib-tab>
-				</uib-tabset>
-				<div class="tabs-divider"></div>
-			</scrollable-tabset>
-
-			<div id="institution-result-table" class="table-wrapper">
-				<div ng-if="gridOptions" ag-grid="gridOptions" class="ag-fresh ag-height-fixed"></div>
+		<div class="toolbar-responsive panel-toolbar">
+			<div class="toolbar-wrapper">
+				<div class="input select">
+					<div class="input-select-wrapper">
+						<select class="form-control" ng-options="item.text for item in SurveyRulesController.surveyFormOptions track by item.value" ng-model="selectSurveyForms"></select>
+					</div>
+				</div>
 			</div>
+		</div>
+		<div id="survey-rules-table" class="table-wrapper">
+
+			<!-- <div ng-if="gridOptions" ag-grid="gridOptions" class="ag-fresh ag-height-fixed"></div> -->
 		</div>
 	</div>
 

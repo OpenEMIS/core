@@ -1,52 +1,75 @@
-angular.module('survey.results.ctrl', ['utils.svc', 'alert.svc', 'survey.results.svc'])
-.controller('SurveyRulesCtrl', function($scope, $filter, UtilsSvc, AlertSvc, SurveyRulesSvc) {
-    $scope.action = 'view';
-    $scope.message = null;
-    $scope.resultType = null;
-    $scope.results = {};
-    $scope.gridOptions = null;
+angular
+    .module('survey.rules.ctrl', ['utils.svc', 'alert.svc', 'survey.rules.svc'])
+    .controller('SurveyRulesCtrl', SurveyRulesController);
 
-    angular.element(document).ready(function () {
+SurveyRulesController.$inject = ['$filter', 'UtilsSvc', 'AlertSvc', 'SurveyRulesSvc'];
+
+function SurveyRulesController($filter, UtilsSvc, AlertSvc, SurveyRulesSvc) {
+    var vm = this;
+    SurveyRulesSvc.init(angular.baseUrl);
+    SurveyRulesSvc.getSurveyForm()
+    .then(function(response) {
+        var formData = response.data;
+        var options = [];
+        for(i = 0; i < formData.length; i++) {
+            options.push({"text": formData[i].name, "value": formData[i].id});
+        }
+        vm.surveyFormOptions = options;
+        console.log(options);
+    }, function(error) {
+        console.log(error);
+        AlertSvc.warning(vm, error);
+    });
+}
+
+// angular.module('survey.rules.ctrl', ['utils.svc', 'alert.svc', 'survey.rules.svc'])
+// .controller('SurveyRulesCtrl', function($scope, $filter, UtilsSvc, AlertSvc, SurveyRulesSvc) {
+    // $scope.action = 'view';
+    // $scope.message = null;
+    // $scope.resultType = null;
+    // $scope.results = {};
+    // $scope.gridOptions = null;
+
+    // angular.element(document).ready(function () {
         // $scope.class_id = UtilsSvc.requestQuery('class_id');
         // $scope.assessment_id = UtilsSvc.requestQuery('assessment_id');
 
         // init
-        InstitutionsResultsSvc.init(angular.baseUrl);
+        // SurveyRulesSvc.init(angular.baseUrl);
 
-        UtilsSvc.isAppendLoader(true);
-        // getAssessment
-        InstitutionsResultsSvc.getAssessment($scope.assessment_id)
-        .then(function(response) {
-            var assessment = response.data;
+        // UtilsSvc.isAppendLoader(true);
+        // InstitutionsResultsSvc.getAssessment($scope.assessment_id)
+        // .then(function(response) {
+        //     var assessment = response.data;
 
-            $scope.assessment = assessment;
-            $scope.academic_period_id = assessment.academic_period_id;
-            $scope.education_grade_id = assessment.education_grade_id;
+        //     $scope.assessment = assessment;
+        //     $scope.academic_period_id = assessment.academic_period_id;
+        //     $scope.education_grade_id = assessment.education_grade_id;
             
-            return InstitutionsResultsSvc.getSubjects($scope.assessment_id);
-        }, function(error) {
-            // No Assessment
-            console.log(error);
-            AlertSvc.warning($scope, error);
-        })
-        // getSubjects
-        .then(function(subjects) {
-            $scope.subjects = subjects;
-            if (angular.isObject(subjects) && subjects.length > 0) {
-                var subject = subjects[0];
+        //     return InstitutionsResultsSvc.getSubjects($scope.assessment_id);
+        // }, function(error) {
+        //     // No Assessment
+        //     console.log(error);
+        //     AlertSvc.warning($scope, error);
+        // })
+        // // getSubjects
+        // .then(function(subjects) {
+        //     $scope.subjects = subjects;
+        //     if (angular.isObject(subjects) && subjects.length > 0) {
+        //         var subject = subjects[0];
 
-                $scope.initGrid(subject);
-            }
-        }, function(error) {
-            // No Assessment Items
-            console.log(error);
-            AlertSvc.warning($scope, error);
-        })
-        .finally(function(obj) {
-            UtilsSvc.isAppendLoader(false);
-        })
-        ;
-    });
+        //         $scope.initGrid(subject);
+        //     }
+        // }, function(error) {
+        //     // No Assessment Items
+        //     console.log(error);
+        //     AlertSvc.warning($scope, error);
+        // })
+        // .finally(function(obj) {
+        //     UtilsSvc.isAppendLoader(false);
+        // })
+        // ;
+    // });
 
     // $scope.$watch('action', function(newValue, oldValue) {
     //     if (angular.isDefined(newValue) && angular.isDefined(oldValue) && newValue != oldValue) {
@@ -233,4 +256,4 @@ angular.module('survey.results.ctrl', ['utils.svc', 'alert.svc', 'survey.results
         //     $scope.action = 'view';
         // }
     // };
-});
+// });
