@@ -20,8 +20,8 @@ class StudentListBehavior extends Behavior {
             'CustomForms' => 'Survey.SurveyForms',
             'CustomFormsFields' => 'Survey.SurveyFormsQuestions',
             'SurveyQuestionParams' => 'Survey.SurveyQuestionParams',
-            'Sections' => 'Institution.InstitutionSections',
-            'SectionStudents' => 'Institution.InstitutionSectionStudents',
+            'Classes' => 'Institution.InstitutionClasses',
+            'ClassStudents' => 'Institution.InstitutionClassStudents',
             'StudentSurveys' => 'Student.StudentSurveys',
             'StudentSurveyAnswers' => 'Student.StudentSurveyAnswers'
         ],
@@ -106,7 +106,7 @@ class StudentListBehavior extends Behavior {
 
         $Form = $event->subject()->Form;
         $fieldKey = 0;
-        $sectionOptions = [];
+        $classOptions = [];
         $tableHeaders = [];
         $tableCells = [];
         $cellCount = 0;
@@ -156,24 +156,24 @@ class StudentListBehavior extends Behavior {
                 $periodId = $entity->academic_period_id;
 
                 // Classes Options
-                $sectionQuery = $this->Sections
+                $classQuery = $this->Classes
                     ->find('list')
                     ->where([
-                        $this->Sections->aliasField('institution_id') => $institutionId,
-                        $this->Sections->aliasField('academic_period_id') => $periodId
+                        $this->Classes->aliasField('institution_id') => $institutionId,
+                        $this->Classes->aliasField('academic_period_id') => $periodId
                     ]);
 
                 if ($this->_table->AccessControl->check(['Institutions', 'AllClasses', 'index'])) {
                     // All Classes
-                    $sectionOptions = $sectionQuery->toArray();
-                } else if ($this->_table->AccessControl->check(['Institutions', 'Sections', 'index'])) {
+                    $classOptions = $classQuery->toArray();
+                } else if ($this->_table->AccessControl->check(['Institutions', 'Classes', 'index'])) {
                     // My Classes
                     $userId = $this->_table->Auth->user('id');
-                    $sectionQuery->where([
-                        $this->Sections->aliasField('staff_id') => $userId
+                    $classQuery->where([
+                        $this->Classes->aliasField('staff_id') => $userId
                     ]);
 
-                    $sectionOptions = $sectionQuery->toArray();
+                    $classOptions = $classQuery->toArray();
                 }
                 // End
 
@@ -190,49 +190,49 @@ class StudentListBehavior extends Behavior {
                 }
                 // End
 
-                if (!empty($sectionOptions)) {
-                    // Set selectedSection to session and read it back.
-                    $selectedSection = key($sectionOptions);
+                if (!empty($classOptions)) {
+                    // Set selectedClass to session and read it back.
+                    $selectedClass = key($classOptions);
                     $session = $this->_table->request->session();
                     $plugin = $this->_table->controller->plugin;
                     $model = $this->_table->alias();
-                    $sessionKey = "$plugin.$model.custom_field_values.$customFieldObj->id.institution_section";
+                    $sessionKey = "$plugin.$model.custom_field_values.$customFieldObj->id.institution_class";
                     $fieldKey = $customFieldObj->id;
 
                     if ($this->_table->request->is(['get'])) {
                         // Clear session if is not redirect from save
                         $requestQuery = $this->_table->request->query;
-                        if (array_key_exists('field_id', $requestQuery) && array_key_exists('section_id', $requestQuery)) {
+                        if (array_key_exists('field_id', $requestQuery) && array_key_exists('class_id', $requestQuery)) {
                             if ($requestQuery['field_id'] == $customFieldObj->id) {
-                                $session->write($sessionKey, $requestQuery['section_id']);
+                                $session->write($sessionKey, $requestQuery['class_id']);
                             }
                         }
                     } else if ($this->_table->request->is(['post', 'put'])) {
                         $requestData = $this->_table->request->data;
                         if (array_key_exists($this->_table->alias(), $requestData)) {
                             if (array_key_exists($attr['field'], $requestData[$this->_table->alias()]['custom_field_values'])) {
-                                if (array_key_exists('institution_section', $requestData[$this->_table->alias()]['custom_field_values'][$attr['field']])) {
-                                    $session->write($sessionKey, $requestData[$this->_table->alias()]['custom_field_values'][$attr['field']]['institution_section']);
+                                if (array_key_exists('institution_class', $requestData[$this->_table->alias()]['custom_field_values'][$attr['field']])) {
+                                    $session->write($sessionKey, $requestData[$this->_table->alias()]['custom_field_values'][$attr['field']]['institution_class']);
                                 }
                             }
                         }
                     }
 
                     if ($session->check($sessionKey)) {
-                        $selectedSection = $session->read($sessionKey);
+                        $selectedClass = $session->read($sessionKey);
                     }
                     // End
-                    $this->_table->advancedSelectOptions($sectionOptions, $selectedSection);
+                    $this->_table->advancedSelectOptions($classOptions, $selectedClass);
 
                     // Students List
-                    $studentQuery = $this->SectionStudents
+                    $studentQuery = $this->ClassStudents
                         ->find()
                         ->contain(['Users']);
 
                     if ($action == 'view' || $action == 'edit') {
                         $studentQuery
                             ->where([
-                                $this->SectionStudents->aliasField('institution_section_id') => $selectedSection
+                                $this->ClassStudents->aliasField('institution_class_id') => $selectedClass
                         ]);
                     }
 
@@ -379,7 +379,7 @@ class StudentListBehavior extends Behavior {
 
         $attr['alias'] = $fieldPrefix;
         $attr['fieldKey'] = $fieldKey;
-        $attr['sectionOptions'] = $sectionOptions;
+        $attr['classOptions'] = $classOptions;
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 

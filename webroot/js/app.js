@@ -365,3 +365,14 @@ var utils = {
 		w.print();
 	}
 }
+
+function pr(data) {
+    data = data || '';
+    // if (typeof data ==='array') {
+    // 	for (var i in data) {
+    // 		console.log(data[i]);
+    // 	}
+    // } else {
+	    console.log(data);
+    // }
+}

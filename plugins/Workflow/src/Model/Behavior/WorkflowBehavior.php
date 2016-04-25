@@ -11,6 +11,7 @@ use Cake\Event\Event;
 use Cake\Utility\Inflector;
 
 class WorkflowBehavior extends Behavior {
+
 	protected $_defaultConfig = [
 		'model' => null,
 		'models' => [
@@ -55,6 +56,7 @@ class WorkflowBehavior extends Behavior {
 	}
 
 	public function implementedEvents() {
+
 		$events = parent::implementedEvents();
 		// priority has to be set at 1000 so that method(s) in model will be triggered first
 		// priority of indexBeforeAction and indexBeforePaginate is set to 1 for it to run first before the event in model
@@ -570,11 +572,17 @@ class WorkflowBehavior extends Behavior {
 				]);
 
 			if (!$this->_table->AccessControl->isAdmin()) {
-				$roles = $this->_table->AccessControl->getRolesByUser()->toArray();
+				$model = $this->_table;
 				$roleIds = [];
-				foreach ($roles as $key => $role) {
-					$roleIds[$role->security_role_id] = $role->security_role_id;
-				}
+				$event = $model->dispatchEvent('Workflow.onUpdateRoles', null, $this);
+				if ($event->result) {
+		    		$roleIds = $event->result;
+		    	} else {
+					$roles = $this->_table->AccessControl->getRolesByUser()->toArray();
+					foreach ($roles as $key => $role) {
+						$roleIds[$role->security_role_id] = $role->security_role_id;
+					}
+		    	}
 
 				$query
 					->innerJoin(
@@ -636,6 +644,10 @@ class WorkflowBehavior extends Behavior {
 				'type' => 'hidden',
 				'value' => $record->id
 			],
+			$alias.'.model_reference' => [
+				'type' => 'hidden',
+				'value' => $record->model_reference
+			],
 			$alias.'.comment_required' => [
 				'type' => 'hidden',
 				'value' => 0,
@@ -682,23 +694,6 @@ class WorkflowBehavior extends Behavior {
 
 		$query = $this->WorkflowSteps
 			->find('list');
-
-		if (!$this->_table->AccessControl->isAdmin()) {
-			$roles = $this->_table->AccessControl->getRolesByUser()->toArray();
-			$roleIds = [];
-			foreach ($roles as $key => $role) {
-				$roleIds[$role->security_role_id] = $role->security_role_id;
-			}
-
-			$WorkflowStepsRoles = $this->WorkflowStepsRoles;
-			$query->innerJoin(
-				[$this->WorkflowStepsRoles->alias() => $this->WorkflowStepsRoles->table()],
-				[
-					$this->WorkflowStepsRoles->aliasField('workflow_step_id = ') . $this->WorkflowSteps->aliasField('id'),
-					$this->WorkflowStepsRoles->aliasField('security_role_id IN') => $roleIds
-				]
-			);
-		}
 
 		if (!empty($this->workflowIds)) {
 			$query->where([
@@ -841,12 +836,19 @@ class WorkflowBehavior extends Behavior {
 		if($this->_table->hasBehavior('Workflow')) {
 			$workflowRecord = $this->getRecord($this->_table->registryAlias(), $entity);
 			if (!empty($workflowRecord)) {
+				$statusId = $workflowRecord->workflow_step_id;
 				if ($entity->has('status_id')) {
 					$this->_table->updateAll(
-						['status_id' => $workflowRecord->workflow_step_id],
+						['status_id' => $statusId],
 						['id' => $entity->id]
 					);
 				}
+
+				$subject = $this->_table;
+				// Trigger workflow update status event here
+				$event = $subject->dispatchEvent('Workflow.updateWorkflowStatus', [$entity, $statusId], $subject);
+				if ($event->isStopped()) { return $event->result; }
+				// End
 			}
 		}
 	}
@@ -861,14 +863,21 @@ class WorkflowBehavior extends Behavior {
 		if ($request->is(['post', 'put'])) {
 			$requestData = $request->data;
 
+			$subject = $this->_table;
+			// Trigger workflow before save event here
+			$event = $subject->dispatchEvent('Workflow.beforeTransition', [$requestData], $subject);
+			if ($event->isStopped()) { return $event->result; }
+			// End
+
 			// Insert into workflow_transitions.
 			$entity = $this->WorkflowTransitions->newEntity($requestData, ['validate' => false]);
+			
+			// $workflowRecord = $this->WorkflowRecords->get($entity->workflow_record_id);
+			// $id = $workflowRecord->model_reference;
+			$id = $requestData['WorkflowTransitions']['model_reference'];
+
 			if ($this->WorkflowTransitions->save($entity)) {
 				$this->_table->controller->Alert->success('general.edit.success', ['reset' => true]);
-
-				$subject = $this->_table;
-				$workflowRecord = $this->WorkflowRecords->get($entity->workflow_record_id);
-				$id = $workflowRecord->model_reference;
 
 				// Trigger workflow after save event here
 				$event = $subject->dispatchEvent('Workflow.afterTransition', [$id, $entity], $subject);

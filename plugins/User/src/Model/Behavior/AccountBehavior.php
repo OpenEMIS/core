@@ -8,6 +8,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
+use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 
@@ -121,6 +122,7 @@ class AccountBehavior extends Behavior {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity)  {
+		$this->_table->ControllerAction->field('username');
 		$this->_table->ControllerAction->setFieldOrder(['username', 'password', 'retype_password']);
 
 		$this->afterActionCode($event, $entity);
@@ -193,6 +195,14 @@ class AccountBehavior extends Behavior {
 				unset($toolbarButtons['back']);
 			}
 		}
+	}
+
+	public function onUpdateFieldUsername(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'edit' && !$this->_table->AccessControl->isAdmin()) {
+			$attr['type'] = 'readonly';
+		}
+
+		return $attr;
 	}
 
 	public function onGetRoleTableElement(Event $event, $action, $entity, $attr, $options=[]) {
