@@ -282,6 +282,16 @@ class StudentsTable extends AppTable {
 
 	// Start PHPOE-2123
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+        // POCOR-2884 - If id cannot be found, return a successful deletion message
+        $primaryKey = $this->primaryKey();
+        $idKey = $this->aliasField($primaryKey);
+        if (!$this->exists([$idKey => $id])) {
+            $process = function() use ($id, $options) {
+                return true;
+            };
+            return $process;
+        }
+
 		// Another check to check before deletion. In case of concurrency issue.
 		$status = $this->get($id)->student_status_id;
 		$studentStatuses = $this->StudentStatuses->findCodeList();
