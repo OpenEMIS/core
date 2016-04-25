@@ -367,25 +367,28 @@ class StudentAdmissionTable extends AppTable {
 		$studentId = $entity->student_id;
 		$periodId = $entity->academic_period_id;
 		$gradeId = $entity->education_grade_id;
+		$newSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($gradeId);
 
-		$conditions = [
-			'institution_id' => $newSchoolId,
-			'student_id' => $studentId,
-			'academic_period_id' => $periodId,
-			'education_grade_id' => $gradeId,
-			'student_status_id' => $statuses['CURRENT']
-		];
-
-		// check if the student is already in the new school
-		if (!$Students->exists($conditions)) { // if not exists
+		$validateEnrolledInAnyInstitutionResult = $Students->validateEnrolledInAnyInstitution($studentId, $newSystemId, ['targetInstitutionId' => $newSchoolId]);
+		if (!empty($validateEnrolledInAnyInstitutionResult)) {
+			$this->Alert->error($validateEnrolledInAnyInstitutionResult, ['type' => 'message']);
+		} else if ($Students->completedGrade($gradeId, $studentId)) {
+			$this->Alert->error('Institution.Students.student_name.ruleStudentNotCompletedGrade');
+		} else { // if not exists
 			$startDate = $data[$this->alias()]['start_date'];
 			$startDate = date('Y-m-d', strtotime($startDate));
 
 			// add the student to the new school
-			$newData = $conditions;
-			$newData['start_date'] = $startDate;
-			$newData['end_date'] = $entity->end_date->format('Y-m-d');
-			$newEntity = $Students->newEntity($newData);
+			$entityData = [
+				'institution_id' => $newSchoolId,
+				'student_id' => $studentId,
+				'academic_period_id' => $periodId,
+				'education_grade_id' => $gradeId,
+				'student_status_id' => $statuses['CURRENT']
+			];
+			$entityData['start_date'] = $startDate;
+			$entityData['end_date'] = $entity->end_date->format('Y-m-d');
+			$newEntity = $Students->newEntity($entityData);
 			if ($Students->save($newEntity)) {
 				$this->Alert->success('StudentAdmission.approve');
 
@@ -417,8 +420,6 @@ class StudentAdmissionTable extends AppTable {
 				$this->Alert->error('general.edit.failed');
 				$this->log($newEntity->errors(), 'debug');
 			}
-		} else {
-			$this->Alert->error('StudentAdmission.exists');
 		}
 
 		// To redirect back to the student admission if it is not access from the workbench

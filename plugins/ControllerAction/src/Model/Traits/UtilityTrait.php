@@ -94,6 +94,7 @@ trait UtilityTrait {
 	public function advancedSelectOptions(&$options, &$selected, $params=[]) {
 		$callable = array_key_exists('callable', $params) ? $params['callable'] : null;
 		$message = array_key_exists('message', $params) ? $params['message'] : '';
+		$selectOption = array_key_exists('selectOption', $params)? $params['selectOption'] : true;
 		$defaultValue = null;
 
 		// Check if the selected key is empty. If it is not empty then change the selected to null and get
@@ -187,7 +188,10 @@ trait UtilityTrait {
 			if ($group !== false) {
 				$options[$group][$selected][] = 'selected';
 			} else if (strlen($selected) > 0) {
-				$options[$selected][] = 'selected';
+				if ($selectOption) {
+					$options[$selected][] = 'selected';
+				}
+				
 			}
 		}
 		
