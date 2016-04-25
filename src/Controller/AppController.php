@@ -93,6 +93,15 @@ class AppController extends Controller {
 			],
 			'theme' => 'core'
 		]);
+
+		// Angular initialization
+		$this->loadComponent('Angular.Angular', [
+			'app' => 'OE_Core',
+			'modules' => [
+				'bgDirectives', 'ui.bootstrap', 'ui.bootstrap-slider', 'ui.tab.scroll', 'agGrid', 'app.ctrl'
+			]
+		]);
+
 		$this->loadComponent('ControllerAction.Alert');
 		$this->loadComponent('AccessControl', [
 			'ignoreList' => [
@@ -108,25 +117,5 @@ class AppController extends Controller {
 			'homePageURL' => ['plugin' => null, 'controller' => 'Dashboard', 'action' => 'index'],
 			'loginPageURL' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'login'],
 		]); // for single sign on authentication
-	}
-
-	public function beforeFilter(Event $event) {
-		parent::beforeFilter($event);
-		$session = $this->request->session();
-
-		if (!is_null($this->Auth->user())) { // if user is logged in
-			if ($this->Auth->user('super_admin') == 1) {
-				$session->write('System.User.roles', __('System Administrator'));
-			} else {
-				$rolesList = $this->AccessControl->getRolesByUser();
-				$roles = [];
-				foreach ($rolesList as $obj) {
-					if (!empty($obj->security_group) && !empty($obj->security_role)) {
-						$roles[] = sprintf("%s (%s)", $obj->security_group->name, $obj->security_role->name);
-					}
-				}
-				$session->write('System.User.roles', implode(', ', $roles));
-			}
-		}
 	}
 }

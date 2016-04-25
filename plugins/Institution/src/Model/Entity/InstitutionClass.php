@@ -7,9 +7,7 @@ use Cake\ORM\Query;
 
 class InstitutionClass extends Entity
 {
-	protected $_virtual = ['male_students', 'female_students', 
-    'teachers', 
-    'education_subject_code', 'section_name'];
+	protected $_virtual = ['male_students', 'female_students', 'subjects'];
 	
     protected function _getMaleStudents() {
         $gender_id = 1; // male
@@ -19,7 +17,6 @@ class InstitutionClass extends Entity
                     ->contain('Users')
                     ->where(['Users.gender_id' => $gender_id])
                     ->where([$table->aliasField('institution_class_id') => $this->id])
-                    ->where([$table->aliasField('status') .' > 0'])
                     ->count()
         ;
         return $count;
@@ -33,58 +30,26 @@ class InstitutionClass extends Entity
                     ->contain('Users')
                     ->where(['Users.gender_id' => $gender_id])
                     ->where([$table->aliasField('institution_class_id') => $this->id])
-                    ->where([$table->aliasField('status') .' > 0'])
                     ->count();
         return $count;
     }
 
-    // protected function _getTeachers() {
-    //     pr($this);die;
-        // $value = '';
-        // $table = TableRegistry::get('Institution.InstitutionClassStaff');
-        // $rawList = $table
-        //             ->find()
-        //             ->contain('Users')
-        //             ->where([$table->aliasField('institution_class_id') => $this->id])
-        //             ->where([$table->aliasField('status') .' > 0'])
-        //             ->toArray();
-        // $list = [];
-        // foreach ($rawList as $staff) {
-        //     $list[$staff->user->id] = $staff->user->name;
-        // }
-        // if (!empty($list)) {
-        //     $value = implode(', ', $list);
-        // }
-        // return $value;
-    // }
-
-    protected function _getEducationSubjectCode() {
-        $value = '';
-        if ($this->has('education_subject')) {
-            $value = $this->education_subject->code;
+    protected function _getSubjects() {
+        $value = 0;
+        if ($this->has('institution_class_subjects')) {
+            $value = count($this->institution_class_subjects);
         } else {
-            $table = TableRegistry::get('Education.EducationSubjects');
-            $id = $this->education_subject_id;
-            $value = $table->get($id)->code;            
+            $table = TableRegistry::get('Institution.InstitutionClassSubjects');
+            $value = $table
+                    ->find()
+                    ->where([$table->aliasField('institution_class_id') => $this->id])
+                    ->count();
         }
         return $value;
+        // return '<a href="/#">'. $value .'</a>';
     }
 
-    // protected function _getSectionName() {
-        // $value = 'mmm';
-    //     if ($this->has('institution_section_classes')) {
-    //         if ($this->has('institution_section')) {
-    //             $value = $this->education_subject->code;
-    //         } else {
-    //             $table = TableRegistry::get('Education.EducationSubjects');
-    //             $id = $this->education_subject_id;
-    //             $value = $table->get($id)->code;            
-    //         }
-    //     } else {
-    //         $table = TableRegistry::get('Education.EducationSubjects');
-    //         $id = $this->education_subject_id;
-    //         $value = $table->get($id)->code;            
-    //     }
-        // return $value;
-    // }
+    protected function _getStaffName() {
+       return (!empty($this->staff) || (!is_null($this->staff))) ? $this->staff->name_with_id : ''; 
+    }
 }
