@@ -5,6 +5,7 @@ use ArrayObject;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\I18n\Time;
+use Cake\I18n\Date;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Log\LogTrait;
@@ -21,6 +22,7 @@ class AppTable extends Table {
 
 	public function initialize(array $config) {
 		Time::$defaultLocale = 'en_US';
+		Date::$defaultLocale = 'en_US';
 		
 		$_config = [
 			'Modified' => true,
@@ -87,6 +89,19 @@ class AppTable extends Table {
 		$this->addBehavior('Modification');
 	}
 
+	// Function to get the entity property from the entity. If data validation occur,
+	// the invalid value has to be extracted from invalid array
+	// For use in Cake 3.2 and above
+	public function getEntityProperty($entity, $propertyName) {
+		if ($entity->has($propertyName)) {
+			return $entity->get($propertyName);
+		} else if (array_key_exists($propertyName, $entity->invalid())) {
+			return $entity->invalid($propertyName);
+		} else {
+			return null;
+		}
+	}
+
 	public function attachWorkflow($config=[]) {
 		// check for session and attach workflow behavior
 		if (isset($_SESSION['Workflow']['Workflows']['models'])) {
@@ -133,11 +148,11 @@ class AppTable extends Table {
 	// Event: 'Model.excel.onFormatDate' ExcelBehavior
 	public function onExcelRenderDate(Event $event, Entity $entity, $attr) {
 		if (!empty($entity->$attr['field'])) {
-			if ($entity->$attr['field'] instanceof Time) {
+			if ($entity->$attr['field'] instanceof Time || $entity->$attr['field'] instanceof Date) {
 				return $this->formatDate($entity->$attr['field']);
 			} else {
 				if ($entity->$attr['field'] != '0000-00-00') {
-					$date = new Time($entity->$attr['field']);
+					$date = new Date($entity->$attr['field']);
 					return $this->formatDate($date);
 				} else {
 					return '';
@@ -150,7 +165,7 @@ class AppTable extends Table {
 
 	public function onExcelRenderDateTime(Event $event, Entity $entity, $attr) {
 		if (!empty($entity->$attr['field'])) {
-			if ($entity->$attr['field'] instanceof Time) {
+			if ($entity->$attr['field'] instanceof Time || $entity->$attr['field'] instanceof Date) {
 				return $this->formatDate($entity->$attr['field']);
 			} else {
 				$date = new Time($entity->$attr['field']);
@@ -162,7 +177,7 @@ class AppTable extends Table {
 	}
 
 	// Event: 'ControllerAction.Model.onFormatDate'
-	public function onFormatDate(Event $event, Time $dateObject) {
+	public function onFormatDate(Event $event, $dateObject) {
 		return $this->formatDate($dateObject);
 	}
 
@@ -171,7 +186,7 @@ class AppTable extends Table {
 	 * @param  Time   $dateObject [description]
 	 * @return [type]             [description]
 	 */
-	public function formatDate(Time $dateObject) {
+	public function formatDate($dateObject) {
 		$ConfigItem = TableRegistry::get('ConfigItems');
 		$format = $ConfigItem->value('date_format');
         $value = '';
@@ -182,8 +197,8 @@ class AppTable extends Table {
 	}
 
 	// Event: 'ControllerAction.Model.onFormatTime'
-	public function onFormatTime(Event $event, Time $dateObject) {
-		return $this->formatTime($dateObject);
+	public function onFormatTime(Event $event, $timeObject) {
+		return $this->formatTime($timeObject);
 	}
 
 	/**
@@ -191,19 +206,19 @@ class AppTable extends Table {
 	 * @param  Time   $dateObject [description]
 	 * @return [type]             [description]
 	 */
-	public function formatTime(Time $dateObject) {
+	public function formatTime($timeObject) {
 		$ConfigItem = TableRegistry::get('ConfigItems');
 		$format = $ConfigItem->value('time_format');
 		$value = '';
-        if (is_object($dateObject)) {
-            $value = $dateObject->format($format);
+        if (is_object($timeObject)) {
+            $value = $timeObject->format($format);
         }
 		return $value;
 	}
 
 	// Event: 'ControllerAction.Model.onFormatDateTime'
-	public function onFormatDateTime(Event $event, Time $dateObject) {
-		return $this->formatDateTime($dateObject);
+	public function onFormatDateTime(Event $event, $timeObject) {
+		return $this->formatDateTime($timeObject);
 	}
 
 	/**
@@ -211,7 +226,7 @@ class AppTable extends Table {
 	 * @param  Time   $dateObject [description]
 	 * @return [type]             [description]
 	 */
-	public function formatDateTime(Time $dateObject) {
+	public function formatDateTime($dateObject) {
 		$ConfigItem = TableRegistry::get('ConfigItems');
 		$format = $ConfigItem->value('date_format') . ' - ' . $ConfigItem->value('time_format');
 		$value = '';
@@ -264,6 +279,13 @@ class AppTable extends Table {
 		];
 		$indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
 
+		// Set for roles belonging to the controller
+		$roles = [];
+		$event = $controller->dispatchEvent('Controller.Buttons.onUpdateRoles', null, $this);
+    	if ($event->result) {
+    		$roles = $event->result;	
+    	}
+
 		if ($action != 'index') {
 			$toolbarButtons['back'] = $buttons['back'];
 			$toolbarButtons['back']['type'] = 'button';
@@ -280,7 +302,7 @@ class AppTable extends Table {
 			}
 		}
 		if ($action == 'index') {
-			if ($buttons->offsetExists('add') && $access->check($buttons['add']['url'])) {
+			if ($buttons->offsetExists('add') && $access->check($buttons['add']['url'], $roles)) {
 				$toolbarButtons['add'] = $buttons['add'];
 				$toolbarButtons['add']['type'] = 'button';
 				$toolbarButtons['add']['label'] = '<i class="fa kd-add"></i>';
@@ -305,7 +327,7 @@ class AppTable extends Table {
 			}
 		} else if ($action == 'view') {
 			// edit button
-			if ($buttons->offsetExists('edit') && $access->check($buttons['edit']['url'])) {
+			if ($buttons->offsetExists('edit') && $access->check($buttons['edit']['url'], $roles)) {
 				$toolbarButtons['edit'] = $buttons['edit'];
 				$toolbarButtons['edit']['type'] = 'button';
 				$toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
@@ -332,25 +354,25 @@ class AppTable extends Table {
 			// }
 		}
 
-		if ($buttons->offsetExists('view') && $access->check($buttons['view']['url'])) {
+		if ($buttons->offsetExists('view') && $access->check($buttons['view']['url'], $roles)) {
 			$indexButtons['view'] = $buttons['view'];
 			$indexButtons['view']['label'] = '<i class="fa fa-eye"></i>' . __('View');
 			$indexButtons['view']['attr'] = $indexAttr;
 		}
 
-		if ($buttons->offsetExists('edit') && $access->check($buttons['edit']['url'])) {
+		if ($buttons->offsetExists('edit') && $access->check($buttons['edit']['url'], $roles)) {
 			$indexButtons['edit'] = $buttons['edit'];
 			$indexButtons['edit']['label'] = '<i class="fa fa-pencil"></i>' . __('Edit');
 			$indexButtons['edit']['attr'] = $indexAttr;
 		}
 
-		if ($buttons->offsetExists('remove') && $access->check($buttons['remove']['url'])) {
+		if ($buttons->offsetExists('remove') && $access->check($buttons['remove']['url'], $roles)) {
 			$indexButtons['remove'] = $buttons['remove'];
 			$indexButtons['remove']['label'] = '<i class="fa fa-trash"></i>' . __('Delete');
 			$indexButtons['remove']['attr'] = $indexAttr;
 		}
 
-		if ($buttons->offsetExists('reorder') && $buttons->offsetExists('edit') && $access->check($buttons['edit']['url'])) {
+		if ($buttons->offsetExists('reorder') && $buttons->offsetExists('edit') && $access->check($buttons['edit']['url'], $roles)) {
 		// if ($buttons->offsetExists('reorder') && $access->check($buttons['edit']['url'])) {
 			$controller->set('reorder', true);
 		}
@@ -398,20 +420,6 @@ class AppTable extends Table {
 
 	public function findOrder(Query $query, array $options) {
 		return $query->order([$this->aliasField('order') => 'ASC']);
-	}
-
-	public function checkIdInOptions($key, $options) {
-		pr('checkIdInOptions is deprecated, please use queryString instead');
-		if (!empty($options)) {
-			if ($key != 0) {
-				if (!array_key_exists($key, $options)) {
-					$key = key($options);
-				}
-			} else {
-				$key = key($options);
-			}
-		}
-		return $key;
 	}
 
 	public function postString($key) {

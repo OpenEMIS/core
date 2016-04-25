@@ -12,6 +12,7 @@
  */
 namespace DebugKit\Model\Table;
 
+use Cake\Core\Configure;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
 use DebugKit\Model\Table\LazyTableTrait;
@@ -33,7 +34,7 @@ class RequestsTable extends Table
     public function initialize(array $config)
     {
         $this->hasMany('DebugKit.Panels', [
-            'sort' => 'Panels.title ASC',
+            'sort' => ['Panels.title' => 'ASC'],
         ]);
         $this->addBehavior('Timestamp', [
             'events' => [
@@ -79,17 +80,24 @@ class RequestsTable extends Table
         if (time() % 100 !== 0) {
             return;
         }
-        $query = $this->query()
-            ->delete()
-            ->where(['requested_at <=' => new \DateTime('-2 weeks')]);
-        $statement = $query->execute();
-        $statement->closeCursor();
-
-        $existing = $this->find()->select(['id']);
+        $noPurge = $this->find()
+            ->select(['id'])
+            ->hydrate(false)
+            ->order(['requested_at' => 'desc'])
+            ->limit(Configure::read('DebugKit.requestCount') ?: 20)
+            ->extract('id')
+            ->toArray();
 
         $query = $this->Panels->query()
             ->delete()
-            ->where(['request_id NOT IN' => $existing]);
+            ->where(['request_id NOT IN' => $noPurge]);
+        $statement = $query->execute();
+        $statement->closeCursor();
+
+        $query = $this->query()
+            ->delete()
+            ->where(['id NOT IN' => $noPurge]);
+
         $statement = $query->execute();
         $statement->closeCursor();
     }

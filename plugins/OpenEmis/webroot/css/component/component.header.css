@@ -1,4 +1,5 @@
-/* HEADER v.1.0.2 */
+/* HEADER v.1.0.3 */
+
 
 /* TOP HEADER */
 
@@ -118,6 +119,8 @@
 .username span {
     display: inline-block;
     padding: 19px 0 14px;
+    font-size: 12px;
+    white-space: pre;
 }
 
 .dropdown-menu .dropdown-arrow {
@@ -238,10 +241,13 @@
     text-decoration: none;
 }
 
+
 /*==========  Non-Mobile First Method  ==========*/
 
+
 /* Small Devices, Tablets */
-@media only screen and (max-width : 1024px) {
+
+@media only screen and (max-width: 1024px) {
     /* HEADER */
     .navbar-left {
         width: 100%;
@@ -335,4 +341,19 @@
     .product-lists .dropdown-arrow {
         right: 28px;
     }
+    .rtl .navbar {
+        height: 58px;
+    }
+    .rtl .split-panes.horizontal {
+        top: 77px;
+    }
+}
+
+
+/* RTL */
+
+.rtl .navbar-right .username,
+.rtl .username a {
+    font-size: 12px;
+    line-height: 12px;
 }
