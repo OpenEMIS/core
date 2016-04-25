@@ -1,6 +1,6 @@
 -- POCOR-2863
 -- db_patches
-INSERT INTO `db_patches` VALUES ('POCOR-2863', NOW());
+INSERT INTO `db_patches` (`issue`, `created`) VALUES ('POCOR-2863', NOW());
 
 -- institution_class_students
 ALTER TABLE `institution_class_students`
