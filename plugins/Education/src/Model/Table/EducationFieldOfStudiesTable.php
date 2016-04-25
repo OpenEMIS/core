@@ -11,6 +11,11 @@ class EducationFieldOfStudiesTable extends ControllerActionTable {
 		$this->belongsTo('ProgrammeOrientations', ['className' => 'Education.EducationProgrammeOrientations', 'foreignKey' => 'education_programme_orientation_id']);
 		$this->hasMany('EducationProgrammes', ['className' => 'Education.EducationProgrammes', 'cascadeCallbacks' => true]);
 		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+				'filter' => 'education_programme_orientation_id',
+			]);
+		}
 	}
 
 	public function addEditBeforeAction(Event $event) {

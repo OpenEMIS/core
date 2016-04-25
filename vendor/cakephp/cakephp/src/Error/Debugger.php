@@ -20,6 +20,8 @@ use Cake\Utility\Security;
 use Cake\Utility\Text;
 use Exception;
 use InvalidArgumentException;
+use ReflectionObject;
+use ReflectionProperty;
 
 /**
  * Provide custom logging and error handling.
@@ -172,7 +174,7 @@ class Debugger
      * @param mixed $var The variable to dump.
      * @param int $depth The depth to output to. Defaults to 3.
      * @return void
-     * @see Debugger::exportVar()
+     * @see \Cake\Error\Debugger::exportVar()
      * @link http://book.cakephp.org/3.0/en/development/debugging.html#outputting-values
      */
     public static function dump($var, $depth = 3)
@@ -235,7 +237,7 @@ class Debugger
      */
     public static function formatTrace($backtrace, $options = [])
     {
-        if ($backtrace instanceof \Exception) {
+        if ($backtrace instanceof Exception) {
             $backtrace = $backtrace->getTrace();
         }
         $self = Debugger::getInstance();
@@ -321,9 +323,11 @@ class Debugger
 
         if (strpos($path, APP) === 0) {
             return str_replace(APP, 'APP/', $path);
-        } elseif (strpos($path, CAKE_CORE_INCLUDE_PATH) === 0) {
+        }
+        if (strpos($path, CAKE_CORE_INCLUDE_PATH) === 0) {
             return str_replace(CAKE_CORE_INCLUDE_PATH, 'CORE', $path);
-        } elseif (strpos($path, ROOT) === 0) {
+        }
+        if (strpos($path, ROOT) === 0) {
             return str_replace(ROOT, 'ROOT', $path);
         }
 
@@ -524,7 +528,7 @@ class Debugger
      * @param int $depth The current depth, used for tracking recursion.
      * @param int $indent The current indentation level.
      * @return string
-     * @see Debugger::exportVar()
+     * @see \Cake\Error\Debugger::exportVar()
      */
     protected static function _object($var, $depth, $indent)
     {
@@ -554,11 +558,11 @@ class Debugger
                 $props[] = "$key => " . $value;
             }
 
-            $ref = new \ReflectionObject($var);
+            $ref = new ReflectionObject($var);
 
             $filters = [
-                \ReflectionProperty::IS_PROTECTED => 'protected',
-                \ReflectionProperty::IS_PRIVATE => 'private',
+                ReflectionProperty::IS_PROTECTED => 'protected',
+                ReflectionProperty::IS_PRIVATE => 'private',
             ];
             foreach ($filters as $filter => $visibility) {
                 $reflectionProperties = $ref->getProperties($filter);
@@ -583,7 +587,7 @@ class Debugger
      *
      * @param string|null $format The format you want errors to be output as.
      *   Leave null to get the current format.
-     * @return mixed Returns null when setting. Returns the current format when getting.
+     * @return string|null Returns null when setting. Returns the current format when getting.
      * @throws \InvalidArgumentException When choosing a format that doesn't exist.
      */
     public static function outputAs($format = null)

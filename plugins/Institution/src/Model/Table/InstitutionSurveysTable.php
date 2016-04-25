@@ -29,7 +29,7 @@ class InstitutionSurveysTable extends AppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
@@ -43,8 +43,10 @@ class InstitutionSurveysTable extends AppTable {
 			'fieldKey' => 'survey_question_id',
 			'tableColumnKey' => 'survey_table_column_id',
 			'tableRowKey' => 'survey_table_row_id',
+			'fieldClass' => ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id'],
 			'formKey' => 'survey_form_id',
 			// 'filterKey' => 'custom_filter_id',
+			'formClass' => ['className' => 'Survey.SurveyForms', 'foreignKey' => 'survey_form_id'],
 			'formFieldClass' => ['className' => 'Survey.SurveyFormsQuestions'],
 			// 'formFilterClass' => ['className' => 'CustomField.CustomFormsFilters'],
 			'recordKey' => 'institution_survey_id',
@@ -54,6 +56,7 @@ class InstitutionSurveysTable extends AppTable {
 		$this->addBehavior('Excel', ['pages' => ['view']]);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Import.ImportLink');
+        $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
 	}
 
 	public function implementedEvents() {
@@ -64,6 +67,7 @@ class InstitutionSurveysTable extends AppTable {
     	foreach ($this->workflowEvents as $event) {
     		$events[$event['value']] = $event['method'];
     	}
+    	$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
 
     	return $events;
     }
@@ -147,6 +151,91 @@ class InstitutionSurveysTable extends AppTable {
 
     	return $this->workflowEvents;
     }
+
+    // Workbench.Model.onGetList
+	public function onGetWorkbenchList(Event $event, $isAdmin, $institutionRoles, ArrayObject $data) {
+		// Results of all Not Completed survey in all institutions that the login user can access
+		$statusIds = $event->subject()->Workflow->getStepsByModelCode($this->registryAlias(), 'NOT_COMPLETED');
+
+		if ($isAdmin) {
+			return []; // remove this line once workbench pagination is implemented
+		} else {
+			$where = [];
+			// returns empty list if there is no status mapping for workflows OR if the user does not have access to any schools
+			// Should never return all rows without any conditions because it may cause out of memory error
+			if (empty($statusIds) || empty($institutionRoles)) {
+				return [];
+			} else {
+				$where[$this->aliasField('status_id') . ' IN '] = $statusIds;
+				$where[$this->aliasField('institution_id') . ' IN '] = array_keys($institutionRoles);
+			}
+
+			$WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+
+			// Array to store security roles in each Workflow Step
+			$stepRoles = [];
+			foreach ($institutionRoles as $institutionId => $roles) {
+				foreach ($statusIds as $key => $statusId) {
+					if (!array_key_exists($statusId, $stepRoles)) {
+						$stepRoles[$statusId] = $WorkflowStepsRoles->getRolesByStep($statusId);
+					}
+
+					// logic to pre-insert survey in school only when user's roles is configured to access the step
+					$hasAccess = count(array_intersect_key($roles, $stepRoles[$statusId])) > 0;
+					if ($hasAccess) {
+						$this->buildSurveyRecords($institutionId);
+					}
+					// End
+				}
+			}
+			// End
+
+			$resultSet = $this
+				->find()
+				->contain(['Statuses', 'AcademicPeriods', 'SurveyForms', 'Institutions', 'ModifiedUser', 'CreatedUser'])
+				->where($where)
+				->order([$this->aliasField('created')])
+				->toArray();
+			// End
+
+			foreach ($resultSet as $key => $obj) {
+				$institutionId = $obj->institution->id;
+				$stepId = $obj->status_id;
+				$roles = $institutionRoles[$institutionId];
+
+				// Permission
+				// access is true if user roles exists in step roles
+				$hasAccess = count(array_intersect_key($roles, $stepRoles[$stepId])) > 0;
+				// End
+
+				if ($hasAccess) {
+					$requestTitle = sprintf('%s - %s of %s in %s', $obj->status->name, $obj->survey_form->name, $obj->institution->name, $obj->academic_period->name);
+					$url = [
+						'plugin' => 'Institution',
+						'controller' => 'Institutions',
+						'action' => 'Surveys',
+						'view',
+						$obj->id,
+						'institution_id' => $institutionId
+					];
+
+					if (is_null($obj->modified)) {
+						$receivedDate = $this->formatDate($obj->created);
+					} else {
+						$receivedDate = $this->formatDate($obj->modified);
+					}
+
+					$data[] = [
+						'request_title' => ['title' => $requestTitle, 'url' => $url],
+						'receive_date' => $receivedDate,
+						'due_date' => '<i class="fa fa-minus"></i>',
+						'requester' => $obj->created_user->username,
+						'type' => __('Institution > Survey > Forms')
+					];
+				}
+			}
+		}
+	}
 
 	public function onGetDescription(Event $event, Entity $entity) {
 		$surveyFormId = $entity->survey_form->id;
@@ -348,6 +437,8 @@ class InstitutionSurveysTable extends AppTable {
 						break;
 					}
 				}
+
+
 
 				// Update all New Survey to Expired by Institution Id
 				$this->updateAll(['status_id' => self::EXPIRED],

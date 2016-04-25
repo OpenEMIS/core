@@ -1,4 +1,4 @@
-/* FORM v.1.2.1 */
+/* FORM v.1.2.2 */
 
 .form-horizontal {
     margin: 20px 0;
@@ -29,6 +29,10 @@ textarea[disabled="disabled"] {
     background-color: #EEE !important;
 }
 
+input:focus {
+    outline: 0 !important;
+}
+
 .form-horizontal input,
 .form-horizontal textarea,
 .form-horizontal .input-group,
@@ -50,7 +54,7 @@ textarea[disabled="disabled"] {
     font-size: 12px;
 }
 
-.form-horizontal input, 
+.form-horizontal input,
 .form-horizontal textarea {
     border: 1px solid #CCC;
 }
@@ -558,4 +562,42 @@ option {
         width: 100% !important;
         margin-left: 0 !important;
     }
+}
+
+
+/* RTL */
+
+.rtl .form-control {
+    padding: 5px 6px 3px;
+    height: 30px;
+}
+
+.rtl .form-control,
+.rtl .form-horizontal input,
+.rtl .form-horizontal textarea,
+.rtl .form-horizontal .chosen-choices,
+.rtl .form-horizontal label,
+.rtl .form-label,
+.rtl .form-input {
+    font-size: 14px !important;
+}
+
+.rtl .form-label,
+.rtl .form-input,
+.rtl .file .form-control {
+    line-height: 14px !important;
+}
+
+.rtl .fileinput-filename {
+    padding-bottom: 3px;
+}
+
+.rtl .file-input-text p, 
+.rtl .file-input-buttons p, 
+.rtl .input-text p {
+    font-size: 13px !important;
+}
+
+.rtl .form-input {
+    padding: 5px 0;
 }

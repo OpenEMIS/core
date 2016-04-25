@@ -19,6 +19,7 @@ class AcademicPeriodsTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('Parents', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('Levels', ['className' => 'AcademicPeriod.AcademicPeriodLevels', 'foreignKey' => 'academic_period_level_id']);
+		$this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true]);
 		$this->addBehavior('Tree');
 	}
 
@@ -218,6 +219,7 @@ class AcademicPeriodsTable extends AppTable {
 
 	public function getYearList($params = []) {
 		$conditions = array_key_exists('conditions', $params) ? $params['conditions'] : [];
+		$withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : false;
 		$isEditable = array_key_exists('isEditable', $params) ? $params['isEditable'] : null;
 
 		$level = $this->Levels
@@ -225,7 +227,7 @@ class AcademicPeriodsTable extends AppTable {
 			->order([$this->Levels->aliasField('level ASC')])
 			->first();
 
-		$list = $this
+		$data = $this
 			->find('list')
 			->find('visible')
 			->find('order')
@@ -233,6 +235,13 @@ class AcademicPeriodsTable extends AppTable {
 			->where([$this->aliasField('academic_period_level_id') => $level->id])
 			->where($conditions)
 			->toArray();
+
+		if ( !$withLevels ) {
+			$list = $data;
+		} else {
+			$list[$level->name] = $data;
+		}
+
 		return $list;
 	}
 
@@ -305,7 +314,7 @@ class AcademicPeriodsTable extends AppTable {
 		}
 
 		if ( $withSelect ) {
-			$data = ['' => __('-- Select Period --')] + $data;
+			$data = ['' => '-- ' . __('Select Period') .' --'] + $data;
 		}
 
 		return $data;
