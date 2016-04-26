@@ -185,16 +185,11 @@ class InstitutionClassStudentsTable extends AppTable {
 			$subjectStudents[] = [
 				'status' => 1,
 				'student_id' => $data['student_id'],	
-<<<<<<< HEAD
 				'institution_subject_id' => $classSubjects['institution_subject_id'],
-				'institution_class_id' => $data['institution_class_id']
-=======
-				'institution_subject_id' => $subject->id,
 				'institution_class_id' => $data['institution_class_id'],
-				'institution_id' => $data['institution_id'],
-				'academic_period_id' => $data['academic_period_id'],
-				'education_subject_id' => $subject->education_subject_id,
->>>>>>> 3f1c27fc5227fe33837037674a2cb156cdb55187
+                'institution_id' => $data['institution_id'],
+                'academic_period_id' => $data['academic_period_id'],
+                'education_subject_id' => $classSubjects['institution_subject_id'],
 			];
 		}
 
