@@ -55,30 +55,30 @@ class SurveysController extends AppController
 	}
 
 	public function Rules() {
-		$this->set('ngController', 'SurveyRulesCtrl as SurveyRulesController');
+		$this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Survey.SurveyRules']);
+		// if ($this->params['action'] == 'index') {
+		// 	pr('here');
+		// 	// $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionPositions']);
+		// }
+		// $this->set('ngController', 'SurveyRulesCtrl as SurveyRulesController');
 	}
 
 	private function attachAngularModules() {
 		$action = $this->request->action;
-
+		$pass = isset($this->request->pass[0]) ? $this->request->pass[0] : 'index';
+		// pr($action);
 		switch ($action) {
 			case 'Rules':
-				$this->Angular->addModules([
-					'alert.svc',
-					'survey.rules.ctrl',
-					'survey.rules.svc'
-				]);
+				if ($pass != 'index') {
+					$this->Angular->addModules([
+						'alert.svc',
+						'survey.rules.ctrl',
+						'survey.rules.svc'
+					]);
+				}
 				break;
 		}
 	}
-
-	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
-
-		
-		$this->Navigation->addCrumb($model->getHeader($model->alias));
-
-		$this->set('contentHeader', $header);
-    }
 
 	public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {
     	if ($model->alias == 'Status') {
