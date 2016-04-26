@@ -11,6 +11,7 @@ use Cake\Utility\Inflector;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
 use Cake\View\Helper\IdGeneratorTrait;
+use Cake\View\NumberHelper;
 
 use Cake\Log\Log;
 
@@ -19,7 +20,7 @@ class HtmlFieldHelper extends Helper {
 
 	public $table = null;
 
-	public $helpers = ['Html', 'Form', 'Url'];
+	public $helpers = ['Html', 'Form', 'Url', 'Number'];
 
 	public $includes = [
 		'datepicker' => [
@@ -58,6 +59,16 @@ class HtmlFieldHelper extends Helper {
 		} else {
 			$this->_View->set($element, [$attr]);
 		}
+	}
+
+	private function patchInvalidFields($data, $field, $options) {
+		if (!is_null($data)) {
+			$invalid = $data->invalid();
+			if (!empty($invalid) && array_key_exists($field, $invalid)) {
+				$options['value'] = $data->invalid($field);
+			}
+		}
+		return $options;
 	}
 
 	public function dispatchEvent($subject, $eventKey, $method=null, $params=[]) {
@@ -145,7 +156,18 @@ class HtmlFieldHelper extends Helper {
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
 			}
+			$options = $this->patchInvalidFields($data, $attr['field'], $options);
 			$value = $this->Form->input($fieldName, $options);
+		}
+		return $value;
+	}
+
+	public function decimal($action, Entity $data, $attr, $options=[]) {
+		$value = '';
+		if ($action == 'index' || $action == 'view') {
+			$value = $data->{$attr['field']};
+		} else if ($action == 'edit') {
+			$value = $this->string($action, $data, $attr, $options);
 		}
 		return $value;
 	}
@@ -163,6 +185,7 @@ class HtmlFieldHelper extends Helper {
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
 			}
+			$options = $this->patchInvalidFields($data, $attr['field'], $options);
 			$value = $this->Form->input($fieldName, $options);
 		}
 		return $value;
@@ -178,6 +201,7 @@ class HtmlFieldHelper extends Helper {
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
 			}
+			$options = $this->patchInvalidFields($data, $attr['field'], $options);
 			$value = $this->Form->input($fieldName, $options);
 		}
 		return $value;
@@ -195,6 +219,7 @@ class HtmlFieldHelper extends Helper {
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
 			}
+			$options = $this->patchInvalidFields($data, $attr['field'], $options);
 			$value = $this->Form->input($fieldName, $options);
 		}
 		return $value;
@@ -308,6 +333,7 @@ class HtmlFieldHelper extends Helper {
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
 			}
+			$options = $this->patchInvalidFields($data, $attr['field'], $options);
 			$value = $this->Form->input($fieldName, $options);
 		}
 		return $value;
@@ -326,6 +352,7 @@ class HtmlFieldHelper extends Helper {
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
 			}
+			$options = $this->patchInvalidFields($data, $attr['field'], $options);
 			$value = $this->Form->input($fieldName, $options);
 		}
 		return $value;
@@ -355,14 +382,25 @@ class HtmlFieldHelper extends Helper {
 		} else if ($action == 'edit') {
 			$options['type'] = 'text';
 			$options['disabled'] = 'disabled';
+			$field = $attr['field'];
+			$invalid = $data->invalid();
+
 			if (isset($attr['options']) && !isset($attr['attr']['value'])) {
-				$options['value'] = $attr['options'][$data->$attr['field']];
+				if (!empty($invalid) && array_key_exists($field, $invalid)) {
+					$options['value'] = $attr['options'][$data->invalid($field)];
+				} else {
+					$options['value'] = $attr['options'][$data->{$field}];
+				}
 			} elseif (isset($attr['attr']['value'])) {
 				$options['value'] = $attr['attr']['value'];
 			} else {
-				$options['value'] = $data->$attr['field'];
+				if (!empty($invalid) && array_key_exists($field, $invalid)) {
+					$options['value'] = $data->invalid($field);
+				} else {
+					$options['value'] = $data->{$field};
+				}
 			}
-			$fieldName = $attr['model'] . '.' . $attr['field'];
+			$fieldName = $attr['model'] . '.' . $field;
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
 			}
@@ -477,7 +515,14 @@ class HtmlFieldHelper extends Helper {
 		}
 
 		$field = $attr['field'];
-		$value = $data->$field;
+		if (!is_null($data)) {
+			$invalid = $data->invalid();
+			if (!empty($invalid) && array_key_exists($field, $invalid)) {
+				$value = $data->invalid($field);
+			} else {
+				$value = $data->$field;
+			}
+		}
 
 		if ($action == 'index' || $action == 'view') {
 			if (!is_null($value)) {
@@ -518,8 +563,15 @@ class HtmlFieldHelper extends Helper {
 		if (!isset($attr['default_date'])) {
 			$attr['default_date'] = $defaultDate;
 		}
-		
-		$value = $data->$field;
+
+		if (!is_null($data)) {
+			$invalid = $data->invalid();
+			if (!empty($invalid) && array_key_exists($field, $invalid)) {
+				$value = $data->invalid($field);
+			} else {
+				$value = $data->$field;
+			}
+		}
 		
 		if ($action == 'index' || $action == 'view') {
 			if (!is_null($value)) {
@@ -530,9 +582,11 @@ class HtmlFieldHelper extends Helper {
 				}
 			}
 		} else if ($action == 'edit') {
-			$attr['id'] = $attr['model'] . '_' . $field; 
-			if (array_key_exists('fieldName', $attr)) {
-				$attr['id'] = $this->_domId($attr['fieldName']);
+			if (!array_key_exists('id', $attr)) {
+				$attr['id'] = $attr['model'] . '_' . $field; 
+				if (array_key_exists('fieldName', $attr)) {
+					$attr['id'] = $this->_domId($attr['fieldName']);
+				}
 			}
 
 			$attr['date_options'] = array_merge($_options, $attr['date_options']);
@@ -549,9 +603,11 @@ class HtmlFieldHelper extends Helper {
 			} else {
 				if (is_object($attr['value'])) {
 					$attr['value'] = $attr['value']->format('d-m-Y');
-				} else {
+				} else if (!array_key_exists('special_value', $attr)) {
 					$attr['value'] = date('d-m-Y', strtotime($attr['value']));
 				}
+				// else $attr['value'] will be what was set before calling this function when $attr['special_value'] was set to true.
+				// this is added when datepicker input is being used with angularJs scope
 			}
 
 			if (!is_null($this->_View->get('datepicker'))) {
@@ -581,7 +637,15 @@ class HtmlFieldHelper extends Helper {
 		}
 
 		$field = $attr['field'];
-		$value = $data->$field;
+
+		if (!is_null($data)) {
+			$invalid = $data->invalid();
+			if (!empty($invalid) && array_key_exists($field, $invalid)) {
+				$value = $data->invalid($field);
+			} else {
+				$value = $data->$field;
+			}
+		}
 
 		if ($action == 'index' || $action == 'view') {
 			if (!is_null($value)) {
