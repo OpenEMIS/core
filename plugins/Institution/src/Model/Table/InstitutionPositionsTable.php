@@ -10,9 +10,10 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
+use Cake\ORM\TableRegistry;
+use Cake\Collection\Collection;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
-use Cake\ORM\TableRegistry;
 
 class InstitutionPositionsTable extends AppTable {
 	use OptionsTrait;
@@ -37,6 +38,13 @@ class InstitutionPositionsTable extends AppTable {
 		]);
 		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
 	}
+
+	public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
+
+    	return $events;
+    }
 
 	public function validationDefault(Validator $validator) {
 		return $validator
@@ -180,7 +188,6 @@ class InstitutionPositionsTable extends AppTable {
 			$staffTitleOptions = array_intersect_key($staffTitleOptions, array_intersect($staffTitleRoles, $roleOptions));
 
 			// Adding the opt group
-			$types = $this->getSelectOptions('Staff.position_types');
 			$titles = [];
 			foreach ($staffTitleOptions as $title) {
 				$type = __($types[$title->type]);
@@ -189,8 +196,8 @@ class InstitutionPositionsTable extends AppTable {
 		} else {
 			$titles = $this->StaffPositionTitles
 				->find()
-			    ->where(['id >' => 1])
-			    ->order(['order'])
+			    ->where([$this->StaffPositionTitles->aliasField('id').' >' => 1])
+			    ->order([$this->StaffPositionTitles->aliasField('order')])
 			    ->map(function ($row) use ($types) { // map() is a collection method, it executes the query
 			        $row->name_and_type = $row->name . ' - ' . (array_key_exists($row->type, $types) ? $types[$row->type] : $row->type);
 			        return $row;
@@ -360,5 +367,133 @@ class InstitutionPositionsTable extends AppTable {
 	public function findWithBelongsTo(Query $query, array $options) {
 		return $query
 			->contain(['StaffPositionTitles', 'Institutions', 'StaffPositionGrades']);
+	}
+
+	public function getInstitutionPositions($institutionId, $userId) {
+
+			// // excluding positions where 'InstitutionStaff.end_date is NULL'
+			$excludePositions = $this->find('list');
+			$excludePositions->matching('InstitutionStaff', function ($q) {
+					return $q->where(['InstitutionStaff.end_date is NULL', 'InstitutionStaff.FTE' => 1]);
+				});
+			$excludePositions->where([$this->aliasField('institution_id') => $institutionId])
+				->toArray()
+				;
+			$excludeArray = [];
+			foreach ($excludePositions as $key => $value) {
+				$excludeArray[] = $value;
+			}
+
+			if ($this->AccessControl->isAdmin()) {
+				$userId = null;
+				$roles = [];
+			} else {
+				$roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+			}
+			
+			// Filter by active status
+			$activeStatusId = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'ACTIVE');
+			$positionConditions = [];
+			$positionConditions[$this->aliasField('institution_id')] = $institutionId;
+			if (!empty($activeStatusId)) {
+				$positionConditions[$this->aliasField('status_id').' IN '] = $activeStatusId;
+			}
+			if (!empty($excludeArray)) {
+				$positionConditions[$this->aliasField('id').' NOT IN '] = $excludeArray;
+			}
+			$staffPositionsOptions = $this
+					->find()
+					->innerJoinWith('StaffPositionTitles.SecurityRoles')
+					->where($positionConditions)
+					->select(['security_role_id' => 'SecurityRoles.id', 'type' => 'StaffPositionTitles.type'])
+					->order(['StaffPositionTitles.type' => 'DESC', 'StaffPositionTitles.order'])
+					->autoFields(true)
+				    ->toArray();
+
+			// Filter by role previlege
+			$SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
+			$roleOptions = $SecurityRolesTable->getRolesOptions($userId, $roles);
+			$roleOptions = array_keys($roleOptions);
+			$staffPositionRoles = $this->array_column($staffPositionsOptions, 'security_role_id');
+			$staffPositionsOptions = array_intersect_key($staffPositionsOptions, array_intersect($staffPositionRoles, $roleOptions));
+
+			// Adding the opt group
+			$types = $this->getSelectOptions('Staff.position_types');
+			$options = [];
+			foreach ($staffPositionsOptions as $position) {
+				$type = __($types[$position->type]);
+				$options[$type][$position->id] = $position->name;
+			}
+	}
+
+	// Workbench.Model.onGetList
+	public function onGetWorkbenchList(Event $event, $isAdmin, $institutionRoles, ArrayObject $data) {
+		$activestatusIds = $event->subject()->Workflow->getStepsByModelCode($this->registryAlias(), 'ACTIVE');
+		$inactivestatusIds = $event->subject()->Workflow->getStepsByModelCode($this->registryAlias(), 'INACTIVE');
+		$statusIds = array_merge($activestatusIds, $inactivestatusIds);
+
+		if ($isAdmin) {
+			return []; // remove this line once workbench pagination is implemented
+		} else {
+			$where = [];
+			if (empty($institutionRoles)) {
+				return [];
+			} else {
+				$where[$this->aliasField('institution_id') . ' IN '] = array_keys($institutionRoles);
+			}
+			if (!empty($statusIds)) {
+				$where[$this->aliasField('status_id') . ' NOT IN '] = $statusIds;
+			}
+
+			$resultSet = $this
+				->find()
+				->contain(['Statuses', 'StaffPositionTitles', 'StaffPositionGrades', 'Institutions', 'ModifiedUser', 'CreatedUser'])
+				->where($where)
+				->order([$this->aliasField('created')])
+				->toArray();
+
+			$WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+			// Array to store security roles in each Workflow Step
+			$stepRoles = [];
+			foreach ($resultSet as $key => $obj) {
+				$institutionId = $obj->institution->id;
+				$stepId = $obj->status_id;
+				$roles = $institutionRoles[$institutionId];
+
+				// Permission
+				if (!array_key_exists($stepId, $stepRoles)) {
+					$stepRoles[$stepId] = $WorkflowStepsRoles->getRolesByStep($stepId);
+				}
+				// access is true if user roles exists in step roles
+				$hasAccess = count(array_intersect_key($roles, $stepRoles[$stepId])) > 0;
+				// End
+
+				if ($hasAccess) {
+					$requestTitle = sprintf('%s - %s with %s of %s', $obj->status->name, $obj->staff_position_title->name, $obj->staff_position_grade->name, $obj->institution->name);
+					$url = [
+						'plugin' => 'Institution',
+						'controller' => 'Institutions',
+						'action' => 'Positions',
+						'view',
+						$obj->id,
+						'institution_id' => $institutionId
+					];
+
+					if (is_null($obj->modified)) {
+						$receivedDate = $this->formatDate($obj->created);
+					} else {
+						$receivedDate = $this->formatDate($obj->modified);
+					}
+
+					$data[] = [
+						'request_title' => ['title' => $requestTitle, 'url' => $url],
+						'receive_date' => $receivedDate,
+						'due_date' => '<i class="fa fa-minus"></i>',
+						'requester' => $obj->created_user->username,
+						'type' => __('Institution > Positions')
+					];
+				}
+			}
+		}
 	}
 }

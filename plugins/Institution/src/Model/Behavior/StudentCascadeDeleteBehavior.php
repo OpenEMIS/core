@@ -47,7 +47,7 @@ class StudentCascadeDeleteBehavior extends Behavior {
 	}
 
 	private function deleteSubjectStudents(Entity $entity) {
-		if (!empty($this->subjectIds)) {
+		if (!empty($this->subjectIds) && !empty($this->classIds)) {
 			$SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
 			$SubjectStudents->deleteAll([
 				$SubjectStudents->aliasField('student_id') => $entity->student_id,
@@ -59,40 +59,27 @@ class StudentCascadeDeleteBehavior extends Behavior {
 
 	private function deleteStudentResults(Entity $entity) {
 		$Assessments = TableRegistry::get('Assessment.Assessments');
-		$AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
 		$Results = TableRegistry::get('Assessment.AssessmentItemResults');
-		$InstitutionAssessments = TableRegistry::get('Institution.InstitutionAssessments');
 
 		$institutionId = $entity->institution_id;
 		$periodId = $entity->academic_period_id;
 		$gradeId = $entity->education_grade_id;
 		$studentId = $entity->student_id;
 
-		$itemIds = $AssessmentItems
+		$assessmentIds = $Assessments
 			->find('list', ['keyField' => 'id', 'valueField' => 'id'])
-			->innerJoin(
-				[$Assessments->alias() => $Assessments->table()],
-				[
-					$Assessments->aliasField('id = ') . $AssessmentItems->aliasField('assessment_id'),
-					$Assessments->aliasField('education_grade_id') => $gradeId
-				]
-			)
-			->innerJoin(
-				[$InstitutionAssessments->alias() => $InstitutionAssessments->table()],
-				[
-					$InstitutionAssessments->aliasField('assessment_id = ') . $Assessments->aliasField('id'),
-					$InstitutionAssessments->aliasField('institution_id') => $institutionId,
-					$InstitutionAssessments->aliasField('academic_period_id') => $periodId
-				]
-			)
+			->where([
+				$Assessments->aliasField('academic_period_id') => $periodId,
+				$Assessments->aliasField('education_grade_id') => $gradeId
+			])
 			->toArray();
 
-		if (!empty($itemIds)) {
+		if (!empty($assessmentIds)) {
 			$Results->deleteAll([
 				$Results->aliasField('institution_id') => $institutionId,
 				$Results->aliasField('academic_period_id') => $periodId,
 				$Results->aliasField('student_id') => $studentId,
-				$Results->aliasField('assessment_item_id IN') => $itemIds
+				$Results->aliasField('assessment_id IN') => $assessmentIds
 			]);
 		}
 	}

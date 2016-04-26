@@ -15,7 +15,6 @@
 namespace Cake\Database\Expression;
 
 use Cake\Database\ExpressionInterface;
-use Cake\Database\Expression\Comparison;
 use Cake\Database\ValueBinder;
 
 /**
@@ -30,8 +29,8 @@ class TupleComparison extends Comparison
     /**
      * Constructor
      *
-     * @param string $fields the fields to use to form a tuple
-     * @param array|ExpressionInterface $values the values to use to form a tuple
+     * @param string|array $fields the fields to use to form a tuple
+     * @param array|\Cake\Database\ExpressionInterface $values the values to use to form a tuple
      * @param array $types the types names to use for casting each of the values, only
      * one type per position in the value array in needed
      * @param string $conjunction the operator used for comparing field and value
@@ -92,7 +91,7 @@ class TupleComparison extends Comparison
 
             $type = $this->_type;
             $multiType = is_array($type);
-            $isMulti = $this->isMulti($i, $type);
+            $isMulti = $this->isMulti();
             $type = $multiType ? $type : str_replace('[]', '', $type);
             $type = $type ?: null;
 

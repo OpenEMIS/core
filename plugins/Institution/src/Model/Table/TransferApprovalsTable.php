@@ -8,6 +8,7 @@ use App\Model\Table\AppTable;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\I18n\Time;
+use Cake\I18n\Date;
 
 class TransferApprovalsTable extends AppTable {
 	const NEW_REQUEST = 0;
@@ -44,7 +45,7 @@ class TransferApprovalsTable extends AppTable {
 
 	public function editOnInitialize(Event $event, Entity $entity) {
 		//set current date to start date
-		$entity->start_date = new Time(date('Y-m-d'));
+		$entity->start_date = new Date();
 
 		// Set all selected values only
 		$this->request->data[$this->alias()]['transfer_status'] = $entity->status;
@@ -64,29 +65,34 @@ class TransferApprovalsTable extends AppTable {
 		if (empty($errors)) {
 			$Students = TableRegistry::get('Institution.Students');
 			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+			$EducationGradesTable = TableRegistry::get('Education.EducationGrades');
+
 			$statuses = $StudentStatuses->findCodeList();
 
 			$newSchoolId = $entity->institution_id;
 			$previousSchoolId = $entity->previous_institution_id;
 			$studentId = $entity->student_id;
-			$periodId = $entity->academic_period_id;
+            $periodId = $entity->academic_period_id;
 			$gradeId = $entity->education_grade_id;
+			$newSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($gradeId);
 
-			$conditions = [
-				'institution_id' => $newSchoolId,
-				'student_id' => $studentId,
-				'academic_period_id' => $periodId,
-				'education_grade_id' => $gradeId,
-				'student_status_id' => $statuses['CURRENT']
-			];
-
-			// check if the student is already in the new school
-			if (!$Students->exists($conditions)) { // if not exists
+			$validateEnrolledInAnyInstitutionResult = $Students->validateEnrolledInAnyInstitution($studentId, $newSystemId, ['targetInstitutionId' => $newSchoolId]);
+			if (!empty($validateEnrolledInAnyInstitutionResult)) {
+				$this->Alert->error($validateEnrolledInAnyInstitutionResult, ['type' => 'message']);
+			} else if ($Students->completedGrade($gradeId, $studentId)) {
+				$this->Alert->error('Institution.Students.student_name.ruleStudentNotCompletedGrade');
+			} else { // if not exists
 				$startDate = $data[$this->alias()]['start_date'];
 				$startDate = date('Y-m-d', strtotime($startDate));
 
 				// add the student to the new school
-				$newData = $conditions;
+				$newData = [
+                    'institution_id' => $newSchoolId,
+                    'student_id' => $studentId,
+                    'academic_period_id' => $periodId,
+                    'education_grade_id' => $gradeId,
+                    'student_status_id' => $statuses['CURRENT']
+                ];
 				$newData['start_date'] = $startDate;
 				$newData['end_date'] = $entity->end_date->format('Y-m-d');
 				$newEntity = $Students->newEntity($newData);
@@ -97,7 +103,9 @@ class TransferApprovalsTable extends AppTable {
 						'student_id' => $newEntity->student_id,
 						'institution_class_id' => $classId,
 						'education_grade_id' => $newEntity->education_grade_id,
-						'student_status_id' => $newEntity->student_status_id
+						'student_status_id' => $newEntity->student_status_id,
+						'institution_id' => $newEntity->institution_id,
+						'academic_period_id' => $newEntity->academic_period_id
 					];
 					$InstitutionClassStudentsTable->autoInsertClassStudent($institutionClassStudentObj);
 
@@ -110,9 +118,14 @@ class TransferApprovalsTable extends AppTable {
 							$Students->aliasField('student_status_id') => $statuses['CURRENT']
 						])
 						->first();
-					$existingStudentEntity->student_status_id = $statuses['TRANSFERRED'];
-					$existingStudentEntity->end_date = $startDate;
-					$Students->save($existingStudentEntity);
+
+                    // if cannot be found (perhaps is a promoted/graduated transfer record). then dont change the record
+                    if (!empty($existingStudentEntity)) {
+                        $existingStudentEntity->student_status_id = $statuses['TRANSFERRED'];
+                        $existingStudentEntity->end_date = $startDate;
+                        $Students->save($existingStudentEntity);
+                    }
+					
 					$EducationGradesTable = TableRegistry::get('Education.EducationGrades');
 
 					$educationSystemId = $EducationGradesTable->getEducationSystemId($gradeId);
@@ -142,8 +155,6 @@ class TransferApprovalsTable extends AppTable {
 					$this->Alert->error('general.edit.failed');
 					$this->log($newEntity->errors(), 'debug');
 				}
-			} else {
-				$this->Alert->error('TransferApprovals.exists');
 			}
 
 			// To redirect back to the student admission if it is not access from the workbench
@@ -332,12 +343,12 @@ class TransferApprovalsTable extends AppTable {
 			$selectedPeriod = $request->data[$this->alias()]['academic_period_id'];
 			$startDate = $request->data[$this->alias()]['start_date'];
 			if (!is_object($startDate)) {
-				$startDate = new Time(date('Y-m-d', strtotime($startDate)));
+				$startDate = new Date(date('Y-m-d', strtotime($startDate)));
 				$request->data[$this->alias()]['start_date'] = $startDate;
 			}
 			$endDate = $request->data[$this->alias()]['end_date'];
 			if (!is_object($endDate)) {
-				$endDate = new Time(date('Y-m-d', strtotime($endDate)));
+				$endDate = new Date(date('Y-m-d', strtotime($endDate)));
 				$request->data[$this->alias()]['end_date'] = $endDate;
 			}
 
@@ -412,7 +423,11 @@ class TransferApprovalsTable extends AppTable {
 
 			$where = [$this->aliasField('status') => 0, $this->aliasField('type') => self::TRANSFER];
 			if (!$AccessControl->isAdmin()) {
-				$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
+				if (!empty($institutionIds)) {
+					$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
+				} else {
+					$where[$this->aliasField('institution_id')] = '-1';
+				}
 			}
 
 			$resultSet = $this
@@ -463,7 +478,6 @@ class TransferApprovalsTable extends AppTable {
 					'attr' => ['class' => 'btn btn-outline btn-cancel', 'div' => false, 'name' => 'submit', 'value' => 'reject']
 				];
 			} else {
-				pr($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST);
 				unset($buttons[0]);
 				unset($buttons[1]);
 			}
