@@ -730,7 +730,7 @@ class StudentAttendancesTable extends AppTable {
 				$this->_fieldOrder[] = 'type';
 				$this->_fieldOrder[] = 'reason';
 
-				$typeOptions = [self::PRESENT => 'Present'];
+				$typeOptions = [self::PRESENT => __('Present')];
 				$this->typeOptions = $typeOptions + $this->absenceList;
 
 				$StudentAbsenceReasons = TableRegistry::get('FieldOption.StudentAbsenceReasons');

@@ -18,14 +18,12 @@ class CachesController extends AppController {
 
 	public function clear() {
 		$this->autoRender = false;
-		Cache::clearGroup('labels');
-		Cache::clearGroup('_cake_core_');
-		Cache::clearGroup('_cake_model_');
-		Cache::gc();
-		Cache::gc('labels');
-		Cache::gc('_cake_core_');
-		Cache::gc('_cake_model_');
+		Cache::clear(false, 'labels');
+		Cache::clear(false, '_cake_core_');
+		Cache::clear(false, '_cake_model_');
 		$Labels = TableRegistry::get('Labels');
 		$Labels->storeLabelsInCache();
+
+		return $this->redirect($this->referer());
 	}
 }

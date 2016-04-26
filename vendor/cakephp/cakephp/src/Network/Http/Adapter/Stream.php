@@ -209,6 +209,9 @@ class Stream
         if (isset($options['redirect'])) {
             $this->_contextOptions['max_redirects'] = (int)$options['redirect'];
         }
+        if (isset($options['proxy']['proxy'])) {
+            $this->_contextOptions['proxy'] = $options['proxy']['proxy'];
+        }
     }
 
     /**
@@ -222,6 +225,7 @@ class Stream
     {
         $sslOptions = [
             'ssl_verify_peer',
+            'ssl_verify_peer_name',
             'ssl_verify_depth',
             'ssl_allow_self_signed',
             'ssl_cafile',
@@ -229,7 +233,7 @@ class Stream
             'ssl_passphrase',
         ];
         if (empty($options['ssl_cafile'])) {
-            $options['ssl_cafile'] = CORE_PATH . 'config' . DS . 'cacert.pem';
+            $options['ssl_cafile'] = CORE_PATH . 'config' . DIRECTORY_SEPARATOR . 'cacert.pem';
         }
         if (!empty($options['ssl_verify_host'])) {
             $url = $request->url();

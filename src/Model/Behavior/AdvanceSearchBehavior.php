@@ -12,13 +12,12 @@ use Cake\Network\Request;
 use Cake\Utility\Inflector;
 
 class AdvanceSearchBehavior extends Behavior {
-	private $_exclude = ['id', 'modified_user_id', 'modified', 'created_user_id', 'created'];
 	protected $model = '';
 	protected $modelAlias = '';
 	protected $data = '';
 	protected $_defaultConfig = [
-		'' => '',
 		'display_country' => true,
+		'exclude' => ['id', 'modified_user_id', 'modified', 'created_user_id', 'created'],
 	];
 
 	public function initialize(array $config) {
@@ -60,7 +59,7 @@ class AdvanceSearchBehavior extends Behavior {
 			$advanceSearchModelData = isset($advanceSearchData[$this->_table->alias()]) ? $advanceSearchData[$this->_table->alias()] : [];
 
 			foreach ($fields as $key) {
-				if (!in_array($key , $this->_exclude)) {
+				if (!in_array($key , $this->config('exclude'))) {
 					if ($this->isForeignKey($key)) {
 						$label = $labels->getLabel($this->_table->alias(), $key, $language);
 						$relatedModel = $this->getAssociatedBelongsToModel($key);
@@ -129,11 +128,15 @@ class AdvanceSearchBehavior extends Behavior {
 					 $model->Session->delete($alias.'.advanceSearch.hasMany');	
 				}
 				// clear fields value
-				foreach ($request->data['AdvanceSearch'][$alias]['belongsTo'] as $key=>$value) {
-					$request->data['AdvanceSearch'][$alias]['belongsTo'][$key] = '';
+				if (array_key_exists('belongsTo', $request->data['AdvanceSearch'][$alias])) {
+					foreach ($request->data['AdvanceSearch'][$alias]['belongsTo'] as $key=>$value) {
+						$request->data['AdvanceSearch'][$alias]['belongsTo'][$key] = '';
+					}
 				}
-				foreach ($request->data['AdvanceSearch'][$alias]['hasMany'] as $key=>$value) {
-					$request->data['AdvanceSearch'][$alias]['hasMany'][$key] = '';
+				if (array_key_exists('hasMany', $request->data['AdvanceSearch'][$alias])) {
+					foreach ($request->data['AdvanceSearch'][$alias]['hasMany'] as $key=>$value) {
+						$request->data['AdvanceSearch'][$alias]['hasMany'][$key] = '';
+					}
 				}
 				$request->data['AdvanceSearch'][$alias]['isSearch'] = false;
 			}
@@ -143,8 +146,6 @@ class AdvanceSearchBehavior extends Behavior {
 
 	public function advancedSearchQuery (Request $request, Query $query) {
 		$conditions = '';
-		$advancedSearchBelongsTo = [];
-		$advancedSearchHasMany = [];
 
 		$model = $this->_table;
 		$alias = $model->alias();
@@ -248,32 +249,6 @@ class AdvanceSearchBehavior extends Behavior {
 			die($field . '\'s association not found in ' . $this->_table->alias());
 		}
 		return $associatedEntityArrayKey;
-	}
-
-
-/******************************************************************************************************************
-**
-** specific field functions
-**
-******************************************************************************************************************/
-	// public function onGetField(Event $event, Entity $entity) {
-	// 	$value = str_replace('_id', '', $entity->field);
-	// 	return Inflector::humanize($value);
-	// }
-
-	// public function onGetOldValue(Event $event, Entity $entity) {
-	// 	if (array_key_exists($entity->field_type, $this->_dateTypes)) {
-	// 		return $this->formatToSystemConfig($entity->old_value, $entity->field_type);
-	// 	}
-	// }
-
-
-/******************************************************************************************************************
-**
-** essential functions
-**
-******************************************************************************************************************/
-	public function formatToSystemConfig($value, $type) {
 	}
 
 }

@@ -56,6 +56,7 @@ class WorkflowBehavior extends Behavior {
 	}
 
 	public function implementedEvents() {
+
 		$events = parent::implementedEvents();
 		// priority has to be set at 1000 so that method(s) in model will be triggered first
 		// priority of indexBeforeAction and indexBeforePaginate is set to 1 for it to run first before the event in model
@@ -643,6 +644,10 @@ class WorkflowBehavior extends Behavior {
 				'type' => 'hidden',
 				'value' => $record->id
 			],
+			$alias.'.model_reference' => [
+				'type' => 'hidden',
+				'value' => $record->model_reference
+			],
 			$alias.'.comment_required' => [
 				'type' => 'hidden',
 				'value' => 0,
@@ -831,12 +836,19 @@ class WorkflowBehavior extends Behavior {
 		if($this->_table->hasBehavior('Workflow')) {
 			$workflowRecord = $this->getRecord($this->_table->registryAlias(), $entity);
 			if (!empty($workflowRecord)) {
+				$statusId = $workflowRecord->workflow_step_id;
 				if ($entity->has('status_id')) {
 					$this->_table->updateAll(
-						['status_id' => $workflowRecord->workflow_step_id],
+						['status_id' => $statusId],
 						['id' => $entity->id]
 					);
 				}
+
+				$subject = $this->_table;
+				// Trigger workflow update status event here
+				$event = $subject->dispatchEvent('Workflow.updateWorkflowStatus', [$entity, $statusId], $subject);
+				if ($event->isStopped()) { return $event->result; }
+				// End
 			}
 		}
 	}
@@ -851,14 +863,21 @@ class WorkflowBehavior extends Behavior {
 		if ($request->is(['post', 'put'])) {
 			$requestData = $request->data;
 
+			$subject = $this->_table;
+			// Trigger workflow before save event here
+			$event = $subject->dispatchEvent('Workflow.beforeTransition', [$requestData], $subject);
+			if ($event->isStopped()) { return $event->result; }
+			// End
+
 			// Insert into workflow_transitions.
 			$entity = $this->WorkflowTransitions->newEntity($requestData, ['validate' => false]);
+			
+			// $workflowRecord = $this->WorkflowRecords->get($entity->workflow_record_id);
+			// $id = $workflowRecord->model_reference;
+			$id = $requestData['WorkflowTransitions']['model_reference'];
+
 			if ($this->WorkflowTransitions->save($entity)) {
 				$this->_table->controller->Alert->success('general.edit.success', ['reset' => true]);
-
-				$subject = $this->_table;
-				$workflowRecord = $this->WorkflowRecords->get($entity->workflow_record_id);
-				$id = $workflowRecord->model_reference;
 
 				// Trigger workflow after save event here
 				$event = $subject->dispatchEvent('Workflow.afterTransition', [$id, $entity], $subject);
