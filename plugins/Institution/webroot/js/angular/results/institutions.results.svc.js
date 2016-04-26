@@ -22,7 +22,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc'])
             return AssessmentsTable.get(assessmentId).ajax({defer: true});
         },
 
-        getSubjects: function(assessmentId) {
+        getSubjects: function(assessmentId, classId) {
             var success = function(response, deferred) {
                 var items = response.data.data;
 
@@ -45,6 +45,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc'])
 
             return AssessmentItemsTable
             .select()
+            .find('bySubjectsAccessControl', {assessment_id: assessmentId, class_id: classId})
             .contain(['EducationSubjects', 'GradingTypes.GradingOptions'])
             .where({assessment_id: assessmentId})
             .ajax({success: success, defer: true})
