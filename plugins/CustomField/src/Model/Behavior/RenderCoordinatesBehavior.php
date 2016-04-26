@@ -60,18 +60,19 @@ class RenderCoordinatesBehavior extends RenderBehavior {
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
             $attr['fieldPrefix'] = $fieldPrefix;
             $attr['form'] = $form;
-            $postData = $entity->custom_field_values[($attr['attr']['seq'] - 1)];
-            if (!empty($postData->dirty())) {
+
+            // $postData = $entity->custom_field_values[($attr['attr']['seq'] - 1)];
+            $postData = $entity->custom_field_values[$attr['attr']['seq']];
+            if ($postData instanceof Entity && !empty($postData->dirty())) {
                 $values = ($postData->invalid('coordinates_value')) ? json_decode(json_encode($postData->invalid('coordinates_value'))) : json_decode(json_encode($postData->coordinates_value));
             } elseif (!is_null($savedValue)) {
                 $values = json_decode($savedValue);
             } else {
                 $values = null;
             }
-            if (!empty($postData)) {
+            if ($postData instanceof Entity && !empty($postData)) {
                 $errors = $postData->errors('coordinates_value');
             }
-
         }
 
         $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['action' => $action, 'values' => $values, 'errors' => $errors, 'id' => $savedId, 'attr' => $attr]);

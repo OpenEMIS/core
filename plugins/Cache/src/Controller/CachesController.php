@@ -23,5 +23,7 @@ class CachesController extends AppController {
 		Cache::clear(false, '_cake_model_');
 		$Labels = TableRegistry::get('Labels');
 		$Labels->storeLabelsInCache();
+
+		return $this->redirect($this->referer());
 	}
 }
