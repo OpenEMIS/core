@@ -65,6 +65,9 @@
 						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.status", [ 'value' => $obj->status ]);
 						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.institution_subject_id", [ 'value' => $obj->institution_subject_id ]);
 						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.institution_class_id", [ 'value' => $obj->institution_class_id ]);
+						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.institution_id", [ 'value' => $obj->institution_id ]);
+						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.academic_period_id", [ 'value' => $obj->academic_period_id ]);
+						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.education_subject_id", [ 'value' => $obj->education_subject_id ]);
 
 						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.user.id", [ 'value' => $n ]);
 						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.user.openemis_no", [ 'value' => $userData['openemis_no'] ]);
@@ -74,7 +77,7 @@
 						<td><?= $userData['openemis_no'] ?></td>
 						<td><?= $userData['name'] ?></td>
 						<td><?= $userData['gender']['name'] ?></td>
-						<td><?= __($obj->class_student->student_status->name) ?></td>
+						<td><?= $obj->student_status ?></td>
 						<td> 
 							<?php //if ($attr['data']['isHistoryRecord']): ?>
 							
@@ -95,17 +98,18 @@
 				<?php else:?>
 
 					<tr>
-						<td><?= $this->html->link($obj->user->openemis_no , [
+						<td>
+							<?= $this->html->link($obj->student_openemis_no, [
 									'plugin' => 'Institution',
 									'controller' => 'Institutions',
 									'action' => 'StudentUser',
 									'view',
-									$obj->user->id 
+									$obj->student_user_id
 								]) ?>
 						</td>
-						<td><?= $obj->user->name ?></td>
-						<td><?= $obj->user->gender->name ?></td>
-						<td><?= __($obj->class_student->student_status->name) ?></td>
+						<td><?= $obj->student_name ?></td>
+						<td><?= $obj->student_gender ?></td>
+						<td><?= $obj->student_status ?></td>
 					</tr>
 
 				<?php endif;?>

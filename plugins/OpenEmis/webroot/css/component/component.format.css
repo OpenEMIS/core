@@ -1,4 +1,4 @@
-/* FORMAT TAB v.1.0.7 */
+/* FORMAT TAB v.1.0.8 */
 
 .toolbar-icon .format-lists,
 .toolbar-image .format-lists {
@@ -405,7 +405,7 @@ input[type="checkbox"] {
 }
 
 .chrome.rtl .format-lists .input-select-wrapper select.form-control {
-    padding: 4px 5px 5px 25px !important;
+    padding: 3px 5px 5px 25px !important;
 }
 
 .rtl .format-lists .input-select-wrapper .form-control,
