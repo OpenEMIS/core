@@ -4,6 +4,7 @@ v3.5.3
 - Added a class filter to retrieve student list by class in Promote/Transfer/Undo pages
 - Fixed a bug that cause 404 error when deleting students from institutions
 - Fixed a bug that allows Students to be enrolled in two different school at the same time
+- Fixed a bug that cause 404 error when saving students in class
 
 v3.5.2
 - Added Weights to Assessment Items and Assessment Periods for calculating results
