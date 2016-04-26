@@ -325,6 +325,7 @@ class RestfulController extends AppController
 			$functionName = strtolower(substr($finder, 0, $strlen));
 			if (!in_array($functionName, array_merge($this->_specificFields, ['list']))) {
 				$parameters = $this->_setupFinderParams($finder);
+				$parameters['accessControl'] = $this->AccessControl;
 				if (method_exists($target, 'find'.ucwords($functionName))) {
 					$query->find($functionName, $parameters);
 				} else {

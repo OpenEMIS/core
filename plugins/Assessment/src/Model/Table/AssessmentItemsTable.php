@@ -4,10 +4,13 @@ namespace Assessment\Model\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Cake\ORM\Query;
+use Cake\Network\Session;
 
 class AssessmentItemsTable extends AssessmentsAppTable {
 
-	public function initialize(array $config) {
+	public function initialize(array $config) 
+	{
 		parent::initialize($config);
 		$this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
 		$this->belongsTo('GradingTypes', ['className' => 'Assessment.AssessmentGradingTypes', 'foreignKey' => 'assessment_grading_type_id']);
@@ -37,7 +40,8 @@ class AssessmentItemsTable extends AssessmentsAppTable {
 		];
 	}
 
-	public function getFormFields($action = 'edit') {
+	public function getFormFields($action = 'edit') 
+	{
 		if ($action=='add') {
 			return ['education_subject_id'=>'', 'assessment_grading_type_id'=>'', 'weight'=>''];
 		} else if ($action=='edit') {
@@ -47,7 +51,8 @@ class AssessmentItemsTable extends AssessmentsAppTable {
 		}
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator) 
+	{
 		$validator
 			->requirePresence('assessment_id', 'update')
 			->requirePresence('assessment_grading_type_id')
@@ -59,7 +64,8 @@ class AssessmentItemsTable extends AssessmentsAppTable {
 		return $validator;
 	}
 
-	public function populateAssessmentItemsArray(Entity $entity, $gradeId) {
+	public function populateAssessmentItemsArray(Entity $entity, $gradeId) 
+	{
 		$EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
 		$gradeSubjects = $EducationGradesSubjects->find()
 			->contain('EducationSubjects')
@@ -88,7 +94,8 @@ class AssessmentItemsTable extends AssessmentsAppTable {
 	 *
 	 *	@return array The array containing the assessment item id, subject name and the result type
 	 */
-	public function getAssessmentItemSubjects($assessmentId) {
+	public function getAssessmentItemSubjects($assessmentId) 
+	{
 		$subjectList = $this
 			->find()
 			->matching('EducationSubjects')
@@ -105,4 +112,40 @@ class AssessmentItemsTable extends AssessmentsAppTable {
 		return $subjectList;
 	}
 
+	public function findBySubjectsAccessControl(Query $query, array $options) 
+	{	
+		if (array_key_exists('accessControl', $options)) 
+		{
+			$AccessControl = $options['accessControl'];
+			if (!$AccessControl->isAdmin()) 
+			{
+				$session = new Session;
+				$userId = $session->read('Auth.User.id');
+				$institutionId = $session->read('Institution.Institutions.id');
+
+				$roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+
+				if (!$AccessControl->check(['Institutions', 'AllSubjects', $action], $roles)) 
+				{
+					if (!$AccessControl->check(['Institutions', 'Subjects', $action], $roles)) 
+					{
+						$query
+							->where(['0 = 1']);
+					} else 
+					{
+						$query
+							->innerJoin(['InstitutionSubjects' => 'institution_subjects'], [
+								'InstitutionSubjects.id' => $this->aliasField('education_subject_id')
+							])
+							->innerJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
+								'InstitutionSubjectStaff.institution_subject_id = InstitutionSubjects.id', 
+								'InstitutionSubjectStaff.staff_id' => $userId
+							]);
+					}
+				}
+			}
+
+			return $query;
+		}
+	}
 }
