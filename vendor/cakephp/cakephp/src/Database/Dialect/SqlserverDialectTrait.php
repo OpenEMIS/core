@@ -14,11 +14,11 @@
  */
 namespace Cake\Database\Dialect;
 
-use Cake\Database\Dialect\TupleComparisonTranslatorTrait;
 use Cake\Database\Expression\FunctionExpression;
 use Cake\Database\Expression\OrderByExpression;
 use Cake\Database\Expression\UnaryExpression;
 use Cake\Database\Query;
+use Cake\Database\Schema\SqlserverSchema;
 use Cake\Database\SqlDialectTrait;
 use Cake\Database\SqlserverCompiler;
 use PDO;
@@ -65,7 +65,7 @@ trait SqlserverDialectTrait
         }
 
         if ($offset !== null && !$query->clause('order')) {
-            $query->order($query->newExpr()->add('SELECT NULL'));
+            $query->order($query->newExpr()->add('(SELECT NULL)'));
         }
 
         if ($this->_version() < 11 && $offset !== null) {
@@ -82,6 +82,7 @@ trait SqlserverDialectTrait
      */
     public function _version()
     {
+        $this->connect();
         return $this->_connection->getAttribute(PDO::ATTR_SERVER_VERSION);
     }
 
@@ -136,8 +137,8 @@ trait SqlserverDialectTrait
      * Returns the passed query after rewriting the DISTINCT clause, so that drivers
      * that do not support the "ON" part can provide the actual way it should be done
      *
-     * @param Query $original The query to be transformed
-     * @return Query
+     * @param \Cake\Database\Query $original The query to be transformed
+     * @return \Cake\Database\Query
      */
     protected function _transformDistinct($original)
     {
@@ -154,10 +155,10 @@ trait SqlserverDialectTrait
             ->select(function ($q) use ($distinct, $order) {
                 $over = $q->newExpr('ROW_NUMBER() OVER')
                     ->add('(PARTITION BY')
-                    ->add($q->newExpr()->add($distinct)->type(','))
+                    ->add($q->newExpr()->add($distinct)->tieWith(','))
                     ->add($order)
                     ->add(')')
-                    ->type(' ');
+                    ->tieWith(' ');
                 return [
                     '_cake_distinct_pivot_' => $over
                 ];
@@ -210,7 +211,7 @@ trait SqlserverDialectTrait
         switch ($expression->name()) {
             case 'CONCAT':
                 // CONCAT function is expressed as exp1 + exp2
-                $expression->name('')->type(' +');
+                $expression->name('')->tieWith(' +');
                 break;
             case 'DATEDIFF':
                 $hasDay = false;
@@ -238,7 +239,7 @@ trait SqlserverDialectTrait
                 $expression->name('GETUTCDATE');
                 break;
             case 'EXTRACT':
-                $expression->name('DATEPART')->type(' ,');
+                $expression->name('DATEPART')->tieWith(' ,');
                 break;
             case 'DATE_ADD':
                 $params = [];
@@ -258,7 +259,7 @@ trait SqlserverDialectTrait
 
                 $expression
                     ->name('DATEADD')
-                    ->type(',')
+                    ->tieWith(',')
                     ->iterateParts($visitor)
                     ->iterateParts($manipulator)
                     ->add([$params[2] => 'literal']);
@@ -266,7 +267,7 @@ trait SqlserverDialectTrait
             case 'DAYOFWEEK':
                 $expression
                     ->name('DATEPART')
-                    ->type(' ')
+                    ->tieWith(' ')
                     ->add(['weekday, ' => 'literal'], [], true);
                 break;
         }
@@ -282,7 +283,7 @@ trait SqlserverDialectTrait
      */
     public function schemaDialect()
     {
-        return new \Cake\Database\Schema\SqlserverSchema($this);
+        return new SqlserverSchema($this);
     }
 
     /**

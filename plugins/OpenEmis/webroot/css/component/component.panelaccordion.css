@@ -1,4 +1,4 @@
-/* PANEL TOOLBAR v.1.0.12 */
+/* PANEL TOOLBAR v.1.0.13 */
 
 .scrolltabs.panel-accordion .tab-content {
     padding: 0 !important;
@@ -774,6 +774,7 @@ accordion .format-item .input-selection {
 .rtl .panel-toolbar .check-all .selection-label {
     margin: 2px -4px !important;
     width: 75% !important;
+    line-height: 14px;
 }
 
 .rtl .dropdown-menu .accordion-header {
@@ -834,6 +835,7 @@ accordion .format-item .input-selection {
 .rtl .panel-toolbar .format-item .input-selection .selection-label {
     margin: 0 !important;
 }
+
 
 
 /*==========  Non-Mobile First Method  ==========*/

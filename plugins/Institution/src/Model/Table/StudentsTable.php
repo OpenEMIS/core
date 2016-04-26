@@ -15,6 +15,9 @@ use Cake\Utility\Inflector;
 use Cake\ORM\ResultSet;
 
 class StudentsTable extends AppTable {
+	const PENDING_TRANSFER = -2;
+	const PENDING_ADMISSION = -3;
+	const PENDING_DROPOUT = -4;
 
 	private $dashboardQuery = null;
 	
@@ -42,7 +45,6 @@ class StudentsTable extends AppTable {
 			'pages' => ['index']
 		]);
 
-		// $this->addBehavior('AdvanceSearch');
 		$this->addBehavior('HighChart', [
 			'number_of_students_by_year' => [
 				'_function' => 'getNumberOfStudentsByYear',
@@ -68,6 +70,34 @@ class StudentsTable extends AppTable {
 		]);
         $this->addBehavior('Import.ImportLink');
         $this->addBehavior('Institution.UpdateStudentStatus');
+
+		/**
+		 * Advance Search Types.
+		 * AdvanceSearchBehavior must be included first before adding other types of advance search.
+		 * If no "belongsTo" relation from the main model is needed, include its foreign key name in AdvanceSearch->exclude options.
+		 */
+		$this->addBehavior('AdvanceSearch', [
+			'exclude' => [
+				'student_id',
+				'institution_id',
+				'education_grade_id',
+				'academic_period_id',
+				'student_status_id',
+			]
+		]);
+		$this->addBehavior('User.AdvancedIdentitySearch', [
+			'associatedKey' => $this->aliasField('student_id')
+		]);
+		$this->addBehavior('User.AdvancedContactNumberSearch', [
+			'associatedKey' => $this->aliasField('student_id')
+		]);
+		$this->addBehavior('User.AdvancedSpecificNameTypeSearch', [
+			'modelToSearch' => $this->Users
+		]);
+		/**
+		 * End Advance Search Types
+		 */
+		
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -276,21 +306,21 @@ class StudentsTable extends AppTable {
 		$status = $StudentStatusesTable->findCodeList();
 		$selectedStatus = $this->request->query('status_id');
 		switch ($selectedStatus) {
-			case $status['PENDING_ADMISSION']:
+			case $StudentStatusesTable->PENDING_ADMISSION:
 				$event->stopPropagation();
 				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StudentAdmission']);
 				break;
-			case $status['PENDING_TRANSFER']:
+			case $StudentStatusesTable->PENDING_TRANSFER:
 				$event->stopPropagation();
 				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'TransferRequests']);
 				break;
-			case $status['PENDING_DROPOUT']:
+			case $StudentStatusesTable->PENDING_DROPOUT:
 				$event->stopPropagation();
 				return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StudentDropout']);
 		}
 	}
 
-	 /**
+	/**
      * Method to check if the student is enrolled in all institution within a particular
      * education system in the academic period
      *
@@ -338,6 +368,14 @@ class StudentsTable extends AppTable {
 		$statusOptions = $this->StudentStatuses
 			->find('list')
 			->toArray();
+		$StudentStatusesTable = $this->StudentStatuses;
+		$pendingStatus = [
+			$StudentStatusesTable->PENDING_TRANSFER => __('Pending Transfer'),
+			$StudentStatusesTable->PENDING_ADMISSION => __('Pending Admission'),
+			$StudentStatusesTable->PENDING_DROPOUT => __('Pending Dropout'),
+		];
+
+		$statusOptions = $statusOptions + $pendingStatus;
 
 		// Academic Periods
 		$academicPeriodOptions = $this->AcademicPeriods->getList();
@@ -447,8 +485,7 @@ class StudentsTable extends AppTable {
 			->autoFields(true);
 	}
 
-	public function indexAfterPaginate(Event $event, ResultSet $resultSet) {
-		$query = $resultSet->__debugInfo()['query'];
+	public function indexAfterPaginate(Event $event, ResultSet $resultSet, Query $query) {
 		$this->dashboardQuery = clone $query;
 	}
 
@@ -524,7 +561,7 @@ class StudentsTable extends AppTable {
 			$indexDashboard = 'dashboard';
 			$indexElements = $this->controller->viewVars['indexElements'];
 			
-			$indexElements[] = ['name' => 'Institution.Students/controls', 'data' => [], 'options' => [], 'order' => 2];
+			$indexElements[] = ['name' => 'Institution.Students/controls', 'data' => [], 'options' => [], 'order' => 0];
 			
 			$indexElements[] = [
 				'name' => $indexDashboard,
@@ -534,8 +571,17 @@ class StudentsTable extends AppTable {
 					'modelArray' => $InstitutionArray,
 				],
 				'options' => [],
-				'order' => 1
+				'order' => 2
 			];
+			foreach ($indexElements as $key => $value) {
+				if ($value['name']=='advanced_search') {
+					$indexElements[$key]['order'] = 1;
+				} else if ($value['name']=='OpenEmis.ControllerAction/index') {
+					$indexElements[$key]['order'] = 3;
+				} else if ($value['name']=='OpenEmis.pagination') {
+					$indexElements[$key]['order'] = 4;
+				}
+			}
 			$this->controller->set('indexElements', $indexElements);
 		}
 	}
@@ -660,8 +706,8 @@ class StudentsTable extends AppTable {
 
 		// Check if student has already been enrolled
 		if (!empty ($studentId)) {
-
-			$pendingAdmissionCode = $this->StudentStatuses->getIdByCode('PENDING_ADMISSION');
+			$StudentStatusesTable = $this->StudentStatuses;
+			$pendingAdmissionCode = $StudentStatusesTable->PENDING_ADMISSION;
 			$educationSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($entity->education_grade_id);
 			// Check if the student that is pass over is a pending admission student
 			if ($pendingAdmissionCode == $studentData['student_status_id'] && 
@@ -727,6 +773,8 @@ class StudentsTable extends AppTable {
 					$classData['education_grade_id'] = $entity->education_grade_id;
 					$classData['institution_class_id'] = $entity->class;
 					$classData['student_status_id'] = $entity->student_status_id;
+					$classData['institution_id'] = $entity->institution_id;
+					$classData['academic_period_id'] = $entity->academic_period_id;
 					$InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
 					$InstitutionClassStudents->autoInsertClassStudent($classData);
 				}
@@ -855,19 +903,15 @@ class StudentsTable extends AppTable {
 
 	public function onUpdateFieldStudentStatusId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
-			// 1 - Enrolled, 9 - Pending Admission
-			$statusesToShow = ['CURRENT', 'PENDING_ADMISSION'];
 			$StudentStatusesTable = $this->StudentStatuses;
 			$conditions = [
-				$StudentStatusesTable->aliasField('code').' IN' => $statusesToShow
+				$StudentStatusesTable->aliasField('code') => 'CURRENT'
 			];
 			$options = $StudentStatusesTable
 				->find('list')
 				->where([$conditions])
 				->toArray();
-			foreach ($options as $key => $value) {
-				$options[$key] = __($value);
-			}
+			$options[$StudentStatusesTable->PENDING_ADMISSION] = 'Pending Admission';
 			$attr['options'] = $options;
 		}
 		return $attr;

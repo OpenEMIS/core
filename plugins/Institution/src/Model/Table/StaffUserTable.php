@@ -11,6 +11,7 @@ use Cake\Utility\Text;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
+use Cake\Network\Session;
 use Staff\Model\Table\StaffTable as UserTable;
 
 class StaffUserTable extends UserTable {
@@ -81,11 +82,16 @@ class StaffUserTable extends UserTable {
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($action == 'view') {
+			$id = $this->request->query('id');
+			$this->Session->write('Institution.Staff.id', $id);
+			$session = $this->request->session();
 			if ($toolbarButtons->offsetExists('back')) {
 				unset($toolbarButtons['back']);
 			}
 		} else if ($action == 'add') {
-			$toolbarButtons['back']['url'] = $this->request->referer(true);
+			$backAction = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Staff', 'add'];
+			$toolbarButtons['back']['url'] = $backAction;
+
 			if ($toolbarButtons->offsetExists('export')) {
 				unset($toolbarButtons['export']);
 			}

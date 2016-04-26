@@ -322,7 +322,7 @@ class StudentTransferTable extends AppTable {
 				$institutionId = $this->institutionId;
 
 				$nextPeriodData = $this->AcademicPeriods->get($nextPeriodId);
-				if ($nextPeriodData->start_date instanceof Time) {
+				if ($nextPeriodData->start_date instanceof Time || $nextPeriodData->start_date instanceof Date) {
 					$nextPeriodStartDate = $nextPeriodData->start_date->format('Y-m-d');
 				} else {
 					$nextPeriodStartDate = date('Y-m-d', strtotime($nextPeriodData->start_date));
