@@ -47,6 +47,8 @@
 						echo $this->Form->hidden("InstitutionClasses.class_students.$n.institution_class_id", [ 'value'=> $obj->institution_class_id ]);
 						echo $this->Form->hidden("InstitutionClasses.class_students.$n.education_grade_id", [ 'value'=> $obj->education_grade_id ]);
 						echo $this->Form->hidden("InstitutionClasses.class_students.$n.student_status_id", [ 'value'=> $obj->student_status_id ]);
+						echo $this->Form->hidden("InstitutionClasses.class_students.$n.academic_period_id", [ 'value'=> $obj->academic_period_id ]);
+						echo $this->Form->hidden("InstitutionClasses.class_students.$n.institution_id", [ 'value'=> $obj->institution_id ]);
 						?>
 						<td><?= $obj->user->openemis_no ?></td>
 						<td><?= $obj->user->name ?></td>
