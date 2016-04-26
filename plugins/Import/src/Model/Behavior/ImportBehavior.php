@@ -1084,23 +1084,23 @@ class ImportBehavior extends Behavior {
             }
             if (!empty($val)) {
                 if($activeModel->schema()->column($columnName)['type'] == 'date') {// checking the main table schema data type
+                    $originalRow[$col] = $val;
                     if (is_numeric($val)) {
-                        // convert to date format set in config for converting to a compatible date string for Date object
-                        $val = date($systemDateFormat, \PHPExcel_Shared_Date::ExcelToPHP($val));
+                        // convert the numerical value to date format specified on the template for converting to a compatible date string for Date object
+                        $val = date('d/m/Y', \PHPExcel_Shared_Date::ExcelToPHP($val));
                     }
                     
                     // converts val to Date object so that this field will pass 'validDate' check since
                     // different model has different date format checking. Example; user->date_of_birth is using dmY while others using Y-m-d,
                     // so it is best to convert the date here instead of adjusting individual model's date validation format
                     try {
-                        $formattedDate = Date::createFromFormat($systemDateFormat, $val);
-                        if ($formattedDate instanceof DateTimeInterface) {
-                            $val = $formattedDate;
-                            // follow date format as required on the template
-                            $originalRow[$col] = $val->format('d/m/Y');
-                        }
+                        // parse the retrieved value using the format specified on the template
+                        $formattedDate = Date::createFromFormat('d/m/Y', $val);
+                        $val = $formattedDate;
+                        // follow date format as required on the template
+                        $originalRow[$col] = $val->format('d/m/Y');
                     } catch (InvalidArgumentException $e) {
-                        $originalRow[$col] = $val;
+                        // pr($e->getMessage());
                     }
                 }
             }
