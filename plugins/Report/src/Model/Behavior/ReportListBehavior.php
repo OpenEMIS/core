@@ -29,7 +29,7 @@ class ReportListBehavior extends Behavior {
 	public function afterAction(Event $event, $config) {
 		if ($this->_table->action == 'index') {
 			$this->_table->controller->set('ControllerAction', $config);
-			return $this->_table->controller->render('Report.index');
+			$this->_table->ControllerAction->renderView('/Reports/index');
 		}
 	}
 

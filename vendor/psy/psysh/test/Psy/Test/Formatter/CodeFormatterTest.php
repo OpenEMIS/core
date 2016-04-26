@@ -1,9 +1,9 @@
 <?php
 
 /*
- * This file is part of Psy Shell
+ * This file is part of Psy Shell.
  *
- * (c) 2012-2014 Justin Hileman
+ * (c) 2012-2015 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -22,8 +22,8 @@ class CodeFormatterTest extends \PHPUnit_Framework_TestCase
 
     public function testFormat()
     {
-        $expected = <<<EOS
-  > 18|     private function ignoreThisMethod(\$arg)
+        $expected = <<<'EOS'
+  > 18|     private function ignoreThisMethod($arg)
     19|     {
     20|         echo 'whot!';
     21|     }

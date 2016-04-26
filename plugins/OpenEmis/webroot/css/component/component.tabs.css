@@ -1,4 +1,4 @@
-/* TABS v.1.0.6 */
+/* TABS v.1.0.7 */
 
 .tab-content {
     margin-top: -1px;
@@ -36,7 +36,7 @@
 }
 
 .ng-tabs ul li a {
-    margin: 0 2px 0 0 !important;    
+    margin: 0 2px 0 0 !important;
     padding: 4px !important;
 }
 
@@ -326,10 +326,53 @@
     }
 }
 
+
 /* For IE */
 
-@media all and (-ms-high-contrast: none),(-ms-high-contrast: active) {
+@media all and (-ms-high-contrast: none),
+(-ms-high-contrast: active) {
     .scroll_tabs_container div.scroll_tab_inner span {
         line-height: 30px;
+    }
+}
+
+
+/* RTL */
+
+.rtl .horizontal-tabs span a,
+.rtl .horizontal-tabs span a:focus,
+.rtl .horizontal-tabs span a:visited,
+.rtl .horizontal-tabs span.tab-active a,
+.rtl .horizontal-tabs span.tab-active a:hover,
+.rtl .horizontal-tabs span.tab-active a:focus {
+    height: 28px;
+    line-height: 32px;
+    font-size: 14px;
+}
+
+.rtl .ng-tabs .nav-tabs,
+.rtl .scroll_tabs_container {
+    height: 30px;
+}
+
+@media only screen and (max-width: 1024px) {
+    .rtl .ng-tabs .nav-tabs,
+    .rtl .scroll_tabs_container,
+    .rtl .horizontal-tabs span a,
+    .rtl .horizontal-tabs span a:focus,
+    .rtl .horizontal-tabs span a:visited,
+    .rtl .horizontal-tabs span.tab-active a,
+    .rtl .horizontal-tabs span.tab-active a:hover,
+    .rtl .horizontal-tabs span.tab-active a:focus {
+        height: 32px;
+    }
+    .rtl .horizontal-tabs span a,
+    .rtl .horizontal-tabs span a:focus,
+    .rtl .horizontal-tabs span a:visited,
+    .rtl .horizontal-tabs span.tab-active a,
+    .rtl .horizontal-tabs span.tab-active a:hover,
+    .rtl .horizontal-tabs span.tab-active a:focus,
+    .rtl .horizontal-tabs, .scroll_tabs_container div.scroll_tab_inner span {
+        line-height: 20px;
     }
 }
