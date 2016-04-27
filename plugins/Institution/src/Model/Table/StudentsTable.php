@@ -320,7 +320,7 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	 /**
+	/**
      * Method to check if the student is enrolled in all institution within a particular
      * education system in the academic period
      *
@@ -485,8 +485,7 @@ class StudentsTable extends AppTable {
 			->autoFields(true);
 	}
 
-	public function indexAfterPaginate(Event $event, ResultSet $resultSet) {
-		$query = $resultSet->__debugInfo()['query'];
+	public function indexAfterPaginate(Event $event, ResultSet $resultSet, Query $query) {
 		$this->dashboardQuery = clone $query;
 	}
 
@@ -774,6 +773,8 @@ class StudentsTable extends AppTable {
 					$classData['education_grade_id'] = $entity->education_grade_id;
 					$classData['institution_class_id'] = $entity->class;
 					$classData['student_status_id'] = $entity->student_status_id;
+					$classData['institution_id'] = $entity->institution_id;
+					$classData['academic_period_id'] = $entity->academic_period_id;
 					$InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
 					$InstitutionClassStudents->autoInsertClassStudent($classData);
 				}
