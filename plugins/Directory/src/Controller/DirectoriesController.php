@@ -55,6 +55,9 @@ class DirectoriesController extends AppController {
 			// Staff
 			'StaffEmployments'		=> ['className' => 'Staff.Employments'],
 			'StaffSalaries'			=> ['className' => 'Staff.Salaries'],
+			'StaffPositions'		=> ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
+			'StaffSections'			=> ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
+			'StaffClasses'			=> ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
 			'StaffQualifications'	=> ['className' => 'Staff.Qualifications'],
 			'StaffAbsences'			=> ['className' => 'Staff.Absences', 'actions' => ['index', 'view']],
 			'StaffLeaves'			=> ['className' => 'Staff.Leaves'],
@@ -78,6 +81,7 @@ class DirectoriesController extends AppController {
 	}
 
 	// CAv4
+	public function StaffQualifications() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Qualifications']); }
 	public function StaffPositions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Positions']); }
 	public function StaffClasses() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffClasses']); }
 	public function StaffSubjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSubjects']); }
@@ -320,7 +324,8 @@ class DirectoriesController extends AppController {
 			'Subjects' => ['text' => __('Subjects')],
 			'Absences' => ['text' => __('Absences')],
 			'Behaviours' => ['text' => __('Behaviours')],
-			'Results' => ['text' => __('Results')],
+			// POCOR-2759: temporary hide Results tab
+			// 'Results' => ['text' => __('Results')],
 			'Awards' => ['text' => __('Awards')],
 			'Extracurriculars' => ['text' => __('Extracurriculars')],
 		];
