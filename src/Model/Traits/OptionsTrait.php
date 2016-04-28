@@ -44,7 +44,15 @@ trait OptionsTrait {
 					'B+' => 'B+', 'B-' => 'B-',
 					'AB+' => 'AB+', 'AB-' => 'AB-'
 				]
-			]
+			],
+			'StaffPositionProfiles' => [
+				'FTE' => [
+					'0.25' => '25%', 
+					'0.5' => '50%', 
+					'0.75' => '75%', 
+					'1' => '100%'
+				],
+			],
 		];
 
 		$index = explode('.', $code);
