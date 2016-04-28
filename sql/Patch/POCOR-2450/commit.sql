@@ -3,7 +3,7 @@
 --
 
 -- db_patches
-INSERT INTO `db_patches` VALUES('POCOR-2450', NOW());
+INSERT INTO `db_patches` (issue, created) VALUES('POCOR-2450', NOW());
 
 -- backup tables
 CREATE TABLE `z_2450_custom_field_types` LIKE `custom_field_types`;
