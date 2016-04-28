@@ -9,6 +9,10 @@ function KdSessionSvc($q, $http) {
 	var _base = '';
 	var _controller = 'restful';
 	var _model = '_session';
+	var _settings = {
+		headers: {'Content-Type': 'application/json'},
+        defer: true
+	};
 
 	var service = {
 		base: base,
@@ -25,22 +29,16 @@ function KdSessionSvc($q, $http) {
     };
 
     function check(key) {
-    	var settings = {
-            headers: {'Content-Type': 'application/json'},
-            defer: true,
-            method: 'CHECK',
-            url: toURL() + '/' + key
-        };
+    	var settings = _settings;
+    	settings['method'] = 'CHECK';
+    	settings['url'] = toURL() + '/' + key;
         return ajax(settings);
     };
 
     function read(key) {
-    	var settings = {
-            headers: {'Content-Type': 'application/json'},
-            defer: true,
-            method: 'GET',
-            url: toURL() + '/' + key
-        };
+    	var settings = _settings;
+    	settings['method'] = 'GET';
+        settings['url'] = toURL() + '/' + key;
         return ajax(settings);
     };
 
@@ -48,13 +46,10 @@ function KdSessionSvc($q, $http) {
     	var data = {};
     	data[key] = value;
 
-        var settings = {
-            headers: {'Content-Type': 'application/json'},
-            data: data,
-            defer: true,
-            method: 'POST',
-            url: toURL()
-        };
+    	var settings = _settings;
+    	settings['method'] = 'POST';
+    	settings['data'] = data;
+        settings['url'] = toURL();
         return ajax(settings);
     };
 
