@@ -114,14 +114,15 @@ class AssessmentItemsTable extends AssessmentsAppTable {
 
 	public function findStaffSubjects(Query $query, array $options) 
 	{	
-		if (isset($options['class_id'])) {
+		if (isset($options['class_id'])) 
+		{
 			$classId = $options['class_id'];
 			$session = new Session;
 			$userId = $session->read('Auth.User.id');
 
 			$query->where([
 					'OR' => [
-						// first condition if the current user is a teacher for this subject
+						// For subject teachers
 						'EXISTS (
 							SELECT 1 
 							FROM institution_subjects InstitutionSubjects
@@ -133,7 +134,7 @@ class AssessmentItemsTable extends AssessmentsAppTable {
 								AND InstitutionSubjectStaff.staff_id = '.$userId.'
 							WHERE InstitutionSubjects.education_subject_id = ' . $this->aliasField('education_subject_id') .')',
 
-						// second condition if the current user is the homeroom teacher of the subject class
+						// Homeroom teacher for the class should see all the subjects also
 						'EXISTS (
 							SELECT 1 
 							FROM institution_classes InstitutionClasses
