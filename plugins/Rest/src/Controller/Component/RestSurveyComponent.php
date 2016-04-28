@@ -240,8 +240,11 @@ class RestSurveyComponent extends Component
                 $recordKey = 'institution_survey_id';
 
                 $xmlResponse = $data['response'];
-                // line below is for testing
+                // lines below is for testing
                 // $xmlResponse = "<xf:instance id='xform'><oe:SurveyForms id='1'><oe:Institutions>1</oe:Institutions><oe:AcademicPeriods>10</oe:AcademicPeriods><oe:SurveyQuestions id='2'>some text</oe:SurveyQuestions><oe:SurveyQuestions id='3'>0</oe:SurveyQuestions><oe:SurveyQuestions id='4'>some long long text</oe:SurveyQuestions><oe:SurveyQuestions id='6'>3</oe:SurveyQuestions><oe:SurveyQuestions id='7'>5 6 7</oe:SurveyQuestions><oe:SurveyQuestions id='25'><oe:SurveyTableRows id='20'><oe:SurveyTableColumns0 id='0'>Male</oe:SurveyTableColumns0><oe:SurveyTableColumns1 id='37'>10</oe:SurveyTableColumns1><oe:SurveyTableColumns2 id='38'>20</oe:SurveyTableColumns2><oe:SurveyTableColumns3 id='39'>30</oe:SurveyTableColumns3></oe:SurveyTableRows><oe:SurveyTableRows id='21'><oe:SurveyTableColumns0 id='0'>Female</oe:SurveyTableColumns0><oe:SurveyTableColumns1 id='37'>15</oe:SurveyTableColumns1><oe:SurveyTableColumns2 id='38'>25</oe:SurveyTableColumns2><oe:SurveyTableColumns3 id='39'>35</oe:SurveyTableColumns3></oe:SurveyTableRows></oe:SurveyQuestions></oe:SurveyForms></xf:instance>";
+                // $xmlResponse = '<xf:instance id="xform"><oe:SurveyForms id="16"><oe:Institutions>1059</oe:Institutions><oe:AcademicPeriods>10</oe:AcademicPeriods><oe:SurveyQuestions id="113" array-id="1">1.3641 123.9214</oe:SurveyQuestions><oe:SurveyQuestions id="114" array-id="2">1.74 100.243</oe:SurveyQuestions><oe:SurveyQuestions id="16" array-id="3">5</oe:SurveyQuestions></oe:SurveyForms></xf:instance>';
+                // end testing data //                
+                
                 $this->log('XML Response', 'debug');
                 $this->log($xmlResponse, 'debug');
                 $xmlResponse = str_replace("xf:", "", $xmlResponse);
@@ -337,6 +340,8 @@ class RestSurveyComponent extends Component
                                 case 'NUMBER':
                                 case 'TEXTAREA':
                                 case 'DROPDOWN':
+                                case 'DATE':
+                                case 'TIME':
                                     $answerValue = urldecode($field->__toString());
                                     if (strlen($answerValue) != 0) {
                                         $answerData = [
@@ -406,6 +411,35 @@ class RestSurveyComponent extends Component
                                                     // End
                                                 }
                                             }
+                                        }
+                                    }
+                                    break;
+                                case 'COORDINATES':
+                                    $answerValue = urldecode($field->__toString());
+                                    if (strlen($answerValue) != 0) {
+                                        $answerValues = explode(' ', $answerValue);
+                                        if (count($answerValues)==2) {
+                                            $answerValue = json_encode([
+                                                'latitude' => $answerValues[0],
+                                                'longitude' => $answerValues[1]
+                                            ]);
+                                            $answerData = [
+                                                $recordKey => $recordId,
+                                                $this->fieldKey => $fieldId,
+                                                $fieldColumnName => $answerValue,
+                                                'institution_id' => $institutionId,
+                                                'created_user_id' => $createdUserId
+                                            ];
+
+                                            // Save answer
+                                            $answerEntity = $this->FieldValue->newEntity($answerData);
+                                            if ($this->FieldValue->save($answerEntity)) {
+                                            } else {
+                                                $this->log($answerEntity->errors(), 'debug');
+                                            }
+                                            // End
+                                        } else {
+                                            $this->log('COORDINATES type answer is invalid', 'debug');
                                         }
                                     }
                                     break;
@@ -545,12 +579,6 @@ class RestSurveyComponent extends Component
 
     }
 
-    private function _coordinatesType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
-    {
-        $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
-        $this->_setFieldBindNode($modelNode, $instanceId, 'geopoint', $field->default_is_mandatory, '', $index);
-    }
-
     private function _textType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
     {
         $validationHint = '';
@@ -667,18 +695,6 @@ class RestSurveyComponent extends Component
         $this->_setFieldBindNode($modelNode, $instanceId, 'integer', $field->default_is_mandatory, '', $index);
     }
 
-    private function _dateType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
-    {
-        $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
-        $this->_setFieldBindNode($modelNode, $instanceId, 'date', $field->default_is_mandatory, '', $index);
-    }
-
-    private function _timeType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
-    {
-        $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
-        $this->_setFieldBindNode($modelNode, $instanceId, 'time', $field->default_is_mandatory, '', $index);
-    }
-
     private function _checkboxType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
     {
         $checkboxNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'select', $instanceId, $index);
@@ -770,6 +786,24 @@ class RestSurveyComponent extends Component
                 }
             }
         }
+    }
+
+    private function _dateType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
+    {
+        $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
+        $this->_setFieldBindNode($modelNode, $instanceId, 'date', $field->default_is_mandatory, '', $index);
+    }
+
+    private function _timeType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
+    {
+        $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
+        $this->_setFieldBindNode($modelNode, $instanceId, 'time', $field->default_is_mandatory, '', $index);
+    }
+
+    private function _coordinatesType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
+    {
+        $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
+        $this->_setFieldBindNode($modelNode, $instanceId, 'geopoint', $field->default_is_mandatory, '', $index);
     }
 
     private function _setCommonAttribute($sectionBreakNode, $fieldName, $fieldType, $instanceId, $index)
