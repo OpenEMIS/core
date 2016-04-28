@@ -39,6 +39,10 @@ Router::scope('/restful', ['plugin' => 'Restful'], function ($routes) {
 		        ['pass' => ['model', 'id']]
 			);
 
+			$routes->connect('/_session/:key', ['action' => 'check', '_method' => 'CHECK'], ['pass' => ['key']]);
+			$routes->connect('/_session/:key', ['action' => 'read', '_method' => 'GET'], ['pass' => ['key']]);
+			$routes->connect('/_session', ['action' => 'write', '_method' => 'POST']);
+			$routes->connect('/_session', ['action' => 'delete', '_method' => 'DELETE']);
 		}
 	);
 
