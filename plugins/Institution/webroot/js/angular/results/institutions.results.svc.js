@@ -24,6 +24,34 @@ angular.module('institutions.results.svc', ['kd.orm.svc'])
         },
 
         getSubjects: function(assessmentId, classId) {
+            var session = '';
+            var allSubjects = 0;
+            var mySubjects = 1;
+            var superAdmin = 0;
+            console.log(assessmentId);
+
+            var fail = function(response, deferred) {
+                deferred.reject('You do not have access to subjects');
+            };
+
+            var assessmentSubjects = AssessmentItemsTable
+                .select()
+                .contain(['EducationSubjects', 'GradingTypes.GradingOptions'])
+                .where({assessment_id: assessmentId});
+            
+            if (!superAdmin)
+            {
+                if (!allSubjects) {
+                    if (!mySubjects) {
+                        // If there is no mysubject permission
+                        return AssessmentItemsTable.ajax({success: fail, defer: true});
+                    } else {
+                        assessmentSubjects = assessmentSubjects
+                            .find('staffSubjects', {class_id: classId});
+                    }
+                }
+            }
+
             var success = function(response, deferred) {
                 var items = response.data.data;
 
@@ -43,15 +71,8 @@ angular.module('institutions.results.svc', ['kd.orm.svc'])
                     deferred.reject('You need to configure Assessment Items first');
                 }
             };
-
-            var assessmentSubjects = AssessmentItemsTable
-                .select()
-                .contain(['EducationSubjects', 'GradingTypes.GradingOptions'])
-                .where({assessment_id: assessmentId})
-                .ajax({success: success, defer: true})
-                ;
-
-            return assessmentSubjects;
+            
+            return assessmentSubjects.ajax({success: success, defer: true});
         },
 
         getPeriods: function(assessmentId) {

@@ -112,18 +112,42 @@ class AssessmentItemsTable extends AssessmentsAppTable {
 		return $subjectList;
 	}
 
-	public function findByStaffSubjects(Query $query, array $options) 
+	public function findStaffSubjects(Query $query, array $options) 
 	{	
-		$session = new Session;
-		$userId = $session->read('Auth.User.id');
-		$query
-			->innerJoin(['InstitutionSubjects' => 'institution_subjects'], [
-				'InstitutionSubjects.id' => $this->aliasField('education_subject_id')
-			])
-			->innerJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
-				'InstitutionSubjectStaff.institution_subject_id = InstitutionSubjects.id', 
-				'InstitutionSubjectStaff.staff_id' => $userId
-			]);
-		return $query;
+		if (isset($options['class_id'])) {
+			$classId = $options['class_id'];
+			$session = new Session;
+			$userId = $session->read('Auth.User.id');
+
+			$query->where([
+					'OR' => [
+						// first condition if the current user is a teacher for this subject
+						'EXISTS (
+							SELECT 1 
+							FROM institution_subjects InstitutionSubjects
+							INNER JOIN institution_class_subjects InstitutionClassSubjects
+								ON InstitutionClassSubjects.institution_class_id = '.$classId.'
+								AND InstitutionClassSubjects.institution_subject_id = InstitutionSubjects.id
+							INNER JOIN institution_subject_staff InstitutionSubjectStaff
+								ON InstitutionSubjectStaff.institution_subject_id = InstitutionSubjects.id
+								AND InstitutionSubjectStaff.staff_id = '.$userId.'
+							WHERE InstitutionSubjects.education_subject_id = ' . $this->aliasField('education_subject_id') .')',
+
+						// second condition if the current user is the homeroom teacher of the subject class
+						'EXISTS (
+							SELECT 1 
+							FROM institution_classes InstitutionClasses
+							INNER JOIN institution_class_subjects InstitutionClassSubjects
+								ON InstitutionClassSubjects.institution_class_id = InstitutionClasses.id
+							INNER JOIN institution_subjects InstitutionSubjects
+								ON InstitutionSubjects.id = InstitutionClassSubjects.institution_subject_id
+							WHERE InstitutionClasses.staff_id = '.$userId.' 
+								AND InstitutionClasses.id = '.$classId.' 
+								AND InstitutionSubjects.education_subject_id = '.$this->aliasField('education_subject_id').')'
+					]
+				]);
+
+			return $query;
+		}
 	}
 }
