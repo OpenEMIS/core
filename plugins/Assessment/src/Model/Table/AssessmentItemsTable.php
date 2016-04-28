@@ -112,40 +112,18 @@ class AssessmentItemsTable extends AssessmentsAppTable {
 		return $subjectList;
 	}
 
-	public function findBySubjectsAccessControl(Query $query, array $options) 
+	public function findByStaffSubjects(Query $query, array $options) 
 	{	
-		if (array_key_exists('accessControl', $options)) 
-		{
-			$AccessControl = $options['accessControl'];
-			if (!$AccessControl->isAdmin()) 
-			{
-				$session = new Session;
-				$userId = $session->read('Auth.User.id');
-				$institutionId = $session->read('Institution.Institutions.id');
-
-				$roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
-
-				if (!$AccessControl->check(['Institutions', 'AllSubjects', $action], $roles)) 
-				{
-					if (!$AccessControl->check(['Institutions', 'Subjects', $action], $roles)) 
-					{
-						$query
-							->where(['0 = 1']);
-					} else 
-					{
-						$query
-							->innerJoin(['InstitutionSubjects' => 'institution_subjects'], [
-								'InstitutionSubjects.id' => $this->aliasField('education_subject_id')
-							])
-							->innerJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
-								'InstitutionSubjectStaff.institution_subject_id = InstitutionSubjects.id', 
-								'InstitutionSubjectStaff.staff_id' => $userId
-							]);
-					}
-				}
-			}
-
-			return $query;
-		}
+		$session = new Session;
+		$userId = $session->read('Auth.User.id');
+		$query
+			->innerJoin(['InstitutionSubjects' => 'institution_subjects'], [
+				'InstitutionSubjects.id' => $this->aliasField('education_subject_id')
+			])
+			->innerJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
+				'InstitutionSubjectStaff.institution_subject_id = InstitutionSubjects.id', 
+				'InstitutionSubjectStaff.staff_id' => $userId
+			]);
+		return $query;
 	}
 }
