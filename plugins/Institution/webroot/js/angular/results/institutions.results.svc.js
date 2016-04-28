@@ -1,3 +1,4 @@
+// angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc'])
 angular.module('institutions.results.svc', ['kd.orm.svc'])
 .service('InstitutionsResultsSvc', function($http, $q, $filter, KdOrmSvc) {
     const resultTypes = {MARKS: 'MARKS', GRADES: 'GRADES'};
@@ -43,13 +44,14 @@ angular.module('institutions.results.svc', ['kd.orm.svc'])
                 }
             };
 
-            return AssessmentItemsTable
-            .select()
-            .find('bySubjectsAccessControl', {assessment_id: assessmentId, class_id: classId})
-            .contain(['EducationSubjects', 'GradingTypes.GradingOptions'])
-            .where({assessment_id: assessmentId})
-            .ajax({success: success, defer: true})
-            ;
+            var assessmentSubjects = AssessmentItemsTable
+                .select()
+                .contain(['EducationSubjects', 'GradingTypes.GradingOptions'])
+                .where({assessment_id: assessmentId})
+                .ajax({success: success, defer: true})
+                ;
+
+            return assessmentSubjects;
         },
 
         getPeriods: function(assessmentId) {
