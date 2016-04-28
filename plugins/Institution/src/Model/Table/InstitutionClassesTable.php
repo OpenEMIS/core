@@ -519,6 +519,9 @@ class InstitutionClassesTable extends ControllerActionTable {
                         'student_id' => $classStudent['student_id'],
 						'institution_subject_id' => $subjectEntity->id,
                         'institution_class_id' => $classStudent['institution_class_id'],
+                        'institution_id' => $subjectEntity->institution_id,
+                        'academic_period_id' => $subjectEntity->academic_period_id,
+                        'education_subject_id' => $subjectEntity->education_subject_id
                 	];
 				}
 			}
@@ -937,5 +940,4 @@ class InstitutionClassesTable extends ControllerActionTable {
 		$multiGradeData = $this->find('list', $multiGradeOptions);
 		return $multiGradeData->toArray();
 	}
-
 }
