@@ -26,6 +26,29 @@ class RestfulController extends AppController
         parent::initialize();
     }
 
+    public function write()
+    {
+        $session = $this->request->session();
+        $data = $this->request->data;
+        foreach ($data as $key => $value) {
+            $session->write($key, $value);
+        }
+        $this->set(['data' => $data, '_serialize' => ['data']]);
+    }
+
+    public function read($key)
+    {
+        $session = $this->request->session();
+        $data = $session->read($key);
+        $this->set(['data' => $data, '_serialize' => ['data']]);
+    }
+
+    public function check($key)
+    {
+        $session = $this->request->session();
+        $data = $session->check($key);
+        $this->set(['data' => $data, '_serialize' => ['data']]);
+    }
 
 /***************************************************************************************************************************************************
  *
@@ -40,11 +63,14 @@ class RestfulController extends AppController
             $this->request->params['_ext'] = 'json';
         }
 
-        $pass = $this->request->params['pass'];
-        if (count($pass) > 0) {
-            $model = $this->_instantiateModel($pass[0]);
-            if ($model != false) {
-                $this->model = $model;
+        if (isset($this->request->model)) {
+            $tableAlias = $this->request->model;
+
+            if ($tableAlias != '_session') {
+                $model = $this->_instantiateModel($tableAlias);
+                if ($model != false) {
+                    $this->model = $model;
+                }
             }
         }
     }
@@ -128,7 +154,7 @@ class RestfulController extends AppController
         }
     }
 
-    private function _find(Query $query, $value, ArrayObject $extra)
+    private function _finder(Query $query, $value, ArrayObject $extra)
     {
         if (!empty($value)) {
             $finders = $this->decode($value);
@@ -182,12 +208,13 @@ class RestfulController extends AppController
     {
         if (!empty($value)) {
             $query->limit($value);
+            $extra['limit'] = $value;
         }
     }
 
     private function _page(Query $query, $value, ArrayObject $extra)
     {
-        if (!empty($value)) {
+        if (!empty($value) && $extra->offsetExists('limit')) {
             $query->page($value);
         }
     }
@@ -365,78 +392,6 @@ class RestfulController extends AppController
             '_serialize' => ['data']
         ]);
     }
-    
-    // private $_specificFields = ['visible', 'active', 'order', 'editable'];
-    // private function _attachFieldSpecificFinders(Table $target, array $requestQueries, Query $query) {
-    //     $finders = explode(',', $requestQueries['_finder']);
-    //     foreach ($finders as $key => $finder) {
-    //         $strlen = (strpos($finder, '[')>0) ? strpos($finder, '[') : strlen($finder);
-    //         $functionName = strtolower(substr($finder, 0, $strlen));
-    //         if (in_array($functionName, $this->_specificFields)) {
-    //             $targetColumns = $target->schema()->columns();
-    //             if (in_array($functionName, $targetColumns)) {
-    //                 $parameters = $this->_setupFinderParams($finder);
-    //                 if (method_exists($target, 'find'.ucwords($functionName))) {
-    //                     $query->find($functionName, $parameters);
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     return $query;
-    // }
-    
-    // private function _attachFinders(Table $target, array $requestQueries, Query $query) {
-    //     $finders = explode(',', $requestQueries['_finder']);
-    //     foreach ($finders as $key => $finder) {
-    //         $strlen = (strpos($finder, '[')>0) ? strpos($finder, '[') : strlen($finder);
-    //         $functionName = strtolower(substr($finder, 0, $strlen));
-    //         if (!in_array($functionName, array_merge($this->_specificFields, ['list']))) {
-    //             $parameters = $this->_setupFinderParams($finder);
-    //             if (method_exists($target, 'find'.ucwords($functionName))) {
-    //                 $query->find($functionName, $parameters);
-    //             } else {
-    //                 foreach ($target->behaviors()->loaded() as $behaviorName) {
-    //                     $behavior = $target->behaviors()->get($behaviorName);
-    //                     if (method_exists($behavior, 'find'.ucwords($functionName))) {
-    //                         $query->find($functionName, $parameters);
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     return $query;
-    // }
-
-    // private function _setupFinderParams($finder) {
-    //     $strlen = (strpos($finder, '[')>0) ? strpos($finder, '[') : strlen($finder);
-    //     $parameters = substr($finder, $strlen+1, -1);
-    //     if (!empty($parameters)) {
-    //         $parameters = explode(';', $parameters);
-    //         foreach ($parameters as $key => $value) {
-    //             $buffer = explode(':', $value);
-    //             $parameters[$buffer[0]] = $buffer[1];
-    //         }
-    //     } else {
-    //         $parameters = [];
-    //     }
-    //     return $parameters;
-    // }
-    
-    // private $_specialParams = ['_finder', '_limit', '_page', '_fields', '_contain', '_group'];
-    // private function _setupConditions(Table $target, array $requestQueries) {
-    //     $targetColumns = $target->schema()->columns();
-    //     $conditions = [];
-    //     foreach ($requestQueries as $requestQueryKey => $requestQuery) {
-    //         if (in_array($requestQueryKey, $this->_specialParams)) {
-    //             continue;
-    //         }
-    //         if (!in_array($requestQueryKey, $targetColumns)) {
-    //             return false;
-    //         }
-    //         $conditions[$target->aliasField($requestQueryKey)] = $requestQuery;
-    //     }
-    //     return $conditions;
-    // }
 
     private function _setupContainments(Table $target, array $requestQueries, Query $query) {
         $contains = [];
