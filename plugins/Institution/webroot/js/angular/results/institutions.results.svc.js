@@ -23,12 +23,13 @@ angular.module('institutions.results.svc', ['kd.orm.svc'])
             return AssessmentsTable.get(assessmentId).ajax({defer: true});
         },
 
-        getSubjects: function(assessmentId, classId) {
+        getSubjects: function(assessmentId, classId) 
+        {
+            // To add session and access control check
             var session = '';
-            var allSubjects = 0;
+            var allSubjects = 1;
             var mySubjects = 1;
-            var superAdmin = 0;
-            console.log(assessmentId);
+            var superAdmin = 1;
 
             var fail = function(response, deferred) {
                 deferred.reject('You do not have access to subjects');
@@ -41,11 +42,14 @@ angular.module('institutions.results.svc', ['kd.orm.svc'])
             
             if (!superAdmin)
             {
-                if (!allSubjects) {
-                    if (!mySubjects) {
+                if (!allSubjects) 
+                {
+                    if (!mySubjects) 
+                    {
                         // If there is no mysubject permission
                         return AssessmentItemsTable.ajax({success: fail, defer: true});
-                    } else {
+                    } else 
+                    {
                         assessmentSubjects = assessmentSubjects
                             .find('staffSubjects', {class_id: classId});
                     }
@@ -55,11 +59,13 @@ angular.module('institutions.results.svc', ['kd.orm.svc'])
             var success = function(response, deferred) {
                 var items = response.data.data;
 
-                if (angular.isObject(items) && items.length > 0) {
+                if (angular.isObject(items) && items.length > 0) 
+                {
                     var educationSubject = null;
 
                     var subjects = [];
-                    angular.forEach(items, function(item, key) {
+                    angular.forEach(items, function(item, key) 
+                    {
                         educationSubject = item.education_subject;
                         educationSubject.grading_type = item.grading_type;
 
@@ -67,7 +73,8 @@ angular.module('institutions.results.svc', ['kd.orm.svc'])
                     }, subjects);
 
                     deferred.resolve(subjects);
-                } else {
+                } else 
+                {
                     deferred.reject('You need to configure Assessment Items first');
                 }
             };
@@ -75,7 +82,8 @@ angular.module('institutions.results.svc', ['kd.orm.svc'])
             return assessmentSubjects.ajax({success: success, defer: true});
         },
 
-        getPeriods: function(assessmentId) {
+        getPeriods: function(assessmentId) 
+        {
             var success = function(response, deferred) {
                 var periods = response.data.data;
 
