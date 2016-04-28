@@ -395,7 +395,7 @@ class ImportBehavior extends Behavior {
                                 $rowCodeError .= '<li>' . $fieldName . ' => ' . $arr[key($arr)] . '</li>';
                                 $rowCodeErrorForExcel[] = $fieldName . ' => ' . $arr[key($arr)];
                             } else {
-                                if ($field == 'student_name') {
+                                if (in_array($field, ['student_name', 'staff_name'])) {
                                     $rowCodeError .= '<li>' . $arr[key($arr)] . '</li>';
                                     $rowCodeErrorForExcel[] = $arr[key($arr)];
                                 }
@@ -447,7 +447,6 @@ class ImportBehavior extends Behavior {
 
                     // update importedUniqueCodes either a single key or composite primary keys
                     $this->dispatchEvent($this->_table, $this->eventKey('onImportUpdateUniqueKeys'), 'onImportUpdateUniqueKeys', [$importedUniqueCodes, $tableEntity]);
-                
                 }
 
                 // $model->log('ImportBehavior: '.$row.' records imported', 'info');
@@ -898,10 +897,29 @@ class ImportBehavior extends Behavior {
                 $lookupModel = $mappingRow->lookup_model;
                 $lookupColumn = $mappingRow->lookup_column;
                 $lookupModelObj = TableRegistry::get($lookupModel, ['className' => $lookupPlugin . '.' . $lookupModel]);
-                $lookupValues = $lookupModelObj->getList()->toArray();
+
+                $lookupValues = $lookupModelObj->getList($lookupModelObj->find());
+                $emptyCodeRecords = $lookupValues;
+                $emptyCodeRecords = $emptyCodeRecords->stopWhen(function ($record, $index) {
+                    return !empty($record->national_code);
+                })->toArray();
+
+                $lookupValues = $lookupValues->toArray();
                 $lookup[$key] = [];
-                foreach ($lookupValues as $valId => $valObj) {
-                    $lookup[$key][$valId] = $valObj;
+                if (!empty($lookupValues)) {
+                    foreach($lookupValues as $record) {
+                        if (count($emptyCodeRecords) < 1) {
+                            $lookup[$key][$record->national_code] = [
+                                'id' => $record->id,
+                                'name' => $record->name
+                            ];
+                        } else {
+                            $lookup[$key][$record->id] = [
+                                'id' => $record->id,
+                                'name' => $record->name
+                            ];
+                        }
+                    }
                 }
             }
         }
@@ -940,22 +958,31 @@ class ImportBehavior extends Behavior {
                 } else {
                     $relatedModel = TableRegistry::get($lookupModel, ['className' => $lookupPlugin . '\Model\Table\\' . $lookupModel.'Table']);
                 }
-                $modelData = $relatedModel->getList()->toArray();
+                $modelData = $relatedModel->getList($relatedModel->find());
+                $emptyCodeRecords = $modelData;
+                $emptyCodeRecords = $emptyCodeRecords->stopWhen(function ($record, $key) {
+                    return !empty($record->national_code);
+                })->toArray();
+
                 $data[$row->order]['lookupColumn'] = 2;
                 $data[$row->order]['data'][] = [__('Name'), $translatedCol];
+                $modelData = $modelData->toArray();
                 if (!empty($modelData)) {
-                    foreach($modelData as $key=>$value) {
-                        $data[$row->order]['data'][] = [$value, $key];
+                    foreach($modelData as $record) {
+                        if (count($emptyCodeRecords)<1) {
+                            $data[$row->order]['data'][] = [$record->name, $record->national_code];
+                        } else {
+                            $data[$row->order]['data'][] = [$record->name, $record->id];
+                        }
                     }
                 }
-            } else if ($foreignKey == self::DIRECT_TABLE || $foreignKey == self::NON_TABLE_LIST) {
+            } elseif ($foreignKey == self::DIRECT_TABLE || $foreignKey == self::NON_TABLE_LIST) {
 
                 $params = [$lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, $data, $row->order];
                 $this->dispatchEvent($this->_table, $this->eventKey('onImportPopulate'.$lookupModel.'Data'), 'onImportPopulate'.$lookupModel.'Data', $params);
 
             }
         }
-
         return $data;
     }
     
@@ -1024,14 +1051,13 @@ class ImportBehavior extends Behavior {
                  */
                 $language = '';
                 $translatedCol = $this->_table->onGetFieldLabel(new Event($this), $module, $columnName, $language);
-                if (empty($translatedCol) || $translatedCol==$columnName) {
-                    $translatedCol = Inflector::humanize(substr($columnName, 0, strpos($columnName, '_id')));
+                if (empty($translatedCol) || ($translatedCol==$columnName && $columnName!='FTE')) { // checking for column name FTE should not be hard-coded here, do revisit this in the future
+                    $translatedCol = Inflector::humanize(Inflector::singularize(Inflector::tableize($columnName)));
                 }
             }
             // saves label in runtime array to avoid multiple calls to the db or cache
             $this->labels[$module][$columnName] = $translatedCol;
         }
-
         return __($translatedCol);
     }
 
@@ -1105,10 +1131,15 @@ class ImportBehavior extends Behavior {
                 }
             }
             $translatedCol = $this->getExcelLabel($activeModel->alias(), $columnName);
+            $columnDescription = strtolower($mapping[$col]->description);
+            $isOptional = substr_count($columnDescription, 'optional');
+            if (!$isOptional) {
+                $isOptional = substr_count($columnDescription, 'not required');
+            }
             if ($foreignKey == self::FIELD_OPTION) {
                 if (!empty($cellValue)) {
                     if (array_key_exists($cellValue, $lookup[$col])) {
-                        $val = $cellValue;
+                        $val = $lookup[$col][$cellValue]['id'];
                     } else { // if the cell value not found in lookup
                         $rowPass = false;
                         $rowInvalidCodeCols[$columnName] = __('Selected value is not in the list');
@@ -1117,7 +1148,7 @@ class ImportBehavior extends Behavior {
                     $rowPass = false;
                     $rowInvalidCodeCols[$columnName] = __('This field cannot be left empty');
                 }
-            } else if ($foreignKey == self::DIRECT_TABLE) {
+            } elseif ($foreignKey == self::DIRECT_TABLE) {
                 $registryAlias = $excelMappingObj->lookup_plugin . '.' . $excelMappingObj->lookup_model;
                 if (!empty($this->directTables) && isset($this->directTables[$registryAlias])) {
                     $excelLookupModel = $this->directTables[$registryAlias]['excelLookupModel'];
@@ -1153,28 +1184,30 @@ class ImportBehavior extends Behavior {
                 } else {
                     $val = $cellValue;
                 }
-            } else if ($foreignKey == self::NON_TABLE_LIST) {
+            } elseif ($foreignKey == self::NON_TABLE_LIST) {
                 if (!empty($cellValue)) {
-                    $recordId = $this->dispatchEvent($this->_table, $this->eventKey('onImportGet'.$excelMappingObj->lookup_model.'Id'), 'onImportGet'.$excelMappingObj->lookup_model.'Id', [$cellValue]);
+                    $getIdEvent = $this->dispatchEvent($this->_table, $this->eventKey('onImportGet'.$excelMappingObj->lookup_model.'Id'), 'onImportGet'.$excelMappingObj->lookup_model.'Id', [$cellValue]);
+                    $recordId = $getIdEvent->result;
                     if (!empty($recordId)) {
-                        $val = $recordId->id;
+                        $val = $recordId;
                     } else {
                         $rowPass = false;
                         $rowInvalidCodeCols[$columnName] = __('Selected value is not in the list');
                     }
                 } else {
-                    $rowPass = false;
-                    $rowInvalidCodeCols[$columnName] = __('This field cannot be left empty');
+                    if (!$isOptional) {
+                        $rowPass = false;
+                        $rowInvalidCodeCols[$columnName] = __('This field cannot be left empty');
+                    }
                 }
             }
-            $columnDescription = strtolower($mapping[$col]->description);
-            $isOptional = substr_count($columnDescription, 'optional');
             if (!$isOptional || ($isOptional && !empty($val))) {
                 $tempRow[$columnName] = $val;
             }
         }
         if ($rowPass) {
-            $rowPass = $this->dispatchEvent($this->_table, $this->eventKey('onImportModelSpecificValidation'), 'onImportModelSpecificValidation', [$references, $tempRow, $originalRow, $rowInvalidCodeCols]);
+            $rowPassEvent = $this->dispatchEvent($this->_table, $this->eventKey('onImportModelSpecificValidation'), 'onImportModelSpecificValidation', [$references, $tempRow, $originalRow, $rowInvalidCodeCols]);
+            $rowPass = $rowPassEvent->result;
         }
         return $rowPass;
     }
