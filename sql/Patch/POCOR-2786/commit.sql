@@ -1,4 +1,3 @@
-
 -- db_patches
 INSERT IGNORE INTO `db_patches` VALUES ('POCOR-2786', NOW());
 
