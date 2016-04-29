@@ -473,7 +473,7 @@ class StudentTransferTable extends AppTable {
     public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request) {
     	$institutionClass = TableRegistry::get('Institution.InstitutionClasses');
 		$institutionId = $this->institutionId;
-		$selectedPeriod = $request->query('academic_period_id');
+		$selectedPeriod = $this->currentPeriod->id;
 		$educationGradeId = $request->query('education_grade_id');
 
 		$classes = $institutionClass
