@@ -59,6 +59,15 @@ class TransferApprovalsTable extends AppTable {
 		$this->request->data[$this->alias()]['status'] = $entity->status;
 	}
 
+    private function updateStudentStatus($entity, $oldStatus, $newStatus, $newEndDate) {
+        $Students = TableRegistry::get('Institution.Students');
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $statuses = $StudentStatuses->findCodeList();
+        $entity->end_date = $newEndDate;
+        $entity->student_status_id = $statuses[$newStatus];
+        $Students->save($entity);
+    }
+
 	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		$errors = $entity->errors();
 
@@ -76,14 +85,29 @@ class TransferApprovalsTable extends AppTable {
 			$gradeId = $entity->education_grade_id;
 			$newSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($gradeId);
 
-			$validateEnrolledInAnyInstitutionResult = $Students->validateEnrolledInAnyInstitution($studentId, $newSystemId, ['targetInstitutionId' => $newSchoolId]);
+			$validateEnrolledInAnyInstitutionResult = $Students->validateEnrolledInAnyInstitution($studentId, $newSystemId, ['excludeInstitutions' => [$previousSchoolId], 'targetInstitutionId' => $newSchoolId]);
 			if (!empty($validateEnrolledInAnyInstitutionResult)) {
 				$this->Alert->error($validateEnrolledInAnyInstitutionResult, ['type' => 'message']);
 			} else if ($Students->completedGrade($gradeId, $studentId)) {
 				$this->Alert->error('Institution.Students.student_name.ruleStudentNotCompletedGrade');
 			} else { // if not exists
-				$startDate = $data[$this->alias()]['start_date'];
-				$startDate = date('Y-m-d', strtotime($startDate));
+                $startDate = $data[$this->alias()]['start_date'];
+                $startDate = date('Y-m-d', strtotime($startDate));
+
+                $existingStudentEntity = $Students->find()->where([
+                        $Students->aliasField('institution_id') => $previousSchoolId,
+                        $Students->aliasField('student_id') => $studentId,
+                        $Students->aliasField('academic_period_id') => $periodId,
+                        $Students->aliasField('education_grade_id') => $gradeId,
+                        $Students->aliasField('student_status_id') => $statuses['CURRENT']
+                    ])
+                    ->first();
+
+                // if cannot be found (perhaps is a promoted/graduated transfer record). then dont change the record
+                if (!empty($existingStudentEntity)) {
+                    $prevEndDate = $existingStudentEntity->end_date;
+                    $this->updateStudentStatus($existingStudentEntity, 'CURRENT', 'TRANSFERRED', $startDate);
+                }
 
 				// add the student to the new school
 				$newData = [
@@ -110,21 +134,6 @@ class TransferApprovalsTable extends AppTable {
 					$InstitutionClassStudentsTable->autoInsertClassStudent($institutionClassStudentObj);
 
 					$this->Alert->success('TransferApprovals.approve');
-					$existingStudentEntity = $Students->find()->where([
-							$Students->aliasField('institution_id') => $previousSchoolId,
-							$Students->aliasField('student_id') => $studentId,
-							$Students->aliasField('academic_period_id') => $periodId,
-							$Students->aliasField('education_grade_id') => $gradeId,
-							$Students->aliasField('student_status_id') => $statuses['CURRENT']
-						])
-						->first();
-
-                    // if cannot be found (perhaps is a promoted/graduated transfer record). then dont change the record
-                    if (!empty($existingStudentEntity)) {
-                        $existingStudentEntity->student_status_id = $statuses['TRANSFERRED'];
-                        $existingStudentEntity->end_date = $startDate;
-                        $Students->save($existingStudentEntity);
-                    }
 					
 					$EducationGradesTable = TableRegistry::get('Education.EducationGrades');
 
@@ -152,6 +161,9 @@ class TransferApprovalsTable extends AppTable {
 						$this->log($entity->errors(), 'debug');
 					}
 				} else {
+                    if (!empty($existingStudentEntity)) {
+                        $this->updateStudentStatus($existingStudentEntity, 'TRANSFERRED', 'CURRENT', $prevEndDate);
+                    }
 					$this->Alert->error('general.edit.failed');
 					$this->log($newEntity->errors(), 'debug');
 				}
