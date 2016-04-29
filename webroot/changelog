@@ -5,6 +5,7 @@ v3.5.3
 - Fixed a bug that cause 404 error when deleting students from institutions
 - Fixed a bug that allows Students to be enrolled in two different school at the same time
 - Fixed a bug that cause 404 error when saving students in class
+- Fixed a bug that cause 404 error page when approving a Transfer request when a Promoted/Graduate student
 
 v3.5.2
 - Added Weights to Assessment Items and Assessment Periods for calculating results
