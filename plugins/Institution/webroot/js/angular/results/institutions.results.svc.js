@@ -1,6 +1,5 @@
-// angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc'])
-angular.module('institutions.results.svc', ['kd.orm.svc'])
-.service('InstitutionsResultsSvc', function($http, $q, $filter, KdOrmSvc) {
+angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc'])
+.service('InstitutionsResultsSvc', function($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
     const resultTypes = {MARKS: 'MARKS', GRADES: 'GRADES'};
 
     var models = {
@@ -8,12 +7,14 @@ angular.module('institutions.results.svc', ['kd.orm.svc'])
         AssessmentItemsTable: 'Assessment.AssessmentItems',
         AssessmentPeriodsTable: 'Assessment.AssessmentPeriods',
         AssessmentItemResultsTable: 'Assessment.AssessmentItemResults',
-        InstitutionSubjectStudentsTable: 'Institution.InstitutionSubjectStudents'
+        InstitutionSubjectStudentsTable: 'Institution.InstitutionSubjectStudents',
+        SecurityGroupUsersTable: 'Security.SecurityGroupUsers'
     };
 
     return {
         init: function(baseUrl) {
             KdOrmSvc.base(baseUrl);
+            KdSessionSvc.base(baseUrl);
             angular.forEach(models, function(model, key) {
                 window[key] = KdOrmSvc.init(model);
             });
@@ -30,6 +31,42 @@ angular.module('institutions.results.svc', ['kd.orm.svc'])
             var allSubjects = 1;
             var mySubjects = 1;
             var superAdmin = 1;
+
+            // Get list of institution roles
+            var institutionId = 0;
+
+            KdSessionSvc.read('Auth.User.super_admin').then(function(value) {
+                return value;
+            }).then (function(isSuperAdmin){
+                if (!isSuperAdmin)
+                {
+                    KdSessionSvc.read('Auth.User.id').then(function(userId) {
+                        KdSessionSvc.read('Institution.Institutions.id').then(function(institutionId) {
+                            var roles = SecurityGroupUsersTable
+                                .select()
+                                // .find('RoleByInstitution', {security_user_id: userId, institution_id: institutionId})
+                                .ajax({defer: true});
+                            console.log(roles);
+                        });
+
+                        console.log(institutionId);
+                        console.log(userId);
+                        // if (!allSubjects) 
+                        // {
+                        //     if (!mySubjects) 
+                        //     {
+                        //         // If there is no mysubject permission
+                        //         return AssessmentItemsTable.ajax({success: fail, defer: true});
+                        //     } else 
+                        //     {
+                        //         assessmentSubjects = assessmentSubjects
+                        //             .find('staffSubjects', {class_id: classId});
+                        //     }
+                        // }
+                    });
+                    
+                }
+            });
 
             var fail = function(response, deferred) {
                 deferred.reject('You do not have access to subjects');

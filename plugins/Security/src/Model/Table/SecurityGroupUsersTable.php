@@ -88,4 +88,18 @@ class SecurityGroupUsersTable extends AppTable {
 			return [];
 		}
 	}
+
+	public function findRoleByInstitution(Query $query, array $options)
+	{
+		$userId = $options['security_user_id'];
+		$institutionId = $options['institution_id'];
+		$query
+			->innerJoin(['SecurityGroupInstitutions' => 'security_group_institutions'], [
+				'SecurityGroupInstitutions.security_group_id = '.$this->aliasField('security_group_id'), 
+				'SecurityGroupInstitutions.institution_id' => $institutionId
+			])
+			->where([$this->aliasField('security_user_id') => $userId]);
+
+		return $query;
+	}
 }
