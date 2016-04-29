@@ -3,6 +3,8 @@ namespace Security\Model\Table;
 
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
+use Cake\ORM\Query;
+use Cake\Log\Log;
 
 class SecurityGroupUsersTable extends AppTable {
 	public function initialize(array $config) {
@@ -90,7 +92,7 @@ class SecurityGroupUsersTable extends AppTable {
 	}
 
 	public function findRoleByInstitution(Query $query, array $options)
-	{
+	{	
 		$userId = $options['security_user_id'];
 		$institutionId = $options['institution_id'];
 		$query
@@ -98,8 +100,8 @@ class SecurityGroupUsersTable extends AppTable {
 				'SecurityGroupInstitutions.security_group_id = '.$this->aliasField('security_group_id'), 
 				'SecurityGroupInstitutions.institution_id' => $institutionId
 			])
-			->where([$this->aliasField('security_user_id') => $userId]);
-
+			->where([$this->aliasField('security_user_id') => $userId])
+			->distinct([$this->aliasField('security_role_id')]);
 		return $query;
 	}
 }
