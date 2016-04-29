@@ -1310,7 +1310,7 @@ class StudentsTable extends AppTable {
 				'count' => $InstitutionRecords->func()->count('DISTINCT ' . $this->aliasField('student_id')),
 				'gender' => 'Genders.name'
 			])
-			->group(['gender']);
+			->group(['gender'], true);
 			
 		// Creating the data set		
 		$dataSet = [];
@@ -1382,9 +1382,7 @@ class StudentsTable extends AppTable {
 			->contain([
 				'EducationGrades'
 			])
-			->group([
-				$this->aliasField('education_grade_id'),
-			])
+			->group([$this->aliasField('education_grade_id')], true)
 			->toArray();
 
 		$dataSet = [];
