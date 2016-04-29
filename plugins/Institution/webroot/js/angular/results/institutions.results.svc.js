@@ -33,7 +33,6 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc'])
             var superAdmin = 1;
 
             // Get list of institution roles
-            var institutionId = 0;
 
             KdSessionSvc.read('Auth.User.super_admin').then(function(value) {
                 return value;
@@ -41,82 +40,114 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc'])
                 if (!isSuperAdmin)
                 {
                     KdSessionSvc.read('Auth.User.id').then(function(userId) {
-                        KdSessionSvc.read('Institution.Institutions.id').then(function(institutionId) {
-                            var roles = SecurityGroupUsersTable
-                                .select()
-                                // .find('RoleByInstitution', {security_user_id: userId, institution_id: institutionId})
-                                .ajax({defer: true});
-                            console.log(roles);
-                        });
-
-                        console.log(institutionId);
+                        var securityUserId = userId;
                         console.log(userId);
-                        // if (!allSubjects) 
-                        // {
-                        //     if (!mySubjects) 
-                        //     {
-                        //         // If there is no mysubject permission
-                        //         return AssessmentItemsTable.ajax({success: fail, defer: true});
-                        //     } else 
-                        //     {
-                        //         assessmentSubjects = assessmentSubjects
-                        //             .find('staffSubjects', {class_id: classId});
-                        //     }
-                        // }
+                        KdSessionSvc.read('Institution.Institutions.id').then(function(institutionId) {
+                            var postProcessing = function (response, deferred) {
+
+                            };
+                            SecurityGroupUsersTable
+                            .select(['security_role_id'])
+                            .find('RoleByInstitution', {security_user_id: securityUserId, institution_id: institutionId})
+                            .ajax({defer: true})
+                            .then(function(responseData) {
+                                securityRoles = responseData.data;
+                                roles = [];
+                                for(i = 0; i < securityRoles.length; i++) {
+                                    roles[i] = securityRoles[i].security_role_id;
+                                }
+
+                                KdSessionSvc.read('Permissions.Institutions.AllSubjects.view')
+                                    .then(function(allSubjectRoles){
+                                        return allSubjectRoles;
+                                    })
+                                    .then(function(allSubjectRoles){
+                                        KdSessionSvc.read('Permissions.Institutions.Subjects.view')
+                                            .then(function(subjectRoles){
+
+                                                var success = function(response, deferred) {
+                                                    var items = response.data.data;
+
+                                                    if (angular.isObject(items) && items.length > 0) 
+                                                    {
+                                                        var educationSubject = null;
+
+                                                        var subjects = [];
+                                                        angular.forEach(items, function(item, key) 
+                                                        {
+                                                            educationSubject = item.education_subject;
+                                                            educationSubject.grading_type = item.grading_type;
+
+                                                            this.push(educationSubject);
+                                                        }, subjects);
+
+                                                        deferred.resolve(subjects);
+                                                    } else 
+                                                    {
+                                                        deferred.reject('You need to configure Assessment Items first');
+                                                    }
+                                                };
+
+                                                var assessmentSubjects = AssessmentItemsTable
+                                                    .select()
+                                                    .contain(['EducationSubjects', 'GradingTypes.GradingOptions'])
+                                                    .where({assessment_id: assessmentId});
+
+                                                var allSubjectPermission = true;
+
+                                                if (allSubjectRoles == null) {
+                                                    allSubjectPermission = false;
+                                                } else {
+                                                    var arrays = [roles, allSubjectRoles];
+
+                                                    var result = arrays.shift().filter(function(v) {
+                                                        return arrays.every(function(a) {
+                                                            return a.indexOf(v) !== -1;
+                                                        });
+                                                    });
+
+                                                    if (result.length == 0) {
+                                                        allSubjectPermission = false;
+                                                    }
+                                                }
+
+                                                if (allSubjectPermission) {
+                                                    // show all subjects
+                                                    assessmentSubjects = assessmentSubjects
+                                                        .ajax({success: success, defer: true});
+                                                } else {
+                                                    var newArray = [roles, subjectRoles];
+                                                    var newResults = newArray.shift().filter(function(val) {
+                                                        return newArray.every(function(arr) {
+                                                            return arr.indexOf(val) !== -1;
+                                                        });
+                                                    });
+
+                                                    if (newResults.length > 0) {
+                                                        // display only user subjects
+                                                        assessmentSubjects = assessmentSubjects
+                                                            .find('staffSubjects', {class_id: classId})
+                                                            .ajax({success: success, defer: true});
+                                                    } else {
+                                                        // If there is no mysubject permission
+                                                        var fail = function(response, deferred) {
+                                                            deferred.reject('You do not have access to subjects');
+                                                        };
+                                                        assessmentSubjects = AssessmentItemsTable.ajax({success: fail, defer: true});
+                                                    }
+
+                                                    return assessmentSubjects;
+                                                }
+                                            });
+                                    });
+                            }, function(error) {
+                                console.log(error);
+                            });
+                        });
                     });
                     
                 }
             });
-
-            var fail = function(response, deferred) {
-                deferred.reject('You do not have access to subjects');
-            };
-
-            var assessmentSubjects = AssessmentItemsTable
-                .select()
-                .contain(['EducationSubjects', 'GradingTypes.GradingOptions'])
-                .where({assessment_id: assessmentId});
-            
-            if (!superAdmin)
-            {
-                if (!allSubjects) 
-                {
-                    if (!mySubjects) 
-                    {
-                        // If there is no mysubject permission
-                        return AssessmentItemsTable.ajax({success: fail, defer: true});
-                    } else 
-                    {
-                        assessmentSubjects = assessmentSubjects
-                            .find('staffSubjects', {class_id: classId});
-                    }
-                }
-            }
-
-            var success = function(response, deferred) {
-                var items = response.data.data;
-
-                if (angular.isObject(items) && items.length > 0) 
-                {
-                    var educationSubject = null;
-
-                    var subjects = [];
-                    angular.forEach(items, function(item, key) 
-                    {
-                        educationSubject = item.education_subject;
-                        educationSubject.grading_type = item.grading_type;
-
-                        this.push(educationSubject);
-                    }, subjects);
-
-                    deferred.resolve(subjects);
-                } else 
-                {
-                    deferred.reject('You need to configure Assessment Items first');
-                }
-            };
-            
-            return assessmentSubjects.ajax({success: success, defer: true});
         },
 
         getPeriods: function(assessmentId) 
