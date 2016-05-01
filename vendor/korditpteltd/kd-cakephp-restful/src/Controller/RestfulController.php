@@ -26,30 +26,6 @@ class RestfulController extends AppController
         parent::initialize();
     }
 
-    public function write()
-    {
-        $session = $this->request->session();
-        $data = $this->request->data;
-        foreach ($data as $key => $value) {
-            $session->write($key, $value);
-        }
-        $this->set(['data' => $data, '_serialize' => ['data']]);
-    }
-
-    public function read($key)
-    {
-        $session = $this->request->session();
-        $data = $session->read($key);
-        $this->set(['data' => $data, '_serialize' => ['data']]);
-    }
-
-    public function check($key)
-    {
-        $session = $this->request->session();
-        $data = $session->check($key);
-        $this->set(['data' => $data, '_serialize' => ['data']]);
-    }
-
 /***************************************************************************************************************************************************
  *
  * CakePHP events
