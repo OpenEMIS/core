@@ -277,7 +277,7 @@ class RestfulController extends AppController
         foreach ($queryString as $key => $attr) {
             $this->$key($query, $attr, $extra);
         }
-        if (!empty($extra['fields'])) {
+        if (array_key_exists('_fields', $queryString) && !empty($extra['fields'])) {
         	$query->select($extra['fields']);
         }
 
