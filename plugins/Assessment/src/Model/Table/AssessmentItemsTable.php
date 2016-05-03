@@ -4,10 +4,13 @@ namespace Assessment\Model\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Cake\ORM\Query;
+use Cake\Network\Session;
 
 class AssessmentItemsTable extends AssessmentsAppTable {
 
-	public function initialize(array $config) {
+	public function initialize(array $config) 
+	{
 		parent::initialize($config);
 		$this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
 		$this->belongsTo('GradingTypes', ['className' => 'Assessment.AssessmentGradingTypes', 'foreignKey' => 'assessment_grading_type_id']);
@@ -37,7 +40,8 @@ class AssessmentItemsTable extends AssessmentsAppTable {
 		];
 	}
 
-	public function getFormFields($action = 'edit') {
+	public function getFormFields($action = 'edit') 
+	{
 		if ($action=='add') {
 			return ['education_subject_id'=>'', 'assessment_grading_type_id'=>'', 'weight'=>''];
 		} else if ($action=='edit') {
@@ -47,7 +51,8 @@ class AssessmentItemsTable extends AssessmentsAppTable {
 		}
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator) 
+	{
 		$validator
 			->requirePresence('assessment_id', 'update')
 			->requirePresence('assessment_grading_type_id')
@@ -59,7 +64,8 @@ class AssessmentItemsTable extends AssessmentsAppTable {
 		return $validator;
 	}
 
-	public function populateAssessmentItemsArray(Entity $entity, $gradeId) {
+	public function populateAssessmentItemsArray(Entity $entity, $gradeId) 
+	{
 		$EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
 		$gradeSubjects = $EducationGradesSubjects->find()
 			->contain('EducationSubjects')
@@ -88,7 +94,8 @@ class AssessmentItemsTable extends AssessmentsAppTable {
 	 *
 	 *	@return array The array containing the assessment item id, subject name and the result type
 	 */
-	public function getAssessmentItemSubjects($assessmentId) {
+	public function getAssessmentItemSubjects($assessmentId) 
+	{
 		$subjectList = $this
 			->find()
 			->matching('EducationSubjects')
@@ -105,4 +112,43 @@ class AssessmentItemsTable extends AssessmentsAppTable {
 		return $subjectList;
 	}
 
+	public function findStaffSubjects(Query $query, array $options) 
+	{	
+		if (isset($options['class_id'])) 
+		{
+			$classId = $options['class_id'];
+			$session = new Session;
+			$userId = $session->read('Auth.User.id');
+
+			$query->where([
+					'OR' => [
+						// For subject teachers
+						'EXISTS (
+							SELECT 1 
+							FROM institution_subjects InstitutionSubjects
+							INNER JOIN institution_class_subjects InstitutionClassSubjects
+								ON InstitutionClassSubjects.institution_class_id = '.$classId.'
+								AND InstitutionClassSubjects.institution_subject_id = InstitutionSubjects.id
+							INNER JOIN institution_subject_staff InstitutionSubjectStaff
+								ON InstitutionSubjectStaff.institution_subject_id = InstitutionSubjects.id
+								AND InstitutionSubjectStaff.staff_id = '.$userId.'
+							WHERE InstitutionSubjects.education_subject_id = ' . $this->aliasField('education_subject_id') .')',
+
+						// Homeroom teacher for the class should see all the subjects also
+						'EXISTS (
+							SELECT 1 
+							FROM institution_classes InstitutionClasses
+							INNER JOIN institution_class_subjects InstitutionClassSubjects
+								ON InstitutionClassSubjects.institution_class_id = InstitutionClasses.id
+							INNER JOIN institution_subjects InstitutionSubjects
+								ON InstitutionSubjects.id = InstitutionClassSubjects.institution_subject_id
+							WHERE InstitutionClasses.staff_id = '.$userId.' 
+								AND InstitutionClasses.id = '.$classId.' 
+								AND InstitutionSubjects.education_subject_id = '.$this->aliasField('education_subject_id').')'
+					]
+				]);
+
+			return $query;
+		}
+	}
 }
