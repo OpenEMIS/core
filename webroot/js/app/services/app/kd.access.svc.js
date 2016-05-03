@@ -2,15 +2,11 @@ angular
 	.module('kd.access.svc', ['kd.session.svc'])
 	.service('KdAccessSvc', KdAccessSvc);
 
-KdAccessSvc.$inject = ['$q', 'KdSessionSvc'];
+KdAccessSvc.$inject = ['$http', '$q', 'KdSessionSvc'];
 
-function KdAccessSvc($q, KdSessionSvc) {
-	var $this = this;
-	var _base = '';
-	var _model = '_access';
-
+function KdAccessSvc($http, $q, KdSessionSvc) {
 	var service = {
-		check: check,
+		checkPermission: checkPermission,
 	};
 
     return service;
@@ -20,6 +16,9 @@ function KdAccessSvc($q, KdSessionSvc) {
     	KdSessionSvc.read(key)
     	.then(function(permissionRoles){
     		var permission = false;
+            if (permissionRoles == null) {
+                permissionRoles = [];
+            }
             var compareRolesArray = [roles, permissionRoles];
             var result = compareRolesArray.shift().filter(function(v) {
             	return compareRolesArray.every(function(a) {
@@ -29,6 +28,7 @@ function KdAccessSvc($q, KdSessionSvc) {
             if (result.length > 0) {
             	permission = true;
             }
+            console.log(permission);
             deferred.resolve(permission);
         }, function(error) {
         	deferred.reject(error);
