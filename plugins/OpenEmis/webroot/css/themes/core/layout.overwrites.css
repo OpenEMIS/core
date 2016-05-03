@@ -1,5 +1,5 @@
 /* 
-Core Overwrites: v.1.0.4
+Core Overwrites: v.1.0.5
 */
 
 
@@ -455,4 +455,10 @@ a,
 
 .rtl .ag-fresh .ag-header-cell-menu-button {
     float: left;
+}
+
+/* Error message on the fileinput */
+
+.fileinput-preview {
+    width: 25%;
 }
