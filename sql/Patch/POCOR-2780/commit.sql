@@ -18,3 +18,11 @@ INSERT INTO `import_mapping` (`id`, `model`, `column_name`, `description`, `orde
 (85, 'Institution.Staff', 'staff_id', 'OpenEMIS ID', 6, 2, 'Staff', 'Staff', 'openemis_no')
 ;
 
+CREATE TABLE `z_2780_security_functions` LIKE `security_functions`;
+INSERT INTO `z_2780_security_functions` 
+SELECT *
+FROM `security_functions`;
+
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
+(1042, 'Import Staff', 'Institutions', 'Institutions', 'Staff', 1016, NULL, NULL, NULL, NULL, 'ImportStaff.add|ImportStaff.template|ImportStaff.results|ImportStaff.downloadFailed|ImportStaff.downloadPassed', 1042, 1, NULL, NULL, 1, NOW());
+
