@@ -68,8 +68,8 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                 }
                 var promises = [];
 
-                promises.push(KdAccessSvc.checkPermission('Permissions.Institutions.AllSubjects.view', roles));
-                promises.push(KdAccessSvc.checkPermission('Permissions.Institutions.Subjects.view', roles));
+                promises.push(KdAccessSvc.checkPermission('Institutions.AllSubjects.view', roles));
+                promises.push(KdAccessSvc.checkPermission('Institutions.Subjects.view', roles));
 
                 return $q.all(promises);
             }, function(error) {
