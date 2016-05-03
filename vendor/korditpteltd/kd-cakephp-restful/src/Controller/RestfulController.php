@@ -41,12 +41,9 @@ class RestfulController extends AppController
 
         if (isset($this->request->model)) {
             $tableAlias = $this->request->model;
-
-            if ($tableAlias != '_session') {
-                $model = $this->_instantiateModel($tableAlias);
-                if ($model != false) {
-                    $this->model = $model;
-                }
+            $model = $this->_instantiateModel($tableAlias);
+            if ($model != false) {
+                $this->model = $model;
             }
         }
     }
@@ -149,28 +146,28 @@ class RestfulController extends AppController
 
             if ($value === 'true') { // contains all BelongsTo associations
                 foreach ($table->associations() as $assoc) {
-                	if ($assoc->type() == 'manyToOne') {
-                		$contain[] = $assoc->name();
-                	}
+                    if ($assoc->type() == 'manyToOne') {
+                        $contain[] = $assoc->name();
+                    }
                 }
             } else {
                 $contain = explode(',', $value);
             }
             
             if (!empty($contain)) {
-            	$query->contain($contain);
-            	$fields = [];
-            	foreach ($contain as $name) {
-            		foreach ($table->associations() as $assoc) {
-	                    if ($name == $assoc->name()) {
-	                        $columns = $assoc->schema()->columns();
-	                        foreach ($columns as $column) {
-	                            $fields[] = $assoc->aliasField($column);
-	                        }
-	                    }
-	                }
-            	}
-            	$extra['fields'] = array_merge($extra['fields'], $fields);
+                $query->contain($contain);
+                $fields = [];
+                foreach ($contain as $name) {
+                    foreach ($table->associations() as $assoc) {
+                        if ($name == $assoc->name()) {
+                            $columns = $assoc->schema()->columns();
+                            foreach ($columns as $column) {
+                                $fields[] = $assoc->aliasField($column);
+                            }
+                        }
+                    }
+                }
+                $extra['fields'] = array_merge($extra['fields'], $fields);
             }
         }
     }
@@ -204,15 +201,14 @@ class RestfulController extends AppController
     private function _limit(Query $query, $value, ArrayObject $extra)
     {
         if (!empty($value)) {
-            $query->limit($value);
-            $extra['limit'] = $value;
+            $extra['limit'] = $value; // used in _page
         }
     }
 
     private function _page(Query $query, $value, ArrayObject $extra)
     {
         if (!empty($value) && $extra->offsetExists('limit')) {
-            $query->page($value);
+            $extra['page'] = $value;
         }
     }
 
@@ -246,7 +242,8 @@ class RestfulController extends AppController
         $query = $table->find();
         $requestQueries = $this->request->query;
         $extra = new ArrayObject(['table' => $table, 'fields' => []]);
-
+        Log::write('debug', $requestQueries);
+        
         $default = ['_limit' => 30, '_page' => 1];
         $queryString = array_merge($default, $this->processQueryString($requestQueries));
 
@@ -254,17 +251,25 @@ class RestfulController extends AppController
             $this->$key($query, $attr, $extra);
         }
         if (array_key_exists('_fields', $queryString) && !empty($extra['fields'])) {
-        	$query->select($extra['fields']);
+            $query->select($extra['fields']);
         }
 
         try {
             $data = [];
+            $serialize = [];
             if ($extra->offsetExists('list') && $extra['list'] == true) {
                 $data = $query->toArray();
+                $serialize = ['data' => $data];
             } else {
+                $total = $query->count();
+                if ($extra->offsetExists('limit') && $extra->offsetExists('page')) {
+                    $query->limit($extra['limit'])->page($extra['page']);
+                }
                 $data = $this->_formatBinaryValue($query->all());
+                $serialize = ['data' => $data, 'total' => $total];
             }
-            $this->_outputData($data);
+            $serialize['_serialize'] = array_keys($serialize);
+            $this->set($serialize);
         } catch (Exception $e) {
             $this->_outputError($e->getMessage());
         }
