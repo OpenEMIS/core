@@ -1,5 +1,5 @@
-angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc'])
-.service('InstitutionsResultsSvc', function($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
+angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.access.svc'])
+.service('InstitutionsResultsSvc', function($http, $q, $filter, KdOrmSvc, KdSessionSvc, KdAccessSvc) {
     const resultTypes = {MARKS: 'MARKS', GRADES: 'GRADES'};
 
     var models = {
@@ -30,8 +30,6 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc'])
             promises.push(KdSessionSvc.read('Auth.User.super_admin'));
             promises.push(KdSessionSvc.read('Auth.User.id'));
             promises.push(KdSessionSvc.read('Institution.Institutions.id'));
-            promises.push(KdSessionSvc.read('Permissions.Institutions.AllSubjects.view'));
-            promises.push(KdSessionSvc.read('Permissions.Institutions.Subjects.view'));
 
             return $q.all(promises);
         },
@@ -50,8 +48,8 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc'])
                 isSuperAdmin = response[0];
                 var securityUserId = response[1];
                 var institutionId = response[2];
-                allSubjectRoles = response[3];
-                subjectRoles = response[4];
+                // allSubjectRoles = response[3];
+                // subjectRoles = response[4];
 
                 return SecurityGroupUsersTable
                     .select(['security_role_id'])
@@ -68,6 +66,18 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc'])
                 for (i = 0; i < securityRoles.length; i++) {
                     roles[i] = securityRoles[i].security_role_id;
                 }
+                var promises = [];
+
+                promises.push(KdAccessSvc.checkPermission('Permissions.Institutions.AllSubjects.view', roles));
+                promises.push(KdAccessSvc.checkPermission('Permissions.Institutions.Subjects.view', roles));
+
+                return $q.all(promises);
+            }, function(error) {
+
+            })
+            .then(function(response) {
+                var allSubjectsPermission = response[0];
+                var mySubjectsPermission = response[1];
 
                 var assessmentSubjects = AssessmentItemsTable
                     .select()
@@ -112,40 +122,9 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc'])
                     // Non super admin logic
 
                     // Check if has all subjects permission
-                    var allSubjectsPermission = false;
-                    if (allSubjectRoles == null) {
-                        allSubjectRoles = [];
-                    }
-                    var arrayIntersect = [roles, allSubjectRoles];
-                    var result = arrayIntersect.shift().filter(function(v) {
-                        return arrayIntersect.every(function(a) {
-                            return a.indexOf(v) !== -1;
-                        });
-                    });
-
-                    if (result.length > 0) 
-                    {
-                        allSubjectsPermission = true;
-                    }
                     if (!allSubjectsPermission)
                     {
                         // If no all subjects permission, check if user has my subjects permisson
-                        var mySubjectsPermission = false;
-                        if (subjectRoles == null) {
-                            subjectRoles = [];
-                        }
-                        var arrIntersect = [roles, subjectRoles];
-                        var results = arrIntersect.shift().filter(function(v) {
-                            return arrIntersect.every(function(a) {
-                                return a.indexOf(v) !== -1;
-                            });
-                        });
-
-                        if (results.length > 0) 
-                        {
-                            mySubjectsPermission = true;
-                        }
-
                         if (mySubjectsPermission)
                         {
                             // User has my subjects permission, display subjects relevant to user
