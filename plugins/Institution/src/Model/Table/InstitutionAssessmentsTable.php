@@ -97,7 +97,28 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 			])
 			->autoFields(true)
 			;
-
+        
+        // For filtering all classes and my classes
+        $AccessControl = $this->AccessControl;
+        $userId = $session->read('Auth.User.id');
+        $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+        if (!$AccessControl->isAdmin()) 
+        {
+            if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles))
+            {
+                if (!$AccessControl->check(['Institutions', 'Classes', 'index'], $roles)) 
+                {
+                    $query->where(['1 = 0'], [], true);
+                } else 
+                {
+                    $query->innerJoin(['InstitutionClasses' => 'institution_classes'], [
+                        'InstitutionClasses.id = '.$ClassGrades->aliasField('institution_class_id'),
+                        'InstitutionClasses.staff_id' => $userId
+                    ]);
+                }
+            }   
+        }
+		
 		// Academic Periods
 		$periodOptions = $this->AcademicPeriods->getYearList(['withLevels' => true, 'isEditable' => true]);
 		if (is_null($this->request->query('academic_period_id'))) {
