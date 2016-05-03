@@ -38,6 +38,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
         {
             var deferred = $q.defer();
             var isSuperAdmin = 0;
+            var securityUserId = 0;
             var roles = [];
             var allSubjectRoles = [];
             var subjectRoles = [];
@@ -46,7 +47,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             this.getPermissions()
             .then(function(response) {
                 isSuperAdmin = response[0];
-                var securityUserId = response[1];
+                securityUserId = response[1];
                 var institutionId = response[2];
                 // allSubjectRoles = response[3];
                 // subjectRoles = response[4];
@@ -129,7 +130,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         {
                             // User has my subjects permission, display subjects relevant to user
                             assessmentSubjects = assessmentSubjects
-                                .find('staffSubjects', {class_id: classId})
+                                .find('staffSubjects', {class_id: classId, staff_id: securityUserId})
                                 .ajax({success: success, defer: true});
                         } else
                         {   
