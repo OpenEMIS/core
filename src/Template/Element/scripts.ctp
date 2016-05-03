@@ -15,6 +15,7 @@ echo $this->Html->script('app/app.svc');
 echo $this->Html->script('app/services/app/utils.svc');
 echo $this->Html->script('app/services/app/kd.orm.svc');
 echo $this->Html->script('app/services/app/kd.session.svc');
+echo $this->Html->script('app/services/app/kd.access.svc');
 
 echo $this->Html->script('angular/kdModule/controllers/kd.ctrl');
 echo $this->Html->script('angular/kdModule/directives/kd.drt');
