@@ -7,14 +7,17 @@ KdSessionSvc.$inject = ['$q', '$http'];
 function KdSessionSvc($q, $http) {
 	var $this = this;
 	var _base = '';
-	var _controller = 'restful';
-	var _model = '_session';
+	var _controller = 'session';
+	var _settings = {
+		headers: {'Content-Type': 'application/json'},
+        defer: true
+	};
 
 	var service = {
 		base: base,
+        write: write,
 		check: check,
 		read: read,
-		write: write,
 		remove: remove
 	};
 
@@ -24,42 +27,34 @@ function KdSessionSvc($q, $http) {
     	_base = url;
     };
 
-    function check(key) {
-    	var settings = {
-            headers: {'Content-Type': 'application/json'},
-            defer: true,
-            method: 'CHECK',
-            url: toURL() + '/' + key
-        };
+    function write(key, value) {
+        var data = {};
+        data[key] = value;
+
+        var settings = _settings;
+        settings['method'] = 'POST';
+        settings['data'] = data;
+        settings['url'] = toURL();
         return ajax(settings);
+    };
+
+    function check(key) {
+    	return send(key, 'CHECK');
     };
 
     function read(key) {
-    	var settings = {
-            headers: {'Content-Type': 'application/json'},
-            defer: true,
-            method: 'GET',
-            url: toURL() + '/' + key
-        };
-        return ajax(settings);
-    };
-
-    function write(key, value) {
-    	var data = {};
-    	data[key] = value;
-
-        var settings = {
-            headers: {'Content-Type': 'application/json'},
-            data: data,
-            defer: true,
-            method: 'POST',
-            url: toURL()
-        };
-        return ajax(settings);
+        return send(key, 'GET');
     };
 
     function remove(key) {
+        return send(key, 'DELETE');
+    };
 
+    function send(key, method) {
+        var settings = _settings;
+        settings['method'] = method;
+        settings['url'] = toURL() + '/' + key;
+        return ajax(settings);
     };
 
     function ajax(settings) {
@@ -118,8 +113,6 @@ function KdSessionSvc($q, $http) {
     };
 
     function toURL() {
-        var url = [_base, _controller, _model].join('/');
-        
-        return url;
+        return [_base, _controller].join('/');
     };
 };
