@@ -40,7 +40,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc'])
         {
             var deferred = $q.defer();
             var isSuperAdmin = 0;
-            var roles = {};
+            var roles = [];
             var allSubjectRoles = [];
             var subjectRoles = [];
             var subjects = [];
@@ -64,7 +64,10 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc'])
                 deferred.reject(error);
             })
             .then(function(response) {
-                roles = response.data;
+                var securityRoles = response.data;
+                for (i = 0; i < securityRoles.length; i++) {
+                    roles[i] = securityRoles[i].security_role_id;
+                }
 
                 var assessmentSubjects = AssessmentItemsTable
                     .select()
@@ -110,10 +113,13 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc'])
 
                     // Check if has all subjects permission
                     var allSubjectsPermission = false;
+                    if (allSubjectRoles == null) {
+                        allSubjectRoles = [];
+                    }
                     var arrayIntersect = [roles, allSubjectRoles];
-                    var result = arrayIntersect.shift().filter(function(val) {
-                        return arrayIntersect.every(function(arr) {
-                            return arr.indexOf(val) !== -1;
+                    var result = arrayIntersect.shift().filter(function(v) {
+                        return arrayIntersect.every(function(a) {
+                            return a.indexOf(v) !== -1;
                         });
                     });
 
@@ -121,15 +127,17 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc'])
                     {
                         allSubjectsPermission = true;
                     }
-
                     if (!allSubjectsPermission)
                     {
                         // If no all subjects permission, check if user has my subjects permisson
                         var mySubjectsPermission = false;
+                        if (subjectRoles == null) {
+                            subjectRoles = [];
+                        }
                         var arrIntersect = [roles, subjectRoles];
-                        var results = arrIntersect.shift().filter(function(val) {
-                            return arrIntersect.every(function(arr) {
-                                return arr.indexOf(val) !== -1;
+                        var results = arrIntersect.shift().filter(function(v) {
+                            return arrIntersect.every(function(a) {
+                                return a.indexOf(v) !== -1;
                             });
                         });
 
