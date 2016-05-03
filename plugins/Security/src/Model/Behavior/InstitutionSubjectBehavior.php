@@ -14,7 +14,6 @@ class InstitutionSubjectBehavior extends Behavior {
 		// priority has to be set at 100 so that Institutions->indexBeforePaginate will be triggered first
 		$events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 100];
 		// set the priority of the action button to be after the academic period behavior
-		$events['ControllerAction.Model.index.afterAction'] = ['callable' => 'indexAfterAction', 'priority' => 101];
 		$events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
 		$events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
 		return $events;
@@ -29,8 +28,9 @@ class InstitutionSubjectBehavior extends Behavior {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
-		if (!$this->checkAllSubjectsEditPermission()) {
-			if ($this->checkMySubjectsEditPermission()) {
+		$action = 'edit';
+		if (!$this->checkAllSubjectsPermission($action)) {
+			if ($this->checkMySubjectsPermission($action)) {
 				$userId = $this->_table->Auth->user('id');
 				if (empty($entity->teachers)) {
 					$urlParams = $this->_table->url('view');
@@ -56,43 +56,16 @@ class InstitutionSubjectBehavior extends Behavior {
 		}
 	}
 
-	// used to be onUpdateActionButtons
-	public function indexAfterAction(Event $event, ResultSet $data, ArrayObject $extra) {
-		// $buttons = $this->_table->indexAfterAction($event, $data, $extra);
-		// Remove the edit function if the user does not have the right to access that page
-		// if (!$this->checkAllSubjectsEditPermission()) {
-		// 	if ($this->checkMySubjectsEditPermission()) {
-				// $userId = $this->_table->Auth->user('id');
-				// if ($entity->has('teachers')) {
-				// 	if (empty($entity->teachers)) {
-				// 		if (isset($extra['indexButtons']['edit'])) {
-				// 			unset($extra['indexButtons']['edit']);
-				// 			// return $extra['indexButtons'];
-				// 		}
-				// 	} else {
-				// 		$isFound = false;
-				// 		foreach ($entity->teachers as $staff) {
-				// 			if ($userId == $staff->id) {
-				// 				$isFound = true;
-				// 				break;
-				// 			}
-				// 		}
-				// 		if (! $isFound) {
-				// 			if (isset($extra['indexButtons']['edit'])) {
-				// 				unset($extra['indexButtons']['edit']);
-				// 				// return $extra['indexButtons'];
-				// 			}
-				// 		}
-				// 	}
-				// }
-		// 	}
-		// }
-	}
-
-	// Function to check MySubjects edit permission is set
-	public function checkMySubjectsEditPermission() {
+	// Function to check MySubjects permission is set
+	private function checkMySubjectsPermission($action) {
 		$AccessControl = $this->_table->AccessControl;
-		$mySubjectsEditPermission = $AccessControl->check(['Institutions', 'Subjects', 'edit']);
+		$controller = $this->_table->controller;
+		$roles = [];
+		$event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
+    	if ($event->result) {
+    		$roles = $event->result;	
+    	}
+		$mySubjectsEditPermission = $AccessControl->check(['Institutions', 'Subjects', $action], $roles);
 		if ($mySubjectsEditPermission) {
 			return true;
 		} else {
@@ -100,10 +73,16 @@ class InstitutionSubjectBehavior extends Behavior {
 		}
 	}
 
-	// Function to check AllSubjects edit permission is set
-	public function checkAllSubjectsEditPermission() {
+	// Function to check AllSubjects permission is set
+	private function checkAllSubjectsPermission($action) {
 		$AccessControl = $this->_table->AccessControl;
-		$allSubjectsEditPermission = $AccessControl->check(['Institutions', 'AllSubjects', 'edit']);
+		$controller = $this->_table->controller;
+		$roles = [];
+		$event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
+    	if ($event->result) {
+    		$roles = $event->result;	
+    	}
+		$allSubjectsEditPermission = $AccessControl->check(['Institutions', 'AllSubjects', $action], $roles);
 		if ($allSubjectsEditPermission) {
 			return true;
 		} else {
@@ -112,18 +91,51 @@ class InstitutionSubjectBehavior extends Behavior {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
-		$staff = [];
-		if (!empty($entity->teachers)) {
-			$staff = $entity->teachers;
+		$action = 'view';
+
+		// Check if the staff has access to the subject
+		if (!$this->checkAllSubjectsPermission($action)) {
+			if ($this->checkMySubjectsPermission($action)) {
+				$isFound = false;
+				$userId = $this->_table->Auth->user('id');
+				
+				// Homeroom teacher of the class will be able to view the subject
+				if ($entity->has('classes')) {
+					foreach ($entity->classes as $class) {
+						if ($class->staff_id == $userId) {
+							$isFound = true;
+							break;
+						}
+					}
+				}
+
+				// Teachers who are owner of the classes will be able to access the subjects
+				if (!empty($entity->teachers)) {
+					foreach ($entity->teachers as $staff) {
+						if ($userId == $staff->id) {
+							$isFound = true;
+							break;
+						}
+					}
+				}
+			}
+			if (!$isFound) {
+				$urlParams = $this->_table->ControllerAction->url('index');
+				$event->stopPropagation();
+				$this->_table->Alert->error('security.noAccess');
+				return $this->_table->controller->redirect($urlParams);
+			}
 		}
-		$this->_table->request->data[$this->_table->alias()]['teachers'] = $staff;
 
 		switch ($this->_table->action) {
 			case 'view':
-				if (!$this->checkAllSubjectsEditPermission()) {
-					if ($this->checkMySubjectsEditPermission()) {
+				if (!$this->checkAllSubjectsPermission('edit')) {
+					if ($this->checkMySubjectsPermission('edit')) {
 						$userId = $this->_table->Auth->user('id');
-						$staffs = $this->_table->request->data[$this->_table->alias()]['teachers'];
+						$staffs = [];
+						if (!empty($entity->teachers)) {
+							$staffs = $entity->teachers;
+						}
 						$isFound = false;
 						foreach ($staffs as $staff) {
 							if ($userId == $staff->id) {
@@ -149,7 +161,13 @@ class InstitutionSubjectBehavior extends Behavior {
 		if (array_key_exists('accessControl', $options)) {
 			$AccessControl = $options['accessControl'];
 			$userId = $options['userId'];
-			if (!$AccessControl->check(['Institutions', 'AllSubjects', 'index'])) {
+			$controller = $this->_table->controller;
+			$roles = [];
+			$event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
+			if ($event->result) {
+				$roles = $event->result;	
+			}
+			if (!$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles)) {
 				$query->where([
 					'OR' => [
 						// first condition if the current user is a teacher for this subject
