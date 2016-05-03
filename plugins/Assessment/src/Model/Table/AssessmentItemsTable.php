@@ -5,7 +5,6 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\ORM\Query;
-use Cake\Network\Session;
 
 class AssessmentItemsTable extends AssessmentsAppTable {
 
@@ -114,11 +113,10 @@ class AssessmentItemsTable extends AssessmentsAppTable {
 
 	public function findStaffSubjects(Query $query, array $options) 
 	{	
-		if (isset($options['class_id'])) 
+		if (isset($options['class_id']) && isset($options['staff_id'])) 
 		{
 			$classId = $options['class_id'];
-			$session = new Session;
-			$userId = $session->read('Auth.User.id');
+			$staffId = $options['staff_id'];
 
 			$query->where([
 					'OR' => [
@@ -131,7 +129,7 @@ class AssessmentItemsTable extends AssessmentsAppTable {
 								AND InstitutionClassSubjects.institution_subject_id = InstitutionSubjects.id
 							INNER JOIN institution_subject_staff InstitutionSubjectStaff
 								ON InstitutionSubjectStaff.institution_subject_id = InstitutionSubjects.id
-								AND InstitutionSubjectStaff.staff_id = '.$userId.'
+								AND InstitutionSubjectStaff.staff_id = '.$staffId.'
 							WHERE InstitutionSubjects.education_subject_id = ' . $this->aliasField('education_subject_id') .')',
 
 						// Homeroom teacher for the class should see all the subjects also
@@ -142,7 +140,7 @@ class AssessmentItemsTable extends AssessmentsAppTable {
 								ON InstitutionClassSubjects.institution_class_id = InstitutionClasses.id
 							INNER JOIN institution_subjects InstitutionSubjects
 								ON InstitutionSubjects.id = InstitutionClassSubjects.institution_subject_id
-							WHERE InstitutionClasses.staff_id = '.$userId.' 
+							WHERE InstitutionClasses.staff_id = '.$staffId.' 
 								AND InstitutionClasses.id = '.$classId.' 
 								AND InstitutionSubjects.education_subject_id = '.$this->aliasField('education_subject_id').')'
 					]
