@@ -788,14 +788,14 @@ class RestSurveyComponent extends Component
             if ($validationType) {
                 if ($validationType!='between') {
                     if ($validationType=='earlier') {
-                        $constraint = ". > ".$params['start_date'];
+                        $constraint = ". > '" . $params['start_date'] . "'";
                         $validationHint = __('Value should be at least '. $params['start_date']);
                     } else if ($validationType=='later') {
-                        $constraint = ". < ".$params['end_date'];
+                        $constraint = ". < '" . $params['end_date'] . "'";
                         $validationHint = __('Value should not be more than '. $params['end_date']);
                     }
                 } else {
-                    $constraint = ". > " . $params['start_date'] . " && . < " . $params['end_date'];
+                    $constraint = ". > '" . $params['start_date'] . "' && . < '" . $params['end_date'] . "'";
                     $validationHint = __('Value should be between '. implode(' and ', $params));
                 }
             }
@@ -810,11 +810,52 @@ class RestSurveyComponent extends Component
 
     private function _timeType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
     {
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // unable to find actual sample of time type validation for xforms; therefore skipping special time validation for now.
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
-        $this->_setFieldBindNode($modelNode, $instanceId, 'time', $field->default_is_mandatory, '', $index);
+        $validationHint = '';
+        if (!empty($field->params)) {
+            $params = json_decode($field->params, true);
+            if (array_key_exists('start_time', $params) && array_key_exists('end_time', $params)) {
+                $validationType = 'between';
+            } else if (array_key_exists('start_time', $params)) {
+                $validationType = 'earlier';
+            } else if (array_key_exists('end_time', $params)) {
+                $validationType = 'later';
+            } else {
+                $validationType = false;
+            }
+            if ($validationType) {
+                if ($validationType!='between') {
+                    if ($validationType=='earlier') {
+                        $constraint = ". > '" . $this->_twentyFourHourFormat($params['start_time']) . "'";
+                        $validationHint = __('Value should be at least '. $params['start_time']);
+                    } else if ($validationType=='later') {
+                        $constraint = ". < '" . $this->_twentyFourHourFormat($params['end_time']) . "'";
+                        $validationHint = __('Value should not be more than '. $params['end_time']);
+                    }
+                } else {
+                    $constraint = ". > '" . $this->_twentyFourHourFormat($params['start_time']) . "' && . < '" . $this->_twentyFourHourFormat($params['end_time']) . "'";
+                    $validationHint = __('Value should be between '. implode(' and ', $params));
+                }
+            }
+        }
+        $fieldNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
+        $bindNode = $this->_setFieldBindNode($modelNode, $instanceId, 'time', $field->default_is_mandatory, '', $index);
+        if (!empty($validationHint)) {
+            $fieldHint = $fieldNode->addChild("hint", htmlspecialchars($validationHint, ENT_QUOTES), NS_XF);
+            $bindNode->addAttribute("constraint", $constraint);
+        }
+    }
+
+    private function _twentyFourHourFormat($value)
+    {
+        $values = explode(' ', $value);
+        if (strtolower($values[1])=='am') {
+            return $values[0] . ':00';
+        } else {
+            $time = explode(':', $values[0]);
+            $time[] = '00';
+            $time[0] = intval($time[0]) + 12;
+            return implode(':', $time);
+        }
     }
 
     private function _coordinatesType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
