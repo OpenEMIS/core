@@ -354,8 +354,7 @@ class RestSurveyComponent extends Component
 
                                         // Save answer
                                         $answerEntity = $this->FieldValue->newEntity($answerData);
-                                        if ($this->FieldValue->save($answerEntity)) {
-                                        } else {
+                                        if (!$this->FieldValue->save($answerEntity)) {
                                             $this->log($answerEntity->errors(), 'debug');
                                         }
                                         // End
@@ -376,8 +375,7 @@ class RestSurveyComponent extends Component
 
                                             // Save answer
                                             $answerEntity = $this->FieldValue->newEntity($answerData);
-                                            if ($this->FieldValue->save($answerEntity)) {
-                                            } else {
+                                            if (!$this->FieldValue->save($answerEntity)) {
                                                 $this->log($answerEntity->errors(), 'debug');
                                             }
                                             // End
@@ -404,8 +402,7 @@ class RestSurveyComponent extends Component
 
                                                     // Save cell by cell
                                                     $cellEntity = $this->TableCell->newEntity($cellData);
-                                                    if ($this->TableCell->save($cellEntity)) {
-                                                    } else {
+                                                    if (!$this->TableCell->save($cellEntity)) {
                                                         $this->log($cellEntity->errors(), 'debug');
                                                     }
                                                     // End
@@ -433,8 +430,7 @@ class RestSurveyComponent extends Component
 
                                             // Save answer
                                             $answerEntity = $this->FieldValue->newEntity($answerData);
-                                            if ($this->FieldValue->save($answerEntity)) {
-                                            } else {
+                                            if (!$this->FieldValue->save($answerEntity)) {
                                                 $this->log($answerEntity->errors(), 'debug');
                                             }
                                             // End
@@ -484,17 +480,6 @@ class RestSurveyComponent extends Component
                 $this->FormField->aliasField($this->formKey) => $id
             ])
             ->toArray();
-
-        /*
-        $xmlstr = '<?xml version="1.0" encoding="UTF-8"?>
-            <html 
-                xmlns="' . NS_XHTML . '" 
-                xmlns:xf="' . NS_XF . '" 
-                xmlns:ev="' . NS_EV . '" 
-                xmlns:xsd="' . NS_XSD . '"
-                xmlns:oe="' . NS_OE . '">';
-        return $this->_testString($xmlstr);
-         */
 
         $xmlstr = '<?xml version="1.0" encoding="UTF-8"?>
                 <html
@@ -582,8 +567,8 @@ class RestSurveyComponent extends Component
     private function _textType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
     {
         $validationHint = '';
+        $bindType = 'string';
         if (!empty($field->params)) {
-            $bindType = 'string';
             $params = json_decode($field->params, true);
             $validationType = key($params);
             if (in_array($validationType, ['min_length', 'max_length', 'range'])) {
@@ -615,8 +600,6 @@ class RestSurveyComponent extends Component
                     $validationHint = __('Value should be between '. implode(' and ', $values).' characters long.');
                 }
             }
-        } else {
-            $bindType = 'string';
         }
         $fieldNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
         if (!empty($validationHint)) {
@@ -657,8 +640,8 @@ class RestSurveyComponent extends Component
                 }
             }
         }
-        $bindNode = $this->_setFieldBindNode($modelNode, $instanceId, 'integer', $field->default_is_mandatory, '', $index);
         $fieldNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
+        $bindNode = $this->_setFieldBindNode($modelNode, $instanceId, 'integer', $field->default_is_mandatory, '', $index);
         if (!empty($validationHint)) {
             $fieldHint = $fieldNode->addChild("hint", htmlspecialchars($validationHint, ENT_QUOTES), NS_XF);
             $bindNode->addAttribute("constraint", $constraint);
@@ -790,12 +773,46 @@ class RestSurveyComponent extends Component
 
     private function _dateType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
     {
-        $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
-        $this->_setFieldBindNode($modelNode, $instanceId, 'date', $field->default_is_mandatory, '', $index);
+        $validationHint = '';
+        if (!empty($field->params)) {
+            $params = json_decode($field->params, true);
+            if (array_key_exists('start_date', $params) && array_key_exists('end_date', $params)) {
+                $validationType = 'between';
+            } else if (array_key_exists('start_date', $params)) {
+                $validationType = 'earlier';
+            } else if (array_key_exists('end_date', $params)) {
+                $validationType = 'later';
+            } else {
+                $validationType = false;
+            }
+            if ($validationType) {
+                if ($validationType!='between') {
+                    if ($validationType=='earlier') {
+                        $constraint = ". > ".$params['start_date'];
+                        $validationHint = __('Value should be at least '. $params['start_date']);
+                    } else if ($validationType=='later') {
+                        $constraint = ". < ".$params['end_date'];
+                        $validationHint = __('Value should not be more than '. $params['end_date']);
+                    }
+                } else {
+                    $constraint = ". > " . $params['start_date'] . " && . < " . $params['end_date'];
+                    $validationHint = __('Value should be between '. implode(' and ', $params));
+                }
+            }
+        }
+        $fieldNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
+        $bindNode = $this->_setFieldBindNode($modelNode, $instanceId, 'date', $field->default_is_mandatory, '', $index);
+        if (!empty($validationHint)) {
+            $fieldHint = $fieldNode->addChild("hint", htmlspecialchars($validationHint, ENT_QUOTES), NS_XF);
+            $bindNode->addAttribute("constraint", $constraint);
+        }
     }
 
     private function _timeType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
     {
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // unable to find actual sample of time type validation for xforms; therefore skipping special time validation for now.
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
         $this->_setFieldBindNode($modelNode, $instanceId, 'time', $field->default_is_mandatory, '', $index);
     }
@@ -828,319 +845,5 @@ class RestSurveyComponent extends Component
             $bindNode->addAttribute("required", 'false()');
         }
         return $bindNode;
-    }
-
-    private function _testString($xmlstr)
-    {
-$xmlstr .= '<head>
-      <title>Custom Form With Validations Manual</title>
-      <xf:model>
-         <xf:instance id="xform">
-            <oe:SurveyForms id="10">
-               <oe:Institutions/>
-               <oe:AcademicPeriods/>
-               <oe:SurveyQuestions id="118" array-id="1"/>
-               <oe:SurveyQuestions id="104" array-id="2"/>
-               <oe:SurveyQuestions id="105" array-id="3"/>
-               <oe:SurveyQuestions id="117" array-id="4"/>
-               <oe:SurveyQuestions id="106" array-id="5"/>
-               <oe:SurveyQuestions id="107" array-id="6"/>
-               <oe:SurveyQuestions id="108" array-id="7"/>
-               <oe:SurveyQuestions id="115" array-id="8"/>
-               <oe:SurveyQuestions id="111" array-id="9"/>
-               <oe:SurveyQuestions id="109" array-id="10"/>
-               <oe:SurveyQuestions id="110" array-id="11"/>
-               <oe:SurveyQuestions id="116" array-id="12"/>
-               <oe:SurveyQuestions id="114" array-id="13"/>
-               <oe:SurveyQuestions id="112" array-id="14"/>
-               <oe:SurveyQuestions id="113" array-id="15"/>
-               <oe:SurveyQuestions id="39" array-id="16"/>
-               <oe:SurveyQuestions id="14" array-id="17"/>
-               <oe:SurveyQuestions id="99" array-id="18">
-                  <oe:SurveyTableRows id="193">
-                     <oe:SurveyTableColumns0 id="0">Males</oe:SurveyTableColumns0>
-                     <oe:SurveyTableColumns1 id="222"/>
-                     <oe:SurveyTableColumns2 id="223"/>
-                     <oe:SurveyTableColumns3 id="224"/>
-                     <oe:SurveyTableColumns4 id="225"/>
-                     <oe:SurveyTableColumns5 id="226"/>
-                     <oe:SurveyTableColumns6 id="239"/>
-                  </oe:SurveyTableRows>
-                  <oe:SurveyTableRows id="194">
-                     <oe:SurveyTableColumns0 id="0">Females</oe:SurveyTableColumns0>
-                     <oe:SurveyTableColumns1 id="222"/>
-                     <oe:SurveyTableColumns2 id="223"/>
-                     <oe:SurveyTableColumns3 id="224"/>
-                     <oe:SurveyTableColumns4 id="225"/>
-                     <oe:SurveyTableColumns5 id="226"/>
-                     <oe:SurveyTableColumns6 id="239"/>
-                  </oe:SurveyTableRows>
-                  <oe:SurveyTableRows id="195">
-                     <oe:SurveyTableColumns0 id="0">Total</oe:SurveyTableColumns0>
-                     <oe:SurveyTableColumns1 id="222"/>
-                     <oe:SurveyTableColumns2 id="223"/>
-                     <oe:SurveyTableColumns3 id="224"/>
-                     <oe:SurveyTableColumns4 id="225"/>
-                     <oe:SurveyTableColumns5 id="226"/>
-                     <oe:SurveyTableColumns6 id="239"/>
-                  </oe:SurveyTableRows>
-               </oe:SurveyQuestions>
-               <oe:SurveyQuestions id="11" array-id="19">
-                  <oe:SurveyTableRows id="6">
-                     <oe:SurveyTableColumns0 id="0">Boys</oe:SurveyTableColumns0>
-                     <oe:SurveyTableColumns1 id="7"/>
-                  </oe:SurveyTableRows>
-                  <oe:SurveyTableRows id="7">
-                     <oe:SurveyTableColumns0 id="0">Girls</oe:SurveyTableColumns0>
-                     <oe:SurveyTableColumns1 id="7"/>
-                  </oe:SurveyTableRows>
-                  <oe:SurveyTableRows id="8">
-                     <oe:SurveyTableColumns0 id="0">Total</oe:SurveyTableColumns0>
-                     <oe:SurveyTableColumns1 id="7"/>
-                  </oe:SurveyTableRows>
-               </oe:SurveyQuestions>
-               <oe:SurveyQuestions id="25" array-id="20">
-                  <oe:SurveyTableRows id="4">
-                     <oe:SurveyTableColumns0 id="0">Running Water</oe:SurveyTableColumns0>
-                     <oe:SurveyTableColumns1 id="4"/>
-                     <oe:SurveyTableColumns2 id="5"/>
-                  </oe:SurveyTableRows>
-                  <oe:SurveyTableRows id="5">
-                     <oe:SurveyTableColumns0 id="0">Bucket/Scoop-pour water</oe:SurveyTableColumns0>
-                     <oe:SurveyTableColumns1 id="4"/>
-                     <oe:SurveyTableColumns2 id="5"/>
-                  </oe:SurveyTableRows>
-               </oe:SurveyQuestions>
-               <oe:SurveyQuestions id="7" array-id="21"/>
-            </oe:SurveyForms>
-         </xf:instance>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/Institutions" type="string" required="true()"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/AcademicPeriods" type="string" required="true()"/>
-         <xsd:schema>
-            <xsd:simpleType name="stringRange2">
-               <xsd:restriction base="xf:string">
-                  <xsd:minLength value="5"/>
-                  <xsd:maxLength value="10"/>
-               </xsd:restriction>
-            </xsd:simpleType>
-         </xsd:schema>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[1]" type="string" required="false()"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[2]" type="stringRange2" required="true()"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[3]" type="string" required="false()"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[4]" type="integer" required="false()"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[5]" type="integer" required="false()" constraint=". &gt; 5"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[6]" type="integer" required="false()" constraint=". &lt; 5"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[7]" type="integer" required="false()" constraint=". &gt; 2"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[8]" type="date" required="false()"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[9]" type="date" required="false()"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[10]" type="date" required="false()"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[11]" type="date" required="false()"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[12]" type="time" required="false()"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[13]" type="time" required="false()"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[14]" type="time" required="false()"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[15]" type="time" required="false()"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[16]" type="integer" required="false()"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[17]" type="integer" required="false()"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[18]/SurveyTableColumns0" type="string"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[18]/SurveyTableColumns1" type="string"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[18]/SurveyTableColumns2" type="string"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[18]/SurveyTableColumns3" type="string"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[18]/SurveyTableColumns4" type="string"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[18]/SurveyTableColumns5" type="string"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[18]/SurveyTableColumns6" type="string"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[19]/SurveyTableColumns0" type="string"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[19]/SurveyTableColumns1" type="string"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[20]/SurveyTableColumns0" type="string"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[20]/SurveyTableColumns1" type="string"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[20]/SurveyTableColumns2" type="string"/>
-         <xf:bind ref="instance(\'xform\')/SurveyForms/SurveyQuestions[21]" type="integer" required="true()"/>
-      </xf:model>
-   </head>
-   <body>
-      <xf:input ref="instance(\'xform\')/SurveyForms/Institutions" oe-type="select">
-         <xf:label>Institution</xf:label>
-      </xf:input>
-      <xf:input ref="instance(\'xform\')/SurveyForms/AcademicPeriods" oe-type="select" oe-dependency="instance(\'xform\')/SurveyForms/Institutions">
-         <xf:label>Academic Period</xf:label>
-      </xf:input>
-      <xf:group ref="10_118">
-         <xf:label>With Validations</xf:label>
-         <xf:input ref="instance(\'xform\')/SurveyForms/SurveyQuestions[1]">
-            <xf:label>0 Field Text</xf:label>
-         </xf:input>
-         <xf:input ref="instance(\'xform\')/SurveyForms/SurveyQuestions[2]">
-            <xf:label>0 Field Text Length</xf:label>
-            <xf:hint>Value should be between 5 and 10 characters long.</xf:hint>
-         </xf:input>
-         <xf:input ref="instance(\'xform\')/SurveyForms/SurveyQuestions[3]">
-            <xf:label>0 Field Text Custom</xf:label>
-         </xf:input>
-         <xf:input ref="instance(\'xform\')/SurveyForms/SurveyQuestions[4]">
-            <xf:label>0 Field Number</xf:label>
-         </xf:input>
-         <xf:input ref="instance(\'xform\')/SurveyForms/SurveyQuestions[5]">
-            <xf:label>0 Field Number More Than</xf:label>
-            <xf:hint>Value should be at least 5</xf:hint>
-         </xf:input>
-         <xf:input ref="instance(\'xform\')/SurveyForms/SurveyQuestions[6]">
-            <xf:label>0 Field Number Less Than</xf:label>
-            <xf:hint>Value should not be more than 5</xf:hint>
-         </xf:input>
-         <xf:input ref="instance(\'xform\')/SurveyForms/SurveyQuestions[7]">
-            <xf:label>0 Field Number Between</xf:label>
-            <xf:hint>Value should be between 2 and 6</xf:hint>
-         </xf:input>
-         <xf:input ref="instance(\'xform\')/SurveyForms/SurveyQuestions[8]">
-            <xf:label>0 Field Date</xf:label>
-         </xf:input>
-         <xf:input ref="instance(\'xform\')/SurveyForms/SurveyQuestions[9]">
-            <xf:label>0 Field Date Between</xf:label>
-         </xf:input>
-         <xf:input ref="instance(\'xform\')/SurveyForms/SurveyQuestions[10]">
-            <xf:label>0 Field Date Not Earlier than</xf:label>
-         </xf:input>
-         <xf:input ref="instance(\'xform\')/SurveyForms/SurveyQuestions[11]">
-            <xf:label>0 Field Date Not Later than</xf:label>
-         </xf:input>
-         <xf:input ref="instance(\'xform\')/SurveyForms/SurveyQuestions[12]">
-            <xf:label>0 Field Time</xf:label>
-         </xf:input>
-         <xf:input ref="instance(\'xform\')/SurveyForms/SurveyQuestions[13]">
-            <xf:label>0 Field Time Between</xf:label>
-         </xf:input>
-         <xf:input ref="instance(\'xform\')/SurveyForms/SurveyQuestions[14]">
-            <xf:label>0 Field Time Not Earlier than</xf:label>
-         </xf:input>
-         <xf:input ref="instance(\'xform\')/SurveyForms/SurveyQuestions[15]">
-            <xf:label>0 Field Time Not Later than</xf:label>
-         </xf:input>
-      </xf:group>
-      <xf:group ref="10_39">
-         <xf:label>No Validations</xf:label>
-         <xf:select ref="instance(\'xform\')/SurveyForms/SurveyQuestions[16]">
-            <xf:label>Which of the following does the school have access to?  </xf:label>
-            <xf:item>
-               <xf:label>Electricity</xf:label>
-               <xf:value>70</xf:value>
-            </xf:item>
-            <xf:item>
-               <xf:label>Running Water</xf:label>
-               <xf:value>71</xf:value>
-            </xf:item>
-            <xf:item>
-               <xf:label>Computer</xf:label>
-               <xf:value>72</xf:value>
-            </xf:item>
-            <xf:item>
-               <xf:label>Internet</xf:label>
-               <xf:value>73</xf:value>
-            </xf:item>
-         </xf:select>
-         <xf:select1 ref="instance(\'xform\')/SurveyForms/SurveyQuestions[17]">
-            <xf:label>Does your preschool have a feeding program? </xf:label>
-            <xf:item>
-               <xf:label>Yes</xf:label>
-               <xf:value>3</xf:value>
-            </xf:item>
-            <xf:item>
-               <xf:label>No</xf:label>
-               <xf:value>4</xf:value>
-            </xf:item>
-         </xf:select1>
-         <xf:group ref="99" oe-type="table">
-            <xf:label>In the table provided, indicate by Form how many pupils transferred out of your school during the last school year</xf:label>
-            <table ref="instance(\'xform\')/SurveyForms/SurveyQuestions[18]">
-               <tr>
-                  <th>Gender and Form</th>
-                  <th>Prep</th>
-                  <th>Form 1</th>
-                  <th>Form 2</th>
-                  <th>Form 3</th>
-                  <th>Form 4</th>
-                  <th>Total</th>
-               </tr>
-               <tbody>
-                  <xf:repeat ref="instance(\'xform\')/SurveyForms/SurveyQuestions[18]/SurveyTableRows">
-                     <tr>
-                        <td>
-                           <xf:output ref="instance(\'xform\')/SurveyForms/SurveyQuestions[18]/SurveyTableColumns0"/>
-                        </td>
-                        <td>
-                           <xf:input ref="instance(\'xform\')/SurveyForms/SurveyQuestions[18]/SurveyTableColumns1"/>
-                        </td>
-                        <td>
-                           <xf:input ref="instance(\'xform\')/SurveyForms/SurveyQuestions[18]/SurveyTableColumns2"/>
-                        </td>
-                        <td>
-                           <xf:input ref="instance(\'xform\')/SurveyForms/SurveyQuestions[18]/SurveyTableColumns3"/>
-                        </td>
-                        <td>
-                           <xf:input ref="instance(\'xform\')/SurveyForms/SurveyQuestions[18]/SurveyTableColumns4"/>
-                        </td>
-                        <td>
-                           <xf:input ref="instance(\'xform\')/SurveyForms/SurveyQuestions[18]/SurveyTableColumns5"/>
-                        </td>
-                        <td>
-                           <xf:input ref="instance(\'xform\')/SurveyForms/SurveyQuestions[18]/SurveyTableColumns6"/>
-                        </td>
-                     </tr>
-                  </xf:repeat>
-               </tbody>
-            </table>
-         </xf:group>
-         <xf:group ref="11" oe-type="table">
-            <xf:label>Please list the number of Infant 1 students who are receiving immunization.</xf:label>
-            <table ref="instance(\'xform\')/SurveyForms/SurveyQuestions[19]">
-               <tr>
-                  <th>Students</th>
-                  <th>Number of Students</th>
-               </tr>
-               <tbody>
-                  <xf:repeat ref="instance(\'xform\')/SurveyForms/SurveyQuestions[19]/SurveyTableRows">
-                     <tr>
-                        <td>
-                           <xf:output ref="instance(\'xform\')/SurveyForms/SurveyQuestions[19]/SurveyTableColumns0"/>
-                        </td>
-                        <td>
-                           <xf:input ref="instance(\'xform\')/SurveyForms/SurveyQuestions[19]/SurveyTableColumns1"/>
-                        </td>
-                     </tr>
-                  </xf:repeat>
-               </tbody>
-            </table>
-         </xf:group>
-         <xf:group ref="25" oe-type="table">
-            <xf:label>How many water access points are at the school, not including hand washing facilities? (A water access point includes classroom water buckets, drinking water fountains, running water taps not used for hand washing, well pumps, and storage tank taps)</xf:label>
-            <table ref="instance(\'xform\')/SurveyForms/SurveyQuestions[20]">
-               <tr>
-                  <th>Typ</th>
-                  <th>Functional</th>
-                  <th>Non Functional</th>
-               </tr>
-               <tbody>
-                  <xf:repeat ref="instance(\'xform\')/SurveyForms/SurveyQuestions[20]/SurveyTableRows">
-                     <tr>
-                        <td>
-                           <xf:output ref="instance(\'xform\')/SurveyForms/SurveyQuestions[20]/SurveyTableColumns0"/>
-                        </td>
-                        <td>
-                           <xf:input ref="instance(\'xform\')/SurveyForms/SurveyQuestions[20]/SurveyTableColumns1"/>
-                        </td>
-                        <td>
-                           <xf:input ref="instance(\'xform\')/SurveyForms/SurveyQuestions[20]/SurveyTableColumns2"/>
-                        </td>
-                     </tr>
-                  </xf:repeat>
-               </tbody>
-            </table>
-         </xf:group>
-         <xf:input ref="instance(\'xform\')/SurveyForms/SurveyQuestions[21]">
-            <xf:label>What is the average number of days that the truants miss from school?.</xf:label>
-         </xf:input>
-      </xf:group>
-   </body>
-</html>
-        ';
-        return $xmlstr;
     }
 }
