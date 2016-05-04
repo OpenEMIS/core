@@ -874,6 +874,8 @@ class InstitutionClassesTable extends ControllerActionTable {
 				'student_id' => $id,
 				'institution_class_id' => $entity->id,
 				'education_grade_id'=>  $userData->education_grade_id,
+				'institution_id' => $entity->institution_id,
+				'academic_period_id' => $entity->academic_period_id,
 				'student_status_id' => $userData->student_status_id,
 				'education_grade' => [],
 				'student_status' => [],
