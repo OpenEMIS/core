@@ -14,6 +14,7 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
 ControllerActionComponent - Current Version 3.1.16
+3.1.18 (Malcolm) - remove() - If id(to be deleted) cannot be found, return a successful deletion message
 3.1.17 (Malcolm) - buildDefaultValidation() - Added condition '&& strlen($attr['default']) == 0' when it comes to determining whether should automatically add 'notBlank' and 'requirePresence' validations
 3.1.16 (Malcolm) - renderFields() - '-- Select --' is added if ($attr['type'] != 'chosenSelect') 
 3.1.15 (Malcolm) - renderFields() - for automatic adding of '-- Select --' if (there are no '' value fields in dropdown) and $attr['select'] != false (default true)
@@ -1271,8 +1272,15 @@ class ControllerActionComponent extends Component {
             $deleteOptions = new ArrayObject([]);
 
             $process = function ($model, $id, $deleteOptions) {
-                $entity = $model->get($id);
-                return $model->delete($entity, $deleteOptions->getArrayCopy());
+                $primaryKey = $model->primaryKey();
+                $idKey = $model->aliasField($primaryKey);
+                if ($model->exists([$idKey => $id])) {
+                    $entity = $model->get($id);
+                    return $model->delete($entity, $deleteOptions->getArrayCopy());
+                } else {
+                    // If id(to be deleted) cannot be found, return a successful deletion message
+                    return true;
+                }
             };
 
             // Event: onBeforeDelete
