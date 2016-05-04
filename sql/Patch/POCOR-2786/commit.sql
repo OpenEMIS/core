@@ -1,6 +1,5 @@
-
 -- db_patches
-INSERT IGNORE INTO `db_patches` VALUES ('POCOR-2786', NOW());
+INSERT IGNORE INTO `db_patches` (`issue`, `created`) VALUES ('POCOR-2786', NOW());
 
 UPDATE `db_patches` SET `created` = NOW() WHERE `issue` = 'POCOR-2786';
 
