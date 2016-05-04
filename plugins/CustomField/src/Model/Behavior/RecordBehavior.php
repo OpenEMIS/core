@@ -16,6 +16,8 @@ use Cake\I18n\Date;
 class RecordBehavior extends Behavior {
 	protected $_defaultConfig = [
 		'events' => [
+			'ControllerAction.Model.add.onInitialize'		=> ['callable' => 'addOnInitialize', 'priority' => 100],
+			'ControllerAction.Model.edit.onInitialize'		=> ['callable' => 'editOnInitialize', 'priority' => 100],
 			'ControllerAction.Model.viewEdit.beforeQuery'	=> ['callable' => 'viewEditBeforeQuery', 'priority' => 100],
 			'ControllerAction.Model.view.afterAction'		=> ['callable' => 'viewAfterAction', 'priority' => 100],
 			'ControllerAction.Model.addEdit.beforePatch' 	=> ['callable' => 'addEditBeforePatch', 'priority' => 100],
@@ -127,6 +129,14 @@ class RecordBehavior extends Behavior {
 		}
 	}
 
+	public function addOnInitialize(Event $event, Entity $entity) {
+		$this->deleteUploadSessions();
+	}
+
+	public function editOnInitialize(Event $event, Entity $entity) {
+		$this->deleteUploadSessions();
+	}
+
 	public function viewEditBeforeQuery(Event $event, Query $query) {
 		// do not contain CustomFieldValues
 		$query->contain(['CustomTableCells']);
@@ -143,11 +153,12 @@ class RecordBehavior extends Behavior {
     }
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-    	$alias = $this->_table->alias();
+    	$model = $this->_table;
+    	$alias = $model->alias();
 
     	if (array_key_exists('custom_field_values', $data[$alias])) {
 			$values = $data[$alias]['custom_field_values'];
-			$fieldValues = $this->_table->array_column($values, $this->config('fieldKey'));
+			$fieldValues = $model->array_column($values, $this->config('fieldKey'));
 
 			$CustomFields = TableRegistry::get($this->config('fieldClass.className'));
 			$fields = $CustomFields->find()->where(['id IN' => $fieldValues])->all();
@@ -159,6 +170,19 @@ class RecordBehavior extends Behavior {
 						$data[$alias]['custom_field_values'][$key]['mandatory'] = $f->is_mandatory;
 						$data[$alias]['custom_field_values'][$key]['unique'] = $f->is_unique;
 						$data[$alias]['custom_field_values'][$key]['params'] = $f->params;
+
+						// logic to patch request data
+						$fieldType = Inflector::camelize(strtolower($f->field_type));
+		        		$settings = new ArrayObject([
+							'recordKey' => $this->config('recordKey'),
+							'fieldKey' => $this->config('fieldKey'),
+							'tableColumnKey' => $this->config('tableColumnKey'),
+							'tableRowKey' => $this->config('tableRowKey'),
+							'customValue' => $attr
+						]);
+		        		$event = $model->dispatchEvent('Render.patch'.$fieldType.'Values', [$entity, $data, $settings], $model);
+						if ($event->isStopped()) { return $event->result; }
+						// End
 					}
 				}
 			}
@@ -497,6 +521,7 @@ class RecordBehavior extends Behavior {
 
 	public function setupCustomFields(Entity $entity) {
 		$model = $this->_table;
+		$session = $model->request->session();
 		$query = $this->getCustomFieldQuery($entity);
 
 		// If tabSection is set, setup Tab Section
@@ -572,6 +597,19 @@ class RecordBehavior extends Behavior {
 								$fieldData['textarea_value'] = $obj->textarea_value;
 								$fieldData['date_value'] = $obj->date_value;
 								$fieldData['time_value'] = $obj->time_value;
+
+								// logic for Initialize
+								$fieldType = Inflector::camelize(strtolower($obj->custom_field->field_type));
+				        		$settings = new ArrayObject([
+									'recordKey' => $this->config('recordKey'),
+									'fieldKey' => $this->config('fieldKey'),
+									'tableColumnKey' => $this->config('tableColumnKey'),
+									'tableRowKey' => $this->config('tableRowKey'),
+									'customValue' => $obj
+								]);
+				        		$event = $model->dispatchEvent('Render.on'.$fieldType.'Initialize', [$entity, $settings], $model);
+								if ($event->isStopped()) { return $event->result; }
+								// End
 							} else if ($model->request->is(['post', 'put'])) {
 					        	// onPost, no actions
 					        }
@@ -654,6 +692,12 @@ class RecordBehavior extends Behavior {
 			ksort($fieldOrder);
 			$model->ControllerAction->setFieldOrder($fieldOrder);
 		}
+	}
+
+	private function deleteUploadSessions() {
+		$model = $this->_table;
+		$session = $model->request->session();
+		$session->delete($model->registryAlias().'.parseUpload');
 	}
 
 	// Model.excel.onExcelBeforeStart
