@@ -697,7 +697,7 @@ class RecordBehavior extends Behavior {
 	private function deleteUploadSessions() {
 		$model = $this->_table;
 		$session = $model->request->session();
-		$session->delete($model->registryAlias().'.parseUpload');
+		$session->delete($model->registryAlias().'.parseFile');
 	}
 
 	// Model.excel.onExcelBeforeStart

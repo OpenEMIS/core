@@ -20,6 +20,7 @@ class InstitutionsController extends AppController  {
 
 		$this->ControllerAction->model('Institution.Institutions');
 		$this->ControllerAction->models = [
+			'Institutions' 		=> ['className' => 'Institution.Institutions'],
 			'Attachments' 		=> ['className' => 'Institution.InstitutionAttachments'],
 			'History' 			=> ['className' => 'Institution.InstitutionActivities', 'actions' => ['search', 'index']],
 
@@ -185,7 +186,7 @@ class InstitutionsController extends AppController  {
 			$persona = false;
 			$requestQuery = $this->request->query;
 			if (isset($params['pass'][1])) {
-				if ($model->table() == 'security_users') {
+				if ($model->table() == 'security_users' && $action !== 'downloadFile') {
 					$persona = $model->get($params['pass'][1]);
 				}
 			} else if (isset($requestQuery['user_id'][1])) {
