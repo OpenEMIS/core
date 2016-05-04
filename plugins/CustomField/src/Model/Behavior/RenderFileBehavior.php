@@ -63,7 +63,8 @@ class RenderFileBehavior extends RenderBehavior {
 
                 $config = $model->ControllerAction->getVar('ControllerAction');
                 $buttons = $config['buttons'];
-                $url = $buttons['download']['url'];
+                $url = $buttons['view']['url'];
+                $url['action'] = $model->alias;
                 $url[0] = 'downloadFile';
                 $url[1] = $savedId;
 
@@ -79,10 +80,10 @@ class RenderFileBehavior extends RenderBehavior {
 
             // Rely on session variable to show file name, if session has value, read from session
             $session = $model->request->session();
-            $sessionKey = $model->registryAlias().'.parseUpload.'.$fieldId;
+            $sessionKey = $model->registryAlias().'.parseFile.'.$fieldId;
             if ($session->check($sessionKey)) {
-                $parseUploadData = $session->read($sessionKey);
-                $attr['value'] = $parseUploadData['file']['name'];
+                $parseFileData = $session->read($sessionKey);
+                $attr['value'] = $parseFileData['file']['name'];
             }
             // End
 
@@ -112,12 +113,12 @@ class RenderFileBehavior extends RenderBehavior {
 
         $model = $this->_table;
         $session = $model->request->session();
-        $sessionKey = $model->registryAlias().'.parseUpload.'.$fieldId;
+        $sessionKey = $model->registryAlias().'.parseFile.'.$fieldId;
 
-        $parseUploadData = [
+        $parseFileData = [
             'file' => ['name' => $customValue->text_value]
         ];
-        $session->write($sessionKey, $parseUploadData);
+        $session->write($sessionKey, $parseFileData);
     }
 
     public function patchFileValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
@@ -129,7 +130,7 @@ class RenderFileBehavior extends RenderBehavior {
 
         $model = $this->_table;
         $session = $model->request->session();
-        $sessionKey = $model->registryAlias().'.parseUpload.'.$fieldId;
+        $sessionKey = $model->registryAlias().'.parseFile.'.$fieldId;
 
         if (!is_array($file)) {
             if ($session->check($sessionKey)) {
@@ -138,9 +139,9 @@ class RenderFileBehavior extends RenderBehavior {
         } else {
             if (!empty($file) && $file['error'] == 0) { // success
                 if ($this->fileSizeAllowed($file)) {
-                    $parseUploadData = $this->parseUpload($file);
-                    $parseUploadData['file'] = $file;
-                    $session->write($sessionKey, $parseUploadData);
+                    $parseFileData = $this->parseFile($file);
+                    $parseFileData['file'] = $file;
+                    $session->write($sessionKey, $parseFileData);
                 } else {
                     // To-do: File size too big
                     $session->delete($sessionKey);
@@ -161,16 +162,16 @@ class RenderFileBehavior extends RenderBehavior {
         $fieldId = $customValue[$fieldKey];
         $model = $this->_table;
         $session = $model->request->session();
-        $sessionKey = $model->registryAlias().'.parseUpload.'.$fieldId;
+        $sessionKey = $model->registryAlias().'.parseFile.'.$fieldId;
 
         $uploadNewFile = true;
         if ($session->check($sessionKey)) {
-            $parseUploadData = $session->read($sessionKey);
+            $parseFileData = $session->read($sessionKey);
             
-            if (array_key_exists('fileContent', $parseUploadData)) {
+            if (array_key_exists('fileContent', $parseFileData)) {
                 // upload new file
-                $customValue['text_value'] = $parseUploadData['fileName'];
-                $customValue['file'] = $parseUploadData['fileContent'];
+                $customValue['text_value'] = $parseFileData['fileName'];
+                $customValue['file'] = $parseFileData['fileContent'];
             } else {
                 $uploadNewFile = false;
             }
@@ -221,7 +222,7 @@ class RenderFileBehavior extends RenderBehavior {
         return !(isset($file['type']) && ($file['size'] > $this->readableFormatToBytes()));
     }
 
-    private function parseUpload($file=null) {
+    private function parseFile($file=null) {
         if (!is_null($file)) {
             $fileName = $file['name'];
             $fileContent = file_get_contents($file['tmp_name']);
