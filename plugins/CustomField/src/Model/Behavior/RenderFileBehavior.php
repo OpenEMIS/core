@@ -40,6 +40,7 @@ class RenderFileBehavior extends RenderBehavior {
 	public function onGetCustomFileElement(Event $event, $action, $entity, $attr, $options=[]) {
         $value = '';
 
+        $model = $this->_table;
         $fieldType = strtolower($this->fieldTypeCode);
         // for edit
         $fieldId = $attr['customField']->id;
@@ -57,11 +58,10 @@ class RenderFileBehavior extends RenderBehavior {
         // End
 
         if ($action == 'view') {
-            // to-do: render attachment
             if (!is_null($savedValue)) {
                 $value = $savedValue;
 
-                $config = $this->_table->ControllerAction->getVar('ControllerAction');
+                $config = $model->ControllerAction->getVar('ControllerAction');
                 $buttons = $config['buttons'];
                 $url = $buttons['download']['url'];
                 $url[0] = 'downloadFile';
@@ -76,6 +76,15 @@ class RenderFileBehavior extends RenderBehavior {
             if (!is_null($savedValue)) {
                 $attr['value'] = $savedValue;
             }
+
+            // Rely on session variable to show file name, if session has value, read from session
+            $session = $model->request->session();
+            $sessionKey = $model->registryAlias().'.parseUpload.'.$fieldId;
+            if ($session->check($sessionKey)) {
+                $parseUploadData = $session->read($sessionKey);
+                $attr['value'] = $parseUploadData['file']['name'];
+            }
+            // End
 
             $attr['fieldName'] = $fieldPrefix.".file";
             $attr['comment'] = $this->getFileComment();
@@ -95,21 +104,88 @@ class RenderFileBehavior extends RenderBehavior {
         $includes['jasny']['include'] = true;
     }
 
-    public function processFileValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
+    public function onFileInitialize(Event $event, Entity $entity, ArrayObject $settings) {
+        $fieldKey = $settings['fieldKey'];
         $customValue = $settings['customValue'];
 
+        $fieldId = $customValue[$fieldKey];
+
+        $model = $this->_table;
+        $session = $model->request->session();
+        $sessionKey = $model->registryAlias().'.parseUpload.'.$fieldId;
+
+        $parseUploadData = [
+            'file' => ['name' => $customValue->text_value]
+        ];
+        $session->write($sessionKey, $parseUploadData);
+    }
+
+    public function patchFileValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
+        $fieldKey = $settings['fieldKey'];
+        $customValue = $settings['customValue'];
+
+        $fieldId = $customValue[$fieldKey];
         $file = $customValue['file'];
-        if (!empty($file) && $file['error'] == 0) { // success
-            $parsedUploadData = $this->parseUpload($file);
-            $customValue['text_value'] = $parsedUploadData['fileName'];
-            $customValue['file'] = $parsedUploadData['fileContent'];
+
+        $model = $this->_table;
+        $session = $model->request->session();
+        $sessionKey = $model->registryAlias().'.parseUpload.'.$fieldId;
+
+        if (!is_array($file)) {
+            if ($session->check($sessionKey)) {
+                $session->delete($sessionKey);
+            }
         } else {
-            $customValue['text_value'] = '';
+            if (!empty($file) && $file['error'] == 0) { // success
+                if ($this->fileSizeAllowed($file)) {
+                    $parseUploadData = $this->parseUpload($file);
+                    $parseUploadData['file'] = $file;
+                    $session->write($sessionKey, $parseUploadData);
+                } else {
+                    // To-do: File size too big
+                    $session->delete($sessionKey);
+                }
+            }
         }
 
-        $settings['valueKey'] = 'text_value';
         $settings['customValue'] = $customValue;
-        $this->processValues($entity, $data, $settings);
+    }
+
+    public function processFileValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
+        $settings['valueKey'] = 'text_value';
+
+        $fieldKey = $settings['fieldKey'];
+        $valueKey = $settings['valueKey'];
+        $customValue = $settings['customValue'];
+
+        $fieldId = $customValue[$fieldKey];
+        $model = $this->_table;
+        $session = $model->request->session();
+        $sessionKey = $model->registryAlias().'.parseUpload.'.$fieldId;
+
+        $uploadNewFile = true;
+        if ($session->check($sessionKey)) {
+            $parseUploadData = $session->read($sessionKey);
+            
+            if (array_key_exists('fileContent', $parseUploadData)) {
+                // upload new file
+                $customValue['text_value'] = $parseUploadData['fileName'];
+                $customValue['file'] = $parseUploadData['fileContent'];
+            } else {
+                $uploadNewFile = false;
+            }
+
+            $session->delete($sessionKey);
+        } else {
+            // will delete
+            $customValue['text_value'] = '';
+            $customValue['file'] = '';
+        }
+
+        if ($uploadNewFile) {
+            $settings['customValue'] = $customValue;
+            $this->processValues($entity, $data, $settings);
+        }
     }
 
     private function getFileComment() {
@@ -118,19 +194,42 @@ class RenderFileBehavior extends RenderBehavior {
         return $comment;
     }
 
+    private function readableFormatToBytes() {
+        $KILO = 1024;
+        $MEGA = $KILO * 1024;
+        $GIGA = $MEGA * 1024;
+        $TERA = $GIGA * 1024;
+
+        if (substr_count(strtolower($this->config('size')), 'kb')) {
+            $size = intval(str_replace('kb', '', (strtolower($this->config('size')))));
+            return $size * $KILO;
+        } else if (substr_count(strtolower($this->config('size')), 'mb')) {
+            $size = intval(str_replace('mb', '', (strtolower($this->config('size')))));
+            return $size * $MEGA;
+        } else if (substr_count(strtolower($this->config('size')), 'gb')) {
+            $size = intval(str_replace('gb', '', (strtolower($this->config('size')))));
+            return $size * $GIGA;
+        } else if (substr_count(strtolower($this->config('size')), 'tb')) {
+            $size = intval(str_replace('tb', '', (strtolower($this->config('size')))));
+            return $size * $TERA;
+        } else {
+            return intval($this->config('size'));
+        }
+    }
+
+    private function fileSizeAllowed($file) {
+        return !(isset($file['type']) && ($file['size'] > $this->readableFormatToBytes()));
+    }
+
     private function parseUpload($file=null) {
         if (!is_null($file)) {
-            if ($this->config('useDefaultName')) {
-                $fileName = $file['name'];
-            } else {
-                $pathInfo = pathinfo($file['name']);
-                $fileName = uniqid() . '.' . $pathInfo['extension'];
-            }
+            $fileName = $file['name'];
             $fileContent = file_get_contents($file['tmp_name']);
         } else {
             $fileName = null;
             $fileContent = null;
         }
+
         return ['fileName' => $fileName, 'fileContent' => $fileContent];
     }
 
