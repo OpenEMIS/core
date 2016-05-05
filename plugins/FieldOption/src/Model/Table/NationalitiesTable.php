@@ -14,7 +14,7 @@ class NationalitiesTable extends ControllerActionTable {
 		parent::initialize($config);
 
         $this->belongsTo('IdentityTypes', ['className' => 'FieldOption.IdentityTypes']);
-		$this->hasMany('Nationalities', ['className' => 'User.UserNationalities', 'foreignKey' => 'nationality_id']);
+		$this->hasMany('UserNationalities', ['className' => 'User.UserNationalities', 'foreignKey' => 'nationality_id']);
 
         $this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
 	}
