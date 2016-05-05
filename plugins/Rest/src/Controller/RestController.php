@@ -40,7 +40,6 @@ class RestController extends AppController
 				'TableCell' => 'Institution.InstitutionSurveyTableCells'
 			]
 		]);
-		// $this->Auth->config('authorize', 'xxxx');
 		$this->SecurityRestSessions = TableRegistry::get('SecurityRestSessions');
 
 	}
@@ -48,35 +47,93 @@ class RestController extends AppController
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 
-		$this->Auth->config('authenticate', [
-            'ADmad/JwtAuth.Jwt' => [
-                'parameter' => 'token',
-                'userModel' => 'User.Users',
-                'scope' => ['Users.status' => 1],
-                'fields' => [
-                    'username' => 'id'
-                ],
-                'queryDatasource' => true
-            ]
-        ]);
-        $this->Auth->allow(['token']);
-		if ($this->request->action == 'survey') {
-			$this->autoRender = false;
+		if ($this->RestVersion == 2.0) {
+			$this->Auth->config('authenticate', [
+	            'ADmad/JwtAuth.Jwt' => [
+	                'parameter' => 'token',
+	                'userModel' => 'User.Users',
+	                'scope' => ['Users.status' => 1],
+	                'fields' => [
+	                    'username' => 'id'
+	                ],
+	                'queryDatasource' => true
+	            ]
+	        ]);
+	        $this->Auth->config('authorize', null);
+	        $this->Auth->allow(['token']);
 
-			$pass = $this->request->params['pass'];
-			$action = null;
+			if ($this->request->action == 'survey') {
+				$this->autoRender = false;
 
-			if (!empty($pass)) {
-				$action = array_shift($pass);
+				$pass = $this->request->params['pass'];
+				$action = null;
+
+				if (!empty($pass)) {
+					$action = array_shift($pass);
+				}
+
+				if (!is_null($action) && in_array($action, $this->RestSurvey->allowedActions)) {
+					$this->Auth->allow('survey');
+				}
+			} else {
+				$this->Auth->identify();
 			}
+		} else {
+			$this->Auth->allow();
+			if ($this->request->action == 'survey') {
+				$this->autoRender = false;
 
+				$pass = $this->request->params['pass'];
+				$action = null;
 
-			if (!is_null($action) && in_array($action, $this->RestSurvey->allowedActions)) {
-				// actions require authentication
-				// if authentication is required:
-				// 1. check if token exists
-				// 2. check if current time is greater than expiry time
-				$this->Auth->allow('survey');
+				if (!empty($pass)) {
+					$action = array_shift($pass);
+				}
+
+				if (!is_null($action) && !in_array($action, $this->RestSurvey->allowedActions)) {
+					// actions require authentication
+					// if authentication is required:
+					// 1. check if token exists
+					// 2. check if current time is greater than expiry time
+
+					$accessToken = '';
+					if ($this->request->is(['post', 'put'])) {
+						$json = [];
+
+						if (array_key_exists('SecurityRestSession', $this->request->data)) {
+							if (array_key_exists('access_token', $this->request->data['SecurityRestSession'])) {
+								$accessToken = $this->request->data['SecurityRestSession']['access_token'];
+
+								$confirm = $this->SecurityRestSessions
+									->find()
+									->where([
+										$this->SecurityRestSessions->aliasField('access_token') => $accessToken
+									])
+									->first();
+
+								$current = time();
+
+								if (!empty($confirm)) {
+									$expiry = strtotime($confirm->expiry_date);
+									if ($current > $expiry) {
+										throw new BadRequestException('Custom error message', 408);
+										$json	= ['message' => 'invalid'];
+									} else {
+										$json	= ['message' => 'valid'];
+									}
+								} else {
+									throw new BadRequestException('Custom error message', 408);
+									$json	= ['message' => 'invalid'];
+								}
+							}
+						}
+
+						$this->response->body(json_encode($json, JSON_UNESCAPED_UNICODE));
+						$this->response->type('json');
+
+						//return $this->response;
+					}
+				}
 			}
 		}
 	}
@@ -201,93 +258,94 @@ class RestController extends AppController
 		return $this->response;
 	}
 
-	// public function token() {
-	// 	$this->autoRender = false;
-	// 	$accessToken = '';
-	// 	$refreshToken = '';
-	// 	$json = [];
+	public function token() {
 
-	// 	if ($this->request->is(['post', 'put'])) 
-	// 	{
-	// 		$accessToken = $this->request->data['access_token'];
-	// 		$refreshToken = $this->request->data['refresh_token'];
+		if ($this->RestVersion != '2.0') {
+			$this->autoRender = false;
+			$accessToken = '';
+			$refreshToken = '';
+			$json = [];
 
-	// 		$search = $this->SecurityRestSessions
-	// 			->find()
-	// 			->where([
-	// 				$this->SecurityRestSessions->aliasField('access_token') => $accessToken,
-	// 				$this->SecurityRestSessions->aliasField('refresh_token') => $refreshToken
-	// 			])
-	// 			->first();
+			if ($this->request->is(['post', 'put'])) 
+			{
+				$accessToken = $this->request->data['access_token'];
+				$refreshToken = $this->request->data['refresh_token'];
 
-	// 		// check if the record actually exists. if it does, do the update, else just return fail.
-	// 		// we check if the expiry time has already passed. if it has passed, return error.
-	// 		if (!empty($search)) {
-	// 			$current = time();
-	// 			$expiry = strtotime($search->expiry_date);
+				$search = $this->SecurityRestSessions
+					->find()
+					->where([
+						$this->SecurityRestSessions->aliasField('access_token') => $accessToken,
+						$this->SecurityRestSessions->aliasField('refresh_token') => $refreshToken
+					])
+					->first();
 
-	// 			if ($current < $expiry) {
-	// 				$refreshToken = sha1(time());
-	// 				$startDate = time() + 3600; // current time + one hour
-	// 				$expiryTime = date('Y-m-d H:i:s', $startDate);
+				// check if the record actually exists. if it does, do the update, else just return fail.
+				// we check if the expiry time has already passed. if it has passed, return error.
+				if (!empty($search)) {
+					$current = time();
+					$expiry = strtotime($search->expiry_date);
 
-	// 				$search->refresh_token = $refreshToken;
-	// 				$search->expiry_date = $expiryTime;
+					if ($current < $expiry) {
+						$refreshToken = sha1(time());
+						$startDate = time() + 3600; // current time + one hour
+						$expiryTime = date('Y-m-d H:i:s', $startDate);
 
-	// 				$this->SecurityRestSessions->save($search);
-	// 				$json = ['message' => 'success', 'refresh_token' => $refreshToken];
-	// 			} else {
-	// 				$json = ['message' => 'token not updated'];
-	// 			}
-	// 		} else {
-	// 			$json = ['message' => 'token not found'];
-	// 		}
+						$search->refresh_token = $refreshToken;
+						$search->expiry_date = $expiryTime;
 
-	// 		$this->response->body(json_encode($json, JSON_UNESCAPED_UNICODE));
-	// 		$this->response->type('json');
-
-	// 		return $this->response;
-	// 	}
-	// }
-
-	public function token()
-	{	
-		if (isset($this->request->query['payload'])) {
-			if (!$this->Cookie->check('Restful.Call')) {
-				$redirectUrl = $this->ControllerAction->url('token');
-				if (isset($redirectUrl['payload'])) {
-					unset($redirectUrl['payload']);
+						$this->SecurityRestSessions->save($search);
+						$json = ['message' => 'success', 'refresh_token' => $refreshToken];
+					} else {
+						$json = ['message' => 'token not updated'];
+					}
+				} else {
+					$json = ['message' => 'token not found'];
 				}
 
-			}
-			$token = $this->request->query('payload');
-			$json = [
-		        'success' => true,
-		        'data' => [
-		            'token' => $token
-		        ]
-		    ];
-			$this->response->body(json_encode($json, JSON_UNESCAPED_UNICODE));
-			$this->response->type('json');
+				$this->response->body(json_encode($json, JSON_UNESCAPED_UNICODE));
+				$this->response->type('json');
 
-			return $this->response;
-		} else {
-			$this->Cookie->configKey('Restful', 'path', '/');
-			$this->Cookie->configKey('Restful', [
-			    'expires' => '+5 minutes'
-			]);
-			$url = 'http://www.google.com.sg';
-			$this->Cookie->write('Restful.Call', true);
-			$this->Cookie->write('Restful.CallBackURL', $url);
-			if ($this->Auth->user()) {
-				$payload = $this->SSO->generateToken();
-				$redirectUrl = $this->ControllerAction->url('token');
-				$redirectUrl['payload'] = $payload;
-				$this->redirect($redirectUrl);
-			} else {
-				$this->SSO->doAuthentication();	
+				return $this->response;
 			}
-			
+
+		} else {
+			if (isset($this->request->query['payload'])) {
+				if (!$this->Cookie->check('Restful.Call')) {
+					$redirectUrl = $this->ControllerAction->url('token');
+					if (isset($redirectUrl['payload'])) {
+						unset($redirectUrl['payload']);
+					}
+
+				}
+				$token = $this->request->query('payload');
+				$json = [
+			        'success' => true,
+			        'data' => [
+			            'token' => $token
+			        ]
+			    ];
+				$this->response->body(json_encode($json, JSON_UNESCAPED_UNICODE));
+				$this->response->type('json');
+
+				return $this->response;
+			} else {
+				$this->Cookie->configKey('Restful', 'path', '/');
+				$this->Cookie->configKey('Restful', [
+				    'expires' => '+5 minutes'
+				]);
+				$url = 'http://www.google.com.sg';
+				$this->Cookie->write('Restful.Call', true);
+				$this->Cookie->write('Restful.CallBackURL', $url);
+				if ($this->Auth->user()) {
+					$payload = $this->SSO->generateToken();
+					$redirectUrl = $this->ControllerAction->url('token');
+					$redirectUrl['payload'] = $payload;
+					$this->redirect($redirectUrl);
+				} else {
+					$this->SSO->doAuthentication();	
+				}
+				
+			}
 		}
 	}
 }
