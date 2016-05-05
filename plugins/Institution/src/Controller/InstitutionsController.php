@@ -207,7 +207,7 @@ class InstitutionsController extends AppController  {
 			$isDownload = $action == 'downloadFile' ? true : false;
 
 			$alias = $model->alias;
-			$crumbTitle = $model->getHeader($alias);
+			$crumbTitle = Inflector::humanize(Inflector::underscore($alias));
 			$crumbOptions = [];
 			if ($action) {
 				$crumbOptions = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias];
