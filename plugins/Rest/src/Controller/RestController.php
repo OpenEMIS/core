@@ -163,6 +163,7 @@ class RestController extends AppController
 					'refresh_token' => $refreshToken,
 					'expiry_date' => $expiryTime,
 					'modified' => new Time('NOW'),
+					'created' => new Time('NOW')
 				];
 
 				$entity = $this->SecurityRestSessions->newEntity($saveData);
