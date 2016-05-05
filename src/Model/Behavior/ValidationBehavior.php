@@ -1,16 +1,17 @@
 <?php
 namespace App\Model\Behavior;
 
-use DateTime;
+use App\Model\Traits\MessagesTrait;
 use Cake\Event\Event;
 use Cake\I18n\Date;
 use Cake\I18n\Time;
-use Cake\ORM\TableRegistry;
-use Cake\ORM\Behavior;
-use Cake\Utility\Inflector;
-use Cake\Validation\Validator;
 use Cake\Network\Session;
-use App\Model\Traits\MessagesTrait;
+use Cake\ORM\Behavior;
+use Cake\ORM\TableRegistry;
+use Cake\Utility\Inflector;
+use Cake\Validation\Validation;
+use Cake\Validation\Validator;
+use DateTime;
 
 class ValidationBehavior extends Behavior {
 	use MessagesTrait;
@@ -1213,7 +1214,55 @@ class ValidationBehavior extends Behavior {
 
 		return true;
 	}
+    
+    public static function latIsValid($field, array $globalData) {
+        $error = false;
+        $isRequired = $globalData['data']['mandatory'];
+        if (is_array($field)) {
+            $latitude = $field['latitude'];
+            $longitude = $field['longitude'];
+            if (!empty($latitude) || !empty($longitude)) {
+                if (empty($latitude)) {
+                    $error = __('Latitude cannot be empty');
+                } else {
+                    $latIsValid = Validation::latitude($latitude);
+                    if (!$latIsValid) {
+                        $error = __('Latitude value is invalid');
+                    }
+                }
+            } elseif ($isRequired) {
+	            $error = __('Latitude value is required');
+            }
+        } elseif ($isRequired) {
+            $error = __('Required data is not available');
+        }
+        return (!$error) ? true : $error;
+    }
 
+    public static function lngIsValid($field, array $globalData) {
+        $error = false;
+        $isRequired = $globalData['data']['mandatory'];
+        if (is_array($field)) {
+            $latitude = $field['latitude'];
+            $longitude = $field['longitude'];
+            if (!empty($latitude) || !empty($longitude)) {
+                if (empty($longitude)) {
+                    $error = __('Longitude cannot be empty');
+                } else {
+                    $latIsValid = Validation::longitude($longitude);
+                    if (!$latIsValid) {
+                        $error = __('Longitude value is invalid');
+                    }
+                }
+            } elseif ($isRequired) {
+	            $error = __('Longitude value is required');
+            }
+        } elseif ($isRequired) {
+            $error = __('Required data is not available');
+        }
+        return (!$error) ? true : $error;
+    }
+    
 	public static function checkMinNotMoreThanMax($minValue, array $globalData) {
         return intVal($minValue) <= intVal($globalData['data']['max']);
     } 
