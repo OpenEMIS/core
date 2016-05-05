@@ -37,7 +37,7 @@ var Header = {
         } else {
             var headerH2 = $(".page-header h2");
 
-            headerH2.css('max-width', '100%').css('white-space', 'normal').css('text-overflow', 'unset');
+            headerH2.css('max-width', '100%').css('white-space', 'normal').css('text-overflow', 'unset').css('display', 'block');
         }         
     }
 };
