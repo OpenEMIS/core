@@ -29,5 +29,11 @@ RENAME TABLE `z_2449_institution_survey_answers` TO `institution_survey_answers`
 DROP TABLE IF EXISTS `institution_student_survey_answers`;
 RENAME TABLE `z_2449_institution_student_survey_answers` TO `institution_student_survey_answers`;
 
+DROP TABLE IF EXISTS `user_activities`;
+RENAME TABLE `z_2449_user_activities` TO `user_activities`;
+
+DROP TABLE IF EXISTS `institution_activities`;
+RENAME TABLE `z_2449_institution_activities` TO `institution_activities`;
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2449';

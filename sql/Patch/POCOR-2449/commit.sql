@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS `custom_field_values` (
   INDEX `custom_record_id` (`custom_record_id`),
   INDEX `modified_user_id` (`modified_user_id`),
   INDEX `created_user_id` (`created_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `custom_field_values` (`id`, `text_value`, `number_value`, `textarea_value`, `date_value`, `time_value`, `file`, `custom_field_id`, `custom_record_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT `id`, `text_value`, `number_value`, `textarea_value`, `date_value`, `time_value`, NULL, `custom_field_id`, `custom_record_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS `institution_custom_field_values` (
   INDEX `institution_id` (`institution_id`),
   INDEX `modified_user_id` (`modified_user_id`),
   INDEX `created_user_id` (`created_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `institution_custom_field_values` (`id`, `text_value`, `number_value`, `textarea_value`, `date_value`, `time_value`, `file`, `institution_custom_field_id`, `institution_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT `id`, `text_value`, `number_value`, `textarea_value`, `date_value`, `time_value`, NULL, `institution_custom_field_id`, `institution_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS `student_custom_field_values` (
   INDEX `student_id` (`student_id`),
   INDEX `modified_user_id` (`modified_user_id`),
   INDEX `created_user_id` (`created_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `student_custom_field_values` (`id`, `text_value`, `number_value`, `textarea_value`, `date_value`, `time_value`, `file`, `student_custom_field_id`, `student_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT `id`, `text_value`, `number_value`, `textarea_value`, `date_value`, `time_value`, NULL, `student_custom_field_id`, `student_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
@@ -121,7 +121,7 @@ CREATE TABLE IF NOT EXISTS `staff_custom_field_values` (
   INDEX `staff_id` (`staff_id`),
   INDEX `modified_user_id` (`modified_user_id`),
   INDEX `created_user_id` (`created_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `staff_custom_field_values` (`id`, `text_value`, `number_value`, `textarea_value`, `date_value`, `time_value`, `file`, `staff_custom_field_id`, `staff_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT `id`, `text_value`, `number_value`, `textarea_value`, `date_value`, `time_value`, NULL, `staff_custom_field_id`, `staff_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
@@ -150,7 +150,7 @@ CREATE TABLE IF NOT EXISTS `infrastructure_custom_field_values` (
   INDEX `institution_infrastructure_id` (`institution_infrastructure_id`),
   INDEX `modified_user_id` (`modified_user_id`),
   INDEX `created_user_id` (`created_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `infrastructure_custom_field_values` (`id`, `text_value`, `number_value`, `textarea_value`, `date_value`, `time_value`, `file`, `infrastructure_custom_field_id`, `institution_infrastructure_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT `id`, `text_value`, `number_value`, `textarea_value`, `date_value`, `time_value`, NULL, `infrastructure_custom_field_id`, `institution_infrastructure_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
@@ -179,7 +179,7 @@ CREATE TABLE IF NOT EXISTS `institution_survey_answers` (
   INDEX `institution_survey_id` (`institution_survey_id`),
   INDEX `modified_user_id` (`modified_user_id`),
   INDEX `created_user_id` (`created_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `institution_survey_answers` (`id`, `text_value`, `number_value`, `textarea_value`, `date_value`, `time_value`, `file`, `survey_question_id`, `institution_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT `id`, `text_value`, `number_value`, `textarea_value`, `date_value`, `time_value`, NULL, `survey_question_id`, `institution_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
@@ -208,8 +208,56 @@ CREATE TABLE IF NOT EXISTS `institution_student_survey_answers` (
   INDEX `institution_student_survey_id` (`institution_student_survey_id`),
   INDEX `modified_user_id` (`modified_user_id`),
   INDEX `created_user_id` (`created_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `institution_student_survey_answers` (`id`, `text_value`, `number_value`, `textarea_value`, `date_value`, `time_value`, `file`, `survey_question_id`, `institution_student_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT `id`, `text_value`, `number_value`, `textarea_value`, `date_value`, `time_value`, NULL, `survey_question_id`, `institution_student_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
 FROM `z_2449_institution_student_survey_answers`;
+
+-- user_activities
+RENAME TABLE `user_activities` TO `z_2449_user_activities`;
+
+DROP TABLE IF EXISTS `user_activities`;
+CREATE TABLE IF NOT EXISTS `user_activities` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `model` varchar(200) NOT NULL,
+  `model_reference` int(11) NOT NULL,
+  `field` varchar(200) NOT NULL,
+  `field_type` varchar(128) NOT NULL,
+  `old_value` varchar(255) DEFAULT NULL,
+  `new_value` varchar(255) DEFAULT NULL,
+  `operation` varchar(10) NOT NULL,
+  `security_user_id` int(11) NOT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `model_reference` (`model_reference`),
+  INDEX `security_user_id` (`security_user_id`),
+  INDEX `created_user_id` (`created_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `user_activities` SELECT * FROM `z_2449_user_activities`;
+
+-- institution_activities
+RENAME TABLE `institution_activities` TO `z_2449_institution_activities`;
+
+DROP TABLE IF EXISTS `institution_activities`;
+CREATE TABLE IF NOT EXISTS `institution_activities` (
+  `id` int(11) NOT NULL,
+  `model` varchar(200) NOT NULL,
+  `model_reference` int(11) NOT NULL,
+  `field` varchar(200) NOT NULL,
+  `field_type` varchar(128) NOT NULL,
+  `old_value` varchar(255) DEFAULT NULL,
+  `new_value` varchar(255) DEFAULT NULL,
+  `operation` varchar(10) NOT NULL,
+  `institution_id` int(11) NOT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `model_reference` (`model_reference`),
+  INDEX `institution_id` (`institution_id`),
+  INDEX `created_user_id` (`created_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `institution_activities` SELECT * FROM `z_2449_institution_activities`;
