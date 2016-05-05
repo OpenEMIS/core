@@ -17,6 +17,7 @@ trait MessagesTrait {
 			'noGradingTypes' => 'You need to configure Grading Types first.',
 			'addAssessmentItem' => 'Add Assessment Item',
 			'assessmentItems' => 'Assessment Items',
+			'assessmentPeriods' => 'Assessment Periods',
 		],
 		'CustomGroups' => [
 			'custom_modules' => 'Module'
@@ -123,7 +124,8 @@ trait MessagesTrait {
 			'failedSavingGrades' => 'Failed to save grades',
 			'start_date' => 'Start Date',
 			'end_date' => 'End Date',
-			'education_grade' => 'Education Grades'
+			'education_grade' => 'Education Grades',
+			'allGradesAlreadyAdded' => 'All possible Education Grades for the selected Education Programme already added.'
 		],
 		'InstitutionShifts' => [
 			'start_time' => 'Start Time',
@@ -195,20 +197,8 @@ trait MessagesTrait {
 		// 	'last_date_absent' => 'Last Day Of Absence'
 		// ],
 		'InstitutionAssessments' => [
-			'noSubjects' => 'There are no available Education Subjects.',
-			'noClasses' => 'No Available Classes',
-			'noStudents' => 'No Available Students',
-			'mark' => 'Mark',
-			'grading' => 'Grading',
-			'save' => [
-				'draft' => 'Assessment record has been saved to draft successfully.',
-				'final' => 'Assessment record has been submitted successfully.',
-				'failed' => 'The record is not saved due to errors encountered.',
-			],
-			'reject' => [
-				'success' => 'The record has been rejected successfully.',
-				'failed' => 'The record is not rejected due to errors encountered.'
-			],
+			'noAssessments' => 'No Assessments',
+			'noClasses' => 'No Classes'
 		],
 		'InstitutionSurveys' => [
 			'save' => [
@@ -366,7 +356,8 @@ trait MessagesTrait {
 			'hasDropoutApplication' => 'There is a pending dropout application for this student at the moment, please reject the dropout application before making another request.'
 		],
 		'TransferApprovals' => [
-			'exists' => 'Student is already exists in the new school',
+			'existsInNewSchool' => 'Student is already exists in the new school',
+			'enrolledInInstitution' => 'Student is already enrolled in another school.',
 			'approve' => 'Transfer request has been approved successfully.',
 			'reject' => 'Transfer request has been rejected successfully.'
 		],
@@ -388,7 +379,8 @@ trait MessagesTrait {
 			'successGraduated' => 'Students have graduated',
 			'successOthers' => 'Students status changed successfully',
 			'noNextAcademicPeriod' => 'There is no next academic period for the promotion.',
-			'pendingRequest' => 'There is a pending student status change request at the moment.'
+			'pendingRequest' => 'There is a pending student status change request at the moment.',
+			'selectNextGrade' => 'Please select a grade to promote to.'
 		],
 		'StudentTransfer' => [
 			'noGrades' => 'No Available Grades',
@@ -396,6 +388,22 @@ trait MessagesTrait {
 			'noInstitutions' => 'No Available Institutions',
 			'noData' => 'There are no available Students for Transfer.',
 			'success' => 'Students have been transferred.'
+		],
+		'StaffPositionProfiles' => [
+			'request' => 'Request for change in Staff Position Profile has been submitted successfully.',
+			'notExists' => 'Staff record no longer exists in the system.',
+			'errorApproval' => 'Record cannot be approved due to errors encountered.',
+		],
+		'StaffTransferRequests' => [
+			'alreadyAssigned' => '%s is currently assigned to %s',
+			'confirmRequest' => 'By clicking save, a transfer request will be sent to the institution for approval',
+			'errorApproval' => 'Record cannot be assigned due to errors encountered',
+		],
+		'StaffTransferApprovals' => [
+			'transferType' => 'Please select the transfer type.',
+			'effectiveDate' => 'Please enter an effective date for the partial transfer.',
+			'newFTE' => 'Please select a new FTE for the partial transfer.',
+			'staffEndOfAssignment' => 'The assignment of this staff has ended.'
 		],
 		'UndoStudentStatus' => [
 			'noGrades' => 'No Available Grades',
@@ -410,7 +418,8 @@ trait MessagesTrait {
 			'add_next_programme' => 'Add Next Programme'
 		],
 		'StudentAdmission' => [
-			'exists' => 'Student exists in the school',
+			'existsInSchool' => 'Student is already exists in the school',
+			'enrolledInInstitution' => 'Student is already enrolled in another school.',
 			'existsInRecord' => 'Student has already been added to admission list',
 			'approve' => 'Student admission has been approved successfully.',
 			'reject' => 'Student admission has been rejected successfully.'
@@ -586,14 +595,32 @@ trait MessagesTrait {
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				]
 			],
+			'StaffPositionProfiles' => [
+				'institution_position_id' => [
+					'ruleCheckFTE' => 'No available FTE.',
+				],
+				'start_date' => [
+					'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
+				],
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
+				],
+			],
 			'TransferRequests' => [
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				], 
+				'student_id' => [
+					'ruleNoNewDropoutRequestInGradeAndInstitution' => 'There is a pending dropout application for this student at the moment, please reject the dropout application before making another request.'
 				]
 			],
 			'Students' => [
 				'student_name' => [
-					'ruleInstitutionStudentId' => 'Student has already been added.',
+					'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
+						'inTargetSchool' => 'Student is already enrolled in this school.',
+						'inAnotherSchool' => 'Student is already enrolled in another school.',
+					],
+					'ruleStudentNotCompletedGrade' => 'Student has already completed the selected grade.',
 					'ruleCheckAdmissionAgeWithEducationCycleGrade' => 'This student does not fall within the allowed age range for this grade',
 					'ageHint' => 'The student should be %s years old',
 					'ageRangeHint' => 'The student should be between %s to %s years old',
@@ -856,6 +883,7 @@ trait MessagesTrait {
 			],
 		],
 		'Staff' => [
+			'transferExists' => 'There is an existing transfer request for that staff.',
 			'date_of_birth' => 'Date Of Birth',
 			'photo_content' => 'Profile Image',
 			'Qualifications' => [
@@ -863,7 +891,8 @@ trait MessagesTrait {
 					'required' => 'Please enter a valid Qualification Title'
 				],
 				'graduate_year' => [
-					'required' => 'Please enter a valid Graduate Year'
+					'required' => 'Please enter a valid Graduate Year',
+					'ruleNumeric' => 'Please enter a valid Numeric value',
 				],
 				'qualification_level_id' => [
 					'required' => 'Please enter a valid Qualification Level'
@@ -1071,6 +1100,54 @@ trait MessagesTrait {
 				'later' => 'Time should be later than or equal to %s',
 				'between' => 'Time should be between %s and %s (inclusive)'
 			]
+		],
+		'Assessment' => [
+			'AssessmentPeriods' => [
+				'code' => [
+					'ruleUniqueCode' => 'Code must be unique',
+					'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form',
+				],
+				'start_date' => [
+					'ruleInParentAcademicPeriod' => 'Date must be within selected academic period start and end date',
+				],
+				'end_date' => [
+					'ruleInParentAcademicPeriod' => 'Date must be within selected academic period start and end date',
+				],
+				'weight' => [
+					'ruleIsDecimal' => 'Value is not a valid decimal',
+				],
+			],
+			'AssessmentItems' => [
+				'weight' => [
+					'ruleIsDecimal' => 'Value is not a valid decimal',
+				],
+			],
+			'AssessmentGradingTypes' => [
+				'code' => [
+					'ruleUniqueCode' => 'Code must be unique',
+				],
+				'pass_mark' => [
+					'ruleNotMoreThanMax' => 'Min value cannot be more than max value',
+					'ruleIsDecimal' => 'Value is not a valid decimal',
+				],
+				'max' => [
+					'ruleIsDecimal' => 'Value is not a valid decimal',
+				],
+			],
+			'GradingOptions' => [
+				'code' => [
+					'ruleUniqueCode' => 'Code must be unique',
+					'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form',
+				],
+				'min' => [
+					'ruleNotMoreThanMax' => 'Min value cannot be more than max value',
+					'ruleIsDecimal' => 'Value is not a valid decimal',
+				],
+				'max' => [
+					'ruleNotMoreThanGradingTypeMax' => 'Grading Option max value cannot be more than Grading Type max value',
+					'ruleIsDecimal' => 'Value is not a valid decimal',
+				],
+			],
 		],
 
 	];

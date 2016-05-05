@@ -14,8 +14,6 @@
  */
 namespace Cake\Core;
 
-use Cake\Core\ClassLoader;
-use Cake\Core\Configure;
 use Cake\Core\Exception\MissingPluginException;
 use DirectoryIterator;
 
@@ -137,10 +135,10 @@ class Plugin
 
         if (empty($config['path'])) {
             $paths = App::path('Plugin');
-            $pluginPath = str_replace('/', DS, $plugin);
+            $pluginPath = str_replace('/', DIRECTORY_SEPARATOR, $plugin);
             foreach ($paths as $path) {
                 if (is_dir($path . $pluginPath)) {
-                    $config['path'] = $path . $pluginPath . DS;
+                    $config['path'] = $path . $pluginPath . DIRECTORY_SEPARATOR;
                     break;
                 }
             }
@@ -150,9 +148,9 @@ class Plugin
             throw new MissingPluginException(['plugin' => $plugin]);
         }
 
-        $config['classPath'] = $config['path'] . $config['classBase'] . DS;
+        $config['classPath'] = $config['path'] . $config['classBase'] . DIRECTORY_SEPARATOR;
         if (!isset($config['configPath'])) {
-            $config['configPath'] = $config['path'] . 'config' . DS;
+            $config['configPath'] = $config['path'] . 'config' . DIRECTORY_SEPARATOR;
         }
 
         static::$_plugins[$plugin] = $config;
@@ -164,11 +162,11 @@ class Plugin
             }
             static::$_loader->addNamespace(
                 str_replace('/', '\\', $plugin),
-                $config['path'] . $config['classBase'] . DS
+                $config['path'] . $config['classBase'] . DIRECTORY_SEPARATOR
             );
             static::$_loader->addNamespace(
                 str_replace('/', '\\', $plugin) . '\Test',
-                $config['path'] . 'tests' . DS
+                $config['path'] . 'tests' . DIRECTORY_SEPARATOR
             );
         }
 
@@ -187,11 +185,13 @@ class Plugin
         if (Configure::check('plugins')) {
             return;
         }
-
-        $vendorFile = dirname(dirname(dirname(dirname(__DIR__)))) . DS . 'cakephp-plugins.php';
+        $vendorFile = dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'cakephp-plugins.php';
         if (!file_exists($vendorFile)) {
-            Configure::write(['plugins' => []]);
-            return;
+            $vendorFile = dirname(dirname(dirname(dirname(__DIR__)))) . DIRECTORY_SEPARATOR . 'cakephp-plugins.php';
+            if (!file_exists($vendorFile)) {
+                Configure::write(['plugins' => []]);
+                return;
+            }
         }
 
         $config = require $vendorFile;
@@ -230,7 +230,7 @@ class Plugin
             $dir = new DirectoryIterator($path);
             foreach ($dir as $path) {
                 if ($path->isDir() && !$path->isDot()) {
-                    $plugins[] = $path->getBaseName();
+                    $plugins[] = $path->getBasename();
                 }
             }
         }
@@ -301,7 +301,7 @@ class Plugin
      *
      * @param string $plugin name of the plugin
      * @return mixed
-     * @see Plugin::load() for examples of bootstrap configuration
+     * @see \Cake\Core\Plugin::load() for examples of bootstrap configuration
      */
     public static function bootstrap($plugin)
     {
@@ -320,7 +320,7 @@ class Plugin
     /**
      * Loads the routes file for a plugin, or all plugins configured to load their respective routes file
      *
-     * @param string $plugin name of the plugin, if null will operate on all plugins having enabled the
+     * @param string|null $plugin name of the plugin, if null will operate on all plugins having enabled the
      * loading of routes files
      * @return bool
      */
@@ -346,13 +346,13 @@ class Plugin
      * Returns true if the plugin $plugin is already loaded
      * If plugin is null, it will return a list of all loaded plugins
      *
-     * @param string $plugin Plugin name.
-     * @return mixed boolean true if $plugin is already loaded.
+     * @param string|null $plugin Plugin name.
+     * @return bool|array Boolean true if $plugin is already loaded.
      *   If $plugin is null, returns a list of plugins that have been loaded
      */
     public static function loaded($plugin = null)
     {
-        if ($plugin) {
+        if ($plugin !== null) {
             return isset(static::$_plugins[$plugin]);
         }
         $return = array_keys(static::$_plugins);
@@ -363,7 +363,7 @@ class Plugin
     /**
      * Forgets a loaded plugin or all of them if first parameter is null
      *
-     * @param string $plugin name of the plugin to forget
+     * @param string|null $plugin name of the plugin to forget
      * @return void
      */
     public static function unload($plugin = null)
