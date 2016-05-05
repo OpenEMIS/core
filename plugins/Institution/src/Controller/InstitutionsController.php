@@ -175,7 +175,7 @@ class InstitutionsController extends AppController  {
 			}
 
 			$alias = $model->alias;
-			$crumbTitle = $model->getHeader($alias);
+			$crumbTitle = Inflector::humanize(Inflector::underscore($alias));
 			$crumbOptions = [];
 			if ($action) {
 				$crumbOptions = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias];
