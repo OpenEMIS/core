@@ -174,6 +174,7 @@ class InstitutionsController extends AppController  {
 			if (isset($params['pass'][0])) {
 				$action = $params['pass'][0];
 			}
+			$isDownload = $action == 'downloadFile' ? true : false;
 
 			$alias = $model->alias;
 			$crumbTitle = $model->getHeader($alias);
@@ -186,7 +187,7 @@ class InstitutionsController extends AppController  {
 			$persona = false;
 			$requestQuery = $this->request->query;
 			if (isset($params['pass'][1])) {
-				if ($model->table() == 'security_users' && $action !== 'downloadFile') {
+				if ($model->table() == 'security_users' && !$isDownload) {
 					$persona = $model->get($params['pass'][1]);
 				}
 			} else if (isset($requestQuery['user_id'][1])) {
@@ -230,7 +231,7 @@ class InstitutionsController extends AppController  {
 					 */
 
 					// replaced 'action' => $alias to 'action' => $model->alias, since only the name changes but not url
-					if (!$exists) {
+					if (!$exists && !$isDownload) {
 						$this->Alert->warning('general.notExists');
 						return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
 					}
