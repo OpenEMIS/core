@@ -19,7 +19,7 @@ class PreferencesController extends AppController {
 			'Account' 				=> ['className' => 'UserAccounts'],
 			'Contacts'				=> ['className' => 'UserContacts'],
 			'Identities' 			=> ['className' => 'User.Identities'],
-			'Nationalities' 		=> ['className' => 'User.Nationalities'],
+			'Nationalities' 		=> ['className' => 'User.UserNationalities'],
 			'Languages' 			=> ['className' => 'User.UserLanguages'],
 			'Comments' 				=> ['className' => 'User.Comments'],
 			'Attachments' 			=> ['className' => 'User.Attachments'],
@@ -83,7 +83,7 @@ class PreferencesController extends AppController {
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Identities'],
 				'text' => __('Identities')
 			],
-			'Nationalities' => [
+			'UserNationalities' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Nationalities'],
 				'text' => __('Nationalities')	
 			],

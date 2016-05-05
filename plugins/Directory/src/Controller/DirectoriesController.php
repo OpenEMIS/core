@@ -19,7 +19,7 @@ class DirectoriesController extends AppController {
 			// Users
 			'Contacts' 				=> ['className' => 'User.Contacts'],
 			'Identities' 			=> ['className' => 'User.Identities'],
-			'Nationalities' 		=> ['className' => 'User.Nationalities'],
+			'Nationalities' 		=> ['className' => 'User.UserNationalities'],
 			'Languages' 			=> ['className' => 'User.UserLanguages'],
 			'Comments' 				=> ['className' => 'User.Comments'],
 			'Attachments' 			=> ['className' => 'User.Attachments'],
@@ -267,7 +267,7 @@ class DirectoriesController extends AppController {
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Identities', $id],
 				'text' => __('Identities')	
 			],
-			'Nationalities' => [
+			'UserNationalities' => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Nationalities', $id],
 				'text' => __('Nationalities')	
 			],
