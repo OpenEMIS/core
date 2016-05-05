@@ -50,7 +50,7 @@ class RecordBehavior extends Behavior {
 	];
 
 	// value for these field types will be saved on custom_field_values
-	private $fieldValueArray = ['TEXT', 'NUMBER', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'DATE', 'TIME', 'FILE'];
+	private $fieldValueArray = ['TEXT', 'NUMBER', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'DATE', 'TIME', 'COORDINATES', 'FILE'];
 
 	private $CustomFieldValues = null;
 	private $CustomTableCells = null;
@@ -88,6 +88,7 @@ class RecordBehavior extends Behavior {
 		$this->CustomFormsFields = TableRegistry::get($this->config('formFieldClass.className'));
 		$this->CustomFormsFilters = TableRegistry::get($this->config('formFilterClass.className'));
 
+		// Each field type will have one behavior attached
 		$this->_table->addBehavior('CustomField.RenderText');
 		$this->_table->addBehavior('CustomField.RenderNumber');
 		$this->_table->addBehavior('CustomField.RenderTextarea');
@@ -96,8 +97,10 @@ class RecordBehavior extends Behavior {
 		$this->_table->addBehavior('CustomField.RenderTable');
 		$this->_table->addBehavior('CustomField.RenderDate');
 		$this->_table->addBehavior('CustomField.RenderTime');
-		$this->_table->addBehavior('CustomField.RenderFile');
 		$this->_table->addBehavior('CustomField.RenderStudentList');
+		$this->_table->addBehavior('CustomField.RenderCoordinates');
+		$this->_table->addBehavior('CustomField.RenderFile');
+		// End
 
 		// If tabSection is not set, added to handle Section Header
 		if (!$this->config('tabSection')) {
