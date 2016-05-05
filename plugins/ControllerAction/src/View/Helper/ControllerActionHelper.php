@@ -257,10 +257,10 @@ class ControllerActionHelper extends Helper {
 					$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);
 				}
 				
-				if ($entity->has($associatedObject) && $entity->$associatedObject->has('name')) {
-					$value = $entity->$associatedObject->name;
-					$associatedFound = true;
-				}
+                if ($entity->has($associatedObject) && $entity->$associatedObject instanceof Entity && $entity->$associatedObject->has('name')) {
+                    $value = $entity->$associatedObject->name;
+                    $associatedFound = true;
+                }
 			}
 
 			if (!$associatedFound) {
