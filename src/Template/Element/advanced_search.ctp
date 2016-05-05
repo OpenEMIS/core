@@ -1,17 +1,22 @@
 <?php
 use Cake\Utility\Inflector;
 ?>
-<div id="advanced-search" class="advanced-search-wrapper alert search-box <?= !$advancedSearch ? 'hidden' : '' ?>">
-
+<!-- <div id="advanced-search" class="advanced-search-wrapper alert search-box <?= !$advancedSearch ? 'hidden' : '' ?>"> -->
+<div class="adv-search">
 	<button class="btn btn-xs close" type="button" alt="Collapse">×</button>
-	<h4><?= __('Advanced Search')?></h4>
+	<div class="adv-search-label">
+		<i class="fa fa-search-plus"></i>
+		<label><?= __('Advanced Search')?></label>
+	</div>
+<!-- 	<button class="btn btn-xs close" type="button" alt="Collapse">×</button>
+	<h4><?= __('Advanced Search')?></h4> -->
 
 	<?php
 		foreach ($filters as $key=>$filter) :
 	?>
 
-		<div class="input select">
-		  <label class="form-label"><?= $filter['label'] ?>:</label>
+		<div class="select">
+		  <label><?= $filter['label'] ?>:</label>
 		  <div class="input-select-wrapper">	 
 			  <select name="AdvanceSearch[<?= $model ?>][belongsTo][<?= $key ?>]">
 				<option value=""><?= __('-- SELECT --'); ?></option>
@@ -29,8 +34,8 @@ use Cake\Utility\Inflector;
 		foreach ($searchables as $key=>$searchable) :
 	?>
 
-		<div class="input text" style="margin-bottom:10px;">
-			<label for="advancesearch-directories-identity-number" class="form-label"><?= $searchable['label'] ?>:</label>
+		<div class="text" style="margin-bottom:10px;">
+			<label for="advancesearch-directories-identity-number"><?= $searchable['label'] ?>:</label>
 
 			<input type="text" name="AdvanceSearch[<?= $model ?>][hasMany][<?= $key ?>]" class="form-control focus" id="advancesearch-<?= strtolower($model) ?>-<?= Inflector::dasherize($key) ?>" value="<?= $searchable['value'] ?>" />
 		</div>
@@ -44,24 +49,24 @@ use Cake\Utility\Inflector;
 </div>
 
 <script type="text/javascript">   
-	var box = $('#advanced-search');
-	var isSearch = $('#isSearch');
+	// var box = $('#advanced-search');
+	// var isSearch = $('#isSearch');
 
-	$('button#search-toggle').on('click', function () {
-		box.toggleClass('hidden');
-		if (!isSearch.val()) {
-			isSearch.val('true');
-		}else {
-			isSearch.val('');
-		}
-	});
+	// $('button#search-toggle').on('click', function () {
+	// 	box.toggleClass('hidden');
+	// 	if (!isSearch.val()) {
+	// 		isSearch.val('true');
+	// 	}else {
+	// 		isSearch.val('');
+	// 	}
+	// });
 
-	$(box.selector+' button.close').on('click', function (e) {
-		e.preventDefault();
-		$('button#search-toggle').trigger('click');
-	});
+	// $(box.selector+' button.close').on('click', function (e) {
+	// 	e.preventDefault();
+	// 	$('button#search-toggle').trigger('click');
+	// });
 
-	if (!box.hasClass('hidden')) {
-		isSearch.val('true');
-	}
+	// if (!box.hasClass('hidden')) {
+	// 	isSearch.val('true');
+	// }
 </script>
