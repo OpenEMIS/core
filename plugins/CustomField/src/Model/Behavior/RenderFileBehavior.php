@@ -64,9 +64,14 @@ class RenderFileBehavior extends RenderBehavior {
                 $config = $model->ControllerAction->getVar('ControllerAction');
                 $buttons = $config['buttons'];
                 $url = $buttons['view']['url'];
-                $url['action'] = $model->alias;
-                $url[0] = 'downloadFile';
-                $url[1] = $savedId;
+                if ($model->ControllerAction->getTriggerFrom() == 'Controller') {
+                    $url['action'] = 'downloadFile';
+                    $url[0] = $savedId;
+                } else {
+                    $url['action'] = $model->alias;
+                    $url[0] = 'downloadFile';
+                    $url[1] = $savedId;
+                }
 
                 $value = $event->subject()->Html->link($savedValue, $url);
             }
