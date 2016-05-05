@@ -2,6 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+use Cake\I18n\Time;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -481,7 +482,9 @@ class InstitutionSurveysTable extends AppTable {
 								'status_id' => $openStatusId,
 								'academic_period_id' => $periodId,
 								'survey_form_id' => $surveyFormId,
-								'institution_id' => $institutionId
+								'institution_id' => $institutionId,
+								'created_user_id' => 1,
+								'created' => new Time('NOW')
 							];
 
 							$surveyEntity = $this->newEntity($surveyData, ['validate' => false]);
