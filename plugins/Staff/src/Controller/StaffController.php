@@ -18,7 +18,7 @@ class StaffController extends AppController {
 			'Accounts'			=> ['className' => 'Staff.Accounts', 'actions' => ['view', 'edit']],
 			'Contacts'			=> ['className' => 'User.Contacts'],
 			'Identities'		=> ['className' => 'User.Identities'],
-			'Nationalities' 	=> ['className' => 'User.Nationalities'],
+			'Nationalities' 	=> ['className' => 'User.UserNationalities'],
 			'Languages'			=> ['className' => 'User.UserLanguages'],
 			'Comments'			=> ['className' => 'User.Comments'],
 			'SpecialNeeds'		=> ['className' => 'User.SpecialNeeds'],
