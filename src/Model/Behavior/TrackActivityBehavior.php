@@ -155,7 +155,7 @@ class TrackActivityBehavior extends Behavior {
 			$activity['field_type'] = '';
 			$activity['old_value'] = '';
 			$activity['new_value'] = '';
-			$activity['institution_id'] = $id;
+			$activity[$this->config('key')] = $id;
 			$activity['operation'] = 'delete';
 
 			$ActivityModel = TableRegistry::get($this->config('target'));
