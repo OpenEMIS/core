@@ -13,7 +13,8 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.1.16
+ControllerActionComponent - Current Version 3.1.19
+3.1.19 (Malcolm) - Fixed an error issue when using getFields() on tables with joint primary keys
 3.1.18 (Malcolm) - remove() - If id(to be deleted) cannot be found, return a successful deletion message
 3.1.17 (Malcolm) - buildDefaultValidation() - Added condition '&& strlen($attr['default']) == 0' when it comes to determining whether should automatically add 'notBlank' and 'requirePresence' validations
 3.1.16 (Malcolm) - renderFields() - '-- Select --' is added if ($attr['type'] != 'chosenSelect') 
@@ -1601,8 +1602,18 @@ class ControllerActionComponent extends Component {
             }
             */
         }
-        
-        $fields[$model->primaryKey()]['type'] = 'hidden';
+
+        if (is_array($model->primaryKey())) {
+            if (array_key_exists('id', $fields)) {
+                $fields['id']['type'] = 'hidden';
+            }
+            foreach ($model->primaryKey() as $value) {
+                $fields[$value]['type'] = 'hidden';
+            }
+        } else {
+            $fields[$model->primaryKey()]['type'] = 'hidden';
+        }
+
         foreach ($ignoreFields as $field) {
             if (array_key_exists($field, $fields)) {
                 $fields[$field]['visible']['index'] = false;
