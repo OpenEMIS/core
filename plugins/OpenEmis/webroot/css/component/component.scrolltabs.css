@@ -1,16 +1,17 @@
-/* ANGULAR SCROLL TABS v.1.0.0 */
+/* ANGULAR SCROLL TABS v.1.0.2 */
 
 .scrolltabs {
     position: relative;
 }
 
-.scrolltabs ul {
-    border-bottom: 1px solid #DDD !important;
+.scrolltabs .nav-tabs {
+    border-bottom: 1px solid #DDD;
     height: 33px;
 }
 
-.scrolltabs ul li {
-    width: auto !important;
+.scrolltabs .nav-tabs li {
+    vertical-align: top;
+    width: auto;
 }
 
 .scrolltabs .tabs-divider {
@@ -30,10 +31,11 @@
 }
 
 .scrolltabs .ui-tabs-scrollable > .spacer > div:first-child > .nav-tabs > li > a {
-    height: 28px;
+    height: 29px;
     z-index: 10;
     line-height: 20px;
     min-width: 58px;
+    text-align: center;
 }
 
 .scrolltabs li a,
@@ -63,7 +65,7 @@
 
 .scrolltabs .nav > li:hover {
     color: #888;
-    font-weight: 500;
+    font-weight: normal;
 }
 
 .scrolltabs .nav > li:active > a,
@@ -253,7 +255,7 @@
     .scrolltabs .tabs-divider {
         top: 35px;
     }
-    .scrolltabs ul {
+    .scrolltabs .nav-tabs {
         height: 40px;
     }
     .scrolltabs .ui-tabs-scrollable > .nav-button,
@@ -274,7 +276,7 @@
     }
     .chrome .scrolltabs .ui-tabs-scrollable > .spacer > div:first-child > .nav-tabs > li > a,
     .safari .scrolltabs .ui-tabs-scrollable > .spacer > div:first-child > .nav-tabs > li > a {
-        height: 35px;
+        height: 36px;
     }
     .scrolltabs .nav > li > a {
         font-size: 14px;

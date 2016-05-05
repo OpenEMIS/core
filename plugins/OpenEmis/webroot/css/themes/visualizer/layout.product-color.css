@@ -1,5 +1,5 @@
 /* 
-Visualizer Theme: v.1.0.0
+Visualizer Theme: v.1.0.2
 Product Color: #CC9933
 Darker Shade Color: #8F6B24
 */
@@ -64,11 +64,13 @@ a:focus,
 .pagination > .active > a:hover,
 .pagination>li>a:focus,
 .scroll_tabs_container .scroll_tab_left_button,
-.scroll_tabs_container .scroll_tab_right_button {
+.scroll_tabs_container .scroll_tab_right_button,
+.scrolltabs .ui-tabs-scrollable > .nav-button.left-nav-button,
+.scrolltabs .ui-tabs-scrollable > .nav-button.right-nav-button,
+.scrolltabs .ui-tabs-scrollable > .btn-group > .btn.dropdown-toggle {
     background-color: #CC9933 !important;
     color: #FFF !important;
     border: 1px solid #CC9933;
-    z-index: 1 !important;
 }
 
 .fileinput .btn-file-cancel,
@@ -138,7 +140,10 @@ a:hover,
 .scroll_tabs_container .scroll_tab_left_button,
 .scroll_tabs_container .scroll_tab_right_button,
 .input-left-btn button:hover,
-.input-left-btn button:focus {
+.input-left-btn button:focus,
+.scrolltabs .ui-tabs-scrollable > .nav-button.left-nav-button,
+.scrolltabs .ui-tabs-scrollable > .nav-button.right-nav-button,
+.scrolltabs .ui-tabs-scrollable > .btn-group > .btn.dropdown-toggle {
     border: 1px solid #8F6B24 !important;
 }
 
@@ -189,7 +194,9 @@ a:hover,
 .pagination > li > a:hover,
 .btn-dropdown:hover,
 .input-left-btn button:hover,
-.input-left-btn button:focus {
+.input-left-btn button:focus,
+.scrolltabs .dropdown-menu>li>a:focus, 
+.scrolltabs .dropdown-menu>li>a:hover {
     background-color: #8F6B24 !important;
     color: #FFF !important;
     background-image: none !important;

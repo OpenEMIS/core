@@ -17,14 +17,8 @@ have received a copy of the GNU General Public License along with this program. 
 namespace ControllerAction\Model\Behavior;
 
 use ArrayObject;
-
-use DateTime;
-use Cake\ORM\Entity;
-use Cake\ORM\Behavior;
 use Cake\Event\Event;
-use Cake\Validation\Validator;
-use Cake\I18n\Time;
-
+use Cake\ORM\Behavior;
 use ControllerAction\Model\Traits\PickerTrait;
 
 class DatePickerBehavior extends Behavior {
@@ -33,7 +27,9 @@ class DatePickerBehavior extends Behavior {
 	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
 		foreach ($this->config() as $field) {
 			if (!empty($data[$field])) {
-				if (!$data[$field] instanceof Time) {
+				if (is_object($data[$field])) {
+					$data[$field] = $data[$field]->format('Y-m-d');
+				} else {
 					$convertedDate = $this->convertForDatePicker($data[$field]);
 					$data[$field] = (!empty($convertedDate))? $convertedDate: $data[$field];
 				}
