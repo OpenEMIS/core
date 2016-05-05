@@ -20,7 +20,6 @@ class InstitutionsController extends AppController  {
 
 		$this->ControllerAction->model('Institution.Institutions');
 		$this->ControllerAction->models = [
-			'Institutions' 		=> ['className' => 'Institution.Institutions'],
 			'Attachments' 		=> ['className' => 'Institution.InstitutionAttachments'],
 			'History' 			=> ['className' => 'Institution.InstitutionActivities', 'actions' => ['search', 'index']],
 
@@ -94,6 +93,37 @@ class InstitutionsController extends AppController  {
 		$this->set('ngController', 'InstitutionsResultsCtrl');
 	}
 	// End
+
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Controller.AccessControl.checkIgnoreActions'] = 'checkIgnoreActions';
+		return $events;
+	}
+
+	public function checkIgnoreActions(Event $event, $controller, $action) {
+		$ignore = false;
+		if ($controller == 'Institutions') {
+			$ignoredList = ['downloadFile'];
+			if (in_array($action, $ignoredList)) {
+				$ignore = true;
+			} else {
+				$ignoredList = [
+					'StudentUser' => ['downloadFile'],
+					'StaffUser' => ['downloadFile'],
+					'Infrastructures' => ['downloadFile'],
+					'Surveys' => ['downloadFile']
+				];
+				
+				if (array_key_exists($action, $ignoredList)) {
+					$pass = $this->request->params['pass'];
+					if (count($pass) > 0 && in_array($pass[0], $ignoredList[$action])) {
+						$ignore = true;
+					}
+				}
+			}
+		}
+		return $ignore;
+	}
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);

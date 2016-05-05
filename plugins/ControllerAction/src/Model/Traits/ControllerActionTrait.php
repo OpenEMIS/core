@@ -21,6 +21,9 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.onGetFormButtons'			=> 'onGetFormButtons', // called to add/remove form buttons
 		// public function onGetFormButtons(Event $event, ArrayObject $buttons) {}
 
+		'ControllerAction.Model.onUpdateDefaultActions'		=> 'onUpdateDefaultActions', // called to update default actions
+		// public function onUpdateDefaultActions(Event $event) {}
+
 		'ControllerAction.Model.beforeAction'				=> 'beforeAction', // called before start of any actions
 		// public function beforeAction(Event $event) {}
 
