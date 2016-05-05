@@ -2,25 +2,25 @@
 
 	<style>
 		<?php if ($htmlLangDir=='ltr'):?>
-			.input-value-wrapper{width:10%;margin-right:1%;float:left;}
+			.input-value-wrapper{width:10%;margin-right:1%;float:left}
 		<?php else: ?>
-			.input-value-wrapper{width:10%;margin-left:1%;float:right;}
+			.input-value-wrapper{width:10%;margin-left:1%;float:right}
 		<?php endif; ?>
 		.status-grey-border{border-color:#ddd}
 	</style>
 
 	<?php
 		$latitude = (is_object($values)) ? $values->latitude : '&nbsp;';
-        $latitude = '<div class="input-value-wrapper"><span class="status past">Latitude</span><span class="status status-grey-border">'.$latitude.'</span></div>';
+        $latitude = '<div class="input-value-wrapper"><span class="status past">'.__('Latitude').'</span><span class="status status-grey-border">'.$latitude.'</span></div>';
 		$longitude = (is_object($values)) ? $values->longitude : '&nbsp;';
-        $longitude = '<div class="input-value-wrapper"><span class="status past">Longitude</span><span class="status status-grey-border">'.$longitude.'</span></div>';
+        $longitude = '<div class="input-value-wrapper"><span class="status past">'.__('Longitude').'</span><span class="status status-grey-border">'.$longitude.'</span></div>';
         echo $latitude . $longitude;
     ?>
 
 <?php else: ?>
 
 	<style>
-		.error-message.error-message-double-line {margin: 0;padding-top: 0;}
+		.error-message.error-message-double-line {margin:0;padding-top:0}
 	</style>
 	
 	<div class="input <?php if ($attr['customField']['is_mandatory']) : ?> required <?php endif; ?>">
