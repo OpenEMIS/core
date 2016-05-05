@@ -1,4 +1,4 @@
-/* GENERAL STYLE v.1.0.9 */
+/* GENERAL STYLE v.1.0.10 */
 
 html, body {
     overflow: hidden !important;
@@ -409,4 +409,25 @@ footer {
         text-align: center;
         font-size: 10px;
     }
+}
+
+/* RTL */
+
+.rtl body,
+.rtl .btn,
+.rtl .navbar-right .username,
+.rtl .panel-breadcrumb li,
+.rtl .panel-breadcrumb li a,
+.rtl .alert,
+.rtl .format-item label,
+.rtl .table tbody,
+.rtl .table > thead:first-child > tr:first-child > th,
+.rtl .panel-toolbar,
+.rtl .view-image:hover:before,
+.rtl .search input,
+.rtl .advanced-search-wrapper .form-control,
+.rtl select,
+.rtl .dropdown-menu > li > a,
+.rtl .section-header {
+    font-size: 14px !important;
 }

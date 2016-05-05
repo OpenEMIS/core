@@ -22,10 +22,14 @@ class DashboardController extends AppController {
 		
 		$this->loadComponent('Workbench', [
 			'models' => [
-				'Institution.TransferApprovals',
-				'Institution.StudentAdmission',
-				'Institution.StudentDropout',
-				'Institution.InstitutionSurveys'
+				'Institution.TransferApprovals' => ['version' => 1],
+				'Institution.StudentAdmission' => ['version' => 1],
+				'Institution.StudentDropout' => ['version' => 1],
+				'Institution.InstitutionSurveys' => ['version' => 2],
+				'Institution.InstitutionPositions' => ['version' => 2],
+				'Institution.StaffPositionProfiles' => ['version' => 1],
+				'Institution.StaffTransferApprovals' => ['version' => 1],
+				'Institution.StaffTransferRequests' => ['version' => 1]
 			]
 		]);
     }

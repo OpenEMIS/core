@@ -135,12 +135,12 @@ class SurveysTable extends AppTable  {
 		$surveyStatuses = $WorkflowStatusesTable->getWorkflowSteps($status);
 		
 		$this->surveyStatuses = $WorkflowStatusesTable->getWorkflowStepStatusNameMappings('Institution.InstitutionSurveys');
-		
-		$statusCondition = [
-			$this->aliasField('status_id').' IN ' => array_keys($surveyStatuses)
-		];
-
-		$condition = array_merge($condition, $statusCondition);
+		if (!empty($surveyStatuses)) {
+			$statusCondition = [
+				$this->aliasField('status_id').' IN ' => array_keys($surveyStatuses)
+			];
+			$condition = array_merge($condition, $statusCondition);
+		}
 		$condition = array_merge($condition, $configCondition);
 
 		$this->setCondition($condition);
