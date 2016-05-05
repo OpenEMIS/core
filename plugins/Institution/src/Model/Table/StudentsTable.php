@@ -892,7 +892,7 @@ class StudentsTable extends AppTable {
 		$studentEndDate = $entity->end_date;
 
 		//if student status is not Enrolled (1), then cant edit the End Date
-		if($studentStatusID == 1){
+		if($studentStatusID != 1){
 
 			$this->ControllerAction->field('end_date', [
 				'type' => 'readonly',
