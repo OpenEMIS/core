@@ -240,6 +240,7 @@ class StudentAttendancesTable extends AppTable {
 		$this->ControllerAction->field('student_id');
 		$this->ControllerAction->field('institution_class_id', ['visible' => false]);
 		$this->ControllerAction->field('education_grade_id', ['visible' => false]);
+        $this->ControllerAction->field('academic_period_id', ['visible' => false]);
 		$this->ControllerAction->field('status', ['visible' => false]);
 		$this->ControllerAction->field('student_status_id', ['visible' => false]);
 	}
@@ -754,6 +755,8 @@ class StudentAttendancesTable extends AppTable {
 
 	public function indexAfterAction(Event $event, $data) {
 		$this->dataCount = $data->count();
+
+        $this->ControllerAction->field('student_id', ['visible' => true, 'type' => 'string']);
 	}
 
 	public function findWithAbsence(Query $query, array $options) {
