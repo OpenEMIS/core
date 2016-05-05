@@ -46,7 +46,7 @@ UPDATE z_2588_academic_period_parent
 -- UPDATING ALL STUDENT RECORDS TO USE ACADEMIC PERIOD OF YEAR LEVEL IF AVAILABLE
 UPDATE institution_students 
     INNER JOIN z_2588_academic_period_parent ON (institution_students.academic_period_id = z_2588_academic_period_parent.period_id)
-        SET institution_students.academic_period_id = z_2588_academic_period_parent.parent_id
+        SET institution_students.academic_period_id = z_2588_academic_period_parent.parent_id;
 
 
 
