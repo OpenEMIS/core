@@ -44,7 +44,7 @@ class FieldOptionsController extends AppController {
 				"$controller.Languages" 					=> "$controller.%s",
 				"$controller.LicenseTypes" 					=> "$controller.%s",
 				"$controller.SpecialNeedTypes" 				=> "$controller.%s",
-				"$controller.SpecialNeedTypeDifficulties" 	=> "$controller.%s",
+				"$controller.SpecialNeedDifficulties" 		=> "$controller.%s",
 				"$controller.StaffAbsenceReasons" 			=> "$controller.%s",
 				"$controller.StudentAbsenceReasons" 		=> "$controller.%s"
 			]
@@ -98,7 +98,7 @@ class FieldOptionsController extends AppController {
 	public function Languages() { $this->ControllerAction->process(['alias' => __FUNCTION__, 					'className' => 'Languages']); }
 	public function LicenseTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 				'className' => 'FieldOption.LicenseTypes']); }
 	public function SpecialNeedTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 			'className' => 'FieldOption.SpecialNeedTypes']); }
-	public function SpecialNeedTypeDifficulties() { $this->ControllerAction->process(['alias' => __FUNCTION__, 	'className' => 'FieldOption.SpecialNeedTypeDifficulties']); }
+	public function SpecialNeedDifficulties() { $this->ControllerAction->process(['alias' => __FUNCTION__, 		'className' => 'FieldOption.SpecialNeedDifficulties']); }
 	public function StaffAbsenceReasons() { $this->ControllerAction->process(['alias' => __FUNCTION__, 			'className' => 'FieldOption.StaffAbsenceReasons']); }
 	public function StudentAbsenceReasons() { $this->ControllerAction->process(['alias' => __FUNCTION__, 		'className' => 'FieldOption.StudentAbsenceReasons']); }
 }
