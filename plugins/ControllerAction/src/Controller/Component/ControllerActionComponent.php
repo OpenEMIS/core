@@ -121,6 +121,23 @@ class ControllerActionComponent extends Component {
         $action = $this->request->params['action'];
         $this->debug('Startup');
         if (!method_exists($controller, $action)) { // method cannot be found in controller
+            $defaultActions = $this->defaultActions;
+
+            if (!is_null($this->model)) {
+                // Trigger event to model to modify defaultActions
+                $this->debug(__METHOD__, ': Event -> ControllerAction.Model.onUpdateDefaultActions');
+                $event = new Event('ControllerAction.Model.onUpdateDefaultActions', $this);
+                $event = $this->model->eventManager()->dispatch($event);
+                if ($event->isStopped()) { return $event->result; }
+
+                if (!empty($event->result)) {
+                    $newDefaultActions = $event->result;
+                    $defaultActions = array_merge($defaultActions, $newDefaultActions);
+                }
+            }
+
+            $this->defaultActions = $defaultActions;
+
             if (in_array($action, $this->defaultActions)) { // default actions
                 $this->currentAction = $action;
                 $this->request->params['action'] = 'ComponentAction';
@@ -541,7 +558,11 @@ class ControllerActionComponent extends Component {
         if ($this->autoProcess) {
             if ($this->triggerFrom == 'Controller') {
                 if (in_array($this->currentAction, $this->defaultActions)) {
-                    $result = call_user_func_array([$this, $this->currentAction], $this->paramsPass);
+                    if (method_exists($this->model, $this->currentAction) || $this->model->behaviors()->hasMethod($this->currentAction)) {                    
+                        $result = call_user_func_array([$this->model, $this->currentAction], $this->paramsPass);
+                    } else {
+                        $result = call_user_func_array([$this, $this->currentAction], $this->paramsPass);
+                    }
                 }
             } else if ($this->triggerFrom == 'Model') {
                 if (method_exists($this->model, $this->currentAction) || $this->model->behaviors()->hasMethod($this->currentAction)) {
