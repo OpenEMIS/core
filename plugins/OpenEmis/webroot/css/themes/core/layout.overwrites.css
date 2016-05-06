@@ -413,3 +413,9 @@ a,
 .adv-search {
     margin: 14px 0 !important;
 }
+
+/* Set width for the left-pane and right-pane */
+
+.left-pane {
+    opacity: 0;
+}
