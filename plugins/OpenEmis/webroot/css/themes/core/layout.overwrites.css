@@ -448,3 +448,8 @@ a,
     width: 52px;
     height: 30px;
 }
+
+.rtl .table .input-group-addon {
+    left: 0;
+    right: auto !important;
+}
