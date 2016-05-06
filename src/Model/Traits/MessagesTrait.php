@@ -1100,6 +1100,9 @@ trait MessagesTrait {
 				'earlier' => 'Time should be earlier than or equal to %s',
 				'later' => 'Time should be later than or equal to %s',
 				'between' => 'Time should be between %s and %s (inclusive)'
+			],
+			'file' => [
+				'maxSize' => 'File size should not be more than %s',
 			]
 		],
 		'Assessment' => [
