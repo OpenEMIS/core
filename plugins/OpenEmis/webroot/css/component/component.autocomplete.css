@@ -1,12 +1,12 @@
-/* AUTOCOMPLETE v.1.0.0 */
+/* AUTOCOMPLETE v.1.0.3 */
 
 .ui-autocomplete {
-    max-height: 120px !important;
+    max-height: 320px !important;
     overflow: scroll;
 }
 
 .ui-widget-content {
-    background: none;
+    background: none !important;
     background-color: #FFF !important;
     border: 1px solid #CCC !important;
     -webkit-box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
@@ -56,8 +56,20 @@
     outline: none !important;
 }
 
-@media (min-width: 485px) and (max-width: 1055px){
-    .form-horizontal input {
-        width: 60%;
-    }
+/* RTL */
+
+.rtl .ui-menu .ui-menu-item,
+.rtl .ui-widget label,
+.rtl .ui-menu-item:hover,
+.rtl .ui-state-focus:hover,
+.rtl .ui-state-focus:focus,
+.rtl .ui-state-focus:visited,
+.rtl .ui-state-focus:active,
+.rtl .chosen-container .chosen-results li.highlighted,
+.rtl .chosen-container .chosen-results li.active-result:hover {
+    font-size: 14px !important;
+}
+
+.rtl .chosen-container .chosen-results li {
+    font-size: 14px !important;
 }

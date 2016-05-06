@@ -8,7 +8,7 @@ use Cake\TestSuite\IntegrationTestCase;
 class InstitutionsControllerTest extends IntegrationTestCase {
 	public $fixtures = [
 		'plugin.institution.institutions',
-		// 'plugin.institution.institution_site_activities',
+		// 'plugin.institution.institution_activities',
 		// 'plugin.institution.security_users',
 		// 'plugin.FieldOption.field_option_values',
 		// 'plugin.FieldOption.field_options',
@@ -17,8 +17,8 @@ class InstitutionsControllerTest extends IntegrationTestCase {
 
 	public function setUp() {
 		parent::setUp();
-		$this->Institutions = TableRegistry::get('institution_sites');
-		$this->Institutions->InstitutionSiteActivities = TableRegistry::get('institution_site_activities');
+		$this->Institutions = TableRegistry::get('institutions');
+		$this->Institutions->InstitutionActivities = TableRegistry::get('institution_activities');
 		// $this->SecurityUsers = TableRegistry::get('security_users');
 		// $this->Institutions = TableRegistry::get('Institutions');
 	}
@@ -39,7 +39,7 @@ class InstitutionsControllerTest extends IntegrationTestCase {
 	// public function testBeforePaginate() {
 	// 	$session = $this->request->session();
 
-	// 	if (array_key_exists('institution_site_id', $model->fields)) {
+	// 	if (array_key_exists('institution_id', $model->fields)) {
 	// 		if (!$session->check('Institutions.id')) {
 	// 			$this->Alert->error('general.notExists');
 	// 		}
@@ -90,16 +90,16 @@ class InstitutionsControllerTest extends IntegrationTestCase {
 	// 		'year_closed' => 1990,
 	// 		'longitude' => '100',
 	// 		'latitude' => '1.32',
-	// 		'institution_site_area_id' => null,
+	// 		'institution_area_id' => null,
 	// 		'area_id' => 1,
 	// 		'area_administrative_id' => 1,
-	// 		'institution_site_locality_id' => 83,
-	// 		'institution_site_type_id' => 65,
-	// 		'institution_site_ownership_id' => 72,
-	// 		'institution_site_status_id' => 89,
-	// 		'institution_site_sector_id' => 2,
-	// 		'institution_site_provider_id' => 1,
-	// 		'institution_site_gender_id' => 6,
+	// 		'institution_locality_id' => 83,
+	// 		'institution_type_id' => 65,
+	// 		'institution_ownership_id' => 72,
+	// 		'institution_status_id' => 89,
+	// 		'institution_sector_id' => 2,
+	// 		'institution_provider_id' => 1,
+	// 		'institution_gender_id' => 6,
 	// 		'security_group_id' => 0
 	// 	];
 
@@ -140,16 +140,16 @@ class InstitutionsControllerTest extends IntegrationTestCase {
 			'year_closed' => 1990,
 			'longitude' => '100',
 			'latitude' => '1.32',
-			'institution_site_area_id' => null,
+			'institution_area_id' => null,
 			'area_id' => 1,
 			'area_administrative_id' => 1,
-			'institution_site_locality_id' => 83,
-			'institution_site_type_id' => 65,
-			'institution_site_ownership_id' => 72,
-			'institution_site_status_id' => 89,
-			'institution_site_sector_id' => 2,
-			'institution_site_provider_id' => 1,
-			'institution_site_gender_id' => 6,
+			'institution_locality_id' => 83,
+			'institution_type_id' => 65,
+			'institution_ownership_id' => 72,
+			'institution_status_id' => 89,
+			'institution_sector_id' => 2,
+			'institution_provider_id' => 1,
+			'institution_gender_id' => 6,
 			'security_group_id' => 0
 		];
 

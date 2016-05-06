@@ -11,12 +11,14 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
 class InstitutionGradesTable extends AppTable {
+	private $institutionId;
+
 	public function initialize(array $config) {
-		$this->table('institution_site_grades');
+		$this->table('institution_grades');
 		parent::initialize($config);
 		
 		$this->belongsTo('EducationGrades', 			['className' => 'Education.EducationGrades']);
-		$this->belongsTo('Institutions', 				['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('Institutions', 				['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		
 		$this->addBehavior('AcademicPeriod.Period');
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
@@ -31,8 +33,13 @@ class InstitutionGradesTable extends AppTable {
  			->add('start_date', 'ruleCompareWithInstitutionDateOpened', [
 					'rule' => ['compareWithInstitutionDateOpened']
 				])
+			->requirePresence('programme')
  			;
 		return $validator;
+	}
+
+	public function beforeAction(Event $event) {
+		$this->institutionId = $this->Session->read('Institution.Institutions.id');
 	}
 
 	public function afterAction(Event $event) {
@@ -79,28 +86,29 @@ class InstitutionGradesTable extends AppTable {
 **
 ******************************************************************************************************************/
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
-		$process = function($model, $entity) use ($data) {
-			$errors = $entity->errors();
+		$errors = $entity->errors();
+		$process = function($model, $entity) use ($data, $errors) {
 			/**
 			 * PHPOE-2117
-			 * Remove 		$this->ControllerAction->field('institution_site_programme_id', ['type' => 'hidden']);
+			 * Remove 		$this->ControllerAction->field('institution_programme_id', ['type' => 'hidden']);
 			 * 
 			 * education_grade_id will always be empty
 			 * so if errors array is more than 1, other fields are having an error
 			 */
 			if (empty($errors) || count($errors)==1) {
-				$startDate = $entity->start_date;
-				$institutionId = $entity->institution_site_id;
 				if ($data->offsetExists('grades')) {
-
+					$gradeIsSelected = false;
 					$error = true;
 					$gradeEntities = [];
 					foreach ($data['grades'] as $key=>$grade) {
 						if ($grade['education_grade_id'] != 0) {
 							$error = false;
+							$gradeIsSelected = true;
 
-							$grade['start_date'] = $startDate;
-							$grade['institution_site_id'] = $institutionId;
+							// need to set programme value since it was marked as required in validationDefault()
+							$grade['programme'] = $entity->programme;
+							$grade['start_date'] = $entity->start_date;
+							$grade['institution_id'] = $entity->institution_id;
 							if ($entity->has('end_date')) {
 								$grade['end_date'] = $entity->end_date;
 							}
@@ -111,8 +119,11 @@ class InstitutionGradesTable extends AppTable {
 							}
 						}
 					}
-					if ($error) {
-						$model->Alert->error('InstitutionGrades.failedSavingGrades');
+					if ($error && $gradeIsSelected) {
+						$model->Alert->error($this->aliasField('failedSavingGrades'));
+						return false;
+					} else if (!$gradeIsSelected) {
+						$model->Alert->error($this->aliasField('noGradeSelected'));
 						return false;
 					} else {
 						foreach ($gradeEntities as $grade) {
@@ -121,15 +132,36 @@ class InstitutionGradesTable extends AppTable {
 						return true;
 					}
 				} else {
-					$model->Alert->error('InstitutionGrades.noGradeSelected');
+					$model->Alert->error($this->aliasField('noGradeSelected'));
 					return false;
 				}
 			} else {
-				$model->Alert->error('InstitutionGrades.noGradeSelected');
+				$model->Alert->error($this->aliasField('noGradeSelected'));
 				return false;
 			}
 		};
-		return $process;
+		if (empty($errors) || count($errors)==1) {
+			$educationGradeCount = $this->EducationGrades->find('list')
+					->find('visible')
+					->find('order')
+					->where([$this->EducationGrades->aliasField('education_programme_id') => $entity->programme])
+					->count();
+			$existingGradeCount = $this->find()
+					->select([$this->EducationGrades->aliasField('name')])
+					->contain([$this->EducationGrades->alias()])
+					->where([
+						$this->EducationGrades->aliasField('education_programme_id') => $entity->programme,
+						$this->aliasField('institution_id') => $entity->institution_id
+					])
+					->count();
+			if ($educationGradeCount == $existingGradeCount) {
+				$this->Alert->warning($this->aliasField('allGradesAlreadyAdded'));
+				$event->stopPropagation();
+				return $this->controller->redirect($this->ControllerAction->url('index'));
+			} else {
+				return $process;
+			}
+		}
 	}
 
 	public function addAfterAction(Event $event, Entity $entity) {
@@ -141,7 +173,11 @@ class InstitutionGradesTable extends AppTable {
 		$this->fields['end_date']['date_options']['startDate'] = $institution->date_opened->format('d-m-Y');
 	}
 
+	public function addOnChangeLevel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$data[$this->alias()]['programme'] = 0;
+	}
 
+	
 /******************************************************************************************************************
 **
 ** edit action methods
@@ -233,7 +269,7 @@ class InstitutionGradesTable extends AppTable {
 
 				$institutionId = $this->Session->read('Institution.Institutions.id');
 				$exists = $this->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade_id'])
-				->where([$this->aliasField('institution_site_id') => $institutionId])
+				->where([$this->aliasField('institution_id') => $institutionId])
 				->toArray();
 
 				$attr['data'] = $data;
@@ -251,19 +287,35 @@ class InstitutionGradesTable extends AppTable {
 ** essential methods
 **
 ******************************************************************************************************************/
-	public function addOnChangeLevel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$data[$this->alias()]['programme'] = 0;
+	public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $listOnly=true) {
+		/**
+		 * PHPOE-2090, changed to find by AcademicPeriod function in PeriodBehavior.php
+		 */
+		/**
+		 * PHPOE-2132, changed to find by AcademicPeriod function in PeriodBehavior.php with extra parameter to exclude finding grades within date range.
+		 * Common statements with getGradeOptions() were moved to _gradeOptions().
+		 */
+		$query = $this->find('all')
+					->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId, 'beforeEndDate' => $this->aliasField('start_date')]);
+		return $this->_gradeOptions($query, $institutionsId, $listOnly);
 	}
 
 	public function getGradeOptions($institutionsId, $academicPeriodId, $listOnly=true) {
 		/**
 		 * PHPOE-2090, changed to find by AcademicPeriod function in PeriodBehavior.php
 		 */
+		/**
+		 * PHPOE-2132, Common statements with getGradeOptionsForIndex() were moved to _gradeOptions().
+		 */
 		$query = $this->find('all')
-					->contain(['EducationGrades'])
-					->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
-					->where(['InstitutionGrades.institution_site_id = ' . $institutionsId])
-					->order(['EducationGrades.education_programme_id', 'EducationGrades.order']);
+					->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId]);
+		return $this->_gradeOptions($query, $institutionsId, $listOnly);
+	}
+
+	private function _gradeOptions(Query $query, $institutionsId, $listOnly) {
+		$query->contain(['EducationGrades'])
+			->where(['InstitutionGrades.institution_id = ' . $institutionsId])
+			->order(['EducationGrades.education_programme_id', 'EducationGrades.order']);
 		$data = $query->toArray();
 		if($listOnly) {
 			$list = [];
@@ -277,7 +329,7 @@ class InstitutionGradesTable extends AppTable {
 	}
 
 	/**
-	 * Used by InstitutionSiteSectionsTable & InstitutionSiteClassesTable.
+	 * Used by InstitutionClassesTable & InstitutionSubjectsTable.
 	 * This function resides here instead of inside AcademicPeriodsTable because the first query is to get 'start_date' and 'end_date' 
 	 * of registered Programmes in the Institution. 
 	 * @param  integer $model           		 [description]

@@ -13,6 +13,7 @@ use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\UserTrait;
 use Cake\Datasource\Exception\RecordNotFoundException;
 
+// this file is used solely for Preferences/Users
 class UsersTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('security_users');
@@ -49,29 +50,19 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('is_guardian', ['visible' => false]);
 		// $this->ControllerAction->field('openemis_no', ['type' => 'readonly']);
 
-		$controller = $this->controller;
 		$userId = $this->Auth->user('id');
-		$tabElements = [
-			'account' => [
-				'url' => ['plugin' => null, 'controller' => $controller->name, 'action' => 'view', $userId],
-				'text' => __('Account')
-			],
-			'password' => [
-				'url' => ['plugin' => null, 'controller' => $controller->name, 'action' => 'Users', 'password'],
-				'text' => __('Password')
-			]
-		];
-
-		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', 'account');
-	}
-
-	public function viewBeforeAction(Event $event) {
-		$userId = $this->Auth->user('id');
-		if ($userId != $this->request->pass[0]) { // stop user from navigating to other profiles
+		if ($userId != $this->request->pass[0] && $this->action != 'password') { // stop user from navigating to other profiles
 			$event->stopPropagation();
 			return $this->controller->redirect(['plugin' => null, 'controller' => $this->controller->name, 'action' => 'view', $userId]);
 		}
+
+		$tabElements = $this->controller->getUserTabElements();
+
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', 'General');
+	}
+
+	public function viewBeforeAction(Event $event) {
 		$this->ControllerAction->field('roles', [
 			'type' => 'role_table', 
 			'valueClass' => 'table-full-width',
@@ -84,13 +75,26 @@ class UsersTable extends AppTable {
 		$query->contain(['Roles']);
 	}
 
-	public function password() {
-		$this->controller->set('selectedAction', 'password');
-		$userId = $this->Auth->user('id');
-		$entity = $this->get($userId);
-		$entity->password = '';
+	public function addEditBeforeAction(Event $event) {
+		$this->ControllerAction->field('username', ['visible' => false]);
+		$this->ControllerAction->field('openemis_no', ['visible' => false]);
+		$this->ControllerAction->field('date_of_birth', [
+				'date_options' => [
+					'endDate' => date('d-m-Y', strtotime("-2 year"))
+				],
+				'default_date' => false,
+			]
+		);
+		$this->ControllerAction->field('last_login', ['visible' => false]);
+	}
 
-		$this->ControllerAction->field('username', ['type' => 'readonly']);
+	public function password() {
+		$this->controller->set('selectedAction', 'Account');
+
+		$userId = $this->Auth->user('id');
+		$this->ControllerAction->edit($userId);
+
+		$this->ControllerAction->field('username', ['visible' => true, 'type' => 'readonly']);
 		$this->ControllerAction->field('openemis_no', ['visible' => false]);
 		$this->ControllerAction->field('first_name', ['visible' => false]);
 		$this->ControllerAction->field('middle_name', ['visible' => false]);
@@ -102,97 +106,50 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('new_password', ['type' => 'password', 'order' => 60, 'attr' => ['value' => '']]);
 		$this->ControllerAction->field('retype_password', ['type' => 'password', 'order' => 61, 'attr' => ['value' => '']]);
 
-		$request = $this->request;
-		if ($request->is(['post', 'put'])) {
-			$request->data['username'] = $request->data[$this->alias()]['username'];
-			$request->data['password'] = $request->data[$this->alias()]['password'];
-
-			$user = $this->Auth->identify();
-			if ($user != false) {
-				$newPassword = $request->data[$this->alias()]['new_password'];
-				$retypePassword = $request->data[$this->alias()]['retype_password'];
-
-				if ($newPassword === $retypePassword) {
-					if (strlen($newPassword) >= 6) {
-						$entity->password = $newPassword;
-						if ($this->save($entity)) {
-							$this->Alert->success('general.edit.success');
-							$action = ['plugin' => false, 'controller' => $this->controller->name, 'action' => 'Users', 'view', $entity->id];
-							return $this->controller->redirect($action);
-						} else {
-							$this->Alert->error('general.error');
-						}
-					} else {
-						$this->Alert->error('User.Users.password.ruleMinLength');
-					}
-				} else {
-					$this->Alert->error('User.Users.retype_password.ruleCompare');
-				}
-			} else {
-				$this->Alert->error('User.Users.password.ruleChangePassword');
-			}
-		}
-
-		// pr($entity);
-		$this->controller->set('data', $entity);
 		$this->ControllerAction->renderView('/ControllerAction/edit');
 	}
 
 	public function onGetRoleTableElement(Event $event, $action, $entity, $attr, $options=[]) {
 		$tableHeaders = [__('Groups'), __('Roles')];
 		$tableCells = [];
-		$alias = $this->alias();
 		$key = 'roles';
-
-		$Group = TableRegistry::get('Security.SecurityGroups');
-
 		if ($action == 'view') {
-			$associated = $entity->extractOriginal([$key]);
-			if (!empty($associated[$key])) {
-				foreach ($associated[$key] as $i => $obj) {
-					$groupId = $obj['_joinData']->security_group_id;
-					try {
-						$groupEntity = $Group->get($groupId);
-						$rowData = [];
-						$rowData[] = $groupEntity->name;
-						$rowData[] = $obj->name;
-						$tableCells[] = $rowData;
-					} catch (RecordNotFoundException $ex) {
-						$this->log($groupId . ' is missing in security_groups', 'error');
-					}
-				}
+			$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+			$groupUserRecords = $GroupUsers->find()
+				->matching('SecurityGroups')
+				->matching('SecurityRoles')
+				->where([$GroupUsers->aliasField('security_user_id') => $entity->id])
+				->group([
+					$GroupUsers->aliasField('security_group_id'), 
+					$GroupUsers->aliasField('security_role_id')
+				])
+				->select(['group_name' => 'SecurityGroups.name', 'role_name' => 'SecurityRoles.name'])
+				->all();
+			foreach ($groupUserRecords as $obj) {
+				$rowData = [];
+				$rowData[] = $obj->group_name;
+				$rowData[] = $obj->role_name;
+				$tableCells[] = $rowData;
 			}
 		}
 		$attr['tableHeaders'] = $tableHeaders;
-    	$attr['tableCells'] = $tableCells;
+		$attr['tableCells'] = $tableCells;
 
 		return $event->subject()->renderElement('User.Accounts/' . $key, ['attr' => $attr]);
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator
-			->add('first_name', [
-					'ruleCheckIfStringGotNoNumber' => [
-						'rule' => 'checkIfStringGotNoNumber',
-					],
-					'ruleNotBlank' => [
-						'rule' => 'notBlank',
-					]
-				])
-			->allowEmpty('middle_name')
-			->allowEmpty('third_name')
-			->add('last_name', [
-					'ruleCheckIfStringGotNoNumber' => [
-						'rule' => 'checkIfStringGotNoNumber',
-					]
-				])
-			->allowEmpty('preferred_name')
-			->add('openemis_no', [
-					'ruleUnique' => [
-						'rule' => 'validateUnique',
-						'provider' => 'table',
-					]
-				])
+		$BaseUsers = TableRegistry::get('User.Users');
+		return $BaseUsers->setUserValidation($validator, $this);		
+	}
+
+	public function validationPassword(Validator $validator) {
+		$retypeCompareField = 'new_password';
+
+		$this->setValidationCode('username.ruleUnique', 'User.Accounts');
+		$this->setValidationCode('username.ruleAlphanumeric', 'User.Accounts');
+		$this->setValidationCode('retype_password.ruleCompare', 'User.Accounts');
+		return $validator
 			->add('username', [
 				'ruleUnique' => [
 					'rule' => 'validateUnique',
@@ -202,21 +159,41 @@ class UsersTable extends AppTable {
 				    'rule' => 'alphanumeric',
 				]
 			])
-			->allowEmpty('username')
-			->allowEmpty('password')
-			->add('address', [])
-			->allowEmpty('photo_content')
+			// password validation now in behavior
+			->add('retype_password' , [
+				'ruleCompare' => [
+					'rule' => ['comparePasswords', $retypeCompareField],
+					'on' => 'update'
+				]
+			])
 			;
-		return $validator;
 	}
 
-	public function implementedEvents() {
-    	$events = parent::implementedEvents();
-    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-    	return $events;
-    }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {   
-		$toolbarButtons->exchangeArray([]);
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		return $events;
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {  
+		switch ($action) {
+			case 'view':
+				if ($toolbarButtons->offsetExists('edit')) {
+					$toolbarButtons->exchangeArray(['edit' => $toolbarButtons['edit']]);
+				} else {
+					$toolbarButtons->exchangeArray([]);
+				}
+				
+				break;
+			
+			case 'edit':
+				if ($toolbarButtons->offsetExists('back')) {
+					$toolbarButtons->exchangeArray(['back' => $toolbarButtons['back']]);
+				} else {
+					$toolbarButtons->exchangeArray([]);
+				}
+				break;
+		}
 	}
 }

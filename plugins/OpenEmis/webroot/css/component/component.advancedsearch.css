@@ -1,4 +1,4 @@
-/* ADVANCED SEARCH v.1.0.0 */
+/* ADVANCED SEARCH v.1.0.1 */
 
 .advanced-search-wrapper {
     float: none;
@@ -70,11 +70,11 @@
     margin: 8px 0 4px;
 }
 
-.advanced-search-wrapper .input-checkbox,
-.advanced-search-wrapper .input-checkbox-inline {
+.advanced-search-wrapper .input-selection,
+.advanced-search-wrapper .input-selection-inline {
     width: 100% !important;
 }
 
-.advanced-search-wrapper .checkbox-label {
+.advanced-search-wrapper .selection-label {
     width: 15% !important;
 }
