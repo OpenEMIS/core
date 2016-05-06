@@ -50,7 +50,7 @@ class SSOComponent extends Component {
     			$restfulCall = $this->controller->Cookie->read('Restful.Call');
     		}
     		if ($restfulCall) {
-    			return $this->controller->redirect(['plugin' => null, 'controller' => 'Rest', 'action' => 'token', 'payload' => $this->generateToken()]);
+    			return $this->controller->redirect(['plugin' => null, 'controller' => 'Rest', 'action' => 'auth', 'payload' => $this->generateToken(), 'version' => '2.0']);
     		} else {
     			return $this->controller->redirect($this->_config['homePageURL']);
     		}
