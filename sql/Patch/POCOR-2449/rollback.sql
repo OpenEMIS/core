@@ -2,10 +2,10 @@
 DELETE FROM `custom_field_types` WHERE `code` = 'FILE';
 
 -- custom_modules
-UPDATE `custom_modules` SET `supported_field_types` = 'TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,TABLE,DATE,TIME,STUDENT_LIST' WHERE `model` = 'Institution.Institutions';
-UPDATE `custom_modules` SET `supported_field_types` = 'TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,TABLE,DATE,TIME' WHERE `model` = 'Student.Students';
-UPDATE `custom_modules` SET `supported_field_types` = 'TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,TABLE,DATE,TIME' WHERE `model` = 'Staff.Staff';
-UPDATE `custom_modules` SET `supported_field_types` = 'TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,TABLE,DATE,TIME' WHERE `model` = 'Institution.InstitutionInfrastructures';
+UPDATE `custom_modules` SET `supported_field_types` = REPLACE(`supported_field_types`, ',FILE', '') WHERE `model` = 'Institution.Institutions';
+UPDATE `custom_modules` SET `supported_field_types` = REPLACE(`supported_field_types`, ',FILE', '') WHERE `model` = 'Student.Students';
+UPDATE `custom_modules` SET `supported_field_types` = REPLACE(`supported_field_types`, ',FILE', '') WHERE `model` = 'Staff.Staff';
+UPDATE `custom_modules` SET `supported_field_types` = REPLACE(`supported_field_types`, ',FILE', '') WHERE `model` = 'Institution.InstitutionInfrastructures';
 
 -- Restore tables
 DROP TABLE IF EXISTS `custom_field_values`;
