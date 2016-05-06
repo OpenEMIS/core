@@ -462,7 +462,7 @@ function getPanesObjFromDOM(_childNodes, _type, _strMatch, _boundSize) {
     for (var i in _childNodes) {
         if (_childNodes[i][_type] != undefined && _childNodes[i][_type].match(matchCase)) {
             var paneKey = (count == 0) ? 'pane1' : 'pane2';
-            var reverse = (i == 0) ? false : true;
+            var reverse = (count == 0) ? false : true;
             if (_childNodes[i].hasAttribute('size-p')) {
                 panelObj[paneKey]['size'] = calRatioInPixal(_childNodes[i].getAttribute('size-p'), _boundSize, reverse);
                 if (!sizeFound) {
