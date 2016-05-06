@@ -52,6 +52,6 @@ use Cake\Utility\Inflector;
 
 <?php if($advancedSearch):?>
 <h4 ng-class="disableElement">
-	Search Results
+	<?= __('Search Results') ?>
 </h4>
 <?php endif;?>
