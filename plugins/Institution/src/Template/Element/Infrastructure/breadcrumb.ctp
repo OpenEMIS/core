@@ -13,10 +13,13 @@
 		<?php else : ?>
 			<li><a href="<?= $baseUrl; ?>"><?= __('All')?></a></li>
 			<?php foreach ($crumbs as $crumb) : ?>
+				<?php
+					$crumbName = $crumb->name." <span class='divider'></span> ".$allLevelOptions[$crumb->infrastructure_type_id];
+				?>
 				<?php if ($crumb === end($crumbs)) : ?>
-		    		<li class="active"><?= $crumb->name; ?></li>
+		    		<li class="active"><?= $crumbName; ?></li>
 		    	<?php else : ?>
-					<li><a href="<?= $baseUrl . "?parent=" . $crumb->id; ?>"><?= $crumb->name; ?></a></li>
+					<li><a href="<?= $baseUrl . "?parent=" . $crumb->id; ?>"><?= $crumbName; ?></a></li>
 				<?php endif ?>
 			<?php endforeach ?>
 		<?php endif ?>
