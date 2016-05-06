@@ -1,5 +1,5 @@
 /* 
-Core Overwrites: v.1.0.4
+Core Overwrites: v.1.0.6
 */
 
 
@@ -88,10 +88,6 @@ a.btn-green:hover {
 
 /* Layout Splitter */
 
-.rtl .split-panes.horizontal > .split-pane2 {
-    right: 10%;
-}
-
 .rtl .left-menu {
     left: 0;
 }
@@ -130,6 +126,16 @@ a.btn-green:hover {
     padding: 0;
 }
 
+.rtl .horizontal-tabs span a,
+.rtl .horizontal-tabs span a:focus,
+.rtl .horizontal-tabs span a:visited,
+.rtl .horizontal-tabs span.tab-active a,
+.rtl .horizontal-tabs span.tab-active a:hover,
+.rtl .horizontal-tabs span.tab-active a:focus {
+    height: 30px;
+    line-height: 31px;    
+}
+
 
 /* About Page */
 
@@ -148,56 +154,6 @@ a.btn-green:hover {
 .rtl .table-curved,
 .rtl .table {
     border-collapse: collapse !important;
-}
-
-
-/* Quick Fix for Breadcrumb */
-
-.treemap-breadcrumb li {
-    line-height: 30px;
-    white-space: nowrap;
-}
-
-.treemap-breadcrumb > li + li::before {
-    margin: 4px !important;
-}
-
-.treemap-breadcrumb li a,
-.treemap-breadcrumb li a:hover,
-.treemap-breadcrumb li a:focus {
-    margin: 0 4px;
-    height: 32px;
-}
-
-.rtl .treemap-breadcrumb {
-    font-size: 14px;
-}
-
-.rtl .treemap-breadcrumb li {
-    line-height: 25px;
-    vertical-align: middle;
-}
-
-.rtl .treemap-breadcrumb > li:after {
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-.rtl .treemap-breadcrumb > li.active {
-    padding: 0 4px;
-    line-height: 30px;
-}
-
-.rtl .treemap-breadcrumb li a,
-.rtl .treemap-breadcrumb li a:hover,
-.rtl .treemap-breadcrumb li a:focus {
-    margin: 0 0 0 4px;
-}
-
-@media only screen and (max-width: 800px) {
-    .treemap-breadcrumb {
-        height: auto;
-    }
 }
 
 
@@ -279,7 +235,8 @@ a,
     margin: 0 5px;
 }
 
-.ag-fresh .ag-sort-ascending-icon::after, .ag-sort-descending-icon::after {
+.ag-fresh .ag-sort-ascending-icon::after,
+.ag-sort-descending-icon::after {
     vertical-align: middle;
 }
 
@@ -413,7 +370,7 @@ a,
     font-size: 14px;
 }
 
-.rtl .ag-fresh .ag-header-cell .ag-header-cell-label { 
+.rtl .ag-fresh .ag-header-cell .ag-header-cell-label {
     padding: 10px 10px 10px 35px;
 }
 
@@ -433,17 +390,17 @@ a,
     float: right;
 }
 
-.rtl .ag-sort-descending-icon:after, 
-.rtl .ag-sort-none-icon:after, 
-.rtl .ag-fresh .oe-cell-editable.oe-select-wrapper:after, 
+.rtl .ag-sort-descending-icon:after,
+.rtl .ag-sort-none-icon:after,
+.rtl .ag-fresh .oe-cell-editable.oe-select-wrapper:after,
 .rtl .ag-fresh .ag-filter div div:after,
-.rtl .ag-sort-ascending-icon:after, 
+.rtl .ag-sort-ascending-icon:after,
 .rtl .ag-sort-descending-icon:after {
     margin-right: 0;
     margin-left: 10px;
 }
 
-.rtl .ag-fresh .oe-cell-editable.oe-select-wrapper:after, 
+.rtl .ag-fresh .oe-cell-editable.oe-select-wrapper:after,
 .rtl .ag-fresh .ag-filter div div:after {
     right: auto !important;
     left: 0;
@@ -455,4 +412,39 @@ a,
 
 .rtl .ag-fresh .ag-header-cell-menu-button {
     float: left;
+}
+
+
+/* Advanced Search alignment */
+
+.adv-search {
+    margin: 14px 0 !important;
+}
+
+
+/* Set width for the left-pane and right-pane */
+
+.left-pane {
+    opacity: 0;
+}
+
+
+/* Highcharts Border */
+
+.institution-dashboard .highcharts-background {
+    stroke-width: 1px;
+}
+
+
+
+/* Date/Time Picker inside Table */
+
+.table .input-group-addon {
+    position: absolute;
+    right: 0;
+    line-height: 0;
+    cursor: pointer;
+    font-size: 15px;
+    width: 52px;
+    height: 30px;
 }
