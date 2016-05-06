@@ -419,3 +419,9 @@ a,
 .left-pane {
     opacity: 0;
 }
+
+/* Highcharts Border */
+
+.institution-dashboard .highcharts-background {
+    stroke-width: 1px;
+}
