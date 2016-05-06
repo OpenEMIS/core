@@ -20,9 +20,7 @@ class StudentsController extends AppController {
 			'Contacts' 			=> ['className' => 'User.Contacts'],
 			'Identities' 		=> ['className' => 'User.Identities'],
 			'Nationalities' 	=> ['className' => 'User.Nationalities'],
-			'Languages' 		=> ['className' => 'User.UserLanguages'],
 			'Comments' 			=> ['className' => 'User.Comments'],
-			'SpecialNeeds' 		=> ['className' => 'User.SpecialNeeds'],
 			'Awards' 			=> ['className' => 'User.Awards'],
 			'Attachments' 		=> ['className' => 'User.Attachments'],
 			'Guardians' 		=> ['className' => 'Student.Guardians'],
@@ -57,6 +55,9 @@ class StudentsController extends AppController {
 	// CAv4
 	public function Classes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']); }
 	public function Subjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']); }
+    public function Languages() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
+    public function SpecialNeeds() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
+
 	// End
 
 	public function beforeFilter(Event $event) {
