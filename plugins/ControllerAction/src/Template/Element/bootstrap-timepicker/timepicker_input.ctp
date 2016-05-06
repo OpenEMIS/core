@@ -2,8 +2,8 @@
     <?php if (strlen($attr['label']) > 0 ):?>
         <label for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
     <?php endif ?> 
-     
-    <div class="input-group time <?= $attr['class'] ?>" id="<?= $attr['id'] ?>">
+
+    <div class="input-group time <?= isset($attr['class']) ? $attr['class'] : '' ?>" id="<?= $attr['id'] ?>">
         <?php 
             $errorMsg = '';
             if (array_key_exists('fieldName', $attr)) {
