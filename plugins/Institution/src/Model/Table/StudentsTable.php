@@ -417,7 +417,7 @@ class StudentsTable extends AppTable {
 		$statusOptions = $statusOptions + $pendingStatus;
 
 		// Academic Periods
-		$academicPeriodOptions = $this->AcademicPeriods->getList();
+		$academicPeriodOptions = $this->AcademicPeriods->getList(['restrictLevel' => ['1'], 'withLevels' => false]);
 
 		// Education Grades
 		$InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
@@ -1056,7 +1056,7 @@ class StudentsTable extends AppTable {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 
 		// Academic Period
-		$periodOptions = $AcademicPeriod->getList(['isEditable'=>true]);
+		$periodOptions = $AcademicPeriod->getList(['isEditable'=>true, 'restrictLevel' => ['1'], 'withLevels' => false]);
 		if (empty($this->request->query['period'])) {
 			$this->request->query['period'] = $this->AcademicPeriods->getCurrent();
 		}
