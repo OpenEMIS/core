@@ -1184,4 +1184,4 @@ trait MessagesTrait {
 
 		return !is_array($message) ? vsprintf(__($message), $sprintf) : $message;
 	}
-} 
+}
