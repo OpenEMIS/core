@@ -443,7 +443,7 @@ function insertCSSRules(_parentClassName, _panesObj, _pos) {
         sheet.insertRule(prependClassName + ' .' + _panesObj.right + '{left: 0px;right:0px;}', 0);
         sheet.insertRule(prependClassName + ' .' + _panesObj.left + '{left: 0px;right:0px;}', 0);
     } else {
-        sheet.insertRule(prependClassName + ' .' + _panesObj.left + '{width:' + _pos + 'px; ' + affectedDir + ':0px;' + oppDir + ':auto;}', 0);
+        sheet.insertRule(prependClassName + ' .' + _panesObj.left + '{width:' + _pos + 'px; ' + affectedDir + ':0px;' + oppDir + ':auto; opacity: 1;}', 0);
         sheet.insertRule(prependClassName + ' .' + _panesObj.right + '{' + affectedDir + ':' + _pos + 'px;' + oppDir + ':0px;}', 0);
         sheet.insertRule(prependClassName + ' .' + _panesObj.left + ' + .split-handler{' + affectedDir + ':' + _pos + 'px;}', 0);
     }
