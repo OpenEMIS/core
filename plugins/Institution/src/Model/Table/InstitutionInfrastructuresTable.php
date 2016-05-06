@@ -13,7 +13,7 @@ use Cake\Validation\Validator;
 
 class InstitutionInfrastructuresTable extends AppTable {
 	private $_fieldOrder = [
-		'institution_id', 'parent_id', 'infrastructure_level_id', 'code', 'name', 'infrastructure_type_id', 'size', 'infrastructure_ownership_id', 'year_acquired', 'year_disposed', 'infrastructure_condition_id', 'comment'
+		'institution_id', 'parent_id', 'code', 'name', 'infrastructure_level_id', 'infrastructure_type_id', 'size', 'infrastructure_ownership_id', 'year_acquired', 'year_disposed', 'infrastructure_condition_id', 'comment'
 	];
 
 	public function initialize(array $config) {
@@ -67,11 +67,13 @@ class InstitutionInfrastructuresTable extends AppTable {
 	public function beforeAction(Event $event) {
 		// Add breadcrumb
 		$action = $this->ControllerAction->action();
-		if ($action == 'index' || $action == 'edit') {
+		if ($action == 'edit') {
 			$toolbarElements = [
 	            ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => [], 'options' => []]
 	        ];
 			$this->controller->set('toolbarElements', $toolbarElements);
+			$allLevelOptions = $this->Levels->getList()->toArray();
+			$this->controller->set('allLevelOptions', $allLevelOptions);
 		}
 
 		$this->ControllerAction->field('parent_id');
@@ -82,6 +84,14 @@ class InstitutionInfrastructuresTable extends AppTable {
 	}
 
 	public function indexBeforeAction(Event $event) {
+		$toolbarElements = [
+			['name' => 'Institution.Infrastructure/breadcrumb', 'data' => [], 'options' => []],
+			['name' => 'Institution.Infrastructure/controls', 'data' => [], 'options' => []]
+		];
+		$this->controller->set('toolbarElements', $toolbarElements);
+		$allLevelOptions = $this->Levels->getList()->toArray();
+		$this->controller->set('allLevelOptions', $allLevelOptions);
+
 		$parentId = $this->request->query('parent');
 		if (!is_null($parentId)) {
 			$crumbs = $this->findPath(['for' => $parentId]);
@@ -89,7 +99,6 @@ class InstitutionInfrastructuresTable extends AppTable {
 		}
 
 		$this->fields['parent_id']['visible'] = false;
-		$this->fields['infrastructure_level_id']['visible'] = false;
 		$this->fields['size']['visible'] = false;
 		$this->fields['infrastructure_ownership_id']['visible'] = false;
 		$this->fields['year_acquired']['visible'] = false;
@@ -104,6 +113,12 @@ class InstitutionInfrastructuresTable extends AppTable {
 			$query->where([$this->aliasField('parent_id') => $parentId]);
 		} else {
 			$query->where([$this->aliasField('parent_id IS NULL')]);
+		}
+
+		list($levelOptions, $selectedLevel) = array_values($this->getLevelOptions());
+		$this->controller->set(compact('levelOptions', 'selectedLevel'));
+		if (!is_null($selectedLevel)) {
+			$query->where([$this->aliasField('infrastructure_level_id') => $selectedLevel]);
 		}
 	}
 
