@@ -158,6 +158,13 @@ class RenderFileBehavior extends RenderBehavior {
                         ]
                     ]);
                 }
+            } else if (!empty($file) && $file['error'] != 4) {  // allow empty
+                $session->delete($sessionKey);
+                $session->write($sessionErrorKey, [
+                    'file' => [
+                        'ruleCustomFile' => $model->getMessage('fileUpload.'.$file['error'])
+                    ]
+                ]);
             }
         }
 
