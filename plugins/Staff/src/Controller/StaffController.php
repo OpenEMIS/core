@@ -19,9 +19,7 @@ class StaffController extends AppController {
 			'Contacts'			=> ['className' => 'User.Contacts'],
 			'Identities'		=> ['className' => 'User.Identities'],
 			'Nationalities' 	=> ['className' => 'User.Nationalities'],
-			'Languages'			=> ['className' => 'User.UserLanguages'],
 			'Comments'			=> ['className' => 'User.Comments'],
-			'SpecialNeeds'		=> ['className' => 'User.SpecialNeeds'],
 			'Awards'			=> ['className' => 'User.Awards'],
 			'Attachments'		=> ['className' => 'User.Attachments'],
 			'Positions'			=> ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
@@ -67,6 +65,9 @@ class StaffController extends AppController {
 	public function Positions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Positions']); }
 	public function Classes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffClasses']); }
 	public function Subjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSubjects']); }
+    public function Languages() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
+    public function SpecialNeeds() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
+
 	// End
 
 	public function beforeFilter(Event $event) {
