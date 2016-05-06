@@ -243,7 +243,7 @@ RENAME TABLE `institution_activities` TO `z_2449_institution_activities`;
 
 DROP TABLE IF EXISTS `institution_activities`;
 CREATE TABLE IF NOT EXISTS `institution_activities` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `model` varchar(200) NOT NULL,
   `model_reference` int(11) NOT NULL,
   `field` varchar(200) NOT NULL,
