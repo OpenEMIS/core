@@ -2,14 +2,14 @@
 INSERT INTO `db_patches` (`issue`, `created`) VALUES('POCOR-2449', NOW());
 
 -- custom_field_types
-INSERT INTO `custom_field_types` (`code`, `name`, `value`, `description`, `format`, `is_mandatory`, `is_unique`, `visible`) VALUES
-('FILE', 'File', 'file', '', 'OpenEMIS', 0, 0, 1);
+INSERT INTO `custom_field_types` (`id`, `code`, `name`, `value`, `description`, `format`, `is_mandatory`, `is_unique`, `visible`) VALUES
+(11, 'FILE', 'File', 'file', '', 'OpenEMIS', 0, 0, 1);
 
 -- custom_modules
-UPDATE `custom_modules` SET `supported_field_types` = 'TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,TABLE,DATE,TIME,STUDENT_LIST,FILE' WHERE `model` = 'Institution.Institutions';
-UPDATE `custom_modules` SET `supported_field_types` = 'TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,TABLE,DATE,TIME,FILE' WHERE `model` = 'Student.Students';
-UPDATE `custom_modules` SET `supported_field_types` = 'TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,TABLE,DATE,TIME,FILE' WHERE `model` = 'Staff.Staff';
-UPDATE `custom_modules` SET `supported_field_types` = 'TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,TABLE,DATE,TIME,FILE' WHERE `model` = 'Institution.InstitutionInfrastructures';
+UPDATE `custom_modules` SET `supported_field_types` = CONCAT(`supported_field_types`, ',FILE') WHERE `model` = 'Institution.Institutions';
+UPDATE `custom_modules` SET `supported_field_types` = CONCAT(`supported_field_types`, ',FILE') WHERE `model` = 'Student.Students';
+UPDATE `custom_modules` SET `supported_field_types` = CONCAT(`supported_field_types`, ',FILE') WHERE `model` = 'Staff.Staff';
+UPDATE `custom_modules` SET `supported_field_types` = CONCAT(`supported_field_types`, ',FILE') WHERE `model` = 'Institution.InstitutionInfrastructures';
 
 -- custom_field_values
 RENAME TABLE `custom_field_values` TO `z_2449_custom_field_values`;
