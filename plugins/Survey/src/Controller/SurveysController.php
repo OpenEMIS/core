@@ -42,7 +42,7 @@ class SurveysController extends AppController
         $this->set('selectedAction', $this->request->action);
 	}
 
-	public function onInitialize(Event $event, Table $model) {
+	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		$header = __('Survey');
 
 		$header .= ' - ' . $model->getHeader($model->alias);

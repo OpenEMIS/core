@@ -3,6 +3,8 @@ namespace Security\Model\Table;
 
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
+use Cake\ORM\Query;
+use Cake\Log\Log;
 
 class SecurityGroupUsersTable extends AppTable {
 	public function initialize(array $config) {
@@ -13,15 +15,15 @@ class SecurityGroupUsersTable extends AppTable {
 	}
 
 	public function insertSecurityRoleForInstitution($data) {
-		$institutionSiteId = (array_key_exists('institution_site_id', $data))? $data['institution_site_id']: null;
+		$institutionId = (array_key_exists('institution_id', $data))? $data['institution_id']: null;
 		$securityUserId = (array_key_exists('security_user_id', $data))? $data['security_user_id']: null;
 		$securityRoleId = (array_key_exists('security_role_id', $data))? $data['security_role_id']: null;
 
-		if (!is_null($institutionSiteId) && !is_null($securityUserId) && !is_null($securityRoleId)) {
+		if (!is_null($institutionId) && !is_null($securityUserId) && !is_null($securityRoleId)) {
 			$Institution = TableRegistry::get('Institution.Institutions');
 			$institutionQuery = $Institution
 				->find()
-				->where([$Institution->aliasField($Institution->primaryKey()) => $institutionSiteId])
+				->where([$Institution->aliasField($Institution->primaryKey()) => $institutionId])
 				->first()
 				;
 
@@ -45,5 +47,61 @@ class SecurityGroupUsersTable extends AppTable {
 		} else {
 			return false;
 		}
+	}
+
+	public function checkEditGroup($userId, $securityGroupId, $field) {
+		// Security function: Group
+		$securityFunctionId = 5023;
+		$results = $this
+			->find()
+			->innerJoin(
+				['SecurityRoleFunctions' => 'security_role_functions'],
+				[
+					'SecurityRoleFunctions.security_role_id = '.$this->aliasField('security_role_id'),
+					'SecurityRoleFunctions.security_function_id' => $securityFunctionId,
+					'SecurityRoleFunctions.'.$field => 1
+				]
+			)
+			->where([$this->aliasField('security_user_id') => $userId, $this->aliasField('security_group_id') => $securityGroupId])
+			->hydrate(false)
+			->toArray();
+		return $results;
+	}
+
+	public function getRolesByUserAndGroup($groupIds, $userId) {
+		if (!empty($groupIds)) {
+			$securityRoles = $this
+				->find('list', [
+					'keyField' => 'security_role_id',
+					'valueField' => 'security_role_id'
+				])
+				->innerJoinWith('SecurityRoles')
+				->where([
+					$this->aliasField('security_user_id') => $userId,
+					$this->aliasField('security_group_id').' IN ' => $groupIds
+				])
+				->order('SecurityRoles.order')
+				->group([$this->aliasField('security_role_id')])
+				->select([$this->aliasField('security_role_id')])
+				->hydrate(false)
+				->toArray();
+			return $securityRoles;
+		} else {
+			return [];
+		}
+	}
+
+	public function findRoleByInstitution(Query $query, array $options)
+	{	
+		$userId = $options['security_user_id'];
+		$institutionId = $options['institution_id'];
+		$query
+			->innerJoin(['SecurityGroupInstitutions' => 'security_group_institutions'], [
+				'SecurityGroupInstitutions.security_group_id = '.$this->aliasField('security_group_id'), 
+				'SecurityGroupInstitutions.institution_id' => $institutionId
+			])
+			->where([$this->aliasField('security_user_id') => $userId])
+			->distinct([$this->aliasField('security_role_id')]);
+		return $query;
 	}
 }

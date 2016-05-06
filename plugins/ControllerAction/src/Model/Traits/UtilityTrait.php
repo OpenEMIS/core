@@ -28,6 +28,16 @@ trait UtilityTrait {
 		return __($header);
 	}
 
+	// PHP 5.5 array_column alternative
+	public function array_column($array, $column_name) {
+        return array_map(
+        	function($element) use($column_name) {
+        		if (isset($element[$column_name])) {
+        			return $element[$column_name];
+        		}
+       		}, $array);
+    }
+
 	// to get the value from querystring, if exists. otherwise get a default value from the first option in the list
 	public function queryString($key, $options=[], $request=null) {
 		$value = null;
@@ -84,6 +94,7 @@ trait UtilityTrait {
 	public function advancedSelectOptions(&$options, &$selected, $params=[]) {
 		$callable = array_key_exists('callable', $params) ? $params['callable'] : null;
 		$message = array_key_exists('message', $params) ? $params['message'] : '';
+		$selectOption = array_key_exists('selectOption', $params)? $params['selectOption'] : true;
 		$defaultValue = null;
 
 		// Check if the selected key is empty. If it is not empty then change the selected to null and get
@@ -177,10 +188,24 @@ trait UtilityTrait {
 			if ($group !== false) {
 				$options[$group][$selected][] = 'selected';
 			} else if (strlen($selected) > 0) {
-				$options[$selected][] = 'selected';
+				if ($selectOption) {
+					$options[$selected][] = 'selected';
+				}
+				
 			}
 		}
 		
 		return $selected;
 	}
+
+	// greatest common denominator function
+	function gCD($a, $b) {
+		while ( $b != 0)
+		{
+			$remainder = $a % $b;
+			$a = $b;
+			$b = $remainder;
+		}
+		return abs ($a);
+	} 
 }

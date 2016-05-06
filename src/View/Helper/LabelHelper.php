@@ -119,10 +119,10 @@ class LabelHelper extends Helper {
 	// 		'single' => '*File size should not be larger than 2MB.',
 	// 		'multi' => '*Maximum 5 files are permitted on single upload. Each file size should not be larger than 2MB.',
 	// 	],
-	// 	'InstitutionSiteStaff' => [
+	// 	'InstitutionStaff' => [
 	// 		'staff_status_id' => 'Status',
 	// 		'staff_type_id' => 'Type',
-	// 		'institution_site_position_id' => 'Position',
+	// 		'institution_position_id' => 'Position',
 	// 		'total_fte' => 'Total FTE',
 	// 		'fte' => 'FTE'
 	// 	],

@@ -116,8 +116,11 @@ class SqlServerAdapter extends PdoAdapter implements AdapterInterface
         if (empty($options['port'])) {
             $dsn = 'dblib:host=' . $options['host'] . ';dbname=' . $options['name'];
         } else {
-            $dsn = 'dblib:host=' . $options['host'] . ',' . $options['port'] . ';dbname=' . $options['name'];
+            $dsn = 'dblib:host=' . $options['host'] . ':' . $options['port'] . ';dbname=' . $options['name'];
         }
+
+        $driverOptions = array(\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION);
+
 
         try {
             $db = new \PDO($dsn, $options['user'], $options['pass'], $driverOptions);
@@ -386,7 +389,7 @@ class SqlServerAdapter extends PdoAdapter implements AdapterInterface
             $column = new Column();
             $column->setName($columnInfo['name'])
                    ->setType($this->getPhinxType($columnInfo['type']))
-                   ->setNull($columnInfo['null'] != 'NO')
+                   ->setNull($columnInfo['null'] !== 'NO')
                    ->setDefault($this->parseDefault($columnInfo['default']))
                    ->setIdentity($columnInfo['identity'] === '1')
                    ->setComment($this->getColumnComment($columnInfo['table_name'], $columnInfo['name']));
@@ -522,7 +525,7 @@ SQL;
         $this->writeCommand('changeColumn', array($tableName, $columnName, $newColumn->getType()));
         $columns = $this->getColumns($tableName);
         $changeDefault = $newColumn->getDefault() !== $columns[$columnName]->getDefault() || $newColumn->getType() !== $columns[$columnName]->getType();
-        if ($columnName != $newColumn->getName()) {
+        if ($columnName !== $newColumn->getName()) {
             $this->renameColumn($tableName, $columnName, $newColumn->getName());
         }
 
@@ -665,6 +668,22 @@ ORDER BY T.[name], I.[index_id];";
 
             if (empty($a)) {
                 return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function hasIndexByName($tableName, $indexName)
+    {
+        $indexes = $this->getIndexes($tableName);
+
+        foreach ($indexes as $name => $index) {
+            if ($name === $indexName) {
+                 return true;
             }
         }
 
@@ -897,6 +916,7 @@ ORDER BY T.[name], I.[index_id];";
             case static::PHINX_TYPE_DATE:
                 return array('name' => 'date');
                 break;
+            case static::PHINX_TYPE_BLOB:
             case static::PHINX_TYPE_BINARY:
                 return array('name' => 'varbinary');
                 break;
@@ -1067,7 +1087,7 @@ SQL;
         }
 
         $properties = $column->getProperties();
-        $buffer[] = $column->getType() == 'filestream' ? 'FILESTREAM' : '';
+        $buffer[] = $column->getType() === 'filestream' ? 'FILESTREAM' : '';
         $buffer[] = isset($properties['rowguidcol']) ? 'ROWGUIDCOL' : '';
 
         $buffer[] = $column->isNull() ? 'NULL' : 'NOT NULL';
@@ -1106,7 +1126,7 @@ SQL;
         }
         $def = sprintf(
             "CREATE %s INDEX %s ON %s (%s);",
-            ($index->getType() == Index::UNIQUE ? 'UNIQUE' : ''),
+            ($index->getType() === Index::UNIQUE ? 'UNIQUE' : ''),
             $indexName,
             $this->quoteTableName($tableName),
             '[' . implode('],[', $index->getColumns()) . ']'

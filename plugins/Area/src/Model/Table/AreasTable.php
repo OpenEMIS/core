@@ -13,20 +13,101 @@ class AreasTable extends AppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->belongsTo('Parents', ['className' => 'Area.Areas']);
-		$this->belongsTo('Levels', ['className' => 'Area.AreaLevels', 'foreignKey' => 'area_level_id']);
+		$this->belongsTo('AreaParents', ['className' => 'Area.Areas', 'foreignKey' => 'parent_id']);
+		$this->belongsTo('AreaLevels', ['className' => 'Area.AreaLevels', 'foreignKey' => 'area_level_id']);
+		$this->hasMany('Areas', ['className' => 'Area.Areas', 'foreignKey' => 'parent_id']);
+		$this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
+		$this->belongsToMany('SecurityGroups', [
+			'className' => 'Security.UserGroups',
+			'joinTable' => 'security_group_areas',
+			'foreignKey' => 'area_id',
+			'targetForeignKey' => 'security_group_id',
+			'through' => 'Security.SecurityGroupAreas',
+			'dependent' => false,
+		]);
 		$this->addBehavior('Tree');
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+				'filter' => 'parent_id',
+			]);
+		}
 	}
 
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('area_level_id');
-
+		$count = $this->find()->where([
+				'OR' => [
+					[$this->aliasField('lft').' IS NULL'],
+					[$this->aliasField('rght').' IS NULL']
+				]
+			])
+			->count();
+		if ($count) {
+			$this->rebuildLftRght();
+		}
 		$this->fields['lft']['visible'] = false;
 		$this->fields['rght']['visible'] = false;
 	}
 
+	public function rebuildLftRght() {
+		$this->updateAll(
+			['parent_id' => null],
+			['parent_id' => -1]
+		);
+		$this->recover();
+		$this->updateAll(
+			['parent_id' => -1],
+			['parent_id IS NULL']
+		);
+	}
+
 	public function afterAction(Event $event) {
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	}
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$transferTo = $this->request->data['transfer_to'];
+		$transferFrom = $id;
+		// Require to update the parent id of the children before removing the node from the tree
+		$this->updateAll(
+				[
+					'parent_id' => $transferTo, 
+					'lft' => null,
+					'rght' => null
+				],
+				['parent_id' => $transferFrom]
+			);
+
+		$entity = $this->get($id);
+		$left = $entity->lft;
+		$right = $entity->rght;
+
+		// The left and right value of the children will all have to be rebuilt
+		$this->updateAll(
+				[
+					'lft' => null,
+					'rght' => null
+				],
+				[ 
+					'lft > ' => $left, 
+					'rght < ' => $right
+				]
+			);
+
+		$this->rebuildLftRght();
+
+		$process = function($model, $id, $options) {
+			$entity = $model->get($id);
+			$model->removeFromTree($entity);
+			return $model->delete($entity, $options->getArrayCopy());
+		};
+		return $process;
+	}
+	public function onGetConvertOptions(Event $event, Entity $entity, Query $query) {
+		$level = $entity->area_level_id;
+		$query->where([
+				$this->aliasField('area_level_id') => $level
+			]);
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -124,19 +205,18 @@ class AreasTable extends AppTable {
 			$data = $results->first();
 			$areaLevelId = $data->area_level_id;
 
-			$levelResults = $this->Levels
+			$levelResults = $this->AreaLevels
 				->find()
-				->select([$this->Levels->aliasField('level')])
-				->where([$this->Levels->aliasField('id') => $areaLevelId])
+				->select([$this->AreaLevels->aliasField('level')])
+				->where([$this->AreaLevels->aliasField('id') => $areaLevelId])
 				->all();
-
 			if (!$levelResults->isEmpty()) {
 				$levelData = $levelResults->first();
 				$level = $levelData->level;
 
-				$levelOptions = $this->Levels
+				$levelOptions = $this->AreaLevels
 					->find('list')
-					->where([$this->Levels->aliasField('level >') => $level])
+					->where([$this->AreaLevels->aliasField('level >') => $level])
 					->toArray();
 				$attr['options'] = $levelOptions;
 			}
@@ -151,21 +231,21 @@ class AreasTable extends AppTable {
 
 		$list = $this
 			->find()
-			->contain('Levels')
+			->contain('AreaLevels')
 			->where([
 				'OR' => [
 					$this->aliasField('name') . ' LIKE' => $search,
 					$this->aliasField('code') . ' LIKE' => $search,
-					'Levels.name LIKE' => $search
+					'AreaLevels.name LIKE' => $search
 				]
 			])
-			->order(['Levels.level', $this->aliasField('order')])
+			->order(['AreaLevels.level', $this->aliasField('order')])
 			->all();
 		
 		$data = array();
 		foreach($list as $obj) {
 			$data[] = [
-				'label' => sprintf('%s - %s (%s)', $obj->level->name, $obj->name, $obj->code),
+				'label' => sprintf('%s - %s (%s)', $obj->area_level->name, $obj->name, $obj->code),
 				'value' => $obj->id
 			];
 		}

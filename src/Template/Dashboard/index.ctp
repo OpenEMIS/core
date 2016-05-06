@@ -7,7 +7,7 @@ $this->start('panelBody');
 	<div id="news">
 		<h5><?php echo __('Notices'); ?></h5>
 		<div class="dashboard-content">
-			<table class="table table-striped table-hover table-bordered">
+			<table class="table table-lined">
 				<tbody class="table_body">
 				<?php 
 				$count = 0;
@@ -40,10 +40,10 @@ $this->start('panelBody');
 </div>
 
 <div class="row dashboard-container">
-	<div id="workbench">
+	<div id="workbench" style="max-height: 400px;">
 		<h5><?php echo __('Workbench'); ?></h5>
 		<div class="dashboard-content">
-			<table class="table table-striped table-hover table-bordered">
+			<table class="table">
 				<thead class="table_head">
 					<tr>
 						<th class="action"></th>

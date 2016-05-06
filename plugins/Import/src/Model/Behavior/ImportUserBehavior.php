@@ -58,23 +58,35 @@ class ImportUserBehavior extends Behavior {
 		return $val;
 	}
 
-	public function onImportPopulateDirectTableData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
-		if ($lookupModel == 'Areas') {
-			$order = [$lookupModel.'.area_level_id', $lookupModel.'.order'];
-		} else if ($lookupModel == 'AreaAdministratives') {
-			$order = [$lookupModel.'.area_administrative_level_id', $lookupModel.'.order'];
-		} else {
-			$order = [$lookupModel.'.order'];
+	public function onImportPopulateAreaAdministrativesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
+		if (!empty($data[$sheetName])) {
+			return true;
 		}
 
 		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-		$selectFields = ['name', $lookupColumn];
 		$modelData = $lookedUpTable->find('all')
-			->select($selectFields)
-			;
-		if ($lookedUpTable->hasField('order')) {
-			$modelData->order($order);
+								->select(['name', $lookupColumn])
+								->order($lookupModel.'.area_administrative_level_id', $lookupModel.'.order')
+								;
+
+		$translatedReadableCol = $this->_table->getExcelLabel($lookedUpTable, 'name');
+		$data[$sheetName][] = [$translatedReadableCol, $translatedCol];
+		if (!empty($modelData)) {
+			foreach($modelData->toArray() as $row) {
+				$data[$sheetName][] = [
+					$row->name,
+					$row->$lookupColumn
+				];
+			}
 		}
+	}
+
+	public function onImportPopulateGendersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
+		$lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+		$modelData = $lookedUpTable->find('all')
+								->select(['name', $lookupColumn])
+								->order([$lookupModel.'.order'])
+								;
 
 		$translatedReadableCol = $this->_table->getExcelLabel($lookedUpTable, 'name');
 		$data[$sheetName][] = [$translatedReadableCol, $translatedCol];

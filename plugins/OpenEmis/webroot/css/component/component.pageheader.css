@@ -1,7 +1,7 @@
-/* PAGE HEADER v.1.0.0 */
+/* PAGE HEADER v.1.0.5 */
 
 .page-header {
-    display: inline-block;
+    display: block;
     width: 100%;
     padding: 0;
     clear: both;
@@ -10,58 +10,71 @@
     background-color: #FFF;
     z-index: 10;
     height: 39px;
+    position: relative;
 }
 
 .page-header h2 {
-    float: left;
-    padding: 8px 12px 8px 0;
+    display: inline-block;
+    position: relative;
+    padding: 8px 24px 8px 0;
     margin: 0;
+    max-width: 350px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 
-/* buttons, toolbar and page-header alignments in chrome */
+/*==========  Non-Mobile First Method  ==========*/
 
-.chrome .page-header h2 {
-    padding: 10px 12px 10px 0;
-}
-
-/* buttons, toolbar and page-header alignments in safari */
-
-.safari .page-header {
-    margin-left: -1px;
-}
-
-.safari .toolbar {
-    margin-left: -1px;
-}
-
-@media (max-width: 800px) {
+/* Bigger Screen */
+@media only screen and (max-width : 1024px) {
     .page-header {
-        border-bottom: 0;
         height: auto;
-        border-bottom: 1px solid #DDD;
     }
     .page-header h2 {
-        width: 100%;
         float: none;
+        width: 100%;
         border-bottom: 1px solid #DDD;
+        max-width: 100% !important;
+        white-space: normal !important;
+        text-overflow: unset !important;
+        display: block;
+    }
+
+    .page-header h2:hover + .toolbar {
+        display: inline-block !important;
     }
 }
 
-@media (min-width: 800px) {
-    .page-header {
+/* Small Devices, Tablets */
+@media only screen and (max-width : 800px) {
+   .page-header {
+        border-bottom: 0;
+        height: auto !important;
         border-bottom: 1px solid #DDD;
+    }
+    .page-header h2,
+    .page-header h2:hover {
+        width: 100%;
+        float: none !important;
+        margin-bottom: -1px;
+        border-bottom: 1px solid #DDD;
+        display: block !important;
+    }
+    .page-header h2:hover + .toolbar {
+        display: inline-block !important;
     }
 }
 
-@media (min-width: 100px) and (max-width: 480px) {
+/* Extra Small Devices, Phones */ 
+@media only screen and (max-width : 480px) {
     .page-header h2 {
         width: 100%;
         float: none;
         border-bottom: 1px solid #DDD !important;
     }
 }
-
 
 /* RTL PAGE HEADER */
 
@@ -71,6 +84,6 @@
 }
 
 .rtl .page-header h2 {
-    padding: 8px 0 6px 12px;
+    padding: 8px 0 6px 24px;
     float: right;
 }
