@@ -36,7 +36,11 @@ class StudentAttendancesTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
 		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-		$this->belongsTo('StudentStatuses',	['className' => 'Student.StudentStatuses']);
+		$this->belongsTo('StudentStatuses',   ['className' => 'Student.StudentStatuses']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
+        
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->addBehavior('Excel', [
 			'excludes' => ['status', 'education_grade_id'],
@@ -236,6 +240,7 @@ class StudentAttendancesTable extends AppTable {
 		$this->ControllerAction->field('student_id');
 		$this->ControllerAction->field('institution_class_id', ['visible' => false]);
 		$this->ControllerAction->field('education_grade_id', ['visible' => false]);
+        $this->ControllerAction->field('academic_period_id', ['visible' => false]);
 		$this->ControllerAction->field('status', ['visible' => false]);
 		$this->ControllerAction->field('student_status_id', ['visible' => false]);
 	}
@@ -657,7 +662,7 @@ class StudentAttendancesTable extends AppTable {
 			$AccessControl = $this->AccessControl;
 			$classOptions = $Classes
 				->find('list')
-				->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl]) // restrict user to see own class if permission is set
+				->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl, 'controller' => $this->controller]) // restrict user to see own class if permission is set
 				->where([
 					$Classes->aliasField('institution_id') => $institutionId, 
 					$Classes->aliasField('academic_period_id') => $selectedPeriod
@@ -750,6 +755,8 @@ class StudentAttendancesTable extends AppTable {
 
 	public function indexAfterAction(Event $event, $data) {
 		$this->dataCount = $data->count();
+
+        $this->ControllerAction->field('student_id', ['visible' => true, 'type' => 'string']);
 	}
 
 	public function findWithAbsence(Query $query, array $options) {
