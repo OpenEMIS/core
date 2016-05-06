@@ -967,4 +967,4 @@ class RecordBehavior extends Behavior {
 		}
 		return '';
 	}
-}
+} 
