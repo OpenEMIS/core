@@ -293,4 +293,4 @@ class RenderFileBehavior extends RenderBehavior {
 
         return $file;
     }
-} 
+}
