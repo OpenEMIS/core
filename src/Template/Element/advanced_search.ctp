@@ -1,15 +1,15 @@
+<?= $this->Html->script('OpenEmis.../js/angular/ng.advanced-search.ctrl', ['block' => true]); ?>
+
 <?php
 use Cake\Utility\Inflector;
 ?>
-<!-- <div id="advanced-search" class="advanced-search-wrapper alert search-box <?= !$advancedSearch ? 'hidden' : '' ?>"> -->
-<div class="adv-search">
-	<button class="btn btn-xs close" type="button" alt="Collapse">×</button>
+
+<div class="adv-search" ng-show="showAdvSearch">
+	<button class="btn btn-xs close" type="button" alt="Collapse" ng-click="removeAdvSearch()">×</button>
 	<div class="adv-search-label">
 		<i class="fa fa-search-plus"></i>
 		<label><?= __('Advanced Search')?></label>
 	</div>
-<!-- 	<button class="btn btn-xs close" type="button" alt="Collapse">×</button>
-	<h4><?= __('Advanced Search')?></h4> -->
 
 	<?php
 		foreach ($filters as $key=>$filter) :
@@ -42,31 +42,16 @@ use Cake\Utility\Inflector;
 
 	<?php endforeach ?>
 
-	<hr>
-	<input type="hidden" name="AdvanceSearch[<?= $model ?>][isSearch]" value="" id="isSearch" />
-	<button class="btn btn-default btn-xs" href=""><?= __('Search') ?></button>
-	<button id="reset" class="btn btn-default btn-xs" name="reset" value="Reset"><?= __('Reset') ?></button>
+	<div class="search-action-btn">
+		<input type="hidden" name="AdvanceSearch[<?= $model ?>][isSearch]" value="" id="isSearch" />
+		<button class="btn btn-default btn-xs" href="" ng-click="submitSearch()"><?= __('Search') ?></button>
+		<button id="reset" class="btn btn-outline btn-xs" name="reset" value="Reset"><?= __('Reset') ?></button>
+	</div>
+
 </div>
 
-<script type="text/javascript">   
-	// var box = $('#advanced-search');
-	// var isSearch = $('#isSearch');
-
-	// $('button#search-toggle').on('click', function () {
-	// 	box.toggleClass('hidden');
-	// 	if (!isSearch.val()) {
-	// 		isSearch.val('true');
-	// 	}else {
-	// 		isSearch.val('');
-	// 	}
-	// });
-
-	// $(box.selector+' button.close').on('click', function (e) {
-	// 	e.preventDefault();
-	// 	$('button#search-toggle').trigger('click');
-	// });
-
-	// if (!box.hasClass('hidden')) {
-	// 	isSearch.val('true');
-	// }
-</script>
+<?php if($advancedSearch):?>
+<h4 ng-class="disableElement">
+	Search Results
+</h4>
+<?php endif;?>
