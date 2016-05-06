@@ -3,11 +3,20 @@ $this->Html->scriptStart(['block' => 'scriptBottom']);
 ?>
 $(function () {
 <?php
-$timepickerScript = "$('#%s').timepicker(%s);\n";
+$timepickerScript = "var timepicker%s = $('#%s').timepicker(%s);\n";
 if (isset($timepicker)) {
 	foreach ($timepicker as $key => $obj) {
-		echo sprintf($timepickerScript, $obj['id'], json_encode($obj['time_options']));
+		echo sprintf($timepickerScript, $key, $obj['id'], json_encode($obj['time_options']));
 	}
+	echo "$( document ).on('DOMMouseScroll mousewheel scroll', function(){\n";
+		echo "window.clearTimeout( t );\n";
+	        echo "t = window.setTimeout( function(){\n";
+				foreach ($timepicker as $key => $obj) {
+					echo sprintf("timepicker%s.timepicker('place');\n", $key);
+				}
+	        echo "});\n";
+	    echo "}\n";
+	echo ");\n";
 }
 /*
 foreach ($timepicker as $key => $obj) {

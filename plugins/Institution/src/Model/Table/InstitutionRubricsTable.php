@@ -18,28 +18,42 @@ class InstitutionRubricsTable extends AppTable {
 	private $_contain = ['EducationGrades.EducationProgrammes'];
 
 	public function initialize(array $config) {
-		$this->table('institution_site_quality_rubrics');
+		$this->table('institution_quality_rubrics');
 		parent::initialize($config);
 
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('RubricTemplates', ['className' => 'Rubric.RubricTemplates']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-		$this->belongsTo('Sections', ['className' => 'Institution.InstitutionSiteSections', 'foreignKey' => 'institution_site_section_id']);
-		$this->belongsTo('Classes', ['className' => 'Institution.InstitutionSiteClasses', 'foreignKey' => 'institution_site_class_id']);
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('Classes', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_class_id']);
+		$this->belongsTo('Subjects', ['className' => 'Institution.InstitutionSubjects', 'foreignKey' => 'institution_subject_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->hasMany('InstitutionRubricAnswers', ['className' => 'Institution.InstitutionRubricAnswers', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->addBehavior('Excel', ['excludes' => ['status', 'comment'], 'pages' => ['view']]);
+		$this->addBehavior('Report.RubricsReport');
 	}
 
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('status', ['visible' => ['index' => false, 'view' => true, 'edit' => false]]);
 		$this->ControllerAction->field('comment', ['visible' => false]);
-		$this->ControllerAction->field('institution_site_section_id', ['visible' => ['index' => false, 'view' => false, 'edit' => true]]);
+		$this->ControllerAction->field('institution_class_id', ['visible' => ['index' => false, 'view' => false, 'edit' => true]]);
 	}
 
 	public function afterAction(Event $event, ArrayObject $config) {
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	}
+
+	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
+		$templateId = $this->get($settings['id'])->rubric_template_id;
+		$sheets[] = [
+    		'name' => $this->alias(),
+			'table' => $this,
+			'query' => $this->find(),
+			'orientation' => 'portrait',
+			'templateId' => $templateId,
+    	];
+    	$event->stopPropagation();
 	}
 
 	public function onGetCustomRubricSectionsElement(Event $event, $action, $entity, $attr, $options=[]) {
@@ -74,27 +88,27 @@ class InstitutionRubricsTable extends AppTable {
 				$count = 1;
 				foreach ($data as $key => $obj) {
 					$rowData = [];
-					$sectionId = $obj->id;
-					$sectionName = $obj->name;
+					$rubricSectionId = $obj->id;
+					$rubricSectionName = $obj->name;
 					if ($this->AccessControl->check([$this->controller->name, 'RubricAnswers', 'edit'])) {
 						$editable = $this->AcademicPeriods->getEditable($entity->academic_period_id);
 						$status = $this->get($entity->id)->status;
 						if ($editable || $status == 2) {
-							$sectionName = $event->subject()->Html->link($obj->name, [
+							$rubricSectionName = $event->subject()->Html->link($obj->name, [
 								'plugin' => $this->controller->plugin,
 								'controller' => $this->controller->name,
 								'action' => 'RubricAnswers',
 								'edit',
 								$entity->id,
 								'status' => $status,
-								'section' => $sectionId
+								'section' => $rubricSectionId
 							]);
 						}
 					}
 					$criterias = $RubricCriterias
 						->find()
 						->where([
-							$RubricCriterias->aliasField('rubric_section_id') => $sectionId,
+							$RubricCriterias->aliasField('rubric_section_id') => $rubricSectionId,
 							$RubricCriterias->aliasField('type !=') => 1
 						])
 						->count();
@@ -104,8 +118,8 @@ class InstitutionRubricsTable extends AppTable {
 					$rubricAnswers = $this->InstitutionRubricAnswers
 						->find()
 						->where([
-							$this->InstitutionRubricAnswers->aliasField('institution_site_quality_rubric_id') => $entity->id,
-							$this->InstitutionRubricAnswers->aliasField('rubric_section_id') => $sectionId,
+							$this->InstitutionRubricAnswers->aliasField('institution_quality_rubric_id') => $entity->id,
+							$this->InstitutionRubricAnswers->aliasField('rubric_section_id') => $rubricSectionId,
 							$this->InstitutionRubricAnswers->aliasField('rubric_criteria_option_id IS NOT') => 0
 						]);
 					if ($status == 1) {
@@ -114,7 +128,7 @@ class InstitutionRubricsTable extends AppTable {
 					// End
 
 					$rowData[0] = $count;
-					$rowData[1] = $sectionName;
+					$rowData[1] = $rubricSectionName;
 					$rowData[2] = $noOfCriterias;
 
 					$tableCells[$key] = $rowData;
@@ -134,7 +148,7 @@ class InstitutionRubricsTable extends AppTable {
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
 		if ($field == 'education_grade_id') {
 			return __('Programme') . '<span class="divider"></span>' . __('Grade');
-		} else if ($field == 'institution_site_class_id') {
+		} else if ($field == 'institution_subject_id') {
 			return __('Class') . '<span class="divider"></span>' . __('Subject');
 		} else {
 			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
@@ -145,12 +159,12 @@ class InstitutionRubricsTable extends AppTable {
 		return $entity->education_grade->education_programme->name . '<span class="divider"></span>' . $entity->education_grade->name;
 	}
 
-	public function onGetInstitutionSiteClassId(Event $event, Entity $entity) {
-		return $entity->section->name . '<span class="divider"></span>' . $entity->class->name;
+	public function onGetInstitutionSubjectId(Event $event, Entity $entity) {
+		return $entity->class->name . '<span class="divider"></span>' . $entity->subject->name;
 	}
 
 	public function onGetLastModified(Event $event, Entity $entity) {
-		return $entity->modified;
+		return $this->formatDate($entity->modified);
 	}
 
 	public function onGetToBeCompletedBy(Event $event, Entity $entity) {
@@ -177,14 +191,14 @@ class InstitutionRubricsTable extends AppTable {
 
 		if (!$results->isEmpty()) {
 			$dateDisabled = $results->first()->date_disabled;
-			$value = $dateDisabled->format('d-m-Y');
+			$value = $this->formatDate($dateDisabled);
 		}
 
 		return $value;
 	}
 
 	public function onGetCompletedOn(Event $event, Entity $entity) {
-		return $entity->modified;
+		return $this->formatDateTime($entity->modified);
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -216,7 +230,7 @@ class InstitutionRubricsTable extends AppTable {
 		$this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $statusOptions[$selectedStatus]);
 
-		$this->_fieldOrder = ['rubric_template_id', 'academic_period_id', 'education_grade_id', 'institution_site_class_id', 'security_user_id'];
+		$this->_fieldOrder = ['rubric_template_id', 'academic_period_id', 'education_grade_id', 'institution_subject_id', 'staff_id'];
         if ($selectedStatus == 0) {	//New
 			$this->ControllerAction->field('to_be_completed_by');
 			$this->_fieldOrder[] = 'to_be_completed_by';
@@ -264,7 +278,7 @@ class InstitutionRubricsTable extends AppTable {
 				break;
 		}
 
-		$this->_fieldOrder = ['status', 'rubric_template_id', 'academic_period_id', 'education_grade_id', 'institution_site_section_id', 'institution_site_class_id', 'security_user_id', 'rubric_sections'];
+		$this->_fieldOrder = ['status', 'rubric_template_id', 'academic_period_id', 'education_grade_id', 'institution_class_id', 'institution_subject_id', 'staff_id', 'rubric_sections'];
 	}
 
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
@@ -305,7 +319,7 @@ class InstitutionRubricsTable extends AppTable {
 		// Update all New Rubric to Expired by Institution Id
 		$this->updateAll(['status' => -1],
 			[
-				'institution_site_id' => $institutionId,
+				'institution_id' => $institutionId,
 				'status' => 0
 			]
 		);
@@ -316,10 +330,10 @@ class InstitutionRubricsTable extends AppTable {
 		$todayDate = date("Y-m-d");
 
 		$RubricStatuses = $this->RubricTemplates->RubricStatuses;
-		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
-		$Classes = TableRegistry::get('Institution.InstitutionSiteClasses');
-		$SectionClasses = TableRegistry::get('Institution.InstitutionSiteSectionClasses');
-		$SectionGrades = TableRegistry::get('Institution.InstitutionSiteSectionGrades');
+		$Classes = TableRegistry::get('Institution.InstitutionClasses');
+		$Subjects = TableRegistry::get('Institution.InstitutionSubjects');
+		$ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+		$ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
 
 		foreach ($rubrics as $key => $rubric) {
 			$rubricStatuses = $RubricStatuses
@@ -346,82 +360,82 @@ class InstitutionRubricsTable extends AppTable {
 
 				foreach ($rubricStatus->academic_periods as $academicPeriod) {
 					$academicPeriodId = $academicPeriod->id;
-					$sectionResults = $Sections
+					$classResults = $Classes
 						->find()
 						->select([
-							$Sections->aliasField('id'),
-							$Sections->aliasField('name')
+							$Classes->aliasField('id'),
+							$Classes->aliasField('name')
 						])
 						->where([
-							$Sections->aliasField('institution_site_id') => $institutionId,
-							$Sections->aliasField('academic_period_id') => $academicPeriodId,
+							$Classes->aliasField('institution_id') => $institutionId,
+							$Classes->aliasField('academic_period_id') => $academicPeriodId,
 						])
 						->join([
-							'table' => $SectionGrades->_table,
-							'alias' => $SectionGrades->alias(),
+							'table' => $ClassGrades->_table,
+							'alias' => $ClassGrades->alias(),
 							'conditions' => [
-								$SectionGrades->aliasField('institution_site_section_id =') . $Sections->aliasField('id'),
-								$SectionGrades->aliasField('education_grade_id IN') => $gradeIds
+								$ClassGrades->aliasField('institution_class_id =') . $Classes->aliasField('id'),
+								$ClassGrades->aliasField('education_grade_id IN') => $gradeIds
 							]
 						])
 						->join([
-							'table' => $SectionClasses->_table,
-							'alias' => $SectionClasses->alias(),
+							'table' => $ClassSubjects->_table,
+							'alias' => $ClassSubjects->alias(),
 							'conditions' => [
-								$SectionClasses->aliasField('institution_site_section_id =') . $Sections->aliasField('id')
+								$ClassSubjects->aliasField('institution_class_id =') . $Classes->aliasField('id')
 							]
 						])
 						->join([
-							'table' => $Classes->_table,
-							'alias' => $Classes->alias(),
+							'table' => $Subjects->_table,
+							'alias' => $Subjects->alias(),
 							'conditions' => [
-								$Classes->aliasField('id =') . $SectionClasses->aliasField('institution_site_class_id'),
-								$Classes->aliasField('institution_site_id') => $institutionId,
-								$Classes->aliasField('academic_period_id') => $academicPeriodId
+								$Subjects->aliasField('id =') . $ClassSubjects->aliasField('institution_subject_id'),
+								$Subjects->aliasField('institution_id') => $institutionId,
+								$Subjects->aliasField('academic_period_id') => $academicPeriodId
 							]
 						])
 						->group([
-							$Sections->aliasField('id')
+							$Classes->aliasField('id')
 						])
-						->contain(['InstitutionSiteSectionGrades', 'InstitutionSiteClasses.InstitutionSiteClassStaff'])
+						->contain(['ClassGrades', 'InstitutionSubjects.SubjectStaff'])
 						->all();
 
-					if (!$sectionResults->isEmpty()) {
-						foreach ($sectionResults as $section) {
-							$sectionId = $section->id;
+					if (!$classResults->isEmpty()) {
+						foreach ($classResults as $class) {
+							$classId = $class->id;
 							$gradeId = 0;
-							foreach ($section->institution_site_section_grades as $grade) {
+							foreach ($class->class_grades as $grade) {
 								$gradeId = $grade->education_grade_id;
 							}
 
-							foreach ($section->institution_site_classes as $class) {
-								$classId = $class->id;
-								foreach ($class->institution_site_class_staff as $staff) {
-									$staffId = $staff->security_user_id;
+							foreach ($class->institution_subjects as $subject) {
+								$subjectId = $subject->id;
+								foreach ($subject->subject_staff as $staff) {
+									$staffId = $staff->staff_id;
 
 									$results = $this
 										->find('all')
 										->where([
-											$this->aliasField('institution_site_id') => $institutionId,
+											$this->aliasField('institution_id') => $institutionId,
 											$this->aliasField('rubric_template_id') => $templateId,
 											$this->aliasField('academic_period_id') => $academicPeriodId,
 											$this->aliasField('education_grade_id') => $gradeId,
-											$this->aliasField('institution_site_section_id') => $sectionId,
-											$this->aliasField('institution_site_class_id') => $classId,
-											$this->aliasField('security_user_id') => $staffId
+											$this->aliasField('institution_class_id') => $classId,
+											$this->aliasField('institution_subject_id') => $subjectId,
+											$this->aliasField('staff_id') => $staffId
 										])
 										->all();
 									
 									if ($results->isEmpty()) {
 										// Insert New Rubric if not found
 										$data = [
-											'institution_site_id' => $institutionId,
+											'institution_id' => $institutionId,
 											'rubric_template_id' => $templateId,
 											'academic_period_id' => $academicPeriodId,
 											'education_grade_id' => $gradeId,
-											'institution_site_section_id' => $sectionId,
-											'institution_site_class_id' => $classId,
-											'security_user_id' => $staffId
+											'institution_class_id' => $classId,
+											'institution_subject_id' => $subjectId,
+											'staff_id' => $staffId
 										];
 										$entity = $this->newEntity($data);
 
@@ -433,13 +447,13 @@ class InstitutionRubricsTable extends AppTable {
 										// Update Expired Rubric back to New
 										$this->updateAll(['status' => 0],
 											[
-												'institution_site_id' => $institutionId,
+												'institution_id' => $institutionId,
 												'rubric_template_id' => $templateId,
 												'academic_period_id' => $academicPeriodId,
 												'education_grade_id' => $gradeId,
-												'institution_site_section_id' => $sectionId,
-												'institution_site_class_id' => $classId,
-												'security_user_id' => $staffId,
+												'institution_class_id' => $classId,
+												'institution_subject_id' => $subjectId,
+												'staff_id' => $staffId,
 												'status' => -1
 											]
 										);
