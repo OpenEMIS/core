@@ -295,6 +295,12 @@ class AccessControlComponent extends Component {
 			} else {
 				$ignored = true;
 			}
+		} else {
+			$event = new Event('Controller.AccessControl.checkIgnoreActions', $this, [$controller, $action]);
+            $event = $this->controller->eventManager()->dispatch($event);
+            if ($event->result) {
+            	$ignored = $event->result;
+            }
 		}
 
 		return $ignored;
