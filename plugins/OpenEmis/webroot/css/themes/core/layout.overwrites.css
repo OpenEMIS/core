@@ -434,3 +434,17 @@ a,
 .institution-dashboard .highcharts-background {
     stroke-width: 1px;
 }
+
+
+
+/* Date/Time Picker inside Table */
+
+.table .input-group-addon {
+    position: absolute;
+    right: 0;
+    line-height: 0;
+    cursor: pointer;
+    font-size: 15px;
+    width: 52px;
+    height: 30px;
+}
