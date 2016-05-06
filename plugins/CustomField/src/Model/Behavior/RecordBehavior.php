@@ -309,15 +309,17 @@ class RecordBehavior extends Behavior {
 				$indexedErrors = $indexedErrors + $fileErrors;
 
 				if (!empty($indexedErrors)) {
-					if (array_key_exists('custom_field_values', $data[$model->alias()])) {
-						foreach ($data[$model->alias()]['custom_field_values'] as $key => $obj) {
-							$fieldId = $obj[$this->config('fieldKey')];
+					if (array_key_exists($model->alias(), $data)) {
+						if (array_key_exists('custom_field_values', $data[$model->alias()])) {
+							foreach ($data[$model->alias()]['custom_field_values'] as $key => $obj) {
+								$fieldId = $obj[$this->config('fieldKey')];
 
-							if (array_key_exists($fieldId, $indexedErrors)) {
-								foreach ($fields as $field) {
-									if (array_key_exists($field, $indexedErrors[$fieldId])) {
-										$error = $indexedErrors[$fieldId][$field];
-										$entity->custom_field_values[$key]->errors($field, $error, true);
+								if (array_key_exists($fieldId, $indexedErrors)) {
+									foreach ($fields as $field) {
+										if (array_key_exists($field, $indexedErrors[$fieldId])) {
+											$error = $indexedErrors[$fieldId][$field];
+											$entity->custom_field_values[$key]->errors($field, $error, true);
+										}
 									}
 								}
 							}
@@ -967,4 +969,4 @@ class RecordBehavior extends Behavior {
 		}
 		return '';
 	}
-} 
+}
