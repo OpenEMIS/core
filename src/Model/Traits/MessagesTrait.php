@@ -93,6 +93,13 @@ trait MessagesTrait {
 		'fileUpload' => [
 			'single' => '*File size should not be larger than 2MB.',
 			'multi' => '*Maximum 5 files are permitted on single upload. Each file size should not be larger than 2MB.',
+			'1' => 'The uploaded file exceeds the max filesize upload limits.',
+			'2' => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.',
+			'3' => 'The uploaded file was only partially uploaded.',
+			'4' => 'No file was uploaded.',
+			'6' => 'Missing a temporary folder. Please contact your network administrator for assistance.',
+			'7' => 'Failed to write file to disk. Please contact your network administrator for assistance.',
+			'8' => 'A PHP extension stopped the file upload. Please contact your network administrator for assistance.'
 		],
 		'InfrastructureTypes' => [
 			'noLevels' => 'No Available Levels',
@@ -1102,7 +1109,7 @@ trait MessagesTrait {
 				'between' => 'Time should be between %s and %s (inclusive)'
 			],
 			'file' => [
-				'maxSize' => 'File size should not be more than %s',
+				'maxSize' => 'File size should not be more than %s'
 			]
 		],
 		'Assessment' => [
