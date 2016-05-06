@@ -133,14 +133,15 @@ class WorkflowsTable extends AppTable {
 				} else {
 					$value = __('No');
 
+					$filters = [];
 					$filterModel = TableRegistry::get($filter);
-					$query = $filterModel->getList();
-
 					if (!empty($filterIds)) {
-						$query->where([$filterModel->aliasField('id IN ') => $filterIds]);
+						$filters = $filterModel
+							->getList()
+							->where([$filterModel->aliasField('id IN ') => $filterIds])
+							->toArray();
 					}
 
-					$filters = $query->toArray();
 					$entity->filters = $filters;
 				}
 
@@ -836,13 +837,15 @@ class WorkflowsTable extends AppTable {
 						$filterIds[$obj->id] = $obj->id;
 					}
 
-					$recordIds = $subject
-					->find('list', ['keyField' => 'id', 'valueField' => 'id'])
-					->where([
-						$subject->aliasField($filterKey . ' IN ') => $filterIds,
-						$subject->aliasField($statusKey . ' IN ') => $stepIds
-					])
-					->toArray();
+					if (!empty($filterIds) && !empty($stepIds)) {
+						$recordIds = $subject
+						->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+						->where([
+							$subject->aliasField($filterKey . ' IN ') => $filterIds,
+							$subject->aliasField($statusKey . ' IN ') => $stepIds
+						])
+						->toArray();
+					}
 					
 					$Workflows = TableRegistry::get('Workflow.Workflows');
 					$defaultWorkflowId = $this->WorkflowsFilters
@@ -857,30 +860,34 @@ class WorkflowsTable extends AppTable {
 						])
 						->toArray();
 
-					$openStepId = $this->WorkflowSteps
-						->find()
-						->where([
-							$this->WorkflowSteps->aliasField('workflow_id') => $defaultWorkflowId,
-							$this->WorkflowSteps->aliasField('stage') => self::OPEN
-						])
-						->first()
-						->id;
+					if (!empty($defaultWorkflowId)) {
+						$openStepId = $this->WorkflowSteps
+							->find()
+							->where([
+								$this->WorkflowSteps->aliasField('workflow_id IN ') => $defaultWorkflowId,
+								$this->WorkflowSteps->aliasField('stage') => self::OPEN
+							])
+							->first()
+							->id;
+					}
 				} else {
 					foreach ($entity->filters as $key => $obj) {
 						$filterIds[$obj->id] = $obj->id;
 					}
 
-					$recordIds = $subject
-						->find('list', ['keyField' => 'id', 'valueField' => 'id'])
-						->where([
-							$subject->aliasField($filterKey . ' IN ') => $filterIds,
-							$subject->aliasField($statusKey . ' NOT IN ') => $stepIds
-						])
-						->toArray();
+					if (!empty($filterIds) && !empty($stepIds)) {
+						$recordIds = $subject
+							->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+							->where([
+								$subject->aliasField($filterKey . ' IN ') => $filterIds,
+								$subject->aliasField($statusKey . ' NOT IN ') => $stepIds
+							])
+							->toArray();
+					}
 				}
 			}
 
-			if (!empty($recordIds)) {
+			if (!is_null($openStepId) && !empty($recordIds)) {
 				$subject->updateAll(
 					[$statusKey => $openStepId],
 					['id IN ' => $recordIds]
