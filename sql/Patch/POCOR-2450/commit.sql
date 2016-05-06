@@ -12,8 +12,7 @@ INSERT INTO `custom_field_types` (`id`, `code`, `name`, `value`, `description`, 
 CREATE TABLE `z_2450_custom_modules` LIKE `custom_modules`;
 INSERT INTO `z_2450_custom_modules` SELECT * FROM `custom_modules`;
 
-UPDATE `custom_modules` SET `supported_field_types`='TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,TABLE,DATE,TIME,STUDENT_LIST,COORDINATES' WHERE `code`='Institution';
-UPDATE `custom_modules` SET `supported_field_types`='TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,TABLE,DATE,TIME,COORDINATES' WHERE `code`='Student';
-UPDATE `custom_modules` SET `supported_field_types`='TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,TABLE,DATE,TIME,COORDINATES' WHERE `code`='Staff';
-UPDATE `custom_modules` SET `supported_field_types`='TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,TABLE,DATE,TIME,COORDINATES' WHERE `code`='Infrastructure';
-UPDATE `custom_modules` SET `supported_field_types`='TEXT,NUMBER,DROPDOWN,COORDINATES' WHERE `code`='Institution > Students';
+UPDATE `custom_modules` SET `supported_field_types` = CONCAT(`supported_field_types`, ',COORDINATES') WHERE `model` = 'Institution.Institutions';
+UPDATE `custom_modules` SET `supported_field_types` = CONCAT(`supported_field_types`, ',COORDINATES') WHERE `model` = 'Student.Students';
+UPDATE `custom_modules` SET `supported_field_types` = CONCAT(`supported_field_types`, ',COORDINATES') WHERE `model` = 'Staff.Staff';
+UPDATE `custom_modules` SET `supported_field_types` = CONCAT(`supported_field_types`, ',COORDINATES') WHERE `model` = 'Institution.InstitutionInfrastructures';
