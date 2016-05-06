@@ -1,5 +1,5 @@
 /* 
-Core Overwrites: v.1.0.4
+Core Overwrites: v.1.0.5
 */
 
 
@@ -405,4 +405,11 @@ a,
 
 .rtl .ag-fresh .ag-header-cell-menu-button {
     float: left;
+}
+
+
+/* Advanced Search alignment */
+
+.adv-search {
+    margin: 14px 0 !important;
 }
