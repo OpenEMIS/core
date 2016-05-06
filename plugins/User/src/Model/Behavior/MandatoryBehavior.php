@@ -161,6 +161,16 @@ class MandatoryBehavior extends Behavior {
 									$incompleteField = true;
 								}
 							}
+
+                            if (!$incompleteField) {
+                                // done for controller v4 for add saving by association 'security_user_id' is pre-set and replaced by cake later with the correct id
+                                if (in_array($key, ['SpecialNeeds'])) {
+                                    foreach ($data[$this->_table->alias()][$tableName] as $tkey => $tvalue) {
+                                        $data[$this->_table->alias()][$tableName][$tkey]['security_user_id'] = '0';
+                                    }
+                                }
+                            }
+
 							if ($incompleteField) {
 								unset($data[$this->_table->alias()][$tableName]);
 							}

@@ -1,25 +1,18 @@
 <?php
 namespace User\Model\Table;
 
-use ArrayObject;
-use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use App\Model\Table\ControllerActionTable;
 
-class UserLanguagesTable extends AppTable {
+class UserLanguagesTable extends ControllerActionTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 
+        $this->behaviors()->get('ControllerAction')->config('actions.search', false);
+
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('Languages', ['className' => 'Languages']);
-	}
-
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$newEvent = [];
-		$newEvent['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-		$events = array_merge($events, $newEvent);
-		return $events;
 	}
 
 	public function beforeAction($event) {
@@ -83,11 +76,5 @@ class UserLanguagesTable extends AppTable {
 
 	public function afterAction(Event $event, $data) {
 		$this->setupTabElements();
-	}
-
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		$toolbarArray = $toolbarButtons->getArrayCopy();
-		unset($toolbarArray['search']);
-		$toolbarButtons->exchangeArray($toolbarArray);
 	}
 }
