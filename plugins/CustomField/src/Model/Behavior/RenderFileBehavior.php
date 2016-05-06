@@ -136,6 +136,8 @@ class RenderFileBehavior extends RenderBehavior {
         $model = $this->_table;
         $session = $model->request->session();
         $sessionKey = $model->registryAlias().'.parseFile.'.$fieldId;
+        $sessionErrorKey = $model->registryAlias().'.parseFileError.'.$fieldId;
+        $session->delete($sessionErrorKey);
 
         if (!is_array($file)) {
             if ($session->check($sessionKey)) {
@@ -148,8 +150,13 @@ class RenderFileBehavior extends RenderBehavior {
                     $parseFileData['file'] = $file;
                     $session->write($sessionKey, $parseFileData);
                 } else {
-                    // To-do: File size too big
+                    // File size too big
                     $session->delete($sessionKey);
+                    $session->write($sessionErrorKey, [
+                        'file' => [
+                            'ruleCustomFile' => $model->getMessage('CustomField.file.maxSize', ['sprintf' => $this->config('size')])
+                        ]
+                    ]);
                 }
             }
         }
