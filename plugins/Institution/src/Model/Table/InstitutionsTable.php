@@ -255,7 +255,8 @@ class InstitutionsTable extends AppTable  {
 				$entity->security_group_id = $securityGroup->id;
 				if (!$this->save($entity)) {
 					return false;
-				} else {
+				} /*else { //remove the automation process of assigning user to institution admin when user created the institution.
+					
 					$UsersTable = TableRegistry::get('Security.Users');
 					if (!$UsersTable->isAdmin($entity->created_user_id)) {
 						$SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
@@ -269,7 +270,7 @@ class InstitutionsTable extends AppTable  {
 							]);
 						$SecurityGroupUsers->save($newEntity);
 					}
-					
+					*/					
 				}
 			} else {
 				return false;
