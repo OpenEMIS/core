@@ -182,17 +182,21 @@ class RestController extends AppController
 	}
 
 	public function auth() {
+		$json = [];
         if ($this->RestVersion == '2.0')
         {
             if (isset($this->request->query['payload'])) {
                 if (!$this->Cookie->check('Restful.Call')) 
                 {
-                    $redirectUrl = $this->ControllerAction->url('token');
+                    $redirectUrl = $this->ControllerAction->url('auth');
+                    $redirectUrl['version'] = '2.0';
                     if (isset($redirectUrl['payload'])) {
                         unset($redirectUrl['payload']);
                     }
-
+                    $this->redirect($redirectUrl);
                 }
+
+                $url = $this->Cookie->read('Restful.CallBackURL');
                 $token = $this->request->query('payload');
                 $json = [
                     'success' => true,
@@ -200,10 +204,16 @@ class RestController extends AppController
                         'token' => $token
                     ]
                 ];
-                $this->response->body(json_encode($json, JSON_UNESCAPED_UNICODE));
-                $this->response->type('json');
 
-                return $this->response;
+                // Doesn't work on localhost
+                try{
+                	$http = new Client();
+	                $http->post($url, [
+					  'token' => $token
+					]);
+                } catch (\Exception $e) {
+                	Log::write('error', $e->getMessage());
+                }
             } else {
                 $this->Cookie->configKey('Restful', 'path', '/');
                 $this->Cookie->configKey('Restful', [
