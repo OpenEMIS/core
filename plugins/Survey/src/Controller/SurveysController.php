@@ -55,12 +55,14 @@ class SurveysController extends AppController
 	}
 
 	public function Rules() {
-		$this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Survey.SurveyRules']);
-		// if ($this->params['action'] == 'index') {
-		// 	pr('here');
-		// 	// $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionPositions']);
-		// }
-		// $this->set('ngController', 'SurveyRulesCtrl as SurveyRulesController');
+		$pass = isset($this->request->pass[0]) ? $this->request->pass[0] : 'index';
+		
+		if ($pass == 'index') {
+			$this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Survey.SurveyRules']);
+		} else {
+			$this->set('ngController', 'SurveyRulesCtrl as SurveyRulesController');
+		}
+		
 	}
 
 	private function attachAngularModules() {
