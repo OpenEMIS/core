@@ -115,9 +115,9 @@ class InstitutionInfrastructuresTable extends AppTable {
 			$query->where([$this->aliasField('parent_id IS NULL')]);
 		}
 
-		list($levelOptions, $selectedLevel) = array_values($this->getLevelOptions());
+		list($levelOptions, $selectedLevel) = array_values($this->getLevelOptions(['withAll' => true]));
 		$this->controller->set(compact('levelOptions', 'selectedLevel'));
-		if (!is_null($selectedLevel)) {
+		if ($selectedLevel != '-1') {
 			$query->where([$this->aliasField('infrastructure_level_id') => $selectedLevel]);
 		}
 	}
@@ -388,7 +388,9 @@ class InstitutionInfrastructuresTable extends AppTable {
 		return $parentPath;
 	}
 
-	public function getLevelOptions() {
+	public function getLevelOptions($params=[]) {
+		$withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
+
 		$parentId = $this->request->query('parent');
 		$levelQuery = $this->Levels->find('list');
 		if (is_null($parentId)) {
@@ -398,6 +400,9 @@ class InstitutionInfrastructuresTable extends AppTable {
 			$levelQuery->where([$this->Levels->aliasField('parent_id') => $levelId]);
 		}
 		$levelOptions = $levelQuery->toArray();
+		if($withAll) {
+			$levelOptions = ['-1' => __('All Levels')] + $levelOptions;
+		}
 		$selectedLevel = $this->queryString('level', $levelOptions);
 		$this->advancedSelectOptions($levelOptions, $selectedLevel);
 
