@@ -422,14 +422,11 @@ class StudentPromotionTable extends AppTable {
 				}
 				$options[$statusesCode['REPEATED']] = __($studentStatusesList[$statusesCode['REPEATED']]);
 			}
-<<<<<<< HEAD
-			$options[$statusesCode['REPEATED']] = $studentStatusesList[$statusesCode['REPEATED']];
 
 			foreach ($options as $key => $value) {
 				$options[$key] = __($value);
 			}
-=======
->>>>>>> fe4ad9bb870f240ba147ce6aec1faf6ad1ac0730
+
 			$attr['options'] = $options;
 			$attr['onChangeReload'] = 'changeStudentStatus';
 			return $attr;
