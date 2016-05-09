@@ -185,9 +185,11 @@ class InstitutionGradesTable extends AppTable {
 ******************************************************************************************************************/
 	public function editAfterAction(Event $event, Entity $entity) {
 		$level = $entity->education_grade->education_programme->education_cycle->education_level->system_level_name;
-		$programme = $entity->education_grade->education_programme->cycle_programme_name;
+		$programme = $entity->education_grade->education_programme;
 		$this->fields['level']['attr']['value'] = $level;
-		$this->fields['programme']['attr']['value'] = $programme;
+
+		$this->fields['programme']['attr']['value'] = $programme->cycle_programme_name;
+		$this->fields['programme']['value'] = $programme->id;
 		$this->fields['education_grade_id']['attr']['value'] = $entity->education_grade->name;
 
 		$Institution = TableRegistry::get('Institution.Institutions');
