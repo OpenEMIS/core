@@ -71,6 +71,7 @@ class SecurityRolesTable extends AppTable {
 		$this->controller->set('selectedAction', $selectedAction);
 
 		$this->ControllerAction->field('security_group_id', ['viewType' => $selectedAction]);
+		$this->ControllerAction->field('code', ['visible' => false]);
 
 		$action = $this->ControllerAction->action();
 		if ($action == 'index' && $selectedAction == 'user') {
@@ -137,7 +138,8 @@ class SecurityRolesTable extends AppTable {
 				$SecurityGroupsTable = $this->SecurityGroups;
 				$InstitutionsTable = TableRegistry::get('Institution.Institutions');
 				$institutionSecurityGroup = $InstitutionsTable->find('list');
-				$groupOptions = $SecurityGroupsTable->find('list')->where([
+				$groupOptions = $SecurityGroupsTable->find('list')
+					->where([
 						'NOT EXISTS ('.$institutionSecurityGroup->sql().' WHERE '.$InstitutionsTable->aliasField('security_group_id').' = '.$SecurityGroupsTable->aliasField('id').')'
 					])
 					->toArray();
@@ -185,8 +187,8 @@ class SecurityRolesTable extends AppTable {
 				$query->andWhere([$this->aliasField('order').' > ' => $userRole['security_role']['order']]);
 			}		
 		} else {
-			$query
-				->where([$this->aliasField('security_group_id') => $selectedGroup]);
+			$conditions = [$this->aliasField('security_group_id') => $selectedGroup];
+
 			if (!is_null($userId)) {
 				$userRole = $GroupRoles
 				->find()
@@ -197,8 +199,23 @@ class SecurityRolesTable extends AppTable {
 					'SecurityRoles.security_group_id' => $selectedGroup
 				])
 				->first();
-				$query->andWhere([$this->aliasField('order').' > ' => $userRole['security_role']['order']]);
+
+				$conditions = [
+					'OR' => [
+						// show roles that are lower privileges than current user role in selected group
+						[
+							$this->aliasField('security_group_id') => $selectedGroup,
+							$this->aliasField('order').' > ' => $userRole['security_role']['order'],
+						],
+						// also show roles that are created by current user
+						[
+							$this->aliasField('security_group_id') => $selectedGroup,
+							$this->aliasField('created_user_id') => $userId
+						]
+					]
+				];
 			}
+			$query->where($conditions);
 		}
 	}
 
@@ -258,12 +275,46 @@ class SecurityRolesTable extends AppTable {
 	public function getSystemRolesList() {
 		$systemRoleGroupIds = [-1,0];
 		return $this->find('list')
+			->find('visible')
 			->where([
 				$this->aliasField('security_group_id').' IN ' => $systemRoleGroupIds
 			])
 			->order([$this->aliasField('order')])
 			->hydrate(false)
 			->toArray();
+	}
+
+	public function getRolesOptions($userId=null, $currentRoles=[]) {
+		$roleOptions = [];
+		$systemGroupIds = [-1, 0];
+
+		if (!is_null($userId)) {
+			foreach ($currentRoles as $role) {
+				$roleInfo = $this->get($role);
+				$query = $this->find('list');
+				if (in_array($roleInfo->security_group_id, $systemGroupIds)) {
+					// For system roles
+					$query = $query->where([$this->aliasField('security_group_id').' IN ' => $systemGroupIds]);
+				} else {
+					// For user roles
+					$query = $query->where([$this->aliasField('security_group_id') => $roleInfo->security_group_id]);
+				}
+
+				$list = $query
+					->where([$this->aliasField('order').' > ' => $roleInfo->order])
+					->order([$this->aliasField('order')])
+					->toArray();
+
+				$roleOptions = $roleOptions + $list;
+			}
+		} else {
+			$roleOptions = $this->find('list')
+				->where([$this->aliasField('security_group_id').' IN ' => $systemGroupIds])
+				->order([$this->aliasField('order')])
+				->toArray();
+		}
+
+		return $roleOptions;
 	}
 
 	// this function will return all roles (system roles & user roles) that has lower
@@ -382,5 +433,14 @@ class SecurityRolesTable extends AppTable {
 				$this->aliasField('name') => 'Group Administrator'
 			])
 			->first();
+	}
+
+	public function getHomeroomRoleId() {
+		$homeroomData = $this->find()
+			->select([$this->primaryKey()])
+			->where([$this->aliasField('code') => 'HOMEROOM_TEACHER'])
+			->first();
+
+		return (!empty($homeroomData))? $homeroomData->id: null;
 	}
 }

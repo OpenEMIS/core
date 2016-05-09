@@ -21,6 +21,9 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.onGetFormButtons'			=> 'onGetFormButtons', // called to add/remove form buttons
 		// public function onGetFormButtons(Event $event, ArrayObject $buttons) {}
 
+		'ControllerAction.Model.onUpdateDefaultActions'		=> 'onUpdateDefaultActions', // called to update default actions
+		// public function onUpdateDefaultActions(Event $event) {}
+
 		'ControllerAction.Model.beforeAction'				=> 'beforeAction', // called before start of any actions
 		// public function beforeAction(Event $event) {}
 
@@ -101,6 +104,9 @@ trait ControllerActionTrait {
 
 		'ControllerAction.Model.edit.beforePatch'			=> 'editBeforePatch',
 		// public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {}
+
+		'ControllerAction.Model.edit.afterPatch'			=> 'editAfterPatch',
+		// public function editAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {}
 
 		'ControllerAction.Model.edit.beforeSave'			=> 'editBeforeSave', // you can overwrite this function to implement your own saving logic
 		// public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) { return function() {}; }

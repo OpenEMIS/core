@@ -2,23 +2,124 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use Cake\I18n\Time;
+use Cake\Utility\Text;
+use App\Model\Table\AppTable;
 
 class InstitutionClassStudentsTable extends AppTable {
+	
+	// For reports
+	private $assessmentItemResults = [];
+
 	public function initialize(array $config) {
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
-		$this->belongsTo('InstitutionSections', ['className' => 'Institution.InstitutionSections']);
+		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+		$this->belongsTo('StudentStatuses',	['className' => 'Student.StudentStatuses']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+		$this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
+
+		$this->hasMany('SubjectStudents', [
+			'className' => 'Institution.InstitutionSubjectStudents',
+			'foreignKey' => [
+				'institution_class_id',
+				'student_id'
+			],
+			'bindingKey' => [
+				'institution_class_id',
+				'student_id'
+			]
+		]);
+
 	}
 
-	public function getMaleCountBySubject($classId) {
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+
+		$fields[] = [
+			'key' => 'Institutions.code',
+			'field' => 'code',
+			'type' => 'string',
+			'label' => '',
+		];
+
+		$fields[] = [
+			'key' => 'InstitutionClasses.institution_id',
+			'field' => 'institution_id',
+			'type' => 'string',
+			'label' => '',
+		];
+
+    	$sheet = $settings['sheet'];
+    	$assessments = $sheet['assessments'];
+    	foreach ($assessments as $assessment) {
+    		$assessmentName = TableRegistry::get('Assessment.Assessments')->get($assessment)->name;
+    		$assessmentSubjects = TableRegistry::get('Assessment.AssessmentItems')->getAssessmentItemSubjects($assessment);
+
+    		foreach($assessmentSubjects as $subject) {
+    			$label = __($assessmentName).' - '.__($subject['name']);
+    			if ($subject['type'] == 'MARKS') {
+    				$label = $label.' ('.$subject['max'].')';
+    			}
+    			$fields[] = [
+	    			'key' => $subject['id'],
+	    			'field' => 'assessment_item',
+	    			'type' => 'assessment',
+					'label' => $label,
+					'institutionId' => $sheet['institutionId'],
+					'assessmentId' => $assessment,
+					'academicPeriodId' => $sheet['academicPeriodId'],
+					'result_type' => $subject['type']
+	    		];
+    		}
+    	}
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+    	if ($entity->isNew()) {
+    		$entity->id = Text::uuid();
+    	}
+	}
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
+    	$query
+    		->contain(['InstitutionClasses.Institutions'])
+    		->select(['code' => 'Institutions.code', 'institution_id' => 'Institutions.name']);
+    }
+
+    public function onExcelRenderAssessment(Event $event, Entity $entity, array $attr) {
+    	$studentId = $entity->student_id;
+    	$assessmentItemId = $attr['key'];
+    	$academicPeriodId = $attr['academicPeriodId'];
+    	$institutionId = $attr['institutionId'];
+    	$resultType = $attr['result_type'];
+    	$assessmentItemResults = $this->assessmentItemResults;
+    	if (!(isset($assessmentItemResults[$institutionId][$studentId][$assessmentItemId]))) {
+    		$AssessmentItemResultsTable = TableRegistry::get('Assessment.AssessmentItemResults');
+    		$this->assessmentItemResults = $AssessmentItemResultsTable->getAssessmentItemResults($institutionId, $academicPeriodId);
+    		$assessmentItemResults = $this->assessmentItemResults;
+    	}
+    	if (isset($assessmentItemResults[$institutionId][$studentId][$assessmentItemId])) {
+    		$result = $assessmentItemResults[$institutionId][$studentId][$assessmentItemId];
+    		switch($resultType) {
+    			case 'MARKS':
+    				return '='.$result['marks'];
+    				break;
+    			case 'GRADES':
+					return $result['grade_code'];
+    				break;
+    		}
+    	}
+    	return '';
+    }
+
+	public function getMaleCountByClass($classId) {
 		$gender_id = 1; // male
 		$count = $this
 			->find()
@@ -30,7 +131,7 @@ class InstitutionClassStudentsTable extends AppTable {
 		return $count;
 	}
 
-	public function getFemaleCountBySubject($classId) {
+	public function getFemaleCountByClass($classId) {
 		$gender_id = 2; // female
 		$count = $this
 			->find()
@@ -42,47 +143,76 @@ class InstitutionClassStudentsTable extends AppTable {
 		return $count;
 	}
 
-	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
-		//PHPOE-2338 - implement afterDelete to delete records in AssessmentItemResultsTable
-		// find related sections and grades
-		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-		$institutionClassData = $InstitutionClasses->find()
-			->contain('InstitutionSections.InstitutionSectionGrades')
-			->where([$InstitutionClasses->aliasField($InstitutionClasses->primaryKey()) => $entity->institution_class_id])
+	public function autoInsertClassStudent($data) {
+		$studentId = $data['student_id'];
+		$gradeId = $data['education_grade_id'];
+		$classId = $data['institution_class_id'];
+		$data['subject_students'] = $this->_setSubjectStudentData($data);
+        $data['id'] = Text::uuid();
+		$entity = $this->newEntity($data);
+
+		$existingData = $this
+			->find()
+			->where(
+				[
+					$this->aliasField('student_id') => $studentId,
+					$this->aliasField('education_grade_id') => $gradeId,
+					$this->aliasField('institution_class_id') => $classId
+				]
+			)
 			->first()
-			;
-		$gradeArray = [];
-		if (!empty($institutionClassData->institution_sections)) {
-			foreach ($institutionClassData->institution_sections as $skey => $svalue) {
-				if (!empty($svalue->institution_section_grades)) {
-					foreach ($svalue->institution_section_grades as $gkey => $gvalue) {
-						$gradeArray[] = $gvalue->education_grade_id;
-					}
-				}
-			}
-		}
-		$gradeArray = array_unique($gradeArray);
+		;
 
-		$AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
-		// conditions: 'assessment_item_results' removing from student_id, institution_id, academic_period_id, assessment_item_id->education_subject_id; 
-		$deleteAssessmentItemResults = $AssessmentItemResults->find()
+		if (!empty($existingData)) {
+			$entity->id = $existingData->id;
+		}
+		$this->save($entity);
+	}
+
+	private function _setSubjectStudentData($data) {
+        $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+
+        $classSubjectsData = $ClassSubjects->find()
+            ->where([
+                $ClassSubjects->aliasField('institution_class_id') => $data['institution_class_id']
+            ])
+            ->select([$ClassSubjects->aliasField('institution_subject_id')])
+            ->toArray()
+            ;
+
+		$subjectStudents = [];
+		foreach ($classSubjectsData as $classSubjects) {
+			$subjectStudents[] = [
+				'status' => 1,
+				'student_id' => $data['student_id'],	
+				'institution_subject_id' => $classSubjects['institution_subject_id'],
+				'institution_class_id' => $data['institution_class_id'],
+                'institution_id' => $data['institution_id'],
+                'academic_period_id' => $data['academic_period_id'],
+                'education_subject_id' => $classSubjects['institution_subject_id'],
+			];
+		}
+
+		return $subjectStudents;
+	}
+
+	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+		// PHPOE-2338 - implement afterDelete in InstitutionClassStudentsTable.php to delete from InstitutionSubjectStudentsTable
+		$this->_autoDeleteSubjectStudent($entity);
+	}
+
+	private function _autoDeleteSubjectStudent(Entity $entity) {
+		$InstitutionSubjectStudentsTable = TableRegistry::get('Institution.InstitutionSubjectStudents');
+		$deleteSubjectStudent = $InstitutionSubjectStudentsTable->find()
 			->where([
-				$AssessmentItemResults->aliasField('student_id') => $entity->student_id, 
-				$AssessmentItemResults->aliasField('institution_id') => $institutionClassData->institution_id, 
-				$AssessmentItemResults->aliasField('academic_period_id') => $institutionClassData->academic_period_id, 
-				
+				$InstitutionSubjectStudentsTable->aliasField('student_id') => $entity->student_id,
+				$InstitutionSubjectStudentsTable->aliasField('institution_class_id') => $entity->institution_class_id
 			])
-			;
+			->toArray();
 
-		if (!empty($gradeArray)) {
-			$deleteAssessmentItemResults->matching('AssessmentItems.Assessments', function ($q) use ($gradeArray) {
-			    return $q->where(['Assessments.education_grade_id IN ' => $gradeArray]);
-			})
-			;
-		}
-
-		foreach ($deleteAssessmentItemResults as $key => $value) {
-			$AssessmentItemResults->delete($value);
+		// have to delete one by one so that InstitutionSubjectStudents->afterDelete() will be triggered
+		foreach ($deleteSubjectStudent as $key => $value) {
+			$InstitutionSubjectStudentsTable->delete($value);
 		}
 	}
 

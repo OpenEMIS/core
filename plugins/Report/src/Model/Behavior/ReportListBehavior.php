@@ -29,7 +29,7 @@ class ReportListBehavior extends Behavior {
 	public function afterAction(Event $event, $config) {
 		if ($this->_table->action == 'index') {
 			$this->_table->controller->set('ControllerAction', $config);
-			return $this->_table->controller->render('Report.index');
+			$this->_table->ControllerAction->renderView('/Reports/index');
 		}
 	}
 
@@ -92,7 +92,7 @@ class ReportListBehavior extends Behavior {
 		return $process;
 	}
 
-	public function onExcelGenerate(Event $event, $writer, $settings) {
+	public function onExcelGenerate(Event $event, $settings) {
 		$requestData = json_decode($settings['process']['params']);
 		$locale = $requestData->locale;
 		I18n::locale($locale);
