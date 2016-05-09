@@ -181,7 +181,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 		$this->field('staff_id', ['type' => 'select', 'options' => [], 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true], 'attr' => ['label' => $this->getMessage($this->aliasField('staff_id'))]]);
 
 		$this->setFieldOrder([
-			'name', 'staff_id', 'male_students', 'female_students', 'subjects',
+			'name', 'staff_id', 'total_students', 'subjects',
 		]);
 
 	}
@@ -697,6 +697,28 @@ class InstitutionClassesTable extends ControllerActionTable {
 				return $this->getMessage($this->aliasField('noTeacherAssigned'));
 			}			
 		}		
+	}
+
+	public function onGetTotalStudents(Event $event, Entity $entity) {
+		if ($entity->has('id')) {
+			$table = TableRegistry::get('Institution.InstitutionClassStudents');
+	        $count = $table
+	                    ->find()
+	                    ->where([$table->aliasField('institution_class_id') => $entity->id])
+	                    ->count();
+	        return $count;	
+		}
+	}
+
+	public function onGetSubjects(Event $event, Entity $entity) {
+		if ($entity->has('id')) {
+			$table = TableRegistry::get('Institution.InstitutionClassSubjects');
+            $count = $table
+                    ->find()
+                    ->where([$table->aliasField('institution_class_id') => $entity->id])
+                    ->count();
+	        return $count;	
+		}
 	}
 
 
