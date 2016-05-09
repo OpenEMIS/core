@@ -76,7 +76,8 @@ class DirectoriesController extends AppController {
 
 		$this->loadComponent('Training.Training');
 		$this->loadComponent('User.Image');
-
+		$this->attachAngularModules();
+		
 		$this->set('contentHeader', 'Directories');
 	}
 
@@ -209,6 +210,17 @@ class DirectoriesController extends AppController {
 				$event->stopPropagation();
 				return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'index']);
 			}
+		}
+	}
+
+	private function attachAngularModules() {
+		$action = $this->request->action;
+		switch ($action) {
+			case 'index':
+				$this->Angular->addModules([
+					'advanced.search.ctrl'
+				]);
+			break;
 		}
 	}
 
