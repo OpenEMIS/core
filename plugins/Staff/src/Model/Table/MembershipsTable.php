@@ -1,19 +1,17 @@
 <?php
 namespace Staff\Model\Table;
 
-use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use App\Model\Table\ControllerActionTable;
 
-class MembershipsTable extends AppTable {
+class MembershipsTable extends ControllerActionTable {
 	public function initialize(array $config) {
 		$this->table('staff_memberships');
 		parent::initialize($config);
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 	}
-
-	public function beforeAction() {}
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
@@ -34,6 +32,7 @@ class MembershipsTable extends AppTable {
 	}
 
 	public function afterAction(Event $event) {
+		$this->ControllerAction->setFieldOrder(['membership', 'issue_date', 'expiry_date', 'comment']);
 		$this->setupTabElements();
 	}
 }
