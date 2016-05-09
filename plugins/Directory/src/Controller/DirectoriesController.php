@@ -63,8 +63,6 @@ class DirectoriesController extends AppController {
 			'StaffLeaves'			=> ['className' => 'Staff.Leaves'],
 			'StaffBehaviours'		=> ['className' => 'Staff.StaffBehaviours', 'actions' => ['index', 'view']],
 			'StaffExtracurriculars'	=> ['className' => 'Staff.Extracurriculars'],
-			'StaffMemberships'		=> ['className' => 'Staff.Memberships'],
-			'StaffLicenses'			=> ['className' => 'Staff.Licenses'],
 			'StaffTrainings'		=> ['className' => 'Staff.StaffTrainings'],
 			'TrainingResults'		=> ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
 			'TrainingNeeds'			=> ['className' => 'Staff.TrainingNeeds'],
@@ -76,7 +74,8 @@ class DirectoriesController extends AppController {
 
 		$this->loadComponent('Training.Training');
 		$this->loadComponent('User.Image');
-
+		$this->attachAngularModules();
+		
 		$this->set('contentHeader', 'Directories');
 	}
 
@@ -87,6 +86,8 @@ class DirectoriesController extends AppController {
 	public function StaffSubjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSubjects']); }
 	public function StudentClasses() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']); }
 	public function StudentSubjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']); }
+	public function StaffMemberships() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Memberships']); }
+	public function StaffLicenses() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Licenses']); }
 	// End
 
 	public function beforeFilter(Event $event) {
@@ -209,6 +210,17 @@ class DirectoriesController extends AppController {
 				$event->stopPropagation();
 				return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'index']);
 			}
+		}
+	}
+
+	private function attachAngularModules() {
+		$action = $this->request->action;
+		switch ($action) {
+			case 'index':
+				$this->Angular->addModules([
+					'advanced.search.ctrl'
+				]);
+			break;
 		}
 	}
 
