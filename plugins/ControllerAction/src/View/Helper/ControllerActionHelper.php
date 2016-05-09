@@ -56,7 +56,7 @@ class ControllerActionHelper extends Helper {
 		$config = $this->_View->get('ControllerAction');
 		$fields = $config['fields'];
 		if (!empty($fields)) {
-			$types = ['binary','image'];
+			$types = ['binary','image', 'custom_file'];
 			foreach ($fields as $key => $attr) {
 				if (in_array($attr['type'], $types)) {
 					$options['type'] = 'file';
@@ -64,7 +64,7 @@ class ControllerActionHelper extends Helper {
 				}
 			}
 		}
-		
+
 		return $options;
 	}
 
@@ -257,10 +257,10 @@ class ControllerActionHelper extends Helper {
 					$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);
 				}
 				
-				if ($entity->has($associatedObject) && $entity->$associatedObject->has('name')) {
-					$value = $entity->$associatedObject->name;
-					$associatedFound = true;
-				}
+                if ($entity->has($associatedObject) && $entity->$associatedObject instanceof Entity && $entity->$associatedObject->has('name')) {
+                    $value = $entity->$associatedObject->name;
+                    $associatedFound = true;
+                }
 			}
 
 			if (!$associatedFound) {
