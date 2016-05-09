@@ -2,6 +2,7 @@
 namespace Restful\Controller;
 
 use Exception;
+use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
@@ -19,12 +20,19 @@ class RestfulController extends AppController
     public $components = [
         'RequestHandler'
     ];
+<<<<<<< HEAD
 
     public function initialize()
     {
         parent::initialize();
     }
+=======
+>>>>>>> fe4ad9bb870f240ba147ce6aec1faf6ad1ac0730
 
+    public function initialize()
+    {
+        parent::initialize();
+    }
 
 /***************************************************************************************************************************************************
  *
@@ -39,9 +47,15 @@ class RestfulController extends AppController
             $this->request->params['_ext'] = 'json';
         }
 
+<<<<<<< HEAD
         $pass = $this->request->params['pass'];
         if (count($pass) > 0) {
             $model = $this->_instantiateModel($pass[0]);
+=======
+        if (isset($this->request->model)) {
+            $tableAlias = $this->request->model;
+            $model = $this->_instantiateModel($tableAlias);
+>>>>>>> fe4ad9bb870f240ba147ce6aec1faf6ad1ac0730
             if ($model != false) {
                 $this->model = $model;
             }
@@ -73,6 +87,7 @@ class RestfulController extends AppController
         $this->_outputData([]);
     }
 
+<<<<<<< HEAD
     private function processFinders(Table $table, array $finders)
     {
         $query = $table->find();
@@ -119,6 +134,165 @@ class RestfulController extends AppController
             $query->group($groupBy);
         }
         return $query;
+=======
+    private function processQueryString($requestQueries)
+    {
+        $conditions = [];
+        foreach ($requestQueries as $key => $value) {
+            if (!$this->startsWith($key, '_')) {
+                $conditions[$key] = $value;
+                unset($requestQueries[$key]);
+            }
+        }
+        if (!empty($conditions)) {
+            $requestQueries['_conditions'] = $conditions;
+        }
+        return $requestQueries;
+    }
+
+    // to convert string into json string, and decode into php array
+    private function decode($value)
+    {
+        $list = [];
+        $queryArray = explode(',', $value);
+
+        foreach ($queryArray as $json) {
+            // to convert to a proper json string for decoding into php array
+            $json = str_replace(':', '":"', $json);
+            $json = str_replace('[', '":{"', $json);
+            $json = str_replace(']', '"}}', $json);
+            $json = '{"' . str_replace(';', '","', $json);
+            
+            $noAttributesFound = strripos($json, '"}') === false;
+            if ($noAttributesFound) {
+                $json .= '": {}}';
+            }
+            $array = json_decode($json, true);
+            $list = array_merge($list, $array);
+        }
+        return $list;
+    }
+
+    private function _fields(Query $query, $value, ArrayObject $extra)
+    {
+        if (!empty($value)) {
+            $table = $extra['table'];
+            $columns = $table->schema()->columns();
+            
+            $fields = explode(',', $value);
+            foreach ($fields as $index => $field) {
+                if (in_array($field, $columns)) {
+                    $fields[$index] = $table->aliasField($field);
+                }
+            }
+            $extra['fields'] = array_merge($extra['fields'], $fields);
+        }
+    }
+
+    private function _finder(Query $query, $value, ArrayObject $extra)
+    {
+        if (!empty($value)) {
+            $finders = $this->decode($value);
+            foreach ($finders as $name => $options) {
+                $query->find($name, $options);
+            }
+            $extra['list'] = array_key_exists('list', $finders);
+        }
+    }
+
+    private function _contain(Query $query, $value, ArrayObject $extra)
+    {
+        if (!empty($value)) {
+            $contain = [];
+            $table = $extra['table'];
+
+            if ($value === 'true') { // contains all BelongsTo associations
+                foreach ($table->associations() as $assoc) {
+                    if ($assoc->type() == 'manyToOne') {
+                        $contain[] = $assoc->name();
+                    }
+                }
+            } else {
+                $contain = explode(',', $value);
+            }
+            
+            if (!empty($contain)) {
+                $query->contain($contain);
+                $fields = [];
+                foreach ($contain as $name) {
+                    foreach ($table->associations() as $assoc) {
+                        if ($name == $assoc->name()) {
+                            $columns = $assoc->schema()->columns();
+                            foreach ($columns as $column) {
+                                $fields[] = $assoc->aliasField($column);
+                            }
+                        }
+                    }
+                }
+                $extra['fields'] = array_merge($extra['fields'], $fields);
+            }
+        }
+    }
+
+    private function _conditions(Query $query, $value, ArrayObject $extra)
+    {
+        if (!empty($value)) {
+            $conditions = [];
+            $table = $extra['table'];
+            $columns = $table->schema()->columns();
+           
+            foreach ($value as $field => $val) {
+                if (in_array($field, $columns)) {
+                    $conditions[$table->aliasField($field)] = $val;
+                } else {
+                    $conditions[$field] = $val;
+                }
+            }
+            $query->where($conditions);
+        }
+    }
+
+    private function _group(Query $query, $value, ArrayObject $extra)
+    {
+        if (!empty($value)) {
+            $fields = explode(',', $value);
+            $query->group($fields);
+        }
+    }
+
+    private function _limit(Query $query, $value, ArrayObject $extra)
+    {
+        if (!empty($value)) {
+            $extra['limit'] = $value; // used in _page
+        }
+    }
+
+    private function _page(Query $query, $value, ArrayObject $extra)
+    {
+        if (!empty($value) && $extra->offsetExists('limit')) {
+            $extra['page'] = $value;
+        }
+    }
+
+    private function convertBinaryToBase64(Entity $entity)
+    {
+        foreach ($entity->visibleProperties() as $property) {
+            if (is_resource($entity->$property)) {
+                $entity->$property = base64_encode("data:image/jpeg;base64,".stream_get_contents($entity->$property));
+            }
+        }
+    }
+
+    private function _formatBinaryValue($data) {
+        if ($data instanceof Entity) {
+            $this->convertBinaryToBase64($data);
+        } else {
+            foreach ($data as $key => $value) {
+                $this->convertBinaryToBase64($value);
+            }
+        }
+        return $data;
+>>>>>>> fe4ad9bb870f240ba147ce6aec1faf6ad1ac0730
     }
 
     public function index()
@@ -128,6 +302,7 @@ class RestfulController extends AppController
         }
 
         $table = $this->model;
+<<<<<<< HEAD
         $requestQueries = $this->request->query;
 
         $finders = $this->decode($requestQueries, '_finder');
@@ -189,6 +364,46 @@ class RestfulController extends AppController
     }
 
     public function add($model) {
+=======
+        $query = $table->find();
+        $requestQueries = $this->request->query;
+        $extra = new ArrayObject(['table' => $table, 'fields' => []]);
+        Log::write('debug', $requestQueries);
+        
+        $default = ['_limit' => 30, '_page' => 1];
+        $queryString = array_merge($default, $this->processQueryString($requestQueries));
+
+        foreach ($queryString as $key => $attr) {
+            $this->$key($query, $attr, $extra);
+        }
+        if (array_key_exists('_fields', $queryString) && !empty($extra['fields'])) {
+            $query->select($extra['fields']);
+        }
+
+        try {
+            $data = [];
+            $serialize = [];
+            if ($extra->offsetExists('list') && $extra['list'] == true) {
+                $data = $query->toArray();
+                $serialize = ['data' => $data];
+            } else {
+                $total = $query->count();
+                if ($extra->offsetExists('limit') && $extra->offsetExists('page')) {
+                    $query->limit($extra['limit'])->page($extra['page']);
+                }
+                $data = $this->_formatBinaryValue($query->all());
+                $serialize = ['data' => $data, 'total' => $total];
+            }
+            $serialize['_serialize'] = array_keys($serialize);
+            $this->set($serialize);
+        } catch (Exception $e) {
+            $this->_outputError($e->getMessage());
+        }
+    }
+
+    public function add($model)
+    {
+>>>>>>> fe4ad9bb870f240ba147ce6aec1faf6ad1ac0730
         $target = $this->_instantiateModel($model);
         if ($target) {
             $entity = $target->newEntity($this->request->data);
@@ -201,7 +416,12 @@ class RestfulController extends AppController
         }
     }
 
+<<<<<<< HEAD
     public function view($model, $id) {
+=======
+    public function view($model, $id)
+    {
+>>>>>>> fe4ad9bb870f240ba147ce6aec1faf6ad1ac0730
         $target = $this->_instantiateModel($model);
         if ($target) {
             if ($target->exists([$target->aliasField($target->primaryKey()) => $id])) {
@@ -234,7 +454,12 @@ class RestfulController extends AppController
         }
     }
 
+<<<<<<< HEAD
     public function edit($model, $id) {
+=======
+    public function edit($model, $id)
+    {
+>>>>>>> fe4ad9bb870f240ba147ce6aec1faf6ad1ac0730
         $target = $this->_instantiateModel($model);
         if ($target) {
             if ($target->exists([$target->aliasField($target->primaryKey()) => $id])) {
@@ -256,7 +481,12 @@ class RestfulController extends AppController
         }
     }
 
+<<<<<<< HEAD
     public function delete($model, $id) {
+=======
+    public function delete($model, $id)
+    {
+>>>>>>> fe4ad9bb870f240ba147ce6aec1faf6ad1ac0730
         $target = $this->_instantiateModel($model);
         if ($target) {
             if ($target->exists([$target->aliasField($target->primaryKey()) => $id])) {
@@ -295,7 +525,12 @@ class RestfulController extends AppController
         }
     }
 
+<<<<<<< HEAD
     private function _outputError($message = 'Requested Plugin-Model does not exists') {
+=======
+    private function _outputError($message = 'Requested Plugin-Model does not exists')
+    {
+>>>>>>> fe4ad9bb870f240ba147ce6aec1faf6ad1ac0730
         $model = str_replace('-', '.', $this->request->params['model']);
         $this->set([
             'model' => $model,
@@ -304,13 +539,19 @@ class RestfulController extends AppController
         ]);
     }
 
+<<<<<<< HEAD
     private function _outputData($data) {
+=======
+    private function _outputData($data)
+    {
+>>>>>>> fe4ad9bb870f240ba147ce6aec1faf6ad1ac0730
         $this->set([
             'data' => $data,
             '_serialize' => ['data']
         ]);
     }
 
+<<<<<<< HEAD
     private function _formatBinaryValue($data) {
         if ($data instanceof Entity) {
             foreach ($data->visibleProperties() as $property) {
@@ -438,6 +679,10 @@ class RestfulController extends AppController
     }
 
     private function _setupContainments(Table $target, array $requestQueries, Query $query) {
+=======
+    private function _setupContainments(Table $target, array $requestQueries, Query $query)
+    {
+>>>>>>> fe4ad9bb870f240ba147ce6aec1faf6ad1ac0730
         $contains = [];
         if (array_key_exists('_contain', $requestQueries)) {
             $contains = array_map('trim', explode(',', $requestQueries['_contain']));
@@ -460,7 +705,12 @@ class RestfulController extends AppController
         return $contains;
     }
 
+<<<<<<< HEAD
     private function _filterSelectFields(Table $target, array $requestQueries, array $containments=[]) {
+=======
+    private function _filterSelectFields(Table $target, array $requestQueries, array $containments=[])
+    {
+>>>>>>> fe4ad9bb870f240ba147ce6aec1faf6ad1ac0730
         $targetColumns = $target->schema()->columns();
         if (!array_key_exists('_fields', $requestQueries)) {
             return [];
@@ -487,4 +737,13 @@ class RestfulController extends AppController
         }
         return $fields;
     }
+<<<<<<< HEAD
+=======
+
+    private function startsWith($haystack, $needle)
+    {
+        // search backwards starting from haystack length characters from the end
+        return $needle === "" || strrpos($haystack, $needle, -strlen($haystack)) !== false;
+    }
+>>>>>>> fe4ad9bb870f240ba147ce6aec1faf6ad1ac0730
 }
