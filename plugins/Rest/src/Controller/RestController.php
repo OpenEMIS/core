@@ -16,6 +16,7 @@ use Cake\Network\Http\Client;
 class RestController extends AppController
 {
 	public $SecurityRestSessions = null;
+	private $RestVersion = '1.0';
 
 	public function initialize() {
 		parent::initialize();
@@ -42,7 +43,6 @@ class RestController extends AppController
 			]
 		]);
 		$this->SecurityRestSessions = TableRegistry::get('Rest.SecurityRestSessions');
-		$this->RestVersion = '1.0';
 	}
 
 	public function beforeFilter(Event $event) {
