@@ -22,6 +22,7 @@ class LeavesTable extends AppTable {
 			'contentEditable' => true,
 			'allowable_file_types' => 'all'
 		]);
+		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
 	}
 
 	public function validationDefault(Validator $validator) {

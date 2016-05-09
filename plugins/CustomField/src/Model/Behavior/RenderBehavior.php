@@ -25,10 +25,13 @@ class RenderBehavior extends Behavior {
     public function implementedEvents() {
     	$events = parent::implementedEvents();
     	$eventMap = [
-            'Render.'.'format'.$this->fieldType.'Entity' => 'format'.$this->fieldType.'Entity',
-            'Render.'.'process'.$this->fieldType.'Values' => 'process'.$this->fieldType.'Values',
-            'Render.'.'onSave' => 'onSave',
-            'ControllerAction.Model.onUpdateIncludes' => 'onUpdateIncludes'
+            'Render.on'.$this->fieldType.'Initialize' => 'on'.$this->fieldType.'Initialize',
+            'Render.format'.$this->fieldType.'Entity' => 'format'.$this->fieldType.'Entity',
+            'Render.patch'.$this->fieldType.'Values' => 'patch'.$this->fieldType.'Values',
+            'Render.process'.$this->fieldType.'Values' => 'process'.$this->fieldType.'Values',
+            'Render.onSave' => 'onSave',
+            'ControllerAction.Model.onUpdateIncludes' => 'onUpdateIncludes',
+            'Workflow.updateWorkflowStatus' => 'updateWorkflowStatus'
         ];
 
         foreach ($eventMap as $event => $method) {
