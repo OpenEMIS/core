@@ -115,17 +115,17 @@ class UsersTable extends AppTable {
 	}
 
 	public static function handleAssociations($model) {
-		$model->belongsTo('Genders', ['className' => 'User.Genders']);
-		$model->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
+		$model->belongsTo('Genders', 		 ['className' => 'User.Genders']);
+		$model->belongsTo('AddressAreas', 	 ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
 		$model->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
 
 		$model->hasMany('Identities', 		['className' => 'User.Identities',		'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$model->hasMany('Nationalities', 	['className' => 'User.Nationalities',	'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$model->hasMany('SpecialNeeds', 		['className' => 'User.SpecialNeeds',	'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$model->hasMany('Contacts', 			['className' => 'User.Contacts',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('SpecialNeeds', 	['className' => 'User.SpecialNeeds',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Contacts', 		['className' => 'User.Contacts',		'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$model->hasMany('Attachments', 		['className' => 'User.Attachments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$model->hasMany('BankAccounts', 		['className' => 'User.BankAccounts',	'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$model->hasMany('Comments', 			['className' => 'User.Comments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('BankAccounts', 	['className' => 'User.BankAccounts',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Comments', 		['className' => 'User.Comments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$model->hasMany('Languages', 		['className' => 'User.UserLanguages',	'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$model->hasMany('Awards', 			['className' => 'User.Awards',			'foreignKey' => 'security_user_id', 'dependent' => true]);
 
@@ -135,6 +135,11 @@ class UsersTable extends AppTable {
 			'targetForeignKey' => 'security_user_id',
 			'through' => 'Security.SecurityGroupUsers',
 			'dependent' => true
+		]);
+
+		$model->hasMany('ClassStudents', [
+			'className' => 'Institution.InstitutionClassStudents',
+			'foreignKey' => 'student_id'
 		]);
 	}
 

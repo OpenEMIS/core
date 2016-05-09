@@ -62,20 +62,20 @@ class InstitutionStudentClassroomRatioTable extends AppTable  {
   	}
 
   	public function onExcelRenderClassCount(Event $event, Entity $entity, $attr) {
-  		$InstitutionSections = TableRegistry::get('Institution.InstitutionSections');
+  		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
 		$institutionId = $entity->id;
-		$query = $InstitutionSections->find();
+		$query = $InstitutionClasses->find();
 		$query->matching('Institutions', function ($q) use ($institutionId) {
 			return $q->where(['Institutions.id' => $institutionId]);
 		});
 
-		$query->select(['totalClasses' => $query->func()->count('DISTINCT '.$InstitutionSections->aliasField('id'))])
+		$query->select(['totalClasses' => $query->func()->count('DISTINCT '.$InstitutionClasses->aliasField('id'))])
 			->group('Institutions.id')
 			;
 
 		if (array_key_exists('academic_period_id', $attr) && !empty($attr['academic_period_id'])) {
 			$query->where([
-				$InstitutionSections->aliasField('academic_period_id') => $attr['academic_period_id']
+				$InstitutionClasses->aliasField('academic_period_id') => $attr['academic_period_id']
 			]);
 		}
 

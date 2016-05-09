@@ -15,8 +15,6 @@ var Area = {
 			var displayCountry = $(this).find('select').attr('display-country');
 			url += "/" + modelName + "/" + value + "/" + displayCountry;
 			Area.populate(closestObject,url, formError);
-			// Update hidden field value
-			$(this).next().val(value);
 		});
 	},
 	reload: function(obj) {
@@ -28,9 +26,7 @@ var Area = {
 		var parent = $(obj).closest('.areapicker');
 		var displayCountry = $(obj).attr('display-country');
 		url += "/" + modelName + "/" + value + "/" + displayCountry;
-		Area.populate(parent, url, formError)
-		// Update hidden field value
-		$( parent ).next().val(value);
+		Area.populate(parent, url, formError);
 	},
 	populate: function(objToUpdate, url, formError) {
 		$.ajax({
@@ -41,7 +37,10 @@ var Area = {
 			},
 			success: function(data){
 				objToUpdate.html(data);
+				lastSelectedValue = objToUpdate.find('select').last().val();
+				// Populate hidden value
+				$( objToUpdate ).next().val(lastSelectedValue);
 			}
-		});	
+		});
 	}
 }
