@@ -47,11 +47,13 @@ class RestController extends AppController
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
-        if (isset($this->request->query['version'])) {
+        if (isset($this->request->query['version'])) 
+        {
             $this->RestVersion = $this->request->query('version');
         }
 		
-		if ($this->RestVersion == 2.0) {
+		if ($this->RestVersion == 2.0) 
+		{
             // Using JWT for authenication
 			$this->Auth->config('authenticate', [
 	            'ADmad/JwtAuth.Jwt' => [
@@ -67,7 +69,8 @@ class RestController extends AppController
 	        $this->Auth->config('authorize', null);
 	        $this->Auth->allow(['auth']);
 
-			if ($this->request->action == 'survey') {
+			if ($this->request->action == 'survey') 
+			{
 				$this->autoRender = false;
 
 				$pass = $this->request->params['pass'];
@@ -83,7 +86,8 @@ class RestController extends AppController
 					$this->Auth->identify();
 				}
 			}
-		} else {
+		} else 
+		{
 			$this->Auth->allow();
 			if ($this->request->action == 'survey') {
 				$this->autoRender = false;
@@ -185,7 +189,8 @@ class RestController extends AppController
 		$json = [];
         if ($this->RestVersion == '2.0')
         {
-            if (isset($this->request->query['payload'])) {
+            if (isset($this->request->query['payload'])) 
+            {
                 if (!$this->Cookie->check('Restful.Call')) 
                 {
                     $redirectUrl = $this->ControllerAction->url('auth');

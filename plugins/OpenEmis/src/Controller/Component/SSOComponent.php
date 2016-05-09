@@ -68,7 +68,7 @@ class SSOComponent extends Component {
     	// Expiry change to 24 hours
 	    return JWT::encode([
 	                'sub' => $user['id'],
-	                'exp' =>  time() + 86400
+	                'exp' =>  time() + 10800
 	            ],
 	            Security::salt());
     }
