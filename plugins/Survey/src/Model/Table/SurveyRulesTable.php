@@ -53,7 +53,7 @@ class SurveyRulesTable extends ControllerActionTable
                 ->select(['survey_section' => $SurveyFormsQuestionsTable->aliasField('section')])
                 ->where([
                     $SurveyFormsQuestionsTable->aliasField('survey_form_id') => $surveyFormId,
-                    $SurveyFormsQuestionsTable->aliasField('survey_form_id').' IS NOT NULL'
+                    $SurveyFormsQuestionsTable->aliasField('section').' IS NOT NULL'
                 ])
                 ->distinct([$SurveyFormsQuestionsTable->aliasField('section')])
                 ->order([$SurveyFormsQuestionsTable->aliasField('order')])
@@ -66,10 +66,19 @@ class SurveyRulesTable extends ControllerActionTable
             $this->controller->set(compact('sectionOptions'));
         }
 
+        // Checking if the survey form id and the section id is 0 or empty
         if (!empty($surveyFormId) && !empty($sectionId)) 
         {
-            $section = $sectionOptions[$sectionId];
-            
+            $section = $sectionOptions[$sectionId]['text'];
+
+            // Subquery for questions
+            $questionIds = $SurveyFormsQuestionsTable
+                ->find()
+                ->select([$SurveyFormsQuestionsTable->aliasField('survey_question_id')])
+                ->where([
+                    $SurveyFormsQuestionsTable->aliasField('section') => $section
+                ]);
+            $query->where([$this->aliasField('survey_question_id').' IN ' => $questionIds]);
         }
     }
 }
