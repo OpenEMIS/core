@@ -582,7 +582,8 @@ trait MessagesTrait {
 			],
 			'InstitutionPositions' => [
 				'position_no' => [
-					'ruleUnique' => 'The position number that you have entered already existed, please try again.'
+					'ruleUnique' => 'The position number that you have entered already existed, please try again.',
+					'ruleNoSpaces' => 'Only alphabets and numbers are allowed'
 				]
 			],
 			'InstitutionShifts' => [
