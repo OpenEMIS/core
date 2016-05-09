@@ -14,5 +14,8 @@ CREATE TABLE `security_rest_sessions` (
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  INDEX `access_token` (`access_token`),
+  INDEX `refresh_token` (`refresh_token`),
+  INDEX `expiry_date` (`expiry_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

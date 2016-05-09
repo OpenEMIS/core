@@ -5,12 +5,7 @@ use Cake\Log\Log;
 use Cake\I18n\Time;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Exception\UnauthorizedException;
-use Cake\Utility\Security;
-use Firebase\JWT\JWT;
-use Cake\Network\Exception\BadRequestException;
 use App\Controller\AppController;
-use Cake\Network\Session;
 use Cake\Network\Http\Client;
 
 class RestController extends AppController
@@ -47,13 +42,11 @@ class RestController extends AppController
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
-        if (isset($this->request->query['version'])) 
-        {
+        if (isset($this->request->query['version'])) {
             $this->RestVersion = $this->request->query('version');
         }
 		
-		if ($this->RestVersion == 2.0) 
-		{
+		if ($this->RestVersion == 2.0) {
             // Using JWT for authenication
 			$this->Auth->config('authenticate', [
 	            'ADmad/JwtAuth.Jwt' => [
@@ -69,8 +62,7 @@ class RestController extends AppController
 	        $this->Auth->config('authorize', null);
 	        $this->Auth->allow(['auth']);
 
-			if ($this->request->action == 'survey') 
-			{
+			if ($this->request->action == 'survey') {
 				$this->autoRender = false;
 
 				$pass = $this->request->params['pass'];
@@ -86,8 +78,7 @@ class RestController extends AppController
 					$this->Auth->identify();
 				}
 			}
-		} else 
-		{
+		} else {
 			$this->Auth->allow();
 			if ($this->request->action == 'survey') {
 				$this->autoRender = false;
@@ -187,13 +178,10 @@ class RestController extends AppController
 
 	public function auth() {
 		$json = [];
-		
-        if ($this->RestVersion == '2.0')
-        {
-            if (isset($this->request->query['payload'])) 
-            {
-                if (!$this->Cookie->check('Restful.Call')) 
-                {
+
+        if ($this->RestVersion == '2.0') {
+            if (isset($this->request->query['payload'])) {
+                if (!$this->Cookie->check('Restful.Call')) {
                     $redirectUrl = $this->ControllerAction->url('auth');
                     $redirectUrl['version'] = '2.0';
                     if (isset($redirectUrl['payload'])) {
@@ -228,14 +216,12 @@ class RestController extends AppController
                 $url = $this->request->data('callback_url');
                 $this->Cookie->write('Restful.Call', true);
                 $this->Cookie->write('Restful.CallBackURL', $url);
-                if ($this->Auth->user()) 
-                {
+                if ($this->Auth->user()) {
                     $payload = $this->SSO->generateToken();
                     $redirectUrl = $this->ControllerAction->url('token');
                     $redirectUrl['payload'] = $payload;
                     $this->redirect($redirectUrl);
-                } else 
-                {
+                } else {
                     $this->SSO->doAuthentication(); 
                 }
                 
@@ -245,13 +231,11 @@ class RestController extends AppController
             $this->autoRender = false;
             $json = [];
             // We check if request came from a post form
-            if ($this->request->is(['post', 'put'])) 
-            {
+            if ($this->request->is(['post', 'put'])) {
                 // do the login..
                 $user = $this->login();
 
-                if ($user) 
-                {
+                if ($user) {
                     // get all the user details if login is successful.
                     $userID = $user['id'];
                     $accessToken = sha1(time() . $userID);
@@ -333,8 +317,7 @@ class RestController extends AppController
 		$refreshToken = '';
 		$json = [];
 
-		if ($this->request->is(['post', 'put'])) 
-		{
+		if ($this->request->is(['post', 'put'])) {
 			$accessToken = $this->request->data['access_token'];
 			$refreshToken = $this->request->data['refresh_token'];
 
