@@ -247,7 +247,14 @@ class ControllerActionHelper extends Helper {
 
 			$associatedFound = false;
 			if (strlen($event->result) > 0) {
-				$value = __($event->result);
+				//array that doesn't need to be translate
+				$excludeTranslation = ['integer', 'decimal', 'float'];
+				
+				if (!in_array($attr['type'], $excludeTranslation)) {
+					$value = __($event->result);
+				} else {
+					$value = $event->result;
+				}
 				$entity->$field = $value;
 			} else if ($this->endsWith($field, '_id')) {
 				$associatedObject = '';
