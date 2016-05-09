@@ -13,8 +13,11 @@
 @import url('component/component.buttons.css');
 @import url('component/component.chosen.css');
 @import url('component/component.checkbox.css');
+@import url('component/component.content-splitter.css');
+@import url('component/component.customizetab.css');
 @import url('component/component.dashboard.css');
 @import url('component/component.dragdrop.css');
+@import url('component/component.dropdown.css');
 @import url('component/component.error.css');
 @import url('component/component.formbuttons.css');
 @import url('component/component.form.css');
@@ -32,6 +35,7 @@
 @import url('component/component.pageheader.css');
 @import url('component/component.pagination.css');
 @import url('component/component.panelaccordion.css');
+@import url('component/component.panelaccordion-anchor.css');
 @import url('component/component.progressloader.css');
 @import url('component/component.search.css');
 @import url('component/component.series.css');
@@ -48,5 +52,6 @@
 @import url('component/component.toolbar.css');
 @import url('component/component.toolbarinput.css');
 @import url('component/component.tooltip.css');
+@import url('component/component.tooltipdescription.css');
 @import url('component/component.visualization.css');
 @import url('component/component.wizard.css');
