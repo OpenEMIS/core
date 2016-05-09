@@ -4,10 +4,8 @@ namespace OpenEmis\Controller\Component;
 use ArrayObject;
 use Cake\Controller\Component;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Exception\UnauthorizedException;
 use Cake\Utility\Security;
 use Firebase\JWT\JWT;
-use Cake\Network\Exception\BadRequestException;
 
 class SSOComponent extends Component {
 	private $controller;

@@ -8,8 +8,4 @@ class SecurityRestSessionsTable extends ControllerActionTable {
 		$this->table('security_rest_sessions');
 		parent::initialize($config);
 	}
-
-	public function wow() {
-		pr('something');die;
-	}
 }
