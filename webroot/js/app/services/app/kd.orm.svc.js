@@ -207,15 +207,26 @@ angular.module('kd.orm.svc', [])
     };
 
     return {
-        base: function(base) {
-            query._base = base;
-            return this;
-        },
+        base: base,
+        init: init
+    };
 
-        init: function(className) {
+    function base(base) {
+        query._base = base;
+        return this;
+    };
+
+    function init(className) {
+        if (angular.isObject(className)) {
+            angular.forEach(className, function(model, key) {
+                var newObject = angular.merge({}, query);
+                newObject.className(model);
+                window[key] = newObject;
+            });
+        } else {
             var newObject = angular.merge({}, query);
             newObject.className(className);
             return newObject;
         }
-    }
+    };
 });
