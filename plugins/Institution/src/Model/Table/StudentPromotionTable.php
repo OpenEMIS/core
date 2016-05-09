@@ -627,6 +627,10 @@ class StudentPromotionTable extends AppTable {
 		if (isset($errors['institution_id'])) {
 			unset($errors['institution_id']);
 		}
+		if (isset($errors['education_grade_id'])) {
+			unset($errors['education_grade_id']);
+		}
+
 		if (!$errors) {
 			if (array_key_exists($this->alias(), $data)) {
 				$selectedStudent = false;
