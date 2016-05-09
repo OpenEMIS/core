@@ -1,3 +1,7 @@
+v3.5.5
+- Added Difficulties to Special Needs
+- Position Number cannot contain spaces now
+
 v3.5.4
 - Students can only be added to schools with academic period of Year level now
 - Fixed a bug that caused Area Levels not displaying correct names	
