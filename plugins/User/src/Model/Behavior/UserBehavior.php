@@ -264,6 +264,12 @@ class UserBehavior extends Behavior {
 		return $value;
 	}
 
+    public function onGetGenderId(Event $event, Entity $entity) {
+        if ($entity->has('gender') && $entity->gender->name) {
+            return __($entity->gender->name);
+        }
+    }
+
 	public function onGetPhotoContent(Event $event, Entity $entity) {
 		// check file name instead of file content
 		$fileContent = null;
