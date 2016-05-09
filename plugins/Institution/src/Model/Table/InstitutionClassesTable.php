@@ -155,8 +155,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 		$this->field('academic_period_id', ['type' => 'select', 'visible' => ['view'=>true, 'edit'=>true]]);
 		$this->field('institution_shift_id', ['type' => 'select', 'visible' => ['view'=>true, 'edit'=>true]]);
 
-		$this->field('male_students', ['type' => 'integer', 'visible' => ['index'=>true]]);
-		$this->field('female_students', ['type' => 'integer', 'visible' => ['index'=>true]]);
+		$this->field('total_students', ['type' => 'integer', 'visible' => ['index'=>true]]);
 		$this->field('subjects', ['override' => true, 'type' => 'integer', 'visible' => ['index'=>true]]);
 
 		$this->field('students', [
