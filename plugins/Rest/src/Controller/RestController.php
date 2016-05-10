@@ -260,7 +260,6 @@ class RestController extends AppController
                 }
             }
         }
->>>>>>> origin_ssh/POCOR-2843-dev
 
 		$this->response->body(json_encode($json, JSON_UNESCAPED_UNICODE));
 		$this->response->type('json');
