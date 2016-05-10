@@ -3,6 +3,7 @@ v3.5.5
 - Position Number cannot contain spaces now
 - Fixed a bug that prevent the system from perform Student Repeat
 - OAuth and SAML authentication via mobile can now be supported
+- Deleting Institutions now deletes Staff Profile change requests properly
 
 v3.5.4
 - Students can only be added to schools with academic period of Year level now
