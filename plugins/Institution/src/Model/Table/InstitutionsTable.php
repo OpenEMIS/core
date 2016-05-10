@@ -255,23 +255,8 @@ class InstitutionsTable extends AppTable  {
 				$entity->security_group_id = $securityGroup->id;
 				if (!$this->save($entity)) {
 					return false;
-				} /*else { //remove the automation process of assigning user to institution admin when user created the institution.
-					
-					$UsersTable = TableRegistry::get('Security.Users');
-					if (!$UsersTable->isAdmin($entity->created_user_id)) {
-						$SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
-						$groupAdmin = $SecurityRolesTable->getGroupAdministratorEntity();
-
-						$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-						$newEntity = $SecurityGroupUsers->newEntity([
-								'security_group_id' => $securityGroup->id,
-								'security_user_id' => $entity->created_user_id,
-								'security_role_id' => $groupAdmin->id
-							]);
-						$SecurityGroupUsers->save($newEntity);
-					}
-					*/					
 				}
+				
 			} else {
 				return false;
 			}
