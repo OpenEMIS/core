@@ -258,7 +258,7 @@ class ControllerActionHelper extends Helper {
 				}
 				
                 if ($entity->has($associatedObject) && $entity->$associatedObject instanceof Entity && $entity->$associatedObject->has('name')) {
-                    $value = $entity->$associatedObject->name;
+                    $value = __($entity->$associatedObject->name);
                     $associatedFound = true;
                 }
 			}
@@ -494,7 +494,7 @@ class ControllerActionHelper extends Helper {
 					}
 					
 					if ($data->has($associatedObject)) {
-						$value = $data->$associatedObject->name;
+						$value = __($data->$associatedObject->name);
 						$associatedFound = true;
 					}
 				}
