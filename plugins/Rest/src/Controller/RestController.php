@@ -45,7 +45,10 @@ class RestController extends AppController
         if (isset($this->request->query['version'])) {
             $this->RestVersion = $this->request->query('version');
         }
-		
+		// The logout is the ensure that there is no login state for restful call
+		// As we are using the Core's login page or the individual IDP login page
+		// Core will authenticate and set the login state in session. We do not want
+		// to be always login on the Mobile app.
 		$this->Auth->logout();
 		if ($this->RestVersion == 2.0) {
             // Using JWT for authenication
