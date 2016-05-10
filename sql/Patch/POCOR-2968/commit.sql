@@ -1,4 +1,3 @@
--- POCOR-2968
 -- db_patches
 INSERT INTO `db_patches` (issue, created) VALUES ('POCOR-2968', NOW());
 
@@ -13,7 +12,7 @@ ALTER TABLE `academic_periods` ADD INDEX `academic_period_level_id` (`academic_p
 
 ALTER TABLE `institutions` ADD INDEX `area_administrative_id` (`area_administrative_id`);
 ALTER TABLE `area_administrative_levels` ADD INDEX `area_administrative_id` (`area_administrative_id`);
-
+	
 ALTER TABLE `institution_bank_accounts` ADD INDEX `bank_branch_id` (`bank_branch_id`);
 
 ALTER TABLE `bank_branches` ADD INDEX `bank_id` (`bank_id`);
@@ -23,7 +22,7 @@ ALTER TABLE `custom_forms_fields` ADD INDEX `custom_field_id` (`custom_field_id`
 ALTER TABLE `custom_table_rows` ADD INDEX `custom_field_id` (`custom_field_id`);
 ALTER TABLE `custom_field_options` ADD INDEX `custom_field_id` (`custom_field_id`);
 ALTER TABLE `custom_table_cells` ADD INDEX `custom_field_id` (`custom_field_id`);
-
+	
 ALTER TABLE `custom_forms_filters` ADD INDEX `custom_filter_id` (`custom_filter_id`);
 
 ALTER TABLE `custom_records` ADD INDEX `custom_form_id` (`custom_form_id`);
@@ -65,34 +64,34 @@ ALTER TABLE `infrastructure_custom_forms_fields` ADD INDEX `infrastructure_custo
 ALTER TABLE `infrastructure_custom_forms_filters` ADD INDEX `infrastructure_custom_form_id` (`infrastructure_custom_form_id`);
 ALTER TABLE `infrastructure_custom_table_cells` ADD INDEX `infrastructure_custom_table_column_id` (`infrastructure_custom_table_column_id`);
 ALTER TABLE `infrastructure_custom_table_cells` ADD INDEX `infrastructure_custom_table_row_id` (`infrastructure_custom_table_row_id`);
-
+	
 ALTER TABLE `institution_custom_table_columns` ADD INDEX `institution_custom_field_id` (`institution_custom_field_id`);
 ALTER TABLE `institution_custom_field_options` ADD INDEX `institution_custom_field_id` (`institution_custom_field_id`);
 ALTER TABLE `institution_custom_table_cells` ADD INDEX `institution_custom_field_id` (`institution_custom_field_id`);
 ALTER TABLE `institution_custom_table_rows` ADD INDEX `institution_custom_field_id` (`institution_custom_field_id`);
 ALTER TABLE `institution_custom_forms_fields` ADD INDEX `institution_custom_field_id` (`institution_custom_field_id`);
-
+	
 ALTER TABLE `institution_custom_forms_filters` ADD INDEX `institution_custom_filter_id` (`institution_custom_filter_id`);
 ALTER TABLE `institution_custom_forms_fields` ADD INDEX `institution_custom_form_id` (`institution_custom_form_id`);
 ALTER TABLE `institution_custom_forms_filters` ADD INDEX `institution_custom_form_id` (`institution_custom_form_id`);
 ALTER TABLE `institution_custom_table_cells` ADD INDEX `institution_custom_table_column_id` (`institution_custom_table_column_id`);
 ALTER TABLE `institution_custom_table_cells` ADD INDEX `institution_custom_table_row_id` (`institution_custom_table_row_id`);
-
+	
 ALTER TABLE `institution_student_dropout` ADD INDEX `institution_id` (`institution_id`);
 ALTER TABLE `institution_bank_accounts` ADD INDEX `institution_id` (`institution_id`);
 ALTER TABLE `institution_student_absences` ADD INDEX `institution_id` (`institution_id`);
 ALTER TABLE `institution_student_admission` ADD INDEX `institution_id` (`institution_id`);
-
+	
 ALTER TABLE `infrastructure_custom_table_cells` ADD INDEX `institution_infrastructure_id` (`institution_infrastructure_id`);
 ALTER TABLE `institution_staff_position_profiles` ADD INDEX `institution_staff_id` (`institution_staff_id`);
 ALTER TABLE `institution_survey_table_cells` ADD INDEX `institution_survey_id` (`institution_survey_id`);
 ALTER TABLE `institution_student_surveys` ADD INDEX `parent_form_id` (`parent_form_id`);
-
+	
 ALTER TABLE `security_functions` ADD INDEX `parent_id` (`parent_id`);
 ALTER TABLE `institution_infrastructures` ADD INDEX `parent_id` (`parent_id`);
 ALTER TABLE `infrastructure_levels` ADD INDEX `parent_id` (`parent_id`);
 ALTER TABLE `custom_modules` ADD INDEX `parent_id` (`parent_id`);
-
+	
 ALTER TABLE `institution_student_admission` ADD INDEX `previous_institution_id` (`previous_institution_id`);
 ALTER TABLE `staff_qualifications` ADD INDEX `qualification_level_id` (`qualification_level_id`);
 ALTER TABLE `batch_processes` ADD INDEX `reference_id` (`reference_id`);
@@ -125,22 +124,22 @@ ALTER TABLE `student_custom_table_cells` ADD INDEX `student_custom_field_id` (`s
 ALTER TABLE `student_custom_table_columns` ADD INDEX `student_custom_field_id` (`student_custom_field_id`);
 ALTER TABLE `student_custom_forms_fields` ADD INDEX `student_custom_field_id` (`student_custom_field_id`);
 ALTER TABLE `student_custom_table_rows` ADD INDEX `student_custom_field_id` (`student_custom_field_id`);
-
+	
 ALTER TABLE `student_custom_forms_fields` ADD INDEX `student_custom_form_id` (`student_custom_form_id`);
 ALTER TABLE `student_custom_table_cells` ADD INDEX `student_custom_table_column_id` (`student_custom_table_column_id`);
 ALTER TABLE `student_custom_table_cells` ADD INDEX `student_custom_table_row_id` (`student_custom_table_row_id`);
 ALTER TABLE `institution_student_dropout` ADD INDEX `student_dropout_reason_id` (`student_dropout_reason_id`);
-
+	
 ALTER TABLE `institution_student_admission` ADD INDEX `student_id` (`student_id`);
 ALTER TABLE `institution_student_dropout` ADD INDEX `student_id` (`student_id`);
 ALTER TABLE `student_custom_table_cells` ADD INDEX `student_id` (`student_id`);
-
+	
 ALTER TABLE `institution_student_admission` ADD INDEX `student_transfer_reason_id` (`student_transfer_reason_id`);
-
+	
 ALTER TABLE `institution_surveys` ADD INDEX `survey_form_id` (`survey_form_id`);
 ALTER TABLE `survey_statuses` ADD INDEX `survey_form_id` (`survey_form_id`);
 ALTER TABLE `survey_forms_questions` ADD INDEX `survey_form_id` (`survey_form_id`);
-
+	
 ALTER TABLE `survey_table_columns` ADD INDEX `survey_question_id` (`survey_question_id`);
 ALTER TABLE `institution_survey_table_cells` ADD INDEX `survey_question_id` (`survey_question_id`);
 ALTER TABLE `survey_forms_questions` ADD INDEX `survey_question_id` (`survey_question_id`);
@@ -161,123 +160,4 @@ ALTER TABLE `workflow_statuses_steps` ADD INDEX `workflow_step_id` (`workflow_st
 
 ALTER TABLE `security_users` ADD INDEX `super_admin` (`super_admin`);
 
-
--- POCOR-2614
--- db_patches
-INSERT INTO `db_patches` (issue, created) VALUES ('POCOR-2614', NOW());
-
-INSERT INTO `translations` (`id`, `code`, `en`, `ar`, `zh`, `es`, `fr`, `ru`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT NULL, NULL, 'Next grade in the Education Structure is not available in this Institution.', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, now() FROM dual WHERE NOT EXISTS (SELECT * FROM translations WHERE en = 'Next grade in the Education Structure is not available in this Institution.');
-
-INSERT INTO `translations` (`id`, `code`, `en`, `ar`, `zh`, `es`, `fr`, `ru`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT NULL, NULL, 'No Available Grades in this Institution', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, now() FROM dual WHERE NOT EXISTS (SELECT * FROM translations WHERE en = 'No Available Grades in this Institution');
-
-INSERT INTO `translations` (`id`, `code`, `en`, `ar`, `zh`, `es`, `fr`, `ru`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT NULL, NULL, 'No Available Academic Periods', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, now() FROM dual WHERE NOT EXISTS (SELECT * FROM translations WHERE en = 'No Available Academic Periods');
-
-
--- POCOR-2899
--- db_patches
-INSERT INTO `db_patches` (`issue`, `created`) VALUES ('POCOR-2899', NOW());
-
--- remove orphan / test record
-DELETE FROM `institution_staff_position_profiles`
-WHERE NOT EXISTS (
-        SELECT 1 FROM `institutions`
-                WHERE `institutions`.`id` = `institution_staff_position_profiles`.`institution_id`
-);
-
-
--- POCOR-2885
--- db_patches
-INSERT INTO `db_patches` (`issue`, `created`) VALUES ('POCOR-2885', NOW());
-
--- new table
-
-CREATE TABLE IF NOT EXISTS `special_need_difficulties` (
-  `id` int(11) NOT NULL,
-  `name` varchar(50) NOT NULL,
-  `order` int(3) NOT NULL,
-  `visible` int(1) NOT NULL DEFAULT '1',
-  `editable` int(1) NOT NULL DEFAULT '1',
-  `default` int(1) NOT NULL DEFAULT '0',
-  `international_code` varchar(50) DEFAULT NULL,
-  `national_code` varchar(50) DEFAULT NULL,
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL
-) ENGINE=InnoDB AUTO_INCREMENT=1 COLLATE utf8mb4_unicode_ci;
-
-INSERT INTO `special_need_difficulties` (`id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-(1, 'None', 1, 1, 1, 1, '', '', NULL, NULL, 1, NOW()),
-(2, 'Some', 2, 1, 1, 0, '', '', NULL, NULL, 1, NOW()),
-(3, 'A Lot', 3, 1, 1, 0, '', '', NULL, NULL, 1, NOW()),
-(4, 'Unable', 4, 1, 1, 0, '', '', NULL, NULL, 1, NOW());
-
---
-ALTER TABLE `special_need_difficulties`
-  ADD PRIMARY KEY (`id`);
-
-ALTER TABLE `special_need_difficulties`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=1;
-
-
--- backup the old table
-
-ALTER TABLE `user_special_needs`
-RENAME TO  `z_2885_user_special_needs` ;
-
--- create new table and apply the changess
-
-CREATE TABLE IF NOT EXISTS `user_special_needs` (
-  `id` int(11) NOT NULL,
-  `special_need_date` date NOT NULL,
-  `comment` text,
-  `security_user_id` int(11) NOT NULL,
-  `special_need_type_id` int(11) NOT NULL,
-  `special_need_difficulty_id` int(11) NOT NULL,
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL
-)ENGINE=InnoDB COLLATE utf8mb4_unicode_ci;
-
-ALTER TABLE `user_special_needs`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `special_need_type_id` (`special_need_type_id`),
-  ADD KEY `special_need_difficulty_id` (`special_need_difficulty_id`),
-  ADD KEY `security_user_id` (`security_user_id`);
-
-ALTER TABLE `user_special_needs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
--- reinsert from backup table with value changes
-
-INSERT INTO user_special_needs
-SELECT `z_2885_user_special_needs`.`id`,
-  `z_2885_user_special_needs`.`special_need_date`,
-  `z_2885_user_special_needs`.`comment`,
-  `z_2885_user_special_needs`.`security_user_id`,
-  `z_2885_user_special_needs`.`special_need_type_id`,
-  1,
-  `z_2885_user_special_needs`.`modified_user_id`,
-  `z_2885_user_special_needs`.`modified`,
-  `z_2885_user_special_needs`.`created_user_id`,
-  `z_2885_user_special_needs`.`created`
-FROM `z_2885_user_special_needs`;
-
--- update the order column and insert new record with desired order
-
-UPDATE field_options
-SET `order` = `order`+1
-WHERE `order` >= 49;
-
-INSERT INTO `field_options` (`id`, `plugin`, `code`, `name`, `parent`, `params`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-VALUES (NULL, 'FieldOption', 'SpecialNeedDifficulties', 'Special Need Difficulties', 'Others', '{"model":"FieldOption.SpecialNeedDifficulties"}', '49', '1', NULL, NULL, '1', NOW());
-
--- add label
-INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `code`, `name`, `visible`, `created_user_id`, `created`) VALUES
-(uuid(), 'SpecialNeeds', 'special_need_difficulty_id', 'Special Needs', 'Difficulty', NULL, NULL, 1, 0, NOW());
-
-
--- 3.5.5
-UPDATE config_items SET value = '3.5.5' WHERE code = 'db_version';
-UPDATE db_patches SET version = (SELECT value FROM config_items WHERE code = 'db_version') WHERE version IS NULL;
+	
