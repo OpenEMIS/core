@@ -260,50 +260,51 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->field('password', ['order' => ++$highestOrder, 'visible' => false, 'type' => 'password', 'attr' => ['value' => '', 'autocomplete' => 'off']]);
 	}
 
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		$process = function($model, $id, $options) {
-			$studentData = $model->find()->where([$model->aliasField('id') => $id])->first();
-			// contain was used to test newly created associations
-			// $studentData->contain(['StudentAbsences', 'StudentBehaviours', 'AssessmentItemResults', 'Guardians', 'StudentAdmission', 'StudentCustomFieldValues', 'StudentCustomTableCells', 'StudentFees', 'Extracurriculars']); 
+    // this function is no longer required because there should not be a ('Student.Students')->delete() after the implementation of directory
+	// public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+	// 	$process = function($model, $id, $options) {
+	// 		$studentData = $model->find()->where([$model->aliasField('id') => $id])->first();
+	// 		// contain was used to test newly created associations
+	// 		// $studentData->contain(['StudentAbsences', 'StudentBehaviours', 'AssessmentItemResults', 'Guardians', 'StudentAdmission', 'StudentCustomFieldValues', 'StudentCustomTableCells', 'StudentFees', 'Extracurriculars']); 
 
-			if ($studentData) {
-				if ($studentData->is_staff || $studentData->is_guardian) {
-					// remove all student records from institution_students, institution_site_student_absences, student_behaviours, assessment_item_results, student_guardians, institution_student_admission, student_custom_field_values, student_custom_table_cells, student_fees, student_extracurriculars
-					$deletionInformation = [
-						['class' => 'Institution.Students', 'foreignKey' => 'student_id'],
-						['class' => 'Institution.InstitutionSiteStudentAbsences', 'foreignKey' => 'security_user_id'],
-						['class' => 'Institution.StudentBehaviours', 'foreignKey' => 'student_id'],
-						['class' => 'Assessment.AssessmentItemResults', 'foreignKey' => 'student_id'],
-						['class' => 'Institution.StudentAdmission', 'foreignKey' => 'student_id'],
-						['class' => 'CustomField.StudentCustomFieldValues', 'foreignKey' => 'security_user_id'],
-						['class' => 'CustomField.StudentCustomTableCells', 'foreignKey' => 'security_user_id'],
-						['class' => 'Institution.StudentFeesAbstract', 'foreignKey' => 'student_id'],
-						['class' => 'Student.Extracurriculars', 'foreignKey' => 'security_user_id'],
-						['class' => 'Student.Guardians', 'foreignKey' => 'student_id'],
-					];
+	// 		if ($studentData) {
+	// 			if ($studentData->is_staff || $studentData->is_guardian) {
+	// 				// remove all student records from institution_students, institution_site_student_absences, student_behaviours, assessment_item_results, student_guardians, institution_student_admission, student_custom_field_values, student_custom_table_cells, student_fees, student_extracurriculars
+	// 				$deletionInformation = [
+	// 					['class' => 'Institution.Students', 'foreignKey' => 'student_id'],
+	// 					['class' => 'Institution.InstitutionStudentAbsences', 'foreignKey' => 'student_id'],
+	// 					['class' => 'Institution.StudentBehaviours', 'foreignKey' => 'student_id'],
+	// 					['class' => 'Assessment.AssessmentItemResults', 'foreignKey' => 'student_id'],
+	// 					['class' => 'Institution.StudentAdmission', 'foreignKey' => 'student_id'],
+	// 					['class' => 'CustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id'],
+	// 					['class' => 'CustomField.StudentCustomTableCells', 'foreignKey' => 'student_id'],
+	// 					['class' => 'Institution.StudentFeesAbstract', 'foreignKey' => 'student_id'],
+	// 					['class' => 'Student.Extracurriculars', 'foreignKey' => 'security_user_id'],
+	// 					['class' => 'Student.Guardians', 'foreignKey' => 'student_id'],
+	// 				];
 
-					foreach ($deletionInformation as $key => $value) {
-						$deletionClass = TableRegistry::get($value['class']);
-						$deletionEntities = $deletionClass->find()->where([$deletionClass->aliasField($value['foreignKey']) => $id]);
-						foreach ($deletionEntities as $dkey => $dvalue) {
-							$deletionClass->delete($dvalue);
-						}
-					}
+	// 				foreach ($deletionInformation as $key => $value) {
+	// 					$deletionClass = TableRegistry::get($value['class']);
+	// 					$deletionEntities = $deletionClass->find()->where([$deletionClass->aliasField($value['foreignKey']) => $id]);
+	// 					foreach ($deletionEntities as $dkey => $dvalue) {
+	// 						$deletionClass->delete($dvalue);
+	// 					}
+	// 				}
 
-					// do not delete user record
-					$model->updateAll(['is_student' => 0], [$model->primaryKey() => $id]);
-				} else {
-					// student is neither a guardian or staff... delete the user record along with all associated data
-					$model->delete($studentData);	
-				}
-			}
+	// 				// do not delete user record
+	// 				$model->updateAll(['is_student' => 0], [$model->primaryKey() => $id]);
+	// 			} else {
+	// 				// student is neither a guardian or staff... delete the user record along with all associated data
+	// 				$model->delete($studentData);	
+	// 			}
+	// 		}
 
-			// die('dead');
+	// 		// die('dead');
 			
-			return true;
-		};
-		return $process;
-	}
+	// 		return true;
+	// 	};
+	// 	return $process;
+	// }
 	
 	// Logic for the mini dashboard
 	public function afterAction(Event $event) {
