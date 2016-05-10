@@ -71,6 +71,7 @@ class InstitutionsController extends AppController  {
 		];
 
 		$this->loadComponent('Institution.InstitutionAccessControl');
+		$this->attachAngularModules();
 	}
 
 	// CAv4
