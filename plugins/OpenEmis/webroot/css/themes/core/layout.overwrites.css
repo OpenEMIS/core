@@ -133,7 +133,7 @@ a.btn-green:hover {
 .rtl .horizontal-tabs span.tab-active a:hover,
 .rtl .horizontal-tabs span.tab-active a:focus {
     height: 30px;
-    line-height: 31px;    
+    line-height: 31px;
 }
 
 
@@ -422,7 +422,7 @@ a,
 }
 
 
-/* Set width for the left-pane and right-pane */
+/* Set opacity to left pane */
 
 .left-pane {
     opacity: 0;
@@ -434,7 +434,6 @@ a,
 .institution-dashboard .highcharts-background {
     stroke-width: 1px;
 }
-
 
 
 /* Date/Time Picker inside Table */
