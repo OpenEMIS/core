@@ -195,6 +195,10 @@ class InstitutionsTable extends AppTable  {
 		return $name;
 	}
 
+	public function onUpdateDefaultActions(Event $event) {
+		return ['downloadFile'];
+	}
+
 	public function beforeAction($event) {
 		$this->ControllerAction->field('security_group_id', ['visible' => false]);
 		// $this->ControllerAction->field('institution_site_area_id', ['visible' => false]);
