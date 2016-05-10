@@ -1,3 +1,13 @@
+-- POCOR-2614
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue`='POCOR-2614';
+
+
+-- POCOR-2899
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2899';
+
+
 -- POCOR-2885
 -- delete new table
 
