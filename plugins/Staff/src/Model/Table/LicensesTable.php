@@ -81,7 +81,7 @@ class LicensesTable extends ControllerActionTable {
 	}
 
 	public function afterAction(Event $event) {
-		$this->ControllerAction->setFieldOrder(['license_type_id', 'license_number', 'issue_date', 'expiry_date', 'issuer']);
+		$this->setFieldOrder(['license_type_id', 'license_number', 'issue_date', 'expiry_date', 'issuer']);
 		$this->setupTabElements();
 	}
 }
