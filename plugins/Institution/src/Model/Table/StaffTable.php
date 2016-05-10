@@ -171,6 +171,8 @@ class StaffTable extends AppTable {
 		$this->fields['institution_position_id']['order'] = 6;
 		$this->fields['FTE']['visible'] = false;
 
+		$this->controller->set('ngController', 'AdvancedSearchCtrl');
+
 		$selectedStatus = $this->request->query('staff_status_id');
 		switch ($selectedStatus) {
 			case self::PENDING_PROFILE:
