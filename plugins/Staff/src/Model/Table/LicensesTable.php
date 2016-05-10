@@ -1,6 +1,7 @@
 <?php
 namespace Staff\Model\Table;
 
+use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
@@ -80,8 +81,8 @@ class LicensesTable extends ControllerActionTable {
 		$this->controller->set('selectedAction', $this->alias());
 	}
 
-	public function afterAction(Event $event) {
-		$this->ControllerAction->setFieldOrder(['license_type_id', 'license_number', 'issue_date', 'expiry_date', 'issuer']);
+	public function afterAction(Event $event, ArrayObject $extra) {
+		$this->setFieldOrder(['license_type_id', 'license_number', 'issue_date', 'expiry_date', 'issuer']);
 		$this->setupTabElements();
 	}
 }
