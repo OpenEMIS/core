@@ -51,6 +51,7 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('Infrastructures',					['className' => 'Institution.InstitutionInfrastructures', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->hasMany('Staff',				 				['className' => 'Institution.Staff', 'dependent' => true]);
+		$this->hasMany('StaffPositionProfiles',				['className' => 'Institution.StaffPositionProfiles', 'dependent' => true]);
 		$this->hasMany('StaffBehaviours', 					['className' => 'Institution.StaffBehaviours', 'dependent' => true]);
 		$this->hasMany('InstitutionStaffAbsences', 			['className' => 'Institution.StaffAbsences', 'dependent' => true]);
 
