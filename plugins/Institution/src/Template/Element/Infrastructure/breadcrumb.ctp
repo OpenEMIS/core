@@ -14,7 +14,13 @@
 			<li><a href="<?= $baseUrl; ?>"><?= __('All')?></a></li>
 			<?php foreach ($crumbs as $crumb) : ?>
 				<?php if ($crumb === end($crumbs)) : ?>
-		    		<li class="active"><?= $crumb->name." <span class='divider'></span> ".$levelOptions[$selectedLevel]['text']; ?></li>
+					<?php
+						$crumbName = $crumb->name;
+						if (!empty($levelOptions) && !is_null($selectedLevel)) {
+							$crumbName .= " <span class='divider'></span> ".$levelOptions[$selectedLevel]['text'];
+						}
+					?>
+					<li class="active"><?= $crumbName; ?></li>
 		    	<?php else : ?>
 					<li><a href="<?= $baseUrl . "?parent=" . $crumb->id; ?>"><?= $crumb->name; ?></a></li>
 				<?php endif ?>
