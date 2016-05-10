@@ -1,6 +1,7 @@
 <?php
 namespace Staff\Model\Table;
 
+use ArrayObject;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use App\Model\Table\ControllerActionTable;
@@ -31,8 +32,8 @@ class MembershipsTable extends ControllerActionTable {
 		$this->controller->set('selectedAction', $this->alias());
 	}
 
-	public function afterAction(Event $event) {
-		$this->ControllerAction->setFieldOrder(['membership', 'issue_date', 'expiry_date', 'comment']);
+	public function afterAction(Event $event, ArrayObject $extra) {
+		$this->setFieldOrder(['membership', 'issue_date', 'expiry_date', 'comment']);
 		$this->setupTabElements();
 	}
 }
