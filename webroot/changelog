@@ -9,6 +9,7 @@ v3.5.5
 - Optimisation on database queries
 - Fixed a bug that caused specific users not able to access newly created schools
 - Fixed a bug that caused 404 error page when accessing Rubrics
+- Added xform validations to work with mobile app
 
 v3.5.4
 - Students can only be added to schools with academic period of Year level now
