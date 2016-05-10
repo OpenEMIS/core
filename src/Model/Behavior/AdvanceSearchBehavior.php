@@ -47,7 +47,9 @@ class AdvanceSearchBehavior extends Behavior {
 **
 ******************************************************************************************************************/
 	public function afterAction(Event $event) {
-		if ($this->_table->action == 'index') {
+		$model = $this->_table;
+		$alias = $model->alias();
+		if ($model->action == 'index') {
 		    $labels = TableRegistry::get('Labels');
 			$filters = [];
 			$advancedSearch = false;
@@ -88,9 +90,24 @@ class AdvanceSearchBehavior extends Behavior {
 								$filters[$key]['options'] = $options;
 							}
 						}
+					} else {
+						$filtered = (isset($advanceSearchModelData['hasMany']) && isset($advanceSearchModelData['hasMany'][$key])) ? $advanceSearchModelData['hasMany'][$key] : '' ;
+						if (strlen($filtered) > 0 && $advancedSearch == false) {
+							$advancedSearch = true;
+						}
 					}
 				}
 			}
+			$advancedSearchBelongsTo = $model->Session->check($alias.'.advanceSearch.belongsTo') ? $model->Session->read($alias.'.advanceSearch.belongsTo') : [];
+			$advancedSearchHasMany = $model->Session->check($alias.'.advanceSearch.hasMany') ? $model->Session->read($alias.'.advanceSearch.hasMany') : [];
+			// pr($advancedSearchBelongsTo);
+			// pr($advancedSearchHasMany);
+			foreach ($advancedSearchHasMany as $field => $value) {
+				if (strlen($value) > 0 && $advancedSearch == false) {
+					$advancedSearch = true;
+				}
+			}
+
 			if (! empty ($advanceSearchModelData['isSearch']) ) {
 				$advancedSearch = true;
 			}
