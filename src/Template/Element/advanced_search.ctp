@@ -1,5 +1,3 @@
-<?= $this->Html->script('OpenEmis.../js/angular/ng.advanced-search.ctrl', ['block' => true]); ?>
-
 <?php
 use Cake\Utility\Inflector;
 ?>
