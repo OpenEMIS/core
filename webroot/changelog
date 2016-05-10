@@ -2,6 +2,7 @@ v3.5.5
 - Added Difficulties to Special Needs
 - Position Number cannot contain spaces now
 - Fixed a bug that prevent the system from perform Student Repeat
+- OAuth and SAML authentication via mobile can now be supported
 
 v3.5.4
 - Students can only be added to schools with academic period of Year level now
