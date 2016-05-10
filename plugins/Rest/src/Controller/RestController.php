@@ -46,6 +46,7 @@ class RestController extends AppController
             $this->RestVersion = $this->request->query('version');
         }
 		
+		$this->Auth->logout();
 		if ($this->RestVersion == 2.0) {
             // Using JWT for authenication
 			$this->Auth->config('authenticate', [
@@ -189,42 +190,19 @@ class RestController extends AppController
                     }
                     $this->redirect($redirectUrl);
                 }
-
                 $url = $this->Cookie->read('Restful.CallBackURL');
                 $token = $this->request->query('payload');
-                $json = [
-                    'success' => true,
-                    'data' => [
-                        'token' => $token
-                    ]
-                ];
-
-                // Doesn't work on localhost
-                try{
-                	$http = new Client();
-	                $http->post($url, [
-					  'token' => $token
-					]);
-                } catch (\Exception $e) {
-                	Log::write('error', $e->getMessage());
-                }
+                $url = $url.'?code='.$token;
+                $this->redirect($url);
             } else {
                 $this->Cookie->configKey('Restful', 'path', '/');
                 $this->Cookie->configKey('Restful', [
                     'expires' => '+5 minutes'
                 ]);
-                $url = $this->request->data('callback_url');
+                $url = $this->request->query('redirect_uri');
                 $this->Cookie->write('Restful.Call', true);
                 $this->Cookie->write('Restful.CallBackURL', $url);
-                if ($this->Auth->user()) {
-                    $payload = $this->SSO->generateToken();
-                    $redirectUrl = $this->ControllerAction->url('token');
-                    $redirectUrl['payload'] = $payload;
-                    $this->redirect($redirectUrl);
-                } else {
-                    $this->SSO->doAuthentication(); 
-                }
-                
+                $this->SSO->doAuthentication();
             }   
         } else
         {
