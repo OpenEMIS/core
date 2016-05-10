@@ -72,8 +72,8 @@ class InstitutionInfrastructuresTable extends AppTable {
 	            ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => [], 'options' => []]
 	        ];
 			$this->controller->set('toolbarElements', $toolbarElements);
-			$allLevelOptions = $this->Levels->getList()->toArray();
-			$this->controller->set('allLevelOptions', $allLevelOptions);
+			list($levelOptions, $selectedLevel) = array_values($this->getLevelOptions(['withAll' => true]));
+			$this->controller->set(compact('levelOptions', 'selectedLevel'));
 		}
 
 		$this->ControllerAction->field('parent_id');
@@ -84,14 +84,6 @@ class InstitutionInfrastructuresTable extends AppTable {
 	}
 
 	public function indexBeforeAction(Event $event) {
-		$toolbarElements = [
-			['name' => 'Institution.Infrastructure/breadcrumb', 'data' => [], 'options' => []],
-			['name' => 'Institution.Infrastructure/controls', 'data' => [], 'options' => []]
-		];
-		$this->controller->set('toolbarElements', $toolbarElements);
-		$allLevelOptions = $this->Levels->getList()->toArray();
-		$this->controller->set('allLevelOptions', $allLevelOptions);
-
 		$parentId = $this->request->query('parent');
 		if (!is_null($parentId)) {
 			$crumbs = $this->findPath(['for' => $parentId]);
@@ -117,6 +109,15 @@ class InstitutionInfrastructuresTable extends AppTable {
 
 		list($levelOptions, $selectedLevel) = array_values($this->getLevelOptions(['withAll' => true]));
 		$this->controller->set(compact('levelOptions', 'selectedLevel'));
+		$toolbarElements = [
+			['name' => 'Institution.Infrastructure/breadcrumb', 'data' => [], 'options' => []]
+		];
+		// No need to show controls filter if only has one level options
+		if (count($levelOptions) > 1) {
+			$toolbarElements[] = ['name' => 'Institution.Infrastructure/controls', 'data' => [], 'options' => []];
+		}
+		$this->controller->set('toolbarElements', $toolbarElements);
+
 		if ($selectedLevel != '-1') {
 			$query->where([$this->aliasField('infrastructure_level_id') => $selectedLevel]);
 		}
@@ -400,7 +401,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 			$levelQuery->where([$this->Levels->aliasField('parent_id') => $levelId]);
 		}
 		$levelOptions = $levelQuery->toArray();
-		if($withAll) {
+		if($withAll && count($levelOptions) > 1) {
 			$levelOptions = ['-1' => __('All Levels')] + $levelOptions;
 		}
 		$selectedLevel = $this->queryString('level', $levelOptions);
