@@ -4,6 +4,10 @@ v3.5.5
 - Fixed a bug that prevent the system from perform Student Repeat
 - OAuth and SAML authentication via mobile can now be supported
 - Deleting Institutions now deletes Staff Profile change requests properly
+- Fixed 504 bad gateway issue when login by certain users
+- Fixed a bug that caused Coordinate tooltip not to display properly
+- Optimisation on database queries
+- Fixed a bug that caused specific users not able to access newly created schools
 
 v3.5.4
 - Students can only be added to schools with academic period of Year level now

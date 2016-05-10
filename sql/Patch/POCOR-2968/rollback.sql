@@ -1,4 +1,3 @@
--- POCOR-2968
 -- code here
 ALTER TABLE `survey_status_periods` DROP INDEX `academic_period_id`;
 ALTER TABLE `institution_student_admission` DROP INDEX `academic_period_id`;
@@ -8,7 +7,7 @@ ALTER TABLE `academic_periods` DROP INDEX `academic_period_level_id`;
 
 ALTER TABLE `institutions` DROP INDEX `area_administrative_id`;
 ALTER TABLE `area_administrative_levels` DROP INDEX `area_administrative_id`;
-
+	
 ALTER TABLE `institution_bank_accounts` DROP INDEX `bank_branch_id`;
 
 ALTER TABLE `bank_branches` DROP INDEX `bank_id`;
@@ -18,7 +17,7 @@ ALTER TABLE `custom_forms_fields` DROP INDEX `custom_field_id`;
 ALTER TABLE `custom_table_rows` DROP INDEX `custom_field_id`;
 ALTER TABLE `custom_field_options` DROP INDEX `custom_field_id`;
 ALTER TABLE `custom_table_cells` DROP INDEX `custom_field_id`;
-
+	
 ALTER TABLE `custom_forms_filters` DROP INDEX `custom_filter_id`;
 
 ALTER TABLE `custom_records` DROP INDEX `custom_form_id`;
@@ -60,34 +59,34 @@ ALTER TABLE `infrastructure_custom_forms_fields` DROP INDEX `infrastructure_cust
 ALTER TABLE `infrastructure_custom_forms_filters` DROP INDEX `infrastructure_custom_form_id`;
 ALTER TABLE `infrastructure_custom_table_cells` DROP INDEX `infrastructure_custom_table_column_id`;
 ALTER TABLE `infrastructure_custom_table_cells` DROP INDEX `infrastructure_custom_table_row_id`;
-
+	
 ALTER TABLE `institution_custom_table_columns` DROP INDEX `institution_custom_field_id`;
 ALTER TABLE `institution_custom_field_options` DROP INDEX `institution_custom_field_id`;
 ALTER TABLE `institution_custom_table_cells` DROP INDEX `institution_custom_field_id`;
 ALTER TABLE `institution_custom_table_rows` DROP INDEX `institution_custom_field_id`;
 ALTER TABLE `institution_custom_forms_fields` DROP INDEX `institution_custom_field_id`;
-
+	
 ALTER TABLE `institution_custom_forms_filters` DROP INDEX `institution_custom_filter_id`;
 ALTER TABLE `institution_custom_forms_fields` DROP INDEX `institution_custom_form_id`;
 ALTER TABLE `institution_custom_forms_filters` DROP INDEX `institution_custom_form_id`;
 ALTER TABLE `institution_custom_table_cells` DROP INDEX `institution_custom_table_column_id`;
 ALTER TABLE `institution_custom_table_cells` DROP INDEX `institution_custom_table_row_id`;
-
+	
 ALTER TABLE `institution_student_dropout` DROP INDEX `institution_id`;
 ALTER TABLE `institution_bank_accounts` DROP INDEX `institution_id`;
 ALTER TABLE `institution_student_absences` DROP INDEX `institution_id`;
 ALTER TABLE `institution_student_admission` DROP INDEX `institution_id`;
-
+	
 ALTER TABLE `infrastructure_custom_table_cells` DROP INDEX `institution_infrastructure_id`;
 ALTER TABLE `institution_staff_position_profiles` DROP INDEX `institution_staff_id`;
 ALTER TABLE `institution_survey_table_cells` DROP INDEX `institution_survey_id`;
 ALTER TABLE `institution_student_surveys` DROP INDEX `parent_form_id`;
-
+	
 ALTER TABLE `security_functions` DROP INDEX `parent_id`;
 ALTER TABLE `institution_infrastructures` DROP INDEX `parent_id`;
 ALTER TABLE `infrastructure_levels` DROP INDEX `parent_id`;
 ALTER TABLE `custom_modules` DROP INDEX `parent_id`;
-
+	
 ALTER TABLE `institution_student_admission` DROP INDEX `previous_institution_id`;
 ALTER TABLE `staff_qualifications` DROP INDEX `qualification_level_id`;
 ALTER TABLE `batch_processes` DROP INDEX `reference_id`;
@@ -120,22 +119,22 @@ ALTER TABLE `student_custom_table_cells` DROP INDEX `student_custom_field_id`;
 ALTER TABLE `student_custom_table_columns` DROP INDEX `student_custom_field_id`;
 ALTER TABLE `student_custom_forms_fields` DROP INDEX `student_custom_field_id`;
 ALTER TABLE `student_custom_table_rows` DROP INDEX `student_custom_field_id`;
-
+	
 ALTER TABLE `student_custom_forms_fields` DROP INDEX `student_custom_form_id`;
 ALTER TABLE `student_custom_table_cells` DROP INDEX `student_custom_table_column_id`;
 ALTER TABLE `student_custom_table_cells` DROP INDEX `student_custom_table_row_id`;
 ALTER TABLE `institution_student_dropout` DROP INDEX `student_dropout_reason_id`;
-
+	
 ALTER TABLE `institution_student_admission` DROP INDEX `student_id`;
 ALTER TABLE `institution_student_dropout` DROP INDEX `student_id`;
 ALTER TABLE `student_custom_table_cells` DROP INDEX `student_id`;
-
+	
 ALTER TABLE `institution_student_admission` DROP INDEX `student_transfer_reason_id`;
-
+	
 ALTER TABLE `institution_surveys` DROP INDEX `survey_form_id`;
 ALTER TABLE `survey_statuses` DROP INDEX `survey_form_id`;
 ALTER TABLE `survey_forms_questions` DROP INDEX `survey_form_id`;
-
+	
 ALTER TABLE `survey_table_columns` DROP INDEX `survey_question_id`;
 ALTER TABLE `institution_survey_table_cells` DROP INDEX `survey_question_id`;
 ALTER TABLE `survey_forms_questions` DROP INDEX `survey_question_id`;
@@ -153,45 +152,8 @@ ALTER TABLE `workflow_comments` DROP INDEX `workflow_record_id`;
 ALTER TABLE `workflow_statuses_steps` DROP INDEX `workflow_status_id`;
 ALTER TABLE `workflow_steps_roles` DROP INDEX `workflow_step_id`;
 ALTER TABLE `workflow_statuses_steps` DROP INDEX `workflow_step_id`;
+	
+
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2968';
-
-
--- POCOR-2614
--- db_patches
-DELETE FROM `db_patches` WHERE `issue`='POCOR-2614';
-
-
--- POCOR-2899
--- db_patches
-DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2899';
-
-
--- POCOR-2885
--- delete new table
-DROP TABLE IF EXISTS `special_need_difficulties`;
-
--- db_rollback
-DROP TABLE IF EXISTS `user_special_needs`;
-
-ALTER TABLE `z_2885_user_special_needs`
-RENAME TO  `user_special_needs`;
-
--- db_rollback
-DELETE FROM `field_options`
-WHERE `order` = 49;
-
-UPDATE `field_options`
-SET `order` = `order`-1
-WHERE `order` >=49;
-
--- remove labels
-DELETE FROM `labels` WHERE `module`='SpecialNeeds' and `field`='special_need_difficulty_id';
-
--- db_patches
-DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2885';
-
-
--- 3.5.4
-UPDATE config_items SET value = '3.5.4' WHERE code = 'db_version';

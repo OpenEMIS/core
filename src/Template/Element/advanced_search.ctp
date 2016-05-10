@@ -1,5 +1,3 @@
-<?= $this->Html->script('OpenEmis.../js/angular/ng.advanced-search.ctrl', ['block' => true]); ?>
-
 <?php
 use Cake\Utility\Inflector;
 ?>
@@ -19,7 +17,7 @@ use Cake\Utility\Inflector;
 		  <label><?= $filter['label'] ?>:</label>
 		  <div class="input-select-wrapper">	 
 			  <select name="AdvanceSearch[<?= $model ?>][belongsTo][<?= $key ?>]">
-				<option value=""><?= __('-- SELECT --'); ?></option>
+				<option value=""><?= __('-- Select --'); ?></option>
 				<?php foreach ($filter['options'] as $optKey=>$optVal): ?>
 					<?php $selected = ($optKey==$filter['selected']) ? 'selected' : ''; ?>
 					<option value="<?= $optKey ?>" <?= $selected ?>><?= $optVal ?></option>
