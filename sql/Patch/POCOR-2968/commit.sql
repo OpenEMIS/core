@@ -25,9 +25,9 @@ ALTER TABLE `custom_table_cells` ADD INDEX `custom_field_id` (`custom_field_id`)
 	
 ALTER TABLE `custom_forms_filters` ADD INDEX `custom_filter_id` (`custom_filter_id`);
 
-ALTER TABLE `custom_records` ADD INDEX `custom_form_id` (`custom_form_id`);		
-ALTER TABLE `custom_forms_fields` ADD INDEX `custom_form_id` (`custom_form_id`);		
-ALTER TABLE `custom_forms_filters` ADD INDEX `custom_form_id` (`custom_form_id`);		
+ALTER TABLE `custom_records` ADD INDEX `custom_form_id` (`custom_form_id`);
+ALTER TABLE `custom_forms_fields` ADD INDEX `custom_form_id` (`custom_form_id`);
+ALTER TABLE `custom_forms_filters` ADD INDEX `custom_form_id` (`custom_form_id`);
 
 ALTER TABLE `custom_forms` ADD INDEX `custom_module_id` (`custom_module_id`);
 ALTER TABLE `survey_forms` ADD INDEX `custom_module_id` (`custom_module_id`);
@@ -157,4 +157,7 @@ ALTER TABLE `workflow_comments` ADD INDEX `workflow_record_id` (`workflow_record
 ALTER TABLE `workflow_statuses_steps` ADD INDEX `workflow_status_id` (`workflow_status_id`);
 ALTER TABLE `workflow_steps_roles` ADD INDEX `workflow_step_id` (`workflow_step_id`);
 ALTER TABLE `workflow_statuses_steps` ADD INDEX `workflow_step_id` (`workflow_step_id`);
+
+ALTER TABLE `security_users` ADD INDEX `super_admin` (`super_admin`);
+
 	
