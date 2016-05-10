@@ -9,6 +9,7 @@ echo $this->Html->script('OpenEmis.lib/angular/angular-route.min');
 // echo $this->Html->script('OpenEmis.angular/ng.layout-splitter');
 echo $this->Html->script('OpenEmis.lib/holder');
 echo $this->Html->script('OpenEmis.lib/angular/ui-bootstrap-tpls.min');
+echo $this->Html->script('OpenEmis.angular/ng.advanced-search.ctrl');
 
 //Only when needed this have to be added in ScriptBottom
 echo $this->Html->script('OpenEmis.jquery/jq.mobile-menu');
