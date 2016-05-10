@@ -14,7 +14,7 @@
 			<li><a href="<?= $baseUrl; ?>"><?= __('All')?></a></li>
 			<?php foreach ($crumbs as $crumb) : ?>
 				<?php if ($crumb === end($crumbs)) : ?>
-		    		<li class="active"><?= $crumb->name." <span class='divider'></span> ".$allLevelOptions[$crumb->infrastructure_type_id]; ?></li>
+		    		<li class="active"><?= $crumb->name." <span class='divider'></span> ".$levelOptions[$selectedLevel]['text']; ?></li>
 		    	<?php else : ?>
 					<li><a href="<?= $baseUrl . "?parent=" . $crumb->id; ?>"><?= $crumb->name; ?></a></li>
 				<?php endif ?>
