@@ -32,7 +32,7 @@ class MembershipsTable extends ControllerActionTable {
 	}
 
 	public function afterAction(Event $event) {
-		$this->ControllerAction->setFieldOrder(['membership', 'issue_date', 'expiry_date', 'comment']);
+		$this->setFieldOrder(['membership', 'issue_date', 'expiry_date', 'comment']);
 		$this->setupTabElements();
 	}
 }
