@@ -43,6 +43,7 @@ class ApiSISBComponent extends Component {
 		})->toArray();
 
 		if (array_key_exists('id', $params) && $params['id']!='') {
+			$Students = TableRegistry::get('API.Students');
 
 			$message = 'User ' . $params['user_id'] . ' from ' . $externalApplication->name . ' queries for ' . $params['id'];
 			Log::info($message, ['scope' => ['api']]);
@@ -58,12 +59,97 @@ class ApiSISBComponent extends Component {
 			} else {
 				$PersonaIdentities = TableRegistry::get('API.StudentIdentities');
 			}
-
+			
 			if (isset($result)) { return $result; }
 
 			$conditions = [];
 			if ($paramIdentityType=='openemis_no') {
 				$conditions[] = ['Student.openemis_no' => $params['id']];
+				$resultSet = $Students
+					->find()
+					->contain(['Identities.IdentityTypes'])
+					->where([$Students->aliasField('openemis_no') => $params['id']])
+					->all();
+
+				if ($resultSet->count() > 0) {
+					$entity = $resultSet->first();
+					$identities = $entity->identities;
+
+					$result = [
+						'id' => [
+							'label' => 'Not Available',
+							'value' => 'Not Available'
+						],
+						'name' => [
+							'label' => 'Name'
+						],
+						'status' => [
+							'label' => 'Currently in school',
+							'value' =>  'Not Available',
+						],
+						'school_name' => [
+							'label' => 'Current school',
+							'value' =>  'Not Available',
+						],
+						'school_code' => [
+							'label' => 'Current school #',
+							'value' =>  'Not Available',
+						],
+						'level' => [
+							'label' => 'Current level',
+							'value' =>  'Not Available',
+						],
+						'openemis_id' => [
+							'label' => 'OpenEMIS ID#'
+						]
+					];
+
+					if (count($identities) > 0) {
+						$result['id'] = [
+							'label' => $identities[0]->identity_type->name . ' #',
+							'value' => $identities[0]->number
+						];
+					}
+
+					$result['name'] = [
+						'label' => 'Name',
+						'value' => implode(' ', [$entity['first_name'], $entity['middle_name'], $entity['third_name'], $entity['last_name']])
+					];
+
+					$InstitutionStudents = TableRegistry::get('InstitutionStudents');
+					$academicEntity = $InstitutionStudents
+						->find()
+						->select(['EducationGrades.name', 'Institutions.name', 'Institutions.code'])
+						->innerJoin(
+							['EducationGrades' => 'education_grades'],
+							['EducationGrades.id = ' . $InstitutionStudents->aliasField('education_grade_id')]
+						)
+						->innerJoin(
+							['Institutions' => 'institutions'],
+							['Institutions.id = ' . $InstitutionStudents->aliasField('institution_id')]
+						)
+						->where([
+							$InstitutionStudents->aliasField('student_id') => $entity->id,
+							$InstitutionStudents->aliasField('student_status_id') => 1 // Enrolled
+						])
+						->autoFields(true)
+						->first();
+
+					if ($academicEntity) {
+						// pr($academicEntity);
+						$result['status']['value'] = 'Yes';
+						$result['school_name']['value'] = $academicEntity->Institutions['name'];
+						$result['school_code']['value'] = $academicEntity->Institutions['code'];
+						$result['level']['value'] = $academicEntity->EducationGrades['name'];
+						$result['openemis_id']['value'] = $entity->openemis_no;
+					}
+
+					$result['error'] = $ApiAuthorizations->getErrorMessage(0);
+
+					// pr($result);
+					// pr($entity);die;
+				}
+
 			} else {
 				if (empty($identity_type)) {
 					$result = [
