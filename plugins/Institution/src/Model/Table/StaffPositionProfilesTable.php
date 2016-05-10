@@ -245,7 +245,8 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 					$requestData[$this->alias()]['end_date'] = $requestData[$this->alias()]['start_date'];
 				}
 			} else {
-				$requestData[$this->alias()]['end_date'] = $newEndDate;
+				$endDate = (new Date($newEndDate))->modify('-1 day');
+				$requestData[$this->alias()]['end_date'] = $endDate->format('Y-m-d');
 			}
 		}		
 	}
