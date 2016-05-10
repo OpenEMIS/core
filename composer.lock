@@ -4,9 +4,54 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "f682ef9e90cff148564a059279017fb5",
-    "content-hash": "ab60b6f8578cb79e679fc3621d75a64b",
+    "hash": "1083e1c01eda36f1b60b23d3c325c4dc",
+    "content-hash": "bd0302f665b15b835655e6b663130714",
     "packages": [
+        {
+            "name": "admad/cakephp-jwt-auth",
+            "version": "2.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ADmad/cakephp-jwt-auth.git",
+                "reference": "c62e76c2323013984dd93ac53ce71217d4643d15"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ADmad/cakephp-jwt-auth/zipball/c62e76c2323013984dd93ac53ce71217d4643d15",
+                "reference": "c62e76c2323013984dd93ac53ce71217d4643d15",
+                "shasum": ""
+            },
+            "require": {
+                "cakephp/cakephp": "~3.1",
+                "firebase/php-jwt": "~3.0"
+            },
+            "type": "cakephp-plugin",
+            "autoload": {
+                "psr-4": {
+                    "ADmad\\JwtAuth\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "ADmad",
+                    "homepage": "https://github.com/ADmad",
+                    "role": "Author"
+                }
+            ],
+            "description": "CakePHP plugin for authenticating using JSON Web Tokens",
+            "homepage": "http://github.com/ADmad/cakephp-jwt-auth",
+            "keywords": [
+                "Authentication",
+                "authenticate",
+                "cakephp",
+                "jwt"
+            ],
+            "time": "2016-04-02 19:34:30"
+        },
         {
             "name": "aura/installer-default",
             "version": "1.0.0",
@@ -252,6 +297,49 @@
                 "time"
             ],
             "time": "2016-03-10 01:50:25"
+        },
+        {
+            "name": "firebase/php-jwt",
+            "version": "v3.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/firebase/php-jwt.git",
+                "reference": "fa8a06e96526eb7c0eeaa47e4f39be59d21f16e1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/firebase/php-jwt/zipball/fa8a06e96526eb7c0eeaa47e4f39be59d21f16e1",
+                "reference": "fa8a06e96526eb7c0eeaa47e4f39be59d21f16e1",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Firebase\\JWT\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Neuman Vong",
+                    "email": "neuman+pear@twilio.com",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Anant Narayanan",
+                    "email": "anant@php.net",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A simple library to encode and decode JSON Web Tokens (JWT) in PHP. Should conform to the current spec.",
+            "homepage": "https://github.com/firebase/php-jwt",
+            "time": "2015-07-22 18:31:08"
         },
         {
             "name": "korditpteltd/kd-cakephp-restful",
