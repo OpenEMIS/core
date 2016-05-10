@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\Log\Log;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\MessagesTrait;
@@ -153,6 +154,14 @@ class InstitutionSurveysTable extends AppTable {
     	return $this->workflowEvents;
     }
 
+    public function triggerBuildSurveyRecordsShell($institutionId) {
+    	$cmd = ROOT . DS . 'bin' . DS . 'cake Survey ' . $institutionId;
+		$logs = ROOT . DS . 'logs' . DS . 'survey.log & echo $!';
+		$shellCmd = $cmd . ' >> ' . $logs;
+		$pid = exec($shellCmd);
+		Log::write('debug', $shellCmd);
+    }
+
     // Workbench.Model.onGetList
 	public function onGetWorkbenchList(Event $event, $isAdmin, $institutionRoles, ArrayObject $data) {
 		// Results of all Not Completed survey in all institutions that the login user can access
@@ -184,7 +193,9 @@ class InstitutionSurveysTable extends AppTable {
 					// logic to pre-insert survey in school only when user's roles is configured to access the step
 					$hasAccess = count(array_intersect_key($roles, $stepRoles[$statusId])) > 0;
 					if ($hasAccess) {
-						$this->buildSurveyRecords($institutionId);
+						// create shell to process building of survey records
+						$this->triggerBuildSurveyRecordsShell($institutionId);
+						// $this->buildSurveyRecords($institutionId);
 					}
 					// End
 				}
