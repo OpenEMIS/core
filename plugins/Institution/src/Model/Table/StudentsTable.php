@@ -312,6 +312,8 @@ class StudentsTable extends AppTable {
 		$this->fields['start_date']['visible'] = false;
 		$this->fields['end_date']['visible'] = false;
 		$this->fields['class']['sort'] = ['field' => 'InstitutionClasses.name'];
+
+		$this->controller->set('ngController', 'AdvancedSearchCtrl');
 		
 		$StudentStatusesTable = $this->StudentStatuses;
 		$status = $StudentStatusesTable->findCodeList();

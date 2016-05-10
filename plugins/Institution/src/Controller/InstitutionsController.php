@@ -154,6 +154,8 @@ class InstitutionsController extends AppController  {
 		$action = $this->request->action;
 		switch ($action) {
 			case 'index':
+			case 'Staff':
+			case 'Students':
 				$this->Angular->addModules([
 					'advanced.search.ctrl'
 				]);
