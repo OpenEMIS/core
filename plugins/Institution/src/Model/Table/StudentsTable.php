@@ -286,7 +286,6 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->field('student_status_id', ['type' => 'select']);
 	}
 
-	// Start PHPOE-2123
     public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
         // POCOR-2884 - If id cannot be found, return a successful deletion message
         $primaryKey = $this->primaryKey();
@@ -298,17 +297,143 @@ class StudentsTable extends AppTable {
             return $process;
         }
 
-        // Another check to check before deletion. In case of concurrency issue.
+        // PHPOE-2123 moved.. 'Another check to check before deletion. In case of concurrency issue.'
         $status = $this->get($id)->student_status_id;
         $studentStatuses = $this->StudentStatuses->findCodeList();
         if ($status != $studentStatuses['CURRENT']) {
             $process = function() use ($id, $options) {
-                $this->Alert->error('Institution.InstitutionStudents.deleteNotEnrolled');
+                $this->Alert->error('Institution.InstitutionSiteStudents.deleteNotEnrolled');
             };
             return $process;
         }
+
+        $process = function($model, $id, $options) {
+            $studentData = $model->find()->where([$model->aliasField('id') => $id])->first();
+            $studentId = $studentData->student_id;
+            $startDate = $studentData->start_date;
+            $endDate = $studentData->end_date;
+
+            if ($startDate instanceof Time) {
+                $startDate = $startDate->format('Y-m-d');
+            } else {
+                $startDate = date('Y-m-d', strtotime($startDate));
+            }
+            if ($endDate instanceof Time) {
+                $endDate = $endDate->format('Y-m-d');
+            } else {
+                $endDate = date('Y-m-d', strtotime($endDate));
+            }
+            $academicPeriodId = $studentData->academic_period_id;
+            $educationGradeId = $studentData->education_grade_id;
+
+            /* delete the student from all classes that have the same grade (grade info can be found in institution_student) */
+            $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+            $classStudentData = $InstitutionClassStudents->find();
+            if (!empty($educationGradeId)) {
+                $classStudentData->contain([
+                    'EducationGrades' => function ($q) use ($educationGradeId) {
+                            return $q
+                                ->where(['EducationGrades.id' => $educationGradeId]);
+                        }
+                    ]
+                );
+            }
+            $classStudentData->where([$InstitutionClassStudents->aliasField('student_id') => $studentId]);
+
+            // DELETION TO BE DONE HERE FOR $classStudentData
+            foreach ($classStudentData as $key => $value) {
+                // this delete also deletes subjects in $InstitutionClassStudents->afterDelete()
+                $InstitutionClassStudents->delete($value);
+            }
+            
+        /* delete all attendance records (institution_site_student_absences) with dates that fall between the start and end date found in institution_students */
+            $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+            $overlapDateCondition = [];
+            $overlapDateCondition['OR'] = [
+                'OR' => [
+                    [
+                        $InstitutionStudentAbsences->aliasField('end_date') . ' IS NOT NULL',
+                        $InstitutionStudentAbsences->aliasField('start_date') . ' <=' => $startDate,
+                        $InstitutionStudentAbsences->aliasField('end_date') . ' >=' => $startDate
+                    ],
+                    [
+                        $InstitutionStudentAbsences->aliasField('end_date') . ' IS NOT NULL',
+                        $InstitutionStudentAbsences->aliasField('start_date') . ' <=' => $endDate,
+                        $InstitutionStudentAbsences->aliasField('end_date') . ' >=' => $endDate
+                    ],
+                    [
+                        $InstitutionStudentAbsences->aliasField('end_date') . ' IS NOT NULL',
+                        $InstitutionStudentAbsences->aliasField('start_date') . ' >=' => $startDate,
+                        $InstitutionStudentAbsences->aliasField('end_date') . ' <=' => $endDate
+                    ]
+                ],
+                [
+                    $InstitutionStudentAbsences->aliasField('end_date') . ' IS NULL',
+                    $InstitutionStudentAbsences->aliasField('start_date') . ' <=' => $endDate
+                ]
+            ];
+            
+            $studentAbsenceData = $InstitutionStudentAbsences->find()
+                ->where($overlapDateCondition)
+                ->where([$InstitutionStudentAbsences->aliasField('student_id') => $studentId])
+                ;
+
+            // DELETION TO BE DONE HERE FOR $studentAbsenceData
+            foreach ($studentAbsenceData as $key => $value) {
+                $InstitutionStudentAbsences->delete($value);
+            }
+
+        /* delete all behaviour records (student_behaviours) with dates that fall between the start and end date found in institution_students */
+            $StudentBehaviours = TableRegistry::get('Institution.StudentBehaviours');
+            
+            $studentBehaviourData = $StudentBehaviours->find()
+                ->where([
+                    $StudentBehaviours->aliasField('date_of_behaviour').' >= ' => $startDate,
+                    $StudentBehaviours->aliasField('date_of_behaviour').' <= ' => $endDate
+                ])
+                ->where([$StudentBehaviours->aliasField('student_id') => $studentId])
+                ;
+
+            // DELETION TO BE DONE HERE FOR $studentBehaviourData
+            foreach ($studentBehaviourData as $key => $value) {
+                $StudentBehaviours->delete($value);
+            }
+
+        /* delete all assessment records (assessment_item_results) that belongs to the same student and academic period (academic_period_id can be found in institution_students) */
+            $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+            $studentAssessmentData = $AssessmentItemResults->find()
+                ->where([
+                    $AssessmentItemResults->aliasField('student_id') => $studentId,
+                    $AssessmentItemResults->aliasField('academic_period_id') => $academicPeriodId
+                ])
+                ;
+
+            // DELETION TO BE DONE HERE FOR $studentAssessmentData
+            foreach ($studentAssessmentData as $key => $value) {
+                $AssessmentItemResults->delete($value);
+            }
+
+        /* delete all fees paid by students to that specific grade (grade info can be found in institution_site_fees) */
+            $StudentFees = TableRegistry::get('Institution.StudentFeesAbstract');
+            $studentFeeData = $StudentFees->find()
+                ->contain(['InstitutionFees' => function ($q) use ($educationGradeId) {
+                            return $q
+                                ->where(['InstitutionFees.education_grade_id' => $educationGradeId]);
+                        }
+                    ]
+                )
+                ->where([$StudentFees->aliasField('student_id') => $studentId])
+                ;
+
+
+            // DELETION TO BE DONE HERE FOR $studentFeeData
+            foreach ($studentFeeData as $key => $value) {
+                $StudentFees->delete($value);
+            }
+            return $model->delete($studentData);
+        };
+        return $process;
     }
-    // End PHPOE-2123
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$this->ControllerAction->field('academic_period_id', ['visible' => false]);
