@@ -114,7 +114,7 @@ class StudentAttendancesTable extends AppTable {
 					'key' => 'AcademicPeriod.days',
 					'field' => 'attendance_field',
 					'type' => 'attendance',
-					'label' => sprintf('%s (%s)', $item['day'], $item['weekDay']),
+					'label' => sprintf('%s (%s)', $item['day'], __($item['weekDay'])),
 					'date' => $item['date']
 				];
 			}
