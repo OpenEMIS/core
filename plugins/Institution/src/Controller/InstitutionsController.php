@@ -71,8 +71,6 @@ class InstitutionsController extends AppController  {
 		];
 
 		$this->loadComponent('Institution.InstitutionAccessControl');
-
-		$this->attachAngularModules();
 	}
 
 	// CAv4
@@ -185,21 +183,6 @@ class InstitutionsController extends AppController  {
 		$action = $this->request->action;
 		
 		switch ($action) {
-			case 'index':
-				$this->Angular->addModules([
-					'advanced.search.ctrl'
-				]);
-			break;
-			case 'Staff':
-				$this->Angular->addModules([
-					'advanced.search.ctrl'
-				]);
-			break;	
-			case 'Students':
-				$this->Angular->addModules([
-					'advanced.search.ctrl'
-				]);
-			break;
 			case 'Results':
 				$this->Angular->addModules([
 					'alert.svc',
