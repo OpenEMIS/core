@@ -9,12 +9,14 @@ function SurveyRulesController($scope, $filter, UtilsSvc, AlertSvc, SurveyRulesS
     var vm = this;
     $scope.action = 'index';
     var filterValue = '';
+    var surveyFormId = UtilsSvc.requestQuery('survey_form_id');
     
     // Initialisation
     angular.element(document).ready(function() 
     {
         SurveyRulesSvc.init(angular.baseUrl);
-        SurveyRulesSvc.getSurveyForm()
+
+        SurveyRulesSvc.getSurveyForm(surveyFormId)
         .then(function(response) 
         {
             var formData = response.data;
@@ -23,8 +25,22 @@ function SurveyRulesController($scope, $filter, UtilsSvc, AlertSvc, SurveyRulesS
             {   
                 options.push({text: formData[i].name.toString(), value: formData[i].id});
             }
-            vm.surveyFormOptions = options;
-            vm.filters = vm.surveyFormOptions[0].value;
+            
+            vm.surveyFormName = options[0].text;
+            vm.surveyFormId = options[0].value; 
+
+            SurveyRulesSvc.getSection(surveyFormId)
+            .then(function(sections)
+            {
+                var sectionData = sections.data;
+                options = [];
+                for(i = 0; i < sectionData.length; i++) 
+                {   
+                    options.push({text: sectionData[i].section.toString(), value: sectionData[i].section});
+                }
+                vm.surveySectionOptions = options;
+                vm.sectionFilters = options[0].value;
+            });
         }, function(error) 
         {
             console.log(error);
@@ -42,7 +58,6 @@ function SurveyRulesController($scope, $filter, UtilsSvc, AlertSvc, SurveyRulesS
 
     // busy waiting to watch the action of the page
     $scope.$watch('action', function(newValue, oldValue) {
-        console.log('here');
         if (angular.isDefined(newValue) && angular.isDefined(oldValue) && newValue != oldValue) {
             $scope.action = newValue;
         }
