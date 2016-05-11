@@ -43,14 +43,25 @@ angular.module('survey.rules.svc', ['kd.orm.svc'])
             ;
         },
 
-        getQuestions: function(surveyFormId) {
+        getQuestions: function(surveyFormId, sectionName) 
+        {
             return SurveyFormsQuestionsTable
             .select()
-            .contain([CustomFields])
-            .where({survey_form_id: surveyFormId})
-            .ajax({success: success, defer: true})
+            .contain(['CustomFields'])
+            .where({survey_form_id: surveyFormId, section: sectionName})
+            .ajax({defer: true})
             ;
         },
+
+        getDependentQuestions: function(surveyFormId, sectionName, order) 
+        {
+            return SurveyFormsQuestionsTable
+            .select()
+            .contain(['CustomFields'])
+            .find('DependentQuestions', {})
+            .ajax({defer: true});
+        }
+        ,
 
         getDependent: function(surveyFormId, questionOrder) {
             return SurveyFormsQuestionsTable

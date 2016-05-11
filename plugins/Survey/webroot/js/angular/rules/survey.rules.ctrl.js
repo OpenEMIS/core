@@ -2,9 +2,9 @@ angular
     .module('survey.rules.ctrl', ['utils.svc', 'alert.svc', 'survey.rules.svc'])
     .controller('SurveyRulesCtrl', SurveyRulesController);
 
-SurveyRulesController.$inject = ['$scope', '$filter', 'UtilsSvc', 'AlertSvc', 'SurveyRulesSvc'];
+SurveyRulesController.$inject = ['$scope', '$filter', '$q', 'UtilsSvc', 'AlertSvc', 'SurveyRulesSvc'];
 
-function SurveyRulesController($scope, $filter, UtilsSvc, AlertSvc, SurveyRulesSvc) {
+function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRulesSvc) {
     
     var vm = this;
     $scope.action = 'index';
@@ -39,7 +39,30 @@ function SurveyRulesController($scope, $filter, UtilsSvc, AlertSvc, SurveyRulesS
                     options.push({text: sectionData[i].section.toString(), value: sectionData[i].section});
                 }
                 vm.surveySectionOptions = options;
-                vm.sectionFilters = options[0].value;
+                vm.sectionName = options[0].value;
+                var sectionName = vm.sectionName;
+
+                SurveyRulesSvc.getQuestions(surveyFormId, vm.sectionName)
+                .then(function(response)
+                {   
+                    var surveyQuestions = [];
+                    for(i = 0; i < response.data.length; i++) {
+                        question = response.data[i];
+                        var shortName = question.name;
+                        if (shortName.length > 30) {
+                            shortName = shortName.substring(0,29)+'...';
+                        }
+                        surveyQuestions[i] = {
+                            no: i,
+                            survey_question_id: question.survey_question_id,
+                            name: question.name,
+                            short_name: shortName,
+                            order: question.order
+                        };
+                    }
+                    vm.surveyQuestions = surveyQuestions;
+                    console.log(surveyQuestions);
+                });
             });
         }, function(error) 
         {
@@ -63,7 +86,38 @@ function SurveyRulesController($scope, $filter, UtilsSvc, AlertSvc, SurveyRulesS
         }
     });
 
-    vm.onAddClick = function() {
-        $scope.action = 'add';
-    };
+    vm.onChangeSection = function(sectionName) {
+        // AlertSvc.reset($scope);
+        vm.sectionName = sectionName;
+        SurveyRulesSvc.getQuestions(vm.surveyFormId, sectionName)
+        .then(function(response)
+        {
+            console.log(response.data);
+        });
+        // console.log(sectionName);
+        // UtilsSvc.isAppendSpinner(true, 'survey-rules-table');
+        // if () {
+
+        // }
+    }
+
+    vm.getDependentQuestions = function(question) {
+        
+    }
+
+    vm.onChangeQuestion = function(questionId) {
+        // AlertSvc.reset($scope);
+        // vm.sectionName = sectionName;
+        // SurveyRulesSvc.getQuestions(vm.surveyFormId, sectionName)
+        // .then(function(response)
+        // {
+        //     console.log(questions);
+        // });
+        console.log(questionId);
+        // console.log(sectionName);
+        // UtilsSvc.isAppendSpinner(true, 'survey-rules-table');
+        // if () {
+
+        // }
+    }
 }
