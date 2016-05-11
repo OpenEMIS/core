@@ -59,7 +59,7 @@ class SurveysController extends AppController
 		
 		if ($pass == 'index') {
 			$this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Survey.SurveyRules']);
-		} else {
+		} elseif ($pass == 'edit' || $pass == 'add') {
 			$this->set('ngController', 'SurveyRulesCtrl as SurveyRulesController');
 		}
 		
