@@ -893,10 +893,6 @@ class StudentsTable extends AppTable {
 				'endDate' => $endDate->subDay()->format('d-m-Y')
 			];
 
-			$studentStatusID = $entity->student_status->id;
-			$studentStartDate = $entity->user->start_date;
-			$studentEndDate = $entity->end_date;
-
 			$this->Session->write('Student.Students.id', $entity->student_id);
 			$this->Session->write('Student.Students.name', $entity->user->name);
 			$this->setupTabElements($entity);
