@@ -73,10 +73,7 @@ select,
     clear: both;
     padding: 10px 0;
     position: relative;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    height: calc(100% - 80px);
 }
 
 .wrapper-child {
@@ -230,6 +227,7 @@ body.large {
 
 .panel-body {
     height: 100%;
+    width: 100%;
     padding: 0;
 }
 
@@ -396,6 +394,17 @@ footer {
 
 /*==========  Non-Mobile First Method  ==========*/
 
+/* Desktop, Bigger Tablets */
+@media only screen and (max-width: 1024px) {
+    .has-header, 
+    .has-breadcrumb {
+        padding: 10px 0 !important;
+        position: relative !important;
+        top: 0 !important;
+        height: 90%;
+    }
+}
+
 /* Small Devices, Tablets */
 @media only screen and (max-width : 800px) {
     footer {
@@ -414,12 +423,12 @@ footer {
 /* RTL */
 
 .rtl body,
-.rtl .btn,
+.rtl .btn-default,
+.rtl .btn-outline,
 .rtl .navbar-right .username,
 .rtl .panel-breadcrumb li,
 .rtl .panel-breadcrumb li a,
 .rtl .alert,
-.rtl .format-item label,
 .rtl .table tbody,
 .rtl .table > thead:first-child > tr:first-child > th,
 .rtl .panel-toolbar,
