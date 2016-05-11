@@ -76,10 +76,10 @@ class RenderRepeaterBehavior extends RenderBehavior {
                 $periodId = $entity->academic_period_id;
 
                 // Build table header
-                $headerHtml = __('No');
+                $headerHtml = __('No.');
                 $headerHtml .= $form->hidden("$fieldPrefix.$formKey", ['value' => $formId]);
                 $tableHeaders[] = $headerHtml;
-                $colOffset = 1; // 0 -> No
+                $colOffset = 1; // 0 -> No.
 
                 foreach ($questions as $colKey => $question) {
                     $questionName = !is_null($question->name) ? $question->name : $question->custom_field->name;
@@ -88,10 +88,36 @@ class RenderRepeaterBehavior extends RenderBehavior {
                 // End
 
                 $repeaters = [];
-                $repeaters[] = ['repeater_id' => Text::uuid()];
-                $repeaters[] = ['repeater_id' => Text::uuid()];
-                $repeaters[] = ['repeater_id' => Text::uuid()];
-                $repeaters[] = ['repeater_id' => Text::uuid()];
+                if ($model->request->is(['get'])) {
+                    $sessionKey = "$registryAlias.repeaters.$fieldId";
+                    if ($session->check($sessionKey)) {
+                        $repeaters = $session->read($sessionKey);
+                        $session->delete($sessionKey);
+                    }
+                } else if ($model->request->is(['post', 'put'])) {
+                    $requestData = $model->request->data;
+                    $submit = isset($requestData['submit']) ? $requestData['submit'] : 'save';
+
+                    if ($submit == 'save') {
+                        // do nothing
+                    } else if ($submit == 'addRepeater') {
+                        // from existing rows
+                        if (array_key_exists($model->alias(), $requestData)) {
+                            if (array_key_exists('institution_repeater_surveys', $requestData[$model->alias()])) {
+                                if (array_key_exists($fieldId, $requestData[$model->alias()]['institution_repeater_surveys'])) {
+                                    foreach ($requestData[$model->alias()]['institution_repeater_surveys'][$fieldId] as $repeaterKey => $repeaterObj) {
+                                        if ($repeaterKey == 'survey_form_id') { continue; }
+                                        $repeaters[] = $repeaterKey;
+                                    }
+                                }
+                            }
+                        }
+
+                        // add one more rows
+                        $repeaters[] = Text::uuid();
+                    } else {
+                    }
+                }
 
                 if (!empty($repeaters)) {
                     $fieldTypes = $CustomFieldTypes
@@ -99,8 +125,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
                         ->toArray();
 
                     $rowCount = 1;
-                    foreach ($repeaters as $rowKey => $repeater) {
-                        $repeaterId = $repeater['repeater_id'];
+                    foreach ($repeaters as $rowKey => $repeaterId) {
                         $rowPrefix = "$fieldPrefix.$repeaterId";
 
                         $rowData = [];
@@ -213,6 +238,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
 
     public function formatRepeaterEntity(Event $event, Entity $entity, ArrayObject $settings) {
         $surveysArray = $entity->has('institution_repeater_surveys') ? $entity->institution_repeater_surveys : [];
+        $repeatersArray = [];
 
         if (isset($entity->id)) {
             $fieldKey = $settings['fieldKey'];
@@ -221,8 +247,8 @@ class RenderRepeaterBehavior extends RenderBehavior {
 
             $params = json_decode($customField->params, true);
             if (array_key_exists($formKey, $params)) {
-                $StudentSurveys = TableRegistry::get('Student.StudentSurveys');
-                $StudentSurveyAnswers = TableRegistry::get('Student.StudentSurveyAnswers');
+                $RepeaterSurveys = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
+                $RepeaterSurveyAnswers = TableRegistry::get('InstitutionRepeater.RepeaterSurveyAnswers');
 
                 $status = $entity->status_id;
                 $institutionId = $entity->institution_id;
@@ -230,14 +256,15 @@ class RenderRepeaterBehavior extends RenderBehavior {
                 $formId = $params[$formKey];
 
                 $surveysArray[$customField->id][$formKey] = $formId;
-                $surveyResults = $StudentSurveys
+                $repeatersArray[$customField->id] = [];
+                $surveyResults = $RepeaterSurveys
                     ->find()
                     ->contain(['CustomFieldValues'])
                     ->where([
-                        $StudentSurveys->aliasField('status_id') => $status,
-                        $StudentSurveys->aliasField('institution_id') => $institutionId,
-                        $StudentSurveys->aliasField('academic_period_id') => $periodId,
-                        $StudentSurveys->aliasField($formKey) => $formId
+                        $RepeaterSurveys->aliasField('status_id') => $status,
+                        $RepeaterSurveys->aliasField('institution_id') => $institutionId,
+                        $RepeaterSurveys->aliasField('academic_period_id') => $periodId,
+                        $RepeaterSurveys->aliasField($formKey) => $formId
                     ])
                     ->all();
 
@@ -255,8 +282,9 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                 ];
                             }
                         }
-                        $surveysArray[$customField->id][$survey->student_id] = $answersArray;
-                        $surveysArray[$customField->id][$survey->student_id]['id'] = $survey->id;
+                        $surveysArray[$customField->id][$survey->repeater_id] = $answersArray;
+                        $surveysArray[$customField->id][$survey->repeater_id]['id'] = $survey->id;
+                        $repeatersArray[$customField->id][] = $survey->repeater_id;
                     }
                 }
             }
@@ -265,8 +293,10 @@ class RenderRepeaterBehavior extends RenderBehavior {
         $model = $this->_table;
         $session = $model->request->session();
         $registryAlias = $model->registryAlias();
-        $sessionKey = "$registryAlias.student_surveys";
+        $sessionKey = "$registryAlias.repeater_surveys";
         $session->write($sessionKey, $surveysArray);
+        $repeaterSessionKey = "$registryAlias.repeaters";
+        $session->write($repeaterSessionKey, $repeatersArray);
 
         $entity->set('institution_repeater_surveys', $surveysArray);
     }
