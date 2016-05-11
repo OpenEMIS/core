@@ -37,31 +37,40 @@ $institutionId = $session->read('Institution.Institutions.id');
 			<div class="input select">
 				<label for="surveyrules-survey-form-section-name"><?= __('Survey Form Section')?></label>
 				<div class="input-select-wrapper">
-					<select name="StaffPositionProfiles[staff_change_type_id]" id="staffpositionprofiles-staff-change-type-id" ng-options="item.value as item.text for item in SurveyRulesController.surveySectionOptions" ng-model="SurveyRulesController.sectionFilters" ng-change="SurveyRulesController.update(SurveyRulesController.sectionFilters)">
+					<select name="StaffPositionProfiles[staff_change_type_id]" id="staffpositionprofiles-staff-change-type-id" ng-options="item.value as item.text for item in SurveyRulesController.surveySectionOptions" ng-model="SurveyRulesController.sectionName" ng-change="SurveyRulesController.onChangeSection(SurveyRulesController.sectionName)">
 					</select>
 				</div>
 			</div>
-				<!-- <form method="post" accept-charset="utf-8" id="content-main-form" novalidate="novalidate" action="/openemis-phpoe/Surveys/Forms?module=1" class="ng-pristine ng-valid"><div style="display:none;"><input type="hidden" name="_method" value="POST"></div>
+				<form method="post" accept-charset="utf-8" id="content-main-form" novalidate="novalidate" action="/openemis-phpoe/Surveys/Forms?module=1" class="ng-pristine ng-valid"><div style="display:none;"><input type="hidden" name="_method" value="POST"></div>
 					<div class="table-wrapper">
 						<div class="table-responsive">
-							<table class="table table-curved table-sortable table-checkable">
+							<div class="section-header" ng-repeat-start="question in SurveyRulesController.surveyQuestions">{{question.no}}. {{question.name}}</div>
+							<table class="table table-curved table-sortable table-checkable" ng-repeat-end>
 								<thead>
 									<tr>
-										<th>Question</th>
-										<th>Dependent On</th>
-										<th>Show If</th>
-										<th>Action</th>
+										<th><?= __('Enable')?></th>
+										<th><?= __('Dependent On')?></th>
+										<th><?= __('Show If')?></th>
 									</tr>
 								</thead>
 									<tr>
-										<td>sdsd</td>
-										<td>sdsd</td>
-										<td>sdsd</td>
+										<td><input type="checkbox" ng-model="checked"></td>
+										<td>
+											<div class="input-select-wrapper">
+												<select ng-options="item.survey_question_id as item.short_name for item in SurveyRulesController.surveyDependentQuestions(question)" ng-model="SurveyRulesController.surveyDependentQuestions">
+												</select>
+											</div>
+										</td>
+										<td>
+											<div class="input-select-wrapper">
+
+											</div>
+										</td>
 									</tr>
 							</table>
 						</div>
 					</div>
-				</form> -->
+				</form>
 
 			<div id="survey-rules-table" class="table-wrapper">
 				<div ng-if="gridOptions" ag-grid="gridOptions" class="ag-fresh ag-height-fixed"></div>
