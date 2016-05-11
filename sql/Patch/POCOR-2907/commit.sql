@@ -18,10 +18,6 @@ ADD `is_homeroom` INT NOT NULL AFTER `security_group_id`,
 ADD `security_group_user_homeroom_id` char(36) NULL AFTER `is_homeroom`
 ;
 
--- destroy all system role related data pt1/2
-UPDATE z_2907_institution_staff SET security_group_user_id = NULL;
-
--- destroy all system role related data pt2/2
 DELETE FROM security_group_users WHERE EXISTS (SELECT * FROM institutions WHERE institutions.security_group_id = security_group_users.security_group_id);
 
 -- inserting all non-expired entries
@@ -127,8 +123,12 @@ INSERT INTO security_group_users (
                 WHERE z_2907_institution_staff.is_homeroom = 1;
 
 
-
--- HAVE TO UPDATE THE ACTUAL TABLE institution_staff WITH THE security_group_user_id
+-- destroy all system role related data
+UPDATE institution_staff SET security_group_user_id = NULL 
+WHERE NOT EXISTS (
+    SELECT * FROM z_2907_institution_staff WHERE institution_staff.id = z_2907_institution_staff.id
+);
+-- and update with new values
 UPDATE institution_staff 
     INNER JOIN z_2907_institution_staff ON (z_2907_institution_staff.id = institution_staff.id)
         SET institution_staff.security_group_user_id = z_2907_institution_staff.security_group_user_id;
