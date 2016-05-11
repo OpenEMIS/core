@@ -1,14 +1,5 @@
 <?php if ($action != 'edit'): ?>
 
-	<style>
-		<?php if ($htmlLangDir=='ltr'):?>
-			.input-value-wrapper{width:10%;margin-right:1%;float:left}
-		<?php else: ?>
-			.input-value-wrapper{width:10%;margin-left:1%;float:right}
-		<?php endif; ?>
-		.status-grey-border{border-color:#ddd}
-	</style>
-
 	<?php
 		$latitude = (is_object($values)) ? $values->latitude : '&nbsp;';
         $latitude = '<div class="input-value-wrapper"><span class="status past">'.__('Latitude').'</span><span class="status status-grey-border">'.$latitude.'</span></div>';

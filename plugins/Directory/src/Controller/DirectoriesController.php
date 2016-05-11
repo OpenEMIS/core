@@ -76,7 +76,7 @@ class DirectoriesController extends AppController {
 
 		$this->loadComponent('Training.Training');
 		$this->loadComponent('User.Image');
-
+		
 		$this->set('contentHeader', 'Directories');
 	}
 

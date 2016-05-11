@@ -1,4 +1,4 @@
-//Mobile Menu v.1.0.1
+//Mobile Menu v.1.0.2
 
 //On Mobile View -- Hamburgar Menu will appear
 var MobileMenu = {
@@ -24,7 +24,7 @@ var MobileMenu = {
         menuHandler.off('click');
         rightPane.off('click');
         // console.log("width = " + width );
-        if ((width <= 1024)) {
+        if (width <= 1024) {
             leftPane.addClass("enable-overflow");
             menuHandler.on('click', function() {
                 leftPane.toggleClass("enable-overflow").css("display", "block", "!important");
