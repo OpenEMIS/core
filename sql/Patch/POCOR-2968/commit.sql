@@ -160,4 +160,11 @@ ALTER TABLE `workflow_statuses_steps` ADD INDEX `workflow_step_id` (`workflow_st
 
 ALTER TABLE `security_users` ADD INDEX `super_admin` (`super_admin`);
 
-	
+ALTER TABLE `education_grades_subjects` ADD INDEX `education_grade_id` (`education_grade_id`);
+ALTER TABLE `education_cycles` ADD INDEX `education_level_id` (`education_level_id`);
+ALTER TABLE `education_grades_subjects` ADD INDEX `education_subject_id` (`education_subject_id`);
+ALTER TABLE `infrastructure_custom_field_options` ADD INDEX `infrastructure_custom_field_id` (`infrastructure_custom_field_id`);
+ALTER TABLE `report_progress` ADD INDEX `pid` (`pid`);
+ALTER TABLE `system_processes` ADD INDEX `process_id` (`process_id`);
+ALTER TABLE `staff_custom_field_options` ADD INDEX `staff_custom_field_id` (`staff_custom_field_id`);
+ALTER TABLE `student_custom_field_options` ADD INDEX `student_custom_field_id` (`student_custom_field_id`);
