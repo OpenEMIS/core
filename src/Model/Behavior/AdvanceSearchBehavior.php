@@ -64,9 +64,6 @@ class AdvanceSearchBehavior extends Behavior {
 						$label = $labels->getLabel($this->_table->alias(), $key, $language);
 						$relatedModel = $this->getAssociatedBelongsToModel($key);
 						$selected = (isset($advanceSearchModelData['belongsTo']) && isset($advanceSearchModelData['belongsTo'][$key])) ? $advanceSearchModelData['belongsTo'][$key] : '' ;
-						if (!empty($selected) && $advancedSearch == false) {
-							$advancedSearch = true;
-						}
 
 						$filters[$key] = [
 							'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->alias()),
@@ -91,7 +88,24 @@ class AdvanceSearchBehavior extends Behavior {
 					}
 				}
 			}
-			if (! empty ($advanceSearchModelData['isSearch']) ) {
+
+			if (array_key_exists('belongsTo', $advanceSearchModelData)) {
+				foreach ($advanceSearchModelData['belongsTo'] as $field => $value) {
+					if (!empty($value) && $advancedSearch == false) {
+						$advancedSearch = true;
+					}
+				}
+			}
+
+			if (array_key_exists('hasMany', $advanceSearchModelData)) {
+				foreach ($advanceSearchModelData['hasMany'] as $field => $value) {
+					if (strlen($value) > 0 && $advancedSearch == false) {
+						$advancedSearch = true;
+					}
+				}
+			}
+
+			if (!empty($advanceSearchModelData['isSearch']) ) {
 				$advancedSearch = true;
 			}
 
