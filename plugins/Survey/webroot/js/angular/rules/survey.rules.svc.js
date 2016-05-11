@@ -16,18 +16,30 @@ angular.module('survey.rules.svc', ['kd.orm.svc'])
             });
         },
 
-        getSurveyForm: function() {
-            return SurveyFormsTable
-            .select()
-            .ajax({defer: true})
-            ;
+        getSurveyForm: function(surveyFormId) {
+            var forms = null;
+            if (surveyFormId != 0) {
+                forms = SurveyFormsTable
+                    .select()
+                    .where({id: surveyFormId})
+                    .ajax({defer: true})
+                    ;
+            } else {
+                forms = SurveyFormsTable
+                    .select()
+                    .ajax({defer: true})
+                    ;
+            }
+            return forms;
         },
 
         getSection: function(surveyFormId) {
             // Distinct condition not yet added
             return SurveyFormsQuestionsTable
-            .select('section')
+            .select(['section'])
             .where({survey_form_id: surveyFormId})
+            .group(['section'])
+            .ajax({defer: true})
             ;
         },
 
