@@ -104,19 +104,13 @@ class RenderRepeaterBehavior extends RenderBehavior {
                     $submit = isset($requestData['submit']) ? $requestData['submit'] : 'save';
 
                     if ($submit == 'save') {
-                        // do nothing
+                        // get repeaters from request data
+                        $repeaters = $this->getRepeaters($model, $requestData, $fieldId);
                     } else if ($submit == 'addRepeater') {
                         // from existing rows
-                        if (array_key_exists($model->alias(), $requestData)) {
-                            if (array_key_exists('institution_repeater_surveys', $requestData[$model->alias()])) {
-                                if (array_key_exists($fieldId, $requestData[$model->alias()]['institution_repeater_surveys'])) {
-                                    foreach ($requestData[$model->alias()]['institution_repeater_surveys'][$fieldId] as $repeaterKey => $repeaterObj) {
-                                        if ($repeaterKey == 'survey_form_id') { continue; }
-                                        $repeaters[] = $repeaterKey;
-                                    }
-                                }
-                            }
+                        $repeaters = $this->getRepeaters($model, $requestData, $fieldId);
 
+                        if (array_key_exists($model->alias(), $requestData)) {
                             // rely on repeater_question_id field added to InstitutionSurveys
                             if (array_key_exists('repeater_question_id', $requestData[$model->alias()])) {
                                 $selectedFieldId = $requestData[$model->alias()]['repeater_question_id'];
@@ -446,5 +440,22 @@ class RenderRepeaterBehavior extends RenderBehavior {
                 'parent_form_id' => $entity->survey_form_id
             ]
         );
+    }
+
+    private function getRepeaters($model, $requestData, $fieldId) {
+        $repeaters = [];
+
+        if (array_key_exists($model->alias(), $requestData)) {
+            if (array_key_exists('institution_repeater_surveys', $requestData[$model->alias()])) {
+                if (array_key_exists($fieldId, $requestData[$model->alias()]['institution_repeater_surveys'])) {
+                    foreach ($requestData[$model->alias()]['institution_repeater_surveys'][$fieldId] as $repeaterKey => $repeaterObj) {
+                        if ($repeaterKey == 'survey_form_id') { continue; }
+                        $repeaters[] = $repeaterKey;
+                    }
+                }
+            }
+        }
+
+        return $repeaters;
     }
 }
