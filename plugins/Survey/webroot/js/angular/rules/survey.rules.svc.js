@@ -5,6 +5,7 @@ angular.module('survey.rules.svc', ['kd.orm.svc'])
         SurveyFormsTable: 'Survey.SurveyForms',
         SurveyQuestionsTable: 'Survey.SurveyQuestions',
         SurveyFormsQuestionsTable: 'Survey.SurveyFormsQuestions',
+        SurveyFormsQuestionsTable2: 'Survey.SurveyFormsQuestions',
         SurveyQuestionChoicesTable: 'Survey.SurveyQuestionChoices'
     };
 
@@ -39,13 +40,14 @@ angular.module('survey.rules.svc', ['kd.orm.svc'])
             .select(['section'])
             .where({survey_form_id: surveyFormId})
             .group(['section'])
+            .order(['order'])
             .ajax({defer: true})
             ;
         },
 
         getQuestions: function(surveyFormId, sectionName) 
         {
-            return SurveyFormsQuestionsTable
+            return SurveyFormsQuestionsTable2
             .select()
             .contain(['CustomFields'])
             .where({survey_form_id: surveyFormId, section: sectionName})
@@ -58,7 +60,7 @@ angular.module('survey.rules.svc', ['kd.orm.svc'])
             return SurveyFormsQuestionsTable
             .select()
             .contain(['CustomFields'])
-            .find('DependentQuestions', {})
+            // .find('DependentQuestions', {})
             .ajax({defer: true});
         }
         ,

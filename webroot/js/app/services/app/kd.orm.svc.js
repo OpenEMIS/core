@@ -174,6 +174,9 @@ angular.module('kd.orm.svc', [])
             if (this._group.length > 0) {
                 params.push('_group=' + this._group.join(','));
             }
+            if (this._order.length > 0) {
+                params.push('_order=' + this._order.join(','));
+            }
             if (Object.keys(this._where).length > 0) {
                 angular.forEach(this._where, function(value, key) {
                     this.push(key + '=' + value);

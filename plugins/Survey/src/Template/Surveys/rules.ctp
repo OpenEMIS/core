@@ -57,7 +57,7 @@ $institutionId = $session->read('Institution.Institutions.id');
 										<td><input type="checkbox" ng-model="checked"></td>
 										<td>
 											<div class="input-select-wrapper">
-												<select ng-options="item.survey_question_id as item.short_name for item in SurveyRulesController.surveyDependentQuestions(question)" ng-model="SurveyRulesController.surveyDependentQuestions">
+												<select ng-init="dependentQuestion = SurveyRulesController.surveyDependentQuestions(question)" ng-options="item.survey_question_id as item.short_name for item in dependentQuestion" ng-model="dependentQuestion">
 												</select>
 											</div>
 										</td>

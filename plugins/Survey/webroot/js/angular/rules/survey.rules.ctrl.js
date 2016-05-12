@@ -41,28 +41,7 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
                 vm.surveySectionOptions = options;
                 vm.sectionName = options[0].value;
                 var sectionName = vm.sectionName;
-
-                SurveyRulesSvc.getQuestions(surveyFormId, vm.sectionName)
-                .then(function(response)
-                {   
-                    var surveyQuestions = [];
-                    for(i = 0; i < response.data.length; i++) {
-                        question = response.data[i];
-                        var shortName = question.name;
-                        if (shortName.length > 30) {
-                            shortName = shortName.substring(0,29)+'...';
-                        }
-                        surveyQuestions[i] = {
-                            no: i,
-                            survey_question_id: question.survey_question_id,
-                            name: question.name,
-                            short_name: shortName,
-                            order: question.order
-                        };
-                    }
-                    vm.surveyQuestions = surveyQuestions;
-                    console.log(surveyQuestions);
-                });
+                vm.getQuestionsFromSection(surveyFormId, sectionName);
             });
         }, function(error) 
         {
@@ -71,6 +50,30 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
         })
         ;
     });
+
+    vm.getQuestionsFromSection = function(surveyFormId, sectionName) 
+    {
+        SurveyRulesSvc.getQuestions(surveyFormId, vm.sectionName)
+        .then(function(response)
+        {   
+            var surveyQuestions = [];
+            for(i = 0; i < response.data.length; i++) {
+                question = response.data[i];
+                var shortName = question.name;
+                if (shortName.length > 30) {
+                    shortName = shortName.substring(0,29)+'...';
+                }
+                surveyQuestions[i] = {
+                    no: i+1,
+                    survey_question_id: question.survey_question_id,
+                    name: question.name,
+                    short_name: shortName,
+                    order: question.order
+                };
+            }
+            vm.surveyQuestions = surveyQuestions;
+        });
+    }
 
     // Updating of the filter for the survey form
     vm.update = function (selectedItem) 
@@ -87,22 +90,22 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
     });
 
     vm.onChangeSection = function(sectionName) {
-        // AlertSvc.reset($scope);
-        vm.sectionName = sectionName;
-        SurveyRulesSvc.getQuestions(vm.surveyFormId, sectionName)
-        .then(function(response)
-        {
-            console.log(response.data);
-        });
-        // console.log(sectionName);
-        // UtilsSvc.isAppendSpinner(true, 'survey-rules-table');
-        // if () {
-
-        // }
+        vm.getQuestionsFromSection(surveyFormId, sectionName);
     }
 
     vm.getDependentQuestions = function(question) {
-        
+        console.log('here');
+        var deferred = $q.defer();
+        var questionOrder = question.order;
+        var sectionName = question.section;
+        var surveyFormId = question.survey_form_id;
+        SurveyRulesSvc.getDependentQuestions(surveyFormId, sectionName, questionOrder)
+        .then(function(response) {
+            deferred.resolve(response.data);
+        }, function(error) {
+            deferred.error(error);
+        });
+        return deferred.promise;
     }
 
     vm.onChangeQuestion = function(questionId) {
