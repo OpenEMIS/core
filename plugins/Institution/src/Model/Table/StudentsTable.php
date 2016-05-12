@@ -868,25 +868,38 @@ class StudentsTable extends AppTable {
 			$event->stopPropagation();
 			$urlParams = $this->ControllerAction->url('view');
 			return $this->controller->redirect($urlParams);
-		}
 		// End PHPOE-1897
+		}else{
 
-		$this->ControllerAction->field('student_id', [
-			'type' => 'readonly', 
-			'order' => 10, 
-			'attr' => ['value' => $entity->user->name_with_id]
-		]);
-		$this->ControllerAction->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $entity->education_grade->programme_grade_name]]);
-		$this->ControllerAction->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $entity->academic_period->name]]);
-		$this->ControllerAction->field('student_status_id', ['type' => 'readonly', 'attr' => ['value' => $entity->student_status->name]]);
-		$period = $entity->academic_period;
-		$endDate = $period->end_date->copy();
-		$this->fields['start_date']['date_options'] = ['startDate' => $period->start_date->format('d-m-Y')];
-		$this->fields['end_date']['date_options'] = ['endDate' => $endDate->subDay()->format('d-m-Y')];
+			$this->ControllerAction->field('student_id', [
+				'type' => 'readonly', 
+				'order' => 10, 
+				'attr' => ['value' => $entity->user->name_with_id]
+			]);
 
-		$this->Session->write('Student.Students.id', $entity->student_id);
-		$this->Session->write('Student.Students.name', $entity->user->name);
-		$this->setupTabElements($entity);
+			$this->ControllerAction->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $entity->education_grade->programme_grade_name]]);
+			$this->ControllerAction->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $entity->academic_period->name]]);
+			$this->ControllerAction->field('student_status_id', ['type' => 'readonly', 'attr' => ['value' => $entity->student_status->name]]);
+			
+			$period = $entity->academic_period;
+			$endDate = $period->end_date->copy();
+			
+			$this->fields['start_date']['date_options'] = [
+				'startDate' => $period->start_date->format('d-m-Y'),
+				'endDate' => $endDate->subDay()->format('d-m-Y')
+			];
+
+
+			$this->fields['end_date']['date_options'] = [
+				'startDate' => $period->start_date->format('d-m-Y'),
+				'endDate' => $endDate->subDay()->format('d-m-Y')
+			];
+
+			$this->Session->write('Student.Students.id', $entity->student_id);
+			$this->Session->write('Student.Students.name', $entity->user->name);
+			$this->setupTabElements($entity);
+		
+		}
 	}
 
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
