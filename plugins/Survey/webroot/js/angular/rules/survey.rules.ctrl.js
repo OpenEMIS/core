@@ -4,6 +4,8 @@ angular
 
 SurveyRulesController.$inject = ['$scope', '$filter', '$q', 'UtilsSvc', 'AlertSvc', 'SurveyRulesSvc'];
 
+
+
 function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRulesSvc) {
     
     var vm = this;
@@ -68,18 +70,12 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
                     survey_question_id: question.survey_question_id,
                     name: question.name,
                     short_name: shortName,
-                    order: question.order
+                    order: question.order,
+                    field_type: question.custom_field.field_type
                 };
             }
             vm.surveyQuestions = surveyQuestions;
         });
-    }
-
-    // Updating of the filter for the survey form
-    vm.update = function (selectedItem) 
-    {
-        filterValue = selectedItem;
-        console.log(filterValue);
     }
 
     // busy waiting to watch the action of the page
@@ -93,34 +89,25 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
         vm.getQuestionsFromSection(surveyFormId, sectionName);
     }
 
-    vm.getDependentQuestions = function(question) {
-        console.log('here');
-        var deferred = $q.defer();
-        var questionOrder = question.order;
-        var sectionName = question.section;
-        var surveyFormId = question.survey_form_id;
-        SurveyRulesSvc.getDependentQuestions(surveyFormId, sectionName, questionOrder)
-        .then(function(response) {
-            deferred.resolve(response.data);
-        }, function(error) {
-            deferred.error(error);
+    vm.filterByOrderAndType = function(order) {
+        return function (item) {
+            if (item.order < order) {
+                if (item.field_type == "DROPDOWN") {
+                    return true;
+                }
+                return false;
+            }
+            return false;
+        }
+    }
+
+    vm.populateOptions = function(item) {
+        SurveyRulesSvc.getShowIfChoices(item)
+        .then(function(response)
+        {
+            vm.questionOptions = response.data;
+            console.log(response.data);
         });
-        return deferred.promise;
     }
 
-    vm.onChangeQuestion = function(questionId) {
-        // AlertSvc.reset($scope);
-        // vm.sectionName = sectionName;
-        // SurveyRulesSvc.getQuestions(vm.surveyFormId, sectionName)
-        // .then(function(response)
-        // {
-        //     console.log(questions);
-        // });
-        console.log(questionId);
-        // console.log(sectionName);
-        // UtilsSvc.isAppendSpinner(true, 'survey-rules-table');
-        // if () {
-
-        // }
-    }
 }
