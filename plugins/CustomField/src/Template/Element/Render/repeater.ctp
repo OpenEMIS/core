@@ -68,10 +68,10 @@
 	<h3><?= $attr['attr']['label']; ?></h3>
 	<div class="clearfix">
 		<div class="input">
-			<label><?= __('Repeater'); ?></label>
+			<label><?= __('Add More'); ?></label>
 			<div class="input-form-wrapper">
 				<div class="table-toolbar">
-					<button class="btn btn-default btn-xs" onclick="$('#reload').val('addRepeater').click();return false;">
+					<button class="btn btn-default btn-xs" onclick="$('.repeater-question-id').val(<?= $attr['customField']->id; ?>);$('#reload').val('addRepeater').click();return false;">
 						<i class="fa fa-plus"></i>
 						<span><?= __('Add'); ?></span>
 					</button>
