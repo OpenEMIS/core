@@ -25,7 +25,7 @@ var MobileMenu = {
         rightPane.off('click');
         // console.log("width = " + width );
         if (width <= 1024) {
-            leftPane.addClass("enable-overflow");
+            leftPane.addClass("enable-overflow").css('opacity', '1');
             menuHandler.on('click', function() {
                 leftPane.toggleClass("enable-overflow").css("display", "block", "!important");
                 // console.log('click');
