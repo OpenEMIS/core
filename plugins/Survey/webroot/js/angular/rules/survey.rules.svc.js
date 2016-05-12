@@ -51,12 +51,14 @@ angular.module('survey.rules.svc', ['kd.orm.svc'])
             .select()
             .contain(['CustomFields'])
             .where({survey_form_id: surveyFormId, section: sectionName})
+            .order(['order'])
             .ajax({defer: true})
             ;
         },
 
         getDependentQuestions: function(surveyFormId, sectionName, order) 
         {
+            console.log('here');
             return SurveyFormsQuestionsTable
             .select()
             .contain(['CustomFields'])
@@ -78,7 +80,7 @@ angular.module('survey.rules.svc', ['kd.orm.svc'])
             return SurveyQuestionChoicesTable
             .select()
             .where({survey_question_id: questionId})
-            .ajax({success: success, defer: true})
+            .ajax({defer: true})
             ;
         },
 
