@@ -456,30 +456,7 @@ class RestSurveyComponent extends Component
         $title = $this->Form->get($id)->name;
         $title = htmlspecialchars($title, ENT_QUOTES);
 
-        $fields = $this->FormField
-            ->find()
-            ->find('order')
-            ->select([
-                'form_id' => $this->FormField->aliasField($this->formKey),
-                'field_id' => $this->FormField->aliasField($this->fieldKey),
-                'section_name' => $this->FormField->aliasField('section'),
-                'name' => $this->FormField->aliasField('name'),
-                'is_mandatory' => $this->FormField->aliasField('is_mandatory'),
-                'is_unique' => $this->FormField->aliasField('is_unique'),
-                'field_type' => $this->Field->aliasField('field_type'),
-                'default_name' => $this->Field->aliasField('name'),
-                'default_is_mandatory' => $this->Field->aliasField('is_mandatory'),
-                'default_is_unique' => $this->Field->aliasField('is_unique'),
-                'params' => $this->Field->aliasField('params')
-            ])
-            ->innerJoin(
-                [$this->Field->alias() => $this->Field->table()],
-                [$this->Field->aliasField('id =') . $this->FormField->aliasField($this->fieldKey)]
-            )
-            ->where([
-                $this->FormField->aliasField($this->formKey) => $id
-            ])
-            ->toArray();
+        $fields = $this->_getFields($id);
 
         $xmlstr = '<?xml version="1.0" encoding="UTF-8"?>
                 <html
@@ -564,7 +541,7 @@ class RestSurveyComponent extends Component
 
     }
 
-    private function _textType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
+    private function _textType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode, $suffix=[])
     {
         $validationHint = '';
         $bindType = 'string';
@@ -573,7 +550,7 @@ class RestSurveyComponent extends Component
             $validationType = key($params);
             if (in_array($validationType, ['min_length', 'max_length', 'range'])) {
                 $bindType = 'string' . Inflector::camelize($validationType) . $index;
-                $this->_setFieldBindNode($modelNode, $instanceId, $bindType, $field->default_is_mandatory, '', $index);
+                $this->_setFieldBindNode($modelNode, $instanceId, $bindType, $field->default_is_mandatory, '', $index, $suffix);
                 $simpleType = $schemaNode->addChild('simpleType', null, NS_XSD);
                 $simpleType->addAttribute("name", $bindType);
                 $restriction = $simpleType->addChild('restriction', null, NS_XSD);
@@ -601,16 +578,16 @@ class RestSurveyComponent extends Component
                 }
             }
         }
-        $fieldNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
+        $fieldNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index, $suffix);
         if (!empty($validationHint)) {
             // <xf:hint>Your name should be at least 3 characters long.</xf:hint>
             $fieldHint = $fieldNode->addChild("hint", htmlspecialchars($validationHint, ENT_QUOTES), NS_XF);
         } else {
-            $this->_setFieldBindNode($modelNode, $instanceId, $bindType, $field->default_is_mandatory, '', $index);
+            $this->_setFieldBindNode($modelNode, $instanceId, $bindType, $field->default_is_mandatory, '', $index, $suffix);
         }
     }
 
-    private function _numberType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
+    private function _numberType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode, $suffix=[])
     {
         $validationHint = '';
         if (!empty($field->params)) {
@@ -640,8 +617,8 @@ class RestSurveyComponent extends Component
                 }
             }
         }
-        $fieldNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
-        $bindNode = $this->_setFieldBindNode($modelNode, $instanceId, 'integer', $field->default_is_mandatory, '', $index);
+        $fieldNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index, $suffix);
+        $bindNode = $this->_setFieldBindNode($modelNode, $instanceId, 'integer', $field->default_is_mandatory, '', $index, $suffix);
         if (!empty($validationHint)) {
             $fieldHint = $fieldNode->addChild("hint", htmlspecialchars($validationHint, ENT_QUOTES), NS_XF);
             $bindNode->addAttribute("constraint", $constraint);
@@ -654,9 +631,9 @@ class RestSurveyComponent extends Component
         $this->_setFieldBindNode($modelNode, $instanceId, 'string', $field->default_is_mandatory, '', $index);
     }
 
-    private function _dropdownType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
+    private function _dropdownType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode, $suffix=[])
     {
-        $dropdownNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'select1', $instanceId, $index);
+        $dropdownNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'select1', $instanceId, $index, $suffix);
 
         $fieldOptionResults = $this->FieldOption
             ->find()
@@ -675,7 +652,7 @@ class RestSurveyComponent extends Component
             }
         }
 
-        $this->_setFieldBindNode($modelNode, $instanceId, 'integer', $field->default_is_mandatory, '', $index);
+        $this->_setFieldBindNode($modelNode, $instanceId, 'integer', $field->default_is_mandatory, '', $index, $suffix);
     }
 
     private function _checkboxType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
@@ -864,18 +841,85 @@ class RestSurveyComponent extends Component
         $this->_setFieldBindNode($modelNode, $instanceId, 'geopoint', $field->default_is_mandatory, '', $index);
     }
 
-    private function _setCommonAttribute($sectionBreakNode, $fieldName, $fieldType, $instanceId, $index)
+    private function _repeaterType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
     {
-        $fieldNode = $sectionBreakNode->addChild($fieldType, null, NS_XF);
-        $fieldNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]");
+        $repeaterNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'repeater', $instanceId, $index);
+        // $this->_setFieldBindNode($modelNode, $instanceId, 'string', $field->default_is_mandatory, '', $index);
+
+        $formKey = 'survey_form_id';
+        $fieldKey = 'survey_question_id';
+
+        $formId = null;
+        // Get Survey Form ID
+        if ($field->has('params') && !empty($field->params)) {
+            $params = json_decode($field->params, true);
+            if (array_key_exists($formKey, $params)) {
+                $formId = $params[$formKey];
+            }
+        }
+
+        if (!is_null($formId)) {
+            $fields = $this->_getFields($formId);
+
+            if (!empty($fields)) {
+                foreach ($fields as $field) {
+                    $fieldTypeFunction = '_'.strtolower($field->field_type).'Type';
+                    if (method_exists($this, $fieldTypeFunction)) {
+                        $this->$fieldTypeFunction($field, $repeaterNode, $modelNode, $instanceId, $index, null, $schemaNode, [$field->field_id]);
+                    }
+                }
+            }
+        } else {
+            // Survey Form ID not found
+            $this->log('Repeater Survey Form ID is not configured.', 'debug');
+        }
+        // End
+    }
+
+    private function _getFields($id)
+    {
+        return $this->FormField
+            ->find()
+            ->find('order')
+            ->select([
+                'form_id' => $this->FormField->aliasField($this->formKey),
+                'field_id' => $this->FormField->aliasField($this->fieldKey),
+                'section_name' => $this->FormField->aliasField('section'),
+                'name' => $this->FormField->aliasField('name'),
+                'is_mandatory' => $this->FormField->aliasField('is_mandatory'),
+                'is_unique' => $this->FormField->aliasField('is_unique'),
+                'field_type' => $this->Field->aliasField('field_type'),
+                'default_name' => $this->Field->aliasField('name'),
+                'default_is_mandatory' => $this->Field->aliasField('is_mandatory'),
+                'default_is_unique' => $this->Field->aliasField('is_unique'),
+                'params' => $this->Field->aliasField('params')
+            ])
+            ->innerJoin(
+                [$this->Field->alias() => $this->Field->table()],
+                [$this->Field->aliasField('id =') . $this->FormField->aliasField($this->fieldKey)]
+            )
+            ->where([
+                $this->FormField->aliasField($this->formKey) => $id
+            ])
+            ->toArray();
+    }
+
+    private function _setCommonAttribute($parentNode, $fieldName, $fieldType, $instanceId, $index, $suffix=[])
+    {
+        $fieldNode = $parentNode->addChild($fieldType, null, NS_XF);
+        $ref = "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]";
+        $ref = $this->_setRef($ref, $suffix);
+
+        $fieldNode->addAttribute("ref", $ref);
         $fieldNode->addChild("label", htmlspecialchars($fieldName, ENT_QUOTES), NS_XF);
         return $fieldNode;
     }
 
-    private function _setFieldBindNode($modelNode, $instanceId, $bindType, $fieldIsMandatory=false, $ref='', $index='0')
+    private function _setFieldBindNode($modelNode, $instanceId, $bindType, $fieldIsMandatory=false, $ref='', $index='0', $suffix=[])
     {
         if (empty($ref)) {
             $ref = "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]";
+            $ref = $this->_setRef($ref, $suffix);
         }
         $bindNode = $modelNode->addChild("bind", null, NS_XF);
         $bindNode->addAttribute("ref", $ref);
@@ -886,5 +930,15 @@ class RestSurveyComponent extends Component
             $bindNode->addAttribute("required", 'false()');
         }
         return $bindNode;
+    }
+
+    private function _setRef($ref, $suffix=[]) {
+        if (!empty($suffix)) {
+            foreach ($suffix as $value) {
+                $ref .= "/".$value;
+            }
+        }
+
+        return $ref;
     }
 }
