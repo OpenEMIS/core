@@ -844,17 +844,13 @@ class RestSurveyComponent extends Component
     private function _repeaterType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
     {
         $repeaterNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'repeater', $instanceId, $index);
-        // $this->_setFieldBindNode($modelNode, $instanceId, 'string', $field->default_is_mandatory, '', $index);
-
-        $formKey = 'survey_form_id';
-        $fieldKey = 'survey_question_id';
 
         $formId = null;
         // Get Survey Form ID
         if ($field->has('params') && !empty($field->params)) {
             $params = json_decode($field->params, true);
-            if (array_key_exists($formKey, $params)) {
-                $formId = $params[$formKey];
+            if (array_key_exists($this->formKey, $params)) {
+                $formId = $params[$this->formKey];
             }
         }
 
