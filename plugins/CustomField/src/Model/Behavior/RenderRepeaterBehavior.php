@@ -224,11 +224,11 @@ class RenderRepeaterBehavior extends RenderBehavior {
                 }
             } else {
                 // Survey Questions not setup for the form or not in the supported field type.
-                Log::write('debug', $debugInfo . ': Student List Survey Form ID: '.$formId.' has no questions.');
+                Log::write('debug', $debugInfo . ': Repeater Survey Form ID: '.$formId.' has no questions.');
             }
         } else {
             // Survey Form ID not found
-            Log::write('debug', $debugInfo . ': Student List Survey Form ID is not configured.');
+            Log::write('debug', $debugInfo . ': Repeater Survey Form ID is not configured.');
         }
 
         // $attr['attr']['classOptions'] = $classOptions;
