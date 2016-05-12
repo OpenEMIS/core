@@ -97,6 +97,7 @@ trait UtilityTrait {
 		$selectOption = array_key_exists('selectOption', $params)? $params['selectOption'] : true;
 		$defaultValue = null;
 
+
 		// Check if the selected key is empty. If it is not empty then change the selected to null and get
 		// the first available from the list
 		if (is_callable($callable) && !empty($selected)) {
