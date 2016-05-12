@@ -7,6 +7,9 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use App\Controller\AppController;
 use Cake\Network\Http\Client;
+use Cake\Utility\Security;
+use Firebase\JWT\JWT;
+use Cake\Network\Exception\BadRequestException;
 
 class RestController extends AppController
 {
@@ -65,7 +68,18 @@ class RestController extends AppController
 	        ]);
 	        $this->Auth->config('authorize', null);
 	        $this->Auth->allow(['auth']);
-
+	        $header = $this->request->header('authorization');
+	        if ($header) {
+	            $token = str_ireplace('bearer ', '', $header);
+	            $payload = JWT::decode($token, Security::salt(), ['HS256']);
+	            $currentTimeStamp = (new Time)->toUnixString();
+	            $exp = $payload->exp;
+	            if ($exp < $currentTimeStamp) {
+	            	throw new BadRequestException('Custom error message', 408);
+	            	$event->stopPropagation();
+	            }
+	        }
+	       
 			if ($this->request->action == 'survey') {
 				$this->autoRender = false;
 
