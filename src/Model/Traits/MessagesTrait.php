@@ -53,6 +53,7 @@ trait MessagesTrait {
 				'label' => 'Edit',
 			],
 			'delete' => [
+				'restrictDelete' => 'The record cannot be deleted.',
 				'success' => 'The record has been deleted successfully.',
 				'failed' => 'The record is not deleted due to errors encountered.',
 				'label' => 'Delete',
@@ -92,6 +93,13 @@ trait MessagesTrait {
 		'fileUpload' => [
 			'single' => '*File size should not be larger than 2MB.',
 			'multi' => '*Maximum 5 files are permitted on single upload. Each file size should not be larger than 2MB.',
+			'1' => 'The uploaded file exceeds the max filesize upload limits.',
+			'2' => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.',
+			'3' => 'The uploaded file was only partially uploaded.',
+			'4' => 'No file was uploaded.',
+			'6' => 'Missing a temporary folder. Please contact your network administrator for assistance.',
+			'7' => 'Failed to write file to disk. Please contact your network administrator for assistance.',
+			'8' => 'A PHP extension stopped the file upload. Please contact your network administrator for assistance.'
 		],
 		'InfrastructureTypes' => [
 			'noLevels' => 'No Available Levels',
@@ -356,7 +364,8 @@ trait MessagesTrait {
 			'hasDropoutApplication' => 'There is a pending dropout application for this student at the moment, please reject the dropout application before making another request.'
 		],
 		'TransferApprovals' => [
-			'exists' => 'Student is already exists in the new school',
+			'existsInNewSchool' => 'Student is already exists in the new school',
+			'enrolledInInstitution' => 'Student is already enrolled in another school.',
 			'approve' => 'Transfer request has been approved successfully.',
 			'reject' => 'Transfer request has been rejected successfully.'
 		],
@@ -378,7 +387,8 @@ trait MessagesTrait {
 			'successGraduated' => 'Students have graduated',
 			'successOthers' => 'Students status changed successfully',
 			'noNextAcademicPeriod' => 'There is no next academic period for the promotion.',
-			'pendingRequest' => 'There is a pending student status change request at the moment.'
+			'pendingRequest' => 'There is a pending student status change request at the moment.',
+			'selectNextGrade' => 'Please select a grade to promote to.'
 		],
 		'StudentTransfer' => [
 			'noGrades' => 'No Available Grades',
@@ -416,7 +426,8 @@ trait MessagesTrait {
 			'add_next_programme' => 'Add Next Programme'
 		],
 		'StudentAdmission' => [
-			'exists' => 'Student exists in the school',
+			'existsInSchool' => 'Student is already exists in the school',
+			'enrolledInInstitution' => 'Student is already enrolled in another school.',
 			'existsInRecord' => 'Student has already been added to admission list',
 			'approve' => 'Student admission has been approved successfully.',
 			'reject' => 'Student admission has been rejected successfully.'
@@ -606,11 +617,18 @@ trait MessagesTrait {
 			'TransferRequests' => [
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				], 
+				'student_id' => [
+					'ruleNoNewDropoutRequestInGradeAndInstitution' => 'There is a pending dropout application for this student at the moment, please reject the dropout application before making another request.'
 				]
 			],
 			'Students' => [
 				'student_name' => [
-					'ruleInstitutionStudentId' => 'Student has already been added.',
+					'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
+						'inTargetSchool' => 'Student is already enrolled in this school.',
+						'inAnotherSchool' => 'Student is already enrolled in another school.',
+					],
+					'ruleStudentNotCompletedGrade' => 'Student has already completed the selected grade.',
 					'ruleCheckAdmissionAgeWithEducationCycleGrade' => 'This student does not fall within the allowed age range for this grade',
 					'ageHint' => 'The student should be %s years old',
 					'ageRangeHint' => 'The student should be between %s to %s years old',
@@ -1089,6 +1107,9 @@ trait MessagesTrait {
 				'earlier' => 'Time should be earlier than or equal to %s',
 				'later' => 'Time should be later than or equal to %s',
 				'between' => 'Time should be between %s and %s (inclusive)'
+			],
+			'file' => [
+				'maxSize' => 'File size should not be more than %s'
 			]
 		],
 		'Assessment' => [

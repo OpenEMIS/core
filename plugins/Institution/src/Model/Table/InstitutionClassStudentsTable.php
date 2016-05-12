@@ -22,6 +22,8 @@ class InstitutionClassStudentsTable extends AppTable {
 		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('StudentStatuses',	['className' => 'Student.StudentStatuses']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
 
 		$this->hasMany('SubjectStudents', [
@@ -78,6 +80,12 @@ class InstitutionClassStudentsTable extends AppTable {
     		}
     	}
     }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+    	if ($entity->isNew()) {
+    		$entity->id = Text::uuid();
+    	}
+	}
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
     	$query
@@ -139,7 +147,6 @@ class InstitutionClassStudentsTable extends AppTable {
 		$studentId = $data['student_id'];
 		$gradeId = $data['education_grade_id'];
 		$classId = $data['institution_class_id'];
-
 		$data['subject_students'] = $this->_setSubjectStudentData($data);
         $data['id'] = Text::uuid();
 		$entity = $this->newEntity($data);
@@ -163,26 +170,26 @@ class InstitutionClassStudentsTable extends AppTable {
 	}
 
 	private function _setSubjectStudentData($data) {
-		$Classes = TableRegistry::get('Institution.InstitutionClasses');
+        $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
 
-		$class = $Classes->find()
-			->contain([
-				'InstitutionSubjects.Students', 
-				'InstitutionSubjects.Classes'
-			])->where([
-				$Classes->aliasField('id') => $data['institution_class_id']
-			])->first();
+        $classSubjectsData = $ClassSubjects->find()
+            ->where([
+                $ClassSubjects->aliasField('institution_class_id') => $data['institution_class_id']
+            ])
+            ->select([$ClassSubjects->aliasField('institution_subject_id')])
+            ->toArray()
+            ;
 
 		$subjectStudents = [];
-		foreach ($class->institution_subjects as $subject) {
+		foreach ($classSubjectsData as $classSubjects) {
 			$subjectStudents[] = [
 				'status' => 1,
 				'student_id' => $data['student_id'],	
-				'institution_subject_id' => $subject->id,
+				'institution_subject_id' => $classSubjects['institution_subject_id'],
 				'institution_class_id' => $data['institution_class_id'],
-				'institution_id' => $data['institution_id'],
-				'academic_period_id' => $data['academic_period_id'],
-				'education_subject_id' => $subject->education_subject_id,
+                'institution_id' => $data['institution_id'],
+                'academic_period_id' => $data['academic_period_id'],
+                'education_subject_id' => $classSubjects['institution_subject_id'],
 			];
 		}
 
