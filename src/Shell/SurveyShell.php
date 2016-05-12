@@ -2,16 +2,20 @@
 namespace App\Shell;
 
 use Cake\Console\Shell;
+use Cake\ORM\TableRegistry;
 
 class SurveyShell extends Shell {
 	public function initialize() {
 		parent::initialize();
-		$this->loadModel('Institution.InstitutionSurveys');
 	}
 
  	public function main() {
-		$institutionId = $this->args[0];
+		$institutionIds = $this->args[0];
+		$InstitutionSurveys = TableRegistry::get('Institution.InstitutionSurveys');
+		$InstitutionSurveys->addBehavior('Workflow.Workflow', ['model' => $InstitutionSurveys->registryAlias()]);
 
-		$this->InstitutionSurveys->buildSurveyRecords($institutionId);
+		foreach ($institutionIds as $institutionId) {
+			$InstitutionSurveys->buildSurveyRecords($institutionId);
+		}
 	}
 }
