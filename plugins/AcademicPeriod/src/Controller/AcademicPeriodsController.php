@@ -18,6 +18,8 @@ class AcademicPeriodsController extends AppController
 		$this->loadComponent('Paginator');
     }
 
+    public function Levels() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'AcademicPeriod.AcademicPeriodLevels']); }
+
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
 
