@@ -18,6 +18,7 @@ class StaffValidationBehavior extends Behavior {
 				'rule' => ['checkStaffExistWithinPeriod'],
 				'on' => 'update'
 			])
+			->requirePresence('position_type')
 			->add('institution_position_id', 'ruleCheckFTE', [
 				'rule' => ['checkFTE'],
 			])
