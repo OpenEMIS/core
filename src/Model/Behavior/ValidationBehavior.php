@@ -506,21 +506,6 @@ class ValidationBehavior extends Behavior {
 		return ($currentNumberOfStudents < 100);
 	}
 
-<<<<<<< HEAD
-	// Return false if not enrolled in other education system
-	public static function checkEnrolledInOtherInstitution($field, array $globalData) {
-		$Students = TableRegistry::get('Institution.Students');
-		$enrolled = false;
-		if (!empty($globalData['data']['academic_period_id'])) {
-			if (empty($globalData['data']['education_grade_id'])) {
-				return false;
-			}
-			$educationSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($globalData['data']['education_grade_id']);
-			$enrolled = $Students->checkIfEnrolledInAllInstitution($globalData['data']['student_id'], $globalData['data']['academic_period_id'], $educationSystemId);
-		}
-		return !$enrolled;
-	}                                                                                                                                                                 
-=======
 	public static function studentNotEnrolledInAnyInstitutionAndSameEducationSystem($field, $options = [], array $globalData) {
 		$data = $globalData['data'];
         
@@ -534,7 +519,6 @@ class ValidationBehavior extends Behavior {
                 }
             }
         }
->>>>>>> 71279889e29902aa9a60e2dc252a328c70c5f360
 
 		$Students = TableRegistry::get('Institution.Students');
 
