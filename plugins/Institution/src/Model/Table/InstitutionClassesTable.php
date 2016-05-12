@@ -708,9 +708,11 @@ class InstitutionClassesTable extends ControllerActionTable {
 	        $count = $table
 	                    ->find()
 	                    ->contain('Users')
-	                    ->where(['Users.gender_id' => $gender_id])
-	                    ->where([$table->aliasField('institution_class_id') => $entity->id])
-	                    ->where([$table->aliasField('student_status_id') .' > 0'])
+	                    ->where([
+	                    	'Users.gender_id' => $gender_id,
+	                    	$table->aliasField('institution_class_id') => $entity->id,
+	                    	$table->aliasField('student_status_id') .' > 0'
+	                    	])
 	                    ->count();
 	        return $count;
 		}
@@ -723,9 +725,11 @@ class InstitutionClassesTable extends ControllerActionTable {
 	        $count = $table
 	                    ->find()
 	                    ->contain('Users')
-	                    ->where(['Users.gender_id' => $gender_id])
-	                    ->where([$table->aliasField('institution_class_id') => $entity->id])
-	                    ->where([$table->aliasField('student_status_id') .' > 0'])
+	                    ->where([
+	                    	'Users.gender_id' => $gender_id,
+	                    	$table->aliasField('institution_class_id') => $entity->id,
+	                    	$table->aliasField('student_status_id') .' > 0'
+	                    	])
 	                    ->count();
 	        return $count;
 		}
