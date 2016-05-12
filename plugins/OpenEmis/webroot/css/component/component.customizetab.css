@@ -1,0 +1,186 @@
+/* CUSTOMIZE TAB v.1.0.0 */
+
+.customize-tab .ui-tabs-scrollable > .spacer > div:first-child > .nav-tabs > li > a,
+.customize-tab .ui-tabs-scrollable > .nav-button {
+    height: auto;
+    padding: 6px 10px;
+    line-height: normal;
+}
+
+.customize-tab .ui-tabs-scrollable > .nav-button {
+    width: auto;
+    height: auto;
+    line-height: normal;
+}
+
+.tabs-action-btn i {
+    margin: 0 0 0 4px;
+    text-shadow: 0px 0px 2px #FFF, 0px 0px 2px #FFF, 0px 0px 2px #FFF, 0px 0px 2px #FFF, 0px 0px 2px #FFF;
+    cursor: pointer;
+}
+
+.tabs-action-btn,
+.customize-tab .tab-icon .nav-pills > li.active > a,
+.customize-tab .tab-icon .nav-pills > li.active > a:focus,
+.customize-tab .ui-tabs-scrollable > .nav-button {
+    color: #6B6B6B;
+}
+
+.customize-tab .tab-icon .nav-pills > li.active > a,
+.customize-tab .tab-icon .nav-pills > li.active > a:focus,
+.customize-tab .tab-icon .nav-pills > li.active > a:hover {
+    background-color: #FFF;
+    border-top: 1px solid #CCC;
+    border-left: 1px solid #CCC;
+    border-right: 1px solid #CCC;
+    -webkit-border-bottom-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+    -webkit-border-bottom-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+    margin: 1px;
+}
+
+.tabs-action-btn i,
+.customize-tab .tab-icon a {
+    opacity: 0.6;
+}
+
+.tabs-action-btn i:hover,
+.customize-tab .tab-icon a:hover {
+    opacity: 1;
+}
+
+.customize-tab .tab-icon .nav-pills > li.active > a:hover {
+    background-color: #6B6B6B;
+    color: #FFF;
+    border-color: #6B6B6B;
+    cursor: pointer;
+}
+
+.customize-tab .nav-tabs > li > a,
+.customize-tab .tab-icon .nav-pills > li.active > a,
+.customize-tab .ui-tabs-scrollable > .nav-button.left-nav-button:before, 
+.customize-tab .ui-tabs-scrollable > .nav-button.right-nav-button:before {
+    font-size: 12px;
+}
+
+.customize-tab .nav-tabs > li > a {
+    border: 1px solid #DDD;
+    color: #BBB;
+}
+
+.customize-tab .nav-tabs > li > a:focus {
+    background-color: transparent; 
+}
+
+.customize-tab .nav-tabs > li.active > a,
+.customize-tab .nav-tabs > li > a:hover,
+.customize-tab .tab-icon .nav-pills > li.active > a,
+.customize-tab .ui-tabs-scrollable > .nav-button.left-nav-button,
+.customize-tab .ui-tabs-scrollable > .nav-button.right-nav-button {
+    border-color: #BBB;
+}
+
+.customize-tab .ui-tabs-scrollable > .spacer > div:first-child > .tab-content {
+    border-top-color: #BBB;
+}
+
+.customize-tab .tab-icon a,
+.customize-tab .tab-icon a:active,
+.customize-tab .tab-icon a:focus {
+    min-width: auto !important;
+    padding: 6px 10px !important;
+    height: auto;
+    margin: 3px 0;
+    line-height: normal;
+}
+
+.customize-tab .tab-icon .nav-pills {
+    margin-left: -4px;
+}
+
+.tabs-inline,
+.customize-tab > .spacer > div:first-child > .nav-tabs > li,
+.tabs-action-btn,
+.tabs-inline form {
+    display: inline-block !important;
+    vertical-align: bottom;
+    text-align: center;
+}
+
+.tabs-inline span {
+    vertical-align: bottom;
+}
+
+.customize-tab .tab-icon .nav-pills > li.active > a i {
+    vertical-align: middle;
+}
+
+.customize-tab .nav-tabs .active {
+    margin-bottom: 0;
+}
+
+.customize-tab .nav-tabs > li.active > a,
+.customize-tab .nav-tabs > li.active > a:focus,
+.customize-tab .nav-tabs > li.active > a:hover,
+.customize-tab .nav-tabs > li > a:hover {
+    background-color: inherit;
+    color: inherit;
+}
+
+.customize-tab .nav-tabs > li.active > a,
+.customize-tab .nav-tabs > li.active > a:focus,
+.customize-tab .nav-tabs > li.active > a:hover {
+    border-bottom-color: #FFF;
+}
+
+.customize-tab form input.tab-heading,
+.customize-tab form input.tab-heading:focus {
+    padding: 0;
+    border: 0;
+    outline: 0 !important;
+    background-color: #F6F7CD;
+}
+
+.customize-tab .tab-edit {
+    cursor: text;
+}
+
+.customize-tab .ui-tabs-scrollable > .nav-button.left-nav-button:before,
+.customize-tab .ui-tabs-scrollable > .nav-button.right-nav-button:before {
+    font-family: "FontAwesome";
+}
+
+.customize-tab .ui-tabs-scrollable > .nav-button.left-nav-button:before {
+    content: "\f0d9";
+}
+
+.customize-tab .ui-tabs-scrollable > .nav-button.right-nav-button:before {
+    content: "\f0da";
+}
+
+@media only screen and (max-width: 1024px) {
+    .customize-tab .tab-icon a,
+    .customize-tab .tab-icon a:hover,
+    .customize-tab .tab-icon a:focus {
+        margin-top: 6px;
+    }
+}
+
+
+/* RTL OF CUSTOMIZE TAB */
+
+.rtl .tabs-action-btn i {
+    margin: 0 4px 0 0;
+}
+
+.rtl .customize-tab .tab-icon .nav-pills {
+    margin-right: -4px;
+    margin-left: 0 !important;
+}
+
+.rtl .customize-tab .ui-tabs-scrollable > .spacer:not(.hidden-buttons) > div:first-child > .nav-tabs > li:first-child.active a, 
+.rtl .customize-tab .ui-tabs-scrollable > .spacer:not(.hidden-buttons) > div:first-child > .nav-tabs > li:first-child a:hover {
+    border-top-left-radius: 4px;
+    border-left-color: #BBB;
+}

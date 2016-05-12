@@ -1,4 +1,4 @@
-/* TOGGLE SWITCH v1.0.4 */
+/* TOGGLE SWITCH v1.0.5 */
 
 .switch-toggle {
     height: 26px !important;
@@ -15,7 +15,7 @@
 */
 
 .switch-candy {
-    background-color: transparent;
+    background-color: #FFF !important;
     text-shadow: none;
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.18) inset, 0 1px 0 rgba(255, 255, 255, 0.2);
     margin-left: 10px;
@@ -29,18 +29,18 @@
 }
 
 .switch-candy label {
-    color: #333;
+    color: #333 !important;
 }
 
 .switch-candy input:checked + label {
-    color: #fff;
+    color: #fff !important;
     text-shadow: none;
 }
 
 .switch-candy a {
     height: 100% !important;
-    background-color: #990000 !important;
-    border-color: #6b0000;
+    background-color: #999 !important;
+    border-color: #6B6B6B;
 }
 
 .switch-candy label {
@@ -70,6 +70,7 @@
 
 
 /* BUTTON TOGGLE */
+
 
 .toggle-slider-header {
     display: table-cell;
@@ -136,6 +137,10 @@
 
 
 /*RTL*/
+
+.rtl .toggle-responsive {
+    direction: rtl;
+}
 
 .rtl .switch-candy {
     margin-left: 0;
