@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\Network\Session;
 use Cake\Log\Log;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
@@ -154,8 +155,8 @@ class InstitutionSurveysTable extends AppTable {
     	return $this->workflowEvents;
     }
 
-    public function triggerBuildSurveyRecordsShell($institutionId) {
-    	$cmd = ROOT . DS . 'bin' . DS . 'cake Survey ' . $institutionId;
+    public function triggerBuildSurveyRecordsShell($params) {
+    	$cmd = ROOT . DS . 'bin' . DS . 'cake Survey ' . implode(',', $params);
 		$logs = ROOT . DS . 'logs' . DS . 'survey.log & echo $!';
 		$shellCmd = $cmd . ' >> ' . $logs;
 		$pid = exec($shellCmd);
@@ -184,6 +185,7 @@ class InstitutionSurveysTable extends AppTable {
 
 			// Array to store security roles in each Workflow Step
 			$stepRoles = [];
+			$shellParams = [];
 			foreach ($institutionRoles as $institutionId => $roles) {
 				foreach ($statusIds as $key => $statusId) {
 					if (!array_key_exists($statusId, $stepRoles)) {
@@ -193,14 +195,22 @@ class InstitutionSurveysTable extends AppTable {
 					// logic to pre-insert survey in school only when user's roles is configured to access the step
 					$hasAccess = count(array_intersect_key($roles, $stepRoles[$statusId])) > 0;
 					if ($hasAccess) {
-						// create shell to process building of survey records
-						$this->triggerBuildSurveyRecordsShell($institutionId);
-						// $this->buildSurveyRecords($institutionId);
+						if (!in_array($institutionId, $shellParams)) {
+							$shellParams[] = $institutionId;
+						}
 					}
 					// End
 				}
 			}
 			// End
+
+			// create shell to process building of survey records
+			// only build survey once on every user session
+			$session = new Session;
+			if (!$session->check('BuildSurvey')) {
+				$session->write('BuildSurvey', true);
+				$this->triggerBuildSurveyRecordsShell($shellParams);
+			}
 
 			$resultSet = $this
 				->find()
@@ -241,7 +251,7 @@ class InstitutionSurveysTable extends AppTable {
 						'request_title' => ['title' => $requestTitle, 'url' => $url],
 						'receive_date' => $receivedDate,
 						'due_date' => '<i class="fa fa-minus"></i>',
-						'requester' => $obj->created_user->username,
+						'requester' => $obj->has('created_user') ? $obj->created_user->username : '',
 						'type' => __('Institution > Survey > Forms')
 					];
 				}
