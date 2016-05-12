@@ -568,7 +568,7 @@ class CustomFieldListBehavior extends Behavior {
 	private function time($data, $field, $options=[]) {
 		if (isset($data[$field['id']])) {
 			$time = date_create_from_format('G:i:s', $data[$field['id']]);
-			return $this->_table->formatTime($date);
+			return $this->_table->formatTime($time);
 		} else {
 			return '';
 		}

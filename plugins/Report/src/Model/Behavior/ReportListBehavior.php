@@ -10,6 +10,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Report\Model\Table\ReportProgressTable as Process;
 use Cake\I18n\I18n;
+use Cake\Network\Session;
 
 class ReportListBehavior extends Behavior {
 	public $ReportProgress;
@@ -85,6 +86,9 @@ class ReportListBehavior extends Behavior {
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		$data[$this->_table->alias()]['locale'] = I18n::locale();
+		$session = new Session();
+		$data[$this->_table->alias()]['user_id'] = $session->read('Auth.User.id');
+		$data[$this->_table->alias()]['super_admin'] = $session->read('Auth.User.super_admin');
 		$process = function($model, $entity) use ($data) {
 			$this->_generate($data);
 			return true;
