@@ -9,7 +9,7 @@ use Cake\Validation\Validator;
 use CustomField\Model\Behavior\SetupBehavior;
 
 class SetupRepeaterBehavior extends SetupBehavior {
-	private $module = 'Institution.RepeaterSurveys';
+	private $module = 'InstitutionRepeater.RepeaterSurveys';
 	private $CustomModules = null;
 	private $CustomForms = null;
 	private $formOptions = [];

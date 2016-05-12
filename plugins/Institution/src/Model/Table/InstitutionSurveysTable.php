@@ -360,6 +360,8 @@ class InstitutionSurveysTable extends AppTable {
 		$this->ControllerAction->field('survey_form_id', [
 			'attr' => ['value' => $entity->survey_form_id]
 		]);
+		// this extra field is use by repeater type to know user click add on which repeater question
+		$this->ControllerAction->field('repeater_question_id');
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
@@ -411,6 +413,14 @@ class InstitutionSurveysTable extends AppTable {
 			$attr['type'] = 'readonly';
 			$attr['attr']['value'] = $formOptions[$formId];
 		}
+
+		return $attr;
+	}
+
+	public function onUpdateFieldRepeaterQuestionId(Event $event, array $attr, $action, $request) {
+		$attr['type'] = 'hidden';
+		$attr['value'] = 0;
+		$attr['attr']['class'] = 'repeater-question-id';
 
 		return $attr;
 	}
