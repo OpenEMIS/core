@@ -7,7 +7,9 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Utility\Xml;
+use Cake\Utility\Text;
 use Cake\Log\LogTrait;
+use Cake\I18n\Time;
 
 define("NS_XHTML", "http://www.w3.org/1999/xhtml");
 define("NS_XF", "http://www.w3.org/2002/xforms");
@@ -238,6 +240,24 @@ class RestSurveyComponent extends Component {
                 // $xmlResponse = "<xf:instance id='xform'><oe:SurveyForms id='1'><oe:Institutions>1</oe:Institutions><oe:AcademicPeriods>10</oe:AcademicPeriods><oe:SurveyQuestions id='2'>some text</oe:SurveyQuestions><oe:SurveyQuestions id='3'>0</oe:SurveyQuestions><oe:SurveyQuestions id='4'>some long long text</oe:SurveyQuestions><oe:SurveyQuestions id='6'>3</oe:SurveyQuestions><oe:SurveyQuestions id='7'>5 6 7</oe:SurveyQuestions><oe:SurveyQuestions id='25'><oe:SurveyTableRows id='20'><oe:SurveyTableColumns0 id='0'>Male</oe:SurveyTableColumns0><oe:SurveyTableColumns1 id='37'>10</oe:SurveyTableColumns1><oe:SurveyTableColumns2 id='38'>20</oe:SurveyTableColumns2><oe:SurveyTableColumns3 id='39'>30</oe:SurveyTableColumns3></oe:SurveyTableRows><oe:SurveyTableRows id='21'><oe:SurveyTableColumns0 id='0'>Female</oe:SurveyTableColumns0><oe:SurveyTableColumns1 id='37'>15</oe:SurveyTableColumns1><oe:SurveyTableColumns2 id='38'>25</oe:SurveyTableColumns2><oe:SurveyTableColumns3 id='39'>35</oe:SurveyTableColumns3></oe:SurveyTableRows></oe:SurveyQuestions></oe:SurveyForms></xf:instance>";
                 // $xmlResponse = '<xf:instance id="xform"><oe:SurveyForms id="16"><oe:Institutions>1059</oe:Institutions><oe:AcademicPeriods>10</oe:AcademicPeriods><oe:SurveyQuestions id="113" array-id="1">1.3641 123.9214</oe:SurveyQuestions><oe:SurveyQuestions id="114" array-id="2">1.74 100.243</oe:SurveyQuestions><oe:SurveyQuestions id="16" array-id="3">5</oe:SurveyQuestions></oe:SurveyForms></xf:instance>';
                 // end testing data //
+
+                // save response into database for debug purpose, always purge 3 days old response
+                $SurveyResponses = TableRegistry::get('Survey.SurveyResponses');
+                $expiryDate = new Time();
+                $expiryDate->subDays(3);
+                $SurveyResponses->deleteAll([
+                    $SurveyResponses->aliasField('created <') => $expiryDate
+                ]);
+
+                $responseData = [
+                    'id' => Text::uuid(),
+                    'response' => $xmlResponse
+                ];
+                $responseEntity = $SurveyResponses->newEntity($responseData);
+                if (!$SurveyResponses->save($responseEntity)) {
+                    $this->log($responseEntity->errors(), 'debug');
+                }
+                // End
                 
                 $this->log('XML Response', 'debug');
                 $this->log($xmlResponse, 'debug');
