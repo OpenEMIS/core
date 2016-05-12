@@ -153,6 +153,16 @@ ALTER TABLE `workflow_statuses_steps` DROP INDEX `workflow_status_id`;
 ALTER TABLE `workflow_steps_roles` DROP INDEX `workflow_step_id`;
 ALTER TABLE `workflow_statuses_steps` DROP INDEX `workflow_step_id`;
 	
+ALTER TABLE `education_grades_subjects` DROP INDEX `education_grade_id`;
+ALTER TABLE `education_cycles` DROP INDEX `education_level_id`;
+ALTER TABLE `education_grades_subjects` DROP INDEX `education_subject_id`;
+ALTER TABLE `infrastructure_custom_field_options` DROP INDEX `infrastructure_custom_field_id`;
+ALTER TABLE `report_progress` DROP INDEX `pid`;
+ALTER TABLE `system_processes` DROP INDEX `process_id`;
+ALTER TABLE `staff_custom_field_options` DROP INDEX `staff_custom_field_id`;
+ALTER TABLE `student_custom_field_options` DROP INDEX `student_custom_field_id`;
+
+ALTER TABLE `security_users` DROP INDEX `super_admin`;
 
 
 -- db_patches
