@@ -198,6 +198,14 @@ class RestfulController extends AppController
         }
     }
 
+    private function _order(Query $query, $value, ArrayObject $extra)
+    {
+        if (!empty($value)) {
+            $fields = explode(',', $value);
+            $query->order($fields);
+        }
+    }
+
     private function _limit(Query $query, $value, ArrayObject $extra)
     {
         if (!empty($value)) {
