@@ -432,8 +432,6 @@ class StaffTable extends AppTable {
 		$this->ControllerAction->setFieldOrder([
 			'institution_position_id', 'start_date', 'position_type', 'FTE', 'staff_type_id', 'staff_status_id', 'staff_name'
 		]);
-		
-		
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -572,6 +570,18 @@ class StaffTable extends AppTable {
 				unset($entity->user);
 				$newEntity = $this->newEntity($entity->toArray());
 				$this->save($newEntity);
+				// if ($this->save($newEntity)) {
+				// 	$url = [
+				// 		'plugin' => 'Institution', 
+				// 		'controller' => 'Institutions', 
+				// 		'action' => 'Staff', 
+				// 		'0' => 'view', 
+				// 		'1' => $newEntity->id
+				// 	];
+				// 	$url = array_merge($url, $this->ControllerAction->params());
+				// 	$event->stopPropagation();
+				// 	return $this->controller->redirect($url);
+				// }
 			} else {
 				if (empty($entity->end_date) || $entity->end_date->isToday() || $entity->end_date->isFuture()) {
 					$this->addStaffRole($entity);
@@ -797,6 +807,7 @@ class StaffTable extends AppTable {
 	}
 
 	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$options['validate']=true;
 		$patch = $this->patchEntity($entity, $data->getArrayCopy(), $options->getArrayCopy());
 		$errorCount = count($patch->errors());
 		if ($errorCount == 0 || ($errorCount == 1 && array_key_exists('staff_id', $patch->errors()))) {
