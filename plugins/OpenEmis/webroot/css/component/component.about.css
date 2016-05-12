@@ -1,8 +1,7 @@
-/* ABOUT v.1.0.2 */
+/* ABOUT v.1.0.3 */
 
 .about-wrapper {
-    background-color: #F2F2F2;
-    padding: 3px 0 0;
+    background-color: #FFF;
     border-left: 1px solid #DDD;
     border-right: 1px solid #DDD;
     border-bottom: 1px solid #DDD;
@@ -11,7 +10,6 @@
 .about-container {
     text-align: left;
     padding: 15px !important;
-    border-top: 1px solid #DDD;
     display: block;
     background-color: #FFF;
 }
