@@ -17,7 +17,8 @@ define("NS_EV", "http://www.w3.org/2001/xml-events");
 define("NS_XSD", "http://www.w3.org/2001/XMLSchema");
 define("NS_OE", "https://www.openemis.org");
 
-class RestSurveyComponent extends Component {
+class RestSurveyComponent extends Component
+{
     use LogTrait;
     
     public $controller;
@@ -27,7 +28,8 @@ class RestSurveyComponent extends Component {
 
     public $allowedActions = array('listing', 'schools', 'download');
 
-    public function initialize(array $config) {
+    public function initialize(array $config)
+    {
         $this->controller = $this->_registry->getController();
         $this->action = $this->request->params['action'];
 
@@ -46,7 +48,8 @@ class RestSurveyComponent extends Component {
         }
     }
 
-    public function listing() {
+    public function listing()
+    {
         $query = $this->Form->find('list');
         $options = [];
         $options['limit'] = !is_null($this->request->query('limit')) ? $this->request->query('limit') : 20;
@@ -121,7 +124,8 @@ class RestSurveyComponent extends Component {
         return $this->response;
     }
 
-    public function schools() {
+    public function schools()
+    {
         $result = [];
 
         $ids = !is_null($this->request->query('ids')) ? $this->request->query('ids') : 0;
@@ -190,7 +194,8 @@ class RestSurveyComponent extends Component {
         return $this->response;
     }
 
-    public function download($format="xform", $id=0, $output=true) {
+    public function download($format="xform", $id=0, $output=true)
+    {
         switch ($format) {
             case 'xform':
                 $result = $this->getXForms($format, $id);
@@ -222,7 +227,8 @@ class RestSurveyComponent extends Component {
         }
     }
 
-    public function upload() {
+    public function upload()
+    {
         if ($this->request->is(['post', 'put'])) {
             $data = $this->request->data;
             $this->log('Data:', 'debug');
@@ -242,21 +248,8 @@ class RestSurveyComponent extends Component {
                 // end testing data //
 
                 // save response into database for debug purpose, always purge 3 days old response
-                $SurveyResponses = TableRegistry::get('Survey.SurveyResponses');
-                $expiryDate = new Time();
-                $expiryDate->subDays(3);
-                $SurveyResponses->deleteAll([
-                    $SurveyResponses->aliasField('created <') => $expiryDate
-                ]);
-
-                $responseData = [
-                    'id' => Text::uuid(),
-                    'response' => $xmlResponse
-                ];
-                $responseEntity = $SurveyResponses->newEntity($responseData);
-                if (!$SurveyResponses->save($responseEntity)) {
-                    $this->log($responseEntity->errors(), 'debug');
-                }
+                $this->_deleteExpiredResponse();
+                $this->_addResponse($xmlResponse);
                 // End
                 
                 $this->log('XML Response', 'debug');
@@ -492,7 +485,8 @@ class RestSurveyComponent extends Component {
         }
     }
 
-    public function getXForms($instanceId, $id) {
+    public function getXForms($instanceId, $id)
+    {
         $title = $this->Form->get($id)->name;
         $title = htmlspecialchars($title, ENT_QUOTES);
 
@@ -598,11 +592,13 @@ class RestSurveyComponent extends Component {
         return $xml;
     }
 
-    private function _setValidationSchema($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode) {
+    private function _setValidationSchema($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode)
+    {
 
     }
 
-    private function _textType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode) {
+    private function _textType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
+    {
         $validationHint = '';
         $bindType = 'string';
         if (!empty($field->params)) {
@@ -647,7 +643,8 @@ class RestSurveyComponent extends Component {
         }
     }
 
-    private function _numberType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode) {
+    private function _numberType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
+    {
         $validationHint = '';
         if (!empty($field->params)) {
             $params = json_decode($field->params, true);
@@ -684,12 +681,14 @@ class RestSurveyComponent extends Component {
         }
     }
 
-    private function _textareaType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode) {
+    private function _textareaType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
+    {
         $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'textarea', $instanceId, $index);
         $this->_setFieldBindNode($modelNode, $instanceId, 'string', $field->default_is_mandatory, '', $index);
     }
 
-    private function _dropdownType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode) {
+    private function _dropdownType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
+    {
         $dropdownNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'select1', $instanceId, $index);
 
         $fieldOptionResults = $this->FieldOption
@@ -712,7 +711,8 @@ class RestSurveyComponent extends Component {
         $this->_setFieldBindNode($modelNode, $instanceId, 'integer', $field->default_is_mandatory, '', $index);
     }
 
-    private function _checkboxType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode) {
+    private function _checkboxType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
+    {
         $checkboxNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'select', $instanceId, $index);
 
         $fieldOptionResults = $this->FieldOption
@@ -736,7 +736,8 @@ class RestSurveyComponent extends Component {
         $this->_setFieldBindNode($modelNode, $instanceId, 'integer', $field->default_is_mandatory, '', $index);
     }
 
-    private function _tableType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode) {
+    private function _tableType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
+    {
         // To nested table inside xform group
         $tableBreakNode = $sectionBreakNode->addChild("group", null, NS_XF);
         $tableBreakNode->addAttribute("ref", $field->field_id);
@@ -803,7 +804,8 @@ class RestSurveyComponent extends Component {
         }
     }
 
-    private function _dateType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode) {
+    private function _dateType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
+    {
         $validationHint = '';
         if (!empty($field->params)) {
             $params = json_decode($field->params, true);
@@ -839,7 +841,8 @@ class RestSurveyComponent extends Component {
         }
     }
 
-    private function _timeType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode) {
+    private function _timeType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
+    {
         $validationHint = '';
         if (!empty($field->params)) {
             $params = json_decode($field->params, true);
@@ -875,12 +878,14 @@ class RestSurveyComponent extends Component {
         }
     }
 
-    private function _fileType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode) {
+    private function _fileType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
+    {
         $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'upload', $instanceId, $index);
         $this->_setFieldBindNode($modelNode, $instanceId, 'file', $field->default_is_mandatory, '', $index);
     }
 
-    private function _twentyFourHourFormat($value) {
+    private function _twentyFourHourFormat($value)
+    {
         $values = explode(' ', $value);
         if (strtolower($values[1])=='am') {
             return $values[0] . ':00';
@@ -892,19 +897,22 @@ class RestSurveyComponent extends Component {
         }
     }
 
-    private function _coordinatesType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode) {
+    private function _coordinatesType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
+    {
         $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
         $this->_setFieldBindNode($modelNode, $instanceId, 'geopoint', $field->default_is_mandatory, '', $index);
     }
 
-    private function _setCommonAttribute($sectionBreakNode, $fieldName, $fieldType, $instanceId, $index) {
+    private function _setCommonAttribute($sectionBreakNode, $fieldName, $fieldType, $instanceId, $index)
+    {
         $fieldNode = $sectionBreakNode->addChild($fieldType, null, NS_XF);
         $fieldNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]");
         $fieldNode->addChild("label", htmlspecialchars($fieldName, ENT_QUOTES), NS_XF);
         return $fieldNode;
     }
 
-    private function _setFieldBindNode($modelNode, $instanceId, $bindType, $fieldIsMandatory=false, $ref='', $index='0') {
+    private function _setFieldBindNode($modelNode, $instanceId, $bindType, $fieldIsMandatory=false, $ref='', $index='0')
+    {
         if (empty($ref)) {
             $ref = "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]";
         }
@@ -917,5 +925,29 @@ class RestSurveyComponent extends Component {
             $bindNode->addAttribute("required", 'false()');
         }
         return $bindNode;
+    }
+
+    private function _deleteExpiredResponse()
+    {
+        $SurveyResponses = TableRegistry::get('Survey.SurveyResponses');
+        $expiryDate = new Time();
+        $expiryDate->subDays(3);
+        $SurveyResponses->deleteAll([
+            $SurveyResponses->aliasField('created <') => $expiryDate
+        ]);
+    }
+
+    private function _addResponse($xmlResponse)
+    {
+        $SurveyResponses = TableRegistry::get('Survey.SurveyResponses');
+            $responseData = [
+            'id' => Text::uuid(),
+            'response' => $xmlResponse
+        ];
+
+        $responseEntity = $SurveyResponses->newEntity($responseData);
+        if (!$SurveyResponses->save($responseEntity)) {
+            $this->log($responseEntity->errors(), 'debug');
+        }
     }
 }
