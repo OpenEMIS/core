@@ -1,4 +1,4 @@
-//Layout Splitter v.2.0.0
+//Layout Splitter v.2.0.1
 
 // Fixing the issue on first load when left navigation is overlaping the view before the angular has been initialize
 var sheet = (function() {
@@ -107,7 +107,7 @@ function bgSpiltterCtrl($scope) {
 }
 
 function bgSplitterLink(scope, element, attrs, $compile) {
-    var isMobileView = (window.innerWidth <= 1024)? true: false;
+    var isMobileView = (window.innerWidth <= 1024) ? true : false;
     var showHideIcon = 'kd-lists';
     var vertical = scope.orientation == 'vertical';
     var panelObj = {};
@@ -157,7 +157,7 @@ function bgSplitterLink(scope, element, attrs, $compile) {
                 paneElems['floatBtn'] = btnElem;
                 btnElem.bind('click', function(_event) {
                     if (window.innerWidth <= 1024) {
-                        console.log("close click");
+                        // console.log("close click");
                         iconElem.removeClass(showHideIcon);
                         if (showHideIcon === "kd-lists") {
                             showHideIcon = "kd-close-round";
@@ -176,16 +176,27 @@ function bgSplitterLink(scope, element, attrs, $compile) {
         //Add in splitter slide out class on the handler so that it won't appear on load
         showHideSidePane();
 
+        scope.$watch(function() {
+            return element.attr('collapse');
+        }, function(newValue) {
+            if (angular.isDefined(newValue)) {
+                panelObj.collapse = newValue;
+                showHideSidePane(true);
+            }
+        });
+
+
+
         /* ===============
          * Bind events
          * =============== */
 
-        handler.bind('mousedown', function(_event) {
+        handler.bind('mousedown touchstart', function(_event) {
             _event.preventDefault();
             drag = true;
         });
 
-        angular.element(document).bind('mouseup', function(_event) {
+        angular.element(document).bind('mouseup touchend', function(_event) {
             drag = false;
         });
 
@@ -217,6 +228,7 @@ function bgSplitterLink(scope, element, attrs, $compile) {
                 if (isMobileView) {
                     isMobileView = false;
                 }
+
                 enableDrag();
                 setPanes(vertical, paneElems, { pos1: panelObj.current, pos2: panelObj.current });
 
@@ -235,9 +247,10 @@ function bgSplitterLink(scope, element, attrs, $compile) {
     }
 
     function enableDrag() {
-        element.bind('mousemove', function(_event) {
+        element.bind('mousemove touchmove', function(_event) {
             if (!drag) return;
-
+            // console.log(_event);
+            var moveObj = _event;
             var bounds = element[0].getBoundingClientRect();
             var pos = 0;
             panelObj = reCalPanelSize();
@@ -245,10 +258,13 @@ function bgSplitterLink(scope, element, attrs, $compile) {
             // $.each($('.highchart'), function(key, group) {
             //     $(group).highcharts().reflow();
             // });
+            if(angular.isDefined(_event.originalEvent.touches)){ // check is using touch event or mousemove event
+                moveObj = _event.originalEvent.touches[0]; 
+            }
 
             if (vertical) {
                 var height = bounds.bottom - bounds.top;
-                pos = _event.clientY - bounds.top;
+                pos = moveObj.clientY - bounds.top;
 
                 if (pos < panelObj.pane1.min) return;
                 if (height - pos < panelObj.pane2.min) return;
@@ -256,7 +272,7 @@ function bgSplitterLink(scope, element, attrs, $compile) {
                 localStorage[handlerSessionID] = pos / height;
             } else {
                 var width = bounds.right - bounds.left;
-                pos = (bodyDir == 'ltr') ? _event.clientX - bounds.left : bounds.right - _event.clientX;
+                pos = (bodyDir == 'ltr') ? moveObj.clientX - bounds.left : bounds.right - moveObj.clientX;
 
                 if (angular.isDefined(panelObj.pane1.max) && pos > panelObj.pane1.max) return;
                 if (pos < panelObj.pane1.min) return;
@@ -282,18 +298,45 @@ function bgSplitterLink(scope, element, attrs, $compile) {
         element.unbind('mousemove');
     }
 
-    function showHideSidePane() {
+    function showHideSidePane(_withAnimation) {
+        var time = 550;
         // var paneElems = getChildPanes(element[0].childNodes); //Get updated dom when angular is ready
         if ((panelObj.isRoot === false) && (window.innerWidth <= 1024)) {
             paneElems.right.addClass('splitter-slide-out');
         } else if (panelObj.collapse === "true") {
-            addSlideOutContent(paneElems.splitter);
-            addOverlayContent(paneElems.left);
-            addSlideOutContent(paneElems.right)
+            if (_withAnimation) {
+                addSlideOutAnimation(paneElems.splitter);
+                addSlideOutAnimation(paneElems.right);
+                addOverlayContent(paneElems.left);
+                addTransition(paneElems.left);
+
+                setTimeout(function() {
+                    removeTransition(paneElems.splitter);
+                    removeTransition(paneElems.right);
+                    removeTransition(paneElems.left);
+                }, time);
+            } else {
+                addSlideOutContent(paneElems.splitter);
+                addOverlayContent(paneElems.left);
+                addSlideOutContent(paneElems.right);
+            }
         } else {
-            addSlideInContent(paneElems.splitter);
-            removeOverlayContent(paneElems.left);
-            addSlideInContent(paneElems.right)
+            if (_withAnimation) {
+                addTransition(paneElems.left);
+                removeOverlayContent(paneElems.left);
+                addSlideInAnimation(paneElems.right);
+                addSlideInAnimation(paneElems.splitter);
+
+                setTimeout(function() {
+                    removeTransition(paneElems.left);
+                    removeTransition(paneElems.right);
+                    removeTransition(paneElems.splitter);
+                }, time);
+            } else {
+                addSlideInContent(paneElems.splitter);
+                removeOverlayContent(paneElems.left);
+                addSlideInContent(paneElems.right);
+            }
         }
     }
 

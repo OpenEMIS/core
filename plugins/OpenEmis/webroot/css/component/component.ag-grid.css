@@ -1,4 +1,4 @@
-/* ANGULARJS GRID v.1.0.0 */
+/* ANGULARJS GRID v.1.0.1 */
 
 .ag-fresh {
     z-index: 2;
@@ -26,21 +26,12 @@
 
 /* AG-HEADER */
 
-.ag-fresh div.ag-header {
-    background: none;
-    border-bottom: 0px;
-}
-
-.ag-fresh .ag-header-row div.ag-header-cell {
+.ag-fresh .ag-header-cell {
     border-top: 0 !important;
     border-bottom: 0 !important;
-    border-color: #DDD;
-    border-style: solid;
+    border-color: #DDD !important;
+    border-style: solid !important;
     position: relative;
-}
-
-.ag-fresh span.ag-header-cell-text {
-    text-shadow: none;
 }
 
 .ag-fresh .ag-header-cell .ag-header-cell-label {
@@ -49,8 +40,9 @@
     text-shadow: 1px 1px 0px #FFF;
     font-weight: bold;
     text-align: left;
-    padding: 10px;
+    padding: 10px 35px 10px 10px;
     cursor: pointer;
+    line-height: normal;
 }
 
 .ag-fresh .ag-header-container {
@@ -62,82 +54,17 @@
     border-bottom: 1px solid #DDD !important;
 }
 
-select.ag-filter-select {
-    width: 192px !important;
-    margin: 10px 10px 0px 10px;
-    /*margin: 10px;*/
-    filter: 5px;
+.ag-fresh .ag-header-cell-text {
+    vertical-align: middle;
 }
 
-/* HIGH TABLE DIRECTIVE (SEVIN) */
-
-.hightable .ag-filter {
-    height: 292px;
+.ag-fresh .header-icon {
+    color: #999;
+    margin: 0 5px;
 }
 
-.hightable div.ag-menu,
-.hightable div.ag-filter,
-.hightable .ag-filter div {
-    height: auto;
-}
-
-.hightable .ag-menu {
-    border: 0 !important;
-}
-
-.hightable .ag-filter .ag-filter-header-container:first-child {
-    height: 50px;
-}
-
-.hightable .ag-filter .ag-filter-header-container + .ag-filter-header-container {
-    height: 42px;
-}
-
-.hightable .ag-filter .ag-filter-list-viewport {
-    height: 200px;
-}
-
-.hightable .ag-filter .ag-filter-item {
-    /*padding-top: 8px;*/
-    padding-bottom: 16px;
-    width: 200px;
-}
-
-.hightable .ag-header-cell-label {
-    padding: 0px;
-}
-
-.hightable .ag-header-cell-custom-label {
-    width: 100%;
-    height: 100%;
-}
-
-.hightable .ag-header-row div.ag-header-cell {
-    border-left: 0 !important;
-}
-
-.hightable .ag-header-row div.ag-header-cell {
-    border-left: 0 !important;
-}
-
-.hightable .ag-header-icon.ag-header-cell-menu-button:hover {
-    background: transparent;
-}
-
-.hightable .ag-header-icon.ag-header-cell-menu-button:hover:after {
-    color: #ccc;
-}
-
-.hightable .ag-cell:first-child {
-    border-left: 0 !important;
-}
-
-.hightable .ag-overlay-wrapper.ag-overlay-loading-wrapper .spinner-wrapper .spinner-text {
-    height: 70px;
-}
-
-.hightable .ag-overlay-wrapper.ag-overlay-loading-wrapper .spinner-wrapper .spinner-text .loading-percentage {
-    height: 20px;
+.ag-fresh .ag-sort-ascending-icon::after, .ag-sort-descending-icon::after {
+    vertical-align: middle;
 }
 
 /* AG-BODY */
@@ -214,12 +141,8 @@ select.ag-filter-select {
     right: -1px;
 }
 
-/*.ag-header-cell-menu-button svg,
+.ag-header-cell-menu-button svg,
 .ag-header-icon {
-    display: none;
-}*/
-
-.ag-header-cell-menu-button svg {
     display: none;
 }
 
@@ -319,6 +242,11 @@ select.ag-filter-select {
     position: relative;
 }
 
+.ag-height-fixed {
+    height: 650px;
+    min-height: 200px;
+}
+
 
 /* AG-CHECKBOX FILTER */
 
@@ -375,6 +303,7 @@ select.ag-filter-select {
 
 .rtl .ag-fresh .ag-header-cell .ag-header-cell-label {
     text-align: right;
+    padding: 10px 10px 10px 35px;
 }
 
 .rtl .ag-cell {

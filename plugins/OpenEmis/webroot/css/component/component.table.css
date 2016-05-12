@@ -1,4 +1,4 @@
-/* TABLE v.1.0.14 */
+/* TABLE v.1.0.15 */
 
 .table-responsive {
     border: 0 !important;
@@ -11,6 +11,21 @@
 .table-wrapper {
     position: relative;
     margin-bottom: 20px;
+}
+
+.vertical-align-top td,
+.vertical-align-top {
+    vertical-align: top !important;
+}
+
+.vertical-align-bottom td,
+.vertical-align-bottom {
+    vertical-align: bottom !important;
+}
+
+.vertical-align-middle td,
+.vertical-align-middle {
+    vertical-align: middle !important;
 }
 
 .shadow-right:after,
@@ -141,10 +156,6 @@ table thead {
 table tbody {
     border-left: 1px solid #FFF;
     border-right: 1px solid #FFF;
-}
-
-table .input-group {
-    width: inherit !important;
 }
 
 .full-width {
@@ -592,6 +603,19 @@ table .input-group {
     width: inherit !important;
 }
 
+.table .time,
+.table .date {
+    display: block;
+}
+
+.table .time,
+.table .time input,
+.table .date,
+.table .date input,
+.table .input-select-wrapper {
+    width: 100% !important;
+}
+
 @media (max-width: 767px) {
     .table-responsive .dropdown-menu {
         position: relative !important;
@@ -706,4 +730,8 @@ table .input-group {
 .rtl .table >:first-child >:first-child > .table-header:first-child {
     border-left: 1px solid #DDD !important;
     border-right: 0 !important;
+}
+
+.rtl .table .input-select-wrapper {
+    float: none;
 }
