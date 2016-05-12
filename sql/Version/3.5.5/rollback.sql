@@ -1,3 +1,11 @@
+-- POCOR-2979
+-- delete tables
+DROP TABLE IF EXISTS `survey_responses`;
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2979';
+
+
 -- POCOR-2915
 -- code here
 ALTER TABLE `institution_class_students` DROP INDEX `student_id`;
