@@ -85,6 +85,11 @@ class RenderRepeaterBehavior extends RenderBehavior {
                     $questionName = !is_null($question->name) ? $question->name : $question->custom_field->name;
                     $tableHeaders[$colKey + $colOffset] = $questionName;
                 }
+
+                // remove button
+                if ($action == 'edit') {
+                    $tableHeaders[] = '';
+                }
                 // End
 
                 $repeaters = [];
@@ -111,11 +116,16 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                     }
                                 }
                             }
-                        }
 
-                        // add one more rows
-                        $repeaters[] = Text::uuid();
-                    } else {
+                            // rely on repeater_question_id field added to InstitutionSurveys
+                            if (array_key_exists('repeater_question_id', $requestData[$model->alias()])) {
+                                $selectedFieldId = $requestData[$model->alias()]['repeater_question_id'];
+                                if ($fieldId == $selectedFieldId) {
+                                    // add one more rows
+                                    $repeaters[] = Text::uuid();
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -206,6 +216,11 @@ class RenderRepeaterBehavior extends RenderBehavior {
                             }
                         }
 
+                        // remove button
+                        if ($action == 'edit') {
+                            $rowData[] = '<button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemove(this);"><i class="fa fa-close"></i>' . __('Remove') . '</button>';
+                        }
+
                         $tableCells[$rowKey] = $rowData;
                         $rowCount++;
                     }
@@ -238,7 +253,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
 
     public function formatRepeaterEntity(Event $event, Entity $entity, ArrayObject $settings) {
         $surveysArray = $entity->has('institution_repeater_surveys') ? $entity->institution_repeater_surveys : [];
-        $repeatersArray = [];
+        $repeatersArray = $entity->has('institution_repeaters') ? $entity->institution_repeaters : [];
 
         if (isset($entity->id)) {
             $fieldKey = $settings['fieldKey'];
@@ -299,6 +314,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
         $session->write($repeaterSessionKey, $repeatersArray);
 
         $entity->set('institution_repeater_surveys', $surveysArray);
+        $entity->set('institution_repeaters', $repeatersArray);
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
@@ -319,8 +335,19 @@ class RenderRepeaterBehavior extends RenderBehavior {
 
                 // Logic to delete all answers before re-insert
                 $repeaterIds = array_keys($fieldObj);
+                $originalRepeaterIds = [];
+                $originalRepeaterSurveys = $entity->extractOriginal(['institution_repeater_surveys']);
+                if (array_key_exists('institution_repeater_surveys', $originalRepeaterSurveys)) {
+                    if (array_key_exists($fieldId, $originalRepeaterSurveys['institution_repeater_surveys'])) {
+                        if (array_key_exists($formKey, $originalRepeaterSurveys['institution_repeater_surveys'][$fieldId])) {
+                            unset($originalRepeaterSurveys['institution_repeater_surveys'][$fieldId][$formKey]);
+                        }
+                        $originalRepeaterIds = array_keys($originalRepeaterSurveys['institution_repeater_surveys'][$fieldId]);
+                    }
+                }
+
                 $surveyIds = [];
-                if (!empty($repeaterIds)) {
+                if (!empty($originalRepeaterIds)) {
                     $surveyIds = $RepeaterSurveys
                         ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
                         ->where([
@@ -328,20 +355,45 @@ class RenderRepeaterBehavior extends RenderBehavior {
                             $RepeaterSurveys->aliasField('institution_id') => $institutionId,
                             $RepeaterSurveys->aliasField('academic_period_id') => $periodId,
                             $RepeaterSurveys->aliasField($formKey) => $formId,
-                            $RepeaterSurveys->aliasField('repeater_id IN ') => $repeaterIds
+                            $RepeaterSurveys->aliasField('repeater_id IN ') => $originalRepeaterIds
                         ])
                         ->toArray();
                 }
                 
                 if (!empty($surveyIds)) {
+                    // always deleted all existing answers before re-insert
                     $RepeaterSurveyAnswers->deleteAll([
                         $RepeaterSurveyAnswers->aliasField('institution_repeater_survey_id IN ') => $surveyIds
+                    ]);
+                }
+
+                if (!empty($repeaterIds)) {
+                    if (!empty($originalRepeaterIds)) {
+                        $missingRepeaters = array_diff($originalRepeaterIds, $repeaterIds);
+                        if (!empty($missingRepeaters)) {
+                            // if user has remove particular repeater from form, delete away that repeater from database too
+                            $RepeaterSurveys->deleteAll([
+                                $RepeaterSurveys->aliasField('status_id') => $status,
+                                $RepeaterSurveys->aliasField('institution_id') => $institutionId,
+                                $RepeaterSurveys->aliasField('academic_period_id') => $periodId,
+                                $RepeaterSurveys->aliasField($formKey) => $formId,
+                                $RepeaterSurveys->aliasField('repeater_id IN ') => $missingRepeaters
+                            ]);
+                        }
+                    }
+                } else {
+                    // if user remove all rows from form, delete away all repeater records
+                    $RepeaterSurveys->deleteAll([
+                        $RepeaterSurveys->aliasField('status_id') => $status,
+                        $RepeaterSurveys->aliasField('institution_id') => $institutionId,
+                        $RepeaterSurveys->aliasField('academic_period_id') => $periodId,
+                        $RepeaterSurveys->aliasField($formKey) => $formId
                     ]);
                 }
                 // End
 
                 foreach ($fieldObj as $repeaterId => $repeaterObj) {
-                    if (is_array($repeaterObj)) {
+                    if (is_array($repeaterObj)) {                        
                         $surveyData = [
                             'status_id' => $status,
                             'institution_id' => $institutionId,
@@ -376,7 +428,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
                         }
 
                         $surveyData['custom_field_values'] = $answers;
-                        $surveyEntity = $RepeaterSurveys->newEntity($surveyData);
+                        $surveyEntity = $RepeaterSurveys->newEntity($surveyData, ['validate' => false]);
                         // save repeater by repeater
                         if ($RepeaterSurveys->save($surveyEntity)) {
                         } else {
