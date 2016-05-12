@@ -336,13 +336,9 @@ class RenderRepeaterBehavior extends RenderBehavior {
                 // Logic to delete all answers before re-insert
                 $repeaterIds = array_keys($fieldObj);
                 $originalRepeaterIds = [];
-                $originalRepeaterSurveys = $entity->extractOriginal(['institution_repeater_surveys']);
-                if (array_key_exists('institution_repeater_surveys', $originalRepeaterSurveys)) {
-                    if (array_key_exists($fieldId, $originalRepeaterSurveys['institution_repeater_surveys'])) {
-                        if (array_key_exists($formKey, $originalRepeaterSurveys['institution_repeater_surveys'][$fieldId])) {
-                            unset($originalRepeaterSurveys['institution_repeater_surveys'][$fieldId][$formKey]);
-                        }
-                        $originalRepeaterIds = array_keys($originalRepeaterSurveys['institution_repeater_surveys'][$fieldId]);
+                if ($entity->has('institution_repeaters')) {
+                    if (array_key_exists($fieldId, $entity->institution_repeaters)) {
+                        $originalRepeaterIds = array_values($entity->institution_repeaters[$fieldId]);
                     }
                 }
 
