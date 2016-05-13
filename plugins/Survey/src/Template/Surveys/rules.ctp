@@ -57,13 +57,13 @@ $institutionId = $session->read('Institution.Institutions.id');
 										<td><input type="checkbox" value="{{question.survey_question_id}}"></td>
 										<td>
 											<div class="input-select-wrapper">
-												<select ng-options="item.survey_question_id as item.short_name for item in SurveyRulesController.surveyQuestions | filter:SurveyRulesController.filterByOrderAndType({{question.order}})" ng-model="surveyQuestions" ng-click="SurveyRulesController.populateOptions(surveyQuestions)">
+												<select ng-options="item.survey_question_id as item.short_name for item in SurveyRulesController.surveyQuestions | filter:SurveyRulesController.filterByOrderAndType({{question.order}})" ng-model="dependentQuestion" ng-click="SurveyRulesController.populateOptions(dependentQuestion)">
 												</select>
 											</div>
 										</td>
 										<td>
 											<div class="input-select-wrapper">
-												<select chosen multiple options="SurveyRulesController.questionOptions" ng-model="surveyQuestions" ng-options="item.id as item.name for item in SurveyRulesController.questionOptions"></select>
+												<select chosen multiple options="SurveyRulesController.questionOptions" ng-model="dependentOptions" ng-options="item.survey_question_choice_id as item.survey_question_choice_name for item in SurveyRulesController.questionOptions | filter:SurveyRulesController.filterChoiceBySurveyQuestionId(dependentQuestion)"></select>
 											</div>
 										</td>
 									</tr>

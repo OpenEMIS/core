@@ -12,6 +12,7 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
     $scope.action = 'index';
     var filterValue = '';
     var surveyFormId = UtilsSvc.requestQuery('survey_form_id');
+    vm.surveyFormId = surveyFormId;
     
     // Initialisation
     angular.element(document).ready(function() 
@@ -59,6 +60,7 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
         .then(function(response)
         {   
             var surveyQuestions = [];
+            console.log(response.data);
             for(i = 0; i < response.data.length; i++) {
                 question = response.data[i];
                 var shortName = question.name;
@@ -101,10 +103,23 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
         }
     }
 
-    vm.populateOptions = function(item) {
-        SurveyRulesSvc.getShowIfChoices(item)
+    vm.filterChoiceBySurveyQuestionId = function(surveyQuestionId) {
+        return function (item) {
+            if (surveyQuestionId == '' || surveyQuestionId == undefined) {
+                return false;
+            } else if (item.survey_question_id == surveyQuestionId) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    vm.populateOptions = function() {
+        SurveyRulesSvc.getShowIfChoices(vm.surveyFormId, vm.sectionName)
         .then(function(response)
         {
+            console.log(response.data);
             vm.questionOptions = response.data;
             console.log(response.data);
         });
