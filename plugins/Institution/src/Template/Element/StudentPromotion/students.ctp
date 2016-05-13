@@ -11,7 +11,7 @@
 							<?php if ($action != 'reconfirm') { ?>
 							<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
 							<?php } ?>
-							<th><?= __('OpenEmis ID') ?></th>
+							<th><?= __('OpenEMIS ID') ?></th>
 							<th><?= __('Student') ?></th>
 							<th><?= __('Current Grade') ?></th>
 							<th><?= __('Class') ?></th>
