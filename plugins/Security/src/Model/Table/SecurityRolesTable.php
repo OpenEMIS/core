@@ -135,7 +135,7 @@ class SecurityRolesTable extends AppTable {
 			
 			$SecurityGroupsTable = $this->SecurityGroups;
 
-			if($this->Auth->user('super_admin') != 1){ //if not admin, then list out SecurityGroups which member created
+			if ($this->Auth->user('super_admin') != 1) { //if not admin, then list out SecurityGroups which member created
 
 				$groupOptions = $SecurityGroupsTable->find('list')
 					->where([
@@ -144,7 +144,7 @@ class SecurityRolesTable extends AppTable {
 					])
 					->toArray();
 
-			}else{ //if admin then show all SecurityGroups excluding default institution System Group
+			} else { //if admin then show all SecurityGroups excluding default institution System Group
 
 				$groupOptions = $SecurityGroupsTable->find('list')
 					->where([
