@@ -25,7 +25,7 @@ CREATE TABLE `nationalities` (
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 ALTER TABLE `nationalities`
   ADD PRIMARY KEY (`id`);
@@ -70,7 +70,51 @@ WHERE EXISTS (
 );
 
 
-ALTER TABLE `user_nationalities` CHANGE `country_id` `nationality_id` INT(11) NOT NULL;
+-- Fix: re-create the user_nationalities table with the correct columns instead of altering table as it might take a long time 
+-- backing up
+RENAME TABLE user_nationalities TO z_2714_user_nationalities;
+
+-- new table user_nationalities START
+CREATE TABLE IF NOT EXISTS `user_nationalities` (
+  `id` int(11) NOT NULL,
+  `nationality_id` int(11) NOT NULL,
+  `comments` text,
+  `security_user_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE `user_nationalities`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `nationality_id` (`nationality_id`),
+  ADD KEY `security_user_id` (`security_user_id`);
+
+ALTER TABLE `user_nationalities`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+-- new table user_nationalities END
+
+INSERT INTO `user_nationalities` (
+    `id`,
+    `nationality_id`,
+    `comments`,
+    `security_user_id`,
+    `modified_user_id`,
+    `modified`,
+    `created_user_id`,
+    `created`
+) SELECT 
+    `id`,
+    `country_id`,
+    `comments`,
+    `security_user_id`,
+    `modified_user_id`,
+    `modified`,
+    `created_user_id`,
+    `created` 
+    FROM z_2714_user_nationalities;
+
 
 -- NEED TO DROP THE IDENTITY_TYPE COLUMN FOR COUNTRIES
 ALTER TABLE `countries` DROP `identity_type_id`;
