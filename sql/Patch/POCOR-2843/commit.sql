@@ -1,6 +1,10 @@
 -- db_patches
 INSERT INTO `db_patches` (issue, created) VALUES ('POCOR-2843', NOW());
 
+-- authentication_type_attributes
+ALTER TABLE `authentication_type_attributes` 
+CHANGE COLUMN `attribute_name` `attribute_name` VARCHAR(100) NOT NULL COMMENT '' ;
+
 -- security_rest_sessions
 ALTER TABLE `security_rest_sessions` 
 RENAME TO  `z_2843_security_rest_sessions` ;
