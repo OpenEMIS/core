@@ -1064,7 +1064,7 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	public function _getSelectOptions() {
+	private function _getSelectOptions() {
 		//Return all required options and their key
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$Grades = TableRegistry::get('Institution.InstitutionGrades');
@@ -1076,6 +1076,11 @@ class StudentsTable extends AppTable {
 		$periodOptions = $AcademicPeriod->getList(['isEditable'=>true, 'restrictLevel' => ['1'], 'withLevels' => false]);
 		if (empty($this->request->query['period'])) {
 			$this->request->query['period'] = $this->AcademicPeriods->getCurrent();
+		}
+
+		$selectedPeriod = 0;
+		if ($this->request->is('post')) {
+			$selectedPeriod = $this->request->data['Students']['academic_period_id'];
 		}
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
