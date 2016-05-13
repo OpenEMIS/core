@@ -94,9 +94,8 @@ trait UtilityTrait {
 	public function advancedSelectOptions(&$options, &$selected, $params=[]) {
 		$callable = array_key_exists('callable', $params) ? $params['callable'] : null;
 		$message = array_key_exists('message', $params) ? $params['message'] : '';
+		$defaultValue = array_key_exists('defaultValue', $params) ? $params['defaultValue'] : null;
 		$selectOption = array_key_exists('selectOption', $params)? $params['selectOption'] : true;
-		$defaultValue = null;
-
 
 		// Check if the selected key is empty. If it is not empty then change the selected to null and get
 		// the first available from the list
