@@ -19,7 +19,6 @@ class DirectoriesController extends AppController {
 			// Users
 			'Contacts' 				=> ['className' => 'User.Contacts'],
 			'Identities' 			=> ['className' => 'User.Identities'],
-			'Nationalities' 		=> ['className' => 'User.UserNationalities'],
 			'Languages' 			=> ['className' => 'User.UserLanguages'],
 			'Comments' 				=> ['className' => 'User.Comments'],
 			'Attachments' 			=> ['className' => 'User.Attachments'],
@@ -87,6 +86,7 @@ class DirectoriesController extends AppController {
 	public function StaffSubjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSubjects']); }
 	public function StudentClasses() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']); }
 	public function StudentSubjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']); }
+    public function Nationalities() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }    
 	// End
 
 	public function beforeFilter(Event $event) {

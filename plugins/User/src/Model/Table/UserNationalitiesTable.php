@@ -1,11 +1,13 @@
 <?php
 namespace User\Model\Table;
 
-use App\Model\Table\AppTable;
+use ArrayObject;
+
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use App\Model\Table\ControllerActionTable;
 
-class UserNationalitiesTable extends AppTable {
+class UserNationalitiesTable extends ControllerActionTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		
@@ -13,7 +15,7 @@ class UserNationalitiesTable extends AppTable {
         $this->belongsTo('Nationalities', ['className' => 'FieldOption.Nationalities']);
 	}
 
-	public function beforeAction($event) {
+	public function beforeAction(Event $event) {
 		$this->fields['nationality_id']['type'] = 'select';
 	}
 
