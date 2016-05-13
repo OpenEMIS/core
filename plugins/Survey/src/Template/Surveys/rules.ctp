@@ -44,8 +44,8 @@ $institutionId = $session->read('Institution.Institutions.id');
 				<form method="post" accept-charset="utf-8" id="content-main-form" novalidate="novalidate" action="/openemis-phpoe/Surveys/Forms?module=1" class="ng-pristine ng-valid"><div style="display:none;"><input type="hidden" name="_method" value="POST"></div>
 					<div class="table-wrapper">
 						<div class="table-responsive">
-							<div class="section-header" ng-repeat-start="question in SurveyRulesController.surveyQuestions">{{question.no}}. {{question.name}}</div>
-							<table class="table table-curved table-sortable table-checkable" ng-repeat-end>
+							
+							<table class="table table-curved table-sortable table-checkable">
 								<thead>
 									<tr>
 										<th><?= __('Enable')?></th>
@@ -53,17 +53,22 @@ $institutionId = $session->read('Institution.Institutions.id');
 										<th><?= __('Show If')?></th>
 									</tr>
 								</thead>
-									<tr>
+									<tr ng-repeat-start="question in SurveyRulesController.surveyQuestions">
+										<td colspan="3"><div class="section-header">{{question.no}}. {{question.name}}</div></td>
+									</tr>
+									<tr ng-repeat-end>
 										<td><input type="checkbox" value="{{question.survey_question_id}}"></td>
 										<td>
 											<div class="input-select-wrapper">
 												<select ng-options="item.survey_question_id as item.short_name for item in SurveyRulesController.surveyQuestions | filter:SurveyRulesController.filterByOrderAndType({{question.order}})" ng-model="dependentQuestion" ng-click="SurveyRulesController.populateOptions(dependentQuestion)">
+													<option value="">-- <?= __('Select One') ?> --</option>
 												</select>
 											</div>
 										</td>
 										<td>
 											<div class="input-select-wrapper">
-												<select chosen multiple options="SurveyRulesController.questionOptions" ng-model="dependentOptions" ng-options="item.survey_question_choice_id as item.survey_question_choice_name for item in SurveyRulesController.questionOptions | filter:SurveyRulesController.filterChoiceBySurveyQuestionId(dependentQuestion)"></select>
+												<select chosen multiple options="SurveyRulesController.questionOptions" ng-model="dependentOptions" ng-options="item.survey_question_choice_id as item.survey_question_choice_name for item in SurveyRulesController.questionOptions | filter:SurveyRulesController.filterChoiceBySurveyQuestionId(dependentQuestion)">
+												</select>
 											</div>
 										</td>
 									</tr>
