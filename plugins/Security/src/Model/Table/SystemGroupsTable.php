@@ -151,16 +151,27 @@ class SystemGroupsTable extends AppTable {
 
 		// filter groups by users permission
 		if ($this->Auth->user('super_admin') != 1) {
+
+
+			$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+			$SecurityGroupUsers = $SecurityGroupUsersTable->find('list');
+
 			$userId = $this->Auth->user('id');
-			$query->innerJoin(
-				['GroupUsers' => 'security_group_users'],
-				[
-					'GroupUsers.security_group_id = ' . $this->aliasField('id'),
-					'GroupUsers.security_user_id = ' . $userId
-				]
-			);
-			$query->group([$this->aliasField('id')]);
+			
+			$query
+				->where(['Institutions.created_user_id'=>$userId])
+				->orWhere([
+					'EXISTS ('.
+						$SecurityGroupUsers->sql().
+						' WHERE '.$SecurityGroupUsersTable->aliasField('security_group_id').' = '.$this->aliasField('id').
+						' AND '.$SecurityGroupUsersTable->aliasField('security_user_id').' = '.$userId.
+					')'
+				]);
 		}
+
+		// where exists in (security_group_users) or security_groups.created_user_id = user.id
+
+		//pr($query);
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
