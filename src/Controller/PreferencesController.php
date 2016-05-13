@@ -19,7 +19,6 @@ class PreferencesController extends AppController {
 			'Account' 				=> ['className' => 'UserAccounts'],
 			'Contacts'				=> ['className' => 'UserContacts'],
 			'Identities' 			=> ['className' => 'User.Identities'],
-			'Nationalities' 		=> ['className' => 'User.UserNationalities'],
 			'Languages' 			=> ['className' => 'User.UserLanguages'],
 			'Comments' 				=> ['className' => 'User.Comments'],
 			'Attachments' 			=> ['className' => 'User.Attachments'],
@@ -27,6 +26,10 @@ class PreferencesController extends AppController {
 			'SpecialNeeds' 			=> ['className' => 'User.SpecialNeeds'],
 		];
 	}
+
+    // CAv4
+    public function Nationalities() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }    
+    // End
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
@@ -128,4 +131,8 @@ class PreferencesController extends AppController {
 			return $this->redirect(['action' => 'index']);
 		}
 	}
+
+    public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra) {
+        $this->beforePaginate($event, $model, $query, $extra);
+    }
 }
