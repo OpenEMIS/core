@@ -126,7 +126,7 @@ class StaffTable extends AppTable {
 				'rule' => ['institutionStaffId'],
 				'on' => 'create'
 			])
-			->requirePresence('position_type',false)
+			->requirePresence('position_type')
 		;
 	}
 

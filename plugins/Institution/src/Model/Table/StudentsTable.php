@@ -137,7 +137,7 @@ class StudentsTable extends AppTable {
 		return $validator;
 	}
 
-	public function validationNew(Validator $validator) {
+	public function validationNewStudent(Validator $validator) {
         $validator = $this->validationDefault($validator);
         $validator = $validator->remove('student_name');
         return $validator;
@@ -995,7 +995,7 @@ class StudentsTable extends AppTable {
 	}
 
 	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$options['validate'] = 'new';
+		$options['validate'] = 'newStudent';
 		$entity = $this->patchEntity($entity, $data->getArrayCopy(), $options->getArrayCopy());
 		$errorCount = count($entity->errors());
 		if ($errorCount == 0 || ($errorCount == 1 && array_key_exists('student_id', $entity->errors()))) {
