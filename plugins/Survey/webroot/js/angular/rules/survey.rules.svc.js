@@ -6,6 +6,7 @@ angular.module('survey.rules.svc', ['kd.orm.svc'])
         SurveyQuestionsTable: 'Survey.SurveyQuestions',
         SurveyFormsQuestionsTable: 'Survey.SurveyFormsQuestions',
         SurveyFormsQuestionsTable2: 'Survey.SurveyFormsQuestions',
+        SurveyFormsQuestionsTable3: 'Survey.SurveyFormsQuestions',
         SurveyQuestionChoicesTable: 'Survey.SurveyQuestionChoices'
     };
 
@@ -71,15 +72,16 @@ angular.module('survey.rules.svc', ['kd.orm.svc'])
             return SurveyFormsQuestionsTable
             .select()
             .find('DropDownQuestions')
+            .contain(['CustomFields.CustomFieldOptions'])
             .where({survey_form_id: surveyFormId})
             .ajax({success: success, defer: true})
             ;
         },
 
-        getShowIfChoices: function(questionId) {
-            return SurveyQuestionChoicesTable
-            .select()
-            .where({survey_question_id: questionId})
+        getShowIfChoices: function(surveyFormId, section) {
+            return SurveyFormsQuestionsTable3
+            .find('SurveyFormChoices', {survey_form_id: surveyFormId})
+            .where({survey_form_id: surveyFormId, section: section})
             .ajax({defer: true})
             ;
         },
