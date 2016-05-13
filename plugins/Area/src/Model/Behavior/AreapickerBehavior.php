@@ -118,7 +118,7 @@ class AreapickerBehavior extends Behavior {
 					$this->_table->ControllerAction->field($field.$key, [
 						'type' => 'readonly', 
 						'attr' => ['label' => __($area['level_name'])],
-						'value' => $area['area_name'],
+						'value' => __($area['area_name']),
 						'after' => $after
 					]);
 					$after = $field.$key;
@@ -144,7 +144,7 @@ class AreapickerBehavior extends Behavior {
 						$this->_table->ControllerAction->field($field.$key, [
 							'type' => 'disabled', 
 							'attr' => ['label' => __($area['level_name']), 'value' => $area['area_name']],
-							'value' => $area['area_name'],
+							'value' => __($area['area_name']),
 							'after' => $after
 						]);
 						$after = $field.$key;
