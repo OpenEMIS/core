@@ -70,10 +70,13 @@ class InstitutionStaffTable extends AppTable  {
 		);
 
 		$query->contain(['Users.Genders', 'Institutions.Areas', 'Positions.StaffPositionTitles'])->select([
-			'openemis_no' => 'Users.openemis_no', 
+			'openemis_no' => 'Users.openemis_no',
+			'first_name' => 'Users.first_name',
+			'middle_name' => 'Users.middle_name',
+			'last_name' => 'Users.last_name',
 			'number' => 'Identities.number', 
 			'code' => 'Institutions.code', 
-			'gender_id' => 'Genders.name', 
+			'gender' => 'Genders.name', 
 			'area_name' => 'Areas.name', 
 			'area_code' => 'Areas.code',
 			'position_title_teaching' => 'StaffPositionTitles.type'
@@ -116,7 +119,7 @@ class InstitutionStaffTable extends AppTable  {
 		// unset($fields[array_search('institution_id', array_column($fields, 'field'))]);
 
 		foreach ($fields as $key => $field) {
-			if ($field['field'] == 'institution_id') {
+			if ($field['field'] == 'institution_id' || $field['field'] == 'staff_id') {
 				unset($fields[$key]);
 				break;
 			}
@@ -144,6 +147,27 @@ class InstitutionStaffTable extends AppTable  {
 		];
 
 		$extraField[] = [
+			'key' => 'Users.first_name',
+			'field' => 'first_name',
+			'type' => 'string',
+			'label' => ''
+		];
+
+		$extraField[] = [
+			'key' => 'Users.middle_name',
+			'field' => 'middle_name',
+			'type' => 'string',
+			'label' => ''
+		];
+
+		$extraField[] = [
+			'key' => 'Users.last_name',
+			'field' => 'last_name',
+			'type' => 'string',
+			'label' => ''
+		];
+
+		$extraField[] = [
 			'key' => 'Identities.number',
 			'field' => 'number',
 			'type' => 'string',
@@ -152,7 +176,7 @@ class InstitutionStaffTable extends AppTable  {
 
 		$extraField[] = [
 			'key' => 'Users.gender_id',
-			'field' => 'gender_id',
+			'field' => 'gender',
 			'type' => 'string',
 			'label' => ''
 		];
