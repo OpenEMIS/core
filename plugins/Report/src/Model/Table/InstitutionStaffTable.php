@@ -29,6 +29,7 @@ class InstitutionStaffTable extends AppTable  {
 			'excludes' => ['start_year', 'end_year', 'FTE', 'security_group_user_id'], 
 			'pages' => false
 		]);
+		$this->addBehavior('Report.InstitutionSecurity');
 	}
 
 	public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
@@ -45,6 +46,8 @@ class InstitutionStaffTable extends AppTable  {
 		$requestData = json_decode($settings['process']['params']);
 		$statusId = $requestData->status;
 		$typeId = $requestData->type;
+		$userId = $requestData->user_id;
+		$superAdmin = $requestData->super_admin;
 
 		if ($statusId!=0) {
 			$query->where([
@@ -75,6 +78,10 @@ class InstitutionStaffTable extends AppTable  {
 			'area_code' => 'Areas.code',
 			'position_title_teaching' => 'StaffPositionTitles.type'
 		]);
+
+		if (!$superAdmin) {
+			$query->find('ByAccess', ['user_id' => $userId, 'institution_field_alias' => $this->aliasField('institution_id')]);
+		}
 	}
 
 	public function onExcelGetFTE(Event $event, Entity $entity) {
