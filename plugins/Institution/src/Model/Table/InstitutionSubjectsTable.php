@@ -1130,9 +1130,11 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 	        $count = $table
 	                    ->find()
 	                    ->contain('Users')
-	                    ->where(['Users.gender_id' => $gender_id])
-	                    ->where([$table->aliasField('institution_subject_id') => $entity->id])
-	                    ->where([$table->aliasField('status') .' > 0'])
+	                    ->where([
+	                    	'Users.gender_id' => $gender_id,
+	                    	$table->aliasField('institution_subject_id') => $entity->id,
+	                    	$table->aliasField('status') .' > 0'
+	                    	])
 	                    ->count();
 	        return $count;
 		}
@@ -1145,9 +1147,11 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 	        $count = $table
 	                    ->find()
 	                    ->contain('Users')
-	                    ->where(['Users.gender_id' => $gender_id])
-	                    ->where([$table->aliasField('institution_subject_id') => $entity->id])
-	                    ->where([$table->aliasField('status') .' > 0'])
+	                    ->where([
+	                    	'Users.gender_id' => $gender_id,
+	                    	$table->aliasField('institution_subject_id') => $entity->id,
+	                    	$table->aliasField('status') .' > 0'
+	                    	])
 	                    ->count();
 	        return $count;
 		}
