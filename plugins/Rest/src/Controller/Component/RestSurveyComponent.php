@@ -652,10 +652,10 @@ class RestSurveyComponent extends Component
             if (in_array($validationType, ['min_value', 'max_value', 'range'])) {
                 if ($validationType!='range') {
                     if ($validationType=='min_value') {
-                        $constraint = ". > ".$params[$validationType];
+                        $constraint = ". >= ".$params[$validationType];
                         $validationHint = __('Value should be at least '. $params[$validationType]);
                     } else if ($validationType=='max_value') {
-                        $constraint = ". < ".$params[$validationType];
+                        $constraint = ". <= ".$params[$validationType];
                         $validationHint = __('Value should not be more than '. $params[$validationType]);
                     }
                 } else {
@@ -663,9 +663,9 @@ class RestSurveyComponent extends Component
                     $constraint = "";
                     foreach ($params[$validationType] as $key => $value) {
                         if ($key=='lower') {
-                            $constraint .= empty($constraint) ? ". > ".$value : " && . > ".$value;
+                            $constraint .= empty($constraint) ? ". >= ".$value : " && . >= ".$value;
                         } else {
-                            $constraint .= empty($constraint) ? ". < ".$value : " && . < ".$value;
+                            $constraint .= empty($constraint) ? ". <= ".$value : " && . <= ".$value;
                         }
                         $values[] = $value;
                     }
