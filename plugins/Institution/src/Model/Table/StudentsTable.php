@@ -111,19 +111,21 @@ class StudentsTable extends AppTable {
 			])
 			->add('academic_period_id', [
 			])
+			->add('education_grade_id', [
+			])
 			->allowEmpty('student_name')
-			->add('student_name', 'ruleInstitutionStudentId', [
-				'rule' => ['institutionStudentId'],
-
+			->add('student_name', 'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem', [
+				'rule' => ['studentNotEnrolledInAnyInstitutionAndSameEducationSystem', []],
+				'on' => 'create',
+				'last' => true
+			])
+			->add('student_name', 'ruleStudentNotCompletedGrade', [
+				'rule' => ['studentNotCompletedGrade'],
 				'on' => 'create',
 				'last' => true
 			])
 			->add('student_name', 'ruleCheckAdmissionAgeWithEducationCycleGrade', [
 				'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
-				'on' => 'create'
-			])
-			->add('student_name', 'ruleStudentEnrolledInOthers', [
-				'rule' => ['checkEnrolledInOtherInstitution'],
 				'on' => 'create'
 			])
 			->allowEmpty('class')
@@ -134,6 +136,12 @@ class StudentsTable extends AppTable {
 			;
 		return $validator;
 	}
+
+	public function validationNew(Validator $validator) {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator->remove('student_name');
+        return $validator;
+    }
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
@@ -751,6 +759,7 @@ class StudentsTable extends AppTable {
 
 				// Check if the student is a new record in the admission table, if the record exist as an approved record or rejected record, that record should
 				// be retained for auditing purposes as the student may be approved in the first place, then remove from the institution for some reason, then added back
+
 				$studentExist = $AdmissionTable->find()
 					->where([
 							$AdmissionTable->aliasField('status') => 0,
@@ -786,54 +795,13 @@ class StudentsTable extends AppTable {
 							return false;
 						}
 					};
+					return $process;
+				} else {
 					$process = function ($model, $entity){
 						return false;
 					};
-					return $process;
-				} else {
-					$studentExist = $AdmissionTable->find()
-						->where([
-								$AdmissionTable->aliasField('status') => 0,
-								$AdmissionTable->aliasField('student_id') => $studentId,
-								$AdmissionTable->aliasField('institution_id') => $studentData['institution_id'],
-								$AdmissionTable->aliasField('academic_period_id') => $studentData['academic_period_id'],
-								$AdmissionTable->aliasField('education_grade_id') => $studentData['education_grade_id'],
-								$AdmissionTable->aliasField('type') => 1
-							])
-						->count();
-					// Check if the student is already added to the student admission table
-					if ($studentExist == 0) {
-						$process = function ($model, $entity) use ($studentData, $AdmissionTable, $studentId) {
-							$admissionStatus = 1;
-							$entityData = [
-								'start_date' => $studentData['start_date'],
-								'end_date' => $studentData['end_date'],
-								'student_id' => $studentId,
-								'status' => 0,
-								'institution_id' => $studentData['institution_id'],
-								'academic_period_id' => $studentData['academic_period_id'],
-								'education_grade_id' => $studentData['education_grade_id'],
-								'previous_institution_id' => 0,
-								'student_transfer_reason_id' => 0,
-								'type' => $admissionStatus,
-							];
-
-							$admissionEntity = $AdmissionTable->newEntity($entityData);
-							if( $AdmissionTable->save($admissionEntity) ){
-								return true;
-							} else {
-								$AdmissionTable->log($admissionEntity->errors(), 'debug');
-								return false;
-							}
-						};
-						return $process;
-					} else {
-						$process = function ($model, $entity){
-							return false;
-						};
 						$this->Alert->error('StudentAdmission.existsInRecord');
 						return $process;
-					}
 				}
 			}
 		}
@@ -1027,10 +995,10 @@ class StudentsTable extends AppTable {
 	}
 
 	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$options['validate'] = true;
-		$patch = $this->patchEntity($entity, $data->getArrayCopy(), $options->getArrayCopy());
-		$errorCount = count($patch->errors());
-		if ($errorCount == 0 || ($errorCount == 1 && array_key_exists('student_id', $patch->errors()))) {
+		$options['validate'] = 'new';
+		$entity = $this->patchEntity($entity, $data->getArrayCopy(), $options->getArrayCopy());
+		$errorCount = count($entity->errors());
+		if ($errorCount == 0 || ($errorCount == 1 && array_key_exists('student_id', $entity->errors()))) {
 			if (isset($data['Students']['academic_period_id'])) {
 				// For PHPOE-1916
 				$editable = $this->AcademicPeriods->getEditable($data['Students']['academic_period_id']);
@@ -1104,10 +1072,10 @@ class StudentsTable extends AppTable {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 
 		// Academic Period
-		$periodOptions = $AcademicPeriod->getList(['isEditable'=>true]);
-		$selectedPeriod = $this->postString('academic_period_id');
-		if (is_null($selectedPeriod) || empty($selectedPeriod)) {
-			$selectedPeriod = $this->AcademicPeriods->getCurrent();
+
+		$periodOptions = $AcademicPeriod->getList(['isEditable'=>true, 'restrictLevel' => ['1'], 'withLevels' => false]);
+		if (empty($this->request->query['period'])) {
+			$this->request->query['period'] = $this->AcademicPeriods->getCurrent();
 		}
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),

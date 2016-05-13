@@ -29,7 +29,8 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 			->remove('start_date')
 			->requirePresence('FTE')
 			->requirePresence('staff_change_type_id')
-			->requirePresence('staff_type_id');
+			->requirePresence('staff_type_id')
+			->requirePresence('position_type',false);
 	}
 
 	public function validationIncludeEffectiveDate(Validator $validator) {
