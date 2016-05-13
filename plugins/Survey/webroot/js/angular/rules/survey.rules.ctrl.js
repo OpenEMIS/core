@@ -127,8 +127,11 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
         });
     }
 
-    vm.saveValue = function() {
-        
+    vm.saveValue = function(item) {
+        console.log(vm.questionId);
+        console.log(vm.dependentQuestion);
+        console.log(vm.dependentOptions);
+        var counter = vm.surveyQuestions.length;
     }
 
 }
