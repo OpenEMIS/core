@@ -125,7 +125,9 @@ class StaffTable extends AppTable {
 			->add('staff_name', 'ruleInstitutionStaffId', [
 				'rule' => ['institutionStaffId'],
 				'on' => 'create'
-			]);
+			])
+			->requirePresence('position_type')
+		;
 	}
 
 	public function validationAllowEmptyName(Validator $validator) {
