@@ -679,7 +679,11 @@ class ValidationBehavior extends Behavior {
 				->where([$Students->aliasField($Students->primaryKey()) => $data['student_id']])
 				->first();
 				;
-			$dateOfBirth = ($studentQuery->has('date_of_birth'))? $studentQuery->date_of_birth: null;
+			if ($studentQuery) {
+				$dateOfBirth = ($studentQuery->has('date_of_birth'))? $studentQuery->date_of_birth: null;
+			} else {
+				return $model->getMessage('Institution.Students.student_name.studentNotExists');
+			}
 		} else {
 			// saving for new students
 			$dateOfBirth = new DateTime($field);

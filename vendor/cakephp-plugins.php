@@ -2,9 +2,11 @@
 $baseDir = dirname(dirname(__FILE__));
 return [
     'plugins' => [
+        'ADmad/JwtAuth' => $baseDir . '/vendor/admad/cakephp-jwt-auth/',
         'API' => $baseDir . '/plugins/API/',
         'AcademicPeriod' => $baseDir . '/plugins/AcademicPeriod/',
         'Alert' => $baseDir . '/plugins/Alert/',
+        'Angular' => $baseDir . '/plugins/Angular/',
         'Area' => $baseDir . '/plugins/Area/',
         'Assessment' => $baseDir . '/plugins/Assessment/',
         'Bake' => $baseDir . '/vendor/cakephp/bake/',
@@ -31,6 +33,7 @@ return [
         'Rest' => $baseDir . '/plugins/Rest/',
         'Restful' => $baseDir . '/vendor/korditpteltd/kd-cakephp-restful/',
         'Rubric' => $baseDir . '/plugins/Rubric/',
+        'SSO' => $baseDir . '/plugins/SSO/',
         'Security' => $baseDir . '/plugins/Security/',
         'Staff' => $baseDir . '/plugins/Staff/',
         'StaffCustomField' => $baseDir . '/plugins/StaffCustomField/',
