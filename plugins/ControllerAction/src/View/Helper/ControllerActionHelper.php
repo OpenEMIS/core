@@ -247,15 +247,8 @@ class ControllerActionHelper extends Helper {
 
 			$associatedFound = false;
 			if (strlen($event->result) > 0) {
-<<<<<<< HEAD
-				//array that doesn't need to be translate
-				$excludeTranslation = ['integer', 'decimal', 'float'];
-				
-				if (!in_array($attr['type'], $excludeTranslation)) {
-=======
 				$allowedTranslation = ['string','text'];//array that will be translate
 				if (in_array($attr['type'], $allowedTranslation)) {
->>>>>>> 54fa59bcd0e6c9af4432660471f895fcd32ab653
 					$value = __($event->result);
 				} else {
 					$value = $event->result;
