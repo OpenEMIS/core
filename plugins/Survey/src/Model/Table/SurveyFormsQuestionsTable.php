@@ -34,4 +34,23 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
 			->autoFields(true)
 			;
 	}
+
+	public function findSurveyRules(Query $query, array $options)
+	{
+		$query
+			->leftJoin(
+				['SurveyRules' => 'survey_rules'],
+				[
+					'SurveyRules.survey_form_id = '.$this->aliasField('survey_form_id'),
+					'SurveyRules.survey_question_id = '.$this->aliasField('survey_question_id')
+				]
+			)
+			->select([
+				'survey_rules_enabled' => 'SurveyRules.enabled',
+				'dependent_question' => 'SurveyRules.dependent_question_id',
+				'show_options' => 'SurveyRules.show_options',
+			])
+			->autoFields(true)
+			;
+	}
 }

@@ -60,7 +60,9 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
         .then(function(response)
         {   
             var surveyQuestions = [];
-            console.log(response.data);
+            var rules = [];
+            // console.log(response.data);
+
             for(i = 0; i < response.data.length; i++) {
                 question = response.data[i];
                 var shortName = question.name;
@@ -75,17 +77,17 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
                     order: question.order,
                     field_type: question.custom_field.field_type
                 };
+                if (question.survey_rules_enabled != null) {
+                    rules[question.survey_question_id] = {
+                        enabled: question.survey_rules_enabled,
+                        dependent_question_id: question.dependent_question,
+                        show_options: question.show_options
+                    }
+                }
             }
             vm.surveyQuestions = surveyQuestions;
         });
     }
-
-    // busy waiting to watch the action of the page
-    $scope.$watch('action', function(newValue, oldValue) {
-        if (angular.isDefined(newValue) && angular.isDefined(oldValue) && newValue != oldValue) {
-            $scope.action = newValue;
-        }
-    });
 
     vm.onChangeSection = function(sectionName) {
         vm.getQuestionsFromSection(surveyFormId, sectionName);
@@ -123,6 +125,10 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
             vm.questionOptions = response.data;
             console.log(response.data);
         });
+    }
+
+    vm.saveValue = function() {
+        
     }
 
 }
