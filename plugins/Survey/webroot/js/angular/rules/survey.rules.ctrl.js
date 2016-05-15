@@ -66,11 +66,12 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
             for(i = 0; i < response.data.length; i++) {
                 question = response.data[i];
                 var shortName = question.name;
+                var number = i + 1;
                 if (shortName.length > 30) {
-                    shortName = shortName.substring(0,29)+'...';
+                    shortName = number + '. ' + shortName.substring(0,29)+'...';
                 }
                 surveyQuestions[i] = {
-                    no: i+1,
+                    no: number,
                     survey_question_id: question.survey_question_id,
                     name: question.name,
                     short_name: shortName,
@@ -121,17 +122,22 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
         SurveyRulesSvc.getShowIfChoices(vm.surveyFormId, vm.sectionName)
         .then(function(response)
         {
-            console.log(response.data);
             vm.questionOptions = response.data;
-            console.log(response.data);
         });
     }
 
     vm.saveValue = function(item) {
-        console.log(vm.questionId);
-        console.log(vm.dependentQuestion);
-        console.log(vm.dependentOptions);
-        var counter = vm.surveyQuestions.length;
+
+    	var questionIds = vm.questionId;
+    	var dependentQuestions = vm.dependentQuestion;
+    	var dependentOptions = vm.dependentOptions;
+        var log = [];
+        angular.forEach(questionIds, function(value, key) {
+        	
+		  
+		}, log);
+
+		console.log(log);
     }
 
 }
