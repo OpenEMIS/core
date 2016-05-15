@@ -7,7 +7,8 @@ angular.module('survey.rules.svc', ['kd.orm.svc'])
         SurveyFormsQuestionsTable: 'Survey.SurveyFormsQuestions',
         SurveyFormsQuestionsTable2: 'Survey.SurveyFormsQuestions',
         SurveyFormsQuestionsTable3: 'Survey.SurveyFormsQuestions',
-        SurveyQuestionChoicesTable: 'Survey.SurveyQuestionChoices'
+        SurveyQuestionChoicesTable: 'Survey.SurveyQuestionChoices',
+        SurveyRulesTable: 'Survey.SurveyRules'
     };
 
     return {
@@ -58,33 +59,20 @@ angular.module('survey.rules.svc', ['kd.orm.svc'])
             ;
         },
 
-        getDependentQuestions: function(surveyFormId, sectionName, order) 
-        {
-            console.log('here');
-            return SurveyFormsQuestionsTable
-            .select()
-            .contain(['CustomFields'])
-            // .find('DependentQuestions', {})
-            .ajax({defer: true});
-        }
-        ,
-
-        getDependent: function(surveyFormId, questionOrder) {
-            return SurveyFormsQuestionsTable
-            .select()
-            .find('DropDownQuestions')
-            .contain(['CustomFields.CustomFieldOptions'])
-            .where({survey_form_id: surveyFormId})
-            .ajax({success: success, defer: true})
-            ;
-        },
-
         getShowIfChoices: function(surveyFormId, section) {
             return SurveyFormsQuestionsTable3
             .find('SurveyFormChoices', {survey_form_id: surveyFormId})
             .where({survey_form_id: surveyFormId, section: section})
             .ajax({defer: true})
             ;
+        },
+
+        saveData: function(ruleData) {
+            var promises = [];
+            angular.forEach(ruleData, function(rule, key) {
+                promises.push(SurveyRulesTable.save(rule));
+            }, this);
+            return $q.all(promises);
         }
     }
 });
