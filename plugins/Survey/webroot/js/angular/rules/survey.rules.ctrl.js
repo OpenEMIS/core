@@ -126,18 +126,33 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
         });
     }
 
-    vm.saveValue = function(item) {
-
+    vm.saveValue = function() {
     	var questionIds = vm.questionId;
+    	var enabled = vm.enabled;
     	var dependentQuestions = vm.dependentQuestion;
     	var dependentOptions = vm.dependentOptions;
         var log = [];
-        angular.forEach(questionIds, function(value, key) {
-        	
-		  
+        angular.forEach(questionIds, function(surveyQuestionId, key) {
+        	if (dependentQuestions.hasOwnProperty(key)) {
+        		if (dependentOptions.hasOwnProperty(key)) {
+        			var enableStatus = enabled[key];
+        			if (enableStatus == undefined) {
+        				enableStatus = 0;
+        			}
+        			var dependentQuestionId = dependentQuestions[key];
+        			var options = JSON.stringify(dependentOptions[key]);
+        			this.push({
+        				survey_form_id: vm.surveyFormId,
+        				enabled: enableStatus, 
+        				survey_question_id: surveyQuestionId, 
+        				dependent_question_id: dependentQuestionId, 
+        				show_options: options
+        			});
+        		}
+        	}
 		}, log);
-
-		console.log(log);
+        // console.log(log);
+		SurveyRulesSvc.saveData(log);
     }
 
 }
