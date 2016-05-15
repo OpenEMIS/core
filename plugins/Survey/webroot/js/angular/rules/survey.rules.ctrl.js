@@ -70,21 +70,30 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
                 if (shortName.length > 30) {
                     shortName = number + '. ' + shortName.substring(0,29)+'...';
                 }
+
+                var rule = {
+                	id: null,
+                	enabled: 0,
+                	dependent_question_id: undefined,
+                	show_options: undefined
+                };
+                if (question.survey_rule_id != null) {
+                    rule = {
+                    	id: question.survey_rule_id,
+                        enabled: question.survey_rules_enabled,
+                        dependent_question_id: question.dependent_question,
+                        show_options: JSON.parse(question.show_options)
+                    }
+                }
                 surveyQuestions[i] = {
                     no: number,
                     survey_question_id: question.survey_question_id,
                     name: question.name,
                     short_name: shortName,
                     order: question.order,
-                    field_type: question.custom_field.field_type
+                    field_type: question.custom_field.field_type,
+                    rule: rule
                 };
-                if (question.survey_rules_enabled != null) {
-                    rules[question.survey_question_id] = {
-                        enabled: question.survey_rules_enabled,
-                        dependent_question_id: question.dependent_question,
-                        show_options: question.show_options
-                    }
-                }
             }
             vm.surveyQuestions = surveyQuestions;
         });
@@ -127,6 +136,7 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
     }
 
     vm.saveValue = function() {
+    	var ruleId = vm.ruleId;
     	var questionIds = vm.questionId;
     	var enabled = vm.enabled;
     	var dependentQuestions = vm.dependentQuestion;
@@ -141,17 +151,31 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
         			}
         			var dependentQuestionId = dependentQuestions[key];
         			var options = JSON.stringify(dependentOptions[key]);
-        			this.push({
-        				survey_form_id: vm.surveyFormId,
-        				enabled: enableStatus, 
-        				survey_question_id: surveyQuestionId, 
-        				dependent_question_id: dependentQuestionId, 
-        				show_options: options
-        			});
+
+        			var data = {};
+        			if (ruleId[key] != null) {
+        				data = {
+        					id: ruleId[key],
+	        				survey_form_id: vm.surveyFormId,
+	        				enabled: enableStatus, 
+	        				survey_question_id: surveyQuestionId, 
+	        				dependent_question_id: dependentQuestionId, 
+	        				show_options: options
+	        			};
+        			} else {
+        				data = {
+	        				survey_form_id: vm.surveyFormId,
+	        				enabled: enableStatus, 
+	        				survey_question_id: surveyQuestionId, 
+	        				dependent_question_id: dependentQuestionId, 
+	        				show_options: options
+	        			};
+        			}
+        			
+        			this.push(data);
         		}
         	}
 		}, log);
-        // console.log(log);
 		SurveyRulesSvc.saveData(log);
     }
 
