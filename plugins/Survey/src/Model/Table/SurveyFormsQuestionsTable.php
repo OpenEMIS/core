@@ -46,7 +46,8 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
 				]
 			)
 			->select([
-				'survey_rules_enabled' => 'SurveyRules.enabled',
+				'survey_rule_id' => 'SurveyRules.id',
+				'survey_rule_enabled' => 'SurveyRules.enabled',
 				'dependent_question' => 'SurveyRules.dependent_question_id',
 				'show_options' => 'SurveyRules.show_options',
 			])
