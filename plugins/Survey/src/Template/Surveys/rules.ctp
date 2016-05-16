@@ -71,14 +71,14 @@ $institutionId = $session->read('Institution.Institutions.id');
 											ng-true-value="1" 
 											ng-false-value="0" 
 											ng-model="SurveyRulesController.enabled[question.no]" 
-											ng-init="SurveyRulesController.enabled[question.no] = question.rule.enabled"></td>
+											ng-init="SurveyRulesController.enabled[question.no] = 0; SurveyRulesController.initEnabled(question);"></td>
 										<td>
 											<div class="input-select-wrapper">
 												<select 
 													ng-options="item.survey_question_id as item.short_name for item in SurveyRulesController.surveyQuestions | filter:SurveyRulesController.filterByOrderAndType({{question.order}})" 
 													ng-model="SurveyRulesController.dependentQuestion[question.no]" 
 													ng-change="SurveyRulesController.populateOptions(question.rule.dependent_question_id)"
-													ng-init="SurveyRulesController.dependentQuestion[question.no] = question.rule.dependent_question_id; SurveyRulesController.populateOptions(SurveyRulesController.dependentQuestion[question.no]);">
+													ng-init="SurveyRulesController.dependentQuestion[question.no] = 0; SurveyRulesController.populateOptions(SurveyRulesController.dependentQuestion[question.no]); SurveyRulesController.initDependentQuestion(question);">
 													<option value="">-- <?= __('Select One') ?> --</option>
 												</select>
 											</div>
