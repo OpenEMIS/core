@@ -71,7 +71,6 @@ class InstitutionsController extends AppController  {
 		];
 
 		$this->loadComponent('Institution.InstitutionAccessControl');
-
 		$this->attachAngularModules();
 	}
 
@@ -93,6 +92,37 @@ class InstitutionsController extends AppController  {
 		$this->set('ngController', 'InstitutionsResultsCtrl');
 	}
 	// End
+
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Controller.AccessControl.checkIgnoreActions'] = 'checkIgnoreActions';
+		return $events;
+	}
+
+	public function checkIgnoreActions(Event $event, $controller, $action) {
+		$ignore = false;
+		if ($controller == 'Institutions') {
+			$ignoredList = ['downloadFile'];
+			if (in_array($action, $ignoredList)) {
+				$ignore = true;
+			} else {
+				$ignoredList = [
+					'StudentUser' => ['downloadFile'],
+					'StaffUser' => ['downloadFile'],
+					'Infrastructures' => ['downloadFile'],
+					'Surveys' => ['downloadFile']
+				];
+				
+				if (array_key_exists($action, $ignoredList)) {
+					$pass = $this->request->params['pass'];
+					if (count($pass) > 0 && in_array($pass[0], $ignoredList[$action])) {
+						$ignore = true;
+					}
+				}
+			}
+		}
+		return $ignore;
+	}
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
@@ -152,7 +182,7 @@ class InstitutionsController extends AppController  {
 
 	private function attachAngularModules() {
 		$action = $this->request->action;
-
+		
 		switch ($action) {
 			case 'Results':
 				$this->Angular->addModules([
@@ -173,9 +203,10 @@ class InstitutionsController extends AppController  {
 			if (isset($params['pass'][0])) {
 				$action = $params['pass'][0];
 			}
+			$isDownload = $action == 'downloadFile' ? true : false;
 
 			$alias = $model->alias;
-			$crumbTitle = $model->getHeader($alias);
+			$crumbTitle = Inflector::humanize(Inflector::underscore($alias));
 			$crumbOptions = [];
 			if ($action) {
 				$crumbOptions = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias];
@@ -185,7 +216,7 @@ class InstitutionsController extends AppController  {
 			$persona = false;
 			$requestQuery = $this->request->query;
 			if (isset($params['pass'][1])) {
-				if ($model->table() == 'security_users') {
+				if ($model->table() == 'security_users' && !$isDownload) {
 					$persona = $model->get($params['pass'][1]);
 				}
 			} else if (isset($requestQuery['user_id'][1])) {
@@ -229,7 +260,7 @@ class InstitutionsController extends AppController  {
 					 */
 
 					// replaced 'action' => $alias to 'action' => $model->alias, since only the name changes but not url
-					if (!$exists) {
+					if (!$exists && !$isDownload) {
 						$this->Alert->warning('general.notExists');
 						return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
 					}

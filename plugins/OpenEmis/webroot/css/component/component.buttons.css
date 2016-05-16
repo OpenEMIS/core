@@ -1,7 +1,17 @@
-/* BUTTONS v.1.0.12 */
+/* BUTTONS v.1.0.14 */
+
+.close:hover {
+    text-decoration: none !important;
+}
+
+.btn:focus {
+    -webkit-box-shadow: none !important;
+    -moz-box-shadow: none !important;
+    box-shadow: none !important;
+    outline: 0 !important;
+}
 
 .btn-default i {
-    vertical-align: middle;
     margin-right: 5px;
 }
 
@@ -99,7 +109,8 @@ a.btn-green:hover {
 
 .btn-outline:hover,
 .btn-outline:active,
-.btn-outline:focus {
+.btn-outline:focus,
+.btn-toggled {
     background-color: #6B6B6B !important;
     color: #FFF !important;
     transition: all 0.8s ease;
@@ -133,12 +144,12 @@ a.btn-green:hover {
     cursor: pointer;
     text-align: center;
     position: relative;
-    border-color: #C26666 !important;
-    color: #C26666 !important;
+    padding: 0;
 }
 
-.btn-circle:hover {
-    border: 2px solid #6B0000 !important;
+.btn-circle,
+.btn-circle:focus {
+    border: 0; 
 }
 
 .btn-square i,
@@ -151,6 +162,50 @@ a.btn-green:hover {
     -ms-transform: translate(-50%, -50%);
     -o-transform: translate(-50%, -50%);
     transform: translate(-50%, -50%);
+}
+
+.btn-large {
+    width: 50px !important;
+    height: 50px !important;
+    font-size: 20px;
+}
+
+.btn-medium {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 18px;
+}
+
+.btn-small {
+    width: 30px !important;
+    height: 30px !important;
+}
+
+.btn-float-top-left,
+.btn-float-top-right,
+.btn-float-bottom-left,
+.btn-float-bottom-right {
+    position: absolute !important;
+}
+
+.btn-float-top-left {
+    top: 0;
+    left: 0;
+}
+
+.btn-float-top-right {
+    top: 0;
+    right: 0;
+}
+
+.btn-float-bottom-left {
+    bottom: 0;
+    left: 0;
+}
+
+.btn-float-bottom-right {
+    bottom: 0;
+    right: 0;
 }
 
 .table-toolbar .btn,
@@ -412,6 +467,30 @@ table .action-dropdown .dropdown-arrow {
     -webkit-transform: rotate(180deg);
     -ms-transform: rotate(180deg);
     transform: rotate(180deg);
+}
+
+.rtl .btn-float-top-left {
+    top: 0;
+    left: auto !important;
+    right: 0;
+}
+
+.rtl .btn-float-top-right {
+    top: 0;
+    right: auto !important;
+    left: 0;
+}
+
+.rtl .btn-float-bottom-left {
+    bottom: 0;
+    left: auto !important;
+    right: 0;
+}
+
+.rtl .btn-float-bottom-right {
+    bottom: 0;
+    right: auto !important;
+    left: 0;
 }
 
 

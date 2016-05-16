@@ -15,16 +15,27 @@ class SpecialNeedsTable extends ControllerActionTable {
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('SpecialNeedTypes', ['className' => 'FieldOption.SpecialNeedTypes']);
+		$this->belongsTo('SpecialNeedDifficulties', ['className' => 'FieldOption.SpecialNeedDifficulties']);
 	}
 
 	public function beforeAction($event) {
 		$this->fields['special_need_type_id']['type'] = 'select';
+		$this->fields['special_need_difficulty_id']['type'] = 'select';
 	}
 
 	public function indexBeforeAction(Event $event) {
 		$order = 0;
 		$this->ControllerAction->setFieldOrder('special_need_date', $order++);
 		$this->ControllerAction->setFieldOrder('special_need_type_id', $order++);
+		$this->ControllerAction->setFieldOrder('special_need_difficulty_id', $order++);
+		$this->ControllerAction->setFieldOrder('comment', $order++);
+	}
+
+	public function addEditBeforeAction(Event $event) {
+		$order = 0;
+		$this->ControllerAction->setFieldOrder('special_need_type_id', $order++);
+		$this->ControllerAction->setFieldOrder('special_need_date', $order++);
+		$this->ControllerAction->setFieldOrder('special_need_difficulty_id', $order++);
 		$this->ControllerAction->setFieldOrder('comment', $order++);
 	}
 
@@ -33,7 +44,6 @@ class SpecialNeedsTable extends ControllerActionTable {
 
 		return $validator
 			->allowEmpty('special_need_date')
-			->add('comment', [])
 		;
 	}
 
