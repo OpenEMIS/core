@@ -79,12 +79,6 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 		}
 		$startDate = $this->formatDate($entity->start_date);
 		
-		$this->field('institution_position_id', ['type' => 'hidden']);
-		$this->field('staff_type_id', ['type' => 'hidden']);		
-		$this->field('FTE', ['type' => 'hidden']);
-		$this->field('start_date', ['type' => 'hidden']);
-		
-
 		$staffId = $entity->staff_id;
 
 		$institutionId = $entity->previous_institution_id;
@@ -108,7 +102,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 			$this->field('current_FTE', ['after' => 'current_institution_position_id', 'type' => 'disabled', 'attr' => ['value' => $staffRecord->FTE]]);
 			$this->field('current_staff_type', ['after' => 'current_FTE', 'type' => 'disabled', 'attr' => ['value' => $staffRecord->staff_type->name]]);
 			$this->field('current_start_date', ['after' => 'current_staff_type', 'type' => 'disabled', 'attr' => ['value' => $this->formatDate($staffRecord->start_date)]]);
-			$this->field('institution_position_id', ['type' => 'disabled', 'after' => 'current_start_date', 'attr' => ['required' => false]]);
+			$this->field('institution_position_id', ['type' => 'disabled', 'after' => 'current_start_date', 'attr' => ['required' => false, 'value' => $entity->position->name]]);
 			$InstitutionPositionTable = $this->Positions;
 			$staffPositionType = $InstitutionPositionTable
 				->find()
@@ -123,7 +117,8 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 				$staffPositionType = __('Non-Teaching');
 			}
 			$this->field('requested_position_type', ['type' => 'disabled', 'attr' => ['value' => $staffPositionType], 'after' => 'institution_position_id']);
-			$this->field('FTE', ['type' => 'disabled', 'after' => 'requested_position_type', 'attr' => ['required' => false]]);
+			$fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
+			$this->field('FTE', ['type' => 'disabled', 'after' => 'requested_position_type', 'attr' => ['value' => $fteOptions[strval($entity->FTE)], 'required' => false]]);
 			$this->field('staff_type_id', ['type' => 'disabled', 'attr' => ['required' => false, 'value' => $this->StaffTypes->get($entity->staff_type_id)->name], 'after' => 'FTE']);
 			$this->field('start_date', ['type' => 'disabled', 'after' => 'staff_type_id', 'attr' => ['required' => false, 'value' => $this->formatDate($entity->start_date)]]);
 
@@ -315,7 +310,10 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 	public function onUpdateFieldCurrentFTE(Event $event, array $attr, $action, Request $request) {
 		$fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
 		$val = $attr['attr']['value'];
-		$attr['attr']['value'] = $fteOptions[strval($val)];
+		if (isset($fteOptions[strval($val)])) {
+			$attr['attr']['value'] = $fteOptions[strval($val)];
+		}
+		
 		return $attr;
 	}
 
