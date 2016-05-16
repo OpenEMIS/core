@@ -23,7 +23,8 @@ class InstitutionClassBehavior extends Behavior {
 		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
 			$userId = $this->_table->Auth->user('id');
 			$AccessControl = $this->_table->AccessControl;
-			$query->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl]);
+            $controller = $this->_table->controller;
+			$query->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl, 'controller' => $this->_table->controller]);
 		}
 	}
 
@@ -46,15 +47,19 @@ class InstitutionClassBehavior extends Behavior {
 		if (array_key_exists('accessControl', $options)) {
 			$AccessControl = $options['accessControl'];
 			$userId = $options['userId'];
-			$controller = $this->_table->controller;
 			$roles = [];
-			$event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
-			if ($event->result) {
-				$roles = $event->result;	
-			}
+            if (array_key_exists('controller', $options)) {
+                $controller = $options['controller'];
+                $event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
+                if (is_array($event->result)) {
+                    $roles = $event->result;    
+                }
+            }
+
 			if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles)) {
 				$query->where([$this->_table->aliasField('staff_id') => $userId]);
-			}		}
+			}		
+        }
 		return $query;
 	}
 

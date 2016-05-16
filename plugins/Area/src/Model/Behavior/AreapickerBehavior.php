@@ -117,8 +117,8 @@ class AreapickerBehavior extends Behavior {
 				foreach ($list as $key => $area) {
 					$this->_table->ControllerAction->field($field.$key, [
 						'type' => 'readonly', 
-						'attr' => ['label' => __($area['level'])],
-						'value' => $area['area_name'],
+						'attr' => ['label' => __($area['level_name'])],
+						'value' => __($area['area_name']),
 						'after' => $after
 					]);
 					$after = $field.$key;
@@ -143,8 +143,8 @@ class AreapickerBehavior extends Behavior {
 					foreach ($list as $key => $area) {
 						$this->_table->ControllerAction->field($field.$key, [
 							'type' => 'disabled', 
-							'attr' => ['label' => __($area['level']), 'value' => $area['area_name']],
-							'value' => $area['area_name'],
+							'attr' => ['label' => __($area['level_name']), 'value' => $area['area_name']],
+							'value' => __($area['area_name']),
 							'after' => $after
 						]);
 						$after = $field.$key;
@@ -171,7 +171,7 @@ class AreapickerBehavior extends Behavior {
 		$path = $targetTable
 			->find('path', ['for' => $areaId])
 			->contain([$levelAssociation])
-			->select(['level' => $levelAssociation.'.name', 'area_name' => $targetTable->aliasField('name')])
+			->select(['level_name' => $levelAssociation.'.name', 'area_name' => $targetTable->aliasField('name')])
 			->bufferResults(false)
 			->toArray();
 

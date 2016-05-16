@@ -2,6 +2,7 @@
 namespace Workflow\Model\Behavior;
 
 use ArrayObject;
+use Cake\I18n\Time;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -534,7 +535,9 @@ class WorkflowBehavior extends Behavior {
 				$data = [
 					'model_reference' => $entity->id,
 					'workflow_model_id' => $workflowModelId,
-					'workflow_step_id' => $workflowStep->id
+					'workflow_step_id' => $workflowStep->id,
+					'created_user_id' => 1,
+					'created' => new Time('NOW')
 				];
 				$entity = $this->WorkflowRecords->newEntity($data, ['validate' => false]);
 				if ($this->WorkflowRecords->save($entity)) {

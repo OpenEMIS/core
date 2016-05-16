@@ -75,7 +75,7 @@ class TrackActivityBehavior extends Behavior {
 		    			/**
 		    			 * Added extra conditions; if oldData is 'World' and newData is an empty string, skip it as location 'World' is the same as an empty string on user views.
 		    			 */
-		    			if ($oldValue != 'World' && $newValue != '' && $oldValue != $newValue) {
+		    			if ($oldValue != 'World' && $oldValue != $newValue) {
 
 			    			/**
 			    			 * PHPOE-2081 - changed getAssociatedBelongsToModel function to getAssociatedTable function and duplicate it in App\Model\Table\AppTable

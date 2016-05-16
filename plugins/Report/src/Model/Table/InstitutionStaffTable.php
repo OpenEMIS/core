@@ -29,6 +29,7 @@ class InstitutionStaffTable extends AppTable  {
 			'excludes' => ['start_year', 'end_year', 'FTE', 'security_group_user_id'], 
 			'pages' => false
 		]);
+		$this->addBehavior('Report.InstitutionSecurity');
 	}
 
 	public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
@@ -45,6 +46,8 @@ class InstitutionStaffTable extends AppTable  {
 		$requestData = json_decode($settings['process']['params']);
 		$statusId = $requestData->status;
 		$typeId = $requestData->type;
+		$userId = $requestData->user_id;
+		$superAdmin = $requestData->super_admin;
 
 		if ($statusId!=0) {
 			$query->where([
@@ -67,14 +70,21 @@ class InstitutionStaffTable extends AppTable  {
 		);
 
 		$query->contain(['Users.Genders', 'Institutions.Areas', 'Positions.StaffPositionTitles'])->select([
-			'openemis_no' => 'Users.openemis_no', 
+			'openemis_no' => 'Users.openemis_no',
+			'first_name' => 'Users.first_name',
+			'middle_name' => 'Users.middle_name',
+			'last_name' => 'Users.last_name',
 			'number' => 'Identities.number', 
 			'code' => 'Institutions.code', 
-			'gender_id' => 'Genders.name', 
+			'gender' => 'Genders.name', 
 			'area_name' => 'Areas.name', 
 			'area_code' => 'Areas.code',
 			'position_title_teaching' => 'StaffPositionTitles.type'
 		]);
+
+		if (!$superAdmin) {
+			$query->find('ByAccess', ['user_id' => $userId, 'institution_field_alias' => $this->aliasField('institution_id')]);
+		}
 	}
 
 	public function onExcelGetFTE(Event $event, Entity $entity) {
@@ -109,7 +119,7 @@ class InstitutionStaffTable extends AppTable  {
 		// unset($fields[array_search('institution_id', array_column($fields, 'field'))]);
 
 		foreach ($fields as $key => $field) {
-			if ($field['field'] == 'institution_id') {
+			if ($field['field'] == 'institution_id' || $field['field'] == 'staff_id') {
 				unset($fields[$key]);
 				break;
 			}
@@ -137,6 +147,27 @@ class InstitutionStaffTable extends AppTable  {
 		];
 
 		$extraField[] = [
+			'key' => 'Users.first_name',
+			'field' => 'first_name',
+			'type' => 'string',
+			'label' => ''
+		];
+
+		$extraField[] = [
+			'key' => 'Users.middle_name',
+			'field' => 'middle_name',
+			'type' => 'string',
+			'label' => ''
+		];
+
+		$extraField[] = [
+			'key' => 'Users.last_name',
+			'field' => 'last_name',
+			'type' => 'string',
+			'label' => ''
+		];
+
+		$extraField[] = [
 			'key' => 'Identities.number',
 			'field' => 'number',
 			'type' => 'string',
@@ -145,7 +176,7 @@ class InstitutionStaffTable extends AppTable  {
 
 		$extraField[] = [
 			'key' => 'Users.gender_id',
-			'field' => 'gender_id',
+			'field' => 'gender',
 			'type' => 'string',
 			'label' => ''
 		];

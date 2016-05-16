@@ -130,6 +130,13 @@ class ControllerActionBehavior extends Behavior {
 
         if (!is_array($primaryKey) && array_key_exists($primaryKey, $fields)) { // not composite primary keys
             $fields[$primaryKey]['type'] = 'hidden';
+        } else {
+            if (array_key_exists('id', $fields)) {
+                $fields['id']['type'] = 'hidden';
+            }
+            foreach ($primaryKey as $value) {
+                $fields[$value]['type'] = 'hidden';
+            }
         }
 
         $excludedFields = $this->config('fields.excludes');

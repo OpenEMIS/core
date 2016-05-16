@@ -33,8 +33,6 @@ class StaffController extends AppController {
 			'Trainings'			=> ['className' => 'Staff.StaffTrainings'],
 			'Employments'		=> ['className' => 'Staff.Employments'],
 			'Salaries'			=> ['className' => 'Staff.Salaries'],
-			'Memberships'		=> ['className' => 'Staff.Memberships'],
-			'Licenses'			=> ['className' => 'Staff.Licenses'],
 			'BankAccounts'		=> ['className' => 'User.BankAccounts'],
 			'History'			=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 			'ImportStaff' 		=> ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
@@ -65,9 +63,14 @@ class StaffController extends AppController {
 	public function Positions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Positions']); }
 	public function Classes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffClasses']); }
 	public function Subjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSubjects']); }
+<<<<<<< HEAD
     public function Languages() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
     public function SpecialNeeds() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
 
+=======
+	public function Memberships() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Memberships']); }
+	public function Licenses() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Licenses']); }
+>>>>>>> 217b87397382c484a4934fcf05f9e8f35e33303f
 	// End
 
 	public function beforeFilter(Event $event) {
