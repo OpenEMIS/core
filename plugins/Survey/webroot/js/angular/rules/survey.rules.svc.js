@@ -72,6 +72,7 @@ angular.module('survey.rules.svc', ['kd.orm.svc'])
             angular.forEach(ruleData, function(rule, key) {
                 promises.push(SurveyRulesTable.save(rule));
             }, this);
+            console.log('Success');
             return $q.all(promises);
         }
     }

@@ -80,7 +80,7 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
                 if (question.survey_rule_id != null) {
                     rule = {
                     	id: question.survey_rule_id,
-                        enabled: question.survey_rules_enabled,
+                        enabled: question.survey_rule_enabled,
                         dependent_question_id: question.dependent_question,
                         show_options: JSON.parse(question.show_options)
                     }
@@ -95,6 +95,7 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
                     rule: rule
                 };
             }
+            // console.log(surveyQuestions);
             vm.surveyQuestions = surveyQuestions;
         });
     }
@@ -133,6 +134,16 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
         {
             vm.questionOptions = response.data;
         });
+    }
+
+    vm.initEnabled = function(question) {
+        var no = question.no;
+        vm.enabled[no] = parseInt(question.rule.enabled);
+    }
+
+    vm.initDependentQuestion = function(question) {
+        var no = question.no;
+        vm.dependentQuestion[no] = parseInt(question.rule.dependent_question_id);
     }
 
     vm.saveValue = function() {
