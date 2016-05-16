@@ -50,6 +50,7 @@ class RenderDropdownBehavior extends RenderBehavior {
 
             $options['type'] = 'select';
             $options['options'] = $dropdownOptions;
+            $options['attr']['onChangeReload'] = true;
 
             if ($this->_table->request->is(['get'])) {
                 $selectedValue = !is_null($savedValue) ? $savedValue : $dropdownDefault;
