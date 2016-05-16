@@ -84,9 +84,11 @@ $institutionId = $session->read('Institution.Institutions.id');
 											</div>
 										</td>
 										<td>
-											<div class="input-select-wrapper">
-												<select 
-													chosen multiple options="SurveyRulesController.questionOptions" 
+											<div class="input select">
+												<select
+													multiple="multiple" 
+													class="chosen-select" 
+													options="SurveyRulesController.questionOptions" 
 													ng-model="SurveyRulesController.dependentOptions[question.no]" 
 													ng-options="item.survey_question_choice_id as item.survey_question_choice_name for item in SurveyRulesController.questionOptions | filter:SurveyRulesController.filterChoiceBySurveyQuestionId(SurveyRulesController.dependentQuestion[question.no])"
 													ng-init="SurveyRulesController.dependentOptions[question.no] = question.rule.show_options">
