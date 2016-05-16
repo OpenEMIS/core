@@ -398,6 +398,7 @@ class StudentTransferTable extends AppTable {
 					]
 				])
 				->where([$this->Institutions->aliasField('id <>') => $institutionId])
+				->order([$this->Institutions->aliasField('code')])
 				->toArray();
     	}
 
