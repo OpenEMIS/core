@@ -1,5 +1,5 @@
 /* 
-Core Overwrites: v.1.0.6
+Core Overwrites: v.1.0.7
 */
 
 
@@ -530,4 +530,10 @@ a,
     -moz-border-bottom-left-radius: 0 !important;
     -ms-border-bottom-left-radius: 0 !important;
     border-bottom-left-radius: 0 !important;
+}
+
+/* Fixed for POCOR-3001, select option order is not consistent in RTL */
+
+.form-horizontal option {
+    direction: ltr;
 }
