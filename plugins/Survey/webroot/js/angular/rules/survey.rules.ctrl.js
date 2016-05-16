@@ -157,8 +157,8 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
         	if (dependentQuestions.hasOwnProperty(key)) {
         		if (dependentOptions.hasOwnProperty(key)) {
         			var enableStatus = enabled[key];
-        			if (enableStatus == undefined) {
-        				enableStatus = 0;
+        			if (enableStatus == undefined || enableStatus == 0) {
+        				enableStatus = "0";
         			}
         			var dependentQuestionId = dependentQuestions[key];
         			var options = JSON.stringify(dependentOptions[key]);
