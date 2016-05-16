@@ -802,7 +802,6 @@ class InstitutionClassesTable extends ControllerActionTable {
 		$query = $students
 			->find('all')
 			->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
-			// ->contain(['Users'])
             ->contain([
                 'Users' => function ($q) {
                         return $q->select(['id', 'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name']);
