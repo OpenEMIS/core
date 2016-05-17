@@ -1,3 +1,6 @@
+v3.5.5.1
+- Fixed a bug that caused the system to calculate using a wrong admission age when adding a student to institution
+
 v3.5.5
 - Added Difficulties to Special Needs
 - Position Number cannot contain spaces now
