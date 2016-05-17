@@ -78,7 +78,7 @@ class GuardianUserTable extends UserTable {
 				unset($toolbarButtons['export']);
 			}
 		} else if ($action == 'add') {
-			$toolbarButtons['back']['url']['action'] = 'Guardians';
+			$toolbarButtons['back']['url']['action'] = 'StudentGuardians';
 			$toolbarButtons['back']['url'][0] = 'add';
 		}
 	}
