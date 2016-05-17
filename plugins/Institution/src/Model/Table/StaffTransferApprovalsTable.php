@@ -122,7 +122,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 			$this->field('staff_type_id', ['type' => 'disabled', 'attr' => ['required' => false, 'value' => $this->StaffTypes->get($entity->staff_type_id)->name], 'after' => 'FTE']);
 			$this->field('start_date', ['type' => 'disabled', 'after' => 'staff_type_id', 'attr' => ['required' => false, 'value' => $this->formatDate($entity->start_date)]]);
 
-			$this->field('new_FTE', ['currentFTE' => $staffRecord->FTE]);
+			$this->field('new_FTE', ['currentFTE' => $staffRecord->FTE, 'attr' => ['required' => true]]);
 			$this->field('new_staff_type_id', ['attr' => ['value' => $staffRecord->staff_type_id], 'select' => false]);
 			$this->field('staff_end_date', ['type' => 'date', 'value' => new Date(), 
 				'date_options' => ['startDate' => $staffRecord->start_date->format('d-m-Y')]]);
