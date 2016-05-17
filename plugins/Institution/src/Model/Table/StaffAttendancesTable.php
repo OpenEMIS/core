@@ -586,7 +586,9 @@ class StaffAttendancesTable extends AppTable {
 			$schooldays = [];
 
 			for($i=0; $i<$daysPerWeek; $i++) {
-				$schooldays[] = ($firstDayOfWeek + $i) % 7;
+				// sunday should be '7' in order to be displayed
+				$schooldays[] = 1 + ($firstDayOfWeek + 6 + $i) % 7;
+				// $schooldays[] = ($firstDayOfWeek + $i) % 7; // before changed
 			}
 
 			$week = $weeks[$selectedWeek];
