@@ -175,7 +175,6 @@ class DirectoriesTable extends AppTable {
 							['EXISTS ('.$guardianAndOthers->sql().')'],
 						]
 					])
-					->group([$this->aliasField('id')])
 					;
 			} else {
 				$query = $this->find()->where([$this->aliasField('id') => -1]);
