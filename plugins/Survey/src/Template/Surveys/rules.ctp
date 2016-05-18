@@ -44,7 +44,7 @@ $institutionId = $session->read('Institution.Institutions.id');
 					<div class="table-wrapper">
 						<div class="table-responsive">
 							
-							<table class="table table-curved table-sortable table-checkable">
+							<table class="table table-curved table-sortable table-checkable" id="survey-rules-table">
 								<thead>
 									<tr>
 										<th><?= __('Enable')?></th>

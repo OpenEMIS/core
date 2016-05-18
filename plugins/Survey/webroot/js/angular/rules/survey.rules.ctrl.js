@@ -16,7 +16,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
     angular.element(document).ready(function() 
     {
         SurveyRulesSvc.init(angular.baseUrl);
-
+        UtilsSvc.isAppendSpinner(true, 'survey-rules-table');
         SurveyRulesSvc.getSurveyForm(0)
         .then(function(response) 
         {
@@ -33,12 +33,15 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
             } else {
                 vm.surveyFormId = options[0].value; 
             }
-
             vm.getSurveySection(surveyFormId);
         }, function(error) 
         {
             console.log(error);
             AlertSvc.warning(vm, error);
+            UtilsSvc.isAppendSpinner(false, 'survey-rules-table');
+        })
+        .finally(function() {
+            UtilsSvc.isAppendSpinner(false, 'survey-rules-table');
         })
         ;
     });
@@ -163,7 +166,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
     	var enabled = vm.enabled;
     	var dependentQuestions = vm.dependentQuestion;
     	var dependentOptions = vm.dependentOptions;
-        var log = [];
+        var data = [];
         angular.forEach(questionIds, function(surveyQuestionId, key) {
         	if (dependentQuestions.hasOwnProperty(key)) {
         		if (dependentOptions.hasOwnProperty(key)) {
@@ -197,8 +200,9 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
         			this.push(data);
         		}
         	}
-		}, log);
-		SurveyRulesSvc.saveData(log)
+		}, data);
+        UtilsSvc.isAppendSpinner(true, 'survey-rules-table');
+		SurveyRulesSvc.saveData(data)
         .then(function (response){
             vm.getQuestionsFromSection(vm.surveyFormId, vm.sectionName);
             AlertSvc.success($scope, "Record has been added successfully");
@@ -210,6 +214,9 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
             }
         }, function(error){
             console.log(error);
+        })
+        .finally(function() {
+            UtilsSvc.isAppendSpinner(false, 'survey-rules-table');
         });
         
     }
