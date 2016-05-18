@@ -416,9 +416,7 @@ class InstitutionSurveysTable extends AppTable {
 	}
 
 	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
-		$includes['alert'] = ['include' => true, 'js' => 'app/components/alert/alert.svc'];
 		$includes['ruleCtrl'] = ['include' => true, 'js' => 'CustomField.angular/rules/relevancy.rules.ctrl'];
-        $includes['ruleSvc'] = ['include' => true, 'js' => 'CustomField.angular/rules/relevancy.rules.svc'];
 	}
 
 	public function buildSurveyRecords($institutionId=null) {

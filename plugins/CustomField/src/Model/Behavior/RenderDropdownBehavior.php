@@ -4,17 +4,13 @@ namespace CustomField\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use Cake\ORM\TableRegistry;
 use CustomField\Model\Behavior\RenderBehavior;
 
 class RenderDropdownBehavior extends RenderBehavior {
 
-    private $surveyRules = null;
-    private $SurveyRulesTable;
     private $postedData = null;
 	public function initialize(array $config) {
         parent::initialize($config);
-        $this->SurveyRulesTable = TableRegistry::get('Survey.SurveyRules');
     }
 
 	public function onGetCustomDropdownElement(Event $event, $action, $entity, $attr, $options=[]) {
@@ -51,50 +47,18 @@ class RenderDropdownBehavior extends RenderBehavior {
                 $value = $dropdownOptions[$savedValue];
             }
         } else if ($action == 'edit') {
-
-            if (is_null($this->surveyRules)) {
-                $rules = $this->SurveyRulesTable
-                    ->find()
-                    ->where([
-                        $this->SurveyRulesTable->aliasField('survey_form_id') => $entity->survey_form_id,
-                        $this->SurveyRulesTable->aliasField('enabled') => 1
-                    ])
-                    ->select([
-                        $this->SurveyRulesTable->aliasField('survey_question_id'), 
-                        $this->SurveyRulesTable->aliasField('dependent_question_id'),
-                        $this->SurveyRulesTable->aliasField('show_options')
-                    ])
-                    ->hydrate(false)
-                    ->toArray();
-                foreach ($rules as $rule) {
-                    $showOptions = json_decode($rule['show_options']);
-                    $showOptionsJsonArray = '[';
-                    foreach($showOptions as $option) {
-                        $showOptionsJsonArray = $showOptionsJsonArray.$option.',';
-                    }
-                    $showOptionsJsonArray = trim($showOptionsJsonArray, ",");
-                    $showOptionsJsonArray = $showOptionsJsonArray.']';
-                    $this->surveyRules[$rule['survey_question_id']] = [
-                            'dependent_question_id' => $rule['dependent_question_id'],
-                            'show_options' => $showOptionsJsonArray
-                        ];
-                }
-            }
             $form = $event->subject()->Form;
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
             $options['type'] = 'select';
             $options['options'] = $dropdownOptions;
             $options['ng-model'] = 'RelevancyRulesController.Dropdown["'.$fieldId.'"]';
-            if (isset($this->surveyRules[$fieldId])) {
-                $value .= '<div ng-show="RelevancyRulesController.showDropdown('.$this->surveyRules[$fieldId]['dependent_question_id'].', '.$this->surveyRules[$fieldId]['show_options'].');">';
-            }
 
             if ($this->_table->request->is(['get'])) {
                 $selectedValue = !is_null($savedValue) ? $savedValue : $dropdownDefault;
                 $options['default'] = $selectedValue;
                 $options['value'] = $selectedValue;
-                $options['ng-init'] = 'RelevancyRulesController.Dropdown["'.$fieldId.'"] = "'.$selectedValue.'"; RelevancyRulesController.printSomething();';
+                $options['ng-init'] = 'RelevancyRulesController.Dropdown["'.$fieldId.'"] = "'.$selectedValue.'";';
             } else {
                 if (is_null($this->postedData)) {
                     $questions = $this->_table->request->data[$this->_table->alias()]['custom_field_values'];
@@ -105,7 +69,7 @@ class RenderDropdownBehavior extends RenderBehavior {
                     }
                 }
                 $selectedValue = $this->postedData[$fieldId];
-                $options['ng-init'] = 'RelevancyRulesController.Dropdown["'.$fieldId.'"] = "'.$selectedValue.'"; RelevancyRulesController.printSomething();';
+                $options['ng-init'] = 'RelevancyRulesController.Dropdown["'.$fieldId.'"] = "'.$selectedValue.'";';
             }
 
             $value .= $form->input($fieldPrefix.".number_value", $options);
@@ -114,9 +78,7 @@ class RenderDropdownBehavior extends RenderBehavior {
                 $value .= $form->hidden($fieldPrefix.".id", ['value' => $savedId]);
             }
 
-            if (isset($this->surveyRules[$fieldId])) {
-                $value .= '</div>';
-            }
+            $value = $this->processRelevancyDisabled($entity, $value, $fieldId);
         }
 
         $event->stopPropagation();

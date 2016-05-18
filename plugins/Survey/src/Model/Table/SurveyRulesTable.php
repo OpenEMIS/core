@@ -9,11 +9,14 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Text;
 use Cake\ORM\Query;
+use App\Model\Traits\OptionsTrait;
 
 use App\Model\Table\ControllerActionTable;
 
 class SurveyRulesTable extends ControllerActionTable 
 {
+    use OptionsTrait;
+
     public function initialize(array $config) 
     {
         $this->table('survey_rules');
@@ -26,6 +29,29 @@ class SurveyRulesTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra) 
     {
         $extra['elements']['controls'] = ['name' => 'Survey.survey_rules_controls', 'data' => [], 'options' => [], 'order' => 2];
+    }
+
+    public function onGetShowOptions(Event $event, Entity $entity) 
+    {
+        $showOptions = $entity->show_options;
+        $showOptions = json_decode($showOptions);
+        $SurveyQuestionChoicesTable = TableRegistry::get('Survey.SurveyQuestionChoices');
+        if (!empty($showOptions)) {
+            $options = $SurveyQuestionChoicesTable
+                ->find()
+                ->select([$SurveyQuestionChoicesTable->aliasField('name')])
+                ->where([$SurveyQuestionChoicesTable->aliasField('id').' IN' => $showOptions])
+                ->hydrate(false)
+                ->extract('name')
+                ->toList(); 
+            return implode('<br />', $options);
+        }
+    }
+
+    public function onGetEnabled(Event $event, Entity $entity)
+    {
+        $options = $this->getSelectOptions('general.yesno');
+        return $options[$entity->enabled];
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) 
