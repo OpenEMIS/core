@@ -239,8 +239,6 @@ class RestSurveyComponent extends Component
                 $CustomRecords = TableRegistry::get('Institution.InstitutionSurveys');
                 $formAlias = $this->Form->alias();
                 $fieldAlias = $this->Field->alias();
-                // To use $this->recordKey when record table is changed to institution_surveys and foreign key will become institution_survey_id
-                $recordKey = 'institution_survey_id';
 
                 $xmlResponse = $data['response'];
                 // lines below is for testing
@@ -294,195 +292,217 @@ class RestSurveyComponent extends Component
                 }
                 // End
 
-                // Overwrite survey record only if is not completed
-                $where[$CustomRecords->aliasField('status_id IN')] = $statusIds;
-                $completedResults = $CustomRecords
-                    ->find()
-                    ->where($where)
-                    ->all();
+                if (!empty($statusIds)) {
+                    // Overwrite survey record only if is not completed
+                    $where[$CustomRecords->aliasField('status_id IN')] = $statusIds;
+                    $completedResults = $CustomRecords
+                        ->find()
+                        ->where($where)
+                        ->all();
 
-                if ($completedResults->isEmpty()) {
-                    // Update record table
-                    $entity = $CustomRecords->newEntity($formData, ['validate' => false]);
-                    if ($CustomRecords->save($entity)) {
-                        // if($entity->status == 2) {
-                            $message = 'Survey record has been submitted successfully.';
-                        // } else {
-                            // $message = 'Survey record has been saved to draft successfully.';
-                        // }
-                        $this->log('Message:', 'debug');
-                        $this->log($message, 'debug');
-                    } else {
-                        $this->log($entity->errors(), 'debug');
-                    }
-                    // End
+                    if ($completedResults->isEmpty()) {
+                        // Update record table
+                        $entity = $CustomRecords->newEntity($formData, ['validate' => false]);
+                        if ($CustomRecords->save($entity)) {
+                            // if($entity->status == 2) {
+                                $message = 'Survey record has been submitted successfully.';
+                            // } else {
+                                // $message = 'Survey record has been saved to draft successfully.';
+                            // }
+                            $this->log('Message:', 'debug');
+                            $this->log($message, 'debug');
+                        } else {
+                            $this->log($entity->errors(), 'debug');
+                        }
+                        // End
 
-                    $recordId = $entity->id;
-                    if (!is_null($recordId)) {
-                        $CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
-                        $fieldTypes = $CustomFieldTypes
-                            ->find('list', ['keyField' => 'code', 'valueField' => 'value'])
-                            ->toArray();
+                        $recordId = $entity->id;
+                        if (!is_null($recordId)) {
+                            $fields = $xml->$formAlias->$fieldAlias;
+                            foreach ($fields as $field) {
+                                $fieldId = $field->attributes()->id->__toString();
+                                $fieldType = $this->Field->get($fieldId)->field_type;
+                                $responseValue = urldecode($field->__toString());
 
-                        $fields = $xml->$formAlias->$fieldAlias;
-                        foreach ($fields as $field) {
-                            $fieldId = $field->attributes()->id->__toString();
-                            $fieldType = $this->Field->get($fieldId)->field_type;
-                            $fieldColumnName = $fieldTypes[$fieldType];
+                                $fieldTypeFunction = "upload" . Inflector::camelize(strtolower($fieldType));
+                                if (method_exists($this, $fieldTypeFunction)) {
+                                    $responseData = [
+                                        $this->recordKey => $recordId,
+                                        $this->fieldKey => $fieldId,
+                                        'institution_id' => $institutionId,
+                                        'created_user_id' => $createdUserId
+                                    ];
 
-                            // Always delete the answers before reinsert
-                            if ($fieldType == 'TABLE') {
-                                $this->TableCell->deleteAll([
-                                    $this->TableCell->aliasField($recordKey) => $recordId,
-                                    $this->TableCell->aliasField($this->fieldKey) => $fieldId
-                                ]);
-                            } else {
-                                $this->FieldValue->deleteAll([
-                                    $this->FieldValue->aliasField($recordKey) => $recordId,
-                                    $this->FieldValue->aliasField($this->fieldKey) => $fieldId
-                                ]);
-                            }
-
-                            switch($fieldType) {
-                                case 'TEXT':
-                                case 'NUMBER':
-                                case 'TEXTAREA':
-                                case 'DROPDOWN':
-                                case 'DATE':
-                                case 'TIME':
-                                    $answerValue = urldecode($field->__toString());
-                                    if (strlen($answerValue) != 0) {
-                                        $answerData = [
-                                            $recordKey => $recordId,
-                                            $this->fieldKey => $fieldId,
-                                            $fieldColumnName => $answerValue,
-                                            'institution_id' => $institutionId,
-                                            'created_user_id' => $createdUserId
-                                        ];
-
-                                        // Save answer
-                                        $answerEntity = $this->FieldValue->newEntity($answerData);
-                                        if (!$this->FieldValue->save($answerEntity)) {
-                                            $this->log($answerEntity->errors(), 'debug');
-                                        }
-                                        // End
-                                    }
-                                    break;
-                                case 'CHECKBOX':
-                                    $answerValue = urldecode($field->__toString());
-                                    if (strlen($answerValue) != 0) {
-                                        $checkboxValues = explode(" ", $answerValue);
-                                        foreach ($checkboxValues as $checkboxKey => $checkboxValue) {
-                                            $answerData = [
-                                                $recordKey => $recordId,
-                                                $this->fieldKey => $fieldId,
-                                                $fieldColumnName => $checkboxValue,
-                                                'institution_id' => $institutionId,
-                                                'created_user_id' => $createdUserId
-                                            ];
-
-                                            // Save answer
-                                            $answerEntity = $this->FieldValue->newEntity($answerData);
-                                            if (!$this->FieldValue->save($answerEntity)) {
-                                                $this->log($answerEntity->errors(), 'debug');
-                                            }
-                                            // End
-                                        }
-                                    }
-                                    break;
-                                case 'TABLE':
-                                    foreach ($field->children() as $row => $rowObj) {
-                                        $rowId = $rowObj->attributes()->id->__toString();
-                                        foreach ($rowObj->children() as $col => $colObj) {
-                                            $colId = $colObj->attributes()->id->__toString();
-                                            if ($colId != 0) {
-                                                $cellValue = urldecode($colObj->__toString());
-                                                if (strlen($cellValue) != 0) {
-                                                    $cellData = array(
-                                                        $recordKey => $recordId,
-                                                        $this->fieldKey => $fieldId,
-                                                        $this->tableColumnKey => $colId,
-                                                        $this->tableRowKey => $rowId,
-                                                        $fieldColumnName => $cellValue,
-                                                        'institution_id' => $institutionId,
-                                                        'created_user_id' => $createdUserId
-                                                    );
-
-                                                    // Save cell by cell
-                                                    $cellEntity = $this->TableCell->newEntity($cellData);
-                                                    if (!$this->TableCell->save($cellEntity)) {
-                                                        $this->log($cellEntity->errors(), 'debug');
-                                                    }
-                                                    // End
-                                                }
-                                            }
-                                        }
-                                    }
-                                    break;
-                                case 'COORDINATES':
-                                    $answerValue = urldecode($field->__toString());
-                                    if (strlen($answerValue) != 0) {
-                                        $answerValues = explode(' ', $answerValue);
-                                        if (count($answerValues)==2) {
-                                            $answerValue = json_encode([
-                                                'latitude' => $answerValues[0],
-                                                'longitude' => $answerValues[1]
-                                            ]);
-                                            $answerData = [
-                                                $recordKey => $recordId,
-                                                $this->fieldKey => $fieldId,
-                                                $fieldColumnName => $answerValue,
-                                                'institution_id' => $institutionId,
-                                                'created_user_id' => $createdUserId
-                                            ];
-
-                                            // Save answer
-                                            $answerEntity = $this->FieldValue->newEntity($answerData);
-                                            if (!$this->FieldValue->save($answerEntity)) {
-                                                $this->log($answerEntity->errors(), 'debug');
-                                            }
-                                            // End
-                                        } else {
-                                            $this->log('COORDINATES type answer is invalid', 'debug');
-                                        }
-                                    }
-                                    break;
-                                case 'FILE':
-                                    $answerValue = urldecode($field->__toString());
-                                    if (strlen($answerValue) != 0) {
-                                        // expected format received from mobile
-                                        // filename.jpg|data:image/jpg;base64,urlencode( base64_encode( file_get_contents( $filepath) ) )
-                                        list($fileName, $fileData) = explode("|", $answerValue, 2);
-                                        list($fileTypeStr, $encodedStr) = explode(";", $fileData, 2);
-                                        list($encodeType, $encoded) = explode(",", $encodedStr, 2);
-                                        $decoded = base64_decode($encoded);
-
-                                        $answerData = [
-                                            $recordKey => $recordId,
-                                            $this->fieldKey => $fieldId,
-                                            'text_value' => $fileName,
-                                            $fieldColumnName => $decoded,   // fileContent
-                                            'institution_id' => $institutionId,
-                                            'created_user_id' => $createdUserId
-                                        ];
-
-                                        // Save answer
-                                        $answerEntity = $this->FieldValue->newEntity($answerData);
-                                        if (!$this->FieldValue->save($answerEntity)) {
-                                            $this->log($answerEntity->errors(), 'debug');
-                                        }
-                                        // End
-                                    }
-                                    break;
+                                    $this->$fieldTypeFunction($field, $responseData, $responseValue);
+                                }
                             }
                         }
+                    } else {
+                        $message = 'Survey record is not saved.';
+                        $this->log('Message:', 'debug');
+                        $this->log($message, 'debug');
                     }
-                } else {
-                    $message = 'Survey record is not saved.';
-                    $this->log('Message:', 'debug');
-                    $this->log($message, 'debug');
                 }
             }
+        }
+    }
+
+    private function deleteFieldValue($data)
+    {
+        $this->FieldValue->deleteAll([
+            $this->FieldValue->aliasField($this->recordKey) => $data[$this->recordKey],
+            $this->FieldValue->aliasField($this->fieldKey) => $data[$this->fieldKey]
+        ]);
+    }
+
+    private function saveFieldValue($answerData)
+    {
+        $answerEntity = $this->FieldValue->newEntity($answerData);
+        if (!$this->FieldValue->save($answerEntity)) {
+            $this->log($answerEntity->errors(), 'debug');
+        }
+    }
+
+    private function deleteTableCell($data)
+    {
+        $this->TableCell->deleteAll([
+            $this->TableCell->aliasField($this->recordKey) => $data[$this->recordKey],
+            $this->TableCell->aliasField($this->fieldKey) => $data[$this->fieldKey]
+        ]);
+    }
+
+    private function saveTableCell($cellData)
+    {
+        $cellEntity = $this->TableCell->newEntity($cellData);
+        if (!$this->TableCell->save($cellEntity)) {
+            $this->log($cellEntity->errors(), 'debug');
+        }
+    }
+
+    private function uploadText($field, $data, $value)
+    {
+        $this->deleteFieldValue($data);
+        if (strlen($value) != 0) {
+            $data['text_value'] = $value;
+            $this->saveFieldValue($data);
+        }
+    }
+
+    private function uploadNumber($field, $data, $value)
+    {
+        $this->deleteFieldValue($data);
+        if (strlen($value) != 0) {
+            $data['number_value'] = $value;
+            $this->saveFieldValue($data);
+        }
+    }
+
+    private function uploadTextarea($field, $data, $value)
+    {
+        $this->deleteFieldValue($data);
+        if (strlen($value) != 0) {
+            $data['textarea_value'] = $value;
+            $this->saveFieldValue($data);
+        }
+    }
+
+    private function uploadDropdown($field, $data, $value)
+    {
+        $this->deleteFieldValue($data);
+        if (strlen($value) != 0) {
+            $data['number_value'] = $value;
+            $this->saveFieldValue($data);
+        }
+    }
+
+    private function uploadCheckbox($field, $data, $value)
+    {
+        $this->deleteFieldValue($data);
+        if (strlen($value) != 0) {
+            $checkboxValues = explode(" ", $value);
+            foreach ($checkboxValues as $checkboxKey => $checkboxValue) {
+                $data['number_value'] = $checkboxValue;
+                $this->saveFieldValue($data);
+            }
+        }
+    }
+
+    private function uploadTable($field, $data, $value)
+    {
+        $this->deleteTableCell($data);
+
+        foreach ($field->children() as $row => $rowObj) {
+            $rowId = $rowObj->attributes()->id->__toString();
+            foreach ($rowObj->children() as $col => $colObj) {
+                $colId = $colObj->attributes()->id->__toString();
+                if ($colId != 0) {
+                    $cellValue = urldecode($colObj->__toString());
+                    if (strlen($cellValue) != 0) {
+                        $cellData = array_merge($data, [
+                            $this->tableColumnKey => $colId,
+                            $this->tableRowKey => $rowId,
+                            'text_value' => $cellValue
+                        ]);
+
+                        $this->saveTableCell($cellData);
+                    }
+                }
+            }
+        }
+    }
+
+    private function uploadDate($field, $data, $value)
+    {
+        $this->deleteFieldValue($data);
+        if (strlen($value) != 0) {
+            $data['date_value'] = $value;
+            $this->saveFieldValue($data);
+        }
+    }
+
+    private function uploadTime($field, $data, $value)
+    {
+        $this->deleteFieldValue($data);
+        if (strlen($value) != 0) {
+            $data['time_value'] = $value;
+            $this->saveFieldValue($data);
+        }
+    }
+
+    private function uploadCoordinates($field, $data, $value)
+    {
+        $this->deleteFieldValue($data);
+        if (strlen($value) != 0) {
+            if (count(explode(" ", $value)) == 2) {
+                list($latitudeValue, $longitudeValue) = explode(" ", $value, 2);
+                $json = json_encode([
+                    'latitude' => $latitudeValue,
+                    'longitude' => $longitudeValue
+                ]);
+                $data['text_value'] = $json;
+                $this->saveFieldValue($data);
+            } else {
+                $this->log('COORDINATES type answer is invalid', 'debug');
+            }
+        }
+    }
+
+    private function uploadFile($field, $data, $value)
+    {
+        $this->deleteFieldValue($data);
+        if (strlen($value) != 0) {
+            // expected format received from mobile
+            // filename.jpg|data:image/jpg;base64,urlencode( base64_encode( file_get_contents( $filepath) ) )
+            list($fileName, $fileData) = explode("|", $value, 2);
+            list($fileTypeStr, $encodedStr) = explode(";", $fileData, 2);
+            list($encodeType, $encoded) = explode(",", $encodedStr, 2);
+            $decoded = base64_decode($encoded);
+
+            $answerData = array_merge($data, [
+                'text_value' => $fileName,
+                'file' => $decoded  // fileContent
+            ]);
+            $this->saveFieldValue($answerData);
         }
     }
 
