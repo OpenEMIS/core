@@ -118,14 +118,20 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 			'type' => 'integer',
 			'visible' => ['index'=>true]
 		]);
+
 		$this->field('female_students', [
+			'type' => 'integer',
+			'visible' => ['index'=>true]
+		]);
+
+		$this->field('total_students', [
 			'type' => 'integer',
 			'visible' => ['index'=>true]
 		]);
 
 
 		$this->setFieldOrder([
-			'name', 'education_subject_id', 'teachers', 'male_students', 'female_students',
+			'name', 'education_subject_id', 'teachers', 'male_students', 'female_students','total_students',
 		]);
 
 		$academicPeriodOptions = $this->getAcademicPeriodOptions($extra['institution_id']);
@@ -1109,4 +1115,58 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 			return implode(', ', $resultArray);
 		}
 	} 
+
+
+/******************************************************************************************************************
+**
+** field specific methods
+**
+******************************************************************************************************************/
+
+	public function onGetMaleStudents(Event $event, Entity $entity) {
+		if ($entity->has('id')) {
+			$gender_id = 1; // male
+	        $table = TableRegistry::get('Institution.InstitutionSubjectStudents');
+	        $count = $table
+	                    ->find()
+	                    ->contain('Users')
+	                    ->where([
+	                    	'Users.gender_id' => $gender_id,
+	                    	$table->aliasField('institution_subject_id') => $entity->id,
+	                    	$table->aliasField('status') .' > 0'
+	                    	])
+	                    ->count();
+	        return $count;
+		}
+	}
+
+	public function onGetFemaleStudents(Event $event, Entity $entity) {
+		if ($entity->has('id')) {
+			$gender_id = 2; // female
+	        $table = TableRegistry::get('Institution.InstitutionSubjectStudents');
+	        $count = $table
+	                    ->find()
+	                    ->contain('Users')
+	                    ->where([
+	                    	'Users.gender_id' => $gender_id,
+	                    	$table->aliasField('institution_subject_id') => $entity->id,
+	                    	$table->aliasField('status') .' > 0'
+	                    	])
+	                    ->count();
+	        return $count;
+		}
+	}
+
+	public function onGetTotalStudents(Event $event, Entity $entity) {
+		if ($entity->has('id')) {
+			$table = TableRegistry::get('Institution.InstitutionSubjectStudents');
+	        $count = $table
+	                    ->find()
+	                    ->where([$table->aliasField('institution_subject_id') => $entity->id])
+	                    ->count();
+	        return $count;	
+		}
+	}
+
+	
 }

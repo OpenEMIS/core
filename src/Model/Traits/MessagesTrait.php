@@ -53,6 +53,7 @@ trait MessagesTrait {
 				'label' => 'Edit',
 			],
 			'delete' => [
+				'restrictDelete' => 'The record cannot be deleted.',
 				'success' => 'The record has been deleted successfully.',
 				'failed' => 'The record is not deleted due to errors encountered.',
 				'label' => 'Delete',
@@ -92,6 +93,13 @@ trait MessagesTrait {
 		'fileUpload' => [
 			'single' => '*File size should not be larger than 2MB.',
 			'multi' => '*Maximum 5 files are permitted on single upload. Each file size should not be larger than 2MB.',
+			'1' => 'The uploaded file exceeds the max filesize upload limits.',
+			'2' => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.',
+			'3' => 'The uploaded file was only partially uploaded.',
+			'4' => 'No file was uploaded.',
+			'6' => 'Missing a temporary folder. Please contact your network administrator for assistance.',
+			'7' => 'Failed to write file to disk. Please contact your network administrator for assistance.',
+			'8' => 'A PHP extension stopped the file upload. Please contact your network administrator for assistance.'
 		],
 		'InfrastructureTypes' => [
 			'noLevels' => 'No Available Levels',
@@ -574,7 +582,8 @@ trait MessagesTrait {
 			],
 			'InstitutionPositions' => [
 				'position_no' => [
-					'ruleUnique' => 'The position number that you have entered already existed, please try again.'
+					'ruleUnique' => 'The position number that you have entered already existed, please try again.',
+					'ruleNoSpaces' => 'Only alphabets and numbers are allowed'
 				]
 			],
 			'InstitutionShifts' => [
@@ -1099,6 +1108,9 @@ trait MessagesTrait {
 				'earlier' => 'Time should be earlier than or equal to %s',
 				'later' => 'Time should be later than or equal to %s',
 				'between' => 'Time should be between %s and %s (inclusive)'
+			],
+			'file' => [
+				'maxSize' => 'File size should not be more than %s'
 			]
 		],
 		'Assessment' => [
@@ -1154,17 +1166,19 @@ trait MessagesTrait {
 
 	public function getMessage($code, $options = []) {
 		$sprintf = (array_key_exists('sprintf', $options))? $options['sprintf']: [];
+		$defaultMessage = (array_key_exists('defaultMessage', $options))? $options['defaultMessage']: true;
 
-		$index = explode('.', $code);
-		$message = $this->messages;
-		foreach ($index as $i) {
-			if (isset($message[$i])) {
-				$message = $message[$i];
-			} else {
-				//check whether label exists in cache
-				$Labels = TableRegistry::get('Labels');
-				$message = Cache::read($code, $Labels->getDefaultConfig());
-				if($message === false) {
+		$Labels = TableRegistry::get('Labels');
+		$message = Cache::read($code, $Labels->getDefaultConfig());
+
+		if ($message == false) {
+			$message = $this->messages;
+			$index = explode('.', $code);
+			foreach ($index as $i) {
+				if (isset($message[$i])) {
+					$message = $message[$i];
+				} else {
+					if (!$defaultMessage) return false;
 					$message = '[Message Not Found]';
 					break;
 				}
