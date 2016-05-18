@@ -5,34 +5,33 @@
 <?php
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('toolbar');
-?>
+?>	
+	<div id="anchorTop"></div>
 	<button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Add');?>" ng-show="action == 'index'" ng-click="SurveyRulesController.onAddClick()">
 		<i class="fa kd-add"></i>
 	</button>
+
 <?php
 $this->end();
 $this->start('panelBody');
 $session = $this->request->session();
 $institutionId = $session->read('Institution.Institutions.id');
 ?>
+
 	<div class="alert {{class}}" ng-hide="message == null">
 		<a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
 	</div>
-		<!-- <div class="toolbar-responsive panel-toolbar">
-			<div class="toolbar-wrapper">
-				<div class="input select">
-					<div class="input-select-wrapper">
-						<select class="form-control" ng-options="item.value as item.text for item in SurveyRulesController.surveyFormOptions" ng-model="SurveyRulesController.filters" ng-change="SurveyRulesController.update(SurveyRulesController.filters)"></select>
-					</div>
-				</div>
-			</div>
-		</div> -->
 		<form method="post" accept-charset="utf-8" id="content-main-form" class="form-horizontal ng-pristine ng-valid" novalidate="novalidate" action="">
 			<div style="display:none;"></div>
-			<div class="input text">
+			<div class="input select">
 				<label for="surveyrules-survey-form-id"><?= __('Survey Form')?></label>
-				<input type="text" name="SurveyRules[survey_form_id]" disabled="disabled" id="surveyrules-survey-form-id" ng-model="SurveyRulesController.surveyFormName" />
-				<input type="hidden" name="SurveyRules[survey_form_id]" id="surveyrules-survey-form-id" ng-value="SurveyRulesController.surveyFormId" />
+				<div class="input-select-wrapper">
+				<select class="form-control"
+					ng-options="item.value as item.text for item in SurveyRulesController.surveyFormOptions"
+					ng-model="SurveyRulesController.surveyFormId"
+					ng-change="SurveyRulesController.getSurveySection(SurveyRulesController.surveyFormId);"
+				></select>
+				</div>
 			</div>
 			<div class="input select">
 				<label for="surveyrules-survey-form-section-name"><?= __('Survey Form Section')?></label>

@@ -194,9 +194,7 @@ class InstitutionsController extends AppController  {
 				break;
 			case 'Surveys':
 				$this->Angular->addModules([
-					'alert.svc',
-					'relevancy.rules.ctrl',
-					'relevancy.rules.svc'
+					'relevancy.rules.ctrl'
 				]);
 				$this->set('ngController', 'RelevancyRulesCtrl as RelevancyRulesController');
 				break;
