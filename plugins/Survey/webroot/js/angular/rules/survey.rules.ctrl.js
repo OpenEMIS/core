@@ -2,11 +2,9 @@ angular
     .module('survey.rules.ctrl', ['utils.svc', 'alert.svc', 'survey.rules.svc'])
     .controller('SurveyRulesCtrl', SurveyRulesController);
 
-SurveyRulesController.$inject = ['$scope', '$filter', '$q', 'UtilsSvc', 'AlertSvc', 'SurveyRulesSvc'];
+SurveyRulesController.$inject = ['$scope', '$anchorScroll', '$location', '$filter', '$q', 'UtilsSvc', 'AlertSvc', 'SurveyRulesSvc'];
 
-
-
-function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRulesSvc) {
+function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, UtilsSvc, AlertSvc, SurveyRulesSvc) {
     
     var vm = this;
     $scope.action = 'index';
@@ -19,7 +17,7 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
     {
         SurveyRulesSvc.init(angular.baseUrl);
 
-        SurveyRulesSvc.getSurveyForm(surveyFormId)
+        SurveyRulesSvc.getSurveyForm(0)
         .then(function(response) 
         {
             var formData = response.data;
@@ -29,23 +27,14 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
                 options.push({text: formData[i].name.toString(), value: formData[i].id});
             }
             
-            vm.surveyFormName = options[0].text;
-            vm.surveyFormId = options[0].value; 
+            vm.surveyFormOptions = options;
+            if (surveyFormId != undefined) {
+                vm.surveyFormId = surveyFormId; 
+            } else {
+                vm.surveyFormId = options[0].value; 
+            }
 
-            SurveyRulesSvc.getSection(surveyFormId)
-            .then(function(sections)
-            {
-                var sectionData = sections.data;
-                options = [];
-                for(i = 0; i < sectionData.length; i++) 
-                {   
-                    options.push({text: sectionData[i].section.toString(), value: sectionData[i].section});
-                }
-                vm.surveySectionOptions = options;
-                vm.sectionName = options[0].value;
-                var sectionName = vm.sectionName;
-                vm.getQuestionsFromSection(surveyFormId, sectionName);
-            });
+            vm.getSurveySection(surveyFormId);
         }, function(error) 
         {
             console.log(error);
@@ -53,6 +42,28 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
         })
         ;
     });
+
+    vm.getSurveySection = function(surveyFormId)
+    {
+        SurveyRulesSvc.getSection(surveyFormId)
+        .then(function(sections)
+        {
+            var sectionData = sections.data;
+            var options = [];
+            for(i = 0; i < sectionData.length; i++) 
+            {   
+                if (sectionData[i].section.toString() == "") {
+                    options.push({text: "No Section", value: sectionData[i].section});
+                } else {
+                    options.push({text: sectionData[i].section.toString(), value: sectionData[i].section});
+                }
+            }
+            vm.surveySectionOptions = options;
+            vm.sectionName = options[0].value;
+            var sectionName = vm.sectionName;
+            vm.getQuestionsFromSection(surveyFormId, sectionName);
+        });
+    }
 
     vm.getQuestionsFromSection = function(surveyFormId, sectionName) 
     {
@@ -187,7 +198,20 @@ function SurveyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, SurveyRu
         		}
         	}
 		}, log);
-		SurveyRulesSvc.saveData(log);
+		SurveyRulesSvc.saveData(log)
+        .then(function (response){
+            vm.getQuestionsFromSection(vm.surveyFormId, vm.sectionName);
+            AlertSvc.success($scope, "Record has been added successfully");
+            var newHash = 'anchorTop';
+            if ($location.hash() !== newHash) {
+              $location.hash(newHash);
+            } else {
+              $anchorScroll();
+            }
+        }, function(error){
+            console.log(error);
+        });
+        
     }
 
 }

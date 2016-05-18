@@ -1,28 +1,21 @@
 angular
-    .module('relevancy.rules.ctrl', ['utils.svc', 'alert.svc', 'relevancy.rules.svc'])
+    .module('relevancy.rules.ctrl', [])
     .controller('RelevancyRulesCtrl', RelevancyRulesController);
 
-RelevancyRulesController.$inject = ['$scope', '$filter', '$q', 'UtilsSvc', 'AlertSvc', 'RelevancyRulesSvc'];
+RelevancyRulesController.$inject = ['$filter', '$q'];
 
 
 
-function RelevancyRulesController($scope, $filter, $q, UtilsSvc, AlertSvc, RelevancyRulesSvc) {
+function RelevancyRulesController($filter, $q) {
     
     var vm = this;
-    var filterValue = '';
-    // var surveyFormId = UtilsSvc.requestQuery('survey_form_id');
-    
-    // Initialisation
-    angular.element(document).ready(function() 
-    {
-    });
-
-    vm.printSomething = function () {
-        
-    }
 
     vm.showDropdown = function(dependentQuestionId, showOptions) {
-        console.log(showOptions);
-        console.log(dependentQuestionId);
+        var optionSelected = parseInt(vm.Dropdown[dependentQuestionId]);
+        if (showOptions.indexOf(optionSelected) != -1) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
