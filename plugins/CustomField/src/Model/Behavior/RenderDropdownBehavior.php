@@ -67,9 +67,16 @@ class RenderDropdownBehavior extends RenderBehavior {
                     ->hydrate(false)
                     ->toArray();
                 foreach ($rules as $rule) {
+                    $showOptions = json_decode($rule['show_options']);
+                    $showOptionsJsonArray = '[';
+                    foreach($showOptions as $option) {
+                        $showOptionsJsonArray = $showOptionsJsonArray.$option.',';
+                    }
+                    $showOptionsJsonArray = trim($showOptionsJsonArray, ",");
+                    $showOptionsJsonArray = $showOptionsJsonArray.']';
                     $this->surveyRules[$rule['survey_question_id']] = [
                             'dependent_question_id' => $rule['dependent_question_id'],
-                            'show_options' => $rule['show_options']
+                            'show_options' => $showOptionsJsonArray
                         ];
                 }
             }
@@ -80,7 +87,7 @@ class RenderDropdownBehavior extends RenderBehavior {
             $options['options'] = $dropdownOptions;
             $options['ng-model'] = 'RelevancyRulesController.Dropdown["'.$fieldId.'"]';
             if (isset($this->surveyRules[$fieldId])) {
-                $value .= '<div ng-show="RelevancyRulesController.showDropdown("'.$this->surveyRules[$fieldId]['dependent_question_id'].'", "'.$this->surveyRules[$fieldId]['show_options'].'")">';
+                $value .= '<div ng-show="RelevancyRulesController.showDropdown('.$this->surveyRules[$fieldId]['dependent_question_id'].', '.$this->surveyRules[$fieldId]['show_options'].');">';
             }
 
             if ($this->_table->request->is(['get'])) {
