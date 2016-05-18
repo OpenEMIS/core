@@ -112,6 +112,9 @@ class DirectoriesTable extends AppTable {
                             $InstitutionStudentTable = TableRegistry::get('Institution.Students');
 
                             $institutionStudents = $InstitutionStudentTable->find()
+                                ->select([
+                                    $InstitutionStudentTable->aliasField('student_id')
+                                ])
                                 ->where([
                                     $InstitutionStudentTable->aliasField('institution_id').' IN ('.$institutionIds.')',
                                     $InstitutionStudentTable->aliasField('student_id').' = '.$this->aliasField('id')
@@ -119,6 +122,9 @@ class DirectoriesTable extends AppTable {
                                 ->bufferResults(false);
 
                             $allInstitutionStudents = $InstitutionStudentTable->find()
+                                ->select([
+                                    $InstitutionStudentTable->aliasField('student_id')
+                                ])
                                 ->where([
                                     $InstitutionStudentTable->aliasField('student_id').' = '.$this->aliasField('id')
                                 ])
@@ -139,6 +145,9 @@ class DirectoriesTable extends AppTable {
                             $InstitutionStaffTable = TableRegistry::get('Institution.Staff');
 
                             $institutionStaff = $InstitutionStaffTable->find()
+                                ->select([
+                                    $InstitutionStaffTable->aliasField('staff_id')
+                                ])
                                 ->where([
                                     $InstitutionStaffTable->aliasField('institution_id').' IN ('.$institutionIds.')',
                                     $InstitutionStaffTable->aliasField('staff_id').' = '.$this->aliasField('id')
@@ -146,6 +155,9 @@ class DirectoriesTable extends AppTable {
                                 ->bufferResults(false);
 
                             $allInstitutionStaff = $InstitutionStaffTable->find()
+                                ->select([
+                                    $InstitutionStaffTable->aliasField('staff_id')
+                                ])
                                 ->where([
                                     $InstitutionStaffTable->aliasField('staff_id').' = '.$this->aliasField('id')
                                 ])
