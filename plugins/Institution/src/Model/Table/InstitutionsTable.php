@@ -51,6 +51,7 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('Infrastructures',					['className' => 'Institution.InstitutionInfrastructures', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->hasMany('Staff',				 				['className' => 'Institution.Staff', 'dependent' => true]);
+		$this->hasMany('StaffPositionProfiles',				['className' => 'Institution.StaffPositionProfiles', 'dependent' => true]);
 		$this->hasMany('StaffBehaviours', 					['className' => 'Institution.StaffBehaviours', 'dependent' => true]);
 		$this->hasMany('InstitutionStaffAbsences', 			['className' => 'Institution.StaffAbsences', 'dependent' => true]);
 
@@ -195,6 +196,10 @@ class InstitutionsTable extends AppTable  {
 		return $name;
 	}
 
+	public function onUpdateDefaultActions(Event $event) {
+		return ['downloadFile'];
+	}
+
 	public function beforeAction($event) {
 		$this->ControllerAction->field('security_group_id', ['visible' => false]);
 		// $this->ControllerAction->field('institution_site_area_id', ['visible' => false]);
@@ -251,22 +256,8 @@ class InstitutionsTable extends AppTable  {
 				$entity->security_group_id = $securityGroup->id;
 				if (!$this->save($entity)) {
 					return false;
-				} else {
-					$UsersTable = TableRegistry::get('Security.Users');
-					if (!$UsersTable->isAdmin($entity->created_user_id)) {
-						$SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
-						$groupAdmin = $SecurityRolesTable->getGroupAdministratorEntity();
-
-						$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-						$newEntity = $SecurityGroupUsers->newEntity([
-								'security_group_id' => $securityGroup->id,
-								'security_user_id' => $entity->created_user_id,
-								'security_role_id' => $groupAdmin->id
-							]);
-						$SecurityGroupUsers->save($newEntity);
-					}
-					
 				}
+				
 			} else {
 				return false;
 			}
@@ -384,6 +375,7 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->setFieldVisible(['index'], [
 			'code', 'name', 'area_id', 'institution_type_id'
 		]);
+		$this->controller->set('ngController', 'AdvancedSearchCtrl');
 	}
 
 	public function onGetAreaId(Event $event, Entity $entity) {

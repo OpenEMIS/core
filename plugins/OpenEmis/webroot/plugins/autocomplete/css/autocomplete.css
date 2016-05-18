@@ -16,7 +16,7 @@
 }
 
 .safari .autocomplete-loader {
-	top: 2px !important;
+	top: 2px;
 }
 
 .rtl .autocomplete-loader {

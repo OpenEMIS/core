@@ -189,6 +189,10 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 			} else if ($transferType == self::PARTIAL_TRANSFER){
 				$staffRecord->FTE = $requestData[$this->alias()]['new_FTE'];
 				$staffRecord->staff_type_id = $requestData[$this->alias()]['new_staff_type_id'];
+                // $staffRecord is an existing entity
+                // this section of code uses InstitutionStaff afterSave logic, newFTE to save a newEntity
+                // POCOR-2907 - unsetting security_group_user_id so a new security_group_user_id can be created and used as a foreign key
+                unset($staffRecord->security_group_user_id);
 				$InstitutionStaff->save($staffRecord);
 			}
 		}

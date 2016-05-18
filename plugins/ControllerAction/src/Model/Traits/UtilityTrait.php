@@ -94,8 +94,8 @@ trait UtilityTrait {
 	public function advancedSelectOptions(&$options, &$selected, $params=[]) {
 		$callable = array_key_exists('callable', $params) ? $params['callable'] : null;
 		$message = array_key_exists('message', $params) ? $params['message'] : '';
+		$defaultValue = array_key_exists('defaultValue', $params) ? $params['defaultValue'] : null;
 		$selectOption = array_key_exists('selectOption', $params)? $params['selectOption'] : true;
-		$defaultValue = null;
 
 		// Check if the selected key is empty. If it is not empty then change the selected to null and get
 		// the first available from the list
@@ -105,7 +105,6 @@ trait UtilityTrait {
 				$selected = null;
 			}
 		}
-		
 		foreach ($options as $id => $val) {
 			if (is_array($val)) {
 				if (array_key_exists('value', $val) && array_key_exists('text', $val)) { // cake format ['value', 'text']
@@ -182,7 +181,7 @@ trait UtilityTrait {
 				}
 			}
 		}
-		if (!is_null($defaultValue)) {
+		if (!is_null($defaultValue) && (!is_bool($defaultValue) || !(is_bool($defaultValue) && !$defaultValue))) {
 			$selected = $defaultValue['selected'];
 			$group = $defaultValue['group'];
 			if ($group !== false) {

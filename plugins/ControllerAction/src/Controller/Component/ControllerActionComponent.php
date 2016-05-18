@@ -13,7 +13,8 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.1.16
+ControllerActionComponent - Current Version 3.1.19
+3.1.19 (Malcolm) - Fixed an error issue when using getFields() on tables with joint primary keys
 3.1.18 (Malcolm) - remove() - If id(to be deleted) cannot be found, return a successful deletion message
 3.1.17 (Malcolm) - buildDefaultValidation() - Added condition '&& strlen($attr['default']) == 0' when it comes to determining whether should automatically add 'notBlank' and 'requirePresence' validations
 3.1.16 (Malcolm) - renderFields() - '-- Select --' is added if ($attr['type'] != 'chosenSelect') 
@@ -121,6 +122,23 @@ class ControllerActionComponent extends Component {
         $action = $this->request->params['action'];
         $this->debug('Startup');
         if (!method_exists($controller, $action)) { // method cannot be found in controller
+            $defaultActions = $this->defaultActions;
+
+            if (!is_null($this->model)) {
+                // Trigger event to model to modify defaultActions
+                $this->debug(__METHOD__, ': Event -> ControllerAction.Model.onUpdateDefaultActions');
+                $event = new Event('ControllerAction.Model.onUpdateDefaultActions', $this);
+                $event = $this->model->eventManager()->dispatch($event);
+                if ($event->isStopped()) { return $event->result; }
+
+                if (!empty($event->result)) {
+                    $newDefaultActions = $event->result;
+                    $defaultActions = array_merge($defaultActions, $newDefaultActions);
+                }
+            }
+
+            $this->defaultActions = $defaultActions;
+
             if (in_array($action, $this->defaultActions)) { // default actions
                 $this->currentAction = $action;
                 $this->request->params['action'] = 'ComponentAction';
@@ -541,7 +559,11 @@ class ControllerActionComponent extends Component {
         if ($this->autoProcess) {
             if ($this->triggerFrom == 'Controller') {
                 if (in_array($this->currentAction, $this->defaultActions)) {
-                    $result = call_user_func_array([$this, $this->currentAction], $this->paramsPass);
+                    if (method_exists($this->model, $this->currentAction) || $this->model->behaviors()->hasMethod($this->currentAction)) {                    
+                        $result = call_user_func_array([$this->model, $this->currentAction], $this->paramsPass);
+                    } else {
+                        $result = call_user_func_array([$this, $this->currentAction], $this->paramsPass);
+                    }
                 }
             } else if ($this->triggerFrom == 'Model') {
                 if (method_exists($this->model, $this->currentAction) || $this->model->behaviors()->hasMethod($this->currentAction)) {
@@ -1601,8 +1623,18 @@ class ControllerActionComponent extends Component {
             }
             */
         }
-        
-        $fields[$model->primaryKey()]['type'] = 'hidden';
+
+        if (is_array($model->primaryKey())) {
+            if (array_key_exists('id', $fields)) {
+                $fields['id']['type'] = 'hidden';
+            }
+            foreach ($model->primaryKey() as $value) {
+                $fields[$value]['type'] = 'hidden';
+            }
+        } else {
+            $fields[$model->primaryKey()]['type'] = 'hidden';
+        }
+
         foreach ($ignoreFields as $field) {
             if (array_key_exists($field, $fields)) {
                 $fields[$field]['visible']['index'] = false;
