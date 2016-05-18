@@ -291,11 +291,6 @@ class AcademicPeriodsTable extends AppTable {
 				->find('visible')
 				->find('editable', ['isEditable' => $isEditable])
 				->contain(['Levels'])
-				->select([
-						'id' => $this->aliasField('id'),
-						'name' => $this->aliasField('name'),
-						'level' => 'Levels.name'
-					])
 				->where($where)
 				->order([$this->aliasField('academic_period_level_id'), $this->aliasField('order')])
 				->toArray();
@@ -303,10 +298,12 @@ class AcademicPeriodsTable extends AppTable {
 			$levelName = "";
 			$list = [];
 
-			foreach ($data as $obj) {
-				if ($levelName != $obj->level) {
-					$levelName = __($obj->level);
+			foreach ($data as $key => $obj) {
+
+				if ($levelName != $obj->level->name) {
+					$levelName = __($obj->level->name);
 				}
+
 				$list[$levelName][$obj->id] = __($obj->name);
 			}
 
