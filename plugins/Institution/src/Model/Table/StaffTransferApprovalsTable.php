@@ -98,27 +98,13 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 
 		if (!is_null($staffRecord)) {
 			$this->field('transfer_type');
-			$this->field('current_institution_position_id', ['before' => 'transfer_type', 'type' => 'disabled', 'attr' => ['value' => $staffRecord->position->name]]);
+			$this->field('current_institution_position_id', ['after' => 'previous_institution_id', 'type' => 'disabled', 'attr' => ['value' => $staffRecord->position->name]]);
 			$this->field('current_FTE', ['after' => 'current_institution_position_id', 'type' => 'disabled', 'attr' => ['value' => $staffRecord->FTE]]);
 			$this->field('current_staff_type', ['after' => 'current_FTE', 'type' => 'disabled', 'attr' => ['value' => $staffRecord->staff_type->name]]);
 			$this->field('current_start_date', ['after' => 'current_staff_type', 'type' => 'disabled', 'attr' => ['value' => $this->formatDate($staffRecord->start_date)]]);
-			$this->field('institution_position_id', ['type' => 'disabled', 'after' => 'current_start_date', 'attr' => ['required' => false, 'value' => $entity->position->name]]);
-			$InstitutionPositionTable = $this->Positions;
-			$staffPositionType = $InstitutionPositionTable
-				->find()
-				->where([$InstitutionPositionTable->aliasField('id') => $entity->position->id])
-				->innerJoinWith('StaffPositionTitles')
-				->select(['position_type' => 'StaffPositionTitles.type'])
-				->extract('position_type')
-				->first();
-			if ($staffPositionType) {
-				$staffPositionType = __('Teaching');
-			} else {
-				$staffPositionType = __('Non-Teaching');
-			}
-			$this->field('requested_position_type', ['type' => 'disabled', 'attr' => ['value' => $staffPositionType], 'after' => 'institution_position_id']);
+			$this->field('institution_position_id', ['type' => 'disabled', 'after' => 'institution_id', 'attr' => ['required' => false, 'value' => $entity->position->name]]);
 			$fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
-			$this->field('FTE', ['type' => 'disabled', 'after' => 'requested_position_type', 'attr' => ['value' => $fteOptions[strval($entity->FTE)], 'required' => false]]);
+			$this->field('FTE', ['type' => 'disabled', 'after' => 'institution_position_id', 'attr' => ['value' => $fteOptions[strval($entity->FTE)], 'required' => false]]);
 			$this->field('staff_type_id', ['type' => 'disabled', 'attr' => ['required' => false, 'value' => $this->StaffTypes->get($entity->staff_type_id)->name], 'after' => 'FTE']);
 			$this->field('start_date', ['type' => 'disabled', 'after' => 'staff_type_id', 'attr' => ['required' => false, 'value' => $this->formatDate($entity->start_date)]]);
 
