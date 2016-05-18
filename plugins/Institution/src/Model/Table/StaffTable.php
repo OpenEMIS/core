@@ -126,7 +126,7 @@ class StaffTable extends AppTable {
 				'rule' => ['institutionStaffId'],
 				'on' => 'create'
 			])
-			->requirePresence('position_type', 'create')
+			->requirePresence('position_type')
 		;
 	}
 
@@ -134,6 +134,12 @@ class StaffTable extends AppTable {
 		$validator = $this->validationDefault($validator);
         $validator->remove('staff_name');
         return $validator;
+	}
+
+	public function validationAllowPositionType(Validator $validator) {
+		$validator = $this->validationDefault($validator);
+		$validator->requirePresence('position_type', false);
+		return $validator;
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {

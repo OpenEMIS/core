@@ -141,7 +141,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 			unset($data['modified']);
 			unset($data['modified_user_id']);
 			unset($data['id']);
-			$newEntity = $InstitutionStaff->patchEntity($staffRecord, $data);
+			$newEntity = $InstitutionStaff->patchEntity($staffRecord, $data, ['validate' => "AllowPositionType"]);
 		}
 
 		return $newEntity;
