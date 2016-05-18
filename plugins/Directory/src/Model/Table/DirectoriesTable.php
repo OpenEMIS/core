@@ -64,11 +64,8 @@ class DirectoriesTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$userTypeOptions = [
-				self::ALL => __('All Users'),
-				self::STUDENT => __('Students'),
-				self::STAFF => __('Staff'),
-				self::GUARDIAN => __('Guardians'),
-				self::OTHER => __('Others')
+                self::STAFF => __('Staff'),
+				self::STUDENT => __('Students')
 			];
 
 		$selectedUserType = $this->queryString('user_type', $userTypeOptions);
@@ -76,32 +73,20 @@ class DirectoriesTable extends AppTable {
 		$this->controller->set(compact('userTypeOptions'));
 
 		$conditions = [];
-		if (!is_null($request->query('user_type'))) {
-			switch($request->query('user_type')) {
-				case self::ALL:
-					// Do nothing
-					break;
-				case self::STUDENT:
-					$conditions = [$this->aliasField('is_student') => 1];
-					break;
 
-				case self::STAFF:
-					$conditions = [$this->aliasField('is_staff') => 1];
-					break;
+        if ($this->AccessControl->isAdmin()) { // if user is super admin, this condition is used for filtering
+    		if (!is_null($request->query('user_type'))) {
+    			switch($request->query('user_type')) {
+    				case self::STUDENT:
+    					$conditions = [$this->aliasField('is_student') => 1];
+    					break;
 
-				case self::GUARDIAN:
-					$conditions = [$this->aliasField('is_guardian') => 1];
-					break;
-
-				case self::OTHER:
-					$conditions = [
-						$this->aliasField('is_student') => 0,
-						$this->aliasField('is_staff') => 0,
-						$this->aliasField('is_guardian') => 0
-					];
-					break;
-			}
-		}
+    				case self::STAFF:
+    					$conditions = [$this->aliasField('is_staff') => 1];
+    					break;
+    			}
+    		}
+        }
 		$notSuperAdminCondition = [
 			$this->aliasField('super_admin') => 0
 		];
@@ -121,61 +106,62 @@ class DirectoriesTable extends AppTable {
 			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
 			
 			if (!empty($institutionIds)) {
-				$InstitutionStudentTable = TableRegistry::get('Institution.Students');
+                if (!is_null($request->query('user_type'))) {
+                    switch($request->query('user_type')) {
+                        case self::STUDENT:
+                            $InstitutionStudentTable = TableRegistry::get('Institution.Students');
 
-				$institutionStudents = $InstitutionStudentTable->find()
-					->where([
-						$InstitutionStudentTable->aliasField('institution_id').' IN ('.$institutionIds.')',
-						$InstitutionStudentTable->aliasField('student_id').' = '.$this->aliasField('id')
-					])
-					->bufferResults(false);
+                            $institutionStudents = $InstitutionStudentTable->find()
+                                ->where([
+                                    $InstitutionStudentTable->aliasField('institution_id').' IN ('.$institutionIds.')',
+                                    $InstitutionStudentTable->aliasField('student_id').' = '.$this->aliasField('id')
+                                ])
+                                ->bufferResults(false);
 
-				$allInstitutionStudents = $InstitutionStudentTable->find()
-					->where([
-						$InstitutionStudentTable->aliasField('student_id').' = '.$this->aliasField('id')
-					])
-					->bufferResults(false);
+                            $allInstitutionStudents = $InstitutionStudentTable->find()
+                                ->where([
+                                    $InstitutionStudentTable->aliasField('student_id').' = '.$this->aliasField('id')
+                                ])
+                                ->bufferResults(false);
 
-				$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
+                            $query->where([
+                                'OR' => [
+                                    // floating students
+                                    ['NOT EXISTS ('.$allInstitutionStudents->sql().')', $this->aliasField('is_student') => 1],
+                                    // is a student in ->getInstitutionsByUser()
+                                    ['EXISTS ('.$institutionStudents->sql().')']
+                                ]
+                            ])
+                            ;
+                            break;
 
-				$institutionStaff = $InstitutionStaffTable->find()
-					->where([
-						$InstitutionStaffTable->aliasField('institution_id').' IN ('.$institutionIds.')',
-						$InstitutionStaffTable->aliasField('staff_id').' = '.$this->aliasField('id')
-					])
-					->bufferResults(false);
+                        case self::STAFF:
+                            $InstitutionStaffTable = TableRegistry::get('Institution.Staff');
 
-				$allInstitutionStaff = $InstitutionStaffTable->find()
-					->where([
-						$InstitutionStaffTable->aliasField('staff_id').' = '.$this->aliasField('id')
-					])
-					->bufferResults(false);
+                            $institutionStaff = $InstitutionStaffTable->find()
+                                ->where([
+                                    $InstitutionStaffTable->aliasField('institution_id').' IN ('.$institutionIds.')',
+                                    $InstitutionStaffTable->aliasField('staff_id').' = '.$this->aliasField('id')
+                                ])
+                                ->bufferResults(false);
 
-				$directoriesTableClone = clone $this;
-				$directoriesTableClone->alias('DirectoriesClone');
-
-				$guardianAndOthers = $directoriesTableClone->find()
-					->where([
-						'OR' => [
-							[$directoriesTableClone->aliasField('is_guardian').'= 1'],
-							[$directoriesTableClone->aliasField('is_student').'= 0', $directoriesTableClone->aliasField('is_guardian').'= 0', $directoriesTableClone->aliasField('is_staff').'= 0']
-						],
-						[$directoriesTableClone->aliasField('id').' = '.$this->aliasField('id')]
-					])
-					->bufferResults(false);
-
-				$userId = $this->Auth->user('id');
-
-				$query->where([
-						'OR' => [
-							['NOT EXISTS ('.$allInstitutionStudents->sql().')', $this->aliasField('is_student') => 1],
-							['NOT EXISTS ('.$allInstitutionStaff->sql().')', $this->aliasField('is_staff') => 1],
-							['EXISTS ('.$institutionStaff->sql().')'],
-							['EXISTS ('.$institutionStudents->sql().')'],
-							['EXISTS ('.$guardianAndOthers->sql().')'],
-						]
-					])
-					;
+                            $allInstitutionStaff = $InstitutionStaffTable->find()
+                                ->where([
+                                    $InstitutionStaffTable->aliasField('staff_id').' = '.$this->aliasField('id')
+                                ])
+                                ->bufferResults(false);
+                            $query->where([
+                                'OR' => [
+                                    // floating staff
+                                    ['NOT EXISTS ('.$allInstitutionStaff->sql().')', $this->aliasField('is_staff') => 1],
+                                    // is a staff in ->getInstitutionsByUser()
+                                    ['EXISTS ('.$institutionStaff->sql().')'],
+                                ]
+                            ])
+                            ;
+                            break;
+                    }
+                }
 			} else {
 				$query = $this->find()->where([$this->aliasField('id') => -1]);
 			}
