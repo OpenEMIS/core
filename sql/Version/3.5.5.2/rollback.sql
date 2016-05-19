@@ -1,3 +1,10 @@
+-- POCOR-3003
+-- No rollback code needed
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue`='POCOR-3003';
+
+
 -- POCOR-2451
 -- custom_field_types
 DELETE FROM `custom_field_types` WHERE `code` = 'REPEATER';
