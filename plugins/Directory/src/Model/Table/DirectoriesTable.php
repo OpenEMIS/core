@@ -68,6 +68,11 @@ class DirectoriesTable extends AppTable {
 				self::STUDENT => __('Students')
 			];
 
+        if ($this->AccessControl->isAdmin()) { // if user is super admin, this condition is used for filtering
+            $userTypeOptions[self::GUARDIAN] = __('Guardians');
+            $userTypeOptions[self::OTHER] = __('Others');
+        }
+
 		$selectedUserType = $this->queryString('user_type', $userTypeOptions);
 		$this->advancedSelectOptions($userTypeOptions, $selectedUserType);
 		$this->controller->set(compact('userTypeOptions'));
@@ -84,6 +89,18 @@ class DirectoriesTable extends AppTable {
     				case self::STAFF:
     					$conditions = [$this->aliasField('is_staff') => 1];
     					break;
+
+                    case self::GUARDIAN:
+                        $conditions = [$this->aliasField('is_guardian') => 1];
+                        break;
+
+                    case self::OTHER:
+                        $conditions = [
+                            $this->aliasField('is_student') => 0,
+                            $this->aliasField('is_staff') => 0,
+                            $this->aliasField('is_guardian') => 0
+                        ];
+                        break;
     			}
     		}
         }
