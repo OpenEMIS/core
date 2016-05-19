@@ -19,21 +19,11 @@ angular.module('survey.rules.svc', ['kd.orm.svc'])
             });
         },
 
-        getSurveyForm: function(surveyFormId) {
-            var forms = null;
-            if (surveyFormId != 0) {
-                forms = SurveyFormsTable
-                    .select()
-                    .where({id: surveyFormId})
-                    .ajax({defer: true})
-                    ;
-            } else {
-                forms = SurveyFormsTable
-                    .select()
-                    .ajax({defer: true})
-                    ;
-            }
-            return forms;
+        getSurveyForm: function() {
+            return SurveyFormsTable
+                .select()
+                .ajax({defer: true})
+                ;
         },
 
         getSection: function(surveyFormId) {
