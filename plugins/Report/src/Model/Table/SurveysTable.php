@@ -102,11 +102,11 @@ class SurveysTable extends AppTable  {
 				$row = [];
 				foreach ($fields as $field) {
 					if (in_array($field['field'], $mappingArray)) {
-						$row[] = $record->$field['field'];
-					} else if ($field['field'] == 'area_id') {
-						$row[] = $record->area;
-					} else if ($field['field'] == 'area_administrative_id') {
-						$row[] = $record->area_administrative;
+						$row[] = __($record->$field['field']);
+					} else if ($field['field'] == 'area') {
+						$row[] = __($record->area);
+					} else if ($field['field'] == 'area_administrative') {
+						$row[] = __($record->area_administrative);
 					} else {
 						$row[] = '';
 					}
