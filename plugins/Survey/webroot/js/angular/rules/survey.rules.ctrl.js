@@ -11,10 +11,20 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
     var filterValue = '';
     var surveyFormId = UtilsSvc.requestQuery('survey_form_id');
     vm.surveyFormId = surveyFormId;
-    
+
+    // Functions
+    vm.getSurveySection = getSurveySection;
+    vm.getQuestionsFromSection = getQuestionsFromSection;
+    vm.onChangeSection = onChangeSection;
+    vm.filterByOrderAndType = filterByOrderAndType;
+    vm.filterChoiceBySurveyQuestionId = filterChoiceBySurveyQuestionId;
+    vm.populateOptions = populateOptions;
+    vm.initEnabled = initEnabled;
+    vm.initDependentQuestion = initDependentQuestion;
+    vm.saveValue = saveValue;
+
     // Initialisation
-    angular.element(document).ready(function() 
-    {
+    angular.element(document).ready(function() {
         SurveyRulesSvc.init(angular.baseUrl);
         UtilsSvc.isAppendLoader(true);
         SurveyRulesSvc.getSurveyForm(0)
@@ -45,11 +55,9 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
         ;
     });
 
-    vm.getSurveySection = function(surveyFormId)
-    {
+    function getSurveySection(surveyFormId) {
         SurveyRulesSvc.getSection(surveyFormId)
-        .then(function(sections)
-        {
+        .then(function(sections) {
             var sectionData = sections.data;
             var options = [];
             for(i = 0; i < sectionData.length; i++) 
@@ -67,8 +75,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
         });
     }
 
-    vm.getQuestionsFromSection = function(surveyFormId, sectionName) 
-    {
+    function getQuestionsFromSection(surveyFormId, sectionName) {
         UtilsSvc.isAppendSpinner(true, 'survey-rules-table');
         SurveyRulesSvc.getQuestions(surveyFormId, sectionName)
         .then(function(response)
@@ -82,18 +89,16 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
                 var shortName = question.name;
                 var number = i + 1;
                 if (shortName.length > 30) {
-                    shortName = number + '. ' + shortName.substring(0,29)+'...';
+                    shortName = shortName.substring(0,29)+'...';
                 }
 
                 var rule = {
-                	id: null,
                 	enabled: 0,
                 	dependent_question_id: undefined,
                 	show_options: undefined
                 };
-                if (question.survey_rule_id != null) {
+                if (question.survey_rule_enabled != null) {
                     rule = {
-                    	id: question.survey_rule_id,
                         enabled: question.survey_rule_enabled,
                         dependent_question_id: question.dependent_question,
                         show_options: JSON.parse(question.show_options)
@@ -103,7 +108,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
                     no: number,
                     survey_question_id: question.survey_question_id,
                     name: question.name,
-                    short_name: shortName,
+                    short_name: number + '. ' + shortName,
                     order: question.order,
                     field_type: question.custom_field.field_type,
                     rule: rule
@@ -118,11 +123,11 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
         });
     }
 
-    vm.onChangeSection = function(sectionName) {
+    function onChangeSection(sectionName) {
         vm.getQuestionsFromSection(vm.surveyFormId, sectionName);
     }
 
-    vm.filterByOrderAndType = function(order) {
+    function filterByOrderAndType(order) {
         return function (item) {
             if (item.order < order) {
                 if (item.field_type == "DROPDOWN") {
@@ -134,7 +139,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
         }
     }
 
-    vm.filterChoiceBySurveyQuestionId = function(surveyQuestionId) {
+    function filterChoiceBySurveyQuestionId(surveyQuestionId) {
         return function (item) {
             if (surveyQuestionId == '' || surveyQuestionId == undefined) {
                 return false;
@@ -146,7 +151,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
         }
     }
 
-    vm.populateOptions = function() {
+    function populateOptions() {
         SurveyRulesSvc.getShowIfChoices(vm.surveyFormId, vm.sectionName)
         .then(function(response)
         {
@@ -154,18 +159,17 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
         });
     }
 
-    vm.initEnabled = function(question) {
+    function initEnabled(question) {
         var no = question.no;
         vm.enabled[no] = parseInt(question.rule.enabled);
     }
 
-    vm.initDependentQuestion = function(question) {
+    function initDependentQuestion(question) {
         var no = question.no;
         vm.dependentQuestion[no] = parseInt(question.rule.dependent_question_id);
     }
 
-    vm.saveValue = function() {
-    	var ruleId = vm.ruleId;
+    function saveValue() {
     	var questionIds = vm.questionId;
     	var enabled = vm.enabled;
     	var dependentQuestions = vm.dependentQuestion;
@@ -181,26 +185,13 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
         			var dependentQuestionId = dependentQuestions[key];
         			var options = JSON.stringify(dependentOptions[key]);
 
-        			var data = {};
-        			if (ruleId[key] != null) {
-        				data = {
-        					id: ruleId[key],
-	        				survey_form_id: vm.surveyFormId,
-	        				enabled: enableStatus, 
-	        				survey_question_id: surveyQuestionId, 
-	        				dependent_question_id: dependentQuestionId, 
-	        				show_options: options
-	        			};
-        			} else {
-        				data = {
-	        				survey_form_id: vm.surveyFormId,
-	        				enabled: enableStatus, 
-	        				survey_question_id: surveyQuestionId, 
-	        				dependent_question_id: dependentQuestionId, 
-	        				show_options: options
-	        			};
-        			}
-        			
+        			var data = {
+        				survey_form_id: vm.surveyFormId,
+        				enabled: enableStatus, 
+        				survey_question_id: surveyQuestionId, 
+        				dependent_question_id: dependentQuestionId, 
+        				show_options: options
+        			};
         			this.push(data);
         		}
         	}
