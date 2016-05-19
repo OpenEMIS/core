@@ -402,52 +402,36 @@ class RestSurveyComponent extends Component
         }
     }
 
-    private function uploadText($field, $entity, $extra)
+    private function processUpload($key, $extra)
     {
         $data = $extra['data'];
         $value = $extra['value'];
 
         $this->deleteFieldValue($data, $extra);
         if (strlen($value) != 0) {
-            $data['text_value'] = $value;
+            $data[$key] = $value;
             $this->saveFieldValue($data, $extra);
         }
+    }
+
+    private function uploadText($field, $entity, $extra)
+    {
+        $this->processUpload('text_value', $extra);
     }
 
     private function uploadNumber($field, $entity, $extra)
     {
-        $data = $extra['data'];
-        $value = $extra['value'];
-
-        $this->deleteFieldValue($data, $extra);
-        if (strlen($value) != 0) {
-            $data['number_value'] = $value;
-            $this->saveFieldValue($data, $extra);
-        }
+        $this->processUpload('number_value', $extra);
     }
 
     private function uploadTextarea($field, $entity, $extra)
     {
-        $data = $extra['data'];
-        $value = $extra['value'];
-
-        $this->deleteFieldValue($data, $extra);
-        if (strlen($value) != 0) {
-            $data['textarea_value'] = $value;
-            $this->saveFieldValue($data, $extra);
-        }
+        $this->processUpload('textarea_value', $extra);
     }
 
     private function uploadDropdown($field, $entity, $extra)
     {
-        $data = $extra['data'];
-        $value = $extra['value'];
-
-        $this->deleteFieldValue($data, $extra);
-        if (strlen($value) != 0) {
-            $data['number_value'] = $value;
-            $this->saveFieldValue($data, $extra);
-        }
+        $this->processUpload('number_value', $extra);
     }
 
     private function uploadCheckbox($field, $entity, $extra)
@@ -493,26 +477,12 @@ class RestSurveyComponent extends Component
 
     private function uploadDate($field, $entity, $extra)
     {
-        $data = $extra['data'];
-        $value = $extra['value'];
-
-        $this->deleteFieldValue($data, $extra);
-        if (strlen($value) != 0) {
-            $data['date_value'] = $value;
-            $this->saveFieldValue($data, $extra);
-        }
+        $this->processUpload('date_value', $extra);
     }
 
     private function uploadTime($field, $entity, $extra)
     {
-        $data = $extra['data'];
-        $value = $extra['value'];
-
-        $this->deleteFieldValue($data, $extra);
-        if (strlen($value) != 0) {
-            $data['time_value'] = $value;
-            $this->saveFieldValue($data, $extra);
-        }
+        $this->processUpload('time_value', $extra);
     }
 
     private function uploadCoordinates($field, $entity, $extra)
@@ -533,18 +503,6 @@ class RestSurveyComponent extends Component
             } else {
                 $this->log('COORDINATES type answer is invalid', 'debug');
             }
-        }
-    }
-
-    private function _uploadText($field, $entity, $extra)
-    {
-        $data = $extra['data'];
-        $value = $extra['value'];
-
-        $this->deleteFieldValue($data, $extra);
-        if (strlen($value) != 0) {
-            $data['text_value'] = $value;
-            $this->saveFieldValue($data, $extra);
         }
     }
 
@@ -770,22 +728,26 @@ class RestSurveyComponent extends Component
 
     private function text($field, $parentNode, $instanceId, $extra)
     {
-        $this->setBodyNode($field, $parentNode, $instanceId, 'input', $extra);
-        $this->setBindNode($extra['model'], $instanceId, $extra['references'], ['type' => 'string', 'required' => $field->default_is_mandatory]);
+        $extra['tagName'] = 'input';
+        $extra['bindType'] = 'string';
+
+        $this->setCommonNode($field, $parentNode, $instanceId, $extra);
     }
 
     private function number($field, $parentNode, $instanceId, $extra)
     {
-        $this->setBodyNode($field, $parentNode, $instanceId, 'input', $extra);
-        $this->setBindNode($extra['model'], $instanceId, $extra['references'], ['type' => 'integer', 'required' => $field->default_is_mandatory]);
+        $extra['tagName'] = 'input';
+        $extra['bindType'] = 'integer';
+
+        $this->setCommonNode($field, $parentNode, $instanceId, $extra);
     }
 
     private function textarea($field, $parentNode, $instanceId, $extra)
     {
-        $extra['references'] = [$this->Form->alias(), $this->Field->alias()."[".$extra['index']."]"];
+        $extra['tagName'] = 'textarea';
+        $extra['bindType'] = 'string';
 
-        $this->setBodyNode($field, $parentNode, $instanceId, 'textarea', $extra);
-        $this->setBindNode($extra['model'], $instanceId, $extra['references'], ['type' => 'string', 'required' => $field->default_is_mandatory]);
+        $this->setCommonNode($field, $parentNode, $instanceId, $extra);
     }
 
     private function dropdown($field, $parentNode, $instanceId, $extra)
@@ -914,26 +876,34 @@ class RestSurveyComponent extends Component
 
     private function date($field, $parentNode, $instanceId, $extra)
     {
-        $this->setBodyNode($field, $parentNode, $instanceId, 'input', $extra);
-        $this->setBindNode($extra['model'], $instanceId, $extra['references'], ['type' => 'date', 'required' => $field->default_is_mandatory]);
+        $extra['tagName'] = 'input';
+        $extra['bindType'] = 'date';
+
+        $this->setCommonNode($field, $parentNode, $instanceId, $extra);
     }
 
     private function time($field, $parentNode, $instanceId, $extra)
     {
-        $this->setBodyNode($field, $parentNode, $instanceId, 'input', $extra);
-        $this->setBindNode($extra['model'], $instanceId, $extra['references'], ['type' => 'time', 'required' => $field->default_is_mandatory]);
+        $extra['tagName'] = 'input';
+        $extra['bindType'] = 'time';
+
+        $this->setCommonNode($field, $parentNode, $instanceId, $extra);
     }
 
     private function coordinates($field, $parentNode, $instanceId, $extra)
     {
-        $this->setBodyNode($field, $parentNode, $instanceId, 'input', $extra);
-        $this->setBindNode($extra['model'], $instanceId, $extra['references'], ['type' => 'geopoint', 'required' => $field->default_is_mandatory]);
+        $extra['tagName'] = 'input';
+        $extra['bindType'] = 'geopoint';
+
+        $this->setCommonNode($field, $parentNode, $instanceId, $extra);
     }
 
     private function file($field, $parentNode, $instanceId, $extra)
     {
-        $this->setBodyNode($field, $parentNode, $instanceId, 'upload', $extra);
-        $this->setBindNode($extra['model'], $instanceId, $extra['references'], ['type' => 'file', 'required' => $field->default_is_mandatory]);
+        $extra['tagName'] = 'upload';
+        $extra['bindType'] = 'file';
+
+        $this->setCommonNode($field, $parentNode, $instanceId, $extra);
     }
 
     private function repeater($field, $parentNode, $instanceId, $extra)
@@ -978,6 +948,15 @@ class RestSurveyComponent extends Component
             $this->log('Repeater Survey Form ID is not configured.', 'debug');
         }
         // End
+    }
+
+    private function setCommonNode($field, $parentNode, $instanceId, $extra)
+    {
+        $tagName = array_key_exists('tagName', $extra) ? $extra['tagName'] : 'input';
+        $bindType = array_key_exists('bindType', $extra) ? $extra['bindType'] : 'string';
+
+        $this->setBodyNode($field, $parentNode, $instanceId, $tagName, $extra);
+        $this->setBindNode($extra['model'], $instanceId, $extra['references'], ['type' => $bindType, 'required' => $field->default_is_mandatory]);
     }
 
     private function setBodyNode($field, $parentNode, $instanceId, $fieldType, $extra)
