@@ -3,7 +3,7 @@ INSERT INTO `db_patches` (`issue`, `created`) VALUES('POCOR-2451', NOW());
 
 -- custom_field_types
 INSERT INTO `custom_field_types` (`code`, `name`, `value`, `description`, `format`, `is_mandatory`, `is_unique`, `visible`) VALUES
-('REPEATER', 'Repeater', 'text_value', '', 'OpenEMIS', 0, 0, 1);
+('REPEATER', 'Repeater', 'text_value', '', 'OpenEMIS_Institution', 0, 0, 1);
 
 -- custom_modules
 UPDATE `custom_modules` SET `supported_field_types` = CONCAT(`supported_field_types`, ',REPEATER') WHERE `model` = 'Institution.Institutions';
