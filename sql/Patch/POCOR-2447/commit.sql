@@ -14,5 +14,5 @@ CREATE TABLE `survey_rules` (
   `modified_user_id` INT NULL COMMENT '',
   `created` DATETIME NOT NULL COMMENT '',
   `created_user_id` INT NOT NULL COMMENT '',
-  PRIMARY KEY (`survey_form_id`, `survey_question_id`, `dependent_question_id`)
+  PRIMARY KEY (`survey_form_id`, `survey_question_id`)
 );

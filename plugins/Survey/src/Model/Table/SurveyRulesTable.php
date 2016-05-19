@@ -28,6 +28,11 @@ class SurveyRulesTable extends ControllerActionTable
         $this->toggle('add', false);
     }
 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
+    {
+        $entity->id = Text::uuid();
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra) 
     {
         $toolbarButtons = $extra['toolbarButtons'];
@@ -41,6 +46,10 @@ class SurveyRulesTable extends ControllerActionTable
             'title' => __('Edit')
         ];
         $extra['elements']['controls'] = ['name' => 'Survey.survey_rules_controls', 'data' => [], 'options' => [], 'order' => 2];
+
+        if (!$this->request->query('survey_form_id')) {
+            $this->field('survey_form_id', ['visible' => true]);
+        }
     }
 
     public function onGetShowOptions(Event $event, Entity $entity) 
