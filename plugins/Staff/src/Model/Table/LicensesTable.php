@@ -1,13 +1,14 @@
 <?php
 namespace Staff\Model\Table;
 
+use ArrayObject;
 use Cake\ORM\TableRegistry;
-use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\Database\ValueBinder;
+use App\Model\Table\ControllerActionTable;
 
-class LicensesTable extends AppTable {
+class LicensesTable extends ControllerActionTable {
 	public function initialize(array $config) {
 		$this->table('staff_licenses');
 		parent::initialize($config);
@@ -80,7 +81,8 @@ class LicensesTable extends AppTable {
 		$this->controller->set('selectedAction', $this->alias());
 	}
 
-	public function afterAction(Event $event) {
+	public function afterAction(Event $event, ArrayObject $extra) {
+		$this->setFieldOrder(['license_type_id', 'license_number', 'issue_date', 'expiry_date', 'issuer']);
 		$this->setupTabElements();
 	}
 }
