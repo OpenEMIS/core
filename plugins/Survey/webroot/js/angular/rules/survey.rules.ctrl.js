@@ -16,7 +16,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
     angular.element(document).ready(function() 
     {
         SurveyRulesSvc.init(angular.baseUrl);
-        UtilsSvc.isAppendSpinner(true, 'survey-rules-table');
+        UtilsSvc.isAppendLoader(true);
         SurveyRulesSvc.getSurveyForm(0)
         .then(function(response) 
         {
@@ -28,20 +28,19 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
             }
             
             vm.surveyFormOptions = options;
-            if (surveyFormId != undefined) {
+            if (!isNaN(surveyFormId) && surveyFormId !=0) {
                 vm.surveyFormId = surveyFormId; 
             } else {
-                vm.surveyFormId = options[0].value; 
+                vm.surveyFormId = options[0].value;
             }
-            vm.getSurveySection(surveyFormId);
+            vm.getSurveySection(vm.surveyFormId);
         }, function(error) 
         {
             console.log(error);
             AlertSvc.warning(vm, error);
-            UtilsSvc.isAppendSpinner(false, 'survey-rules-table');
         })
-        .finally(function() {
-            UtilsSvc.isAppendSpinner(false, 'survey-rules-table');
+        .finally(function(){
+            UtilsSvc.isAppendLoader(false);
         })
         ;
     });
@@ -70,7 +69,8 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
 
     vm.getQuestionsFromSection = function(surveyFormId, sectionName) 
     {
-        SurveyRulesSvc.getQuestions(surveyFormId, vm.sectionName)
+        UtilsSvc.isAppendSpinner(true, 'survey-rules-table');
+        SurveyRulesSvc.getQuestions(surveyFormId, sectionName)
         .then(function(response)
         {   
             var surveyQuestions = [];
@@ -109,13 +109,17 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
                     rule: rule
                 };
             }
-            // console.log(surveyQuestions);
             vm.surveyQuestions = surveyQuestions;
+        }, function(error) {
+            console.log(error);
+        })
+        .finally(function(){
+            UtilsSvc.isAppendSpinner(false, 'survey-rules-table');
         });
     }
 
     vm.onChangeSection = function(sectionName) {
-        vm.getQuestionsFromSection(surveyFormId, sectionName);
+        vm.getQuestionsFromSection(vm.surveyFormId, sectionName);
     }
 
     vm.filterByOrderAndType = function(order) {

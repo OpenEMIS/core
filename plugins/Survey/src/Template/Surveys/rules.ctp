@@ -1,6 +1,8 @@
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
 <?= $this->Html->script('Survey.angular/rules/survey.rules.svc', ['block' => true]); ?>
 <?= $this->Html->script('Survey.angular/rules/survey.rules.ctrl', ['block' => true]); ?>
+<?= $this->Html->css('ControllerAction.../plugins/chosen/css/chosen.min', ['block' => true]); ?>
+<?= $this->Html->script('ControllerAction.../plugins/chosen/js/chosen.jquery.min', ['block' => true]); ?>
 
 <?php
 $this->extend('OpenEmis./Layout/Panel');
@@ -40,11 +42,12 @@ $institutionId = $session->read('Institution.Institutions.id');
 					</select>
 				</div>
 			</div>
+				<div class="table-wrapper" id="survey-rules-table">
 				<form method="post" accept-charset="utf-8" id="content-main-form" novalidate="novalidate" action="/openemis-phpoe/Surveys/Forms?module=1" class="ng-pristine ng-valid"><div style="display:none;"><input type="hidden" name="_method" value="POST"></div>
 					<div class="table-wrapper">
 						<div class="table-responsive">
 							
-							<table class="table table-curved table-sortable table-checkable" id="survey-rules-table">
+							<table class="table table-curved table-sortable table-checkable" >
 								<thead>
 									<tr>
 										<th><?= __('Enable')?></th>
@@ -65,12 +68,16 @@ $institutionId = $session->read('Institution.Institutions.id');
 											type="hidden" 
 											ng-init="SurveyRulesController.ruleId[question.no] = question.rule.id"
 											ng-model="SurveyRulesController.ruleId[question.no]"/>
-										<input 
-											type="checkbox" 
-											ng-true-value="1" 
-											ng-false-value="0" 
-											ng-model="SurveyRulesController.enabled[question.no]" 
-											ng-init="SurveyRulesController.enabled[question.no] = 0; SurveyRulesController.initEnabled(question);"></td>
+											<div class="input">
+												<input 
+													class="icheck-input" 
+													type="checkbox"
+													ng-true-value="1" 
+													ng-false-value="0" 
+													ng-model="SurveyRulesController.enabled[question.no]" 
+													ng-init="SurveyRulesController.enabled[question.no] = 0; SurveyRulesController.initEnabled(question);">
+											</div>
+										</td>
 										<td>
 											<div class="input-select-wrapper">
 												<select 
@@ -101,6 +108,7 @@ $institutionId = $session->read('Institution.Institutions.id');
 						</div>
 					</div>
 				</form>
+			</div>
 		</div>
 	</form>
 

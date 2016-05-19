@@ -92,19 +92,25 @@ class SurveyRulesTable extends ControllerActionTable
             $this->controller->set(compact('sectionOptions'));
         }
 
-        // Checking if the survey form id and the section id is 0 or empty
-        if (!empty($surveyFormId) && !empty($sectionId)) 
-        {
-            $section = $sectionOptions[$sectionId]['text'];
+        if (!empty($surveyFormId)) {
 
-            // Subquery for questions
-            $questionIds = $SurveyFormsQuestionsTable
-                ->find()
-                ->select([$SurveyFormsQuestionsTable->aliasField('survey_question_id')])
-                ->where([
-                    $SurveyFormsQuestionsTable->aliasField('section') => $section
-                ]);
-            $query->where([$this->aliasField('survey_question_id').' IN ' => $questionIds]);
+            $query->where([$this->aliasField('survey_form_id') => $surveyFormId]);
+            
+            // Checking if the survey form id and the section id is 0 or empty
+            if (!empty($sectionId)) 
+            {
+                $section = $sectionOptions[$sectionId]['text'];
+
+                // Subquery for questions
+                $questionIds = $SurveyFormsQuestionsTable
+                    ->find()
+                    ->select([$SurveyFormsQuestionsTable->aliasField('survey_question_id')])
+                    ->where([
+                        $SurveyFormsQuestionsTable->aliasField('survey_form_id') => $surveyFormId,
+                        $SurveyFormsQuestionsTable->aliasField('section') => $section
+                    ]);
+                $query->where([$this->aliasField('survey_question_id').' IN ' => $questionIds]);
+            }
         }
     }
 }
