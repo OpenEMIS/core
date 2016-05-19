@@ -218,4 +218,11 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 
 		return $grade->programme_grade_name;
 	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+    	$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+    	unset($buttons['edit']);//remove edit action from the action button
+    	unset($buttons['remove']);// remove delete action from the action button
+    	return $buttons;
+    }
 }
