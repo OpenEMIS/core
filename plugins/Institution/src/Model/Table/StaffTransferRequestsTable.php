@@ -276,8 +276,10 @@ class StaffTransferRequestsTable extends StaffTransfer {
 		unset($staffDetail['id']);
 		unset($staffDetail['previous_institution_id']);
 		unset($staffDetail['comment']);
+        $staffDetail['staff_status_id'] = $staffDetail['status'];
+        unset($staffDetail['status']);
 		$StaffTable = TableRegistry::get('Institution.Staff');
-		$newStaffEntity = $StaffTable->newEntity($staffDetail);
+		$newStaffEntity = $StaffTable->newEntity($staffDetail, ['validate' => "AllowPositionType"]);
 		if ($newStaffEntity->errors()) {
 			$message = [];
 			$errors = $newStaffEntity->errors();

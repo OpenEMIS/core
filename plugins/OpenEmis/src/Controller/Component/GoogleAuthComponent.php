@@ -103,12 +103,15 @@ class GoogleAuthComponent extends Component {
         		return;
         	}
             $this->session->write('Google.accessToken', $client->getAccessToken());
-            if ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443) {
-                $redirect = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']; 
-            } else {
-                $redirect = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
-            }
-            $this->controller->redirect($redirect);
+
+            // Zack: To revisit this part
+
+            // if ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443) {
+            //     $redirect = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']; 
+            // } else {
+            //     $redirect = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
+            // }
+            // $this->controller->redirect($redirect);
         }
 
         /************************************************************************************************
