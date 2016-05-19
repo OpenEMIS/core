@@ -269,6 +269,7 @@ class RestSurveyComponent extends Component
 
                 $formData = [];
                 $formData = [
+                    'status_id' => 0,
                     $this->formKey => $formId,
                     'institution_id' => $institutionId,
                     'academic_period_id' => $periodId,
@@ -288,7 +289,9 @@ class RestSurveyComponent extends Component
                     ->all();
 
                 if (!$recordResults->isEmpty()) {
-                    $formData['id'] = $recordResults->first()->id;
+                    $record = $recordResults->first();
+                    $formData['id'] = $record->id;
+                    $formData['status_id'] = $record->status_id;
                 }
                 // End
 
@@ -329,11 +332,19 @@ class RestSurveyComponent extends Component
                                     $responseData = [
                                         $this->recordKey => $recordId,
                                         $this->fieldKey => $fieldId,
-                                        'institution_id' => $institutionId,
                                         'created_user_id' => $createdUserId
                                     ];
 
-                                    $this->$fieldTypeFunction($field, $responseData, $responseValue);
+                                    $extra = new ArrayObject([]);
+                                    $extra['model'] = $this->FieldValue;
+                                    $extra['cellModel'] = $this->TableCell;
+                                    $extra['data'] = $responseData;
+                                    $extra['value'] = $responseValue;
+                                    $extra['recordKey'] = $this->recordKey;
+                                    $extra['formKey'] = $this->formKey;
+                                    $extra['fieldKey'] = $this->fieldKey;
+
+                                    $this->$fieldTypeFunction($field, $entity, $extra);
                                 }
                             }
                         }
@@ -347,90 +358,119 @@ class RestSurveyComponent extends Component
         }
     }
 
-    private function deleteFieldValue($data)
+    private function deleteFieldValue($data, $extra)
     {
-        $this->FieldValue->deleteAll([
-            $this->FieldValue->aliasField($this->recordKey) => $data[$this->recordKey],
-            $this->FieldValue->aliasField($this->fieldKey) => $data[$this->fieldKey]
+        $model = $extra['model'];
+        $recordKey = $extra['recordKey'];
+        $fieldKey = $extra['fieldKey'];
+
+        $model->deleteAll([
+            $model->aliasField($recordKey) => $data[$recordKey],
+            $model->aliasField($fieldKey) => $data[$fieldKey]
         ]);
     }
 
-    private function saveFieldValue($answerData)
+    private function saveFieldValue($answerData, $extra)
     {
-        $answerEntity = $this->FieldValue->newEntity($answerData);
-        if (!$this->FieldValue->save($answerEntity)) {
+        $model = $extra['model'];
+
+        $answerEntity = $model->newEntity($answerData);
+        if (!$model->save($answerEntity)) {
             $this->log($answerEntity->errors(), 'debug');
         }
     }
 
-    private function deleteTableCell($data)
+    private function deleteTableCell($data, $extra)
     {
-        $this->TableCell->deleteAll([
-            $this->TableCell->aliasField($this->recordKey) => $data[$this->recordKey],
-            $this->TableCell->aliasField($this->fieldKey) => $data[$this->fieldKey]
+        $cellModel = $extra['cellModel'];
+        $recordKey = $extra['recordKey'];
+        $fieldKey = $extra['fieldKey'];
+
+        $cellModel->deleteAll([
+            $cellModel->aliasField($recordKey) => $data[$recordKey],
+            $cellModel->aliasField($fieldKey) => $data[$fieldKey]
         ]);
     }
 
-    private function saveTableCell($cellData)
+    private function saveTableCell($cellData, $extra)
     {
-        $cellEntity = $this->TableCell->newEntity($cellData);
-        if (!$this->TableCell->save($cellEntity)) {
+        $cellModel = $extra['cellModel'];
+
+        $cellEntity = $cellModel->newEntity($cellData);
+        if (!$cellModel->save($cellEntity)) {
             $this->log($cellEntity->errors(), 'debug');
         }
     }
 
-    private function uploadText($field, $data, $value)
+    private function uploadText($field, $entity, $extra)
     {
-        $this->deleteFieldValue($data);
+        $data = $extra['data'];
+        $value = $extra['value'];
+
+        $this->deleteFieldValue($data, $extra);
         if (strlen($value) != 0) {
             $data['text_value'] = $value;
-            $this->saveFieldValue($data);
+            $this->saveFieldValue($data, $extra);
         }
     }
 
-    private function uploadNumber($field, $data, $value)
+    private function uploadNumber($field, $entity, $extra)
     {
-        $this->deleteFieldValue($data);
+        $data = $extra['data'];
+        $value = $extra['value'];
+
+        $this->deleteFieldValue($data, $extra);
         if (strlen($value) != 0) {
             $data['number_value'] = $value;
-            $this->saveFieldValue($data);
+            $this->saveFieldValue($data, $extra);
         }
     }
 
-    private function uploadTextarea($field, $data, $value)
+    private function uploadTextarea($field, $entity, $extra)
     {
-        $this->deleteFieldValue($data);
+        $data = $extra['data'];
+        $value = $extra['value'];
+
+        $this->deleteFieldValue($data, $extra);
         if (strlen($value) != 0) {
             $data['textarea_value'] = $value;
-            $this->saveFieldValue($data);
+            $this->saveFieldValue($data, $extra);
         }
     }
 
-    private function uploadDropdown($field, $data, $value)
+    private function uploadDropdown($field, $entity, $extra)
     {
-        $this->deleteFieldValue($data);
+        $data = $extra['data'];
+        $value = $extra['value'];
+
+        $this->deleteFieldValue($data, $extra);
         if (strlen($value) != 0) {
             $data['number_value'] = $value;
-            $this->saveFieldValue($data);
+            $this->saveFieldValue($data, $extra);
         }
     }
 
-    private function uploadCheckbox($field, $data, $value)
+    private function uploadCheckbox($field, $entity, $extra)
     {
-        $this->deleteFieldValue($data);
+        $data = $extra['data'];
+        $value = $extra['value'];
+
+        $this->deleteFieldValue($data, $extra);
         if (strlen($value) != 0) {
             $checkboxValues = explode(" ", $value);
             foreach ($checkboxValues as $checkboxKey => $checkboxValue) {
                 $data['number_value'] = $checkboxValue;
-                $this->saveFieldValue($data);
+                $this->saveFieldValue($data, $extra);
             }
         }
     }
 
-    private function uploadTable($field, $data, $value)
+    private function uploadTable($field, $entity, $extra)
     {
-        $this->deleteTableCell($data);
+        $data = $extra['data'];
+        $value = $extra['value'];
 
+        $this->deleteTableCell($data, $extra);
         foreach ($field->children() as $row => $rowObj) {
             $rowId = $rowObj->attributes()->id->__toString();
             foreach ($rowObj->children() as $col => $colObj) {
@@ -444,34 +484,43 @@ class RestSurveyComponent extends Component
                             'text_value' => $cellValue
                         ]);
 
-                        $this->saveTableCell($cellData);
+                        $this->saveTableCell($cellData, $extra);
                     }
                 }
             }
         }
     }
 
-    private function uploadDate($field, $data, $value)
+    private function uploadDate($field, $entity, $extra)
     {
-        $this->deleteFieldValue($data);
+        $data = $extra['data'];
+        $value = $extra['value'];
+
+        $this->deleteFieldValue($data, $extra);
         if (strlen($value) != 0) {
             $data['date_value'] = $value;
-            $this->saveFieldValue($data);
+            $this->saveFieldValue($data, $extra);
         }
     }
 
-    private function uploadTime($field, $data, $value)
+    private function uploadTime($field, $entity, $extra)
     {
-        $this->deleteFieldValue($data);
+        $data = $extra['data'];
+        $value = $extra['value'];
+
+        $this->deleteFieldValue($data, $extra);
         if (strlen($value) != 0) {
             $data['time_value'] = $value;
-            $this->saveFieldValue($data);
+            $this->saveFieldValue($data, $extra);
         }
     }
 
-    private function uploadCoordinates($field, $data, $value)
+    private function uploadCoordinates($field, $entity, $extra)
     {
-        $this->deleteFieldValue($data);
+        $data = $extra['data'];
+        $value = $extra['value'];
+
+        $this->deleteFieldValue($data, $extra);
         if (strlen($value) != 0) {
             if (count(explode(" ", $value)) == 2) {
                 list($latitudeValue, $longitudeValue) = explode(" ", $value, 2);
@@ -480,16 +529,31 @@ class RestSurveyComponent extends Component
                     'longitude' => $longitudeValue
                 ]);
                 $data['text_value'] = $json;
-                $this->saveFieldValue($data);
+                $this->saveFieldValue($data, $extra);
             } else {
                 $this->log('COORDINATES type answer is invalid', 'debug');
             }
         }
     }
 
-    private function uploadFile($field, $data, $value)
+    private function _uploadText($field, $entity, $extra)
     {
-        $this->deleteFieldValue($data);
+        $data = $extra['data'];
+        $value = $extra['value'];
+
+        $this->deleteFieldValue($data, $extra);
+        if (strlen($value) != 0) {
+            $data['text_value'] = $value;
+            $this->saveFieldValue($data, $extra);
+        }
+    }
+
+    private function uploadFile($field, $entity, $extra)
+    {
+        $data = $extra['data'];
+        $value = $extra['value'];
+
+        $this->deleteFieldValue($data, $extra);
         if (strlen($value) != 0) {
             // expected format received from mobile
             // filename.jpg|data:image/jpg;base64,urlencode( base64_encode( file_get_contents( $filepath) ) )
@@ -499,10 +563,82 @@ class RestSurveyComponent extends Component
             $decoded = base64_decode($encoded);
 
             $answerData = array_merge($data, [
-                'text_value' => $fileName,
-                'file' => $decoded  // fileContent
+                'text_value' => $fileName,  // File Name
+                'file' => $decoded  // File Content
             ]);
-            $this->saveFieldValue($answerData);
+            $this->saveFieldValue($answerData, $extra);
+        }
+    }
+
+    private function uploadRepeater($field, $entity, $extra)
+    {
+        $RepeaterSurveys = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
+        $RepeaterSurveyAnswers = TableRegistry::get('InstitutionRepeater.RepeaterSurveyAnswers');
+        $RepeaterSurveyTableCells = TableRegistry::get('InstitutionRepeater.RepeaterSurveyTableCells');
+        $repeaterRecordKey = 'institution_repeater_survey_id';
+        
+        $data = $extra['data'];
+        $value = $extra['value'];
+        $recordKey = $extra['recordKey'];
+        $formKey = $extra['formKey'];
+        $fieldKey = $extra['fieldKey'];
+
+        $formId = null;
+        $fieldId = $data[$fieldKey];
+        // Get Survey Form ID
+        $fieldEntity = $this->Field->get($fieldId);
+        if ($fieldEntity->has('params') && !empty($fieldEntity->params)) {
+            $params = json_decode($fieldEntity->params, true);
+            if (array_key_exists($formKey, $params)) {
+                $formId = $params[$formKey];
+            }
+        }
+        // End
+
+        if (!is_null($formId)) {
+            foreach ($field->children() as $repeater => $repeaterObj) {
+                // $repeaterId = $repeaterObj->attributes()->id->__toString();
+                $repeaterData = [
+                    'status_id' => $entity->status_id,
+                    'institution_id' => $entity->institution_id,
+                    'repeater_id' => Text::uuid(),
+                    'academic_period_id' => $entity->academic_period_id,
+                    $formKey => $formId,
+                    'parent_form_id' => $entity->survey_form_id
+                ];
+
+                $repeaterEntity = $RepeaterSurveys->newEntity($repeaterData);
+                if ($RepeaterSurveys->save($repeaterEntity)) {
+                    foreach ($repeaterObj->children() as $field => $fieldObj) {
+                        $fieldId = $fieldObj->attributes()->id->__toString();
+                        $fieldType = $this->Field->get($fieldId)->field_type;
+                        $responseValue = urldecode($fieldObj->__toString());
+
+                        $fieldTypeFunction = "upload" . Inflector::camelize(strtolower($fieldType));
+                        if (method_exists($this, $fieldTypeFunction)) {
+                            $responseData = [
+                                $repeaterRecordKey => $repeaterEntity->id,
+                                $this->fieldKey => $fieldId
+                            ];
+
+                            $extra = new ArrayObject([]);
+                            $extra['model'] = $RepeaterSurveyAnswers;
+                            $extra['cellmodel'] = $RepeaterSurveyTableCells;
+                            $extra['data'] = $responseData;
+                            $extra['value'] = $responseValue;
+                            $extra['recordKey'] = $repeaterRecordKey;
+                            $extra['formKey'] = $formKey;
+                            $extra['fieldKey'] = $fieldKey;
+
+                            $this->$fieldTypeFunction($field, $entity, $extra);
+                        }
+                    }
+                } else {
+                    $this->log($repeaterEntity->errors(), 'debug');
+                }
+            }
+        } else {
+            $this->log('Missing Survey Form ID id Repeater Type question #' . $fieldId, 'debug');
         }
     }
 

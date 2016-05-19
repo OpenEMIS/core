@@ -1,6 +1,5 @@
 <?php
 	$fieldPrefix = $ControllerAction['table']->alias() . '.institution_repeater_surveys.' . $attr['customField']->id;
-	// $classOptions = isset($attr['attr']['classOptions']) ? $attr['attr']['classOptions'] : [];
 	$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
 	$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
 ?>
@@ -32,25 +31,6 @@
 		// Survey Question Id
 		$url['field_id'] = $fieldId;
 		// End
-		/*
-		$baseUrl = $this->Url->build($url);
-		$template = $this->ControllerAction->getFormTemplate();
-		$this->Form->templates($template);
-
-		$inputOptions = [
-			'class' => 'form-control',
-			'label' => false,
-			'options' => $classOptions,
-			'url' => $baseUrl,
-			'data-named-key' => 'class_id',
-			'escape' => false
-		];
-		if (!empty($dataNamedGroup)) {
-			$inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
-			$dataNamedGroup[] = 'class_id';
-		}
-		echo $this->Form->input('institution_class', $inputOptions);
-		*/
 	?>
 
 	<div class="clearfix"></div>
