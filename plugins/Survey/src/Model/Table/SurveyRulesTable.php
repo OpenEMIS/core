@@ -24,10 +24,22 @@ class SurveyRulesTable extends ControllerActionTable
         $this->belongsTo('SurveyForms',                     ['className' => 'Survey.SurveyForms', 'foreignKey' => 'survey_form_id']);
         $this->belongsTo('SurveyQuestions',                 ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id']);
         $this->belongsTo('DependentQuestions',              ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'dependent_question_id']);
+        $this->toggle('view', false);
+        $this->toggle('add', false);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) 
     {
+        $toolbarButtons = $extra['toolbarButtons'];
+        $toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
+        $toolbarButtons['edit']['url'] = $this->url('edit');
+        $toolbarButtons['edit']['attr'] = [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false,
+            'title' => __('Edit')
+        ];
         $extra['elements']['controls'] = ['name' => 'Survey.survey_rules_controls', 'data' => [], 'options' => [], 'order' => 2];
     }
 
@@ -45,7 +57,18 @@ class SurveyRulesTable extends ControllerActionTable
                 ->extract('name')
                 ->toList(); 
             return implode('<br />', $options);
+        } else {
+            return ' ';
         }
+    }
+
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) 
+    {
+        $buttons = parent::onUpdateActionButtons($event,$entity,$buttons);
+        if (isset($buttons['edit'])) {
+            $buttons['edit']['url']['survey_form_id'] = $entity->survey_form_id;
+        }
+        return $buttons;
     }
 
     public function onGetEnabled(Event $event, Entity $entity)
