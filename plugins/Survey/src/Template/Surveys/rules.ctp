@@ -3,6 +3,8 @@
 <?= $this->Html->script('Survey.angular/rules/survey.rules.ctrl', ['block' => true]); ?>
 <?= $this->Html->css('ControllerAction.../plugins/chosen/css/chosen.min', ['block' => true]); ?>
 <?= $this->Html->script('ControllerAction.../plugins/chosen/js/chosen.jquery.min', ['block' => true]); ?>
+<?= $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', ['block' => true]); ?>
+
 
 <?php
 $this->extend('OpenEmis./Layout/Panel');
@@ -91,8 +93,9 @@ $institutionId = $session->read('Institution.Institutions.id');
 										</td>
 										<td>
 											<div class="input select">
-												<select
+												<select chosen
 													multiple="multiple" 
+													data-placeholder="<?=__('Select Question Options') ?>"
 													class="chosen-select" 
 													options="SurveyRulesController.questionOptions" 
 													ng-model="SurveyRulesController.dependentOptions[question.no]" 

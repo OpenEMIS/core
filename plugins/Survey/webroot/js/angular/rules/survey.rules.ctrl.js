@@ -1,5 +1,5 @@
 angular
-    .module('survey.rules.ctrl', ['utils.svc', 'alert.svc', 'survey.rules.svc'])
+    .module('survey.rules.ctrl', ['utils.svc', 'alert.svc', 'survey.rules.svc', 'angular.chosen'])
     .controller('SurveyRulesCtrl', SurveyRulesController);
 
 SurveyRulesController.$inject = ['$scope', '$anchorScroll', '$location', '$filter', '$q', 'UtilsSvc', 'AlertSvc', 'SurveyRulesSvc'];
