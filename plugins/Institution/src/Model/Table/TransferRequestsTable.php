@@ -440,7 +440,8 @@ class TransferRequestsTable extends AppTable {
 						]
 					]
 				])
-				->where([$this->Institutions->aliasField('id <>') => $institutionId]);
+				->where([$this->Institutions->aliasField('id <>') => $institutionId])
+				->order([$this->Institutions->aliasField('code')]);
 
 
 			$attr['type'] = 'select';
