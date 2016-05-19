@@ -11,10 +11,6 @@ $this->extend('OpenEmis./Layout/Panel');
 $this->start('toolbar');
 ?>	
 	<div id="anchorTop"></div>
-	<button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Add');?>" ng-show="action == 'index'" ng-click="SurveyRulesController.onAddClick()">
-		<i class="fa kd-add"></i>
-	</button>
-
 <?php
 $this->end();
 $this->start('panelBody');
@@ -66,10 +62,6 @@ $institutionId = $session->read('Institution.Institutions.id');
 											type="hidden" 
 											ng-init="SurveyRulesController.questionId[question.no] = question.survey_question_id"
 											ng-model="SurveyRulesController.questionId[question.no]" />
-										<input 
-											type="hidden" 
-											ng-init="SurveyRulesController.ruleId[question.no] = question.rule.id"
-											ng-model="SurveyRulesController.ruleId[question.no]"/>
 											<div class="input">
 												<input 
 													class="icheck-input" 

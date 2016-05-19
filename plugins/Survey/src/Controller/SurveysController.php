@@ -57,9 +57,9 @@ class SurveysController extends AppController
 	public function Rules() {
 		$pass = isset($this->request->pass[0]) ? $this->request->pass[0] : 'index';
 		
-		if ($pass == 'index') {
+		if ($pass != 'edit') {
 			$this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Survey.SurveyRules']);
-		} elseif ($pass == 'edit' || $pass == 'add') {
+		} else {
 			$this->set('ngController', 'SurveyRulesCtrl as SurveyRulesController');
 		}
 		
@@ -71,7 +71,7 @@ class SurveysController extends AppController
 		// pr($action);
 		switch ($action) {
 			case 'Rules':
-				if ($pass != 'index') {
+				if ($pass == 'edit') {
 					$this->Angular->addModules([
 						'alert.svc',
 						'survey.rules.ctrl',

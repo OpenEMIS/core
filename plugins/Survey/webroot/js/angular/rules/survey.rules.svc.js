@@ -1,5 +1,10 @@
-angular.module('survey.rules.svc', ['kd.orm.svc'])
-.service('SurveyRulesSvc', function($http, $q, $filter, KdOrmSvc) {
+angular
+    .module('survey.rules.svc', ['kd.orm.svc'])
+    .service('SurveyRulesSvc', SurveyRulesSvc);
+
+SurveyRulesSvc.$inject = ['$q', 'KdOrmSvc'];
+
+function SurveyRulesSvc($q, KdOrmSvc) {
 
     var models = {
         SurveyFormsTable: 'Survey.SurveyForms',
@@ -11,35 +16,45 @@ angular.module('survey.rules.svc', ['kd.orm.svc'])
         SurveyRulesTable: 'Survey.SurveyRules'
     };
 
-    return {
-        init: function(baseUrl) {
-            KdOrmSvc.base(baseUrl);
-            angular.forEach(models, function(model, key) {
-                window[key] = KdOrmSvc.init(model);
-            });
-        },
+    var service = {
+        init: init,
+        getSurveyForm: getSurveyForm,
+        getSection: getSection,
+        getQuestions: getQuestions,
+        getShowIfChoices: getShowIfChoices,
+        saveData: saveData
+    };
 
-        getSurveyForm: function() {
-            return SurveyFormsTable
-                .select()
-                .ajax({defer: true})
-                ;
-        },
+    return service;
 
-        getSection: function(surveyFormId) {
-            // Distinct condition not yet added
-            return SurveyFormsQuestionsTable
+    function init(baseUrl) 
+    {
+        KdOrmSvc.base(baseUrl);
+        KdOrmSvc.init(models);
+    };
+
+    function getSurveyForm() 
+    {
+        return SurveyFormsTable
+            .select()
+            .ajax({defer: true})
+            ;
+    };
+
+    function getSection(surveyFormId) 
+    {
+        return SurveyFormsQuestionsTable
             .select(['section'])
             .where({survey_form_id: surveyFormId})
             .group(['section'])
             .order(['order'])
             .ajax({defer: true})
             ;
-        },
+    };
 
-        getQuestions: function(surveyFormId, sectionName) 
-        {
-            return SurveyFormsQuestionsTable2
+    function getQuestions(surveyFormId, sectionName) 
+    {
+        return SurveyFormsQuestionsTable2
             .select()
             .contain(['CustomFields'])
             .where({survey_form_id: surveyFormId, section: sectionName})
@@ -47,23 +62,24 @@ angular.module('survey.rules.svc', ['kd.orm.svc'])
             .order(['order'])
             .ajax({defer: true})
             ;
-        },
+    };
 
-        getShowIfChoices: function(surveyFormId, section) {
-            return SurveyFormsQuestionsTable3
+    function getShowIfChoices(surveyFormId, section) 
+    {
+        return SurveyFormsQuestionsTable3
+            .select()
             .find('SurveyFormChoices', {survey_form_id: surveyFormId})
             .where({survey_form_id: surveyFormId, section: section})
             .ajax({defer: true})
             ;
-        },
+    };
 
-        saveData: function(ruleData) {
-            var promises = [];
-            angular.forEach(ruleData, function(rule, key) {
-                promises.push(SurveyRulesTable.save(rule));
-            }, this);
-            console.log('Success');
-            return $q.all(promises);
-        }
-    }
-});
+    function saveData(ruleData) 
+    {
+        var promises = [];
+        angular.forEach(ruleData, function(rule, key) {
+            promises.push(SurveyRulesTable.save(rule));
+        }, this);
+        return $q.all(promises);
+    };
+}
