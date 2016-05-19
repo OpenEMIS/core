@@ -100,6 +100,7 @@ class RecordBehavior extends Behavior {
 		$this->_table->addBehavior('CustomField.RenderStudentList');
 		$this->_table->addBehavior('CustomField.RenderCoordinates');
 		$this->_table->addBehavior('CustomField.RenderFile');
+		$this->_table->addBehavior('CustomField.RenderRepeater');
 		// End
 
 		// If tabSection is not set, added to handle Section Header
