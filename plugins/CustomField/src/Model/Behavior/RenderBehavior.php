@@ -80,13 +80,7 @@ class RenderBehavior extends Behavior {
                 ->hydrate(false)
                 ->toArray();
             foreach ($rules as $rule) {
-                $showOptions = json_decode($rule['show_options']);
-                $showOptionsJsonArray = '[';
-                foreach($showOptions as $option) {
-                    $showOptionsJsonArray = $showOptionsJsonArray.$option.',';
-                }
-                $showOptionsJsonArray = trim($showOptionsJsonArray, ",");
-                $showOptionsJsonArray = $showOptionsJsonArray.']';
+                $showOptionsJsonArray = str_replace('"', '', $rule['show_options']);
                 $this->surveyRules[$rule['survey_question_id']] = [
                         'dependent_question_id' => $rule['dependent_question_id'],
                         'show_options' => $showOptionsJsonArray
