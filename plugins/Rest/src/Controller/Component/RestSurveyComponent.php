@@ -7,7 +7,9 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Utility\Xml;
+use Cake\Utility\Text;
 use Cake\Log\LogTrait;
+use Cake\I18n\Time;
 
 define("NS_XHTML", "http://www.w3.org/1999/xhtml");
 define("NS_XF", "http://www.w3.org/2002/xforms");
@@ -243,7 +245,12 @@ class RestSurveyComponent extends Component
                 // lines below is for testing
                 // $xmlResponse = "<xf:instance id='xform'><oe:SurveyForms id='1'><oe:Institutions>1</oe:Institutions><oe:AcademicPeriods>10</oe:AcademicPeriods><oe:SurveyQuestions id='2'>some text</oe:SurveyQuestions><oe:SurveyQuestions id='3'>0</oe:SurveyQuestions><oe:SurveyQuestions id='4'>some long long text</oe:SurveyQuestions><oe:SurveyQuestions id='6'>3</oe:SurveyQuestions><oe:SurveyQuestions id='7'>5 6 7</oe:SurveyQuestions><oe:SurveyQuestions id='25'><oe:SurveyTableRows id='20'><oe:SurveyTableColumns0 id='0'>Male</oe:SurveyTableColumns0><oe:SurveyTableColumns1 id='37'>10</oe:SurveyTableColumns1><oe:SurveyTableColumns2 id='38'>20</oe:SurveyTableColumns2><oe:SurveyTableColumns3 id='39'>30</oe:SurveyTableColumns3></oe:SurveyTableRows><oe:SurveyTableRows id='21'><oe:SurveyTableColumns0 id='0'>Female</oe:SurveyTableColumns0><oe:SurveyTableColumns1 id='37'>15</oe:SurveyTableColumns1><oe:SurveyTableColumns2 id='38'>25</oe:SurveyTableColumns2><oe:SurveyTableColumns3 id='39'>35</oe:SurveyTableColumns3></oe:SurveyTableRows></oe:SurveyQuestions></oe:SurveyForms></xf:instance>";
                 // $xmlResponse = '<xf:instance id="xform"><oe:SurveyForms id="16"><oe:Institutions>1059</oe:Institutions><oe:AcademicPeriods>10</oe:AcademicPeriods><oe:SurveyQuestions id="113" array-id="1">1.3641 123.9214</oe:SurveyQuestions><oe:SurveyQuestions id="114" array-id="2">1.74 100.243</oe:SurveyQuestions><oe:SurveyQuestions id="16" array-id="3">5</oe:SurveyQuestions></oe:SurveyForms></xf:instance>';
-                // end testing data //                
+                // end testing data //
+
+                // save response into database for debug purpose, always purge 3 days old response
+                $this->_deleteExpiredResponse();
+                $this->_addResponse($xmlResponse);
+                // End
                 
                 $this->log('XML Response', 'debug');
                 $this->log($xmlResponse, 'debug');
@@ -439,6 +446,33 @@ class RestSurveyComponent extends Component
                                         }
                                     }
                                     break;
+                                case 'FILE':
+                                    $answerValue = urldecode($field->__toString());
+                                    if (strlen($answerValue) != 0) {
+                                        // expected format received from mobile
+                                        // filename.jpg|data:image/jpg;base64,urlencode( base64_encode( file_get_contents( $filepath) ) )
+                                        list($fileName, $fileData) = explode("|", $answerValue, 2);
+                                        list($fileTypeStr, $encodedStr) = explode(";", $fileData, 2);
+                                        list($encodeType, $encoded) = explode(",", $encodedStr, 2);
+                                        $decoded = base64_decode($encoded);
+
+                                        $answerData = [
+                                            $recordKey => $recordId,
+                                            $this->fieldKey => $fieldId,
+                                            'text_value' => $fileName,
+                                            $fieldColumnName => $decoded,   // fileContent
+                                            'institution_id' => $institutionId,
+                                            'created_user_id' => $createdUserId
+                                        ];
+
+                                        // Save answer
+                                        $answerEntity = $this->FieldValue->newEntity($answerData);
+                                        if (!$this->FieldValue->save($answerEntity)) {
+                                            $this->log($answerEntity->errors(), 'debug');
+                                        }
+                                        // End
+                                    }
+                                    break;
                             }
                         }
                     }
@@ -539,8 +573,6 @@ class RestSurveyComponent extends Component
 
             $fieldTypeFunction = '_'.strtolower($field->field_type).'Type';
             if (method_exists($this, $fieldTypeFunction)) {
-
-                //
                 // function for student list type does not exists and puting this set of statement outside of method_exists check scope
                 // will actually creates a malformed xform on the mobile side although viewing from browser is ok.
                     $fieldNode = $formNode->addChild($this->Field->alias(), null, NS_OE);
@@ -556,6 +588,7 @@ class RestSurveyComponent extends Component
                 $this->$fieldTypeFunction($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode);
             }
         }
+
         return $xml;
     }
 
@@ -619,10 +652,10 @@ class RestSurveyComponent extends Component
             if (in_array($validationType, ['min_value', 'max_value', 'range'])) {
                 if ($validationType!='range') {
                     if ($validationType=='min_value') {
-                        $constraint = ". > ".$params[$validationType];
+                        $constraint = ". >= ".$params[$validationType];
                         $validationHint = __('Value should be at least '. $params[$validationType]);
                     } else if ($validationType=='max_value') {
-                        $constraint = ". < ".$params[$validationType];
+                        $constraint = ". <= ".$params[$validationType];
                         $validationHint = __('Value should not be more than '. $params[$validationType]);
                     }
                 } else {
@@ -630,9 +663,9 @@ class RestSurveyComponent extends Component
                     $constraint = "";
                     foreach ($params[$validationType] as $key => $value) {
                         if ($key=='lower') {
-                            $constraint .= empty($constraint) ? ". > ".$value : " && . > ".$value;
+                            $constraint .= empty($constraint) ? ". >= ".$value : " && . >= ".$value;
                         } else {
-                            $constraint .= empty($constraint) ? ". < ".$value : " && . < ".$value;
+                            $constraint .= empty($constraint) ? ". <= ".$value : " && . <= ".$value;
                         }
                         $values[] = $value;
                     }
@@ -845,6 +878,12 @@ class RestSurveyComponent extends Component
         }
     }
 
+    private function _fileType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
+    {
+        $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'upload', $instanceId, $index);
+        $this->_setFieldBindNode($modelNode, $instanceId, 'file', $field->default_is_mandatory, '', $index);
+    }
+
     private function _twentyFourHourFormat($value)
     {
         $values = explode(' ', $value);
@@ -886,5 +925,29 @@ class RestSurveyComponent extends Component
             $bindNode->addAttribute("required", 'false()');
         }
         return $bindNode;
+    }
+
+    private function _deleteExpiredResponse()
+    {
+        $SurveyResponses = TableRegistry::get('Survey.SurveyResponses');
+        $expiryDate = new Time();
+        $expiryDate->subDays(3);
+        $SurveyResponses->deleteAll([
+            $SurveyResponses->aliasField('created <') => $expiryDate
+        ]);
+    }
+
+    private function _addResponse($xmlResponse)
+    {
+        $SurveyResponses = TableRegistry::get('Survey.SurveyResponses');
+            $responseData = [
+            'id' => Text::uuid(),
+            'response' => $xmlResponse
+        ];
+
+        $responseEntity = $SurveyResponses->newEntity($responseData);
+        if (!$SurveyResponses->save($responseEntity)) {
+            $this->log($responseEntity->errors(), 'debug');
+        }
     }
 }

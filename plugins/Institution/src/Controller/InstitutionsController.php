@@ -71,7 +71,6 @@ class InstitutionsController extends AppController  {
 		];
 
 		$this->loadComponent('Institution.InstitutionAccessControl');
-
 		$this->attachAngularModules();
 	}
 
@@ -183,7 +182,7 @@ class InstitutionsController extends AppController  {
 
 	private function attachAngularModules() {
 		$action = $this->request->action;
-
+		
 		switch ($action) {
 			case 'Results':
 				$this->Angular->addModules([
