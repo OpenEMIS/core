@@ -160,7 +160,7 @@ class InstitutionPositionsTable extends AppTable {
    		}
 	}
 
-    public function editAfterAction(Event $event, Entity $entity) {
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
         // POCOR-3003 - [...] decision is to make Position Title not editable on the position edit page
         if ($entity->has('staff_position_title_id')) {
             $types = $this->getSelectOptions('Staff.position_types');
