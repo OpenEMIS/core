@@ -243,6 +243,9 @@ class StudentAttendancesTable extends AppTable {
         $this->ControllerAction->field('academic_period_id', ['visible' => false]);
 		$this->ControllerAction->field('status', ['visible' => false]);
 		$this->ControllerAction->field('student_status_id', ['visible' => false]);
+
+		$this->fields['type']['tableColumnClass'] = 'vertical-align-top';
+		$this->fields['reason']['tableColumnClass'] = 'vertical-align-top';
 	}
 
 	// Event: ControllerAction.Model.afterAction
@@ -327,13 +330,14 @@ class StudentAttendancesTable extends AppTable {
 
 			}
 			$attr['time_options']['defaultTime'] = $attr['value'];
+			$attr['class'] = 'margin-top-10 no-margin-bottom';
 			$attr['field'] = 'late_time';
 			$attr['model'] = $fieldPrefix;
 			$attr['id'] = 'late_time_'.$id;
 			$attr['label'] = false;
 			
 			$time = $HtmlField->time('edit', $entity, $attr);
-			$html .= '<div id="late_time__'.$id.'" class="late_time__'.$id.'_'.$codeAbsenceTypeList['LATE'].'" style="'.$displayTime.'width:100px">'.$time.'</div>';
+			$html .= '<div id="late_time__'.$id.'" class="late_time__'.$id.'_'.$codeAbsenceTypeList['LATE'].'" style="'.$displayTime.'">'.$time.'</div>';
 
 			$html .= $Form->hidden($fieldPrefix.".institution_id", ['value' => $institutionId]);
 			$html .= $Form->hidden($fieldPrefix.".student_id", ['value' => $id]);
