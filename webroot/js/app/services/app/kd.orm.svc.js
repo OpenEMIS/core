@@ -33,6 +33,8 @@ angular.module('kd.orm.svc', [])
             this._finder = [];
             this._where = {};
             this._limit = 0;
+            this._group = [];
+            this._order = [];
             this._page = 0;
             this._method = 'GET';
         },
