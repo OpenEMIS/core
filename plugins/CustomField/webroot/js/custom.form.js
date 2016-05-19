@@ -14,6 +14,7 @@ var CustomForm = {
 			prependHTML += "<td>";
 			prependHTML += "<div class=section-header>" + sectionName +"</div>";
 			prependHTML += "</td>";
+			prependHTML += "<td></td>";	// Field Type
 			prependHTML += "<td><button onclick='jsTable.doRemove(this);CustomForm.updateSection();' aria-expanded='true' type='button' class='btn btn-dropdown action-toggle btn-single-action'><i class='fa fa-trash'></i>&nbsp;<span>Delete</span></button></td>";
 			prependHTML += "<td class='sorter rowlink-skip' onmousedown='Reorder.enableSortable(this);'><div class='reorder-icon'><a><i class='fa fa-arrows-alt'></i></a></div></td>";
 			prependHTML += "</td>";
