@@ -908,7 +908,7 @@ class RestSurveyComponent extends Component
 
     private function repeater($field, $parentNode, $instanceId, $extra)
     {
-        $repeaterNode = $this->setBodyNode($field, $parentNode, $instanceId, 'repeater', $extra);
+        $repeaterNode = $this->setBodyNode($field, $parentNode, $instanceId, 'repeat', $extra);
 
         $fieldNode = $this->setModelNode($field, $extra['form'], $instanceId, $extra);
         $repeatNode = $fieldNode->addChild('RepeatBlock', null, NS_OE);
