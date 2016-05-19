@@ -5,12 +5,16 @@ use Cake\Log\Log;
 use Cake\I18n\Time;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Exception\BadRequestException;
 use App\Controller\AppController;
+use Cake\Network\Http\Client;
+use Cake\Utility\Security;
+use Firebase\JWT\JWT;
+use Cake\Network\Exception\BadRequestException;
 
 class RestController extends AppController
 {
 	public $SecurityRestSessions = null;
+	private $RestVersion = '1.0';
 
 	public function initialize() {
 		parent::initialize();
@@ -36,15 +40,46 @@ class RestController extends AppController
 				'TableCell' => 'Institution.InstitutionSurveyTableCells'
 			]
 		]);
-		// $this->Auth->config('authorize', 'xxxx');
-		$this->SecurityRestSessions = TableRegistry::get('SecurityRestSessions');
+		$this->SecurityRestSessions = TableRegistry::get('Rest.SecurityRestSessions');
 	}
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
-		$this->Auth->allow();
+        if (isset($this->request->query['version'])) {
+            $this->RestVersion = $this->request->query('version');
+        }
 
-		if ($this->request->action == 'survey') {
+		if ($this->RestVersion == 2.0) {
+            // Using JWT for authenication
+			$this->Auth->config('authenticate', [
+	            'ADmad/JwtAuth.Jwt' => [
+	                'parameter' => 'token',
+	                'userModel' => 'User.Users',
+	                'scope' => ['Users.status' => 1],
+	                'fields' => [
+	                    'username' => 'id'
+	                ],
+	                'queryDatasource' => true
+	            ]
+	        ]);
+	        $this->Auth->config('authorize', null);
+	        $this->Auth->allow(['auth']);
+	        if ($this->request->data('code')) {
+	        	$token = $this->request->data('code');
+	        	$this->request->env('HTTP_AUTHORIZATION', $token);
+	        }
+	        $header = $this->request->header('authorization');
+	        if ($header) {
+	            $token = str_ireplace('bearer ', '', $header);
+	            $payload = JWT::decode($token, Security::salt(), ['HS256']);
+	            $currentTimeStamp = (new Time)->toUnixString();
+	            $exp = $payload->exp;
+	            if ($exp < $currentTimeStamp) {
+	            	throw new BadRequestException('Custom error message', 408);
+	            	$event->stopPropagation();
+	            }
+	        }
+	       
 			$this->autoRender = false;
 
 			$pass = $this->request->params['pass'];
@@ -54,48 +89,66 @@ class RestController extends AppController
 				$action = array_shift($pass);
 			}
 
-			if (!is_null($action) && !in_array($action, $this->RestSurvey->allowedActions)) {
-				// actions require authentication
-				// if authentication is required:
-				// 1. check if token exists
-				// 2. check if current time is greater than expiry time
+			if (!is_null($action) && in_array($action, $this->RestSurvey->allowedActions)) {
+				$this->Auth->allow();
+			} else {
+				$this->Auth->identify();
+			}
+		} else {
+			$this->Auth->allow();
+			if ($this->request->action == 'survey') {
+				$this->autoRender = false;
 
-				$accessToken = '';
-				if ($this->request->is(['post', 'put'])) {
-					$json = [];
+				$pass = $this->request->params['pass'];
+				$action = null;
 
-					if (array_key_exists('SecurityRestSession', $this->request->data)) {
-						if (array_key_exists('access_token', $this->request->data['SecurityRestSession'])) {
-							$accessToken = $this->request->data['SecurityRestSession']['access_token'];
+				if (!empty($pass)) {
+					$action = array_shift($pass);
+				}
 
-							$confirm = $this->SecurityRestSessions
-								->find()
-								->where([
-									$this->SecurityRestSessions->aliasField('access_token') => $accessToken
-								])
-								->first();
+				if (!is_null($action) && !in_array($action, $this->RestSurvey->allowedActions)) {
+					// actions require authentication
+					// if authentication is required:
+					// 1. check if token exists
+					// 2. check if current time is greater than expiry time
 
-							$current = time();
+					$accessToken = '';
+					if ($this->request->is(['post', 'put'])) {
+						$json = [];
 
-							if (!empty($confirm)) {
-								$expiry = strtotime($confirm->expiry_date);
-								if ($current > $expiry) {
+						if (array_key_exists('SecurityRestSession', $this->request->data)) {
+							if (array_key_exists('access_token', $this->request->data['SecurityRestSession'])) {
+								$accessToken = $this->request->data['SecurityRestSession']['access_token'];
+
+								$confirm = $this->SecurityRestSessions
+									->find()
+									->where([
+										$this->SecurityRestSessions->aliasField('access_token') => $accessToken
+									])
+									->first();
+
+								$current = time();
+
+								if (!empty($confirm)) {
+									$expiry = strtotime($confirm->expiry_date);
+									if ($current > $expiry) {
+										throw new BadRequestException('Custom error message', 408);
+										$json	= ['message' => 'invalid'];
+									} else {
+										$json	= ['message' => 'valid'];
+									}
+								} else {
 									throw new BadRequestException('Custom error message', 408);
 									$json	= ['message' => 'invalid'];
-								} else {
-									$json	= ['message' => 'valid'];
 								}
-							} else {
-								throw new BadRequestException('Custom error message', 408);
-								$json	= ['message' => 'invalid'];
 							}
 						}
+
+						$this->response->body(json_encode($json, JSON_UNESCAPED_UNICODE));
+						$this->response->type('json');
+
+						//return $this->response;
 					}
-
-					$this->response->body(json_encode($json, JSON_UNESCAPED_UNICODE));
-					$this->response->type('json');
-
-					//return $this->response;
 				}
 			}
 		}
@@ -140,39 +193,66 @@ class RestController extends AppController
 	}
 
 	public function auth() {
-		$this->autoRender = false;
 		$json = [];
 
-		// We check if request came from a post form
-		if ($this->request->is(['post', 'put'])) {
-			// do the login..
-			$user = $this->login();
+        if ($this->RestVersion == '2.0') {
+            if (isset($this->request->query['payload'])) {
+                if (!$this->Cookie->check('Restful.Call')) {
+                    $redirectUrl = $this->ControllerAction->url('auth');
+                    $redirectUrl['version'] = '2.0';
+                    if (isset($redirectUrl['payload'])) {
+                        unset($redirectUrl['payload']);
+                    }
+                    $this->redirect($redirectUrl);
+                }
+                $url = $this->Cookie->read('Restful.CallBackURL');
+                $token = $this->request->query('payload');
+                $url = $url.'?code='.$token;
+                $this->redirect($url);
+            } else {
+                $this->Cookie->configKey('Restful', 'path', '/');
+                $this->Cookie->configKey('Restful', [
+                    'expires' => '+5 minutes'
+                ]);
+                $url = $this->request->query('redirect_uri');
+                $this->Cookie->write('Restful.Call', true);
+                $this->Cookie->write('Restful.CallBackURL', $url);
+                $this->SSO->doAuthentication();
+            }   
+        } else
+        {
+            $this->autoRender = false;
+            $json = [];
+            // We check if request came from a post form
+            if ($this->request->is(['post', 'put'])) {
+                // do the login..
+                $user = $this->login();
 
-			if ($user) {
-				// get all the user details if login is successful.
-				$userID = $user['id'];
-				$accessToken = sha1(time() . $userID);
-				$refreshToken = sha1(time());
-				$json = ['message' => 'success', 'access_token' => $accessToken, 'refresh_token' => $refreshToken];
+                if ($user) {
+                    // get all the user details if login is successful.
+                    $userID = $user['id'];
+                    $accessToken = sha1(time() . $userID);
+                    $refreshToken = sha1(time());
+                    $json = ['message' => 'success', 'access_token' => $accessToken, 'refresh_token' => $refreshToken];
 
-				// set the values, and save the data
-				$startDate = time() + 3600; // current time + one hour
-                $expiryTime = new Time($startDate);
-				$saveData = [
-					'access_token' => $accessToken,
-					'refresh_token' => $refreshToken,
-					'expiry_date' => $expiryTime,
-					'modified' => new Time('NOW'),
-					'created' => new Time('NOW')
-				];
+                    // set the values, and save the data
+                    $startDate = time() + 3600; // current time + one hour
+                    $expiryTime = date('Y-m-d H:i:s', $startDate);
+                    $saveData = [
+                        'access_token' => $accessToken,
+                        'refresh_token' => $refreshToken,
+                        'expiry_date' => $expiryTime,
+                        'created_user_id' => 1
+                    ];
 
-				$entity = $this->SecurityRestSessions->newEntity($saveData);
-				$this->SecurityRestSessions->save($entity);
-			} else {
-				// if the login is wrong, show the error message.
-				$json = ['message' => 'failure'];
-			}
-		}
+                    $entity = $this->SecurityRestSessions->newEntity($saveData);
+                    $this->SecurityRestSessions->save($entity);
+                } else {
+                    // if the login is wrong, show the error message.
+                    $json = ['message' => 'failure'];
+                }
+            }
+        }
 
 		$this->response->body(json_encode($json, JSON_UNESCAPED_UNICODE));
 		$this->response->type('json');
@@ -263,11 +343,11 @@ class RestController extends AppController
 			} else {
 				$json = ['message' => 'token not found'];
 			}
+
+			$this->response->body(json_encode($json, JSON_UNESCAPED_UNICODE));
+			$this->response->type('json');
+
+			return $this->response;
 		}
-
-		$this->response->body(json_encode($json, JSON_UNESCAPED_UNICODE));
-		$this->response->type('json');
-
-		return $this->response;
 	}
 }
