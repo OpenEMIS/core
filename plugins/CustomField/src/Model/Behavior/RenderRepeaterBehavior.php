@@ -212,7 +212,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
 
                         // remove button
                         if ($action == 'edit') {
-                            $rowData[] = '<button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemove(this);"><i class="fa fa-close"></i>' . __('Remove') . '</button>';
+                            $rowData[] = '<button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemove(this);"><i class="fa fa-close"></i> '.__('Remove') . '</button>';
                         }
 
                         $tableCells[$rowKey] = $rowData;
