@@ -63,7 +63,7 @@ class RenderDropdownBehavior extends RenderBehavior {
                 if (is_null($this->postedData)) {
                     $questions = $this->_table->request->data[$this->_table->alias()]['custom_field_values'];
                     foreach ($questions as $question) {
-                        if ($question['field_type'] == 'DROPDOWN') {
+                        if (isset($question['number_value'])) {
                             $this->postedData[$question['survey_question_id']] = $question['number_value'];
                         }
                     }
