@@ -1,4 +1,4 @@
-/* GRID VIEW v.1.0.1 */
+/* GRID VIEW v.1.0.2 */
 
 .toggle-wrapper {
     width: 100%;
@@ -28,15 +28,20 @@
     width: 90px;
     height: 50px;
     padding: 10px;
-    background-color: rgba(255,255,255,0.8);
+    background-color: rgba(255, 255, 255, 0.8);
     border: 1px solid #EEE;
     text-align: center;
     z-index: 10;
 }
 
+.control-wrapper .btn-default i {
+    margin: 0;
+    line-height: normal;
+}
+
 .switch-pri-control input.active + label,
 .switch-sec-control .active {
-    color: #FFF !important;    
+    color: #FFF !important;
 }
 
 .switch-sec-control .active {
@@ -45,6 +50,8 @@
     -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.45);
     -moz-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.45);
     box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.45);
+    background-color: #999 !important;
+    border: 1px solid #6B6B6B !important;
 }
 
 .switch-sec-control {
@@ -63,7 +70,6 @@
     border: 1px solid #CCC !important;
     outline: 0 !important;
     -webkit-border-radius: 0;
-    -moz-border-radius: 0;
     border-radius: 0;
     -webkit-text-shadow: 1px 1px 0px #FFF;
     -moz-text-shadow: 1px 1px 0px #FFF;
@@ -73,21 +79,32 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.45);
 }
 
-.switch-sec-control button:hover {
+.switch-sec-control .btn:hover,
+.switch-sec-control .btn:focus {
+    -webkit-border-top-left-radius: 0;
+    border-top-left-radius: 0;
+    -webkit-border-bottom-left-radius: 0;
+    border-bottom-left-radius: 0;
+    -webkit-border-top-right-radius: 4px;
+    border-top-right-radius: 4px;
+    -webkit-border-bottom-right-radius: 4px;
+    border-bottom-right-radius: 4px;
     text-shadow: none;
     -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.45);
     -moz-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.45);
     box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.45);
     -webkit-transition: none !important;
-       -moz-transition: none !important;
-        -ms-transition: none !important;
-         -o-transition: none !important;
-            transition: none !important;
+    -moz-transition: none !important;
+    -ms-transition: none !important;
+    -o-transition: none !important;
+    transition: none !important;
 }
 
-.switch-sec-control .btn[ng-click="showGridList = false"],
-.switch-sec-control .btn[ng-click="showGridList = false"]:hover {  
-    margin-right: -3px !important;  
+.switch-sec-control .btn:first-child,
+.switch-sec-control .btn:first-child:hover,
+.switch-sec-control .btn:first-child.active,
+.switch-sec-control .btn:first-child:active {
+    margin-right: -3px !important;
     -webkit-border-top-left-radius: 4px !important;
     -moz-border-top-left-radius: 4px !important;
     border-top-left-radius: 4px !important;
@@ -99,11 +116,13 @@
     border-top-right-radius: 0 !important;
     -webkit-border-bottom-right-radius: 0 !important;
     -moz-border-bottom-right-radius: 0 !important;
-    border-bottom-right-radius: 0 !important; 
+    border-bottom-right-radius: 0 !important;
 }
 
-.switch-sec-control .btn[ng-click="showGridList = true"],
-.switch-sec-control .btn[ng-click="showGridList = true"]:hover {
+.switch-sec-control .btn:last-child,
+.switch-sec-control .btn:last-child:hover,
+.switch-sec-control .btn:last-child.active,
+.switch-sec-control .btn:last-child:active {
     -webkit-border-top-left-radius: 0 !important;
     -moz-border-top-left-radius: 0 !important;
     border-top-left-radius: 0 !important;
@@ -115,10 +134,10 @@
     border-top-right-radius: 4px !important;
     -webkit-border-bottom-right-radius: 4px !important;
     -moz-border-bottom-right-radius: 4px !important;
-    border-bottom-right-radius: 4px !important;    
+    border-bottom-right-radius: 4px !important;
 }
 
-.switch-sec-control .btn:last-child:focus, 
+.switch-sec-control .btn:last-child:focus,
 .switch-sec-control .btn:first-child:focus,
 .switch-sec-control button:focus {
     outline: 0 !important;
@@ -142,11 +161,11 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    -webkit-transform: translate(-50%,-50%);
-       -moz-transform: translate(-50%,-50%);
-        -ms-transform: translate(-50%,-50%);
-         -o-transform: translate(-50%,-50%);
-            transform: translate(-50%,-50%);
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    -o-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
 }
 
 .grid-list {
@@ -162,12 +181,12 @@
     -moz-border-radius: 3px;
     border-radius: 3px;
     position: relative;
-    box-shadow: 0 2px 2px 0px rgba(0,0,0,0.05);
-    -webkit-box-shadow: 0 2px 2px 0px rgba(0,0,0,0.05);
-    -moz-box-shadow: 0 2px 2px 0px rgba(0,0,0,0.05);
-    box-shadow: 0 2px 2px 0px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 2px 0px rgba(0, 0, 0, 0.05);
+    -webkit-box-shadow: 0 2px 2px 0px rgba(0, 0, 0, 0.05);
+    -moz-box-shadow: 0 2px 2px 0px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 2px 0px rgba(0, 0, 0, 0.05);
     text-align: center;
-    vertical-align: top;    
+    vertical-align: top;
     min-height: 165px;
 }
 
@@ -246,22 +265,23 @@
 .grid-list-item .action-dropdown {
     left: 50%;
     top: 25px;
-    -webkit-transform: translate(-50%,0);
-       -moz-transform: translate(-50%,0);
-        -ms-transform: translate(-50%,0);
-         -o-transform: translate(-50%,0);
-            transform: translate(-50%,0);
+    -webkit-transform: translate(-50%, 0);
+    -moz-transform: translate(-50%, 0);
+    -ms-transform: translate(-50%, 0);
+    -o-transform: translate(-50%, 0);
+    transform: translate(-50%, 0);
 }
 
 .grid-list-item .action-dropdown .dropdown-arrow {
     left: 50%;
     right: auto !important;
-    -webkit-transform: translate(-50%,0);
-       -moz-transform: translate(-50%,0);
-        -ms-transform: translate(-50%,0);
-         -o-transform: translate(-50%,0);
-            transform: translate(-50%,0);
+    -webkit-transform: translate(-50%, 0);
+    -moz-transform: translate(-50%, 0);
+    -ms-transform: translate(-50%, 0);
+    -o-transform: translate(-50%, 0);
+    transform: translate(-50%, 0);
 }
+
 
 /* RTL GRID VIEW */
 
@@ -299,8 +319,10 @@
     left: 0;
 }
 
-.rtl .switch-sec-control .btn[ng-click="showGridList = false"],
-.rtl .switch-sec-control .btn[ng-click="showGridList = false"]:hover { 
+.rtl .switch-sec-control .btn:first-child,
+.rtl .switch-sec-control .btn:first-child:hover,
+.rtl .switch-sec-control .btn:first-child.active,
+.rtl .switch-sec-control .btn:first-child:active {
     -webkit-border-top-left-radius: 0 !important;
     -moz-border-top-left-radius: 0 !important;
     border-top-left-radius: 0 !important;
@@ -312,12 +334,13 @@
     border-top-right-radius: 4px !important;
     -webkit-border-bottom-right-radius: 4px !important;
     -moz-border-bottom-right-radius: 4px !important;
-    border-bottom-right-radius: 4px !important;  
+    border-bottom-right-radius: 4px !important;
 }
 
-.rtl .switch-sec-control .btn[ng-click="showGridList = true"],
-.rtl .switch-sec-control .btn[ng-click="showGridList = true"]:hover {        
-    margin-right: -4px !important;  
+.rtl .switch-sec-control .btn:last-child,
+.rtl .switch-sec-control .btn:last-child:hover,
+.rtl .switch-sec-control .btn:last-child.active,
+.rtl .switch-sec-control .btn:last-child:active {
     -webkit-border-top-left-radius: 4px !important;
     -moz-border-top-left-radius: 4px !important;
     border-top-left-radius: 4px !important;
@@ -329,26 +352,46 @@
     border-top-right-radius: 0 !important;
     -webkit-border-bottom-right-radius: 0 !important;
     -moz-border-bottom-right-radius: 0 !important;
-    border-bottom-right-radius: 0 !important;  
+    border-bottom-right-radius: 0 !important;
+}
+
+.rtl .switch-sec-control .btn:first-child,
+.rtl .switch-sec-control .btn:first-child:hover {
+    margin-left: -4px !important;
+}
+
+.rtl .switch-sec-control .btn:hover,
+.rtl .switch-sec-control .btn:focus {
+    -webkit-border-top-left-radius: 4px !important;
+    border-top-left-radius: 4px !important;
+    -webkit-border-bottom-left-radius: 4px !important;
+    border-bottom-left-radius: 4px !important;
+    -webkit-border-top-right-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+    -webkit-border-bottom-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
 }
 
 .rtl .grid-list-item .action-dropdown {
     left: 50%;
-    -webkit-transform: translate(-50%,0);
-       -moz-transform: translate(-50%,0);
-        -ms-transform: translate(-50%,0);
-         -o-transform: translate(-50%,0);
-            transform: translate(-50%,0);
+    -webkit-transform: translate(-50%, 0);
+    -moz-transform: translate(-50%, 0);
+    -ms-transform: translate(-50%, 0);
+    -o-transform: translate(-50%, 0);
+    transform: translate(-50%, 0);
 }
 
 .rtl .action-dropdown .dropdown-arrow {
     top: -20px;
 }
 
+
 /*==========  Non-Mobile First Method  ==========*/
 
-/* Extra Small Devices, Phones */ 
-@media only screen and (max-width : 480px) {
+
+/* Extra Small Devices, Phones */
+
+@media only screen and (max-width: 480px) {
     .toggle-wrapper {
         height: auto;
         margin-bottom: 20px;

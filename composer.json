@@ -10,7 +10,8 @@
         "mobiledetect/mobiledetectlib": "2.*",
         "PHPOffice/PHPExcel": "dev-master",
         "mk-j/php_xlsxwriter": "dev-master",
-        "korditpteltd/kd-cakephp-restful": "*"
+        "korditpteltd/kd-cakephp-restful": "*",
+        "admad/cakephp-jwt-auth": "2.0.1"
     },
     "require-dev": {
         "psy/psysh": "@stable",

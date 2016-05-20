@@ -84,19 +84,19 @@ class ApiSISBComponent extends Component {
 							'label' => 'Name'
 						],
 						'status' => [
-							'label' => 'Currently in school',
+							'label' => 'Last known status',
 							'value' =>  'Not Available',
 						],
 						'school_name' => [
-							'label' => 'Current school',
+							'label' => 'Last known school',
 							'value' =>  'Not Available',
 						],
 						'school_code' => [
-							'label' => 'Current school #',
+							'label' => 'Last known school #',
 							'value' =>  'Not Available',
 						],
 						'level' => [
-							'label' => 'Current level',
+							'label' => 'Highest education level',
 							'value' =>  'Not Available',
 						],
 						'openemis_id' => [
@@ -119,7 +119,11 @@ class ApiSISBComponent extends Component {
 					$InstitutionStudents = TableRegistry::get('InstitutionStudents');
 					$academicEntity = $InstitutionStudents
 						->find()
-						->select(['EducationGrades.name', 'Institutions.name', 'Institutions.code'])
+						->select([
+							'EducationGrades.name', 'Institutions.name', 
+							'Institutions.code', 'Statuses.name',
+							'InstitutionStudents.start_date', 'InstitutionStudents.end_date'
+						])
 						->innerJoin(
 							['EducationGrades' => 'education_grades'],
 							['EducationGrades.id = ' . $InstitutionStudents->aliasField('education_grade_id')]
@@ -128,16 +132,22 @@ class ApiSISBComponent extends Component {
 							['Institutions' => 'institutions'],
 							['Institutions.id = ' . $InstitutionStudents->aliasField('institution_id')]
 						)
+						->innerJoin(
+							['Statuses' => 'student_statuses'],
+							['Statuses.id = ' . $InstitutionStudents->aliasField('student_status_id')]
+						)
 						->where([
-							$InstitutionStudents->aliasField('student_id') => $entity->id,
-							$InstitutionStudents->aliasField('student_status_id') => 1 // Enrolled
+							$InstitutionStudents->aliasField('student_id') => $entity->id
 						])
+						->order([$InstitutionStudents->aliasField('created') => 'DESC'])
 						->autoFields(true)
 						->first();
 
 					if ($academicEntity) {
 						// pr($academicEntity);
-						$result['status']['value'] = 'Yes';
+						$result['status']['value'] = $academicEntity->Statuses['name'];
+						$result['status']['start_date'] = $academicEntity->start_date->format('d-M-Y');
+						$result['status']['end_date'] = $academicEntity->end_date->format('d-M-Y');
 						$result['school_name']['value'] = $academicEntity->Institutions['name'];
 						$result['school_code']['value'] = $academicEntity->Institutions['code'];
 						$result['level']['value'] = $academicEntity->EducationGrades['name'];
@@ -177,7 +187,7 @@ class ApiSISBComponent extends Component {
 						'value' =>  'Not Available' ,
 					],
 					'status' => [
-						'label' => 'Currently in school',
+						'label' => 'Last known status',
 						'value' =>  'Not Available',
 					],
 					'school_name' => [
@@ -189,7 +199,7 @@ class ApiSISBComponent extends Component {
 						'value' =>  'Not Available',
 					],
 					'level' => [
-						'label' => 'Highest completed level',
+						'label' => 'Highest education level',
 						'value' =>  'Not Available',
 					],
 					'openemis_id' => [

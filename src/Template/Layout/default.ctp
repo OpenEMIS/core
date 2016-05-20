@@ -41,8 +41,8 @@
 	
 	<?=  $this->element('OpenEmis.header'); ?>
 
-	<bg-splitter orientation="horizontal" class="pane-wrapper">
-		<bg-pane class="left-pane">
+	<bg-splitter orientation="horizontal" class="pane-wrapper" resize-callback="splitterDragCallback" elements="getSplitterElements">
+		<bg-pane id="leftPane" class="left-pane" max-size-p="40">
 			<div class="pane-container">
 				<?php 
 	        		echo $this->element('OpenEmis.navigation');
@@ -50,7 +50,7 @@
 			</div>
 		</bg-pane>
 		
-		<bg-pane class="right-pane pane-container" min-size-p="60">
+		<bg-pane id="rightPane" class="right-pane pane-container">
 <!-- 			<div class="load-content">
 				<div class="loader-text">
 					<i class="fa kd-openemis"></i>

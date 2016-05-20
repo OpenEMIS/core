@@ -1,3 +1,22 @@
+v3.5.5.1
+- Fixed a bug that caused the system to calculate using a wrong admission age when adding a student to institution
+
+v3.5.5
+- Added Difficulties to Special Needs
+- Position Number cannot contain spaces now
+- Fixed a bug that prevent the system from perform Student Repeat
+- OAuth and SAML authentication via mobile can now be supported
+- Deleting Institutions now deletes Staff Profile change requests properly
+- Fixed 504 bad gateway issue when login by certain users
+- Fixed a bug that caused Coordinate tooltip not to display properly
+- Optimisation on database queries
+- Fixed a bug that caused specific users not able to access newly created schools
+- Fixed a bug that caused 404 error page when accessing Rubrics
+- Added xform validations to work with mobile app
+- Fixed a bug that caused Programmes not able to save during Edit
+- Class List now shows the Total number of Students
+- Fixed a bug that caused 404 error page when user edits Institutions -> Subjects
+
 v3.5.4
 - Students can only be added to schools with academic period of Year level now
 - Fixed a bug that caused Area Levels not displaying correct names	

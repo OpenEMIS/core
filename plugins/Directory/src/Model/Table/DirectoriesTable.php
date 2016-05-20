@@ -175,7 +175,6 @@ class DirectoriesTable extends AppTable {
 							['EXISTS ('.$guardianAndOthers->sql().')'],
 						]
 					])
-					->group([$this->aliasField('id')])
 					;
 			} else {
 				$query = $this->find()->where([$this->aliasField('id') => -1]);
@@ -391,6 +390,8 @@ class DirectoriesTable extends AppTable {
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$this->fields = [];
+		$this->controller->set('ngController', 'AdvancedSearchCtrl');
+		
 		if (!is_null($this->request->query('user_type'))) {
 			switch($this->request->query('user_type')) {
 				case self::ALL:
