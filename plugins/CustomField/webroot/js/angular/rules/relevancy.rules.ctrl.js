@@ -12,8 +12,8 @@ function RelevancyRulesController($filter, $q) {
         var optionSelected = parseInt(vm.Dropdown[dependentQuestionId]);
         var showOption = false;
         if (showOptions.indexOf(optionSelected) != -1) {
-            showOptions = true;
+            showOption = true;
         }
-        return showOptions;
+        return showOption;
     }
 }
