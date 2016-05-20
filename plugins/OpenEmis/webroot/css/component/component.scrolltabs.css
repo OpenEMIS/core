@@ -1,4 +1,4 @@
-/* ANGULAR SCROLL TABS v.1.0.2 */
+/* ANGULAR SCROLL TABS v.1.0.5 */
 
 .scrolltabs {
     position: relative;
@@ -36,17 +36,18 @@
     line-height: 20px;
     min-width: 58px;
     text-align: center;
+    padding: 4px 10px !important;
 }
 
-.scrolltabs li a,
+.scrolltabs .nav-tabs li a,
 .chrome .scrolltabs .nav-tabs > li > a,
-.scrolltabs li.active a:focus,
-.scrolltabs li.active a:hover,
-.scrolltabs li:active a,
+.scrolltabs .nav-tabs li.active a:focus,
+.scrolltabs .nav-tabs li.active a:hover,
+.scrolltabs .nav-tabs li:active a,
 .scrolltabs .nav-tabs > li.active > a,
 .chrome .scrolltabs .nav-tabs > li.active > a {
-    padding: 4px 10px !important;
-    margin: 0 2px 0 0 !important;
+    padding: 4px 10px;
+    margin: 0 2px 0 0;
 }
 
 .scrolltabs .nav-tabs > li:last-child > a,
@@ -58,28 +59,34 @@
     padding: 10px 0;
 }
 
-.scrolltabs .nav > li > a {
+.scrolltabs.sticky-content .tab-content {
+    padding: 0;
+}
+
+.scrolltabs .nav-tabs > li > a {
     color: #888;
     background: #FFF;
 }
 
-.scrolltabs .nav > li:hover {
+.scrolltabs .nav-tabs > li:hover {
     color: #888;
     font-weight: normal;
 }
 
-.scrolltabs .nav > li:active > a,
-.scrolltabs .nav > li.active > a {
-    color: #333 !important;
+.scrolltabs .nav-tabs > li:active > a,
+.scrolltabs .nav-tabs > li.active > a {
+    color: #333;
     font-weight: 500;
+    line-height: 15px;
 }
 
-.scrolltabs .nav > li > a:hover {
+.scrolltabs .nav-tabs > li > a:hover {
     color: #FFF;
+    background-color: #6B6B6B;
 }
 
-.scrolltabs .nav > li:focus > a,
-.scrolltabs .nav > li > a:focus {
+.scrolltabs .nav-tabs > li:focus > a,
+.scrolltabs .nav-tabs > li > a:focus {
     border-left-color: #DDD !important;
     outline: none !important;
 }
@@ -268,7 +275,7 @@
     }
     .scrolltabs .ui-tabs-scrollable > .spacer > div:first-child > .nav-tabs > li > a {
         height: 36px;
-        line-height: 28px !important;
+        line-height: 20px !important;
         -webkit-border-bottom-left-radius: 0 !important;
         border-bottom-left-radius: 0 !important;
         -webkit-border-bottom-right-radius: 0 !important;
@@ -277,8 +284,9 @@
     .chrome .scrolltabs .ui-tabs-scrollable > .spacer > div:first-child > .nav-tabs > li > a,
     .safari .scrolltabs .ui-tabs-scrollable > .spacer > div:first-child > .nav-tabs > li > a {
         height: 36px;
+        line-height: 26px !important;
     }
-    .scrolltabs .nav > li > a {
+    .scrolltabs .nav-tabs > li > a {
         font-size: 14px;
     }
 }

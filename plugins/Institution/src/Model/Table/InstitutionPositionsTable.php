@@ -47,12 +47,19 @@ class InstitutionPositionsTable extends AppTable {
     }
 
 	public function validationDefault(Validator $validator) {
-		return $validator
+		
+		$validator
 			->add('position_no', 'ruleUnique', [
 				'rule' => 'validateUnique', 
 				'provider' => 'table'
 			])
-			;
+			
+			->add('position_no', 'ruleNoSpaces', [
+				'rule' => 'checkNoSpaces',
+				'provider' => 'custom'
+			]);
+		
+		return $validator;
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {

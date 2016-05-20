@@ -67,7 +67,7 @@ $this->ControllerAction->HtmlField->includes($table, 'index');
 $baseUrl = $this->Url->build($url);
 ?>
 
-<div class="table-wrapper">
+<div class="table-wrapper" ng-class="disableElement">
 	<div class="table-responsive">
 		<table class="<?= $tableClass ?>" <?= $displayReorder ? 'id="sortable" url="' . $baseUrl . '"' : '' ?>>
 			<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
