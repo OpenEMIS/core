@@ -140,8 +140,7 @@ class PermissionsTable extends AppTable {
 		//this is to check if user have role higher that the one user try to edit.  e.g. teacher(4) and principal(2) 
 		//also for super admin where redirect not necessary
 		//OR user is creator of the user role.
-		if (($roleOrder > $userRole['security_role']['order']) ||  ($roleEntity->created_user_id == $userId))return true;
-		else return false;
+		return (($roleOrder > $userRole['security_role']['order']) ||  ($roleEntity->created_user_id == $userId));
 		
 	}
 
