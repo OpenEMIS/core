@@ -74,4 +74,6 @@ ALTER TABLE `institution_subject_students`
 -- insert from stagging table
 INSERT INTO `institution_subject_students`
 SELECT * FROM `institution_subject_students_temp`
-GROUP BY `student_id`, `institution_subject_id`, `institution_class_id`, `institution_id`, `academic_period_id`, `education_subject_id`;
+GROUP BY `student_id`, `institution_class_id`, `institution_id`, `academic_period_id`, `education_subject_id`;
+
+DROP TABLE IF EXISTS `institution_subject_students_temp`;
