@@ -1,4 +1,6 @@
--- delete new table
+-- delete new table and temp
+
+DROP TABLE IF EXISTS `institution_subject_students_temp`;
 
 DROP TABLE IF EXISTS `institution_subject_students`;
 
