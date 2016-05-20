@@ -1,3 +1,8 @@
+v3.5.5.2
+- Survey Reports will now be generated based on the user's security access
+- Fixed a bug that caused 404 error page when users access Directories
+- Fixed a bug that caused 404 error page when user accessing Classes -> Edit
+
 v3.5.5.1
 - Fixed a bug that caused the system to calculate using a wrong admission age when adding a student to institution
 
