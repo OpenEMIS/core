@@ -214,9 +214,22 @@ class InstitutionSurveysTable extends AppTable {
 
 			$resultSet = $this
 				->find()
-				->contain(['Statuses', 'AcademicPeriods', 'SurveyForms', 'Institutions', 'ModifiedUser', 'CreatedUser'])
+				->select([
+					$this->aliasField('id'),
+					$this->aliasField('status_id'),
+					$this->aliasField('modified'),
+					$this->aliasField('created'),
+					'Statuses.name',
+					'AcademicPeriods.name',
+					'SurveyForms.name',
+					'Institutions.id',
+					'Institutions.name',
+					'CreatedUser.username'
+				])
+				->contain(['Statuses', 'AcademicPeriods', 'SurveyForms', 'Institutions', 'CreatedUser'])
 				->where($where)
 				->order([$this->aliasField('created')])
+				->limit(30)
 				->toArray();
 			// End
 
