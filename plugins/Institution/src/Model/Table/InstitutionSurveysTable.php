@@ -451,6 +451,10 @@ class InstitutionSurveysTable extends AppTable {
 		return $attr;
 	}
 
+	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
+		$includes['ruleCtrl'] = ['include' => true, 'js' => 'CustomField.angular/rules/relevancy.rules.ctrl'];
+	}
+	
 	public function onUpdateFieldRepeaterQuestionId(Event $event, array $attr, $action, $request) {
 		$attr['type'] = 'hidden';
 		$attr['value'] = 0;
