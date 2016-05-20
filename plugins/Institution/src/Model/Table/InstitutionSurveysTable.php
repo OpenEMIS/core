@@ -451,17 +451,16 @@ class InstitutionSurveysTable extends AppTable {
 		return $attr;
 	}
 
-<<<<<<< HEAD
 	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
 		$includes['ruleCtrl'] = ['include' => true, 'js' => 'CustomField.angular/rules/relevancy.rules.ctrl'];
-=======
+	}
+	
 	public function onUpdateFieldRepeaterQuestionId(Event $event, array $attr, $action, $request) {
 		$attr['type'] = 'hidden';
 		$attr['value'] = 0;
 		$attr['attr']['class'] = 'repeater-question-id';
 
 		return $attr;
->>>>>>> 38158d112bfbaa4c64778b7dacdfa3bdb00fcee4
 	}
 
 	public function buildSurveyRecords($institutionId=null) {
