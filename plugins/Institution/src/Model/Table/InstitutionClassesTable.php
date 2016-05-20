@@ -492,8 +492,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 
 	public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		$query->contain([
-			'InstitutionSubjects',
-			'SubjectStudents',
+			'InstitutionSubjects'
 		]);
 	}
 
