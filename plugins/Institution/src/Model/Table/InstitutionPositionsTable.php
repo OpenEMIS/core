@@ -454,9 +454,22 @@ class InstitutionPositionsTable extends AppTable {
 
 			$resultSet = $this
 				->find()
-				->contain(['Statuses', 'StaffPositionTitles', 'StaffPositionGrades', 'Institutions', 'ModifiedUser', 'CreatedUser'])
+				->select([
+					$this->aliasField('id'),
+					$this->aliasField('status_id'),
+					$this->aliasField('modified'),
+					$this->aliasField('created'),
+					'Statuses.name',
+					'StaffPositionTitles.name',
+					'StaffPositionGrades.name',
+					'Institutions.id',
+					'Institutions.name',
+					'CreatedUser.username'
+				])
+				->contain(['Statuses', 'StaffPositionTitles', 'StaffPositionGrades', 'Institutions', 'CreatedUser'])
 				->where($where)
 				->order([$this->aliasField('created')])
+				->limit(30)
 				->toArray();
 
 			$WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
