@@ -120,6 +120,10 @@ class DirectoriesController extends AppController {
 	}
 
 	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
+        if ($model instanceof \Staff\Model\Table\StaffClassesTable || $model instanceof \Staff\Model\Table\StaffSubjectsTable) {
+            $model->toggle('add', false);
+        }
+        
 		/**
 		 * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
 		 */
