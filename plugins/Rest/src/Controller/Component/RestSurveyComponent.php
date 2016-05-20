@@ -657,17 +657,21 @@ class RestSurveyComponent extends Component
         // End
 
         // used to build validation rules
-        // $schemaNode = $modelNode->addChild("schema", null, NS_XSD);
+        $schemaNode = $modelNode->addChild("schema", null, NS_XSD);
 
         $sectionName = null;
         foreach ($fields as $key => $field) {
             $extra = new ArrayObject([]);
             $extra['index'] = $key + 1;
+            $extra['subIndex'] = 0;
             $extra['head'] = $headNode;
             $extra['body'] = $bodyNode;
             $extra['model'] = $modelNode;
             $extra['instance'] = $instanceNode;
+            $extra['schema'] = $schemaNode;
             $extra['form'] = $formNode;
+            $extra['hint'] = null;
+            $extra['constraint'] = null;
 
             $extra['references'] = [$this->Form->alias(), $this->Field->alias()."[".$extra['index']."]"];
             $extra['default_value'] = null;
@@ -689,6 +693,7 @@ class RestSurveyComponent extends Component
             if (method_exists($this, $fieldTypeFunction)) {
                 $this->$fieldTypeFunction($field, $parentNode, $instanceId, $extra);
 
+                // set to null to skip adding into Head > Model > Instance (e.g. for table and repeater)
                 if (!is_null($extra['form'])) {
                     $this->setModelNode($field, $extra['form'], $instanceId, $extra);
                 }
@@ -728,16 +733,97 @@ class RestSurveyComponent extends Component
 
     private function text($field, $parentNode, $instanceId, $extra)
     {
-        $extra['tagName'] = 'input';
-        $extra['bindType'] = 'string';
+        $bindType = 'string';
 
+        $validationType = null;
+        $validations = [];
+        $validationHint = '';
+        if ($field->has('params') && !empty($field->params)) {
+            $params = json_decode($field->params, true);
+
+            foreach ($params as $key => $value) {
+                switch ($key) {
+                    case 'min_length':
+                        $validationType = $key;
+                        $validations[$validationType] = $value;
+                        $validationHint = $this->Field->getMessage('CustomField.text.minLength', ['sprintf' => $value]);
+                        break;
+                    case 'max_length':
+                        $validationType = $key;
+                        $validations[$validationType] = $value;
+                        $validationHint = $this->Field->getMessage('CustomField.text.maxLength', ['sprintf' => $value]);
+                        break;
+                    case 'range':
+                        $validationType = $key;
+                        if (array_key_exists('lower', $value) && array_key_exists('upper', $value)) {
+                            $validations['min_length'] = $value['lower'];
+                            $validations['max_length'] = $value['upper'];
+                            $validationHint = $this->Field->getMessage('CustomField.text.range', ['sprintf' => [$value['lower'], $value['upper']]]);
+                        }
+                }
+            }
+        }
+
+        if (!is_null($validationType)) {
+            $bindType = "string".Inflector::camelize($validationType).$extra['index'];
+
+            // introduce subIndex to handle question inside repeater has validation
+            $subIndex = $extra['subIndex'];
+            if (!empty($subIndex)) {
+                $bindType .= "_$subIndex";
+            }
+            // End
+
+            $schemaNode = $extra['schema'];
+            $simpleType = $schemaNode->addChild('simpleType', null, NS_XSD);
+            $simpleType->addAttribute("name", $bindType);
+
+            $restriction = $simpleType->addChild('restriction', null, NS_XSD);
+            $restriction->addAttribute("base", "xf:string");
+
+            foreach ($validations as $key => $value) {
+                $condition = $restriction->addChild(Inflector::variable($key), null, NS_XSD);
+                $condition->addAttribute("value", $value);
+            }
+        }
+
+        $extra['tagName'] = 'input';
+        $extra['bindType'] = $bindType;
+        $extra['hint'] = !empty($validationHint) ? $validationHint : null;
         $this->setCommonNode($field, $parentNode, $instanceId, $extra);
     }
 
     private function number($field, $parentNode, $instanceId, $extra)
     {
+        $constraint = null;
+        $validationHint = '';
+        if ($field->has('params') && !empty($field->params)) {
+            $params = json_decode($field->params, true);
+
+            foreach ($params as $key => $value) {
+                switch ($key) {
+                    case 'min_value':
+                        $constraint = ". >= $value";
+                        $validationHint = $this->Field->getMessage('CustomField.number.minValue', ['sprintf' => $value]);
+                        break;
+                    case 'max_value':
+                        $constraint = ". <= $value";
+                        $validationHint = $this->Field->getMessage('CustomField.number.maxValue', ['sprintf' => $value]);
+                        break;
+                    case 'range':
+                        if (array_key_exists('lower', $value) && array_key_exists('upper', $value)) {
+                            $constraint = ". >= ".$value['lower']." && ".". <= ".$value['upper'];
+                            $validationHint = $this->Field->getMessage('CustomField.number.range', ['sprintf' => [$value['lower'], $value['upper']]]);
+                        }
+                        break;
+                }
+            }
+        }
+
         $extra['tagName'] = 'input';
         $extra['bindType'] = 'integer';
+        $extra['hint'] = !empty($validationHint) ? $validationHint : null;
+        $extra['constraint'] = !empty($constraint) ? $constraint : null;
 
         $this->setCommonNode($field, $parentNode, $instanceId, $extra);
     }
@@ -876,16 +962,60 @@ class RestSurveyComponent extends Component
 
     private function date($field, $parentNode, $instanceId, $extra)
     {
+        $constraint = null;
+        $validationHint = '';
+        if ($field->has('params') && !empty($field->params)) {
+            $params = json_decode($field->params, true);
+
+            $startDate = array_key_exists('start_date', $params) ? $params['start_date'] : null;
+            $endDate = array_key_exists('end_date', $params) ? $params['end_date'] : null;
+
+            if (!is_null($startDate) && !is_null($endDate)) {
+                $constraint = ". >= '".$startDate."'' && ".". <= '".$endDate."'";
+                $validationHint = $this->Field->getMessage('CustomField.date.between', ['sprintf' => [$startDate, $endDate]]);
+            } else if (!is_null($startDate)) {
+                $constraint = ". >= '$startDate'";
+                $validationHint = $this->Field->getMessage('CustomField.date.earlier', ['sprintf' => $startDate]);
+            } else if (!is_null($endDate)) {
+                $constraint = ". <= '$endDate'";
+                $validationHint = $this->Field->getMessage('CustomField.date.later', ['sprintf' => $endDate]);
+            }
+        }
+
         $extra['tagName'] = 'input';
         $extra['bindType'] = 'date';
+        $extra['hint'] = !empty($validationHint) ? $validationHint : null;
+        $extra['constraint'] = !empty($constraint) ? $constraint : null;
 
         $this->setCommonNode($field, $parentNode, $instanceId, $extra);
     }
 
     private function time($field, $parentNode, $instanceId, $extra)
     {
+        $constraint = null;
+        $validationHint = '';
+        if ($field->has('params') && !empty($field->params)) {
+            $params = json_decode($field->params, true);
+
+            $startTime = array_key_exists('start_time', $params) ? $params['start_time'] : null;
+            $endTime = array_key_exists('end_time', $params) ? $params['end_time'] : null;
+
+            if (!is_null($startTime) && !is_null($endTime)) {
+                $constraint = ". >= '".$this->twentyFourHourFormat($startTime)."'' && ".". <= '".$this->twentyFourHourFormat($endTime)."'";
+                $validationHint = $this->Field->getMessage('CustomField.time.between', ['sprintf' => [$startTime, $endTime]]);
+            } else if (!is_null($startTime)) {
+                $constraint = ". >= '".$this->twentyFourHourFormat($startTime)."'";
+                $validationHint = $this->Field->getMessage('CustomField.time.earlier', ['sprintf' => $startTime]);
+            } else if (!is_null($endTime)) {
+                $constraint = ". <= '".$this->twentyFourHourFormat($endTime)."'";
+                $validationHint = $this->Field->getMessage('CustomField.time.later', ['sprintf' => $endTime]);
+            }
+        }
+
         $extra['tagName'] = 'input';
         $extra['bindType'] = 'time';
+        $extra['hint'] = !empty($validationHint) ? $validationHint : null;
+        $extra['constraint'] = !empty($constraint) ? $constraint : null;
 
         $this->setCommonNode($field, $parentNode, $instanceId, $extra);
     }
@@ -929,6 +1059,7 @@ class RestSurveyComponent extends Component
             if (!empty($fields)) {
                 foreach ($fields as $key => $field) {
                     $index = $key + 1;
+                    $extra['subIndex'] = $index;
                     // must reset to null
                     $extra['default_value'] = null;
                     $extra['references'] = [$this->Form->alias(), $this->Field->alias()."[".$extra['index']."]", 'RepeatBlock', $this->Field->alias().$index];
@@ -956,7 +1087,15 @@ class RestSurveyComponent extends Component
         $bindType = array_key_exists('bindType', $extra) ? $extra['bindType'] : 'string';
 
         $this->setBodyNode($field, $parentNode, $instanceId, $tagName, $extra);
-        $this->setBindNode($extra['model'], $instanceId, $extra['references'], ['type' => $bindType, 'required' => $field->default_is_mandatory]);
+
+        $bindAttr = [
+            'type' => $bindType,
+            'required' => $field->default_is_mandatory
+        ];
+        if (!empty($extra['constraint'])) {
+            $bindAttr['constraint'] = $extra['constraint'];
+        }
+        $this->setBindNode($extra['model'], $instanceId, $extra['references'], $bindAttr);
     }
 
     private function setBodyNode($field, $parentNode, $instanceId, $fieldType, $extra)
@@ -965,6 +1104,11 @@ class RestSurveyComponent extends Component
         $fieldNode->addAttribute("ref", $this->getRef($instanceId, $extra['references']));
         $fieldNode->addChild("label", htmlspecialchars($field->default_name, ENT_QUOTES), NS_XF);
 
+        if (!empty($extra['hint'])) {
+            // <xf:hint>Text should be at least 10 characters</xf:hint>
+            $fieldNode->addChild("hint", htmlspecialchars($extra['hint'], ENT_QUOTES), NS_XF);
+        }
+
         return $fieldNode;
     }
 
@@ -972,6 +1116,7 @@ class RestSurveyComponent extends Component
     {
         $bindType = array_key_exists('type', $attr) ? $attr['type'] : 'string';
         $required = array_key_exists('required', $attr) ? $attr['required'] : false;
+        $constraint = array_key_exists('constraint', $attr) ? $attr['constraint'] : null;
 
         $bindNode = $modelNode->addChild("bind", null, NS_XF);
         $bindNode->addAttribute("ref", $this->getRef($instanceId, $references));
@@ -981,6 +1126,11 @@ class RestSurveyComponent extends Component
             $bindNode->addAttribute("required", 'true()');
         } else {
             $bindNode->addAttribute("required", 'false()');
+        }
+
+        if (!is_null($constraint)) {
+            // <xf:bind constraint=". &gt;= 5 &amp;&amp; . &lt;= 15" ref="instance('xform')/SurveyForms/SurveyQuestions[1]" required="false()" type="integer"/>
+            $bindNode->addAttribute("constraint", $constraint);
         }
 
         return $bindNode;
