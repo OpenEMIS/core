@@ -7,6 +7,8 @@ use Cake\Event\Event;
 use CustomField\Model\Behavior\RenderBehavior;
 
 class RenderDropdownBehavior extends RenderBehavior {
+
+    private $postedData = null;
 	public function initialize(array $config) {
         parent::initialize($config);
     }
@@ -50,17 +52,33 @@ class RenderDropdownBehavior extends RenderBehavior {
 
             $options['type'] = 'select';
             $options['options'] = $dropdownOptions;
+            $options['ng-model'] = 'RelevancyRulesController.Dropdown["'.$fieldId.'"]';
 
             if ($this->_table->request->is(['get'])) {
                 $selectedValue = !is_null($savedValue) ? $savedValue : $dropdownDefault;
                 $options['default'] = $selectedValue;
                 $options['value'] = $selectedValue;
+                $options['ng-init'] = 'RelevancyRulesController.Dropdown["'.$fieldId.'"] = "'.$selectedValue.'";';
+            } else {
+                if (is_null($this->postedData)) {
+                    $questions = $this->_table->request->data[$this->_table->alias()]['custom_field_values'];
+                    foreach ($questions as $question) {
+                        if ($question['field_type'] == 'DROPDOWN') {
+                            $this->postedData[$question['survey_question_id']] = $question['number_value'];
+                        }
+                    }
+                }
+                $selectedValue = $this->postedData[$fieldId];
+                $options['ng-init'] = 'RelevancyRulesController.Dropdown["'.$fieldId.'"] = "'.$selectedValue.'";';
             }
+
             $value .= $form->input($fieldPrefix.".number_value", $options);
             $value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
             if (!is_null($savedId)) {
                 $value .= $form->hidden($fieldPrefix.".id", ['value' => $savedId]);
             }
+
+            $value = $this->processRelevancyDisabled($entity, $value, $fieldId);
         }
 
         $event->stopPropagation();
