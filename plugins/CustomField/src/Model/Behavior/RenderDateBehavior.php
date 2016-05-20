@@ -105,6 +105,7 @@ class RenderDateBehavior extends RenderBehavior {
             if (!is_null($savedId)) {
                 $value .= $form->hidden($fieldPrefix.".id", ['value' => $savedId]);
             }
+            $value = $this->processRelevancyDisabled($entity, $value, $fieldId);
 		}
 
         $event->stopPropagation();

@@ -1,3 +1,11 @@
+-- POCOR-2447
+-- survey_rules
+DROP TABLE `survey_rules`;
+
+-- db_patches
+DELETE FROM db_patches WHERE `issue` = 'POCOR-2447';
+
+
 -- POCOR-2723
 UPDATE security_functions
     SET
