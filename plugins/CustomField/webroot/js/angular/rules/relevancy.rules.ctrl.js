@@ -4,18 +4,16 @@ angular
 
 RelevancyRulesController.$inject = ['$filter', '$q'];
 
-
-
-function RelevancyRulesController($filter, $q) {
-    
+function RelevancyRulesController($filter, $q) {    
     var vm = this;
+    vm.showDropdown = showDropdown;
 
-    vm.showDropdown = function(dependentQuestionId, showOptions) {
+    function showDropdown(dependentQuestionId, showOptions) {
         var optionSelected = parseInt(vm.Dropdown[dependentQuestionId]);
+        var showOption = false;
         if (showOptions.indexOf(optionSelected) != -1) {
-            return true;
-        } else {
-            return false;
+            showOptions = true;
         }
+        return showOptions;
     }
 }

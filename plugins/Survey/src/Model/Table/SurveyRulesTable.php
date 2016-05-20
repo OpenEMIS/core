@@ -48,7 +48,7 @@ class SurveyRulesTable extends ControllerActionTable
         $extra['elements']['controls'] = ['name' => 'Survey.survey_rules_controls', 'data' => [], 'options' => [], 'order' => 2];
 
         if (!$this->request->query('survey_form_id')) {
-            $this->field('survey_form_id', ['visible' => true]);
+            $this->fields['survey_form_id']['type'] = 'integer';
         }
     }
 
@@ -92,7 +92,7 @@ class SurveyRulesTable extends ControllerActionTable
         $surveyFormOptions = $this->SurveyForms
             ->find('list')
             ->toArray();
-        $surveyFormOptions = ['' => '--'.__('Select Survey').'--'] + $surveyFormOptions;
+        $surveyFormOptions = ['' => '-- '.__('Select Survey').' --'] + $surveyFormOptions;
         $surveyFormId = $this->request->query('survey_form_id');
         $this->advancedSelectOptions($surveyFormOptions, $surveyFormId);
         $this->controller->set(compact('surveyFormOptions'));
@@ -117,7 +117,7 @@ class SurveyRulesTable extends ControllerActionTable
                 ->order([$SurveyFormsQuestionsTable->aliasField('order')])
                 ->toArray();
 
-            $sectionOptions = ['0' => '--'.__('Select Section').'--'] + $surveySections;
+            $sectionOptions = ['0' => '-- '.__('Select Section').' --'] + $surveySections;
             $sectionOptions = array_values($sectionOptions);
             $sectionId = $this->request->query('section_id');
             $this->advancedSelectOptions($sectionOptions, $sectionId);
