@@ -50,7 +50,7 @@ $institutionId = $session->read('Institution.Institutions.id');
 									<tr>
 										<th><?= __('Enable')?></th>
 										<th><?= __('Dependent On')?></th>
-										<th><?= __('Show If')?></th>
+										<th><?= __('Dropdown Question Options')?></th>
 									</tr>
 								</thead>
 									<tr ng-repeat-start="question in SurveyRulesController.surveyQuestions">

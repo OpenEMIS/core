@@ -35,7 +35,8 @@ class RenderBehavior extends Behavior {
             'Render.process'.$this->fieldType.'Values' => 'process'.$this->fieldType.'Values',
             'Render.onSave' => 'onSave',
             'ControllerAction.Model.onUpdateIncludes' => 'onUpdateIncludes',
-            'Workflow.updateWorkflowStatus' => 'updateWorkflowStatus'
+            'Workflow.updateWorkflowStatus' => 'updateWorkflowStatus',
+            // 'Render.deleteCustomFieldValues' => 'deleteCustomFieldValues'
         ];
 
         foreach ($eventMap as $event => $method) {
