@@ -160,10 +160,34 @@ class InstitutionPositionsTable extends AppTable {
    		}
 	}
 
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+        // POCOR-3003 - [...] decision is to make Position Title not editable on the position edit page
+        if ($entity->has('staff_position_title_id')) {
+            $types = $this->getSelectOptions('Staff.position_types');
+            $staffPositionData = $this->StaffPositionTitles->find()
+                ->select(['name', 'type'])
+                ->where([$this->StaffPositionTitles->aliasField($this->StaffPositionTitles->primaryKey()) => $entity->staff_position_title_id])
+                ->first();
+            if (!empty($staffPositionData)) {
+                $type = (array_key_exists($staffPositionData->type, $types))? $types[$staffPositionData->type]: null;
+                $this->fields['staff_position_title_id']['attr']['value'] = $staffPositionData->name;
+                if (!empty($type)) {
+                    $this->fields['staff_position_title_id']['attr']['value'] .= ' - ' . $type;
+                }
+            }
+        }
+    }
+
    	public function onUpdateFieldStaffPositionTitleId(Event $event, array $attr, $action, $request) {
+        if (in_array($action, ['edit'])) {
+            // POCOR-3003 - [...] decision is to make Position Title not editable on the position edit page
+            $attr['type'] = 'readonly';
+            return $attr;
+        }
+
    		$types = $this->getSelectOptions('Staff.position_types');
 		$titles = new ArrayObject();
-		if (in_array($action, ['add', 'edit'])) {
+		if (in_array($action, ['add'])) {
 
 			$userId = $this->Auth->user('id');
 			$institutionId = $this->Session->read('Institution.Institutions.id');
@@ -454,9 +478,22 @@ class InstitutionPositionsTable extends AppTable {
 
 			$resultSet = $this
 				->find()
-				->contain(['Statuses', 'StaffPositionTitles', 'StaffPositionGrades', 'Institutions', 'ModifiedUser', 'CreatedUser'])
+				->select([
+					$this->aliasField('id'),
+					$this->aliasField('status_id'),
+					$this->aliasField('modified'),
+					$this->aliasField('created'),
+					'Statuses.name',
+					'StaffPositionTitles.name',
+					'StaffPositionGrades.name',
+					'Institutions.id',
+					'Institutions.name',
+					'CreatedUser.username'
+				])
+				->contain(['Statuses', 'StaffPositionTitles', 'StaffPositionGrades', 'Institutions', 'CreatedUser'])
 				->where($where)
 				->order([$this->aliasField('created')])
+				->limit(30)
 				->toArray();
 
 			$WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
