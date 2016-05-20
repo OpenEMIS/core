@@ -1,5 +1,4 @@
 -- db_patches
-
 INSERT INTO db_patches (`issue`, `created`) VALUES ('POCOR-2447', NOW());
 
 -- survey_rules
@@ -15,4 +14,4 @@ CREATE TABLE `survey_rules` (
   `created` DATETIME NOT NULL COMMENT '',
   `created_user_id` INT NOT NULL COMMENT '',
   PRIMARY KEY (`survey_form_id`, `survey_question_id`)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
