@@ -10,7 +10,7 @@
 <div class="input clearfix">
 	<div class="clearfix">
 	<?php
-		echo $this->Form->input('<i class="fa fa-plus"></i> <span>Add New Payment</span>', [
+		echo $this->Form->input('<i class="fa fa-plus"></i> <span>'.__('Add New Payment').'</span>', [
 			'label' => __('Payments'),
 			'type' => 'button',
 			'class' => 'btn btn-default',

@@ -210,18 +210,18 @@ class InstitutionRubricsTable extends AppTable {
 
 		$tabElements = [];
 		if ($this->AccessControl->check([$this->controller->name, 'NewRubrics', 'view'])) {
-			$tabElements['New'] = [
+			$tabElements[__('New')] = [
 				'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action.'?status=0'],
 				'text' => __('New')
 			];
-			$tabElements['Draft'] = [
+			$tabElements[__('Draft')] = [
 				'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action.'?status=1'],
 				'text' => __('Draft')
 			];
 		}
 
 		if ($this->AccessControl->check([$this->controller->name, 'CompletedRubrics', 'view'])) {
-			$tabElements['Completed'] = [
+			$tabElements[__('Completed')] = [
 				'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action.'?status=2'],
 				'text' => __('Completed')
 			];
@@ -353,110 +353,115 @@ class InstitutionRubricsTable extends AppTable {
 					$programmeId = $programme->id;
 					$programmeIds[$programmeId] = $programmeId;
 				}
-				$gradeIds = $this->EducationGrades
-					->find('list', ['keyField' => 'id', 'valueField' => 'id'])
-					->where([$this->EducationGrades->aliasField('education_programme_id IN') => $programmeIds])
-					->toArray();
 
-				foreach ($rubricStatus->academic_periods as $academicPeriod) {
-					$academicPeriodId = $academicPeriod->id;
-					$classResults = $Classes
-						->find()
-						->select([
-							$Classes->aliasField('id'),
-							$Classes->aliasField('name')
-						])
-						->where([
-							$Classes->aliasField('institution_id') => $institutionId,
-							$Classes->aliasField('academic_period_id') => $academicPeriodId,
-						])
-						->join([
-							'table' => $ClassGrades->_table,
-							'alias' => $ClassGrades->alias(),
-							'conditions' => [
-								$ClassGrades->aliasField('institution_class_id =') . $Classes->aliasField('id'),
-								$ClassGrades->aliasField('education_grade_id IN') => $gradeIds
-							]
-						])
-						->join([
-							'table' => $ClassSubjects->_table,
-							'alias' => $ClassSubjects->alias(),
-							'conditions' => [
-								$ClassSubjects->aliasField('institution_class_id =') . $Classes->aliasField('id')
-							]
-						])
-						->join([
-							'table' => $Subjects->_table,
-							'alias' => $Subjects->alias(),
-							'conditions' => [
-								$Subjects->aliasField('id =') . $ClassSubjects->aliasField('institution_subject_id'),
-								$Subjects->aliasField('institution_id') => $institutionId,
-								$Subjects->aliasField('academic_period_id') => $academicPeriodId
-							]
-						])
-						->group([
-							$Classes->aliasField('id')
-						])
-						->contain(['ClassGrades', 'InstitutionSubjects.SubjectStaff'])
-						->all();
+				if (!empty($programmeIds)) {
+					$gradeIds = $this->EducationGrades
+						->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+						->where([$this->EducationGrades->aliasField('education_programme_id IN') => $programmeIds])
+						->toArray();
 
-					if (!$classResults->isEmpty()) {
-						foreach ($classResults as $class) {
-							$classId = $class->id;
-							$gradeId = 0;
-							foreach ($class->class_grades as $grade) {
-								$gradeId = $grade->education_grade_id;
-							}
+					if (!empty($gradeIds)) {
+						foreach ($rubricStatus->academic_periods as $academicPeriod) {
+							$academicPeriodId = $academicPeriod->id;
+							$classResults = $Classes
+								->find()
+								->select([
+									$Classes->aliasField('id'),
+									$Classes->aliasField('name')
+								])
+								->where([
+									$Classes->aliasField('institution_id') => $institutionId,
+									$Classes->aliasField('academic_period_id') => $academicPeriodId,
+								])
+								->join([
+									'table' => $ClassGrades->_table,
+									'alias' => $ClassGrades->alias(),
+									'conditions' => [
+										$ClassGrades->aliasField('institution_class_id =') . $Classes->aliasField('id'),
+										$ClassGrades->aliasField('education_grade_id IN') => $gradeIds
+									]
+								])
+								->join([
+									'table' => $ClassSubjects->_table,
+									'alias' => $ClassSubjects->alias(),
+									'conditions' => [
+										$ClassSubjects->aliasField('institution_class_id =') . $Classes->aliasField('id')
+									]
+								])
+								->join([
+									'table' => $Subjects->_table,
+									'alias' => $Subjects->alias(),
+									'conditions' => [
+										$Subjects->aliasField('id =') . $ClassSubjects->aliasField('institution_subject_id'),
+										$Subjects->aliasField('institution_id') => $institutionId,
+										$Subjects->aliasField('academic_period_id') => $academicPeriodId
+									]
+								])
+								->group([
+									$Classes->aliasField('id')
+								])
+								->contain(['ClassGrades', 'InstitutionSubjects.SubjectStaff'])
+								->all();
 
-							foreach ($class->institution_subjects as $subject) {
-								$subjectId = $subject->id;
-								foreach ($subject->subject_staff as $staff) {
-									$staffId = $staff->staff_id;
+							if (!$classResults->isEmpty()) {
+								foreach ($classResults as $class) {
+									$classId = $class->id;
+									$gradeId = 0;
+									foreach ($class->class_grades as $grade) {
+										$gradeId = $grade->education_grade_id;
+									}
 
-									$results = $this
-										->find('all')
-										->where([
-											$this->aliasField('institution_id') => $institutionId,
-											$this->aliasField('rubric_template_id') => $templateId,
-											$this->aliasField('academic_period_id') => $academicPeriodId,
-											$this->aliasField('education_grade_id') => $gradeId,
-											$this->aliasField('institution_class_id') => $classId,
-											$this->aliasField('institution_subject_id') => $subjectId,
-											$this->aliasField('staff_id') => $staffId
-										])
-										->all();
-									
-									if ($results->isEmpty()) {
-										// Insert New Rubric if not found
-										$data = [
-											'institution_id' => $institutionId,
-											'rubric_template_id' => $templateId,
-											'academic_period_id' => $academicPeriodId,
-											'education_grade_id' => $gradeId,
-											'institution_class_id' => $classId,
-											'institution_subject_id' => $subjectId,
-											'staff_id' => $staffId
-										];
-										$entity = $this->newEntity($data);
+									foreach ($class->institution_subjects as $subject) {
+										$subjectId = $subject->id;
+										foreach ($subject->subject_staff as $staff) {
+											$staffId = $staff->staff_id;
 
-										if ($this->save($entity)) {
-										} else {
-											$this->log($entity->errors(), 'debug');
+											$results = $this
+												->find('all')
+												->where([
+													$this->aliasField('institution_id') => $institutionId,
+													$this->aliasField('rubric_template_id') => $templateId,
+													$this->aliasField('academic_period_id') => $academicPeriodId,
+													$this->aliasField('education_grade_id') => $gradeId,
+													$this->aliasField('institution_class_id') => $classId,
+													$this->aliasField('institution_subject_id') => $subjectId,
+													$this->aliasField('staff_id') => $staffId
+												])
+												->all();
+											
+											if ($results->isEmpty()) {
+												// Insert New Rubric if not found
+												$data = [
+													'institution_id' => $institutionId,
+													'rubric_template_id' => $templateId,
+													'academic_period_id' => $academicPeriodId,
+													'education_grade_id' => $gradeId,
+													'institution_class_id' => $classId,
+													'institution_subject_id' => $subjectId,
+													'staff_id' => $staffId
+												];
+												$entity = $this->newEntity($data);
+
+												if ($this->save($entity)) {
+												} else {
+													$this->log($entity->errors(), 'debug');
+												}
+											} else {
+												// Update Expired Rubric back to New
+												$this->updateAll(['status' => 0],
+													[
+														'institution_id' => $institutionId,
+														'rubric_template_id' => $templateId,
+														'academic_period_id' => $academicPeriodId,
+														'education_grade_id' => $gradeId,
+														'institution_class_id' => $classId,
+														'institution_subject_id' => $subjectId,
+														'staff_id' => $staffId,
+														'status' => -1
+													]
+												);
+											}
 										}
-									} else {
-										// Update Expired Rubric back to New
-										$this->updateAll(['status' => 0],
-											[
-												'institution_id' => $institutionId,
-												'rubric_template_id' => $templateId,
-												'academic_period_id' => $academicPeriodId,
-												'education_grade_id' => $gradeId,
-												'institution_class_id' => $classId,
-												'institution_subject_id' => $subjectId,
-												'staff_id' => $staffId,
-												'status' => -1
-											]
-										);
 									}
 								}
 							}
