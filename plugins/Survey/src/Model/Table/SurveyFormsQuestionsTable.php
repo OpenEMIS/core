@@ -3,6 +3,10 @@ namespace Survey\Model\Table;
 
 use CustomField\Model\Table\CustomFormsFieldsTable;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
+use Cake\Event\Event;
+use Cake\ORM\Entity;
+use ArrayObject;
 
 class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
 	public function initialize(array $config) {
@@ -12,6 +16,20 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
 		$this->belongsTo('CustomFields', ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id']);
 
 		$this->removeBehavior('Reorder');
+	}
+
+	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+		$SurveyRules = TableRegistry::get('Survey.SurveyRules');
+		$entities = $SurveyRules
+			->find()
+			->where([
+				$SurveyRules->aliasField('survey_form_id') => $entity->survey_form_id,
+				$SurveyRules->aliasField('survey_question_id') => $entity->survey_question_id
+			])
+			->toArray();
+		foreach($entities as $entity) {
+			$SurveyRules->delete($entity);
+		}
 	}
 
 	public function findDropDownQuestions(Query $query, array $options)

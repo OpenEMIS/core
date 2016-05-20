@@ -10,8 +10,6 @@ function SurveyRulesSvc($q, KdOrmSvc) {
         SurveyFormsTable: 'Survey.SurveyForms',
         SurveyQuestionsTable: 'Survey.SurveyQuestions',
         SurveyFormsQuestionsTable: 'Survey.SurveyFormsQuestions',
-        SurveyFormsQuestionsTable2: 'Survey.SurveyFormsQuestions',
-        SurveyFormsQuestionsTable3: 'Survey.SurveyFormsQuestions',
         SurveyQuestionChoicesTable: 'Survey.SurveyQuestionChoices',
         SurveyRulesTable: 'Survey.SurveyRules'
     };
@@ -50,7 +48,7 @@ function SurveyRulesSvc($q, KdOrmSvc) {
     };
 
     function getQuestions(surveyFormId, sectionName) {
-        return SurveyFormsQuestionsTable2
+        return SurveyFormsQuestionsTable
             .select()
             .contain(['CustomFields'])
             .where({survey_form_id: surveyFormId, section: sectionName})
@@ -61,7 +59,7 @@ function SurveyRulesSvc($q, KdOrmSvc) {
     };
 
     function getShowIfChoices(surveyFormId, section) {
-        return SurveyFormsQuestionsTable3
+        return SurveyFormsQuestionsTable
             .select()
             .find('SurveyFormChoices', {survey_form_id: surveyFormId})
             .where({survey_form_id: surveyFormId, section: section})
