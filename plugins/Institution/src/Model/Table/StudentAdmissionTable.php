@@ -226,11 +226,25 @@ class StudentAdmissionTable extends AppTable {
 
 			$resultSet = $this
 				->find()
-				->contain(['Users', 'Institutions', 'EducationGrades', 'ModifiedUser', 'CreatedUser'])
+				->select([
+					$this->aliasField('id'),
+					$this->aliasField('modified'),
+					$this->aliasField('created'),
+					'Users.openemis_no',
+					'Users.first_name',
+					'Users.middle_name',
+					'Users.third_name',
+					'Users.last_name',
+					'Users.preferred_name',
+					'Institutions.name',
+					'CreatedUser.username'
+				])
+				->contain(['Users', 'Institutions', 'CreatedUser'])
 				->where($where)
 				->order([
 					$this->aliasField('created')
 				])
+				->limit(30)
 				->toArray();
 
 			foreach ($resultSet as $key => $obj) {
