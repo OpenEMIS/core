@@ -239,6 +239,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
             $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
         } else if ($action == 'edit') {
             $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
+            $value = $this->processRelevancyDisabled($entity, $value, $fieldId);
         }
 
         $event->stopPropagation();
@@ -429,6 +430,57 @@ class RenderRepeaterBehavior extends RenderBehavior {
             }
         }
     }
+
+    // TODO: To implement delete logic for survey relevance
+    // public function deleteCustomFieldValues(Event $event, $parentFormId, $deleteFieldIds) 
+    // {   
+        // $RepeaterSurveys = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
+        // $institutionRepeaterSurveyIds = $RepeaterSurveys
+        //     ->find()
+        //     ->where([$RepeaterSurveys->aliasField('parent_form_id') => $parentFormId])
+        //     ->select([$RepeaterSurveys->aliasField('id')]);
+
+        
+
+        // $SurveyQuestions = TableRegistry::get('Survey.SurveyQuestions');
+        // $formIds = $SurveyQuestions
+        //     ->find()
+        //     ->where([
+        //         $SurveyQuestions->aliasField('id').' IN ' => $deleteFieldIds,
+        //         $SurveyQuestions->aliasField('field_type') => 'REPEATER'
+        //     ])
+        //     ->select([$SurveyQuestions->aliasField('params')])
+        //     ->toArray();
+        //     ;
+        // $surveyFormId = [];
+        // foreach ($formIds as $formId) {
+        //     $param = json_decode($formId->params);
+        //     $surveyFormId[] = $param->survey_form_id;
+        // }
+
+        // if (!empty($surveyFormId)) {
+        //     $SurveyFormsQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
+        //     $RepeaterSurveyAnswers = TableRegistry::get('InstitutionRepeater.RepeaterSurveyAnswers');
+        //     $RepeaterSurveyTableCells = TableRegistry::get('InstitutionRepeater.RepeaterSurveyTableCells')
+        //     $questionId = $SurveyFormsQuestions
+        //         ->find()
+        //         ->innerJoinWith('CustomFields')
+        //         ->where([
+        //             $SurveyFormsQuestions->aliasField('survey_form_id').' IN ' => $surveyFormId,
+        //             'CustomFields.field_type = ' => 'REPEATER'
+        //         ])
+        //         ->select([$SurveyFormsQuestions->aliasField('survey_question_id')]);
+        //     $RepeaterSurveyAnswers->deleteAll([
+        //         'institution_repeater_survey_id IN ' => $institutionRepeaterSurveyIds,
+        //         'survey_question_id IN ' => $questionId
+        //     ]);
+
+        //     $RepeaterSurveyAnswers->deleteAll([
+        //         'institution_repeater_survey_id IN ' => $institutionRepeaterSurveyIds,
+        //         'survey_question_id IN ' => $questionId
+        //     ]); 
+        // }
+    // }
 
     public function updateWorkflowStatus(Event $event, $entity, $statusId) {
         $RepeaterSurveys = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
