@@ -75,7 +75,7 @@ class RenderCoordinatesBehavior extends RenderBehavior {
         }
 
         $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['action' => $action, 'values' => $values, 'errors' => $errors, 'id' => $savedId, 'attr' => $attr]);
-
+        $value = $this->processRelevancyDisabled($entity, $value, $fieldId);
         $event->stopPropagation();
         return $value;
     }
