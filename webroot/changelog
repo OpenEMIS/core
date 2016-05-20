@@ -1,7 +1,15 @@
 v3.5.5.2
-- Survey Reports will now be generated based on the user's security access
-- Fixed a bug that caused 404 error page when users access Directories
-- Fixed a bug that caused 404 error page when user accessing Classes -> Edit
+- Survey Reports will now be generated based on the user's security access	
+- New Feature - You can now configure Rules to hide/show survey questions
+- New Feature - You can now configure survey questions to be repeated	
+- Fixed a bug that caused Students in Subjects to be duplicated	
+- Fixed a bug that caused 404 error page when users access Directories	
+- Fixed a bug that caused Sunday not showing up in Attendance	
+- Staff Status are now translated properly	
+- Institution list is now ordered by code in Student Transfer	
+- Fixed a bug that caused 404 error page when user accessing Classes -> Edit	
+- Changing of position title on Institution -> Positions is no longer available after the position is created
+- Fixed a bug that caused user to experience 502 bad gateway after login	
 
 v3.5.5.1
 - Fixed a bug that caused the system to calculate using a wrong admission age when adding a student to institution
