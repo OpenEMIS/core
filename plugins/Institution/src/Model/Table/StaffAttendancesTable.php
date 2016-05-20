@@ -255,9 +255,6 @@ class StaffAttendancesTable extends AppTable {
 		$this->ControllerAction->field('staff_type_id', ['visible' => false]);
 		$this->ControllerAction->field('staff_status_id', ['visible' => false]);
 		$this->ControllerAction->field('institution_position_id', ['visible' => false]);
-
-		$this->fields['type']['tableColumnClass'] = 'vertical-align-top';
-		$this->fields['reason']['tableColumnClass'] = 'vertical-align-top';
 	}
 
 	// Event: ControllerAction.Model.afterAction
@@ -673,8 +670,8 @@ class StaffAttendancesTable extends AppTable {
 					$this->_fieldOrder[] = $key;
 				}
 			} else {
-				$this->ControllerAction->field('type');
-				$this->ControllerAction->field('reason');
+				$this->ControllerAction->field('type', ['tableColumnClass' => 'vertical-align-top']);
+				$this->ControllerAction->field('reason', ['tableColumnClass' => 'vertical-align-top']);
 				$this->_fieldOrder[] = 'type';
 				$this->_fieldOrder[] = 'reason';
 				$typeOptions = [self::PRESENT => __('Present')];
