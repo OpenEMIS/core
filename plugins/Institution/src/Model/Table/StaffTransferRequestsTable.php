@@ -234,11 +234,27 @@ class StaffTransferRequestsTable extends StaffTransfer {
 
 			$resultSet = $this
 				->find()
-				->contain(['Users', 'Institutions', 'PreviousInstitutions', 'ModifiedUser', 'CreatedUser'])
+				->select([
+					$this->aliasField('id'),
+					$this->aliasField('institution_id'),
+					$this->aliasField('modified'),
+					$this->aliasField('created'),
+					'Users.openemis_no',
+					'Users.first_name',
+					'Users.middle_name',
+					'Users.third_name',
+					'Users.last_name',
+					'Users.preferred_name',
+					'Institutions.name',
+					'PreviousInstitutions.name',
+					'CreatedUser.username'
+				])
+				->contain(['Users', 'Institutions', 'PreviousInstitutions', 'CreatedUser'])
 				->where($where)
 				->order([
 					$this->aliasField('created') => 'DESC'
 				])
+				->limit(30)
 				->toArray();
 
 			foreach ($resultSet as $key => $obj) {
