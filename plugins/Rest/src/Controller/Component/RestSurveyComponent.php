@@ -674,7 +674,7 @@ class RestSurveyComponent extends Component
             $extra['constraint'] = null;
 
             $extra['references'] = [$this->Form->alias(), $this->Field->alias()."[".$extra['index']."]"];
-            $extra['default_value'] = null;
+            $extra['default_value'] = null; // to handle default value for dropdown
 
             if (is_null($sectionName)) { $parentNode = $bodyNode; }
 
@@ -1069,8 +1069,8 @@ class RestSurveyComponent extends Component
                         $this->$fieldTypeFunction($field, $repeaterNode, $instanceId, $extra);
 
                         // add to Head > Model > Instance > RepeatBlock here
-                        $itemNode = $repeatNode->addChild($this->Field->alias().$index, null, NS_OE);
-                        $itemNode->addAttribute("id", $field->field_id);
+                        $repeatBlockNode = $repeatNode->addChild($this->Field->alias().$index, $extra['default_value'], NS_OE);
+                        $repeatBlockNode->addAttribute("id", $field->field_id);
                     }
                 }
             }
