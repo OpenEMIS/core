@@ -132,19 +132,17 @@ class PermissionsTable extends AppTable {
 			->first();
 
 		$SecurityRolesTable = $this->SecurityRoles;
-		$roleOrder = $SecurityRolesTable->get($roleId)->order;
 
-		if ($roleOrder > $userRole['security_role']['order']) { //this is to check if user have role higher that the one user try to edit.  e.g. teacher(4) and principal(2) 
-																//also for super admin where redirect not necessary
-			return true;
-		} else { //this one for non super admin need to check the creator of user role
+		$roleEntity = $SecurityRolesTable->get($roleId);
 
-			$roleCreator = $SecurityRolesTable->get($roleId)->created_user_id;
+		$roleOrder = $roleEntity->order;
 
-			if ($roleCreator == $userId) return true; //if creator then no redirect
-			else return false;
-
-		}
+		//this is to check if user have role higher that the one user try to edit.  e.g. teacher(4) and principal(2) 
+		//also for super admin where redirect not necessary
+		//OR user is creator of the user role.
+		if (($roleOrder > $userRole['security_role']['order']) ||  ($roleEntity->created_user_id == $userId))return true;
+		else return false;
+		
 	}
 
 	public function edit($roleId=0) {
