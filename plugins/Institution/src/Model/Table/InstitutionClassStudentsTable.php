@@ -170,18 +170,24 @@ class InstitutionClassStudentsTable extends AppTable {
 	}
 
 	private function _setSubjectStudentData($data) {
-        $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
 
+		$ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+
+        //get the education_subject_id and education_subject_id using the institution_id
         $classSubjectsData = $ClassSubjects->find()
-            ->where([
+			->innerJoinWith('InstitutionSubjects')
+			->select([
+				'education_subject_id' => 'InstitutionSubjects.education_subject_id', 
+				'institution_subject_id' => 'InstitutionSubjects.id'
+			])
+			->where([
                 $ClassSubjects->aliasField('institution_class_id') => $data['institution_class_id']
             ])
-            ->select([$ClassSubjects->aliasField('institution_subject_id')])
-            ->toArray()
-            ;
+            ->toArray();
 
-		$subjectStudents = [];
+        $subjectStudents = [];
 		foreach ($classSubjectsData as $classSubjects) {
+
 			$subjectStudents[] = [
 				'status' => 1,
 				'student_id' => $data['student_id'],	
@@ -189,7 +195,7 @@ class InstitutionClassStudentsTable extends AppTable {
 				'institution_class_id' => $data['institution_class_id'],
                 'institution_id' => $data['institution_id'],
                 'academic_period_id' => $data['academic_period_id'],
-                'education_subject_id' => $classSubjects['institution_subject_id'],
+                'education_subject_id' => $classSubjects['education_subject_id'],
 			];
 		}
 
