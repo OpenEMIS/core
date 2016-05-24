@@ -412,10 +412,17 @@ class TransferRequestsTable extends AppTable {
 
 			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			$selectedAcademicPeriodData = $AcademicPeriods->get($this->selectedAcademicPeriod);
+			
 			if ($selectedAcademicPeriodData->start_date instanceof Time || $selectedAcademicPeriodData->start_date instanceof Date) {
 				$academicPeriodStartDate = $selectedAcademicPeriodData->start_date->format('Y-m-d');
 			} else {
 				$academicPeriodStartDate = date('Y-m-d', $selectedAcademicPeriodData->start_date);
+			}
+
+			if ($selectedAcademicPeriodData->end_date instanceof Time || $selectedAcademicPeriodData->end_date instanceof Date) {
+				$academicPeriodEndDate = $selectedAcademicPeriodData->end_date->format('Y-m-d');
+			} else {
+				$academicPeriodEndDate = date('Y-m-d', $selectedAcademicPeriodData->end_date);
 			}
 
 			$institutionOptions = $this->Institutions
@@ -426,14 +433,15 @@ class TransferRequestsTable extends AppTable {
 					'conditions' => [
 						$InstitutionGrades->aliasField('institution_id =') . $this->Institutions->aliasField('id'),
 						$InstitutionGrades->aliasField('education_grade_id') => $this->selectedGrade,
-						$InstitutionGrades->aliasField('start_date').' <=' => $academicPeriodStartDate,
+						$InstitutionGrades->aliasField('start_date').' <=' => $academicPeriodEndDate,
 						'OR' => [
 							$InstitutionGrades->aliasField('end_date').' IS NULL',
 							$InstitutionGrades->aliasField('end_date').' >=' => $academicPeriodStartDate
 						]
 					]
 				])
-				->where([$this->Institutions->aliasField('id <>') => $institutionId]);
+				->where([$this->Institutions->aliasField('id <>') => $institutionId])
+				->order([$this->Institutions->aliasField('code')]);
 
 
 			$attr['type'] = 'select';
