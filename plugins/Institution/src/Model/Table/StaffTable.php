@@ -136,6 +136,12 @@ class StaffTable extends AppTable {
         return $validator;
 	}
 
+	public function validationAllowPositionType(Validator $validator) {
+		$validator = $this->validationDefault($validator);
+		$validator->requirePresence('position_type', false);
+		return $validator;
+	}
+
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$query->where([$this->aliasField('institution_id') => $institutionId]);

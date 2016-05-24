@@ -1,6 +1,7 @@
 <?php
 namespace Rest\Controller\Component;
 
+use ArrayObject;
 use Cake\Network\Exception\NotFoundException;
 use Cake\ORM\TableRegistry;
 use Cake\Controller\Component;
@@ -238,8 +239,6 @@ class RestSurveyComponent extends Component
                 $CustomRecords = TableRegistry::get('Institution.InstitutionSurveys');
                 $formAlias = $this->Form->alias();
                 $fieldAlias = $this->Field->alias();
-                // To use $this->recordKey when record table is changed to institution_surveys and foreign key will become institution_survey_id
-                $recordKey = 'institution_survey_id';
 
                 $xmlResponse = $data['response'];
                 // lines below is for testing
@@ -248,8 +247,8 @@ class RestSurveyComponent extends Component
                 // end testing data //
 
                 // save response into database for debug purpose, always purge 3 days old response
-                $this->_deleteExpiredResponse();
-                $this->_addResponse($xmlResponse);
+                $this->deleteExpiredResponse();
+                $this->addResponse($xmlResponse);
                 // End
                 
                 $this->log('XML Response', 'debug');
@@ -270,6 +269,7 @@ class RestSurveyComponent extends Component
 
                 $formData = [];
                 $formData = [
+                    'status_id' => 0,
                     $this->formKey => $formId,
                     'institution_id' => $institutionId,
                     'academic_period_id' => $periodId,
@@ -289,199 +289,314 @@ class RestSurveyComponent extends Component
                     ->all();
 
                 if (!$recordResults->isEmpty()) {
-                    $formData['id'] = $recordResults->first()->id;
+                    $record = $recordResults->first();
+                    $formData['id'] = $record->id;
+                    $formData['status_id'] = $record->status_id;
                 }
                 // End
 
-                // Overwrite survey record only if is not completed
-                $where[$CustomRecords->aliasField('status_id IN')] = $statusIds;
-                $completedResults = $CustomRecords
-                    ->find()
-                    ->where($where)
-                    ->all();
+                if (!empty($statusIds)) {
+                    // Overwrite survey record only if is not completed
+                    $where[$CustomRecords->aliasField('status_id IN')] = $statusIds;
+                    $completedResults = $CustomRecords
+                        ->find()
+                        ->where($where)
+                        ->all();
 
-                if ($completedResults->isEmpty()) {
-                    // Update record table
-                    $entity = $CustomRecords->newEntity($formData, ['validate' => false]);
-                    if ($CustomRecords->save($entity)) {
-                        // if($entity->status == 2) {
-                            $message = 'Survey record has been submitted successfully.';
-                        // } else {
-                            // $message = 'Survey record has been saved to draft successfully.';
-                        // }
+                    if ($completedResults->isEmpty()) {
+                        // Update record table
+                        $entity = $CustomRecords->newEntity($formData, ['validate' => false]);
+                        if ($CustomRecords->save($entity)) {
+                            // if($entity->status == 2) {
+                                $message = 'Survey record has been submitted successfully.';
+                            // } else {
+                                // $message = 'Survey record has been saved to draft successfully.';
+                            // }
+                            $this->log('Message:', 'debug');
+                            $this->log($message, 'debug');
+                        } else {
+                            $this->log($entity->errors(), 'debug');
+                        }
+                        // End
+
+                        $recordId = $entity->id;
+                        if (!is_null($recordId)) {
+                            $fields = $xml->$formAlias->$fieldAlias;
+                            foreach ($fields as $field) {
+                                $fieldId = $field->attributes()->id->__toString();
+                                $fieldType = $this->Field->get($fieldId)->field_type;
+                                $responseValue = urldecode($field->__toString());
+
+                                $fieldTypeFunction = "upload" . Inflector::camelize(strtolower($fieldType));
+                                if (method_exists($this, $fieldTypeFunction)) {
+                                    $responseData = [
+                                        $this->recordKey => $recordId,
+                                        $this->fieldKey => $fieldId,
+                                        'created_user_id' => $createdUserId
+                                    ];
+
+                                    $extra = new ArrayObject([]);
+                                    $extra['model'] = $this->FieldValue;
+                                    $extra['cellModel'] = $this->TableCell;
+                                    $extra['data'] = $responseData;
+                                    $extra['value'] = $responseValue;
+                                    $extra['recordKey'] = $this->recordKey;
+                                    $extra['formKey'] = $this->formKey;
+                                    $extra['fieldKey'] = $this->fieldKey;
+
+                                    $this->$fieldTypeFunction($field, $entity, $extra);
+                                }
+                            }
+                        }
+                    } else {
+                        $message = 'Survey record is not saved.';
                         $this->log('Message:', 'debug');
                         $this->log($message, 'debug');
-                    } else {
-                        $this->log($entity->errors(), 'debug');
                     }
-                    // End
+                }
+            }
+        }
+    }
 
-                    $recordId = $entity->id;
-                    if (!is_null($recordId)) {
-                        $CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
-                        $fieldTypes = $CustomFieldTypes
-                            ->find('list', ['keyField' => 'code', 'valueField' => 'value'])
-                            ->toArray();
+    private function deleteFieldValue($data, $extra)
+    {
+        $model = $extra['model'];
+        $recordKey = $extra['recordKey'];
+        $fieldKey = $extra['fieldKey'];
 
-                        $fields = $xml->$formAlias->$fieldAlias;
-                        foreach ($fields as $field) {
-                            $fieldId = $field->attributes()->id->__toString();
-                            $fieldType = $this->Field->get($fieldId)->field_type;
-                            $fieldColumnName = $fieldTypes[$fieldType];
+        $model->deleteAll([
+            $model->aliasField($recordKey) => $data[$recordKey],
+            $model->aliasField($fieldKey) => $data[$fieldKey]
+        ]);
+    }
 
-                            // Always delete the answers before reinsert
-                            if ($fieldType == 'TABLE') {
-                                $this->TableCell->deleteAll([
-                                    $this->TableCell->aliasField($recordKey) => $recordId,
-                                    $this->TableCell->aliasField($this->fieldKey) => $fieldId
-                                ]);
-                            } else {
-                                $this->FieldValue->deleteAll([
-                                    $this->FieldValue->aliasField($recordKey) => $recordId,
-                                    $this->FieldValue->aliasField($this->fieldKey) => $fieldId
-                                ]);
-                            }
+    private function saveFieldValue($answerData, $extra)
+    {
+        $model = $extra['model'];
 
-                            switch($fieldType) {
-                                case 'TEXT':
-                                case 'NUMBER':
-                                case 'TEXTAREA':
-                                case 'DROPDOWN':
-                                case 'DATE':
-                                case 'TIME':
-                                    $answerValue = urldecode($field->__toString());
-                                    if (strlen($answerValue) != 0) {
-                                        $answerData = [
-                                            $recordKey => $recordId,
-                                            $this->fieldKey => $fieldId,
-                                            $fieldColumnName => $answerValue,
-                                            'institution_id' => $institutionId,
-                                            'created_user_id' => $createdUserId
-                                        ];
+        $answerEntity = $model->newEntity($answerData);
+        if (!$model->save($answerEntity)) {
+            $this->log($answerEntity->errors(), 'debug');
+        }
+    }
 
-                                        // Save answer
-                                        $answerEntity = $this->FieldValue->newEntity($answerData);
-                                        if (!$this->FieldValue->save($answerEntity)) {
-                                            $this->log($answerEntity->errors(), 'debug');
-                                        }
-                                        // End
-                                    }
-                                    break;
-                                case 'CHECKBOX':
-                                    $answerValue = urldecode($field->__toString());
-                                    if (strlen($answerValue) != 0) {
-                                        $checkboxValues = explode(" ", $answerValue);
-                                        foreach ($checkboxValues as $checkboxKey => $checkboxValue) {
-                                            $answerData = [
-                                                $recordKey => $recordId,
-                                                $this->fieldKey => $fieldId,
-                                                $fieldColumnName => $checkboxValue,
-                                                'institution_id' => $institutionId,
-                                                'created_user_id' => $createdUserId
-                                            ];
+    private function deleteTableCell($data, $extra)
+    {
+        $cellModel = $extra['cellModel'];
+        $recordKey = $extra['recordKey'];
+        $fieldKey = $extra['fieldKey'];
 
-                                            // Save answer
-                                            $answerEntity = $this->FieldValue->newEntity($answerData);
-                                            if (!$this->FieldValue->save($answerEntity)) {
-                                                $this->log($answerEntity->errors(), 'debug');
-                                            }
-                                            // End
-                                        }
-                                    }
-                                    break;
-                                case 'TABLE':
-                                    foreach ($field->children() as $row => $rowObj) {
-                                        $rowId = $rowObj->attributes()->id->__toString();
-                                        foreach ($rowObj->children() as $col => $colObj) {
-                                            $colId = $colObj->attributes()->id->__toString();
-                                            if ($colId != 0) {
-                                                $cellValue = urldecode($colObj->__toString());
-                                                if (strlen($cellValue) != 0) {
-                                                    $cellData = array(
-                                                        $recordKey => $recordId,
-                                                        $this->fieldKey => $fieldId,
-                                                        $this->tableColumnKey => $colId,
-                                                        $this->tableRowKey => $rowId,
-                                                        $fieldColumnName => $cellValue,
-                                                        'institution_id' => $institutionId,
-                                                        'created_user_id' => $createdUserId
-                                                    );
+        $cellModel->deleteAll([
+            $cellModel->aliasField($recordKey) => $data[$recordKey],
+            $cellModel->aliasField($fieldKey) => $data[$fieldKey]
+        ]);
+    }
 
-                                                    // Save cell by cell
-                                                    $cellEntity = $this->TableCell->newEntity($cellData);
-                                                    if (!$this->TableCell->save($cellEntity)) {
-                                                        $this->log($cellEntity->errors(), 'debug');
-                                                    }
-                                                    // End
-                                                }
-                                            }
-                                        }
-                                    }
-                                    break;
-                                case 'COORDINATES':
-                                    $answerValue = urldecode($field->__toString());
-                                    if (strlen($answerValue) != 0) {
-                                        $answerValues = explode(' ', $answerValue);
-                                        if (count($answerValues)==2) {
-                                            $answerValue = json_encode([
-                                                'latitude' => $answerValues[0],
-                                                'longitude' => $answerValues[1]
-                                            ]);
-                                            $answerData = [
-                                                $recordKey => $recordId,
-                                                $this->fieldKey => $fieldId,
-                                                $fieldColumnName => $answerValue,
-                                                'institution_id' => $institutionId,
-                                                'created_user_id' => $createdUserId
-                                            ];
+    private function saveTableCell($cellData, $extra)
+    {
+        $cellModel = $extra['cellModel'];
 
-                                            // Save answer
-                                            $answerEntity = $this->FieldValue->newEntity($answerData);
-                                            if (!$this->FieldValue->save($answerEntity)) {
-                                                $this->log($answerEntity->errors(), 'debug');
-                                            }
-                                            // End
-                                        } else {
-                                            $this->log('COORDINATES type answer is invalid', 'debug');
-                                        }
-                                    }
-                                    break;
-                                case 'FILE':
-                                    $answerValue = urldecode($field->__toString());
-                                    if (strlen($answerValue) != 0) {
-                                        // expected format received from mobile
-                                        // filename.jpg|data:image/jpg;base64,urlencode( base64_encode( file_get_contents( $filepath) ) )
-                                        list($fileName, $fileData) = explode("|", $answerValue, 2);
-                                        list($fileTypeStr, $encodedStr) = explode(";", $fileData, 2);
-                                        list($encodeType, $encoded) = explode(",", $encodedStr, 2);
-                                        $decoded = base64_decode($encoded);
+        $cellEntity = $cellModel->newEntity($cellData);
+        if (!$cellModel->save($cellEntity)) {
+            $this->log($cellEntity->errors(), 'debug');
+        }
+    }
 
-                                        $answerData = [
-                                            $recordKey => $recordId,
-                                            $this->fieldKey => $fieldId,
-                                            'text_value' => $fileName,
-                                            $fieldColumnName => $decoded,   // fileContent
-                                            'institution_id' => $institutionId,
-                                            'created_user_id' => $createdUserId
-                                        ];
+    private function processUpload($key, $extra)
+    {
+        $data = $extra['data'];
+        $value = $extra['value'];
 
-                                        // Save answer
-                                        $answerEntity = $this->FieldValue->newEntity($answerData);
-                                        if (!$this->FieldValue->save($answerEntity)) {
-                                            $this->log($answerEntity->errors(), 'debug');
-                                        }
-                                        // End
-                                    }
-                                    break;
-                            }
+        $this->deleteFieldValue($data, $extra);
+        if (strlen($value) != 0) {
+            $data[$key] = $value;
+            $this->saveFieldValue($data, $extra);
+        }
+    }
+
+    private function uploadText($field, $entity, $extra)
+    {
+        $this->processUpload('text_value', $extra);
+    }
+
+    private function uploadNumber($field, $entity, $extra)
+    {
+        $this->processUpload('number_value', $extra);
+    }
+
+    private function uploadTextarea($field, $entity, $extra)
+    {
+        $this->processUpload('textarea_value', $extra);
+    }
+
+    private function uploadDropdown($field, $entity, $extra)
+    {
+        $this->processUpload('number_value', $extra);
+    }
+
+    private function uploadCheckbox($field, $entity, $extra)
+    {
+        $data = $extra['data'];
+        $value = $extra['value'];
+
+        $this->deleteFieldValue($data, $extra);
+        if (strlen($value) != 0) {
+            $checkboxValues = explode(" ", $value);
+            foreach ($checkboxValues as $checkboxKey => $checkboxValue) {
+                $data['number_value'] = $checkboxValue;
+                $this->saveFieldValue($data, $extra);
+            }
+        }
+    }
+
+    private function uploadTable($field, $entity, $extra)
+    {
+        $data = $extra['data'];
+        $value = $extra['value'];
+
+        $this->deleteTableCell($data, $extra);
+        foreach ($field->children() as $row => $rowObj) {
+            $rowId = $rowObj->attributes()->id->__toString();
+            foreach ($rowObj->children() as $col => $colObj) {
+                $colId = $colObj->attributes()->id->__toString();
+                if ($colId != 0) {
+                    $cellValue = urldecode($colObj->__toString());
+                    if (strlen($cellValue) != 0) {
+                        $cellData = array_merge($data, [
+                            $this->tableColumnKey => $colId,
+                            $this->tableRowKey => $rowId,
+                            'text_value' => $cellValue
+                        ]);
+
+                        $this->saveTableCell($cellData, $extra);
+                    }
+                }
+            }
+        }
+    }
+
+    private function uploadDate($field, $entity, $extra)
+    {
+        $this->processUpload('date_value', $extra);
+    }
+
+    private function uploadTime($field, $entity, $extra)
+    {
+        $this->processUpload('time_value', $extra);
+    }
+
+    private function uploadCoordinates($field, $entity, $extra)
+    {
+        $data = $extra['data'];
+        $value = $extra['value'];
+
+        $this->deleteFieldValue($data, $extra);
+        if (strlen($value) != 0) {
+            if (count(explode(" ", $value)) == 2) {
+                list($latitudeValue, $longitudeValue) = explode(" ", $value, 2);
+                $json = json_encode([
+                    'latitude' => $latitudeValue,
+                    'longitude' => $longitudeValue
+                ]);
+                $data['text_value'] = $json;
+                $this->saveFieldValue($data, $extra);
+            } else {
+                $this->log('COORDINATES type answer is invalid', 'debug');
+            }
+        }
+    }
+
+    private function uploadFile($field, $entity, $extra)
+    {
+        $data = $extra['data'];
+        $value = $extra['value'];
+
+        $this->deleteFieldValue($data, $extra);
+        if (strlen($value) != 0) {
+            // expected format received from mobile
+            // filename.jpg|data:image/jpg;base64,urlencode( base64_encode( file_get_contents( $filepath) ) )
+            list($fileName, $fileData) = explode("|", $value, 2);
+            list($fileTypeStr, $encodedStr) = explode(";", $fileData, 2);
+            list($encodeType, $encoded) = explode(",", $encodedStr, 2);
+            $decoded = base64_decode($encoded);
+
+            $answerData = array_merge($data, [
+                'text_value' => $fileName,  // File Name
+                'file' => $decoded  // File Content
+            ]);
+            $this->saveFieldValue($answerData, $extra);
+        }
+    }
+
+    private function uploadRepeater($field, $entity, $extra)
+    {
+        $RepeaterSurveys = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
+        $RepeaterSurveyAnswers = TableRegistry::get('InstitutionRepeater.RepeaterSurveyAnswers');
+        $RepeaterSurveyTableCells = TableRegistry::get('InstitutionRepeater.RepeaterSurveyTableCells');
+        $repeaterRecordKey = 'institution_repeater_survey_id';
+        
+        $data = $extra['data'];
+        $value = $extra['value'];
+        $recordKey = $extra['recordKey'];
+        $formKey = $extra['formKey'];
+        $fieldKey = $extra['fieldKey'];
+
+        $formId = null;
+        $fieldId = $data[$fieldKey];
+        // Get Survey Form ID
+        $fieldEntity = $this->Field->get($fieldId);
+        if ($fieldEntity->has('params') && !empty($fieldEntity->params)) {
+            $params = json_decode($fieldEntity->params, true);
+            if (array_key_exists($formKey, $params)) {
+                $formId = $params[$formKey];
+            }
+        }
+        // End
+
+        if (!is_null($formId)) {
+            foreach ($field->children() as $repeater => $repeaterObj) {
+                // $repeaterId = $repeaterObj->attributes()->id->__toString();
+                $repeaterData = [
+                    'status_id' => $entity->status_id,
+                    'institution_id' => $entity->institution_id,
+                    'repeater_id' => Text::uuid(),
+                    'academic_period_id' => $entity->academic_period_id,
+                    $formKey => $formId,
+                    'parent_form_id' => $entity->survey_form_id
+                ];
+
+                $repeaterEntity = $RepeaterSurveys->newEntity($repeaterData);
+                if ($RepeaterSurveys->save($repeaterEntity)) {
+                    foreach ($repeaterObj->children() as $field => $fieldObj) {
+                        $fieldId = $fieldObj->attributes()->id->__toString();
+                        $fieldType = $this->Field->get($fieldId)->field_type;
+                        $responseValue = urldecode($fieldObj->__toString());
+
+                        $fieldTypeFunction = "upload" . Inflector::camelize(strtolower($fieldType));
+                        if (method_exists($this, $fieldTypeFunction)) {
+                            $responseData = [
+                                $repeaterRecordKey => $repeaterEntity->id,
+                                $this->fieldKey => $fieldId
+                            ];
+
+                            $extra = new ArrayObject([]);
+                            $extra['model'] = $RepeaterSurveyAnswers;
+                            $extra['cellmodel'] = $RepeaterSurveyTableCells;
+                            $extra['data'] = $responseData;
+                            $extra['value'] = $responseValue;
+                            $extra['recordKey'] = $repeaterRecordKey;
+                            $extra['formKey'] = $formKey;
+                            $extra['fieldKey'] = $fieldKey;
+
+                            $this->$fieldTypeFunction($field, $entity, $extra);
                         }
                     }
                 } else {
-                    $message = 'Survey record is not saved.';
-                    $this->log('Message:', 'debug');
-                    $this->log($message, 'debug');
+                    $this->log($repeaterEntity->errors(), 'debug');
                 }
             }
+        } else {
+            $this->log('Missing Survey Form ID id Repeater Type question #' . $fieldId, 'debug');
         }
     }
 
@@ -490,7 +605,107 @@ class RestSurveyComponent extends Component
         $title = $this->Form->get($id)->name;
         $title = htmlspecialchars($title, ENT_QUOTES);
 
-        $fields = $this->FormField
+        $fields = $this->getFields($id);
+
+        $xmlstr = '<?xml version="1.0" encoding="UTF-8"?>
+                <html
+                    xmlns="' . NS_XHTML . '"
+                    xmlns:xf="' . NS_XF . '"
+                    xmlns:ev="' . NS_EV . '"
+                    xmlns:xsd="' . NS_XSD . '"
+                    xmlns:oe="' . NS_OE . '">
+                </html>';
+
+        $xml = Xml::build($xmlstr);
+
+        $headNode = $xml->addChild("head", null, NS_XHTML);
+        $bodyNode = $xml->addChild("body", null, NS_XHTML);
+        $headNode->addChild("title", $title, NS_XHTML);
+        $modelNode = $headNode->addChild("model", null, NS_XF);
+
+        $instanceNode = $modelNode->addChild("instance", null, NS_XF);
+        $instanceNode->addAttribute("id", $instanceId);
+        $formNode = $instanceNode->addChild($this->Form->alias(), null, NS_OE);
+        $formNode->addAttribute("id", $id);
+
+        // need further testing if is commented out
+        // $sectionBreakNode = $bodyNode;
+
+        // set fixed Institutions Field
+        $references = [$this->Form->alias(), 'Institutions'];
+
+        $formNode->addChild('Institutions', null, NS_OE);
+        $fieldNode = $bodyNode->addChild("input", null, NS_XF);
+        $fieldNode->addAttribute("ref", $this->getRef($instanceId, $references));
+        $fieldNode->addAttribute("oe-type", "select");
+        $fieldNode->addChild("label", "Institution", NS_XF);
+
+        $this->setBindNode($modelNode, $instanceId, $references, ['type' => 'string', 'required' => true]);
+        // End
+
+        // set fixed Academic Periods Field
+        $references = [$this->Form->alias(), 'AcademicPeriods'];
+
+        $formNode->addChild('AcademicPeriods', null, NS_OE);
+        $fieldNode = $bodyNode->addChild("input", null, NS_XF);
+        $fieldNode->addAttribute("ref", $this->getRef($instanceId, $references));
+        $fieldNode->addAttribute("oe-type", "select");
+        $fieldNode->addAttribute("oe-dependency", $this->getRef($instanceId, [$this->Form->alias(), 'Institutions']));
+        $fieldNode->addChild("label", "Academic Period", NS_XF);
+
+        $this->setBindNode($modelNode, $instanceId, $references, ['type' => 'string', 'required' => true]);
+        // End
+
+        // used to build validation rules
+        $schemaNode = $modelNode->addChild("schema", null, NS_XSD);
+
+        $sectionName = null;
+        foreach ($fields as $key => $field) {
+            $extra = new ArrayObject([]);
+            $extra['index'] = $key + 1;
+            $extra['subIndex'] = 0;
+            $extra['head'] = $headNode;
+            $extra['body'] = $bodyNode;
+            $extra['model'] = $modelNode;
+            $extra['instance'] = $instanceNode;
+            $extra['schema'] = $schemaNode;
+            $extra['form'] = $formNode;
+            $extra['hint'] = null;
+            $extra['constraint'] = null;
+
+            $extra['references'] = [$this->Form->alias(), $this->Field->alias()."[".$extra['index']."]"];
+            $extra['default_value'] = null; // to handle default value for dropdown
+
+            if (is_null($sectionName)) { $parentNode = $bodyNode; }
+
+            // Section
+            if ($field->section_name != $sectionName) {
+                $sectionName = $field->section_name;
+                $sectionBreakNode = $bodyNode->addChild("group", null, NS_XF);
+                $sectionBreakNode->addAttribute("ref", $field->form_id . '_' . $field->field_id);
+                $sectionBreakNode->addChild("label", htmlspecialchars($sectionName, ENT_QUOTES), NS_XF);
+
+                $parentNode = $sectionBreakNode;
+            }
+            // End
+
+            $fieldTypeFunction = strtolower($field->field_type);
+            if (method_exists($this, $fieldTypeFunction)) {
+                $this->$fieldTypeFunction($field, $parentNode, $instanceId, $extra);
+
+                // set to null to skip adding into Head > Model > Instance (e.g. for table and repeater)
+                if (!is_null($extra['form'])) {
+                    $this->setModelNode($field, $extra['form'], $instanceId, $extra);
+                }
+            }
+        }
+
+        return $xml;
+    }
+
+    private function getFields($id)
+    {
+        return $this->FormField
             ->find()
             ->find('order')
             ->select([
@@ -514,183 +729,115 @@ class RestSurveyComponent extends Component
                 $this->FormField->aliasField($this->formKey) => $id
             ])
             ->toArray();
+    }
 
-        $xmlstr = '<?xml version="1.0" encoding="UTF-8"?>
-                <html
-                    xmlns="' . NS_XHTML . '"
-                    xmlns:xf="' . NS_XF . '"
-                    xmlns:ev="' . NS_EV . '"
-                    xmlns:xsd="' . NS_XSD . '"
-                    xmlns:oe="' . NS_OE . '">
-                </html>';
+    private function text($field, $parentNode, $instanceId, $extra)
+    {
+        $bindType = 'string';
 
-        $xml = Xml::build($xmlstr);
+        $validationType = null;
+        $validations = [];
+        $validationHint = '';
+        if ($field->has('params') && !empty($field->params)) {
+            $params = json_decode($field->params, true);
 
-        $headNode = $xml->addChild("head", null, NS_XHTML);
-        $bodyNode = $xml->addChild("body", null, NS_XHTML);
-        $headNode->addChild("title", $title, NS_XHTML);
-        $modelNode = $headNode->addChild("model", null, NS_XF);
+            foreach ($params as $key => $value) {
+                switch ($key) {
+                    case 'min_length':
+                        $validationType = $key;
+                        $validations[$validationType] = $value;
+                        $validationHint = $this->Field->getMessage('CustomField.text.minLength', ['sprintf' => $value]);
+                        break;
+                    case 'max_length':
+                        $validationType = $key;
+                        $validations[$validationType] = $value;
+                        $validationHint = $this->Field->getMessage('CustomField.text.maxLength', ['sprintf' => $value]);
+                        break;
+                    case 'range':
+                        $validationType = $key;
+                        if (array_key_exists('lower', $value) && array_key_exists('upper', $value)) {
+                            $validations['min_length'] = $value['lower'];
+                            $validations['max_length'] = $value['upper'];
+                            $validationHint = $this->Field->getMessage('CustomField.text.range', ['sprintf' => [$value['lower'], $value['upper']]]);
+                        }
+                }
+            }
+        }
 
-        $instanceNode = $modelNode->addChild("instance", null, NS_XF);
-        $instanceNode->addAttribute("id", $instanceId);
-        $formNode = $instanceNode->addChild($this->Form->alias(), null, NS_OE);
-        $formNode->addAttribute("id", $id);
-        $formNode->addChild('Institutions', null, NS_OE);
-        $formNode->addChild('AcademicPeriods', null, NS_OE);
-    
-        $sectionBreakNode = $bodyNode;
-        // set fixed fields
-        $fieldNode = $sectionBreakNode->addChild("input", null, NS_XF);
-        $fieldNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/Institutions");
-        $fieldNode->addAttribute("oe-type", "select");
-        $fieldNode->addChild("label", "Institution", NS_XF);
-        $ref = "instance('" . $instanceId . "')/".$this->Form->alias()."/Institutions";
-        $this->_setFieldBindNode($modelNode, $instanceId, 'string', true, $ref);
-        
-        $fieldNode = $sectionBreakNode->addChild("input", null, NS_XF);
-        $fieldNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/AcademicPeriods");
-        $fieldNode->addAttribute("oe-type", "select");
-        $fieldNode->addAttribute("oe-dependency", "instance('" . $instanceId . "')/".$this->Form->alias()."/Institutions");
-        $fieldNode->addChild("label", "Academic Period", NS_XF);
-        $ref = "instance('" . $instanceId . "')/".$this->Form->alias()."/AcademicPeriods";
-        $this->_setFieldBindNode($modelNode, $instanceId, 'string', true, $ref);
-        // end setting fixed fields
+        if (!is_null($validationType)) {
+            $bindType = "string".Inflector::camelize($validationType).$extra['index'];
 
-        $schemaNode = $modelNode->addChild("schema", null, NS_XSD);
-
-        $sectionName = null;
-        foreach ($fields as $key => $field) {
-            $index = $key + 1;
-
-            // Section
-            if ($field->section_name != $sectionName) {
-                $sectionName = $field->section_name;
-                $sectionBreakNode = $bodyNode->addChild("group", null, NS_XF);
-                $sectionBreakNode->addAttribute("ref", $field->form_id . '_' . $field->field_id);
-                $sectionBreakNode->addChild("label", htmlspecialchars($sectionName, ENT_QUOTES), NS_XF);
+            // introduce subIndex to handle question inside repeater has validation
+            $subIndex = $extra['subIndex'];
+            if (!empty($subIndex)) {
+                $bindType .= "_$subIndex";
             }
             // End
 
-            $fieldTypeFunction = '_'.strtolower($field->field_type).'Type';
-            if (method_exists($this, $fieldTypeFunction)) {
-                // function for student list type does not exists and puting this set of statement outside of method_exists check scope
-                // will actually creates a malformed xform on the mobile side although viewing from browser is ok.
-                    $fieldNode = $formNode->addChild($this->Field->alias(), null, NS_OE);
-                    $fieldNode->addAttribute("id", $field->field_id);
+            $schemaNode = $extra['schema'];
+            $simpleType = $schemaNode->addChild('simpleType', null, NS_XSD);
+            $simpleType->addAttribute("name", $bindType);
 
-                    // added array-id attribute to instance element child in the header to assist on troubleshooting the generated xml
-                    // the sample output would be <oe:SurveyQuestions id="118" array-id="1"/>
-                    // this element will actually map to <xf:bind ref="instance('xform')/SurveyForms/SurveyQuestions[1]" type="name" required="true()" />
-                    // if instance element child exists but its related bind element does not exists, validation will not work.
-                    $fieldNode->addAttribute("array-id", $index);
-                //
-                        
-                $this->$fieldTypeFunction($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode);
+            $restriction = $simpleType->addChild('restriction', null, NS_XSD);
+            $restriction->addAttribute("base", "xf:string");
+
+            foreach ($validations as $key => $value) {
+                $condition = $restriction->addChild(Inflector::variable($key), null, NS_XSD);
+                $condition->addAttribute("value", $value);
             }
         }
 
-        return $xml;
+        $extra['tagName'] = 'input';
+        $extra['bindType'] = $bindType;
+        $extra['hint'] = !empty($validationHint) ? $validationHint : null;
+        $this->setCommonNode($field, $parentNode, $instanceId, $extra);
     }
 
-    private function _setValidationSchema($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode)
+    private function number($field, $parentNode, $instanceId, $extra)
     {
-
-    }
-
-    private function _textType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
-    {
+        $constraint = null;
         $validationHint = '';
-        $bindType = 'string';
-        if (!empty($field->params)) {
+        if ($field->has('params') && !empty($field->params)) {
             $params = json_decode($field->params, true);
-            $validationType = key($params);
-            if (in_array($validationType, ['min_length', 'max_length', 'range'])) {
-                $bindType = 'string' . Inflector::camelize($validationType) . $index;
-                $this->_setFieldBindNode($modelNode, $instanceId, $bindType, $field->default_is_mandatory, '', $index);
-                $simpleType = $schemaNode->addChild('simpleType', null, NS_XSD);
-                $simpleType->addAttribute("name", $bindType);
-                $restriction = $simpleType->addChild('restriction', null, NS_XSD);
-                $restriction->addAttribute("base", "xf:string");
-                if ($validationType!='range') {
-                    $condition = $restriction->addChild(Inflector::variable($validationType), null, NS_XSD);
-                    $condition->addAttribute("value", $params[$validationType]);
-                    if ($validationType=='min_length') {
-                        $validationHint = __('Value should be at least '. $params[$validationType].' characters long.');
-                    } else if ($validationType=='max_length') {
-                        $validationHint = __('Value should not be more than '. $params[$validationType].' characters long.');
-                    }
-                } else {
-                    $values = [];
-                    foreach ($params[$validationType] as $key => $value) {
-                        if ($key=='lower') {
-                            $condition = $restriction->addChild('minLength', null, NS_XSD);
-                        } else {
-                            $condition = $restriction->addChild('maxLength', null, NS_XSD);
+
+            foreach ($params as $key => $value) {
+                switch ($key) {
+                    case 'min_value':
+                        $constraint = ". >= $value";
+                        $validationHint = $this->Field->getMessage('CustomField.number.minValue', ['sprintf' => $value]);
+                        break;
+                    case 'max_value':
+                        $constraint = ". <= $value";
+                        $validationHint = $this->Field->getMessage('CustomField.number.maxValue', ['sprintf' => $value]);
+                        break;
+                    case 'range':
+                        if (array_key_exists('lower', $value) && array_key_exists('upper', $value)) {
+                            $constraint = ". >= ".$value['lower']." && ".". <= ".$value['upper'];
+                            $validationHint = $this->Field->getMessage('CustomField.number.range', ['sprintf' => [$value['lower'], $value['upper']]]);
                         }
-                        $condition->addAttribute("value", $value);
-                        $values[] = $value;
-                    }
-                    $validationHint = __('Value should be between '. implode(' and ', $values).' characters long.');
+                        break;
                 }
             }
         }
-        $fieldNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
-        if (!empty($validationHint)) {
-            // <xf:hint>Your name should be at least 3 characters long.</xf:hint>
-            $fieldHint = $fieldNode->addChild("hint", htmlspecialchars($validationHint, ENT_QUOTES), NS_XF);
-        } else {
-            $this->_setFieldBindNode($modelNode, $instanceId, $bindType, $field->default_is_mandatory, '', $index);
-        }
+
+        $extra['tagName'] = 'input';
+        $extra['bindType'] = 'integer';
+        $extra['hint'] = !empty($validationHint) ? $validationHint : null;
+        $extra['constraint'] = !empty($constraint) ? $constraint : null;
+
+        $this->setCommonNode($field, $parentNode, $instanceId, $extra);
     }
 
-    private function _numberType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
+    private function textarea($field, $parentNode, $instanceId, $extra)
     {
-        $validationHint = '';
-        if (!empty($field->params)) {
-            $params = json_decode($field->params, true);
-            $validationType = key($params);
-            if (in_array($validationType, ['min_value', 'max_value', 'range'])) {
-                if ($validationType!='range') {
-                    if ($validationType=='min_value') {
-                        $constraint = ". >= ".$params[$validationType];
-                        $validationHint = __('Value should be at least '. $params[$validationType]);
-                    } else if ($validationType=='max_value') {
-                        $constraint = ". <= ".$params[$validationType];
-                        $validationHint = __('Value should not be more than '. $params[$validationType]);
-                    }
-                } else {
-                    $values = [];
-                    $constraint = "";
-                    foreach ($params[$validationType] as $key => $value) {
-                        if ($key=='lower') {
-                            $constraint .= empty($constraint) ? ". >= ".$value : " && . >= ".$value;
-                        } else {
-                            $constraint .= empty($constraint) ? ". <= ".$value : " && . <= ".$value;
-                        }
-                        $values[] = $value;
-                    }
-                    $validationHint = __('Value should be between '. implode(' and ', $values));
-                }
-            }
-        }
-        $fieldNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
-        $bindNode = $this->_setFieldBindNode($modelNode, $instanceId, 'integer', $field->default_is_mandatory, '', $index);
-        if (!empty($validationHint)) {
-            $fieldHint = $fieldNode->addChild("hint", htmlspecialchars($validationHint, ENT_QUOTES), NS_XF);
-            $bindNode->addAttribute("constraint", $constraint);
-        }
+        $extra['tagName'] = 'textarea';
+        $extra['bindType'] = 'string';
+
+        $this->setCommonNode($field, $parentNode, $instanceId, $extra);
     }
 
-    private function _textareaType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
+    private function dropdown($field, $parentNode, $instanceId, $extra)
     {
-        $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'textarea', $instanceId, $index);
-        $this->_setFieldBindNode($modelNode, $instanceId, 'string', $field->default_is_mandatory, '', $index);
-    }
-
-    private function _dropdownType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
-    {
-        $dropdownNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'select1', $instanceId, $index);
-
         $fieldOptionResults = $this->FieldOption
             ->find()
             ->find('visible')
@@ -699,22 +846,27 @@ class RestSurveyComponent extends Component
                 $this->FieldOption->aliasField($this->fieldKey) => $field->field_id
             ])
             ->all();
+
+        $dropdownNode = $this->setBodyNode($field, $parentNode, $instanceId, 'select1', $extra);
         if (!$fieldOptionResults->isEmpty()) {
             $fieldOptions = $fieldOptionResults->toArray();
             foreach ($fieldOptions as $fieldOption) {
+                if ($fieldOption->is_default) {
+                    // to set default value in Head > Model > instance e.g. <oe:SurveyQuestions id='5'>default value here</oe:SurveyQuestions>
+                    $extra['default_value'] = $fieldOption->id;
+                }
+
                 $itemNode = $dropdownNode->addChild("item", null, NS_XF);
                     $itemNode->addChild("label", htmlspecialchars($fieldOption->name, ENT_QUOTES), NS_XF);
                     $itemNode->addChild("value", $fieldOption->id, NS_XF);
             }
         }
 
-        $this->_setFieldBindNode($modelNode, $instanceId, 'integer', $field->default_is_mandatory, '', $index);
+        $this->setBindNode($extra['model'], $instanceId, $extra['references'], ['type' => 'integer', 'required' => $field->default_is_mandatory]);
     }
 
-    private function _checkboxType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
+    private function checkbox($field, $parentNode, $instanceId, $extra)
     {
-        $checkboxNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'select', $instanceId, $index);
-
         $fieldOptionResults = $this->FieldOption
             ->find()
             ->find('visible')
@@ -724,6 +876,7 @@ class RestSurveyComponent extends Component
             ])
             ->all();
 
+        $checkboxNode = $this->setBodyNode($field, $parentNode, $instanceId, 'select', $extra);
         if (!$fieldOptionResults->isEmpty()) {
             $fieldOptions = $fieldOptionResults->toArray();
             foreach ($fieldOptions as $fieldOption) {
@@ -733,25 +886,25 @@ class RestSurveyComponent extends Component
             }
         }
 
-        $this->_setFieldBindNode($modelNode, $instanceId, 'integer', $field->default_is_mandatory, '', $index);
+        $this->setBindNode($extra['model'], $instanceId, $extra['references'], ['type' => 'integer', 'required' => $field->default_is_mandatory]);
     }
 
-    private function _tableType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
+    private function table($field, $parentNode, $instanceId, $extra)
     {
         // To nested table inside xform group
-        $tableBreakNode = $sectionBreakNode->addChild("group", null, NS_XF);
+        $tableBreakNode = $parentNode->addChild('group', null, NS_XF);
         $tableBreakNode->addAttribute("ref", $field->field_id);
-        $tableBreakNode->addAttribute("oe-type", "table");
         $tableBreakNode->addChild("label", htmlspecialchars($field->default_name, ENT_QUOTES), NS_XF);
+        $tableBreakNode->addAttribute("oe-type", "table");
         // End
-        // 
+
         $tableNode = $tableBreakNode->addChild("table", null, NS_XHTML);
-        $tableNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]");
+        $tableNode->addAttribute("ref", $this->getRef($instanceId, $extra['references']));
             $tableHeader = $tableNode->addChild("tr", null, NS_XHTML);
             $tableBody = $tableNode->addChild("tbody", null, NS_XHTML);
-                $xformRepeat = $tableBody->addChild("repeat", null, NS_XF);
-                $xformRepeat->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]"."/".$this->TableRow->alias());
-                    $tbodyRow = $xformRepeat->addChild("tr", null, NS_XHTML);
+                $repeatNode = $tableBody->addChild("repeat", null, NS_XF);
+                $repeatNode->addAttribute("ref", $this->getRef($instanceId, array_merge($extra['references'], [$this->TableRow->alias()])));
+                $tbodyRow = $repeatNode->addChild("tr", null, NS_XHTML);
 
         $tableColumnResults = $this->TableColumn
             ->find()
@@ -774,6 +927,10 @@ class RestSurveyComponent extends Component
         if (!$tableColumnResults->isEmpty() && !$tableRowResults->isEmpty()) {
             $tableColumns = $tableColumnResults->toArray();
             $tableRows = $tableRowResults->toArray();
+
+            $fieldNode = $this->setModelNode($field, $extra['form'], $instanceId, $extra);
+            $extra['form'] = null;  // set to null to skip adding into Head > Model > Instance
+
             foreach ($tableRows as $row => $tableRow) {
                 $rowNode = $fieldNode->addChild($this->TableRow->alias(), null, NS_OE);
                 $rowNode->addAttribute("id", $tableRow->id);
@@ -793,98 +950,212 @@ class RestSurveyComponent extends Component
                         $tableHeader->addChild("th", htmlspecialchars($tableColumn->name, ENT_QUOTES), NS_XHTML);
                         $tbodyColumn = $tbodyRow->addChild("td", null, NS_XHTML);
                             $tbodyCell = $tbodyColumn->addChild($cellType, null, NS_XF);
-                                $tbodyCell->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]"."/".$this->TableColumn->alias().$col);
+                            $tbodyCell->addAttribute("ref", $this->getRef($instanceId, array_merge($extra['references'], [$this->TableColumn->alias().$col])));
 
-                        $bindNode = $modelNode->addChild("bind", null, NS_XF);
-                        $bindNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]"."/".$this->TableColumn->alias().$col);
-                        $bindNode->addAttribute("type", 'string');
+                        $this->setBindNode($extra['model'], $instanceId, array_merge($extra['references'], [$this->TableColumn->alias().$col]), ['type' => 'string']);
                     }
                 }
             }
         }
     }
 
-    private function _dateType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
+
+    private function date($field, $parentNode, $instanceId, $extra)
     {
+        $constraint = null;
         $validationHint = '';
-        if (!empty($field->params)) {
+        if ($field->has('params') && !empty($field->params)) {
             $params = json_decode($field->params, true);
-            if (array_key_exists('start_date', $params) && array_key_exists('end_date', $params)) {
-                $validationType = 'between';
-            } else if (array_key_exists('start_date', $params)) {
-                $validationType = 'earlier';
-            } else if (array_key_exists('end_date', $params)) {
-                $validationType = 'later';
-            } else {
-                $validationType = false;
-            }
-            if ($validationType) {
-                if ($validationType!='between') {
-                    if ($validationType=='earlier') {
-                        $constraint = ". > '" . $params['start_date'] . "'";
-                        $validationHint = __('Value should be at least '. $params['start_date']);
-                    } else if ($validationType=='later') {
-                        $constraint = ". < '" . $params['end_date'] . "'";
-                        $validationHint = __('Value should not be more than '. $params['end_date']);
-                    }
-                } else {
-                    $constraint = ". > '" . $params['start_date'] . "' && . < '" . $params['end_date'] . "'";
-                    $validationHint = __('Value should be between '. implode(' and ', $params));
-                }
+
+            $startDate = array_key_exists('start_date', $params) ? $params['start_date'] : null;
+            $endDate = array_key_exists('end_date', $params) ? $params['end_date'] : null;
+
+            if (!is_null($startDate) && !is_null($endDate)) {
+                $constraint = ". >= '".$startDate."'' && ".". <= '".$endDate."'";
+                $validationHint = $this->Field->getMessage('CustomField.date.between', ['sprintf' => [$startDate, $endDate]]);
+            } else if (!is_null($startDate)) {
+                $constraint = ". >= '$startDate'";
+                $validationHint = $this->Field->getMessage('CustomField.date.earlier', ['sprintf' => $startDate]);
+            } else if (!is_null($endDate)) {
+                $constraint = ". <= '$endDate'";
+                $validationHint = $this->Field->getMessage('CustomField.date.later', ['sprintf' => $endDate]);
             }
         }
-        $fieldNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
-        $bindNode = $this->_setFieldBindNode($modelNode, $instanceId, 'date', $field->default_is_mandatory, '', $index);
-        if (!empty($validationHint)) {
-            $fieldHint = $fieldNode->addChild("hint", htmlspecialchars($validationHint, ENT_QUOTES), NS_XF);
+
+        $extra['tagName'] = 'input';
+        $extra['bindType'] = 'date';
+        $extra['hint'] = !empty($validationHint) ? $validationHint : null;
+        $extra['constraint'] = !empty($constraint) ? $constraint : null;
+
+        $this->setCommonNode($field, $parentNode, $instanceId, $extra);
+    }
+
+    private function time($field, $parentNode, $instanceId, $extra)
+    {
+        $constraint = null;
+        $validationHint = '';
+        if ($field->has('params') && !empty($field->params)) {
+            $params = json_decode($field->params, true);
+
+            $startTime = array_key_exists('start_time', $params) ? $params['start_time'] : null;
+            $endTime = array_key_exists('end_time', $params) ? $params['end_time'] : null;
+
+            if (!is_null($startTime) && !is_null($endTime)) {
+                $constraint = ". >= '".$this->twentyFourHourFormat($startTime)."'' && ".". <= '".$this->twentyFourHourFormat($endTime)."'";
+                $validationHint = $this->Field->getMessage('CustomField.time.between', ['sprintf' => [$startTime, $endTime]]);
+            } else if (!is_null($startTime)) {
+                $constraint = ". >= '".$this->twentyFourHourFormat($startTime)."'";
+                $validationHint = $this->Field->getMessage('CustomField.time.earlier', ['sprintf' => $startTime]);
+            } else if (!is_null($endTime)) {
+                $constraint = ". <= '".$this->twentyFourHourFormat($endTime)."'";
+                $validationHint = $this->Field->getMessage('CustomField.time.later', ['sprintf' => $endTime]);
+            }
+        }
+
+        $extra['tagName'] = 'input';
+        $extra['bindType'] = 'time';
+        $extra['hint'] = !empty($validationHint) ? $validationHint : null;
+        $extra['constraint'] = !empty($constraint) ? $constraint : null;
+
+        $this->setCommonNode($field, $parentNode, $instanceId, $extra);
+    }
+
+    private function coordinates($field, $parentNode, $instanceId, $extra)
+    {
+        $extra['tagName'] = 'input';
+        $extra['bindType'] = 'geopoint';
+
+        $this->setCommonNode($field, $parentNode, $instanceId, $extra);
+    }
+
+    private function file($field, $parentNode, $instanceId, $extra)
+    {
+        $extra['tagName'] = 'upload';
+        $extra['bindType'] = 'file';
+
+        $this->setCommonNode($field, $parentNode, $instanceId, $extra);
+    }
+
+    private function repeater($field, $parentNode, $instanceId, $extra)
+    {
+        $repeaterNode = $this->setBodyNode($field, $parentNode, $instanceId, 'repeat', $extra);
+
+        $fieldNode = $this->setModelNode($field, $extra['form'], $instanceId, $extra);
+        $repeatNode = $fieldNode->addChild('RepeatBlock', null, NS_OE);
+        $extra['form'] = null;  // set to null to skip adding into Head > Model > Instance
+
+        $formId = null;
+        // Get Survey Form ID
+        if ($field->has('params') && !empty($field->params)) {
+            $params = json_decode($field->params, true);
+            if (array_key_exists($this->formKey, $params)) {
+                $formId = $params[$this->formKey];
+            }
+        }
+
+        if (!is_null($formId)) {
+            $fields = $this->getFields($formId);
+
+            if (!empty($fields)) {
+                foreach ($fields as $key => $field) {
+                    $index = $key + 1;
+                    $extra['subIndex'] = $index;
+                    // must reset to null
+                    $extra['default_value'] = null;
+                    $extra['references'] = [$this->Form->alias(), $this->Field->alias()."[".$extra['index']."]", 'RepeatBlock', $this->Field->alias().$index];
+
+                    $fieldTypeFunction = strtolower($field->field_type);
+                    if (method_exists($this, $fieldTypeFunction)) {
+                        $this->$fieldTypeFunction($field, $repeaterNode, $instanceId, $extra);
+
+                        // add to Head > Model > Instance > RepeatBlock here
+                        $repeatBlockNode = $repeatNode->addChild($this->Field->alias().$index, $extra['default_value'], NS_OE);
+                        $repeatBlockNode->addAttribute("id", $field->field_id);
+                    }
+                }
+            }
+        } else {
+            // Survey Form ID not found
+            $this->log('Repeater Survey Form ID is not configured.', 'debug');
+        }
+        // End
+    }
+
+    private function setCommonNode($field, $parentNode, $instanceId, $extra)
+    {
+        $tagName = array_key_exists('tagName', $extra) ? $extra['tagName'] : 'input';
+        $bindType = array_key_exists('bindType', $extra) ? $extra['bindType'] : 'string';
+
+        $this->setBodyNode($field, $parentNode, $instanceId, $tagName, $extra);
+
+        $bindAttr = [
+            'type' => $bindType,
+            'required' => $field->default_is_mandatory
+        ];
+        if (!empty($extra['constraint'])) {
+            $bindAttr['constraint'] = $extra['constraint'];
+        }
+        $this->setBindNode($extra['model'], $instanceId, $extra['references'], $bindAttr);
+    }
+
+    private function setBodyNode($field, $parentNode, $instanceId, $fieldType, $extra)
+    {
+        $fieldNode = $parentNode->addChild($fieldType, null, NS_XF);
+        $fieldNode->addAttribute("ref", $this->getRef($instanceId, $extra['references']));
+        $fieldNode->addChild("label", htmlspecialchars($field->default_name, ENT_QUOTES), NS_XF);
+
+        if (!empty($extra['hint'])) {
+            // <xf:hint>Text should be at least 10 characters</xf:hint>
+            $fieldNode->addChild("hint", htmlspecialchars($extra['hint'], ENT_QUOTES), NS_XF);
+        }
+
+        return $fieldNode;
+    }
+
+    private function setBindNode($modelNode, $instanceId, $references=[], $attr=[])
+    {
+        $bindType = array_key_exists('type', $attr) ? $attr['type'] : 'string';
+        $required = array_key_exists('required', $attr) ? $attr['required'] : false;
+        $constraint = array_key_exists('constraint', $attr) ? $attr['constraint'] : null;
+
+        $bindNode = $modelNode->addChild("bind", null, NS_XF);
+        $bindNode->addAttribute("ref", $this->getRef($instanceId, $references));
+        $bindNode->addAttribute("type", $bindType);
+
+        if ($required) {
+            $bindNode->addAttribute("required", 'true()');
+        } else {
+            $bindNode->addAttribute("required", 'false()');
+        }
+
+        if (!is_null($constraint)) {
+            // <xf:bind constraint=". &gt;= 5 &amp;&amp; . &lt;= 15" ref="instance('xform')/SurveyForms/SurveyQuestions[1]" required="false()" type="integer"/>
             $bindNode->addAttribute("constraint", $constraint);
         }
+
+        return $bindNode;
     }
 
-    private function _timeType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
+    private function setModelNode($field, $formNode, $instanceId, $extra)
     {
-        $validationHint = '';
-        if (!empty($field->params)) {
-            $params = json_decode($field->params, true);
-            if (array_key_exists('start_time', $params) && array_key_exists('end_time', $params)) {
-                $validationType = 'between';
-            } else if (array_key_exists('start_time', $params)) {
-                $validationType = 'earlier';
-            } else if (array_key_exists('end_time', $params)) {
-                $validationType = 'later';
-            } else {
-                $validationType = false;
-            }
-            if ($validationType) {
-                if ($validationType!='between') {
-                    if ($validationType=='earlier') {
-                        $constraint = ". > '" . $this->_twentyFourHourFormat($params['start_time']) . "'";
-                        $validationHint = __('Value should be at least '. $params['start_time']);
-                    } else if ($validationType=='later') {
-                        $constraint = ". < '" . $this->_twentyFourHourFormat($params['end_time']) . "'";
-                        $validationHint = __('Value should not be more than '. $params['end_time']);
-                    }
-                } else {
-                    $constraint = ". > '" . $this->_twentyFourHourFormat($params['start_time']) . "' && . < '" . $this->_twentyFourHourFormat($params['end_time']) . "'";
-                    $validationHint = __('Value should be between '. implode(' and ', $params));
-                }
+        $fieldNode = $formNode->addChild($this->Field->alias(), $extra['default_value'], NS_OE);
+        $fieldNode->addAttribute("id", $field->field_id);
+
+        return $fieldNode;
+    }
+
+    private function getRef($instanceId, $references=[]) {
+        $ref = "instance('" . $instanceId . "')";
+        if (!empty($references)) {
+            foreach ($references as $reference) {
+                $ref .= "/$reference";
             }
         }
-        $fieldNode = $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
-        $bindNode = $this->_setFieldBindNode($modelNode, $instanceId, 'time', $field->default_is_mandatory, '', $index);
-        if (!empty($validationHint)) {
-            $fieldHint = $fieldNode->addChild("hint", htmlspecialchars($validationHint, ENT_QUOTES), NS_XF);
-            $bindNode->addAttribute("constraint", $constraint);
-        }
+
+        return $ref;
     }
 
-    private function _fileType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
-    {
-        $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'upload', $instanceId, $index);
-        $this->_setFieldBindNode($modelNode, $instanceId, 'file', $field->default_is_mandatory, '', $index);
-    }
-
-    private function _twentyFourHourFormat($value)
+    private function twentyFourHourFormat($value)
     {
         $values = explode(' ', $value);
         if (strtolower($values[1])=='am') {
@@ -897,37 +1168,7 @@ class RestSurveyComponent extends Component
         }
     }
 
-    private function _coordinatesType($field, $sectionBreakNode, $modelNode, $instanceId, $index, $fieldNode, $schemaNode)
-    {
-        $this->_setCommonAttribute($sectionBreakNode, $field->default_name, 'input', $instanceId, $index);
-        $this->_setFieldBindNode($modelNode, $instanceId, 'geopoint', $field->default_is_mandatory, '', $index);
-    }
-
-    private function _setCommonAttribute($sectionBreakNode, $fieldName, $fieldType, $instanceId, $index)
-    {
-        $fieldNode = $sectionBreakNode->addChild($fieldType, null, NS_XF);
-        $fieldNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]");
-        $fieldNode->addChild("label", htmlspecialchars($fieldName, ENT_QUOTES), NS_XF);
-        return $fieldNode;
-    }
-
-    private function _setFieldBindNode($modelNode, $instanceId, $bindType, $fieldIsMandatory=false, $ref='', $index='0')
-    {
-        if (empty($ref)) {
-            $ref = "instance('" . $instanceId . "')/".$this->Form->alias()."/".$this->Field->alias()."[".$index."]";
-        }
-        $bindNode = $modelNode->addChild("bind", null, NS_XF);
-        $bindNode->addAttribute("ref", $ref);
-        $bindNode->addAttribute("type", $bindType);
-        if($fieldIsMandatory) {
-            $bindNode->addAttribute("required", 'true()');
-        } else {
-            $bindNode->addAttribute("required", 'false()');
-        }
-        return $bindNode;
-    }
-
-    private function _deleteExpiredResponse()
+    private function deleteExpiredResponse()
     {
         $SurveyResponses = TableRegistry::get('Survey.SurveyResponses');
         $expiryDate = new Time();
@@ -937,7 +1178,7 @@ class RestSurveyComponent extends Component
         ]);
     }
 
-    private function _addResponse($xmlResponse)
+    private function addResponse($xmlResponse)
     {
         $SurveyResponses = TableRegistry::get('Survey.SurveyResponses');
             $responseData = [
