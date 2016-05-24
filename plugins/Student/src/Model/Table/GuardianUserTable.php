@@ -37,11 +37,11 @@ class GuardianUserTable extends UserTable {
 	}
 
 	public function addAfterAction(Event $event) {
-		if ($this->controller->name == 'Directories') {
+		// if ($this->controller->name == 'Directories') {
 			$options['type'] = 'student';
 			$tabElements = $this->controller->getStudentGuardianTabElements($options);
 			$this->controller->set('tabElements', $tabElements);
-		}
+		// }
 	}
 
 	private function setupTabElements($entity) {
@@ -72,13 +72,17 @@ class GuardianUserTable extends UserTable {
     }
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		
+		$backUrl = $this->controller->getStudentGuardianTabElements();
+		// pr($backUrl['Guardians']['url']['action']);
+		
 		if ($action == 'view') {
 			unset($toolbarButtons['back']);
 			if ($toolbarButtons->offsetExists('export')) {
 				unset($toolbarButtons['export']);
 			}
 		} else if ($action == 'add') {
-			$toolbarButtons['back']['url']['action'] = 'StudentGuardians';
+			$toolbarButtons['back']['url']['action'] = $backUrl['Guardians']['url']['action'];
 			$toolbarButtons['back']['url'][0] = 'add';
 		}
 	}
