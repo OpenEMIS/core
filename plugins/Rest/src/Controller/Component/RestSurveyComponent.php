@@ -320,6 +320,32 @@ class RestSurveyComponent extends Component
                         // End
 
                         $recordId = $entity->id;
+
+                        // Delete relevance questions
+                        $RulesTable = TableRegistry::get('Survey.SurveyRules');
+                        $questions = $RulesTable
+                            ->find()
+                            ->select([
+                                $RulesTable->aliasField('survey_question_id')
+                            ])
+                            ->where([
+                                $RulesTable->aliasField('survey_form_id') => $this->formKey
+                            ]);
+
+                        $CustomFieldValues = $this->FieldValue;
+                        $CustomTableCells = $this->TableCell;
+                        $CustomFieldValues->deleteAll(
+                            'survey_question_id IN ' => $questions,
+                            'institution_survey_id' => $recordId
+                        );
+
+                        $CustomTableCells->deleteAll(
+                            'survey_question_id IN ' => $questions,
+                            'institution_survey_id' => $recordId
+                        );
+                        // End delete relevance questions
+
+                        
                         if (!is_null($recordId)) {
                             $fields = $xml->$formAlias->$fieldAlias;
                             foreach ($fields as $field) {
