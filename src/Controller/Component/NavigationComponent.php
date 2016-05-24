@@ -502,7 +502,7 @@ class NavigationComponent extends Component {
 				'title' => 'Finance', 
 				'parent' => 'Institutions.Students.index',
 				'params' => ['plugin' => 'Student'],
-				'selected' => ['Students.Fees']],
+				'selected' => ['Students.StudentFees']],
 			'Students.Healths' => [
 				'title' => 'Health', 
 				'parent' => 'Institutions.Students.index',
