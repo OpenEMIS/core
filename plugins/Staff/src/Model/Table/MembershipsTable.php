@@ -20,10 +20,7 @@ class MembershipsTable extends ControllerActionTable {
 		return $validator
 			->add('issue_date', 'ruleCompareDate', [
 				'rule' => ['compareDate', 'expiry_date', false]
-			])
-			->add('expiry_date', [
-			])
-		;
+			]);
 	}
 
 	private function setupTabElements() {

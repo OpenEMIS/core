@@ -19,9 +19,12 @@ class StudentsController extends AppController {
 			'Accounts' 			=> ['className' => 'Student.Accounts', 'actions' => ['view', 'edit']],
 			'Contacts' 			=> ['className' => 'User.Contacts'],
 			'Identities' 		=> ['className' => 'User.Identities'],
+<<<<<<< HEAD
 			'Languages' 		=> ['className' => 'User.UserLanguages'],
+=======
+			'Nationalities' 	=> ['className' => 'User.Nationalities'],
+>>>>>>> 37dfc9f476257cc204fbd967e96aee02b35954e8
 			'Comments' 			=> ['className' => 'User.Comments'],
-			'SpecialNeeds' 		=> ['className' => 'User.SpecialNeeds'],
 			'Awards' 			=> ['className' => 'User.Awards'],
 			'Attachments' 		=> ['className' => 'User.Attachments'],
 			'Guardians' 		=> ['className' => 'Student.Guardians'],
@@ -56,7 +59,13 @@ class StudentsController extends AppController {
 	// CAv4
 	public function Classes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']); }
 	public function Subjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']); }
+<<<<<<< HEAD
     public function Nationalities() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
+=======
+    public function Languages() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
+    public function SpecialNeeds() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
+
+>>>>>>> 37dfc9f476257cc204fbd967e96aee02b35954e8
 	// End
 
 	public function beforeFilter(Event $event) {
@@ -271,5 +280,18 @@ class StudentsController extends AppController {
 		$this->autoRender = false;
 		$this->ControllerAction->autoRender = false;
 		$this->Image->getUserImage($id);
+	}
+
+	public function getStudentGuardianTabElements($options = []) {
+		$type = (array_key_exists('type', $options))? $options['type']: null;
+		$plugin = $this->plugin;
+		$name = $this->name;
+		$tabElements = [
+			'Guardians' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Guardians', 'type' => $type],
+				'text' => __('Guardians')	
+			],
+		];
+		return $tabElements;
 	}
 }
