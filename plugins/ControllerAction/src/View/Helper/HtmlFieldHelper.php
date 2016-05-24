@@ -553,7 +553,7 @@ class HtmlFieldHelper extends Helper {
 		$columnAttr = $schema->column($field);
 		$defaultDate = true;
 		if ($columnAttr['null'] == true) {
-			$defaultDate = false;
+			$defaultDate = date('d-m-Y');
 		}
 
 		if (!isset($attr['date_options'])) {
