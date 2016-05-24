@@ -135,15 +135,8 @@ class StaffSubjectsTable extends ControllerActionTable {
         $session = $this->request->session();
         $staffId = $session->read('Staff.Staff.id');
         $subjectOptions = $this->getSubjectOptions();
-        $this->field('subjects', [
-            'type' => 'element',
-            'element' => 'Institution.Classes/subjects',
-            'data' => [ 
-                'subjects' => $subjectOptions,
-                'staffId' => $staffId
-            ],
-        ]);
-
+        // this 'save' does not redirect, need to re-extract the $subjectOptions after saving is done
+        $this->fields['subjects']['data']['subjects'] = $subjectOptions;
         $extra['subjectOptions'] = $subjectOptions;
     }
 
