@@ -19,11 +19,8 @@ class StudentsController extends AppController {
 			'Accounts' 			=> ['className' => 'Student.Accounts', 'actions' => ['view', 'edit']],
 			'Contacts' 			=> ['className' => 'User.Contacts'],
 			'Identities' 		=> ['className' => 'User.Identities'],
-<<<<<<< HEAD
 			'Languages' 		=> ['className' => 'User.UserLanguages'],
-=======
 			'Nationalities' 	=> ['className' => 'User.Nationalities'],
->>>>>>> 37dfc9f476257cc204fbd967e96aee02b35954e8
 			'Comments' 			=> ['className' => 'User.Comments'],
 			'Awards' 			=> ['className' => 'User.Awards'],
 			'Attachments' 		=> ['className' => 'User.Attachments'],
@@ -59,13 +56,9 @@ class StudentsController extends AppController {
 	// CAv4
 	public function Classes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']); }
 	public function Subjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']); }
-<<<<<<< HEAD
     public function Nationalities() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
-=======
     public function Languages() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
     public function SpecialNeeds() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
-
->>>>>>> 37dfc9f476257cc204fbd967e96aee02b35954e8
 	// End
 
 	public function beforeFilter(Event $event) {
