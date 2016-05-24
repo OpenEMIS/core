@@ -434,6 +434,9 @@ class UsersTable extends AppTable {
 					]
 				])
 			->add('username', [
+                'ruleMinLength' => [
+                    'rule' => ['minLength', 6]
+                ],
 				'ruleUnique' => [
 					'rule' => 'validateUnique',
 					'provider' => 'table',
@@ -475,6 +478,9 @@ class UsersTable extends AppTable {
 					]
 				])
 			->add('username', [
+                'ruleMinLength' => [
+                    'rule' => ['minLength', 6]
+                ],
 				'ruleUnique' => [
 					'rule' => 'validateUnique',
 					'provider' => 'table',
@@ -495,6 +501,7 @@ class UsersTable extends AppTable {
 		$thisModel->setValidationCode('first_name.ruleNotBlank', 'User.Users');
 		$thisModel->setValidationCode('last_name.ruleCheckIfStringGotNoNumber', 'User.Users');
 		$thisModel->setValidationCode('openemis_no.ruleUnique', 'User.Users');
+        $thisModel->setValidationCode('username.ruleMinLength', 'User.Users');
 		$thisModel->setValidationCode('username.ruleUnique', 'User.Users');
 		$thisModel->setValidationCode('username.ruleAlphanumeric', 'User.Users');
 		$thisModel->setValidationCode('username.ruleCheckUsername', 'User.Users');
