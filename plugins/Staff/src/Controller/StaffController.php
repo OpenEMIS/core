@@ -28,14 +28,12 @@ class StaffController extends AppController {
 			'Classes'			=> ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
 			'Qualifications'	=> ['className' => 'Staff.Qualifications'],
 			'Absences'			=> ['className' => 'Staff.Absences', 'actions' => ['index', 'view']],
-			'Leaves'			=> ['className' => 'Staff.Leaves'],
+			'Leave'  			=> ['className' => 'Staff.Leaves'],
 			'Behaviours'		=> ['className' => 'Staff.StaffBehaviours', 'actions' => ['index', 'view']],
 			'Extracurriculars'	=> ['className' => 'Staff.Extracurriculars'],
 			'Trainings'			=> ['className' => 'Staff.StaffTrainings'],
 			'Employments'		=> ['className' => 'Staff.Employments'],
 			'Salaries'			=> ['className' => 'Staff.Salaries'],
-			'Memberships'		=> ['className' => 'Staff.Memberships'],
-			'Licenses'			=> ['className' => 'Staff.Licenses'],
 			'BankAccounts'		=> ['className' => 'User.BankAccounts'],
 			'History'			=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 			'ImportStaff' 		=> ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
@@ -66,7 +64,12 @@ class StaffController extends AppController {
 	public function Positions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Positions']); }
 	public function Classes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffClasses']); }
 	public function Subjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSubjects']); }
+<<<<<<< HEAD
     public function Nationalities() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
+=======
+	public function Memberships() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Memberships']); }
+	public function Licenses() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Licenses']); }
+>>>>>>> a299a1d14bed4a0b3b63f45a9eb705fed53c4e86
 	// End
 
 	public function beforeFilter(Event $event) {

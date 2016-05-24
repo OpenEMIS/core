@@ -2,11 +2,14 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+use Cake\I18n\Time;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\Network\Session;
+use Cake\Log\Log;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\MessagesTrait;
@@ -152,6 +155,14 @@ class InstitutionSurveysTable extends AppTable {
     	return $this->workflowEvents;
     }
 
+    public function triggerBuildSurveyRecordsShell($params) {
+    	$cmd = ROOT . DS . 'bin' . DS . 'cake Survey ' . implode(',', $params);
+		$logs = ROOT . DS . 'logs' . DS . 'survey.log & echo $!';
+		$shellCmd = $cmd . ' >> ' . $logs;
+		$pid = exec($shellCmd);
+		Log::write('debug', $shellCmd);
+    }
+
     // Workbench.Model.onGetList
 	public function onGetWorkbenchList(Event $event, $isAdmin, $institutionRoles, ArrayObject $data) {
 		// Results of all Not Completed survey in all institutions that the login user can access
@@ -174,6 +185,7 @@ class InstitutionSurveysTable extends AppTable {
 
 			// Array to store security roles in each Workflow Step
 			$stepRoles = [];
+			$shellParams = [];
 			foreach ($institutionRoles as $institutionId => $roles) {
 				foreach ($statusIds as $key => $statusId) {
 					if (!array_key_exists($statusId, $stepRoles)) {
@@ -183,18 +195,41 @@ class InstitutionSurveysTable extends AppTable {
 					// logic to pre-insert survey in school only when user's roles is configured to access the step
 					$hasAccess = count(array_intersect_key($roles, $stepRoles[$statusId])) > 0;
 					if ($hasAccess) {
-						$this->buildSurveyRecords($institutionId);
+						if (!in_array($institutionId, $shellParams)) {
+							$shellParams[] = $institutionId;
+						}
 					}
 					// End
 				}
 			}
 			// End
 
+			// create shell to process building of survey records
+			// only build survey once on every user session
+			$session = new Session;
+			if (!$session->check('BuildSurvey')) {
+				$session->write('BuildSurvey', true);
+				$this->triggerBuildSurveyRecordsShell($shellParams);
+			}
+
 			$resultSet = $this
 				->find()
-				->contain(['Statuses', 'AcademicPeriods', 'SurveyForms', 'Institutions', 'ModifiedUser', 'CreatedUser'])
+				->select([
+					$this->aliasField('id'),
+					$this->aliasField('status_id'),
+					$this->aliasField('modified'),
+					$this->aliasField('created'),
+					'Statuses.name',
+					'AcademicPeriods.name',
+					'SurveyForms.name',
+					'Institutions.id',
+					'Institutions.name',
+					'CreatedUser.username'
+				])
+				->contain(['Statuses', 'AcademicPeriods', 'SurveyForms', 'Institutions', 'CreatedUser'])
 				->where($where)
 				->order([$this->aliasField('created')])
+				->limit(30)
 				->toArray();
 			// End
 
@@ -229,7 +264,7 @@ class InstitutionSurveysTable extends AppTable {
 						'request_title' => ['title' => $requestTitle, 'url' => $url],
 						'receive_date' => $receivedDate,
 						'due_date' => '<i class="fa fa-minus"></i>',
-						'requester' => $obj->created_user->username,
+						'requester' => $obj->has('created_user') ? $obj->created_user->username : '',
 						'type' => __('Institution > Survey > Forms')
 					];
 				}
@@ -359,6 +394,8 @@ class InstitutionSurveysTable extends AppTable {
 		$this->ControllerAction->field('survey_form_id', [
 			'attr' => ['value' => $entity->survey_form_id]
 		]);
+		// this extra field is use by repeater type to know user click add on which repeater question
+		$this->ControllerAction->field('repeater_question_id');
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
@@ -410,6 +447,18 @@ class InstitutionSurveysTable extends AppTable {
 			$attr['type'] = 'readonly';
 			$attr['attr']['value'] = $formOptions[$formId];
 		}
+
+		return $attr;
+	}
+
+	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
+		$includes['ruleCtrl'] = ['include' => true, 'js' => 'CustomField.angular/rules/relevancy.rules.ctrl'];
+	}
+	
+	public function onUpdateFieldRepeaterQuestionId(Event $event, array $attr, $action, $request) {
+		$attr['type'] = 'hidden';
+		$attr['value'] = 0;
+		$attr['attr']['class'] = 'repeater-question-id';
 
 		return $attr;
 	}
@@ -481,7 +530,9 @@ class InstitutionSurveysTable extends AppTable {
 								'status_id' => $openStatusId,
 								'academic_period_id' => $periodId,
 								'survey_form_id' => $surveyFormId,
-								'institution_id' => $institutionId
+								'institution_id' => $institutionId,
+								'created_user_id' => 1,
+								'created' => new Time('NOW')
 							];
 
 							$surveyEntity = $this->newEntity($surveyData, ['validate' => false]);

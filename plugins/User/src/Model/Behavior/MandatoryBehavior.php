@@ -79,7 +79,12 @@ class MandatoryBehavior extends Behavior {
 		$defaultNationality = $Nationalities->find()
 			->where([$Nationalities->aliasField('default') => 1])
 			->first();
+<<<<<<< HEAD
 		if (!empty($defaultNationality)) {
+=======
+		$defaultIdentityType = '';
+		if (!empty($defaultCountry)) {
+>>>>>>> a299a1d14bed4a0b3b63f45a9eb705fed53c4e86
 			// if default nationality can be found
 			$this->_table->fields['nationality']['default'] = $defaultNationality->id;
 			$defaultIdentityType = $defaultNationality->identity_type_id;
@@ -95,8 +100,10 @@ class MandatoryBehavior extends Behavior {
 			}
 		}
 
-		$this->_table->fields['identity_type']['default'] = $defaultIdentityType;
-
+		if (!empty($defaultIdentityType)) {
+			$this->_table->fields['identity_type']['default'] = $defaultIdentityType;
+		}
+		
 		return $entity;
 	}
 
