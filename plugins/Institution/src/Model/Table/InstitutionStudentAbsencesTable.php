@@ -523,7 +523,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		$AccessControl = $this->AccessControl;
 		$classOptions = $Classes
 			->find('list')
-			->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl]) // restrict user to see own class if permission is set
+			->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl, 'controller' => $this->controller]) // restrict user to see own class if permission is set
 			->where([
 				$Classes->aliasField('institution_id') => $institutionId,
 				$Classes->aliasField('academic_period_id') => $selectedPeriod
