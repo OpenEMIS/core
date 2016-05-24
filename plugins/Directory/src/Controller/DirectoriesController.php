@@ -309,7 +309,6 @@ class DirectoriesController extends AppController {
 				'text' => __('Guardians')	
 			],
 		];
-
 		return $tabElements;
 	}
 
