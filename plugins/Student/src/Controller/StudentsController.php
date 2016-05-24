@@ -283,7 +283,6 @@ class StudentsController extends AppController {
 				'text' => __('Guardians')	
 			],
 		];
-
 		return $tabElements;
 	}
 }
