@@ -21,11 +21,8 @@ class PreferencesController extends AppController {
 			'Account' 				=> ['className' => 'UserAccounts'],
 			'Contacts'				=> ['className' => 'UserContacts'],
 			'Identities' 			=> ['className' => 'User.Identities'],
-<<<<<<< HEAD
 			'Languages' 			=> ['className' => 'User.UserLanguages'],
-=======
 			'Nationalities' 		=> ['className' => 'User.Nationalities'],
->>>>>>> 37dfc9f476257cc204fbd967e96aee02b35954e8
 			'Comments' 				=> ['className' => 'User.Comments'],
 			'Attachments' 			=> ['className' => 'User.Attachments'],
 			'History' 				=> ['className' => 'User.UserActivities', 'actions' => ['index']],
@@ -33,17 +30,11 @@ class PreferencesController extends AppController {
 	}
 
     // CAv4
-<<<<<<< HEAD
-    public function Nationalities() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }    
-    // End
-
-=======
+    public function Nationalities() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
     public function Languages() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
     public function SpecialNeeds() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
     // End
 
-
->>>>>>> 37dfc9f476257cc204fbd967e96aee02b35954e8
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 		$header = __('Preferences');
@@ -129,11 +120,6 @@ class PreferencesController extends AppController {
 		}
 		return $tabElements;
 	}
-
-    public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra) {
-        $this->beforePaginate($event, $model, $query, $extra);
-    }
-
 
 	public function beforePaginate(Event $event, $model, Query $query, ArrayObject $options) {
 		$session = $this->request->session();
