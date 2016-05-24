@@ -1,13 +1,15 @@
 <?php
 namespace User\Model\Table;
 
-use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use App\Model\Table\ControllerActionTable;
 
-class UserLanguagesTable extends AppTable {
+class UserLanguagesTable extends ControllerActionTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
+
+        $this->behaviors()->get('ControllerAction')->config('actions.search', false);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('Languages', ['className' => 'Languages']);
