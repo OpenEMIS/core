@@ -129,15 +129,23 @@ class SecurityRolesTable extends AppTable {
 
 		$viewType = $attr['viewType'];
 		if ($viewType == 'user') {
+
+			$InstitutionsTable = TableRegistry::get('Institution.Institutions');
+			$institutionSecurityGroup = $InstitutionsTable->find('list');
 			
-			if ($this->Auth->user('super_admin') != 1) {
-				$groupOptions = $this->SecurityGroups->find('list')
-					->find('byUser', ['userId' => $this->Auth->user('id')])
+			$SecurityGroupsTable = $this->SecurityGroups;
+
+			if ($this->Auth->user('super_admin') != 1) { //if not admin, then list out SecurityGroups which member created
+
+				$groupOptions = $SecurityGroupsTable->find('list')
+					->where([
+						$SecurityGroupsTable->aliasField('created_user_id')=>$this->Auth->user('id'),
+						'NOT EXISTS ('.$institutionSecurityGroup->sql().' WHERE '.$InstitutionsTable->aliasField('security_group_id').' = '.$SecurityGroupsTable->aliasField('id').')'
+					])
 					->toArray();
-			} else {
-				$SecurityGroupsTable = $this->SecurityGroups;
-				$InstitutionsTable = TableRegistry::get('Institution.Institutions');
-				$institutionSecurityGroup = $InstitutionsTable->find('list');
+
+			} else { //if admin then show all SecurityGroups excluding default institution System Group
+
 				$groupOptions = $SecurityGroupsTable->find('list')
 					->where([
 						'NOT EXISTS ('.$institutionSecurityGroup->sql().' WHERE '.$InstitutionsTable->aliasField('security_group_id').' = '.$SecurityGroupsTable->aliasField('id').')'
@@ -145,7 +153,6 @@ class SecurityRolesTable extends AppTable {
 					->toArray();
 			}
 			
-
 			$selectedGroup = $this->queryString('security_group_id', $groupOptions);
 			$this->advancedSelectOptions($groupOptions, $selectedGroup);
 			$request->query['security_group_id'] = $selectedGroup;

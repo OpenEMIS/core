@@ -250,12 +250,17 @@ class AcademicPeriodsTable extends AppTable {
 		$withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : true;
 		$withSelect = array_key_exists('withSelect', $params) ? $params['withSelect'] : false;
 		$isEditable = array_key_exists('isEditable', $params) ? $params['isEditable'] : null;
+		$restrictLevel = array_key_exists('restrictLevel', $params) ? $params['restrictLevel'] : null;
 
 		if ( !$withLevels ) {
 			$where = [
 				$this->aliasField('current') => 1,
 				$this->aliasField('parent_id') . ' <> ' => 0
 			];
+
+			if (!empty($restrictLevel)) {
+				$where['academic_period_level_id IN '] = $restrictLevel;
+			}
 
 			// get the current period
 			$data = $this->find('list')
@@ -276,6 +281,10 @@ class AcademicPeriodsTable extends AppTable {
 			$where = [
 				$this->aliasField('parent_id') . ' <> ' => 0,
 			];
+
+			if (!empty($restrictLevel)) {
+				$where['academic_period_level_id IN '] = $restrictLevel;
+			}
 
 			// get the current period
 			$data = $this->find()
@@ -364,9 +373,20 @@ class AcademicPeriodsTable extends AppTable {
 		$period = $this->findById($id)->first();
 		$ConfigItems = TableRegistry::get('ConfigItems');
 		$firstDayOfWeek = $ConfigItems->value('first_day_of_week');
+
+		// If First of week is sunday changed the value to 7, because sunday with the '0' value unable to be displayed 
+		if ($firstDayOfWeek == 0) {
+			$firstDayOfWeek = 7;
+		}
+
 		$daysPerWeek = $ConfigItems->value('days_per_week');
 
-		$lastDayIndex = ($firstDayOfWeek + $daysPerWeek - 1) % 7;
+		// If last day index is '0'-valued-sunday it will change the value to '7' so it will be displayed.
+		$lastDayIndex = ($firstDayOfWeek - 1);// last day index always 1 day before the starting date.
+		if ($lastDayIndex == 0) {
+			$lastDayIndex = 7;
+		} 
+
 		$startDate = $period->start_date;
 
 		$weekIndex = 1;
