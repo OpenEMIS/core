@@ -272,4 +272,17 @@ class StudentsController extends AppController {
 		$this->ControllerAction->autoRender = false;
 		$this->Image->getUserImage($id);
 	}
+
+	public function getStudentGuardianTabElements($options = []) {
+		$type = (array_key_exists('type', $options))? $options['type']: null;
+		$plugin = $this->plugin;
+		$name = $this->name;
+		$tabElements = [
+			'Guardians' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Guardians', 'type' => $type],
+				'text' => __('Guardians')	
+			],
+		];
+		return $tabElements;
+	}
 }
