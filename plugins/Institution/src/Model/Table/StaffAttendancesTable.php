@@ -255,9 +255,6 @@ class StaffAttendancesTable extends AppTable {
 		$this->ControllerAction->field('staff_type_id', ['visible' => false]);
 		$this->ControllerAction->field('staff_status_id', ['visible' => false]);
 		$this->ControllerAction->field('institution_position_id', ['visible' => false]);
-
-		$this->fields['type']['tableColumnClass'] = 'vertical-align-top';
-		$this->fields['reason']['tableColumnClass'] = 'vertical-align-top';
 	}
 
 	// Event: ControllerAction.Model.afterAction
@@ -590,7 +587,8 @@ class StaffAttendancesTable extends AppTable {
 			$schooldays = [];
 
 			for($i=0; $i<$daysPerWeek; $i++) {
-				$schooldays[] = ($firstDayOfWeek + $i) % 7;
+				// sunday should be '7' in order to be displayed
+				$schooldays[] = 1 + ($firstDayOfWeek + 6 + $i) % 7;
 			}
 
 			$week = $weeks[$selectedWeek];
@@ -672,8 +670,8 @@ class StaffAttendancesTable extends AppTable {
 					$this->_fieldOrder[] = $key;
 				}
 			} else {
-				$this->ControllerAction->field('type');
-				$this->ControllerAction->field('reason');
+				$this->ControllerAction->field('type', ['tableColumnClass' => 'vertical-align-top']);
+				$this->ControllerAction->field('reason', ['tableColumnClass' => 'vertical-align-top']);
 				$this->_fieldOrder[] = 'type';
 				$this->_fieldOrder[] = 'reason';
 				$typeOptions = [self::PRESENT => __('Present')];

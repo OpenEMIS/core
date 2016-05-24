@@ -492,8 +492,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 
 	public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		$query->contain([
-			'InstitutionSubjects',
-			'SubjectStudents',
+			'InstitutionSubjects'
 		]);
 	}
 
@@ -802,7 +801,11 @@ class InstitutionClassesTable extends ControllerActionTable {
 		$query = $students
 			->find('all')
 			->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
-			->contain(['Users'])
+            ->contain([
+                'Users' => function ($q) {
+                        return $q->select(['id', 'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name']);
+                    }
+            ])
 			->where([
 				$students->aliasField('institution_id') => $classEntity->institution_id
 			])
