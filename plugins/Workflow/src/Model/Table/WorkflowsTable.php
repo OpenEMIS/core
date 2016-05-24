@@ -639,7 +639,7 @@ class WorkflowsTable extends AppTable {
 	}
 
 	private function addAssociation($selectedModel=null) {
-		if (!is_null($selectedModel)) {
+		if (!is_null($selectedModel) && !empty($selectedModel)) {
 			$filter = $this->WorkflowModels->get($selectedModel)->filter;
 			if (!is_null($filter)) {
 				$this->filterClass['className'] = $filter;
