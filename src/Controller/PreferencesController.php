@@ -7,6 +7,8 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Table;
 
+use App\Controller\AppController;
+
 class PreferencesController extends AppController {
 	public $activeObj = null;
 
@@ -20,13 +22,17 @@ class PreferencesController extends AppController {
 			'Contacts'				=> ['className' => 'UserContacts'],
 			'Identities' 			=> ['className' => 'User.Identities'],
 			'Nationalities' 		=> ['className' => 'User.Nationalities'],
-			'Languages' 			=> ['className' => 'User.UserLanguages'],
 			'Comments' 				=> ['className' => 'User.Comments'],
 			'Attachments' 			=> ['className' => 'User.Attachments'],
 			'History' 				=> ['className' => 'User.UserActivities', 'actions' => ['index']],
-			'SpecialNeeds' 			=> ['className' => 'User.SpecialNeeds'],
 		];
 	}
+
+    // CAv4
+    public function Languages() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
+    public function SpecialNeeds() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
+    // End
+
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
@@ -113,6 +119,11 @@ class PreferencesController extends AppController {
 		}
 		return $tabElements;
 	}
+
+    public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra) {
+        $this->beforePaginate($event, $model, $query, $extra);
+    }
+
 
 	public function beforePaginate(Event $event, $model, Query $query, ArrayObject $options) {
 		$session = $this->request->session();
