@@ -414,6 +414,12 @@ a,
     float: left;
 }
 
+/* Error message on the fileinput */
+
+.fileinput-preview {
+    width: 25% !important;
+}
+
 
 /* Advanced Search alignment */
 

@@ -162,12 +162,14 @@ class InstitutionInfrastructuresTable extends AppTable {
 	}
 
 	private function getAutogenerateCode($institutionId, $infrastructureLevelId, $parentId) {
-		if (!empty($parentId)) {
-			$conditions[$this->aliasField('parent_id')] = $parentId;
-		} else {
-			$conditions[$this->aliasField('institution_id')] = $institutionId;
-			$conditions[$this->aliasField('infrastructure_level_id')] = $infrastructureLevelId;
+
+		if (!empty($parentId)) { //if have parent, then count number of child of parent
+			$conditions[] = $this->aliasField('parent_id') . " = " . $parentId;
+		} else { // no parent, means 1st level (parent = null), then count number of infra of the institution.
+			$conditions[] = $this->aliasField('parent_id') . ' IS NULL';
+			$conditions[] = $this->aliasField('institution_id') . " = " . $institutionId;
 		}
+
 		// getting suffix of code by counting 
 		$indexData = $this->find()
 			->where($conditions)
@@ -178,7 +180,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 		// if 1 character prepend '0'
 		$indexData = (strlen($indexData) == 1)? '0'.$indexData: $indexData;
 		if (empty($parentId)) {
-			// hasParent
+			// no Parent then get institutionID followed by counter
 			$institutionData = $this->Institutions->find()
 				->where([
 					$this->Institutions->aliasField($this->Institutions->primaryKey()) => $institutionId
@@ -191,7 +193,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 				return $indexData;
 			}
 		} else {
-			// hasParent
+			// has Parent then get the ID of the parent then followed by counter
 			$parentData = $this->find()
 				->where([
 					$this->aliasField($this->primaryKey()) => $parentId
@@ -202,7 +204,6 @@ class InstitutionInfrastructuresTable extends AppTable {
 			if (!empty($parentData)) {
 				return $parentData->code . $indexData;
 			} else {
-				// no parent data just return the 
 				return $indexData;
 			}
 		}
