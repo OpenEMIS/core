@@ -21,6 +21,7 @@ class PreferencesController extends AppController {
 			'Account' 				=> ['className' => 'UserAccounts'],
 			'Contacts'				=> ['className' => 'UserContacts'],
 			'Identities' 			=> ['className' => 'User.Identities'],
+			'Languages' 			=> ['className' => 'User.UserLanguages'],
 			'Nationalities' 		=> ['className' => 'User.Nationalities'],
 			'Comments' 				=> ['className' => 'User.Comments'],
 			'Attachments' 			=> ['className' => 'User.Attachments'],
@@ -29,10 +30,10 @@ class PreferencesController extends AppController {
 	}
 
     // CAv4
+    public function Nationalities() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
     public function Languages() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
     public function SpecialNeeds() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
     // End
-
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
@@ -89,7 +90,7 @@ class PreferencesController extends AppController {
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Identities'],
 				'text' => __('Identities')
 			],
-			'Nationalities' => [
+			'UserNationalities' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Nationalities'],
 				'text' => __('Nationalities')	
 			],
@@ -120,11 +121,6 @@ class PreferencesController extends AppController {
 		return $tabElements;
 	}
 
-    public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra) {
-        $this->beforePaginate($event, $model, $query, $extra);
-    }
-
-
 	public function beforePaginate(Event $event, $model, Query $query, ArrayObject $options) {
 		$session = $this->request->session();
 
@@ -139,4 +135,8 @@ class PreferencesController extends AppController {
 			return $this->redirect(['action' => 'index']);
 		}
 	}
+
+    public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra) {
+        $this->beforePaginate($event, $model, $query, $extra);
+    }
 }

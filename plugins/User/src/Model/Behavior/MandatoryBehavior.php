@@ -29,7 +29,7 @@ class MandatoryBehavior extends Behavior {
 		}
 
 		$this->_table->hasMany('Identities', 				['className' => 'User.Identities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->_table->hasMany('Nationalities', 			['className' => 'User.Nationalities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->_table->hasMany('Nationalities', 			['className' => 'User.UserNationalities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->_table->hasMany('SpecialNeeds', 				['className' => 'User.SpecialNeeds', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->_table->hasMany('Contacts', 					['className' => 'User.Contacts', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		// pr($this->_info);
@@ -75,15 +75,16 @@ class MandatoryBehavior extends Behavior {
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity) { 
-		$Countries = TableRegistry::get('FieldOption.Countries');
-		$defaultCountry = $Countries->find()
-			->where([$Countries->aliasField('default') => 1])
+		$Nationalities = TableRegistry::get('FieldOption.Nationalities');
+		$defaultNationality = $Nationalities->find()
+			->where([$Nationalities->aliasField('default') => 1])
 			->first();
+            
 		$defaultIdentityType = '';
-		if (!empty($defaultCountry)) {
+		if (!empty($defaultNationality)) {
 			// if default nationality can be found
-			$this->_table->fields['nationality']['default'] = $defaultCountry->id;
-			$defaultIdentityType = $defaultCountry->identity_type_id;
+			$this->_table->fields['nationality']['default'] = $defaultNationality->id;
+			$defaultIdentityType = $defaultNationality->identity_type_id;
 		}
 
 		if (empty($defaultIdentityType)) {
@@ -193,10 +194,10 @@ class MandatoryBehavior extends Behavior {
 	}
 
 	public function addOnChangeNationality(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$Countries = TableRegistry::get('FieldOption.Countries');
-		$countryId = $data[$this->_table->alias()]['nationalities'][0]['country_id'];
-		$country = $Countries->findById($countryId)->first();
-		$defaultIdentityType = (!empty($country))? $country->identity_type_id: null;
+		$Nationalities = TableRegistry::get('FieldOption.Nationalities');
+		$nationalityId = $data[$this->_table->alias()]['nationalities'][0]['nationality_id'];
+		$nationality = $Nationalities->findById($nationalityId)->first();
+		$defaultIdentityType = (!empty($nationality))? $nationality->identity_type_id: null;
 		if (empty($defaultIdentityType)) {
 			$IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
 			$defaultIdentityType = $IdentityTypes->find()
@@ -205,7 +206,7 @@ class MandatoryBehavior extends Behavior {
 			$defaultIdentityType = (!empty($defaultIdentityType))? $defaultIdentityType->id: null;
 		}
 		
-		$this->_table->fields['nationality']['default'] = $data[$this->_table->alias()]['nationalities'][0]['country_id'];
+		$this->_table->fields['nationality']['default'] = $data[$this->_table->alias()]['nationalities'][0]['nationality_id'];
 
 		// overriding the  previous input to put in default identities
 		$this->_table->fields['identity_type']['default'] = $defaultIdentityType;
@@ -215,7 +216,7 @@ class MandatoryBehavior extends Behavior {
 			'InstitutionStudents' => ['validate' => false],
 			'InstitutionStaff' => ['validate' => false],
 			'Identities' => ['validate' => false],
-			'Nationalities' => ['validate' => false],
+			'UserNationalities' => ['validate' => false],
 			'SpecialNeeds' => ['validate' => false],
 			'Contacts' => ['validate' => false]
 		];
@@ -254,13 +255,13 @@ class MandatoryBehavior extends Behavior {
 			}
 		}
 
-		$Countries = TableRegistry::get('FieldOption.Countries');
-		$nationalityOptions = $Countries->getList()->toArray();
+		$Nationalities = TableRegistry::get('FieldOption.Nationalities');
+		$nationalityOptions = $Nationalities->getList()->toArray();
 
 		$attr['type'] = 'select';
 		$attr['options'] = $nationalityOptions;
 		$attr['onChangeReload'] = 'changeNationality';
-		$attr['fieldName'] = $this->_table->alias().'.nationalities.0.country_id';
+		$attr['fieldName'] = $this->_table->alias().'.nationalities.0.nationality_id';
 		// default is set in addOnInitialize
 
 		return $attr;

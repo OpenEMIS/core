@@ -389,7 +389,7 @@ class InstitutionsController extends AppController  {
 
 		$studentTabElements = [
 			'Identities' => ['text' => __('Identities')],
-			'Nationalities' => ['text' => __('Nationalities')],
+			'UserNationalities' => ['url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Nationalities', $id], 'text' => __('Nationalities'), 'urlModel' => 'Nationalities'],
 			'Contacts' => ['text' => __('Contacts')],
 			'Guardians' => ['text' => __('Guardians')],
 			'Languages' => ['text' => __('Languages')],
@@ -425,7 +425,8 @@ class InstitutionsController extends AppController  {
 			}
 
 			foreach ($studentTabElements as $key => $value) {
-				$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
+                $urlModel = (array_key_exists('urlModel', $value))? $value['urlModel'] : $key;
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$urlModel, 'index']);
 			}
 		}
 
