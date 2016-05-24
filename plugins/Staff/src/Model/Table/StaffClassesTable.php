@@ -158,14 +158,8 @@ class StaffClassesTable extends ControllerActionTable {
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra) 
     {
         $classOptions = $this->getClassOptions();
-        $this->field('classes', [
-            'label' => __('Classes'),
-            'type' => 'element',
-            'element' => 'Institution.Classes/classes',
-            'data' => [ 
-                'classes' => $classOptions
-            ],
-        ]);
+        // this 'save' does not redirect, need to re-extract the $classOptions after saving is done
+        $this->fields['classes']['data']['classes'] = $classOptions;
         $extra['classOptions'] = $classOptions;
     }
 
