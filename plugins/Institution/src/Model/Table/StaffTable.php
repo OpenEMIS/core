@@ -540,12 +540,18 @@ class StaffTable extends AppTable {
 
 			$entity->FTE = $entity->getOriginal('FTE');
 			$entity->newFTE = $newFTE;
+			$todayDate = new Date();
 
 			if (empty($newEndDate)) {
-				if ($entity->start_date < date('Y-m-d')) {
-					$entity->end_date = date('Y-m-d');
+				if ($entity->start_date < $todayDate) {
+					$entity->end_date = $todayDate;
 				} else {
 					$entity->end_date = $entity->start_date;
+				}
+			} else {
+				// If end date is of a past date, set the user status to end of assignment
+				if ($entity->end_date < $todayDate) {
+					$entity->staff_status_id = $this->endOfAssignment;
 				}
 			}
 		}

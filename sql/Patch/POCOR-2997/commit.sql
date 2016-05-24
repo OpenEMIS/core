@@ -1,10 +1,9 @@
--- POCOR-2997
 -- db_patches
 INSERT INTO `db_patches` (`issue`, `created`) VALUES ('POCOR-2997', NOW());
 
 -- backup the current table
 
-ALTER TABLE `staff_training_needs`
+ALTER TABLE `staff_training_needs` 
 RENAME TO `z_2997_staff_training_needs`;
 
 -- create new table and apply the changes
@@ -56,24 +55,19 @@ ALTER TABLE `staff_training_needs`
 -- reinsert from backup table
 
 INSERT INTO `staff_training_needs`
-SELECT `z_2997_staff_training_needs`.`id`,
-  `z_2997_staff_training_needs`.`comments`,
-  `z_2997_staff_training_needs`.`course_code`,
-  `z_2997_staff_training_needs`.`course_name`,
+SELECT `z_2997_staff_training_needs`.`id`, 
+  `z_2997_staff_training_needs`.`comments`, 
+  `z_2997_staff_training_needs`.`course_code`, 
+  `z_2997_staff_training_needs`.`course_name`, 
   `z_2997_staff_training_needs`.`course_description`,
-  `z_2997_staff_training_needs`.`course_id`,
-  `z_2997_staff_training_needs`.`training_need_category_id`,
+  `z_2997_staff_training_needs`.`course_id`, 
+  `z_2997_staff_training_needs`.`training_need_category_id`, 
   `z_2997_staff_training_needs`.`training_requirement_id`,
-  `z_2997_staff_training_needs`.`training_priority_id`,
-  `z_2997_staff_training_needs`.`staff_id`,
+  `z_2997_staff_training_needs`.`training_priority_id`, 
+  `z_2997_staff_training_needs`.`staff_id`, 
   `z_2997_staff_training_needs`.`status_id`,
-  `z_2997_staff_training_needs`.`modified_user_id`,
-  `z_2997_staff_training_needs`.`modified`,
-  `z_2997_staff_training_needs`.`created_user_id`,
-  `z_2997_staff_training_needs`.`created`
+  `z_2997_staff_training_needs`.`modified_user_id`, 
+  `z_2997_staff_training_needs`.`modified`, 
+  `z_2997_staff_training_needs`.`created_user_id`, 
+  `z_2997_staff_training_needs`.`created` 
 FROM `z_2997_staff_training_needs`;
-
-
--- 3.5.6
-UPDATE config_items SET value = '3.5.6' WHERE code = 'db_version';
-UPDATE db_patches SET version = (SELECT value FROM config_items WHERE code = 'db_version') WHERE version IS NULL;
