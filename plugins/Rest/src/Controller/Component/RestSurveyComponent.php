@@ -330,7 +330,8 @@ class RestSurveyComponent extends Component
                                 $RulesTable->aliasField('survey_question_id')
                             ])
                             ->where([
-                                $RulesTable->aliasField('survey_form_id') => $this->formKey
+                                $RulesTable->aliasField('survey_form_id') => $this->formKey,
+                                $RulesTable->aliasField('enabled') => 1
                             ]);
 
                         $CustomFieldValues = $this->FieldValue;
@@ -1207,7 +1208,7 @@ class RestSurveyComponent extends Component
                     }
                 }
                 $relevancy = rtrim($relevancy, ' &#38;&#38; ');
-                $bindNode->addAttribute("relevancy", $relevancy);
+                $bindNode->addAttribute("relevant", $relevancy);
             }
         }
 
