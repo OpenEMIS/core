@@ -242,14 +242,15 @@ class RestSurveyComponent extends Component
                 $fieldAlias = $this->Field->alias();
 
                 $xmlResponse = $data['response'];
+
                 // lines below is for testing
                 // $xmlResponse = "<xf:instance id='xform'><oe:SurveyForms id='1'><oe:Institutions>1</oe:Institutions><oe:AcademicPeriods>10</oe:AcademicPeriods><oe:SurveyQuestions id='2'>some text</oe:SurveyQuestions><oe:SurveyQuestions id='3'>0</oe:SurveyQuestions><oe:SurveyQuestions id='4'>some long long text</oe:SurveyQuestions><oe:SurveyQuestions id='6'>3</oe:SurveyQuestions><oe:SurveyQuestions id='7'>5 6 7</oe:SurveyQuestions><oe:SurveyQuestions id='25'><oe:SurveyTableRows id='20'><oe:SurveyTableColumns0 id='0'>Male</oe:SurveyTableColumns0><oe:SurveyTableColumns1 id='37'>10</oe:SurveyTableColumns1><oe:SurveyTableColumns2 id='38'>20</oe:SurveyTableColumns2><oe:SurveyTableColumns3 id='39'>30</oe:SurveyTableColumns3></oe:SurveyTableRows><oe:SurveyTableRows id='21'><oe:SurveyTableColumns0 id='0'>Female</oe:SurveyTableColumns0><oe:SurveyTableColumns1 id='37'>15</oe:SurveyTableColumns1><oe:SurveyTableColumns2 id='38'>25</oe:SurveyTableColumns2><oe:SurveyTableColumns3 id='39'>35</oe:SurveyTableColumns3></oe:SurveyTableRows></oe:SurveyQuestions></oe:SurveyForms></xf:instance>";
                 // $xmlResponse = '<xf:instance id="xform"><oe:SurveyForms id="16"><oe:Institutions>1059</oe:Institutions><oe:AcademicPeriods>10</oe:AcademicPeriods><oe:SurveyQuestions id="113" array-id="1">1.3641 123.9214</oe:SurveyQuestions><oe:SurveyQuestions id="114" array-id="2">1.74 100.243</oe:SurveyQuestions><oe:SurveyQuestions id="16" array-id="3">5</oe:SurveyQuestions></oe:SurveyForms></xf:instance>';
                 // end testing data //
 
                 // save response into database for debug purpose, always purge 3 days old response
-                $this->deleteExpiredResponse();
-                $this->addResponse($xmlResponse);
+                // $this->deleteExpiredResponse();
+                // $this->addResponse($xmlResponse);
                 // End
                 
                 $this->log('XML Response', 'debug');
@@ -296,6 +297,7 @@ class RestSurveyComponent extends Component
                 }
                 // End
 
+
                 if (!empty($statusIds)) {
                     // Overwrite survey record only if is not completed
                     $where[$CustomRecords->aliasField('status_id IN')] = $statusIds;
@@ -330,7 +332,7 @@ class RestSurveyComponent extends Component
                                 $RulesTable->aliasField('survey_question_id')
                             ])
                             ->where([
-                                $RulesTable->aliasField('survey_form_id') => $this->formKey,
+                                $RulesTable->aliasField('survey_form_id') => $entity->survey_form_id,
                                 $RulesTable->aliasField('enabled') => 1
                             ]);
 
@@ -347,7 +349,28 @@ class RestSurveyComponent extends Component
                         ]);
                         // End delete relevance questions
 
-                        
+                        // Rules
+                        $rules = $RulesTable
+                            ->find('list', [
+                                'groupField' => 'question',
+                                'keyField' => 'dependent',
+                                'valueField' => 'options'
+                            ])
+                            ->where([
+                                $RulesTable->aliasField('survey_form_id') => $entity->survey_form_id,
+                                $RulesTable->aliasField('enabled') => 1
+                            ])
+                            ->select([
+                                'question' => $RulesTable->aliasField('survey_question_id'), 
+                                'dependent' => $RulesTable->aliasField('dependent_question_id'),
+                                'options' => $RulesTable->aliasField('show_options')
+                            ])
+                            ->group(['question'])
+                            ->toArray();
+                        // End Rules
+
+                        $answers = new ArrayObject();
+
                         if (!is_null($recordId)) {
                             $fields = $xml->$formAlias->$fieldAlias;
                             foreach ($fields as $field) {
@@ -372,7 +395,24 @@ class RestSurveyComponent extends Component
                                     $extra['formKey'] = $this->formKey;
                                     $extra['fieldKey'] = $this->fieldKey;
 
-                                    $this->$fieldTypeFunction($field, $entity, $extra);
+                                    $questionId = $extra['data']['survey_question_id'];
+                                    $show = true;
+                                    if (isset($rules[$questionId])) {
+                                        $show = false;
+                                        $dependentQuestions = $rules[$questionId];
+                                        $ans = $answers->getArrayCopy();
+                                        $intersectKey = array_intersect_key($ans, $dependentQuestions);
+                                        foreach ($intersectKey as $key => $value) {
+                                            $ruleOptions = json_decode($dependentQuestions[$key]);
+                                            if (in_array($value, $ruleOptions)) {
+                                                $show = true;
+                                            }
+                                        }
+                                    }
+                                    if ($show) {
+                                        $answers[$questionId] = $responseValue;
+                                        $this->$fieldTypeFunction($field, $entity, $extra); 
+                                    }
                                 }
                             }
                         }
@@ -696,7 +736,8 @@ class RestSurveyComponent extends Component
                 'valueField' => 'options'
             ])
             ->where([
-                $RulesTable->aliasField('survey_form_id') => $id
+                $RulesTable->aliasField('survey_form_id') => $id,
+                $RulesTable->aliasField('enabled') => 1
             ])
             ->select([
                 'question' => $RulesTable->aliasField('survey_question_id'), 
