@@ -1150,18 +1150,12 @@ class StudentsTable extends AppTable {
 			$buttons['view']['url'] = $url;
 		}
 
+		// Remove in POCOR-3010
 		if (isset($buttons['edit'])) {
-			$url = $this->ControllerAction->url('edit');
-			$url['action'] = 'StudentUser';
-			$url[1] = $entity['_matchingData']['Users']['id'];
-			$url['id'] = $entity->id;
-			$buttons['edit']['url'] = $url;
+			unset($buttons['edit']);
 		}
 
 		if (! $this->checkEnrolledInInstitution($studentId, $institutionId)) {
-			if (isset($buttons['edit'])) {
-				unset($buttons['edit']);
-			}
 			if (isset($buttons['remove'])) {
 				unset($buttons['remove']);
 			}
