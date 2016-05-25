@@ -1438,70 +1438,65 @@ class StudentsTable extends AppTable {
 			$_conditions[$this->alias().'.'.$key] = $value;
 		}
 
-		$periodConditions = $_conditions;
-		$query = $this->find();
-		$periodResult = $query
-			->select([
-				'min_year' => $query->func()->min($this->aliasField('start_year')),
-				'max_year' => $query->func()->max($this->aliasField('end_year'))
-			])
-			->where($periodConditions)
-			->first();
 		$AcademicPeriod = $this->AcademicPeriods;
 		$currentPeriodId = $AcademicPeriod->getCurrent();
 		$currentPeriodObj = $AcademicPeriod->get($currentPeriodId);
-		$thisYear = $currentPeriodObj->end_year;
-		$minYear = $thisYear - 2;
-		$minYear = $minYear > $periodResult->min_year ? $minYear : $periodResult->min_year;
-		$maxYear = $thisYear;
-
-		$years = [];
 
 		$genderOptions = $this->Users->Genders->getList();
-		$dataSet = [];
+		$dataSet = new ArrayObject();
 		foreach ($genderOptions as $key => $value) {
 			$dataSet[$value] = ['name' => __($value), 'data' => []];
 		}
 
-		$studentsByYearConditions = array('Genders.name IS NOT NULL');
-		$studentsByYearConditions = array_merge($studentsByYearConditions, $_conditions);
-
-		for ($currentYear = $minYear; $currentYear <= $maxYear; $currentYear++) {
-			$years[$currentYear] = $currentYear;
-			$studentsByYearConditions['OR'] = [
-				[
-					$this->aliasField('end_year').' IS NOT NULL',
-					$this->aliasField('start_year').' <= "' . $currentYear . '"',
-					$this->aliasField('end_year').' >= "' . $currentYear . '"'
-				]
-			];
-
-			$query = $this->find();
-			$studentsByYear = $query
-				->contain(['Users.Genders'])
-				->select([
-					'Users.first_name',
-					'Genders.name',
-					'total' => $query->func()->count('DISTINCT '.$this->aliasField('student_id'))
-				])
-				->where($studentsByYearConditions)
-				->group('Genders.name')
-				->toArray()
-				;
- 			foreach ($dataSet as $key => $value) {
- 				if (!array_key_exists($currentYear, $dataSet[$key]['data'])) {
- 					$dataSet[$key]['data'][$currentYear] = 0;
- 				}				
+		$academicPeriodList = [];
+		$found = false;
+		foreach ($AcademicPeriod->getYearList() as $periodId => $periodName) {
+			if ($found) {
+				$academicPeriodList[$periodId] = $periodName;
+				break;
 			}
-
-			foreach ($studentsByYear as $key => $studentByYear) {
-				$studentGender = isset($studentByYear->user->gender->name) ? $studentByYear->user->gender->name : null;
-				$studentTotal = isset($studentByYear->total) ? $studentByYear->total : 0;
-				$dataSet[$studentGender]['data'][$currentYear] = $studentTotal;
+			if ($periodId == $currentPeriodId) {
+				$academicPeriodList[$periodId] = $periodName;
+				$found = true;
+			} else {
+				$academicPeriodList = [$periodId => $periodName];
 			}
 		}
+		$academicPeriodList = array_reverse($academicPeriodList, true);
 
-		$params['dataSet'] = $dataSet;
+		$academicPeriodCondition = ['academic_period_id IN ' => array_keys($academicPeriodList)];
+		$queryCondition = array_merge($academicPeriodCondition, $_conditions);
+		$studentsByYear = $this
+			->find('list',[
+				'groupField' => 'gender_name',
+				'keyField' => 'period_name',
+				'valueField' => 'total'
+			])
+			->matching('Users.Genders')
+			->matching('AcademicPeriods')
+			->select([
+				'gender_name' => 'Genders.name',
+				'period_name' => 'AcademicPeriods.name',
+				'total' => $this->find()->func()->count('DISTINCT '.$this->aliasField('student_id'))
+			])
+			->where($queryCondition)
+			->group(['gender_name', $this->aliasField('academic_period_id')])
+			->order('AcademicPeriods.order DESC')
+			->hydrate(false)
+			->toArray()
+			;
+
+		foreach ($dataSet as $key => $data) {
+			foreach ($academicPeriodList as $period) {
+
+				if (isset($studentsByYear[$key][$period])) {
+					$dataSet[$key]['data'][$period] = $studentsByYear[$key][$period];
+				} else {
+					$dataSet[$key]['data'][$period] = 0;
+				}	
+			}
+		}
+		$params['dataSet'] = $dataSet->getArrayCopy();
 
 		return $params;
 	}
