@@ -1459,7 +1459,7 @@ class StudentsTable extends AppTable {
 				$academicPeriodList[$periodId] = $periodName;
 				$found = true;
 			} else {
-				$academicPeriodList[$periodId] = $periodName;
+				$academicPeriodList = [$periodId => $periodName];
 			}
 		}
 		$academicPeriodList = array_reverse($academicPeriodList, true);
