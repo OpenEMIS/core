@@ -156,13 +156,13 @@ class SurveyRulesTable extends ControllerActionTable
                 'valueField' => 'options'
             ])
             ->where([
-                $RulesTable->aliasField('survey_form_id') => $surveyFormId,
-                $RulesTable->aliasField('enabled') => 1
+                $this->aliasField('survey_form_id') => $surveyFormId,
+                $this->aliasField('enabled') => 1
             ])
             ->select([
-                'question' => $RulesTable->aliasField('survey_question_id'), 
-                'dependent' => $RulesTable->aliasField('dependent_question_id'),
-                'options' => $RulesTable->aliasField('show_options')
+                'question' => $this->aliasField('survey_question_id'), 
+                'dependent' => $this->aliasField('dependent_question_id'),
+                'options' => $this->aliasField('show_options')
             ])
             ->group(['question']);
     }
