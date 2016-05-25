@@ -249,8 +249,8 @@ class RestSurveyComponent extends Component
                 // end testing data //
 
                 // save response into database for debug purpose, always purge 3 days old response
-                // $this->deleteExpiredResponse();
-                // $this->addResponse($xmlResponse);
+                $this->deleteExpiredResponse();
+                $this->addResponse($xmlResponse);
                 // End
                 
                 $this->log('XML Response', 'debug');
