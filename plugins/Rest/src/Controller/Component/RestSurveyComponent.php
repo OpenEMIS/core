@@ -325,47 +325,13 @@ class RestSurveyComponent extends Component
                         $recordId = $entity->id;
 
                         // Delete relevance questions
-                        $RulesTable = TableRegistry::get('Survey.SurveyRules');
-                        $questions = $RulesTable
-                            ->find()
-                            ->select([
-                                $RulesTable->aliasField('survey_question_id')
-                            ])
-                            ->where([
-                                $RulesTable->aliasField('survey_form_id') => $entity->survey_form_id,
-                                $RulesTable->aliasField('enabled') => 1
-                            ]);
-
-                        $CustomFieldValues = $this->FieldValue;
-                        $CustomTableCells = $this->TableCell;
-                        $CustomFieldValues->deleteAll([
-                            'survey_question_id IN ' => $questions,
-                            'institution_survey_id' => $recordId
-                        ]);
-
-                        $CustomTableCells->deleteAll([
-                            'survey_question_id IN ' => $questions,
-                            'institution_survey_id' => $recordId
-                        ]);
-                        // End delete relevance questions
+                        $this->deleteQuestionWithRules($entity->survey_form_id);
 
                         // Rules
                         $rules = $RulesTable
-                            ->find('list', [
-                                'groupField' => 'question',
-                                'keyField' => 'dependent',
-                                'valueField' => 'options'
+                            ->find('SurveyRulesList', [
+                                'survey_form_id' => $entity->survey_form_id
                             ])
-                            ->where([
-                                $RulesTable->aliasField('survey_form_id') => $entity->survey_form_id,
-                                $RulesTable->aliasField('enabled') => 1
-                            ])
-                            ->select([
-                                'question' => $RulesTable->aliasField('survey_question_id'), 
-                                'dependent' => $RulesTable->aliasField('dependent_question_id'),
-                                'options' => $RulesTable->aliasField('show_options')
-                            ])
-                            ->group(['question'])
                             ->toArray();
                         // End Rules
 
@@ -396,21 +362,8 @@ class RestSurveyComponent extends Component
                                     $extra['fieldKey'] = $this->fieldKey;
 
                                     $questionId = $extra['data']['survey_question_id'];
-                                    $show = true;
-                                    if (isset($rules[$questionId])) {
-                                        $show = false;
-                                        $dependentQuestions = $rules[$questionId];
-                                        $ans = $answers->getArrayCopy();
-                                        $intersectKey = array_intersect_key($ans, $dependentQuestions);
-                                        foreach ($intersectKey as $key => $value) {
-                                            $ruleOptions = json_decode($dependentQuestions[$key]);
-                                            if (in_array($value, $ruleOptions)) {
-                                                $show = true;
-                                            }
-                                        }
-                                    }
+                                    $show = $this->isRelevantQuestion($rules, $questionId, $answers);
                                     if ($show) {
-                                        $answers[$questionId] = $responseValue;
                                         $this->$fieldTypeFunction($field, $entity, $extra); 
                                     }
                                 }
@@ -424,6 +377,53 @@ class RestSurveyComponent extends Component
                 }
             }
         }
+    }
+
+    private function isRelevantQuestion($rules, $questionId, ArrayObject $answers)
+    {
+        $show = true;
+        if (isset($rules[$questionId])) {
+            $show = false;
+            $dependentQuestions = $rules[$questionId];
+            $ans = $answers->getArrayCopy();
+            $intersectKey = array_intersect_key($ans, $dependentQuestions);
+            foreach ($intersectKey as $key => $value) {
+                $ruleOptions = json_decode($dependentQuestions[$key]);
+                if (in_array($value, $ruleOptions)) {
+                    $show = true;
+                }
+            }
+        }
+        if ($show) {
+            $answers[$questionId] = $responseValue;
+        }
+        return $show;
+    }
+
+    private function deleteQuestionWithRules($surveyFormId)
+    {
+        $RulesTable = TableRegistry::get('Survey.SurveyRules');
+        $questions = $RulesTable
+            ->find()
+            ->select([
+                $RulesTable->aliasField('survey_question_id')
+            ])
+            ->where([
+                $RulesTable->aliasField('survey_form_id') => $surveyFormId,
+                $RulesTable->aliasField('enabled') => 1
+            ]);
+
+        $CustomFieldValues = $this->FieldValue;
+        $CustomTableCells = $this->TableCell;
+        $CustomFieldValues->deleteAll([
+            'survey_question_id IN ' => $questions,
+            'institution_survey_id' => $recordId
+        ]);
+
+        $CustomTableCells->deleteAll([
+            'survey_question_id IN ' => $questions,
+            'institution_survey_id' => $recordId
+        ]);
     }
 
     private function deleteFieldValue($data, $extra)
@@ -730,21 +730,9 @@ class RestSurveyComponent extends Component
         // relevancy rules
         $RulesTable = TableRegistry::get('Survey.SurveyRules');
         $rules = $RulesTable
-            ->find('list', [
-                'groupField' => 'question',
-                'keyField' => 'dependent',
-                'valueField' => 'options'
+            ->find('SurveyRulesList', [
+                'survey_form_id' => $id
             ])
-            ->where([
-                $RulesTable->aliasField('survey_form_id') => $id,
-                $RulesTable->aliasField('enabled') => 1
-            ])
-            ->select([
-                'question' => $RulesTable->aliasField('survey_question_id'), 
-                'dependent' => $RulesTable->aliasField('dependent_question_id'),
-                'options' => $RulesTable->aliasField('show_options')
-            ])
-            ->group(['question'])
             ->toArray();
         $rules = new ArrayObject($rules);
 
@@ -767,7 +755,6 @@ class RestSurveyComponent extends Component
 
             // For relevancy
             $extra['field_id'] = $field->field_id;
-            $extra['form_id'] = $field->form_id;
             $extra['rules'] = $rules;
 
             if (is_null($sectionName)) { $parentNode = $bodyNode; }
