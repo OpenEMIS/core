@@ -4,6 +4,7 @@ v3.5.6
 - Fixed a bug that caused 'Select All' checkboxes affecting disabled checkboxes
 - Usernames should be at least 6 characters now
 - Administrative Boundaries and Nationalities now use two different list instead of the same one
+- Classes and Subjects can now be linked to Staff via Careers
 - Fixed a bug that caused user created roles not able to access Permissions
 - Fixed a bug that caused Arabic translation not working properly in Attendance report
 - Staff FTE effective start date is now set as the End Date of the old position instead of the Start Date of the new position
