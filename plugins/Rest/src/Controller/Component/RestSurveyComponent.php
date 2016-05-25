@@ -328,6 +328,7 @@ class RestSurveyComponent extends Component
                         $this->deleteQuestionWithRules($entity->survey_form_id);
 
                         // Rules
+                        $RulesTable = TableRegistry::get('Survey.SurveyRules');
                         $rules = $RulesTable
                             ->find('SurveyRulesList', [
                                 'survey_form_id' => $entity->survey_form_id
