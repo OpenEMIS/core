@@ -121,7 +121,10 @@ class TransferRequestsTable extends AppTable {
 				'on' => 'create'
 			])
 			->add('student_id', 'ruleStudentNotCompletedGrade', [
-				'rule' => ['studentNotCompletedGrade'],
+				'rule' => ['studentNotCompletedGrade', [
+					'educationGradeField' => 'new_education_grade_id',
+					'studentIdField' => 'student_id'
+				]],
 				'on' => 'create'
 			])
 			->requirePresence('new_education_grade_id')
@@ -501,12 +504,11 @@ class TransferRequestsTable extends AppTable {
 			$academicPeriodId = $request->data[$this->alias()]['academic_period_id'];
 			$educationGradeId = $request->data[$this->alias()]['education_grade_id'];
 			$requestInstitution = $request->data[$this->alias()]['previous_institution_id'];
-			$gradeOptions = $this->InstitutionGrades->getGradeOptions($requestInstitution, $academicPeriodId);
-			if (!isset($request->data[$this->alias()]['new_education_grade_id'])) {
-				$request->data[$this->alias()]['new_education_grade_id'] = $educationGradeId;
-			}
+			$gradeOptions = [];
+
 			if (isset($request->data[$this->alias()]['institution_id'])) {
 				$institutionId = $request->data[$this->alias()]['institution_id'];
+				$gradeOptions = $this->InstitutionGrades->getGradeOptions($institutionId, $academicPeriodId);
 				if ($institutionId == $requestInstitution && isset($gradeOptions[$educationGradeId])) {
 					unset($gradeOptions[$educationGradeId]);
 				}
