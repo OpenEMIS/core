@@ -237,17 +237,23 @@ class TransferRequestsTable extends AppTable {
     	$this->Session->delete($this->registryAlias().'.id');
     }
 
+    private function addSections() 
+    {
+		$this->ControllerAction->field('transfer_status_header', ['type' => 'section', 'title' => __('Transfer Status')]);
+		$this->ControllerAction->field('existing_information_header', ['type' => 'section', 'title' => __('Transfer From')]);
+		$this->ControllerAction->field('new_information_header', ['type' => 'section', 'title' => __('Transfer To')]);
+		$this->ControllerAction->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Details')]);
+    }
+
     public function viewBeforeAction(Event $event) {
-    	$this->ControllerAction->field('transfer_status_header', ['type' => 'section', 'title' => __('Transfer Status')]);
-		$this->ControllerAction->field('existing_information_header', ['type' => 'section', 'title' => __('Existing Information')]);
-		$this->ControllerAction->field('new_information_header', ['type' => 'section', 'title' => __('New Information')]);
-		$this->ControllerAction->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Transfer Information')]);
+    	$this->addSections();
     	$this->ControllerAction->field('student_transfer_reason_id', ['visible' => true]);
     	$this->ControllerAction->field('start_date', ['visible' => true]);
     	$this->ControllerAction->field('end_date', ['visible' => true]);
     	$this->ControllerAction->field('previous_institution_id', ['visible' => false]);
     	$this->ControllerAction->field('type', ['visible' => false]);
-    	$this->ControllerAction->field('comment', ['visible' => true]);
+    	$this->ControllerAction->field('comment', ['visible'
+    	 => true]);
     	$this->ControllerAction->field('student_id');
     	$this->ControllerAction->field('status');
     	$this->ControllerAction->field('institution_id', ['visible' => true]);
@@ -260,10 +266,7 @@ class TransferRequestsTable extends AppTable {
 
 	public function addAfterAction(Event $event, Entity $entity) {
 		if ($this->Session->check($this->registryAlias().'.id')) {
-			$this->ControllerAction->field('transfer_status_header', ['type' => 'section', 'title' => __('Transfer Status')]);
-			$this->ControllerAction->field('existing_information_header', ['type' => 'section', 'title' => __('Existing Information')]);
-			$this->ControllerAction->field('new_information_header', ['type' => 'section', 'title' => __('New Information')]);
-			$this->ControllerAction->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Transfer Information')]);
+			$this->addSections();
 			$this->ControllerAction->field('transfer_status');
 			$this->ControllerAction->field('student');
 			$this->ControllerAction->field('student_id');
@@ -316,10 +319,7 @@ class TransferRequestsTable extends AppTable {
 			$event->stopPropagation();
 			return $this->controller->redirect(['controller' => 'Institutions', 'action' => 'Students', 'plugin'=>'Institution']);
 		}
-		$this->ControllerAction->field('transfer_status_header', ['type' => 'section', 'title' => __('Transfer Status')]);
-		$this->ControllerAction->field('existing_information_header', ['type' => 'section', 'title' => __('Existing Information')]);
-		$this->ControllerAction->field('new_information_header', ['type' => 'section', 'title' => __('New Information')]);
-		$this->ControllerAction->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Transfer Information')]);
+		$this->addSections();
 		$this->ControllerAction->field('transfer_status');
 		$this->ControllerAction->field('student');
 		$this->ControllerAction->field('student_id');
