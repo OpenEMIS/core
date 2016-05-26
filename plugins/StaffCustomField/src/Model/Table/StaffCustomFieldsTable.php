@@ -9,8 +9,8 @@ class StaffCustomFieldsTable extends CustomFieldsTable {
 		$this->hasMany('CustomFieldOptions', ['className' => 'StaffCustomField.StaffCustomFieldOptions', 'dependent' => true]);
 		$this->hasMany('CustomTableColumns', ['className' => 'StaffCustomField.StaffCustomTableColumns', 'dependent' => true]);
 		$this->hasMany('CustomTableRows', ['className' => 'StaffCustomField.StaffCustomTableRows', 'dependent' => true]);
-		$this->hasMany('CustomFieldValues', ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'dependent' => true]);
-		$this->hasMany('CustomTableCells', ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'dependent' => true]);
+		$this->hasMany('CustomFieldValues', ['className' => 'StaffCustomField.StaffCustomFieldValues', 'dependent' => true]);
+		$this->hasMany('CustomTableCells', ['className' => 'StaffCustomField.StaffCustomTableCells', 'dependent' => true]);
 		$this->belongsToMany('CustomForms', [
 			'className' => 'StaffCustomField.StaffCustomForms',
 			'joinTable' => 'staff_custom_forms_fields',

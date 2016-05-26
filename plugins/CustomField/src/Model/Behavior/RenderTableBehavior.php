@@ -69,6 +69,7 @@ class RenderTableBehavior extends RenderBehavior {
             $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
         } else if ($action == 'edit') {
             $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
+            $value = $this->processRelevancyDisabled($entity, $value, $fieldId);
         }
 
         $event->stopPropagation();
@@ -87,6 +88,7 @@ class RenderTableBehavior extends RenderBehavior {
         $valueKey = $settings['valueKey'];
 
         foreach ($values as $fieldId => $rows) {
+            $settings['deleteFieldIds'][] = $fieldId;
             foreach ($rows as $rowId => $columns) {
                 foreach ($columns as $columnId => $obj) {
                     $cellValue = $obj[$valueKey];

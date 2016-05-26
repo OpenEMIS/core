@@ -155,7 +155,14 @@ class StudentFeesTable extends ControllerActionTable {
 		}
 		$institutionId = $this->institutionId;
 		$this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
-		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId);
+		$selectedOption = $this->queryString('academic_period_id', $academicPeriodOptions);
+		$Fees = $this;
+		$this->advancedSelectOptions($academicPeriodOptions, $selectedOption, [
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudentFees')),
+			'callable' => function($id) use ($Fees, $institutionId) {
+				return $Fees->find()->where(['institution_id'=>$institutionId, 'academic_period_id'=>$id])->count();
+			}
+		]);
 
 		$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($institutionId, $this->_selectedAcademicPeriodId);
 		$this->_selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);
@@ -590,4 +597,20 @@ class StudentFeesTable extends ControllerActionTable {
 		return $associations;
 	}
 
+<<<<<<< HEAD
+=======
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		if ($action == 'index') {
+			unset($toolbarButtons['add']);
+		} else if ($action == 'view') {
+			$toolbarButtons['add'] = $toolbarButtons['back'];
+			$toolbarButtons['add']['url'] = $buttons['add']['url'];
+			$toolbarButtons['add']['label'] = '<i class="fa kd-add"></i>';
+			$toolbarButtons['add']['attr']['title'] = __('Add New Payment');
+		} else if ($action == 'add') {
+			$toolbarButtons['back']['url'] = $buttons['view']['url'];
+		}
+	}
+
+>>>>>>> a299a1d14bed4a0b3b63f45a9eb705fed53c4e86
 }

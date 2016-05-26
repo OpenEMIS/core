@@ -1,4 +1,5 @@
-/* HEADER v.1.0.2 */
+/* HEADER v.1.0.3 */
+
 
 /* TOP HEADER */
 
@@ -118,6 +119,8 @@
 .username span {
     display: inline-block;
     padding: 19px 0 14px;
+    font-size: 12px;
+    white-space: pre;
 }
 
 .dropdown-menu .dropdown-arrow {
@@ -238,10 +241,13 @@
     text-decoration: none;
 }
 
+
 /*==========  Non-Mobile First Method  ==========*/
 
+
 /* Small Devices, Tablets */
-@media only screen and (max-width : 1024px) {
+
+@media only screen and (max-width: 1024px) {
     /* HEADER */
     .navbar-left {
         width: 100%;
@@ -335,4 +341,124 @@
     .product-lists .dropdown-arrow {
         right: 28px;
     }
+    .rtl .navbar {
+        height: 58px;
+    }
+    .rtl .split-panes.horizontal {
+        top: 77px;
+    }
+    /* Mobile */
+    .mobile .navbar-left {
+        width: 100%;
+        text-align: center;
+        padding: 0;
+        margin: 0;
+    }
+    .mobile .navbar-left h1 {
+        font-size: 22px;
+        color: #FFF;
+    }
+    .mobile .navbar-right {
+        height: 30px;
+        clear: both;
+        width: 100%;
+    }
+    .mobile .brand-logo {
+        width: 100%;
+        padding: 5px 0;
+        text-align: center;
+    }
+    .mobile .header-navigation {
+        text-align: right;
+        background-color: #F9F9F9;
+        border-bottom: 1px solid #DDD;
+        margin: 0;
+        height: 30px;
+    }
+    .mobile .header-navigation .btn-group,
+    .mobile .header-navigation .btn-group .btn {
+        height: 30px;
+        padding: 0 5px;
+    }
+    .mobile .header-navigation .btn:hover {
+        background: 0 !important;
+        opacity: 0.8;
+    }
+    .mobile .header-navigation .kd-role {
+        color: #555;
+        font-size: 13px;
+        vertical-align: middle;
+    }
+    .mobile .header-navigation .product-lists {
+        left: -247px !important;
+        top: 26px !important;
+    }
+    .mobile .header-navigation .more-menu {
+        left: -125px !important;
+    }
+    .mobile .header-navigation .username {
+        padding: 0 !important;
+    }
+    .mobile .header-navigation .username span {
+        padding: 4px 0 4px 10px;
+        margin: 0;
+    }
+    .mobile .username {
+        display: table;
+    }
+    .mobile .username a {
+        display: table-cell;
+        vertical-align: middle;
+    }
+    .mobile .more-menu .dropdown-arrow {
+        right: 10px;
+    }
+    .mobile .more-menu {
+        top: 26px !important;
+        width: 150px;
+        left: -130px !important;
+    }
+    .mobile .navbar-right .username {
+        color: #555;
+        padding: 2px 13px 0 5px;
+        border-right: 0;
+        margin-right: 0;
+        margin-left: 15px;
+        height: 30px;
+    }
+    .mobile .navbar-right .username span {
+        margin-right: 0;
+        padding: 0;
+        display: table-cell;
+        vertical-align: middle;
+        height: 30px;
+    }
+    .mobile .navbar-right .btn-group .btn i {
+        color: #555;
+        vertical-align: middle;
+    }
+    .mobile .product-lists .dropdown-arrow {
+        right: 28px;
+    }
+    .rtl.mobile .navbar-right .username {
+        margin-right: 20px;
+    }
+    .rtl.mobile .navbar {
+        height: 58px;
+    }
+    .rtl.mobile .split-panes.horizontal {
+        top: 77px;
+    }
+    .rtl.mobile .header-navigation {
+        text-align: left;
+    }
+}
+
+
+/* RTL */
+
+.rtl .navbar-right .username,
+.rtl .username a {
+    font-size: 12px;
+    line-height: 12px;
 }
