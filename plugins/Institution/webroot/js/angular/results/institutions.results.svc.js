@@ -241,7 +241,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             var ResultsSvc = this;
             angular.forEach(periods, function(period, key) {
                 var allowEdit = (action == 'edit' && period.editable);
-                var headerLabel = period.name + " <span class='divider'></span> " + period.weight + "%";
+                var headerLabel = period.name + " <span class='divider'></span> " + period.weight;
                 var headerName = allowEdit ? headerLabel + " <i class='fa fa-pencil-square-o fa-lg header-icon'></i>" : headerLabel;
 
                 var periodField = 'period_' + period.id;
@@ -284,12 +284,6 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         }
                     },
                     filterParams: filterParams
-                });
-
-                columnDefs.push({
-                    headerName: "total weight",
-                    field: "total_weight",
-                    hide: true
                 });
 
                 columnDefs.push({
@@ -426,10 +420,8 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                     var isMarksType = (resultType == resultTypes.MARKS);
                     var isGradesType = (resultType == resultTypes.GRADES);
 
-                    var totalWeight = 0;
                     var periodObj = {};
                     angular.forEach(periods, function(period, key) {
-                        totalWeight += parseFloat(period.weight);
                         periodObj[period.id] = period;
                     }, periodObj);
 
@@ -456,7 +448,6 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                                 if (isMarksType) {
                                     studentResults = angular.merge(studentResults, {
                                         total_mark: subjectStudent.total_mark,
-                                        total_weight: totalWeight,
                                         is_dirty: false
                                     });
                                 }
@@ -536,7 +527,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             for (var key in data) {
                 if (/period_/.test(key)) {
                     var index = key.replace(/period_(\d+)/, '$1');
-                    totalMark += data[key] * (data['weight_'+index] / data.total_weight);
+                    totalMark += data[key] * (data['weight_'+index]);
                 }
             }
 
