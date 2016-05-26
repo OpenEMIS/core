@@ -46,12 +46,14 @@ class Migrate extends AbstractCommand
         $this->setName('migrate')
              ->setDescription('Migrate the database')
              ->addOption('--target', '-t', InputOption::VALUE_REQUIRED, 'The version number to migrate to')
+             ->addOption('--date', '-d', InputOption::VALUE_REQUIRED, 'The date to migrate to')
              ->setHelp(
 <<<EOT
 The <info>migrate</info> command runs all available migrations, optionally up to a specific version
 
 <info>phinx migrate -e development</info>
 <info>phinx migrate -e development -t 20110103081132</info>
+<info>phinx migrate -e development -d 20110103</info>
 <info>phinx migrate -e development -v</info>
 
 EOT
@@ -69,8 +71,9 @@ EOT
     {
         $this->bootstrap($input, $output);
 
-        $version = $input->getOption('target');
+        $version     = $input->getOption('target');
         $environment = $input->getOption('environment');
+        $date        = $input->getOption('date');
 
         if (null === $environment) {
             $environment = $this->getConfig()->getDefaultEnvironment();
@@ -84,8 +87,15 @@ EOT
             $output->writeln('<info>using adapter</info> ' . $envOptions['adapter']);
         }
 
+        if (isset($envOptions['wrapper'])) {
+            $output->writeln('<info>using wrapper</info> ' . $envOptions['wrapper']);
+        }
+
         if (isset($envOptions['name'])) {
             $output->writeln('<info>using database</info> ' . $envOptions['name']);
+        } else {
+            $output->writeln('<error>Could not determine database name! Please specify a database name in your config file.</error>');
+            return;
         }
 
         if (isset($envOptions['table_prefix'])) {
@@ -97,7 +107,11 @@ EOT
 
         // run the migrations
         $start = microtime(true);
-        $this->getManager()->migrate($environment, $version);
+        if (null !== $date) {
+            $this->getManager()->migrateToDateTime($environment, new \DateTime($date));
+        } else {
+            $this->getManager()->migrate($environment, $version);
+        }
         $end = microtime(true);
 
         $output->writeln('');

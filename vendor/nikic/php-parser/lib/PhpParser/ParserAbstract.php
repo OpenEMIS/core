@@ -6,7 +6,9 @@ namespace PhpParser;
  * This parser is based on a skeleton written by Moriyoshi Koizumi, which in
  * turn is based on work by Masato Bito.
  */
-abstract class ParserAbstract
+use PhpParser\Node\Name;
+
+abstract class ParserAbstract implements Parser
 {
     const SYMBOL_NONE = -1;
 
@@ -444,7 +446,7 @@ abstract class ParserAbstract
     private function getNamespacingStyle(array $stmts) {
         $style = null;
         $hasNotAllowedStmts = false;
-        foreach ($stmts as $stmt) {
+        foreach ($stmts as $i => $stmt) {
             if ($stmt instanceof Node\Stmt\Namespace_) {
                 $currentStyle = null === $stmt->stmts ? 'semicolon' : 'brace';
                 if (null === $style) {
@@ -455,10 +457,38 @@ abstract class ParserAbstract
                 } elseif ($style !== $currentStyle) {
                     throw new Error('Cannot mix bracketed namespace declarations with unbracketed namespace declarations', $stmt->getLine());
                 }
-            } elseif (!$stmt instanceof Node\Stmt\Declare_ && !$stmt instanceof Node\Stmt\HaltCompiler) {
-                $hasNotAllowedStmts = true;
+                continue;
             }
+
+            /* declare() and __halt_compiler() can be used before a namespace declaration */
+            if ($stmt instanceof Node\Stmt\Declare_ || $stmt instanceof Node\Stmt\HaltCompiler) {
+                continue;
+            }
+
+            /* There may be a hashbang line at the very start of the file */
+            if ($i == 0 && $stmt instanceof Node\Stmt\InlineHTML && preg_match('/\A#!.*\r?\n\z/', $stmt->value)) {
+                continue;
+            }
+
+            /* Everything else if forbidden before namespace declarations */
+            $hasNotAllowedStmts = true;
         }
         return $style;
+    }
+
+    protected function handleScalarTypes(Name $name) {
+        $scalarTypes = [
+            'bool'   => true,
+            'int'    => true,
+            'float'  => true,
+            'string' => true,
+        ];
+
+        if (!$name->isUnqualified()) {
+            return $name;
+        }
+
+        $lowerName = strtolower($name->toString());
+        return isset($scalarTypes[$lowerName]) ? $lowerName : $name;
     }
 }

@@ -1,12 +1,12 @@
 /* 
-Integrator Overwrites: v.1.0.0
+Integrator Overwrites: v.1.0.1
 */
 
 
 /* Homepage Background */
 
 .body-wrapper {
-    background-image: url('../../img/login-bg.jpg') !important;
+    background-image: url('../../../img/login-bg.jpg') !important;
 }
 
 

@@ -26,8 +26,25 @@ class WorkflowStatusesTable extends AppTable {
 		]);
 	}
 
+	public function indexBeforeAction(Event $event) {
+		//Add controls filter to index page
+		$toolbarElements = [
+            ['name' => 'Workflow.WorkflowModels/controls', 'data' => [], 'options' => []]
+        ];
+		$this->controller->set('toolbarElements', $toolbarElements);
+		// End
+	}
+
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$modelOptions = $this->WorkflowModels->find('list')->toArray();
+		$modelOptions = ['-1' => __('All Models')] + $modelOptions;
+		$selectedModel = $this->queryString('model', $modelOptions);
+		$this->controller->set(compact('modelOptions', 'selectedModel'));
+		
 		$query->contain($this->_contain);
+		if ($selectedModel != -1) {
+			$query->where([$this->aliasField('workflow_model_id') => $selectedModel]);
+		}
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
@@ -67,20 +84,22 @@ class WorkflowStatusesTable extends AppTable {
 				$tableCells = [];
 				$workflowStatusId = $this->request->pass[1];
 				$workflowSteps = $this->getWorkflowSteps($workflowStatusId);
-				$workflowStepOptions = $this->WorkflowSteps
-					->find()
-					->matching('Workflows')
-					->select([
-						'name' => $this->WorkflowSteps->aliasField('name'),
-						'group' => 'Workflows.name'
-					])
-					->where([$this->WorkflowSteps->aliasField('id').' IN ' => array_keys($workflowSteps)])
-					->toArray();
-				foreach ($workflowStepOptions as $step) {
-					$rowData = [];
-					$rowData[] = $step['name'];
-					$rowData[] = $step['group'];
-					$tableCells[] = $rowData;
+				if (!empty($workflowSteps)) {
+					$workflowStepOptions = $this->WorkflowSteps
+						->find()
+						->matching('Workflows')
+						->select([
+							'name' => $this->WorkflowSteps->aliasField('name'),
+							'group' => 'Workflows.name'
+						])
+						->where([$this->WorkflowSteps->aliasField('id').' IN ' => array_keys($workflowSteps)])
+						->toArray();
+					foreach ($workflowStepOptions as $step) {
+						$rowData = [];
+						$rowData[] = $step['name'];
+						$rowData[] = $step['group'];
+						$tableCells[] = $rowData;
+					}
 				}
 				$attr['tableHeaders'] = $tableHeaders;
 				$attr['tableCells'] = $tableCells;

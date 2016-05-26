@@ -58,52 +58,52 @@ class DirectoriesTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator = parent::validationDefault($validator);
-		return $validator
-			->allowEmpty('photo_content')
-		;
+		$BaseUsers = TableRegistry::get('User.Users');
+		return $BaseUsers->setUserValidation($validator, $this);
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$userTypeOptions = [
-				self::ALL => __('All Users'),
-				self::STUDENT => __('Students'),
-				self::STAFF => __('Staff'),
-				self::GUARDIAN => __('Guardians'),
-				self::OTHER => __('Others')
+                self::STAFF => __('Staff'),
+				self::STUDENT => __('Students')
 			];
+
+        if ($this->AccessControl->isAdmin()) { // if user is super admin, this condition is used for filtering
+            $userTypeOptions[self::GUARDIAN] = __('Guardians');
+            $userTypeOptions[self::OTHER] = __('Others');
+        }
 
 		$selectedUserType = $this->queryString('user_type', $userTypeOptions);
 		$this->advancedSelectOptions($userTypeOptions, $selectedUserType);
 		$this->controller->set(compact('userTypeOptions'));
 
 		$conditions = [];
-		if (!is_null($request->query('user_type'))) {
-			switch($request->query('user_type')) {
-				case self::ALL:
-					// Do nothing
-					break;
-				case self::STUDENT:
-					$conditions = [$this->aliasField('is_student') => 1];
-					break;
 
-				case self::STAFF:
-					$conditions = [$this->aliasField('is_staff') => 1];
-					break;
+        if ($this->AccessControl->isAdmin()) { // if user is super admin, this condition is used for filtering
+    		if (!is_null($request->query('user_type'))) {
+    			switch($request->query('user_type')) {
+    				case self::STUDENT:
+    					$conditions = [$this->aliasField('is_student') => 1];
+    					break;
 
-				case self::GUARDIAN:
-					$conditions = [$this->aliasField('is_guardian') => 1];
-					break;
+    				case self::STAFF:
+    					$conditions = [$this->aliasField('is_staff') => 1];
+    					break;
 
-				case self::OTHER:
-					$conditions = [
-						$this->aliasField('is_student') => 0,
-						$this->aliasField('is_staff') => 0,
-						$this->aliasField('is_guardian') => 0
-					];
-					break;
-			}
-		}
+                    case self::GUARDIAN:
+                        $conditions = [$this->aliasField('is_guardian') => 1];
+                        break;
+
+                    case self::OTHER:
+                        $conditions = [
+                            $this->aliasField('is_student') => 0,
+                            $this->aliasField('is_staff') => 0,
+                            $this->aliasField('is_guardian') => 0
+                        ];
+                        break;
+    			}
+    		}
+        }
 		$notSuperAdminCondition = [
 			$this->aliasField('super_admin') => 0
 		];
@@ -122,63 +122,78 @@ class DirectoriesTable extends AppTable {
 			$institutionIds = implode(', ', $institutionIds);
 			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
 			
-			$InstitutionStudentTable = TableRegistry::get('Institution.Students');
+			if (!empty($institutionIds)) {
+                if (!is_null($request->query('user_type'))) {
+                    switch($request->query('user_type')) {
+                        case self::STUDENT:
+                            $InstitutionStudentTable = TableRegistry::get('Institution.Students');
 
-			$institutionStudents = $InstitutionStudentTable->find()
-				->where([
-					$InstitutionStudentTable->aliasField('institution_id').' IN ('.$institutionIds.')',
-					$InstitutionStudentTable->aliasField('student_id').' = '.$this->aliasField('id')
-				])
-				->bufferResults(false);
+                            $institutionStudents = $InstitutionStudentTable->find()
+                                ->select([
+                                    $InstitutionStudentTable->aliasField('student_id')
+                                ])
+                                ->where([
+                                    $InstitutionStudentTable->aliasField('institution_id').' IN ('.$institutionIds.')',
+                                    $InstitutionStudentTable->aliasField('student_id').' = '.$this->aliasField('id')
+                                ])
+                                ->bufferResults(false);
 
-			$allInstitutionStudents = $InstitutionStudentTable->find()
-				->where([
-					$InstitutionStudentTable->aliasField('student_id').' = '.$this->aliasField('id')
-				])
-				->bufferResults(false);
+                            $allInstitutionStudents = $InstitutionStudentTable->find()
+                                ->select([
+                                    $InstitutionStudentTable->aliasField('student_id')
+                                ])
+                                ->where([
+                                    $InstitutionStudentTable->aliasField('student_id').' = '.$this->aliasField('id')
+                                ])
+                                ->bufferResults(false);
 
-			$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
+                            $query->where([
+                                'OR' => [
+                                    // floating students
+                                    ['NOT EXISTS ('.$allInstitutionStudents->sql().')', $this->aliasField('is_student') => 1],
+                                    // is a student in ->getInstitutionsByUser()
+                                    ['EXISTS ('.$institutionStudents->sql().')']
+                                ]
+                            ])
+                            ;
+                            break;
 
-			$institutionStaff = $InstitutionStaffTable->find()
-				->where([
-					$InstitutionStaffTable->aliasField('institution_id').' IN ('.$institutionIds.')',
-					$InstitutionStaffTable->aliasField('staff_id').' = '.$this->aliasField('id')
-				])
-				->bufferResults(false);
+                        case self::STAFF:
+                            $InstitutionStaffTable = TableRegistry::get('Institution.Staff');
 
-			$allInstitutionStaff = $InstitutionStaffTable->find()
-				->where([
-					$InstitutionStaffTable->aliasField('staff_id').' = '.$this->aliasField('id')
-				])
-				->bufferResults(false);
+                            $institutionStaff = $InstitutionStaffTable->find()
+                                ->select([
+                                    $InstitutionStaffTable->aliasField('staff_id')
+                                ])
+                                ->where([
+                                    $InstitutionStaffTable->aliasField('institution_id').' IN ('.$institutionIds.')',
+                                    $InstitutionStaffTable->aliasField('staff_id').' = '.$this->aliasField('id')
+                                ])
+                                ->bufferResults(false);
 
-			$directoriesTableClone = clone $this;
-			$directoriesTableClone->alias('DirectoriesClone');
-
-			$guardianAndOthers = $directoriesTableClone->find()
-				->where([
-					'OR' => [
-						[$directoriesTableClone->aliasField('is_guardian').'= 1'],
-						[$directoriesTableClone->aliasField('is_student').'= 0', $directoriesTableClone->aliasField('is_guardian').'= 0', $directoriesTableClone->aliasField('is_staff').'= 0']
-					],
-					[$directoriesTableClone->aliasField('id').' = '.$this->aliasField('id')]
-				])
-				->bufferResults(false);
-
-			$userId = $this->Auth->user('id');
-
-			$query->where([
-					'OR' => [
-						['NOT EXISTS ('.$allInstitutionStudents->sql().')', $this->aliasField('is_student') => 1],
-						['NOT EXISTS ('.$allInstitutionStaff->sql().')', $this->aliasField('is_staff') => 1],
-						['EXISTS ('.$institutionStaff->sql().')'],
-						['EXISTS ('.$institutionStudents->sql().')'],
-						['EXISTS ('.$guardianAndOthers->sql().')'],
-					]
-				])
-				->group([$this->aliasField('id')])
-				;
-			// pr($query->sql());die;
+                            $allInstitutionStaff = $InstitutionStaffTable->find()
+                                ->select([
+                                    $InstitutionStaffTable->aliasField('staff_id')
+                                ])
+                                ->where([
+                                    $InstitutionStaffTable->aliasField('staff_id').' = '.$this->aliasField('id')
+                                ])
+                                ->bufferResults(false);
+                            $query->where([
+                                'OR' => [
+                                    // floating staff
+                                    ['NOT EXISTS ('.$allInstitutionStaff->sql().')', $this->aliasField('is_staff') => 1],
+                                    // is a staff in ->getInstitutionsByUser()
+                                    ['EXISTS ('.$institutionStaff->sql().')'],
+                                ]
+                            ])
+                            ;
+                            break;
+                    }
+                }
+			} else {
+				$query = $this->find()->where([$this->aliasField('id') => -1]);
+			}
 		}
 		
 		$this->dashboardQuery = clone $query;
@@ -262,6 +277,7 @@ class DirectoriesTable extends AppTable {
 
 			switch ($userType) {
 				case self::STUDENT:
+					$this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 					$this->addBehavior('CustomField.Record', [
 						'model' => 'Student.Students',
 						'behavior' => 'Student',
@@ -277,9 +293,9 @@ class DirectoriesTable extends AppTable {
 						'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
 						'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]
 					]);
-					$this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 					break;
 				case self::STAFF:
+					$this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 					$this->addBehavior('CustomField.Record', [
 						'model' => 'Staff.Staff',
 						'behavior' => 'Staff',
@@ -295,7 +311,6 @@ class DirectoriesTable extends AppTable {
 						'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
 						'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true]
 					]);
-					$this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 					break;
 			}	
 		}
@@ -363,9 +378,15 @@ class DirectoriesTable extends AppTable {
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
 		$userType = $requestData[$this->alias()]['user_type'];
 		$type = [
-			'is_student' => 0,
-			'is_staff' => 0,
-			'is_guardian' => 0
+			'is_student' => '0',
+			'is_staff' => '0',
+			'is_guardian' => '0'
+			// 'is_student' => intval(0),
+			// 'is_staff' => intval(0),
+			// 'is_guardian' => intval(0)
+			// 'is_student' => 0,
+			// 'is_staff' => 0,
+			// 'is_guardian' => 0
 		];
 		switch ($userType) {
 			case self::STUDENT:
@@ -384,6 +405,8 @@ class DirectoriesTable extends AppTable {
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$this->fields = [];
+		$this->controller->set('ngController', 'AdvancedSearchCtrl');
+		
 		if (!is_null($this->request->query('user_type'))) {
 			switch($this->request->query('user_type')) {
 				case self::ALL:
@@ -474,7 +497,6 @@ class DirectoriesTable extends AppTable {
 			$isSet = true;
 		}
 
-		// To make sure the navigation component has already read the set value
 		if ($isSet) {
 			$reload = $this->Session->read('Directory.Directories.reload');
 			if (!isset($reload)) {

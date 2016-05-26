@@ -14,15 +14,15 @@ class FieldTypeBehavior extends Behavior {
     }
 
     public function getFieldTypeList($format=[]) {
-        $list = $this->CustomFieldTypes
-        	->find('list', ['keyField' => 'code', 'valueField' => 'name'])
-        	->find('visible')
-            ->where([
-                $this->CustomFieldTypes->aliasField('format IN ') => $format
-            ])
-        	->toArray();
+        $query = $this->CustomFieldTypes
+            ->find('list', ['keyField' => 'code', 'valueField' => 'name'])
+            ->find('visible');
 
-        return $list;
+        if (!empty($format)) {
+            $query->where([$this->CustomFieldTypes->aliasField('format IN ') => $format]);
+        }
+
+        return $query->toArray();
     }
 
     public function onGetFieldType(Event $event, Entity $entity) {

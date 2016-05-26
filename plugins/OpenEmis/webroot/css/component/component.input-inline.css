@@ -1,0 +1,64 @@
+/* INPUT INLINE v.1.0.0 */
+
+.input-inline-dropdown .input-select-wrapper {
+    width: 20%;
+    margin-right: 10px;
+}
+
+.input-inline-dropdown {
+    display: inline-block;    
+    width: -webkit-calc(70% - 15px);
+    width: -moz-calc(70% - 15px);
+    width: calc(70% - 15px);
+}
+
+.input-inline-dropdown .table-in-view {
+    width: 100% !important;
+}
+
+.label-icon {
+    font-size: 18px;
+    color: #444;
+    width: 35px;
+    text-align: center;
+}
+
+.input-toolbar button {
+    margin: 3px 0 10px;
+    height: 30px;
+    width: 30px;
+    padding: 0;
+}
+
+.table-btn {
+    text-align: right;
+}
+
+/* Bigger Desktop View */ 
+@media only screen and (max-width : 1024px) {
+    .input-inline-dropdown .input-select-wrapper {
+        width: 25%;
+    }
+}
+
+/* Tablet View */
+@media only screen and (max-width : 800px) {
+    .input-inline-dropdown {
+        width: 100% !important;
+    }
+}
+
+/* RTL INPUT INLINE */
+
+.rtl .table-btn {
+    text-align: left;
+}
+
+.rtl .input-toolbar button {
+    margin: 0 0 10px;
+}
+
+.rtl .input-inline-dropdown .input-select-wrapper {
+    margin-right: 0;
+    margin-left: 10px;
+}

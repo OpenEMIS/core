@@ -9,6 +9,16 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 
 class AdvancedIdentitySearchBehavior extends Behavior {
+	protected $_defaultConfig = [
+		'associatedKey' => '',
+	];
+
+	public function initialize(array $config) {
+		$associatedKey = $this->config('associatedKey');
+		if (empty($associatedKey)) {
+			$this->config('associatedKey', $this->_table->aliasField('id'));
+		}
+	}
 	
 	public function onBuildQuery(Event $event, Query $query, $advancedSearchHasMany) {
 		if (isset($advancedSearchHasMany['identity_number'])) {
@@ -16,8 +26,6 @@ class AdvancedIdentitySearchBehavior extends Behavior {
 		} else {
 			$search = '';
 		}
-
-		$alias = $this->_table->alias();
 
 		if (!empty($search)) {
 			$IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
@@ -29,7 +37,7 @@ class AdvancedIdentitySearchBehavior extends Behavior {
 						'table' => 'user_identities',
 						'alias' => 'Identities',
 						'conditions' => [
-							'Identities.security_user_id = '. $alias . '.id',
+							'Identities.security_user_id = '. $this->config('associatedKey'),
 							'Identities.identity_type_id = '. $default_identity_type
 						]
 					]
@@ -53,7 +61,7 @@ class AdvancedIdentitySearchBehavior extends Behavior {
 	public function onSetupFormField(Event $event, ArrayObject $searchables, $advanceSearchModelData) {
 		$searchables['identity_number'] = [
 			'label' => __('Identity Number'),
-			'value' => isset($advanceSearchModelData['hasMany']) ? $advanceSearchModelData['hasMany']['identity_number'] : '',
+			'value' => (isset($advanceSearchModelData['hasMany']) && isset($advanceSearchModelData['hasMany']['identity_number'])) ? $advanceSearchModelData['hasMany']['identity_number'] : '',
 		];
 	}
 

@@ -24,6 +24,17 @@ class MigrationsShell extends Shell
 {
 
     /**
+     * {@inheritDoc}
+     */
+    public $tasks = [
+        'Migrations.Create',
+        'Migrations.MarkMigrated',
+        'Migrations.Migrate',
+        'Migrations.Rollback',
+        'Migrations.Status'
+    ];
+
+    /**
      * Array of arguments to run the shell with.
      *
      * @var array
@@ -35,7 +46,7 @@ class MigrationsShell extends Shell
      * This is required because CakePHP validates the passed options
      * and would complain if something not configured here is present
      *
-     * @return Cake\Console\ConsoleOptionParser
+     * @return \Cake\Console\ConsoleOptionParser
      */
     public function getOptionParser()
     {
@@ -44,12 +55,15 @@ class MigrationsShell extends Shell
             ->addOption('target', ['short' => 't'])
             ->addOption('connection', ['short' => 'c'])
             ->addOption('source', ['short' => 's'])
+            ->addOption('seed')
             ->addOption('ansi')
             ->addOption('no-ansi')
             ->addOption('version', ['short' => 'V'])
             ->addOption('no-interaction', ['short' => 'n'])
             ->addOption('template', ['short' => 't'])
-            ->addOption('format', ['short' => 'f']);
+            ->addOption('format', ['short' => 'f'])
+            ->addOption('only', ['short' => 'o'])
+            ->addOption('exclude', ['short' => 'x']);
     }
 
     /**
@@ -79,6 +93,7 @@ class MigrationsShell extends Shell
     {
         $app = new MigrationsDispatcher(PHINX_VERSION);
         $input = new ArgvInput($this->argv);
+        $app->setAutoExit(false);
         $app->run($input);
     }
 
@@ -103,7 +118,6 @@ class MigrationsShell extends Shell
      */
     protected function displayHelp($command)
     {
-        $command;
         $this->main();
     }
 

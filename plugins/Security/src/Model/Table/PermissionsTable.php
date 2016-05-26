@@ -9,6 +9,8 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
 use Cake\ORM\TableRegistry;
+use Cake\Log\Log;
+use Cake\Datasource\Exception\RecordNotFoundException;
 
 class PermissionsTable extends AppTable {
 	private $operations = ['_view', '_edit', '_add', '_delete', '_execute'];
@@ -31,6 +33,17 @@ class PermissionsTable extends AppTable {
 			}
 		}
 		return $flag;
+	}
+
+	public function afterAction(Event $event, ArrayObject $entity) {
+		$plugin = __($this->controller->plugin);
+		$id = $this->request->pass[1];
+		try {
+			$name = $this->SecurityRoles->get($id)->name;
+			$this->controller->set('contentHeader', $plugin.' - '.$name);
+		} catch (RecordNotFoundException $e) {
+			Log::write('error', $e->getMessage());
+		}
 	}
 
 	public function beforeAction(Event $event) {
@@ -142,7 +155,7 @@ class PermissionsTable extends AppTable {
 			$permissions = $request->data($this->alias());
 			if (!empty($permissions)) {
 				foreach ($permissions as $row) {
-					$defaultData = ['_view' => 0, '_edit' => 0, '_add' => 0, '_delete' => 0, '_execute' => 0, 'security_role_id' => $roleId];
+					$defaultData = ['_view' => '0', '_edit' => '0', '_add' => '0', '_delete' => '0', '_execute' => '0', 'security_role_id' => $roleId];
 					$entity = $this->newEntity(array_merge($defaultData, $row));
 					$this->save($entity);
 				}

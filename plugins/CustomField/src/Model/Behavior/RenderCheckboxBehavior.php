@@ -69,6 +69,7 @@ class RenderCheckboxBehavior extends RenderBehavior {
 
             $attr['output'] = $html;
             $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
+            $value = $this->processRelevancyDisabled($entity, $value, $fieldId);
         }
 
         $event->stopPropagation();
