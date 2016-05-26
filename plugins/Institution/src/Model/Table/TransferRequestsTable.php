@@ -358,6 +358,7 @@ class TransferRequestsTable extends AppTable {
 		$this->request->data[$this->alias()]['transfer_status'] = $entity->status;
 		$this->request->data[$this->alias()]['student_id'] = $entity->student_id;
 		$this->request->data[$this->alias()]['institution_id'] = $entity->institution_id;
+		$this->request->data[$this->alias()]['new_education_grade_id'] = $entity->new_education_grade_id;
 		$this->request->data[$this->alias()]['education_grade_id'] = $entity->education_grade_id;
 		$this->request->data[$this->alias()]['start_date'] = $entity->start_date;
 		$this->request->data[$this->alias()]['end_date'] = $entity->end_date;
