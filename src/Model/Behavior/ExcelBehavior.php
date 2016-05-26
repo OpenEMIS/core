@@ -286,12 +286,10 @@ class ExcelBehavior extends Behavior {
 		$columns = $schema->columns();
 		$excludes = $this->config('excludes');
 
-		if (count($table->primaryKey()) > 1) { //for hasMany relation then will have many primaryKey, excluding id must be done manually, the other primary key excluded on Table file.
-			$excludes[] = 'id';
-		} else {
+		if (!is_array($table->primaryKey())) { //if not composite key
 			$excludes[] = $table->primaryKey();
 		}
-		
+
 		$fields = new ArrayObject();
 		$module = $table->alias();
 		$language = I18n::locale();
