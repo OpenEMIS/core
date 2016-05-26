@@ -1,7 +1,7 @@
 --
 -- POCOR-2255
 --
-INSERT INTO `db_patches` VALUES ('POCOR-2255', NOW());
+INSERT INTO `db_patches` (issue, created) VALUES ('POCOR-2255', NOW());
 
 ALTER TABLE `institution_fee_types` CHANGE `amount` `amount` DECIMAL(15,2) NOT NULL;
 ALTER TABLE `institution_fees` CHANGE `total` `total` DECIMAL(50,2) NULL DEFAULT NULL;
