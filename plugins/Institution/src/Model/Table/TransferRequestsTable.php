@@ -289,7 +289,7 @@ class TransferRequestsTable extends AppTable {
 			$this->ControllerAction->setFieldOrder([
 				'transfer_status_header', 'transfer_status', 
 				'existing_information_header', 'student', 'previous_institution_id', 'education_grade_id', 
-				'new_information_header', 'institution_id', 'new_education_grade_id',
+				'new_information_header', 'new_education_grade_id', 'institution_id',
 				'academic_period_id', 
 				'status', 'start_date', 'end_date',
 				'transfer_reasons_header', 'student_transfer_reason_id', 'comment'
@@ -309,7 +309,7 @@ class TransferRequestsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder([
 			'transfer_status_header', 'created', 'status', 'type', 
 			'existing_information_header', 'student_id', 'academic_period_id', 'education_grade_id', 'start_date', 'end_date',
-			'new_information_header', 'institution_id', 'new_education_grade_id',
+			'new_information_header', 'new_education_grade_id', 'institution_id',
 			'transfer_reasons_header', 'student_transfer_reason_id', 'comment'
 		]);
 	}
@@ -346,7 +346,7 @@ class TransferRequestsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder([
 			'transfer_status_header', 'transfer_status', 
 			'existing_information_header', 'student', 'previous_institution_id', 'education_grade_id', 
-			'new_information_header', 'institution_id', 'new_education_grade_id',
+			'new_information_header', 'new_education_grade_id', 'institution_id', 
 			'academic_period_id', 
 			'status', 'start_date', 'end_date',
 			'transfer_reasons_header', 'student_transfer_reason_id', 'comment'
@@ -474,10 +474,13 @@ class TransferRequestsTable extends AppTable {
 				])
 				->order([$this->Institutions->aliasField('code')]);
 
+			if ($this->selectedGrade == $request->data[$this->alias()]['education_grade_id']) {
+				$institutionOptions->where([$this->Institutions->aliasField('id').' <> ' => $institutionId]);
+			}
+
 
 			$attr['type'] = 'select';
 			$attr['options'] = $institutionOptions->toArray();
-			$attr['onChangeReload'] = true;
 
 			/* to be implemented with custom autocomplete
 			$attr['type'] = 'string';
@@ -501,20 +504,73 @@ class TransferRequestsTable extends AppTable {
 	public function onUpdateFieldNewEducationGradeId(Event $event, array $attr, $action, $request)
 	{
 		if ($action == 'add') {
-			$academicPeriodId = $request->data[$this->alias()]['academic_period_id'];
-			$educationGradeId = $request->data[$this->alias()]['education_grade_id'];
-			$requestInstitution = $request->data[$this->alias()]['previous_institution_id'];
-			$gradeOptions = [];
+			$id = $this->Session->read($this->registryAlias().'.id');
+			$Students = TableRegistry::get('Institution.Students');
+			
+			$studentInfo = $Students->find()->contain(['EducationGrades', 'StudentStatuses'])->where([$Students->aliasField($Students->primaryKey()) => $id])->first();
 
-			if (isset($request->data[$this->alias()]['institution_id'])) {
-				$institutionId = $request->data[$this->alias()]['institution_id'];
-				$gradeOptions = $this->InstitutionGrades->getGradeOptions($institutionId, $academicPeriodId);
-				if ($institutionId == $requestInstitution && isset($gradeOptions[$educationGradeId])) {
-					unset($gradeOptions[$educationGradeId]);
-				}
+			$studentStatusCode = null;
+			if ($studentInfo) {
+				$studentStatusCode = $studentInfo->student_status->code;
 			}
-			$attr['type'] = 'select';
-			$attr['options'] = $gradeOptions;
+
+			switch ($studentStatusCode) {
+				case 'GRADUATED': case 'PROMOTED':
+						$moreAdvancedEducationGrades = [];
+						$currentProgrammeGrades = $this->EducationGrades
+							->find('list', [
+								'keyField' => 'id',
+								'valueField' => 'programme_grade_name'
+							])
+							->find('visible')
+							->where([
+								$this->EducationGrades->aliasField('order').' > ' => $studentInfo->education_grade->order,
+								$this->EducationGrades->aliasField('education_programme_id') => $studentInfo->education_grade->education_programme_id
+							])
+							->toArray();
+
+						$EducationProgrammesNextProgrammesTable = TableRegistry::get('Education.EducationProgrammesNextProgrammes');
+						$educationProgrammeId = $studentInfo->education_grade->education_programme_id;
+						$nextEducationGradeList = $EducationProgrammesNextProgrammesTable->getNextGradeList($educationProgrammeId);
+						$moreAdvancedEducationGrades = $currentProgrammeGrades + $nextEducationGradeList;
+
+						$this->selectedGrade = $request->data[$this->alias()]['new_education_grade_id'];
+						if (!array_key_exists($this->selectedGrade, $moreAdvancedEducationGrades)) {
+							reset($moreAdvancedEducationGrades);
+							$this->selectedGrade = key($moreAdvancedEducationGrades);
+						}
+
+						$attr['options'] = $moreAdvancedEducationGrades;
+						$attr['onChangeReload'] = true;
+
+					break;
+				
+				default:
+					$academicPeriodId = $request->data[$this->alias()]['academic_period_id'];
+					$educationGradeId = $request->data[$this->alias()]['education_grade_id'];
+					$requestInstitution = $request->data[$this->alias()]['previous_institution_id'];
+					$grades = $this->InstitutionGrades
+						->find()
+						->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
+						->contain(['EducationGrades.EducationProgrammes'])
+						->order(['EducationGrades.education_programme_id', 'EducationGrades.order']);
+					$gradeOptions = [];
+					foreach ($grades as $grade) {
+						$gradeOptions[$grade->education_grade->education_programme->name][$grade->education_grade->id] = $grade->education_grade->programme_grade_name;
+					}
+					if (!isset($request->data[$this->alias()]['new_education_grade_id'])) {
+						$request->data[$this->alias()]['new_education_grade_id'] = $educationGradeId;
+					}
+					$attr['type'] = 'select';
+					$attr['options'] = $gradeOptions;
+					$attr['onChangeReload'] = true;
+					$this->selectedGrade = $request->data[$this->alias()]['new_education_grade_id'];
+					break;
+			}	
+		} elseif ($action == 'edit') {
+			$this->selectedGrade = $request->data[$this->alias()]['new_education_grade_id'];
+			$attr['type'] = 'readonly';
+			$attr['attr']['value'] = $this->EducationGrades->get($this->selectedGrade)->programme_grade_name;
 		}
 		return $attr;
 	}
@@ -571,59 +627,9 @@ class TransferRequestsTable extends AppTable {
 
 	public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, $request) {
 		if ($action == 'add' || $action == 'edit') {
-			$id = $this->Session->read($this->registryAlias().'.id');
-			$Students = TableRegistry::get('Institution.Students');
-			
-			$studentInfo = $Students->find()->contain(['EducationGrades', 'StudentStatuses'])->where([$Students->aliasField($Students->primaryKey()) => $id])->first();
-
-			$studentStatusCode = null;
-			if ($studentInfo) {
-				$studentStatusCode = $studentInfo->student_status->code;
-			}
-
-			switch ($studentStatusCode) {
-				case 'GRADUATED': case 'PROMOTED':
-					if ($action == 'add') {
-						$moreAdvancedEducationGrades = [];
-						$currentProgrammeGrades = $this->EducationGrades
-							->find('list', [
-								'keyField' => 'id',
-								'valueField' => 'programme_grade_name'
-							])
-							->find('visible')
-							->where([
-								$this->EducationGrades->aliasField('order').' > ' => $studentInfo->education_grade->order,
-								$this->EducationGrades->aliasField('education_programme_id') => $studentInfo->education_grade->education_programme_id
-							])
-							->toArray();
-
-						$EducationProgrammesNextProgrammesTable = TableRegistry::get('Education.EducationProgrammesNextProgrammes');
-						$educationProgrammeId = $studentInfo->education_grade->education_programme_id;
-						$nextEducationGradeList = $EducationProgrammesNextProgrammesTable->getNextGradeList($educationProgrammeId);
-						$moreAdvancedEducationGrades = $currentProgrammeGrades + $nextEducationGradeList;
-
-						$this->selectedGrade = $request->data[$this->alias()]['education_grade_id'];
-						if (!array_key_exists($this->selectedGrade, $moreAdvancedEducationGrades)) {
-							reset($moreAdvancedEducationGrades);
-							$this->selectedGrade = key($moreAdvancedEducationGrades);
-						}
-
-						$attr['options'] = $moreAdvancedEducationGrades;
-						$attr['onChangeReload'] = true;
-					} else if ($action == 'edit') {
-						$this->selectedGrade = $request->data[$this->alias()]['education_grade_id'];
-						$attr['type'] = 'readonly';
-						$attr['attr']['value'] = $this->EducationGrades->get($this->selectedGrade)->programme_grade_name;
-					}
-
-					break;
-				
-				default:
-					$this->selectedGrade = $request->data[$this->alias()]['education_grade_id'];
-					$attr['type'] = 'readonly';
-					$attr['attr']['value'] = $this->EducationGrades->get($this->selectedGrade)->programme_grade_name;
-					break;
-			}			
+			$educationGradeId = $request->data[$this->alias()]['education_grade_id'];
+			$attr['type'] = 'readonly';
+			$attr['attr']['value'] = $this->EducationGrades->get($educationGradeId)->programme_grade_name;
 		}
 
 		return $attr;
