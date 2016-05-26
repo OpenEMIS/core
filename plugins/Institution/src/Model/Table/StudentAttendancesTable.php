@@ -43,7 +43,7 @@ class StudentAttendancesTable extends AppTable {
         
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->addBehavior('Excel', [
-			'excludes' => ['status', 'education_grade_id', 'academic_period_id', 'institution_id'],
+			'excludes' => ['status', 'education_grade_id', 'id', 'academic_period_id', 'institution_id'],
 			'pages' => ['index']
 		]);
 		$this->addBehavior('Import.ImportLink');
