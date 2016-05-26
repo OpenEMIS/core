@@ -6,7 +6,7 @@
 
       $("#existingImage").remove();
       $("img").remove();
-      $("#toggleImage").append("<?= $defaultImgView?>");
+      $("#toggleImage").html("<?= $defaultImgView?>");
 
     });
 

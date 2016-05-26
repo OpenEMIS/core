@@ -7,6 +7,7 @@ use Cake\ORM\Behavior;
 class SetupBehavior extends Behavior {
 	protected $fieldTypeCode;
 	protected $fieldType;
+	protected $inputLimits;
 
 	public function initialize(array $config) {
         parent::initialize($config);
@@ -19,19 +20,23 @@ class SetupBehavior extends Behavior {
 		$this->_table->setFieldTypes($code);
 		$this->fieldTypeCode = $code;
 		$this->fieldType = $class;
+		$this->inputLimits = [
+			'text_value' => ['max' => 250],
+			'number_value' => ['min' => -2147483648, 'max' => 2147483647]
+		];
     }
 
     public function implementedEvents() {
     	$events = parent::implementedEvents();
     	$eventMap = [
-            'Setup.'.'set'.$this->fieldType.'Elements' => 'onSet'.$this->fieldType.'Elements',
+            'Setup.set'.$this->fieldType.'Elements' => 'onSet'.$this->fieldType.'Elements',
             'ControllerAction.Model.viewEdit.beforeQuery' => 'viewEditBeforeQuery',
             'ControllerAction.Model.addEdit.onChangeType' => 'addEditOnChangeType',
-            'ControllerAction.Model.addEdit.onChangeRule' => 'addEditOnChangeRule',
             'ControllerAction.Model.addEdit.onAddOption' => 'addEditOnAddOption',
             'ControllerAction.Model.addEdit.onAddColumn' => 'addEditOnAddColumn',
             'ControllerAction.Model.addEdit.onAddRow' => 'addEditOnAddRow',
-            'ControllerAction.Model.addEdit.beforePatch' => 'addEditBeforePatch'
+			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
+            'ControllerAction.Model.edit.afterQuery' => 'editAfterQuery',
         ];
 
         foreach ($eventMap as $event => $method) {

@@ -9,6 +9,11 @@ class CustomTableRowsTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('CustomFields', ['className' => 'CustomField.CustomFields']);
 		$this->hasMany('CustomTableCells', ['className' => 'CustomField.CustomTableCells', 'dependent' => true]);
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+				'filter' => 'custom_field_id',
+			]);
+		}
 	}
 
 	public function validationDefault(Validator $validator) {

@@ -9,10 +9,11 @@ use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Log\Log;
+use Cake\Validation\Validator;
 
 class InstitutionInfrastructuresTable extends AppTable {
 	private $_fieldOrder = [
-		'institution_id', 'parent_id', 'infrastructure_level_id', 'code', 'name', 'infrastructure_type_id', 'size', 'infrastructure_ownership_id', 'year_acquired', 'year_disposed', 'infrastructure_condition_id', 'comment'
+		'institution_id', 'parent_id', 'code', 'name', 'infrastructure_level_id', 'infrastructure_type_id', 'size', 'infrastructure_ownership_id', 'year_acquired', 'year_disposed', 'infrastructure_condition_id', 'comment'
 	];
 
 	public function initialize(array $config) {
@@ -41,6 +42,18 @@ class InstitutionInfrastructuresTable extends AppTable {
 		]);
 	}
 
+	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+		return $validator
+			->add('code', [
+	    		'ruleUnique' => [
+			        'rule' => ['validateUnique', ['scope' => 'institution_id']],
+			        'provider' => 'table'
+			    ]
+		    ])
+		;
+	}
+
 	public function onGetCode(Event $event, Entity $entity) {
 		return $event->subject()->Html->link($entity->code, [
 			'plugin' => $this->controller->plugin,
@@ -54,11 +67,13 @@ class InstitutionInfrastructuresTable extends AppTable {
 	public function beforeAction(Event $event) {
 		// Add breadcrumb
 		$action = $this->ControllerAction->action();
-		if ($action == 'index' || $action == 'edit') {
+		if ($action == 'edit') {
 			$toolbarElements = [
 	            ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => [], 'options' => []]
 	        ];
 			$this->controller->set('toolbarElements', $toolbarElements);
+			list($levelOptions, $selectedLevel) = array_values($this->getLevelOptions(['withAll' => true]));
+			$this->controller->set(compact('levelOptions', 'selectedLevel'));
 		}
 
 		$this->ControllerAction->field('parent_id');
@@ -76,7 +91,6 @@ class InstitutionInfrastructuresTable extends AppTable {
 		}
 
 		$this->fields['parent_id']['visible'] = false;
-		$this->fields['infrastructure_level_id']['visible'] = false;
 		$this->fields['size']['visible'] = false;
 		$this->fields['infrastructure_ownership_id']['visible'] = false;
 		$this->fields['year_acquired']['visible'] = false;
@@ -91,6 +105,21 @@ class InstitutionInfrastructuresTable extends AppTable {
 			$query->where([$this->aliasField('parent_id') => $parentId]);
 		} else {
 			$query->where([$this->aliasField('parent_id IS NULL')]);
+		}
+
+		list($levelOptions, $selectedLevel) = array_values($this->getLevelOptions(['withAll' => true]));
+		$this->controller->set(compact('levelOptions', 'selectedLevel'));
+		$toolbarElements = [
+			['name' => 'Institution.Infrastructure/breadcrumb', 'data' => [], 'options' => []]
+		];
+		// No need to show controls filter if only has one level options
+		if (count($levelOptions) > 1) {
+			$toolbarElements[] = ['name' => 'Institution.Infrastructure/controls', 'data' => [], 'options' => []];
+		}
+		$this->controller->set('toolbarElements', $toolbarElements);
+
+		if ($selectedLevel != '-1') {
+			$query->where([$this->aliasField('infrastructure_level_id') => $selectedLevel]);
 		}
 	}
 
@@ -120,10 +149,63 @@ class InstitutionInfrastructuresTable extends AppTable {
 	}
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
-		$this->ControllerAction->field('infrastructure_level_id');
+		$this->ControllerAction->field('infrastructure_level_id', ['select' => false]);
 		$this->ControllerAction->field('infrastructure_type_id');
 		$this->ControllerAction->field('infrastructure_ownership_id', ['type' => 'select']);
 		$this->ControllerAction->field('infrastructure_condition_id', ['type' => 'select']);
+
+		$session = $this->request->session();
+		$institutionId = $session->read('Institution.Institutions.id');
+		$infrastructureLevelId = $this->request->query('level');
+		$parentId = $this->request->query('parent');
+		$this->fields['code']['attr']['default'] = $this->getAutogenerateCode($institutionId, $infrastructureLevelId, $parentId);
+	}
+
+	private function getAutogenerateCode($institutionId, $infrastructureLevelId, $parentId) {
+		if (!empty($parentId)) {
+			$conditions[$this->aliasField('parent_id')] = $parentId;
+		} else {
+			$conditions[$this->aliasField('institution_id')] = $institutionId;
+			$conditions[$this->aliasField('infrastructure_level_id')] = $infrastructureLevelId;
+		}
+		// getting suffix of code by counting 
+		$indexData = $this->find()
+			->where($conditions)
+			->count();
+		$indexData += 1; // starts counting from 1
+		$indexData = strval($indexData);
+
+		// if 1 character prepend '0'
+		$indexData = (strlen($indexData) == 1)? '0'.$indexData: $indexData;
+		if (empty($parentId)) {
+			// hasParent
+			$institutionData = $this->Institutions->find()
+				->where([
+					$this->Institutions->aliasField($this->Institutions->primaryKey()) => $institutionId
+				])
+				->select([$this->Institutions->aliasField('code')])
+				->first();
+			if (!empty($institutionData)) {
+				return $institutionData->code . $indexData;
+			} else {
+				return $indexData;
+			}
+		} else {
+			// hasParent
+			$parentData = $this->find()
+				->where([
+					$this->aliasField($this->primaryKey()) => $parentId
+				])
+				->first()
+				;
+
+			if (!empty($parentData)) {
+				return $parentData->code . $indexData;
+			} else {
+				// no parent data just return the 
+				return $indexData;
+			}
+		}
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity) {
@@ -307,7 +389,9 @@ class InstitutionInfrastructuresTable extends AppTable {
 		return $parentPath;
 	}
 
-	public function getLevelOptions() {
+	public function getLevelOptions($params=[]) {
+		$withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
+
 		$parentId = $this->request->query('parent');
 		$levelQuery = $this->Levels->find('list');
 		if (is_null($parentId)) {
@@ -317,6 +401,9 @@ class InstitutionInfrastructuresTable extends AppTable {
 			$levelQuery->where([$this->Levels->aliasField('parent_id') => $levelId]);
 		}
 		$levelOptions = $levelQuery->toArray();
+		if($withAll && count($levelOptions) > 1) {
+			$levelOptions = ['-1' => __('All Levels')] + $levelOptions;
+		}
 		$selectedLevel = $this->queryString('level', $levelOptions);
 		$this->advancedSelectOptions($levelOptions, $selectedLevel);
 

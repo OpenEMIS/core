@@ -59,26 +59,30 @@ class CustomFormsTable extends AppTable {
 				])
 				->toArray();
 
-			$CustomFormsFilters = TableRegistry::get($this->extra['filterClass']['through']);
-			$CustomFormsFilters->deleteAll([
-				'OR' => [
-					[
-						$CustomFormsFilters->aliasField($this->extra['filterClass']['foreignKey'] . ' IN') => $customFormIds,
-						$CustomFormsFilters->aliasField($this->extra['filterClass']['targetForeignKey']) => 0
-					],
-					$CustomFormsFilters->aliasField($this->extra['filterClass']['foreignKey']) => $entity->id
-				]
-			]);
+			if (!empty($customFormIds)) {
+				$CustomFormsFilters = TableRegistry::get($this->extra['filterClass']['through']);
+				$CustomFormsFilters->deleteAll([
+					'OR' => [
+						[
+							$CustomFormsFilters->aliasField($this->extra['filterClass']['foreignKey'] . ' IN') => $customFormIds,
+							$CustomFormsFilters->aliasField($this->extra['filterClass']['targetForeignKey']) => 0
+						],
+						$CustomFormsFilters->aliasField($this->extra['filterClass']['foreignKey']) => $entity->id
+					]
+				]);
 
-			$filterData = [
-				$this->extra['filterClass']['foreignKey'] => $entity->id,
-				$this->extra['filterClass']['targetForeignKey'] => 0
-			];
-			$filterEntity = $CustomFormsFilters->newEntity($filterData);
+				$filterData = [
+					$this->extra['filterClass']['foreignKey'] => $entity->id,
+					$this->extra['filterClass']['targetForeignKey'] => 0
+				];
+				$filterEntity = $CustomFormsFilters->newEntity($filterData);
 
-			if ($CustomFormsFilters->save($filterEntity)) {
+				if ($CustomFormsFilters->save($filterEntity)) {
+				} else {
+					$CustomFormsFilters->log($filterEntity->errors(), 'debug');
+				}
 			} else {
-				$CustomFormsFilters->log($filterEntity->errors(), 'debug');
+				$this->log('customFormIds is empty...', 'debug');
 			}
 		}
 	}
@@ -109,6 +113,7 @@ class CustomFormsTable extends AppTable {
 			->find('all')
 			->select([
 				'name' => $CustomFields->aliasField('name'),
+				'field_type' => $CustomFields->aliasField('field_type'),
 				$fieldKey => $CustomFormsFields->aliasField($fieldKey),
 				$formKey => $CustomFormsFields->aliasField($formKey),
 				'section' => $CustomFormsFields->aliasField('section'),
@@ -128,7 +133,7 @@ class CustomFormsTable extends AppTable {
 		if ($action == 'index') {
 			// No implementation yet
 		} else if ($action == 'view') {
-			$tableHeaders = [__($this->extra['label']['fields'])];
+			$tableHeaders = [__($this->extra['label']['fields']), __('Field Type')];
 			$tableCells = [];
 
 			$customFormId = $entity->id;
@@ -144,11 +149,13 @@ class CustomFormsTable extends AppTable {
 				if (!empty($sectionName) && ($printSection)) {
 					$rowData = [];
 					$rowData[] = '<div class="section-header">'.$sectionName.'</div>';
+					$rowData[] = ''; // Field Type
 					$tableCells[] = $rowData;
 					$printSection = false;
 				}
 				$rowData = [];
 				$rowData[] = $obj['name'];
+				$rowData[] = $obj['field_type'];
 				$tableCells[] = $rowData;
 			}
 
@@ -182,6 +189,7 @@ class CustomFormsTable extends AppTable {
 					foreach ($customFields as $key => $obj) {
 						$arrayFields[] = [
 							'name' => $obj->name,
+							'field_type' => $obj->field_type,
 							$fieldKey => $obj->{$fieldKey},
 							$formKey => $obj->{$formKey},
 							'section' => $obj->section,
@@ -196,6 +204,7 @@ class CustomFormsTable extends AppTable {
 					foreach ($requestData[$this->alias()]['custom_fields'] as $key => $obj) {
 						$arrayData = [
 							'name' => $obj['_joinData']['name'],
+							'field_type' => $obj['_joinData']['field_type'],
 							$fieldKey => $obj['id'],
 							$formKey => $obj['_joinData'][$formKey],
 							'section' => $obj['_joinData']['section']
@@ -215,6 +224,7 @@ class CustomFormsTable extends AppTable {
 						$sectionName = $entity->section;
 						$arrayFields[] = [
 							'name' => $fieldObj->name,
+							'field_type' => $fieldObj->field_type,
 							$fieldKey => $fieldObj->id,
 							$formKey => $entity->id,
 							'section' => $sectionName
@@ -246,7 +256,7 @@ class CustomFormsTable extends AppTable {
 			}
 
 			$cellCount = 0;
-			$tableHeaders = [__($this->extra['label']['fields']) , ''];
+			$tableHeaders = [__($this->extra['label']['fields']) , __('Field Type'), ''];
 			$tableCells = [];
 
 			$order = 0;
@@ -257,6 +267,7 @@ class CustomFormsTable extends AppTable {
 				$joinDataPrefix = $fieldPrefix . '._joinData';
 
 				$customFieldName = $obj['name'];
+				$customFieldType = $obj['field_type'];
 				$customFieldId = $obj[$fieldKey];
 				$customFormId = $obj[$formKey];
 				$customSection = "";
@@ -271,6 +282,7 @@ class CustomFormsTable extends AppTable {
 				$cellData = "";
 				$cellData .= $form->hidden($fieldPrefix.".id", ['value' => $customFieldId]);
 				$cellData .= $form->hidden($joinDataPrefix.".name", ['value' => $customFieldName]);
+				$cellData .= $form->hidden($joinDataPrefix.".field_type", ['value' => $customFieldType]);
 				$cellData .= $form->hidden($joinDataPrefix.".".$formKey, ['value' => $customFormId]);
 				$cellData .= $form->hidden($joinDataPrefix.".".$fieldKey, ['value' => $customFieldId]);
 				$cellData .= $form->hidden($joinDataPrefix.".order", ['value' => ++$order, 'class' => 'order']);
@@ -282,6 +294,7 @@ class CustomFormsTable extends AppTable {
 				if (! empty($sectionName) && ($printSection)) {
 					$rowData = [];
 					$rowData[] = '<div class="section-header">'.$sectionName.'</div>';
+					$rowData[] = ''; // Field Type
 					$rowData[] = '<button onclick="jsTable.doRemove(this);CustomForm.updateSection();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
 					$rowData[] = [$event->subject()->renderElement('OpenEmis.reorder', ['attr' => '']), ['class' => 'sorter rowlink-skip']];
 					$printSection = false;
@@ -289,6 +302,7 @@ class CustomFormsTable extends AppTable {
 				} 
 				$rowData = [];
 				$rowData[] = $customFieldName.$cellData;
+				$rowData[] = $customFieldType;
 				$rowData[] = '<button onclick="jsTable.doRemove(this); $(\'#reload\').click();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
 				$rowData[] = [$event->subject()->renderElement('OpenEmis.reorder', ['attr' => '']), ['class' => 'sorter rowlink-skip']];
 				$tableCells[] = $rowData;

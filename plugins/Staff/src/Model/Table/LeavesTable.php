@@ -22,6 +22,7 @@ class LeavesTable extends AppTable {
 			'contentEditable' => true,
 			'allowable_file_types' => 'all'
 		]);
+		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -73,7 +74,7 @@ class LeavesTable extends AppTable {
 		$options['type'] = 'staff';
 		$tabElements = $this->controller->getCareerTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
+		$this->controller->set('selectedAction', 'Leave');
 	}
 
 	public function indexAfterAction(Event $event, $data) {
