@@ -27,7 +27,7 @@ $this->start('panelBody');
 
 			<div class="input select">
 				<div class="input-select-wrapper">
-					<select name="StudentResults[assessment_id]" id="studentresults-assessment-id" class="form-control" ng-options="item.value as item.text for item in StudentResultsController.assessmentOptions" ng-model="StudentResultsController.assessmentId" ng-change="StudentResultsController.onChangeAssessment(StudentResultsController.assessmentId)">
+					<select name="StudentResults[assessment_id]" id="studentresults-assessment-id" class="form-control" ng-options="item.value as item.text for item in StudentResultsController.assessmentOptions" ng-model="StudentResultsController.assessmentId" ng-change="StudentResultsController.onChangeAssessment(StudentResultsController.academicPeriodId, StudentResultsController.assessmentId)">
 						<option value="">-- <?= __('Select Assessment') ?> --</option>
 					</select>
 				</div>
