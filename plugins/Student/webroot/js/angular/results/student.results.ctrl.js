@@ -25,6 +25,7 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
         .then(function(academicPeriods) {
             vm.periodOptions = academicPeriods;
         }, function(error) {
+            // No Academic Periods
             console.log(error);
             AlertSvc.warning(vm, error);
         })
@@ -36,44 +37,59 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
     function onChangePeriod(periodId) {
         vm.resetGrid();
 
-        UtilsSvc.isAppendLoader(true);
-        StudentResultsSvc.getAssessments(periodId)
-        .then(function(assessments) {
-            vm.assessmentOptions = assessments;
-        }, function(error) {
-            console.log(error);
-            AlertSvc.warning(vm, error);
-        })
-        .finally(function() {
-            UtilsSvc.isAppendLoader(false);
-        })
-        ;
+        if (periodId == null) {
+            var errorMessage = 'There is no academic period selected';
+            console.log(errorMessage);
+            AlertSvc.warning(vm, errorMessage);
+        } else {
+            UtilsSvc.isAppendLoader(true);
+            StudentResultsSvc.getAssessments(periodId)
+            .then(function(assessments) {
+                vm.assessmentOptions = assessments;
+            }, function(error) {
+                // No Assessments
+                console.log(error);
+                AlertSvc.warning(vm, error);
+            })
+            .finally(function() {
+                UtilsSvc.isAppendLoader(false);
+            })
+            ;
+        }
     }
 
-    function onChangeAssessment(assessmentId) {
+    function onChangeAssessment(periodId, assessmentId) {
         vm.resetGrid();
 
-        UtilsSvc.isAppendSpinner(true, 'student-result-table');
-        StudentResultsSvc.getAssessmentPeriods(assessmentId)
-        // getAssessmentPeriods
-        .then(function(assessmentPeriods) {
-            if (vm.resetColumnDefs(assessmentPeriods)) {
-                return StudentResultsSvc.getRowData();
-            }
-        }, function(error) {
-            console.log(error);
-        })
-        // getRowData
-        .then(function(rows) {
-            $scope.gridOptions.api.setRowData(rows);
-        }, function(error) {
-            // No Results
-            console.log(error);
-            AlertSvc.warning(vm, error);
-        })
-        .finally(function(){
-            UtilsSvc.isAppendSpinner(false, 'student-result-table');
-        });
+        if (assessmentId == null) {
+            var errorMessage = 'There is no assessment selected';
+            console.log(errorMessage);
+            AlertSvc.warning(vm, errorMessage);
+        } else {
+            UtilsSvc.isAppendSpinner(true, 'student-result-table');
+            StudentResultsSvc.getAssessmentPeriods(assessmentId)
+            // getAssessmentPeriods
+            .then(function(assessmentPeriods) {
+                if (vm.resetColumnDefs(assessmentPeriods)) {
+                    return StudentResultsSvc.getRowData(periodId, assessmentId);
+                }
+            }, function(error) {
+                // Assessment Periods is not configured
+                console.log(error);
+                AlertSvc.warning(vm, error);
+            })
+            // getRowData
+            .then(function(rows) {
+                $scope.gridOptions.api.setRowData(rows);
+            }, function(error) {
+                // No Results
+                console.log(error);
+                AlertSvc.warning(vm, error);
+            })
+            .finally(function(){
+                UtilsSvc.isAppendSpinner(false, 'student-result-table');
+            });
+        }
     }
 
     function initGrid() {
@@ -90,8 +106,8 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
             suppressMenuHide: true,
             suppressCellSelection: true,
             suppressMovableColumns: true,
-            singleClickEdit: true,
             onGridReady: function() {
+                vm.resetGrid();
             }
         };
     }
@@ -106,11 +122,11 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
 
         if (angular.isDefined(response.error)) {
             console.log(response.error);
-
             return false;
         } else {
+            var columnDefs = response.data;
             if ($scope.gridOptions != null) {
-                $scope.gridOptions.api.setColumnDefs(response.data);
+                $scope.gridOptions.api.setColumnDefs(columnDefs);
             }
 
             return true;
