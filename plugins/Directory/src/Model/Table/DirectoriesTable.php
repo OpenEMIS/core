@@ -81,8 +81,8 @@ class DirectoriesTable extends AppTable {
                     self::STUDENT => __('Students'),
                 ],
                 __('Not In School') => [
-                    self::STUDENTNOTINSCHOOL => __('Student'),
-                    self::STAFFNOTINSCHOOL => __('Staff')
+                    self::STAFFNOTINSCHOOL => __('Staff'),
+                    self::STUDENTNOTINSCHOOL => __('Student')
                 ]  
             ];
         }
