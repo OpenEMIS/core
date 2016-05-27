@@ -8,6 +8,7 @@ v3.5.6
 - Fixed a bug that caused user created roles not able to access Permissions
 - Fixed a bug that caused Arabic translation not working properly in Attendance report
 - Staff FTE effective start date is now set as the End Date of the old position instead of the Start Date of the new position
+- Fixed a bug that caused 404 error page when users access Directories
 - Fixed a bug that caused date format to be different between Successful Records and Failed Records in Import
 - Fixed a bug that caused users not able to select Academic Periods in Institutions -> Visits
 - Fixed a bug that caused validation to happen on End-date while adding Memberships or Licenses
@@ -20,7 +21,6 @@ v3.5.5.2
 - New Feature - You can now configure Rules to hide/show survey questions
 - New Feature - You can now configure survey questions to be repeated
 - Fixed a bug that caused Students in Subjects to be duplicated
-- Fixed a bug that caused 404 error page when users access Directories
 - Fixed a bug that caused Sunday not showing up in Attendance
 - Staff Status are now translated properly
 - Institution list is now ordered by code in Student Transfer
