@@ -68,7 +68,8 @@ class TrainingCoursesTable extends AppTable {
 			// 'content' => 'file_content',
 			'size' => '10MB',
 			'contentEditable' => true,
-			'allowable_file_types' => 'all'
+			'allowable_file_types' => 'all',
+			'useDefaultName' => true
 		]);
 	}
 
