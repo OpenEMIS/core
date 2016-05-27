@@ -337,7 +337,10 @@ class InstitutionGradesTable extends AppTable {
 		 * PHPOE-2132, Common statements with getGradeOptionsForIndex() were moved to _gradeOptions().
 		 */
 		$query = $this->find('all')
-					->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId]);
+					->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
+					->where([
+						'InstitutionGrades.end_date > CURRENT_DATE OR InstitutionGrades.end_date IS NULL'
+					]);
 		return $this->_gradeOptions($query, $institutionsId, $listOnly);
 	}
 
