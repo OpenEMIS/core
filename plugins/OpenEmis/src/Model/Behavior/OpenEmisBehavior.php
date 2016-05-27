@@ -57,7 +57,7 @@ class OpenEmisBehavior extends Behavior {
         
         if ($model->action == 'index' || $model->action == 'view') {
             $modal = [];
-            $modal['title'] = $model->getHeader($model->alias());
+            $modal['title'] = $model->getHeader($model->alias()); //$modal['title'] = $model->alias();
             $modal['content'] = __('All associated information related to this record will also be removed.');
             $modal['content'] .= '<br><br>';
             $modal['content'] .= __('Are you sure you want to delete this record?');
@@ -84,6 +84,18 @@ class OpenEmisBehavior extends Behavior {
         $model->controller->set('action', $this->_table->action);
         $model->controller->set('indexElements', []);
         // end deprecated
+
+        if (array_key_exists('toolbarButtons', $extra)) {
+			$toolbarButtons = $extra['toolbarButtons'];
+			if ($model->action == 'view' && $model->actions('remove') != 'transfer' && $model->actions('remove')) {
+				// not checking existence of entity in $extra so that errors will be shown if entity is removed unexpectedly
+				$toolbarButtons['remove']['attr']['field-value'] = $extra['entity']->{$model->primaryKey()};
+			}
+			$model->controller->set('toolbarButtons', $toolbarButtons);
+		}
+		if (array_key_exists('indexButtons', $extra)) {
+			$model->controller->set('indexButtons', $extra['indexButtons']);
+		}
 
         $this->attachEntityInfoToToolBar($extra);
         if ($extra->offsetExists('indexButtons')) {
