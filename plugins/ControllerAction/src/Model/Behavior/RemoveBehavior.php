@@ -70,14 +70,38 @@ class RemoveBehavior extends Behavior {
 		$entity = null;
 
 		if ($request->is('delete') && !empty($request->data[$primaryKey])) {
-			$id = $request->data[$primaryKey];
-			try {
-				$entity = $model->get($id);
-			} catch (RecordNotFoundException $exception) { // to handle concurrent deletes
-				$mainEvent->stopPropagation();
-				return $model->controller->redirect($model->url('index', 'QUERY'));
-			}
-			$result = $this->doDelete($entity, $extra);
+            $id = $request->data[$primaryKey];
+
+            // default is no restriction
+            $notRestrictedCheck = true;
+            if ($model->actions('remove') == 'restrict') {
+                $notRestrictedCheck = function ($model, $id, $extra) {
+                    return !$model->hasAssociatedRecordsById($model, $id);
+                };
+
+                $event = $model->dispatchEvent('ControllerAction.Model.onBeforeRestrictDelete', [$id, $extra], $this);
+                if ($event->isStopped()) { return $event->result; }
+                if (is_callable($event->result)) {
+                    $notRestrictedCheck = $event->result;
+                    
+                }
+                if (is_callable($notRestrictedCheck)) {
+                    $notRestrictedCheck = $notRestrictedCheck($model, $id, $extra);
+                }
+            }
+
+            if ($notRestrictedCheck) {
+                try {
+                    $entity = $model->get($id);
+                } catch (RecordNotFoundException $exception) { // to handle concurrent deletes
+                    $mainEvent->stopPropagation();
+                    return $model->controller->redirect($model->url('index', 'QUERY'));
+                }
+                $result = $this->doDelete($entity, $extra);
+            } else {
+                $extra['Alert']['message'] = 'general.delete.restrictDeleteBecauseAssociation';
+                $result = false;
+            }
 		}
 		$extra['result'] = $result;
 
