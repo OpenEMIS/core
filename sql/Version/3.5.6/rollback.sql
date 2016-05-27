@@ -1,3 +1,12 @@
+-- POCOR-2802
+-- code here
+UPDATE `security_functions` SET _view = 'Fees.index' WHERE id = 2019;
+
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2802';
+
+
 -- POCOR-2781
 DROP TABLE institution_subject_staff;
 RENAME TABLE z_2781_institution_subject_staff TO institution_subject_staff;
