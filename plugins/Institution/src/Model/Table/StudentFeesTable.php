@@ -597,8 +597,6 @@ class StudentFeesTable extends ControllerActionTable {
 		return $associations;
 	}
 
-<<<<<<< HEAD
-=======
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($action == 'index') {
 			unset($toolbarButtons['add']);
@@ -611,6 +609,4 @@ class StudentFeesTable extends ControllerActionTable {
 			$toolbarButtons['back']['url'] = $buttons['view']['url'];
 		}
 	}
-
->>>>>>> a299a1d14bed4a0b3b63f45a9eb705fed53c4e86
 }
