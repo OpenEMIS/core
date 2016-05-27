@@ -53,7 +53,8 @@ class UsersTable extends AppTable {
 			'content' => 'photo_content',
 			'size' => '2MB',
 			'contentEditable' => true,
-			'allowable_file_types' => 'image'
+			'allowable_file_types' => 'image',
+			'useDefaultName' => true
 		]);
 
 		$this->addBehavior('Area.Areapicker');
