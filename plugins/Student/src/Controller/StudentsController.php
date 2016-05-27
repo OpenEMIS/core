@@ -33,7 +33,6 @@ class StudentsController extends AppController {
 			'Results' 			=> ['className' => 'Student.Results', 'actions' => ['index']],
 			'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],
 			'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
-			'Fees' 				=> ['className' => 'Student.StudentFees', 'actions' => ['index', 'view']],
 			'History' 			=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 			'ImportStudents' 	=> ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
 
@@ -55,6 +54,7 @@ class StudentsController extends AppController {
 	}
 
 	// CAv4
+	public function StudentFees() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentFees']); }
 	public function Classes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']); }
 	public function Subjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']); }
 	// End
@@ -254,7 +254,7 @@ class StudentsController extends AppController {
 		$studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
 		$studentTabElements = [
 			'BankAccounts' => ['text' => __('Bank Accounts')],
-			'Fees' => ['text' => __('Fees')],
+			'StudentFees' => ['text' => __('Fees')],
 		];
 
 		$tabElements = array_merge($tabElements, $studentTabElements);
