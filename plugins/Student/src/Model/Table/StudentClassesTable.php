@@ -34,6 +34,7 @@ class StudentClassesTable extends ControllerActionTable {
 	public function indexBeforeAction(Event $event, ArrayObject $extra) {
 		$this->fields['education_grade_id']['visible'] = false;
 		$this->fields['institution_id']['visible'] = false;
+		$this->fields['academic_period_id']['visible'] = false;
 
 		$this->field('academic_period', []);
 		$this->field('institution', []);
