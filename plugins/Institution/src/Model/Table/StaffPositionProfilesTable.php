@@ -450,10 +450,14 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		$InstitutionStaff = TableRegistry::get('Institution.Staff');
 		$staff = $InstitutionStaff->get($institutionStaffId);
 		$approvedStatus = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'APPROVED');
+		$closedStatus = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'CLOSED');
+
+		$statuses = array_merge($approvedStatus, $closedStatus);
+		
 		$staffPositionProfilesRecord = $this->find()
 			->where([
 				$this->aliasField('institution_staff_id') => $staff->id,
-				$this->aliasField('status_id').' NOT IN ' => $approvedStatus
+				$this->aliasField('status_id').' NOT IN ' => $statuses
 			])
 			->first();
 		if (empty($staffPositionProfilesRecord)) {
