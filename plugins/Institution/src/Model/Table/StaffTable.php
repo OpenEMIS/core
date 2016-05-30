@@ -582,7 +582,7 @@ class StaffTable extends AppTable {
 				unset($entity->staff_status);
 				unset($entity->position);
 				unset($entity->user);
-				$newEntity = $this->newEntity($entity->toArray());
+				$newEntity = $this->newEntity($entity->toArray(), ['validate' => 'AllowPositionType']);
 				$this->save($newEntity);
 				// if ($this->save($newEntity)) {
 				// 	$url = [
