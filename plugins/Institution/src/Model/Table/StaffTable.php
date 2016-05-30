@@ -47,7 +47,6 @@ class StaffTable extends AppTable {
 		$this->belongsTo('StaffTypes',		['className' => 'FieldOption.StaffTypes']);
 		$this->belongsTo('StaffStatuses',	['className' => 'Staff.StaffStatuses']);
 		$this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
-
 		$this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'institution_staff_id', 'dependent' => true]);
 
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
