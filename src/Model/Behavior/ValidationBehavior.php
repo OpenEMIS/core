@@ -679,7 +679,11 @@ class ValidationBehavior extends Behavior {
 				->where([$Students->aliasField($Students->primaryKey()) => $data['student_id']])
 				->first();
 				;
-			$dateOfBirth = ($studentQuery->has('date_of_birth'))? $studentQuery->date_of_birth: null;
+			if ($studentQuery) {
+				$dateOfBirth = ($studentQuery->has('date_of_birth'))? $studentQuery->date_of_birth: null;
+			} else {
+				return $model->getMessage('Institution.Students.student_name.studentNotExists');
+			}
 		} else {
 			// saving for new students
 			$dateOfBirth = new DateTime($field);
@@ -689,6 +693,8 @@ class ValidationBehavior extends Behavior {
 		if (is_null($dateOfBirth)) return $validationErrorMsg;
 
 		$EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $EducationCycles = TableRegistry::get('Education.EducationCycles');
 		$gradeEntity = $EducationGrades->find()
 			->contain('EducationProgrammes.EducationCycles')
 			->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $educationGradeId])
@@ -707,22 +713,27 @@ class ValidationBehavior extends Behavior {
 		// academic period not set in form, return false because there is no way to validate
 		if (!isset($academicStartYear)) return $validationErrorMsg;
 
-		$programmeId = $gradeEntity->education_programme_id;
-		
+        // POCOR-2957 - obtaining gradelist of all grades in cycle, ordered by programme.order then grade.order
+        $cycleId = $gradeEntity->education_programme->education_cycle_id;
+        $programmesList = $EducationProgrammes->find('list')
+            ->where(['EducationProgrammes.education_cycle_id' => $cycleId])
+            ->order($EducationProgrammes->aliasField('order'))
+            ->toArray();
+        $gradeList = [];
+        foreach ($programmesList as $key => $value) {
+            $currGrades = $EducationGrades->find('list')
+                ->where([$EducationGrades->aliasField('education_programme_id') => $key])
+                ->order($EducationGrades->aliasField('order'))
+                ->toArray();
+            $gradeList = $gradeList+$currGrades;
+        }
+        
 		$birthYear = $dateOfBirth->format('Y');
 		$ageOfStudent = $academicStartYear - $birthYear;
 
 		$ConfigItems = TableRegistry::get('ConfigItems');
 		$enrolmentMinimumAge = $admissionAge - $ConfigItems->value('admission_age_minus');
 		$enrolmentMaximumAge = $admissionAge + $ConfigItems->value('admission_age_plus');
-
-		// PHPOE-2284 - 'instead of defining admission age at grade level, please make sure the allowed age range changes according to the grade.'
-		// PHPOE-2691 - 'instead of populating the list of grades by education cycle which is its grandparent, populate the list by its parent instead which is education programme.'
-		$gradeList = $EducationGrades->find('list')
-			->where([$EducationGrades->aliasField('education_programme_id') => $programmeId])
-			->find('order')
-			->toArray()
-			;
 
 		$yearIncrement = 0;
 		foreach ($gradeList as $key => $value) {
@@ -733,14 +744,15 @@ class ValidationBehavior extends Behavior {
 		$enrolmentMinimumAge += $yearIncrement;
 		$enrolmentMaximumAge += $yearIncrement;
 
-		// // age check
+		// age check
 		// pr('academicStartYear = '.$academicStartYear);
 		// pr('birthYear = '.$birthYear);
 		// pr('ageOfStudent = '.$ageOfStudent);
 
-		// // enrolment check check
+		// enrolment check check
 		// pr('enrolmentMinimumAge = '.$enrolmentMinimumAge);
 		// pr('enrolmentMaximumAge = '.$enrolmentMaximumAge);
+        // return 'enrolmentMinimumAge = '.$enrolmentMinimumAge . '/' . 'enrolmentMaximumAge = '.$enrolmentMaximumAge;
 
 		if ($enrolmentMinimumAge == $enrolmentMaximumAge) {
 			$validationErrorMsg = $model->getMessage('Institution.Students.student_name.ageHint', ['sprintf' => [$enrolmentMinimumAge]]);
