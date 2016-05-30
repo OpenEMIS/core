@@ -1,3 +1,8 @@
+-- POCOR-3031
+-- remove db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3031';
+
+
 -- POCOR-2802
 -- code here
 UPDATE `security_functions` SET _view = 'Fees.index' WHERE id = 2019;
