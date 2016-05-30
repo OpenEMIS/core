@@ -1,4 +1,4 @@
-/* BREADCRUMB v.1.0.7 */
+/* BREADCRUMB v.1.0.8 */
 
 .breadcrumb {
     clear: both;
@@ -14,10 +14,6 @@
     line-height: 12px;
     display: inline;
     float: left;
-}
-
-.treemap-breadcrumb > li + li::before {
-    float: none !important;
 }
 
 .panel-breadcrumb li.breadcrumb-active:before {
@@ -45,8 +41,7 @@
     display: inline-table;
 }
 
-.panel-breadcrumb li,
-.treemap-breadcrumb li {
+.panel-breadcrumb li {
     margin: 0 !important;
 }
 
@@ -56,8 +51,7 @@
 }
 
 .breadcrumb-active,
-.panel-breadcrumb a:hover,
-.treemap-breadcrumb li a:hover {
+.panel-breadcrumb a:hover {
     color: #6B6B6B;
     font-weight: normal;
     text-decoration: none;
@@ -65,43 +59,14 @@
 
 .treemap-breadcrumb {
     background: none;
-    margin: 2px;
-    padding: 4px;
-    height: 35px;
-    font-weight: normal;
     font-size: 12px;
+    font-weight: normal;
     vertical-align: middle;
-}
-
-.scrolltabs ul.treemap-breadcrumb {
-    border-bottom: 0 !important;
-}
-
-.treemap-breadcrumb li:before {
     margin: 0 !important;
-    padding: 0 !important;
+    height: 40px;
+    line-height: 18px;
+    padding: 12px 15px;
 }
-
-.treemap-breadcrumb li.active:before {
-    margin-right: 10px !important;
-}
-
-.treemap-breadcrumb li a,
-.treemap-breadcrumb li a:hover {
-    padding: 0;
-    background: none;
-    height: 18px;
-}
-
-.panel-toolbar .treemap-breadcrumb a:hover,
-.panel-toolbar .treemap-breadcrumb a:active,
-.panel-toolbar .treemap-breadcrumb a:focus,
-.panel-toolbar .treemap-breadcrumb a:visited,
-.panel-toolbar .treemap-breadcrumb a.active {
-    padding: 0;
-    background: none;
-}
-
 
 /*==========  Non-Mobile First Method  ==========*/
 
@@ -127,8 +92,7 @@
     padding: 2px 4px;
 }
 
-.rtl .breadcrumb > li + li::after,
-.rtl .treemap-breadcrumb > li:after {
+.rtl .breadcrumb > li + li::after {
     font-family: 'FontAwesome';
     content: "\f053";
     font-size: 0.6em;
@@ -137,38 +101,13 @@
     display: inline;
 }
 
-.rtl .breadcrumb.panel-breadcrumb > li + li::after {
-    float: right;
-}
-
-.rtl .treemap-breadcrumb > li:after {
-    margin: 0 8px 0 4px;
-}
-
-.rtl .treemap-breadcrumb li a,
-.rtl .treemap-breadcrumb li a:hover {
-    padding: 4px !important;
-}
-
 .rtl .panel-breadcrumb {
     text-align: right;
     padding: 6px 0;
 }
 
-.rtl .treemap-breadcrumb > li:after {
-    padding-left: 0 !important;
+.rtl .treemap-breadcrumb {
+    font-size: 14px;
+    padding: 11px 15px;
 }
 
-.rtl .treemap-breadcrumb > li.active:after {
-    display: none;
-}
-
-.rtl .treemap-breadcrumb > li + li:before {
-    display: none;
-}
-
-.rtl .scrolltabs .treemap-breadcrumb li {
-    vertical-align: baseline;
-    font-size: 14px; 
-    line-height: 14px;
-} 

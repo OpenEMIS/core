@@ -8,7 +8,7 @@
 				<table class="table">
 					<thead>
 						<tr>
-							<th><?= __('OpenEmis ID') ?></th>
+							<th><?= __('OpenEMIS ID') ?></th>
 							<th><?= __('Student') ?></th>
 							<th><?= __('Current Grade') ?></th>
 							<th><?= __('Class') ?></th>
@@ -46,7 +46,7 @@
 					<thead>
 						<tr>
 							<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
-							<th><?= __('OpenEmis ID') ?></th>
+							<th><?= __('OpenEMIS ID') ?></th>
 							<th><?= __('Student') ?></th>
 							<th><?= __('Current Grade') ?></th>
 							<th><?= __('Class') ?></th>

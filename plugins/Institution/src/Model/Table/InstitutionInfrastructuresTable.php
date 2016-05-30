@@ -13,7 +13,7 @@ use Cake\Validation\Validator;
 
 class InstitutionInfrastructuresTable extends AppTable {
 	private $_fieldOrder = [
-		'institution_id', 'parent_id', 'infrastructure_level_id', 'code', 'name', 'infrastructure_type_id', 'size', 'infrastructure_ownership_id', 'year_acquired', 'year_disposed', 'infrastructure_condition_id', 'comment'
+		'institution_id', 'parent_id', 'code', 'name', 'infrastructure_level_id', 'infrastructure_type_id', 'size', 'infrastructure_ownership_id', 'year_acquired', 'year_disposed', 'infrastructure_condition_id', 'comment'
 	];
 
 	public function initialize(array $config) {
@@ -67,11 +67,13 @@ class InstitutionInfrastructuresTable extends AppTable {
 	public function beforeAction(Event $event) {
 		// Add breadcrumb
 		$action = $this->ControllerAction->action();
-		if ($action == 'index' || $action == 'edit') {
+		if ($action == 'edit') {
 			$toolbarElements = [
 	            ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => [], 'options' => []]
 	        ];
 			$this->controller->set('toolbarElements', $toolbarElements);
+			list($levelOptions, $selectedLevel) = array_values($this->getLevelOptions(['withAll' => true]));
+			$this->controller->set(compact('levelOptions', 'selectedLevel'));
 		}
 
 		$this->ControllerAction->field('parent_id');
@@ -89,7 +91,6 @@ class InstitutionInfrastructuresTable extends AppTable {
 		}
 
 		$this->fields['parent_id']['visible'] = false;
-		$this->fields['infrastructure_level_id']['visible'] = false;
 		$this->fields['size']['visible'] = false;
 		$this->fields['infrastructure_ownership_id']['visible'] = false;
 		$this->fields['year_acquired']['visible'] = false;
@@ -104,6 +105,21 @@ class InstitutionInfrastructuresTable extends AppTable {
 			$query->where([$this->aliasField('parent_id') => $parentId]);
 		} else {
 			$query->where([$this->aliasField('parent_id IS NULL')]);
+		}
+
+		list($levelOptions, $selectedLevel) = array_values($this->getLevelOptions(['withAll' => true]));
+		$this->controller->set(compact('levelOptions', 'selectedLevel'));
+		$toolbarElements = [
+			['name' => 'Institution.Infrastructure/breadcrumb', 'data' => [], 'options' => []]
+		];
+		// No need to show controls filter if only has one level options
+		if (count($levelOptions) > 1) {
+			$toolbarElements[] = ['name' => 'Institution.Infrastructure/controls', 'data' => [], 'options' => []];
+		}
+		$this->controller->set('toolbarElements', $toolbarElements);
+
+		if ($selectedLevel != '-1') {
+			$query->where([$this->aliasField('infrastructure_level_id') => $selectedLevel]);
 		}
 	}
 
@@ -373,7 +389,9 @@ class InstitutionInfrastructuresTable extends AppTable {
 		return $parentPath;
 	}
 
-	public function getLevelOptions() {
+	public function getLevelOptions($params=[]) {
+		$withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
+
 		$parentId = $this->request->query('parent');
 		$levelQuery = $this->Levels->find('list');
 		if (is_null($parentId)) {
@@ -383,6 +401,9 @@ class InstitutionInfrastructuresTable extends AppTable {
 			$levelQuery->where([$this->Levels->aliasField('parent_id') => $levelId]);
 		}
 		$levelOptions = $levelQuery->toArray();
+		if($withAll && count($levelOptions) > 1) {
+			$levelOptions = ['-1' => __('All Levels')] + $levelOptions;
+		}
 		$selectedLevel = $this->queryString('level', $levelOptions);
 		$this->advancedSelectOptions($levelOptions, $selectedLevel);
 

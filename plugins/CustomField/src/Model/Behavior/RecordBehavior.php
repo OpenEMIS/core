@@ -100,6 +100,7 @@ class RecordBehavior extends Behavior {
 		$this->_table->addBehavior('CustomField.RenderStudentList');
 		$this->_table->addBehavior('CustomField.RenderCoordinates');
 		$this->_table->addBehavior('CustomField.RenderFile');
+		$this->_table->addBehavior('CustomField.RenderRepeater');
 		// End
 
 		// If tabSection is not set, added to handle Section Header
@@ -259,6 +260,23 @@ class RecordBehavior extends Behavior {
 					}
 				}
 
+				// Logic to delete all the answer for rules
+				if (is_null($this->config('moduleKey'))) {
+					$surveyFormId = $data[$this->_table->alias()]['survey_form_id'];
+	        		$SurveyRules = TableRegistry::get('Survey.SurveyRules');
+	        		$rules = $SurveyRules
+	        			->find()
+	        			->where([
+	        				$SurveyRules->aliasField('survey_form_id') => $surveyFormId,
+	        				$SurveyRules->aliasField('enabled') => 1
+	        			])
+	        			->toArray();
+	        		$showRules = [];
+	        		foreach ($rules as $rule) {
+	        			$settings['deleteFieldIds'][] = $rule->survey_question_id;
+	        		}	        		
+				}
+
 				// when edit always delete all the checkbox values before reinsert,
 				// also delete previously saved records with empty value
 				if (isset($entity->id)) {
@@ -276,6 +294,7 @@ class RecordBehavior extends Behavior {
 			                $this->CustomTableCells->aliasField($settings['recordKey']) => $id,
 			                $this->CustomTableCells->aliasField($settings['fieldKey'] . ' IN ') => $deleteFieldIds
 			            ]);
+			            // $event = $model->dispatchEvent('Render.deleteCustomFieldValues', [$entity, $deleteFieldIds], $model);
 		            }
 				}
 

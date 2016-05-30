@@ -1,4 +1,4 @@
-/* PAGINATION v.1.0.5 */
+/* PAGINATION v.1.0.6 */
 
 .first a:before,
 .prev a:before,
@@ -229,7 +229,7 @@
 
 .rtl .display-limit {
     margin: 7px 0;
-    width: 148px !important;
+    width: 155px !important;
 }
 
 .rtl .display-limit span {

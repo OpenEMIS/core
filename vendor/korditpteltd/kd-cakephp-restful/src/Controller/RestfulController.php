@@ -43,7 +43,19 @@ class RestfulController extends AppController
             $tableAlias = $this->request->model;
             $model = $this->_instantiateModel($tableAlias);
             if ($model != false) {
-                $this->model = $model;
+            	$this->model = $model;
+
+                // Event to get allowed action and allowed table to be accessible via restful
+            	$allowedActions = [];
+                $event = $model->dispatchEvent('Restful.Model.onGetAllowedActions', null, $this);
+                if ($event->result) 
+                {
+                    $allowedActions = $event->result;
+                }
+            	if (!empty($allowedActions)) 
+                {
+            		$this->Auth->allow($allowedActions);
+            	}
             }
         }
     }
@@ -195,6 +207,14 @@ class RestfulController extends AppController
         if (!empty($value)) {
             $fields = explode(',', $value);
             $query->group($fields);
+        }
+    }
+
+    private function _order(Query $query, $value, ArrayObject $extra)
+    {
+        if (!empty($value)) {
+            $fields = explode(',', $value);
+            $query->order($fields);
         }
     }
 
