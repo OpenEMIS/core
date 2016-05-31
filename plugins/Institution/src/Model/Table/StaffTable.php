@@ -940,6 +940,16 @@ class StaffTable extends AppTable {
 		$this->setupTabElements($entity);
 	}
 
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$entity = $this->get($id);
+
+		if ($this->Session->read('Auth.User.id') == $entity->staff_id) { // if the current user try to delete itself.
+			$process = function() use ($id, $options) { //alert component will handle the show of error.
+		 	};
+			return $process;
+		}
+	}
+
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
 		// note that $this->table('institution_staff');
 		$id = $entity->id;
