@@ -3,6 +3,7 @@ namespace Institution\Model\Behavior;
 
 use ArrayObject;
 
+use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
@@ -71,6 +72,33 @@ class SingleGradeBehavior extends Behavior {
             $gradeOptions[''] = $model->Alert->getMessage($model->aliasField('education_grade_options_empty'));
             $selectedEducationGradeId = 0;
         }
+
+        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $session = $this->_table->Session;
+        $institutionId = $session->read('Institution.Institutions.id');
+
+        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+       
+        $this->_table->advancedSelectOptions($gradeOptions, $selectedEducationGradeId, [
+			'message' => '{{label}} - ' . $this->_table->getMessage($this->_table->aliasField('expiredGrade')),
+			'callable' => function($id) use ($InstitutionGrades, $institutionId, $AcademicPeriodTable, $selectedAcademicPeriodId) {
+			
+
+				$today = date('Y-m-d');
+				$functionQuery = $InstitutionGrades->find();
+				$query = $InstitutionGrades->find()
+					->where([
+						$InstitutionGrades->aliasField('education_grade_id') => $id,
+						$InstitutionGrades->aliasField('institution_id') => $institutionId,
+						
+						'OR' => [
+							[$InstitutionGrades->aliasField('end_date') . ' >= ' => $functionQuery->func()->now('date')],
+							[$InstitutionGrades->aliasField('end_date'). ' IS NULL']
+							]
+					]);
+				return $query->count();
+			}
+		]);
 		
 		$model->field('education_grade', [
 			'type' => 'select',
