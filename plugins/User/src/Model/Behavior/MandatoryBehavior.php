@@ -32,7 +32,6 @@ class MandatoryBehavior extends Behavior {
 		$this->_table->hasMany('Nationalities', 			['className' => 'User.UserNationalities', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->_table->hasMany('SpecialNeeds', 				['className' => 'User.SpecialNeeds', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->_table->hasMany('Contacts', 					['className' => 'User.Contacts', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		// pr($this->_info);
 	}
 
 	public function implementedEvents() {
@@ -48,6 +47,7 @@ class MandatoryBehavior extends Behavior {
 			'ControllerAction.Model.onUpdateFieldIdentityType' => 'onUpdateFieldIdentityType',
 			'ControllerAction.Model.onUpdateFieldIdentityNumber' => 'onUpdateFieldIdentityNumber',
 			'ControllerAction.Model.onUpdateFieldSpecialNeed' => 'onUpdateFieldSpecialNeed',
+			'ControllerAction.Model.onUpdateFieldSpecialNeedDifficulty' => 'onUpdateFieldSpecialNeedDifficulty',
 			'ControllerAction.Model.onUpdateFieldSpecialNeedComment' => 'onUpdateFieldSpecialNeedComment',
 			'ControllerAction.Model.onUpdateFieldSpecialNeedDate' => 'onUpdateFieldSpecialNeedDate'
 		];
@@ -124,6 +124,7 @@ class MandatoryBehavior extends Behavior {
 
 		if (array_key_exists('SpecialNeeds', $this->_info) && $this->_info['SpecialNeeds'] != 'Excluded') {
 			$this->_table->ControllerAction->field('special_need', ['order' => $i++]);
+			$this->_table->ControllerAction->field('special_need_difficulty', ['order' => $i++]);
 			$this->_table->ControllerAction->field('special_need_comment', ['order' => $i++]);
 			$this->_table->ControllerAction->field('special_need_date', ['order' => $i++]);
 		}
@@ -144,45 +145,60 @@ class MandatoryBehavior extends Behavior {
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		
 		if ($this->_table->action == 'add') {
+			
 			$newOptions = [];
 
 			$newOptions['associated'] = ['Identities', 'Nationalities', 'SpecialNeeds', 'Contacts'];
 
 			foreach ($this->_info as $key => $value) {
-				// default validation is 'Mandatory'
-				if ($value == 'Non-Mandatory') {
-					$newOptions['associated'][$key] = ['validate' => 'NonMandatory'];
-					// also need to remove the data if the field is empty
-					$tableName = Inflector::tableize($key);
 
-					if (array_key_exists($tableName, $data[$this->_table->alias()])) {
-						if (array_key_exists(0, $data[$this->_table->alias()][$tableName])) {
-							// going to check all fields.. if something is empty(form fill incomplete).. the data will not be removed and not saved
-							$incompleteField = false;
-							foreach ($data[$this->_table->alias()][$tableName][0] as $ckey => $check) {
+				if ($value == 'Non-Mandatory') {
+							
+					$newOptions['associated'][$key] = ['validate' => 'NonMandatory'];
+
+				} else {
+
+					if ($value != 'Excluded') {
+						$newOptions['associated'][] = $key;
+					}
+				}
+
+				$tableName = Inflector::tableize($key);
+
+				if (array_key_exists($tableName, $data[$this->_table->alias()])) { //entire form data
+
+					if (array_key_exists(0, $data[$this->_table->alias()][$tableName])) { //data per form element
+
+						// going to check all fields.. if something is empty(form fill incomplete).. the data will not be removed and not saved
+						$incompleteField = false;
+
+						foreach ($data[$this->_table->alias()][$tableName][0] as $ckey => $check) { //value each form element
+
+							// done for controller v4 for add saving by association 'security_user_id' is pre-set and replaced by cake later with the correct id
+							if ((in_array($key, ['SpecialNeeds'])) || (in_array($key, ['Nationalities']))) {
+								
+								if (array_key_exists($tableName, $data[$this->_table->alias()])) {
+
+	                                foreach ($data[$this->_table->alias()][$tableName] as $tkey => $tvalue) {
+	                                	$data[$this->_table->alias()][$tableName][$tkey]['security_user_id'] = '0';
+	                                }
+	                            }
+	                         }
+
+							// also need to remove the data if the field is empty
+							if ($value == 'Non-Mandatory') {
+
 								if (empty($check)) {
 									$incompleteField = true;
 								}
-							}
 
-                            if (!$incompleteField) {
-                                // done for controller v4 for add saving by association 'security_user_id' is pre-set and replaced by cake later with the correct id
-                                if (in_array($key, ['SpecialNeeds'])) {
-                                    foreach ($data[$this->_table->alias()][$tableName] as $tkey => $tvalue) {
-                                        $data[$this->_table->alias()][$tableName][$tkey]['security_user_id'] = '0';
-                                    }
-                                }
-                            }
-
-							if ($incompleteField) {
-								unset($data[$this->_table->alias()][$tableName]);
-							}
-						}
-					}
-				} else {
-					if ($value != 'Excluded') {
-						$newOptions['associated'][] = $key;
+								if ($incompleteField) {
+									unset($data[$this->_table->alias()][$tableName]);
+								}
+							} 
+						}					
 					}
 				}
 			}
@@ -329,6 +345,30 @@ class MandatoryBehavior extends Behavior {
 
 		$attr['value'] = date('Y-m-d');
 
+		return $attr;
+	}
+
+	public function onUpdateFieldSpecialNeedDifficulty(Event $event, array $attr, $action, $request) {
+		if (!empty($this->_info)) {
+			if (array_key_exists('SpecialNeedDifficulties', $this->_info)) {
+				$attr['empty'] = 'Select';
+			}
+		}
+
+		$SpecialNeedDifficulties = TableRegistry::get('FieldOption.SpecialNeedDifficulties');
+		$specialNeedDifficultyOptions = $SpecialNeedDifficulties->getList();
+
+		$defaultEntity = $SpecialNeedDifficulties->find()
+			->where([$SpecialNeedDifficulties->aliasField('default') => 1])
+			->first();
+		if (!empty($defaultEntity)) {
+			$attr['default'] = $defaultEntity->id;
+		}
+
+		$attr['type'] = 'select';
+		$attr['fieldName'] = $this->_table->alias().'.special_needs.0.special_need_difficulty_id';
+		$attr['options'] = $specialNeedDifficultyOptions->toArray();
+		
 		return $attr;
 	}
 	
