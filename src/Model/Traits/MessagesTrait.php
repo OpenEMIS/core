@@ -1161,7 +1161,9 @@ trait MessagesTrait {
 				],
 			],
 		],
-
+        'StaffClasses' => [
+            'notActiveTeachingStaff' => 'Not active teaching staff'
+        ]
 	];
 
 	public function getMessage($code, $options = []) {
