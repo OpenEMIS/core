@@ -622,7 +622,7 @@ class UsersTable extends AppTable {
 		return $data;
 	}
 
-	public function afterSave(Event $event, Entity $entity) 
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options)
 	{
 		// This logic is meant for Import
 		if ($entity->has('customColumns')) {
