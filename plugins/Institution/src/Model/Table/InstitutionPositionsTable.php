@@ -39,7 +39,6 @@ class InstitutionPositionsTable extends AppTable {
 		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
 	}
 
-<<<<<<< HEAD
 	public function transferAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$transferredTo = $entity->convert_to;
 		$securityRole = $this->find()
@@ -61,14 +60,13 @@ class InstitutionPositionsTable extends AppTable {
 			['id IN ' => $securityGroupUserIds]
 		);
 	}
-=======
+	
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
     	$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
 
     	return $events;
     }
->>>>>>> 44e08490e9bb9310780f619762c4f98733956eb7
 
 	public function validationDefault(Validator $validator) {
 		
