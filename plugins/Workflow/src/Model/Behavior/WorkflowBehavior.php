@@ -10,6 +10,7 @@ use Cake\ORM\Entity;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
+use Cake\Network\Session;
 
 class WorkflowBehavior extends Behavior {
 
@@ -27,6 +28,14 @@ class WorkflowBehavior extends Behavior {
 			'WorkflowTransitions' => 'Workflow.WorkflowTransitions'
 		]
 	];
+
+	private $workflowEvents = [
+ 		[
+ 			'value' => 'Workflow.onDeleteRecord',
+			'text' => 'Delete of Current Record',
+ 			'method' => 'onDeleteRecord'
+ 		]
+ 	];
 
 	private $controller;
 	private $model = null;
@@ -76,7 +85,27 @@ class WorkflowBehavior extends Behavior {
 		$events['Model.custom.onUpdateToolbarButtons'] 			= ['callable' => 'onUpdateToolbarButtons', 'priority' => 1000];
 		$events['Model.custom.onUpdateActionButtons'] 			= ['callable' => 'onUpdateActionButtons', 'priority' => 1000];
 		$events['Workflow.afterTransition'] = 'workflowAfterTransition';
+		$events['Workflow.getEvents'] = 'getWorkflowEvents';
+		foreach($this->workflowEvents as $event) {
+			$events[$event['value']] = $event['method'];
+		}
 		return $events;
+	}
+
+	public function onDeleteRecord(Event $event, $id, Entity $workflowTransitionEntity) {
+		$model = $this->_table;
+		$entity = $model->get($id);
+		$model->delete($entity);
+		$session = new Session();
+		$session->write('Workflow.onDeleteRecord', true);
+		return $model->controller->redirect($model->url('index', 'QUERY'));
+	}
+
+	public function getWorkflowEvents(Event $event, ArrayObject $eventsObject) {
+		foreach ($this->workflowEvents as $key => $attr) {
+			$attr['text'] = __($attr['text']);
+			$eventsObject[] = $attr;
+		}
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
@@ -265,6 +294,16 @@ class WorkflowBehavior extends Behavior {
 	}
 
 	public function indexAfterAction(Event $event, $data) {
+		$model = $this->_table;
+		$session = new Session();
+		if ($session->read('Workflow.onDeleteRecord')) {
+			if ($this->isCAv4()) {
+				$model->Alert->success('general.delete.success', ['reset' => true]);
+			} else {
+				$model->controller->Alert->success('general.delete.success', ['reset' => true]);
+			}
+		}
+		$session->delete('Workflow.onDeleteRecord');
 		$this->reorderFields();
 	}
 
