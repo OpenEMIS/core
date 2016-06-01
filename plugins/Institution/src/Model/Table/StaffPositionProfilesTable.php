@@ -109,11 +109,11 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		
 	}
 
-	public function getWorkflowEvents(Event $event) {
+	public function getWorkflowEvents(Event $event, ArrayObject $eventsObject) {
 		foreach ($this->workflowEvents as $key => $attr) {
-			$this->workflowEvents[$key]['text'] = __($attr['text']);
+			$attr['text'] = __($attr['text']);
+			$eventsObject[] = $attr;
 		}
-		return $this->workflowEvents;
 	}
 
 	public function onApprove(Event $event, $id, Entity $workflowTransitionEntity) {
@@ -451,10 +451,14 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		$InstitutionStaff = TableRegistry::get('Institution.Staff');
 		$staff = $InstitutionStaff->get($institutionStaffId);
 		$approvedStatus = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'APPROVED');
+		$closedStatus = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'CLOSED');
+
+		$statuses = array_merge($approvedStatus, $closedStatus);
+		
 		$staffPositionProfilesRecord = $this->find()
 			->where([
 				$this->aliasField('institution_staff_id') => $staff->id,
-				$this->aliasField('status_id').' NOT IN ' => $approvedStatus
+				$this->aliasField('status_id').' NOT IN ' => $statuses
 			])
 			->first();
 		if (empty($staffPositionProfilesRecord)) {
