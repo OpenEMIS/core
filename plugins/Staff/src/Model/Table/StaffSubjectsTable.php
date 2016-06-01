@@ -92,7 +92,7 @@ class StaffSubjectsTable extends ControllerActionTable {
         $academicPeriodOptions = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getYearList();
         $selectedAcademicPeriod = '';
         $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriod, [
-            'message' => '{{label}} - ' . $this->getMessage('StaffClasses.notActiveTeachingStaff'),
+            'message' => '{{label}} - ' . $this->getMessage('StaffSubjects.notActiveTeachingStaff'),
             'callable' => function($id) use ($InstitutionStaff, $staffId, $institutionId) {
                 $allRelevantStaffRecords = $InstitutionStaff
                     ->find()
@@ -101,7 +101,7 @@ class StaffSubjectsTable extends ControllerActionTable {
                             'academicPeriodId' => $id,
                             'staffId' => $staffId,
                             'institutionId' => $institutionId,
-                            'positionTitleId' => 1
+                            'positionType' => 1
                         ]
                     );
                 return ($allRelevantStaffRecords->count() > 0);
