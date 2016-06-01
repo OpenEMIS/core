@@ -1,6 +1,7 @@
 v3.5.6
 - Zero value can now be saved properly in Survey Forms
 - Removing students from Classes now delete Results, Attendance, Behaviour data linked to that student properly
+- New Feature - You can now configure Rules to hide/show survey questions
 - Fixed a bug that caused 'Select All' checkboxes affecting disabled checkboxes
 - Usernames should be at least 6 characters now
 - Administrative Boundaries and Nationalities now use two different list instead of the same one
