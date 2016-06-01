@@ -375,7 +375,7 @@ class ImportBehavior extends Behavior {
 
                 $originalRow = new ArrayObject;
                 $checkCustomColumn = new ArrayObject;
-                $rowPass = $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols, $checkCustomColumn);
+                $rowPass = $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols);
 
                 $tempRow = $tempRow->getArrayCopy();
                 // $tempRow['entity'] must exists!!! should be set in individual model's onImportCheckUnique function
@@ -451,19 +451,6 @@ class ImportBehavior extends Behavior {
 
                     // update importedUniqueCodes either a single key or composite primary keys
                     $this->dispatchEvent($this->_table, $this->eventKey('onImportUpdateUniqueKeys'), 'onImportUpdateUniqueKeys', [$importedUniqueCodes, $tableEntity]);
-
-                    if (count($checkCustomColumn)) {
-
-                        foreach($checkCustomColumn as $key => $value) { //handling custom excel column
-
-                            $tableName = $value['plugin'] . "." . $value['model'];
-
-                            //pr($tableName);
-
-                            $customColumnTable = TableRegistry::get($tableName);
-                            $customColumnTable->onImportInsertIntoDifferentTable($newEntity);
-                        }
-                    }
                 
                 }
 
@@ -879,34 +866,20 @@ class ImportBehavior extends Behavior {
         foreach ($mapping as $key => $value) {
             if ($value->foreign_key == self::CUSTOM) { //custom then need check the default value.
 
-                $customTable = TableRegistry::get($value->lookup_column);
+                $customIdentifier = $value->column_name;
+                $customDataSource = $value->lookup_column;
+                $customHeaderData = new ArrayObject;
 
-                $customTableRecords = $customTable
-                    ->find()
-                    ->where([
-                        $customTable->aliasField('default') => 1
-                    ])
-                    ->toArray();
+                $params = [$customIdentifier, $customDataSource, $customHeaderData];
+                $this->dispatchEvent($this->_table, $this->eventKey('onImportCustomHeader'), 'onImportCustomHeader', $params);
 
-                if (count($customTableRecords)) { //if default found
+                $label = $customHeaderData[1]; //column name
 
-                    if ($value->lookup_column == 'FieldOption.IdentityTypes') { //for FieldOption
-                        $customName = $customTableRecords[0]['name'];
-                    }                    
-                    
-                    $column = __($customName);
-                    
-                    if (!empty($value->description)) {
-                        $column .= ' ' . __($value->description);
-                    }
-
-                } else { //no default defined, then put warning on header
-                    $column = __("Please Define Default Type");
+                if ($customHeaderData[0]) { //show description or not
+                    $label .= ' ' . __($value->description);
                 }
 
-                $header[] = $column;
-
-            } else { //for other type
+            } else {
 
                 $column = $value->column_name;
 
@@ -915,13 +888,13 @@ class ImportBehavior extends Behavior {
                 if (empty($label)) {
                     $label = $this->getExcelLabel($value->model, $column);
                 }
+
                 if (!empty($value->description)) {
                     $label .= ' ' . __($value->description);
                 }
-
-                $header[] = __($label);
-
             }
+
+            $header[] = __($label);
         }
 
         return $header;
@@ -1095,7 +1068,7 @@ class ImportBehavior extends Behavior {
      * @param  ArrayObject  $rowInvalidCodeCols for holding error messages found on option field columns 
      * @return boolean                          returns whether the row being checked pass option field columns check
      */
-    protected function _extractRecord($references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols, ArrayObject $checkCustomColumn) {
+    protected function _extractRecord($references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
         // $references = [$sheet, $mapping, $columns, $lookup, $totalColumns, $row, $activeModel, $systemDateFormat];
         $sheet = $references['sheet'];
         $mapping = $references['mapping'];
@@ -1222,34 +1195,18 @@ class ImportBehavior extends Behavior {
                 }
             } else if ($foreignKey == self::CUSTOM) { //foreign_key = 4
 
-                //send back information that is custom excel column for validation after save
-                $checkCustomColumn[$customColumnCounter]['mappingID'] = $excelMappingObj->id;
-                $checkCustomColumn[$customColumnCounter]['plugin'] = $excelMappingObj->lookup_plugin;
-                $checkCustomColumn[$customColumnCounter]['model'] = $excelMappingObj->lookup_model;
-                $checkCustomColumn[$customColumnCounter]['column'] = $excelMappingObj->lookup_column;
+                $params = [$tempRow, $cellValue];
+                $event = $this->dispatchEvent($this->_table, $this->eventKey('onImportCheck'.$excelMappingObj->column_name.'Config'), 'onImportCheck'.$excelMappingObj->column_name.'Config', $params);
 
-                $customColumnCounter++;
-
-                //validation whether Identity is mandatory based on the user type inserted.
-
-                if (($excelMappingObj->lookup_plugin == "User") && ($excelMappingObj->lookup_model == "Identities")) { //for Identities mandatory checking.
-
-                    $ConfigItems = TableRegistry::get('ConfigItems');
-                    $StudentIdentities = $ConfigItems->value('StudentIdentities');
-                    $StaffIdentities = $ConfigItems->value('StaffIdentities');
-
-                    if (($tempRow['account_type'] == "is_staff") && ($StaffIdentities) && (empty($cellValue))) {
-                        $rowInvalidCodeCols[$columnName] = __('Staff identity is mandatory');
-                        $rowPass = false;
-                    };
-
-                    if (($tempRow['account_type'] == "is_student") && ($StudentIdentities) && (empty($cellValue))) {
-                        $rowInvalidCodeCols[$columnName] = __('Student identity is mandatory');
-                        $rowPass = false;
-                    };
-                    
+                if ($event->result !== true) {
+                    $rowInvalidCodeCols[$columnName] = __($event->result);
+                    $rowPass = false;
+                } else {
+                    if (!array_key_exists('customColumns', $tempRow)) {
+                        $tempRow['customColumns'] = [];
+                    }
+                    $tempRow['customColumns'][$columnName] = $val;
                 }
-
             }
             $columnDescription = strtolower($mapping[$col]->description);
             $isOptional = substr_count($columnDescription, 'optional');

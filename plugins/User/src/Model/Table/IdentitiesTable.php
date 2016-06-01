@@ -73,16 +73,4 @@ class IdentitiesTable extends AppTable {
 		return $validator->allowEmpty('number');
 	}
 
-	public function onImportInsertIntoDifferentTable(Entity $entity){
-
-		$IdentityData = $this->newEntity([
-		    'identity_type_id' => $this->IdentityTypes->getDefaultValue(),
-		    'number' => $entity->identity_number,
-		    'security_user_id' => $entity->id
-		]);
-
-		$this->save($IdentityData);
-
-	}
-
 }

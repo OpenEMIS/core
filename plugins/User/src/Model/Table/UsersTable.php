@@ -621,4 +621,29 @@ class UsersTable extends AppTable {
 		}
 		return $data;
 	}
+
+	public function afterSave(Event $event, Entity $entity) 
+	{
+		// This logic is meant for Import
+		if ($entity->has('customColumns')) {
+			foreach ($entity->customColumns as $column => $value) {
+				switch ($column) {
+					case 'Identity':
+						$userIdentitiesTable = TableRegistry::get('User.Identities');
+
+						$defaultValue = $userIdentitiesTable->IdentityTypes->getDefaultValue();
+
+						if ($defaultValue) {
+							$userIdentityData = $userIdentitiesTable->newEntity([
+							    'identity_type_id' => $defaultValue,
+							    'number' => $value,
+							    'security_user_id' => $entity->id
+							]);
+							$userIdentitiesTable->save($userIdentityData);
+						}
+						break;
+				}
+			}
+		}
+	}
 }
