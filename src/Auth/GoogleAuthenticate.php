@@ -41,8 +41,8 @@ class GoogleAuthenticate extends BaseAuthenticate
 	        		$me = $ServiceOAuth2Object->userinfo->get();
                     $userInfo = [
                         'id' => $me->getId(),
-                        'firstName' => $me->getFamilyName(),
-                        'lastName' => $me->getGivenName(),
+                        'firstName' => $me->getGivenName(),
+                        'lastName' => $me->getFamilyName(),
                         'gender' => $me->getGender(),
                         'email' => $me->getEmail(),
                         'verifiedEmail' => $me->getVerifiedEmail(),

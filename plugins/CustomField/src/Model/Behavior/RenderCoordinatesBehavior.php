@@ -61,7 +61,19 @@ class RenderCoordinatesBehavior extends RenderBehavior {
             $attr['fieldPrefix'] = $fieldPrefix;
             $attr['form'] = $form;
 
-            $postData = $entity->custom_field_values[$attr['attr']['seq']];
+
+            // $postData = $entity->custom_field_values[$attr['attr']['seq']];
+            $postData = null;
+            if ($entity->has('custom_field_values')) {
+                foreach ($entity->custom_field_values as $key => $obj) {
+                    if ($obj->has('custom_field')) {
+                        if ($obj->custom_field->id == $fieldId) {
+                           $postData = $obj;
+                        }
+                    }
+                }
+            }
+
             if ($postData instanceof Entity && !empty($postData->dirty())) {
                 $values = ($postData->invalid('coordinates_value')) ? json_decode(json_encode($postData->invalid('coordinates_value'))) : json_decode(json_encode($postData->coordinates_value));
             } elseif (!is_null($savedValue)) {
