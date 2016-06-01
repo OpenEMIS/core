@@ -23,6 +23,7 @@ class AddBehavior extends Behavior {
 		$model = $this->_table;
 		$request = $this->_table->request;
 		$extra['config']['form'] = true;
+        $extra['redirect'] = $model->url('index', 'QUERY');
 
 		$event = $model->dispatchEvent('ControllerAction.Model.addEdit.beforeAction', [$extra], $this);
 		if ($event->isStopped()) { return $event->result; }
@@ -83,9 +84,9 @@ class AddBehavior extends Behavior {
 				$event = $model->dispatchEvent('ControllerAction.Model.add.afterSave', [$entity, $requestData, $extra], $this);
 				if ($event->isStopped()) { return $event->result; }
 
-				if ($result) {
-					$mainEvent->stopPropagation();
-					return $model->controller->redirect($model->url('index', 'QUERY'));
+				if ($result && $extra['redirect'] !== false) {
+                    $mainEvent->stopPropagation();
+                    return $model->controller->redirect($extra['redirect']);
 				}
 			} else {
 				$patchOptions['validate'] = false;

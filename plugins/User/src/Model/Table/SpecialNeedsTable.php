@@ -1,14 +1,17 @@
 <?php
 namespace User\Model\Table;
 
-use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 
-class SpecialNeedsTable extends AppTable {
+use App\Model\Table\ControllerActionTable;
+
+class SpecialNeedsTable extends ControllerActionTable {
 	public function initialize(array $config) {
 		$this->table('user_special_needs');
 		parent::initialize($config);
+        $this->behaviors()->get('ControllerAction')->config('actions.search', false);
+
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('SpecialNeedTypes', ['className' => 'FieldOption.SpecialNeedTypes']);
