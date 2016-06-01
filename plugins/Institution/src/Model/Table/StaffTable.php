@@ -715,6 +715,10 @@ class StaffTable extends AppTable {
 			$buttons['edit']['url'] = $url;
 		}
 
+		if ($this->Session->read('Auth.User.id') == $entity->_matchingData['Users']->id) { //if logged on user = current user, then unset the delete button
+			unset($buttons['remove']);
+		}
+
 		return $buttons;
 	}
 
@@ -938,16 +942,6 @@ class StaffTable extends AppTable {
 		$this->Session->write('Staff.Staff.id', $entity->staff_id);
 		$this->Session->write('Staff.Staff.name', $entity->user->name);
 		$this->setupTabElements($entity);
-	}
-
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		$entity = $this->get($id);
-
-		if ($this->Session->read('Auth.User.id') == $entity->staff_id) { // if the current user try to delete itself.
-			$process = function() use ($id, $options) { //alert component will handle the show of error.
-		 	};
-			return $process;
-		}
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
