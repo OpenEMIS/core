@@ -19,13 +19,10 @@ class DirectoriesController extends AppController {
 			// Users
 			'Contacts' 				=> ['className' => 'User.Contacts'],
 			'Identities' 			=> ['className' => 'User.Identities'],
-			'Nationalities' 		=> ['className' => 'User.Nationalities'],
-			'Languages' 			=> ['className' => 'User.UserLanguages'],
 			'Comments' 				=> ['className' => 'User.Comments'],
 			'Attachments' 			=> ['className' => 'User.Attachments'],
 			'Accounts'				=> ['className' => 'Directory.Accounts', 'actions' => ['view', 'edit']],
 			'History' 				=> ['className' => 'User.UserActivities', 'actions' => ['index']],
-			'SpecialNeeds' 			=> ['className' => 'User.SpecialNeeds'],
 
 
 			// Users - Health
@@ -43,8 +40,6 @@ class DirectoriesController extends AppController {
 			'StudentGuardians'		=> ['className' => 'Student.Guardians'],
 			'StudentGuardianUser'	=> ['className' => 'Student.GuardianUser'],
 			'StudentProgrammes'		=> ['className' => 'Student.Programmes', 'actions' => ['index', 'view']],
-			'StudentClasses'		=> ['className' => 'Student.StudentSections', 'actions' => ['index', 'view']],
-			'StudentSubjects' 		=> ['className' => 'Student.StudentClasses', 'actions' => ['index', 'view']],
 			'StudentAbsences' 		=> ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
 			'StudentBehaviours' 	=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
 			'StudentResults' 		=> ['className' => 'Student.Results', 'actions' => ['index']],
@@ -57,16 +52,14 @@ class DirectoriesController extends AppController {
 			// Staff
 			'StaffEmployments'		=> ['className' => 'Staff.Employments'],
 			'StaffSalaries'			=> ['className' => 'Staff.Salaries'],
-			'StaffQualifications'	=> ['className' => 'Staff.Qualifications'],
 			'StaffPositions'		=> ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
 			'StaffSections'			=> ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
 			'StaffClasses'			=> ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
+			'StaffQualifications'	=> ['className' => 'Staff.Qualifications'],
 			'StaffAbsences'			=> ['className' => 'Staff.Absences', 'actions' => ['index', 'view']],
-			'StaffLeaves'			=> ['className' => 'Staff.Leaves'],
+			'StaffLeave'			=> ['className' => 'Staff.Leaves'],
 			'StaffBehaviours'		=> ['className' => 'Staff.StaffBehaviours', 'actions' => ['index', 'view']],
 			'StaffExtracurriculars'	=> ['className' => 'Staff.Extracurriculars'],
-			'StaffMemberships'		=> ['className' => 'Staff.Memberships'],
-			'StaffLicenses'			=> ['className' => 'Staff.Licenses'],
 			'StaffTrainings'		=> ['className' => 'Staff.StaffTrainings'],
 			'TrainingResults'		=> ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
 			'TrainingNeeds'			=> ['className' => 'Staff.TrainingNeeds'],
@@ -78,9 +71,23 @@ class DirectoriesController extends AppController {
 
 		$this->loadComponent('Training.Training');
 		$this->loadComponent('User.Image');
-
+		
 		$this->set('contentHeader', 'Directories');
 	}
+
+	// CAv4
+	public function StaffQualifications() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Qualifications']); }
+	public function StaffPositions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Positions']); }
+	public function StaffClasses() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffClasses']); }
+	public function StaffSubjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSubjects']); }
+	public function StudentClasses() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']); }
+	public function StudentSubjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']); }
+    public function Nationalities() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
+    public function Languages() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
+    public function SpecialNeeds() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
+	public function StaffMemberships() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Memberships']); }
+	public function StaffLicenses() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Licenses']); }
+	// End
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
@@ -113,6 +120,10 @@ class DirectoriesController extends AppController {
 	}
 
 	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
+        if ($model instanceof \Staff\Model\Table\StaffClassesTable || $model instanceof \Staff\Model\Table\StaffSubjectsTable) {
+            $model->toggle('add', false);
+        }
+        
 		/**
 		 * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
 		 */
@@ -126,15 +137,9 @@ class DirectoriesController extends AppController {
 			}
 
 			$alias = $model->alias;
-			// temporary fix for renaming Sections and Classes
-			if ($alias == 'Sections') $alias = 'Classes';
-			else if ($alias == 'Classes') $alias = 'Subjects';
-			else if ($alias == 'StaffSections') $alias = 'Staff Classes';
-			else if ($alias == 'StaffClasses') $alias = 'Staff Subjects';
 			$this->Navigation->addCrumb($model->getHeader($alias));
 			$header = $header . ' - ' . $model->getHeader($alias);
 
-			// $params = $this->request->params;
 			$this->set('contentHeader', $header);
 
 			if ($model->hasField('security_user_id')) {
@@ -231,6 +236,10 @@ class DirectoriesController extends AppController {
 		}
 	}
 
+	public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra) {
+		$this->beforePaginate($event, $model, $query, $extra);
+	}
+
 	public function excel($id=0) {
 		$this->Students->excel($id);
 		$this->autoRender = false;
@@ -262,7 +271,7 @@ class DirectoriesController extends AppController {
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Identities', $id],
 				'text' => __('Identities')	
 			],
-			'Nationalities' => [
+			'UserNationalities' => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Nationalities', $id],
 				'text' => __('Nationalities')	
 			],
@@ -304,7 +313,6 @@ class DirectoriesController extends AppController {
 				'text' => __('Guardians')	
 			],
 		];
-
 		return $tabElements;
 	}
 
@@ -319,7 +327,8 @@ class DirectoriesController extends AppController {
 			'Subjects' => ['text' => __('Subjects')],
 			'Absences' => ['text' => __('Absences')],
 			'Behaviours' => ['text' => __('Behaviours')],
-			'Results' => ['text' => __('Results')],
+			// POCOR-2759: temporary hide Results tab
+			// 'Results' => ['text' => __('Results')],
 			'Awards' => ['text' => __('Awards')],
 			'Extracurriculars' => ['text' => __('Extracurriculars')],
 		];
@@ -363,10 +372,10 @@ class DirectoriesController extends AppController {
 		$studentTabElements = [
 			'Employments' => ['text' => __('Employments')],
 			'Positions' => ['text' => __('Positions')],
-			'Sections' => ['text' => __('Classes')],
-			'Classes' => ['text' => __('Subjects')],
+			'Classes' => ['text' => __('Classes')],
+			'Subjects' => ['text' => __('Subjects')],
 			'Absences' => ['text' => __('Absences')],
-			'Leaves' => ['text' => __('Leaves')],
+			'Leave' => ['text' => __('Leave')],
 			'Behaviours' => ['text' => __('Behaviours')],
 			'Awards' => ['text' => __('Awards')],
 		];

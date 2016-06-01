@@ -1,4 +1,4 @@
-/* TOOLTIP v.1.0.6 */
+/* TOOLTIP v.1.0.7 */
 
 .tooltip {
     z-index: 9999 !important;
@@ -129,6 +129,10 @@
     white-space: normal;
 }
 
+.icon-red,
+.icon-blue,
+.icon-green,
+.icon-orange,
 .tooltip-red i[data-toggle="tooltip"],
 .tooltip-blue i[data-toggle="tooltip"],
 .tooltip-orange i[data-toggle="tooltip"],
@@ -136,10 +140,7 @@
     cursor: pointer;
 }
 
-.tooltip-red,
-.tooltip-blue,
-.tooltip-orange,
-.tooltip-green {
+.table-tooltip-icon {
     width: 40px;
     text-align: center;
 }
@@ -171,22 +172,6 @@
 
 
 /* RTL v.1.0.0 */
-
-.rtl .tooltip-red .tooltip,
-.rtl .tooltip-blue .tooltip,
-.rtl .tooltip-orange .tooltip,
-.rtl .tooltip-green .tooltip {
-    margin-left: -82px !important;
-    width: 200px;
-}
-
-.rtl .tooltip-red .tooltip-arrow,
-.rtl .tooltip-blue .tooltip-arrow,
-.rtl .tooltip-orange .tooltip-arrow,
-.rtl .tooltip-green .tooltip-arrow {
-    left: auto !important;
-    right: 13px !important;
-}
 
 .rtl tbody tr:first-child .tooltip-red .tooltip,
 .rtl tbody tr:first-child .tooltip-blue .tooltip,

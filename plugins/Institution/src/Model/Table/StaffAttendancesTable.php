@@ -32,7 +32,7 @@ class StaffAttendancesTable extends AppTable {
 		parent::initialize($config);
 
 		$this->belongsTo('StaffTypes', ['className' => 'FieldOption.StaffTypes']);
-		$this->belongsTo('StaffStatuses', ['className' => 'FieldOption.StaffStatuses']);
+		$this->belongsTo('StaffStatuses', ['className' => 'Staff.StaffStatuses']);
 		$this->belongsTo('InstitutionPositions', ['className' => 'Institution.InstitutionPositions']);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'staff_id']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
@@ -137,7 +137,7 @@ class StaffAttendancesTable extends AppTable {
 					'key' => 'AcademicPeriod.days',
 					'field' => 'attendance_field',
 					'type' => 'attendance',
-					'label' => sprintf('%s (%s)', $item['day'], $item['weekDay']),
+					'label' => sprintf('%s (%s)', $item['day'], __($item['weekDay'])),
 					'date' => $item['date']
 				];
 			}
@@ -330,13 +330,14 @@ class StaffAttendancesTable extends AppTable {
 				}
 			}
 			$attr['time_options']['defaultTime'] = $attr['value'];
+			$attr['class'] = 'margin-top-10 no-margin-bottom';
 			$attr['field'] = 'late_time';
 			$attr['model'] = $fieldPrefix;
 			$attr['id'] = 'late_time_'.$id;
 			$attr['label'] = false;
 			
 			$time = $HtmlField->time('edit', $entity, $attr);
-			$html .= '<div id="late_time__'.$id.'" class="late_time__'.$id.'_'.$codeAbsenceTypeList['LATE'].'" style="'.$displayTime.'width:100px">'.$time.'</div>';
+			$html .= '<div id="late_time__'.$id.'" class="late_time__'.$id.'_'.$codeAbsenceTypeList['LATE'].'" style="'.$displayTime.'">'.$time.'</div>';
 			
 			$html .= $Form->hidden($fieldPrefix.".institution_id", ['value' => $institutionId]);
 			$html .= $Form->hidden($fieldPrefix.".staff_id", ['value' => $id]);
@@ -586,7 +587,8 @@ class StaffAttendancesTable extends AppTable {
 			$schooldays = [];
 
 			for($i=0; $i<$daysPerWeek; $i++) {
-				$schooldays[] = ($firstDayOfWeek + $i) % 7;
+				// sunday should be '7' in order to be displayed
+				$schooldays[] = 1 + ($firstDayOfWeek + 6 + $i) % 7;
 			}
 
 			$week = $weeks[$selectedWeek];
@@ -668,11 +670,11 @@ class StaffAttendancesTable extends AppTable {
 					$this->_fieldOrder[] = $key;
 				}
 			} else {
-				$this->ControllerAction->field('type');
-				$this->ControllerAction->field('reason');
+				$this->ControllerAction->field('type', ['tableColumnClass' => 'vertical-align-top']);
+				$this->ControllerAction->field('reason', ['tableColumnClass' => 'vertical-align-top']);
 				$this->_fieldOrder[] = 'type';
 				$this->_fieldOrder[] = 'reason';
-				$typeOptions = [self::PRESENT => 'Present'];
+				$typeOptions = [self::PRESENT => __('Present')];
 				$this->typeOptions = $typeOptions + $this->absenceList;
 
 				$StaffAbsenceReasons = TableRegistry::get('FieldOption.StaffAbsenceReasons');

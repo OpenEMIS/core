@@ -1,16 +1,17 @@
 <?php
 namespace App\Model\Behavior;
 
-use DateTime;
+use App\Model\Traits\MessagesTrait;
 use Cake\Event\Event;
 use Cake\I18n\Date;
 use Cake\I18n\Time;
-use Cake\ORM\TableRegistry;
-use Cake\ORM\Behavior;
-use Cake\Utility\Inflector;
-use Cake\Validation\Validator;
 use Cake\Network\Session;
-use App\Model\Traits\MessagesTrait;
+use Cake\ORM\Behavior;
+use Cake\ORM\TableRegistry;
+use Cake\Utility\Inflector;
+use Cake\Validation\Validation;
+use Cake\Validation\Validator;
+use DateTime;
 
 class ValidationBehavior extends Behavior {
 	use MessagesTrait;
@@ -58,6 +59,10 @@ class ValidationBehavior extends Behavior {
 					$validator->field($column)->remove($rkey);
 				}
 
+				if ($columnAttr['null'] == 1) {
+					$validator->allowEmpty($column);
+				}
+
 				// inserting these rules first
 				$validator->add($column, [
 					'ruleValidDate' => [
@@ -103,30 +108,42 @@ class ValidationBehavior extends Behavior {
         if ($session->read('Auth.User.super_admin') == 1) {
         	$isValid = true;
         } else {
+        	$data = $globalData['data'];
+        	$isSystemGroup = false;
+        	if (!$globalData['newRecord']) { // only applicable for edit mode
+        		if (array_key_exists('isSystemGroup', $data) && $data['isSystemGroup'] == true) {
+	        		$isSystemGroup = true;
+	        	}
+        	}
+
         	$condition = [];
         	$areaCondition = [];
 
-			$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
-        	$Areas = TableRegistry::get('Area.Areas');
-        	// get areas from security group areas
-        	$areasByUser = $SecurityGroupAreas->getAreasByUser($session->read('Auth.User.id'));
+        	if (!$isSystemGroup) {
+        		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+	        	$Areas = TableRegistry::get('Area.Areas');
+	        	// get areas from security group areas
+	        	$areasByUser = $SecurityGroupAreas->getAreasByUser($session->read('Auth.User.id'));
 
-        	if (count($areasByUser) > 0) {
-				foreach($areasByUser as $area) {
-	        		$areaCondition[] = [
-						$Areas->aliasField('lft').' >= ' => $area['lft'],
-						$Areas->aliasField('rght').' <= ' => $area['rght']
-					];
-	        	}
-	        	$condition['OR'] = $areaCondition;
+	        	if (count($areasByUser) > 0) {
+					foreach($areasByUser as $area) {
+		        		$areaCondition[] = [
+							$Areas->aliasField('lft').' >= ' => $area['lft'],
+							$Areas->aliasField('rght').' <= ' => $area['rght']
+						];
+		        	}
+		        	$condition['OR'] = $areaCondition;
 
-				$isChild = $Areas->find()
-		        	->where([$Areas->aliasField('id') => $check])
-		        	->where($condition)
-		        	->count();
+					$isChild = $Areas->find()
+			        	->where([$Areas->aliasField('id') => $check])
+			        	->where($condition)
+			        	->count();
 
-		        $isValid = $isChild > 0;
-			}
+			        $isValid = $isChild > 0;
+				}
+        	} else {
+        		$isValid = true;
+        	}
         }
         return $isValid;
     }
@@ -481,72 +498,77 @@ class ValidationBehavior extends Behavior {
 
 	// Return false if not enrolled in other education system
 	public static function checkInstitutionClassMaxLimit($class_id, array $globalData) {
-		$SectionStudents = TableRegistry::get("Institution.InstitutionSectionStudents");
-		$currentNumberOfStudents = $SectionStudents->find()->where([
-				$SectionStudents->aliasField('institution_section_id') => $class_id,
-				$SectionStudents->aliasField('education_grade_id') => $globalData['data']['education_grade_id']
+		$ClassStudents = TableRegistry::get("Institution.InstitutionClassStudents");
+		$currentNumberOfStudents = $ClassStudents->find()->where([
+				$ClassStudents->aliasField('institution_class_id') => $class_id,
+				$ClassStudents->aliasField('education_grade_id') => $globalData['data']['education_grade_id']
 			])->count();
 		/**
 		 * @todo  add this max limit to config
-		 * This limit value is being used in InstitutionSections->editAfterAction()
+		 * This limit value is being used in InstitutionClasses->editAfterAction()
 		 */
 		return ($currentNumberOfStudents < 100);
 	}
 
-	// Return false if not enrolled in other education system
-	public static function checkEnrolledInOtherInstitution($field, array $globalData) {
-		$Students = TableRegistry::get('Institution.Students');
-		$enrolled = false;
-		if (!empty($globalData['data']['academic_period_id'])) {
-			$educationSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($globalData['data']['education_grade_id']);
-			$enrolled = $Students->checkIfEnrolledInAllInstitution($globalData['data']['student_id'], $globalData['data']['academic_period_id'], $educationSystemId);
-		}
-		return !$enrolled;
-	}                                                                                                                                                                 
+	public static function studentNotEnrolledInAnyInstitutionAndSameEducationSystem($field, $options = [], array $globalData) {
+		$data = $globalData['data'];
+        
+        // excluding data by field name
+        $excludeInstitutionsOptions = array_key_exists('excludeInstitutions', $options)? $options['excludeInstitutions']: null;
+        $excludeInstitutions = [];
+        if (!empty($excludeInstitutionsOptions)) {
+            foreach ($excludeInstitutionsOptions as $key => $value) {
+                if (array_key_exists($value, $data)) {
+                    $excludeInstitutions[] = $data[$value];
+                }
+            }
+        }
 
-	public static function institutionStudentId($field, array $globalData) {
 		$Students = TableRegistry::get('Institution.Students');
-		$existingRecords = 0;
 
-		// Added the check for academic_period_id as the academic period id is possible to be all disabled 
-		// due to no programme found
-		if (!empty($globalData['data']['academic_period_id'])) {
-			$StudentStatusesTable = TableRegistry::get('Student.StudentStatuses');
-			$statuses = $StudentStatusesTable->findCodeList();
-			$existingRecords = $Students->find()
-				->where(
-					[
-						$Students->aliasField('academic_period_id') => $globalData['data']['academic_period_id'],
-						$Students->aliasField('education_grade_id') => $globalData['data']['education_grade_id'],
-						$Students->aliasField('institution_id') => $globalData['data']['institution_id'],
-						$Students->aliasField('student_id') => $globalData['data']['student_id'],
-						$Students->aliasField('student_status_id').' IS NOT ' => $statuses['DROPOUT']
-					]
-					
-				)
-				->count();
-				;
+		$educationGradeId = (array_key_exists('education_grade_id', $data))? $data['education_grade_id']: null;
+		if (empty($educationGradeId)) {
+			// insufficient params to perform search - return true as a default
+			return true;
 		}
-		return ($existingRecords <= 0);
+
+		$educationSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($educationGradeId);
+
+		// obtains validation message from this function, false is returned if no validation message
+        $validateOptions = ['targetInstitutionId' => $data['institution_id']];
+        if (!empty($excludeInstitutions)) {
+            $validateOptions['excludeInstitutions'] = $excludeInstitutions;
+        }
+		$validateEnrolledInAnyInstitution = $Students->validateEnrolledInAnyInstitution(
+			$globalData['data']['student_id'], 
+			$educationSystemId, 
+			$validateOptions
+		);
+		return ($validateEnrolledInAnyInstitution === false)? true: $validateEnrolledInAnyInstitution;
 	}
 
-	public static function institutionStaffId($field, array $globalData) {
-		$Staff = TableRegistry::get('Institution.Staff');
-
-		$existingRecords = $Staff->find()
-			->where(
-				[
-					$Staff->aliasField('institution_position_id') => $globalData['data']['institution_position_id'],
-					$Staff->aliasField('institution_id') => $globalData['data']['institution_id'],
-					$Staff->aliasField('staff_id') => $globalData['data']['staff_id'],
-					'OR' => [
-						[$Staff->aliasField('end_date').' IS NULL'],
-						[$Staff->aliasField('end_date').' >= ' => $globalData['data']['start_date']]
-					],
-				]	
-			);
-		return ($existingRecords->count() <= 0);
+	public static function studentNotCompletedGrade($field, array $globalData) {
+		$Students = TableRegistry::get('Institution.Students');
+		return !$Students->completedGrade($globalData['data']['education_grade_id'], $globalData['data']['student_id']);
 	}
+
+    public static function institutionStaffId($field, array $globalData) {
+        $Staff = TableRegistry::get('Institution.Staff');
+
+        $existingRecords = $Staff->find()
+            ->where(
+                [
+                    $Staff->aliasField('institution_position_id') => $globalData['data']['institution_position_id'],
+                    $Staff->aliasField('institution_id') => $globalData['data']['institution_id'],
+                    $Staff->aliasField('staff_id') => $globalData['data']['staff_id'],
+                    'OR' => [
+                        [$Staff->aliasField('end_date').' IS NULL'],
+                        [$Staff->aliasField('end_date').' >= ' => $globalData['data']['start_date']]
+                    ],
+                ]   
+            );
+        return ($existingRecords->count() <= 0);
+    }
 
 	public static function studentGuardianId($field, array $globalData) {
 		$Guardians = TableRegistry::get('Student.Guardians');
@@ -661,7 +683,11 @@ class ValidationBehavior extends Behavior {
 				->where([$Students->aliasField($Students->primaryKey()) => $data['student_id']])
 				->first();
 				;
-			$dateOfBirth = ($studentQuery->has('date_of_birth'))? $studentQuery->date_of_birth: null;
+			if ($studentQuery) {
+				$dateOfBirth = ($studentQuery->has('date_of_birth'))? $studentQuery->date_of_birth: null;
+			} else {
+				return $model->getMessage('Institution.Students.student_name.studentNotExists');
+			}
 		} else {
 			// saving for new students
 			$dateOfBirth = new DateTime($field);
@@ -671,6 +697,8 @@ class ValidationBehavior extends Behavior {
 		if (is_null($dateOfBirth)) return $validationErrorMsg;
 
 		$EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $EducationCycles = TableRegistry::get('Education.EducationCycles');
 		$gradeEntity = $EducationGrades->find()
 			->contain('EducationProgrammes.EducationCycles')
 			->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $educationGradeId])
@@ -689,22 +717,27 @@ class ValidationBehavior extends Behavior {
 		// academic period not set in form, return false because there is no way to validate
 		if (!isset($academicStartYear)) return $validationErrorMsg;
 
-		$programmeId = $gradeEntity->education_programme_id;
-		
+        // POCOR-2957 - obtaining gradelist of all grades in cycle, ordered by programme.order then grade.order
+        $cycleId = $gradeEntity->education_programme->education_cycle_id;
+        $programmesList = $EducationProgrammes->find('list')
+            ->where(['EducationProgrammes.education_cycle_id' => $cycleId])
+            ->order($EducationProgrammes->aliasField('order'))
+            ->toArray();
+        $gradeList = [];
+        foreach ($programmesList as $key => $value) {
+            $currGrades = $EducationGrades->find('list')
+                ->where([$EducationGrades->aliasField('education_programme_id') => $key])
+                ->order($EducationGrades->aliasField('order'))
+                ->toArray();
+            $gradeList = $gradeList+$currGrades;
+        }
+        
 		$birthYear = $dateOfBirth->format('Y');
 		$ageOfStudent = $academicStartYear - $birthYear;
 
 		$ConfigItems = TableRegistry::get('ConfigItems');
 		$enrolmentMinimumAge = $admissionAge - $ConfigItems->value('admission_age_minus');
 		$enrolmentMaximumAge = $admissionAge + $ConfigItems->value('admission_age_plus');
-
-		// PHPOE-2284 - 'instead of defining admission age at grade level, please make sure the allowed age range changes according to the grade.'
-		// PHPOE-2691 - 'instead of populating the list of grades by education cycle which is its grandparent, populate the list by its parent instead which is education programme.'
-		$gradeList = $EducationGrades->find('list')
-			->where([$EducationGrades->aliasField('education_programme_id') => $programmeId])
-			->find('order')
-			->toArray()
-			;
 
 		$yearIncrement = 0;
 		foreach ($gradeList as $key => $value) {
@@ -715,14 +748,15 @@ class ValidationBehavior extends Behavior {
 		$enrolmentMinimumAge += $yearIncrement;
 		$enrolmentMaximumAge += $yearIncrement;
 
-		// // age check
+		// age check
 		// pr('academicStartYear = '.$academicStartYear);
 		// pr('birthYear = '.$birthYear);
 		// pr('ageOfStudent = '.$ageOfStudent);
 
-		// // enrolment check check
+		// enrolment check check
 		// pr('enrolmentMinimumAge = '.$enrolmentMinimumAge);
 		// pr('enrolmentMaximumAge = '.$enrolmentMaximumAge);
+        // return 'enrolmentMinimumAge = '.$enrolmentMinimumAge . '/' . 'enrolmentMaximumAge = '.$enrolmentMaximumAge;
 
 		if ($enrolmentMinimumAge == $enrolmentMaximumAge) {
 			$validationErrorMsg = $model->getMessage('Institution.Students.student_name.ageHint', ['sprintf' => [$enrolmentMinimumAge]]);
@@ -775,12 +809,12 @@ class ValidationBehavior extends Behavior {
 	}
 
 	public static function noOverlappingAbsenceDate($field, $SearchTable, array $globalData) {
-		if ($globalData['data']['start_date'] instanceof Time) {
+		if ($globalData['data']['start_date'] instanceof Time || $globalData['data']['start_date'] instanceof Date) {
 			$startDate = $globalData['data']['start_date']->format('Y-m-d');
 		} else {
 			$startDate = date('Y-m-d', strtotime($globalData['data']['start_date']));
 		}
-		if ($globalData['data']['end_date'] instanceof Time) {
+		if ($globalData['data']['end_date'] instanceof Time || $globalData['data']['end_date'] instanceof Date) {
 			$endDate = $globalData['data']['end_date']->format('Y-m-d');
 		} else {
 			$endDate = date('Y-m-d', strtotime($globalData['data']['end_date']));
@@ -967,7 +1001,9 @@ class ValidationBehavior extends Behavior {
 			;
 
 		// no id this is NOT a add method
-		if (array_key_exists('id', $globalData['data']) && !empty($globalData['data']['id'])) {
+		if (array_key_exists('institution_staff_id', $globalData['data']) && !empty($globalData['data']['institution_staff_id'])) {
+			$identicalPositionHolders->where([$InstitutionStaff->aliasField('id').' != '. $globalData['data']['institution_staff_id']]);
+		} else if (array_key_exists('id', $globalData['data']) && !empty($globalData['data']['id'])) {
 			$identicalPositionHolders->where([$InstitutionStaff->aliasField('id').' != '. $globalData['data']['id']]);
 		}
 
@@ -1114,6 +1150,165 @@ class ValidationBehavior extends Behavior {
 		} else {
 			return true;
 		}
+	}
 
+	public static function checkUniqueCode($code, $groupField, array $globalData) {
+		$model = $globalData['providers']['table'];
+		$count = 0;
+		if (is_null($groupField) || empty($groupField) || !$groupField) {
+	    	if (!$globalData['newRecord']) {
+		      	$count =  $model->find()
+				      		->where([
+				      			$model->aliasField('id') .' != ' => $globalData['data']['id'],
+				      			$model->aliasField('code') => $code,
+				      		])
+				      		->count();
+			} else {
+		      	$count =  $model->find()
+				      		->where([$model->aliasField('code') => $code])
+				      		->count();
+			}
+	    } else {
+	    	if (!$globalData['newRecord']) {
+		      	$count =  $model->find()
+				      		->where([
+				      			$model->aliasField('id') .' != ' => $globalData['data']['id'],
+				      			$model->aliasField('code') => $code,
+				      			$model->aliasField($groupField) => $globalData['data'][$groupField],
+				      		])
+				      		->count();
+			}
+	    }
+        return $count==0;
+    }
+
+	public static function checkUniqueCodeWithinForm($code, $parentModel, array $globalData) {
+		$model = $globalData['providers']['table'];
+		$count = 0;
+		$modelAssociation = null;
+		foreach ($parentModel->associations() as $assoc) {
+			if ($assoc->name()==$model->alias()) {
+				$modelAssociation = $assoc;
+				break;
+			}
+		}
+      	foreach ($parentModel->request->data[$parentModel->alias()][$modelAssociation->property()] as $key => $value) {
+      		if ($value['code']==$code) {
+      			$count++;
+      		}
+      	}
+        return $count<2;
+    }
+
+	public static function inParentAcademicPeriod($field, $parentModel, $globalData) {
+		$globalPostData = $parentModel->request->data;
+		$parentPostData = $globalPostData[$parentModel->alias()];
+		$modelPostData = $globalData['data'];
+
+      	if (!empty($parentPostData['academic_period_id']) && !empty($field)) {
+			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			if ($AcademicPeriods->exists($parentPostData['academic_period_id'])) {
+				$periodObj = $AcademicPeriods->get($parentPostData['academic_period_id']);
+				$date = strtotime($field);
+
+				$academicPeriodStartDate = (!is_null($periodObj['start_date'])) ? $periodObj['start_date']->toUnixString() : null;
+				$academicPeriodEndDate = (!is_null($periodObj['end_date'])) ? $periodObj['end_date']->toUnixString() : null;
+
+				$rangecheck = ($date >= $academicPeriodStartDate) && 
+				(is_null($academicPeriodEndDate) ||
+					(!is_null($academicPeriodEndDate) && ($date <= $academicPeriodEndDate))
+				)
+				;
+				return $rangecheck;
+
+			} else {
+				return __('Bad Academic Period Id');
+			}
+		} else if (!empty($parentPostData['academic_period_id'])) {
+			return __('Parent Academic Period Id cannot be empty');
+		}
+
+		return true;
+	}
+    
+    public static function latIsValid($field, array $globalData) {
+        $error = false;
+        $isRequired = $globalData['data']['mandatory'];
+        if (is_array($field)) {
+            $latitude = $field['latitude'];
+            $longitude = $field['longitude'];
+            if (!empty($latitude) || !empty($longitude)) {
+                if (empty($latitude)) {
+                    $error = __('Latitude cannot be empty');
+                } else {
+                    $latIsValid = Validation::latitude($latitude);
+                    if (!$latIsValid) {
+                        $error = __('Latitude value is invalid');
+                    }
+                }
+            } elseif ($isRequired) {
+	            $error = __('Latitude value is required');
+            }
+        } elseif ($isRequired) {
+            $error = __('Required data is not available');
+        }
+        return (!$error) ? true : $error;
+    }
+
+    public static function lngIsValid($field, array $globalData) {
+        $error = false;
+        $isRequired = $globalData['data']['mandatory'];
+        if (is_array($field)) {
+            $latitude = $field['latitude'];
+            $longitude = $field['longitude'];
+            if (!empty($latitude) || !empty($longitude)) {
+                if (empty($longitude)) {
+                    $error = __('Longitude cannot be empty');
+                } else {
+                    $latIsValid = Validation::longitude($longitude);
+                    if (!$latIsValid) {
+                        $error = __('Longitude value is invalid');
+                    }
+                }
+            } elseif ($isRequired) {
+	            $error = __('Longitude value is required');
+            }
+        } elseif ($isRequired) {
+            $error = __('Required data is not available');
+        }
+        return (!$error) ? true : $error;
+    }
+    
+	public static function checkMinNotMoreThanMax($minValue, array $globalData) {
+        return intVal($minValue) <= intVal($globalData['data']['max']);
+    } 
+
+	public static function noNewDropoutRequestInGradeAndInstitution($field, array $globalData)
+	{
+		$model = $globalData['providers']['table'];
+		$data = $globalData['data'];
+
+		$studentId = (array_key_exists('student_id', $data))? $data['student_id']: null;
+		$educationGradeId = (array_key_exists('education_grade_id', $data))? $data['education_grade_id']: null;
+		$previousInstitutionId = (array_key_exists('previous_institution_id', $data))? $data['previous_institution_id']: null;
+
+		if (empty($studentId) || empty($educationGradeId) || empty($previousInstitutionId)) {
+			// insufficient params to perform search - return true as a default
+			return true;
+		}
+
+		$StudentDropoutTable = TableRegistry::get('Institution.StudentDropout');
+    	$conditions = [
+			'student_id' => $studentId, 
+			'status' => $model::NEW_REQUEST,
+			'education_grade_id' => $educationGradeId,
+			'institution_id' => $previousInstitutionId
+		];
+
+		$count = $StudentDropoutTable->find()
+			->where($conditions)
+			->count();
+
+		return ($count == 0);
 	}
 }

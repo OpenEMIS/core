@@ -1,8 +1,16 @@
-/* FORMAT TAB v.1.0.7 */
+/* FORMAT TAB v.1.0.10 */
+
+.toolbar-icon .panel-body {
+    overflow: hidden !important;
+}
 
 .toolbar-icon .format-lists,
 .toolbar-image .format-lists {
     margin-top: 18px;
+}
+
+.toolbar-image .format-item a {
+    display: inline-block;   
 }
 
 .accordion-tab-head {
@@ -36,42 +44,47 @@
     min-width: none;
 }
 
-accordion .input-select-wrapper,
-accordion .form-control {
+.input-select-wrapper,
+.form-control {
     float: none;
-    max-width: 305px;
+    max-width: auto;
+    width: 100%;
 }
 
 accordion .form-group {
     margin: 0 10px 10px 0;
     display: inline-block;
-    min-width: 210px;
-    max-width: 305px;
+    width: 15%;
     vertical-align: top;
 }
 
-accordion .format-item input {
+.format-item input {
     display: inline-block;
-    float: left;
+    /*float: left;*/
 }
 
-accordion .format-item .input-select-wrapper {
+.format-item .input-select-wrapper {
     height: 25px !important;
     margin-bottom: 0 !important;
-    width: 358px;
+    width: 100%;
 }
 
 .format-item label {
-    margin: 4px 10px 4px 0;
+    margin: 4px 0 4px;
+}
+
+.format-item .format-icheck {
+    width: 70%;
 }
 
 .format-item label.label-margin {
     margin: 6px 10px 6px 0 !important;
 }
 
-.form-group .icheckbox_minimal-grey, 
-.form-group .iradio_minimal-grey {
-    margin: -5px 5px -5px 0 !important;
+accordion .form-group .icheckbox_minimal-grey, 
+accordion .form-group .iradio_minimal-grey {
+    margin: 4px 5px -5px 0 !important;
+    vertical-align: top;
 }
 
 .format-lists .input-select-wrapper:after {
@@ -113,10 +126,11 @@ accordion .format-item .input-select-wrapper {
 
 .chrome .format-lists .input-width .form-control {
     padding: 4px 6px !important;
+    line-height: normal;
 }
 
 .chrome .format-lists .font-size-select .form-control {
-    padding: 4px 6px 4px !important;
+    padding: 4px !important;
 }
 
 .color-picker {
@@ -220,6 +234,14 @@ accordion .format-item .input-select-wrapper {
     margin-bottom: 10px !important;
 }
 
+.format-item .checkbox input {
+    margin: -2px 6px 0 6px !important;
+}
+
+.format-item .icheck-input {
+    margin-right: 5px;
+}
+
 .move-action i {
     display: inline;
     font-size: 14px !important;
@@ -280,18 +302,25 @@ button[colorpicker] {
     color: #FFF;
 }
 
+.btn-bold:focus,
+.btn-italic:focus,
+button[colorpicker]:focus {
+    outline: 0 !important;
+}
+
+.chrome .btn-bold,
+.chrome .btn-italic {
+    padding: 3px 5px 5px;
+}
+
 .font-size-select {
     position: relative;
     display: inline;
     margin-bottom: 0 !important;
 }
 
-.font-size-select:after {
-    top: 35% !important;
-}
-
 .font-size {
-    width: 20% !important;
+    width: 100% !important;
     height: 25px !important;
     padding: 4px 15px 4px 0 !important;
     font-size: 12px !important;
@@ -304,8 +333,15 @@ button[colorpicker] {
 
 .chrome .font-size {
     height: 24px !important;
-    width: 22% !important;
     padding: 4px 15px 4px 3px !important;
+}
+
+.font-size-select:after {
+    top: 35% !important;
+    border-left: 4px solid rgba(0, 0, 0, 0);
+    border-right: 4px solid rgba(0, 0, 0, 0);
+    border-top: 4px solid;  
+    right: -9px;      
 }
 
 textarea {
@@ -354,14 +390,64 @@ input[type="checkbox"] {
 }
 
 
-/* FORMAT RTL v.1.0.0 */
+@media only screen and (max-width: 1500px) {
+    accordion .form-group {
+        width: 22%;    
+    }
+}
+
+@media only screen and (max-width: 1024px) {
+    accordion .form-group {
+        width: 30%;    
+    }
+    .format-item {
+        display: inline;
+    }
+    .accordion-anchor {
+        margin-left: 30px !important;
+    }
+}
+
+@media only screen and (max-width: 800px) {
+    accordion .form-group {
+        width: 45%;    
+    }
+    .format-lists {
+        max-height: 160px !important;
+    }
+}
+
+@media only screen and (max-width: 480px) {
+    .font-size {
+        max-width: 40px !important;
+    }
+    .accordion-anchor {
+        margin-left: 20px !important;
+    }
+}
+
+@media only screen and (max-width: 400px) {
+    .font-size-select {
+        max-width: 35px !important;
+    }
+    .font-size-select::after {
+        top: 45% !important;
+    }
+    .font-size {
+        padding: 0 !important;
+        max-width: 35px !important;
+    }
+    .format-item label {
+        max-width: 80px;
+        vertical-align: middle;
+    }
+}
+
+
+/* FORMAT RTL v.1.0.1 */
 
 .rtl accordion .form-group {
     margin: 0 0 10px 10px;
-}
-
-.rtl .format-item label {
-    margin: 8px 0 3px 10px;
 }
 
 .rtl .dropdown-menu .dropdown-header {
@@ -374,13 +460,17 @@ input[type="checkbox"] {
 
 .rtl .format-item button[colorpicker] {
     display: inline-block;
-    margin: 1px 0 5px 5px;
 }
 
 .rtl .btn-bold,
 .rtl .btn-italic {
     display: inline-block;
     margin: 1px 0 5px 2px;
+}
+
+.rtl .format-item label {
+    display: inline;
+    line-height: normal;
 }
 
 .rtl .format-item label.label-margin {
@@ -391,37 +481,25 @@ input[type="checkbox"] {
     margin: 2px;
 }
 
-.rtl .font-size {
-    padding: 4px 3px 4px 15px !important;
-}
-
 .rtl .font-size-select:after {
     left: 5px;
     right: auto;
-}
-
-.rtl .format-lists .input-select-wrapper select.form-control {
-    padding: 3px 5px 5px 25px !important;
-}
-
-.chrome.rtl .format-lists .input-select-wrapper select.form-control {
-    padding: 4px 5px 5px 25px !important;
-}
-
-.rtl .format-lists .input-select-wrapper .form-control,
-.rtl .format-lists .form-control {
-    padding: 3px 6px 3px 24px !important;
-}
-
-.rtl .font-size-select .form-control {
-    padding: 3px 6px 3px 15px !important;
 }
 
 .rtl .input-width .form-control {
     padding: 3px 5px !important;
 }
 
-.rtl .form-group .icheckbox_minimal-grey, 
-.rtl .form-group .iradio_minimal-grey {
-    margin: -5px 0 -5px 5px !important;
+.rtl accordion .form-group .icheckbox_minimal-grey, 
+.rtl accordion .form-group .iradio_minimal-grey {
+    margin: 4px 0 -5px 5px !important;
+    vertical-align: top;
+}
+
+.rtl .font-size {
+    font-size: 12px !important;
+}
+
+.rtl .format-lists .input-select-wrapper select.form-control {
+    padding: 0 5px 0 25px !important;
 }

@@ -1,4 +1,4 @@
-angular.module('OE_Styleguide',['bgDirectives', 'ui.bootstrap', 'ui.bootstrap-slider'])
+angular.module('OE_Core',['app.ctrl', 'bgDirectives', 'ui.bootstrap', 'ui.bootstrap-slider', 'ui.tab.scroll', 'caModule'])
 .run(function($rootScope){
 
 });
