@@ -88,7 +88,26 @@ class StaffSubjectsTable extends ControllerActionTable {
         $institutionId = $session->read('Institution.Institutions.id');
         $institutionName = TableRegistry::get('Institution.Institutions')->get($institutionId)->name;
 
+        $InstitutionStaff = TableRegistry::get('Institution.Staff');
         $academicPeriodOptions = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getYearList();
+        $selectedAcademicPeriod = '';
+        $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriod, [
+            'message' => '{{label}} - ' . $this->getMessage('StaffSubjects.notActiveTeachingStaff'),
+            'callable' => function($id) use ($InstitutionStaff, $staffId, $institutionId) {
+                $allRelevantStaffRecords = $InstitutionStaff
+                    ->find()
+                    ->find('staffRecords',
+                        [
+                            'academicPeriodId' => $id,
+                            'staffId' => $staffId,
+                            'institutionId' => $institutionId,
+                            'positionType' => 1
+                        ]
+                    );
+                return ($allRelevantStaffRecords->count() > 0);
+            },
+            'selectOption' => false
+        ]);
 
         $this->fields = [];
         $this->field('institution', ['type' => 'readonly', 'attr' => ['value' => $institutionName]]);
