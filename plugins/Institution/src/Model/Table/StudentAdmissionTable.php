@@ -28,6 +28,7 @@ class StudentAdmissionTable extends AppTable {
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('StudentTransferReasons', ['className' => 'FieldOption.StudentTransferReasons']);
+		$this->belongsTo('NewEducationGrades', ['className' => 'Education.EducationGrades']);
 
 		$this->addBehavior('User.AdvancedNameSearch');
 	}
@@ -79,6 +80,7 @@ class StudentAdmissionTable extends AppTable {
     	$this->ControllerAction->field('education_grade_id');
     	$this->ControllerAction->field('comment');
     	$this->ControllerAction->field('created', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
+    	$this->ControllerAction->field('new_education_grade_id', ['visible' => false]);
     }
 
     public function editAfterAction($event, Entity $entity) {
