@@ -1265,6 +1265,50 @@ class StaffTable extends AppTable {
 			->contain(['Users', 'Institutions', 'Positions', 'StaffTypes', 'StaffStatuses']);
 	}
 
+    public function findStaffRecords(Query $query, array $options) 
+    {
+        $academicPeriodId = (array_key_exists('academicPeriodId', $options))? $options['academicPeriodId']: null;
+        $positionType = (array_key_exists('positionType', $options))? $options['positionType']: null;
+        $staffId = (array_key_exists('staffId', $options))? $options['staffId']: null;
+        $institutionId = (array_key_exists('institutionId', $options))? $options['institutionId']: null;
+        $isHomeroom = (array_key_exists('isHomeroom', $options))? $options['isHomeroom']: null;
+
+        if (!is_null($academicPeriodId)) {
+            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $academicPeriodData = $AcademicPeriods->find()
+                ->select([
+                    $AcademicPeriods->aliasField('start_date'), $AcademicPeriods->aliasField('end_date')
+                ])
+                ->where([$AcademicPeriods->aliasField($AcademicPeriods->primaryKey()) => $academicPeriodId])
+                ->first();
+            if (!empty($academicPeriodData)) {
+                $start_date = $academicPeriodData->start_date;
+                $end_date = $academicPeriodData->end_date;
+                $query->find('inDateRange', ['start_date' => $start_date, 'end_date' => $end_date]);
+            }
+        }
+        if (!is_null($positionType)) {
+            $query->matching('Positions.StaffPositionTitles', function($q) use ($positionType) {
+                // teaching staff only
+                return $q->where(['StaffPositionTitles.type' => $positionType]);
+            });
+        }
+        if (!is_null($isHomeroom)) {
+            $query->matching('Positions', function($q) use ($isHomeroom) {
+                // homeroom teachers only
+                return $q->where(['Positions.is_homeroom' => $isHomeroom]);
+            });
+        }
+        if (!is_null($staffId)) {
+            $query->where([$this->aliasField('staff_id') => $staffId]);
+        }
+        if (!is_null($institutionId)) {
+            $query->where([$this->aliasField('institution_id') => $institutionId]);
+        }
+
+        return $query;
+    }
+
 	public function removeInactiveStaffSecurityRole() {
 		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 
