@@ -18,10 +18,9 @@ class StaffController extends AppController {
 			'Accounts'			=> ['className' => 'Staff.Accounts', 'actions' => ['view', 'edit']],
 			'Contacts'			=> ['className' => 'User.Contacts'],
 			'Identities'		=> ['className' => 'User.Identities'],
-			'Nationalities' 	=> ['className' => 'User.Nationalities'],
 			'Languages'			=> ['className' => 'User.UserLanguages'],
+			'Nationalities' 	=> ['className' => 'User.Nationalities'],
 			'Comments'			=> ['className' => 'User.Comments'],
-			'SpecialNeeds'		=> ['className' => 'User.SpecialNeeds'],
 			'Awards'			=> ['className' => 'User.Awards'],
 			'Attachments'		=> ['className' => 'User.Attachments'],
 			'Positions'			=> ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
@@ -65,6 +64,9 @@ class StaffController extends AppController {
 	public function Positions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Positions']); }
 	public function Classes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffClasses']); }
 	public function Subjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSubjects']); }
+    public function Nationalities() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
+    public function Languages() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
+    public function SpecialNeeds() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
 	public function Memberships() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Memberships']); }
 	public function Licenses() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Licenses']); }
 	// End
