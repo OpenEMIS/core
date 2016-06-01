@@ -6,7 +6,7 @@ DELETE FROM field_options WHERE code = 'Nationalities';
 -- Fix: re-create the user_nationalities table with the correct columns instead of altering table as it might take a long time 
 -- ALTER TABLE `user_nationalities` CHANGE `nationality_id` `country_id` INT(11) NOT NULL;
 DROP TABLE user_nationalities;
-RENAME TABLE z_2714_user_nationalities TO user_nationalities
+RENAME TABLE z_2714_user_nationalities TO user_nationalities;
 
 DROP TABLE `nationalities`;
 
