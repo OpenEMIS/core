@@ -1,4 +1,4 @@
-/* WIZARD v.1.0.6 */
+/* WIZARD v.1.0.8 */
 
 .fuelux .wizard {
     -webkit-box-shadow: none !important;
@@ -315,10 +315,6 @@
     height: 30px;
 }
 
-.chrome .wizard-filter .search button {
-    margin: 0;
-}
-
 .wizard-filter .input-select-wrapper {
     margin-bottom: 0;
     margin-right: 10px;
@@ -379,6 +375,23 @@
         -webkit-border-bottom-right-radius: 5px;
                 border-bottom-right-radius: 5px;    
     }
+    .wizard-filter .search {
+        position: relative; 
+        max-width: auto;
+        min-width: auto;
+        width: 100% !important;
+        margin-top: 10px !important; 
+    }
+    .wizard-filter .search input,
+    .wizard-filter .input-select-wrapper {
+        min-width: 100%;
+        max-width: 100%;
+        width: 100% !important;
+    }
+    .wizard-filter .search button {
+        right: 0;
+        top: 0;
+    }
 }
 
 @media (max-width: 480px) {
@@ -386,14 +399,14 @@
         margin-left: 0;
         margin-right: 0;
     }
-    .wizard-filter .search input,
-    .wizard-filter .input-select-wrapper select {
-        /*width: 100%;*/
-    }
 }
 
 
 /* RTL */
+
+.rtl .step-wrapper {
+    font-size: 14px;
+}
 
 .rtl .fuelux .wizard > ul.steps,
 .rtl .fuelux .wizard > .steps-container > ul.steps {
@@ -467,11 +480,6 @@
     border-left: none;
     border-right: 1px solid #d4d4d4;
     border-radius: 4px 0 0 0;
-}
-
-.rtl .fuelux .wizard .btn-prev,
-.rtl .fuelux .wizard .btn-next {
-    position: relative;
 }
 
 .rtl .fuelux .wizard .btn-prev {
@@ -555,7 +563,7 @@
     display: inline-block;
     margin-top: 0;
     margin-bottom: 10px;
-    width: 228px !important;
+    width: 228px;
 }
 
 .rtl .wizard-filter .search button {
@@ -588,6 +596,26 @@
     .rtl .wizard .btn-prev {
         right: 10px !important;
         left: auto !important;
+    }
+    .rtl .wizard .actions.top {
+        height: 60px;
+    }
+    .rtl .wizard-filter .search {
+        position: relative; 
+        max-width: auto;
+        min-width: auto;
+        width: 100% !important;
+        margin-top: 10px !important; 
+    }
+    .rtl .wizard-filter .search input,
+    .rtl .wizard-filter .input-select-wrapper {
+        min-width: 100%;
+        max-width: 100%;
+        width: 100% !important;
+    }
+    .rtl .wizard-filter .search button {
+        right: 0;
+        top: 0;
     }
 } 
 

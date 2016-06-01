@@ -1,4 +1,4 @@
-/* CHECKBOX v.1.0.3 */
+/* CHECKBOX v.1.0.4 */
 
 .selection-label {
     display: inline-block;
@@ -99,6 +99,12 @@ td.center .icheck-input input {
     margin: 0;
 }
 
+.rtl .input-selection-inline .selection-label, 
+.rtl .input-selection .selection-label {
+    font-size: 14px;
+    line-height: 14px;
+}
+
 
 /*==========  Non-Mobile First Method  ==========*/
 
@@ -114,46 +120,3 @@ td.center .icheck-input input {
         width: 100% !important;
     }
 }
-
-/*@media (min-width:320px) and (max-width:496px) {
-    .input-selection-inline .selection-label {
-        width: 75% !important;
-        clear: right !important;
-    }
-    .rtl .input-selection-inline .selection-label {
-        width: 75% !important;
-        clear: left !important;
-    }
-    .input-selection .selection-label {
-        width: 75% !important;
-    }
-    .input-selection-inline .icheckbox_minimal-grey,
-    .input-selection-inline .iradio_minimal-grey {
-        clear: left;
-    }
-    .rtl .input-selection-inline .icheckbox_minimal-grey,
-    .rtl .input-selection-inline .iradio_minimal-grey {
-        clear: right;
-    }
-}
-
-@media (max-width: 825px) {
-    .input-selection-inline,
-    .input-selection {
-        width: 100% !important;
-    }
-}
-
-@media (min-width:826px) and (max-width:1260px) {
-    .input-selection-inline,
-    .input-selection {
-        width: 60% !important;
-    }
-}
-
-@media (min-width:1261px) and (max-width:1438px) {
-    .input-selection-inline,
-    .input-selection {
-        width: 70%;
-    }
-}*/

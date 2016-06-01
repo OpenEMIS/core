@@ -23,9 +23,7 @@ class InstitutionsController extends AppController  {
 			'Attachments' 		=> ['className' => 'Institution.InstitutionAttachments'],
 			'History' 			=> ['className' => 'Institution.InstitutionActivities', 'actions' => ['search', 'index']],
 
-			'Programmes' 		=> ['className' => 'Institution.InstitutionGrades'],
-			'Sections' 			=> ['className' => 'Institution.InstitutionSections'],
-			'Classes' 			=> ['className' => 'Institution.InstitutionClasses'],
+            'Programmes'        => ['className' => 'Institution.InstitutionGrades', 'actions' => ['!search']],
 			'Infrastructures' 	=> ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'transfer']],
 
 			'Staff' 			=> ['className' => 'Institution.Staff'],
@@ -44,7 +42,6 @@ class InstitutionsController extends AppController  {
 			'StudentAttendances'=> ['className' => 'Institution.StudentAttendances', 'actions' => ['index']],
 			'AttendanceExport'	=> ['className' => 'Institution.AttendanceExport', 'actions' => ['excel']],
 			'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
-			'Assessments' 		=> ['className' => 'Institution.InstitutionAssessments', 'actions' => ['index', 'view', 'edit', 'remove']],
 			'Promotion' 		=> ['className' => 'Institution.StudentPromotion', 'actions' => ['add']],
 			'Transfer' 			=> ['className' => 'Institution.StudentTransfer', 'actions' => ['index', 'add']],
 			'TransferApprovals' => ['className' => 'Institution.TransferApprovals', 'actions' => ['edit', 'view']],
@@ -74,13 +71,58 @@ class InstitutionsController extends AppController  {
 		];
 
 		$this->loadComponent('Institution.InstitutionAccessControl');
+		$this->attachAngularModules();
 	}
 
 	// CAv4
 	public function Positions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionPositions']); }
 	public function Shifts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionShifts']); }
+	public function StaffTransferRequests() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferRequests']); }
+	public function StaffTransferApprovals() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferApprovals']); }
+	public function StaffPositionProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffPositionProfiles']); }
+	public function Classes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionClasses']); }
+	public function Subjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionSubjects']); }
+	public function Assessments() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionAssessments']); }
 	// public function StaffAbsences() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
 	// End
+
+	// AngularJS
+	public function Results() {
+		$this->set('_edit', $this->AccessControl->check(['Institutions', 'Results', 'edit']));
+		$this->set('ngController', 'InstitutionsResultsCtrl');
+	}
+	// End
+
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Controller.AccessControl.checkIgnoreActions'] = 'checkIgnoreActions';
+		return $events;
+	}
+
+	public function checkIgnoreActions(Event $event, $controller, $action) {
+		$ignore = false;
+		if ($controller == 'Institutions') {
+			$ignoredList = ['downloadFile'];
+			if (in_array($action, $ignoredList)) {
+				$ignore = true;
+			} else {
+				$ignoredList = [
+					'StudentUser' => ['downloadFile'],
+					'StaffUser' => ['downloadFile'],
+					'Infrastructures' => ['downloadFile'],
+					'Surveys' => ['downloadFile']
+				];
+				
+				if (array_key_exists($action, $ignoredList)) {
+					$pass = $this->request->params['pass'];
+					if (count($pass) > 0 && in_array($pass[0], $ignoredList[$action])) {
+						$ignore = true;
+					}
+				}
+			}
+		}
+		return $ignore;
+	}
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
@@ -138,6 +180,26 @@ class InstitutionsController extends AppController  {
 		$this->set('contentHeader', $header);
 	}
 
+	private function attachAngularModules() {
+		$action = $this->request->action;
+		
+		switch ($action) {
+			case 'Results':
+				$this->Angular->addModules([
+					'alert.svc',
+					'institutions.results.ctrl',
+					'institutions.results.svc'
+				]);
+				break;
+			case 'Surveys':
+				$this->Angular->addModules([
+					'relevancy.rules.ctrl'
+				]);
+				$this->set('ngController', 'RelevancyRulesCtrl as RelevancyRulesController');
+				break;
+		}
+	}
+
 	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		if (!is_null($this->activeObj)) {
 			$session = $this->request->session();
@@ -147,13 +209,10 @@ class InstitutionsController extends AppController  {
 			if (isset($params['pass'][0])) {
 				$action = $params['pass'][0];
 			}
+			$isDownload = $action == 'downloadFile' ? true : false;
 
 			$alias = $model->alias;
-			// temporary fix for renaming Sections and Classes
-			if ($alias == 'Sections') $alias = 'Classes';
-			else if ($alias == 'Classes') $alias = 'Subjects';
-
-			$crumbTitle = $model->getHeader($alias);
+			$crumbTitle = Inflector::humanize(Inflector::underscore($alias));
 			$crumbOptions = [];
 			if ($action) {
 				$crumbOptions = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias];
@@ -163,7 +222,7 @@ class InstitutionsController extends AppController  {
 			$persona = false;
 			$requestQuery = $this->request->query;
 			if (isset($params['pass'][1])) {
-				if ($model->table() == 'security_users') {
+				if ($model->table() == 'security_users' && !$isDownload) {
 					$persona = $model->get($params['pass'][1]);
 				}
 			} else if (isset($requestQuery['user_id'][1])) {
@@ -190,7 +249,7 @@ class InstitutionsController extends AppController  {
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
-					if (in_array($model->alias(), ['TransferRequests'])) {
+					if (in_array($model->alias(), ['TransferRequests', 'StaffTransferApprovals'])) {
 						$exists = $model->exists([
 							$model->aliasField($model->primaryKey()) => $modelId,
 							$model->aliasField('previous_institution_id') => $institutionId
@@ -207,7 +266,7 @@ class InstitutionsController extends AppController  {
 					 */
 
 					// replaced 'action' => $alias to 'action' => $model->alias, since only the name changes but not url
-					if (!$exists) {
+					if (!$exists && !$isDownload) {
 						$this->Alert->warning('general.notExists');
 						return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
 					}
@@ -330,7 +389,7 @@ class InstitutionsController extends AppController  {
 
 		$studentTabElements = [
 			'Identities' => ['text' => __('Identities')],
-			'Nationalities' => ['text' => __('Nationalities')],
+			'UserNationalities' => ['url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Nationalities', $id], 'text' => __('Nationalities'), 'urlModel' => 'Nationalities'],
 			'Contacts' => ['text' => __('Contacts')],
 			'Guardians' => ['text' => __('Guardians')],
 			'Languages' => ['text' => __('Languages')],
@@ -366,7 +425,8 @@ class InstitutionsController extends AppController  {
 			}
 
 			foreach ($studentTabElements as $key => $value) {
-				$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
+                $urlModel = (array_key_exists('urlModel', $value))? $value['urlModel'] : $key;
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$urlModel, 'index']);
 			}
 		}
 

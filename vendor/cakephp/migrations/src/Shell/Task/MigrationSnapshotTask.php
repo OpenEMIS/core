@@ -19,14 +19,7 @@ use Cake\Datasource\ConnectionManager;
 use Cake\Event\Event;
 use Cake\Event\EventManager;
 use Cake\Filesystem\Folder;
-use Cake\ORM\AssociationCollection;
-use Cake\ORM\Association\BelongsTo;
-use Cake\ORM\Association\BelongsToMany;
-use Cake\ORM\Association\HasMany;
-use Cake\ORM\Association\HasOne;
 use Cake\ORM\TableRegistry;
-use Cake\Utility\Inflector;
-use Migrations\Shell\Task\SimpleMigrationTask;
 
 /**
  * Task class for generating migration snapshot files.
@@ -38,7 +31,7 @@ class MigrationSnapshotTask extends SimpleMigrationTask
      *
      * @var array
      */
-    public $skipTables = ['i18n', 'phinxlog'];
+    public $skipTables = ['phinxlog'];
 
     /**
      * Regex of Table name to skip
@@ -92,7 +85,7 @@ class MigrationSnapshotTask extends SimpleMigrationTask
         list($version, ) = explode('_', $fileName, 2);
 
 
-        $dispatchCommand = 'migrations mark_migrated ' . $version;
+        $dispatchCommand = 'migrations mark_migrated -t ' . $version . ' -o';
         if (!empty($this->params['connection'])) {
             $dispatchCommand .= ' -c ' . $this->params['connection'];
         }
@@ -126,13 +119,13 @@ class MigrationSnapshotTask extends SimpleMigrationTask
         }
 
         $collection = $this->getCollection($this->connection);
-        $tables = $this->orderTables($collection->listTables());
+        $tables = $collection->listTables();
 
-        if ($this->params['require-table'] === true) {
+        if ($this->params['require-table'] === true || $this->plugin) {
             $tableNamesInModel = $this->getTableNames($this->plugin);
 
             foreach ($tableNamesInModel as $num => $table) {
-                if (!in_array($tables[$num], $tables)) {
+                if (!in_array($table, $tables)) {
                     unset($tableNamesInModel[$num]);
                 }
             }
@@ -143,12 +136,14 @@ class MigrationSnapshotTask extends SimpleMigrationTask
                     unset($tables[$num]);
                     continue;
                 }
-                if (!$this->tableToAdd($table, $this->plugin)) {
-                    unset($tables[$num]);
-                    continue;
-                }
             }
         }
+
+        $autoId = true;
+        if (isset($this->params['disable-autoid'])) {
+            $autoId = !$this->params['disable-autoid'];
+        }
+
         return [
             'plugin' => $this->plugin,
             'pluginPath' => $pluginPath,
@@ -157,72 +152,8 @@ class MigrationSnapshotTask extends SimpleMigrationTask
             'tables' => $tables,
             'action' => 'create_table',
             'name' => $this->BakeTemplate->viewVars['name'],
+            'autoId' => $autoId
         ];
-    }
-
-    /**
-     * Order tables based on foreign key dependencies so tables that are foreign keys
-     * to other are created first
-     *
-     * @param array $tables Tables to order.
-     * @return array Tables ordered.
-     */
-    public function orderTables($tables)
-    {
-        if (empty($tables)) {
-            return $tables;
-        }
-
-        $orderedTables = [];
-        foreach ($tables as $table) {
-            $tableSchema = $this->getCollection($this->connection)->describe($table);
-            $tableConstraints = $tableSchema->constraints();
-            if (isset($tableConstraints[0]) && $tableConstraints[0] === 'primary') {
-                unset($tableConstraints[0]);
-            }
-
-            if (!empty($tableConstraints)) {
-                foreach ($tableConstraints as $tableConstraint) {
-                    $constraint = $tableSchema->constraint($tableConstraint);
-
-                    if ($constraint['type'] !== 'foreign') {
-                        continue;
-                    }
-
-                    $refTable = $constraint['references'][0];
-
-                    $refIndex = array_search($refTable, $orderedTables);
-                    $tableIndex = array_search($table, $orderedTables);
-
-                    if ($refIndex === false && $tableIndex === false) {
-                        array_unshift($orderedTables, $refTable, $table);
-                        continue;
-                    }
-
-                    if ($refIndex === false) {
-                        array_splice($orderedTables, $tableIndex, 0, $refTable);
-                        continue;
-                    }
-
-                    if ($tableIndex === false) {
-                        array_splice($orderedTables, $refIndex + 1, 0, $table);
-                        continue;
-                    }
-
-                    if ($refIndex > $tableIndex) {
-                        unset($orderedTables[$refIndex]);
-                        array_splice($orderedTables, $tableIndex, 0, $refTable);
-                        continue;
-                    }
-                }
-            }
-
-            if (!in_array($table, $orderedTables)) {
-                $orderedTables[] = $table;
-            }
-        }
-
-        return $orderedTables;
     }
 
     /**
@@ -241,41 +172,33 @@ class MigrationSnapshotTask extends SimpleMigrationTask
      * To check if a Table Model is to be added in the migration file
      *
      * @param string $tableName Table name in underscore case.
-     * @param string $pluginName Plugin name if exists.
-     * @return bool true if the model is to be added.
+     * @param string|null $pluginName Plugin name if exists.
+     * @deprecated Will be removed in the next version
+     * @return bool True if the model is to be added.
      */
     public function tableToAdd($tableName, $pluginName = null)
     {
-        if (is_null($pluginName)) {
-            return true;
-        }
-
-        $pluginName = strtolower(str_replace('/', '_', $pluginName)) . '_';
-        if (strpos($tableName, $pluginName) !== false) {
-            return true;
-        }
-
-        return false;
+        return true;
     }
 
     /**
      * Gets list Tables Names
      *
-     * @param string $pluginName Plugin name if exists.
+     * @param string|null $pluginName Plugin name if exists.
      * @return array
      */
     public function getTableNames($pluginName = null)
     {
-        if (!is_null($pluginName) && !Plugin::loaded($pluginName)) {
-            return false;
+        if ($pluginName !== null && !Plugin::loaded($pluginName)) {
+            return [];
         }
         $list = [];
         $tables = $this->findTables($pluginName);
         foreach ($tables as $num => $table) {
-            $list = $list + $this->fetchTableName($table, $pluginName);
+            $list = array_merge($list, $this->fetchTableName($table, $pluginName));
         }
 
-        return $list;
+        return array_unique($list);
     }
 
     /**
@@ -306,14 +229,14 @@ class MigrationSnapshotTask extends SimpleMigrationTask
      * fetch TableName From Table Object
      *
      * @param string $className Name of Table Class.
-     * @param string $pluginName Plugin name if exists.
-     * @return string
+     * @param string|null $pluginName Plugin name if exists.
+     * @return array
      */
     public function fetchTableName($className, $pluginName = null)
     {
         $tables = [];
         $className = str_replace('Table.php', '', $className);
-        if (!is_null($pluginName)) {
+        if ($pluginName !== null) {
             $className = $pluginName . '.' . $className;
         }
 
@@ -323,7 +246,16 @@ class MigrationSnapshotTask extends SimpleMigrationTask
                 $tables[] = $table->associations()->get($key)->_junctionTableName();
             }
         }
-        $tables[] = $table->table();
+        $tableName = $table->table();
+        $splitted = array_reverse(explode('.', $tableName, 2));
+        if (isset($splitted[1])) {
+            $config = ConnectionManager::config($this->connection);
+            $key = isset($config['schema']) ? 'schema' : 'database';
+            if ($config[$key] === $splitted[1]) {
+                $tableName = $splitted[0];
+            }
+        }
+        $tables[] = $tableName;
 
         return $tables;
     }
@@ -343,6 +275,10 @@ class MigrationSnapshotTask extends SimpleMigrationTask
             'boolean' => true,
             'default' => false,
             'help' => 'If require-table is set to true, check also that the table class exists.'
+        ])->addOption('disable-autoid', [
+            'boolean' => true,
+            'default' => false,
+            'help' => 'Disable phinx behavior of automatically adding an id field.'
         ]);
 
         return $parser;

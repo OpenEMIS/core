@@ -84,20 +84,22 @@ class WorkflowStatusesTable extends AppTable {
 				$tableCells = [];
 				$workflowStatusId = $this->request->pass[1];
 				$workflowSteps = $this->getWorkflowSteps($workflowStatusId);
-				$workflowStepOptions = $this->WorkflowSteps
-					->find()
-					->matching('Workflows')
-					->select([
-						'name' => $this->WorkflowSteps->aliasField('name'),
-						'group' => 'Workflows.name'
-					])
-					->where([$this->WorkflowSteps->aliasField('id').' IN ' => array_keys($workflowSteps)])
-					->toArray();
-				foreach ($workflowStepOptions as $step) {
-					$rowData = [];
-					$rowData[] = $step['name'];
-					$rowData[] = $step['group'];
-					$tableCells[] = $rowData;
+				if (!empty($workflowSteps)) {
+					$workflowStepOptions = $this->WorkflowSteps
+						->find()
+						->matching('Workflows')
+						->select([
+							'name' => $this->WorkflowSteps->aliasField('name'),
+							'group' => 'Workflows.name'
+						])
+						->where([$this->WorkflowSteps->aliasField('id').' IN ' => array_keys($workflowSteps)])
+						->toArray();
+					foreach ($workflowStepOptions as $step) {
+						$rowData = [];
+						$rowData[] = $step['name'];
+						$rowData[] = $step['group'];
+						$tableCells[] = $rowData;
+					}
 				}
 				$attr['tableHeaders'] = $tableHeaders;
 				$attr['tableCells'] = $tableCells;

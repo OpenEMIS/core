@@ -27,8 +27,12 @@ class AbsenceTypesTable extends ControllerActionTable {
 	}
 
 	public function getAbsenceTypeList() {
-		return $this
+		$result = $this
 			->find('list')
 			->toArray();
+		foreach ($result as $key => $value) {
+			$result[$key] = __($value);
+		}
+		return $result;
 	}
 }

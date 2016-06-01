@@ -1,5 +1,7 @@
 <?php
 namespace App\Controller;
+
+use Cake\Event\Event;
 use Cake\Datasource\ConnectionManager;
 use Cake\ORM\TableRegistry;
 
@@ -35,7 +37,11 @@ class AboutController extends AppController {
 
 		$this->set('tabElements', $tabElements);
 		$this->set('selectedAction', $this->request->action);
-		$this->set('contentHeader', $this->name);
+	}
+
+	public function beforeFilter(Event $event) {
+		parent::beforeFilter($event);
+		$this->set('contentHeader', __($this->name));
 	}
 
 	public function index() {

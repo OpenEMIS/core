@@ -146,11 +146,15 @@ class UsersTable extends AppTable {
 	public function validationPassword(Validator $validator) {
 		$retypeCompareField = 'new_password';
 
-		$this->setValidationCode('username.ruleUnique', 'User.Accounts');
+		$this->setValidationCode('username.ruleMinLength', 'User.Accounts');
+        $this->setValidationCode('username.ruleUnique', 'User.Accounts');
 		$this->setValidationCode('username.ruleAlphanumeric', 'User.Accounts');
 		$this->setValidationCode('retype_password.ruleCompare', 'User.Accounts');
 		return $validator
 			->add('username', [
+                'ruleMinLength' => [
+                    'rule' => ['minLength', 6]
+                ],
 				'ruleUnique' => [
 					'rule' => 'validateUnique',
 					'provider' => 'table',

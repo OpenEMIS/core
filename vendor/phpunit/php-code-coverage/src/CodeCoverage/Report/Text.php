@@ -13,13 +13,7 @@
  *
  * The output gets put into a text file our written to the CLI.
  *
- * @category   PHP
- * @package    CodeCoverage
- * @author     Sebastian Bergmann <sebastian@phpunit.de>
- * @copyright  Sebastian Bergmann <sebastian@phpunit.de>
- * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
- * @link       http://github.com/sebastianbergmann/php-code-coverage
- * @since      Class available since Release 1.1.0
+ * @since Class available since Release 1.1.0
  */
 class PHP_CodeCoverage_Report_Text
 {
@@ -28,14 +22,14 @@ class PHP_CodeCoverage_Report_Text
     protected $showUncoveredFiles;
     protected $showOnlySummary;
 
-    protected $colors = array(
+    protected $colors = [
         'green'  => "\x1b[30;42m",
         'yellow' => "\x1b[30;43m",
         'red'    => "\x1b[37;41m",
         'header' => "\x1b[1;37;40m",
         'reset'  => "\x1b[0m",
         'eol'    => "\x1b[2K",
-    );
+    ];
 
     public function __construct($lowUpperBound, $highLowerBound, $showUncoveredFiles, $showOnlySummary)
     {
@@ -56,14 +50,14 @@ class PHP_CodeCoverage_Report_Text
         $report = $coverage->getReport();
         unset($coverage);
 
-        $colors = array(
+        $colors = [
             'header'  => '',
             'classes' => '',
             'methods' => '',
             'lines'   => '',
             'reset'   => '',
             'eol'     => ''
-        );
+        ];
 
         if ($showColors) {
             $colors['classes'] = $this->getCoverageColor(
@@ -116,15 +110,15 @@ class PHP_CodeCoverage_Report_Text
             $report->getNumExecutableLines()
         );
 
-        $padding = max(array_map('strlen', array($classes, $methods, $lines)));
+        $padding = max(array_map('strlen', [$classes, $methods, $lines]));
 
         if ($this->showOnlySummary) {
-            $title = 'Code Coverage Report Summary:';
+            $title   = 'Code Coverage Report Summary:';
             $padding = max($padding, strlen($title));
 
             $output .= $this->format($colors['header'], $padding, $title);
         } else {
-            $date = date('  Y-m-d H:i:s', $_SERVER['REQUEST_TIME']);
+            $date  = date('  Y-m-d H:i:s', $_SERVER['REQUEST_TIME']);
             $title = 'Code Coverage Report:';
 
             $output .= $this->format($colors['header'], $padding, $title);
@@ -141,7 +135,7 @@ class PHP_CodeCoverage_Report_Text
             return $output . PHP_EOL;
         }
 
-        $classCoverage = array();
+        $classCoverage = [];
 
         foreach ($report as $item) {
             if (!$item instanceof PHP_CodeCoverage_Report_Node_File) {
@@ -177,14 +171,14 @@ class PHP_CodeCoverage_Report_Text
                     $namespace = '';
                 }
 
-                $classCoverage[$namespace . $className] = array(
+                $classCoverage[$namespace . $className] = [
                     'namespace'         => $namespace,
                     'className '        => $className,
                     'methodsCovered'    => $coveredMethods,
                     'methodCount'       => $classMethods,
                     'statementsCovered' => $coveredClassStatements,
                     'statementCount'    => $classStatements,
-                );
+                ];
             }
         }
 
@@ -229,9 +223,9 @@ class PHP_CodeCoverage_Report_Text
         return $this->colors['red'];
     }
 
-    protected function printCoverageCounts($numberOfCoveredElements, $totalNumberOfElements, $presicion)
+    protected function printCoverageCounts($numberOfCoveredElements, $totalNumberOfElements, $precision)
     {
-        $format = '%' . $presicion . 's';
+        $format = '%' . $precision . 's';
 
         return PHP_CodeCoverage_Util::percent(
             $numberOfCoveredElements,

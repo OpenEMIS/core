@@ -1,7 +1,7 @@
 <?php
 	$alias = isset($attr['alias']) ? $attr['alias'] : [];
 	$fieldKey = isset($attr['fieldKey']) ? $attr['fieldKey'] : 0;
-	$sectionOptions = isset($attr['sectionOptions']) ? $attr['sectionOptions'] : [];
+	$classOptions = isset($attr['classOptions']) ? $attr['classOptions'] : [];
 	$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
 	$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
 ?>
@@ -20,7 +20,7 @@
 		$dataNamedGroup = [];
 		if (!empty($this->request->query)) {
 			foreach ($this->request->query as $key => $value) {
-				if (in_array($key, ['field_id', 'section_id'])) continue;
+				if (in_array($key, ['field_id', 'class_id'])) continue;
 				echo $this->Form->hidden($key, [
 					'value' => $value,
 					'data-named-key' => $key
@@ -40,16 +40,16 @@
 		$inputOptions = [
 			'class' => 'form-control',
 			'label' => false,
-			'options' => $sectionOptions,
+			'options' => $classOptions,
 			'url' => $baseUrl,
-			'data-named-key' => 'section_id',
+			'data-named-key' => 'class_id',
 			'escape' => false
 		];
 		if (!empty($dataNamedGroup)) {
 			$inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
-			$dataNamedGroup[] = 'section_id';
+			$dataNamedGroup[] = 'class_id';
 		}
-		echo $this->Form->input('institution_section', $inputOptions);
+		echo $this->Form->input('institution_class', $inputOptions);
 	?>
 	<div class="clearfix"></div>
 	<div class="table-wrapper">
@@ -66,10 +66,10 @@
 	<h3><?= $attr['attr']['label']; ?></h3>
 	<div class="clearfix">
 		<?php
-			echo $this->Form->input($alias.".institution_section", [
-				'label' => $this->Label->get('InstitutionSurveys.section'),
+			echo $this->Form->input($alias.".institution_class", [
+				'label' => $this->Label->get('InstitutionSurveys.class'),
 				'type' => 'select',
-				'options' => $sectionOptions,
+				'options' => $classOptions,
 				'onchange' => "$('#reload').val('changeSection').click();"
 			]);
 		?>

@@ -216,7 +216,7 @@ class InstitutionsTable extends AppTable  {
 						break;
 					
 					case 'Report.InstitutionStaff':
-						$Statuses = TableRegistry::get('FieldOption.StaffStatuses');
+						$Statuses = TableRegistry::get('Staff.StaffStatuses');
 						$statusData = $Statuses->getList();
 						foreach ($statusData as $key => $value) {
 							$statusOptions[$key] = $value;

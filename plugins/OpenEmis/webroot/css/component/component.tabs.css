@@ -1,4 +1,4 @@
-/* TABS v.1.0.6 */
+/* TABS v.1.0.8 */
 
 .tab-content {
     margin-top: -1px;
@@ -36,7 +36,7 @@
 }
 
 .ng-tabs ul li a {
-    margin: 0 2px 0 0 !important;    
+    margin: 0 2px 0 0 !important;
     padding: 4px !important;
 }
 
@@ -178,31 +178,38 @@
     text-decoration: none !important;
 }
 
-.nav-tabs {
+.horizontal-tabs .nav-tabs,
+.scrolltabs .nav-tabs {
     clear: both;
     float: none;
     margin: 0 !important;
     z-index: 1;
 }
 
-.nav-tabs > li > a {
+.horizontal-tabs .nav-tabs > li > a,
+.scrolltabs .nav-tabs > li > a {
     border: 1px solid #DDD;
     padding: 5px 10px;
     cursor: pointer;
 }
 
-.chrome .nav-tabs > li > a {
+.chrome .horizontal-tabs .nav-tabs > li > a,
+.chrome .scrolltabs .nav-tabs > li > a {
     padding: 6px 10px;
 }
 
-.nav-tabs .active {
+.horizontal-tabs .nav-tabs .active,
+.scrolltabs .nav-tabs .active {
     padding: 1px 0 0;
     margin-bottom: -6px;
 }
 
-.nav-tabs > li.active > a,
-.nav-tabs > li.active > a:focus,
-.nav-tabs > li.active > a:hover {
+.horizontal-tabs .nav-tabs > li.active > a,
+.scrolltabs .nav-tabs > li.active > a,
+.horizontal-tabs .nav-tabs > li.active > a:focus,
+.scrolltabs .nav-tabs > li.active > a:focus,
+.horizontal-tabs .nav-tabs > li.active > a:hover,
+.scrolltabs .nav-tabs > li.active > a:hover {
     border-bottom: 1px solid #F2F2F2;
     background-color: #F2F2F2 !important;
     margin-top: -1px;
@@ -211,13 +218,17 @@
     text-decoration: none;
 }
 
-.chrome .nav-tabs > li.active > a,
-.chrome .nav-tabs > li.active > a:focus,
-.chrome .nav-tabs > li.active > a:hover {
+.chrome .horizontal-tabs .nav-tabs > li.active > a,
+.chrome .scrolltabs .nav-tabs > li.active > a,
+.chrome .horizontal-tabs .nav-tabs > li.active > a:focus,
+.chrome .scrolltabs .nav-tabs > li.active > a:focus,
+.chrome .horizontal-tabs .nav-tabs > li.active > a:hover,
+.chrome .scrolltabs .nav-tabs > li.active > a:hover {
     padding: 6px 10px 6px !important;
 }
 
-.nav-tabs > li.active > a:focus {
+.horizontal-tabs .nav-tabs > li.active > a:focus,
+.scrolltabs .nav-tabs > li.active > a:focus {
     border-left: 1px solid #DDD !important;
 }
 
@@ -249,13 +260,20 @@
     .ng-tabs a:hover {
         height: 38px;
     }
-    .nav-tabs > li.active > a,
-    .nav-tabs > li.active > a:focus,
-    .nav-tabs > li.active > a:hover,
-    .nav-tabs > li > a,
-    .chrome .nav-tabs > li.active > a,
-    .chrome .nav-tabs > li.active > a:focus,
-    .chrome .nav-tabs > li.active > a:hover {
+    .horizontal-tabs .nav-tabs > li.active > a,
+    .scrolltabs .nav-tabs > li.active > a,
+    .horizontal-tabs .nav-tabs > li.active > a:focus,
+    .scrolltabs .nav-tabs > li.active > a:focus,
+    .horizontal-tabs .nav-tabs > li.active > a:hover,
+    .scrolltabs .nav-tabs > li.active > a:hover,
+    .horizontal-tabs .nav-tabs > li > a,
+    .scrolltabs .nav-tabs > li > a,
+    .chrome .horizontal-tabs .nav-tabs > li.active > a,
+    .chrome .scrolltabs .nav-tabs > li.active > a,
+    .chrome .horizontal-tabs .nav-tabs > li.active > a:focus,
+    .chrome .scrolltabs .nav-tabs > li.active > a:focus,
+    .chrome .horizontal-tabs .nav-tabs > li.active > a:hover,
+    .chrome .scrolltabs .nav-tabs > li.active > a:hover {
         padding: 8px 10px !important;
     }
     .scroll_tabs_container div.scroll_tab_inner span,
@@ -326,10 +344,53 @@
     }
 }
 
+
 /* For IE */
 
-@media all and (-ms-high-contrast: none),(-ms-high-contrast: active) {
+@media all and (-ms-high-contrast: none),
+(-ms-high-contrast: active) {
     .scroll_tabs_container div.scroll_tab_inner span {
         line-height: 30px;
+    }
+}
+
+
+/* RTL */
+
+.rtl .horizontal-tabs span a,
+.rtl .horizontal-tabs span a:focus,
+.rtl .horizontal-tabs span a:visited,
+.rtl .horizontal-tabs span.tab-active a,
+.rtl .horizontal-tabs span.tab-active a:hover,
+.rtl .horizontal-tabs span.tab-active a:focus {
+    height: 28px;
+    line-height: 30px;
+    font-size: 14px;
+}
+
+.rtl .ng-tabs .nav-tabs,
+.rtl .scroll_tabs_container {
+    height: 30px;
+}
+
+@media only screen and (max-width: 1024px) {
+    .rtl .ng-tabs .nav-tabs,
+    .rtl .scroll_tabs_container,
+    .rtl .horizontal-tabs span a,
+    .rtl .horizontal-tabs span a:focus,
+    .rtl .horizontal-tabs span a:visited,
+    .rtl .horizontal-tabs span.tab-active a,
+    .rtl .horizontal-tabs span.tab-active a:hover,
+    .rtl .horizontal-tabs span.tab-active a:focus {
+        height: 32px;
+    }
+    .rtl .horizontal-tabs span a,
+    .rtl .horizontal-tabs span a:focus,
+    .rtl .horizontal-tabs span a:visited,
+    .rtl .horizontal-tabs span.tab-active a,
+    .rtl .horizontal-tabs span.tab-active a:hover,
+    .rtl .horizontal-tabs span.tab-active a:focus,
+    .rtl .horizontal-tabs, .scroll_tabs_container div.scroll_tab_inner span {
+        line-height: 20px;
     }
 }
