@@ -1261,9 +1261,10 @@ class StaffTable extends AppTable {
     public function findStaffRecords(Query $query, array $options) 
     {
         $academicPeriodId = (array_key_exists('academicPeriodId', $options))? $options['academicPeriodId']: null;
-        $positionTitleId = (array_key_exists('positionTitleId', $options))? $options['positionTitleId']: null;
+        $positionType = (array_key_exists('positionType', $options))? $options['positionType']: null;
         $staffId = (array_key_exists('staffId', $options))? $options['staffId']: null;
         $institutionId = (array_key_exists('institutionId', $options))? $options['institutionId']: null;
+        $isHomeroom = (array_key_exists('isHomeroom', $options))? $options['isHomeroom']: null;
 
         if (!is_null($academicPeriodId)) {
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -1279,10 +1280,16 @@ class StaffTable extends AppTable {
                 $query->find('inDateRange', ['start_date' => $start_date, 'end_date' => $end_date]);
             }
         }
-        if (!is_null($positionTitleId)) {
-            $query->matching('Positions.StaffPositionTitles', function($q) use ($positionTitleId) {
+        if (!is_null($positionType)) {
+            $query->matching('Positions.StaffPositionTitles', function($q) use ($positionType) {
                 // teaching staff only
-                return $q->where(['StaffPositionTitles.type' => $positionTitleId]);
+                return $q->where(['StaffPositionTitles.type' => $positionType]);
+            });
+        }
+        if (!is_null($isHomeroom)) {
+            $query->matching('Positions', function($q) use ($isHomeroom) {
+                // homeroom teachers only
+                return $q->where(['Positions.is_homeroom' => $isHomeroom]);
             });
         }
         if (!is_null($staffId)) {
