@@ -74,7 +74,7 @@
 						}
 						?>
 
-						<td class="checkbox-column">
+						<td <?php if(!$disabled){ ?> class="checkbox-column" <?php } ?>>
 							<input type="checkbox" class="icheck-input" name="<?php echo sprintf('MultiSubjects[%d][education_subject_id]', $i) ?>" value="<?php echo $n?>" <?php echo $selectedInForm;?> <?php echo $selected;?> <?php echo $disabled;?> />
 						</td>
 						<td><?= $obj->education_subject->name ?></td>
@@ -136,7 +136,7 @@
 				    				],
 				    			];
 							?>
-							<td class="checkbox-column">
+							<td>
 								<input type="checkbox" class="icheck-input" name="<?php echo sprintf('MultiSubjects[%d][education_subject_id]', $i) ?>" value="<?php echo $n?>" checked disabled="disabled" />
 							</td>
 							<td><?= $obj['subject_name'] ?></td>
