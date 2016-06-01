@@ -30,6 +30,8 @@ class SurveysTable extends AppTable  {
 			'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
 			'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
+
+		$this->addBehavior('Report.InstitutionSecurity');
 	}
 
 	public function beforeAction(Event $event) {
@@ -63,6 +65,8 @@ class SurveysTable extends AppTable  {
 			$academicPeriodId = $requestData->academic_period_id;
 			$surveyFormName = $this->SurveyForms->get($surveyFormId)->name;
 			$academicPeriodName = $this->AcademicPeriods->get($academicPeriodId)->name;
+			$userId = $requestData->user_id;
+			$superAdmin = $requestData->super_admin;
 			$InstitutionsTable = $this->Institutions;
 			
 			$missingRecords = $InstitutionsTable->find()
@@ -82,6 +86,10 @@ class SurveysTable extends AppTable  {
 					'area_administrative' => 'AreaAdministratives.name'
 				]);
 
+			if (!$superAdmin) {
+				$missingRecords->find('ByAccess', ['userId' => $userId]);
+			}
+
 			$writer = $settings['writer'];
 			$sheetName = $settings['sheet']['name'];
 			$mappingArray = ['status_id', 'academic_period_id', 'survey_form_id', 'institution_id', 'code'];
@@ -94,11 +102,11 @@ class SurveysTable extends AppTable  {
 				$row = [];
 				foreach ($fields as $field) {
 					if (in_array($field['field'], $mappingArray)) {
-						$row[] = $record->$field['field'];
-					} else if ($field['field'] == 'area_id') {
-						$row[] = $record->area;
-					} else if ($field['field'] == 'area_administrative_id') {
-						$row[] = $record->area_administrative;
+						$row[] = __($record->$field['field']);
+					} else if ($field['field'] == 'area') {
+						$row[] = __($record->area);
+					} else if ($field['field'] == 'area_administrative') {
+						$row[] = __($record->area_administrative);
 					} else {
 						$row[] = '';
 					}
@@ -122,6 +130,8 @@ class SurveysTable extends AppTable  {
 			$surveyStatuses = $WorkflowStatusesTable->WorkflowModels->getWorkflowStatusesCode('Institution.InstitutionSurveys');
 			if ($surveyStatuses[$status] == 'NOT_COMPLETED') {
 				$settings['renderNotComplete'] = true;
+			} else {
+				$settings['renderNotComplete'] = false;
 			}
 		} else {
 			$academicPeriodId = 0;
@@ -135,12 +145,12 @@ class SurveysTable extends AppTable  {
 		$surveyStatuses = $WorkflowStatusesTable->getWorkflowSteps($status);
 		
 		$this->surveyStatuses = $WorkflowStatusesTable->getWorkflowStepStatusNameMappings('Institution.InstitutionSurveys');
-		
-		$statusCondition = [
-			$this->aliasField('status_id').' IN ' => array_keys($surveyStatuses)
-		];
-
-		$condition = array_merge($condition, $statusCondition);
+		if (!empty($surveyStatuses)) {
+			$statusCondition = [
+				$this->aliasField('status_id').' IN ' => array_keys($surveyStatuses)
+			];
+			$condition = array_merge($condition, $statusCondition);
+		}
 		$condition = array_merge($condition, $configCondition);
 
 		$this->setCondition($condition);
@@ -156,7 +166,22 @@ class SurveysTable extends AppTable  {
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
-		$query->select(['code' => 'Institutions.code', 'area_id' => 'Areas.name', 'area_administrative_id' => 'AreaAdministratives.name'])->contain(['Institutions.Areas', 'Institutions.AreaAdministratives']);
+		$requestData = json_decode($settings['process']['params']);
+		$userId = $requestData->user_id;
+		$superAdmin = $requestData->super_admin;
+		$query
+			->select([
+				'code' => 'Institutions.code', 
+				'area' => 'Areas.name', 
+				'area_administrative' => 'AreaAdministratives.name'
+			])
+			->contain([
+				'Institutions.Areas', 
+				'Institutions.AreaAdministratives'
+			]);
+		if (!$superAdmin) {
+			$query->find('ByAccess', ['user_id' => $userId, 'institution_field_alias' => $this->aliasField('institution_id')]);
+		}
 	}
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
@@ -187,14 +212,14 @@ class SurveysTable extends AppTable  {
 
 		$fields[] = [
 			'key' => 'Institutions.area_id',
-			'field' => 'area_id',
+			'field' => 'area',
 			'type' => 'string',
 			'label' => '',
 		];
 
 		$fields[] = [
 			'key' => 'Institutions.area_administrative_id',
-			'field' => 'area_administrative_id',
+			'field' => 'area_administrative',
 			'type' => 'string',
 			'label' => '',
 		];

@@ -37,12 +37,20 @@ class EducationProgrammesNextProgrammesTable extends AppTable {
      */
 	public function getNextGradeList($id) {
 		$EducationGrades = TableRegistry::get('Education.EducationGrades');
-		return $EducationGrades
-			->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
-			->find('visible')
-			->where([
-				$EducationGrades->aliasField('education_programme_id IN') => $this->getNextProgrammeList($id)
-			])
-			->toArray();
+
+		$nextProgrammeList = $this->getNextProgrammeList($id);
+		if (!empty($nextProgrammeList)) {
+			$results = $EducationGrades
+				->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
+				->find('visible')
+				->where([
+					$EducationGrades->aliasField('education_programme_id IN') => $nextProgrammeList
+				])
+				->toArray();
+		} else {
+			$results = [];
+		}
+
+		return $results;
 	}
 }

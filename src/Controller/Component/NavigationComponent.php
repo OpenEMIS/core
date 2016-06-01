@@ -321,28 +321,28 @@ class NavigationComponent extends Component {
 				'Institutions.Shifts' => [
 					'title' => 'Shifts',
 					'parent' => 'Institution.Academic',
-					'selected' => ['Institution.Shifts'],
+					'selected' => ['Institutions.Shifts'],
 					'params' => ['plugin' => 'Institution']
 				],
 
 				'Institutions.Programmes' => [
 					'title' => 'Programmes',
 					'parent' => 'Institution.Academic',
-					'selected' => ['Institution.Programmes'],
-					'params' => ['plugin' => 'Institution']
-				],
-
-				'Institutions.Sections' => [
-					'title' => 'Classes',
-					'parent' => 'Institution.Academic',
-					'selected' => ['Institution.Sections'],
+					'selected' => ['Institutions.Programmes'],
 					'params' => ['plugin' => 'Institution']
 				],
 
 				'Institutions.Classes' => [
+					'title' => 'Classes',
+					'parent' => 'Institution.Academic',
+					'selected' => ['Institutions.Classes'],
+					'params' => ['plugin' => 'Institution']
+				],
+
+				'Institutions.Subjects' => [
 					'title' => 'Subjects',
 					'parent' => 'Institution.Academic',
-					'selected' => ['Institution.Classes'],
+					'selected' => ['Institutions.Subjects'],
 					'params' => ['plugin' => 'Institution']
 				],
 
@@ -496,13 +496,13 @@ class NavigationComponent extends Component {
 				'title' => 'Academic', 
 				'parent' => 'Institutions.Students.index', 
 				'params' => ['plugin' => 'Student'], 
-				'selected' => ['Students.Programmes.index', 'Students.Sections', 'Students.Classes', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.Awards', 
+				'selected' => ['Students.Programmes.index', 'Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.Awards', 
 					'Students.Extracurriculars', 'Institutions.Students.view', 'Institutions.Students.edit']],
 			'Students.BankAccounts' => [
 				'title' => 'Finance', 
 				'parent' => 'Institutions.Students.index',
 				'params' => ['plugin' => 'Student'],
-				'selected' => ['Students.Fees']],
+				'selected' => ['Students.StudentFees']],
 			'Students.Healths' => [
 				'title' => 'Health', 
 				'parent' => 'Institutions.Students.index',
@@ -527,7 +527,7 @@ class NavigationComponent extends Component {
 				'title' => 'Career', 
 				'parent' => 'Institutions.Staff.index', 
 				'params' => ['plugin' => 'Staff'], 
-				'selected' => ['Staff.Employments', 'Staff.Positions', 'Staff.Sections', 'Staff.Classes', 'Staff.Absences', 
+				'selected' => ['Staff.Employments', 'Staff.Positions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences', 
 					'Staff.Leaves', 'Staff.Behaviours', 'Staff.Awards', 'Institutions.Staff.edit', 'Institutions.Staff.view',],
 			],
 			'Staff.Qualifications' => [
@@ -591,7 +591,7 @@ class NavigationComponent extends Component {
 					'title' => 'Career',
 					'parent' => 'Directories.Staff',
 					'params' => ['plugin' => 'Directory'],
-					'selected' => ['Directories.StaffEmployments', 'Directories.StaffPositions', 'Directories.StaffSections', 'Directories.StaffClasses', 
+					'selected' => ['Directories.StaffEmployments', 'Directories.StaffPositions', 'Directories.StaffClasses', 'Directories.StaffSubjects',
 						'Directories.StaffAbsences', 'Directories.StaffLeaves', 'Directories.StaffBehaviours', 'Directories.StaffAwards']
 				],
 				'Directories.StaffQualifications' => [
@@ -822,7 +822,7 @@ class NavigationComponent extends Component {
 					'title' => 'Forms',
 					'parent' => 'Administration.Survey',
 					'params' => ['plugin' => 'Survey'],
-					'selected' => ['Surveys.Questions', 'Surveys.Forms', 'Surveys.Status']
+					'selected' => ['Surveys.Questions', 'Surveys.Forms', 'Surveys.Rules', 'Surveys.Status']
 				],
 
 				'Rubrics.Templates' => [

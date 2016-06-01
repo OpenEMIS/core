@@ -45,11 +45,13 @@ class InstitutionsTable extends AppTable  {
 
 		$this->hasMany('InstitutionPositions', 				['className' => 'Institution.InstitutionPositions', 'dependent' => true]);
 		$this->hasMany('InstitutionShifts', 				['className' => 'Institution.InstitutionShifts', 'dependent' => true]);
-		$this->hasMany('InstitutionSections', 				['className' => 'Institution.InstitutionSections', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionClasses', 				['className' => 'Institution.InstitutionClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSubjects', 				['className' => 'Institution.InstitutionSubjects', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSubjectStudents', 		['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true]);
 		$this->hasMany('Infrastructures',					['className' => 'Institution.InstitutionInfrastructures', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->hasMany('Staff',				 				['className' => 'Institution.Staff', 'dependent' => true]);
+		$this->hasMany('StaffPositionProfiles',				['className' => 'Institution.StaffPositionProfiles', 'dependent' => true]);
 		$this->hasMany('StaffBehaviours', 					['className' => 'Institution.StaffBehaviours', 'dependent' => true]);
 		$this->hasMany('InstitutionStaffAbsences', 			['className' => 'Institution.StaffAbsences', 'dependent' => true]);
 
@@ -67,7 +69,6 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('StudentDropout', 					['className' => 'Institution.StudentDropout', 'dependent' => true]);
 		$this->hasMany('TransferApprovals', 				['className' => 'Institution.TransferApprovals', 'dependent' => true, 'foreignKey' => 'previous_institution_id']);
 		$this->hasMany('AssessmentItemResults', 			['className' => 'Institution.AssessmentItemResults', 'dependent' => true]);
-		$this->hasMany('InstitutionAssessments', 			['className' => 'Institution.InstitutionAssessments', 'dependent' => true]);
 		$this->hasMany('InstitutionRubrics', 				['className' => 'Institution.InstitutionRubrics', 'dependent' => true]);
 		$this->hasMany('InstitutionQualityVisits', 			['className' => 'Institution.InstitutionQualityVisits', 'dependent' => true]);
 		$this->hasMany('StudentSurveys', 					['className' => 'Student.StudentSurveys', 'dependent' => true]);
@@ -195,6 +196,10 @@ class InstitutionsTable extends AppTable  {
 		return $name;
 	}
 
+	public function onUpdateDefaultActions(Event $event) {
+		return ['downloadFile'];
+	}
+
 	public function beforeAction($event) {
 		$this->ControllerAction->field('security_group_id', ['visible' => false]);
 		// $this->ControllerAction->field('institution_site_area_id', ['visible' => false]);
@@ -251,22 +256,8 @@ class InstitutionsTable extends AppTable  {
 				$entity->security_group_id = $securityGroup->id;
 				if (!$this->save($entity)) {
 					return false;
-				} else {
-					$UsersTable = TableRegistry::get('Security.Users');
-					if (!$UsersTable->isAdmin($entity->created_user_id)) {
-						$SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
-						$groupAdmin = $SecurityRolesTable->getGroupAdministratorEntity();
-
-						$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-						$newEntity = $SecurityGroupUsers->newEntity([
-								'security_group_id' => $securityGroup->id,
-								'security_user_id' => $entity->created_user_id,
-								'security_role_id' => $groupAdmin->id
-							]);
-						$SecurityGroupUsers->save($newEntity);
-					}
-					
 				}
+				
 			} else {
 				return false;
 			}
@@ -384,6 +375,7 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->setFieldVisible(['index'], [
 			'code', 'name', 'area_id', 'institution_type_id'
 		]);
+		$this->controller->set('ngController', 'AdvancedSearchCtrl');
 	}
 
 	public function onGetAreaId(Event $event, Entity $entity) {
@@ -460,8 +452,7 @@ class InstitutionsTable extends AppTable  {
 		}
 	}
 
-	public function indexAfterPaginate(Event $event, ResultSet $resultSet) {
-		$query = $resultSet->__debugInfo()['query'];
+	public function indexAfterPaginate(Event $event, ResultSet $resultSet, Query $query) {
 		$this->dashboardQuery = clone $query;
 	}
 
@@ -583,6 +574,7 @@ class InstitutionsTable extends AppTable  {
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 		if (!$this->AccessControl->isAdmin()) {
 			$userId = $this->Auth->user('id');
 			$institutionId = $entity->id;

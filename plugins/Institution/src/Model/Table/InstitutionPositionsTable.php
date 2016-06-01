@@ -10,9 +10,10 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
+use Cake\ORM\TableRegistry;
+use Cake\Collection\Collection;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
-use Cake\ORM\TableRegistry;
 
 class InstitutionPositionsTable extends AppTable {
 	use OptionsTrait;
@@ -38,6 +39,7 @@ class InstitutionPositionsTable extends AppTable {
 		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
 	}
 
+<<<<<<< HEAD
 	public function transferAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$transferredTo = $entity->convert_to;
 		$securityRole = $this->find()
@@ -59,18 +61,86 @@ class InstitutionPositionsTable extends AppTable {
 			['id IN ' => $securityGroupUserIds]
 		);
 	}
+=======
+	public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
+
+    	return $events;
+    }
+>>>>>>> 44e08490e9bb9310780f619762c4f98733956eb7
 
 	public function validationDefault(Validator $validator) {
-		return $validator
+		
+		$validator
 			->add('position_no', 'ruleUnique', [
 				'rule' => 'validateUnique', 
 				'provider' => 'table'
 			])
-			;
+			
+			->add('position_no', 'ruleNoSpaces', [
+				'rule' => 'checkNoSpaces',
+				'provider' => 'custom'
+			]);
+		
+		return $validator;
+	}
+
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		if ($entity->has('is_homeroom') && $entity->dirty('is_homeroom')) {
+			$currIsHomeroom = $entity->is_homeroom;
+			// have to find all the staff that is holding this institution position
+			$InstitutionStaffTable = $this->InstitutionStaff;
+			$staffInvolved = $InstitutionStaffTable->find()
+				->where([
+					$InstitutionStaffTable->aliasField('institution_position_id') => $entity->id,
+					$InstitutionStaffTable->aliasField('security_group_user_id IS NOT NULL')
+				])
+				->where([
+					'OR' => [
+						[function ($exp) use ($InstitutionStaffTable) {
+							return $exp->gte($InstitutionStaffTable->aliasField('end_date'), $InstitutionStaffTable->find()->func()->now('date'));
+						}],
+						[$InstitutionStaffTable->aliasField('end_date').' IS NULL']
+					]
+				])
+				;
+			if (!empty($staffInvolved)) {
+				$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+				$SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+				$homeroomSecurityRoleId = $SecurityRoles->getHomeroomRoleId();
+				try {
+					$securityGroupId = $this->Institutions->get($entity->institution_id)->security_group_id;
+					foreach ($staffInvolved as $key => $value) {
+						$homeRoomData = [
+							'security_role_id' => $homeroomSecurityRoleId,
+							'security_group_id' => $securityGroupId,
+							'security_user_id' => $value->staff_id
+						];
+						if ($currIsHomeroom) {
+							// add 1 homeroom value
+							$newHomeroomEntity = $SecurityGroupUsers->newEntity($homeRoomData);
+							$entity = $SecurityGroupUsers->save($newHomeroomEntity);
+						} else {
+							// remove homeroom value - find 1 entry and delete it
+							$homeroomEntity = $SecurityGroupUsers->find()
+								->where($homeRoomData)
+								->first();
+							if (!empty($homeroomEntity)) {
+								$SecurityGroupUsers->delete($homeroomEntity);
+							}
+						}
+					}
+				} catch (InvalidPrimaryKeyException $ex) {
+					Log::write('error', __METHOD__ . ': ' . $this->Institutions->alias() . ' primary key not found (' . $entity->institution_id . ')');
+				}
+			}
+		}
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
 		$this->field('position_no', ['visible' => true]);
+		$this->field('is_homeroom', ['visible' => true]);
 		$this->field('staff_position_title_id', [
 			'visible' => true,
 			'type' => 'select'
@@ -102,6 +172,11 @@ class InstitutionPositionsTable extends AppTable {
 		}
 	}
 
+	public function onUpdateFieldIsHomeroom(Event $event, array $attr, $action, Request $request) {
+		$attr['options'] = $this->getSelectOptions('general.yesno');
+		return $attr;
+	}
+
 	public function onGetStaffPositionTitleId(Event $event, Entity $entity) {
 		$types = $this->getSelectOptions('Staff.position_types');
    		if ($entity->has('staff_position_title')) {
@@ -109,10 +184,34 @@ class InstitutionPositionsTable extends AppTable {
    		}
 	}
 
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+        // POCOR-3003 - [...] decision is to make Position Title not editable on the position edit page
+        if ($entity->has('staff_position_title_id')) {
+            $types = $this->getSelectOptions('Staff.position_types');
+            $staffPositionData = $this->StaffPositionTitles->find()
+                ->select(['name', 'type'])
+                ->where([$this->StaffPositionTitles->aliasField($this->StaffPositionTitles->primaryKey()) => $entity->staff_position_title_id])
+                ->first();
+            if (!empty($staffPositionData)) {
+                $type = (array_key_exists($staffPositionData->type, $types))? $types[$staffPositionData->type]: null;
+                $this->fields['staff_position_title_id']['attr']['value'] = $staffPositionData->name;
+                if (!empty($type)) {
+                    $this->fields['staff_position_title_id']['attr']['value'] .= ' - ' . $type;
+                }
+            }
+        }
+    }
+
    	public function onUpdateFieldStaffPositionTitleId(Event $event, array $attr, $action, $request) {
+        if (in_array($action, ['edit'])) {
+            // POCOR-3003 - [...] decision is to make Position Title not editable on the position edit page
+            $attr['type'] = 'readonly';
+            return $attr;
+        }
+
    		$types = $this->getSelectOptions('Staff.position_types');
 		$titles = new ArrayObject();
-		if (in_array($action, ['add', 'edit'])) {
+		if (in_array($action, ['add'])) {
 
 			$userId = $this->Auth->user('id');
 			$institutionId = $this->Session->read('Institution.Institutions.id');
@@ -144,7 +243,6 @@ class InstitutionPositionsTable extends AppTable {
 			$staffTitleOptions = array_intersect_key($staffTitleOptions, array_intersect($staffTitleRoles, $roleOptions));
 
 			// Adding the opt group
-			$types = $this->getSelectOptions('Staff.position_types');
 			$titles = [];
 			foreach ($staffTitleOptions as $title) {
 				$type = __($types[$title->type]);
@@ -153,8 +251,8 @@ class InstitutionPositionsTable extends AppTable {
 		} else {
 			$titles = $this->StaffPositionTitles
 				->find()
-			    ->where(['id >' => 1])
-			    ->order(['order'])
+			    ->where([$this->StaffPositionTitles->aliasField('id').' >' => 1])
+			    ->order([$this->StaffPositionTitles->aliasField('order')])
 			    ->map(function ($row) use ($types) { // map() is a collection method, it executes the query
 			        $row->name_and_type = $row->name . ' - ' . (array_key_exists($row->type, $types) ? $types[$row->type] : $row->type);
 			        return $row;
@@ -324,5 +422,146 @@ class InstitutionPositionsTable extends AppTable {
 	public function findWithBelongsTo(Query $query, array $options) {
 		return $query
 			->contain(['StaffPositionTitles', 'Institutions', 'StaffPositionGrades']);
+	}
+
+	public function getInstitutionPositions($institutionId, $userId) {
+
+			// // excluding positions where 'InstitutionStaff.end_date is NULL'
+			$excludePositions = $this->find('list');
+			$excludePositions->matching('InstitutionStaff', function ($q) {
+					return $q->where(['InstitutionStaff.end_date is NULL', 'InstitutionStaff.FTE' => 1]);
+				});
+			$excludePositions->where([$this->aliasField('institution_id') => $institutionId])
+				->toArray()
+				;
+			$excludeArray = [];
+			foreach ($excludePositions as $key => $value) {
+				$excludeArray[] = $value;
+			}
+
+			if ($this->AccessControl->isAdmin()) {
+				$userId = null;
+				$roles = [];
+			} else {
+				$roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+			}
+			
+			// Filter by active status
+			$activeStatusId = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'ACTIVE');
+			$positionConditions = [];
+			$positionConditions[$this->aliasField('institution_id')] = $institutionId;
+			if (!empty($activeStatusId)) {
+				$positionConditions[$this->aliasField('status_id').' IN '] = $activeStatusId;
+			}
+			if (!empty($excludeArray)) {
+				$positionConditions[$this->aliasField('id').' NOT IN '] = $excludeArray;
+			}
+			$staffPositionsOptions = $this
+					->find()
+					->innerJoinWith('StaffPositionTitles.SecurityRoles')
+					->where($positionConditions)
+					->select(['security_role_id' => 'SecurityRoles.id', 'type' => 'StaffPositionTitles.type'])
+					->order(['StaffPositionTitles.type' => 'DESC', 'StaffPositionTitles.order'])
+					->autoFields(true)
+				    ->toArray();
+
+			// Filter by role previlege
+			$SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
+			$roleOptions = $SecurityRolesTable->getRolesOptions($userId, $roles);
+			$roleOptions = array_keys($roleOptions);
+			$staffPositionRoles = $this->array_column($staffPositionsOptions, 'security_role_id');
+			$staffPositionsOptions = array_intersect_key($staffPositionsOptions, array_intersect($staffPositionRoles, $roleOptions));
+
+			// Adding the opt group
+			$types = $this->getSelectOptions('Staff.position_types');
+			$options = [];
+			foreach ($staffPositionsOptions as $position) {
+				$type = __($types[$position->type]);
+				$options[$type][$position->id] = $position->name;
+			}
+	}
+
+	// Workbench.Model.onGetList
+	public function onGetWorkbenchList(Event $event, $isAdmin, $institutionRoles, ArrayObject $data) {
+		$activestatusIds = $event->subject()->Workflow->getStepsByModelCode($this->registryAlias(), 'ACTIVE');
+		$inactivestatusIds = $event->subject()->Workflow->getStepsByModelCode($this->registryAlias(), 'INACTIVE');
+		$statusIds = array_merge($activestatusIds, $inactivestatusIds);
+
+		if ($isAdmin) {
+			return []; // remove this line once workbench pagination is implemented
+		} else {
+			$where = [];
+			if (empty($institutionRoles)) {
+				return [];
+			} else {
+				$where[$this->aliasField('institution_id') . ' IN '] = array_keys($institutionRoles);
+			}
+			if (!empty($statusIds)) {
+				$where[$this->aliasField('status_id') . ' NOT IN '] = $statusIds;
+			}
+
+			$resultSet = $this
+				->find()
+				->select([
+					$this->aliasField('id'),
+					$this->aliasField('status_id'),
+					$this->aliasField('modified'),
+					$this->aliasField('created'),
+					'Statuses.name',
+					'StaffPositionTitles.name',
+					'StaffPositionGrades.name',
+					'Institutions.id',
+					'Institutions.name',
+					'CreatedUser.username'
+				])
+				->contain(['Statuses', 'StaffPositionTitles', 'StaffPositionGrades', 'Institutions', 'CreatedUser'])
+				->where($where)
+				->order([$this->aliasField('created')])
+				->limit(30)
+				->toArray();
+
+			$WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+			// Array to store security roles in each Workflow Step
+			$stepRoles = [];
+			foreach ($resultSet as $key => $obj) {
+				$institutionId = $obj->institution->id;
+				$stepId = $obj->status_id;
+				$roles = $institutionRoles[$institutionId];
+
+				// Permission
+				if (!array_key_exists($stepId, $stepRoles)) {
+					$stepRoles[$stepId] = $WorkflowStepsRoles->getRolesByStep($stepId);
+				}
+				// access is true if user roles exists in step roles
+				$hasAccess = count(array_intersect_key($roles, $stepRoles[$stepId])) > 0;
+				// End
+
+				if ($hasAccess) {
+					$requestTitle = sprintf('%s - %s with %s of %s', $obj->status->name, $obj->staff_position_title->name, $obj->staff_position_grade->name, $obj->institution->name);
+					$url = [
+						'plugin' => 'Institution',
+						'controller' => 'Institutions',
+						'action' => 'Positions',
+						'view',
+						$obj->id,
+						'institution_id' => $institutionId
+					];
+
+					if (is_null($obj->modified)) {
+						$receivedDate = $this->formatDate($obj->created);
+					} else {
+						$receivedDate = $this->formatDate($obj->modified);
+					}
+
+					$data[] = [
+						'request_title' => ['title' => $requestTitle, 'url' => $url],
+						'receive_date' => $receivedDate,
+						'due_date' => '<i class="fa fa-minus"></i>',
+						'requester' => $obj->created_user->username,
+						'type' => __('Institution > Positions')
+					];
+				}
+			}
+		}
 	}
 }
