@@ -109,11 +109,11 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		
 	}
 
-	public function getWorkflowEvents(Event $event) {
+	public function getWorkflowEvents(Event $event, ArrayObject $eventsObject) {
 		foreach ($this->workflowEvents as $key => $attr) {
-			$this->workflowEvents[$key]['text'] = __($attr['text']);
+			$attr['text'] = __($attr['text']);
+			$eventsObject[] = $attr;
 		}
-		return $this->workflowEvents;
 	}
 
 	public function onApprove(Event $event, $id, Entity $workflowTransitionEntity) {
