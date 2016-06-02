@@ -12,7 +12,7 @@ class UserNationalitiesTable extends ControllerActionTable {
 		parent::initialize($config);
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
-        $this->belongsTo('Nationalities', ['className' => 'FieldOption.Nationalities']);
+        $this->belongsTo('NationalitiesLookUp', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
 	}
 
 	public function beforeAction(Event $event) {
