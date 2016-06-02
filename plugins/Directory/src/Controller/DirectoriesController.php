@@ -45,7 +45,6 @@ class DirectoriesController extends AppController {
 			'StudentProgrammes'		=> ['className' => 'Student.Programmes', 'actions' => ['index', 'view']],
 			'StudentAbsences' 		=> ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
 			'StudentBehaviours' 	=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
-			'StudentResults' 		=> ['className' => 'Student.Results', 'actions' => ['index']],
 			'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],
 			'StudentFees' 			=> ['className' => 'Student.StudentFees', 'actions' => ['index', 'view']],
 			'StudentBankAccounts'	=> ['className' => 'User.BankAccounts'],
@@ -74,6 +73,7 @@ class DirectoriesController extends AppController {
 
 		$this->loadComponent('Training.Training');
 		$this->loadComponent('User.Image');
+		$this->attachAngularModules();
 		
 		$this->set('contentHeader', 'Directories');
 	}
@@ -88,6 +88,33 @@ class DirectoriesController extends AppController {
 	public function StaffMemberships() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Memberships']); }
 	public function StaffLicenses() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Licenses']); }
 	// End
+
+	// AngularJS
+	public function StudentResults() {
+		// tabs
+		$options['type'] = 'student';
+		$tabElements = $this->getAcademicTabElements($options);
+		$this->set('tabElements', $tabElements);
+		$this->set('selectedAction', 'Results');
+        // End
+
+		$this->set('ngController', 'StudentResultsCtrl as StudentResultsController');
+	}
+	// End
+
+	private function attachAngularModules() {
+		$action = $this->request->action;
+		
+		switch ($action) {
+			case 'StudentResults':
+				$this->Angular->addModules([
+					'alert.svc',
+					'student.results.ctrl',
+					'student.results.svc'
+				]);
+				break;
+		}
+	}
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
