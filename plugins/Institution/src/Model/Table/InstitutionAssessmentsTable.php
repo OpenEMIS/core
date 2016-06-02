@@ -210,7 +210,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-    	$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);pr($buttons);
+    	$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
     	if (isset($buttons['view']['url'])) {
     		$buttons['view']['url'] = [
 				'plugin' => $this->controller->plugin,
