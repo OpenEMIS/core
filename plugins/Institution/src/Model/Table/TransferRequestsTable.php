@@ -36,7 +36,6 @@ class TransferRequestsTable extends AppTable {
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('StudentTransferReasons', ['className' => 'FieldOption.StudentTransferReasons']);
-		$this->addBehavior('OpenEmis.Autocomplete');
 	}
 
 	public function implementedEvents() {
@@ -444,22 +443,9 @@ class TransferRequestsTable extends AppTable {
 				->where([$this->Institutions->aliasField('id <>') => $institutionId])
 				->order([$this->Institutions->aliasField('code')]);
 
-
-			$attr['type'] = 'autocomplete';
-			$attr['target'] = ['key' => 'institution_id', 'name' => $this->aliasField('institution_id')];
-			$attr['noResults'] = __('No Institution found.');
-			$attr['attr'] = ['placeholder' => __('Institutions')];
-			$attr['url'] = [
-				'controller' => 'Institutions', 
-				'action' => 'TransferRequests', 
-				'ajaxInstitutionAutocomplete',
-				'institution_id' => $institutionId,
-				'academic_period_id' => $this->selectedAcademicPeriod,
-				'education_grade_id' => $this->selectedGrade
-			];
-
-			// $iconSave = '<i class="fa fa-check"></i> ' . __('Save');
-			// $iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
+			$attr['type'] = 'chosenSelect';
+			$attr['attr']['multiple'] = false;
+			$attr['options'] = $institutionOptions->toArray();
 
 			/* to be implemented with custom autocomplete
 			$attr['type'] = 'string';
@@ -478,38 +464,6 @@ class TransferRequestsTable extends AppTable {
 		}
 
 		return $attr;
-	}
-
-	public function ajaxInstitutionAutocomplete() {
-		$this->controller->autoRender = false;
-		$this->ControllerAction->autoRender = false;
-
-		if ($this->request->is(['ajax'])) {
-			$term = $this->request->query['term'];
-			// only search for students
-			$query = $this->Institutions->find();
-
-			$term = trim($term);
-			if (!empty($term)) {
-				$query->where([
-					'OR' => [
-						[$this->Institutions->aliasField('name').' LIKE \'%'.$term.'%\''],
-						[$this->Institutions->aliasField('code').' LIKE \'%'.$term.'%\'']
-					]
-				]);
-			}
-
-    		$list = $query->all();
-
-			$data = [];
-			foreach($list as $obj) {
-				$label = $obj->code_name;
-				$data[] = ['label' => $label, 'value' => $obj->id];
-			}
-
-			echo json_encode($data);
-			die;
-		}
 	}
 
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
