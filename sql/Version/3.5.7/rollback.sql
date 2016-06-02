@@ -1,3 +1,8 @@
+-- POCOR-2734
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue`='POCOR-2734';
+
+
 -- POCOR-2376
 -- institution_student_admission
 ALTER TABLE `institution_student_admission`
