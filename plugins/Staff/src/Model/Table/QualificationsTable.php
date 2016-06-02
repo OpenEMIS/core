@@ -14,7 +14,7 @@ class QualificationsTable extends ControllerActionTable {
 		$this->table('staff_qualifications');
 		parent::initialize($config);
 
-		$this->addBehavior('ControllerAction.FileUpload', ['size' => '2MB', 'contentEditable' => false, 'allowable_file_types' => 'all']);
+		$this->addBehavior('ControllerAction.FileUpload', ['size' => '2MB', 'contentEditable' => false, 'allowable_file_types' => 'all', 'useDefaultName' => true]);
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('QualificationLevels', ['className' => 'FieldOption.QualificationLevels']);
