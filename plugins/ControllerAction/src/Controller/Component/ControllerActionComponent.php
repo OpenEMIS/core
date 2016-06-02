@@ -658,8 +658,10 @@ class ControllerActionComponent extends Component {
         $modal = [];
 
         if ($type == 'remove' && in_array($type, $this->defaultActions)) {
-            $modal['title'] = $this->model->alias();
-            $modal['content'] = __('Are you sure you want to delete this record.');
+            $modal['title'] = $this->model->getHeader($this->model->alias());
+            $modal['content'] = __('All associated information related to this record will also be removed.');
+            $modal['content'] .= '<br><br>';
+            $modal['content'] .= __('Are you sure you want to delete this record?');
 
             $modal['form'] = [
                 'model' => $this->model,

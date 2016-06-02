@@ -700,6 +700,7 @@ trait MessagesTrait {
 					'ruleNoSpaces' => 'Only alphabets and numbers are allowed',
 					'ruleUnique' => 'This username is already in use.',
 					'ruleCheckUsername' => 'Invalid username. Usernames must contain only alphabets and/or digits. Username can also be a valid email',
+                    'ruleMinLength' => 'Username must be at least 6 characters',
 				],
 				'password' => [
 					'ruleChangePassword' => 'Incorrect password.',
@@ -734,6 +735,7 @@ trait MessagesTrait {
 					'ruleNoSpaces' => 'Only alphabets and numbers are allowed',
 					'ruleUnique' => 'This username is already in use.',
 					'ruleCheckUsername' => 'Invalid username. Usernames must contain only alphabets and/or digits. Username can also be a valid email',
+                    'ruleMinLength' => 'Username must be at least 6 characters',
 				],
 				'password' => [
 					'ruleChangePassword' => 'Incorrect password.',
@@ -1046,7 +1048,8 @@ trait MessagesTrait {
 		'Security' => [
 			'Users' => [
 				'username' => [
-					'ruleUnique' => 'This username is already in use'
+					'ruleUnique' => 'This username is already in use',
+                    'ruleMinLength' => 'Username must be at least 6 characters',
 				]
 			]
 		],
@@ -1162,7 +1165,12 @@ trait MessagesTrait {
 				],
 			],
 		],
-
+        'StaffClasses' => [
+            'notActiveHomeroomTeacher' => 'Not active homeroom teacher'
+        ],
+        'StaffSubjects' => [
+            'notActiveTeachingStaff' => 'Not active teaching staff'
+        ]
 	];
 
 	public function getMessage($code, $options = []) {
