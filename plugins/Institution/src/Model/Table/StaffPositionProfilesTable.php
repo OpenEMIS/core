@@ -215,7 +215,9 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
 		// Set the header of the page
-		$this->controller->set('contentHeader', __('Pending Change in Assignment'));
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+		$institutionName = $this->Institutions->get($institutionId)->name;
+		$this->controller->set('contentHeader', $institutionName. ' - ' .__('Pending Change in Assignment'));
 
 		$this->field('institution_staff_id', ['visible' => false]);
 		$this->field('staff_id', ['before' => 'start_date']);
