@@ -2,6 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+use Cake\Log\Log;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
@@ -9,6 +10,7 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\ORM\Query;
 use Cake\Network\Request;
+use Cake\Datasource\Exception\RecordNotFoundException;
 
 class StudentAdmissionTable extends AppTable {
 	const NEW_REQUEST = 0;
@@ -28,6 +30,7 @@ class StudentAdmissionTable extends AppTable {
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('StudentTransferReasons', ['className' => 'FieldOption.StudentTransferReasons']);
+		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
 
 		$this->addBehavior('User.AdvancedNameSearch');
 	}
@@ -81,17 +84,36 @@ class StudentAdmissionTable extends AppTable {
     	$this->ControllerAction->field('created', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
     }
 
-    public function editAfterAction($event, Entity $entity) {
+    public function editAfterAction($event, Entity $entity) { 
+    	$selectedClassId = $entity->institution_class_id;// it will check if the students have class
+    	
+    	if (!is_null($selectedClassId)) {
+	    	try {
+				$selectedClassName = $this->InstitutionClasses->get($selectedClassId)->name;
+			} catch (RecordNotFoundException $ex) {				
+				Log::write('debug', $ex->getMessage());
+				Log::write('debug', $selectedClassId);
+				$selectedClassId = NULL;
+				$entity->institution_class_id = null;
+				$this->save($entity);
+			} 
+		} 
+
+		if (is_null($selectedClassId)) {
+    		$selectedClassName = $this->getMessage($this->aliasField('noClass'));
+    	}
+
 		$this->ControllerAction->field('student_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->student_id)->name_with_id]]);
 		$this->ControllerAction->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
 		$this->ControllerAction->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $this->AcademicPeriods->get($entity->academic_period_id)->name]]);
 		$this->ControllerAction->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
+		$this->ControllerAction->field('institution_class_id', ['type' => 'readonly', 'attr' => ['value' => $selectedClassName]]);
 		$this->ControllerAction->field('student_transfer_reason_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('previous_institution_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('created', ['type' => 'disabled', 'attr' => ['value' => $this->formatDate($entity->created)]]);
   		$this->ControllerAction->setFieldOrder([
 			'created', 'status', 'type', 'student_id',
-			'institution_id', 'academic_period_id', 'education_grade_id',
+			'institution_id', 'academic_period_id', 'education_grade_id', 'institution_class_id',
 			'start_date', 'end_date', 'comment', 
 		]);
 
@@ -371,6 +393,7 @@ class StudentAdmissionTable extends AppTable {
 	}
 
 	public function editOnApprove(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$selectedClassId = $entity->institution_class_id;
 		$entity->comment = $data['StudentAdmission']['comment'];
 		$Students = TableRegistry::get('Institution.Students');
 		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
@@ -382,6 +405,18 @@ class StudentAdmissionTable extends AppTable {
 		$periodId = $entity->academic_period_id;
 		$gradeId = $entity->education_grade_id;
 		$newSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($gradeId);
+
+		if (!is_null($selectedClassId)) {
+			$classData = [];
+			$classData['student_id'] = $studentId;
+			$classData['education_grade_id'] = $gradeId;
+			$classData['institution_class_id'] = $selectedClassId;
+			$classData['student_status_id'] = $statuses['CURRENT'];
+			$classData['institution_id'] = $newSchoolId;
+			$classData['academic_period_id'] = $periodId;
+			$InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+			$InstitutionClassStudents->autoInsertClassStudent($classData);
+		} 
 
 		$validateEnrolledInAnyInstitutionResult = $Students->validateEnrolledInAnyInstitution($studentId, $newSystemId, ['targetInstitutionId' => $newSchoolId]);
 		if (!empty($validateEnrolledInAnyInstitutionResult)) {
