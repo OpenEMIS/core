@@ -202,16 +202,6 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 		}
 	}
 
-	public function onGetName(Event $event, Entity $entity) {
-		return $event->subject()->Html->link($entity->name, [
-			'plugin' => $this->controller->plugin,
-			'controller' => $this->controller->name,
-			'action' => 'Results',
-			'class_id' => $entity->institution_class_id,
-			'assessment_id' => $entity->assessment_id
-		]);
-	}
-
 	public function onGetEducationGrade(Event $event, Entity $entity) {
 		$EducationGrades = TableRegistry::get('Education.EducationGrades');
 		$grade = $EducationGrades->get($entity->education_grade_id);
@@ -220,7 +210,16 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-    	$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+    	$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);pr($buttons);
+    	if (isset($buttons['view']['url'])) {
+    		$buttons['view']['url'] = [
+				'plugin' => $this->controller->plugin,
+				'controller' => $this->controller->name,
+				'action' => 'Results',
+				'class_id' => $entity->institution_class_id,
+				'assessment_id' => $entity->assessment_id
+			];
+		}
     	unset($buttons['edit']);//remove edit action from the action button
     	unset($buttons['remove']);// remove delete action from the action button
     	return $buttons;
