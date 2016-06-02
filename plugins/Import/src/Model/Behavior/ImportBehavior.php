@@ -866,11 +866,10 @@ class ImportBehavior extends Behavior {
         foreach ($mapping as $key => $value) {
             if ($value->foreign_key == self::CUSTOM) { //custom then need check the default value.
 
-                $customIdentifier = $value->column_name;
                 $customDataSource = $value->lookup_column;
                 $customHeaderData = new ArrayObject;
 
-                $params = [$customIdentifier, $customDataSource, $customHeaderData];
+                $params = [$customDataSource, $customHeaderData];
                 $this->dispatchEvent($this->_table, $this->eventKey('onImportCustomHeader'), 'onImportCustomHeader', $params);
 
                 $label = $customHeaderData[1]; //column name

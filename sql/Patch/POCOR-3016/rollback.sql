@@ -8,7 +8,7 @@ AND `lookup_model` = 'Identities'
 AND `lookup_column` = 'FieldOption.IdentityTypes';
 
 DELETE FROM `translations`
-WHERE `en` = 'Please Define Default Type!';
+WHERE `en` = 'Please Define Default Identity Type';
 
 DELETE FROM `translations`
 WHERE `en` = 'Staff identity is mandatory';
