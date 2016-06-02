@@ -212,6 +212,7 @@ class TransferApprovalsTable extends AppTable {
 		$this->ControllerAction->field('type', ['type' => 'hidden', 'value' => self::TRANSFER]);
 		$this->ControllerAction->field('created', ['type' => 'disabled', 'attr' => ['value' => $this->formatDate($entity->created)]]);
 		$this->ControllerAction->field('institution_class', ['type' => 'select']);
+		$this->ControllerAction->field('institution_class_id', ['visible' => false]);
 
 		$this->ControllerAction->setFieldOrder([
 			'created', 'transfer_status', 'student',

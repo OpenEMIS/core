@@ -426,6 +426,7 @@ trait MessagesTrait {
 			'add_next_programme' => 'Add Next Programme'
 		],
 		'StudentAdmission' => [
+			'noClass' => 'No Class Selected',
 			'existsInSchool' => 'Student is already exists in the school',
 			'enrolledInInstitution' => 'Student is already enrolled in another school.',
 			'existsInRecord' => 'Student has already been added to admission list',
