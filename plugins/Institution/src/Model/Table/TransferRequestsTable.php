@@ -443,8 +443,8 @@ class TransferRequestsTable extends AppTable {
 				->where([$this->Institutions->aliasField('id <>') => $institutionId])
 				->order([$this->Institutions->aliasField('code')]);
 
-
-			$attr['type'] = 'select';
+			$attr['type'] = 'chosenSelect';
+			$attr['attr']['multiple'] = false;
 			$attr['options'] = $institutionOptions->toArray();
 
 			/* to be implemented with custom autocomplete
