@@ -23,7 +23,11 @@ class InstitutionsController extends AppController  {
 			'Attachments' 		=> ['className' => 'Institution.InstitutionAttachments'],
 			'History' 			=> ['className' => 'Institution.InstitutionActivities', 'actions' => ['search', 'index']],
 
+<<<<<<< HEAD
 			'Programmes' 		=> ['className' => 'Institution.InstitutionGrades', 'options' => ['deleteStrategy' => 'restrict']],
+=======
+            'Programmes'        => ['className' => 'Institution.InstitutionGrades', 'actions' => ['!search']],
+>>>>>>> 44e08490e9bb9310780f619762c4f98733956eb7
 			'Infrastructures' 	=> ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'transfer']],
 
 			'Staff' 			=> ['className' => 'Institution.Staff'],
@@ -389,7 +393,7 @@ class InstitutionsController extends AppController  {
 
 		$studentTabElements = [
 			'Identities' => ['text' => __('Identities')],
-			'Nationalities' => ['text' => __('Nationalities')],
+			'UserNationalities' => ['url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Nationalities', $id], 'text' => __('Nationalities'), 'urlModel' => 'Nationalities'],
 			'Contacts' => ['text' => __('Contacts')],
 			'Guardians' => ['text' => __('Guardians')],
 			'Languages' => ['text' => __('Languages')],
@@ -425,7 +429,8 @@ class InstitutionsController extends AppController  {
 			}
 
 			foreach ($studentTabElements as $key => $value) {
-				$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
+                $urlModel = (array_key_exists('urlModel', $value))? $value['urlModel'] : $key;
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$urlModel, 'index']);
 			}
 		}
 

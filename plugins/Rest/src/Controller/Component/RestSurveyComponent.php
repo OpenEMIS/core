@@ -11,6 +11,7 @@ use Cake\Utility\Xml;
 use Cake\Utility\Text;
 use Cake\Log\LogTrait;
 use Cake\I18n\Time;
+use Cake\Log\Log;
 
 define("NS_XHTML", "http://www.w3.org/1999/xhtml");
 define("NS_XF", "http://www.w3.org/2002/xforms");
@@ -241,6 +242,7 @@ class RestSurveyComponent extends Component
                 $fieldAlias = $this->Field->alias();
 
                 $xmlResponse = $data['response'];
+
                 // lines below is for testing
                 // $xmlResponse = "<xf:instance id='xform'><oe:SurveyForms id='1'><oe:Institutions>1</oe:Institutions><oe:AcademicPeriods>10</oe:AcademicPeriods><oe:SurveyQuestions id='2'>some text</oe:SurveyQuestions><oe:SurveyQuestions id='3'>0</oe:SurveyQuestions><oe:SurveyQuestions id='4'>some long long text</oe:SurveyQuestions><oe:SurveyQuestions id='6'>3</oe:SurveyQuestions><oe:SurveyQuestions id='7'>5 6 7</oe:SurveyQuestions><oe:SurveyQuestions id='25'><oe:SurveyTableRows id='20'><oe:SurveyTableColumns0 id='0'>Male</oe:SurveyTableColumns0><oe:SurveyTableColumns1 id='37'>10</oe:SurveyTableColumns1><oe:SurveyTableColumns2 id='38'>20</oe:SurveyTableColumns2><oe:SurveyTableColumns3 id='39'>30</oe:SurveyTableColumns3></oe:SurveyTableRows><oe:SurveyTableRows id='21'><oe:SurveyTableColumns0 id='0'>Female</oe:SurveyTableColumns0><oe:SurveyTableColumns1 id='37'>15</oe:SurveyTableColumns1><oe:SurveyTableColumns2 id='38'>25</oe:SurveyTableColumns2><oe:SurveyTableColumns3 id='39'>35</oe:SurveyTableColumns3></oe:SurveyTableRows></oe:SurveyQuestions></oe:SurveyForms></xf:instance>";
                 // $xmlResponse = '<xf:instance id="xform"><oe:SurveyForms id="16"><oe:Institutions>1059</oe:Institutions><oe:AcademicPeriods>10</oe:AcademicPeriods><oe:SurveyQuestions id="113" array-id="1">1.3641 123.9214</oe:SurveyQuestions><oe:SurveyQuestions id="114" array-id="2">1.74 100.243</oe:SurveyQuestions><oe:SurveyQuestions id="16" array-id="3">5</oe:SurveyQuestions></oe:SurveyForms></xf:instance>';
@@ -295,6 +297,7 @@ class RestSurveyComponent extends Component
                 }
                 // End
 
+
                 if (!empty($statusIds)) {
                     // Overwrite survey record only if is not completed
                     $where[$CustomRecords->aliasField('status_id IN')] = $statusIds;
@@ -320,6 +323,21 @@ class RestSurveyComponent extends Component
                         // End
 
                         $recordId = $entity->id;
+
+                        // Delete relevance questions
+                        $this->deleteQuestionWithRules($entity->survey_form_id);
+
+                        // Rules
+                        $RulesTable = TableRegistry::get('Survey.SurveyRules');
+                        $rules = $RulesTable
+                            ->find('SurveyRulesList', [
+                                'survey_form_id' => $entity->survey_form_id
+                            ])
+                            ->toArray();
+                        // End Rules
+
+                        $answers = new ArrayObject();
+
                         if (!is_null($recordId)) {
                             $fields = $xml->$formAlias->$fieldAlias;
                             foreach ($fields as $field) {
@@ -344,7 +362,11 @@ class RestSurveyComponent extends Component
                                     $extra['formKey'] = $this->formKey;
                                     $extra['fieldKey'] = $this->fieldKey;
 
-                                    $this->$fieldTypeFunction($field, $entity, $extra);
+                                    $questionId = $extra['data']['survey_question_id'];
+                                    $show = $this->isRelevantQuestion($rules, $questionId, $answers);
+                                    if ($show) {
+                                        $this->$fieldTypeFunction($field, $entity, $extra); 
+                                    }
                                 }
                             }
                         }
@@ -356,6 +378,53 @@ class RestSurveyComponent extends Component
                 }
             }
         }
+    }
+
+    private function isRelevantQuestion($rules, $questionId, ArrayObject $answers)
+    {
+        $show = true;
+        if (isset($rules[$questionId])) {
+            $show = false;
+            $dependentQuestions = $rules[$questionId];
+            $ans = $answers->getArrayCopy();
+            $intersectKey = array_intersect_key($ans, $dependentQuestions);
+            foreach ($intersectKey as $key => $value) {
+                $ruleOptions = json_decode($dependentQuestions[$key]);
+                if (in_array($value, $ruleOptions)) {
+                    $show = true;
+                }
+            }
+        }
+        if ($show) {
+            $answers[$questionId] = $responseValue;
+        }
+        return $show;
+    }
+
+    private function deleteQuestionWithRules($surveyFormId)
+    {
+        $RulesTable = TableRegistry::get('Survey.SurveyRules');
+        $questions = $RulesTable
+            ->find()
+            ->select([
+                $RulesTable->aliasField('survey_question_id')
+            ])
+            ->where([
+                $RulesTable->aliasField('survey_form_id') => $surveyFormId,
+                $RulesTable->aliasField('enabled') => 1
+            ]);
+
+        $CustomFieldValues = $this->FieldValue;
+        $CustomTableCells = $this->TableCell;
+        $CustomFieldValues->deleteAll([
+            'survey_question_id IN ' => $questions,
+            'institution_survey_id' => $recordId
+        ]);
+
+        $CustomTableCells->deleteAll([
+            'survey_question_id IN ' => $questions,
+            'institution_survey_id' => $recordId
+        ]);
     }
 
     private function deleteFieldValue($data, $extra)
@@ -659,6 +728,15 @@ class RestSurveyComponent extends Component
         // used to build validation rules
         $schemaNode = $modelNode->addChild("schema", null, NS_XSD);
 
+        // relevancy rules
+        $RulesTable = TableRegistry::get('Survey.SurveyRules');
+        $rules = $RulesTable
+            ->find('SurveyRulesList', [
+                'survey_form_id' => $id
+            ])
+            ->toArray();
+        $rules = new ArrayObject($rules);
+
         $sectionName = null;
         foreach ($fields as $key => $field) {
             $extra = new ArrayObject([]);
@@ -676,6 +754,10 @@ class RestSurveyComponent extends Component
             $extra['references'] = [$this->Form->alias(), $this->Field->alias()."[".$extra['index']."]"];
             $extra['default_value'] = null; // to handle default value for dropdown
 
+            // For relevancy
+            $extra['field_id'] = $field->field_id;
+            $extra['rules'] = $rules;
+
             if (is_null($sectionName)) { $parentNode = $bodyNode; }
 
             // Section
@@ -691,6 +773,7 @@ class RestSurveyComponent extends Component
 
             $fieldTypeFunction = strtolower($field->field_type);
             if (method_exists($this, $fieldTypeFunction)) {
+                // here to add logic of xform
                 $this->$fieldTypeFunction($field, $parentNode, $instanceId, $extra);
 
                 // set to null to skip adding into Head > Model > Instance (e.g. for table and repeater)
@@ -862,7 +945,10 @@ class RestSurveyComponent extends Component
             }
         }
 
-        $this->setBindNode($extra['model'], $instanceId, $extra['references'], ['type' => 'integer', 'required' => $field->default_is_mandatory]);
+        $extra['type'] = 'integer';
+        $extra['required'] = $field->default_is_mandatory;
+
+        $this->setBindNode($extra['model'], $instanceId, $extra['references'], $extra);
     }
 
     private function checkbox($field, $parentNode, $instanceId, $extra)
@@ -886,7 +972,10 @@ class RestSurveyComponent extends Component
             }
         }
 
-        $this->setBindNode($extra['model'], $instanceId, $extra['references'], ['type' => 'integer', 'required' => $field->default_is_mandatory]);
+        $extra['type'] = 'integer';
+        $extra['required'] = $field->default_is_mandatory;
+
+        $this->setBindNode($extra['model'], $instanceId, $extra['references'], $extra);
     }
 
     private function table($field, $parentNode, $instanceId, $extra)
@@ -952,7 +1041,9 @@ class RestSurveyComponent extends Component
                             $tbodyCell = $tbodyColumn->addChild($cellType, null, NS_XF);
                             $tbodyCell->addAttribute("ref", $this->getRef($instanceId, array_merge($extra['references'], [$this->TableColumn->alias().$col])));
 
-                        $this->setBindNode($extra['model'], $instanceId, array_merge($extra['references'], [$this->TableColumn->alias().$col]), ['type' => 'string']);
+                        $extra['type'] = 'string';
+
+                        $this->setBindNode($extra['model'], $instanceId, array_merge($extra['references'], [$this->TableColumn->alias().$col]), $extra);
                     }
                 }
             }
@@ -1087,15 +1178,13 @@ class RestSurveyComponent extends Component
         $bindType = array_key_exists('bindType', $extra) ? $extra['bindType'] : 'string';
 
         $this->setBodyNode($field, $parentNode, $instanceId, $tagName, $extra);
+        $extra['type'] = $bindType;
+        $extra['required'] = $field->default_is_mandatory;
 
-        $bindAttr = [
-            'type' => $bindType,
-            'required' => $field->default_is_mandatory
-        ];
-        if (!empty($extra['constraint'])) {
-            $bindAttr['constraint'] = $extra['constraint'];
+        if (empty($extra['constraint'])) {
+            unset($extra['constraint']);
         }
-        $this->setBindNode($extra['model'], $instanceId, $extra['references'], $bindAttr);
+        $this->setBindNode($extra['model'], $instanceId, $extra['references'], $extra);
     }
 
     private function setBodyNode($field, $parentNode, $instanceId, $fieldType, $extra)
@@ -1131,6 +1220,25 @@ class RestSurveyComponent extends Component
         if (!is_null($constraint)) {
             // <xf:bind constraint=". &gt;= 5 &amp;&amp; . &lt;= 15" ref="instance('xform')/SurveyForms/SurveyQuestions[1]" required="false()" type="integer"/>
             $bindNode->addAttribute("constraint", $constraint);
+        }
+
+        if (isset($attr['rules'])) {
+
+            $questionId = $attr['field_id'];
+            $attr['rules']['dependent_question_mapping'][$questionId] = $attr['references'][1];
+            if (isset($attr['rules'][$questionId])) {
+                $rules = $attr['rules'][$questionId];
+                $relevancy = '';
+                foreach ($rules as $key => $options) {
+                    $dependentQuestion = $attr['rules']['dependent_question_mapping'][$key];
+                    $options = json_decode($options);
+                    foreach ($options as $option) {
+                        $relevancy .= '../'.$dependentQuestion.' eq '. $option .' &#38;&#38; ';
+                    }
+                }
+                $relevancy = rtrim($relevancy, ' &#38;&#38; ');
+                $bindNode->addAttribute("relevant", $relevancy);
+            }
         }
 
         return $bindNode;
