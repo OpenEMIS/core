@@ -83,8 +83,6 @@ class SingleGradeBehavior extends Behavior {
 			'message' => '{{label}} - ' . $this->_table->getMessage($this->_table->aliasField('expiredGrade')),
 			'callable' => function($id) use ($InstitutionGrades, $institutionId, $AcademicPeriodTable, $selectedAcademicPeriodId) {
 			
-
-				$today = date('Y-m-d');
 				$functionQuery = $InstitutionGrades->find();
 				$query = $InstitutionGrades->find()
 					->where([
