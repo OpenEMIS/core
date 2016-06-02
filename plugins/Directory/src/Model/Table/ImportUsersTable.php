@@ -243,7 +243,7 @@ class ImportUsersTable extends AppTable {
 		$tempPassedRecord['data'][$key] = $clonedEntity->openemis_no;
 	}
 
-	public function onImportCustomHeader(Event $event, $customIdentifier, $customDataSource, ArrayObject $customHeaderData) 
+	public function onImportCustomHeader(Event $event, $customDataSource, ArrayObject $customHeaderData) 
 	{
 	
 		$customTable = TableRegistry::get($customDataSource);
@@ -265,7 +265,7 @@ class ImportUsersTable extends AppTable {
 
 		        } else { //no default defined, then put warning on header
 		            
-		            $column = "Please Define Default " . $customIdentifier . " Type";
+		            $column = "Please Define Default Identity Type";
 		            $customHeaderData[] = false; //dont show descriptions
 		        }
 

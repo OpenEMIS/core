@@ -5,7 +5,7 @@ INSERT INTO `import_mapping` (`model`, `column_name`, `description`, `order`, `f
 VALUES ('User.Users', 'Identity', 'Number', 14, 4, 'User', 'Identities', 'FieldOption.IdentityTypes');
 
 INSERT INTO `translations` (`id`, `code`, `en`, `ar`, `zh`, `es`, `fr`, `ru`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
-SELECT NULL, NULL, 'Please Define Default Type!', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, now() FROM dual 
+SELECT NULL, NULL, 'Please Define Default Identity Type', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, now() FROM dual 
 WHERE NOT EXISTS (SELECT * FROM translations WHERE en = 'Please Define Default Type!');
 
 INSERT INTO `translations` (`id`, `code`, `en`, `ar`, `zh`, `es`, `fr`, `ru`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
