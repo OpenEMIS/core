@@ -5,24 +5,38 @@ angular
 StudentResultsSvc.$inject = ['$q', '$filter', 'KdOrmSvc', 'KdSessionSvc'];
 
 function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
+    var properties = {
+        academicPeriods: {},
+        institutions: {},
+        assessments: {},
+        subjects: {},
+        assessmentGradingTypes: {},
+        assessmentPeriods: {},
+        assessmentGradingOptions: {}
+    };
 
     var models = {
         AcademicPeriodsTable: 'AcademicPeriod.AcademicPeriods',
-        AssessmentsTable: 'Assessment.Assessments',
-        AssessmentItemsTable: 'Assessment.AssessmentItems',
+        AssessmentGradingTypesTable: 'Assessment.AssessmentGradingTypes',
         AssessmentPeriodsTable: 'Assessment.AssessmentPeriods',
-        AssessmentItemResultsTable: 'Assessment.AssessmentItemResults',
-        InstitutionSubjectStudentsTable: 'Institution.InstitutionSubjectStudents'
+        AssessmentItemResultsTable: 'Assessment.AssessmentItemResults'
     };
 
     var service = {
         init: init,
+        getInstitution: getInstitution,
+        getAssessment: getAssessment,
+        getSubject: getSubject,
+        getAssessmentPeriod: getAssessmentPeriod,
+        getAssessmentGradingOption: getAssessmentGradingOption,
         getSessions: getSessions,
+        getAssessmentGradingTypes: getAssessmentGradingTypes,
         getAcademicPeriods: getAcademicPeriods,
-        getAssessments: getAssessments,
+        getStudentResults: getStudentResults,
         getAssessmentPeriods: getAssessmentPeriods,
         getColumnDefs: getColumnDefs,
-        getRowData: getRowData
+        getRowData: getRowData,
+        calculateTotal: calculateTotal
     };
 
     return service;
@@ -33,28 +47,61 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         KdOrmSvc.init(models);
     };
 
+    function getInstitution(id) {
+        return properties.institutions[id];
+    };
+
+    function getAssessment(id) {
+        return properties.assessments[id];
+    };
+
+    function getSubject(id) {
+        return properties.subjects[id];
+    };
+
+    function getAssessmentPeriod(id) {
+        return properties.assessmentPeriods[id];
+    };
+
+    function getAssessmentGradingOption(id) {
+        return properties.assessmentGradingOptions[id];
+    };
+
     function getSessions() {
         var promises = [];
 
-        promises.push(KdSessionSvc.read('Institution.Institutions.id'));
         promises.push(KdSessionSvc.read('Student.Students.id'));
+        promises.push(KdSessionSvc.read('Institution.Institutions.id'));
 
         return $q.all(promises);
     };
 
+    function getAssessmentGradingTypes() {
+        var success = function(response, deferred) {
+            var assessmentGradingTypes = response.data.data;
+
+            if (angular.isObject(assessmentGradingTypes) && assessmentGradingTypes.length > 0) {
+                angular.forEach(assessmentGradingTypes, function(assessmentGradingType, key) {
+                    properties.assessmentGradingTypes[assessmentGradingType.id] = assessmentGradingType;
+                });
+                deferred.resolve(assessmentGradingTypes);
+            } else {
+                deferred.reject('No Academic Periods');
+            }
+        };
+
+        return AssessmentGradingTypesTable
+            .ajax({success: success, defer: true});
+    };
+
     function getAcademicPeriods() {
         var success = function(response, deferred) {
-            var academicPeriodResults = response.data.data;
+            var academicPeriods = response.data.data;
 
-            if (angular.isObject(academicPeriodResults) && academicPeriodResults.length > 0) {
-                var academicPeriods = [];
-
-                angular.forEach(academicPeriodResults, function(academicPeriod, key) {
-                    if (academicPeriod.parent_id != 0) {
-                        this.push({text: academicPeriod.name, value: academicPeriod.id});
-                    }
-                }, academicPeriods);
-
+            if (angular.isObject(academicPeriods) && academicPeriods.length > 0) {
+                angular.forEach(academicPeriods, function(academicPeriod, key) {
+                    properties.academicPeriods[academicPeriod.id] = academicPeriod;
+                });
                 deferred.resolve(academicPeriods);
             } else {
                 deferred.reject('No Academic Periods');
@@ -62,33 +109,69 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         };
 
         return AcademicPeriodsTable
-            .select()
-            .order(['academic_period_level_id', 'order'])
+            .find('YearList', {
+                id: 0
+            })
             .ajax({success: success, defer: true});
     };
 
-    function getAssessments(periodId) {
+    function getStudentResults(academicPeriodId, studentId, institutionId) {
         var success = function(response, deferred) {
-            var assessmentResults = response.data.data;
-
-            if (angular.isObject(assessmentResults) && assessmentResults.length > 0) {
-                var assessments = [];
-
-                angular.forEach(assessmentResults, function(assessment, key) {
-                    this.push({text: assessment.name, value: assessment.id});
-                }, assessments);
-
-                deferred.resolve(assessments);
+            if (angular.isDefined(response.data.error)) {
+                deferred.reject(response.data.error);
             } else {
-                deferred.reject('No Assessments');
+                var studentResults = response.data.data;
+
+                var results = {};
+                angular.forEach(studentResults, function(studentResult, key) {
+                    var academicPeriodId = studentResult.academic_period_id;
+                    var institutionId = studentResult.institution_id;
+                    var assessmentId = studentResult.assessment_id;
+                    var subjectId = studentResult.education_subject_id;
+                    var assessmentPeriodId = studentResult.assessment_period_id;
+
+                    if (angular.isUndefined(results[academicPeriodId])) {
+                        results[academicPeriodId] = {};
+                    }
+
+                    if (angular.isUndefined(results[academicPeriodId][institutionId])) {
+                        properties.institutions[institutionId] = studentResult._matchingData.Institutions;
+                        results[academicPeriodId][institutionId] = {};
+                    }
+
+                    if (angular.isUndefined(results[academicPeriodId][institutionId][assessmentId])) {
+                        properties.assessments[assessmentId] = studentResult._matchingData.Assessments;
+                        results[academicPeriodId][institutionId][assessmentId] = {};
+                    }
+
+                    if (angular.isUndefined(results[academicPeriodId][institutionId][assessmentId][subjectId])) {
+                        properties.subjects[subjectId] = studentResult._matchingData.EducationSubjects;
+                        results[academicPeriodId][institutionId][assessmentId][subjectId] = {};
+                    }
+
+                    if (angular.isUndefined(results[academicPeriodId][institutionId][assessmentId][subjectId][assessmentPeriodId])) {
+                        properties.assessmentPeriods[assessmentPeriodId] = studentResult._matchingData.AssessmentPeriods;
+                        results[academicPeriodId][institutionId][assessmentId][subjectId][assessmentPeriodId] = {};
+                    }
+
+                    properties.assessmentGradingOptions[studentResult.assessment_grading_option_id] = studentResult._matchingData.AssessmentGradingOptions;
+                    results[academicPeriodId][institutionId][assessmentId][subjectId][assessmentPeriodId]['assessment_grading_option_id'] = studentResult.assessment_grading_option_id;
+                    results[academicPeriodId][institutionId][assessmentId][subjectId][assessmentPeriodId]['marks'] = studentResult.marks;
+                });
+
+                deferred.resolve(results);
             }
         };
 
-        return AssessmentsTable
+        return AssessmentItemResultsTable
             .select()
-            .where({academic_period_id: periodId})
-            .order(['code', 'name'])
-            .ajax({success: success, defer: true});
+            .find('Results', {
+                academic_period_id: academicPeriodId,
+                student_id: studentId,
+                institution_id: institutionId
+            })
+            .ajax({success: success, defer: true})
+            ;
     };
 
     function getAssessmentPeriods(assessmentId) {
@@ -122,9 +205,10 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
 
         angular.forEach(assessmentPeriods, function(assessmentPeriod, key) {
             var assessmentPeriodField = 'period_' + assessmentPeriod.id;
+            var weightField = 'weight_' + assessmentPeriod.id;
 
             var columnDef = {
-                headerName: assessmentPeriod.name,
+                headerName: assessmentPeriod.name + " <span class='divider'></span> " + assessmentPeriod.weight,
                 field: assessmentPeriodField,
                 filter: "number",
                 filterParams: filterParams,
@@ -134,12 +218,19 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                     if (!isNaN(parseFloat(value))) {
                         return $filter('number')(value, 2);
                     } else {
-                        return '';
+                        // for GRADES type
+                        return value;
                     }
                 }
             };
 
             this.push(columnDef);
+
+            columnDefs.push({
+                headerName: "weight of " + assessmentPeriod.id,
+                field: weightField,
+                hide: true
+            });
         }, columnDefs);
 
         columnDefs.push({
@@ -148,12 +239,15 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
             filter: "number",
             filterParams: filterParams,
             valueGetter: function(params) {
+                params.data[params.colDef.field] = service.calculateTotal(params.data);
+
                 var value = params.data[params.colDef.field];
 
                 if (!isNaN(parseFloat(value))) {
                     return $filter('number')(value, 2);
                 } else {
-                    return '';
+                    // empty for GRADES type
+                    return value;
                 }
             }
         });
@@ -161,109 +255,57 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         return {data: columnDefs};
     };
 
-    function getRowData(periodId, assessmentId) {
+    function getRowData(assessmentResults) {
         var deferred = $q.defer();
 
-        this.getSessions()
-        .then(function(response) {
-            var institutionId = response[0];
-            var studentId = response[1];
-
-            var success = function(response, deferred) {
-                if (angular.isDefined(response.data.error)) {
-                    deferred.reject(response.data.error);
-                } else {
-                    var subjectStudents = response.data.data;
-
-                    if (angular.isObject(subjectStudents) && subjectStudents.length > 0) {
-                        var subjectId = null;
-                        var currentSubjectId = null;
-                        var studentResults = {};
-                        var rowData = [];
-
-                        angular.forEach(subjectStudents, function(subjectStudent, key) {
-                            currentSubjectId = parseInt(subjectStudent.education_subject_id);
-
-                            if (subjectId != currentSubjectId) {
-                                if (subjectId != null) {
-                                    this.push(studentResults);
-                                }
-
-                                studentResults = {
-                                    education_subject_id: subjectStudent.education_subject_id,
-                                    subject: subjectStudent.education_subject_name,
-                                    total_mark: subjectStudent.total_mark
-                                };
-
-                                subjectId = currentSubjectId;
-                            }
-
-                            var marks = parseFloat(subjectStudent.marks);
-                            if (!isNaN(marks)) {
-                                studentResults['period_' + parseInt(subjectStudent.assessment_period_id)] = marks;
-                            }
-                        }, rowData);
-
-                        if (studentResults.hasOwnProperty('education_subject_id')) {
-                            rowData.push(studentResults);
-                        }
-
-                        deferred.resolve(rowData);
-                    } else {
-                        deferred.reject('No Results');
-                    }
-                    // var studentResults = response.data.data;
-                    // var rowData = [];
-
-                    // rowData.push({
-                    //     subject: 'Social Studies',
-                    //     period_2: 88.66,
-                    //     period_3: 99.22,
-                    //     total_mark: 77.33
-                    // });
-
-                    // deferred.resolve(rowData);
-                }
+        var rowData = [];
+        angular.forEach(assessmentResults, function(subjectObj, subjectId) {
+            var subjectName = properties.subjects[subjectId].name;
+            var data = {
+                subject: subjectName
             };
 
-            return InstitutionSubjectStudentsTable
-                .select()
-                .contain(['EducationSubjects'])
-                .find('ResultsByStudent', {
-                    institution_id: institutionId,
-                    academic_period_id: periodId,
-                    student_id: studentId,
-                    assessment_id: assessmentId
-                })
-                // .where({
-                //     institution_id: institutionId,
-                //     academic_period_id: periodId,
-                //     student_id: studentId
-                // })
-                .ajax({success: success, defer: true})
-                ;
-            // return AssessmentItemResultsTable
-            //     .select()
-            //     .where({
-            //         institution_id: institutionId,
-            //         student_id: studentId,
-            //         academic_period_id: periodId,
-            //         assessment_id: assessmentId
-            //     })
-            //     .ajax({success: success, defer: true})
-            //     ;
-        }, function(error) {
-            console.log(error);
-            deferred.reject(error);
-        })
-        // Student Results
-        .then(function(response) {
-            deferred.resolve(response);
-        }, function(error) {
-            console.log(error);
-            deferred.reject(error);
-        });
+            angular.forEach(assessmentResults[subjectId], function(resultObj, assessmentPeriodId) {
+                var assessmentGradingOption = properties.assessmentGradingOptions[resultObj.assessment_grading_option_id];
+                
+                var result = '';
+                switch (properties.assessmentGradingTypes[assessmentGradingOption.assessment_grading_type_id].result_type) {
+                    case 'MARKS':
+                        result = resultObj.marks;
+                        break;
+                    case 'GRADES':
+                        result = assessmentGradingOption.code_name;
+                        break;
+                    default:
+                        break;
+                }
+
+                this['period_'+assessmentPeriodId] = result;
+                this['weight_'+assessmentPeriodId] = parseFloat(properties.assessmentPeriods[assessmentPeriodId]['weight']);
+            }, data);
+
+            this.push(data);
+        }, rowData);
+
+        deferred.resolve(rowData);
 
         return deferred.promise;
+    };
+
+    function calculateTotal(data) {
+        var totalMark = 0;
+
+        for (var key in data) {
+            if (/period_/.test(key)) {
+                var index = key.replace(/period_(\d+)/, '$1');
+                totalMark += data[key] * (data['weight_'+index]);
+            }
+        }
+
+        if (totalMark > 0) {
+            return $filter('number')(totalMark, 2);
+        } else {
+            return '';
+        }
     };
 }

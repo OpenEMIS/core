@@ -14,29 +14,12 @@ $this->start('panelBody');
 	<div class="alert {{class}}" ng-hide="message == null">
 		<a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
 	</div>
-
-	<div class="toolbar-responsive panel-toolbar">
-		<div class="toolbar-wrapper">
-			<div class="input select">
-				<div class="input-select-wrapper">
-					<select name="StudentResults[academic_period_id]" id="studentresults-academic-period-id" class="form-control" ng-options="item.value as item.text for item in StudentResultsController.periodOptions" ng-model="StudentResultsController.academicPeriodId" ng-change="StudentResultsController.onChangePeriod(StudentResultsController.academicPeriodId)">
-						<option value="">-- <?= __('Select Period') ?> --</option>
-					</select>
-				</div>
-			</div>
-
-			<div class="input select">
-				<div class="input-select-wrapper">
-					<select name="StudentResults[assessment_id]" id="studentresults-assessment-id" class="form-control" ng-options="item.value as item.text for item in StudentResultsController.assessmentOptions" ng-model="StudentResultsController.assessmentId" ng-change="StudentResultsController.onChangeAssessment(StudentResultsController.academicPeriodId, StudentResultsController.assessmentId)">
-						<option value="">-- <?= __('Select Assessment') ?> --</option>
-					</select>
-				</div>
-			</div>
-		</div>
+	
+	<div class="row section-header" ng-repeat-start="section in StudentResultsController.sections track by section.id" ng-show={{section.visible}}>
+		{{section.name}}
 	</div>
-
-	<div id="student-result-table" class="table-wrapper">
-		<div ng-if="gridOptions" ag-grid="gridOptions" class="ag-fresh ag-height-fixed"></div>
+	<div ng-repeat-end class="table-wrapper" id="student-result-table_{{section.id}}">
+		<div ng-if="StudentResultsController.gridOptions[section.id]" ag-grid="StudentResultsController.gridOptions[section.id]" class="ag-fresh ag-height-fixed"></div>
 	</div>
 <?php
 $this->end();
