@@ -100,9 +100,6 @@ class HtmlFieldHelper extends Helper {
 		} else {
 			if (method_exists($this, $type)) {
 				$html = $this->$type($action, $data, $attr, $options);
-				if ($action == 'index' || $action == 'view') {
-					$html = htmlspecialchars($html);
-				}
 			}
 		}
 		return $html;
