@@ -74,7 +74,13 @@ class AreasControllerTest extends IntegrationTestCase {
 	// public function testDeleteArea() {
 
 	// 	$this->setAuthSession();
-	// 	$this->post('/Areas/Areas/remove/2?parent=1');
+
+	// 	$data = [
+	// 		'id' => 2,
+	// 		'_method' => 'DELETE'
+	// 	];
+		
+	// 	$this->post('/Areas/Areas/remove/2?parent=1', $data);
 	// 	$table = TableRegistry::get('Area.Areas');
 	// 	$entity = $table->get(2);
 	// 	$this->assertEmpty($entity);
