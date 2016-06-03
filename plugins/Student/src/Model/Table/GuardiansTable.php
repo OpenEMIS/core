@@ -159,13 +159,22 @@ class GuardiansTable extends AppTable {
 	}
 
 	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$this->Session->write('Student.Guardians.new', $data[$this->alias()]);
-		$event->stopPropagation();
-		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'GuardianUser', 'add'];
-		if ($this->controller->name == 'Directories') {
-			$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StudentGuardianUser', 'add'];
+		$options['validate']=true;
+		$patch = $this->patchEntity($entity, $data->getArrayCopy(), $options->getArrayCopy());
+		$errorCount = count($patch->errors());
+		
+		if ($errorCount == 0 || ($errorCount == 1 && array_key_exists('guardian_id', $patch->errors()))) {
+			$this->Session->write('Student.Guardians.new', $data[$this->alias()]);
+			$event->stopPropagation();
+
+			$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'GuardianUser', 'add'];
+			if ($this->controller->name == 'Directories') {
+				$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StudentGuardianUser', 'add'];
+			}
+			return $this->controller->redirect($action);
+		} else {
+			$this->Alert->error('general.add.failed', ['reset' => true]);
 		}
-		return $this->controller->redirect($action);
 	}
 
 	public function ajaxUserAutocomplete() {
