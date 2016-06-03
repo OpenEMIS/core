@@ -19,13 +19,10 @@ class DirectoriesController extends AppController {
 			// Users
 			'Contacts' 				=> ['className' => 'User.Contacts'],
 			'Identities' 			=> ['className' => 'User.Identities'],
-			'Nationalities' 		=> ['className' => 'User.Nationalities'],
-			'Languages' 			=> ['className' => 'User.UserLanguages'],
 			'Comments' 				=> ['className' => 'User.Comments'],
 			'Attachments' 			=> ['className' => 'User.Attachments'],
 			'Accounts'				=> ['className' => 'Directory.Accounts', 'actions' => ['view', 'edit']],
 			'History' 				=> ['className' => 'User.UserActivities', 'actions' => ['index']],
-			'SpecialNeeds' 			=> ['className' => 'User.SpecialNeeds'],
 
 
 			// Users - Health
@@ -85,6 +82,9 @@ class DirectoriesController extends AppController {
 	public function StaffSubjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSubjects']); }
 	public function StudentClasses() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']); }
 	public function StudentSubjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']); }
+    public function Nationalities() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
+    public function Languages() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
+    public function SpecialNeeds() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
 	public function StaffMemberships() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Memberships']); }
 	public function StaffLicenses() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Licenses']); }
 	// End
@@ -147,6 +147,10 @@ class DirectoriesController extends AppController {
 	}
 
 	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
+        if ($model instanceof \Staff\Model\Table\StaffClassesTable || $model instanceof \Staff\Model\Table\StaffSubjectsTable) {
+            $model->toggle('add', false);
+        }
+        
 		/**
 		 * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
 		 */
@@ -294,7 +298,7 @@ class DirectoriesController extends AppController {
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Identities', $id],
 				'text' => __('Identities')	
 			],
-			'Nationalities' => [
+			'UserNationalities' => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Nationalities', $id],
 				'text' => __('Nationalities')	
 			],
@@ -336,7 +340,6 @@ class DirectoriesController extends AppController {
 				'text' => __('Guardians')	
 			],
 		];
-
 		return $tabElements;
 	}
 

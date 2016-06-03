@@ -19,10 +19,9 @@ class StudentsController extends AppController {
 			'Accounts' 			=> ['className' => 'Student.Accounts', 'actions' => ['view', 'edit']],
 			'Contacts' 			=> ['className' => 'User.Contacts'],
 			'Identities' 		=> ['className' => 'User.Identities'],
-			'Nationalities' 	=> ['className' => 'User.Nationalities'],
 			'Languages' 		=> ['className' => 'User.UserLanguages'],
+			'Nationalities' 	=> ['className' => 'User.Nationalities'],
 			'Comments' 			=> ['className' => 'User.Comments'],
-			'SpecialNeeds' 		=> ['className' => 'User.SpecialNeeds'],
 			'Awards' 			=> ['className' => 'User.Awards'],
 			'Attachments' 		=> ['className' => 'User.Attachments'],
 			'Guardians' 		=> ['className' => 'Student.Guardians'],
@@ -32,7 +31,7 @@ class StudentsController extends AppController {
 			'Behaviours' 		=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
 			'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],
 			'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
-			'Fees' 				=> ['className' => 'Student.StudentFees', 'actions' => ['index', 'view']],
+			'StudentFees'		=> ['className' => 'Student.StudentFees', 'actions' => ['index', 'view']],
 			'History' 			=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 			'ImportStudents' 	=> ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
 
@@ -57,6 +56,9 @@ class StudentsController extends AppController {
 	// CAv4
 	public function Classes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']); }
 	public function Subjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']); }
+    public function Nationalities() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
+    public function Languages() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
+    public function SpecialNeeds() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
 	// End
 
 	// AngularJS
@@ -281,7 +283,7 @@ class StudentsController extends AppController {
 		$studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
 		$studentTabElements = [
 			'BankAccounts' => ['text' => __('Bank Accounts')],
-			'Fees' => ['text' => __('Fees')],
+			'StudentFees' => ['text' => __('Fees')],
 		];
 
 		$tabElements = array_merge($tabElements, $studentTabElements);
@@ -298,5 +300,18 @@ class StudentsController extends AppController {
 		$this->autoRender = false;
 		$this->ControllerAction->autoRender = false;
 		$this->Image->getUserImage($id);
+	}
+
+	public function getStudentGuardianTabElements($options = []) {
+		$type = (array_key_exists('type', $options))? $options['type']: null;
+		$plugin = $this->plugin;
+		$name = $this->name;
+		$tabElements = [
+			'Guardians' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Guardians', 'type' => $type],
+				'text' => __('Guardians')	
+			],
+		];
+		return $tabElements;
 	}
 }
