@@ -32,7 +32,6 @@ class StudentsController extends AppController {
 			'Results' 			=> ['className' => 'Student.Results', 'actions' => ['index']],
 			'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],
 			'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
-			'StudentFees'		=> ['className' => 'Student.StudentFees', 'actions' => ['index', 'view']],
 			'History' 			=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 			'ImportStudents' 	=> ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
 
@@ -54,6 +53,7 @@ class StudentsController extends AppController {
 	}
 
 	// CAv4
+	public function StudentFees() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentFees']); }
 	public function Classes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']); }
 	public function Subjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']); }
     public function Nationalities() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
