@@ -96,7 +96,7 @@ class AreaAdministrativesTable extends AppTable {
 
 		$process = function($model, $id, $options) {
 			$entity = $model->get($id);
-			$model->removeFromTree($entity);
+			// $model->removeFromTree($entity);
 			return $model->delete($entity, $options->getArrayCopy());
 		};
 		return $process;
