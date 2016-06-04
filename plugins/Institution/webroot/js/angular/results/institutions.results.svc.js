@@ -440,8 +440,8 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                                 }
                                 
                                 studentResults = {
-                                    openemis_id: subjectStudent.openemis_no,
-                                    name: subjectStudent.name,
+                                    openemis_id: subjectStudent._matchingData.Users.openemis_no,
+                                    name: subjectStudent._matchingData.Users.name,
                                     student_id: currentStudentId
                                 };
 
@@ -461,13 +461,13 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                             }
 
                             if (isMarksType) {
-                                var marks = parseFloat(subjectStudent.marks);
+                                var marks = parseFloat(subjectStudent.AssessmentItemResults.marks);
                                 if (!isNaN(marks)) {
-                                    studentResults['period_' + parseInt(subjectStudent.assessment_period_id)] = marks;
+                                    studentResults['period_' + parseInt(subjectStudent.AssessmentItemResults.assessment_period_id)] = marks;
                                 }
                             } else if (isGradesType) {
-                                if (subjectStudent.grading_option_id != null) {
-                                    studentResults['period_' + parseInt(subjectStudent.assessment_period_id)] = subjectStudent.grading_option_id;
+                                if (subjectStudent.AssessmentItemResults.assessment_grading_option_id != null) {
+                                    studentResults['period_' + parseInt(subjectStudent.AssessmentItemResults.assessment_period_id)] = subjectStudent.AssessmentItemResults.assessment_grading_option_id;
                                 }
                             }
                         }, rowData);
@@ -485,7 +485,6 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
             return InstitutionSubjectStudentsTable
             .select()
-            .contain(['Users'])
             .find('Results', {
                 institution_id: institutionId,
                 class_id: classId,
@@ -493,7 +492,6 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                 academic_period_id: academicPeriodId,
                 subject_id: educationSubjectId
             })
-            .where({institution_class_id: classId})
             .ajax({success: success, defer: true})
             ;
         },
