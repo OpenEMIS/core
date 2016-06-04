@@ -1,3 +1,12 @@
+-- POCOR-3026
+-- code here
+UPDATE `security_functions` SET _view = 'Assessments.index|Results.index' WHERE id = 1015;
+
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3026';
+
+
 -- POCOR-2255
 --
 ALTER TABLE `institution_fee_types` CHANGE `amount` `amount` DECIMAL(11,2) NOT NULL;
