@@ -475,12 +475,12 @@ class TransferRequestsTable extends AppTable {
 				])
 				->order([$this->Institutions->aliasField('code')]);
 
+			$attr['type'] = 'chosenSelect';
+			$attr['attr']['multiple'] = false;
 			if ($this->selectedGrade == $request->data[$this->alias()]['education_grade_id']) {
 				$institutionOptions->where([$this->Institutions->aliasField('id').' <> ' => $institutionId]);
 			}
 
-
-			$attr['type'] = 'select';
 			$attr['options'] = $institutionOptions->toArray();
 
 			/* to be implemented with custom autocomplete
