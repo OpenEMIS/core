@@ -654,6 +654,11 @@ trait MessagesTrait {
 					'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
 				],
 			],
+			'InstitutionFeeTypes' => [
+				'amount' => [
+					'ruleMaxLength' => 'Amount entered exceeds system limit'
+				],
+			],
 			'InstitutionInfrastructures' => [
 				'code' => [
 					'ruleUnique' => 'Please enter a unique code'
