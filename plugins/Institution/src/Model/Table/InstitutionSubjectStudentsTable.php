@@ -134,7 +134,7 @@ class InstitutionSubjectStudentsTable extends AppTable {
 		// find related classes and grades
 		$InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
 		$institutionClassData = $InstitutionSubjects->find()
-			->contain('InstitutionClasses.InstitutionClassGrades')
+			->contain('Classes.ClassGrades')
 			->where([$InstitutionSubjects->aliasField($InstitutionSubjects->primaryKey()) => $entity->institution_subject_id])
 			->first()
 			;
