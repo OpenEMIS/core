@@ -70,7 +70,7 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
     function getSessions() {
         var promises = [];
 
-        promises.push(KdSessionSvc.read('Student.Students.id'));
+        promises.push(KdSessionSvc.read('Student.Results.student_id'));
         promises.push(KdSessionSvc.read('Institution.Institutions.id'));
 
         return $q.all(promises);
@@ -109,9 +109,7 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         };
 
         return AcademicPeriodsTable
-            .find('YearList', {
-                id: 0
-            })
+            .find('Years')
             .ajax({success: success, defer: true});
     };
 
