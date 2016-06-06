@@ -1,3 +1,14 @@
+-- POCOR-2820
+-- code here
+ALTER TABLE `institution_student_admission`
+        DROP INDEX `institution_class_id`,
+        DROP COLUMN `institution_class_id`;
+
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2820';
+
+
 -- POCOR-3026
 -- code here
 UPDATE `security_functions` SET _view = 'Assessments.index|Results.index' WHERE id = 1015;
