@@ -95,13 +95,6 @@ class AreasTable extends AppTable {
 			);
 
 		$this->rebuildLftRght();
-
-		$process = function($model, $id, $options) {
-			$entity = $model->get($id);
-			$model->removeFromTree($entity);
-			return $model->delete($entity, $options->getArrayCopy());
-		};
-		return $process;
 	}
 	public function onGetConvertOptions(Event $event, Entity $entity, Query $query) {
 		$level = $entity->area_level_id;
