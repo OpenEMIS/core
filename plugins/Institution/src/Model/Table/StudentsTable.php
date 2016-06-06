@@ -120,7 +120,7 @@ class StudentsTable extends AppTable {
 				'last' => true
 			])
 			->add('student_name', 'ruleStudentNotCompletedGrade', [
-				'rule' => ['studentNotCompletedGrade'],
+				'rule' => ['studentNotCompletedGrade', []],
 				'on' => 'create',
 				'last' => true
 			])
