@@ -35,7 +35,7 @@ class EducationsControllerTest extends IntegrationTestCase {
 			'id' => 1,
 			'name' => 'National Education System'
 		];
-
+		$this->enableCsrfToken();
 		$this->post('/Educations/Systems/add', $data);
 
 		$table = TableRegistry::get('Education.EducationSystems');
@@ -58,7 +58,7 @@ class EducationsControllerTest extends IntegrationTestCase {
 		$data = [
 			'name' => 'PHPUnit Education System'
 		];
-
+		$this->enableCsrfToken();
 		$this->post('/Educations/Systems/edit/1', $data);
 
 		$table = TableRegistry::get('Education.EducationSystems');
@@ -77,7 +77,7 @@ class EducationsControllerTest extends IntegrationTestCase {
 			'id' => 1,
 			'_method' => 'DELETE',
 		];
-
+		$this->enableCsrfToken();
 		$this->post('/Educations/Systems/remove/1', $data);
 		$table = TableRegistry::get('Education.EducationSystems');
 		$exists = $table->exists([$table->primaryKey() => 1]);
