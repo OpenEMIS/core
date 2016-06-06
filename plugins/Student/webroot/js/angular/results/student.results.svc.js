@@ -86,7 +86,7 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                 });
                 deferred.resolve(assessmentGradingTypes);
             } else {
-                deferred.reject('No Academic Periods');
+                deferred.reject('You need to configure Assessment Grading Types first');
             }
         };
 
