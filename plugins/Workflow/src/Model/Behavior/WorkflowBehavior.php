@@ -11,6 +11,7 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Network\Session;
+use Cake\Datasource\Exception\RecordNotFoundException;
 
 class WorkflowBehavior extends Behavior {
 
@@ -33,6 +34,7 @@ class WorkflowBehavior extends Behavior {
  		[
  			'value' => 'Workflow.onDeleteRecord',
 			'text' => 'Delete of Current Record',
+			'description' => 'Performing this action will delete the current record from the system.',
  			'method' => 'onDeleteRecord'
  		]
  	];
@@ -94,8 +96,15 @@ class WorkflowBehavior extends Behavior {
 
 	public function onDeleteRecord(Event $event, $id, Entity $workflowTransitionEntity) {
 		$model = $this->_table;
-		$entity = $model->get($id);
-		$model->delete($entity);
+
+		try {
+			$entity = $model->get($id);
+			$model->delete($entity);
+		} catch (RecordNotFoundException $e) {
+			// Do nothing
+		}
+
+		// Session is required to show alert after the redirection
 		$session = new Session();
 		$session->write('Workflow.onDeleteRecord', true);
 		return $model->controller->redirect($model->url('index', 'QUERY'));
