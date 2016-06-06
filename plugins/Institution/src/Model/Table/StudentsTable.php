@@ -151,7 +151,7 @@ class StudentsTable extends AppTable {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$query->where([$this->aliasField('institution_id') => $institutionId]);
-		$query->contain(['Users.Nationalities.Countries', 'Users.Identities.IdentityTypes', 'Users.Genders']);
+		$query->contain(['Users.Nationalities.NationalitiesLookUp', 'Users.Identities.IdentityTypes', 'Users.Genders']);
 		$query->select(['openemis_no' => 'Users.openemis_no', 'gender_id' => 'Genders.name', 'date_of_birth' => 'Users.date_of_birth', 'code' => 'Institutions.code']);
 		$periodId = $this->request->query['academic_period_id'];
 		if ($periodId > 0) {
@@ -260,8 +260,8 @@ class StudentsTable extends AppTable {
 		if(!empty($entity['user']['nationalities'])) {
 			$nationalities = $entity['user']['nationalities'];
 			foreach ($nationalities as $nationality) {
-				if (isset($nationality['country']['name'])) {
-					$str .= $nationality['country']['name'].', ';
+				if (isset($nationality['nationalities_look_up']['name'])) {
+					$str .= $nationality['nationalities_look_up']['name'].', ';
 				}			
 			}
 		}
@@ -1280,18 +1280,12 @@ class StudentsTable extends AppTable {
 			$buttons['view']['url'] = $url;
 		}
 
+		// Remove in POCOR-3010
 		if (isset($buttons['edit'])) {
-			$url = $this->ControllerAction->url('edit');
-			$url['action'] = 'StudentUser';
-			$url[1] = $entity['_matchingData']['Users']['id'];
-			$url['id'] = $entity->id;
-			$buttons['edit']['url'] = $url;
+			unset($buttons['edit']);
 		}
 
 		if (! $this->checkEnrolledInInstitution($studentId, $institutionId)) {
-			if (isset($buttons['edit'])) {
-				unset($buttons['edit']);
-			}
 			if (isset($buttons['remove'])) {
 				unset($buttons['remove']);
 			}

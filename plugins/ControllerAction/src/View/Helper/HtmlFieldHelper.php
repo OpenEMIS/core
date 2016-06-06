@@ -710,10 +710,10 @@ class HtmlFieldHelper extends Helper {
 
 	public function chosenSelect($action, Entity $data, $attr, $options=[]) {
 		$value = '';
-
 		$_options = [
 			'class' => 'chosen-select',
-			'multiple' => true
+			'multiple' => 'true',
+			'type' => 'select'
 		];
 
 		if ($action == 'index' || $action == 'view') {
