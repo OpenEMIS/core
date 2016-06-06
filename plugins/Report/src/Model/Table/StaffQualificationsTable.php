@@ -2,9 +2,10 @@
 namespace Report\Model\Table;
 
 use ArrayObject;
+use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
@@ -35,5 +36,71 @@ class StaffQualificationsTable extends AppTable  {
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
 		$attr['options'] = $this->controller->getFeatureOptions($this->alias());
 		return $attr;
+	}
+
+	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+
+		$query
+			->select([
+				'institution_name' => 'Institution.name',
+				'institution_code' => 'Institution.code',
+				'staff_position_name' => 'staffPositionTitle.name',
+				'staff_type_name' => 'fieldOptionValue.name'
+			])
+			->innerJoin(
+				['institutionStaff' => 'institution_staff'],
+					['institutionStaff.staff_id = '.$this->aliasField('staff_id')]
+			)
+			->innerJoin(
+				['Institution' => 'institutions'],
+					['Institution.id = institutionStaff.institution_id']
+			)
+			->innerJoin(
+				['institutionPosition' => 'institution_positions'],
+					['institutionPosition.id = institutionStaff.institution_position_id']
+			)
+			->innerJoin(
+				['staffPositionTitle' => 'staff_position_titles'],
+					['staffPositionTitle.id = institutionPosition.staff_position_title_id']
+			)
+			->innerJoin(
+				['fieldOptionValue' => 'field_option_values'],
+					['institutionStaff.staff_type_id = fieldOptionValue.id']
+			);
+
+		// if (!$superAdmin) {
+		// 	$query->find('ByAccess', ['user_id' => $userId, 'institution_field_alias' => $this->aliasField('institution_id')]);
+		// }
+	}
+
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
+		$newArray = [];
+		$newArray[] = [
+			'key' => 'Institution.name',
+			'field' => 'institution_name',
+			'type' => 'string',
+			'label' => __('Institution Name')
+		];
+		$newArray[] = [
+			'key' => 'Institution.code',
+			'field' => 'institution_code',
+			'type' => 'string',
+			'label' => __('Institution Code')
+		];
+		$newArray[] = [
+			'key' => 'staffPositionTitle.name',
+			'field' => 'staff_position_name',
+			'type' => 'string',
+			'label' => __('Position')
+		];
+		$newArray[] = [
+			'key' => 'fieldOptionValue.name',
+			'field' => 'staff_type_name',
+			'type' => 'string',
+			'label' => __('Staff Type')
+		];
+		
+		$newFields = array_merge($newArray, $fields->getArrayCopy());
+		$fields->exchangeArray($newFields);
 	}
 }
