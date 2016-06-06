@@ -30,11 +30,8 @@ class StudentAdmissionTable extends AppTable {
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('StudentTransferReasons', ['className' => 'FieldOption.StudentTransferReasons']);
-<<<<<<< HEAD
 		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
-=======
 		$this->belongsTo('NewEducationGrades', ['className' => 'Education.EducationGrades']);
->>>>>>> 9fb53bf14c520e359ed35c84d5dc4fcba47134ab
 
 		$this->addBehavior('User.AdvancedNameSearch');
 	}
