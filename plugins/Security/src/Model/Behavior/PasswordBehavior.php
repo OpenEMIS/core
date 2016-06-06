@@ -21,6 +21,7 @@ class PasswordBehavior extends Behavior {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
+        $events['Model.buildValidator'] = ['callable' => 'buildValidator', 'priority' => 5];
 		return $events;
 	}
 
@@ -42,6 +43,9 @@ class PasswordBehavior extends Behavior {
 
 		$validator = $validator
 			->add('username', [
+                'ruleMinLength' => [
+                    'rule' => ['minLength', 6]
+                ],
 				'ruleUnique' => [
 					'rule' => 'validateUnique',
 					'provider' => 'table',
@@ -59,6 +63,8 @@ class PasswordBehavior extends Behavior {
 				]
 			])
 			;
+        
+        $this->_table->setValidationCode('username.ruleMinLength', 'User.Accounts');
 		$this->_table->setValidationCode('username.ruleUnique', 'User.Accounts');
 		$this->_table->setValidationCode('username.ruleCheckUsername', 'User.Accounts');
 		$this->_table->setValidationCode('retype_password.ruleCompare', 'User.Accounts');
