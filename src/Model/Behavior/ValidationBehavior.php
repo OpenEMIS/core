@@ -59,6 +59,10 @@ class ValidationBehavior extends Behavior {
 					$validator->field($column)->remove($rkey);
 				}
 
+				if ($columnAttr['null'] == 1) {
+					$validator->allowEmpty($column);
+				}
+
 				// inserting these rules first
 				$validator->add($column, [
 					'ruleValidDate' => [
@@ -543,9 +547,11 @@ class ValidationBehavior extends Behavior {
 		return ($validateEnrolledInAnyInstitution === false)? true: $validateEnrolledInAnyInstitution;
 	}
 
-	public static function studentNotCompletedGrade($field, array $globalData) {
+	public static function studentNotCompletedGrade($field, $options = [], array $globalData) {
 		$Students = TableRegistry::get('Institution.Students');
-		return !$Students->completedGrade($globalData['data']['education_grade_id'], $globalData['data']['student_id']);
+		$educationGradeField = isset($options['educationGradeField']) ? $options['educationGradeField'] : 'education_grade_id';
+		$studentIdField = isset($options['studentIdField']) ? $options['studentIdField'] : 'student_id';
+		return !$Students->completedGrade($globalData['data'][$educationGradeField], $globalData['data'][$studentIdField]);
 	}
 
     public static function institutionStaffId($field, array $globalData) {
