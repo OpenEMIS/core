@@ -1,15 +1,37 @@
-v3.5.5.2
-- Survey Reports will now be generated based on the user's security access	
+v3.5.7
+- You can now transfer students from one grade to another grade
+- You can now find Institutions easily when performing Student Transfer
+
+v3.5.6
+- Zero value can now be saved properly in Survey Forms
+- Removing students from Classes now delete Results, Attendance, Behaviour data linked to that student properly
 - New Feature - You can now configure Rules to hide/show survey questions
-- New Feature - You can now configure survey questions to be repeated	
-- Fixed a bug that caused Students in Subjects to be duplicated	
-- Fixed a bug that caused 404 error page when users access Directories	
-- Fixed a bug that caused Sunday not showing up in Attendance	
-- Staff Status are now translated properly	
-- Institution list is now ordered by code in Student Transfer	
-- Fixed a bug that caused 404 error page when user accessing Classes -> Edit	
+- Fixed a bug that caused 'Select All' checkboxes affecting disabled checkboxes
+- Usernames should be at least 6 characters now
+- Administrative Boundaries and Nationalities now use two different list instead of the same one
+- Classes and Subjects can now be linked to Staff via Careers
+- Fixed a bug that caused user created roles not able to access Permissions
+- Fixed a bug that caused Arabic translation not working properly in Attendance report
+- Staff FTE effective start date is now set as the End Date of the old position instead of the Start Date of the new position
+- Fixed a bug that caused 404 error page when users access Directories
+- Fixed a bug that caused date format to be different between Successful Records and Failed Records in Import
+- Fixed a bug that caused users not able to select Academic Periods in Institutions -> Visits
+- Fixed a bug that caused validation to happen on End-date while adding Memberships or Licenses
+- Fixed a bug that caused users not able to save training needs
+- Fixed a bug that caused Infrastructure code to be generated incorrectly
+- Fixed a bug that caused 404 error when saving a workflow
+
+v3.5.5.2
+- Survey Reports will now be generated based on the user's security access
+- New Feature - You can now configure Rules to hide/show survey questions
+- New Feature - You can now configure survey questions to be repeated
+- Fixed a bug that caused Students in Subjects to be duplicated
+- Fixed a bug that caused Sunday not showing up in Attendance
+- Staff Status are now translated properly
+- Institution list is now ordered by code in Student Transfer
+- Fixed a bug that caused 404 error page when user accessing Classes -> Edit
 - Changing of position title on Institution -> Positions is no longer available after the position is created
-- Fixed a bug that caused user to experience 502 bad gateway after login	
+- Fixed a bug that caused user to experience 502 bad gateway after login
 
 v3.5.5.1
 - Fixed a bug that caused the system to calculate using a wrong admission age when adding a student to institution

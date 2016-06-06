@@ -145,4 +145,25 @@ class SurveyRulesTable extends ControllerActionTable
             }
         }
     }
+
+    public function findSurveyRulesList(Query $query, array $options) 
+    {
+        $surveyFormId = $options['survey_form_id'];
+
+        return $query->find('list', [
+                'groupField' => 'question',
+                'keyField' => 'dependent',
+                'valueField' => 'options'
+            ])
+            ->where([
+                $this->aliasField('survey_form_id') => $surveyFormId,
+                $this->aliasField('enabled') => 1
+            ])
+            ->select([
+                'question' => $this->aliasField('survey_question_id'), 
+                'dependent' => $this->aliasField('dependent_question_id'),
+                'options' => $this->aliasField('show_options')
+            ])
+            ->group(['question']);
+    }
 }

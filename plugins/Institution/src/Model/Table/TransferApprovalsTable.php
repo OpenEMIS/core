@@ -28,6 +28,8 @@ class TransferApprovalsTable extends AppTable {
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('StudentTransferReasons', ['className' => 'FieldOption.StudentTransferReasons']);
+		$this->belongsTo('NewEducationGrades', ['className' => 'Education.EducationGrades']);
+		$this->addBehavior('OpenEmis.Section');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -53,6 +55,7 @@ class TransferApprovalsTable extends AppTable {
 		$this->request->data[$this->alias()]['institution_id'] = $entity->institution_id;
 		$this->request->data[$this->alias()]['academic_period_id'] = $entity->academic_period_id;
 		$this->request->data[$this->alias()]['education_grade_id'] = $entity->education_grade_id;
+		$this->request->data[$this->alias()]['new_education_grade_id'] = $entity->new_education_grade_id;
 		$this->request->data[$this->alias()]['start_date'] = $entity->start_date;
 		$this->request->data[$this->alias()]['end_date'] = $entity->end_date;
 		$this->request->data[$this->alias()]['student_transfer_reason_id'] = $entity->student_transfer_reason_id;
@@ -82,7 +85,7 @@ class TransferApprovalsTable extends AppTable {
 			$previousSchoolId = $entity->previous_institution_id;
 			$studentId = $entity->student_id;
             $periodId = $entity->academic_period_id;
-			$gradeId = $entity->education_grade_id;
+			$gradeId = $entity->new_education_grade_id;
 			$newSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($gradeId);
 
 			$validateEnrolledInAnyInstitutionResult = $Students->validateEnrolledInAnyInstitution($studentId, $newSystemId, ['excludeInstitutions' => [$previousSchoolId], 'targetInstitutionId' => $newSchoolId]);
@@ -192,17 +195,31 @@ class TransferApprovalsTable extends AppTable {
 		}
 	}
 
+	private function addSections() 
+    {
+		$this->ControllerAction->field('transfer_status_header', ['type' => 'section', 'title' => __('Transfer Status')]);
+		$this->ControllerAction->field('existing_information_header', ['type' => 'section', 'title' => __('Transfer From')]);
+		$this->ControllerAction->field('new_information_header', ['type' => 'section', 'title' => __('Transfer To')]);
+		$this->ControllerAction->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Details')]);
+    }
+
 	public function editAfterAction(Event $event, Entity $entity) {
 		if ($entity->type != self::TRANSFER) {
 			$event->stopPropagation();
 			return $this->controller->redirect(['controller' => 'Institutions', 'action' => 'Students', 'plugin'=>'Institution']);
 		}
+		$this->addSections();
 		$this->ControllerAction->field('transfer_status');
 		$this->ControllerAction->field('student');
 		$this->ControllerAction->field('student_id');
 		$this->ControllerAction->field('institution_id');
 		$this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('education_grade_id');
+		$this->ControllerAction->field('new_education_grade_id', [
+			'type' => 'readonly', 
+			'attr' => [
+				'value' => $this->NewEducationGrades->get($entity->new_education_grade_id)->programme_grade_name
+			]]);
 		$this->ControllerAction->field('status', ['type' => 'hidden']);
 		$this->ControllerAction->field('start_date');
 		$this->ControllerAction->field('end_date');
@@ -215,11 +232,11 @@ class TransferApprovalsTable extends AppTable {
 		$this->ControllerAction->field('institution_class_id', ['visible' => false]);
 
 		$this->ControllerAction->setFieldOrder([
-			'created', 'transfer_status', 'student',
-			'institution_id', 'academic_period_id', 'education_grade_id', 'institution_class',
+			'transfer_status_header', 'created', 'transfer_status', 
+			'existing_information_header', 'student', 'previous_institution_id', 'academic_period_id', 'education_grade_id',
+			'new_information_header', 'institution_id', 'new_education_grade_id', 'institution_class',
 			'status', 'start_date', 'end_date',
-			'student_transfer_reason_id', 'comment',
-			'previous_institution_id'
+			'transfer_reasons_header', 'student_transfer_reason_id', 'comment'
 		]);
 		$urlParams = $this->ControllerAction->url('edit');
 		if ($urlParams['controller'] == 'Dashboard') {
@@ -230,14 +247,14 @@ class TransferApprovalsTable extends AppTable {
 	public function onUpdateFieldInstitutionClass(Event $event, array $attr, $action, $request) {
 		$academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
 		$institutionId = $this->request->data[$this->alias()]['institution_id'];
-		$educationGradeId = $this->request->data[$this->alias()]['education_grade_id'];
+		$newEducationGradeId = $this->request->data[$this->alias()]['new_education_grade_id'];
 		$listOfClasses = $this->Institutions->find('list', [
 				'keyField' => 'class_id',
 				'valueField' => 'class_name'
 			])
 			->matching('InstitutionClasses.ClassGrades')
 			->where([
-				'ClassGrades.education_grade_id' => $educationGradeId,
+				'ClassGrades.education_grade_id' => $newEducationGradeId,
 				'InstitutionClasses.academic_period_id' => $academicPeriodId,
 				$this->Institutions->aliasField('id') => $institutionId
 			])

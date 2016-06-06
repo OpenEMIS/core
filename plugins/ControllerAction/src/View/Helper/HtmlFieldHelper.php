@@ -94,8 +94,8 @@ class HtmlFieldHelper extends Helper {
 		$method = 'onGet' . Inflector::camelize($type) . 'Element';
 		$eventKey = 'ControllerAction.Model.' . $method;
 		$event = $this->dispatchEvent($this->table, $eventKey, $method, ['action' => $action, 'entity' => $data, 'attr' => $attr, 'options' => $options]);
-		
-		if (!empty($event->result)) {
+
+		if (isset($event->result)) {
 			$html = $event->result;
 		} else {
 			if (method_exists($this, $type)) {
@@ -553,7 +553,7 @@ class HtmlFieldHelper extends Helper {
 		$columnAttr = $schema->column($field);
 		$defaultDate = true;
 		if ($columnAttr['null'] == true) {
-			$defaultDate = false;
+			$defaultDate = date('d-m-Y');
 		}
 
 		if (!isset($attr['date_options'])) {
@@ -710,10 +710,10 @@ class HtmlFieldHelper extends Helper {
 
 	public function chosenSelect($action, Entity $data, $attr, $options=[]) {
 		$value = '';
-
 		$_options = [
 			'class' => 'chosen-select',
-			'multiple' => true
+			'multiple' => 'true',
+			'type' => 'select'
 		];
 
 		if ($action == 'index' || $action == 'view') {

@@ -18,9 +18,11 @@ class DirectoriesTable extends AppTable {
 	// remember to check AdvancedPositionSearchBehavior if these constants are being modified
 	const ALL = 0;
 	const STUDENT = 1;
-	const STAFF = 2;
+    const STAFF = 2;
 	const GUARDIAN = 3;
 	const OTHER = 4;
+    const STUDENTNOTINSCHOOL = 5;
+    const STAFFNOTINSCHOOL = 6;
 
 	private $dashboardQuery;
 
@@ -63,14 +65,26 @@ class DirectoriesTable extends AppTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$userTypeOptions = [
-                self::STAFF => __('Staff'),
-				self::STUDENT => __('Students')
-			];
+		
 
         if ($this->AccessControl->isAdmin()) { // if user is super admin, this condition is used for filtering
-            $userTypeOptions[self::GUARDIAN] = __('Guardians');
-            $userTypeOptions[self::OTHER] = __('Others');
+            $userTypeOptions = [
+                self::STAFF => __('Staff'),
+                self::STUDENT => __('Students'),
+                self::GUARDIAN => __('Guardians'),
+                self::OTHER => __('Others')
+            ];
+        } else {
+            $userTypeOptions = [
+                __('In School') => [
+                    self::STAFF => __('Staff'),
+                    self::STUDENT => __('Students'),
+                ],
+                __('Not In School') => [
+                    self::STAFFNOTINSCHOOL => __('Staff'),
+                    self::STUDENTNOTINSCHOOL => __('Student')
+                ]  
+            ];
         }
 
 		$selectedUserType = $this->queryString('user_type', $userTypeOptions);
@@ -121,83 +135,106 @@ class DirectoriesTable extends AppTable {
 			$institutionIds = $this->AccessControl->getInstitutionsByUser();
 			$institutionIds = implode(', ', $institutionIds);
 			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
-			
-			if (!empty($institutionIds)) {
-                if (!is_null($request->query('user_type'))) {
-                    switch($request->query('user_type')) {
-                        case self::STUDENT:
-                            $InstitutionStudentTable = TableRegistry::get('Institution.Students');
 
-                            $institutionStudents = $InstitutionStudentTable->find()
-                                ->select([
-                                    $InstitutionStudentTable->aliasField('student_id')
-                                ])
-                                ->where([
-                                    $InstitutionStudentTable->aliasField('institution_id').' IN ('.$institutionIds.')',
-                                    $InstitutionStudentTable->aliasField('student_id').' = '.$this->aliasField('id')
-                                ])
-                                ->bufferResults(false);
+            if (!is_null($request->query('user_type'))) {
+                switch($request->query('user_type')) {
+                    case self::STUDENT:
+                        $query->find('StudentsInSchool', ['institutionIds' => $institutionIds]);
+                        break;
 
-                            $allInstitutionStudents = $InstitutionStudentTable->find()
-                                ->select([
-                                    $InstitutionStudentTable->aliasField('student_id')
-                                ])
-                                ->where([
-                                    $InstitutionStudentTable->aliasField('student_id').' = '.$this->aliasField('id')
-                                ])
-                                ->bufferResults(false);
+                    case self::STUDENTNOTINSCHOOL: 
+                        $query->find('StudentsNotInSchool');
+                        break;
 
-                            $query->where([
-                                'OR' => [
-                                    // floating students
-                                    ['NOT EXISTS ('.$allInstitutionStudents->sql().')', $this->aliasField('is_student') => 1],
-                                    // is a student in ->getInstitutionsByUser()
-                                    ['EXISTS ('.$institutionStudents->sql().')']
-                                ]
-                            ])
-                            ;
-                            break;
+                    case self::STAFF:
+                        $query->find('StaffInSchool', ['institutionIds' => $institutionIds]);
+                        break;
 
-                        case self::STAFF:
-                            $InstitutionStaffTable = TableRegistry::get('Institution.Staff');
-
-                            $institutionStaff = $InstitutionStaffTable->find()
-                                ->select([
-                                    $InstitutionStaffTable->aliasField('staff_id')
-                                ])
-                                ->where([
-                                    $InstitutionStaffTable->aliasField('institution_id').' IN ('.$institutionIds.')',
-                                    $InstitutionStaffTable->aliasField('staff_id').' = '.$this->aliasField('id')
-                                ])
-                                ->bufferResults(false);
-
-                            $allInstitutionStaff = $InstitutionStaffTable->find()
-                                ->select([
-                                    $InstitutionStaffTable->aliasField('staff_id')
-                                ])
-                                ->where([
-                                    $InstitutionStaffTable->aliasField('staff_id').' = '.$this->aliasField('id')
-                                ])
-                                ->bufferResults(false);
-                            $query->where([
-                                'OR' => [
-                                    // floating staff
-                                    ['NOT EXISTS ('.$allInstitutionStaff->sql().')', $this->aliasField('is_staff') => 1],
-                                    // is a staff in ->getInstitutionsByUser()
-                                    ['EXISTS ('.$institutionStaff->sql().')'],
-                                ]
-                            ])
-                            ;
-                            break;
-                    }
+                    case self::STAFFNOTINSCHOOL:
+                        $query->find('StaffNotInSchool');
+                        break;
                 }
-			} else {
-				$query = $this->find()->where([$this->aliasField('id') => -1]);
-			}
+            }
 		}
 		
 		$this->dashboardQuery = clone $query;
 	}
+
+    public function findStudentsInSchool(Query $query, array $options) 
+    {
+        $institutionIds = (array_key_exists('institutionIds', $options))? $options['institutionIds']: [];
+        if (!empty($institutionIds)) {
+            $query->join([
+                [
+                    'type' => 'INNER',
+                    'table' => 'institution_students',
+                    'alias' => 'InstitutionStudents',
+                    'conditions' => [
+                        'InstitutionStudents.institution_id'.' IN ('.$institutionIds.')',
+                        'InstitutionStudents.student_id = '. $this->aliasField('id')
+                    ]
+                ]
+            ]);
+        } else {
+            // return nothing if $institutionIds is empty
+            $query->where([$this->aliasField('id') => -1]);
+        }
+        
+        return $query;
+    }
+
+    public function findStudentsNotInSchool(Query $query, array $options) 
+    {
+        $InstitutionStudentTable = TableRegistry::get('Institution.Students');
+        $allInstitutionStudents = $InstitutionStudentTable->find()
+            ->select([
+                $InstitutionStudentTable->aliasField('student_id')
+            ])
+            ->where([
+                $InstitutionStudentTable->aliasField('student_id').' = '.$this->aliasField('id')
+            ])
+            ->bufferResults(false);
+        $query->where(['NOT EXISTS ('.$allInstitutionStudents->sql().')', $this->aliasField('is_student') => 1]);
+        return $query;
+    }
+
+    public function findStaffInSchool(Query $query, array $options) 
+    {
+        $institutionIds = (array_key_exists('institutionIds', $options))? $options['institutionIds']: [];
+        if (!empty($institutionIds)) {
+            $query->join([
+                [
+                    'type' => 'INNER',
+                    'table' => 'institution_staff',
+                    'alias' => 'InstitutionStaff',
+                    'conditions' => [
+                        'InstitutionStaff.institution_id'.' IN ('.$institutionIds.')',
+                        'InstitutionStaff.staff_id = '. $this->aliasField('id')
+                    ]
+                ]
+            ]);
+        } else {
+            // return nothing if $institutionIds is empty
+            $query->where([$this->aliasField('id') => -1]);
+        }
+
+        return $query;
+    }
+
+    public function findStaffNotInSchool(Query $query, array $options) 
+    {
+        $InstitutionStaffTable = TableRegistry::get('Institution.Staff');
+        $allInstitutionStaff = $InstitutionStaffTable->find()
+            ->select([
+                $InstitutionStaffTable->aliasField('staff_id')
+            ])
+            ->where([
+                $InstitutionStaffTable->aliasField('staff_id').' = '.$this->aliasField('id')
+            ])
+            ->bufferResults(false);
+            $query->where(['NOT EXISTS ('.$allInstitutionStaff->sql().')', $this->aliasField('is_staff') => 1]);
+        return $query;
+    }
 
 	public function afterAction(Event $event) {
 		if ($this->action == 'index') {
@@ -209,11 +246,11 @@ class DirectoriesTable extends AppTable {
 						$dashboardModel = 'users';
 						$iconClass = 'fa fa-user';
 						break;
-					case self::STUDENT:
+					case self::STUDENT: case self::STUDENTNOTINSCHOOL:
 						$dashboardModel = 'students';
 						break;
 
-					case self::STAFF:
+					case self::STAFF: case self::STAFFNOTINSCHOOL:
 						$dashboardModel = 'staff';
 						break;
 
@@ -465,11 +502,8 @@ class DirectoriesTable extends AppTable {
 		return $params;
 	}
 
-	public function editAfterAction(Event $event, Entity $entity) {
-		$this->setupTabElements($entity);
-	}
+	private function setSessionAfterAction($event, $entity){
 
-	public function viewAfterAction(Event $event, Entity $entity) {
 		$this->Session->write('Directory.Directories.id', $entity->id);
 		$this->Session->write('Directory.Directories.name', $entity->name);
 		if (!$this->AccessControl->isAdmin()) {
@@ -496,6 +530,30 @@ class DirectoriesTable extends AppTable {
 			$this->Session->write('Staff.Staff.name', $entity->name);
 			$isSet = true;
 		}
+
+		return $isSet;
+
+	}
+
+	public function editAfterAction(Event $event, Entity $entity) {
+		
+		$isSet = $this->setSessionAfterAction($event, $entity);
+
+		if ($isSet) {
+			$reload = $this->Session->read('Directory.Directories.reload');
+			if (!isset($reload)) {
+				$urlParams = $this->ControllerAction->url('edit');
+				$event->stopPropagation();
+				return $this->controller->redirect($urlParams);
+			}
+		}
+
+		$this->setupTabElements($entity);
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity) {
+
+		$isSet = $this->setSessionAfterAction($event, $entity);
 
 		if ($isSet) {
 			$reload = $this->Session->read('Directory.Directories.reload');
