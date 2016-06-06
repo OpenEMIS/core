@@ -740,7 +740,11 @@ class HtmlFieldHelper extends Helper {
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
 			} else {
-				$fieldName = $attr['model'] . '.' . $attr['field'] . '._ids';
+				if ($options['multiple']) {
+					$fieldName = $attr['model'] . '.' . $attr['field'] . '._ids';
+				} else {
+					$fieldName = $attr['model'] . '.' . $attr['field'];
+				}
 			}
 			$value = $this->Form->input($fieldName, $options);
 		}
