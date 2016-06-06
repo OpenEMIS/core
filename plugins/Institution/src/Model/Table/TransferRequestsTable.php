@@ -285,6 +285,7 @@ class TransferRequestsTable extends AppTable {
 			$this->ControllerAction->field('previous_institution_id');
 			$this->ControllerAction->field('type', ['type' => 'hidden', 'value' => self::TRANSFER]);
 			$this->ControllerAction->field('student_status_id', ['type' => 'hidden']);
+			$this->ControllerAction->field('institution_class_id', ['visible' => false]);
 
 			$this->ControllerAction->setFieldOrder([
 				'transfer_status_header', 'transfer_status', 
