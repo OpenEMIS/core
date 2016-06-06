@@ -1,6 +1,7 @@
 v3.5.7
 - You can now transfer students from one grade to another grade
 - You can now find Institutions easily when performing Student Transfer
+- In Institutions -> Students, only Homeroom teachers are allowed to edit their own students
 
 v3.5.6
 - Zero value can now be saved properly in Survey Forms
