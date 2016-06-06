@@ -66,7 +66,7 @@ class AreasController extends AppController
 
 	public function ajaxGetArea($tableName, $targetModel, $id, $displayCountry = true) {
 		$this->viewBuilder()->layout('ajax');
-		$rootId = -1; // Root node
+		$rootId = null; // Root node
 
 		$condition = [];
 		$accessControlAreaCount = 0;
@@ -82,7 +82,7 @@ class AreasController extends AppController
 		$formError = $this->request->query('formerror');
 		if (!$displayCountry) {
 			if ($tableName == 'Area.AreaAdministratives') {
-				$worldId = $Table->find()->where([$Table->aliasField('parent_id') => -1])->first()->id;
+				$worldId = $Table->find()->where([$Table->aliasField('parent_id') . ' IS NULL'])->first()->id;
 				$condition[] = [
 					'OR' => [
 						[$Table->aliasField('is_main_country') => 1],
@@ -178,7 +178,7 @@ class AreasController extends AppController
 		$objParentIds = [];
 		foreach ($path as $obj) {
 			if (! $AccessControl->isAdmin() && $tableName == 'Area.Areas') {
-				if (!in_array($obj->id, $authorisedAreaId) && !in_array($obj->id, $authorisedParentIds)) {
+				if (!in_array($obj->id, $authorisedAreaId) && !in_array($obj->id, $authorisedParentIds)) {pr(99);
 					$pathToUnset[] = $count - 1;
 					$count++;
 					continue;
@@ -202,7 +202,7 @@ class AreasController extends AppController
 				case "Area.AreaAdministratives":
 					if( $count > 2 ){
 						$list = [$previousOptionId => '--'.__('Select Area').'--'] + $list;
-					}
+					}pr($list)
 					break;
 				default:
 					if( $count > 1 ){
