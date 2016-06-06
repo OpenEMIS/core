@@ -103,7 +103,7 @@ class AreaAdministrativesTable extends AppTable {
 
 		$this->fields['parent_id']['visible'] = false;
 
-		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : NULL;
+		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
 		if ($parentId != null) {
 			$crumbs = $this
 				->find('path', ['for' => $parentId])
