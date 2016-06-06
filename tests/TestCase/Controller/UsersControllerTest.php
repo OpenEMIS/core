@@ -19,7 +19,7 @@ class UsersControllerTest extends IntegrationTestCase {
 			'password' => 'demo',
 			'submit' => 'login'
 		];		
-
+		$this->enableCsrfToken();
 		$this->post('/Users/postLogin', $data);
 		$this->assertArrayHasKey('Auth', $_SESSION, 'Error logging in!');
 	}
