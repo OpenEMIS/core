@@ -18,6 +18,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
  		[
  			'value' => 'Workflow.onApprove',
 			'text' => 'Approval of Changes to Staff Position Profiles',
+			'description' => 'Performing this action will apply the proposed changes to the staff record.',
  			'method' => 'OnApprove'
  		]
  	];
