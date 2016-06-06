@@ -63,14 +63,21 @@ class StudentsController extends AppController {
 
 	// AngularJS
 	public function Results() {
-		// tabs
-		$options = ['type' => 'student'];
-        $tabElements = $this->getAcademicTabElements($options);
-        $this->set('tabElements', $tabElements);
-        $this->set('selectedAction', 'Results');
-        // End
+		$session = $this->request->session();
 
-		$this->set('ngController', 'StudentResultsCtrl as StudentResultsController');
+		if ($session->check('Student.Students.id')) {
+			$studentId = $session->read('Student.Students.id');
+			$session->write('Student.Results.student_id', $studentId);
+
+			// tabs
+			$options = ['type' => 'student'];
+	        $tabElements = $this->getAcademicTabElements($options);
+	        $this->set('tabElements', $tabElements);
+	        $this->set('selectedAction', 'Results');
+	        // End
+
+			$this->set('ngController', 'StudentResultsCtrl as StudentResultsController');
+		}
 	}
 	// End
 
@@ -101,7 +108,7 @@ class StudentsController extends AppController {
 
 		if ($action == 'index') {
 			
-		} else if ($session->check('Student.Students.id') || $action == 'view' || $action == 'edit') {
+		} else if ($session->check('Student.Students.id') || $action == 'view' || $action == 'edit' || $action == 'Results') {
 			// add the student name to the header
 			$id = 0;
 			if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
@@ -115,7 +122,7 @@ class StudentsController extends AppController {
 			if (!empty($id)) {
 				$entity = $this->Students->get($id);
 				$name = $entity->name;
-				$header = $name . ' - ' . __('Overview');
+				$header = $action == 'Results' ? $name . ' - ' . __('Results') : $name . ' - ' . __('Overview');
 				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $id]);
 			}
 		}

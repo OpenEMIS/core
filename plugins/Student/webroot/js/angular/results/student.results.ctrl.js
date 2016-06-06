@@ -49,6 +49,7 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
             angular.forEach(academicPeriods, function(academicPeriod, key) {
                 var academicPeriodId = academicPeriod.id;
                 var academicPeriodName = academicPeriod.name;
+                var academicPeriodOrder = academicPeriod.order;
 
                 StudentResultsSvc.getStudentResults(academicPeriodId, vm.studentId, vm.institutionId)
                 .then(function(response) {
@@ -63,6 +64,7 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
                                 vm.sections.push({
                                     id: sectionId,
                                     name: sectionName,
+                                    order: academicPeriodOrder,
                                     visible: true
                                 });
 
@@ -73,6 +75,16 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
                     }
                 }, function(error) {
                     console.log(error);
+                })
+                .finally(function() {
+                    if (vm.sections.length == 0) {
+                        var errorMessage = 'No Results';
+                        console.log(errorMessage);
+                        AlertSvc.warning($scope, errorMessage);
+                    } else {
+                        AlertSvc.reset($scope);
+                    }
+                    UtilsSvc.isAppendLoader(false);
                 });
             });
         }, function(error) {
@@ -81,7 +93,8 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
             AlertSvc.warning(vm, error);
         })
         .finally(function() {
-            UtilsSvc.isAppendLoader(false);
+            // move turn off loader after getting response from student results
+            // UtilsSvc.isAppendLoader(false);
         });
     });
 

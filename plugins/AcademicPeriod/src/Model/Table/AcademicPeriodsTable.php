@@ -229,11 +229,8 @@ class AcademicPeriodsTable extends AppTable {
 
 		$data = $this
 			->find('list')
-			->find('visible')
-			->find('order')
-			// ->find('yearList')
+			->find('years')
 			->find('editable', ['isEditable' => $isEditable])
-			->where([$this->aliasField('academic_period_level_id') => $level->id])
 			->where($conditions)
 			->toArray();
 
@@ -531,14 +528,13 @@ class AcademicPeriodsTable extends AppTable {
 		return $days;
 	}
 
-	public function findYearList(Query $query, array $options) {
+	public function findYears(Query $query, array $options) {
 		$level = $this->Levels
 			->find()
 			->order([$this->Levels->aliasField('level ASC')])
 			->first();
 
 		return $query
-			// ->find('list')
 			->find('visible')
 			->find('order')
 			->where([$this->aliasField('academic_period_level_id') => $level->id]);

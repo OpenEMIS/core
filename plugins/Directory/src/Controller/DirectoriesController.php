@@ -91,14 +91,21 @@ class DirectoriesController extends AppController {
 
 	// AngularJS
 	public function StudentResults() {
-		// tabs
-		$options['type'] = 'student';
-		$tabElements = $this->getAcademicTabElements($options);
-		$this->set('tabElements', $tabElements);
-		$this->set('selectedAction', 'Results');
-        // End
+		$session = $this->request->session();
 
-		$this->set('ngController', 'StudentResultsCtrl as StudentResultsController');
+		if ($session->check('Directory.Directories.id')) {
+			$studentId = $session->read('Directory.Directories.id');
+			$session->write('Student.Results.student_id', $studentId);
+
+			// tabs
+			$options['type'] = 'student';
+			$tabElements = $this->getAcademicTabElements($options);
+			$this->set('tabElements', $tabElements);
+			$this->set('selectedAction', 'Results');
+	        // End
+
+			$this->set('ngController', 'StudentResultsCtrl as StudentResultsController');
+		}
 	}
 	// End
 
@@ -128,7 +135,7 @@ class DirectoriesController extends AppController {
 			$session->delete('Staff.Staff.name');
 			$session->delete('Student.Students.id');
 			$session->delete('Student.Students.name');
-		} else if ($session->check('Directory.Directories.id') || $action == 'view' || $action == 'edit') {
+		} else if ($session->check('Directory.Directories.id') || $action == 'view' || $action == 'edit' || $action == 'StudentResults') {
 			$id = 0;
 			if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
 				$id = $this->request->pass[0];
@@ -138,7 +145,7 @@ class DirectoriesController extends AppController {
 			if (!empty($id)) {
 				$entity = $this->Directories->get($id);
 				$name = $entity->name;
-				$header = $name . ' - ' . __('Overview');
+				$header = $action == 'StudentResults' ? $name . ' - ' . __('Results') : $name . ' - ' . __('Overview');
 				$this->Navigation->addCrumb($name, ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'view', $id]);
 			}
 		}
