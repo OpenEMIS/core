@@ -32,6 +32,20 @@ class GuardianUserTable extends UserTable {
 		$this->setupTabElements($entity);
 	}
 
+	public function addBeforeAction(Event $event) 
+	{
+		if ($this->controller->name == "Students") {
+			$this->ControllerAction->field('other_information_section', ['visible' => false]);
+		}
+	}
+
+	public function editBeforeAction(Event $event) 
+	{
+		if ($this->controller->name == "Students") {
+			$this->ControllerAction->field('other_information_section', ['visible' => false]);
+		}
+	}
+
 	public function editAfterAction(Event $event, Entity $entity) {
 		$this->setupTabElements($entity);
 	}
