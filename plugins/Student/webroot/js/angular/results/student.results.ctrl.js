@@ -32,7 +32,7 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
         }, function(error) {
             // No Student Id or Institution Id
             console.log(error);
-            AlertSvc.warning(vm, error);
+            AlertSvc.warning($scope, error);
         })
         // getAssessmentGradingTypes
         .then(function(assessmentGradingTypes) {
@@ -40,7 +40,7 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
         }, function(error) {
             // No Assessment Grading Types
             console.log(error);
-            AlertSvc.warning(vm, error);
+            AlertSvc.warning($scope, error);
         })
         // getAcademicPeriods
         .then(function(academicPeriods) {
@@ -90,7 +90,7 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
         }, function(error) {
             // No Academic Periods
             console.log(error);
-            AlertSvc.warning(vm, error);
+            AlertSvc.warning($scope, error);
         })
         .finally(function() {
             // move turn off loader after getting response from student results
@@ -129,7 +129,7 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
         }, function(error) {
             // Assessment Periods is not configured
             console.log(error);
-            AlertSvc.warning(vm, error);
+            AlertSvc.warning($scope, error);
         })
         // getRowData
         .then(function(rows) {
@@ -137,7 +137,7 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
         }, function(error) {
             // No Results
             console.log(error);
-            AlertSvc.warning(vm, error);
+            AlertSvc.warning($scope, error);
         })
         .finally(function(){
             UtilsSvc.isAppendSpinner(false, 'student-result-table_'+sectionId);
