@@ -178,7 +178,7 @@ class AreasTable extends AppTable {
 				'attr' => ['value' => $parentPath]
 			]);
 
-			array_unshift($this->_fieldOrder, "parent");
+			//array_unshift($this->_fieldOrder, "parent");
 		}
 	}
 
