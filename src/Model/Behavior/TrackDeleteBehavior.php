@@ -30,17 +30,48 @@ class TrackDeleteBehavior extends Behavior {
 
     public function beforeDelete(Event $event, Entity $entity) 
     {
+        $this->trackDelete($entity);
+    }
+
+    public function trackDelete(Entity $entity) 
+    {
         try {
-            $temp = $this->_table->alias();
             $DeletedRecords = TableRegistry::get('DeletedRecords');
             $entityTable = TableRegistry::get($entity->source());
             $session = new Session();
             $userId = $session->read('Auth.User.id');
 
+            if (!is_array($entityTable->primaryKey())) {
+                $referenceKey = $entity->{$entityTable->primaryKey()};
+            } else {
+                if ($entity->has('id')) {
+                    $referenceKey = $entity->id;
+                }
+            }
+
+            // catering for 'binary' field type start
+            $binaryDataFieldNames = [];
+            $schema = $entityTable->schema();
+            foreach ($schema->columns() as $key => $value) {
+                $schemaColumnData = $schema->column($value);
+                if (array_key_exists('type', $schemaColumnData) && $schemaColumnData['type'] == 'binary') {
+                    $binaryDataFieldNames[] = $value;
+                }
+            }
+            $entityData = $entity->toArray();
+            foreach ($binaryDataFieldNames as $key => $value) {
+                if (array_key_exists($value, $entityData)) {
+                    if (is_null($entityData[$value])) continue;
+                    $file = base64_encode($this->convertBinaryResourceToString($entityData[$value]));
+                    $entityData[$value] = $file;
+                }
+            }
+            // catering for 'binary' field type end
+            
             $newEntity = $DeletedRecords->newEntity([
                 'reference_table' => $entity->source(),
-                'reference_key' => $entity->{$entityTable->primaryKey()},
-                'data' => json_encode($entity->toArray()),
+                'reference_key' => $referenceKey,
+                'data' => json_encode($entityData),
                 'created_user_id' => $userId,
                 'created' => new Time('NOW')
             ]);
@@ -48,6 +79,16 @@ class TrackDeleteBehavior extends Behavior {
         } catch (Exception $e) {
             Log::write('error', __METHOD__ . ': ' . $e->getMessage());
         }
+    }
+
+    public function convertBinaryResourceToString($phpResourceFile) {
+        $file = ''; 
+        while (!feof($phpResourceFile)) {
+            $file .= fread($phpResourceFile, 8192); 
+        } 
+        fclose($phpResourceFile);
+
+        return $file;
     }
 	
 }
