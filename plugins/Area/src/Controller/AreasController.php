@@ -82,7 +82,7 @@ class AreasController extends AppController
 		$formError = $this->request->query('formerror');
 		if (!$displayCountry) {
 			if ($tableName == 'Area.AreaAdministratives') {
-				$worldId = $Table->find()->where([$Table->aliasField('parent_id') . ' IS NULL'])->first()->id;
+				$worldId = $Table->find()->where([$Table->aliasField('parent_id') => -1])->first()->id;
 				$condition[] = [
 					'OR' => [
 						[$Table->aliasField('is_main_country') => 1],
@@ -173,12 +173,12 @@ class AreasController extends AppController
 			->order([$Table->aliasField('lft')])
 			->all();
 		$count = 1;
-		$prevousOptionId = -1;
+		$previousOptionId = -1;
 		$pathToUnset = [];
 		$objParentIds = [];
 		foreach ($path as $obj) {
 			if (! $AccessControl->isAdmin() && $tableName == 'Area.Areas') {
-				if (!in_array($obj->id, $authorisedAreaId) && !in_array($obj->id, $authorisedParentIds)) {pr(99);
+				if (!in_array($obj->id, $authorisedAreaId) && !in_array($obj->id, $authorisedParentIds)) {
 					$pathToUnset[] = $count - 1;
 					$count++;
 					continue;
@@ -202,7 +202,7 @@ class AreasController extends AppController
 				case "Area.AreaAdministratives":
 					if( $count > 2 ){
 						$list = [$previousOptionId => '--'.__('Select Area').'--'] + $list;
-					}pr($list)
+					}
 					break;
 				default:
 					if( $count > 1 ){
