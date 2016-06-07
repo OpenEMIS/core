@@ -10,7 +10,7 @@
 <div class="input clearfix">
 	<div class="clearfix">
 	<?php
-		echo $this->Form->input('<i class="fa fa-plus"></i> <span>Add New Payment</span>', [
+		echo $this->Form->input('<i class="fa fa-plus"></i> <span>'.__('Add New Payment').'</span>', [
 			'label' => __('Payments'),
 			'type' => 'button',
 			'class' => 'btn btn-default',
@@ -164,9 +164,9 @@
 			<thead>
 				<tr>
 					<th><?= $attr['fields']['payment_date']['tableHeader'] ?></th>
-					<th><?= $attr['fields']['created_user_id']['tableHeader'] ?></th>
-					<th><?= $attr['fields']['comments']['tableHeader'] ?></th>
 					<th class="text-right"><?= $attr['fields']['amount']['tableHeader'] ?></th>
+					<th><?= $attr['fields']['comments']['tableHeader'] ?></th>
+					<th><?= $attr['fields']['created_user_id']['tableHeader'] ?></th>	
 				</tr>
 			</thead>
 			<tbody>
@@ -177,9 +177,9 @@
 					<?php $attr['fields']['created_user_id']['value'] = $record->created_by->name; ?>
 
 					<td><?= $this->HtmlField->{$attr['fields']['payment_date']['type']}($action, $record, $attr['fields']['payment_date'], $attr['fields']['payment_date']['attr']);?></td>
-					<td><?= $this->HtmlField->{$attr['fields']['created_user_id']['type']}($action, $record, $attr['fields']['created_user_id'], $attr['fields']['created_user_id']['attr']);?></td>
-					<td><?= $this->HtmlField->{$attr['fields']['comments']['type']}($action, $record, $attr['fields']['comments'], $attr['fields']['comments']['attr']);?></td>
 					<td class="text-right"><?= $this->HtmlField->{$attr['fields']['amount']['type']}($action, $record, $attr['fields']['amount'], $attr['fields']['amount']['attr']);?></td>
+					<td><?= $this->HtmlField->{$attr['fields']['comments']['type']}($action, $record, $attr['fields']['comments'], $attr['fields']['comments']['attr']);?></td>
+					<td><?= $this->HtmlField->{$attr['fields']['created_user_id']['type']}($action, $record, $attr['fields']['created_user_id'], $attr['fields']['created_user_id']['attr']);?></td>
 				</tr>
 			<?php
 				endforeach;
@@ -189,10 +189,10 @@
 			<?php if (isset($attr['data']) && !empty($attr['data'])) : ?>
 			
 			<tfoot>
-				<td></td>
-				<td></td>
 				<td class="bold"><?php echo $this->Label->get('general.total') ?></td>
 				<td class="text-right bold"><?php echo $attr['total'] ?></td>
+				<td></td>
+				<td></td>
 			</tfoot>
 			
 			<?php endif;?>

@@ -250,12 +250,17 @@ class AcademicPeriodsTable extends AppTable {
 		$withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : true;
 		$withSelect = array_key_exists('withSelect', $params) ? $params['withSelect'] : false;
 		$isEditable = array_key_exists('isEditable', $params) ? $params['isEditable'] : null;
+		$restrictLevel = array_key_exists('restrictLevel', $params) ? $params['restrictLevel'] : null;
 
 		if ( !$withLevels ) {
 			$where = [
 				$this->aliasField('current') => 1,
 				$this->aliasField('parent_id') . ' <> ' => 0
 			];
+
+			if (!empty($restrictLevel)) {
+				$where['academic_period_level_id IN '] = $restrictLevel;
+			}
 
 			// get the current period
 			$data = $this->find('list')
@@ -277,16 +282,15 @@ class AcademicPeriodsTable extends AppTable {
 				$this->aliasField('parent_id') . ' <> ' => 0,
 			];
 
+			if (!empty($restrictLevel)) {
+				$where['academic_period_level_id IN '] = $restrictLevel;
+			}
+
 			// get the current period
 			$data = $this->find()
 				->find('visible')
 				->find('editable', ['isEditable' => $isEditable])
 				->contain(['Levels'])
-				->select([
-						'id' => $this->aliasField('id'),
-						'name' => $this->aliasField('name'),
-						'level' => 'Levels.name'
-					])
 				->where($where)
 				->order([$this->aliasField('academic_period_level_id'), $this->aliasField('order')])
 				->toArray();
@@ -294,10 +298,12 @@ class AcademicPeriodsTable extends AppTable {
 			$levelName = "";
 			$list = [];
 
-			foreach ($data as $obj) {
-				if ($levelName != $obj->level) {
-					$levelName = __($obj->level);
+			foreach ($data as $key => $obj) {
+
+				if ($levelName != $obj->level->name) {
+					$levelName = __($obj->level->name);
 				}
+
 				$list[$levelName][$obj->id] = __($obj->name);
 			}
 
@@ -328,14 +334,24 @@ class AcademicPeriodsTable extends AppTable {
 	}
 
 	public function getWorkingDaysOfWeek() {
+		// $weekdays = [
+		// 	0 => __('Sunday'),
+		// 	1 => __('Monday'),
+		// 	2 => __('Tuesday'),
+		// 	3 => __('Wednesday'),
+		// 	4 => __('Thursday'),
+		// 	5 => __('Friday'),
+		// 	6 => __('Saturday'),
+		// ];
+
 		$weekdays = [
-			0 => __('Sunday'),
-			1 => __('Monday'),
-			2 => __('Tuesday'),
-			3 => __('Wednesday'),
-			4 => __('Thursday'),
-			5 => __('Friday'),
-			6 => __('Saturday'),
+			0 => 'Sunday',
+			1 => 'Monday',
+			2 => 'Tuesday',
+			3 => 'Wednesday',
+			4 => 'Thursday',
+			5 => 'Friday',
+			6 => 'Saturday',
 		];
 		$ConfigItems = TableRegistry::get('ConfigItems');
 		$firstDayOfWeek = $ConfigItems->value('first_day_of_week');
@@ -347,6 +363,7 @@ class AcademicPeriodsTable extends AppTable {
 			$firstDayOfWeek = $firstDayOfWeek % 7;
 		}
 		return $week;
+
 	}
 
 	public function getAttendanceWeeks($id) {
@@ -364,9 +381,20 @@ class AcademicPeriodsTable extends AppTable {
 		$period = $this->findById($id)->first();
 		$ConfigItems = TableRegistry::get('ConfigItems');
 		$firstDayOfWeek = $ConfigItems->value('first_day_of_week');
+
+		// If First of week is sunday changed the value to 7, because sunday with the '0' value unable to be displayed 
+		if ($firstDayOfWeek == 0) {
+			$firstDayOfWeek = 7;
+		}
+
 		$daysPerWeek = $ConfigItems->value('days_per_week');
 
-		$lastDayIndex = ($firstDayOfWeek + $daysPerWeek - 1) % 7;
+		// If last day index is '0'-valued-sunday it will change the value to '7' so it will be displayed.
+		$lastDayIndex = ($firstDayOfWeek - 1);// last day index always 1 day before the starting date.
+		if ($lastDayIndex == 0) {
+			$lastDayIndex = 7;
+		} 
+
 		$startDate = $period->start_date;
 
 		$weekIndex = 1;
