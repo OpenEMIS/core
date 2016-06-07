@@ -352,20 +352,25 @@ class StudentUserTable extends UserTable {
 	{
 		$permission = false;
 		if (!$this->AccessControl->isAdmin()) {
-			$Class = TableRegistry::get('Institution.InstitutionClasses');
-			$classStudentRecord = $Class
-				->find('ByAccess', [
-					'accessControl' => $this->AccessControl,
-					'controller' => $this->controller,
-					'userId' => $userId,
-					'permission' => 'edit'
-				])
-				->innerJoinWith('ClassStudents')
-				->where(['ClassStudents.student_id' => $studentId])
-				->toArray();
-			if (!empty($classStudentRecord)) {
+			if (!$this->AccessControl->check(['Institutions', 'AllClasses', $permission], $roles)) {
+				$Class = TableRegistry::get('Institution.InstitutionClasses');
+				$classStudentRecord = $Class
+					->find('ByAccess', [
+						'accessControl' => $this->AccessControl,
+						'controller' => $this->controller,
+						'userId' => $userId,
+						'permission' => 'edit'
+					])
+					->innerJoinWith('ClassStudents')
+					->where(['ClassStudents.student_id' => $studentId])
+					->toArray();
+				if (!empty($classStudentRecord)) {
+					$permission = true;
+				}
+			} else {
 				$permission = true;
 			}
+			
 		} else {
 			$permission = true;
 		}
