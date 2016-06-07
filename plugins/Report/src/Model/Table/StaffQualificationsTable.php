@@ -24,6 +24,7 @@ class StaffQualificationsTable extends AppTable  {
 				'file_name'
 			]
 		]);
+		$this->addBehavior('Report.InstitutionSecurity');
 		$this->addBehavior('Report.ReportList');
 	}
 
@@ -40,61 +41,68 @@ class StaffQualificationsTable extends AppTable  {
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 
+		$requestData = json_decode($settings['process']['params']);
+		
+		$userId = $requestData->user_id;
+		$superAdmin = $requestData->super_admin;
+
 		$query
 			->select([
-				'institution_name' => 'Institution.name',
-				'institution_code' => 'Institution.code',
-				'staff_position_name' => 'staffPositionTitle.name',
-				'staff_type_name' => 'fieldOptionValue.name'
+				'institution_name' => 'Institutions.name',
+				'institution_code' => 'Institutions.code',
+				'staff_position_name' => 'staffPositionTitles.name',
+				'staff_type_name' => 'fieldOptionValues.name'
 			])
 			->innerJoin(
 				['institutionStaff' => 'institution_staff'],
 					['institutionStaff.staff_id = '.$this->aliasField('staff_id')]
 			)
 			->innerJoin(
-				['Institution' => 'institutions'],
-					['Institution.id = institutionStaff.institution_id']
+				['Institutions' => 'institutions'],
+					['Institutions.id = institutionStaff.institution_id']
 			)
 			->innerJoin(
-				['institutionPosition' => 'institution_positions'],
-					['institutionPosition.id = institutionStaff.institution_position_id']
+				['institutionPositions' => 'institution_positions'],
+					['institutionPositions.id = institutionStaff.institution_position_id']
 			)
 			->innerJoin(
-				['staffPositionTitle' => 'staff_position_titles'],
-					['staffPositionTitle.id = institutionPosition.staff_position_title_id']
+				['staffPositionTitles' => 'staff_position_titles'],
+					['staffPositionTitles.id = institutionPositions.staff_position_title_id']
 			)
 			->innerJoin(
-				['fieldOptionValue' => 'field_option_values'],
-					['institutionStaff.staff_type_id = fieldOptionValue.id']
+				['fieldOptionValues' => 'field_option_values'],
+					['institutionStaff.staff_type_id = fieldOptionValues.id']
 			);
 
-		// if (!$superAdmin) {
-		// 	$query->find('ByAccess', ['user_id' => $userId, 'institution_field_alias' => $this->aliasField('institution_id')]);
-		// }
+		pr($query);
+
+		if (!$superAdmin) {
+			$query->find('ByAccess', ['user_id' => $userId, 'institution_field_alias' => 'Institutions.id']);
+		}
 	}
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
 		$newArray = [];
 		$newArray[] = [
-			'key' => 'Institution.name',
+			'key' => 'Institutions.name',
 			'field' => 'institution_name',
 			'type' => 'string',
 			'label' => __('Institution Name')
 		];
 		$newArray[] = [
-			'key' => 'Institution.code',
+			'key' => 'Institutions.code',
 			'field' => 'institution_code',
 			'type' => 'string',
 			'label' => __('Institution Code')
 		];
 		$newArray[] = [
-			'key' => 'staffPositionTitle.name',
+			'key' => 'staffPositionTitles.name',
 			'field' => 'staff_position_name',
 			'type' => 'string',
 			'label' => __('Position')
 		];
 		$newArray[] = [
-			'key' => 'fieldOptionValue.name',
+			'key' => 'fieldOptionValues.name',
 			'field' => 'staff_type_name',
 			'type' => 'string',
 			'label' => __('Staff Type')
