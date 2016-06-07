@@ -352,6 +352,11 @@ class StudentUserTable extends UserTable {
 	{
 		$permission = false;
 		if (!$this->AccessControl->isAdmin()) {
+			$event = $this->controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
+			$roles = [];
+            if (is_array($event->result)) {
+                $roles = $event->result;    
+            }
 			if (!$this->AccessControl->check(['Institutions', 'AllClasses', $permission], $roles)) {
 				$Class = TableRegistry::get('Institution.InstitutionClasses');
 				$classStudentRecord = $Class
