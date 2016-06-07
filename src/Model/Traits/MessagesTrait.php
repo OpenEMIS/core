@@ -144,6 +144,7 @@ trait MessagesTrait {
 			'institution' => 'Institution',
 		],
 		'InstitutionClasses' => [
+			'expiredGrade' => 'Expired Grade',
 			'noClasses' => 'No Classes',
 			'students' => 'Students',
 			'education_programme' => 'Education Programme',
