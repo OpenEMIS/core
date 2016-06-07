@@ -26,7 +26,12 @@ class AssessmentItemResultsTable extends AppTable {
 
 	public function findResults(Query $query, array $options) {
 		$academicPeriodId = $options['academic_period_id'];
-		$studentId = $options['student_id'];
+		$session = $options['_Session'];
+
+		$studentId = -1;
+		if ($session->check('Student.Results.student_id')) {
+			$studentId = $session->read('Student.Results.student_id');
+		}
 
 	 	return $query
 			->select([
