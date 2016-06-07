@@ -42,7 +42,6 @@ class DirectoriesController extends AppController {
 			'StudentProgrammes'		=> ['className' => 'Student.Programmes', 'actions' => ['index', 'view']],
 			'StudentAbsences' 		=> ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
 			'StudentBehaviours' 	=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
-			'StudentResults' 		=> ['className' => 'Student.Results', 'actions' => ['index']],
 			'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],
 			'StudentFees' 			=> ['className' => 'Student.StudentFees', 'actions' => ['index', 'view']],
 			'StudentBankAccounts'	=> ['className' => 'User.BankAccounts'],
@@ -71,6 +70,7 @@ class DirectoriesController extends AppController {
 
 		$this->loadComponent('Training.Training');
 		$this->loadComponent('User.Image');
+		$this->attachAngularModules();
 		
 		$this->set('contentHeader', 'Directories');
 	}
@@ -89,6 +89,40 @@ class DirectoriesController extends AppController {
 	public function StaffLicenses() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Licenses']); }
 	// End
 
+	// AngularJS
+	public function StudentResults() {
+		$session = $this->request->session();
+
+		if ($session->check('Directory.Directories.id')) {
+			$studentId = $session->read('Directory.Directories.id');
+			$session->write('Student.Results.student_id', $studentId);
+
+			// tabs
+			$options['type'] = 'student';
+			$tabElements = $this->getAcademicTabElements($options);
+			$this->set('tabElements', $tabElements);
+			$this->set('selectedAction', 'Results');
+	        // End
+
+			$this->set('ngController', 'StudentResultsCtrl as StudentResultsController');
+		}
+	}
+	// End
+
+	private function attachAngularModules() {
+		$action = $this->request->action;
+		
+		switch ($action) {
+			case 'StudentResults':
+				$this->Angular->addModules([
+					'alert.svc',
+					'student.results.ctrl',
+					'student.results.svc'
+				]);
+				break;
+		}
+	}
+
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 		$this->Navigation->addCrumb('Directory', ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'index']);
@@ -101,7 +135,7 @@ class DirectoriesController extends AppController {
 			$session->delete('Staff.Staff.name');
 			$session->delete('Student.Students.id');
 			$session->delete('Student.Students.name');
-		} else if ($session->check('Directory.Directories.id') || $action == 'view' || $action == 'edit') {
+		} else if ($session->check('Directory.Directories.id') || $action == 'view' || $action == 'edit' || $action == 'StudentResults') {
 			$id = 0;
 			if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
 				$id = $this->request->pass[0];
@@ -111,7 +145,7 @@ class DirectoriesController extends AppController {
 			if (!empty($id)) {
 				$entity = $this->Directories->get($id);
 				$name = $entity->name;
-				$header = $name . ' - ' . __('Overview');
+				$header = $action == 'StudentResults' ? $name . ' - ' . __('Results') : $name . ' - ' . __('Overview');
 				$this->Navigation->addCrumb($name, ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'view', $id]);
 			}
 		}
@@ -327,8 +361,7 @@ class DirectoriesController extends AppController {
 			'Subjects' => ['text' => __('Subjects')],
 			'Absences' => ['text' => __('Absences')],
 			'Behaviours' => ['text' => __('Behaviours')],
-			// POCOR-2759: temporary hide Results tab
-			// 'Results' => ['text' => __('Results')],
+			'Results' => ['text' => __('Results')],
 			'Awards' => ['text' => __('Awards')],
 			'Extracurriculars' => ['text' => __('Extracurriculars')],
 		];

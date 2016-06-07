@@ -52,25 +52,22 @@ class InstitutionSubjectStudentsTable extends AppTable {
 		$InstitutionSubjects = $this->InstitutionSubjects;
 		$ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
 
-		$query
+		return $query
 			->select([
-				'uuid' => $ItemResults->aliasField('id'),
-				'marks' => $ItemResults->aliasField('marks'),
-				'grading_option_id' => $ItemResults->aliasField('assessment_grading_option_id'),
-				'assessment_period_id' => $ItemResults->aliasField('assessment_period_id'),
-				'student_id' => $this->aliasField('student_id'),
-				'total_mark' => $this->aliasField('total_mark'),
-				'openemis_no' => $Users->aliasField('openemis_no'),
-				'name' => $query->func()->concat([
-					$Users->aliasField('first_name') => 'literal',
-					" ",
-					$Users->aliasField('last_name') => 'literal'
-				]),
-				'first_name' => $Users->aliasField('first_name'),
-				'middle_name' => $Users->aliasField('middle_name'),
-				'third_name' => $Users->aliasField('third_name'),
-				'last_name' => $Users->aliasField('last_name')
+				$ItemResults->aliasField('id'),
+				$ItemResults->aliasField('marks'),
+				$ItemResults->aliasField('assessment_grading_option_id'),
+				$ItemResults->aliasField('assessment_period_id'),
+				$this->aliasField('student_id'),
+				$this->aliasField('total_mark'),
+				$Users->aliasField('openemis_no'),
+				$Users->aliasField('first_name'),
+				$Users->aliasField('middle_name'),
+				$Users->aliasField('third_name'),
+				$Users->aliasField('last_name'),
+				$Users->aliasField('preferred_name')
 			])
+			->matching('Users')
 			->innerJoin(
 				[$InstitutionSubjects->alias() => $InstitutionSubjects->table()],
 				[
@@ -99,6 +96,51 @@ class InstitutionSubjectStudentsTable extends AppTable {
 			])
 			->order([
 				$this->aliasField('student_id')
+			]);
+	}
+
+	public function findResultsByStudent(Query $query, array $options) {
+		$institutionId = $options['institution_id'];
+		$periodId = $options['academic_period_id'];
+		$studentId = $options['student_id'];
+		$assessmentId = $options['assessment_id'];
+
+		$EducationSubjects = $this->EducationSubjects;
+		$ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+
+		$query
+			->select([
+				'uuid' => $ItemResults->aliasField('id'),
+				'marks' => $ItemResults->aliasField('marks'),
+				'grading_option_id' => $ItemResults->aliasField('assessment_grading_option_id'),
+				'assessment_period_id' => $ItemResults->aliasField('assessment_period_id'),
+				'education_subject_id' => $ItemResults->aliasField('education_subject_id'),
+				'education_subject_name' => $EducationSubjects->aliasField('name'),
+				'education_subject_order' => $EducationSubjects->aliasField('order'),
+				'total_mark' => $this->aliasField('total_mark')
+			])
+			->leftJoin(
+				[$ItemResults->alias() => $ItemResults->table()],
+				[
+					$ItemResults->aliasField('student_id = ') . $this->aliasField('student_id'),
+					$ItemResults->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id'),
+					$ItemResults->aliasField('assessment_id') => $assessmentId,
+					$ItemResults->aliasField('institution_id') => $institutionId,
+					$ItemResults->aliasField('academic_period_id') => $periodId
+				]
+			)
+			->where([
+				$ItemResults->aliasField('institution_id') => $institutionId,
+				$ItemResults->aliasField('academic_period_id') => $periodId,
+				$ItemResults->aliasField('student_id') => $studentId,
+				$ItemResults->aliasField('assessment_id') => $assessmentId
+			])
+			->group([
+				$ItemResults->aliasField('assessment_period_id'),
+				$ItemResults->aliasField('education_subject_id')
+			])
+			->order([
+				$EducationSubjects->aliasField('order')
 			])
 			;
 

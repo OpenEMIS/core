@@ -29,7 +29,6 @@ class StudentsController extends AppController {
 			'Programmes' 		=> ['className' => 'Student.Programmes', 'actions' => ['index', 'view']],
 			'Absences' 			=> ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
 			'Behaviours' 		=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
-			'Results' 			=> ['className' => 'Student.Results', 'actions' => ['index']],
 			'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],
 			'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
 			'StudentFees'		=> ['className' => 'Student.StudentFees', 'actions' => ['index', 'view']],
@@ -49,6 +48,7 @@ class StudentsController extends AppController {
 
 		$this->loadComponent('User.Image');
 		$this->loadComponent('Institution.InstitutionAccessControl');
+		$this->attachAngularModules();
 
 		$this->set('contentHeader', 'Students');
 	}
@@ -60,6 +60,40 @@ class StudentsController extends AppController {
     public function Languages() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
     public function SpecialNeeds() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
 	// End
+
+	// AngularJS
+	public function Results() {
+		$session = $this->request->session();
+
+		if ($session->check('Student.Students.id')) {
+			$studentId = $session->read('Student.Students.id');
+			$session->write('Student.Results.student_id', $studentId);
+
+			// tabs
+			$options = ['type' => 'student'];
+	        $tabElements = $this->getAcademicTabElements($options);
+	        $this->set('tabElements', $tabElements);
+	        $this->set('selectedAction', 'Results');
+	        // End
+
+			$this->set('ngController', 'StudentResultsCtrl as StudentResultsController');
+		}
+	}
+	// End
+
+	private function attachAngularModules() {
+		$action = $this->request->action;
+		
+		switch ($action) {
+			case 'Results':
+				$this->Angular->addModules([
+					'alert.svc',
+					'student.results.ctrl',
+					'student.results.svc'
+				]);
+				break;
+		}
+	}
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
@@ -74,7 +108,7 @@ class StudentsController extends AppController {
 
 		if ($action == 'index') {
 			
-		} else if ($session->check('Student.Students.id') || $action == 'view' || $action == 'edit') {
+		} else if ($session->check('Student.Students.id') || $action == 'view' || $action == 'edit' || $action == 'Results') {
 			// add the student name to the header
 			$id = 0;
 			if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
@@ -88,7 +122,7 @@ class StudentsController extends AppController {
 			if (!empty($id)) {
 				$entity = $this->Students->get($id);
 				$name = $entity->name;
-				$header = $name . ' - ' . __('Overview');
+				$header = $action == 'Results' ? $name . ' - ' . __('Results') : $name . ' - ' . __('Overview');
 				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $id]);
 			}
 		}
