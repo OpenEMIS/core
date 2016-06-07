@@ -251,13 +251,15 @@ class ImportStaffTable extends AppTable
         }
         $tempRow['start_year'] = $tempRow['start_date']->year;
 
-        if ($tempRow['position_type']=='PART_TIME') {
-            if ($tempRow['FTE']==1) {
-                $rowInvalidCodeCols['FTE'] = __('FTE cannot be 100% if Position Type is Part Time. Please select a value other than 1');
-                return false;
+        if (array_key_exists("position_type", $tempRow)) {
+            if ($tempRow['position_type']=='PART_TIME') {
+                if ($tempRow['FTE']==1) {
+                    $rowInvalidCodeCols['FTE'] = __('FTE cannot be 100% if Position Type is Part Time. Please select a value other than 1');
+                    return false;
+                }
+            } else { //for fulltime
+                $tempRow['FTE'] = 1;
             }
-        } else {
-            $tempRow['FTE'] = 1;
         }
         return true;
     }
