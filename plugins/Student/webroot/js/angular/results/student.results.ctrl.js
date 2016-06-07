@@ -8,8 +8,6 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
 	var vm = this;
 
     // Variables
-    vm.studentId = null;
-    vm.institutionId = null;
     vm.gridOptions = {};
 
     // Functions
@@ -22,18 +20,7 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
         StudentResultsSvc.init(angular.baseUrl);
 
         UtilsSvc.isAppendLoader(true);
-        StudentResultsSvc.getSessions()
-        // getSessions
-        .then(function(response) {
-            vm.studentId = response[0];
-            vm.institutionId = response[1];
-
-            return StudentResultsSvc.getAssessmentGradingTypes();
-        }, function(error) {
-            // No Student Id or Institution Id
-            console.log(error);
-            AlertSvc.warning($scope, error);
-        })
+        StudentResultsSvc.getAssessmentGradingTypes()
         // getAssessmentGradingTypes
         .then(function(assessmentGradingTypes) {
             return StudentResultsSvc.getAcademicPeriods();
@@ -51,7 +38,7 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
                 var academicPeriodName = academicPeriod.name;
                 var academicPeriodOrder = academicPeriod.order;
 
-                StudentResultsSvc.getStudentResults(academicPeriodId, vm.studentId, vm.institutionId)
+                StudentResultsSvc.getStudentResults(academicPeriodId)
                 .then(function(response) {
                     if (angular.isDefined(response[academicPeriodId])) {
                         angular.forEach(response[academicPeriodId], function(institutionObj, institutionId) {

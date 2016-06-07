@@ -29,7 +29,6 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         getSubject: getSubject,
         getAssessmentPeriod: getAssessmentPeriod,
         getAssessmentGradingOption: getAssessmentGradingOption,
-        getSessions: getSessions,
         getAssessmentGradingTypes: getAssessmentGradingTypes,
         getAcademicPeriods: getAcademicPeriods,
         getStudentResults: getStudentResults,
@@ -65,15 +64,6 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
 
     function getAssessmentGradingOption(id) {
         return properties.assessmentGradingOptions[id];
-    };
-
-    function getSessions() {
-        var promises = [];
-
-        promises.push(KdSessionSvc.read('Student.Results.student_id'));
-        promises.push(KdSessionSvc.read('Institution.Institutions.id'));
-
-        return $q.all(promises);
     };
 
     function getAssessmentGradingTypes() {
@@ -113,7 +103,7 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
             .ajax({success: success, defer: true});
     };
 
-    function getStudentResults(academicPeriodId, studentId, institutionId) {
+    function getStudentResults(academicPeriodId) {
         var success = function(response, deferred) {
             if (angular.isDefined(response.data.error)) {
                 deferred.reject(response.data.error);
@@ -164,9 +154,7 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         return AssessmentItemResultsTable
             .select()
             .find('Results', {
-                academic_period_id: academicPeriodId,
-                student_id: studentId,
-                institution_id: institutionId
+                academic_period_id: academicPeriodId
             })
             .ajax({success: success, defer: true})
             ;
