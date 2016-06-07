@@ -111,6 +111,7 @@ class StaffTable extends AppTable {
 		$this->assigned = $statuses['ASSIGNED'];
 		$this->endOfAssignment = $statuses['END_OF_ASSIGNMENT'];
 		
+        $this->addBehavior('Import.ImportLink');
 	}
 
 	public function implementedEvents() {
