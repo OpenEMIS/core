@@ -11,6 +11,7 @@ angular.module('kd.orm.svc', [])
         _contain: [],
         _finder: [],
         _where: {},
+        _group: [],
         _order: [],
         _limit: 0,
         _page: 0,
@@ -32,6 +33,8 @@ angular.module('kd.orm.svc', [])
             this._finder = [];
             this._where = {};
             this._limit = 0;
+            this._group = [];
+            this._order = [];
             this._page = 0;
             this._method = 'GET';
         },
@@ -68,6 +71,11 @@ angular.module('kd.orm.svc', [])
 
         where: function(where) {
             this._where = where;
+            return this;
+        },
+
+        group: function(group) {
+            this._group = group;
             return this;
         },
 
@@ -165,6 +173,12 @@ angular.module('kd.orm.svc', [])
             if (this._finder.length > 0) {
                 params.push('_finder=' + this._finder.join(','));
             }
+            if (this._group.length > 0) {
+                params.push('_group=' + this._group.join(','));
+            }
+            if (this._order.length > 0) {
+                params.push('_order=' + this._order.join(','));
+            }
             if (Object.keys(this._where).length > 0) {
                 angular.forEach(this._where, function(value, key) {
                     this.push(key + '=' + value);
@@ -198,15 +212,26 @@ angular.module('kd.orm.svc', [])
     };
 
     return {
-        base: function(base) {
-            query._base = base;
-            return this;
-        },
+        base: base,
+        init: init
+    };
 
-        init: function(className) {
+    function base(base) {
+        query._base = base;
+        return this;
+    };
+
+    function init(className) {
+        if (angular.isObject(className)) {
+            angular.forEach(className, function(model, key) {
+                var newObject = angular.merge({}, query);
+                newObject.className(model);
+                window[key] = newObject;
+            });
+        } else {
             var newObject = angular.merge({}, query);
             newObject.className(className);
             return newObject;
         }
-    }
+    };
 });

@@ -56,7 +56,7 @@ class ControllerActionHelper extends Helper {
 		$config = $this->_View->get('ControllerAction');
 		$fields = $config['fields'];
 		if (!empty($fields)) {
-			$types = ['binary','image'];
+			$types = ['binary','image', 'custom_file'];
 			foreach ($fields as $key => $attr) {
 				if (in_array($attr['type'], $types)) {
 					$options['type'] = 'file';
@@ -64,7 +64,7 @@ class ControllerActionHelper extends Helper {
 				}
 			}
 		}
-		
+
 		return $options;
 	}
 
@@ -247,7 +247,12 @@ class ControllerActionHelper extends Helper {
 
 			$associatedFound = false;
 			if (strlen($event->result) > 0) {
-				$value = __($event->result);
+				$allowedTranslation = ['string','text'];//array that will be translate
+				if (in_array($attr['type'], $allowedTranslation)) {
+					$value = __($event->result);
+				} else {
+					$value = $event->result;
+				}
 				$entity->$field = $value;
 			} else if ($this->endsWith($field, '_id')) {
 				$associatedObject = '';
@@ -257,10 +262,10 @@ class ControllerActionHelper extends Helper {
 					$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);
 				}
 				
-				if ($entity->has($associatedObject) && $entity->$associatedObject->has('name')) {
-					$value = $entity->$associatedObject->name;
-					$associatedFound = true;
-				}
+                if ($entity->has($associatedObject) && $entity->$associatedObject instanceof Entity && $entity->$associatedObject->has('name')) {
+                    $value = __($entity->$associatedObject->name);
+                    $associatedFound = true;
+                }
 			}
 
 			if (!$associatedFound) {
@@ -494,7 +499,7 @@ class ControllerActionHelper extends Helper {
 					}
 					
 					if ($data->has($associatedObject)) {
-						$value = $data->$associatedObject->name;
+						$value = __($data->$associatedObject->name);
 						$associatedFound = true;
 					}
 				}

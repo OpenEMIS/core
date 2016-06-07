@@ -74,17 +74,11 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 		}
 
 		$staffType = $this->StaffTypes->get($entity->staff_type_id)->name;
-		if (!$entity->start_date instanceof Time || !$entity->start_date instanceof Date) {
+		if (!$entity->start_date instanceof Time && !$entity->start_date instanceof Date) {
 			$entity->start_date = Time::parse($entity->start_date);
 		}
 		$startDate = $this->formatDate($entity->start_date);
 		
-		$this->field('institution_position_id', ['type' => 'hidden']);
-		$this->field('staff_type_id', ['type' => 'hidden']);		
-		$this->field('FTE', ['type' => 'hidden']);
-		$this->field('start_date', ['type' => 'hidden']);
-		
-
 		$staffId = $entity->staff_id;
 
 		$institutionId = $entity->previous_institution_id;
@@ -104,11 +98,17 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 
 		if (!is_null($staffRecord)) {
 			$this->field('transfer_type');
-			$this->field('current_institution_position_id', ['before' => 'transfer_type', 'type' => 'disabled', 'attr' => ['value' => $staffRecord->position->name]]);
+			$this->field('current_institution_position_id', ['after' => 'previous_institution_id', 'type' => 'disabled', 'attr' => ['value' => $staffRecord->position->name]]);
 			$this->field('current_FTE', ['after' => 'current_institution_position_id', 'type' => 'disabled', 'attr' => ['value' => $staffRecord->FTE]]);
 			$this->field('current_staff_type', ['after' => 'current_FTE', 'type' => 'disabled', 'attr' => ['value' => $staffRecord->staff_type->name]]);
 			$this->field('current_start_date', ['after' => 'current_staff_type', 'type' => 'disabled', 'attr' => ['value' => $this->formatDate($staffRecord->start_date)]]);
-			$this->field('new_FTE', ['currentFTE' => $staffRecord->FTE]);
+			$this->field('institution_position_id', ['type' => 'disabled', 'after' => 'institution_id', 'attr' => ['required' => false, 'value' => $entity->position->name]]);
+			$fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
+			$this->field('FTE', ['type' => 'disabled', 'after' => 'institution_position_id', 'attr' => ['value' => $fteOptions[strval($entity->FTE)], 'required' => false]]);
+			$this->field('staff_type_id', ['type' => 'disabled', 'attr' => ['required' => false, 'value' => $this->StaffTypes->get($entity->staff_type_id)->name], 'after' => 'FTE']);
+			$this->field('start_date', ['type' => 'disabled', 'after' => 'staff_type_id', 'attr' => ['required' => false, 'value' => $this->formatDate($entity->start_date)]]);
+
+			$this->field('new_FTE', ['currentFTE' => $staffRecord->FTE, 'attr' => ['required' => true]]);
 			$this->field('new_staff_type_id', ['attr' => ['value' => $staffRecord->staff_type_id], 'select' => false]);
 			$this->field('staff_end_date', ['type' => 'date', 'value' => new Date(), 
 				'date_options' => ['startDate' => $staffRecord->start_date->format('d-m-Y')]]);
@@ -189,6 +189,10 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 			} else if ($transferType == self::PARTIAL_TRANSFER){
 				$staffRecord->FTE = $requestData[$this->alias()]['new_FTE'];
 				$staffRecord->staff_type_id = $requestData[$this->alias()]['new_staff_type_id'];
+                // $staffRecord is an existing entity
+                // this section of code uses InstitutionStaff afterSave logic, newFTE to save a newEntity
+                // POCOR-2907 - unsetting security_group_user_id so a new security_group_user_id can be created and used as a foreign key
+                unset($staffRecord->security_group_user_id);
 				$InstitutionStaff->save($staffRecord);
 			}
 		}
@@ -243,11 +247,27 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 
 			$resultSet = $this
 				->find()
-				->contain(['Users', 'Institutions', 'PreviousInstitutions', 'ModifiedUser', 'CreatedUser'])
+				->select([
+					$this->aliasField('id'),
+					$this->aliasField('previous_institution_id'),
+					$this->aliasField('modified'),
+					$this->aliasField('created'),
+					'Users.openemis_no',
+					'Users.first_name',
+					'Users.middle_name',
+					'Users.third_name',
+					'Users.last_name',
+					'Users.preferred_name',
+					'Institutions.name',
+					'PreviousInstitutions.name',
+					'CreatedUser.username'
+				])
+				->contain(['Users', 'Institutions', 'PreviousInstitutions', 'CreatedUser'])
 				->where($where)
 				->order([
 					$this->aliasField('created') => 'DESC'
 				])
+				->limit(30)
 				->toArray();
 
 			foreach ($resultSet as $key => $obj) {
@@ -292,7 +312,10 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 	public function onUpdateFieldCurrentFTE(Event $event, array $attr, $action, Request $request) {
 		$fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
 		$val = $attr['attr']['value'];
-		$attr['attr']['value'] = $fteOptions[strval($val)];
+		if (isset($fteOptions[strval($val)])) {
+			$attr['attr']['value'] = $fteOptions[strval($val)];
+		}
+		
 		return $attr;
 	}
 

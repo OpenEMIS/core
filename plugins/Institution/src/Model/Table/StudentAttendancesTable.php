@@ -36,10 +36,14 @@ class StudentAttendancesTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
 		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-		$this->belongsTo('StudentStatuses',	['className' => 'Student.StudentStatuses']);
+		$this->belongsTo('StudentStatuses',   ['className' => 'Student.StudentStatuses']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
+        
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->addBehavior('Excel', [
-			'excludes' => ['status', 'education_grade_id'],
+			'excludes' => ['status', 'education_grade_id', 'id', 'academic_period_id', 'institution_id'],
 			'pages' => ['index']
 		]);
 		$this->addBehavior('Import.ImportLink');
@@ -110,7 +114,7 @@ class StudentAttendancesTable extends AppTable {
 					'key' => 'AcademicPeriod.days',
 					'field' => 'attendance_field',
 					'type' => 'attendance',
-					'label' => sprintf('%s (%s)', $item['day'], $item['weekDay']),
+					'label' => sprintf('%s (%s)', $item['day'], __($item['weekDay'])),
 					'date' => $item['date']
 				];
 			}
@@ -236,6 +240,7 @@ class StudentAttendancesTable extends AppTable {
 		$this->ControllerAction->field('student_id');
 		$this->ControllerAction->field('institution_class_id', ['visible' => false]);
 		$this->ControllerAction->field('education_grade_id', ['visible' => false]);
+        $this->ControllerAction->field('academic_period_id', ['visible' => false]);
 		$this->ControllerAction->field('status', ['visible' => false]);
 		$this->ControllerAction->field('student_status_id', ['visible' => false]);
 	}
@@ -322,13 +327,14 @@ class StudentAttendancesTable extends AppTable {
 
 			}
 			$attr['time_options']['defaultTime'] = $attr['value'];
+			$attr['class'] = 'margin-top-10 no-margin-bottom';
 			$attr['field'] = 'late_time';
 			$attr['model'] = $fieldPrefix;
 			$attr['id'] = 'late_time_'.$id;
 			$attr['label'] = false;
 			
 			$time = $HtmlField->time('edit', $entity, $attr);
-			$html .= '<div id="late_time__'.$id.'" class="late_time__'.$id.'_'.$codeAbsenceTypeList['LATE'].'" style="'.$displayTime.'width:100px">'.$time.'</div>';
+			$html .= '<div id="late_time__'.$id.'" class="late_time__'.$id.'_'.$codeAbsenceTypeList['LATE'].'" style="'.$displayTime.'">'.$time.'</div>';
 
 			$html .= $Form->hidden($fieldPrefix.".institution_id", ['value' => $institutionId]);
 			$html .= $Form->hidden($fieldPrefix.".student_id", ['value' => $id]);
@@ -595,7 +601,8 @@ class StudentAttendancesTable extends AppTable {
 			$schooldays = [];
 
 			for($i=0; $i<$daysPerWeek; $i++) {
-				$schooldays[] = ($firstDayOfWeek + $i) % 7;
+				// sunday should be '7' in order to be displayed
+				$schooldays[] = 1 + ($firstDayOfWeek + 6 + $i) % 7;
 			}
 
 			$week = $weeks[$selectedWeek];
@@ -657,7 +664,7 @@ class StudentAttendancesTable extends AppTable {
 			$AccessControl = $this->AccessControl;
 			$classOptions = $Classes
 				->find('list')
-				->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl]) // restrict user to see own class if permission is set
+				->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl, 'controller' => $this->controller]) // restrict user to see own class if permission is set
 				->where([
 					$Classes->aliasField('institution_id') => $institutionId, 
 					$Classes->aliasField('academic_period_id') => $selectedPeriod
@@ -725,8 +732,8 @@ class StudentAttendancesTable extends AppTable {
 					$this->_fieldOrder[] = $key;
 				}
 			} else {
-				$this->ControllerAction->field('type');
-				$this->ControllerAction->field('reason');
+				$this->ControllerAction->field('type', ['tableColumnClass' => 'vertical-align-top']);
+				$this->ControllerAction->field('reason', ['tableColumnClass' => 'vertical-align-top']);
 				$this->_fieldOrder[] = 'type';
 				$this->_fieldOrder[] = 'reason';
 
@@ -750,6 +757,8 @@ class StudentAttendancesTable extends AppTable {
 
 	public function indexAfterAction(Event $event, $data) {
 		$this->dataCount = $data->count();
+
+        $this->ControllerAction->field('student_id', ['visible' => true, 'type' => 'string']);
 	}
 
 	public function findWithAbsence(Query $query, array $options) {

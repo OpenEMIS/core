@@ -321,28 +321,28 @@ class NavigationComponent extends Component {
 				'Institutions.Shifts' => [
 					'title' => 'Shifts',
 					'parent' => 'Institution.Academic',
-					'selected' => ['Institution.Shifts'],
+					'selected' => ['Institutions.Shifts'],
 					'params' => ['plugin' => 'Institution']
 				],
 
 				'Institutions.Programmes' => [
 					'title' => 'Programmes',
 					'parent' => 'Institution.Academic',
-					'selected' => ['Institution.Programmes'],
+					'selected' => ['Institutions.Programmes'],
 					'params' => ['plugin' => 'Institution']
 				],
 
 				'Institutions.Classes' => [
 					'title' => 'Classes',
 					'parent' => 'Institution.Academic',
-					'selected' => ['Institution.Classes'],
+					'selected' => ['Institutions.Classes'],
 					'params' => ['plugin' => 'Institution']
 				],
 
 				'Institutions.Subjects' => [
 					'title' => 'Subjects',
 					'parent' => 'Institution.Academic',
-					'selected' => ['Institution.Subjects'],
+					'selected' => ['Institutions.Subjects'],
 					'params' => ['plugin' => 'Institution']
 				],
 
@@ -502,7 +502,7 @@ class NavigationComponent extends Component {
 				'title' => 'Finance', 
 				'parent' => 'Institutions.Students.index',
 				'params' => ['plugin' => 'Student'],
-				'selected' => ['Students.Fees']],
+				'selected' => ['Students.StudentFees']],
 			'Students.Healths' => [
 				'title' => 'Health', 
 				'parent' => 'Institutions.Students.index',
@@ -822,7 +822,7 @@ class NavigationComponent extends Component {
 					'title' => 'Forms',
 					'parent' => 'Administration.Survey',
 					'params' => ['plugin' => 'Survey'],
-					'selected' => ['Surveys.Questions', 'Surveys.Forms', 'Surveys.Status']
+					'selected' => ['Surveys.Questions', 'Surveys.Forms', 'Surveys.Rules', 'Surveys.Status']
 				],
 
 				'Rubrics.Templates' => [
