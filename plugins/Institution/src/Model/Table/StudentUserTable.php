@@ -167,18 +167,16 @@ class StudentUserTable extends UserTable {
     	$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
 		$statuses = $InstitutionStudentsTable->StudentStatuses->findCodeList();
 		$id = $session->read('Institution.Students.id');
-		$student = $InstitutionStudentsTable->get($id);	
 		if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])) {
 			$TransferRequests = TableRegistry::get('Institution.TransferRequests');
 			$studentData = $InstitutionStudentsTable->get($id);
 			$selectedStudent = $studentData->student_id;
-			$selectedPeriod = $studentData->academic_period_id;
 			$selectedGrade = $studentData->education_grade_id;
 			$session->write($TransferRequests->registryAlias().'.id', $id);
 
 			// Show Transfer button only if the Student Status is Current
 			$institutionId = $session->read('Institution.Institutions.id');
-			$checkIfCanTransfer = $InstitutionStudentsTable->checkIfCanTransfer($student, $institutionId);
+			$checkIfCanTransfer = $InstitutionStudentsTable->checkIfCanTransfer($studentData, $institutionId);
 			// End
 
 			// Transfer button

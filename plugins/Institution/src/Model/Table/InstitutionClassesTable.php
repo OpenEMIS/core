@@ -157,6 +157,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 
 		$this->field('male_students', ['type' => 'integer', 'visible' => ['index'=>true]]);
 		$this->field('female_students', ['type' => 'integer', 'visible' => ['index'=>true]]);
+		$this->field('total_students', ['type' => 'integer', 'visible' => ['index'=>true]]);
 		$this->field('subjects', ['override' => true, 'type' => 'integer', 'visible' => ['index'=>true]]);
 
 		$this->field('students', [
@@ -182,7 +183,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 		$this->field('staff_id', ['type' => 'select', 'options' => [], 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true], 'attr' => ['label' => $this->getMessage($this->aliasField('staff_id'))]]);
 
 		$this->setFieldOrder([
-			'name', 'staff_id', 'male_students', 'female_students', 'subjects',
+			'name', 'staff_id', 'male_students', 'female_students', 'total_students', 'subjects',
 		]);
 
 	}
@@ -491,8 +492,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 
 	public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		$query->contain([
-			'InstitutionSubjects',
-			'SubjectStudents',
+			'InstitutionSubjects'
 		]);
 	}
 
@@ -700,6 +700,62 @@ class InstitutionClassesTable extends ControllerActionTable {
 		}		
 	}
 
+	public function onGetMaleStudents(Event $event, Entity $entity) {
+		if ($entity->has('id')) {
+			$gender_id = 1; // male
+	        $table = TableRegistry::get('Institution.InstitutionClassStudents');
+	        $count = $table
+	                    ->find()
+	                    ->contain('Users')
+	                    ->where([
+	                    	'Users.gender_id' => $gender_id,
+	                    	$table->aliasField('institution_class_id') => $entity->id,
+	                    	$table->aliasField('student_status_id') .' > 0'
+	                    	])
+	                    ->count();
+	        return $count;
+		}
+	}
+
+	public function onGetFemaleStudents(Event $event, Entity $entity) {
+		if ($entity->has('id')) {
+			$gender_id = 2; // female
+	        $table = TableRegistry::get('Institution.InstitutionClassStudents');
+	        $count = $table
+	                    ->find()
+	                    ->contain('Users')
+	                    ->where([
+	                    	'Users.gender_id' => $gender_id,
+	                    	$table->aliasField('institution_class_id') => $entity->id,
+	                    	$table->aliasField('student_status_id') .' > 0'
+	                    	])
+	                    ->count();
+	        return $count;
+		}
+	}
+
+	public function onGetTotalStudents(Event $event, Entity $entity) {
+		if ($entity->has('id')) {
+			$table = TableRegistry::get('Institution.InstitutionClassStudents');
+	        $count = $table
+	                    ->find()
+	                    ->where([$table->aliasField('institution_class_id') => $entity->id])
+	                    ->count();
+	        return $count;	
+		}
+	}
+
+	public function onGetSubjects(Event $event, Entity $entity) {
+		if ($entity->has('id')) {
+			$table = TableRegistry::get('Institution.InstitutionClassSubjects');
+            $count = $table
+                    ->find()
+                    ->where([$table->aliasField('institution_class_id') => $entity->id])
+                    ->count();
+	        return $count;	
+		}
+	}
+
 
 /******************************************************************************************************************
 **
@@ -745,7 +801,11 @@ class InstitutionClassesTable extends ControllerActionTable {
 		$query = $students
 			->find('all')
 			->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
-			->contain(['Users'])
+            ->contain([
+                'Users' => function ($q) {
+                        return $q->select(['id', 'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name']);
+                    }
+            ])
 			->where([
 				$students->aliasField('institution_id') => $classEntity->institution_id
 			])
@@ -874,6 +934,8 @@ class InstitutionClassesTable extends ControllerActionTable {
 				'student_id' => $id,
 				'institution_class_id' => $entity->id,
 				'education_grade_id'=>  $userData->education_grade_id,
+				'institution_id' => $entity->institution_id,
+				'academic_period_id' => $entity->academic_period_id,
 				'student_status_id' => $userData->student_status_id,
 				'education_grade' => [],
 				'student_status' => [],

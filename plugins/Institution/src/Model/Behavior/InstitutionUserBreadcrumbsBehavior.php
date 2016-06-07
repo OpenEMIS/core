@@ -32,10 +32,10 @@ class InstitutionUserBreadcrumbsBehavior extends Behavior {
 **
 ******************************************************************************************************************/
 	public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, Entity $persona) {
-		$crumbTitle = $this->_table->getHeader($this->_table->alias());
+		$crumbTitle = Inflector::humanize(Inflector::underscore($this->_table->alias()));
 		$splitTitle = explode(' ', $crumbTitle);
 		$newCrumbTitle = Inflector::pluralize($splitTitle[0]);
-		$Navigation->substituteCrumb($crumbTitle, $newCrumbTitle, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $newCrumbTitle]);
+		$Navigation->substituteCrumb($crumbTitle, __($newCrumbTitle), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $newCrumbTitle]);
 		if ($this->_table->alias() == $splitTitle[0].'User') {
 			$Navigation->addCrumb($persona->name);
 		} else {

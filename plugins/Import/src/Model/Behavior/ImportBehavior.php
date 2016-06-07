@@ -63,6 +63,7 @@ class ImportBehavior extends Behavior {
     const FIELD_OPTION = 1;
     const DIRECT_TABLE = 2;
     const NON_TABLE_LIST = 3;
+    const CUSTOM = 4;
 
     const RECORD_HEADER = 2;
     const FIRST_RECORD = 3;
@@ -371,7 +372,9 @@ class ImportBehavior extends Behavior {
                     'activeModel'=>$activeModel,
                     'systemDateFormat'=>$systemDateFormat,
                 ];
+
                 $originalRow = new ArrayObject;
+                $checkCustomColumn = new ArrayObject;
                 $rowPass = $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols);
 
                 $tempRow = $tempRow->getArrayCopy();
@@ -438,7 +441,8 @@ class ImportBehavior extends Behavior {
                 }
 
                 $isNew = $tableEntity->isNew();
-                if ($activeModel->save($tableEntity)) {
+                $newEntity = $activeModel->save($tableEntity);
+                if ($newEntity) {
                     if ($isNew) {
                         $totalImported++;
                     } else {
@@ -716,8 +720,12 @@ class ImportBehavior extends Behavior {
      */
     private function _getReorderedEntityArray( Entity $entity, Array $columns, ArrayObject $originalRow, $systemDateFormat ) {
         $array = [];
-        foreach ($columns as $col=>$property) {
+        foreach ($columns as $col=>$property) {            
+            /*
+            //if value in datetime format, then format it according to the systemDateFormat
             $value = ( $entity->$property instanceof DateTimeInterface ) ? $entity->$property->format( $systemDateFormat ) : $originalRow[$col];
+            */
+            $value = $originalRow[$col];
             $array[] = $value;
         }
         return $array;
@@ -859,15 +867,35 @@ class ImportBehavior extends Behavior {
         
         $header = [];
         foreach ($mapping as $key => $value) {
-            $column = $value->column_name;
-            $label = $this->getExcelLabel('Imports', $value->lookup_model);
-            if (empty($label)) {
-                $label = $this->getExcelLabel($value->model, $column);
+            if ($value->foreign_key == self::CUSTOM) { //custom then need check the default value.
+
+                $customDataSource = $value->lookup_column;
+                $customHeaderData = new ArrayObject;
+
+                $params = [$customDataSource, $customHeaderData];
+                $this->dispatchEvent($this->_table, $this->eventKey('onImportCustomHeader'), 'onImportCustomHeader', $params);
+
+                $label = $customHeaderData[1]; //column name
+
+                if ($customHeaderData[0]) { //show description or not
+                    $label .= ' ' . __($value->description);
+                }
+
+            } else {
+
+                $column = $value->column_name;
+
+                $label = $this->getExcelLabel('Imports', $value->lookup_model);
+
+                if (empty($label)) {
+                    $label = $this->getExcelLabel($value->model, $column);
+                }
+
+                if (!empty($value->description)) {
+                    $label .= ' ' . __($value->description);
+                }
             }
-            if (!empty($value->description)) {
-                $label .= ' ' . __($value->description);
-            }
-            
+
             $header[] = __($label);
         }
 
@@ -1082,6 +1110,8 @@ class ImportBehavior extends Behavior {
         $references = null;
 
         $rowPass = true;
+        $customColumnCounter = 0;
+
         for ($col = 0; $col < $totalColumns; ++$col) {
             $cell = $sheet->getCellByColumnAndRow($col, $row);
             $originalValue = $cell->getValue();
@@ -1199,6 +1229,20 @@ class ImportBehavior extends Behavior {
                         $rowPass = false;
                         $rowInvalidCodeCols[$columnName] = __('This field cannot be left empty');
                     }
+                }
+            } else if ($foreignKey == self::CUSTOM) { //foreign_key = 4
+
+                $params = [$tempRow, $cellValue];
+                $event = $this->dispatchEvent($this->_table, $this->eventKey('onImportCheck'.$excelMappingObj->column_name.'Config'), 'onImportCheck'.$excelMappingObj->column_name.'Config', $params);
+
+                if ($event->result !== true) {
+                    $rowInvalidCodeCols[$columnName] = __($event->result);
+                    $rowPass = false;
+                } else {
+                    if (!array_key_exists('customColumns', $tempRow)) {
+                        $tempRow['customColumns'] = [];
+                    }
+                    $tempRow['customColumns'][$columnName] = $val;
                 }
             }
             if (!$isOptional || ($isOptional && !empty($val))) {

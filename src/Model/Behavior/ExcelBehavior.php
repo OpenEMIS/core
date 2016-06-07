@@ -285,7 +285,11 @@ class ExcelBehavior extends Behavior {
 		$schema = $table->schema();
 		$columns = $schema->columns();
 		$excludes = $this->config('excludes');
-		$excludes[] = $table->primaryKey();
+
+		if (!is_array($table->primaryKey())) { //if not composite key
+			$excludes[] = $table->primaryKey();
+		}
+
 		$fields = new ArrayObject();
 		$module = $table->alias();
 		$language = I18n::locale();

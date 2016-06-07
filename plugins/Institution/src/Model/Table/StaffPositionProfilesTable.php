@@ -141,7 +141,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 			unset($data['modified']);
 			unset($data['modified_user_id']);
 			unset($data['id']);
-			$newEntity = $InstitutionStaff->patchEntity($staffRecord, $data);
+			$newEntity = $InstitutionStaff->patchEntity($staffRecord, $data, ['validate' => "AllowPositionType"]);
 		}
 
 		return $newEntity;
@@ -245,7 +245,8 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 					$requestData[$this->alias()]['end_date'] = $requestData[$this->alias()]['start_date'];
 				}
 			} else {
-				$requestData[$this->alias()]['end_date'] = $newEndDate;
+				$endDate = (new Date($newEndDate))->modify('-1 day');
+				$requestData[$this->alias()]['end_date'] = $endDate->format('Y-m-d');
 			}
 		}		
 	}
@@ -381,7 +382,8 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 				$attr['type'] = 'date';
 				if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
 					$entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
-					$startDate = (new Date($entity->start_date))->modify('+1 day');
+					$startDateClone = clone ($entity->start_date);
+					$startDate = $startDateClone->modify('+1 day');
 					$attr['date_options']['startDate'] = $startDate->format('d-m-Y');	
 				}
 				$attr['value'] = (new Date())->modify('+1 day');
@@ -523,9 +525,24 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		if ($isAdmin) {
 			$resultSet = $this
 				->find()
-				->contain(['Statuses', 'Users', 'Institutions', 'ModifiedUser', 'CreatedUser'])
+				->select([
+					$this->aliasField('id'),
+					$this->aliasField('modified'),
+					$this->aliasField('created'),
+					'Users.openemis_no',
+					'Users.first_name',
+					'Users.middle_name',
+					'Users.third_name',
+					'Users.last_name',
+					'Users.preferred_name',
+					'Institutions.id',
+					'Institutions.name',
+					'CreatedUser.username'
+				])
+				->contain(['Statuses', 'Users', 'Institutions', 'CreatedUser'])
 				->where($where)
 				->order([$this->aliasField('created')])
+				->limit(30)
 				->toArray();
 
 			foreach ($resultSet as $key => $obj) {

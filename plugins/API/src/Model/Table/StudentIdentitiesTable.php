@@ -64,6 +64,13 @@ class StudentIdentitiesTable extends AppTable {
 						'conditions' => [
 							'EducationGrade.id = InstitutionStudent.education_grade_id'
 						]
+					],
+					'Statuses' => [
+						'type' => 'LEFT',
+						'table' => 'student_statuses',
+						'conditions' => [
+							'Statuses.id = InstitutionStudent.student_status_id'
+						]
 					]
 				])
 				->select([
@@ -76,9 +83,13 @@ class StudentIdentitiesTable extends AppTable {
 					'education_level' => 'EducationGrade.name',
 
 					'identity_type' => 'IdentityType.name',
-					$this->aliasField('number')
+					$this->aliasField('number'),
+
+					'status' => 'Statuses.name',
+					'start_date' => 'InstitutionStudent.start_date',
+					'end_date' => 'InstitutionStudent.end_date'
 				])
-				->order(['AcademicPeriod.end_date DESC'])
+				->order(['InstitutionStudent.created DESC'])
 				->where($conditions)
 				;
 
@@ -105,7 +116,7 @@ class StudentIdentitiesTable extends AppTable {
 					],
 					'status' => [
 						'label' => 'Currently in school',
-						'value' =>  'Yes',
+						'value' =>  $data['status'],
 					],
 					'school_name' => [
 						'label' => 'Current school',
@@ -135,6 +146,7 @@ class StudentIdentitiesTable extends AppTable {
 				 * Highest completed level: 0
 				 * OpenEMIS ID#: ????
 				 */
+				// pr($data);
 				$result = [
 					'id' => [
 						'label' => trim($data['identity_type']) . ' #',
@@ -145,8 +157,10 @@ class StudentIdentitiesTable extends AppTable {
 						'value' =>  implode(' ', $data['Student']) ,
 					],
 					'status' => [
-						'label' => 'Currently in school',
-						'value' =>  'No',
+						'label' => 'Last known status',
+						'value' => $data['status'],
+						'start_date' => date('d-M-Y', strtotime($data['start_date'])),
+						'end_date' => date('d-M-Y', strtotime($data['end_date']))
 					],
 					'school_name' => [
 						'label' => 'Last known school',
@@ -157,7 +171,7 @@ class StudentIdentitiesTable extends AppTable {
 						'value' =>  ($data['Institution']['code']) ? $data['Institution']['code'] : 'NONE',
 					],
 					'level' => [
-						'label' => 'Highest completed level',
+						'label' => 'Highest education level',
 						'value' =>  ($data['education_level']) ? $data['education_level'] : 'NONE',
 					],
 					'openemis_id' => [
