@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS `deleted_records` (
   `id` int(11) NOT NULL,
   `reference_table` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `reference_key` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `data`  text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `data`  mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
