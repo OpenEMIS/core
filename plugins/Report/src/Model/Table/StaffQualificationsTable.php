@@ -50,31 +50,29 @@ class StaffQualificationsTable extends AppTable  {
 			->select([
 				'institution_name' => 'Institutions.name',
 				'institution_code' => 'Institutions.code',
-				'staff_position_name' => 'staffPositionTitles.name',
-				'staff_type_name' => 'fieldOptionValues.name'
+				'staff_position_name' => 'StaffPositionTitles.name',
+				'staff_type_name' => 'FieldOptionValues.name'
 			])
 			->innerJoin(
-				['institutionStaff' => 'institution_staff'],
-					['institutionStaff.staff_id = '.$this->aliasField('staff_id')]
+				['InstitutionStaff' => 'institution_staff'],
+					['InstitutionStaff.staff_id = '.$this->aliasField('staff_id')]
 			)
 			->innerJoin(
 				['Institutions' => 'institutions'],
-					['Institutions.id = institutionStaff.institution_id']
+					['Institutions.id = InstitutionStaff.institution_id']
 			)
 			->innerJoin(
-				['institutionPositions' => 'institution_positions'],
-					['institutionPositions.id = institutionStaff.institution_position_id']
+				['InstitutionPositions' => 'institution_positions'],
+					['InstitutionPositions.id = InstitutionStaff.institution_position_id']
 			)
 			->innerJoin(
-				['staffPositionTitles' => 'staff_position_titles'],
-					['staffPositionTitles.id = institutionPositions.staff_position_title_id']
+				['StaffPositionTitles' => 'staff_position_titles'],
+					['StaffPositionTitles.id = InstitutionPositions.staff_position_title_id']
 			)
 			->innerJoin(
-				['fieldOptionValues' => 'field_option_values'],
-					['institutionStaff.staff_type_id = fieldOptionValues.id']
+				['FieldOptionValues' => 'field_option_values'],
+					['InstitutionStaff.staff_type_id = FieldOptionValues.id']
 			);
-
-		pr($query);
 
 		if (!$superAdmin) {
 			$query->find('ByAccess', ['user_id' => $userId, 'institution_field_alias' => 'Institutions.id']);
@@ -96,13 +94,13 @@ class StaffQualificationsTable extends AppTable  {
 			'label' => __('Institution Code')
 		];
 		$newArray[] = [
-			'key' => 'staffPositionTitles.name',
+			'key' => 'StaffPositionTitles.name',
 			'field' => 'staff_position_name',
 			'type' => 'string',
 			'label' => __('Position')
 		];
 		$newArray[] = [
-			'key' => 'fieldOptionValues.name',
+			'key' => 'FieldOptionValues.name',
 			'field' => 'staff_type_name',
 			'type' => 'string',
 			'label' => __('Staff Type')
