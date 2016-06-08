@@ -390,7 +390,7 @@ class DirectoriesTable extends AppTable {
 		];
 		$attr['options'] = $options;
 		$attr['onChangeReload'] = 'changeUserType';
-		if (!isset($this->request->query['user_type'])) {
+		if (!$this->request->query('user_type')) {
 			$this->request->query['user_type'] = key($options);
 		}
 		return $attr;
