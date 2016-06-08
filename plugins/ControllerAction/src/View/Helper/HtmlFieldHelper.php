@@ -10,6 +10,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
+use Cake\I18n\I18n;
 use Cake\View\Helper\IdGeneratorTrait;
 use Cake\View\NumberHelper;
 
@@ -715,6 +716,9 @@ class HtmlFieldHelper extends Helper {
 			'multiple' => 'true',
 			'type' => 'select'
 		];
+		if (I18n::locale() == 'ar') {
+			$_options['class'] = 'chosen-select chosen-rtl';
+		}
 
 		if ($action == 'index' || $action == 'view') {
 			$value = $data->$attr['field'];
