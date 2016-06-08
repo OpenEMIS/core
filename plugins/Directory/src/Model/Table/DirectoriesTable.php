@@ -306,9 +306,9 @@ class DirectoriesTable extends AppTable {
 			if ($this->controller->name != 'Students') {
 				$this->ControllerAction->field('user_type', ['type' => 'select', 'after' => 'photo_content']);
 			} else {
-				$this->request->data[$this->alias()]['user_type'] = self::GUARDIAN;
+				$this->request->query['user_type'] = self::GUARDIAN;
 			}
-			$userType = $this->request->data[$this->alias()]['user_type'];
+			$userType = $this->request->query('user_type');
 			
 			$this->ControllerAction->field('openemis_no', ['user_type' => $userType]);
 
@@ -353,6 +353,13 @@ class DirectoriesTable extends AppTable {
 		}
 	}
 
+	public function addBeforeAction(Event $event)
+	{
+		if (isset($this->request->query['user_type'])) {
+			$this->request->data[$this->alias()]['user_type'] = $this->request->query('user_type');
+		}
+	}
+
 	public function addAfterAction(Event $event) { 
 		// need to find out order values because recordbehavior changes it
 		$allOrderValues = [];
@@ -361,7 +368,7 @@ class DirectoriesTable extends AppTable {
 		}
 		$highestOrder = max($allOrderValues);
 
-		$userType = $this->request->data[$this->alias()]['user_type'];
+		$userType = $this->request->query('user_type');
 
 		switch ($userType) {
 			case self::STUDENT:
@@ -382,12 +389,24 @@ class DirectoriesTable extends AppTable {
 			self::OTHER => __('Others')
 		];
 		$attr['options'] = $options;
-		$attr['onChangeReload'] = true;
-		if (!isset($this->request->data[$this->alias()]['user_type'])) {
-			$this->request->data[$this->alias()]['user_type'] = key($options);
+		$attr['onChangeReload'] = 'changeUserType';
+		if (!isset($this->request->query['user_type'])) {
+			$this->request->query['user_type'] = key($options);
 		}
 		return $attr;
 	}
+
+    public function addOnChangeUserType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		unset($this->request->query['user_type']);
+
+		if ($this->request->is(['post', 'put'])) {
+			if (array_key_exists($this->alias(), $data)) {
+				if (array_key_exists('user_type', $data[$this->alias()])) {
+					$this->request->query['user_type'] = $data[$this->alias()]['user_type'];
+				}
+			}
+		}
+    }
 
 	public function onUpdateFieldOpenemisNo(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
