@@ -620,6 +620,8 @@ class HtmlFieldHelper extends Helper {
 			}
 			$value = $this->_View->element('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
 			$this->includes['datepicker']['include'] = true;
+			$fieldName = $attr['model'] . '.' . $attr['field'];
+			$this->Form->unlockField($fieldName);
 		}
 		return $value;
 	}
@@ -666,16 +668,6 @@ class HtmlFieldHelper extends Helper {
 			if (array_key_exists('fieldName', $attr)) {
 				$attr['id'] = $this->_domId($attr['fieldName']);
 			}
-			$model = split('\.', $attr['model']);
-			$newModel = '';
-			foreach($model as $part) {
-				if (empty($newModel)) {
-					$newModel = $part;
-				} else {
-					$newModel .= '['.$part.']';
-				}
-			}
-			$attr['model'] = $newModel;
 			$attr['time_options'] = array_merge($_options, $attr['time_options']);
 
 			if (!array_key_exists('value', $attr)) {
@@ -704,6 +696,8 @@ class HtmlFieldHelper extends Helper {
 			}
 			$value = $this->_View->element('ControllerAction.bootstrap-timepicker/timepicker_input', ['attr' => $attr]);
 			$this->includes['timepicker']['include'] = true;
+			$fieldName = $attr['model'] . '.' . $attr['field'];
+			$this->Form->unlockField($fieldName);
 		}
 
 		return $value;
@@ -776,6 +770,8 @@ class HtmlFieldHelper extends Helper {
 				$attr['value'] = $data->$name;
 			}
 			$value = $this->_View->element('ControllerAction.file_input', ['attr' => $attr]);
+			$fieldName = $attr['model'] . '.' . $attr['field'];
+			$this->Form->unlockField($fieldName);
 		}
 		return $value;
 	}
@@ -818,6 +814,8 @@ class HtmlFieldHelper extends Helper {
 			}
 
 			$value = $this->_View->element('ControllerAction.autocomplete', ['attr' => $attr, 'options' => $options]);
+			$fieldName = $attr['model'] . '.' . $attr['field'];
+			$this->Form->unlockField($fieldName);
 		}
 		return $value;
 	}
