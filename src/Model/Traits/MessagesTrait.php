@@ -622,7 +622,12 @@ trait MessagesTrait {
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				], 
 				'student_id' => [
-					'ruleNoNewDropoutRequestInGradeAndInstitution' => 'There is a pending dropout application for this student at the moment, please reject the dropout application before making another request.'
+					'ruleNoNewDropoutRequestInGradeAndInstitution' => 'There is a pending dropout application for this student at the moment, please reject the dropout application before making another request.',
+					'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
+						'inTargetSchool' => 'Student is already enrolled in this school.',
+						'inAnotherSchool' => 'Student is already enrolled in another school.',
+					],
+					'ruleStudentNotCompletedGrade' => 'Student has already completed the selected grade.',
 				]
 			],
 			'Students' => [
