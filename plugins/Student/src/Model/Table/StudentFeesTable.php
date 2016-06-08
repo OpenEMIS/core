@@ -92,11 +92,8 @@ class StudentFeesTable extends ControllerActionTable {
 ** index action methods
 **
 ******************************************************************************************************************/
-<<<<<<< HEAD
-	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
-=======
+
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) { 
->>>>>>> origin/POCOR-3048-dev
 		$query
 			->contain([
 				'EducationGrades.EducationProgrammes',
