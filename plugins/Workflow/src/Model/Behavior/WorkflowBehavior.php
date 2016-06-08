@@ -645,7 +645,8 @@ class WorkflowBehavior extends Behavior {
 			$alias.'.workflow_action_description' => [
 				'type' => 'hidden',
 				'value' => '',
-				'class' => 'workflowtransition-action-description'
+				'class' => 'workflowtransition-action-description',
+				'unlockField' => true
 			],
 			$alias.'.workflow_record_id' => [
 				'type' => 'hidden',
@@ -658,7 +659,8 @@ class WorkflowBehavior extends Behavior {
 			$alias.'.comment_required' => [
 				'type' => 'hidden',
 				'value' => 0,
-				'class' => 'workflowtransition-comment-required'
+				'class' => 'workflowtransition-comment-required',
+				'unlockField' => true
 			]
 		];
 
