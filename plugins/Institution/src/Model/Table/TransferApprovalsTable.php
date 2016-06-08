@@ -225,7 +225,7 @@ class TransferApprovalsTable extends AppTable {
 		$this->ControllerAction->field('end_date');
 		$this->ControllerAction->field('student_transfer_reason_id', ['type' => 'select']);
 		$this->ControllerAction->field('comment');
-		$this->ControllerAction->field('previous_institution_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('previous_institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->previous_institution_id)->code_name]]);
 		$this->ControllerAction->field('type', ['type' => 'hidden', 'value' => self::TRANSFER]);
 		$this->ControllerAction->field('created', ['type' => 'disabled', 'attr' => ['value' => $this->formatDate($entity->created)]]);
 		$this->ControllerAction->field('institution_class', ['type' => 'select']);
