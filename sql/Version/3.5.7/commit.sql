@@ -1,3 +1,13 @@
+-- POCOR-3058
+-- db_patches
+INSERT INTO `db_patches` (issue, created) VALUES ('POCOR-3058', NOW());
+
+
+-- code here
+UPDATE `area_administratives` SET `parent_id` = NULL WHERE `parent_id` = -1;
+UPDATE `areas` SET `parent_id` = NULL WHERE `parent_id` = -1;
+
+
 -- POCOR-2335
 -- db_patches
 INSERT INTO `db_patches` (issue, created) VALUES ('POCOR-2335', NOW());
