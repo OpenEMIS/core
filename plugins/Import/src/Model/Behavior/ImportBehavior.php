@@ -1205,6 +1205,22 @@ class ImportBehavior extends Behavior {
         return $period->toArray();
     }
 
+    public function getAcademicPeriodLevel($academicPeriodId) 
+    {
+        if (empty($academicPeriodId)) {
+            return false;
+        }
+        $period = $this->AcademicPeriods
+                    ->find()
+                    ->select([
+                        'academic_period_level_id'
+                    ])
+                    ->where([
+                        "id = ".$academicPeriodId
+                    ]);
+        return $period->toArray();
+    }
+
     private function eventKey($key) {
         return 'Model.import.' . $key;
     }
