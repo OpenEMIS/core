@@ -5,6 +5,7 @@ v3.5.7
 - New Report - Staff Qualifications
 - Users can now import staff into schools via Excel
 - Fixed a bug that caused the system to allow user to add classes to grades that are no longer active
+- Users can now see the summary of student results in Student -> Academic -> Results
 
 v3.5.6
 - Zero value can now be saved properly in Survey Forms
