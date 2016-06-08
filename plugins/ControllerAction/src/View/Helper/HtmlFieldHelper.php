@@ -471,7 +471,8 @@ class HtmlFieldHelper extends Helper {
 																							'showRemoveButton' => $showRemoveButton,
 																							'defaultImgMsg' => $defaultImgMsg,
 																							'defaultImgView' => $defaultImgView]);
-
+			$name = $attr['model'].'.'.$attr['field'];
+			$this->Form->unlockField($name);
 		} 
 
 		return $value;
