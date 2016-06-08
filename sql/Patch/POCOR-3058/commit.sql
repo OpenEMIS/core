@@ -3,5 +3,5 @@ INSERT INTO `db_patches` (issue, created) VALUES ('POCOR-3058', NOW());
 
 
 -- code here
-UPDATE `area_administratives` SET parent_id = NULL WHERE id = 8;
-UPDATE `areas` SET parent_id = NULL WHERE id = 1;
+UPDATE `area_administratives` SET `parent_id` = NULL WHERE `parent_id` = -1;
+UPDATE `areas` SET `parent_id` = NULL WHERE `parent_id` = -1;

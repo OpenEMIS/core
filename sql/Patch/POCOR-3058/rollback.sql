@@ -1,6 +1,6 @@
 -- code here
-UPDATE `area_administratives` SET parent_id = -1 WHERE id = 8;
-UPDATE `areas` SET parent_id = -1 WHERE id = 1;
+UPDATE `area_administratives` SET `parent_id` = -1 WHERE `parent_id` IS NULL;
+UPDATE `areas` SET `parent_id` = -1 WHERE `parent_id` IS NULL;
 
 
 -- db_patches
