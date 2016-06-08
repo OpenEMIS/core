@@ -117,5 +117,8 @@ class AppController extends Controller {
 			'homePageURL' => ['plugin' => null, 'controller' => 'Dashboard', 'action' => 'index'],
 			'loginPageURL' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'login'],
 		]); // for single sign on authentication
+
+		// For Csrf
+		$this->loadComponent('Csrf');
 	}
 }
