@@ -135,6 +135,9 @@ class UserGroupsTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
+		$this->Security->config('unlockedFields', [
+        	'area_id', 'institution_id', 'user_id'
+        ]);
 		$controller = $this->controller;
 		$tabElements = [
 			$this->alias() => [
