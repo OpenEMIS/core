@@ -50,15 +50,7 @@ class AreasTable extends AppTable {
 	}
 
 	public function rebuildLftRght() {
-		$this->updateAll(
-			['parent_id' => null],
-			['parent_id' => -1]
-		);
 		$this->recover();
-		$this->updateAll(
-			['parent_id' => -1],
-			['parent_id IS NULL']
-		);
 	}
 
 	public function afterAction(Event $event) {
@@ -95,13 +87,6 @@ class AreasTable extends AppTable {
 			);
 
 		$this->rebuildLftRght();
-
-		$process = function($model, $id, $options) {
-			$entity = $model->get($id);
-			$model->removeFromTree($entity);
-			return $model->delete($entity, $options->getArrayCopy());
-		};
-		return $process;
 	}
 	public function onGetConvertOptions(Event $event, Entity $entity, Query $query) {
 		$level = $entity->area_level_id;
@@ -119,8 +104,8 @@ class AreasTable extends AppTable {
 
 		$this->fields['parent_id']['visible'] = false;
 
-		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : -1;
-		if ($parentId != -1) {
+		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+		if ($parentId != null) {
 			$crumbs = $this
 				->find('path', ['for' => $parentId])
 				->order([$this->aliasField('lft')])
@@ -130,7 +115,7 @@ class AreasTable extends AppTable {
 			$results = $this
 				->find('all')
 				->select([$this->aliasField('id')])
-				->where([$this->aliasField('parent_id') => -1])
+				->where([$this->aliasField('parent_id') . ' IS NULL'])
 				->all();
 
 			if ($results->count() == 1) {
@@ -146,8 +131,12 @@ class AreasTable extends AppTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : -1;
-		$query->where([$this->aliasField('parent_id') => $parentId]);
+		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+        if ($parentId != null) {
+        	$query->where([$this->aliasField('parent_id') => $parentId]);
+        } else {
+        	$query->where([$this->aliasField('parent_id') . ' IS NULL']);
+        }
 	}
 
 	public function addEditBeforeAction(Event $event) {
@@ -158,7 +147,7 @@ class AreasTable extends AppTable {
 		$parentId = $this->request->query('parent');
 
 		if (is_null($parentId)) {
-			$this->fields['parent_id']['attr']['value'] = -1;
+			$this->fields['parent_id']['attr']['value'] = null;
 		} else {
 			$this->fields['parent_id']['attr']['value'] = $parentId;
 			
@@ -193,7 +182,7 @@ class AreasTable extends AppTable {
 	}
 
 	public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, Request $request) {
-		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : -1;
+		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
 		$results = $this
 			->find()
 			->select([$this->aliasField('area_level_id')])
