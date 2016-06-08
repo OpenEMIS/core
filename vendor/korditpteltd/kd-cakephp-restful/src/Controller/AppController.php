@@ -29,5 +29,7 @@ class AppController extends Controller {
 				'action' => 'login'
 			]
 		]);
+
+		$this->loadComponent('Csrf');
 	}
 }
