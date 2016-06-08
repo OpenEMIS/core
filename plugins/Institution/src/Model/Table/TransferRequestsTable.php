@@ -225,6 +225,7 @@ class TransferRequestsTable extends AppTable {
 
 	public function beforeAction(Event $event) {
     	$this->ControllerAction->field('institution_class_id', ['visible' => false]);
+    }	
 
 	public function indexBeforeAction(Event $event) {
     	$this->ControllerAction->field('student_transfer_reason_id', ['visible' => true]);
