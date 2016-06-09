@@ -38,6 +38,7 @@ class TransferRequestsTable extends AppTable {
 		$this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('StudentTransferReasons', ['className' => 'FieldOption.StudentTransferReasons']);
 		$this->belongsTo('NewEducationGrades', ['className' => 'Education.EducationGrades']);
+		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
 		$this->addBehavior('OpenEmis.Section');
 		$this->InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
 	}
@@ -222,6 +223,10 @@ class TransferRequestsTable extends AppTable {
 		$this->request->data[$this->alias()]['student_status_id'] = $entity->student_status_id;
 	}
 
+	public function beforeAction(Event $event) {
+    	$this->ControllerAction->field('institution_class_id', ['visible' => false]);
+    }	
+
 	public function indexBeforeAction(Event $event) {
     	$this->ControllerAction->field('student_transfer_reason_id', ['visible' => true]);
     	$this->ControllerAction->field('start_date', ['visible' => false]);
@@ -267,7 +272,7 @@ class TransferRequestsTable extends AppTable {
     	$this->ControllerAction->field('created', ['visible' => true]);
     }
 
-	public function addAfterAction(Event $event, Entity $entity) {
+    public function addAfterAction(Event $event, Entity $entity) {
 		if ($this->Session->check($this->registryAlias().'.id')) {
 			$this->addSections();
 			$this->ControllerAction->field('transfer_status');

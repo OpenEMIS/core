@@ -106,6 +106,7 @@ class StudentUserTable extends UserTable {
 					'institution_id' => $academicData['institution_id'],
 					'academic_period_id' => $academicData['academic_period_id'],
 					'education_grade_id' => $academicData['education_grade_id'],
+					'institution_class_id' => $academicData['class'],
 					'previous_institution_id' => 0,
 					'student_transfer_reason_id' => 0,
 					'type' => $admissionStatus,
