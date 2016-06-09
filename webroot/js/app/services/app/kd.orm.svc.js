@@ -59,12 +59,14 @@ angular.module('kd.orm.svc', [])
         },
 
         find: function(finder, params) {
-            var paramsArray = [];
-            if (params != undefined) {
+            if (angular.isDefined(params) && angular.isObject(params)) {
+                var paramsArray = [];
                 angular.forEach(params, function(value, key) {
                     this.push(key + ':' + value);
                 }, paramsArray);
                 this._finder.push(finder + '[' + paramsArray.join(';') + ']');
+            } else {
+                this._finder.push(finder);
             }
             return this;
         },
