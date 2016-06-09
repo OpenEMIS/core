@@ -28,6 +28,11 @@ class GuardianUserTable extends UserTable {
 		return $this->controller->redirect($action);
 	}
 
+	public function beforeAction(Event $event) 
+	{
+		$this->request->query['user_type'] = UserTable::GUARDIAN;
+	}
+
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$this->setupTabElements($entity);
 	}
@@ -36,10 +41,12 @@ class GuardianUserTable extends UserTable {
 		$this->setupTabElements($entity);
 	}
 
-	public function addAfterAction(Event $event) {
-			$options['type'] = 'student';
-			$tabElements = $this->controller->getStudentGuardianTabElements($options);
-			$this->controller->set('tabElements', $tabElements);
+	public function addAfterAction(Event $event) 
+	{
+		$options['type'] = 'student';
+		$tabElements = $this->controller->getStudentGuardianTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$this->ControllerAction->field('user_type', ['type' => 'hidden', 'value' => UserTable::GUARDIAN]);
 	}
 
 	private function setupTabElements($entity) {
