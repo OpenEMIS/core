@@ -24,7 +24,7 @@ class GuardianUserTable extends UserTable {
 			$this->Session->delete($sessionKey);
 		}
 		$event->stopPropagation();
-		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Guardians', 'index'];
+		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StudentGuardians', 'index'];
 		return $this->controller->redirect($action);
 	}
 
