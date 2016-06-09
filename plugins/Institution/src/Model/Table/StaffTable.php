@@ -722,6 +722,10 @@ class StaffTable extends AppTable {
 			$buttons['edit']['url'] = $url;
 		}
 
+		if ($this->Session->read('Auth.User.id') == $entity->_matchingData['Users']->id) { //if logged on user = current user, then unset the delete button
+			unset($buttons['remove']);
+		}
+
 		return $buttons;
 	}
 
