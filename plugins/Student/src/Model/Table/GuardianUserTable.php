@@ -13,6 +13,7 @@ use App\Model\Table\AppTable;
 use Directory\Model\Table\DirectoriesTable as UserTable;
 
 class GuardianUserTable extends UserTable {
+	   	
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
 		$sessionKey = 'Student.Guardians.new';
 		if ($this->Session->check($sessionKey)) {
@@ -30,6 +31,16 @@ class GuardianUserTable extends UserTable {
 
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$this->setupTabElements($entity);
+	}
+
+	public function beforeAction(Event $event) 
+	{
+		if (($this->action=="add") || ($this->action=="edit")) { //hide "other information" section on add/edit guardian because there wont be any custom field.
+			$controller = $this->controller->name;
+			if (($controller=="Students") || ($controller=="Directories")) {
+				$this->ControllerAction->field('other_information_section', ['visible' => false]);
+			}
+		}
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
