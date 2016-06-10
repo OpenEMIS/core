@@ -37,12 +37,7 @@ class GuardianUserTable extends UserTable {
 	public function beforeAction(Event $event) 
 	{
 		parent::beforeAction($event);
-		if (($this->action=="add") || ($this->action=="edit")) { //hide "other information" section on add/edit guardian because there wont be any custom field.
-			$controller = $this->controller->name;
-			if (($controller=="Students") || ($controller=="Directories")) {
-				$this->ControllerAction->field('other_information_section', ['visible' => false]);
-			}
-		}
+		parent::hideOtherInformationSection($this->controller->name, $this->action);
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
