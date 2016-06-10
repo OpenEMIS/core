@@ -100,12 +100,6 @@ class AreasTable extends AppTable {
 
 		$this->rebuildLftRght();
 	}
-	public function onGetConvertOptions(Event $event, Entity $entity, Query $query) {
-		$level = $entity->area_level_id;
-		$query->where([
-				$this->aliasField('area_level_id') => $level
-			]);
-	}
 
 	public function indexBeforeAction(Event $event) {
 		// Add breadcrumb
