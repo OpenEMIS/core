@@ -10,6 +10,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
+use Cake\I18n\I18n;
 use Cake\View\Helper\IdGeneratorTrait;
 use Cake\View\NumberHelper;
 
@@ -710,11 +711,14 @@ class HtmlFieldHelper extends Helper {
 
 	public function chosenSelect($action, Entity $data, $attr, $options=[]) {
 		$value = '';
-
 		$_options = [
 			'class' => 'chosen-select',
-			'multiple' => true
+			'multiple' => 'true',
+			'type' => 'select'
 		];
+		if (I18n::locale() == 'ar') {
+			$_options['class'] = 'chosen-select chosen-rtl';
+		}
 
 		if ($action == 'index' || $action == 'view') {
 			$value = $data->$attr['field'];
@@ -740,7 +744,11 @@ class HtmlFieldHelper extends Helper {
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
 			} else {
-				$fieldName = $attr['model'] . '.' . $attr['field'] . '._ids';
+				if ($options['multiple']) {
+					$fieldName = $attr['model'] . '.' . $attr['field'] . '._ids';
+				} else {
+					$fieldName = $attr['model'] . '.' . $attr['field'];
+				}
 			}
 			$value = $this->Form->input($fieldName, $options);
 		}

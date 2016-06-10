@@ -13,6 +13,7 @@ use App\Model\Table\AppTable;
 use Directory\Model\Table\DirectoriesTable as UserTable;
 
 class GuardianUserTable extends UserTable {
+	   	
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
 		$sessionKey = 'Student.Guardians.new';
 		if ($this->Session->check($sessionKey)) {
@@ -29,17 +30,26 @@ class GuardianUserTable extends UserTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		parent::viewAfterAction($event, $entity);
 		$this->setupTabElements($entity);
 	}
 
+	public function beforeAction(Event $event) 
+	{
+		parent::beforeAction($event);
+		parent::hideOtherInformationSection($this->controller->name, $this->action);
+	}
+
 	public function editAfterAction(Event $event, Entity $entity) {
+		parent::editAfterAction($event, $entity);
 		$this->setupTabElements($entity);
 	}
 
 	public function addAfterAction(Event $event) {
-			$options['type'] = 'student';
-			$tabElements = $this->controller->getStudentGuardianTabElements($options);
-			$this->controller->set('tabElements', $tabElements);
+		parent::addAfterAction($event);
+		$options['type'] = 'student';
+		$tabElements = $this->controller->getStudentGuardianTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
 	}
 
 	private function setupTabElements($entity) {
