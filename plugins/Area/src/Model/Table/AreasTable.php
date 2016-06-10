@@ -61,13 +61,11 @@ class AreasTable extends AppTable {
 		$query->where([
 			$this->aliasField('area_level_id') => $entity->area_level_id
 		]);
-
-		if ($query->count() == 1) {
-			if ((($entity->rght) - ($entity->lft)) != 1) {
-				$this->Alert->warning('general.notTransferrable');
-				$event->stopPropagation();
-				return $this->controller->redirect($this->ControllerAction->url('index'));
-			} 
+		// if the last parent and have children, unable to be deleted and show warning message
+		if ($query->count() == 1 && $this->childCount($entity, true) > 0) {
+			$this->Alert->warning('general.notTransferrable');
+			$event->stopPropagation();
+			return $this->controller->redirect($this->ControllerAction->url('index'));
 		}
 	}
 
