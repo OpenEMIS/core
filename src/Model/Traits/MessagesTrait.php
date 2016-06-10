@@ -144,6 +144,7 @@ trait MessagesTrait {
 			'institution' => 'Institution',
 		],
 		'InstitutionClasses' => [
+			'expiredGrade' => 'Expired Grade',
 			'noClasses' => 'No Classes',
 			'students' => 'Students',
 			'education_programme' => 'Education Programme',
@@ -426,6 +427,7 @@ trait MessagesTrait {
 			'add_next_programme' => 'Add Next Programme'
 		],
 		'StudentAdmission' => [
+			'noClass' => 'No Class Selected',
 			'existsInSchool' => 'Student is already exists in the school',
 			'enrolledInInstitution' => 'Student is already enrolled in another school.',
 			'existsInRecord' => 'Student has already been added to admission list',
@@ -620,7 +622,12 @@ trait MessagesTrait {
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				], 
 				'student_id' => [
-					'ruleNoNewDropoutRequestInGradeAndInstitution' => 'There is a pending dropout application for this student at the moment, please reject the dropout application before making another request.'
+					'ruleNoNewDropoutRequestInGradeAndInstitution' => 'There is a pending dropout application for this student at the moment, please reject the dropout application before making another request.',
+					'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
+						'inTargetSchool' => 'Student is already enrolled in this school.',
+						'inAnotherSchool' => 'Student is already enrolled in another school.',
+					],
+					'ruleStudentNotCompletedGrade' => 'Student has already completed the selected grade.',
 				]
 			],
 			'Students' => [
@@ -651,6 +658,11 @@ trait MessagesTrait {
 				],
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
+				],
+			],
+			'InstitutionFeeTypes' => [
+				'amount' => [
+					'ruleMaxLength' => 'Amount entered exceeds system limit'
 				],
 			],
 			'InstitutionInfrastructures' => [
