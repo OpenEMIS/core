@@ -3,11 +3,21 @@ $this->Html->scriptStart(['block' => 'scriptBottom']);
 ?>
 $(function () {
 <?php
-$datepickerScript = "$('#%s').datepicker(%s);\n";
+$datepickerScript = "var datepicker%s = $('#%s').datepicker(%s);\n";
 if (isset($datepicker)) {
 	foreach ($datepicker as $key => $obj) {
-		echo sprintf($datepickerScript, $obj['id'], json_encode($obj['date_options']));
+		echo sprintf($datepickerScript, $key, $obj['id'], json_encode($obj['date_options']));
 	}
+
+	echo "$( document ).on('DOMMouseScroll mousewheel scroll', function(){\n";
+		echo "window.clearTimeout( t );\n";
+	        echo "t = window.setTimeout( function(){\n";
+				foreach ($datepicker as $key => $obj) {
+					echo sprintf("datepicker%s.datepicker('place');\n", $key);
+				}
+	        echo "});\n";
+	    echo "}\n";
+	echo ");\n";
 }
 /*
 foreach ($datepicker as $key => $obj) {

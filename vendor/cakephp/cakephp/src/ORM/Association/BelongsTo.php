@@ -17,7 +17,6 @@ namespace Cake\ORM\Association;
 use Cake\Database\Expression\IdentifierExpression;
 use Cake\Datasource\EntityInterface;
 use Cake\ORM\Association;
-use Cake\ORM\Association\SelectableAssociationTrait;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use RuntimeException;
@@ -73,23 +72,14 @@ class BelongsTo extends Association
     }
 
     /**
-     * Sets the property name that should be filled with data from the target table
-     * in the source table record.
-     * If no arguments are passed, currently configured type is returned.
+     * Returns default property name based on association name.
      *
-     * @param string|null $name The property name, use null to read the current property.
      * @return string
      */
-    public function property($name = null)
+    protected function _propertyName()
     {
-        if ($name !== null) {
-            return parent::property($name);
-        }
-        if ($name === null && !$this->_propertyName) {
-            list(, $name) = pluginSplit($this->_name);
-            $this->_propertyName = Inflector::underscore(Inflector::singularize($name));
-        }
-        return $this->_propertyName;
+        list(, $name) = pluginSplit($this->_name);
+        return Inflector::underscore(Inflector::singularize($name));
     }
 
     /**
@@ -126,7 +116,7 @@ class BelongsTo extends Association
      * the target table
      * @return bool|\Cake\Datasource\EntityInterface false if $entity could not be saved, otherwise it returns
      * the saved entity
-     * @see Table::save()
+     * @see \Cake\ORM\Table::save()
      */
     public function saveAssociated(EntityInterface $entity, array $options = [])
     {

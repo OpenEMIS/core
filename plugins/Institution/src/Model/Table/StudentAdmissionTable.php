@@ -28,9 +28,13 @@ class StudentAdmissionTable extends AppTable {
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('StudentTransferReasons', ['className' => 'FieldOption.StudentTransferReasons']);
+
+		$this->addBehavior('User.AdvancedNameSearch');
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$options['auto_search'] = false;
+
 		$statusToshow = [self::NEW_REQUEST, self::REJECTED];
 		$typeToShow = [];
 
@@ -43,6 +47,12 @@ class StudentAdmissionTable extends AppTable {
 		}
 
 		$query->where([$this->aliasField('type').' IN' => $typeToShow, $this->aliasField('status').' IN' => $statusToshow]);
+
+		$search = $this->ControllerAction->getSearchKey();
+		if (!empty($search)) {
+			// function from AdvancedNameSearchBehavior
+			$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
+		}
 	}
 
 	public function editOnInitialize(Event $event, Entity $entity) {
@@ -59,6 +69,9 @@ class StudentAdmissionTable extends AppTable {
     	$this->ControllerAction->field('previous_institution_id', ['visible' => ['edit' => true, 'index' => false, 'view' => false]]);
     	$this->ControllerAction->field('type');
     	$this->ControllerAction->field('comment', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
+    	if ($this->action == 'index') {
+    		$this->ControllerAction->field('openemis_no');
+    	}
     	$this->ControllerAction->field('student_id');
     	$this->ControllerAction->field('status');
     	$this->ControllerAction->field('institution_id', ['visible' => ['index' => false, 'edit' => true, 'view' => 'true']]);
@@ -138,6 +151,9 @@ class StudentAdmissionTable extends AppTable {
 		}
 		return __($typeName);
 	}
+	public function onGetOpenemisNo(Event $event, Entity $entity){
+		return $entity->user->openemis_no;
+	}
 
 	public function onGetStudentId(Event $event, Entity $entity){
 		$urlParams = $this->ControllerAction->url('index');
@@ -201,16 +217,34 @@ class StudentAdmissionTable extends AppTable {
 
 			$where = [$this->aliasField('status') => 0, $this->aliasField('type') => self::ADMISSION];
 			if (!$AccessControl->isAdmin()) {
-				$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
+				if (!empty($institutionIds)) {
+					$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
+				} else {
+					$where[$this->aliasField('institution_id')] = '-1';
+				}
 			}
 
 			$resultSet = $this
 				->find()
-				->contain(['Users', 'Institutions', 'EducationGrades', 'ModifiedUser', 'CreatedUser'])
+				->select([
+					$this->aliasField('id'),
+					$this->aliasField('modified'),
+					$this->aliasField('created'),
+					'Users.openemis_no',
+					'Users.first_name',
+					'Users.middle_name',
+					'Users.third_name',
+					'Users.last_name',
+					'Users.preferred_name',
+					'Institutions.name',
+					'CreatedUser.username'
+				])
+				->contain(['Users', 'Institutions', 'CreatedUser'])
 				->where($where)
 				->order([
 					$this->aliasField('created')
 				])
+				->limit(30)
 				->toArray();
 
 			foreach ($resultSet as $key => $obj) {
@@ -223,7 +257,11 @@ class StudentAdmissionTable extends AppTable {
 					$obj->id
 				];
 
-				$receivedDate = $this->formatDate($obj->modified);
+				if (is_null($obj->modified)) {
+					$receivedDate = $this->formatDate($obj->created);
+				} else {
+					$receivedDate = $this->formatDate($obj->modified);
+				}
 
 				$data[] = [
 					'request_title' => ['title' => $requestTitle, 'url' => $url],
@@ -343,25 +381,28 @@ class StudentAdmissionTable extends AppTable {
 		$studentId = $entity->student_id;
 		$periodId = $entity->academic_period_id;
 		$gradeId = $entity->education_grade_id;
+		$newSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($gradeId);
 
-		$conditions = [
-			'institution_id' => $newSchoolId,
-			'student_id' => $studentId,
-			'academic_period_id' => $periodId,
-			'education_grade_id' => $gradeId,
-			'student_status_id' => $statuses['CURRENT']
-		];
-
-		// check if the student is already in the new school
-		if (!$Students->exists($conditions)) { // if not exists
+		$validateEnrolledInAnyInstitutionResult = $Students->validateEnrolledInAnyInstitution($studentId, $newSystemId, ['targetInstitutionId' => $newSchoolId]);
+		if (!empty($validateEnrolledInAnyInstitutionResult)) {
+			$this->Alert->error($validateEnrolledInAnyInstitutionResult, ['type' => 'message']);
+		} else if ($Students->completedGrade($gradeId, $studentId)) {
+			$this->Alert->error('Institution.Students.student_name.ruleStudentNotCompletedGrade');
+		} else { // if not exists
 			$startDate = $data[$this->alias()]['start_date'];
 			$startDate = date('Y-m-d', strtotime($startDate));
 
 			// add the student to the new school
-			$newData = $conditions;
-			$newData['start_date'] = $startDate;
-			$newData['end_date'] = $entity->end_date->format('Y-m-d');
-			$newEntity = $Students->newEntity($newData);
+			$entityData = [
+				'institution_id' => $newSchoolId,
+				'student_id' => $studentId,
+				'academic_period_id' => $periodId,
+				'education_grade_id' => $gradeId,
+				'student_status_id' => $statuses['CURRENT']
+			];
+			$entityData['start_date'] = $startDate;
+			$entityData['end_date'] = $entity->end_date->format('Y-m-d');
+			$newEntity = $Students->newEntity($entityData);
 			if ($Students->save($newEntity)) {
 				$this->Alert->success('StudentAdmission.approve');
 
@@ -393,8 +434,6 @@ class StudentAdmissionTable extends AppTable {
 				$this->Alert->error('general.edit.failed');
 				$this->log($newEntity->errors(), 'debug');
 			}
-		} else {
-			$this->Alert->error('StudentAdmission.exists');
 		}
 
 		// To redirect back to the student admission if it is not access from the workbench

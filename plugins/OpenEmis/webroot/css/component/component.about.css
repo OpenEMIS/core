@@ -1,13 +1,17 @@
-/* ABOUT v.1.0.1 */
+/* ABOUT v.1.0.3 */
+
+.about-wrapper {
+    background-color: #FFF;
+    border-left: 1px solid #DDD;
+    border-right: 1px solid #DDD;
+    border-bottom: 1px solid #DDD;
+}
 
 .about-container {
     text-align: left;
     padding: 15px !important;
-    border-top: 0;
-    border-left: 1px solid #DDD;
-    border-right: 1px solid #DDD;
-    border-bottom: 1px solid #DDD;
     display: block;
+    background-color: #FFF;
 }
 
 .img-logo {

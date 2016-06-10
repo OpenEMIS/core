@@ -15,7 +15,7 @@ use Cake\Utility\Inflector;
 use Cake\Log\Log;
 
 class StudentFeesTable extends AppTable {
-	public $institutionId = 0;
+	private $institutionId = 0;
 	private $_selectedAcademicPeriodId = -1;
 	private $_academicPeriodOptions = [];
 	private $_selectedEducationGradeId = -1;
@@ -132,7 +132,7 @@ class StudentFeesTable extends AppTable {
 			'openemis_no', 'student_id', 'total_fee', 'amount_paid', 'outstanding_fee'
 		]);
 		$conditions = array(
-			'InstitutionGrades.institution_site_id' => $this->institutionId
+			'InstitutionGrades.institution_id' => $this->institutionId
 		);
 		$academicPeriodOptions = $this->AcademicPeriods->getList();
 		if (empty($academicPeriodOptions)) {
@@ -143,7 +143,14 @@ class StudentFeesTable extends AppTable {
 		}
 		$institutionId = $this->institutionId;
 		$this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
-		$this->advancedSelectOptions($academicPeriodOptions, $this->_selectedAcademicPeriodId);
+		$selectedOption = $this->queryString('academic_period_id', $academicPeriodOptions);
+		$Fees = $this;
+		$this->advancedSelectOptions($academicPeriodOptions, $selectedOption, [
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudentFees')),
+			'callable' => function($id) use ($Fees, $institutionId) {
+				return $Fees->find()->where(['institution_id'=>$institutionId, 'academic_period_id'=>$id])->count();
+			}
+		]);
 
 		$gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($institutionId, $this->_selectedAcademicPeriodId);
 		$this->_selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);
@@ -561,7 +568,7 @@ class StudentFeesTable extends AppTable {
 			$toolbarButtons['add'] = $toolbarButtons['back'];
 			$toolbarButtons['add']['url'] = $buttons['add']['url'];
 			$toolbarButtons['add']['label'] = '<i class="fa kd-add"></i>';
-			$toolbarButtons['add']['attr']['title'] = 'Add New Payment';
+			$toolbarButtons['add']['attr']['title'] = __('Add New Payment');
 		} else if ($action == 'add') {
 			$toolbarButtons['back']['url'] = $buttons['view']['url'];
 		}

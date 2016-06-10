@@ -17,57 +17,24 @@ class ResultsTable extends AppTable {
 		parent::initialize($config);
 
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('AssessmentPeriods', ['className' => 'Assessment.AssessmentPeriods']);
+		$this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('AssessmentItems', ['className' => 'Assessment.AssessmentItems']);
+		$this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
+		$this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
 		$this->belongsTo('AssessmentGradingOptions', ['className' => 'Assessment.AssessmentGradingOptions']);
 	}
 
-	public function validationDefault(Validator $validator) {
-		return $validator;
-	}
-	public function onGetInstitutionSiteId(Event $event, Entity $entity) {
-		return $this->Institutions->get($entity->institution_site_id)->name;
-	}
-
-	public function onGetAcademicPeriodId(Event $event, Entity $entity) {
-		return $this->AcademicPeriods->get($entity->academic_period_id)->name;
+	private function setupTabElements() {
+		$options['type'] = 'student';
+		$tabElements = $this->controller->getAcademicTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$alias = $this->alias();
+		$this->controller->set('selectedAction', $alias);
 	}
 
-	public function onGetAssessmentItemId(Event $event, Entity $entity) {
-		return $entity->assessment_item->education_subject->name;
-	}
-
-	public function onGetAssessment(Event $event, Entity $entity) {
-		return $entity->assessment_item->assessment->name;
-	}
-
-	public function beforeAction() {
-		$this->ControllerAction->field('assessment');
-		$this->ControllerAction->field('assessment_result_id', ['visible' => false]);
-		$this->ControllerAction->field('assessment_result_type_id', ['visible' => false]);
-		$this->ControllerAction->field('assessment_grading_option_id', ['visible' => false]);
-
-		$this->ControllerAction->setFieldOrder([
-			'academic_period_id', 'institution_site_id', 'assessment', 'assessment_item_id'
-		]);
-	}
-
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$options['auto_contain'] = false;
-		$query->contain([
-			'AssessmentItems.EducationSubjects',
-			'AssessmentItems.Assessments'
-		])
-		->join(
-			[	'table'=> 'institution_site_assessments',
-				'alias' => 'InstitutionSiteAssessments',
-				'conditions' => [
-					'InstitutionSiteAssessments.academic_period_id = '. $this->aliasField('academic_period_id'),
-					'InstitutionSiteAssessments.institution_site_id = '. $this->aliasField('institution_site_id')
-				]
-			]
-		)
-		->where(['InstitutionSiteAssessments.status' => 2])
-		;
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
 	}
 }

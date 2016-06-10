@@ -10,6 +10,7 @@ use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
+use User\Model\Table\UsersTable AS BaseUsers;
 
 class StudentsTable extends AppTable {
 	public $InstitutionStudent;
@@ -18,20 +19,12 @@ class StudentsTable extends AppTable {
 		$this->table('security_users');
 		$this->entityClass('User.User');
 		parent::initialize($config);
+		
+		// Associations
+		BaseUsers::handleAssociations($this);
+		self::handleAssociations($this);
 
-		$this->belongsTo('Genders', ['className' => 'User.Genders']);
-		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
-		$this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
-
-		$this->belongsToMany('Institutions', [
-			'className' => 'Institution.Institutions',
-			'joinTable' => 'institution_students',
-			'foreignKey'	 => 'student_id',
-			'targetForeignKey' => 'institution_id',
-			'through' => 'Institution.Students',
-			'dependent' => true
-		]);
-
+		// Behaviors
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
 		$this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
@@ -43,17 +36,18 @@ class StudentsTable extends AppTable {
 			'fieldKey' => 'student_custom_field_id',
 			'tableColumnKey' => 'student_custom_table_column_id',
 			'tableRowKey' => 'student_custom_table_row_id',
+			'fieldClass' => ['className' => 'StudentCustomField.StudentCustomFields'],
 			'formKey' => 'student_custom_form_id',
 			'filterKey' => 'student_custom_filter_id',
 			'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
 			'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
-			'recordKey' => 'security_user_id',
-			'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
+			'recordKey' => 'student_id',
+			'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 
 		$this->addBehavior('Excel', [
-			'excludes' => ['photo_name', 'is_student', 'is_staff', 'is_guardian'],
+			'excludes' => ['photo_name', 'is_student', 'is_staff', 'is_guardian', 'super_admin', 'date_of_death'],
 			'filename' => 'Students',
 			'pages' => ['view']
 		]);
@@ -71,14 +65,45 @@ class StudentsTable extends AppTable {
 		]);
         $this->addBehavior('Import.ImportLink');
 
-		// $this->addBehavior('TrackActivity', ['target' => 'Student.StudentActivities', 'key' => 'security_user_id', 'session' => 'Users.id']);
+		$this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
 
 		$this->InstitutionStudent = TableRegistry::get('Institution.Students');
 	}
 
+	public static function handleAssociations($model) {
+
+		// remove all student records from institution_students, institution_site_student_absences, student_behaviours, assessment_item_results, student_guardians, institution_student_admission, student_custom_field_values, student_custom_table_cells, student_fees, student_extracurriculars
+
+
+		$model->belongsToMany('Institutions', [
+			'className' => 'Institution.Institutions',
+			'joinTable' => 'institution_students',
+			'foreignKey' => 'student_id',
+			'targetForeignKey' => 'institution_id',
+			'through' => 'Institution.Students',
+			'dependent' => true
+		]);
+
+		$model->hasMany('StudentAbsences', ['className' => 'Institution.InstitutionSiteStudentAbsences',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('StudentBehaviours', ['className' => 'Institution.StudentBehaviours',	'foreignKey' => 'student_id', 'dependent' => true]);
+		$model->hasMany('AssessmentItemResults', ['className' => 'Assessment.AssessmentItemResults',	'foreignKey' => 'student_id', 'dependent' => true]);
+		$model->belongsToMany('Guardians', [
+			'className' => 'Student.Guardians',
+			'foreignKey' => 'student_id',
+			'targetForeignKey' => 'guardian_id',
+			'through' => 'Student.StudentGuardians',
+			'dependent' => true
+		]);
+		$model->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission',	'foreignKey' => 'student_id', 'dependent' => true]);
+		$model->hasMany('StudentCustomFieldValues', ['className' => 'CustomField.StudentCustomFieldValues',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('StudentCustomTableCells', ['className' => 'CustomField.StudentCustomTableCells',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('StudentFees', ['className' => 'Institution.StudentFeesAbstract',	'foreignKey' => 'student_id', 'dependent' => true]);
+		$model->hasMany('Extracurriculars', ['className' => 'Student.Extracurriculars',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+	}
+
 	public function validationDefault(Validator $validator) {
 		$BaseUsers = TableRegistry::get('User.Users');
-		return $BaseUsers->setUserValidation($validator);
+		return $BaseUsers->setUserValidation($validator, $this);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -116,15 +141,8 @@ class StudentsTable extends AppTable {
 		if (!$this->AccessControl->isAdmin()) { // if user is not super admin, the list will be filtered
 			$institutionIds = $this->AccessControl->getInstitutionsByUser();
 			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
-			$query->innerJoin(
-				['InstitutionStudent' => 'institution_students'],
-				[
-					'InstitutionStudent.student_id = ' . $this->aliasField($this->primaryKey()),
-					'InstitutionStudent.institution_id IN ' => $institutionIds
-				]
-			)
-			->group([$this->aliasField('id')]);
-			;
+			$this->joinInstitutionStudents($institutionIds, $query);
+			$query->group([$this->aliasField('id')]);
 		}
 	}
 
@@ -225,40 +243,114 @@ class StudentsTable extends AppTable {
 		]);
 
 		$this->ControllerAction->field('username', ['order' => 70]);
-		$this->ControllerAction->field('password', ['order' => 71, 'visible' => true]);
+		$this->ControllerAction->field('password', ['order' => 71]);
 		$this->ControllerAction->field('is_student', ['value' => 1]);
 	}
 
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		$process = function($model, $id, $options) {
-			$model->updateAll(['is_student' => 0], [$model->primaryKey() => $id]);
-			return true;
-		};
-		return $process;
+	public function addAfterAction(Event $event) { 
+		// need to find out order values because recordbehavior changes it
+		$allOrderValues = [];
+		foreach ($this->fields as $key => $value) {
+			$allOrderValues[] = (array_key_exists('order', $value) && !empty($value['order']))? $value['order']: 0;
+		}
+		$highestOrder = max($allOrderValues);
+
+		// username and password is always last... 
+		$this->ControllerAction->field('username', ['order' => ++$highestOrder, 'visible' => false]);
+		$this->ControllerAction->field('password', ['order' => ++$highestOrder, 'visible' => false, 'type' => 'password', 'attr' => ['value' => '', 'autocomplete' => 'off']]);
 	}
+
+    // this function is no longer required because there should not be a ('Student.Students')->delete() after the implementation of directory
+	// public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+	// 	$process = function($model, $id, $options) {
+	// 		$studentData = $model->find()->where([$model->aliasField('id') => $id])->first();
+	// 		// contain was used to test newly created associations
+	// 		// $studentData->contain(['StudentAbsences', 'StudentBehaviours', 'AssessmentItemResults', 'Guardians', 'StudentAdmission', 'StudentCustomFieldValues', 'StudentCustomTableCells', 'StudentFees', 'Extracurriculars']); 
+
+	// 		if ($studentData) {
+	// 			if ($studentData->is_staff || $studentData->is_guardian) {
+	// 				// remove all student records from institution_students, institution_site_student_absences, student_behaviours, assessment_item_results, student_guardians, institution_student_admission, student_custom_field_values, student_custom_table_cells, student_fees, student_extracurriculars
+	// 				$deletionInformation = [
+	// 					['class' => 'Institution.Students', 'foreignKey' => 'student_id'],
+	// 					['class' => 'Institution.InstitutionStudentAbsences', 'foreignKey' => 'student_id'],
+	// 					['class' => 'Institution.StudentBehaviours', 'foreignKey' => 'student_id'],
+	// 					['class' => 'Assessment.AssessmentItemResults', 'foreignKey' => 'student_id'],
+	// 					['class' => 'Institution.StudentAdmission', 'foreignKey' => 'student_id'],
+	// 					['class' => 'CustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id'],
+	// 					['class' => 'CustomField.StudentCustomTableCells', 'foreignKey' => 'student_id'],
+	// 					['class' => 'Institution.StudentFeesAbstract', 'foreignKey' => 'student_id'],
+	// 					['class' => 'Student.Extracurriculars', 'foreignKey' => 'security_user_id'],
+	// 					['class' => 'Student.Guardians', 'foreignKey' => 'student_id'],
+	// 				];
+
+	// 				foreach ($deletionInformation as $key => $value) {
+	// 					$deletionClass = TableRegistry::get($value['class']);
+	// 					$deletionEntities = $deletionClass->find()->where([$deletionClass->aliasField($value['foreignKey']) => $id]);
+	// 					foreach ($deletionEntities as $dkey => $dvalue) {
+	// 						$deletionClass->delete($dvalue);
+	// 					}
+	// 				}
+
+	// 				// do not delete user record
+	// 				$model->updateAll(['is_student' => 0], [$model->primaryKey() => $id]);
+	// 			} else {
+	// 				// student is neither a guardian or staff... delete the user record along with all associated data
+	// 				$model->delete($studentData);	
+	// 			}
+	// 		}
+
+	// 		// die('dead');
+			
+	// 		return true;
+	// 	};
+	// 	return $process;
+	// }
 	
 	// Logic for the mini dashboard
 	public function afterAction(Event $event) {
 		if ($this->action == 'index') {
+
+			$searchConditions = $this->getSearchConditions($this, $this->request->data['Search']['searchField']);
+			$searchConditions['OR'] = array_merge($searchConditions['OR'], $this->advanceNameSearch($this, $this->request->data['Search']['searchField']));
 			// Get total number of students
-			$count = $this->find()->where([$this->aliasField('is_student') => 1])->count();
+			$count = $this->find()
+				->where([$this->aliasField('is_student') => 1])
+				->where($searchConditions);
+
+			if (!$this->AccessControl->isAdmin()) {
+				$institutionIds = $this->Session->read('AccessControl.Institutions.ids');
+				$this->joinInstitutionStudents($institutionIds, $count);
+				$count->group([$this->aliasField('id')]);
+			}
+
+			$this->advancedSearchQuery($this->request, $count);
 
 			// Get the gender for all students
 			$data = [];
-			$data[__('Gender')] = $this->getDonutChart('count_by_gender', ['key' => __('Gender')]);
+			$data[__('Gender')] = $this->getDonutChart('count_by_gender', ['searchConditions' => $searchConditions,'key' => __('Gender')]);
 
 			$indexDashboard = 'dashboard';
 			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
 	            'name' => $indexDashboard,
 	            'data' => [
 	            	'model' => 'students',
-	            	'modelCount' => $count,
+	            	'modelCount' => $count->count(),
 	            	'modelArray' => $data,
 	            ],
 	            'options' => [],
 	            'order' => 1
 	        ];
 	    }
+	}
+
+	private function joinInstitutionStudents(array $institutionIds, Query $query) {
+		$query->innerJoin(
+			['InstitutionStudent' => 'institution_students'],
+			[
+				'InstitutionStudent.student_id = ' . $this->aliasField($this->primaryKey()),
+				'InstitutionStudent.institution_id IN ' => $institutionIds
+			]
+		);
 	}
 	
 	private function setupTabElements($options) {
@@ -268,20 +360,55 @@ class StudentsTable extends AppTable {
 
 	// Function use by the mini dashboard (For Student.Students)
 	public function getNumberOfStudentsByGender($params=[]) {
+		$searchConditions = isset($params['searchConditions']) ? $params['searchConditions'] : [];
 		$query = $this->find();
 		$query
-		->select(['gender_id', 'count' => $query->func()->count($this->aliasField($this->primaryKey()))])
+		->select(['gender_id', 'count' => $query->func()->count('DISTINCT '.$this->aliasField($this->primaryKey()))])
 		->where([$this->aliasField('is_student') => 1])
+		->where($searchConditions)
 		->group('gender_id')
 		;
+		if (!$this->AccessControl->isAdmin()) {
+			$institutionIds = $this->Session->read('AccessControl.Institutions.ids');
+			$this->joinInstitutionStudents($institutionIds, $query);
+		}
+
+		$this->advancedSearchQuery($this->request, $query);
 
 		$genders = $this->Genders->getList()->toArray();
 
 		$resultSet = $query->all();
+		$dataSet = [];
 		foreach ($resultSet as $entity) {
 			$dataSet[] = [__($genders[$entity['gender_id']]), $entity['count']];
 		}
 		$params['dataSet'] = $dataSet;
 		return $params;
+	}
+
+	public function getAcademicTabElements($options = []) {
+		// $action = (array_key_exists('action', $options))? $options['action']: 'add';
+		$id = (array_key_exists('id', $options))? $options['id']: 0;
+
+		$tabElements = [];
+		$studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
+		$studentTabElements = [
+			'Programmes' => ['text' => __('Programmes')],
+			'Classes' => ['text' => __('Classes')],
+			'Subjects' => ['text' => __('Subjects')],
+			'Absences' => ['text' => __('Absences')],
+			'Behaviours' => ['text' => __('Behaviours')],
+			// POCOR-2759: temporary hide Results tab
+			// 'Results' => ['text' => __('Results')],
+			'Awards' => ['text' => __('Awards')],
+			'Extracurriculars' => ['text' => __('Extracurriculars')],
+		];
+
+		$tabElements = array_merge($tabElements, $studentTabElements);
+
+		foreach ($studentTabElements as $key => $tab) {
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
+		}
+		return $tabElements;
 	}
 }

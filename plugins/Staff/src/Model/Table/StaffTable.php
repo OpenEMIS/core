@@ -31,21 +31,23 @@ class StaffTable extends AppTable {
 		$this->addBehavior('AdvanceSearch');
 
 		$this->addBehavior('CustomField.Record', [
+			'model' => 'Staff.Staff',
 			'behavior' => 'Staff',
 			'fieldKey' => 'staff_custom_field_id',
 			'tableColumnKey' => 'staff_custom_table_column_id',
 			'tableRowKey' => 'staff_custom_table_row_id',
+			'fieldClass' => ['className' => 'StaffCustomField.StaffCustomFields'],
 			'formKey' => 'staff_custom_form_id',
 			'filterKey' => 'staff_custom_filter_id',
 			'formFieldClass' => ['className' => 'StaffCustomField.StaffCustomFormsFields'],
 			'formFilterClass' => ['className' => 'StaffCustomField.StaffCustomFormsFilters'],
-			'recordKey' => 'security_user_id',
-			'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]
+			'recordKey' => 'staff_id',
+			'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 
 		$this->addBehavior('Excel', [
-			'excludes' => ['photo_name', 'is_student', 'is_staff', 'is_guardian'],
+			'excludes' => ['photo_name', 'is_student', 'is_staff', 'is_guardian', 'super_admin', 'date_of_death' ],
 			'filename' => 'Staff',
 			'pages' => ['view']
 		]);
@@ -57,38 +59,41 @@ class StaffTable extends AppTable {
 		]);
         $this->addBehavior('Import.ImportLink');
 
+        $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Staff.Staff.id']);
+
 		$this->InstitutionStaff = TableRegistry::get('Institution.Staff');
 	}
 
 	public static function handleAssociations($model) {
 		$model->belongsToMany('Institutions', [
 			'className' => 'Institution.Institutions',
-			'joinTable' => 'institution_site_staff', // will need to change to institution_staff
-			'foreignKey' => 'security_user_id', // will need to change to staff_id
-			'targetForeignKey' => 'institution_site_id', // will need to change to institution_id
+			'joinTable' => 'institution_staff', // will need to change to institution_staff
+			'foreignKey' => 'staff_id', // will need to change to staff_id
+			'targetForeignKey' => 'institution_id', // will need to change to institution_id
 			'through' => 'Institution.Staff',
 			'dependent' => true
 		]);
 
-		// section should never cascade delete
-		$model->hasMany('InstitutionSiteSections', 		['className' => 'Institution.InstitutionSiteSections', 'foreignKey' => 'security_user_id']);
+		// class should never cascade delete
+		$model->hasMany('InstitutionClasses', 		['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'staff_id']);
 
 		$model->belongsToMany('Subjects', [
-			'className' => 'Institution.InstitutionSiteClass',
-			'joinTable' => 'institution_site_class_staff',
-			'foreignKey' => 'security_user_id',
-			'targetForeignKey' => 'institution_site_class_id',
-			'through' => 'Institution.InstitutionSiteClassStaff',
+			'className' => 'Institution.InstitutionSubject',
+			'joinTable' => 'institution_subject_staff',
+			'foreignKey' => 'staff_id',
+			'targetForeignKey' => 'institution_subject_id',
+			'through' => 'Institution.InstitutionSubjectStaff',
 			'dependent' => true
 		]);
 
-		$model->hasMany('StaffActivities', 			['className' => 'Staff.StaffActivities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('StaffActivities', 			['className' => 'Staff.StaffActivities', 'foreignKey' => 'staff_id', 'dependent' => true]);
+		$model->hasMany('InstitutionRubrics', 		['className' => 'Institution.InstitutionRubrics', 'foreignKey' => 'staff_id', 'dependent' => true]);
 	}
 
 
 	public function validationDefault(Validator $validator) {
 		$BaseUsers = TableRegistry::get('User.Users');
-		return $BaseUsers->setUserValidation($validator);
+		return $BaseUsers->setUserValidation($validator, $this);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -115,15 +120,29 @@ class StaffTable extends AppTable {
 		// this part filters the list by institutions/areas granted to the group
 		if (!$this->AccessControl->isAdmin()) { // if user is not super admin, the list will be filtered
 			$institutionIds = $this->AccessControl->getInstitutionsByUser();
-			$query->innerJoin(
-				['InstitutionStaff' => 'institution_site_staff'],
-				[
-					'InstitutionStaff.security_user_id = ' . $this->aliasField($this->primaryKey()),
-					'InstitutionStaff.institution_site_id IN ' => $institutionIds
-				]
-			)
-			->group([$this->aliasField('id')]);
+			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
+			$this->joinInstitutionStaffs($institutionIds, $query);
+			$query->group([$this->aliasField('id')]);
+
+			// $query->innerJoin(
+			// 	['InstitutionStaff' => 'institution_staff'],
+			// 	[
+			// 		'InstitutionStaff.staff_id = ' . $this->aliasField($this->primaryKey()),
+			// 		'InstitutionStaff.institution_id IN ' => $institutionIds
+			// 	]
+			// )
+			// ->group([$this->aliasField('id')]);
 		}
+	}
+
+	private function joinInstitutionStaffs(array $institutionIds, Query $query) {
+		$query->innerJoin(
+			['InstitutionStaff' => 'institution_site_staff'],
+			[
+				'InstitutionStaff.security_user_id = ' . $this->aliasField($this->primaryKey()),
+				'InstitutionStaff.institution_site_id IN ' => $institutionIds
+			]
+		);
 	}
 
 	public function onGetInstitution(Event $event, Entity $entity) {
@@ -131,7 +150,7 @@ class StaffTable extends AppTable {
 		$institutions = $this->InstitutionStaff->find('list', ['valueField' => 'Institutions.name'])
 		->contain(['Institutions'])
 		->select(['Institutions.name'])
-		->where([$this->InstitutionStaff->aliasField('security_user_id') => $userId])
+		->where([$this->InstitutionStaff->aliasField('staff_id') => $userId])
 		->andWhere([$this->InstitutionStaff->aliasField('end_date').' IS NULL'])
 		->toArray();
 		;
@@ -151,17 +170,30 @@ class StaffTable extends AppTable {
 		]);
 
 		$this->ControllerAction->field('username', ['order' => 100]);
-		$this->ControllerAction->field('password', ['order' => 101, 'visible' => true]);
+		$this->ControllerAction->field('password', ['order' => 101]);
 		$this->ControllerAction->field('is_staff', ['value' => 1]);
+	}
+
+	public function addAfterAction(Event $event) { 
+		// need to find out order values because recordbehavior changes it
+		$allOrderValues = [];
+		foreach ($this->fields as $key => $value) {
+			$allOrderValues[] = (array_key_exists('order', $value) && !empty($value['order']))? $value['order']: 0;
+		}
+		$highestOrder = max($allOrderValues);
+
+		// username and password is always last... 
+		$this->ControllerAction->field('username', ['order' => ++$highestOrder, 'visible' => true]);
+		$this->ControllerAction->field('password', ['order' => ++$highestOrder, 'visible' => true, 'type' => 'password', 'attr' => ['value' => '', 'autocomplete' => 'off']]);
 	}
 
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
 		$process = function($model, $id, $options) {
-			// sections are not to be deleted (cascade delete is not set and need to change id)
-			$InstitutionSiteSections = TableRegistry::get('Institution.InstitutionSiteSections');
-			$InstitutionSiteSections->updateAll(
-					['security_user_id' => 0],
-					['security_user_id' => $id]
+			// classes are not to be deleted (cascade delete is not set and need to change id)
+			$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+			$InstitutionClasses->updateAll(
+					['staff_id' => 0],
+					['staff_id' => $id]
 				);
 
 			$userQuery = $model->find()->where([$this->aliasField('id') => $id])->first();
@@ -182,19 +214,30 @@ class StaffTable extends AppTable {
 	// Logic for the mini dashboard
 	public function afterAction(Event $event) {
 		if ($this->action == 'index') {
+
+			$searchConditions = $this->getSearchConditions($this, $this->request->data['Search']['searchField']);
+			$searchConditions['OR'] = array_merge($searchConditions['OR'], $this->advanceNameSearch($this, $this->request->data['Search']['searchField']));
 			// Get total number of students
-			$count = $this->find()->where([$this->aliasField('is_staff') => 1])->count();
+			$count = $this->find()
+				->where([$this->aliasField('is_staff') => 1])
+				->where($searchConditions);
+			if (!$this->AccessControl->isAdmin()) {
+				$institutionIds = $this->Session->read('AccessControl.Institutions.ids');
+				$this->joinInstitutionStaffs($institutionIds, $count);
+				$count->group([$this->aliasField('id')]);
+			}
+			$this->advancedSearchQuery($this->request, $count);
 
 			// Get the gender for all students
 			$data = [];
-			$data[__('Gender')] = $this->getDonutChart('count_by_gender', ['key' => __('Gender')]);
+			$data[__('Gender')] = $this->getDonutChart('count_by_gender', ['searchConditions' => $searchConditions, 'key' => __('Gender')]);
 
 			$indexDashboard = 'dashboard';
 			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
 	            'name' => $indexDashboard,
 	            'data' => [
 	            	'model' => 'staff',
-	            	'modelCount' => $count,
+	            	'modelCount' => $count->count(),
 	            	'modelArray' => $data,
 	            ],
 	            'options' => [],
@@ -210,16 +253,24 @@ class StaffTable extends AppTable {
 
 	// Function use by the mini dashboard (For Staff.Staff)
 	public function getNumberOfStaffByGender($params=[]) {
+		$searchConditions = isset($params['searchConditions']) ? $params['searchConditions'] : [];
 		$query = $this->find();
 		$query
-		->select(['gender_id', 'count' => $query->func()->count($this->aliasField($this->primaryKey()))])
-		->where([$this->aliasField('is_staff') => 1])
-		->group('gender_id')
-		;
+			->select(['gender_id', 'count' => $query->func()->count('DISTINCT '.$this->aliasField($this->primaryKey()))])
+			->where([$this->aliasField('is_staff') => 1])
+			->where($searchConditions)
+			->group('gender_id')
+			;
+		if (!$this->AccessControl->isAdmin()) {
+			$institutionIds = $this->Session->read('AccessControl.Institutions.ids');
+			$this->joinInstitutionStaffs($institutionIds, $query);
+		}
+		$this->advancedSearchQuery($this->request, $query);
 
 		$genders = $this->Genders->getList()->toArray();
 
 		$resultSet = $query->all();
+		$dataSet = [];
 		foreach ($resultSet as $entity) {
 			$dataSet[] = [__($genders[$entity['gender_id']]), $entity['count']];
 		}
@@ -227,4 +278,25 @@ class StaffTable extends AppTable {
 		return $params;
 	}
 
+	public function getCareerTabElements($options = []) {
+		$tabElements = [];
+		$studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+		$studentTabElements = [
+			'Employments' => ['text' => __('Employments')],
+			'Positions' => ['text' => __('Positions')],
+			'Classes' => ['text' => __('Classes')],
+			'Subjects' => ['text' => __('Subjects')],
+			'Absences' => ['text' => __('Absences')],
+			'Leave' => ['text' => __('Leave')],
+			'Behaviours' => ['text' => __('Behaviours')],
+			'Awards' => ['text' => __('Awards')],
+		];
+
+		$tabElements = array_merge($tabElements, $studentTabElements);
+
+		foreach ($studentTabElements as $key => $tab) {
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+		}
+		return $tabElements;
+	}
 }

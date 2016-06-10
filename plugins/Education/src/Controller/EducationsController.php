@@ -1,8 +1,10 @@
 <?php
 namespace Education\Controller;
 
+use ArrayObject;
 use App\Controller\AppController;
 use Cake\Event\Event;
+use Cake\ORM\Table;
 
 class EducationsController extends AppController
 {
@@ -15,10 +17,6 @@ class EducationsController extends AppController
 			'Cycles' => ['className' => 'Education.EducationCycles', 'options' => ['deleteStrategy' => 'transfer']],
 			'Programmes' => ['className' => 'Education.EducationProgrammes', 'options' => ['deleteStrategy' => 'transfer']],
 			'Grades' => ['className' => 'Education.EducationGrades', 'options' => ['deleteStrategy' => 'transfer']],
-			'Subjects' => ['className' => 'Education.EducationSubjects'],
-			'Certifications' => ['className' => 'Education.EducationCertifications'],
-			'FieldOfStudies' => ['className' => 'Education.EducationFieldOfStudies'],
-			'ProgrammeOrientations' => ['className' => 'Education.EducationProgrammeOrientations']
 		];
 		$this->loadComponent('Paginator');
     }
@@ -63,7 +61,7 @@ class EducationsController extends AppController
         $this->set('selectedAction', $selectedAction);
 	}
 
-	public function onInitialize($event, $model) {
+	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		$header = __('Education');
 
 		$header .= ' - ' . $model->getHeader($model->alias);
@@ -72,4 +70,9 @@ class EducationsController extends AppController
 
 		$this->set('contentHeader', $header);
     }
+
+    public function Subjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationSubjects']); }
+    public function Certifications() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationCertifications']); }
+    public function FieldOfStudies() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationFieldOfStudies']); }
+    public function ProgrammeOrientations() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationProgrammeOrientations']); }
 }
