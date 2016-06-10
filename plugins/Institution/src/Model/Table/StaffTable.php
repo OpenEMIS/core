@@ -111,6 +111,7 @@ class StaffTable extends AppTable {
 		$this->assigned = $statuses['ASSIGNED'];
 		$this->endOfAssignment = $statuses['END_OF_ASSIGNMENT'];
 		
+        $this->addBehavior('Import.ImportLink');
 	}
 
 	public function implementedEvents() {
@@ -720,6 +721,10 @@ class StaffTable extends AppTable {
 			$url['institution_staff_id'] = $entity->id;
 			$url['action'] = 'StaffPositionProfiles';
 			$buttons['edit']['url'] = $url;
+		}
+
+		if ($this->Session->read('Auth.User.id') == $entity->_matchingData['Users']->id) { //if logged on user = current user, then unset the delete button
+			unset($buttons['remove']);
 		}
 
 		return $buttons;

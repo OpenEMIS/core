@@ -76,7 +76,8 @@ try {
     Configure::config('default', new PhpConfig());
     Configure::load('app', 'default', false);
     Configure::load('app_extra', 'default');
-    Configure::load('datasource', 'default', false);
+    Configure::load('datasource', 'default');
+    Configure::load('testdatasource', 'default');
 } catch (\Exception $e) {
     exit($e->getMessage() . "\n");
 }
