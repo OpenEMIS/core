@@ -57,6 +57,20 @@ class AreasTable extends AppTable {
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
+		$query->where([
+			$this->aliasField('area_level_id') => $entity->area_level_id
+		]);
+
+		if ($query->count() == 1) {
+			if ((($entity->rght) - ($entity->lft)) != 1) {
+				$this->Alert->warning('general.notTransferrable');
+				$event->stopPropagation();
+				return $this->controller->redirect($this->ControllerAction->url('index'));
+			} 
+		}
+	}
+
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
 		$transferTo = $this->request->data['transfer_to'];
 		$transferFrom = $id;
