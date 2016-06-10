@@ -171,13 +171,13 @@ class InstitutionSurveysTable extends AppTable {
 		if ($isAdmin) {
 			return []; // remove this line once workbench pagination is implemented
 		} else {
+			$roleStatusIds = [];
 			$where = [];
 			// returns empty list if there is no status mapping for workflows OR if the user does not have access to any schools
 			// Should never return all rows without any conditions because it may cause out of memory error
 			if (empty($statusIds) || empty($institutionRoles)) {
 				return [];
 			} else {
-				$where[$this->aliasField('status_id') . ' IN '] = $statusIds;
 				$where[$this->aliasField('institution_id') . ' IN '] = array_keys($institutionRoles);
 			}
 
@@ -195,6 +195,7 @@ class InstitutionSurveysTable extends AppTable {
 					// logic to pre-insert survey in school only when user's roles is configured to access the step
 					$hasAccess = count(array_intersect_key($roles, $stepRoles[$statusId])) > 0;
 					if ($hasAccess) {
+						$roleStatusIds[$statusId] = $statusId;
 						if (!in_array($institutionId, $shellParams)) {
 							$shellParams[] = $institutionId;
 						}
@@ -203,6 +204,12 @@ class InstitutionSurveysTable extends AppTable {
 				}
 			}
 			// End
+
+			if (empty($roleStatusIds)) {
+				return [];
+			} else {
+				$where[$this->aliasField('status_id') . ' IN '] = $roleStatusIds;
+			}
 
 			// create shell to process building of survey records
 			// only build survey once on every user session
