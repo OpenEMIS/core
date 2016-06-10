@@ -45,7 +45,7 @@ class AcademicPeriodsTable extends AppTable {
 			$this->updateAll(['current' => 0], []);
 		}
 	}
-	public function beforeAction (Event $event) {
+	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('academic_period_level_id');
 		$this->fields['start_year']['visible'] = false;
 		$this->fields['end_year']['visible'] = false;
@@ -57,6 +57,11 @@ class AcademicPeriodsTable extends AppTable {
 	public function afterAction(Event $event) {
 		$this->ControllerAction->field('current');
 		$this->ControllerAction->field('editable');
+        foreach ($this->_fieldOrder as $key => $value) {
+            if (!in_array($value, array_keys($this->fields))) {
+                unset($this->_fieldOrder[$key]);
+            }
+        }
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 
@@ -133,7 +138,7 @@ class AcademicPeriodsTable extends AppTable {
 				'attr' => ['value' => $parentPath]
 			]);
 
-			array_unshift($this->_fieldOrder, "parent");
+			array_unshift($this->_fieldOrder, 'parent');
 		}
 	}
 	
