@@ -57,18 +57,6 @@ class AreasTable extends AppTable {
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 
-	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
-		$query->where([
-			$this->aliasField('area_level_id') => $entity->area_level_id
-		]);
-		// if the last parent and have children, unable to be deleted and show warning message
-		if ($query->count() == 1 && $this->childCount($entity, true) > 0) {
-			$this->Alert->warning('general.notTransferrable');
-			$event->stopPropagation();
-			return $this->controller->redirect($this->ControllerAction->url('index'));
-		}
-	}
-
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
 		$transferTo = $this->request->data['transfer_to'];
 		$transferFrom = $id;
@@ -99,6 +87,20 @@ class AreasTable extends AppTable {
 			);
 
 		$this->rebuildLftRght();
+	}
+
+	public function onGetConvertOptions(Event $event, Entity $entity, Query $query) {
+		$level = $entity->area_level_id;
+		$query->where([
+			$this->aliasField('area_level_id') => $level
+		]);
+
+		// if do not have any siblings but have child, can not be deleted
+		if ($query->count() == 0 && $this->childCount($entity, true) > 0) {
+			$this->Alert->warning('general.notTransferrable');
+			$event->stopPropagation();
+			return $this->controller->redirect($this->ControllerAction->url('index'));
+		}
 	}
 
 	public function indexBeforeAction(Event $event) {
