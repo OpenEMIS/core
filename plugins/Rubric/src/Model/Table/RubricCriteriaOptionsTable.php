@@ -23,7 +23,6 @@ class RubricCriteriaOptionsTable extends AppTable {
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		parent::beforeSave($event, $entity, $options);
 		//Unset rubric_template_option to avoid it is being saved unintentionally.
 		unset($entity->rubric_template_option);
 	}

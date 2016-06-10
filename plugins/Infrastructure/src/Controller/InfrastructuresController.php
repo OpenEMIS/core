@@ -4,7 +4,6 @@ namespace Infrastructure\Controller;
 use ArrayObject;
 use App\Controller\AppController;
 use Cake\ORM\Table;
-use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 
 class InfrastructuresController extends AppController
@@ -47,7 +46,7 @@ class InfrastructuresController extends AppController
         $this->set('selectedAction', $this->request->action);
 	}
 
-	public function onInitialize(Event $event, Table $model) {
+	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		$header = __('Infrastructure');
 
 		$header .= ' - ' . $model->getHeader($model->alias);

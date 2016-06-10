@@ -8,5 +8,6 @@ class CustomFormsFieldsTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('CustomForms', ['className' => 'CustomField.CustomForms']);
 		$this->belongsTo('CustomFields', ['className' => 'CustomField.CustomFields']);
+		$this->removeBehavior('Reorder');
 	}
 }

@@ -1,8 +1,10 @@
 <?php
 namespace Alert\Controller;
 
+use ArrayObject;
 use App\Controller\AppController;
 use Cake\Event\Event;
+use Cake\ORM\Table;
 
 class AlertsController extends AppController
 {
@@ -20,7 +22,7 @@ class AlertsController extends AppController
     	parent::beforeFilter($event);
 	}
 
-    public function onInitialize($event, $model) {
+	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		$header = __('Communications');
 
 		$header .= ' - ' . $model->getHeader($model->alias);

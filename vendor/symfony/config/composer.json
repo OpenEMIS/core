@@ -16,19 +16,22 @@
         }
     ],
     "require": {
-        "php": ">=5.3.9",
-        "symfony/filesystem": "~2.3"
+        "php": ">=5.5.9",
+        "symfony/filesystem": "~2.8|~3.0"
     },
-    "require-dev": {
-        "symfony/phpunit-bridge": "~2.7"
+    "suggest": {
+        "symfony/yaml": "To use the yaml reference dumper"
     },
     "autoload": {
-        "psr-4": { "Symfony\\Component\\Config\\": "" }
+        "psr-4": { "Symfony\\Component\\Config\\": "" },
+        "exclude-from-classmap": [
+            "/Tests/"
+        ]
     },
     "minimum-stability": "dev",
     "extra": {
         "branch-alias": {
-            "dev-master": "2.7-dev"
+            "dev-master": "3.0-dev"
         }
     }
 }

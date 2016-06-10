@@ -6,7 +6,7 @@
 
       $("#existingImage").remove();
       $("img").remove();
-      $("#toggleImage").append("<?= $defaultImgView?>");
+      $("#toggleImage").html("<?= $defaultImgView?>");
 
     });
 
@@ -35,9 +35,6 @@
 <div class="input string" >
   <label for="<?= $attr['field'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
   <div class="fileinput fileinput-new fileinput-preview" data-provides="fileinput">
-    <div class="image-error">
-      <?= $this->Form->error($attr['field']) ?>
-    </div>
     <div class="fileinput-new thumbnail" style="width: <?= $defaultWidth; ?>px; height: <?= $defaultHeight; ?>px;" id="toggleImage">
       <?= $src ?>
     </div>
@@ -47,19 +44,22 @@
         <span class="btn btn-default btn-file">
           <span class="fileinput-new">
             <i class="fa fa-folder"></i> 
-            <span>Select File</span>
+            <span><?= __('Select File') ?></span>
           </span>
           <span class="fileinput-exists">
             <i class="fa fa-folder"></i> 
-            <span>Change</span>
+            <span><?= __('Change') ?></span>
           </span>
       <input type="file" name="<?= $attr['model'] ?>[<?= $attr['field'] ?>]" id="file-input"></span>
           <span class="fileinput-exists"  id="removeBtn">
             <a href="#" class="btn btn-default" data-dismiss="fileinput">
               <i class="fa fa-close"></i> 
-              <span>Remove</span>
+              <span><?= __('Remove') ?></span>
             </a>
           </span>
     </div>
+  </div>
+  <div class="error-message">
+    <?= $this->Form->error($attr['field']) ?>
   </div>
 </div>

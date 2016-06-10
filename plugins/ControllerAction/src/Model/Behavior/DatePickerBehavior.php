@@ -16,20 +16,22 @@ have received a copy of the GNU General Public License along with this program. 
 
 namespace ControllerAction\Model\Behavior;
 
-use DateTime;
-use Cake\ORM\Entity;
-use Cake\ORM\Behavior;
+use ArrayObject;
 use Cake\Event\Event;
-use Cake\Validation\Validator;
-use Cake\I18n\Time;
+use Cake\ORM\Behavior;
+use ControllerAction\Model\Traits\PickerTrait;
 
 class DatePickerBehavior extends Behavior {
-	public function beforeSave(Event $event, Entity $entity) {
-		$format = 'Y-m-d';
+	use PickerTrait;
+
+	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
 		foreach ($this->config() as $field) {
-			if (!empty($entity->$field)) {
-				if (!$entity->$field instanceof Time) {
-					$entity->$field = date($format, strtotime($entity->$field));
+			if (!empty($data[$field])) {
+				if (is_object($data[$field])) {
+					$data[$field] = $data[$field]->format('Y-m-d');
+				} else {
+					$convertedDate = $this->convertForDatePicker($data[$field]);
+					$data[$field] = (!empty($convertedDate))? $convertedDate: $data[$field];
 				}
 			}
 		}

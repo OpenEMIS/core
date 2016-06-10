@@ -1,7 +1,3 @@
-<?php
-	echo $this->Html->css('OpenEmis.jquery-ui.min', ['block' => true]);
-	echo $this->Html->script('OpenEmis.jquery-ui.min', ['block' => true]);
-?>
 <script>
 $(function() {
 	Autocomplete.init();

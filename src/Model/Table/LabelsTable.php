@@ -34,11 +34,20 @@ class LabelsTable extends AppTable {
 
 	public function storeLabelsInCache() {
 		// Will clear all keys.
-		//Cache::clear(false);
+		// Cache::clear(false);
 		
 		$cacheFolder = new Folder(CACHE.'labels');
 		$files = $cacheFolder->find();
-		if(empty($files)) {
+
+		// ignore hidden files in linux - aka anything that starts with a dot will be ignored
+		$filteredFiles = [];
+		foreach ($files as $key => $value) {
+			if (substr($value, 0, 1)  !== '.') {
+				$filteredFiles[] = $value;
+			}
+		}
+
+		if(empty($filteredFiles)) {
 			$keyArray = [];
 			$allLabels = $this->find();
 			foreach($allLabels as $eachLabel) {

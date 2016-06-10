@@ -21,7 +21,7 @@
 }
 
 .kd-logistics {
-	background-color: #330099;
+	background-color: #003399;
 }
 
 .kd-monitoring {
@@ -40,13 +40,25 @@
 	background-color: #CC9933;
 }
 
-.kd-purple {
+.kd-datamanager {
 	background-color: #993366;
 }
 
+.kd-community {
+	background-color: #00CCFF;
+}
+
+.kd-modelling {
+	background-color: #FF3366;
+}
+
+.kd-identity {
+	background-color: #6666FF;
+}
+
 .kd-classroom, 
-.kd-core, 
-.kd-dashboard,
+.kd-core,
+.kd-dashboard,  
 .kd-insight,
 .kd-integrator,
 .kd-logistics,
@@ -54,12 +66,11 @@
 .kd-school, 
 .kd-survey,
 .kd-visualizer,
-.kd-purple {
+.kd-datamanager,
+.kd-community,
+.kd-modelling,
+.kd-identity {
 	color: #FFF;
 	-webkit-border-radius: 8px;
 	        border-radius: 8px;
-}
-
-.kd-staff {
-	font-size: 26px;
 }
