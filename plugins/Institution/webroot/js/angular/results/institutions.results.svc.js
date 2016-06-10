@@ -241,7 +241,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             var ResultsSvc = this;
             angular.forEach(periods, function(period, key) {
                 var allowEdit = (action == 'edit' && period.editable);
-                var headerLabel = period.name + " <span class='divider'></span> " + period.weight + "%";
+                var headerLabel = period.name + " <span class='divider'></span> " + period.weight;
                 var headerName = allowEdit ? headerLabel + " <i class='fa fa-pencil-square-o fa-lg header-icon'></i>" : headerLabel;
 
                 var periodField = 'period_' + period.id;
@@ -284,12 +284,6 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         }
                     },
                     filterParams: filterParams
-                });
-
-                columnDefs.push({
-                    headerName: "total weight",
-                    field: "total_weight",
-                    hide: true
                 });
 
                 columnDefs.push({
@@ -426,10 +420,8 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                     var isMarksType = (resultType == resultTypes.MARKS);
                     var isGradesType = (resultType == resultTypes.GRADES);
 
-                    var totalWeight = 0;
                     var periodObj = {};
                     angular.forEach(periods, function(period, key) {
-                        totalWeight += parseFloat(period.weight);
                         periodObj[period.id] = period;
                     }, periodObj);
 
@@ -448,15 +440,14 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                                 }
                                 
                                 studentResults = {
-                                    openemis_id: subjectStudent.openemis_no,
-                                    name: subjectStudent.name,
+                                    openemis_id: subjectStudent._matchingData.Users.openemis_no,
+                                    name: subjectStudent._matchingData.Users.name,
                                     student_id: currentStudentId
                                 };
 
                                 if (isMarksType) {
                                     studentResults = angular.merge(studentResults, {
                                         total_mark: subjectStudent.total_mark,
-                                        total_weight: totalWeight,
                                         is_dirty: false
                                     });
                                 }
@@ -470,13 +461,13 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                             }
 
                             if (isMarksType) {
-                                var marks = parseFloat(subjectStudent.marks);
+                                var marks = parseFloat(subjectStudent.AssessmentItemResults.marks);
                                 if (!isNaN(marks)) {
-                                    studentResults['period_' + parseInt(subjectStudent.assessment_period_id)] = marks;
+                                    studentResults['period_' + parseInt(subjectStudent.AssessmentItemResults.assessment_period_id)] = marks;
                                 }
                             } else if (isGradesType) {
-                                if (subjectStudent.grading_option_id != null) {
-                                    studentResults['period_' + parseInt(subjectStudent.assessment_period_id)] = subjectStudent.grading_option_id;
+                                if (subjectStudent.AssessmentItemResults.assessment_grading_option_id != null) {
+                                    studentResults['period_' + parseInt(subjectStudent.AssessmentItemResults.assessment_period_id)] = subjectStudent.AssessmentItemResults.assessment_grading_option_id;
                                 }
                             }
                         }, rowData);
@@ -494,7 +485,6 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
             return InstitutionSubjectStudentsTable
             .select()
-            .contain(['Users'])
             .find('Results', {
                 institution_id: institutionId,
                 class_id: classId,
@@ -502,7 +492,6 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                 academic_period_id: academicPeriodId,
                 subject_id: educationSubjectId
             })
-            .where({institution_class_id: classId})
             .ajax({success: success, defer: true})
             ;
         },
@@ -536,7 +525,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             for (var key in data) {
                 if (/period_/.test(key)) {
                     var index = key.replace(/period_(\d+)/, '$1');
-                    totalMark += data[key] * (data['weight_'+index] / data.total_weight);
+                    totalMark += data[key] * (data['weight_'+index]);
                 }
             }
 

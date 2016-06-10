@@ -1,3 +1,18 @@
+v3.5.7
+- Fixed a bug that caused 404 error page in Staff Training page after the training course was deleted
+- You can now transfer students from one grade to another grade
+- Fixed a bug that caused the system to allow user to add classes to grades that are no longer active	
+- Users can now import staff into schools via Excel	
+- Fixed a bug that caused Students not able to be added to Class via Pending Admission workflow	
+- Fixed a bug that caused Training Session -> External Trainer not to be saved properly	
+- New Report - Staff Qualifications	
+- Users can now see the summary of student results in Student -> Academic -> Results	
+- New Report - Student Absences	
+- Students can only be added to schools with Academic Periods of Year level	
+- You can now find Institutions easily when performing Student Transfer	
+- In Institutions -> Students, only Homeroom teachers are allowed to edit their own students	
+- Fixed a bug that caused 404 error page when deleting an Area	
+
 v3.5.6
 - Zero value can now be saved properly in Survey Forms
 - Removing students from Classes now delete Results, Attendance, Behaviour data linked to that student properly
