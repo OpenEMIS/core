@@ -47,6 +47,7 @@ class InstitutionClassBehavior extends Behavior {
 		if (array_key_exists('accessControl', $options)) {
 			$AccessControl = $options['accessControl'];
 			$userId = $options['userId'];
+			$permission = isset($options['permission']) ? $options['permission'] : 'index';
 			$roles = [];
             if (array_key_exists('controller', $options)) {
                 $controller = $options['controller'];
@@ -55,9 +56,12 @@ class InstitutionClassBehavior extends Behavior {
                     $roles = $event->result;    
                 }
             }
-
-			if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles)) {
-				$query->where([$this->_table->aliasField('staff_id') => $userId]);
+			if (!$AccessControl->check(['Institutions', 'AllClasses', $permission], $roles)) {
+				if ($AccessControl->check(['Institutions', 'Classes', $permission], $roles)) {
+					$query->where([$this->_table->aliasField('staff_id') => $userId]);
+				} else {
+					$query->where(['1 = 0']);
+				}
 			}		
         }
 		return $query;
