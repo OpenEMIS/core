@@ -88,11 +88,19 @@ class AreasTable extends AppTable {
 
 		$this->rebuildLftRght();
 	}
+
 	public function onGetConvertOptions(Event $event, Entity $entity, Query $query) {
 		$level = $entity->area_level_id;
 		$query->where([
-				$this->aliasField('area_level_id') => $level
-			]);
+			$this->aliasField('area_level_id') => $level
+		]);
+
+		// if do not have any siblings but have child, can not be deleted
+		if ($query->count() == 0 && $this->childCount($entity, true) > 0) {
+			$this->Alert->warning('general.notTransferrable');
+			$event->stopPropagation();
+			return $this->controller->redirect($this->ControllerAction->url('index'));
+		}
 	}
 
 	public function indexBeforeAction(Event $event) {
