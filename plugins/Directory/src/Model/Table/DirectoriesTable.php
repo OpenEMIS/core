@@ -350,6 +350,17 @@ class DirectoriesTable extends AppTable {
 					]);
 					break;
 			}	
+		} else if ($this->action == 'edit') {
+			$this->hideOtherInformationSection($this->controller->name, 'edit');
+		}
+	}
+
+	public function hideOtherInformationSection($controller, $action)
+	{
+		if (($action=="add") || ($action=="edit")) { //hide "other information" section on add/edit guardian because there wont be any custom field.
+			if (($controller=="Students") || ($controller=="Directories")) {
+				$this->ControllerAction->field('other_information_section', ['visible' => false]);
+			}
 		}
 	}
 
