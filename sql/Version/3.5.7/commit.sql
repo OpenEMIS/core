@@ -14,34 +14,6 @@ AND `staff_training_needs`.`course_id` <> 0
 AND `staff_training_needs`.`training_need_category_id` = 0;
 
 
--- POCOR-2780
---
-
-INSERT INTO `db_patches` (issue, created) VALUES ('POCOR-2780', NOW());
-
-CREATE TABLE `z_2780_import_mapping` LIKE `import_mapping`;
-INSERT INTO `z_2780_import_mapping`
-SELECT *
-FROM `import_mapping`;
-
-INSERT INTO `import_mapping` (`model`, `column_name`, `description`, `order`, `foreign_key`, `lookup_plugin`, `lookup_model`, `lookup_column`) VALUES
-('Institution.Staff', 'institution_position_id', 'Code', 1, 2, 'Institution', 'InstitutionPositions', 'position_no'),
-('Institution.Staff', 'start_date', '( DD/MM/YYYY )', 2, 0, NULL, NULL, NULL),
-('Institution.Staff', 'position_type', 'Code (Optional)', 3, 3, NULL, 'PositionTypes', 'id'),
-('Institution.Staff', 'FTE', '(Not Required if Position Type is Full Time)', 4, 3, NULL, 'FTE', 'value'),
-('Institution.Staff', 'staff_type_id', 'Code', 5, 1, 'FieldOption', 'StaffTypes', 'code'),
-('Institution.Staff', 'staff_id', 'OpenEMIS ID', 6, 2, 'Staff', 'Staff', 'openemis_no')
-;
-
-CREATE TABLE `z_2780_security_functions` LIKE `security_functions`;
-INSERT INTO `z_2780_security_functions`
-SELECT *
-FROM `security_functions`;
-
-INSERT INTO `security_functions` (`name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-('Import Staff', 'Institutions', 'Institutions', 'Staff', 1016, NULL, NULL, NULL, NULL, 'ImportStaff.add|ImportStaff.template|ImportStaff.results|ImportStaff.downloadFailed|ImportStaff.downloadPassed', 1042, 1, NULL, NULL, 1, NOW());
-
-
 -- POCOR-2820
 -- db_patches
 INSERT INTO `db_patches` (issue, created) VALUES ('POCOR-2820', NOW());
@@ -89,21 +61,6 @@ SELECT
 FROM `field_option_values` as `fov`
 WHERE `fov`.`field_option_id`=(SELECT `fo`.`id` FROM `field_options` as `fo` WHERE `fo`.`code` = 'FeeTypes');
 UPDATE `field_option_values` as `fov` set `fov`.`visible`=0 WHERE `fov`.`field_option_id`=(SELECT `fo`.`id` FROM `field_options` as `fo` WHERE `fo`.`code` = 'FeeTypes');
-
-
--- POCOR-2734
--- db_patches
-INSERT INTO `db_patches` (`issue`, `created`) VALUES('POCOR-2734', NOW());
-
--- security_group_users
--- Re-run patch from POCOR-3003
-UPDATE security_group_users
-JOIN institution_staff s ON s.security_group_user_id = security_group_users.id
-JOIN institution_positions p ON p.id = s.institution_position_id
-JOIN staff_position_titles t
-    ON t.id = p.staff_position_title_id
-    AND t.security_role_id <> security_group_users.security_role_id
-SET security_group_users.security_role_id = t.security_role_id;
 
 
 -- POCOR-2376

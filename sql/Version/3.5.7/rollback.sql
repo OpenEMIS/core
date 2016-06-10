@@ -7,18 +7,6 @@ ALTER TABLE `z_2335_staff_training_needs` RENAME `staff_training_needs`;
 DELETE FROM `db_patches` WHERE `issue`='POCOR-2335';
 
 
--- POCOR-2780
---
-
-DROP TABLE IF EXISTS `import_mapping`;
-RENAME TABLE `z_2780_import_mapping` TO `import_mapping`;
-
-DROP TABLE IF EXISTS `security_functions`;
-RENAME TABLE `z_2780_security_functions` TO `security_functions`;
-
-DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2780';
-
-
 -- POCOR-2820
 -- code here
 ALTER TABLE `institution_student_admission`
@@ -48,10 +36,7 @@ ALTER TABLE `student_fees` CHANGE `amount` `amount` DECIMAL(11,2) NOT NULL;
 DROP TABLE IF EXISTS `fee_types`;
 UPDATE `field_option_values` as `fov` set `fov`.`visible`=1 WHERE `fov`.`field_option_id`=(SELECT `fo`.`id` FROM `field_options` as `fo` WHERE `fo`.`code` = 'FeeTypes');
 
-
--- POCOR-2734
--- db_patches
-DELETE FROM `db_patches` WHERE `issue`='POCOR-2734';
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2255';
 
 
 -- POCOR-2376
