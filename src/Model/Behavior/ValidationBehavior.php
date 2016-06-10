@@ -714,6 +714,8 @@ class ValidationBehavior extends Behavior {
 		}
 		// academic period not set in form, return false because there is no way to validate
 		if (!isset($academicStartYear)) return $validationErrorMsg;
+
+        $programmeId = $gradeEntity->education_programme_id;
         
 		$birthYear = $dateOfBirth->format('Y');
 		$ageOfStudent = $academicStartYear - $birthYear;
