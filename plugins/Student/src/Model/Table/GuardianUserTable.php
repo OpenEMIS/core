@@ -30,11 +30,13 @@ class GuardianUserTable extends UserTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		parent::viewAfterAction($event, $entity);
 		$this->setupTabElements($entity);
 	}
 
 	public function beforeAction(Event $event) 
 	{
+		parent::beforeAction($event);
 		if (($this->action=="add") || ($this->action=="edit")) { //hide "other information" section on add/edit guardian because there wont be any custom field.
 			$controller = $this->controller->name;
 			if (($controller=="Students") || ($controller=="Directories")) {
@@ -44,13 +46,15 @@ class GuardianUserTable extends UserTable {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
+		parent::editAfterAction($event, $entity);
 		$this->setupTabElements($entity);
 	}
 
 	public function addAfterAction(Event $event) {
-			$options['type'] = 'student';
-			$tabElements = $this->controller->getStudentGuardianTabElements($options);
-			$this->controller->set('tabElements', $tabElements);
+		parent::addAfterAction($event);
+		$options['type'] = 'student';
+		$tabElements = $this->controller->getStudentGuardianTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
 	}
 
 	private function setupTabElements($entity) {
