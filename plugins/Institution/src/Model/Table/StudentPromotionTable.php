@@ -556,7 +556,7 @@ class StudentPromotionTable extends AppTable {
 						$conditions = [
 							'student_id' => $value->student_id, 
 							'status' => $StudentAdmissionTable::NEW_REQUEST,
-							'education_grade_id' => $value->education_grade_id,
+							'new_education_grade_id' => $value->education_grade_id,
 							'previous_institution_id' => $value->institution_id,
 							'type' => $StudentAdmissionTable::TRANSFER,
 						];
