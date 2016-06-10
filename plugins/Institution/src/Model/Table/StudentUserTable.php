@@ -106,6 +106,7 @@ class StudentUserTable extends UserTable {
 					'institution_id' => $academicData['institution_id'],
 					'academic_period_id' => $academicData['academic_period_id'],
 					'education_grade_id' => $academicData['education_grade_id'],
+					'institution_class_id' => $academicData['class'],
 					'previous_institution_id' => 0,
 					'student_transfer_reason_id' => 0,
 					'type' => $admissionStatus,
@@ -140,6 +141,16 @@ class StudentUserTable extends UserTable {
 		$this->Session->write('Student.Students.id', $entity->id);
 		$this->Session->write('Student.Students.name', $entity->name);
 		$this->setupTabElements($entity);
+
+		// POCOR-3010
+		$userId = $this->Auth->user('id');
+		if (!$this->checkClassPermission($entity->id, $userId)) {
+			$this->Alert->error('security.noAccess');
+			$event->stopPropagation();
+			$url = $this->ControllerAction->url('view');
+			return $this->controller->redirect($url);
+		}
+		// End POCOR-3010
 	}
 
 	private function setupTabElements($entity) {
@@ -314,6 +325,16 @@ class StudentUserTable extends UserTable {
 				}
 			}
 			// End PHPOE-1897
+
+			// POCOR-3010
+			$userId = $this->Auth->user('id');
+			$studentId = $this->request->pass[1];
+			if (!$this->checkClassPermission($studentId, $userId)) {
+				if (isset($toolbarButtons['edit'])) {
+					unset($toolbarButtons['edit']);
+				}
+			}
+			// End POCOR-3010
 			
 			$session = $this->request->session();
 			$this->addTransferButton($buttons, $toolbarButtons, $attr, $session);
@@ -326,6 +347,40 @@ class StudentUserTable extends UserTable {
 				unset($toolbarButtons['export']);
 			}
 		}
+	}
+
+	private function checkClassPermission($studentId, $userId)
+	{
+		$permission = false;
+		if (!$this->AccessControl->isAdmin()) {
+			$event = $this->controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
+			$roles = [];
+            if (is_array($event->result)) {
+                $roles = $event->result;    
+            }
+			if (!$this->AccessControl->check(['Institutions', 'AllClasses', $permission], $roles)) {
+				$Class = TableRegistry::get('Institution.InstitutionClasses');
+				$classStudentRecord = $Class
+					->find('ByAccess', [
+						'accessControl' => $this->AccessControl,
+						'controller' => $this->controller,
+						'userId' => $userId,
+						'permission' => 'edit'
+					])
+					->innerJoinWith('ClassStudents')
+					->where(['ClassStudents.student_id' => $studentId])
+					->toArray();
+				if (!empty($classStudentRecord)) {
+					$permission = true;
+				}
+			} else {
+				$permission = true;
+			}
+			
+		} else {
+			$permission = true;
+		}
+		return $permission;
 	}
 
 }
