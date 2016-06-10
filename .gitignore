@@ -11,6 +11,7 @@ tmp/tests/*
 logs/*.log*
 webroot/export/*
 webroot/import/*
+webroot/analytics.txt
 /build
 /dist
 /tags

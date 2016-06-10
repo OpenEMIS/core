@@ -48,6 +48,7 @@ class ControllerActionHelper extends Helper {
 
 	public function getFormOptions() {
 		$options = [
+			'id' => 'content-main-form',
 			'class' => 'form-horizontal',
 			'novalidate' => true
 		];
@@ -55,7 +56,7 @@ class ControllerActionHelper extends Helper {
 		$config = $this->_View->get('ControllerAction');
 		$fields = $config['fields'];
 		if (!empty($fields)) {
-			$types = ['binary','image'];
+			$types = ['binary','image', 'custom_file'];
 			foreach ($fields as $key => $attr) {
 				if (in_array($attr['type'], $types)) {
 					$options['type'] = 'file';
@@ -63,7 +64,7 @@ class ControllerActionHelper extends Helper {
 				}
 			}
 		}
-		
+
 		return $options;
 	}
 
@@ -92,16 +93,19 @@ class ControllerActionHelper extends Helper {
 		$event = $this->dispatchEvent($table, $eventKey, null, [$buttons]);
 		// end attach event
 
-		$html = '<div class="form-buttons"><div class="button-label"></div>';
-		foreach ($buttons as $btn) {
-			if (!array_key_exists('url', $btn)) {
-				$html .= $this->Form->button($btn['name'], $btn['attr']);
-			} else {
-				$html .= $this->Html->link($btn['name'], $btn['url'], $btn['attr']);
+		$html = '';
+		if ($buttons->count() > 0) {
+			$html = '<div class="form-buttons"><div class="button-label"></div>';
+			foreach ($buttons as $btn) {
+				if (!array_key_exists('url', $btn)) {
+					$html .= $this->Form->button($btn['name'], $btn['attr']);
+				} else {
+					$html .= $this->Html->link($btn['name'], $btn['url'], $btn['attr']);
+				}
 			}
+			$html .= $this->Form->button('reload', ['id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden']);
+			$html .= '</div>';
 		}
-		$html .= $this->Form->button('reload', ['id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden']);
-		$html .= '</div>';
 		return $html;
 	}
 
@@ -243,14 +247,25 @@ class ControllerActionHelper extends Helper {
 
 			$associatedFound = false;
 			if (strlen($event->result) > 0) {
-				$value = __($event->result);
+				$allowedTranslation = ['string','text'];//array that will be translate
+				if (in_array($attr['type'], $allowedTranslation)) {
+					$value = __($event->result);
+				} else {
+					$value = $event->result;
+				}
 				$entity->$field = $value;
 			} else if ($this->endsWith($field, '_id')) {
-				$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);
-				if ($entity->has($associatedObject) && $entity->$associatedObject->has('name')) {
-					$value = $entity->$associatedObject->name;
-					$associatedFound = true;
+				$associatedObject = '';
+				if (isset($table->CAVersion) && $table->CAVersion=='4.0') {
+					$associatedObject = $table->getAssociatedEntity($field);
+				} else {
+					$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);
 				}
+				
+                if ($entity->has($associatedObject) && $entity->$associatedObject instanceof Entity && $entity->$associatedObject->has('name')) {
+                    $value = __($entity->$associatedObject->name);
+                    $associatedFound = true;
+                }
 			}
 
 			if (!$associatedFound) {
@@ -272,7 +287,7 @@ class ControllerActionHelper extends Helper {
 	}
 
 	public function getPaginatorButtons($type='prev') {
-		$icon = array('prev' => '&laquo', 'next' => '&raquo');
+		$icon = array('prev' => '', 'next' => '');
 		$html = $this->Paginator->{$type}(
 			$icon[$type],
 			array('tag' => 'li', 'escape' => false),
@@ -382,6 +397,9 @@ class ControllerActionHelper extends Helper {
 					$_fieldAttr['label'] = __($_fieldAttr['label']);
 				}
 
+				if (array_key_exists('autocomplete', $options) && $options['autocomplete'] == 'off') {
+					$html .= '<input style="display:none" type="text" name="'.$model.'['.$_field.']"/>';
+				}
 				$html .= $this->HtmlField->render($_type, 'edit', $data, $_fieldAttr, $options);
 			}
 		}
@@ -472,11 +490,16 @@ class ControllerActionHelper extends Helper {
 					$value = $event->result;
 					$data->$_field = $event->result;
 				} else if ($this->endsWith($_field, '_id')) {
-					$table = TableRegistry::get($attr['className']);
-					$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($_field);
+					$associatedObject = '';
+					if (isset($table->CAVersion) && $table->CAVersion=='4.0') {
+						$associatedObject = $table->getAssociatedEntity($_field);
+					} else {
+						$table = TableRegistry::get($attr['className']);
+						$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($_field);
+					}
 					
 					if ($data->has($associatedObject)) {
-						$value = $data->$associatedObject->name;
+						$value = __($data->$associatedObject->name);
 						$associatedFound = true;
 					}
 				}

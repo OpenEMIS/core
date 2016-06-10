@@ -1,4 +1,4 @@
-<table id="table-reorder" class="table table-striped table-hover table-bordered table-sortable">
+<table id="table-reorder" class="table table-curved table-sortable">
   <thead>
     <tr>
       <th>Icons</th>

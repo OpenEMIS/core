@@ -20,9 +20,8 @@ class EducationGradesTable extends AppTable {
 		$this->hasMany('Assessments', ['className' => 'Assessment.Assessments']);
 		$this->hasMany('InstitutionFees', ['className' => 'Institution.InstitutionFees']);
 		$this->hasMany('Rubrics', ['className' => 'Institution.InstitutionRubrics']);
-		$this->hasMany('Visits', ['className' => 'Institution.InstitutionQualityVisits']);
-		$this->hasMany('InstitutionSiteSectionGrades', ['className' => 'Institution.InstitutionSiteSectionGrades']);
-		$this->hasMany('InstitutionSiteSectionStudents', ['className' => 'Institution.InstitutionSiteSectionStudents']);
+		$this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
+		$this->hasMany('InstitutionClassStudents', ['className' => 'Institution.InstitutionClassStudents']);
 		$this->hasMany('InstitutionStudents', ['className' => 'Institution.Students']);
 		$this->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission']);
 		$this->hasMany('StudentDropout', ['className' => 'Institution.StudentDropout']);
@@ -36,6 +35,12 @@ class EducationGradesTable extends AppTable {
 			'dependent' => false,
 			// 'saveStrategy' => 'append'
 		]);
+
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+				'filter' => 'education_programme_id',
+			]);
+		}
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
@@ -79,6 +84,41 @@ class EducationGradesTable extends AppTable {
 			->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
 			->where(['EducationSystems.id' => $systemId])->toArray();
 		return $educationSystemId;
+	}
+
+	/**
+	* Method to get the list of available grades by a given education grade
+	*
+	* @param integer $gradeId The grade to find the list of available education grades
+	* @param bool|true $getNextProgrammeGrades If flag is set to false, it will only fetch all the education
+	*											grades of the same programme. If set to true it will get all
+	*											the grades of the next programmes plus the current programme grades
+	*/
+	public function getNextAvailableEducationGrades($gradeId, $getNextProgrammeGrades=true) {
+		if (!empty($gradeId)) {
+			$gradeObj = $this->get($gradeId);
+			$programmeId = $gradeObj->education_programme_id;
+			$order = $gradeObj->order;
+			$gradeOptions = $this->find('list', [
+					'keyField' => 'id',
+					'valueField' => 'programme_grade_name'
+				])
+				->where([
+					$this->aliasField('education_programme_id') => $programmeId,
+					$this->aliasField('order').' > ' => $order
+				])
+				->toArray();
+			// Default is to get the list of grades with the next programme grades
+			if ($getNextProgrammeGrades) {
+				$nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextGradeList($programmeId);
+				$results = $gradeOptions + $nextProgrammesGradesOptions;
+			} else {
+				$results = $gradeOptions;
+			}
+			return $results;
+		} else {
+			return [];
+		}
 	}
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
@@ -167,11 +207,17 @@ class EducationGradesTable extends AppTable {
 			if (isset($entity->id)) {
 				$form = $event->subject()->Form;
 				// Build Education Subjects options
-				$subjectOptions = $this->EducationSubjects
-					->find('list')
+				$subjectData = $this->EducationSubjects
+					->find()
+					->select([$this->EducationSubjects->aliasField($this->EducationSubjects->primaryKey()), $this->EducationSubjects->aliasField('name'), $this->EducationSubjects->aliasField('code')])
 					->find('visible')
 					->find('order')
 					->toArray();
+
+				$subjectOptions = [];
+				foreach ($subjectData as $key => $value) {
+					$subjectOptions[$value->id] = $value->code . ' - ' . $value->name;
+				}
 				// End
 
 				$tableHeaders = [__('Name'), __('Code'), __('Hours Required'), ''];

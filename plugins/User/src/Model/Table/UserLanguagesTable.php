@@ -1,12 +1,15 @@
 <?php
 namespace User\Model\Table;
 
-use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use Cake\Event\Event;
+use App\Model\Table\ControllerActionTable;
 
-class UserLanguagesTable extends AppTable {
+class UserLanguagesTable extends ControllerActionTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
+
+        $this->behaviors()->get('ControllerAction')->config('actions.search', false);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('Languages', ['className' => 'Languages']);
@@ -52,4 +55,26 @@ class UserLanguagesTable extends AppTable {
 		;
 	}
 
+	private function setupTabElements() {
+		$options = [
+			'userRole' => '',
+		];
+
+		switch ($this->controller->name) {
+			case 'Students':
+				$options['userRole'] = 'Students';
+				break;
+			case 'Staff':
+				$options['userRole'] = 'Staff';
+				break;
+		}
+
+		$tabElements = $this->controller->getUserTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', 'Languages');
+	}
+
+	public function afterAction(Event $event, $data) {
+		$this->setupTabElements();
+	}
 }

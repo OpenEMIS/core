@@ -119,10 +119,10 @@ class LabelHelper extends Helper {
 	// 		'single' => '*File size should not be larger than 2MB.',
 	// 		'multi' => '*Maximum 5 files are permitted on single upload. Each file size should not be larger than 2MB.',
 	// 	],
-	// 	'InstitutionSiteStaff' => [
+	// 	'InstitutionStaff' => [
 	// 		'staff_status_id' => 'Status',
 	// 		'staff_type_id' => 'Type',
-	// 		'institution_site_position_id' => 'Position',
+	// 		'institution_position_id' => 'Position',
 	// 		'total_fte' => 'Total FTE',
 	// 		'fte' => 'FTE'
 	// 	],
@@ -191,16 +191,15 @@ class LabelHelper extends Helper {
 			$labelKey = $attr['labelKey'];
 		}
 		$code = $labelKey .'.'. $key;
-		$label = $this->get($code);
+		$label = $this->getMessage($code, ['defaultMessage' => false]);
 		
-		if($label === false) {
-			$label = __(Inflector::humanize($key));
+		if ($label === false) {
+			$label = Inflector::humanize($key);
 
 			if ($this->endsWith($label, ' Id')) {
 				$label = str_replace(' Id', '', $label);
 			}
-		} elseif ($label == '[Message Not Found]' || is_array($label)) {
-			$label = $this->get($code.'.label');
+			$label == __($label);
 		}
 		return $label;
 	}

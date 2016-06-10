@@ -8,6 +8,9 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
+use Cake\ORM\TableRegistry;
+use Cake\Log\Log;
+use Cake\Datasource\Exception\RecordNotFoundException;
 
 class PermissionsTable extends AppTable {
 	private $operations = ['_view', '_edit', '_add', '_delete', '_execute'];
@@ -32,6 +35,17 @@ class PermissionsTable extends AppTable {
 		return $flag;
 	}
 
+	public function afterAction(Event $event, ArrayObject $entity) {
+		$plugin = __($this->controller->plugin);
+		$id = $this->request->pass[1];
+		try {
+			$name = $this->SecurityRoles->get($id)->name;
+			$this->controller->set('contentHeader', $plugin.' - '.$name);
+		} catch (RecordNotFoundException $e) {
+			Log::write('error', $e->getMessage());
+		}
+	}
+
 	public function beforeAction(Event $event) {
 		$controller = $this->controller;
 
@@ -46,7 +60,7 @@ class PermissionsTable extends AppTable {
 		$this->ControllerAction->field('_delete', $checkboxOptions);
 		$this->ControllerAction->field('_execute', $checkboxOptions);
 
-		$modules = ['Institutions', 'Students', 'Staff', 'Guardians', 'Reports', 'Administration'];
+		$modules = ['Institutions', 'Directory', 'Reports', 'Administration'];
 		$this->setupTabElements($modules);
 
 		$module = $this->request->query('module');
@@ -54,6 +68,7 @@ class PermissionsTable extends AppTable {
 			$module = current($modules);
 			$this->request->query['module'] = $module;
 		}
+
 		$controller->set('selectedAction', $module);
 		$controller->set('operations', $this->operations);
 	}
@@ -67,6 +82,11 @@ class PermissionsTable extends AppTable {
 			return $this->controller->redirect(['action' => 'Roles']);
 		}
 		$roleId = $this->request->pass[1];
+		if (! $this->checkRolesHierarchy($roleId)) {
+			$action = array_merge(['plugin' => 'Security', 'controller' => 'Securities', 'action' => $this->alias(), '0' => 'index']);
+			$event->stopPropagation();
+			return $this->controller->redirect($action);
+		}
 		$module = $this->request->query('module');
 		$settings['pagination'] = false;
 		
@@ -95,16 +115,49 @@ class PermissionsTable extends AppTable {
 		return $list;
 	}
 
+	public function checkRolesHierarchy($roleId) {
+		$user = $this->Auth->user();
+		$userId = $user['id'];
+		if ($user['super_admin'] == 1) { // super admin will show all roles
+			$userId = null;
+		}
+		$GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
+		$userRole = $GroupRoles
+			->find()
+			->contain('SecurityRoles')
+			->order(['SecurityRoles.order'])
+			->where([
+				$GroupRoles->aliasField('security_user_id') => $userId
+			])
+			->first();
+
+		$SecurityRolesTable = $this->SecurityRoles;
+
+		$roleEntity = $SecurityRolesTable->get($roleId);
+
+		$roleOrder = $roleEntity->order;
+
+		//this is to check if user have role higher that the one user try to edit.  e.g. teacher(4) and principal(2) 
+		//also for super admin where redirect not necessary
+		//OR user is creator of the user role.
+		return (($roleOrder > $userRole['security_role']['order']) ||  ($roleEntity->created_user_id == $userId));
+		
+	}
+
 	public function edit($roleId=0) {
 		$request = $this->request;
 		$params = $this->ControllerAction->paramsQuery();
 
+		if (! $this->checkRolesHierarchy($roleId)) {
+			$action = array_merge(['plugin' => 'Security', 'controller' => 'Securities', 'action' => $this->alias(), '0' => 'index']);
+			return $this->controller->redirect($action);
+		}
+		
 		if ($request->is(['post', 'put'])) {
-			// pr($request->data);die;
 			$permissions = $request->data($this->alias());
 			if (!empty($permissions)) {
 				foreach ($permissions as $row) {
-					$defaultData = ['_view' => 0, '_edit' => 0, '_add' => 0, '_delete' => 0, '_execute' => 0, 'security_role_id' => $roleId];
+					$defaultData = ['_view' => '0', '_edit' => '0', '_add' => '0', '_delete' => '0', '_execute' => '0', 'security_role_id' => $roleId];
 					$entity = $this->newEntity(array_merge($defaultData, $row));
 					$this->save($entity);
 				}
