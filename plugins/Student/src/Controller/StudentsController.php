@@ -128,12 +128,6 @@ class StudentsController extends AppController {
 			}
 
 			$alias = $model->alias;
-<<<<<<< HEAD
-			// temporary fix for renaming Sections and Classes
-			if ($alias == 'Sections') $alias = 'Classes';
-			else if ($alias == 'Classes') $alias = 'Subjects';
-=======
->>>>>>> 8e0d44acc48bfcdfe579f4c67f186897ce101902
 			$this->Navigation->addCrumb($model->getHeader($alias));
 			$header = $header . ' - ' . $model->getHeader($alias);
 
