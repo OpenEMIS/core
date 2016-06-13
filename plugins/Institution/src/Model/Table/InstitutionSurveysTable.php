@@ -171,7 +171,7 @@ class InstitutionSurveysTable extends AppTable {
 		if ($isAdmin) {
 			return []; // remove this line once workbench pagination is implemented
 		} else {
-			$roleStatusIds = [];
+			$acessibleStatusIds = [];
 			$where = [];
 			// returns empty list if there is no status mapping for workflows OR if the user does not have access to any schools
 			// Should never return all rows without any conditions because it may cause out of memory error
@@ -195,7 +195,7 @@ class InstitutionSurveysTable extends AppTable {
 					// logic to pre-insert survey in school only when user's roles is configured to access the step
 					$hasAccess = count(array_intersect_key($roles, $stepRoles[$statusId])) > 0;
 					if ($hasAccess) {
-						$roleStatusIds[$statusId] = $statusId;
+						$acessibleStatusIds[$statusId] = $statusId;
 						if (!in_array($institutionId, $shellParams)) {
 							$shellParams[] = $institutionId;
 						}
@@ -205,10 +205,10 @@ class InstitutionSurveysTable extends AppTable {
 			}
 			// End
 
-			if (empty($roleStatusIds)) {
+			if (empty($acessibleStatusIds)) {
 				return [];
 			} else {
-				$where[$this->aliasField('status_id') . ' IN '] = $roleStatusIds;
+				$where[$this->aliasField('status_id') . ' IN '] = $acessibleStatusIds;
 			}
 
 			// create shell to process building of survey records
@@ -245,36 +245,29 @@ class InstitutionSurveysTable extends AppTable {
 				$stepId = $obj->status_id;
 				$roles = $institutionRoles[$institutionId];
 
-				// Permission
-				// access is true if user roles exists in step roles
-				$hasAccess = count(array_intersect_key($roles, $stepRoles[$stepId])) > 0;
-				// End
+				$requestTitle = sprintf('%s - %s of %s in %s', $obj->status->name, $obj->survey_form->name, $obj->institution->name, $obj->academic_period->name);
+				$url = [
+					'plugin' => 'Institution',
+					'controller' => 'Institutions',
+					'action' => 'Surveys',
+					'view',
+					$obj->id,
+					'institution_id' => $institutionId
+				];
 
-				if ($hasAccess) {
-					$requestTitle = sprintf('%s - %s of %s in %s', $obj->status->name, $obj->survey_form->name, $obj->institution->name, $obj->academic_period->name);
-					$url = [
-						'plugin' => 'Institution',
-						'controller' => 'Institutions',
-						'action' => 'Surveys',
-						'view',
-						$obj->id,
-						'institution_id' => $institutionId
-					];
-
-					if (is_null($obj->modified)) {
-						$receivedDate = $this->formatDate($obj->created);
-					} else {
-						$receivedDate = $this->formatDate($obj->modified);
-					}
-
-					$data[] = [
-						'request_title' => ['title' => $requestTitle, 'url' => $url],
-						'receive_date' => $receivedDate,
-						'due_date' => '<i class="fa fa-minus"></i>',
-						'requester' => $obj->has('created_user') ? $obj->created_user->username : '',
-						'type' => __('Institution > Survey > Forms')
-					];
+				if (is_null($obj->modified)) {
+					$receivedDate = $this->formatDate($obj->created);
+				} else {
+					$receivedDate = $this->formatDate($obj->modified);
 				}
+
+				$data[] = [
+					'request_title' => ['title' => $requestTitle, 'url' => $url],
+					'receive_date' => $receivedDate,
+					'due_date' => '<i class="fa fa-minus"></i>',
+					'requester' => $obj->has('created_user') ? $obj->created_user->username : '',
+					'type' => __('Institution > Survey > Forms')
+				];
 			}
 		}
 	}
