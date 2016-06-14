@@ -230,7 +230,10 @@ class ControllerActionHelper extends Helper {
 			$type = $attr['type'];
 
 			if (!empty($search)) {
-				$value = $this->highlight($search, $value);
+				if (!is_array($value)) {
+					$value = $this->highlight($search, $value);
+				}
+				
 			}
 
 			if (is_null($table)) {
