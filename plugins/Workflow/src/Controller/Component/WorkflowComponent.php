@@ -14,6 +14,7 @@ class WorkflowComponent extends Component {
 	private $action;
 
 	public $WorkflowModels;
+	public $WorkflowSteps;
 	public $attachWorkflow = false;	// indicate whether the model require workflow
 	public $hasWorkflow = false;	// indicate whether workflow is setup
 	public $components = ['Auth', 'ControllerAction', 'AccessControl'];
@@ -23,6 +24,7 @@ class WorkflowComponent extends Component {
 		$this->action = $this->request->params['action'];
 
 		$this->WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
+		$this->WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
 
 		// To bypass the permission
 		$session = $this->request->session();
@@ -97,6 +99,26 @@ class WorkflowComponent extends Component {
 				'WorkflowStatuses.code' => $code
 			])
 			->select(['id' => 'WorkflowSteps.id'])
+			->toArray();
+	}
+
+	/**
+	 *	Function to get the list of the workflow steps by a given workflow model's model
+	 *
+	 *	@param string $model The name of the model e.g. Institution.InstitutionSurveys
+	 *	@return array The list of workflow steps id
+	 */
+	public function getStepsByModel($model) {
+		return $this->WorkflowSteps
+			->find('list', [
+				'keyField' => 'id',
+				'valueField' => 'id'
+			])
+			->matching('Workflows.WorkflowModels')
+			->where([
+				$this->WorkflowModels->aliasField('model') => $model
+			])
+			->select(['id' => $this->WorkflowSteps->aliasField('id')])
 			->toArray();
 	}
 }

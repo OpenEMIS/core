@@ -481,21 +481,48 @@ class InstitutionPositionsTable extends AppTable {
 
 	// Workbench.Model.onGetList
 	public function onGetWorkbenchList(Event $event, $isAdmin, $institutionRoles, ArrayObject $data) {
+		$allStatusIds = $event->subject()->Workflow->getStepsByModel($this->registryAlias());
 		$activestatusIds = $event->subject()->Workflow->getStepsByModelCode($this->registryAlias(), 'ACTIVE');
 		$inactivestatusIds = $event->subject()->Workflow->getStepsByModelCode($this->registryAlias(), 'INACTIVE');
-		$statusIds = array_merge($activestatusIds, $inactivestatusIds);
+
+		$excludeStatusId = $activestatusIds + $inactivestatusIds;
+		$statusIds = array_diff_key($allStatusIds, $excludeStatusId);
 
 		if ($isAdmin) {
 			return []; // remove this line once workbench pagination is implemented
 		} else {
+			$acessibleStatusIds = [];
 			$where = [];
-			if (empty($institutionRoles)) {
+			if (empty($statusIds) || empty($institutionRoles)) {
 				return [];
 			} else {
 				$where[$this->aliasField('institution_id') . ' IN '] = array_keys($institutionRoles);
 			}
-			if (!empty($statusIds)) {
-				$where[$this->aliasField('status_id') . ' NOT IN '] = $statusIds;
+
+			$WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+
+			// Array to store security roles in each Workflow Step
+			$stepRoles = [];
+			foreach ($institutionRoles as $institutionId => $roles) {
+				foreach ($statusIds as $key => $statusId) {
+					if (!array_key_exists($statusId, $stepRoles)) {
+						$stepRoles[$statusId] = $WorkflowStepsRoles->getRolesByStep($statusId);
+					}
+
+					// logic to pre-insert survey in school only when user's roles is configured to access the step
+					$hasAccess = count(array_intersect_key($roles, $stepRoles[$statusId])) > 0;
+					if ($hasAccess) {
+						$acessibleStatusIds[$statusId] = $statusId;
+					}
+					// End
+				}
+			}
+			// End
+
+			if (empty($acessibleStatusIds)) {
+				return [];
+			} else {
+				$where[$this->aliasField('status_id') . ' IN '] = $acessibleStatusIds;
 			}
 
 			$resultSet = $this
@@ -518,47 +545,32 @@ class InstitutionPositionsTable extends AppTable {
 				->limit(30)
 				->toArray();
 
-			$WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
-			// Array to store security roles in each Workflow Step
-			$stepRoles = [];
 			foreach ($resultSet as $key => $obj) {
 				$institutionId = $obj->institution->id;
-				$stepId = $obj->status_id;
-				$roles = $institutionRoles[$institutionId];
 
-				// Permission
-				if (!array_key_exists($stepId, $stepRoles)) {
-					$stepRoles[$stepId] = $WorkflowStepsRoles->getRolesByStep($stepId);
+				$requestTitle = sprintf('%s - %s with %s of %s', $obj->status->name, $obj->staff_position_title->name, $obj->staff_position_grade->name, $obj->institution->name);
+				$url = [
+					'plugin' => 'Institution',
+					'controller' => 'Institutions',
+					'action' => 'Positions',
+					'view',
+					$obj->id,
+					'institution_id' => $institutionId
+				];
+
+				if (is_null($obj->modified)) {
+					$receivedDate = $this->formatDate($obj->created);
+				} else {
+					$receivedDate = $this->formatDate($obj->modified);
 				}
-				// access is true if user roles exists in step roles
-				$hasAccess = count(array_intersect_key($roles, $stepRoles[$stepId])) > 0;
-				// End
 
-				if ($hasAccess) {
-					$requestTitle = sprintf('%s - %s with %s of %s', $obj->status->name, $obj->staff_position_title->name, $obj->staff_position_grade->name, $obj->institution->name);
-					$url = [
-						'plugin' => 'Institution',
-						'controller' => 'Institutions',
-						'action' => 'Positions',
-						'view',
-						$obj->id,
-						'institution_id' => $institutionId
-					];
-
-					if (is_null($obj->modified)) {
-						$receivedDate = $this->formatDate($obj->created);
-					} else {
-						$receivedDate = $this->formatDate($obj->modified);
-					}
-
-					$data[] = [
-						'request_title' => ['title' => $requestTitle, 'url' => $url],
-						'receive_date' => $receivedDate,
-						'due_date' => '<i class="fa fa-minus"></i>',
-						'requester' => $obj->created_user->username,
-						'type' => __('Institution > Positions')
-					];
-				}
+				$data[] = [
+					'request_title' => ['title' => $requestTitle, 'url' => $url],
+					'receive_date' => $receivedDate,
+					'due_date' => '<i class="fa fa-minus"></i>',
+					'requester' => $obj->created_user->username,
+					'type' => __('Institution > Positions')
+				];
 			}
 		}
 	}
