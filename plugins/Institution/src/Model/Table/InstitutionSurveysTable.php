@@ -242,8 +242,6 @@ class InstitutionSurveysTable extends AppTable {
 
 			foreach ($resultSet as $key => $obj) {
 				$institutionId = $obj->institution->id;
-				$stepId = $obj->status_id;
-				$roles = $institutionRoles[$institutionId];
 
 				$requestTitle = sprintf('%s - %s of %s in %s', $obj->status->name, $obj->survey_form->name, $obj->institution->name, $obj->academic_period->name);
 				$url = [
