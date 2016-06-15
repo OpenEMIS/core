@@ -110,6 +110,7 @@ class WorkflowComponent extends Component {
 	 *	Function to get the list of the workflow steps by a given workflow model's model
 	 *
 	 *	@param string $model The name of the model e.g. Institution.InstitutionSurveys
+	 *	@param array $excludedStatus The list of the workflow status code to be excluded
 	 *	@return array The list of workflow steps id
 	 */
 	public function getStepsByModel($model, $excludedStatus = []) {
@@ -152,6 +153,13 @@ class WorkflowComponent extends Component {
 		return $statuses;
 	}
 
+	/**
+	 *	Function to get the list of the workflow steps where the login user has security access
+	 *
+	 *	@param array $institutionRoles The list schools and roles in each schools
+	 *	@param array $statusIds The list of the workflow steps id to check against
+	 *	@return array The list of workflow steps id
+	 */
 	public function getAccessibleStatuses($institutionRoles, $statusIds) {
 		$accessibleStatusIds = [];
 
