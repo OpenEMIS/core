@@ -1,53 +1,68 @@
 <?php
 use Cake\ORM\TableRegistry;
-use Cake\TestSuite\IntegrationTestCase;
 
-// attempt to create extending classes and traits fail maybe because of link below
-// https://getcomposer.org/doc/04-schema.md#autoload-dev
-// use App\tests\TestCase\Controller\CoreTestCases;
-// CoreTestCases
+use App\Test\AppTestCase;
 
-// extends IntegrationTestCase: "A test case class intended to make integration tests of your controllers easier... provides a number of helper methods and features that make dispatching requests and checking their responses simpler."
-class AcademicPeriodsControllerTest extends IntegrationTestCase
+class AcademicPeriodsControllerTest extends AppTestCase
 {
     public $fixtures = ['app.academic_period_levels', 'app.academic_periods'];
 
-    private $urlPrefix = '/AcademicPeriods/Periods/';
     private $testingId = 2;
 
     public function setup() 
     {
         parent::setUp();
-        $this->setAuthSession();
+        $this->urlPrefix('/AcademicPeriods/Periods/');
     }
 
-	public function setAuthSession() 
+    public function testIndex() 
     {
-        $this->session([
-            'Auth' => [
-                'User' => [
-                    'id' => 2,
-                    'username' => 'admin',
-                    'super_admin' => '1'
-                ]
-            ]
-        ]);
-	}
+        $testUrl = $this->url('index', ['parent' => 1]);
 
-	public function testIndex() 
-    {
-        $this->get($this->urlPrefix.'index?parent=1');
+        $this->get($testUrl);
         $this->assertResponseCode(200);
+        $this->assertEquals(true, (count($this->viewVariable('data')) >= 1));
     }
 
-    public function testAdd() 
+    public function testSearchFound() 
     {
+        $testUrl = $this->url('index', ['parent' => 1]);
+        $data = [
+            'Search' => [
+                'searchField' => '2015'
+            ]
+        ];
+        $this->post($testUrl, $data);
+
+        $this->assertEquals(true, (count($this->viewVariable('data')) >= 1));
+    }
+
+    public function testSearchNotFound() 
+    {
+        $testUrl = $this->url('index', ['parent' => 1]);
+        $data = [
+            'Search' => [
+                'searchField' => '@#!@!cantFindThis!@#!'
+            ]
+        ];
+        $this->post($testUrl, $data);
+
+        $this->assertEquals(true, (count($this->viewVariable('data')) == 0));
+    }
+
+    public function testCreate() 
+    {
+        $testUrl = $this->url('add', ['parent' => 1]);
+
+        $this->get($testUrl);
+        $this->assertResponseCode(200);
+
         $table = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $data = [
             'AcademicPeriods' => [
                 'academic_period_level_id' => 1,
-                'code' => 'AcademicPeriodsControllerTest_testAdd',
-                'name' => 'AcademicPeriodsControllerTest_testAdd',
+                'code' => 'AcademicPeriodsControllerTest_testCreate',
+                'name' => 'AcademicPeriodsControllerTest_testCreate',
                 'start_date' => '08-06-2016',
                 'end_date' => '09-06-2016',
                 'current' => 1,
@@ -57,29 +72,36 @@ class AcademicPeriodsControllerTest extends IntegrationTestCase
             ],
             'submit' => 'save'
         ];
+        $this->post($testUrl, $data);
 
-        $this->post($this->urlPrefix.'add?parent=1', $data);
-
-        $lastInsertId = null;
         $lastInsertedRecord = $table->find()
-            // ->select([$table->primaryKey()])
             ->where([$table->aliasField('name') => $data['AcademicPeriods']['name']])
             ->first();
-        if (!empty($lastInsertedRecord)) {
-            $lastInsertId = $lastInsertedRecord->id;
-        }
-        $this->assertNotEmpty($lastInsertId);
+        $this->assertEquals(true, (!empty($lastInsertedRecord)));
     }
 
-    public function testView() 
+    public function testRead() 
     {
+        $testUrl = $this->url('view/'.$this->testingId, ['parent' => 1]);
+
         $table = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $url = $this->urlPrefix.'view/'.$this->testingId.'?parent='.'1';
-        $this->get($url);
+        $this->get($testUrl);
+
         $this->assertResponseCode(200);
+        $this->assertEquals(true, 
+            ($this->viewVariable('data')->has('id') && $this->viewVariable('data')->id == $this->testingId)
+        );
     }
 
-    public function testEditEducationSystem() {
+    public function testUpdate() {
+        $testUrl = $this->url('edit/'.$this->testingId, ['parent' => 1]);
+
+        // TODO: DO A GET FIRST
+        $table = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $this->get($testUrl);
+
+        $this->assertResponseCode(200);
+
         $data = [
             'AcademicPeriods' => [
                 'parent' => '',
@@ -97,23 +119,30 @@ class AcademicPeriodsControllerTest extends IntegrationTestCase
             'submit' => 'save'
         ];
 
-        $this->post($this->urlPrefix.'edit/'.$this->testingId, $data);
+        $this->post($testUrl, $data);
 
         $table = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $entity = $table->get($this->testingId);
         $this->assertEquals($data['AcademicPeriods']['name'], $entity->name);
     }
 
-    public function testDeleteYear() {
+    public function testDelete() {
+        $testUrl = $this->url('remove');
+
+        $table = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+
+        $exists = $table->exists([$table->primaryKey() => $this->testingId]);
+        $this->assertTrue($exists);
+
         $data = [
             'id' => $this->testingId,
             '_method' => 'DELETE'
         ];
 
-        $this->post($this->urlPrefix.'remove', $data);
-        $table = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $this->post($testUrl, $data);
+
         $exists = $table->exists([$table->primaryKey() => $this->testingId]);
-        $this->assertTrue($exists);
+        $this->assertFalse($exists);
     }
 
 }

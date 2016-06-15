@@ -11,14 +11,14 @@ class AcademicPeriodLevelsFixture extends TestFixture
     public $import = ['table' => 'academic_period_levels'];
     public $records = [
         [
-            'id' => NULL, 
+            'id' => 1, 
             'name' => 'Year', 
             'level' => '1', 
             'editable' => '0', 
             'modified_user_id' => NULL, 
             'modified' => NULL, 
             'created_user_id' => '1', 
-            'created' => '2015-02-04 00:06:48'
+            'created' => '2015-02-04 00:00:00'
         ]
     ];
 }
