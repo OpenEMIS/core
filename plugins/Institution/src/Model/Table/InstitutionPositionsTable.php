@@ -30,10 +30,12 @@ class InstitutionPositionsTable extends AppTable {
 		$this->hasMany('InstitutionStaff', 		['className' => 'Institution.Staff']);
 		$this->hasMany('StaffPositions', 		['className' => 'Staff.Positions']);
 		$this->hasMany('StaffAttendances', 		['className' => 'Institution.StaffAttendances']);
+        $this->hasMany('StaffTransferRequests',      ['className' => 'Institution.StaffTransferRequests']);
+
 
 		$this->addBehavior('OpenEmis.OpenEmis');
 		$this->addBehavior('ControllerAction.ControllerAction', [
-			'actions' => ['remove' => 'transfer'],
+			'actions' => ['remove' => 'restrict'],
 			'fields' => ['excludes' => ['modified_user_id', 'created_user_id']]
 		]);
 		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
