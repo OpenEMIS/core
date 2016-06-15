@@ -25,9 +25,9 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 		$this->belongsTo('Institutions', 				['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('EducationSubjects', 			['className' => 'Education.EducationSubjects']);
 		
-		$this->hasMany('ClassSubjects', 		['className' => 'Institution.InstitutionClassSubjects', 'dependent' => true]);
-		$this->hasMany('SubjectStudents', 	['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true]);
-		$this->hasMany('SubjectStaff', 		['className' => 'Institution.InstitutionSubjectStaff', 'dependent' => true]);
+		$this->hasMany('ClassSubjects', 		['className' => 'Institution.InstitutionClassSubjects', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('SubjectStudents', 	['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('SubjectStaff', 		['className' => 'Institution.InstitutionSubjectStaff', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->belongsToMany('Classes', [
 			'className' => 'Institution.InstitutionClasses',

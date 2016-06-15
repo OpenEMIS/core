@@ -54,6 +54,7 @@ trait MessagesTrait {
 			],
 			'delete' => [
 				'restrictDelete' => 'The record cannot be deleted.',
+                'restrictDeleteBecauseAssociation' => 'Delete operation is not allowed as there are other information linked to this record.',
 				'success' => 'The record has been deleted successfully.',
 				'failed' => 'The record is not deleted due to errors encountered.',
 				'label' => 'Delete',
