@@ -10,7 +10,9 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Traits\OptionsTrait;
 
-class BankAccountsTable extends AppTable {
+use App\Model\Table\ControllerActionTable;
+
+class BankAccountsTable extends ControllerActionTable {
 	use OptionsTrait;
 	public function initialize(array $config) {
 		$this->table('user_bank_accounts');
@@ -20,42 +22,32 @@ class BankAccountsTable extends AppTable {
 		$this->belongsTo('BankBranches', ['className' => 'FieldOption.BankBranches']);
 	}
 
-	public function beforeAction($event) {
+	public function beforeAction(Event $event, ArrayObject $extra) {
 		$this->fields['active']['type'] = 'select';
 		$this->fields['active']['options'] = $this->getSelectOptions('general.yesno');
 	}
 
-	public function indexBeforeAction(Event $event) {
-		$this->ControllerAction->addField('bank_name',['type' => 'select']);
+	public function indexBeforeAction(Event $event, ArrayObject $extra) {
+		$this->field('bank_name',['type' => 'select']);
+		$this->field('bank_branch_id', ['type' => 'select']);
 
-		$order = 0;
-		$this->ControllerAction->setFieldOrder('bank_name', $order++);
-		$this->ControllerAction->setFieldOrder('bank_branch_id', $order++);	
-		$this->ControllerAction->setFieldOrder('account_name', $order++);
-		$this->ControllerAction->setFieldOrder('account_number', $order++);
-		$this->ControllerAction->setFieldOrder('active', $order++);
+		$this->setFieldOrder(['bank_name', 'bank_branch_id', 'account_name', 'account_number', 'active']);
 		
 	}
 
-	public function addEditAfterAction(Event $event, Entity $entity) {
-		$this->ControllerAction->field('bank_name', ['type' => 'select']);
-		$this->ControllerAction->field('bank_branch_id', ['type' => 'select']);
+	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		$this->field('bank_name', ['type' => 'select']);
+		$this->field('bank_branch_id', ['type' => 'select']);
 
-		$order = 0;
-
-		$this->ControllerAction->setFieldOrder('bank_name', $order++);
-		$this->ControllerAction->setFieldOrder('bank_branch_id', $order++);	
-		$this->ControllerAction->setFieldOrder('account_name', $order++);
-		$this->ControllerAction->setFieldOrder('account_number', $order++);
-		$this->ControllerAction->setFieldOrder('active', $order++);
+		$this->setFieldOrder(['bank_name', 'bank_branch_id', 'account_name', 'account_number', 'active']);
 	}
 
-	public function addOnInitialize(Event $event, Entity $entity) {
+	public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra) {
 		//to clear the bank option when toolbar button (back or list) clicked
 		$this->request->query['bank_option'] = '';
 	}
 
-	public function editOnInitialize(Event $event, Entity $entity) {
+	public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra) {
 		$bankId = $this->BankBranches->get($entity->bank_branch_id)->bank_id;
 		$this->request->query['bank_option'] = $bankId;
 	}
@@ -103,7 +95,7 @@ class BankAccountsTable extends AppTable {
 		}
 	}
 
-	public function afterAction(Event $event) {
+	public function afterAction(Event $event, ArrayObject $extra) {
 		$this->setupTabElements();
 	}
 
