@@ -77,7 +77,7 @@ try {
     Configure::load('app', 'default', false);
     Configure::load('app_extra', 'default');
     Configure::load('datasource', 'default');
-    Configure::load('testdatasource', 'default');
+    Configure::load('test_datasource', 'default');
 } catch (\Exception $e) {
     exit($e->getMessage() . "\n");
 }
