@@ -15,6 +15,8 @@ class WorkflowComponent extends Component {
 
 	public $WorkflowModels;
 	public $WorkflowSteps;
+	public $WorkflowStatuses;
+	public $WorkflowStatusesSteps;
 	public $attachWorkflow = false;	// indicate whether the model require workflow
 	public $hasWorkflow = false;	// indicate whether workflow is setup
 	public $components = ['Auth', 'ControllerAction', 'AccessControl'];
@@ -25,6 +27,8 @@ class WorkflowComponent extends Component {
 
 		$this->WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
 		$this->WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+		$this->WorkflowStatuses = TableRegistry::get('Workflow.WorkflowStatuses');
+		$this->WorkflowStatusesSteps = TableRegistry::get('Workflow.WorkflowStatusesSteps');
 
 		// To bypass the permission
 		$session = $this->request->session();
@@ -108,8 +112,8 @@ class WorkflowComponent extends Component {
 	 *	@param string $model The name of the model e.g. Institution.InstitutionSurveys
 	 *	@return array The list of workflow steps id
 	 */
-	public function getStepsByModel($model) {
-		return $this->WorkflowSteps
+	public function getStepsByModel($model, $excludedStatus = []) {
+		$query = $this->WorkflowSteps
 			->find('list', [
 				'keyField' => 'id',
 				'valueField' => 'id'
@@ -118,7 +122,59 @@ class WorkflowComponent extends Component {
 			->where([
 				$this->WorkflowModels->aliasField('model') => $model
 			])
-			->select(['id' => $this->WorkflowSteps->aliasField('id')])
-			->toArray();
+			->select([
+				'id' => $this->WorkflowSteps->aliasField('id')
+			]);
+
+		if (!empty($excludedStatus)) {
+			$excludedQuery = $this->WorkflowStatusesSteps
+				->find('list', [
+					'keyField' => 'id',
+					'valueField' => 'id'
+				])
+				->select(['id' => $this->WorkflowStatusesSteps->aliasField('workflow_step_id')])
+				->innerJoin(
+					[$this->WorkflowStatuses->alias() => $this->WorkflowStatuses->table()],
+					[
+						$this->WorkflowStatuses->aliasField('id = ') . $this->WorkflowStatusesSteps->aliasField('workflow_status_id'),
+						$this->WorkflowStatuses->aliasField("code IN ('") . implode("','", $excludedStatus) . "')"
+					]
+				)
+				->where([
+					$this->WorkflowStatusesSteps->aliasField('workflow_step_id = ') . $this->WorkflowSteps->aliasField('id')
+				]);
+
+			$query->where(['NOT EXISTS ('.$excludedQuery->sql().')']);
+		}
+			
+		$statuses = $query->toArray();
+
+		return $statuses;
+	}
+
+	public function getAccessibleStatuses($institutionRoles, $statusIds) {
+		$accessibleStatusIds = [];
+
+		$WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+
+		// Array to store security roles in each Workflow Step
+		$stepRoles = [];
+		foreach ($institutionRoles as $institutionId => $roles) {
+			foreach ($statusIds as $key => $statusId) {
+				if (!array_key_exists($statusId, $stepRoles)) {
+					$stepRoles[$statusId] = $WorkflowStepsRoles->getRolesByStep($statusId);
+				}
+
+				// logic to pre-insert survey in school only when user's roles is configured to access the step
+				$hasAccess = count(array_intersect_key($roles, $stepRoles[$statusId])) > 0;
+				if ($hasAccess) {
+					$accessibleStatusIds[$statusId] = $statusId;
+				}
+				// End
+			}
+		}
+		// End
+
+		return $accessibleStatusIds;
 	}
 }

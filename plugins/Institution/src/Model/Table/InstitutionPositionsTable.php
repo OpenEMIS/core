@@ -481,72 +481,90 @@ class InstitutionPositionsTable extends AppTable {
 
 	// Workbench.Model.onGetList
 	public function onGetWorkbenchList(Event $event, $isAdmin, $institutionRoles, ArrayObject $data) {
-		$allStatusIds = $event->subject()->Workflow->getStepsByModel($this->registryAlias());
-		$activestatusIds = $event->subject()->Workflow->getStepsByModelCode($this->registryAlias(), 'ACTIVE');
-		$inactivestatusIds = $event->subject()->Workflow->getStepsByModelCode($this->registryAlias(), 'INACTIVE');
+		$statusIds = $event->subject()->Workflow->getStepsByModel($this->registryAlias(), ['ACTIVE', 'INACTIVE']);
 
-		$excludeStatusId = $activestatusIds + $inactivestatusIds;
-		$statusIds = array_diff_key($allStatusIds, $excludeStatusId);
-
-		if ($isAdmin) {
-			return []; // remove this line once workbench pagination is implemented
+		$where = [];
+		if (empty($statusIds)) {
+			// returns empty list if there is no status mapping for workflows
+			// otherwise it will return all rows without any conditions which may cause out of memory
+			return [];
 		} else {
-			$acessibleStatusIds = [];
-			$where = [];
-			if (empty($statusIds) || empty($institutionRoles)) {
-				return [];
+			if ($isAdmin) {
+				$where[$this->aliasField('status_id') . ' IN '] = $statusIds;
 			} else {
-				$where[$this->aliasField('institution_id') . ' IN '] = array_keys($institutionRoles);
-			}
+				if (empty($institutionRoles)) {
+					// return empty list if login user do not have roles in any schools
+					return [];
+				} else {
+					$where[$this->aliasField('institution_id') . ' IN '] = array_keys($institutionRoles);
 
-			$WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
-
-			// Array to store security roles in each Workflow Step
-			$stepRoles = [];
-			foreach ($institutionRoles as $institutionId => $roles) {
-				foreach ($statusIds as $key => $statusId) {
-					if (!array_key_exists($statusId, $stepRoles)) {
-						$stepRoles[$statusId] = $WorkflowStepsRoles->getRolesByStep($statusId);
+					$accessibleStatusIds = $event->subject()->Workflow->getAccessibleStatuses($institutionRoles, $statusIds);
+					if (empty($accessibleStatusIds)) {
+						// return empty list if login user do not have access to any steps
+						return [];
+					} else {
+						$where[$this->aliasField('status_id') . ' IN '] = $accessibleStatusIds;
 					}
-
-					// logic to pre-insert survey in school only when user's roles is configured to access the step
-					$hasAccess = count(array_intersect_key($roles, $stepRoles[$statusId])) > 0;
-					if ($hasAccess) {
-						$acessibleStatusIds[$statusId] = $statusId;
-					}
-					// End
 				}
 			}
-			// End
+		}
 
-			if (empty($acessibleStatusIds)) {
-				return [];
+		$resultSetQuery = $this
+			->find()
+			->select([
+				$this->aliasField('id'),
+				$this->aliasField('status_id'),
+				$this->aliasField('modified'),
+				$this->aliasField('created'),
+				'Statuses.name',
+				'StaffPositionTitles.name',
+				'StaffPositionGrades.name',
+				'Institutions.id',
+				'Institutions.name',
+				'CreatedUser.username'
+			])
+			->contain(['Statuses', 'StaffPositionTitles', 'StaffPositionGrades', 'Institutions', 'CreatedUser'])
+			->where($where)
+			->order([$this->aliasField('created')]);
+				// ->limit(30)
+				// ->toArray();
+
+		// if is admin, only return the first 30 records
+		if ($isAdmin) {
+			$resultSetQuery->limit(30);
+		}
+
+		$resultSet = $resultSetQuery->all();
+
+		$WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+		$stepRoles = [];
+
+		$resultCount = 0;
+		foreach ($resultSet as $key => $obj) {
+			$institutionId = $obj->institution->id;
+
+			if ($isAdmin) {
+				$hasAccess = true;
 			} else {
-				$where[$this->aliasField('status_id') . ' IN '] = $acessibleStatusIds;
+				$stepId = $obj->status_id;
+				$roles = $institutionRoles[$institutionId];
+
+				// Permission
+				$hasAccess = false;
+
+				// Array to store security roles in each Workflow Step
+				if (!array_key_exists($stepId, $stepRoles)) {
+					$stepRoles[$stepId] = $WorkflowStepsRoles->getRolesByStep($stepId);
+				}
+				// access is true if user roles exists in step roles
+				$hasAccess = count(array_intersect_key($roles, $stepRoles[$stepId])) > 0;
+				// End
 			}
 
-			$resultSet = $this
-				->find()
-				->select([
-					$this->aliasField('id'),
-					$this->aliasField('status_id'),
-					$this->aliasField('modified'),
-					$this->aliasField('created'),
-					'Statuses.name',
-					'StaffPositionTitles.name',
-					'StaffPositionGrades.name',
-					'Institutions.id',
-					'Institutions.name',
-					'CreatedUser.username'
-				])
-				->contain(['Statuses', 'StaffPositionTitles', 'StaffPositionGrades', 'Institutions', 'CreatedUser'])
-				->where($where)
-				->order([$this->aliasField('created')])
-				->limit(30)
-				->toArray();
-
-			foreach ($resultSet as $key => $obj) {
-				$institutionId = $obj->institution->id;
+			if ($hasAccess) {
+				if ($resultCount == 30) {
+					break;
+				}
 
 				$requestTitle = sprintf('%s - %s with %s of %s', $obj->status->name, $obj->staff_position_title->name, $obj->staff_position_grade->name, $obj->institution->name);
 				$url = [
@@ -571,6 +589,8 @@ class InstitutionPositionsTable extends AppTable {
 					'requester' => $obj->created_user->username,
 					'type' => __('Institution > Positions')
 				];
+
+				$resultCount++;
 			}
 		}
 	}
