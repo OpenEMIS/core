@@ -456,45 +456,4 @@ class ControllerActionBehavior extends Behavior {
             return $a["order"] - $b["order"];
         }
     }
-
-    public function hasAssociatedRecordsById($model, $id) 
-    {
-        $records = $this->getAssociatedRecordsById($model, $id);
-        $found = false;
-        foreach ($records as $count) {
-            if ($count['count'] > 0) {
-                $found = true;
-                break;
-            }
-        }
-        return $found;
-    }
-
-    public function getAssociatedRecordsById($model, $id) {
-        $associations = [];
-        foreach ($model->associations() as $assoc) {
-            if (!$assoc->dependent() && ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany')) {
-                if (!array_key_exists($assoc->alias(), $associations)) {
-                    $count = 0;
-                    if ($assoc->type() == 'oneToMany') {
-                        $count = $assoc->find()
-                        ->where([$assoc->aliasField($assoc->foreignKey()) => $id])
-                        ->count();
-                    } else {
-                        $modelAssociationTable = $assoc->junction();
-                        $count = $modelAssociationTable->find()
-                            ->where([$modelAssociationTable->aliasField($assoc->foreignKey()) => $id])
-                            ->count();
-                    }
-                    $title = $assoc->name();
-                    $event = $assoc->dispatchEvent('ControllerAction.Model.transfer.getModelTitle', [], $this);
-                    if (!is_null($event->result)) {
-                        $title = $event->result;
-                    }
-                    $associations[$assoc->alias()] = ['model' => $title, 'count' => $count];
-                }
-            }
-        }
-        return $associations;
-    }
 }
