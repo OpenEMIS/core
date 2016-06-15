@@ -1011,13 +1011,17 @@ class ValidationBehavior extends Behavior {
 		$dateCondition = [];
 		// start and end date is of the new entry
 		$dateCondition['OR'] = [];
+
+		$todayDate = new Date();
+		$todayDate = $todayDate->format('Y-m-d');
+	
 		if (empty($endDate)) {
 			// current position has no end date
 			$dateCondition['OR'][] = 'end_date IS NULL';
 			$dateCondition['OR'][] = [
 				'end_date IS NOT NULL',
 				'end_date >= ' => $startDate,
-				'end_date >= NOW()' //to exclude staff which assignment has been ended.
+				'end_date >= ' => $todayDate //to exclude staff which assignment has been ended.
 			];
 		} else {
 			// current position HAS end date
@@ -1030,7 +1034,7 @@ class ValidationBehavior extends Behavior {
 			$dateCondition['OR']['OR'][] = ['end_date' . ' >= ' => $startDate, 'end_date' . ' <= ' => $endDate];
 			$dateCondition['OR']['OR'][] = ['start_date' . ' <= ' => $startDate, 'end_date' . ' >= ' => $endDate];
 
-			$dateCondition['AND'] = ['end_date >= NOW()']; //to exclude staff which assignment has been ended.
+			$dateCondition['AND'] = ['end_date >= ' => $todayDate]; //to exclude staff which assignment has been ended.
 		}
 
 		$identicalPositionHolders->where($dateCondition);
