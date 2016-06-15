@@ -10,7 +10,9 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 use App\Model\Traits\OptionsTrait;
 
-class ContactsTable extends AppTable {
+use App\Model\Table\ControllerActionTable;
+
+class ContactsTable extends ControllerActionTable {
 	use OptionsTrait;
 	public function initialize(array $config) {
 		$this->table('user_contacts');
@@ -20,15 +22,11 @@ class ContactsTable extends AppTable {
 		$this->belongsTo('ContactTypes', ['className' => 'User.ContactTypes']);
 	}
 
-	public function indexBeforeAction(Event $event) {
-		$this->ControllerAction->addField('description', []);
+	public function indexBeforeAction(Event $event, ArrayObject $extra) {
+		$this->field('description',[]);
+		$this->field('contact_type_id', ['visible' => false]);
 
-		$this->fields['contact_type_id']['visible'] = 'false';
-
-		$order = 0;
-		$this->ControllerAction->setFieldOrder('description', $order++);
-		$this->ControllerAction->setFieldOrder('value', $order++);
-		$this->ControllerAction->setFieldOrder('preferred', $order++);
+		$this->setFieldOrder(['description', 'value', 'preferred']);
 	}
 
 	private function setupTabElements() {
@@ -54,22 +52,22 @@ class ContactsTable extends AppTable {
 		$this->controller->set('tabElements', $tabElements);
 	}
 
-	public function afterAction(Event $event) {
+	public function afterAction(Event $event, ArrayObject $extra) {
 		$this->setupTabElements();
 	}
 
-	public function addEditAfterAction(Event $event, Entity $entity) {
-		$this->ControllerAction->field('contact_option_id', ['type' => 'select']);
-		$this->ControllerAction->field('contact_type_id', ['type' => 'select']);
+	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		$this->field('contact_option_id', ['type' => 'select']);
+		$this->field('contact_type_id', ['type' => 'select']);
 	}
 
-	public function editOnInitialize(Event $event, Entity $entity) {
+	public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra) {
 		$contactOptionId = $this->ContactTypes->get($entity->contact_type_id)->contact_option_id;
 		$entity->contact_option_id = $contactOptionId;
 		$this->request->query['contact_option'] = $contactOptionId;
 	}
 
-	public function beforeAction(Event $event) {
+	public function beforeAction(Event $event, ArrayObject $extra) {
 		$this->fields['preferred']['type'] = 'select';
 		$this->fields['preferred']['options'] = $this->getSelectOptions('general.yesno');
 	}
