@@ -6,6 +6,7 @@ use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
+use Cake\Network\Request;
 use Cake\Event\Event;
 use App\Model\Traits\OptionsTrait;
 
@@ -57,30 +58,15 @@ class ContactsTable extends AppTable {
 		$this->setupTabElements();
 	}
 
-	public function addEditBeforeAction(Event $event) {
-		$contactOptions = TableRegistry::get('User.ContactOptions')
-			->find('list')
-			->find('order')
-			->toArray();
+	public function addEditAfterAction(Event $event, Entity $entity) {
+		$this->ControllerAction->field('contact_option_id', ['type' => 'select']);
+		$this->ControllerAction->field('contact_type_id', ['type' => 'select']);
+	}
 
-		$contactOptionId = key($contactOptions);
-		if ($this->request->data($this->aliasField('contact_option_id'))) {
-			$contactOptionId = $this->request->data($this->aliasField('contact_option_id'));
-		}
-
-		$contactTypes = $this->ContactTypes
-			->find('list')
-			->find('order')
-			->where([$this->ContactTypes->aliasField('contact_option_id')=>$contactOptionId])
-			->toArray();
-
-		$this->fields['contact_type_id']['type'] = 'select';
-		$this->fields['contact_type_id']['options'] = $contactTypes;
-		
-		$this->ControllerAction->addField('contact_option_id',['type' => 'select','options'=>$contactOptions]);
-		$this->fields['contact_option_id']['attr'] = ['onchange' => "$('#reload').click()"];
-		$this->fields['contact_option_id']['attr']['required'] = true;
-		
+	public function editOnInitialize(Event $event, Entity $entity) {
+		$contactOptionId = $this->ContactTypes->get($entity->contact_type_id)->contact_option_id;
+		$entity->contact_option_id = $contactOptionId;
+		$this->request->query['contact_option'] = $contactOptionId;
 	}
 
 	public function beforeAction(Event $event) {
@@ -104,7 +90,7 @@ class ContactsTable extends AppTable {
 		// var_dump($validator->hasField('value'));
 		$validator->remove('value', 'notBlank');
 		$validator
-			// ->allowEmpty('value')
+			->requirePresence('contact_option_id')
 			->add('value', 'ruleValidateNumeric',  [
 				'rule' => ['numeric', 'notBlank'],
 				'on' => function ($context) {
@@ -187,4 +173,47 @@ class ContactsTable extends AppTable {
 		return $validator->allowEmpty('value');
 	}
 
+	public function onUpdateFieldContactOptionId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add' || $action == 'edit') {
+			$contactOptions = TableRegistry::get('User.ContactOptions')
+			->find('list')
+			->find('order')
+			->toArray();
+
+			$attr['options'] = $contactOptions;
+			$attr['onChangeReload'] = 'changeContactOption';
+			$attr['attr']['required'] = true;
+		}	
+		return $attr;
+	}
+
+	public function onUpdateFieldContactTypeId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add' || $action == 'edit') {
+			if (array_key_exists('contact_option', $request->query)) {
+				$contactOptionId = $request->query['contact_option'];
+				$contactTypes = $this->ContactTypes
+					->find('list')
+					->find('order')
+					->where([$this->ContactTypes->aliasField('contact_option_id') => $contactOptionId])
+					->toArray();
+			} else {
+				$contactTypes = [];
+			}
+			$attr['options'] = $contactTypes;
+		}
+		return $attr;
+	}
+
+	public function addEditOnChangeContactOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$request = $this->request;
+		unset($request->query['contact_option']);
+
+		if ($request->is(['post', 'put'])) {
+			if (array_key_exists($this->alias(), $request->data)) {
+				if (array_key_exists('contact_option_id', $request->data[$this->alias()])) {
+					$request->query['contact_option'] = $request->data[$this->alias()]['contact_option_id'];
+				}
+			}
+		}
+	}
 }
