@@ -42,7 +42,7 @@ class InstitutionRubricsTable extends AppTable {
 		$this->controller->Navigation->substituteCrumb($this->alias(), $reportName);
 		$this->controller->set('contentHeader', __($controllerName).' - '.$reportName);
 		$this->fields = [];
-		$this->ControllerAction->field('feature');
+		$this->ControllerAction->field('feature', ['select' => false]);
 		$this->ControllerAction->field('format');
 	}
 
