@@ -10,5 +10,11 @@ RENAME TABLE `z_2780_security_functions` TO `security_functions`;
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2780';
 
 
+-- POCOR-2416
+DROP TABLE deleted_records;
+
+-- db_patches
+DELETE FROM db_patches WHERE `issue` = 'POCOR-2416';
+
 -- 3.5.7
 UPDATE config_items SET value = '3.5.7' WHERE code = 'db_version';
