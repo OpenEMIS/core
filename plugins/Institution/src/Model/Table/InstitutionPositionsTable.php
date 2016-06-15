@@ -526,8 +526,6 @@ class InstitutionPositionsTable extends AppTable {
 			->contain(['Statuses', 'StaffPositionTitles', 'StaffPositionGrades', 'Institutions', 'CreatedUser'])
 			->where($where)
 			->order([$this->aliasField('created')]);
-				// ->limit(30)
-				// ->toArray();
 
 		// if is admin, only return the first 30 records
 		if ($isAdmin) {
