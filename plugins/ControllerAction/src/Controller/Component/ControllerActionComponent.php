@@ -1326,7 +1326,8 @@ class ControllerActionComponent extends Component {
                 return $this->controller->redirect($this->url('index'));
             } else if ($this->deleteStrategy == 'restrict') {
                 $notRestrictedCheck = function ($model, $id, $deleteOptions) {
-                    return !$model->hasAssociatedRecordsById($model, $id);
+                    $newEntity = $model->newEntity([$model->primaryKey() => $id]);
+                    return !$this->hasAssociatedRecords($model, $newEntity);
                 };
 
                 $this->debug(__METHOD__, ': Event -> ControllerAction.Model.onBeforeRestrictDelete');

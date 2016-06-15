@@ -76,7 +76,8 @@ class RemoveBehavior extends Behavior {
             $notRestrictedCheck = true;
             if ($model->actions('remove') == 'restrict') {
                 $notRestrictedCheck = function ($model, $id, $extra) {
-                    return !$model->hasAssociatedRecordsById($model, $id);
+                    $newEntity = $model->newEntity([$model->primaryKey() => $id]);
+                    return !$model->hasAssociatedRecords($model, $newEntity);
                 };
 
                 $event = $model->dispatchEvent('ControllerAction.Model.onBeforeRestrictDelete', [$id, $extra], $this);
