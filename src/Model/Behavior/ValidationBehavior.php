@@ -992,8 +992,7 @@ class ValidationBehavior extends Behavior {
 					$InstitutionStaff->aliasField('institution_position_id') => $globalData['data']['institution_position_id']
 					
 				]
-			)
-			;
+			);
 
 		// no id this is NOT a add method
 		if (array_key_exists('institution_staff_id', $globalData['data']) && !empty($globalData['data']['institution_staff_id'])) {
@@ -1005,12 +1004,17 @@ class ValidationBehavior extends Behavior {
 		$dateCondition = [];
 		// start and end date is of the new entry
 		$dateCondition['OR'] = [];
+
+		$todayDate = new Date();
+		$todayDate = $todayDate->format('Y-m-d');
+	
 		if (empty($endDate)) {
 			// current position has no end date
 			$dateCondition['OR'][] = 'end_date IS NULL';
 			$dateCondition['OR'][] = [
 				'end_date IS NOT NULL',
-				'end_date >= ' => $startDate
+				'end_date >= ' => $startDate,
+				'end_date >= ' => $todayDate //to exclude staff which assignment has been ended.
 			];
 		} else {
 			// current position HAS end date
@@ -1022,6 +1026,8 @@ class ValidationBehavior extends Behavior {
 			$dateCondition['OR']['OR'][] = ['start_date' . ' >= ' => $startDate, 'start_date' . ' <= ' => $endDate];
 			$dateCondition['OR']['OR'][] = ['end_date' . ' >= ' => $startDate, 'end_date' . ' <= ' => $endDate];
 			$dateCondition['OR']['OR'][] = ['start_date' . ' <= ' => $startDate, 'end_date' . ' >= ' => $endDate];
+
+			$dateCondition['AND'] = ['end_date >= ' => $todayDate]; //to exclude staff which assignment has been ended.
 		}
 
 		$identicalPositionHolders->where($dateCondition);
