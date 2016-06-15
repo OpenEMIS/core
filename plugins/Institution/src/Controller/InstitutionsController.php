@@ -23,7 +23,7 @@ class InstitutionsController extends AppController  {
 			'Attachments' 		=> ['className' => 'Institution.InstitutionAttachments'],
 			'History' 			=> ['className' => 'Institution.InstitutionActivities', 'actions' => ['search', 'index']],
 
-            'Programmes'        => ['className' => 'Institution.InstitutionGrades', 'actions' => ['!search']],
+			'Programmes' 		=> ['className' => 'Institution.InstitutionGrades', 'actions' => ['!search'], 'options' => ['deleteStrategy' => 'restrict']],
 			'Infrastructures' 	=> ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'transfer']],
 
 			'Staff' 			=> ['className' => 'Institution.Staff'],
