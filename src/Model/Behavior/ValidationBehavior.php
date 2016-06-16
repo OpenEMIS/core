@@ -787,24 +787,25 @@ class ValidationBehavior extends Behavior {
     }
 
 	public static function inAcademicPeriod($field, $academicFieldName, $globalData) {
-		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$periodObj = $AcademicPeriods
-				->findById($globalData['data'][$academicFieldName])
-				->first();
-		$startDate = strtotime($globalData['data']['start_date']);
-		$endDate = strtotime($globalData['data']['end_date']);
+		if (array_key_exists($academicFieldName, $globalData['data'])) {
+			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			$periodObj = $AcademicPeriods
+					->findById($globalData['data'][$academicFieldName])
+					->first();
+			$startDate = strtotime($globalData['data']['start_date']);
+			$endDate = strtotime($globalData['data']['end_date']);
 
-		if (!empty($periodObj)) {
-			$academicPeriodStartDate = (!is_null($periodObj['start_date']))? $periodObj['start_date']->toUnixString(): null;
-			$academicPeriodEndDate = (!is_null($periodObj['end_date']))? $periodObj['end_date']->toUnixString(): null;
-
-
-			$rangecheck = ($startDate >= $academicPeriodStartDate) && 
-			(is_null($academicPeriodEndDate) ||
-				(!is_null($academicPeriodEndDate) && ($endDate <= $academicPeriodEndDate))
-			)
-			;
-			return $rangecheck;
+			if (!empty($periodObj)) {
+				$academicPeriodStartDate = (!is_null($periodObj['start_date']))? $periodObj['start_date']->toUnixString(): null;
+				$academicPeriodEndDate = (!is_null($periodObj['end_date']))? $periodObj['end_date']->toUnixString(): null;
+			
+				$rangecheck = ($startDate >= $academicPeriodStartDate) && 
+				(is_null($academicPeriodEndDate) ||
+					(!is_null($academicPeriodEndDate) && ($endDate <= $academicPeriodEndDate))
+				)
+				;
+				return $rangecheck;
+			}
 		}
 
 		return false;
