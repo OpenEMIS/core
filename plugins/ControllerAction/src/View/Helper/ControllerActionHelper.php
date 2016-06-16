@@ -214,25 +214,12 @@ class ControllerActionHelper extends Helper {
 		return $tableHeaders;
 	}
 
-	public function getTableRow(Entity $entity, array $fields) {
+	public function getTableRow(Entity $entity, array $fields, $searchableFields = []) {
 		$row = [];
 
 		$search = '';
 		if (isset($this->request->data['Search']) && array_key_exists('searchField', $this->request->data['Search'])) {
 			$search = $this->request->data['Search']['searchField'];
-		}
-
-		$config = $this->_View->get('ControllerAction');
-		$table = $config['table'];
-		
-		//trigger event to get which field need to be highlighted
-		$searchableFields = new ArrayObject();
-		$eventKey = 'ControllerAction.Model.getSearchableFields';
-		$event = new Event($eventKey, $this, [$fields, $searchableFields]);
-		$event = $table->eventManager()->dispatch($event);
-
-		if ($searchableFields) {
-			$searchableFields = $searchableFields->getArrayCopy(); //convert ArrayObject to Array
 		}
 
 		$table = null;
