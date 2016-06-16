@@ -273,12 +273,14 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		$StudentTable = TableRegistry::get('Institution.Students');
 		$studentId = $entity->student_id;
 		$institutionId = $entity->institution_id;
-		if(! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
-			$process = function ($model, $entity) {
-				return false;
-			};
-			$this->Alert->error('InstitutionStudentAbsences.notEnrolled');
-			return $process;
+		if (!is_null($studentId)) {
+			if(! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
+				$process = function ($model, $entity) {
+					return false;
+				};
+				$this->Alert->error('InstitutionStudentAbsences.notEnrolled');
+				return $process;
+			}
 		}
 	}
 
