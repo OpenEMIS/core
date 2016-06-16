@@ -504,7 +504,8 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 
 	// Workbench.Model.onGetList
 	public function onGetWorkbenchList(Event $event, $isAdmin, $institutionRoles, ArrayObject $data) {
-		$statusIds = $event->subject()->Workflow->getStepsByModel($this->registryAlias(), ['APPROVED', 'CLOSED']);
+		$excludedStatuses = ['APPROVED', 'CLOSED'];
+		$statusIds = $event->subject()->Workflow->getStepsByModel($this->registryAlias(), $excludedStatuses);
 
 		$where = [];
 		if (empty($statusIds)) {
@@ -586,7 +587,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 			}
 
 			if ($hasAccess) {
-				if ($resultCount == 30) {
+				if ($resultCount++ == 30) {
 					break;
 				}
 
@@ -613,8 +614,6 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 					'requester' => $obj->created_user->username,
 					'type' => __('Change in Staff Assignment')
 				];
-
-				$resultCount++;
 			}
 		}
 	}
