@@ -63,15 +63,6 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 	}
 
-	// public function implementedEvents() {
-	// 	$events = parent::implementedEvents();
-	// 	$newEvent = [
-	// 		'ControllerAction.Model.getSearchableFields' => 'getSearchableFields'
-	// 	];
-	// 	$events = array_merge($events, $newEvent);
-	// 	return $events;
-	// }
-
 	public function validationDefault(Validator $validator) {
 		$validator->requirePresence('name');
 		return $validator;

@@ -77,8 +77,6 @@ class SearchBehavior extends Behavior {
 		if ($extra['auto_search']) {
 			$OR = [];
 			if (!empty($search)) {
-				$schema = $model->schema();
-				$columns = $schema->columns();
 				foreach ($columns as $col) {
 					$attr = $schema->column($col);
 					if ($col == 'password') continue;
@@ -105,22 +103,21 @@ class SearchBehavior extends Behavior {
 	}
 
 	//called by ControllerActionHelper
-	public function getSearchableFields(Event $event, $fields, ArrayObject $searchableFields) {
-		foreach ($fields as $field => $attr){
-			//this logic to accomodate ('visible' => true) alternative
-			$isVisible = false;
-			if (is_array($attr['visible'])) {
-				if ((array_key_exists('index', $attr['visible'])) && ($attr['visible']['index'])) {
-					$isVisible = true;
-				}
-			} else {
-				if ($attr['visible']) {
-					$isVisible = true;
-				}
-			}
+	public function getSearchableFields(Event $event, ArrayObject $searchableFields) {
+		$model = $this->_table;
+		$schema = $model->schema();
+		$columns = $schema->columns();
+		$ControllerActionHelper = $event->subject();
+		$fields = $model->fields;
 
-			if ((in_array($attr['type'], ['string', 'text'])) && ($isVisible)) {
-				$searchableFields[] = $field;
+		foreach ($columns as $col) {
+			$attr = $schema->column($col);
+			if ($col == 'password') continue;
+			if (in_array($attr['type'], ['string', 'text'])) {
+				$visible = $ControllerActionHelper->isFieldVisible($fields[$col], 'index');
+				if ($visible) {
+					$searchableFields[] = $col;
+				}
 			}
 		}
 	}
