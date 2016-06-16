@@ -259,7 +259,7 @@ class InstitutionSurveysTable extends AppTable {
 				// End
 
 				if ($hasAccess) {
-					if ($resultCount == 30) {
+					if ($resultCount++ == 30) {
 						break;
 					}
 
