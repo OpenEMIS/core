@@ -490,7 +490,8 @@ class InstitutionPositionsTable extends AppTable {
 			return [];
 		} else {
 			if ($isAdmin) {
-				$where[$this->aliasField('status_id') . ' IN '] = $statusIds;
+				// $where[$this->aliasField('status_id') . ' IN '] = $statusIds;
+				return []; // remove this line once workbench pagination is implemented
 			} else {
 				if (empty($institutionRoles)) {
 					// return empty list if login user do not have roles in any schools
