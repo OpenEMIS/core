@@ -349,6 +349,9 @@ trait MessagesTrait {
 			'comment_required' => 'Comment Required',
 			'event' => 'Event'
 		],
+		'WorkflowStatuses' => [
+			'noSteps' => 'No Available Workflow Steps'
+		],
 		'InstitutionQualityVisits' => [
 			'noPeriods' => 'No Available Periods',
 			'noClasses' => 'No Available Classes',
