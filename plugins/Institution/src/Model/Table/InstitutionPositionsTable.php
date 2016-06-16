@@ -481,7 +481,8 @@ class InstitutionPositionsTable extends AppTable {
 
 	// Workbench.Model.onGetList
 	public function onGetWorkbenchList(Event $event, $isAdmin, $institutionRoles, ArrayObject $data) {
-		$statusIds = $event->subject()->Workflow->getStepsByModel($this->registryAlias(), ['ACTIVE', 'INACTIVE']);
+		$excludedStatuses = ['ACTIVE', 'INACTIVE'];
+		$statusIds = $event->subject()->Workflow->getStepsByModel($this->registryAlias(), $excludedStatuses);
 
 		$where = [];
 		if (empty($statusIds)) {
@@ -490,8 +491,7 @@ class InstitutionPositionsTable extends AppTable {
 			return [];
 		} else {
 			if ($isAdmin) {
-				// $where[$this->aliasField('status_id') . ' IN '] = $statusIds;
-				return []; // remove this line once workbench pagination is implemented
+				$where[$this->aliasField('status_id') . ' IN '] = $statusIds;
 			} else {
 				if (empty($institutionRoles)) {
 					// return empty list if login user do not have roles in any schools
@@ -561,7 +561,7 @@ class InstitutionPositionsTable extends AppTable {
 			}
 
 			if ($hasAccess) {
-				if ($resultCount == 30) {
+				if ($resultCount++ == 30) {
 					break;
 				}
 
@@ -588,8 +588,6 @@ class InstitutionPositionsTable extends AppTable {
 					'requester' => $obj->created_user->username,
 					'type' => __('Institution > Positions')
 				];
-
-				$resultCount++;
 			}
 		}
 	}
