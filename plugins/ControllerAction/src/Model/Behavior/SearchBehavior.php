@@ -16,6 +16,7 @@ class SearchBehavior extends Behavior {
 		$events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction', 'priority' => 5];
 		$events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 5];
 		$events['ControllerAction.Model.onGetFormButtons'] = ['callable' => 'onGetFormButtons', 'priority' => 5];
+		$events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
 		return $events;
 	}
 
@@ -99,6 +100,27 @@ class SearchBehavior extends Behavior {
 		if ($extra['auto_order']) {
 			if (in_array($this->config('orderField'), $columns)) {
 				$query->order([$model->aliasField($this->config('orderField')) => 'asc']);
+			}
+		}
+	}
+
+	//called by ControllerActionHelper
+	public function getSearchableFields(Event $event, $fields, ArrayObject $searchableFields) {
+		foreach ($fields as $field => $attr){
+			//this logic to accomodate ('visible' => true) alternative
+			$isVisible = false;
+			if (is_array($attr['visible'])) {
+				if ((array_key_exists('index', $attr['visible'])) && ($attr['visible']['index'])) {
+					$isVisible = true;
+				}
+			} else {
+				if ($attr['visible']) {
+					$isVisible = true;
+				}
+			}
+
+			if ((in_array($attr['type'], ['string', 'text'])) && ($isVisible)) {
+				$searchableFields[] = $field;
 			}
 		}
 	}

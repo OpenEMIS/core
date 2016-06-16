@@ -222,19 +222,25 @@ class ControllerActionHelper extends Helper {
 			$search = $this->request->data['Search']['searchField'];
 		}
 
+		$config = $this->_View->get('ControllerAction');
+		$table = $config['table'];
+		
+		//trigger event to get which field need to be highlighted
+		$searchableFields = new ArrayObject();
+		$eventKey = 'ControllerAction.Model.getSearchableFields';
+		$event = new Event($eventKey, $this, [$fields, $searchableFields]);
+		$event = $table->eventManager()->dispatch($event);
+
+		if ($searchableFields) {
+			$searchableFields = $searchableFields->getArrayCopy(); //convert ArrayObject to Array
+		}
+
 		$table = null;
 
 		foreach ($fields as $field => $attr) {
 			$model = $attr['model'];
 			$value = $entity->$field;
 			$type = $attr['type'];
-
-			if (!empty($search)) {
-				if (!is_array($value)) {
-					$value = $this->highlight($search, $value);
-				}
-				
-			}
 
 			if (is_null($table)) {
 				$table = TableRegistry::get($attr['className']);
@@ -273,6 +279,12 @@ class ControllerActionHelper extends Helper {
 
 			if (!$associatedFound) {
 				$value = $this->HtmlField->render($type, 'index', $entity, $attr);
+			}
+
+			if (!empty($search)) {
+				if (in_array($field, $searchableFields)) {
+					$value = $this->highlight($search, $value);
+				}
 			}
 
 			if (isset($attr['tableColumnClass'])) {
