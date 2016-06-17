@@ -17,7 +17,6 @@ class StudentsController extends AppController {
 		$this->ControllerAction->model('Student.Students');
 		$this->ControllerAction->models = [
 			'Accounts' 			=> ['className' => 'Student.Accounts', 'actions' => ['view', 'edit']],
-			'Contacts' 			=> ['className' => 'User.Contacts'],
 			'Identities' 		=> ['className' => 'User.Identities'],
 			'Languages' 		=> ['className' => 'User.UserLanguages'],
 			'Nationalities' 	=> ['className' => 'User.Nationalities'],
@@ -30,7 +29,6 @@ class StudentsController extends AppController {
 			'Absences' 			=> ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
 			'Behaviours' 		=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
 			'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],
-			'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
 			'History' 			=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 			'ImportStudents' 	=> ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
 
@@ -59,6 +57,8 @@ class StudentsController extends AppController {
     public function Nationalities() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
     public function Languages() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
     public function SpecialNeeds() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
+    public function Contacts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Contacts']); }
+    public function BankAccounts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.BankAccounts']); }
 	// End
 
 	// AngularJS
