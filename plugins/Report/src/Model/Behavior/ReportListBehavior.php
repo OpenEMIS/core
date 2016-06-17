@@ -81,6 +81,7 @@ class ReportListBehavior extends Behavior {
 
 	public function onUpdateFieldFormat(Event $event, array $attr, $action, Request $request) {
 		$attr['options'] = ['xlsx' => 'Excel'];
+		$attr['select'] = false;
 		return $attr;
 	}
 
