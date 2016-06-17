@@ -780,14 +780,11 @@ class StaffAttendancesTable extends AppTable {
 					$toolbarButtons['back'] = $buttons['back'];
 					$toolbarButtons['back']['type'] = null;
 				}
+			} else { // if user selected All Days, Edit operation will not be allowed
+				if ($toolbarButtons->offsetExists('edit')) {
+					$toolbarButtons->offsetUnset('edit');
+				}
 			}
-		}
-
-		$selectedDay = $this->request->query('day');
-		if ($selectedDay == -1) { // selecting all days
-			$toolbarArray = $toolbarButtons->getArrayCopy();
-			unset($toolbarArray['edit']);
-			$toolbarButtons->exchangeArray($toolbarArray);
 		}
 	}
 
