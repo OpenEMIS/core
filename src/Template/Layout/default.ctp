@@ -30,18 +30,19 @@
 
 	echo $this->element('scripts');
 	echo $this->fetch('script');
-		
-	?>
 
+	$angularConfig = $this->Url->build(['plugin' => 'Angular', 'controller' => 'Angular', 'action' => 'app']);
+	?>
+	<script src="<?= $angularConfig ?>"></script>
 </head>
 <?php echo $this->element('OpenEmis.analytics') ?>
 
-<body class='fuelux' ng-app="OE_Styleguide">
+<body class='fuelux' ng-app="OE_Core" ng-controller="AppCtrl">
 	
 	<?=  $this->element('OpenEmis.header'); ?>
 
-	<bg-splitter orientation="horizontal" class="pane-wrapper">
-		<bg-pane class="left-pane">
+	<bg-splitter orientation="horizontal" class="pane-wrapper" resize-callback="splitterDragCallback" elements="getSplitterElements">
+		<bg-pane id="leftPane" class="left-pane" max-size-p="40">
 			<div class="pane-container">
 				<?php 
 	        		echo $this->element('OpenEmis.navigation');
@@ -49,14 +50,14 @@
 			</div>
 		</bg-pane>
 		
-		<bg-pane class="right-pane pane-container" min-size-p="60">
-			<div class="load-content">
+		<bg-pane id="rightPane" class="right-pane pane-container">
+<!-- 			<div class="load-content">
 				<div class="loader-text">
 					<i class="fa kd-openemis"></i>
 					<div class="loader lt-ie9"></div>
 					<p><?= __('Loading...') ?></p>
 				</div>
-			</div>		
+			</div>	 -->	
 			<?php 
 				echo $this->element('OpenEmis.header');
 				echo $this->fetch('content');

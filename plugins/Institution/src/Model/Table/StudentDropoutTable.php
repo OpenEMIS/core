@@ -145,16 +145,34 @@ class StudentDropoutTable extends AppTable {
 
 			$where = [$this->aliasField('status') => 0];
 			if (!$AccessControl->isAdmin()) {
-				$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
+				if (!empty($institutionIds)) {
+					$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
+				} else {
+					$where[$this->aliasField('institution_id')] = '-1';
+				}
 			}
 
 			$resultSet = $this
 				->find()
-				->contain(['Users', 'Institutions', 'EducationGrades', 'ModifiedUser', 'CreatedUser'])
+				->select([
+					$this->aliasField('id'),
+					$this->aliasField('modified'),
+					$this->aliasField('created'),
+					'Users.openemis_no',
+					'Users.first_name',
+					'Users.middle_name',
+					'Users.third_name',
+					'Users.last_name',
+					'Users.preferred_name',
+					'Institutions.name',
+					'CreatedUser.username'
+				])
+				->contain(['Users', 'Institutions', 'CreatedUser'])
 				->where($where)
 				->order([
 					$this->aliasField('created')
 				])
+				->limit(30)
 				->toArray();
 
 			foreach ($resultSet as $key => $obj) {
@@ -297,6 +315,14 @@ class StudentDropoutTable extends AppTable {
 					$Students->aliasField('student_status_id') => $statuses['CURRENT']
 				])
 				->first();
+
+			if (empty($existingStudentEntity)) {
+				// if no record is found say 'This student is not eligible for this action. Please reject this request.'
+				$this->Alert->warning('DropoutRequests.notEligible');
+				$event->stopPropagation();
+				return $this->controller->redirect($this->ControllerAction->url('edit'));
+			}
+
 			$existingStudentEntity->student_status_id = $statuses['DROPOUT'];
 			$existingStudentEntity->end_date = $effectiveDate;
 			$Students->save($existingStudentEntity);

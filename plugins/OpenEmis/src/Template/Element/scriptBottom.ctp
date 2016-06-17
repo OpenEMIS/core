@@ -1,3 +1,4 @@
+<?php echo $this->Html->script('OpenEmis.angular/ng.layout-splitter'); ?>
 <script type="text/javascript">
 $(document).ready(function() {
 	Chosen.init();
@@ -8,4 +9,5 @@ $(document).ready(function() {
 	ScrollTabs.init();
 	Header.init();
 });
+
 </script>

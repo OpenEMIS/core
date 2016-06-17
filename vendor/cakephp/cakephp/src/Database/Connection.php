@@ -20,11 +20,10 @@ use Cake\Database\Exception\MissingExtensionException;
 use Cake\Database\Log\LoggedQuery;
 use Cake\Database\Log\LoggingStatement;
 use Cake\Database\Log\QueryLogger;
-use Cake\Database\Query;
 use Cake\Database\Schema\CachedCollection;
 use Cake\Database\Schema\Collection as SchemaCollection;
-use Cake\Database\ValueBinder;
 use Cake\Datasource\ConnectionInterface;
+use Exception;
 
 /**
  * Represents a connection with a database server.
@@ -59,7 +58,7 @@ class Connection implements ConnectionInterface
     /**
      * Whether a transaction is active in this connection.
      *
-     * @var int
+     * @var bool
      */
     protected $_transactionStarted = false;
 
@@ -81,7 +80,7 @@ class Connection implements ConnectionInterface
     /**
      * Logger object instance.
      *
-     * @var QueryLogger
+     * @var \Cake\Database\Log\QueryLogger
      */
     protected $_logger = null;
 
@@ -181,7 +180,7 @@ class Connection implements ConnectionInterface
         try {
             $this->_driver->connect();
             return true;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             throw new MissingConnectionException(['reason' => $e->getMessage()]);
         }
     }
@@ -529,6 +528,17 @@ class Connection implements ConnectionInterface
     }
 
     /**
+     * Returns whether the driver supports adding or dropping constraints
+     * to already created tables.
+     *
+     * @return bool true if driver supports dynamic constraints
+     */
+    public function supportsDynamicConstraints()
+    {
+        return $this->_driver->supportsDynamicConstraints();
+    }
+
+    /**
      * {@inheritDoc}
      *
      * ### Example:
@@ -545,7 +555,7 @@ class Connection implements ConnectionInterface
 
         try {
             $result = $callback($this);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->rollback();
             throw $e;
         }
@@ -576,7 +586,7 @@ class Connection implements ConnectionInterface
 
         try {
             $result = $callback($this);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->enableForeignKeys();
             throw $e;
         }
@@ -599,8 +609,8 @@ class Connection implements ConnectionInterface
      * Quotes value to be used safely in database query.
      *
      * @param mixed $value The value to quote.
-     * @param string $type Type to be used for determining kind of quoting to perform
-     * @return mixed quoted value
+     * @param string|null $type Type to be used for determining kind of quoting to perform
+     * @return string Quoted value
      */
     public function quote($value, $type = null)
     {
@@ -710,9 +720,7 @@ class Connection implements ConnectionInterface
             'username' => '*****',
             'host' => '*****',
             'database' => '*****',
-            'port' => '*****',
-            'prefix' => '*****',
-            'schema' => '*****'
+            'port' => '*****'
         ];
         $replace = array_intersect_key($secrets, $this->_config);
         $config = $replace + $this->_config;

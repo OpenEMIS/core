@@ -1,9 +1,9 @@
 <?php
 
 /*
- * This file is part of Psy Shell
+ * This file is part of Psy Shell.
  *
- * (c) 2012-2014 Justin Hileman
+ * (c) 2012-2015 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -84,7 +84,7 @@ class ListCommand extends ReflectingCommand implements PresenterAware
             ))
             ->setDescription('List local, instance or class variables, methods and constants.')
             ->setHelp(
-                <<<HELP
+                <<<'HELP'
 List variables, constants, classes, interfaces, traits, functions, methods,
 and properties.
 
@@ -96,7 +96,7 @@ and methods on that class.
 
 e.g.
 <return>>>> ls</return>
-<return>>>> ls \$foo</return>
+<return>>>> ls $foo</return>
 <return>>>> ls -k --grep mongo -i</return>
 <return>>>> ls -al ReflectionClass</return>
 <return>>>> ls --constants --category date</return>

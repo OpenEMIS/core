@@ -76,14 +76,7 @@ class InstitutionStudentEnrollmentsTable extends AppTable  {
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
 		$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
-		$identity = $IdentityType
-		   ->find()
-		   ->contain(['FieldOptions'])
-		   ->where([
-		   		'FieldOptions.code' => 'IdentityTypes'
-		   ])
-		   ->order(['IdentityTypes.default DESC'])
-		   ->first();
+		$identity = $IdentityType->getDefaultEntity();
 
 		$settings['identity'] = $identity;
 

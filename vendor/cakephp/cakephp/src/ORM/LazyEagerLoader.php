@@ -17,7 +17,6 @@ namespace Cake\ORM;
 use Cake\Collection\Collection;
 use Cake\Database\Expression\TupleComparison;
 use Cake\Datasource\EntityInterface;
-use Cake\ORM\Table;
 
 /**
  * Contains methods that are capable of injecting eagerly loaded associations into
@@ -35,11 +34,11 @@ class LazyEagerLoader
      *
      * The properties for the associations to be loaded will be overwritten on each entity.
      *
-     * @param Cake\Datasource\EntityInterface|array $entities a single entity or list of entities
+     * @param \Cake\Datasource\EntityInterface|array $entities a single entity or list of entities
      * @param array $contain A `contain()` compatible array.
-     * @see Cake\ORM\Query\contain()
-     * @param Cake\ORM\Table $source The table to use for fetching the top level entities
-     * @return Cake\Datasource\EntityInterface|array
+     * @see \Cake\ORM\Query\contain()
+     * @param \Cake\ORM\Table $source The table to use for fetching the top level entities
+     * @return \Cake\Datasource\EntityInterface|array
      */
     public function loadInto($entities, array $contain, Table $source)
     {
@@ -62,10 +61,10 @@ class LazyEagerLoader
      * Builds a query for loading the passed list of entity objects along with the
      * associations specified in $contain.
      *
-     * @param Cake\Collection\CollectionInterface $objects The original entitites
+     * @param \Cake\Collection\CollectionInterface $objects The original entities
      * @param array $contain The associations to be loaded
-     * @param Cake\ORM\Table $source The table to use for fetching the top level entities
-     * @return Cake\ORM\Query
+     * @param \Cake\ORM\Table $source The table to use for fetching the top level entities
+     * @return \Cake\ORM\Query
      */
     protected function _getQuery($objects, $contain, $source)
     {
@@ -94,7 +93,6 @@ class LazyEagerLoader
             })
             ->contain($contain);
 
-
         foreach ($query->eagerLoader()->attachableAssociations($source) as $loadable) {
             $config = $loadable->config();
             $config['includeFields'] = true;
@@ -108,7 +106,7 @@ class LazyEagerLoader
      * Returns a map of property names where the association results should be injected
      * in the top level entities.
      *
-     * @param Cake\ORM\Table $source The table having the top level associations
+     * @param \Cake\ORM\Table $source The table having the top level associations
      * @param array $associations The name of the top level associations
      * @return array
      */
@@ -126,10 +124,10 @@ class LazyEagerLoader
      * Injects the results of the eager loader query into the original list of
      * entities.
      *
-     * @param array|Traversable $objects The original list of entities
-     * @param Cake\Collection\CollectionInterface $results The loaded results
+     * @param array|\Traversable $objects The original list of entities
+     * @param \Cake\Collection\CollectionInterface|\Cake\Database\Query $results The loaded results
      * @param array $associations The top level associations that were loaded
-     * @param Cake\ORM\Table $source The table where the entities came from
+     * @param \Cake\ORM\Table $source The table where the entities came from
      * @return array
      */
     protected function _injectResults($objects, $results, $associations, $source)

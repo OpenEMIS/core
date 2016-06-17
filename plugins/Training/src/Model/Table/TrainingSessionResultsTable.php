@@ -207,7 +207,12 @@ class TrainingSessionResultsTable extends AppTable {
 				$traineeResult = $obj->{$TraineeResults->alias()};
 
 				$rowData = [];
-				$rowData[] = $traineeObj->openemis_no;
+				$rowData[] = $event->subject()->Html->link($traineeObj->openemis_no , [
+					'plugin' => 'Directory',
+					'controller' => 'Directories',
+					'action' => 'view',
+					$traineeObj->id
+				]);
 				$rowData[] = $traineeObj->name;
 				$rowData[] = strlen($traineeResult['result']) ? $traineeResult['result'] : '';
 				$tableCells[] = $rowData;
