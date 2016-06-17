@@ -16,6 +16,12 @@ class NavigationComponent extends Component {
 		$this->action = $this->request->params['action'];
 	}
 
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Controller.initialize'] = ['callable' => 'beforeFilter', 'priority' => '11'];
+		return $events;
+	}
+
 	public function addCrumb($title, $options=array()) {
 		$item = array(
 			'title' => __($title),
@@ -81,8 +87,17 @@ class NavigationComponent extends Component {
 	public function checkPermissions(array &$navigations) {
 		$linkOnly = [];
 
+		$roles = [];
+		$restrictedTo = [];
+		$event = $this->controller->dispatchEvent('Controller.Navigation.onUpdateRoles', null, $this);
+    	if ($event->result) {
+    		$roles = $event->result['roles'];
+    		$restrictedTo = $event->result['restrictedTo'];
+    	}
+
 		// Unset the children
 		foreach ($navigations as $key => $value) {
+			$rolesRestrictedTo = $roles;
 			if (isset($value['link']) && !$value['link']) {
 				$linkOnly[] = $key;
 			} else {
@@ -91,12 +106,22 @@ class NavigationComponent extends Component {
 					$params = $value['params'];
 				}
 				$url = $this->getLink($key, $params);
-				if (!$this->AccessControl->check($url)) {
+
+				// Check if the role is only restricted to a certain page
+				foreach ($restrictedTo as $restrictedURL) {
+					if (count(array_intersect($restrictedURL, $url)) > 0) {
+						$rolesRestrictedTo = $roles;
+						break;
+					} else {
+						$rolesRestrictedTo = [];
+					}
+				}
+
+				if (!$this->AccessControl->check($url, $rolesRestrictedTo)) {
 					unset($navigations[$key]);
 				}
 			}
 		}
-
 		// unset the parents if there is no children
 		$linkOnly = array_reverse($linkOnly);
 		foreach ($linkOnly as $link) {
@@ -257,7 +282,7 @@ class NavigationComponent extends Component {
 				'title' => 'Dashboard', 
 				'parent' => 'Institutions.index', 
 				'selected' => ['Institutions.dashboard'],
-				'params' => ['plugin' => 'Institution']
+				'params' => ['plugin' => 'Institution', 0 => $id]
 			],
 
 			'Institution.General' => [
@@ -296,35 +321,35 @@ class NavigationComponent extends Component {
 				'Institutions.Shifts' => [
 					'title' => 'Shifts',
 					'parent' => 'Institution.Academic',
-					'selected' => ['Institution.Shifts'],
+					'selected' => ['Institutions.Shifts'],
 					'params' => ['plugin' => 'Institution']
 				],
 
 				'Institutions.Programmes' => [
 					'title' => 'Programmes',
 					'parent' => 'Institution.Academic',
-					'selected' => ['Institution.Programmes'],
-					'params' => ['plugin' => 'Institution']
-				],
-
-				'Institutions.Sections' => [
-					'title' => 'Classes',
-					'parent' => 'Institution.Academic',
-					'selected' => ['Institution.Sections'],
+					'selected' => ['Institutions.Programmes'],
 					'params' => ['plugin' => 'Institution']
 				],
 
 				'Institutions.Classes' => [
+					'title' => 'Classes',
+					'parent' => 'Institution.Academic',
+					'selected' => ['Institutions.Classes'],
+					'params' => ['plugin' => 'Institution']
+				],
+
+				'Institutions.Subjects' => [
 					'title' => 'Subjects',
 					'parent' => 'Institution.Academic',
-					'selected' => ['Institution.Classes'],
+					'selected' => ['Institutions.Subjects'],
 					'params' => ['plugin' => 'Institution']
 				],
 
 			'Institutions.Students.index' => [
 				'title' => 'Students',
 				'parent' => 'Institutions.index',
-				'selected' => ['Institutions.Students', 'Institutions.Students.add', 'Institutions.TransferRequests', 'Institutions.Promotion', 'Institutions.Transfer', 'Institutions.Undo',
+				'selected' => ['Institutions.Students.add', 'Institutions.TransferRequests', 'Institutions.Promotion', 'Institutions.Transfer', 'Institutions.Undo',
 					'Institutions.StudentAdmission', 'Institutions.TransferApprovals', 'Institutions.StudentDropout', 'Institutions.DropoutRequests', 'Institutions.StudentUser.add', 
 					'Institutions.ImportStudents'],
 				'params' => ['plugin' => 'Institution']
@@ -334,7 +359,7 @@ class NavigationComponent extends Component {
 				'title' => 'Staff',
 				'parent' => 'Institutions.index',
 				'params' => ['plugin' => 'Institution'],
-				'selected' => ['Institutions.Staff.add', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffUser.add']
+				'selected' => ['Institutions.Staff.add', 'Institutions.StaffUser.add', 'Institutions.ImportStaff']
 			],
 
 			'Institution.Attendance' => [
@@ -388,7 +413,7 @@ class NavigationComponent extends Component {
 				'title' => 'Positions',
 				'parent' => 'Institutions.index',
 				'params' => ['plugin' => 'Institution'],
-				'selected' => ['Institutions.Positions', 'Institutions.StaffPositions'],
+				'selected' => ['Institutions.Positions'],
 			],
 
 			'Institution.Finance' => [
@@ -471,13 +496,13 @@ class NavigationComponent extends Component {
 				'title' => 'Academic', 
 				'parent' => 'Institutions.Students.index', 
 				'params' => ['plugin' => 'Student'], 
-				'selected' => ['Institutions.Students.view', 'Students.Programmes.index', 'Students.Sections', 'Students.Classes', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.Awards', 
-					'Students.Extracurriculars']],
+				'selected' => ['Students.Programmes.index', 'Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.Awards', 
+					'Students.Extracurriculars', 'Institutions.Students.view', 'Institutions.Students.edit']],
 			'Students.BankAccounts' => [
 				'title' => 'Finance', 
 				'parent' => 'Institutions.Students.index',
 				'params' => ['plugin' => 'Student'],
-				'selected' => ['Students.Fees']],
+				'selected' => ['Students.StudentFees']],
 			'Students.Healths' => [
 				'title' => 'Health', 
 				'parent' => 'Institutions.Students.index',
@@ -502,8 +527,8 @@ class NavigationComponent extends Component {
 				'title' => 'Career', 
 				'parent' => 'Institutions.Staff.index', 
 				'params' => ['plugin' => 'Staff'], 
-				'selected' => ['Staff.Employments', 'Staff.Positions', 'Staff.Sections', 'Staff.Classes', 'Staff.Absences', 
-					'Staff.Leaves', 'Staff.Behaviours', 'Staff.Awards'],
+				'selected' => ['Staff.Employments', 'Staff.Positions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences', 
+					'Staff.Leave', 'Staff.Behaviours', 'Staff.Awards', 'Institutions.Staff.edit', 'Institutions.Staff.view',],
 			],
 			'Staff.Qualifications' => [
 				'title' => 'Professional Development', 
@@ -566,7 +591,7 @@ class NavigationComponent extends Component {
 					'title' => 'Career',
 					'parent' => 'Directories.Staff',
 					'params' => ['plugin' => 'Directory'],
-					'selected' => ['Directories.StaffEmployments', 'Directories.StaffPositions', 'Directories.StaffSections', 'Directories.StaffClasses', 
+					'selected' => ['Directories.StaffEmployments', 'Directories.StaffPositions', 'Directories.StaffClasses', 'Directories.StaffSubjects',
 						'Directories.StaffAbsences', 'Directories.StaffLeaves', 'Directories.StaffBehaviours', 'Directories.StaffAwards']
 				],
 				'Directories.StaffQualifications' => [
@@ -797,7 +822,7 @@ class NavigationComponent extends Component {
 					'title' => 'Forms',
 					'parent' => 'Administration.Survey',
 					'params' => ['plugin' => 'Survey'],
-					'selected' => ['Surveys.Questions', 'Surveys.Forms', 'Surveys.Status']
+					'selected' => ['Surveys.Questions', 'Surveys.Forms', 'Surveys.Rules', 'Surveys.Status']
 				],
 
 				'Rubrics.Templates' => [

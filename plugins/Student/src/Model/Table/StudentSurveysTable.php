@@ -22,6 +22,7 @@ class StudentSurveysTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
+		$this->belongsTo('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'foreignKey' => 'parent_form_id']);
 		$this->addBehavior('Survey.Survey', [
 			'module' => 'Student.StudentSurveys'
 		]);
@@ -30,10 +31,12 @@ class StudentSurveysTable extends AppTable {
 			'fieldKey' => 'survey_question_id',
 			'tableColumnKey' => 'survey_table_column_id',
 			'tableRowKey' => 'survey_table_row_id',
+			'fieldClass' => ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id'],
 			'formKey' => 'survey_form_id',
 			// 'filterKey' => 'custom_filter_id',
+			'formClass' => ['className' => 'Survey.SurveyForms', 'foreignKey' => 'survey_form_id'],
 			'formFieldClass' => ['className' => 'Survey.SurveyFormsQuestions'],
-			// 'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
+			// 'formFilterClass' => ['className' => 'CustomField.CustomFormsFilters'],
 			'recordKey' => 'institution_student_survey_id',
 			'fieldValueClass' => ['className' => 'Student.StudentSurveyAnswers', 'foreignKey' => 'institution_student_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
 			'tableCellClass' => ['className' => 'Student.StudentSurveyTableCells', 'foreignKey' => 'institution_student_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
@@ -115,6 +118,7 @@ class StudentSurveysTable extends AppTable {
 		$this->ControllerAction->field('student_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('survey_form_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('parent_form_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('status_id', ['type' => 'hidden']);
 
 		$this->surveyInstitutionId = $institutionId;

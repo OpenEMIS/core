@@ -3,6 +3,7 @@ namespace User\Controller;
 use Cake\Event\Event;
 use DateTime;
 use Cake\ORM\TableRegistry;
+use Cake\Log\Log;
 
 class UsersController extends AppController {
 	public function initialize() {
@@ -14,11 +15,23 @@ class UsersController extends AppController {
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 
-		$this->Auth->allow(['login', 'logout', 'postLogin', 'login_remote']);
+		$this->Auth->allow(['login', 'logout', 'postLogin', 'login_remote', 'patchPasswords']);
+	}
+
+	public function patchPasswords() {
+		$this->autoRender = false;
+		$script = 'password';
+
+		$consoleDir = ROOT . DS . 'bin' . DS;
+		$cmd = sprintf("%scake %s %s", $consoleDir, $script, 'User.Users');
+		$nohup = '%s > %slogs/'.$script.'.log & echo $!';
+		$shellCmd = sprintf($nohup, $cmd, ROOT.DS);
+		\Cake\Log\Log::write('debug', $shellCmd);
+		exec($shellCmd);
 	}
 
 	public function login() {
-		$this->getView()->layout(false);
+		$this->viewBuilder()->layout(false);
 		$username = '';
 		$password = '';
 		$session = $this->request->session();
@@ -70,5 +83,40 @@ class UsersController extends AppController {
 		$user->last_login = new DateTime();
 		$this->Users->save($user);
 		$this->log('[' . $user->username . '] Login successfully.', 'debug');
+
+		// To remove inactive staff security group users records
+		$InstitutionStaffTable = TableRegistry::get('Institution.Staff');
+		$InstitutionStaffTable->removeIndividualStaffSecurityRole($user['id']);
+		$this->startInactiveRoleRemoval();
+		$this->shellErrorRecovery();
+	}
+
+	private function startInactiveRoleRemoval() {
+		$cmd = ROOT . DS . 'bin' . DS . 'cake InactiveRoleRemoval';
+		$logs = ROOT . DS . 'logs' . DS . 'RemoveInactiveRoles.log & echo $!';
+		$shellCmd = $cmd . ' >> ' . $logs;
+
+		try {
+			$pid = exec($shellCmd);
+			Log::write('debug', $shellCmd);
+		} catch(\Exception $ex) {
+			Log::write('error', __METHOD__ . ' exception when removing inactive roles : '. $ex);
+		}
+	}
+
+	private function shellErrorRecovery() {
+		$SystemProcesses = TableRegistry::get('SystemProcesses');
+		$processes = $SystemProcesses->getErrorProcesses();
+		foreach ($processes as $process) {
+			$id = $process['id'];
+			$model = $process['model'];
+			$params = $process['params'];
+			$eventName = $process['callable_event'];
+			$executedCount = $process['executed_count'];
+			$modelTable = TableRegistry::get($model);
+			if (!empty($eventName)) {
+				$event = $modelTable->dispatchEvent('Shell.'.$eventName, [$id, $executedCount, $params]);
+			}
+		}
 	}
 }
