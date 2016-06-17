@@ -1,3 +1,11 @@
+v3.5.8
+- Institutions Programmes cannot be deleted if there are students associated with it
+- Users can now import staff into schools via Excel
+- Fixed a bug that caused user not able to access Add Guardian Page when permission was given
+- Fixed a bug that caused Homeroom teacher name not appearing in Institution -> Classes
+- When generating a report, the Format is set to Excel as default
+- Fixed a bug that caused workflow items not showing correctly in workbench
+
 v3.5.7
 - Fixed a bug that caused 404 error page in Staff Training page after the training course was deleted
 - You can now transfer students from one grade to another grade
