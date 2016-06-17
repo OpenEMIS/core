@@ -41,11 +41,13 @@ class TrackDeleteBehavior extends Behavior {
             $session = new Session();
             $userId = $session->read('Auth.User.id');
 
-            if (!is_array($entityTable->primaryKey())) {
+            if (!is_array($entityTable->primaryKey())) { // single primary key
                 $referenceKey = $entity->{$entityTable->primaryKey()};
-            } else {
+            } else { // composite primary keys
                 if ($entity->has('id')) {
                     $referenceKey = $entity->id;
+                } else {
+                    $referenceKey = '';
                 }
             }
 
