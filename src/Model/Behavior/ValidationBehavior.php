@@ -699,8 +699,6 @@ class ValidationBehavior extends Behavior {
 		if (is_null($dateOfBirth)) return $validationErrorMsg;
 
 		$EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
-        $EducationCycles = TableRegistry::get('Education.EducationCycles');
 		$gradeEntity = $EducationGrades->find()
 			->contain('EducationProgrammes.EducationCycles')
 			->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $educationGradeId])
@@ -719,20 +717,7 @@ class ValidationBehavior extends Behavior {
 		// academic period not set in form, return false because there is no way to validate
 		if (!isset($academicStartYear)) return $validationErrorMsg;
 
-        // POCOR-2957 - obtaining gradelist of all grades in cycle, ordered by programme.order then grade.order
-        $cycleId = $gradeEntity->education_programme->education_cycle_id;
-        $programmesList = $EducationProgrammes->find('list')
-            ->where(['EducationProgrammes.education_cycle_id' => $cycleId])
-            ->order($EducationProgrammes->aliasField('order'))
-            ->toArray();
-        $gradeList = [];
-        foreach ($programmesList as $key => $value) {
-            $currGrades = $EducationGrades->find('list')
-                ->where([$EducationGrades->aliasField('education_programme_id') => $key])
-                ->order($EducationGrades->aliasField('order'))
-                ->toArray();
-            $gradeList = $gradeList+$currGrades;
-        }
+        $programmeId = $gradeEntity->education_programme_id;
         
 		$birthYear = $dateOfBirth->format('Y');
 		$ageOfStudent = $academicStartYear - $birthYear;
@@ -740,6 +725,14 @@ class ValidationBehavior extends Behavior {
 		$ConfigItems = TableRegistry::get('ConfigItems');
 		$enrolmentMinimumAge = $admissionAge - $ConfigItems->value('admission_age_minus');
 		$enrolmentMaximumAge = $admissionAge + $ConfigItems->value('admission_age_plus');
+
+        // PHPOE-2284 - 'instead of defining admission age at grade level, please make sure the allowed age range changes according to the grade.'
+       // PHPOE-2691 - 'instead of populating the list of grades by education cycle which is its grandparent, populate the list by its parent instead which is education programme.'
+       $gradeList = $EducationGrades->find('list')
+           ->where([$EducationGrades->aliasField('education_programme_id') => $programmeId])
+           ->find('order')
+           ->toArray()
+           ;
 
 		$yearIncrement = 0;
 		foreach ($gradeList as $key => $value) {
@@ -999,8 +992,7 @@ class ValidationBehavior extends Behavior {
 					$InstitutionStaff->aliasField('institution_position_id') => $globalData['data']['institution_position_id']
 					
 				]
-			)
-			;
+			);
 
 		// no id this is NOT a add method
 		if (array_key_exists('institution_staff_id', $globalData['data']) && !empty($globalData['data']['institution_staff_id'])) {
@@ -1012,12 +1004,17 @@ class ValidationBehavior extends Behavior {
 		$dateCondition = [];
 		// start and end date is of the new entry
 		$dateCondition['OR'] = [];
+
+		$todayDate = new Date();
+		$todayDate = $todayDate->format('Y-m-d');
+	
 		if (empty($endDate)) {
 			// current position has no end date
 			$dateCondition['OR'][] = 'end_date IS NULL';
 			$dateCondition['OR'][] = [
 				'end_date IS NOT NULL',
-				'end_date >= ' => $startDate
+				'end_date >= ' => $startDate,
+				'end_date >= ' => $todayDate //to exclude staff which assignment has been ended.
 			];
 		} else {
 			// current position HAS end date
@@ -1029,6 +1026,8 @@ class ValidationBehavior extends Behavior {
 			$dateCondition['OR']['OR'][] = ['start_date' . ' >= ' => $startDate, 'start_date' . ' <= ' => $endDate];
 			$dateCondition['OR']['OR'][] = ['end_date' . ' >= ' => $startDate, 'end_date' . ' <= ' => $endDate];
 			$dateCondition['OR']['OR'][] = ['start_date' . ' <= ' => $startDate, 'end_date' . ' >= ' => $endDate];
+
+			$dateCondition['AND'] = ['end_date >= ' => $todayDate]; //to exclude staff which assignment has been ended.
 		}
 
 		$identicalPositionHolders->where($dateCondition);
