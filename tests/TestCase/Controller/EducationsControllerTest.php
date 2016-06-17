@@ -1,87 +1,131 @@
 <?php
+namespace App\Test\TestCases;
 
-namespace Education\tests\TestCase\Controller;
-
-use Cake\TestSuite\IntegrationTestCase;
 use Cake\ORM\TableRegistry;
+use App\Test\AppTestCase;
 
-class EducationsControllerTest extends IntegrationTestCase {
+class EducationSystemsControllerTest extends AppTestCase
+{
+	public $fixtures = ['app.education_systems'];
 
-	public function setAuthSession() {
-		
-		$this->session([
-			'Auth' => [
-				'User' => [
-					'id' => 2,
-					'username' => 'admin',
-					'super_admin' => '1'
-				]
-			]
-		]);
-	}
+    private $id = 1;
 
-	public function testEducationSystemIndex() {
+    public function setup() 
+    {
+        parent::setUp();
+        $this->urlPrefix('/Educations/Systems/');
+    }
 
-		$this->setAuthSession();
-		$this->get('/Educations/Systems');
-		$this->assertResponseCode(200);
-	}
+    public function testIndex() 
+    {
+        $testUrl = $this->url('index');
 
-	public function testAddEducationSystem() {
+        $this->get($testUrl);
+        $this->assertResponseCode(200);
+        $this->assertEquals(true, (count($this->viewVariable('data')) == 1));
+    }
 
- 		$this->setAuthSession();
+    public function testSearchFound()
+    {
+        $testUrl = $this->url('index');
+        $data = [
+            'Search' => [
+                'searchField' => 'National'
+            ]
+        ];
+        $this->post($testUrl, $data);
 
-		$data = [
-			'id' => 1,
-			'name' => 'National Education System'
-		];
+        $this->assertEquals(true, (count($this->viewVariable('data')) == 1));
+    }
 
-		$this->post('/Educations/Systems/add', $data);
+    public function testSearchNotFound() 
+    {
+        $testUrl = $this->url('index');
+        $data = [
+            'Search' => [
+                'searchField' => '@#!@!cantFindThis!@#!'
+            ]
+        ];
+        $this->post($testUrl, $data);
 
-		$table = TableRegistry::get('Education.EducationSystems');
-		$this->assertNotEmpty($table->get(1));
-	}
+        $this->assertEquals(true, (count($this->viewVariable('data')) == 0));
+    }
 
-	public function testViewEducationSystem() {
+    public function testCreate() 
+    {
+        $testUrl = $this->url('add');
 
-		$this->setAuthSession();
+        $this->get($testUrl);
+        $this->assertResponseCode(200);
 
-		$this->setAuthSession();
-		$this->get('/Educations/Systems/view/1');
-		$this->assertResponseCode(200);
-	}
+        $table = TableRegistry::get('Education.EducationSystems');
+        $data = [
+            'EducationSystems' => [
+                'name' => 'New National Education System',
+                'visible' => 1
+            ],
+            'submit' => 'save'
+        ];
+        $this->post($testUrl, $data);
 
-	public function testEditEducationSystem() {
+        $lastInsertedRecord = $table->find()
+            ->where([$table->aliasField('name') => $data['EducationSystems']['name']])
+            ->first();
+        $this->assertEquals(true, (!empty($lastInsertedRecord)));
+    }
 
- 		$this->setAuthSession();
+    public function testRead()
+    {
+        $testUrl = $this->url('view/'.$this->id);
 
-		$data = [
-			'name' => 'PHPUnit Education System'
-		];
+        $table = TableRegistry::get('Education.EducationSystems');
+        $this->get($testUrl);
 
-		$this->post('/Educations/Systems/edit/1', $data);
+        $this->assertResponseCode(200);
+        $this->assertEquals(true, ($this->viewVariable('data')->id == $this->id));
+    }
 
-		$table = TableRegistry::get('Education.EducationSystems');
-		$entity = $table->get(1);
-		$this->assertEquals($data['name'], $entity->name);
-	}
+    public function testUpdate() {
+        $testUrl = $this->url('edit/'.$this->id);
 
-	public function testDeleteEducationSystem() {
+        // TODO: DO A GET FIRST
+        $table = TableRegistry::get('Education.EducationSystems');
+        $this->get($testUrl);
 
- 		$this->setAuthSession();
+        $this->assertResponseCode(200);
 
- 		$this->get('Educations/Systems/remove/1');
- 		$this->assertResponseCode(200);
+        $data = [
+            'EducationSystems' => [
+                'id' => $this->id,
+                'name' => 'National Education System',
+                'visible' => 0
+            ],
+            'submit' => 'save'
+        ];
 
-		$data = [
-			'id' => 1,
-			'_method' => 'DELETE',
-		];
+        $this->post($testUrl, $data);
 
-		$this->post('/Educations/Systems/remove/1', $data);
-		$table = TableRegistry::get('Education.EducationSystems');
-		$exists = $table->exists([$table->primaryKey() => 1]);
-		$this->assertFalse($exists);
-	}
+        $entity = $table->get($this->id);
+        $this->assertEquals($data['EducationSystems']['visible'], $entity->visible);
+    }
 
+    // Need to implement for delete transfer
+    // public function testDelete() {
+    //     $testUrl = $this->url('remove');
+
+    //     $table = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+
+    //     $exists = $table->exists([$table->primaryKey() => $this->id]);
+    //     $this->assertTrue($exists);
+
+    //     $data = [
+    //         'id' => $this->id,
+    //         '_method' => 'DELETE'
+    //     ];
+
+    //     $this->post($testUrl, $data);
+
+    //     $exists = $table->exists([$table->primaryKey() => $this->id]);
+    //     $this->assertFalse($exists);
+    // }
 }
