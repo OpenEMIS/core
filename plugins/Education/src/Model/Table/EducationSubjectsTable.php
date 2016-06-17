@@ -1,13 +1,14 @@
 <?php
 namespace Education\Model\Table;
 
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 
-class EducationSubjectsTable extends AppTable {
+class EducationSubjectsTable extends ControllerActionTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->addBehavior('Education.Setup');
-		$this->hasMany('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects', 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true]);
 		$this->belongsToMany('EducationGrades', [
 			'className' => 'Education.EducationGrades',
 			'joinTable' => 'education_grades_subjects',
@@ -16,5 +17,6 @@ class EducationSubjectsTable extends AppTable {
 			'through' => 'Education.EducationGradesSubjects',
 			'dependent' => false
 		]);
+        $this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
 	}
 }

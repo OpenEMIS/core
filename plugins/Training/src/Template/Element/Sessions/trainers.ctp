@@ -57,9 +57,10 @@
 										<tr>
 											<td>
 												<?php
-													if(isset($obj['id'])) {	// edit
-														echo $this->Form->hidden("$prefix.id");
-													}
+													// id is not needed as will always delete and re-insert trainers
+													// if(isset($obj['id'])) {	// edit
+														// echo $this->Form->hidden("$prefix.id");
+													// }
 													echo $this->Form->input("$prefix.type", ['label' => false, 'options' => $trainerTypeOptions]);
 												?>
 											</td>

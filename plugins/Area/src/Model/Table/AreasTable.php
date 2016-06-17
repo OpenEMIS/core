@@ -13,10 +13,18 @@ class AreasTable extends AppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->belongsTo('AreaParents', ['className' => 'Area.Areas']);
+		$this->belongsTo('AreaParents', ['className' => 'Area.Areas', 'foreignKey' => 'parent_id']);
 		$this->belongsTo('AreaLevels', ['className' => 'Area.AreaLevels', 'foreignKey' => 'area_level_id']);
 		$this->hasMany('Areas', ['className' => 'Area.Areas', 'foreignKey' => 'parent_id']);
 		$this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
+		$this->belongsToMany('SecurityGroups', [
+			'className' => 'Security.UserGroups',
+			'joinTable' => 'security_group_areas',
+			'foreignKey' => 'area_id',
+			'targetForeignKey' => 'security_group_id',
+			'through' => 'Security.SecurityGroupAreas',
+			'dependent' => false,
+		]);
 		$this->addBehavior('Tree');
 		if ($this->behaviors()->has('Reorder')) {
 			$this->behaviors()->get('Reorder')->config([
@@ -42,15 +50,7 @@ class AreasTable extends AppTable {
 	}
 
 	public function rebuildLftRght() {
-		$this->updateAll(
-			['parent_id' => null],
-			['parent_id' => -1]
-		);
 		$this->recover();
-		$this->updateAll(
-			['parent_id' => -1],
-			['parent_id IS NULL']
-		);
 	}
 
 	public function afterAction(Event $event) {
@@ -87,19 +87,20 @@ class AreasTable extends AppTable {
 			);
 
 		$this->rebuildLftRght();
-
-		$process = function($model, $id, $options) {
-			$entity = $model->get($id);
-			$model->removeFromTree($entity);
-			return $model->delete($entity, $options->getArrayCopy());
-		};
-		return $process;
 	}
+
 	public function onGetConvertOptions(Event $event, Entity $entity, Query $query) {
 		$level = $entity->area_level_id;
 		$query->where([
-				$this->aliasField('area_level_id') => $level
-			]);
+			$this->aliasField('area_level_id') => $level
+		]);
+
+		// if do not have any siblings but have child, can not be deleted
+		if ($query->count() == 0 && $this->childCount($entity, true) > 0) {
+			$this->Alert->warning('general.notTransferrable');
+			$event->stopPropagation();
+			return $this->controller->redirect($this->ControllerAction->url('index'));
+		}
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -111,8 +112,8 @@ class AreasTable extends AppTable {
 
 		$this->fields['parent_id']['visible'] = false;
 
-		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : -1;
-		if ($parentId != -1) {
+		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+		if ($parentId != null) {
 			$crumbs = $this
 				->find('path', ['for' => $parentId])
 				->order([$this->aliasField('lft')])
@@ -122,7 +123,7 @@ class AreasTable extends AppTable {
 			$results = $this
 				->find('all')
 				->select([$this->aliasField('id')])
-				->where([$this->aliasField('parent_id') => -1])
+				->where([$this->aliasField('parent_id') . ' IS NULL'])
 				->all();
 
 			if ($results->count() == 1) {
@@ -138,8 +139,12 @@ class AreasTable extends AppTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : -1;
-		$query->where([$this->aliasField('parent_id') => $parentId]);
+		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+        if ($parentId != null) {
+        	$query->where([$this->aliasField('parent_id') => $parentId]);
+        } else {
+        	$query->where([$this->aliasField('parent_id') . ' IS NULL']);
+        }
 	}
 
 	public function addEditBeforeAction(Event $event) {
@@ -150,7 +155,7 @@ class AreasTable extends AppTable {
 		$parentId = $this->request->query('parent');
 
 		if (is_null($parentId)) {
-			$this->fields['parent_id']['attr']['value'] = -1;
+			$this->fields['parent_id']['attr']['value'] = null;
 		} else {
 			$this->fields['parent_id']['attr']['value'] = $parentId;
 			
@@ -170,7 +175,7 @@ class AreasTable extends AppTable {
 				'attr' => ['value' => $parentPath]
 			]);
 
-			array_unshift($this->_fieldOrder, "parent");
+			//array_unshift($this->_fieldOrder, "parent");
 		}
 	}
 
@@ -185,7 +190,7 @@ class AreasTable extends AppTable {
 	}
 
 	public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, Request $request) {
-		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : -1;
+		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
 		$results = $this
 			->find()
 			->select([$this->aliasField('area_level_id')])
@@ -197,19 +202,18 @@ class AreasTable extends AppTable {
 			$data = $results->first();
 			$areaLevelId = $data->area_level_id;
 
-			$levelResults = $this->Levels
+			$levelResults = $this->AreaLevels
 				->find()
-				->select([$this->Levels->aliasField('level')])
-				->where([$this->Levels->aliasField('id') => $areaLevelId])
+				->select([$this->AreaLevels->aliasField('level')])
+				->where([$this->AreaLevels->aliasField('id') => $areaLevelId])
 				->all();
-
 			if (!$levelResults->isEmpty()) {
 				$levelData = $levelResults->first();
 				$level = $levelData->level;
 
-				$levelOptions = $this->Levels
+				$levelOptions = $this->AreaLevels
 					->find('list')
-					->where([$this->Levels->aliasField('level >') => $level])
+					->where([$this->AreaLevels->aliasField('level >') => $level])
 					->toArray();
 				$attr['options'] = $levelOptions;
 			}
@@ -224,21 +228,21 @@ class AreasTable extends AppTable {
 
 		$list = $this
 			->find()
-			->contain('Levels')
+			->contain('AreaLevels')
 			->where([
 				'OR' => [
 					$this->aliasField('name') . ' LIKE' => $search,
 					$this->aliasField('code') . ' LIKE' => $search,
-					'Levels.name LIKE' => $search
+					'AreaLevels.name LIKE' => $search
 				]
 			])
-			->order(['Levels.level', $this->aliasField('order')])
+			->order(['AreaLevels.level', $this->aliasField('order')])
 			->all();
 		
 		$data = array();
 		foreach($list as $obj) {
 			$data[] = [
-				'label' => sprintf('%s - %s (%s)', $obj->level->name, $obj->name, $obj->code),
+				'label' => sprintf('%s - %s (%s)', $obj->area_level->name, $obj->name, $obj->code),
 				'value' => $obj->id
 			];
 		}

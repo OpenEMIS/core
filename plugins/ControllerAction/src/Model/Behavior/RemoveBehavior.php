@@ -70,14 +70,39 @@ class RemoveBehavior extends Behavior {
 		$entity = null;
 
 		if ($request->is('delete') && !empty($request->data[$primaryKey])) {
-			$id = $request->data[$primaryKey];
-			try {
-				$entity = $model->get($id);
-			} catch (RecordNotFoundException $exception) { // to handle concurrent deletes
-				$mainEvent->stopPropagation();
-				return $model->controller->redirect($model->url('index', 'QUERY'));
-			}
-			$result = $this->doDelete($entity, $extra);
+            $id = $request->data[$primaryKey];
+
+            // default is no restriction
+            $notRestrictedCheck = true;
+            if ($model->actions('remove') == 'restrict') {
+                $notRestrictedCheck = function ($model, $id, $extra) {
+                    $newEntity = $model->newEntity([$model->primaryKey() => $id]);
+                    return !$model->hasAssociatedRecords($model, $newEntity);
+                };
+
+                $event = $model->dispatchEvent('ControllerAction.Model.onBeforeRestrictDelete', [$id, $extra], $this);
+                if ($event->isStopped()) { return $event->result; }
+                if (is_callable($event->result)) {
+                    $notRestrictedCheck = $event->result;
+                    
+                }
+                if (is_callable($notRestrictedCheck)) {
+                    $notRestrictedCheck = $notRestrictedCheck($model, $id, $extra);
+                }
+            }
+
+            if ($notRestrictedCheck) {
+                try {
+                    $entity = $model->get($id);
+                } catch (RecordNotFoundException $exception) { // to handle concurrent deletes
+                    $mainEvent->stopPropagation();
+                    return $model->controller->redirect($model->url('index', 'QUERY'));
+                }
+                $result = $this->doDelete($entity, $extra);
+            } else {
+                $extra['Alert']['message'] = 'general.delete.restrictDeleteBecauseAssociation';
+                $result = false;
+            }
 		}
 		$extra['result'] = $result;
 
@@ -227,7 +252,7 @@ class RemoveBehavior extends Behavior {
 		return $associations;
 	}
 
-	private function hasAssociatedRecords($model, $entity) {
+	public function hasAssociatedRecords($model, $entity) {
 		$records = $this->getAssociatedRecords($model, $entity);
 		$found = false;
 		foreach ($records as $count) {
@@ -254,32 +279,31 @@ class RemoveBehavior extends Behavior {
 
 		// List of the target foreign keys for subqueries
 		$targetForeignKeys = $modelAssociationTable->find()
-			->select([$modelAssociationTable->aliasField($targetForeignKey)])
-			->where([$modelAssociationTable->aliasField($foreignKey) => $to]);
-
-		// List of id in the junction table to be deleted
-		$idNotToUpdate = $modelAssociationTable->find('list',[
-				'keyField' => 'id',
-				'valueField' => 'id'
-			])
+			->select(['target' => $modelAssociationTable->aliasField($assoc->targetForeignKey())])
 			->where([
-				$modelAssociationTable->aliasField($foreignKey) => $from,
-				$modelAssociationTable->aliasField($targetForeignKey).' IN' => $targetForeignKeys
-			])
-			->toArray();
+				$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferTo
+			]);
 
-		$condition = [];
+		$notUpdateQuery = $modelAssociationTable->query()
+			->select(['target_foreign_key' => 'TargetTable.target'])
+			->from(['TargetTable' => $targetForeignKeys]);
 
-		if (empty($idNotToUpdate)) {
-			$condition = [$foreignKey => $from];
-		} else {
-			$condition = [$foreignKey => $from, 'id NOT IN' => $idNotToUpdate];
+		if (!empty($notUpdateQuery)) {
+			$condition = [];
+
+			$condition = [
+				$assoc->foreignKey() => $transferFrom, 
+				'NOT' => [
+					$assoc->foreignKey() => $transferFrom,
+					$assoc->targetForeignKey().' IN ' => $notUpdateQuery
+				]
+			];
+			
+			// Update all transfer records
+			$modelAssociationTable->updateAll(
+				[$assoc->foreignKey() => $transferTo],
+				$condition
+			);
 		}
-		
-		// Update all transfer records
-		$modelAssociationTable->updateAll(
-			[$foreignKey => $to],
-			$condition
-		);
 	}
 }

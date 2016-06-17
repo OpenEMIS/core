@@ -8,22 +8,25 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use ControllerAction\Model\Traits\UtilityTrait;
+use App\Model\Traits\MessagesTrait;
 
 class AreasController extends AppController
 {
 	use UtilityTrait;
+	use MessagesTrait;
 
 	public function initialize() {
 		parent::initialize();
 
 		$this->ControllerAction->models = [
-			'Levels' => ['className' => 'Area.AreaLevels', 'options' => ['deleteStrategy' => 'transfer']],
 			'Areas' => ['className' => 'Area.Areas', 'options' => ['deleteStrategy' => 'transfer']],
-			'AdministrativeLevels' => ['className' => 'Area.AreaAdministrativeLevels', 'options' => ['deleteStrategy' => 'transfer']],
 			'Administratives' => ['className' => 'Area.AreaAdministratives', 'options' => ['deleteStrategy' => 'transfer']]
 		];
 		$this->loadComponent('Paginator');
 	}
+
+    public function Levels() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Area.AreaLevels']); }
+    public function AdministrativeLevels() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Area.AreaAdministrativeLevels']); }
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
@@ -62,20 +65,24 @@ class AreasController extends AppController
 	}
 
 	public function ajaxGetArea($tableName, $targetModel, $id, $displayCountry = true) {
-		$this->getView()->layout('ajax');
-		$rootId = -1; // Root node
+		$this->viewBuilder()->layout('ajax');
+		$rootId = null; // Root node
 
 		$condition = [];
 		$accessControlAreaCount = 0;
 		$AccessControl = $this->AccessControl;
-		$Table = TableRegistry::get($tableName);	
-		$areaEntity = $Table->get($id);
+		$Table = TableRegistry::get($tableName);
+		if ($id == 0) {
+			$areaEntity = $Table->find()->first();
+		} else {
+			$areaEntity = $Table->get($id);
+		}
 		$pathId = $areaEntity->id;
 		$hasChildren = false;
 		$formError = $this->request->query('formerror');
 		if (!$displayCountry) {
 			if ($tableName == 'Area.AreaAdministratives') {
-				$worldId = $Table->find()->where([$Table->aliasField('parent_id') => -1])->first()->id;
+				$worldId = $Table->find()->where([$Table->aliasField('parent_id') . ' IS NULL'])->first()->id;
 				$condition[] = [
 					'OR' => [
 						[$Table->aliasField('is_main_country') => 1],
@@ -90,7 +97,7 @@ class AreasController extends AppController
 				// Display the list of the areas that are authorised to the user
 				$authorisedArea = $this->AccessControl->getAreasByUser();
 
-				if ($displayCountry !== true) {
+				if ($displayCountry !== true && $displayCountry != 0) {
 					// Using the display country variable here which is passed over from the institution table
 					$areaId = $Table->find()
 						->select([
@@ -107,7 +114,7 @@ class AreasController extends AppController
 				}
 
 				$areaCondition = [];
-				$parentIds = [];
+				$authorisedParentIds = [];
 				foreach ($authorisedArea as $area) {
 					$areaCondition[] = [
 						$Table->aliasField('lft').' >= ' => $area['lft'],
@@ -115,7 +122,7 @@ class AreasController extends AppController
 					];
 
 					// Find all parent ids
-					$parentIds = array_merge($parentIds, $Table
+					$authorisedParentIds = array_merge($authorisedParentIds, $Table
 						->find('path', ['for' => $area['area_id']])
 						->find('list', [
 								'keyField' => 'id',
@@ -124,10 +131,26 @@ class AreasController extends AppController
 						->order([$Table->aliasField('lft')])
 						->toArray());
 				}
-				$areaCondition[] = [
-						$Table->aliasField('id').' IN' => $parentIds
-					];
-				$condition['OR'] = $areaCondition;
+
+				if (!empty($authorisedArea)) {
+					$authorisedAreaId = $Table
+						->find('list', [
+								'keyField' => 'id',
+								'valueField' => 'id'
+							])
+						->where(['OR' => $areaCondition])
+						->toArray();
+				} else {
+					$authorisedAreaId = [];
+				}
+				
+				if (!empty($authorisedParentIds)) {
+					$areaCondition[] = [
+							$Table->aliasField('id').' IN' => $authorisedParentIds
+						];
+					$authorisedParentIds = $authorisedParentIds;
+					$condition['OR'] = $areaCondition;
+				}
 			}
 		}
 
@@ -150,22 +173,36 @@ class AreasController extends AppController
 			->order([$Table->aliasField('lft')])
 			->all();
 		$count = 1;
-		$prevousOptionId=-1;
+		$previousOptionId = null;
 		$pathToUnset = [];
+		$objParentIds = [];
 		foreach ($path as $obj) {
 			if (! $AccessControl->isAdmin() && $tableName == 'Area.Areas') {
-				if (!in_array($obj->id, $parentIds)) {
+				if (!in_array($obj->id, $authorisedAreaId) && !in_array($obj->id, $authorisedParentIds)) {
 					$pathToUnset[] = $count - 1;
+					$count++;
 					continue;
 				}
 			}	
 			$parentId = $obj->parent_id;
-			$list = $Table
+			$listQuery = $Table
 				->find('list')
-				->where([$Table->aliasField('parent_id') => $parentId])
 				->order([$Table->aliasField('order')])
-				->where($condition)
-				->toArray();
+				->where($condition);
+
+			if (is_null($parentId)) {
+				$listQuery->where([$Table->aliasField('parent_id') . ' IS NULL']);
+			} else {
+				$listQuery->where([$Table->aliasField('parent_id') => $parentId]);
+			}	
+
+			$list = $listQuery->toArray();
+
+			$newList = [];
+			foreach ($list as $key => $area) {
+				$newList[$key] = __($area);
+			}
+			$list = $newList;
 
 			switch($tableName){
 				case "Area.AreaAdministratives":
@@ -176,7 +213,7 @@ class AreasController extends AppController
 				default:
 					if( $count > 1 ){
 						if (! $AccessControl->isAdmin()) {
-							if (in_array($parentId, $this->array_column($authorisedArea, 'area_id'))) {
+							if (array_intersect($this->array_column($authorisedArea, 'area_id'), $objParentIds)) {
 								$list = [$previousOptionId => '--'.__('Select Area').'--'] + $list;	
 							}
 						} else {
@@ -186,9 +223,11 @@ class AreasController extends AppController
 					break;
 			}
 
+			$objParentIds [] = $obj->id;
+
 			if(! ($count == count($path)) || ! $hasChildren){
 				$obj->selectedId = $obj->id;
-			}else{
+			} else{
 				$obj->selectedId = $previousOptionId;
 			}
 			
@@ -199,10 +238,25 @@ class AreasController extends AppController
 
 		$path = $path->toArray();
 
-		foreach ($pathToUnset as $arrIndex) {
-			unset($path[$arrIndex]);
-		}
+		$this->unsetUnauthorisedPath($path, $pathToUnset);
+		
 		$levelAssociation = Inflector::underscore(Inflector::singularize($levelAssociation));
 		$this->set(compact('path', 'targetModel', 'tableName', 'formError', 'displayCountry', 'levelAssociation'));
+	}
+
+	// Function to unset the unauthorised path
+	private function unsetUnauthorisedPath(&$path, $pathToUnset) {
+		$firstItem = true;
+		foreach ($pathToUnset as $arrIndex) {
+			if (count($path) == count($pathToUnset)) {
+				if ($firstItem) {
+					$path[$arrIndex]['list'] = ['0' => $this->getMessage('Areas.noAccessToAreas')];
+					$path[$arrIndex]['readonly'] = true;
+					$firstItem = false;
+					continue;
+				}
+			} 
+			unset($path[$arrIndex]);
+		}
 	}
 }

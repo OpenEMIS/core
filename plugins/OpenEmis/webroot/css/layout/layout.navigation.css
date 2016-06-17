@@ -1,4 +1,4 @@
-/* NAVIGATION v.1.2.8 */
+/* NAVIGATION v.1.2.10 */
 
 nav {
     border-radius: 0 !important;
@@ -73,7 +73,6 @@ nav {
     content: "\e641";
     color: #FFF;
     width: 20px;
-    margin-left: 2px;
     background: rgba(0, 0, 0, 0.6);
     top: 50%;
     overflow: auto;
@@ -82,6 +81,10 @@ nav {
     -ms-transition: all 0.2s ease;
     -o-transition: all 0.2s ease;
     transition: all 0.2s ease;
+}
+
+.split-panes.horizontal > .split-handler:hover:after {
+    margin-left: 2px;
 }
 
 .split-panes.horizontal > .split-handler:active:after {
@@ -96,15 +99,15 @@ nav {
     overflow-y: auto;
     background-color: #FFF;
     top: 0;
-    left: 0;
+    /*left: 0;*/
 }
 
 .split-panes.horizontal > .split-pane1 {
-    width: 10%;
+    /*width: 10%;*/
 }
 
 .split-panes.horizontal > .split-pane2 {
-    left: 10%;
+    /*left: 10%;*/
     right: 0px;
 }
 
@@ -382,22 +385,35 @@ nav {
 
 /* RTL NAVIGATION v.1.2.1 */
 
+.rtl .left-menu {
+    left: 0;
+}
+
+.rtl .left-menu li a {
+    font-size: 14px;
+    line-height: 14px !important;
+}
+
 .rtl .left-pane {
-    right: 0;
+    /*    right: 0;
     left: auto;
-    width: 10%;
+    width: 10%;*/
 }
 
 .rtl .right-pane {
-    left: 0 !important;
+    /*left: 0 !important;*/
     border-right: 1px solid #DDD;
     border-left: 0 !important;
     -ms-overflow-x: hidden !important;
     overflow-x: hidden !important;
 }
 
+.rtl .split-panes.horizontal > .split-pane2 {
+    /*right: 10%;*/
+}
+
 .rtl .split-panes.horizontal > .split-handler {
-    right: 10%;
+    /*right: 10%;*/
     -ms-box-shadow: 3px -2px 6px rgba(0, 0, 0, 0.02);
     -moz-box-shadow: 3px -2px 6px rgba(0, 0, 0, 0.02);
     -webkit-box-shadow: 3px -2px 6px rgba(0, 0, 0, 0.02);
@@ -536,6 +552,9 @@ nav {
         -o-transform: translate(-50%, -50%);
         transform: translate(-50%, -50%);
     }
+    .enable-overflow {
+        overflow: hidden !important;
+    }
     .content-overlay {
         position: relative;
         height: 100%;
@@ -627,6 +646,9 @@ nav {
         padding-left: 65px !important;
     }
     /* RTL */
+    .rtl .left-menu li a {
+        line-height: 30px !important;
+    }
     .rtl .menu-handler {
         left: auto !important;
         right: 0;
@@ -653,6 +675,151 @@ nav {
     .rtl .nav-level-4 a {
         padding-left: 15px !important;
         padding-right: 65px !important;
+    }
+    /* In Mobile Devices Only */
+    .mobile .left-pane {
+        display: none;
+    }
+    .mobile .split-panes > .split-handler,
+    .rtl.mobile .split-panes > .split-handler {
+        display: none !important;
+    }
+    .mobile .menu-handler {
+        position: absolute;
+        left: 0;
+        top: 0;
+        display: block;
+        height: 48px;
+        width: 48px;
+    }
+    .mobile .menu-handler .menu-toggle,
+    .mobile .menu-handler .menu-toggle:focus,
+    .mobile .menu-handler .menu-toggle:active,
+    .mobile .menu-handler .menu-toggle:hover {
+        background-color: transparent;
+        font-size: 20px;
+        color: #FFF;
+        border: 0;
+        outline: none;
+        padding: 0;
+        margin: 0;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        -webkit-transform: translate(-50%, -50%);
+        -moz-transform: translate(-50%, -50%);
+        -ms-transform: translate(-50%, -50%);
+        -o-transform: translate(-50%, -50%);
+        transform: translate(-50%, -50%);
+    }
+    .mobile .enable-overflow {
+        overflow: hidden !important;
+    }
+    .mobile .content-overlay {
+        position: relative;
+        height: 100%;
+    }
+    .mobile .content-overlay:after {
+        display: block;
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: -1000%;
+        left: 0;
+        background-color: rgba(33, 33, 33, 0.6);
+        z-index: 99999999;
+        cursor: pointer;
+        -webkit-transition: all 0.4s ease;
+        -moz-transition: all 0.4s ease;
+        -o-transition: all 0.4s ease;
+        transition: all 0.4s ease;
+    }
+    .mobile .split-panes.horizontal {
+        top: 78px;
+    }
+    .mobile .right-pane {
+        background-color: #FFF;
+        -webkit-transition: all 0.4s ease-in-out;
+        -moz-transition: all 0.4s ease-in-out;
+        -o-transition: all 0.4s ease-in-out;
+        transition: all 0.4s ease-in-out;
+        border-left: 0;
+    }
+    .mobile .left-pane {
+        background-color: #FFF;
+        border-right: 0 !important;
+        width: 40% !important;
+    }
+    .mobile .push-content-right,
+    .mobile .push-content-left {
+        -webkit-transition: all 0.5s ease-in-out;
+        -moz-transition: all 0.5s ease-in-out;
+        -o-transition: all 0.5s ease-in-out;
+        transition: all 0.5s ease-in-out;
+        -ms-overflow: hidden !important;
+        overflow: hidden !important;
+    }
+    .mobile .push-content-right {
+        left: 40% !important;
+        right: -40% !important;
+        -webkit-box-shadow: inset 1px 0 2px rgba(33, 33, 33, 0.2);
+        -moz-box-shadow: inset 1px 0 2px rgba(33, 33, 33, 0.2);
+        -ms-box-shadow: inset 1px 0 2px rgba(33, 33, 33, 0.2);
+        -o-box-shadow: inset 1px 0 2px rgba(33, 33, 33, 0.2);
+        box-shadow: inset 1px 0 2px rgba(33, 33, 33, 0.2);
+    }
+    .mobile .push-content-left,
+    .rtl.mobile .right-pane.push-content-left {
+        right: 40% !important;
+        left: -40% !important;
+        -webkit-box-shadow: inset -1px 0 2px rgba(33, 33, 33, 0.2);
+        -moz-box-shadow: inset -1px 0 2px rgba(33, 33, 33, 0.2);
+        -ms-box-shadow: inset -1px 0 2px rgba(33, 33, 33, 0.2);
+        -o-box-shadow: inset -1px 0 2px rgba(33, 33, 33, 0.2);
+        box-shadow: inset -1px 0 2px rgba(33, 33, 33, 0.2);
+    }
+    .mobile .panel-heading.accordion-toggle:after {
+        font-size: 14px !important;
+    }
+    .mobile .nav > li > a {
+        line-height: 2.4em !important;
+    }
+    .mobile .left-menu li a {
+        height: 50px !important;
+        font-size: 14px !important;
+    }
+    .mobile .nav-level-1 a {
+        padding-left: 15px !important;
+    }
+    .mobile .nav-level-2 a {
+        padding-left: 40px !important;
+    }
+    .mobile .nav-level-3 a {
+        padding-left: 50px !important;
+    }
+    .mobile .nav-level-4 a {
+        padding-left: 65px !important;
+    }
+    .rtl.mobile .nav-level-1 a {
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+    }
+    .rtl.mobile .nav-level-2 a {
+        padding-left: 15px !important;
+        padding-right: 50px !important;
+    }
+    .rtl.mobile .nav-level-3 a {
+        padding-left: 15px !important;
+        padding-right: 50px !important;
+    }
+    .rtl.mobile .nav-level-4 a {
+        padding-left: 15px !important;
+        padding-right: 65px !important;
+    }
+    .rtl.mobile .menu-handler {
+        left: auto !important;
+        right: 0;
     }
 }
 
@@ -707,60 +874,4 @@ nav {
         padding-left: 15px !important;
         padding-right: 65px !important;
     }
-}
-
-
-/* In Mobile Devices Only */
-
-.mobile .left-pane {
-    display: none;
-}
-
-.mobile .panel-heading.accordion-toggle:after {
-    font-size: 14px !important;
-}
-
-.mobile .nav > li > a {
-    line-height: 2.4em !important;
-}
-
-.mobile .left-menu li a {
-    height: 50px !important;
-    font-size: 14px !important;
-}
-
-.mobile .nav-level-1 a {
-    padding-left: 15px !important;
-}
-
-.mobile .nav-level-2 a {
-    padding-left: 40px !important;
-}
-
-.mobile .nav-level-3 a {
-    padding-left: 50px !important;
-}
-
-.mobile .nav-level-4 a {
-    padding-left: 65px !important;
-}
-
-.rtl .mobile .nav-level-1 a {
-    padding-left: 15px !important;
-    padding-right: 15px !important;
-}
-
-.rtl .mobile .nav-level-2 a {
-    padding-left: 15px !important;
-    padding-right: 50px !important;
-}
-
-.rtl .mobile .nav-level-3 a {
-    padding-left: 15px !important;
-    padding-right: 50px !important;
-}
-
-.rtl .mobile .nav-level-4 a {
-    padding-left: 15px !important;
-    padding-right: 65px !important;
 }

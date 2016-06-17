@@ -49,7 +49,7 @@ class AdvancedPositionSearchBehavior extends Behavior {
 						]
 					]
 				]);
-			$query->orWhere(['Positions.name LIKE' =>  $searchString]);
+			$query->andWhere(['Positions.name LIKE' =>  $searchString]);
 		}
 
 		return $query;
@@ -80,7 +80,7 @@ class AdvancedPositionSearchBehavior extends Behavior {
 		if ($turnOn) {
 			$searchables['position'] = [
 				'label' => __('Position Title'),
-				'value' => isset($advanceSearchModelData['hasMany']) ? $advanceSearchModelData['hasMany']['position'] : '',
+				'value' => isset($advanceSearchModelData['hasMany']['position']) ? $advanceSearchModelData['hasMany']['position'] : '',
 			];
 			// $this->_table->ControllerAction->field('positions', ['order' => 53]);
 		}

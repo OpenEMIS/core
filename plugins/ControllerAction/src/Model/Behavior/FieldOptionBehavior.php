@@ -84,6 +84,15 @@ class FieldOptionBehavior extends Behavior {
 		return $events;
 	}
 
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		// only perform for v4
+		if ($this->_table->hasBehavior('ControllerAction')) {
+			if ($entity->has('default') && $entity->default == 1) {
+				$this->_table->updateAll(['default' => 0], [$this->_table->primaryKey().' != ' => $entity->{$this->_table->primaryKey()}]);
+			}
+		}
+	}
+
 	private function buildFieldOptions() {
 		$model = TableRegistry::get('FieldOption.FieldOptions');
 		$fieldOptions = [];
@@ -144,6 +153,10 @@ class FieldOptionBehavior extends Behavior {
 		$model = $this->_table;
 		$model->field('name', ['after' => 'editable']);
 		$fields = ['visible', 'default', 'editable', 'name', 'international_code', 'national_code'];
-		$model->setFieldVisible(['index'], $fields);
+		foreach ($fields as $field) {
+			if (array_key_exists($field, $model->fields)) {
+				$model->fields[$field]['visible']['index'] = true;
+			}
+		}
 	}
 }
