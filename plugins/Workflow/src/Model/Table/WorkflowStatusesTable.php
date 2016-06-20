@@ -110,13 +110,17 @@ class WorkflowStatusesTable extends AppTable {
 				$form = $event->subject()->Form;
 				$tableCells = [];
 				$arraySteps = [];
+
+				$selectedModel = $entity->workflow_model_id;
 				$workflowStepOptions = $this->WorkflowSteps
 					->find('list', [
 						'groupField' => 'group',
 						'keyField' => 'id',
 						'valueField' => 'name'
 					])
-					->matching('Workflows')
+					->matching('Workflows', function($q) use ($selectedModel) {
+						return $q->where(['Workflows.workflow_model_id' => $selectedModel]);
+					})
 					->select([
 						'id' => $this->WorkflowSteps->aliasField('id'), 
 						'name' => $this->WorkflowSteps->aliasField('name'),
@@ -211,8 +215,16 @@ class WorkflowStatusesTable extends AppTable {
 					}
 					unset($workflowStepOptions[$stepId]);
 				}
-				$workflowStepOptions[-1] = "-- ".__('Add Workflow Step') ." --";
-				ksort($workflowStepOptions);
+				// recursive count and substract the first level
+				$stepsCount = count($workflowStepOptions, COUNT_RECURSIVE) - count($workflowStepOptions);
+				if ($stepsCount == 0) {
+					$workflowStepOptions = [
+						-1 => $this->Alert->getMessage($this->aliasField('noSteps'))
+					];
+				} else {
+					$workflowStepOptions[-1] = "-- ".__('Add Workflow Step') ." --";
+					ksort($workflowStepOptions);
+				}
 				$attr['options'] = $workflowStepOptions;
 				$attr['tableHeaders'] = $tableHeaders;
 				$attr['tableCells'] = $tableCells;
@@ -255,7 +267,8 @@ class WorkflowStatusesTable extends AppTable {
 		]);
 	}
 
-	public function addBeforeAction(Event $event) {
+	// public function addBeforeAction(Event $event) {
+	public function addAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('workflow_model_id', ['type' => 'select']);
 		$this->ControllerAction->field('is_editable', ['value' => 1]);
 		$this->ControllerAction->field('is_removable', ['value' => 1]);
@@ -265,11 +278,13 @@ class WorkflowStatusesTable extends AppTable {
 	}
 
 	public function onUpdateFieldWorkflowModelId(Event $event, array $attr, $action, $request) {
-		if ($action == 'edit') {
+		if ($action == 'add') {
+			$attr['onChangeReload'] = 'changeModel';
+		} else if ($action == 'edit') {
 			$workflowModelId = $this->request->data[$this->alias()]['workflow_model_id'];
 			$attr['attr']['value'] = $this->WorkflowModels->get($workflowModelId)->name;
-			return $attr;
 		}
+		return $attr;
 	}
 
 	public function onUpdateFieldCode(Event $event, array $attr, $action, $request) {
@@ -292,6 +307,25 @@ class WorkflowStatusesTable extends AppTable {
 				$attr['value'] = $name;
 				$attr['type'] = 'readonly';
 				return $attr;
+			}
+		}
+	}
+
+	public function addEditOnChangeModel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$request = $this->request;
+		unset($request->query['model']);
+
+		if ($request->is(['post', 'put'])) {
+			if (array_key_exists($this->alias(), $request->data)) {
+				if (array_key_exists('workflow_model_id', $request->data[$this->alias()])) {
+					$request->query['model'] = $request->data[$this->alias()]['workflow_model_id'];
+				}
+			}
+			// when add clear previously selected steps when change model
+			if (array_key_exists($this->alias(), $data)) {
+				if (array_key_exists('temporary', $data[$this->alias()])) {
+					$data[$this->alias()]['temporary'] = [];
+				}
 			}
 		}
 	}
