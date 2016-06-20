@@ -113,6 +113,7 @@ class WorkflowBehavior extends Behavior {
 	public function getWorkflowEvents(Event $event, ArrayObject $eventsObject) {
 		foreach ($this->workflowEvents as $key => $attr) {
 			$attr['text'] = __($attr['text']);
+			$attr['description'] = __($attr['description']);
 			$eventsObject[] = $attr;
 		}
 	}
@@ -716,7 +717,7 @@ class WorkflowBehavior extends Behavior {
 		$content .= '<BR><BR>';
 		$content .= '<div class="input textarea"><label>'.__('Comment').'</label><textarea name="WorkflowTransitions[comment]" rows="5" class="workflowtransition-comment"></textarea></div>';
 		$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-comment-error error-message">' . __('This field cannot be left empty') . '</div></div>';
-
+		$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-event-description error-message"></div></div>';
 		$buttons = [
 			'<button type="submit" class="btn btn-default" onclick="return Workflow.onSubmit();">' . __('Save') . '</button>'
 		];
@@ -781,6 +782,21 @@ class WorkflowBehavior extends Behavior {
 					// End
 
 					foreach ($workflowStep->workflow_actions as $actionKey => $actionObj) {
+
+						$eventKey = $actionObj->event_key;
+						$eventsObject = new ArrayObject();
+						$subjectEvent = $this->_table->dispatchEvent('Workflow.getEvents', [$eventsObject], $this->_table);
+						if ($subjectEvent->isStopped()) { return $subjectEvent->result; }
+						$eventArray = $eventsObject->getArrayCopy();
+						$key = array_search($eventKey, array_column($eventArray, 'value'));
+						$eventDescription = '';
+						if ($key !== false) {
+							if (isset($eventArray[$key]['description'])) {
+								$eventDescription .= $eventArray[$key]['description'];
+								$eventDescription .= '<br/>';
+							}
+						}
+
 						$actionType = $actionObj->action;
 						$button = [
 							'id' => $actionObj->id,
@@ -788,7 +804,8 @@ class WorkflowBehavior extends Behavior {
 							'description' => $actionObj->description,
 							'next_step_id' => $actionObj->next_workflow_step_id,
 							'next_step_name' => $actionObj->next_workflow_step->name,
-							'comment_required' => $actionObj->comment_required
+							'comment_required' => $actionObj->comment_required,
+							'event_description' => $eventDescription
 						];
 						$json = json_encode($button, JSON_NUMERIC_CHECK);
 

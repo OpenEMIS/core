@@ -149,6 +149,7 @@ class InstitutionSurveysTable extends AppTable {
 
     public function getWorkflowEvents(Event $event, ArrayObject $eventsObject) {
     	$attr['text'] = __($attr['text']);
+    	$attr['description'] = __($attr['description']);
 		$eventsObject[] = $attr;
     }
 
