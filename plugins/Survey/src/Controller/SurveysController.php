@@ -54,9 +54,7 @@ class SurveysController extends AppController
         $this->set('selectedAction', $this->request->action);
 	}
 
-	public function Rules($pass = null) {
-		$pass = isset($this->request->pass[0]) ? $this->request->pass[0] : 'index';
-		
+	public function Rules($pass = 'index') {
 		if ($pass != 'edit') {
 			$this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Survey.SurveyRules']);
 		} else {
