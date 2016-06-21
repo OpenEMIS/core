@@ -203,4 +203,52 @@ class GuardiansTable extends AppTable {
 			die;
 		}
 	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+		
+		$editRelation = $buttons['edit'];
+		$editProfile = $buttons['edit'];
+
+		$editRelation['label'] = '<i class="fa fa-pencil"></i>' . __('Edit Relation');
+		$editProfile['label'] = '<i class="fa fa-pencil"></i>' . __('Edit Profile');
+
+		$newButtons = [];
+		if (array_key_exists('view', $buttons)) {
+			$newButtons['view'] = $buttons['view'];
+		}
+
+		if (array_key_exists('edit', $buttons)) {
+			$newButtons['editRelation'] = $editRelation;
+			$newButtons['editProfile'] = $editProfile;
+			if (array_key_exists('editProfile', $newButtons)) {
+				if ($this->controller->name == 'Directories') {
+					$newButtons['editProfile']['url'] = [
+						'plugin' => 'Directory',
+						'controller' => 'Directories',
+						'action' => 'StudentGuardianUser',
+						'edit',
+						$entity->_matchingData['Users']->id,
+						'id' => $entity->id
+					];
+				} else {
+					$newButtons['editProfile']['url'] = [
+						'plugin' => 'Student',
+						'controller' => 'Students',
+						'action' => 'GuardianUser',
+						'edit',
+						$entity->_matchingData['Users']->id,
+						'id' => $entity->id
+					];
+				}	
+			}
+
+		}
+
+		if (array_key_exists('remove', $buttons)) {
+			$newButtons['remove'] = $buttons['remove'];
+		}
+		
+		return $newButtons;
+	}
 }
