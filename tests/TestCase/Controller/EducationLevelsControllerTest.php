@@ -101,6 +101,8 @@ class EducationLevelsControllerTest extends AppTestCase
             $alias => [
                 'id' => $this->id,
                 'name' => 'Kindergarten (changed)',
+                'education_system_id' => 1,
+                'education_level_isced_id' => 1,
                 'visible' => 0
             ],
             'submit' => 'save'
