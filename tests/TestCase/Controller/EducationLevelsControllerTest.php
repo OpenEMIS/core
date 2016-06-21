@@ -73,7 +73,7 @@ class EducationLevelsControllerTest extends AppTestCase
         $this->post($testUrl, $data);
 
         $lastInsertedRecord = $this->table->find()
-            ->where([$table->aliasField('name') => $data[$alias]['name']])
+            ->where([$this->table->aliasField('name') => $data[$alias]['name']])
             ->first();
         $this->assertEquals(true, (!empty($lastInsertedRecord)));
     }
