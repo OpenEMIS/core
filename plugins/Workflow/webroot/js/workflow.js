@@ -35,7 +35,6 @@ var Workflow = {
 		$('.workflowtransition-step-name').val(jsonObj.next_step_name);
 		$('.workflowtransition-comment-required').val(jsonObj.comment_required);
 		$('.workflowtransition-event-description').html(jsonObj.event_description);
-		$('.workflowtransition-event-description').show();
 	},
 
 	showError: function() {
