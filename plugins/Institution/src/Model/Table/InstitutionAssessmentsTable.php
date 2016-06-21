@@ -127,9 +127,9 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 	                        	'InstitutionClassSubjects.institution_class_id = InstitutionClasses.id',
 	                       		'InstitutionClassSubjects.status =	 1'
 		                    ])
-		                    ->innerJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
+		                    ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
 		                        'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id'
-		                    ])
+		                    ]);
 
 	                    // If both class and subject permission is available
 	                    if ($subjectPermission && $subjectPermission) {
@@ -137,6 +137,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 	                    		'OR' => [
 	                    			['InstitutionClasses.staff_id' => $userId],
 	                    			['InstitutionSubjectStaff.staff_id' => $userId]
+	                    		]
 	                    	]);
 	                    } 
 	                    // If only subject permission is available
