@@ -1,6 +1,8 @@
 <?php
 echo $this->Html->script('ControllerAction.../plugins/jasny/js/jasny-bootstrap.min', ['block' => true]);
 
+use Cake\Event\Event;
+
 //ControllerActionComponent - Version 1.0.5
 $dataKeys = [];
 $table = $ControllerAction['table'];
@@ -22,8 +24,13 @@ $tableData = [];
 $eventKey = 'Model.custom.onUpdateActionButtons';
 $this->ControllerAction->onEvent($table, $eventKey, 'onUpdateActionButtons');
 
+//trigger event to get which field need to be highlighted
+$searchableFields = new ArrayObject();
+$event = new Event('ControllerAction.Model.getSearchableFields', $this->ControllerAction, [$searchableFields]);
+$event = $table->eventManager()->dispatch($event);
+
 foreach ($data as $entity) {
-	$row = $this->ControllerAction->getTableRow($entity, $dataKeys);
+	$row = $this->ControllerAction->getTableRow($entity, $dataKeys, $searchableFields->getArrayCopy());
 
 	if ($displayAction) {
 		$buttons = $indexButtons->getArrayCopy();
