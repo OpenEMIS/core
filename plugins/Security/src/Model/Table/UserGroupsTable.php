@@ -495,7 +495,7 @@ class UserGroupsTable extends AppTable {
 							$name .= $Form->hidden("$alias.$key.$i._joinData.openemis_no", ['value' => $joinData['openemis_no']]);
 							$name .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $joinData['name']]);
 							$name .= $Form->hidden("$alias.$key.$i._joinData.security_user_id", ['value' => $joinData['security_user_id']]);
-							$name .= $Form->hidden("$alias.$key.$i._joinData.security_role_id", ['value' => $joinData['security_role_id']]);
+							$name .= $Form->hidden("$alias.$key.$i._joinData.security_role_id", ['value' => $this->Roles->getGroupAdministratorEntity()->id]); //get the Group Administrator role ID
 							$rowData[] = $joinData['openemis_no'];
 							$rowData[] = $name;
 							$rowData[] = __('Group Administrator');

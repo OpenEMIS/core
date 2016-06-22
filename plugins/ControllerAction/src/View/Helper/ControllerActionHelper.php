@@ -215,7 +215,7 @@ class ControllerActionHelper extends Helper {
 		return $tableHeaders;
 	}
 
-	public function getTableRow(Entity $entity, array $fields) {
+	public function getTableRow(Entity $entity, array $fields, $searchableFields = []) {
 		$row = [];
 
 		$search = '';
@@ -229,10 +229,6 @@ class ControllerActionHelper extends Helper {
 			$model = $attr['model'];
 			$value = $entity->$field;
 			$type = $attr['type'];
-
-			if (!empty($search)) {
-				$value = $this->highlight($search, $value);
-			}
 
 			if (is_null($table)) {
 				$table = TableRegistry::get($attr['className']);
@@ -275,6 +271,12 @@ class ControllerActionHelper extends Helper {
 
 			if (!$associatedFound) {
 				$value = $this->HtmlField->render($type, 'index', $entity, $attr);
+			}
+
+			if (!empty($search)) {
+				if (in_array($field, $searchableFields)) {
+					$value = $this->highlight($search, $value);
+				}
 			}
 
 			if (isset($attr['tableColumnClass'])) {
