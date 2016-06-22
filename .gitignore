@@ -1,6 +1,7 @@
 # User specific & automatically generated files #
 #################################################
 datasource.php
+test_datasource.php
 tmp
 tmp/*
 tmp/Bake*
