@@ -699,7 +699,7 @@ class WorkflowBehavior extends Behavior {
 		$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-comment-error error-message">' . __('This field cannot be left empty') . '</div></div>';
 
 		$buttons = [
-			'<button type="submit" class="btn btn-default" onclick="return Workflow.onSubmit();">' . __('Save') . '</button>'
+			'<button id="workflow-submit" type="submit" class="btn btn-default" onclick="return Workflow.onSubmit();">' . __('Save') . '</button>'
 		];
 
 		$modal = [
@@ -711,7 +711,8 @@ class WorkflowBehavior extends Behavior {
 				'model' => $this->_table,
 				'formOptions' => [
 					'class' => 'form-horizontal',
-					'url' => $this->isCAv4() ? $this->_table->url('processWorkflow') : $this->_table->ControllerAction->url('processWorkflow')
+					'url' => $this->isCAv4() ? $this->_table->url('processWorkflow') : $this->_table->ControllerAction->url('processWorkflow'),
+					'onSubmit' => 'document.getElementById("workflow-submit").disabled=true;'
 				],
 				'fields' => $fields
 			],
