@@ -287,6 +287,8 @@ class CustomFormsTable extends AppTable {
 				$cellData .= $form->hidden($joinDataPrefix.".".$fieldKey, ['value' => $customFieldId]);
 				$cellData .= $form->hidden($joinDataPrefix.".order", ['value' => ++$order, 'class' => 'order']);
 				$cellData .= $form->hidden($joinDataPrefix.".section", ['value' => $customSection, 'class' => 'section']);
+
+				$form->unlockField($joinDataPrefix.".section");
 				
 				if (isset($obj['id'])) {
 					$cellData .= $form->hidden($joinDataPrefix.".id", ['value' => $obj['id']]);
