@@ -34,7 +34,7 @@ class StudentClass extends Entity
 
 	protected function _getHomeroomTeacherName() {
     	$name = '';
-        $teacherId = $this->institution_class->security_user_id;
+        $teacherId = $this->institution_class->staff_id;
         if (!empty($teacherId)) {
             $Users = TableRegistry::get('Security.Users');
             try {

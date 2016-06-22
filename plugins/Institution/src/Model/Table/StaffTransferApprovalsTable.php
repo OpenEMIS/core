@@ -184,11 +184,13 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 			$InstitutionStaff = TableRegistry::get('Institution.Staff');
 			if ($transferType == self::FULL_TRANSFER) {
 				$staffEndDate = $requestData[$this->alias()]['staff_end_date'];
-				$staffRecord->end_date = new Time($requestData[$this->alias()]['staff_end_date']);
+				$staffRecord->end_date = new Date($requestData[$this->alias()]['staff_end_date']);
 				$InstitutionStaff->save($staffRecord);
 			} else if ($transferType == self::PARTIAL_TRANSFER){
 				$staffRecord->FTE = $requestData[$this->alias()]['new_FTE'];
 				$staffRecord->staff_type_id = $requestData[$this->alias()]['new_staff_type_id'];
+				$effectiveDate = $requestData[$this->alias()]['effective_date'];
+				$staffRecord->end_date = (new Date($effectiveDate))->modify('-1 day');
                 // $staffRecord is an existing entity
                 // this section of code uses InstitutionStaff afterSave logic, newFTE to save a newEntity
                 // POCOR-2907 - unsetting security_group_user_id so a new security_group_user_id can be created and used as a foreign key

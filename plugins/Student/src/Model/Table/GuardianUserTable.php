@@ -13,6 +13,7 @@ use App\Model\Table\AppTable;
 use Directory\Model\Table\DirectoriesTable as UserTable;
 
 class GuardianUserTable extends UserTable {
+	   	
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
 		$sessionKey = 'Student.Guardians.new';
 		if ($this->Session->check($sessionKey)) {
@@ -24,8 +25,22 @@ class GuardianUserTable extends UserTable {
 			$this->Session->delete($sessionKey);
 		}
 		$event->stopPropagation();
+<<<<<<< HEAD
 		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StudentGuardians', 'index'];
 		return $this->controller->redirect($action);
+=======
+
+		$controller = $this->controller->name;
+		$action = 'Guardians';
+
+		if ($controller == 'Directories') { //this is for Directories/StudentGuardians/ (adding guardian for student through directories)
+			$action = 'StudentGuardians';
+		}
+
+		$redirect = ['plugin' => $this->controller->plugin, 'controller' => $controller, 'action' => $action, 'index'];
+			
+		return $this->controller->redirect($redirect);
+>>>>>>> origin/master
 	}
 
 	public function beforeAction(Event $event) 
@@ -34,19 +49,35 @@ class GuardianUserTable extends UserTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		parent::viewAfterAction($event, $entity);
 		$this->setupTabElements($entity);
+	}
+
+	public function beforeAction(Event $event) 
+	{
+		parent::beforeAction($event);
+		parent::hideOtherInformationSection($this->controller->name, $this->action);
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
+		parent::editAfterAction($event, $entity);
 		$this->setupTabElements($entity);
 	}
 
+<<<<<<< HEAD
 	public function addAfterAction(Event $event) 
 	{
 		$options['type'] = 'student';
 		$tabElements = $this->controller->getStudentGuardianTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
 		$this->ControllerAction->field('user_type', ['type' => 'hidden', 'value' => UserTable::GUARDIAN]);
+=======
+	public function addAfterAction(Event $event) {
+		parent::addAfterAction($event);
+		$options['type'] = 'student';
+		$tabElements = $this->controller->getStudentGuardianTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+>>>>>>> origin/master
 	}
 
 	private function setupTabElements($entity) {

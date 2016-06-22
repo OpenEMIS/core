@@ -30,12 +30,13 @@ class StaffTable extends AppTable  {
 		]);
 	}
 
-	public function beforeAction(Event $event) {
+	public function beforeAction(Event $event) 
+	{
 		$this->fields = [];
-		$this->ControllerAction->field('feature');
+		$this->ControllerAction->field('feature', ['select' => false]);
 		$this->ControllerAction->field('format');
 	}
-
+	
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
 		$attr['options'] = $this->controller->getFeatureOptions($this->alias());
 		return $attr;
