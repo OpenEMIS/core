@@ -171,13 +171,13 @@ class InstitutionSurveysTable extends AppTable {
 		if ($isAdmin) {
 			return []; // remove this line once workbench pagination is implemented
 		} else {
+			$accessibleStatusIds = [];
 			$where = [];
 			// returns empty list if there is no status mapping for workflows OR if the user does not have access to any schools
 			// Should never return all rows without any conditions because it may cause out of memory error
 			if (empty($statusIds) || empty($institutionRoles)) {
 				return [];
 			} else {
-				$where[$this->aliasField('status_id') . ' IN '] = $statusIds;
 				$where[$this->aliasField('institution_id') . ' IN '] = array_keys($institutionRoles);
 			}
 
@@ -195,6 +195,7 @@ class InstitutionSurveysTable extends AppTable {
 					// logic to pre-insert survey in school only when user's roles is configured to access the step
 					$hasAccess = count(array_intersect_key($roles, $stepRoles[$statusId])) > 0;
 					if ($hasAccess) {
+						$accessibleStatusIds[$statusId] = $statusId;
 						if (!in_array($institutionId, $shellParams)) {
 							$shellParams[] = $institutionId;
 						}
@@ -204,6 +205,12 @@ class InstitutionSurveysTable extends AppTable {
 			}
 			// End
 
+			if (empty($accessibleStatusIds)) {
+				return [];
+			} else {
+				$where[$this->aliasField('status_id') . ' IN '] = $accessibleStatusIds;
+			}
+
 			// create shell to process building of survey records
 			// only build survey once on every user session
 			$session = new Session;
@@ -212,7 +219,7 @@ class InstitutionSurveysTable extends AppTable {
 				$this->triggerBuildSurveyRecordsShell($shellParams);
 			}
 
-			$resultSet = $this
+			$resultSetQuery = $this
 				->find()
 				->select([
 					$this->aliasField('id'),
@@ -228,22 +235,34 @@ class InstitutionSurveysTable extends AppTable {
 				])
 				->contain(['Statuses', 'AcademicPeriods', 'SurveyForms', 'Institutions', 'CreatedUser'])
 				->where($where)
-				->order([$this->aliasField('created')])
-				->limit(30)
-				->toArray();
+				->order([$this->aliasField('created')]);
 			// End
+			$resultSet = $resultSetQuery->all();
 
+			$stepRoles = [];
+
+			$resultCount = 0;
 			foreach ($resultSet as $key => $obj) {
 				$institutionId = $obj->institution->id;
 				$stepId = $obj->status_id;
 				$roles = $institutionRoles[$institutionId];
 
 				// Permission
+				$hasAccess = false;
+
+				// Array to store security roles in each Workflow Step
+				if (!array_key_exists($stepId, $stepRoles)) {
+					$stepRoles[$stepId] = $WorkflowStepsRoles->getRolesByStep($stepId);
+				}
 				// access is true if user roles exists in step roles
 				$hasAccess = count(array_intersect_key($roles, $stepRoles[$stepId])) > 0;
 				// End
 
 				if ($hasAccess) {
+					if ($resultCount++ == 30) {
+						break;
+					}
+
 					$requestTitle = sprintf('%s - %s of %s in %s', $obj->status->name, $obj->survey_form->name, $obj->institution->name, $obj->academic_period->name);
 					$url = [
 						'plugin' => 'Institution',

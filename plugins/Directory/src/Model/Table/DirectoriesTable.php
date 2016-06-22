@@ -350,6 +350,17 @@ class DirectoriesTable extends AppTable {
 					]);
 					break;
 			}	
+		} else if ($this->action == 'edit') {
+			$this->hideOtherInformationSection($this->controller->name, 'edit');
+		}
+	}
+
+	public function hideOtherInformationSection($controller, $action)
+	{
+		if (($action=="add") || ($action=="edit")) { //hide "other information" section on add/edit guardian because there wont be any custom field.
+			if (($controller=="Students") || ($controller=="Directories")) {
+				$this->ControllerAction->field('other_information_section', ['visible' => false]);
+			}
 		}
 	}
 
@@ -521,11 +532,8 @@ class DirectoriesTable extends AppTable {
 		return $params;
 	}
 
-	public function editAfterAction(Event $event, Entity $entity) {
-		$this->setupTabElements($entity);
-	}
+	private function setSessionAfterAction($event, $entity){
 
-	public function viewAfterAction(Event $event, Entity $entity) {
 		$this->Session->write('Directory.Directories.id', $entity->id);
 		$this->Session->write('Directory.Directories.name', $entity->name);
 		if (!$this->AccessControl->isAdmin()) {
@@ -552,6 +560,30 @@ class DirectoriesTable extends AppTable {
 			$this->Session->write('Staff.Staff.name', $entity->name);
 			$isSet = true;
 		}
+
+		return $isSet;
+
+	}
+
+	public function editAfterAction(Event $event, Entity $entity) {
+		
+		$isSet = $this->setSessionAfterAction($event, $entity);
+
+		if ($isSet) {
+			$reload = $this->Session->read('Directory.Directories.reload');
+			if (!isset($reload)) {
+				$urlParams = $this->ControllerAction->url('edit');
+				$event->stopPropagation();
+				return $this->controller->redirect($urlParams);
+			}
+		}
+
+		$this->setupTabElements($entity);
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity) {
+
+		$isSet = $this->setSessionAfterAction($event, $entity);
 
 		if ($isSet) {
 			$reload = $this->Session->read('Directory.Directories.reload');

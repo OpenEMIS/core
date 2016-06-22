@@ -45,7 +45,7 @@ class AcademicPeriodsTable extends AppTable {
 			$this->updateAll(['current' => 0], []);
 		}
 	}
-	public function beforeAction (Event $event) {
+	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('academic_period_level_id');
 		$this->fields['start_year']['visible'] = false;
 		$this->fields['end_year']['visible'] = false;
@@ -57,6 +57,11 @@ class AcademicPeriodsTable extends AppTable {
 	public function afterAction(Event $event) {
 		$this->ControllerAction->field('current');
 		$this->ControllerAction->field('editable');
+        foreach ($this->_fieldOrder as $key => $value) {
+            if (!in_array($value, array_keys($this->fields))) {
+                unset($this->_fieldOrder[$key]);
+            }
+        }
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 
@@ -133,7 +138,7 @@ class AcademicPeriodsTable extends AppTable {
 				'attr' => ['value' => $parentPath]
 			]);
 
-			array_unshift($this->_fieldOrder, "parent");
+			array_unshift($this->_fieldOrder, 'parent');
 		}
 	}
 	
@@ -229,10 +234,8 @@ class AcademicPeriodsTable extends AppTable {
 
 		$data = $this
 			->find('list')
-			->find('visible')
-			->find('order')
+			->find('years')
 			->find('editable', ['isEditable' => $isEditable])
-			->where([$this->aliasField('academic_period_level_id') => $level->id])
 			->where($conditions)
 			->toArray();
 
@@ -528,5 +531,17 @@ class AcademicPeriodsTable extends AppTable {
 		}
 
 		return $days;
+	}
+
+	public function findYears(Query $query, array $options) {
+		$level = $this->Levels
+			->find()
+			->order([$this->Levels->aliasField('level ASC')])
+			->first();
+
+		return $query
+			->find('visible')
+			->find('order')
+			->where([$this->aliasField('academic_period_level_id') => $level->id]);
 	}
 }
