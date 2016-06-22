@@ -1,6 +1,7 @@
 <?php
-use Cake\ORM\TableRegistry;
+namespace App\Test\TestCases;
 
+use Cake\ORM\TableRegistry;
 use App\Test\AppTestCase;
 
 class AcademicPeriodsControllerTest extends AppTestCase
@@ -88,9 +89,7 @@ class AcademicPeriodsControllerTest extends AppTestCase
         $this->get($testUrl);
 
         $this->assertResponseCode(200);
-        $this->assertEquals(true, 
-            ($this->viewVariable('data')->has('id') && $this->viewVariable('data')->id == $this->testingId)
-        );
+        $this->assertEquals(true, ($this->viewVariable('data')->id == $this->testingId));
     }
 
     public function testUpdate() {
@@ -121,7 +120,6 @@ class AcademicPeriodsControllerTest extends AppTestCase
 
         $this->post($testUrl, $data);
 
-        $table = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $entity = $table->get($this->testingId);
         $this->assertEquals($data['AcademicPeriods']['name'], $entity->name);
     }
@@ -144,5 +142,4 @@ class AcademicPeriodsControllerTest extends AppTestCase
         $exists = $table->exists([$table->primaryKey() => $this->testingId]);
         $this->assertFalse($exists);
     }
-
 }
