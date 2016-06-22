@@ -1,3 +1,9 @@
+v3.5.9
+- Fixed a bug that caused 404 error page when deleting a Specialisation in Field Options
+- Fixed a bug that caused 404 error page when removing a user from a security group
+- You can now select from a list of year options as graduate year when adding a staff qualification
+- Fixed a bug that caused user not able to select the last day of the academic period when editing student academic information	
+
 v3.5.8
 - Institutions Programmes cannot be deleted if there are students associated with it
 - Users can now import staff into schools via Excel
