@@ -1187,5 +1187,8 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 		}
 	}
 
-	
+	//called by ControllerActionHelper incase extra search highlighted
+	// public function getSearchableFields(Event $event, $fields, ArrayObject $searchableFields) {
+	// 	$searchableFields[] = "education_subject_id";
+	// }
 }

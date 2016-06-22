@@ -25,8 +25,17 @@ class GuardianUserTable extends UserTable {
 			$this->Session->delete($sessionKey);
 		}
 		$event->stopPropagation();
-		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Guardians', 'index'];
-		return $this->controller->redirect($action);
+
+		$controller = $this->controller->name;
+		$action = 'Guardians';
+
+		if ($controller == 'Directories') { //this is for Directories/StudentGuardians/ (adding guardian for student through directories)
+			$action = 'StudentGuardians';
+		}
+
+		$redirect = ['plugin' => $this->controller->plugin, 'controller' => $controller, 'action' => $action, 'index'];
+			
+		return $this->controller->redirect($redirect);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
