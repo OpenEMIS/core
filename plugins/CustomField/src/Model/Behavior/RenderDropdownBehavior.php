@@ -65,7 +65,9 @@ class RenderDropdownBehavior extends RenderBehavior {
                     $questions = $this->_table->request->data[$this->_table->alias()]['custom_field_values'];
                     foreach ($questions as $question) {
                         if (isset($question['number_value'])) {
-                            $this->postedData[$question[$fieldKey]] = $question['number_value'];
+                            if (array_key_exists($fieldKey, $question)) {
+                                $this->postedData[$question[$fieldKey]] = $question['number_value'];
+                            }
                         }
                     }
                 }
