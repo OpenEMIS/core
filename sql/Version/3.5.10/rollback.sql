@@ -1,3 +1,11 @@
+-- POCOR-2634
+-- custom_field_types
+UPDATE `custom_field_types` SET `is_mandatory` = 0 WHERE `code` = 'DROPDOWN';
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue`='POCOR-2634';
+
+
 -- POCOR-3093
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue`='POCOR-3093';
