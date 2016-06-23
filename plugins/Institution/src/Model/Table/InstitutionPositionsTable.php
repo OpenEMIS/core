@@ -30,15 +30,39 @@ class InstitutionPositionsTable extends AppTable {
 		$this->hasMany('InstitutionStaff', 		['className' => 'Institution.Staff']);
 		$this->hasMany('StaffPositions', 		['className' => 'Staff.Positions']);
 		$this->hasMany('StaffAttendances', 		['className' => 'Institution.StaffAttendances']);
+        $this->hasMany('StaffTransferRequests',      ['className' => 'Institution.StaffTransferRequests']);
+
 
 		$this->addBehavior('OpenEmis.OpenEmis');
 		$this->addBehavior('ControllerAction.ControllerAction', [
-			'actions' => ['remove' => 'transfer'],
+			'actions' => ['remove' => 'restrict'],
 			'fields' => ['excludes' => ['modified_user_id', 'created_user_id']]
 		]);
 		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
 	}
 
+	public function transferAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		$transferredTo = $entity->convert_to;
+		$securityRole = $this->find()
+			->matching('StaffPositionTitles.SecurityRoles')
+			->where([$this->aliasField('id') => $transferredTo])
+			->select(['security_role_id' => 'SecurityRoles.id'])
+			->hydrate(false)
+			->first();
+		$securityRole = $securityRole['security_role_id'];
+
+		$securityGroupUserIds = $this->InstitutionStaff->find()
+			->select([$this->InstitutionStaff->aliasField('security_group_user_id')])
+			->where([$this->InstitutionStaff->aliasField('institution_position_id') => $transferredTo]);
+
+		$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+
+		$SecurityGroupUsersTable->updateAll(
+			['security_role_id' => $securityRole],
+			['id IN ' => $securityGroupUserIds]
+		);
+	}
+	
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
     	$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
@@ -459,84 +483,113 @@ class InstitutionPositionsTable extends AppTable {
 
 	// Workbench.Model.onGetList
 	public function onGetWorkbenchList(Event $event, $isAdmin, $institutionRoles, ArrayObject $data) {
-		$activestatusIds = $event->subject()->Workflow->getStepsByModelCode($this->registryAlias(), 'ACTIVE');
-		$inactivestatusIds = $event->subject()->Workflow->getStepsByModelCode($this->registryAlias(), 'INACTIVE');
-		$statusIds = array_merge($activestatusIds, $inactivestatusIds);
+		$excludedStatuses = ['ACTIVE', 'INACTIVE'];
+		$statusIds = $event->subject()->Workflow->getStepsByModel($this->registryAlias(), $excludedStatuses);
 
-		if ($isAdmin) {
-			return []; // remove this line once workbench pagination is implemented
+		$where = [];
+		if (empty($statusIds)) {
+			// returns empty list if there is no status mapping for workflows
+			// otherwise it will return all rows without any conditions which may cause out of memory
+			return [];
 		} else {
-			$where = [];
-			if (empty($institutionRoles)) {
-				return [];
+			if ($isAdmin) {
+				$where[$this->aliasField('status_id') . ' IN '] = $statusIds;
 			} else {
-				$where[$this->aliasField('institution_id') . ' IN '] = array_keys($institutionRoles);
-			}
-			if (!empty($statusIds)) {
-				$where[$this->aliasField('status_id') . ' NOT IN '] = $statusIds;
-			}
+				if (empty($institutionRoles)) {
+					// return empty list if login user do not have roles in any schools
+					return [];
+				} else {
+					$where[$this->aliasField('institution_id') . ' IN '] = array_keys($institutionRoles);
 
-			$resultSet = $this
-				->find()
-				->select([
-					$this->aliasField('id'),
-					$this->aliasField('status_id'),
-					$this->aliasField('modified'),
-					$this->aliasField('created'),
-					'Statuses.name',
-					'StaffPositionTitles.name',
-					'StaffPositionGrades.name',
-					'Institutions.id',
-					'Institutions.name',
-					'CreatedUser.username'
-				])
-				->contain(['Statuses', 'StaffPositionTitles', 'StaffPositionGrades', 'Institutions', 'CreatedUser'])
-				->where($where)
-				->order([$this->aliasField('created')])
-				->limit(30)
-				->toArray();
+					$accessibleStatusIds = $event->subject()->Workflow->getAccessibleStatuses($institutionRoles, $statusIds);
+					if (empty($accessibleStatusIds)) {
+						// return empty list if login user do not have access to any steps
+						return [];
+					} else {
+						$where[$this->aliasField('status_id') . ' IN '] = $accessibleStatusIds;
+					}
+				}
+			}
+		}
 
-			$WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
-			// Array to store security roles in each Workflow Step
-			$stepRoles = [];
-			foreach ($resultSet as $key => $obj) {
-				$institutionId = $obj->institution->id;
+		$resultSetQuery = $this
+			->find()
+			->select([
+				$this->aliasField('id'),
+				$this->aliasField('status_id'),
+				$this->aliasField('modified'),
+				$this->aliasField('created'),
+				'Statuses.name',
+				'StaffPositionTitles.name',
+				'StaffPositionGrades.name',
+				'Institutions.id',
+				'Institutions.name',
+				'CreatedUser.username'
+			])
+			->contain(['Statuses', 'StaffPositionTitles', 'StaffPositionGrades', 'Institutions', 'CreatedUser'])
+			->where($where)
+			->order([$this->aliasField('created')]);
+
+		// if is admin, only return the first 30 records
+		if ($isAdmin) {
+			$resultSetQuery->limit(30);
+		}
+
+		$resultSet = $resultSetQuery->all();
+
+		$WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+		$stepRoles = [];
+
+		$resultCount = 0;
+		foreach ($resultSet as $key => $obj) {
+			$institutionId = $obj->institution->id;
+
+			if ($isAdmin) {
+				$hasAccess = true;
+			} else {
 				$stepId = $obj->status_id;
 				$roles = $institutionRoles[$institutionId];
 
 				// Permission
+				$hasAccess = false;
+
+				// Array to store security roles in each Workflow Step
 				if (!array_key_exists($stepId, $stepRoles)) {
 					$stepRoles[$stepId] = $WorkflowStepsRoles->getRolesByStep($stepId);
 				}
 				// access is true if user roles exists in step roles
 				$hasAccess = count(array_intersect_key($roles, $stepRoles[$stepId])) > 0;
 				// End
+			}
 
-				if ($hasAccess) {
-					$requestTitle = sprintf('%s - %s with %s of %s', $obj->status->name, $obj->staff_position_title->name, $obj->staff_position_grade->name, $obj->institution->name);
-					$url = [
-						'plugin' => 'Institution',
-						'controller' => 'Institutions',
-						'action' => 'Positions',
-						'view',
-						$obj->id,
-						'institution_id' => $institutionId
-					];
-
-					if (is_null($obj->modified)) {
-						$receivedDate = $this->formatDate($obj->created);
-					} else {
-						$receivedDate = $this->formatDate($obj->modified);
-					}
-
-					$data[] = [
-						'request_title' => ['title' => $requestTitle, 'url' => $url],
-						'receive_date' => $receivedDate,
-						'due_date' => '<i class="fa fa-minus"></i>',
-						'requester' => $obj->created_user->username,
-						'type' => __('Institution > Positions')
-					];
+			if ($hasAccess) {
+				if ($resultCount++ == 30) {
+					break;
 				}
+
+				$requestTitle = sprintf('%s - %s with %s of %s', $obj->status->name, $obj->staff_position_title->name, $obj->staff_position_grade->name, $obj->institution->name);
+				$url = [
+					'plugin' => 'Institution',
+					'controller' => 'Institutions',
+					'action' => 'Positions',
+					'view',
+					$obj->id,
+					'institution_id' => $institutionId
+				];
+
+				if (is_null($obj->modified)) {
+					$receivedDate = $this->formatDate($obj->created);
+				} else {
+					$receivedDate = $this->formatDate($obj->modified);
+				}
+
+				$data[] = [
+					'request_title' => ['title' => $requestTitle, 'url' => $url],
+					'receive_date' => $receivedDate,
+					'due_date' => '<i class="fa fa-minus"></i>',
+					'requester' => $obj->created_user->username,
+					'type' => __('Institution > Positions')
+				];
 			}
 		}
 	}
