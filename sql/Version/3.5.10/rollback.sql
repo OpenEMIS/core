@@ -1,3 +1,8 @@
+-- POCOR-3093
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue`='POCOR-3093';
+
+
 -- POCOR-3115
 -- code here
 -- Staff
