@@ -121,6 +121,7 @@ class StudentTransferTable extends AppTable {
 			$nextEducationGradeId = null;
 			$nextInstitutionId = null;
 			$studentTransferReasonId = null;
+			$currentEducationGradeId = null;
 
 			if (array_key_exists('next_academic_period_id', $data[$this->alias()])) {
 				$nextAcademicPeriodId = $data[$this->alias()]['next_academic_period_id'];
@@ -134,6 +135,9 @@ class StudentTransferTable extends AppTable {
 			if (array_key_exists('student_transfer_reason_id', $data[$this->alias()])) {
 				$studentTransferReasonId = $data[$this->alias()]['student_transfer_reason_id'];
 			}
+			if (array_key_exists('education_grade_id', $data[$this->alias()])) {
+				$currentEducationGradeId = $data[$this->alias()]['education_grade_id'];
+			}
 
 			if (!empty($nextAcademicPeriodId) && !empty($nextEducationGradeId) && !empty($nextInstitutionId) && !empty($studentTransferReasonId)) {
 				if (array_key_exists('students', $data[$this->alias()])) {
@@ -145,7 +149,8 @@ class StudentTransferTable extends AppTable {
 						if ($studentObj['selected']) {
 							unset($studentObj['selected']);
 							$studentObj['academic_period_id'] = $nextAcademicPeriodId;
-							$studentObj['education_grade_id'] = $nextEducationGradeId;
+							$studentObj['education_grade_id'] = $currentEducationGradeId;
+							$studentObj['new_education_grade_id'] = $nextEducationGradeId;
 							$studentObj['institution_id'] = $nextInstitutionId;
 							$studentObj['student_transfer_reason_id'] = $studentTransferReasonId;
 							$studentObj['previous_institution_id'] = $institutionId;

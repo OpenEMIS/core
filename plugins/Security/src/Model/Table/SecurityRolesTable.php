@@ -132,33 +132,39 @@ class SecurityRolesTable extends AppTable {
 
 			$InstitutionsTable = TableRegistry::get('Institution.Institutions');
 			$institutionSecurityGroup = $InstitutionsTable->find('list');
+
+			$whereClause = [];
 			
 			$SecurityGroupsTable = $this->SecurityGroups;
 
 			if ($this->Auth->user('super_admin') != 1) { //if not admin, then list out SecurityGroups which member created
-
-				$groupOptions = $SecurityGroupsTable->find('list')
-					->where([
-						$SecurityGroupsTable->aliasField('created_user_id')=>$this->Auth->user('id'),
-						'NOT EXISTS ('.$institutionSecurityGroup->sql().' WHERE '.$InstitutionsTable->aliasField('security_group_id').' = '.$SecurityGroupsTable->aliasField('id').')'
-					])
-					->toArray();
-
+				$whereClause[] = $SecurityGroupsTable->aliasField('created_user_id') . ' = ' . $this->Auth->user('id');
+				$whereClause[] = 'NOT EXISTS ('.$institutionSecurityGroup->sql().' WHERE '.$InstitutionsTable->aliasField('security_group_id').' = '.$SecurityGroupsTable->aliasField('id').')';
 			} else { //if admin then show all SecurityGroups excluding default institution System Group
-
-				$groupOptions = $SecurityGroupsTable->find('list')
-					->where([
-						'NOT EXISTS ('.$institutionSecurityGroup->sql().' WHERE '.$InstitutionsTable->aliasField('security_group_id').' = '.$SecurityGroupsTable->aliasField('id').')'
-					])
-					->toArray();
+				$whereClause[] = 'NOT EXISTS ('.$institutionSecurityGroup->sql().' WHERE '.$InstitutionsTable->aliasField('security_group_id').' = '.$SecurityGroupsTable->aliasField('id').')';
 			}
-			
+
+			if ($action=='edit') { //if edit action select only the saved value
+				$whereClause[] = $SecurityGroupsTable->aliasField('id').' = '.$request->query('security_group_id');
+			}
+
+			$groupOptions = $SecurityGroupsTable->find('list')
+				->where($whereClause)
+				->toArray();
+
+			//this is for showing the security group dropdown on index page
 			$selectedGroup = $this->queryString('security_group_id', $groupOptions);
 			$this->advancedSelectOptions($groupOptions, $selectedGroup);
 			$request->query['security_group_id'] = $selectedGroup;
-
 			$this->controller->set('groupOptions', $groupOptions);
-			$attr['options'] = $groupOptions;
+
+			if ($action=='edit') {
+				$attr['type'] = 'readonly';
+				$attr['attr']['value'] = $groupOptions[$request->query('security_group_id')]['text'];
+			} else {
+				$attr['options'] = $groupOptions;
+			}
+
 		} else {
 			$attr['type'] = 'hidden';
 			$attr['value'] = 0;

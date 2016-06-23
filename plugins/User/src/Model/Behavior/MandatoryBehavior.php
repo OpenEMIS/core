@@ -74,31 +74,33 @@ class MandatoryBehavior extends Behavior {
 		return $result->option;
 	}
 
-	public function addOnInitialize(Event $event, Entity $entity) { 
-		$Nationalities = TableRegistry::get('FieldOption.Nationalities');
-		$defaultNationality = $Nationalities->find()
-			->where([$Nationalities->aliasField('default') => 1])
-			->first();
-            
-		$defaultIdentityType = '';
-		if (!empty($defaultNationality)) {
-			// if default nationality can be found
-			$this->_table->fields['nationality']['default'] = $defaultNationality->id;
-			$defaultIdentityType = $defaultNationality->identity_type_id;
-		}
-
-		if (empty($defaultIdentityType)) {
-			$IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
-			$defaultIdentityTypeEntity = $IdentityTypes->find()
-				->where([$IdentityTypes->aliasField('default') => 1])
+	public function addOnInitialize(Event $event, Entity $entity) {
+		if (array_key_exists('Identities', $this->_info) && $this->_info['Identities'] != 'Excluded') {
+			$Nationalities = TableRegistry::get('FieldOption.Nationalities');
+			$defaultNationality = $Nationalities->find()
+				->where([$Nationalities->aliasField('default') => 1])
 				->first();
-			if (!empty($defaultIdentityTypeEntity)) {
-				$defaultIdentityType = $defaultIdentityTypeEntity->id;
+	            
+			$defaultIdentityType = '';
+			if (!empty($defaultNationality)) {
+				// if default nationality can be found
+				$this->_table->fields['nationality']['default'] = $defaultNationality->id;
+				$defaultIdentityType = $defaultNationality->identity_type_id;
 			}
-		}
 
-		if (!empty($defaultIdentityType)) {
-			$this->_table->fields['identity_type']['default'] = $defaultIdentityType;
+			if (empty($defaultIdentityType)) {
+				$IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+				$defaultIdentityTypeEntity = $IdentityTypes->find()
+					->where([$IdentityTypes->aliasField('default') => 1])
+					->first();
+				if (!empty($defaultIdentityTypeEntity)) {
+					$defaultIdentityType = $defaultIdentityTypeEntity->id;
+				}
+			}
+
+			if (!empty($defaultIdentityType)) {
+				$this->_table->fields['identity_type']['default'] = $defaultIdentityType;
+			}
 		}
 		
 		return $entity;

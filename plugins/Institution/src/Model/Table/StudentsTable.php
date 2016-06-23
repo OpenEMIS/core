@@ -125,7 +125,7 @@ class StudentsTable extends AppTable {
 				'last' => true
 			])
 			->add('student_name', 'ruleStudentNotCompletedGrade', [
-				'rule' => ['studentNotCompletedGrade'],
+				'rule' => ['studentNotCompletedGrade', []],
 				'on' => 'create',
 				'last' => true
 			])
@@ -284,16 +284,6 @@ class StudentsTable extends AppTable {
 	}
 
     public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-        // POCOR-2884 - If id cannot be found, return a successful deletion message
-        $primaryKey = $this->primaryKey();
-        $idKey = $this->aliasField($primaryKey);
-        if (!$this->exists([$idKey => $id])) {
-            $process = function() use ($id, $options) {
-                return true;
-            };
-            return $process;
-        }
-
         // PHPOE-2123 moved.. 'Another check to check before deletion. In case of concurrency issue.'
         $status = $this->get($id)->student_status_id;
         $studentStatuses = $this->StudentStatuses->findCodeList();
@@ -304,131 +294,18 @@ class StudentsTable extends AppTable {
             return $process;
         }
 
-        $process = function($model, $id, $options) {
-            $studentData = $model->find()->where([$model->aliasField('id') => $id])->first();
-            $studentId = $studentData->student_id;
-            $startDate = $studentData->start_date;
-            $endDate = $studentData->end_date;
-
-            if ($startDate instanceof Time) {
-                $startDate = $startDate->format('Y-m-d');
+        $process = function ($model, $id, $deleteOptions) {
+            $primaryKey = $model->primaryKey();
+            $idKey = $model->aliasField($primaryKey);
+            if ($model->exists([$idKey => $id])) {
+                $entity = $model->get($id);
+                return $model->delete($entity, $deleteOptions->getArrayCopy());
             } else {
-                $startDate = date('Y-m-d', strtotime($startDate));
+                // If id(to be deleted) cannot be found, return a successful deletion message
+                return true;
             }
-            if ($endDate instanceof Time) {
-                $endDate = $endDate->format('Y-m-d');
-            } else {
-                $endDate = date('Y-m-d', strtotime($endDate));
-            }
-            $academicPeriodId = $studentData->academic_period_id;
-            $educationGradeId = $studentData->education_grade_id;
-
-            /* delete the student from all classes that have the same grade (grade info can be found in institution_student) */
-            $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-            $classStudentData = $InstitutionClassStudents->find();
-            if (!empty($educationGradeId)) {
-                $classStudentData->contain([
-                    'EducationGrades' => function ($q) use ($educationGradeId) {
-                            return $q
-                                ->where(['EducationGrades.id' => $educationGradeId]);
-                        }
-                    ]
-                );
-            }
-            $classStudentData->where([$InstitutionClassStudents->aliasField('student_id') => $studentId]);
-
-            // DELETION TO BE DONE HERE FOR $classStudentData
-            foreach ($classStudentData as $key => $value) {
-                // this delete also deletes subjects in $InstitutionClassStudents->afterDelete()
-                $InstitutionClassStudents->delete($value);
-            }
-            
-        /* delete all attendance records (institution_site_student_absences) with dates that fall between the start and end date found in institution_students */
-            $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
-            $overlapDateCondition = [];
-            $overlapDateCondition['OR'] = [
-                'OR' => [
-                    [
-                        $InstitutionStudentAbsences->aliasField('end_date') . ' IS NOT NULL',
-                        $InstitutionStudentAbsences->aliasField('start_date') . ' <=' => $startDate,
-                        $InstitutionStudentAbsences->aliasField('end_date') . ' >=' => $startDate
-                    ],
-                    [
-                        $InstitutionStudentAbsences->aliasField('end_date') . ' IS NOT NULL',
-                        $InstitutionStudentAbsences->aliasField('start_date') . ' <=' => $endDate,
-                        $InstitutionStudentAbsences->aliasField('end_date') . ' >=' => $endDate
-                    ],
-                    [
-                        $InstitutionStudentAbsences->aliasField('end_date') . ' IS NOT NULL',
-                        $InstitutionStudentAbsences->aliasField('start_date') . ' >=' => $startDate,
-                        $InstitutionStudentAbsences->aliasField('end_date') . ' <=' => $endDate
-                    ]
-                ],
-                [
-                    $InstitutionStudentAbsences->aliasField('end_date') . ' IS NULL',
-                    $InstitutionStudentAbsences->aliasField('start_date') . ' <=' => $endDate
-                ]
-            ];
-            
-            $studentAbsenceData = $InstitutionStudentAbsences->find()
-                ->where($overlapDateCondition)
-                ->where([$InstitutionStudentAbsences->aliasField('student_id') => $studentId])
-                ;
-
-            // DELETION TO BE DONE HERE FOR $studentAbsenceData
-            foreach ($studentAbsenceData as $key => $value) {
-                $InstitutionStudentAbsences->delete($value);
-            }
-
-        /* delete all behaviour records (student_behaviours) with dates that fall between the start and end date found in institution_students */
-            $StudentBehaviours = TableRegistry::get('Institution.StudentBehaviours');
-            
-            $studentBehaviourData = $StudentBehaviours->find()
-                ->where([
-                    $StudentBehaviours->aliasField('date_of_behaviour').' >= ' => $startDate,
-                    $StudentBehaviours->aliasField('date_of_behaviour').' <= ' => $endDate
-                ])
-                ->where([$StudentBehaviours->aliasField('student_id') => $studentId])
-                ;
-
-            // DELETION TO BE DONE HERE FOR $studentBehaviourData
-            foreach ($studentBehaviourData as $key => $value) {
-                $StudentBehaviours->delete($value);
-            }
-
-        /* delete all assessment records (assessment_item_results) that belongs to the same student and academic period (academic_period_id can be found in institution_students) */
-            $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
-            $studentAssessmentData = $AssessmentItemResults->find()
-                ->where([
-                    $AssessmentItemResults->aliasField('student_id') => $studentId,
-                    $AssessmentItemResults->aliasField('academic_period_id') => $academicPeriodId
-                ])
-                ;
-
-            // DELETION TO BE DONE HERE FOR $studentAssessmentData
-            foreach ($studentAssessmentData as $key => $value) {
-                $AssessmentItemResults->delete($value);
-            }
-
-        /* delete all fees paid by students to that specific grade (grade info can be found in institution_site_fees) */
-            $StudentFees = TableRegistry::get('Institution.StudentFeesAbstract');
-            $studentFeeData = $StudentFees->find()
-                ->contain(['InstitutionFees' => function ($q) use ($educationGradeId) {
-                            return $q
-                                ->where(['InstitutionFees.education_grade_id' => $educationGradeId]);
-                        }
-                    ]
-                )
-                ->where([$StudentFees->aliasField('student_id') => $studentId])
-                ;
-
-
-            // DELETION TO BE DONE HERE FOR $studentFeeData
-            foreach ($studentFeeData as $key => $value) {
-                $StudentFees->delete($value);
-            }
-            return $model->delete($studentData);
         };
+
         return $process;
     }
 
@@ -914,6 +791,7 @@ class StudentsTable extends AppTable {
 							'institution_id' => $studentData['institution_id'],
 							'academic_period_id' => $studentData['academic_period_id'],
 							'education_grade_id' => $studentData['education_grade_id'],
+							'institution_class_id' => $studentData['class'],
 							'previous_institution_id' => 0,
 							'student_transfer_reason_id' => 0,
 							'type' => $admissionStatus,
@@ -1008,18 +886,14 @@ class StudentsTable extends AppTable {
 			$this->ControllerAction->field('student_status_id', ['type' => 'readonly', 'attr' => ['value' => $entity->student_status->name]]);
 			
 			$period = $entity->academic_period;
-			$endDate = $period->end_date->copy();
+
+            $dateOptions = [
+                'startDate' => $period->start_date->format('d-m-Y'),
+                'endDate' => $period->end_date->format('d-m-Y')
+            ];
 			
-			$this->fields['start_date']['date_options'] = [
-				'startDate' => $period->start_date->format('d-m-Y'),
-				'endDate' => $endDate->subDay()->format('d-m-Y')
-			];
-
-
-			$this->fields['end_date']['date_options'] = [
-				'startDate' => $period->start_date->format('d-m-Y'),
-				'endDate' => $endDate->subDay()->format('d-m-Y')
-			];
+			$this->fields['start_date']['date_options'] = $dateOptions;
+			$this->fields['end_date']['date_options'] = $dateOptions;
 
 			$this->Session->write('Student.Students.id', $entity->student_id);
 			$this->Session->write('Student.Students.name', $entity->user->name);
@@ -1044,9 +918,8 @@ class StudentsTable extends AppTable {
 		if ($action == 'add') {
 			$period = $attr['period'];
 			if ($period instanceOf Entity) {
-				$endDate = $period->end_date->copy();
 				$attr['date_options']['startDate'] = $period->start_date->format('d-m-Y');
-				$attr['date_options']['endDate'] = $endDate->subDay()->format('d-m-Y');
+				$attr['date_options']['endDate'] = $period->end_date->format('d-m-Y');
 				$attr['value'] = $period->start_date->format('d-m-Y');
 			} else {
 				$attr['date_options']['startDate'] = '';
@@ -1280,18 +1153,12 @@ class StudentsTable extends AppTable {
 			$buttons['view']['url'] = $url;
 		}
 
+		// Remove in POCOR-3010
 		if (isset($buttons['edit'])) {
-			$url = $this->ControllerAction->url('edit');
-			$url['action'] = 'StudentUser';
-			$url[1] = $entity['_matchingData']['Users']['id'];
-			$url['id'] = $entity->id;
-			$buttons['edit']['url'] = $url;
+			unset($buttons['edit']);
 		}
 
 		if (! $this->checkEnrolledInInstitution($studentId, $institutionId)) {
-			if (isset($buttons['edit'])) {
-				unset($buttons['edit']);
-			}
 			if (isset($buttons['remove'])) {
 				unset($buttons['remove']);
 			}
