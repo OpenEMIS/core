@@ -240,12 +240,14 @@ class RenderStudentListBehavior extends RenderBehavior {
                                         }
                                         $dropdownDefault = !is_null($dropdownDefault) ? $dropdownDefault : key($dropdownOptions);
 
+                                        // for edit
                                         $cellOptions['type'] = 'select';
                                         $cellOptions['default'] = !is_null($answerValue) ? $answerValue : $dropdownDefault;
                                         $cellOptions['value'] = !is_null($answerValue) ? $answerValue : $dropdownDefault;
                                         $cellOptions['options'] = $dropdownOptions;
 
-                                        $cellValue = !is_null($answerValue) ? $dropdownOptions[$answerValue] : $dropdownOptions[$dropdownDefault];
+                                        // for view
+                                        $cellValue = !is_null($answerValue) ? $dropdownOptions[$answerValue] : '';
                                         break;
                                     default:
                                         break;
