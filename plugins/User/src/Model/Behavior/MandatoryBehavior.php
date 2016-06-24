@@ -184,6 +184,16 @@ class MandatoryBehavior extends Behavior {
 								
 								if (array_key_exists($tableName, $data[$this->_table->alias()])) {
 	                                foreach ($data[$this->_table->alias()][$tableName] as $tkey => $tvalue) {
+	                                	// logic to get contact_option_id from contact_type_id as contact_option_id is set as requirePresence, otherwise will have validation error
+	                                	if ($key == 'Contacts' && $ckey == 'contact_type_id') {
+	                                		$contactTypeId = $check;
+	                                		if (!empty($contactTypeId)) {
+	                                			$ContactTypes = TableRegistry::get('User.ContactTypes');
+	                                			$contactOptionId = $ContactTypes->get($contactTypeId)->contact_option_id;
+	                                			$data[$this->_table->alias()][$tableName][$tkey]['contact_option_id'] = $contactOptionId;
+	                                		}
+	                                	}
+	                                	// End
 	                                	$data[$this->_table->alias()][$tableName][$tkey]['security_user_id'] = '0';
 	                                }
 	                            }
