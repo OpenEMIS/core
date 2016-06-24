@@ -88,7 +88,9 @@ class ContactsTable extends ControllerActionTable {
 		// var_dump($validator->hasField('value'));
 		$validator->remove('value', 'notBlank');
 		$validator
-			->requirePresence('contact_option_id')
+			->allowEmpty('contact_option_id', function ($context) {
+				return false;
+			})
 			->add('value', 'ruleValidateNumeric',  [
 				'rule' => ['numeric', 'notBlank'],
 				'on' => function ($context) {
