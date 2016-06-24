@@ -80,7 +80,7 @@ class AdvancedPositionSearchBehavior extends Behavior {
 		if ($turnOn) {
 			$searchables['position'] = [
 				'label' => __('Position Title'),
-				'value' => isset($advanceSearchModelData['hasMany']) ? $advanceSearchModelData['hasMany']['position'] : '',
+				'value' => isset($advanceSearchModelData['hasMany']['position']) ? $advanceSearchModelData['hasMany']['position'] : '',
 			];
 			// $this->_table->ControllerAction->field('positions', ['order' => 53]);
 		}

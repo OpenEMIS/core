@@ -87,6 +87,8 @@ class AppTable extends Table {
 		$this->addBehavior('Validation');
 		$this->attachWorkflow();
 		$this->addBehavior('Modification');
+
+        $this->addBehavior('TrackDelete');
 	}
 
 	// Function to get the entity property from the entity. If data validation occur,
@@ -399,7 +401,7 @@ class AppTable extends Table {
             }
 
             if (array_key_exists('remove', $buttons)) {
-                if ($buttons['remove']['strategy'] == 'cascade') {
+                if (in_array($buttons['remove']['strategy'], ['cascade', 'restrict'])) {
                     $buttons['remove']['attr']['data-toggle'] = 'modal';
                     $buttons['remove']['attr']['data-target'] = '#delete-modal';
                     $buttons['remove']['attr']['field-target'] = '#recordId';

@@ -141,8 +141,11 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.onGetConvertOptions'=> 'onGetConvertOptions',
 		// public function onGetConvertOptions(Event $event, Entity $entity, Query $query) {}
 
-		'ControllerAction.Model.onBeforeDelete'				=> 'onBeforeDelete',
-		// public function onBeforeDelete(Event $event, ArrayObject $options, $id) {}
+		'ControllerAction.Model.onBeforeDelete'               => 'onBeforeDelete',
+        // public function onBeforeDelete(Event $event, ArrayObject $options, $id) {}
+
+        'ControllerAction.Model.onBeforeRestrictDelete'             => 'onBeforeRestrictDelete',
+        // public function onBeforeRestrictDelete(Event $event, ArrayObject $options, $id) {}
 
 		'ControllerAction.Model.onDeleteTransfer'			=> 'onDeleteTransfer',
 		// public function onDeleteTransfer(Event $event, ArrayObject $options, $id) {}

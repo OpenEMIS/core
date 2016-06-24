@@ -3,6 +3,7 @@ namespace Assessment\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\AppTable;
+use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Utility\Text;
@@ -21,6 +22,55 @@ class AssessmentItemResultsTable extends AppTable {
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
 		$entity->id = Text::uuid();
+	}
+
+	public function findResults(Query $query, array $options) {
+		$academicPeriodId = $options['academic_period_id'];
+		$session = $options['_Session'];
+
+		$studentId = -1;
+		if ($session->check('Student.Results.student_id')) {
+			$studentId = $session->read('Student.Results.student_id');
+		}
+
+	 	return $query
+			->select([
+				$this->aliasField('id'),
+				$this->aliasField('marks'),
+				$this->aliasField('assessment_grading_option_id'),
+				$this->aliasField('student_id'),
+				$this->aliasField('assessment_id'),
+				$this->aliasField('education_subject_id'),
+				$this->aliasField('institution_id'),
+				$this->aliasField('academic_period_id'),
+				$this->aliasField('assessment_period_id'),
+				$this->Assessments->aliasField('code'),
+				$this->Assessments->aliasField('name'),
+				$this->Assessments->aliasField('education_grade_id'),
+				$this->EducationSubjects->aliasField('code'),
+				$this->EducationSubjects->aliasField('name'),
+				$this->AssessmentGradingOptions->aliasField('code'),
+				$this->AssessmentGradingOptions->aliasField('name'),
+				$this->AssessmentGradingOptions->aliasField('assessment_grading_type_id'),
+				$this->Institutions->aliasField('code'),
+				$this->Institutions->aliasField('name'),
+				$this->AssessmentPeriods->aliasField('code'),
+				$this->AssessmentPeriods->aliasField('name'),
+				$this->AssessmentPeriods->aliasField('weight')
+			])
+			->innerJoinWith('Assessments')
+			->innerJoinWith('EducationSubjects')
+			->innerJoinWith('AssessmentGradingOptions')
+			->innerJoinWith('Institutions')
+			->innerJoinWith('AssessmentPeriods')
+			->where([
+				$this->aliasField('academic_period_id') => $academicPeriodId,
+				$this->aliasField('student_id') => $studentId
+			])
+			->order([
+				$this->Institutions->aliasField('code'), $this->Institutions->aliasField('name'),
+				$this->Assessments->aliasField('code'), $this->Assessments->aliasField('name')
+			]);
 	}
 
 	/**
