@@ -2,23 +2,10 @@
 
 namespace Education\tests\TestCase\Controller;
 
-use Cake\TestSuite\IntegrationTestCase;
+use App\Test\AppTestCase;
 use Cake\ORM\TableRegistry;
 
-class EducationsControllerTest extends IntegrationTestCase {
-
-	public function setAuthSession() {
-		
-		$this->session([
-			'Auth' => [
-				'User' => [
-					'id' => 2,
-					'username' => 'admin',
-					'super_admin' => '1'
-				]
-			]
-		]);
-	}
+class EducationsControllerTest extends AppTestCase {
 
 	public function testEducationSystemIndex() {
 
@@ -35,8 +22,7 @@ class EducationsControllerTest extends IntegrationTestCase {
 			'id' => 1,
 			'name' => 'National Education System'
 		];
-		$this->enableCsrfToken();
-		$this->post('/Educations/Systems/add', $data);
+		$this->postData('/Educations/Systems/add', $data);
 
 		$table = TableRegistry::get('Education.EducationSystems');
 		$this->assertNotEmpty($table->get(1));
@@ -58,8 +44,7 @@ class EducationsControllerTest extends IntegrationTestCase {
 		$data = [
 			'name' => 'PHPUnit Education System'
 		];
-		$this->enableCsrfToken();
-		$this->post('/Educations/Systems/edit/1', $data);
+		$this->postData('/Educations/Systems/edit/1', $data);
 
 		$table = TableRegistry::get('Education.EducationSystems');
 		$entity = $table->get(1);
@@ -77,8 +62,7 @@ class EducationsControllerTest extends IntegrationTestCase {
 			'id' => 1,
 			'_method' => 'DELETE',
 		];
-		$this->enableCsrfToken();
-		$this->post('/Educations/Systems/remove/1', $data);
+		$this->postData('/Educations/Systems/remove/1', $data);
 		$table = TableRegistry::get('Education.EducationSystems');
 		$exists = $table->exists([$table->primaryKey() => 1]);
 		$this->assertFalse($exists);
