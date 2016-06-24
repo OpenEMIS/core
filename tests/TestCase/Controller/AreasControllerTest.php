@@ -2,23 +2,10 @@
 
 namespace Area\tests\TestCase\Controller;
 
-use Cake\TestSuite\IntegrationTestCase;
+use App\Test\AppTestCase;
 use Cake\ORM\TableRegistry;
 
-class AreasControllerTest extends IntegrationTestCase {
-
-	public function setAuthSession() {
-		
-		$this->session([
-			'Auth' => [
-				'User' => [
-					'id' => 2,
-					'username' => 'admin',
-					'super_admin' => '1'
-				]
-			]
-		]);
-	}
+class AreasControllerTest extends AppTestCase {
 
 	public function testAreaIndex() {
 
@@ -41,7 +28,7 @@ class AreasControllerTest extends IntegrationTestCase {
 			'visible' => 1
 		];
 
-		$this->post('/Areas/Areas/add?parent=1', $data);
+		$this->postData('/Areas/Areas/add?parent=1', $data);
 
 		$table = TableRegistry::get('Area.Areas');
 		$this->assertNotEmpty($table->get(2));
@@ -64,7 +51,7 @@ class AreasControllerTest extends IntegrationTestCase {
 			'area_level_id' => 2,
 		];
 
-		$this->post('/Areas/Areas/edit/2?parent=1', $data);
+		$this->postData('/Areas/Areas/edit/2?parent=1', $data);
 
 		$table = TableRegistry::get('Area.Areas');
 		$entity = $table->get(2);
