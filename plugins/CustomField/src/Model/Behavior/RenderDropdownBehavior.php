@@ -28,6 +28,8 @@ class RenderDropdownBehavior extends RenderBehavior {
         $dropdownDefault = !is_null($dropdownDefault) ? $dropdownDefault : key($dropdownOptions);
 
         // for edit
+        $fieldKey = $attr['attr']['fieldKey'];
+        $formKey = $attr['attr']['formKey'];
         $fieldId = $attr['customField']->id;
         $fieldValues = $attr['customFieldValues'];
         $savedId = null;
@@ -64,7 +66,9 @@ class RenderDropdownBehavior extends RenderBehavior {
                     $questions = $this->_table->request->data[$this->_table->alias()]['custom_field_values'];
                     foreach ($questions as $question) {
                         if (isset($question['number_value'])) {
-                            $this->postedData[$question['survey_question_id']] = $question['number_value'];
+                            if (array_key_exists($fieldKey, $question)) {
+                                $this->postedData[$question[$fieldKey]] = $question['number_value'];
+                            }
                         }
                     }
                 }
