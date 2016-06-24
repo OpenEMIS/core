@@ -160,6 +160,11 @@ class ControllerActionComponent extends Component {
                         $this->model($attr['className'], $actions, $options);
                         $this->model->alias = $name;
                         $this->currentAction = $currentAction;
+                        if ($currentAction == 'reorder') {
+                            $this->controller->Security->config('unlockedActions', [
+                                'ComponentAction'
+                            ]);
+                        }
                         $this->ctpFolder = $this->model->alias();
                         $this->request->params['action'] = 'ComponentAction';
                         $this->initComponentsForModel();
