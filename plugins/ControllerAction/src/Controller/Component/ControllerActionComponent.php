@@ -184,6 +184,15 @@ class ControllerActionComponent extends Component {
             $event = $this->model->eventManager()->dispatch($event);
             if ($event->isStopped()) { return $event->result; }
             $this->buildDefaultValidation();
+        } else {
+            $pass = $this->request->pass;
+            if (isset($pass[0])) {
+                if ($pass[0] == 'reorder') {
+                    $this->controller->Security->config('unlockedActions', [
+                        $action
+                    ]);
+                }
+            }
         }
     }
 
