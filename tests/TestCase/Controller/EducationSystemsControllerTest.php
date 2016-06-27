@@ -33,7 +33,7 @@ class EducationSystemsControllerTest extends AppTestCase
                 'searchField' => 'National'
             ]
         ];
-        $this->post($testUrl, $data);
+        $this->postData($testUrl, $data);
 
         $this->assertEquals(true, (count($this->viewVariable('data')) == 1));
     }
@@ -46,7 +46,7 @@ class EducationSystemsControllerTest extends AppTestCase
                 'searchField' => '@#!@!cantFindThis!@#!'
             ]
         ];
-        $this->post($testUrl, $data);
+        $this->postData($testUrl, $data);
 
         $this->assertEquals(true, (count($this->viewVariable('data')) == 0));
     }
@@ -66,7 +66,7 @@ class EducationSystemsControllerTest extends AppTestCase
             ],
             'submit' => 'save'
         ];
-        $this->post($testUrl, $data);
+        $this->postData($testUrl, $data);
 
         $lastInsertedRecord = $table->find()
             ->where([$table->aliasField('name') => $data['EducationSystems']['name']])
@@ -103,7 +103,7 @@ class EducationSystemsControllerTest extends AppTestCase
             'submit' => 'save'
         ];
 
-        $this->post($testUrl, $data);
+        $this->postData($testUrl, $data);
 
         $entity = $table->get($this->id);
         $this->assertEquals($data['EducationSystems']['visible'], $entity->visible);
