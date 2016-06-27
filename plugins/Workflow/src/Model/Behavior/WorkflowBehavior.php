@@ -661,7 +661,7 @@ class WorkflowBehavior extends Behavior {
 		$fields = [
 			$alias.'.prev_workflow_step_id' => [
 				'type' => 'hidden',
-				'value' => $step->id,
+				'value' => $step->id
 			],
 			$alias.'.prev_workflow_step_name' => [
 				'type' => 'hidden',
@@ -670,27 +670,32 @@ class WorkflowBehavior extends Behavior {
 			$alias.'.workflow_step_id' => [
 				'type' => 'hidden',
 				'value' => 0,
-				'class' => 'workflowtransition-step-id'
+				'class' => 'workflowtransition-step-id',
+				'unlockField' => true
 			],
 			$alias.'.workflow_step_name' => [
 				'type' => 'hidden',
 				'value' => '',
-				'class' => 'workflowtransition-step-name'
+				'class' => 'workflowtransition-step-name',
+				'unlockField' => true
 			],
 			$alias.'.workflow_action_id' => [
 				'type' => 'hidden',
 				'value' => 0,
-				'class' => 'workflowtransition-action-id'
+				'class' => 'workflowtransition-action-id',
+				'unlockField' => true
 			],
 			$alias.'.workflow_action_name' => [
 				'type' => 'hidden',
 				'value' => '',
-				'class' => 'workflowtransition-action-name'
+				'class' => 'workflowtransition-action-name',
+				'unlockField' => true
 			],
 			$alias.'.workflow_action_description' => [
 				'type' => 'hidden',
 				'value' => '',
-				'class' => 'workflowtransition-action-description'
+				'class' => 'workflowtransition-action-description',
+				'unlockField' => true
 			],
 			$alias.'.workflow_record_id' => [
 				'type' => 'hidden',
@@ -703,34 +708,60 @@ class WorkflowBehavior extends Behavior {
 			$alias.'.comment_required' => [
 				'type' => 'hidden',
 				'value' => 0,
-				'class' => 'workflowtransition-comment-required'
+				'class' => 'workflowtransition-comment-required',
+				'unlockField' => true
+			]
+		];
+
+		$contentFields = [];
+		$contentFields = [
+			$alias.'.action_name' => [
+				'label' => __('Action'),
+				'type' => 'string',
+				'readonly' => 'readonly',
+				'disabled' => 'disabled',
+				'class'=> 'workflowtransition-action-name'
+			],
+			$alias.'.action_description' => [
+				'label' => __('Description'),
+				'type' => 'textarea',
+				'readonly' => 'readonly',
+				'disabled' => 'disabled',
+				'class'=> 'workflowtransition-action-description'
+			],
+			$alias.'.step_name' => [
+				'label' => __('Next Step'),
+				'type' => 'string',
+				'readonly' => 'readonly',
+				'disabled' => 'disabled',
+				'class'=> 'workflowtransition-step-name'
+			],
+			$alias.'.comment' => [
+				'label' => __('Comment'),
+				'type' => 'textarea',
+				'class'=> 'workflowtransition-comment'
 			]
 		];
 
 		$content = '';
 		$content = '<style type="text/css">.modal-footer { clear: both; } .modal-body textarea { width: 60%; }</style>';
-		$content .= '<div class="input string"><label>'.__('Action').'</label><input name="WorkflowTransitions[action_name]" maxlength="250" value="" type="string" class="workflowtransition-action-name" readonly="readonly" disabled="disabled"></div>';
-		$content .= '<BR><BR>';
-		$content .= '<div class="input textarea"><label>'.__('Description').'</label><textarea name="WorkflowTransitions[action_description]" rows="5" class="workflowtransition-action-description" readonly="readonly" disabled="disabled"></textarea></div>';
-		$content .= '<BR><BR>';
-		$content .= '<div class="input string"><label>'.__('Next Step').'</label><input name="WorkflowTransitions[step_name]" maxlength="250" value="" type="string" class="workflowtransition-step-name" readonly="readonly" disabled="disabled"></div>';
-		$content .= '<BR><BR>';
-		$content .= '<div class="input textarea"><label>'.__('Comment').'</label><textarea name="WorkflowTransitions[comment]" rows="5" class="workflowtransition-comment"></textarea></div>';
 		$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-comment-error error-message">' . __('This field cannot be left empty') . '</div></div>';
 		$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-event-description error-message"></div></div>';
 		$buttons = [
-			'<button type="submit" class="btn btn-default" onclick="return Workflow.onSubmit();">' . __('Save') . '</button>'
+			'<button id="workflow-submit" type="submit" class="btn btn-default" onclick="return Workflow.onSubmit();">' . __('Save') . '</button>'
 		];
 
 		$modal = [
 			'id' => 'workflowTransition',
 			'title' => __('Add Comment'),
 			'content' => $content,
+			'contentFields' => $contentFields, 
 			'form' => [
 				'model' => $this->_table,
 				'formOptions' => [
 					'class' => 'form-horizontal',
-					'url' => $this->isCAv4() ? $this->_table->url('processWorkflow') : $this->_table->ControllerAction->url('processWorkflow')
+					'url' => $this->isCAv4() ? $this->_table->url('processWorkflow') : $this->_table->ControllerAction->url('processWorkflow'),
+					'onSubmit' => 'document.getElementById("workflow-submit").disabled=true;'
 				],
 				'fields' => $fields
 			],
