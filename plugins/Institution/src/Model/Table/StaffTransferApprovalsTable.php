@@ -36,6 +36,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 	}
 
 	public function validationDefault(Validator $validation) {
+		$validator = parent::validationDefault($validator);
 		return $validation->requirePresence('transfer_type');
 	}
 

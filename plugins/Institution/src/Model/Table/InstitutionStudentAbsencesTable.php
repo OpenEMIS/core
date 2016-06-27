@@ -81,6 +81,8 @@ class InstitutionStudentAbsencesTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$this->setValidationCode('start_date.ruleNoOverlappingAbsenceDate', 'Institution.Absences');
 		$this->setValidationCode('start_date.ruleInAcademicPeriod', 'Institution.Absences');
 		$this->setValidationCode('end_date.ruleCompareDateReverse', 'Institution.Absences');
