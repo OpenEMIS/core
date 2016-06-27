@@ -54,6 +54,7 @@ trait MessagesTrait {
 			],
 			'delete' => [
 				'restrictDelete' => 'The record cannot be deleted.',
+                'restrictDeleteBecauseAssociation' => 'Delete operation is not allowed as there are other information linked to this record.',
 				'success' => 'The record has been deleted successfully.',
 				'failed' => 'The record is not deleted due to errors encountered.',
 				'label' => 'Delete',
@@ -348,6 +349,9 @@ trait MessagesTrait {
 			'next_step' => 'Next Step',
 			'comment_required' => 'Comment Required',
 			'event' => 'Event'
+		],
+		'WorkflowStatuses' => [
+			'noSteps' => 'No Available Workflow Steps'
 		],
 		'InstitutionQualityVisits' => [
 			'noPeriods' => 'No Available Periods',

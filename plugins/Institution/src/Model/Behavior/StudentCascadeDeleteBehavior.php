@@ -38,22 +38,35 @@ class StudentCascadeDeleteBehavior extends Behavior {
 	private function deleteClassStudents(Entity $entity) {
 		if (!empty($this->classIds)) {
 			$ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-			$ClassStudents->deleteAll([
-				$ClassStudents->aliasField('student_id') => $entity->student_id,
-				$ClassStudents->aliasField('education_grade_id') => $entity->education_grade_id,
-				$ClassStudents->aliasField('institution_class_id IN ') => $this->classIds
-			]);
+            $classStudentData = $ClassStudents->find()
+                ->where([
+                    $ClassStudents->aliasField('student_id') => $entity->student_id,
+                    $ClassStudents->aliasField('education_grade_id') => $entity->education_grade_id,
+                    $ClassStudents->aliasField('institution_class_id IN ') => $this->classIds
+                ])
+                ->toArray()
+                ;
+            foreach ($classStudentData as $key => $value) {
+                $ClassStudents->delete($value);
+            }
 		}
 	}
 
 	private function deleteSubjectStudents(Entity $entity) {
 		if (!empty($this->subjectIds) && !empty($this->classIds)) {
 			$SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-			$SubjectStudents->deleteAll([
-				$SubjectStudents->aliasField('student_id') => $entity->student_id,
-				$SubjectStudents->aliasField('institution_class_id IN ') => $this->classIds,
-				$SubjectStudents->aliasField('institution_subject_id IN ') => $this->subjectIds
-			]);
+            $subjectStudentData = $SubjectStudents->find()
+                ->where([
+                    $SubjectStudents->aliasField('student_id') => $entity->student_id,
+                    $SubjectStudents->aliasField('institution_class_id IN ') => $this->classIds,
+                    $SubjectStudents->aliasField('institution_subject_id IN ') => $this->subjectIds
+                ])
+                ->toArray()
+                ;
+
+            foreach ($subjectStudentData as $key => $value) {
+                $SubjectStudents->delete($value);
+            }
 		}
 	}
 
@@ -74,13 +87,18 @@ class StudentCascadeDeleteBehavior extends Behavior {
 			])
 			->toArray();
 
+        
 		if (!empty($assessmentIds)) {
-			$Results->deleteAll([
-				$Results->aliasField('institution_id') => $institutionId,
-				$Results->aliasField('academic_period_id') => $periodId,
-				$Results->aliasField('student_id') => $studentId,
-				$Results->aliasField('assessment_id IN') => $assessmentIds
-			]);
+            $resultList = $Results->find()
+                ->where([
+                    $Results->aliasField('institution_id') => $institutionId,
+                    $Results->aliasField('academic_period_id') => $periodId,
+                    $Results->aliasField('student_id') => $studentId,
+                    $Results->aliasField('assessment_id IN') => $assessmentIds
+                ]);
+            foreach ($resultList as $key => $value) {
+                $Results->delete($value);
+            }
 		}
 	}
 
@@ -99,27 +117,99 @@ class StudentCascadeDeleteBehavior extends Behavior {
 
 		if (!$institutionFeeResults->isEmpty()) {
 			$institutionFeeIds = $institutionFeeResults->toArray();
-			$StudentFees->deleteAll([
-				$StudentFees->aliasField('institution_fee_id IN') => $institutionFeeIds,
-				$StudentFees->aliasField('student_id') => $entity->student_id
-			]);
+            $feeList = $StudentFees->find()->where([
+                $StudentFees->aliasField('institution_fee_id IN') => $institutionFeeIds,
+                $StudentFees->aliasField('student_id') => $entity->student_id
+            ]);
+            foreach ($feeList as $key => $value) {
+                $StudentFees->delete($value);
+            }
 		}
 	}
 
 	private function deleteStudentAbsences(Entity $entity) {
-		$StudentAbsences = TableRegistry::get('Student.Absences');
-		$StudentAbsences->deleteAll([
-			$StudentAbsences->aliasField('institution_id') => $entity->institution_id,
-			$StudentAbsences->aliasField('student_id') => $entity->student_id
-		]);
+        $startDate = $entity->start_date;
+        $endDate = $entity->end_date;
+
+        if ($startDate instanceof Time) {
+            $startDate = $startDate->format('Y-m-d');
+        } else {
+            $startDate = date('Y-m-d', strtotime($startDate));
+        }
+        if ($endDate instanceof Time) {
+            $endDate = $endDate->format('Y-m-d');
+        } else {
+            $endDate = date('Y-m-d', strtotime($endDate));
+        }
+
+        /* delete all attendance records (institution_site_student_absences) with dates that fall between the start and end date found in institution_students */
+        $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+        $overlapDateCondition = [];
+        $overlapDateCondition['OR'] = [
+            'OR' => [
+                [
+                    $InstitutionStudentAbsences->aliasField('end_date') . ' IS NOT NULL',
+                    $InstitutionStudentAbsences->aliasField('start_date') . ' <=' => $startDate,
+                    $InstitutionStudentAbsences->aliasField('end_date') . ' >=' => $startDate
+                ],
+                [
+                    $InstitutionStudentAbsences->aliasField('end_date') . ' IS NOT NULL',
+                    $InstitutionStudentAbsences->aliasField('start_date') . ' <=' => $endDate,
+                    $InstitutionStudentAbsences->aliasField('end_date') . ' >=' => $endDate
+                ],
+                [
+                    $InstitutionStudentAbsences->aliasField('end_date') . ' IS NOT NULL',
+                    $InstitutionStudentAbsences->aliasField('start_date') . ' >=' => $startDate,
+                    $InstitutionStudentAbsences->aliasField('end_date') . ' <=' => $endDate
+                ]
+            ],
+            [
+                $InstitutionStudentAbsences->aliasField('end_date') . ' IS NULL',
+                $InstitutionStudentAbsences->aliasField('start_date') . ' <=' => $endDate
+            ]
+        ];
+        
+        $studentAbsenceData = $InstitutionStudentAbsences->find()
+            ->where($overlapDateCondition)
+            ->where([$InstitutionStudentAbsences->aliasField('student_id') => $entity->student_id])
+            ->where([$InstitutionStudentAbsences->aliasField('institution_id') => $entity->institution_id])
+            ;
+
+        foreach ($studentAbsenceData as $key => $value) {
+            $InstitutionStudentAbsences->delete($value);
+        }
 	}
 
 	private function deleteStudentBehaviours(Entity $entity) {
-		$StudentBehaviours = TableRegistry::get('Institution.StudentBehaviours');
-		$StudentBehaviours->deleteAll([
-			$StudentBehaviours->aliasField('institution_id') => $entity->institution_id,
-			$StudentBehaviours->aliasField('student_id') => $entity->student_id
-		]);
+        $startDate = $entity->start_date;
+        $endDate = $entity->end_date;
+
+        if ($startDate instanceof Time) {
+            $startDate = $startDate->format('Y-m-d');
+        } else {
+            $startDate = date('Y-m-d', strtotime($startDate));
+        }
+        if ($endDate instanceof Time) {
+            $endDate = $endDate->format('Y-m-d');
+        } else {
+            $endDate = date('Y-m-d', strtotime($endDate));
+        }
+        /* delete all behaviour records (student_behaviours) with dates that fall between the start and end date found in institution_students */
+        $StudentBehaviours = TableRegistry::get('Institution.StudentBehaviours');
+        
+        $studentBehaviourData = $StudentBehaviours->find()
+            ->where([
+                $StudentBehaviours->aliasField('date_of_behaviour').' >= ' => $startDate,
+                $StudentBehaviours->aliasField('date_of_behaviour').' <= ' => $endDate
+            ])
+            ->where([$StudentBehaviours->aliasField('student_id') => $entity->student_id])
+            ->where([$StudentBehaviours->aliasField('institution_id') => $entity->institution_id])
+            ;
+
+        // DELETION TO BE DONE HERE FOR $studentBehaviourData
+        foreach ($studentBehaviourData as $key => $value) {
+            $StudentBehaviours->delete($value);
+        }
 	}
 
 	private function deleteStudentSurveys(Entity $entity) {
@@ -140,28 +230,52 @@ class StudentCascadeDeleteBehavior extends Behavior {
 
 		if (!$studentSurveyResults->isEmpty()) {
 			$studentSurveyIds = $studentSurveyResults->toArray();
-			$StudentSurveyAnswers->deleteAll([
-				$StudentSurveyAnswers->aliasField('institution_student_survey_id IN ') => $studentSurveyIds
-			]);
-			$StudentSurveyTableCells->deleteAll([
-				$StudentSurveyTableCells->aliasField('institution_student_survey_id IN ') => $studentSurveyIds
-			]);
+			$studentSurveyAnswersData = $StudentSurveyAnswers->find()
+                ->where([
+    				$StudentSurveyAnswers->aliasField('institution_student_survey_id IN ') => $studentSurveyIds
+    			])
+                ->toArray()
+                ;
+            foreach ($studentSurveyAnswersData as $key => $value) {
+                $StudentSurveyAnswers->delete($value);
+            }
+			$studentSurveyTableCellsData = $StudentSurveyTableCells->find()
+                ->where([
+    				$StudentSurveyTableCells->aliasField('institution_student_survey_id IN ') => $studentSurveyIds
+    			])
+                ->toArray()
+                ;
+            foreach ($studentSurveyTableCellsData as $key => $value) {
+                $StudentSurveyTableCells->delete($value);
+            }
 		}
 
-		$StudentSurveys->deleteAll([
-			$StudentSurveys->aliasField('institution_id') => $institutionId,
-			$StudentSurveys->aliasField('student_id') => $studentId
-		]);
+		$studentSurveysData = $StudentSurveys->find()
+            ->where([
+    			$StudentSurveys->aliasField('institution_id') => $institutionId,
+    			$StudentSurveys->aliasField('student_id') => $studentId
+    		])
+            ->toArray()
+            ;
+        foreach ($studentSurveysData as $key => $value) {
+            $StudentSurveys->delete($value);
+        }
 	}
 
 	private function deleteStudentDropoutRecords(Entity $entity) {
 		$StudentDropout = TableRegistry::get('Institution.StudentDropout');
-		$StudentDropout->deleteAll([
-			$StudentDropout->aliasField('institution_id') => $entity->institution_id,
-			$StudentDropout->aliasField('academic_period_id') => $entity->academic_period_id,
-			$StudentDropout->aliasField('education_grade_id') => $entity->education_grade_id,
-			$StudentDropout->aliasField('student_id') => $entity->student_id
-		]);
+		$studentDropoutData = $StudentDropout->find()
+            ->where([
+    			$StudentDropout->aliasField('institution_id') => $entity->institution_id,
+    			$StudentDropout->aliasField('academic_period_id') => $entity->academic_period_id,
+    			$StudentDropout->aliasField('education_grade_id') => $entity->education_grade_id,
+    			$StudentDropout->aliasField('student_id') => $entity->student_id
+    		])
+            ->toArray()
+            ;
+        foreach ($studentDropoutData as $key => $value) {
+            $StudentDropout->delete($value);
+        }
 	}
 
 	private function deleteStudentAdmissionRecords(Entity $entity) {
@@ -173,21 +287,33 @@ class StudentCascadeDeleteBehavior extends Behavior {
 		$studentId = $entity->student_id;
 
 		// delete pending admission
-		$StudentAdmission->deleteAll([
-			$StudentAdmission->aliasField('institution_id') => $institutionId,
-			$StudentAdmission->aliasField('academic_period_id') => $periodId,
-			$StudentAdmission->aliasField('education_grade_id') => $gradeId,
-			$StudentAdmission->aliasField('student_id') => $studentId,
-			$StudentAdmission->aliasField('previous_institution_id') => 0
-		]);
+        $pendingAdmissionData = $StudentAdmission->find()
+            ->where([
+                $StudentAdmission->aliasField('institution_id') => $institutionId,
+                $StudentAdmission->aliasField('academic_period_id') => $periodId,
+                $StudentAdmission->aliasField('education_grade_id') => $gradeId,
+                $StudentAdmission->aliasField('student_id') => $studentId,
+                $StudentAdmission->aliasField('previous_institution_id') => 0
+            ])
+            ->toArray()
+            ;
+        foreach ($pendingAdmissionData as $key => $value) {
+            $StudentAdmission->delete($value);
+        }
 
 		// delete transfer request
-		$StudentAdmission->deleteAll([
-			$StudentAdmission->aliasField('previous_institution_id') => $institutionId,
-			$StudentAdmission->aliasField('academic_period_id') => $periodId,
-			$StudentAdmission->aliasField('education_grade_id') => $gradeId,
-			$StudentAdmission->aliasField('student_id') => $studentId
-		]);
+        $transferRequestData = $StudentAdmission->find()
+            ->where([
+                $StudentAdmission->aliasField('previous_institution_id') => $institutionId,
+                $StudentAdmission->aliasField('academic_period_id') => $periodId,
+                $StudentAdmission->aliasField('education_grade_id') => $gradeId,
+                $StudentAdmission->aliasField('student_id') => $studentId
+            ])
+            ->toArray()
+            ;
+        foreach ($transferRequestData as $key => $value) {
+            $StudentAdmission->delete($value);
+        }
 	}
 
 	private function noStudentRecords(Entity $entity , $includeGrade=false) {
