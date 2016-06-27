@@ -118,6 +118,11 @@ class AppController extends Controller {
 			'loginPageURL' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'login'],
 		]); // for single sign on authentication
 
+<<<<<<< HEAD
 		$this->loadComponent('Security');
+=======
+		// For Csrf
+		$this->loadComponent('Csrf');
+>>>>>>> origin_ssh/POCOR-2978-dev
 	}
 }
