@@ -28,6 +28,8 @@ class GuardiansTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		return $validator
 			->add('guardian_id', 'ruleStudentGuardianId', [
 				'rule' => ['studentGuardianId'],

@@ -108,6 +108,8 @@ class TransferRequestsTable extends AppTable {
 
 	public function validationDefault(Validator $validator) 
 	{
+		$validator = parent::validationDefault($validator);
+
 		return $validator
 			->add('student_id', 'ruleNoNewDropoutRequestInGradeAndInstitution', [
 				'rule' => ['noNewDropoutRequestInGradeAndInstitution'],
