@@ -45,11 +45,8 @@ class RestController extends AppController
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
-<<<<<<< HEAD
-		$this->Security->config('unlockedActions', ['survey']);
-=======
 		$this->eventManager()->off($this->Csrf);
->>>>>>> origin_ssh/POCOR-2978-dev
+		$this->Security->config('unlockedActions', ['survey']);
         if (isset($this->request->query['version'])) {
             $this->RestVersion = $this->request->query('version');
         }
