@@ -147,12 +147,10 @@ class InstitutionSurveysTable extends AppTable {
 		return $list;
 	}
 
-    public function getWorkflowEvents(Event $event) {
-    	foreach ($this->workflowEvents as $key => $attr) {
-    		$this->workflowEvents[$key]['text'] = __($attr['text']);
-    	}
-
-    	return $this->workflowEvents;
+    public function getWorkflowEvents(Event $event, ArrayObject $eventsObject) {
+    	$attr['text'] = __($attr['text']);
+    	$attr['description'] = __($attr['description']);
+		$eventsObject[] = $attr;
     }
 
     public function triggerBuildSurveyRecordsShell($params) {
