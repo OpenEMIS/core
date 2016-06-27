@@ -75,6 +75,8 @@ class ImportUsersTable extends AppTable {
 			'Model.import.onImportPopulateAccountTypesData' => 'onImportPopulateAccountTypesData',
 			'Model.import.onImportGetAccountTypesId' => 'onImportGetAccountTypesId',
 			'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
+			'Model.import.onImportCustomHeader' => 'onImportCustomHeader',
+			'Model.import.onImportCheckIdentityConfig' => 'onImportCheckIdentityConfig',
 		];
 		$events = array_merge($events, $newEvent);
 		return $events;
@@ -241,4 +243,81 @@ class ImportUsersTable extends AppTable {
 		$tempPassedRecord['data'][$key] = $clonedEntity->openemis_no;
 	}
 
+	public function onImportCustomHeader(Event $event, $customDataSource, ArrayObject $customHeaderData) 
+	{
+	
+		$customTable = TableRegistry::get($customDataSource);
+
+        switch($customDataSource) { //this is for specify column name based on the data
+			case 'FieldOption.IdentityTypes':
+
+				$customTableRecords = $customTable
+		            ->find()
+		            ->where([
+		                $customTable->aliasField('default') => 1
+		            ])
+		            ->toArray();
+
+		        if (count($customTableRecords)) { //if default found
+
+		        	$column = $customTableRecords[0]['name'];
+		        	$customHeaderData[] = true; //show descriptions
+
+		        } else { //no default defined, then put warning on header
+		            
+		            $column = "Please Define Default Identity Type";
+		            $customHeaderData[] = false; //dont show descriptions
+		        }
+
+				break;
+		}	
+
+        $customHeaderData[] = $column;
+
+	}
+
+	public function onImportCheckIdentityConfig(Event $event, $tempRow, $cellValue) 
+	{
+		$result = true;
+
+		$ConfigItems = TableRegistry::get('ConfigItems');
+	    $isStudentIdentityMandatory = $ConfigItems->value('StudentIdentities');
+	    $isStaffIdentityMandatory = $ConfigItems->value('StaffIdentities');
+
+	    if (($tempRow['account_type'] == "is_staff") && ($isStaffIdentityMandatory) && (empty($cellValue))) {
+	        $result = 'Staff identity is mandatory';
+	    };
+
+	    if (($tempRow['account_type'] == "is_student") && ($isStudentIdentityMandatory) && (empty($cellValue))) {
+	    	$result = 'Student identity is mandatory';
+	    };
+
+	    if ($result === true) { //if checking mandatory is ok, then check the uniqueness of the Identity
+
+	    	if (!empty($cellValue)) { //if Identity Number is not empty
+
+	    		$userIdentitiesTable = $this->Users->Identities;
+
+	    		$defaultIdentityType = $userIdentitiesTable->IdentityTypes->getDefaultValue();
+
+	    		if ($defaultIdentityType) { //if has default identity
+
+					$countIdentity = $userIdentitiesTable->find()
+										->where([
+											'number'=>$cellValue,
+											'identity_type_id'=>$defaultIdentityType
+										])
+										->count(); //get the record which has same identity number and type
+
+					if ($countIdentity) {
+						$result = "Identity number must be unique";
+					}
+
+				} else {
+					$result = "No default identity type set";
+				}
+			}
+	    }
+		return $result;
+	}
 }

@@ -116,8 +116,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
             return false;
         } else {
             if ($scope.gridOptions != null) {
-                $scope.gridOptions.api.setColumnDefs(response.data);                
-                console.log(Object.keys(response.data).length);
+                $scope.gridOptions.api.setColumnDefs(response.data);
                 if (Object.keys(response.data).length < 15) {
                     $scope.gridOptions.api.sizeColumnsToFit();
                 }

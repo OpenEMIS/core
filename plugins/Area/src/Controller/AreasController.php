@@ -66,7 +66,7 @@ class AreasController extends AppController
 
 	public function ajaxGetArea($tableName, $targetModel, $id, $displayCountry = true) {
 		$this->viewBuilder()->layout('ajax');
-		$rootId = -1; // Root node
+		$rootId = null; // Root node
 
 		$condition = [];
 		$accessControlAreaCount = 0;
@@ -82,7 +82,7 @@ class AreasController extends AppController
 		$formError = $this->request->query('formerror');
 		if (!$displayCountry) {
 			if ($tableName == 'Area.AreaAdministratives') {
-				$worldId = $Table->find()->where([$Table->aliasField('parent_id') => -1])->first()->id;
+				$worldId = $Table->find()->where([$Table->aliasField('parent_id') . ' IS NULL'])->first()->id;
 				$condition[] = [
 					'OR' => [
 						[$Table->aliasField('is_main_country') => 1],
@@ -173,7 +173,7 @@ class AreasController extends AppController
 			->order([$Table->aliasField('lft')])
 			->all();
 		$count = 1;
-		$prevousOptionId = -1;
+		$previousOptionId = null;
 		$pathToUnset = [];
 		$objParentIds = [];
 		foreach ($path as $obj) {
@@ -185,12 +185,18 @@ class AreasController extends AppController
 				}
 			}	
 			$parentId = $obj->parent_id;
-			$list = $Table
+			$listQuery = $Table
 				->find('list')
-				->where([$Table->aliasField('parent_id') => $parentId])
 				->order([$Table->aliasField('order')])
-				->where($condition)
-				->toArray();
+				->where($condition);
+
+			if (is_null($parentId)) {
+				$listQuery->where([$Table->aliasField('parent_id') . ' IS NULL']);
+			} else {
+				$listQuery->where([$Table->aliasField('parent_id') => $parentId]);
+			}	
+
+			$list = $listQuery->toArray();
 
 			$newList = [];
 			foreach ($list as $key => $area) {

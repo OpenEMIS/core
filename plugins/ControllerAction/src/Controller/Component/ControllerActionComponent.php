@@ -13,7 +13,8 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.1.19
+ControllerActionComponent - Current Version 3.1.20
+3.1.20 (Malcolm) - Added (deleteStrategy type - 'restrict') and (event - ControllerAction.Model.onBeforeRestrictDelete)
 3.1.19 (Malcolm) - Fixed an error issue when using getFields() on tables with joint primary keys
 3.1.18 (Malcolm) - remove() - If id(to be deleted) cannot be found, return a successful deletion message
 3.1.17 (Malcolm) - buildDefaultValidation() - Added condition '&& strlen($attr['default']) == 0' when it comes to determining whether should automatically add 'notBlank' and 'requirePresence' validations
@@ -78,7 +79,7 @@ class ControllerActionComponent extends Component {
     private $paramsPass;
     private $config;
     private $defaultActions = ['search', 'index', 'add', 'view', 'edit', 'remove', 'download', 'reorder']; 
-    private $deleteStrategy = 'cascade'; // cascade | transfer
+    private $deleteStrategy = 'cascade'; // cascade | transfer | restrict
     private $view = '';
 
     public $model = null;
@@ -1322,6 +1323,30 @@ class ControllerActionComponent extends Component {
                 } else {
                     $this->Alert->error('general.delete.failed');
                 }
+                return $this->controller->redirect($this->url('index'));
+            } else if ($this->deleteStrategy == 'restrict') {
+                $notRestrictedCheck = function ($model, $id, $deleteOptions) {
+                    $newEntity = $model->newEntity([$model->primaryKey() => $id]);
+                    return !$this->hasAssociatedRecords($model, $newEntity);
+                };
+
+                $this->debug(__METHOD__, ': Event -> ControllerAction.Model.onBeforeRestrictDelete');
+                $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onBeforeRestrictDelete', null, $params);
+                if ($event->isStopped()) { return $event->result; }
+                if (is_callable($event->result)) {
+                    $notRestrictedCheck = $event->result;
+                }
+
+                if ($notRestrictedCheck($model, $id, $deleteOptions)) {
+                    if ($process($model, $id, $deleteOptions)) {
+                        $this->Alert->success('general.delete.success');
+                    } else {
+                        $this->Alert->error('general.delete.failed');
+                    }
+                } else {
+                    $this->Alert->error('general.delete.restrictDeleteBecauseAssociation');
+                }
+                
                 return $this->controller->redirect($this->url('index'));
             } else {
                 $transferFrom = $this->request->data('id');
