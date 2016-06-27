@@ -22,6 +22,7 @@ class StaffTransferRequestsTable extends StaffTransfer {
 	}
 
 	public function validationDefault(Validator $validation) {
+		$validator = parent::validationDefault($validator);
 		return $validation->requirePresence('institution_position_id');
 	}
 

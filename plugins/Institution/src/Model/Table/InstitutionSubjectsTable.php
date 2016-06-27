@@ -64,6 +64,7 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
 		$validator->requirePresence('name');
 		return $validator;
 	}
