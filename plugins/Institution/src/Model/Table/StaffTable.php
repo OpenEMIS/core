@@ -47,7 +47,7 @@ class StaffTable extends AppTable {
 		$this->belongsTo('StaffTypes',		['className' => 'FieldOption.StaffTypes']);
 		$this->belongsTo('StaffStatuses',	['className' => 'Staff.StaffStatuses']);
 		$this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
-		$this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'institution_staff_id', 'dependent' => true]);
+		$this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 		$this->addBehavior('AcademicPeriod.Period');
@@ -111,6 +111,7 @@ class StaffTable extends AppTable {
 		$this->assigned = $statuses['ASSIGNED'];
 		$this->endOfAssignment = $statuses['END_OF_ASSIGNMENT'];
 		
+        $this->addBehavior('Import.ImportLink');
 	}
 
 	public function implementedEvents() {
@@ -725,6 +726,10 @@ class StaffTable extends AppTable {
 			$buttons['edit']['url'] = $url;
 		}
 
+		if ($this->Session->read('Auth.User.id') == $entity->_matchingData['Users']->id) { //if logged on user = current user, then unset the delete button
+			unset($buttons['remove']);
+		}
+
 		return $buttons;
 	}
 
@@ -1016,17 +1021,29 @@ class StaffTable extends AppTable {
 
 		// Staff behavior associated to institution must be deleted.
 		$StaffBehaviours = TableRegistry::get('Institution.StaffBehaviours');
-		$StaffBehaviours->deleteAll([
-			$StaffBehaviours->aliasField('staff_id') => $entity->staff_id,
-			$StaffBehaviours->aliasField('institution_id') => $entity->institution_id,
-		]);
+		$staffBehavioursData = $StaffBehaviours->find()
+            ->where([
+    			$StaffBehaviours->aliasField('staff_id') => $entity->staff_id,
+    			$StaffBehaviours->aliasField('institution_id') => $entity->institution_id,
+    		])
+            ->toArray()
+            ;
+        foreach ($staffBehavioursData as $key => $value) {
+            $StaffBehaviours->delete($value);
+        }
 
 		// Staff absence associated to institution must be deleted.
 		$StaffAbsences = TableRegistry::get('Institution.StaffAbsences');
-		$StaffAbsences->deleteAll([
-			$StaffAbsences->aliasField('staff_id') => $entity->staff_id,
-			$StaffAbsences->aliasField('institution_id') => $entity->institution_id,
-		]);
+		$staffAbsencesData = $StaffAbsences->find()
+            ->where([
+    			$StaffAbsences->aliasField('staff_id') => $entity->staff_id,
+    			$StaffAbsences->aliasField('institution_id') => $entity->institution_id,
+    		])
+            ->toArray()
+            ;
+        foreach ($staffAbsencesData as $key => $value) {
+            $StaffAbsences->delete($value);
+        }
 
 		// Rubrics related to staff must be deleted. (institution_site_quality_rubrics)
 		// association cascade deletes institution_site_quality_rubric_answers
