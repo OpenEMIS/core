@@ -296,11 +296,14 @@ class StaffTable extends AppTable {
 		$statusOptions = $this->StaffStatuses->find('list')->toArray();
 
 		$approvedStatus = $this->Workflow->getStepsByModelCode('Institution.StaffPositionProfiles', 'APPROVED');
+		$closedStatus = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'CLOSED');
+		$staffPositionProfileStatuses = array_merge($approvedStatus, $closedStatus);
+
 		$StaffPositionProfilesTable = TableRegistry::get('Institution.StaffPositionProfiles');
 		$staffPositionProfilesRecordCount = $StaffPositionProfilesTable->find()
 			->where([
 				$StaffPositionProfilesTable->aliasField('institution_id') => $institutionId, 
-				$StaffPositionProfilesTable->aliasField('status_id'). ' NOT IN ' => $approvedStatus
+				$StaffPositionProfilesTable->aliasField('status_id'). ' NOT IN ' => $staffPositionProfileStatuses
 			])
 			->count();
 
