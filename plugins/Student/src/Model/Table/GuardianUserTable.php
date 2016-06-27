@@ -38,11 +38,6 @@ class GuardianUserTable extends UserTable {
 		return $this->controller->redirect($redirect);
 	}
 
-	public function beforeAction(Event $event)
-	{
-		$this->request->query['user_type'] = UserTable::GUARDIAN;
-	}
-
 	public function viewAfterAction(Event $event, Entity $entity) {
 		parent::viewAfterAction($event, $entity);
 		$this->setupTabElements($entity);
@@ -52,6 +47,7 @@ class GuardianUserTable extends UserTable {
 	{
 		parent::beforeAction($event);
 		parent::hideOtherInformationSection($this->controller->name, $this->action);
+		$this->request->query['user_type'] = UserTable::GUARDIAN;
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {

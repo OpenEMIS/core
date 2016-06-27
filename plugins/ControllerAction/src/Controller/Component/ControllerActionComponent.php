@@ -180,6 +180,16 @@ class ControllerActionComponent extends Component {
             if ($event->isStopped()) { return $event->result; }
             $this->buildDefaultValidation();
         }
+
+        $pass = $this->request->pass;
+
+        if (isset($pass[0])) {
+            if ($pass[0] == 'reorder') {
+                $controller->Security->config('unlockedActions', [
+                    $this->request->params['action']
+                ]);
+            }
+        }
     }
 
     public function renderFields() {
