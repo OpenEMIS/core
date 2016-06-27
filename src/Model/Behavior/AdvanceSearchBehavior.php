@@ -35,6 +35,7 @@ class AdvanceSearchBehavior extends Behavior {
 		$newEvent = [
 			'ControllerAction.Model.index.beforePaginate' => 'indexBeforePaginate',
 			'ControllerAction.Model.afterAction' => 'afterAction',
+			'ControllerAction.Model.beforeAction' => 'beforeAction',
 		];
 		$events = array_merge($events,$newEvent);
 		return $events;
@@ -46,6 +47,13 @@ class AdvanceSearchBehavior extends Behavior {
 ** CakePhp events
 **
 ******************************************************************************************************************/
+	public function beforeAction(Event $event)
+	{	
+		if ($this->_table->action == 'index') {
+			$this->_table->Security->config('unlockedActions', ['ComponentAction']);
+		}
+	}
+
 	public function afterAction(Event $event) {
 		if ($this->_table->action == 'index') {
 		    $labels = TableRegistry::get('Labels');

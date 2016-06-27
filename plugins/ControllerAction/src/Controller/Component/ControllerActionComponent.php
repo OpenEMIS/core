@@ -180,6 +180,16 @@ class ControllerActionComponent extends Component {
             if ($event->isStopped()) { return $event->result; }
             $this->buildDefaultValidation();
         }
+
+        $pass = $this->request->pass;
+
+        if (isset($pass[0])) {
+            if ($pass[0] == 'reorder') {
+                $controller->Security->config('unlockedActions', [
+                    $this->request->params['action']
+                ]);
+            }
+        }
     }
 
     public function renderFields() {
@@ -666,7 +676,7 @@ class ControllerActionComponent extends Component {
             $modal['form'] = [
                 'model' => $this->model,
                 'formOptions' => ['type' => 'delete', 'url' => $this->url('remove')],
-                'fields' => ['id' => ['type' => 'hidden', 'id' => 'recordId']]
+                'fields' => ['id' => ['type' => 'hidden', 'id' => 'recordId', 'unlockField' => true]]
             ];
 
             $modal['buttons'] = [
