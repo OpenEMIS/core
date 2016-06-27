@@ -453,4 +453,30 @@ class InstitutionGradesTable extends AppTable {
 		return (($a->toUnixString() >= $b->toUnixString()) ? $a : $b);
 	}
 
+    public function onBeforeRestrictDelete(Event $event, ArrayObject $options, $id) 
+    {
+        $restrictCheck = function ($model, $id, $deleteOptions) {
+            $primaryKey = $model->primaryKey();
+            $idKey = $model->aliasField($primaryKey);
+            if ($model->exists([$idKey => $id])) {
+                $institutionGradeData = $model->get($id);
+                $educationGradeId = $institutionGradeData->education_grade_id;
+                $institutionId = $institutionGradeData->institution_id;
+
+                $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+                $associatedStudentRecordsCount = $InstitutionStudents->find()
+                    ->where([
+                        $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
+                        $InstitutionStudents->aliasField('institution_id') => $institutionId
+                    ])
+                    ->count();
+                // no records return true
+                return ($associatedStudentRecordsCount == 0);
+            } else {
+                // record doesnt exist, return deletion successful
+                return true;
+            }
+        };
+        return $restrictCheck;
+    }
 }

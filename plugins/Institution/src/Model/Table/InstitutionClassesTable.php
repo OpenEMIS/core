@@ -28,9 +28,9 @@ class InstitutionClassesTable extends ControllerActionTable {
 		$this->belongsTo('InstitutionShifts',		['className' => 'Institution.InstitutionShifts', 	'foreignKey' => 'institution_shift_id']);
 		$this->belongsTo('Institutions', 			['className' => 'Institution.Institutions', 		'foreignKey' => 'institution_id']);
 
-		$this->hasMany('ClassGrades', 				['className' => 'Institution.InstitutionClassGrades', 'dependent' => true]);
-		$this->hasMany('ClassStudents', 			['className' => 'Institution.InstitutionClassStudents', 'dependent' => true]);
-		$this->hasMany('SubjectStudents', 			['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true]);
+		$this->hasMany('ClassGrades', 				['className' => 'Institution.InstitutionClassGrades', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('ClassStudents', 			['className' => 'Institution.InstitutionClassStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('SubjectStudents', 			['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->belongsToMany('EducationGrades', [
 			'className' => 'Education.EducationGrades',

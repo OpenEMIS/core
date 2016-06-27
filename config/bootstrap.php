@@ -77,9 +77,15 @@ try {
     Configure::load('app', 'default', false);
     Configure::load('app_extra', 'default');
     Configure::load('datasource', 'default');
-//    Configure::load('testdatasource', 'default');
 } catch (\Exception $e) {
     exit($e->getMessage() . "\n");
+}
+
+// For unit testing
+try {
+    Configure::load('test_datasource', 'default');
+} catch (\Exception $e) {
+    // do nothing if test_datasource.php is not found
 }
 
 // Load an environment local configuration file.
