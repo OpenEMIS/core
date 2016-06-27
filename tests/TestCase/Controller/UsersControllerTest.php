@@ -19,7 +19,11 @@ class UsersControllerTest extends IntegrationTestCase {
 			'password' => 'demo',
 			'submit' => 'login'
 		];		
+<<<<<<< HEAD
 		$this->enableSecurityToken();
+=======
+		$this->enableCsrfToken();
+>>>>>>> origin_ssh/POCOR-2978-dev
 		$this->post('/Users/postLogin', $data);
 		$this->assertArrayHasKey('Auth', $_SESSION, 'Error logging in!');
 	}
