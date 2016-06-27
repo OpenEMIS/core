@@ -114,13 +114,15 @@ class ImportStudentsTable extends AppTable {
         $data[$columnOrder]['data'][] = [$translatedReadableCol, $startDateLabel, $endDateLabel, $translatedCol];
         if (!empty($modelData)) {
             foreach($modelData as $row) {
-                $date = $row->start_date;
-                $data[$columnOrder]['data'][] = [
-                    $row->name,
-                    $row->start_date->format('d/m/Y'),
-                    $row->end_date->format('d/m/Y'),
-                    $row->$lookupColumn
-                ];
+                if ($row->academic_period_level_id == 1) { //validate that only period level "year" will be shown
+                    $date = $row->start_date;
+                    $data[$columnOrder]['data'][] = [
+                        $row->name,
+                        $row->start_date->format('d/m/Y'),
+                        $row->end_date->format('d/m/Y'),
+                        $row->$lookupColumn
+                    ];
+                }
             }
         }
     }
@@ -245,6 +247,17 @@ class ImportStudentsTable extends AppTable {
             $rowInvalidCodeCols['start_date'] = __('Unknown date format');
             return false;
         }
+
+        //check the level of academic period chosen for "year"
+        $academicPeriodLevel = $this->getAcademicPeriodLevel($tempRow['academic_period_id']);
+        
+        if (count($academicPeriodLevel)>0) {
+            if ($academicPeriodLevel[0]['academic_period_level_id']!=1) { //if the level is not year
+                $rowInvalidCodeCols['academic_period_id'] = __('Academic period must be in year level');
+                return false;
+            }
+        }
+
 
         $periods = $this->getAcademicPeriodByStartDate($tempRow['start_date']->format('Y-m-d'));
         if (!$periods) {
