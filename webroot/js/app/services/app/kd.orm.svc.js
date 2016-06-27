@@ -11,6 +11,7 @@ angular.module('kd.orm.svc', [])
         _contain: [],
         _finder: [],
         _where: {},
+        _orWhere: {},
         _group: [],
         _order: [],
         _limit: 0,
@@ -76,6 +77,19 @@ angular.module('kd.orm.svc', [])
             return this;
         },
 
+        // http://host/restful/Plugin-Table.json?_orWhere=field1:A,field2:B,field3:C
+        orWhere: function(orWhere) {
+            if (angular.isObject(orWhere)) {
+                var paramsArray = [];
+                angular.forEach(orWhere, function(value, key) {
+                    this.push(key + ':' + value);
+                }, paramsArray);
+                this._finder.push('[' + paramsArray.join(';') + ']');
+            }
+            this._orWhere = orWhere;
+            return this;
+        },
+
         group: function(group) {
             this._group = group;
             return this;
@@ -133,7 +147,7 @@ angular.module('kd.orm.svc', [])
                     }
                 };
             }
-            
+
             if (settings.error != undefined) {
                 error = settings.error;
             } else {
@@ -185,6 +199,9 @@ angular.module('kd.orm.svc', [])
                 angular.forEach(this._where, function(value, key) {
                     this.push(key + '=' + value);
                 }, params);
+            }
+            if (this._orWhere.length > 0) {
+                params.push('_orWhere=' + this._orWhere.join(','));
             }
             params.push('_limit=' + this._limit);
             if (this._page > 0) {

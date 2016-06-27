@@ -48,11 +48,11 @@ class RestfulController extends AppController
                 // Event to get allowed action and allowed table to be accessible via restful
             	$allowedActions = [];
                 $event = $model->dispatchEvent('Restful.Model.onGetAllowedActions', null, $this);
-                if ($event->result) 
+                if ($event->result)
                 {
                     $allowedActions = $event->result;
                 }
-            	if (!empty($allowedActions)) 
+            	if (!empty($allowedActions))
                 {
             		$this->Auth->allow($allowedActions);
             	}
@@ -112,7 +112,7 @@ class RestfulController extends AppController
             $json = str_replace('[', '":{"', $json);
             $json = str_replace(']', '"}}', $json);
             $json = '{"' . str_replace(';', '","', $json);
-            
+
             $noAttributesFound = strripos($json, '"}') === false;
             if ($noAttributesFound) {
                 $json .= '": {}}';
@@ -128,7 +128,7 @@ class RestfulController extends AppController
         if (!empty($value)) {
             $table = $extra['table'];
             $columns = $table->schema()->columns();
-            
+
             $fields = explode(',', $value);
             foreach ($fields as $index => $field) {
                 if (in_array($field, $columns)) {
@@ -146,10 +146,16 @@ class RestfulController extends AppController
         ];
 
         if (!empty($value)) {
+            $table = $extra['table'];
             $finders = $this->decode($value);
             foreach ($finders as $name => $options) {
                 $options = array_merge($options, $components);
-                $query->find($name, $options);
+                $finderFunction = 'find' . ucfirst($name);
+                if (method_exists($table, $finderFunction) || $table->behaviors()->hasMethod($finderFunction)) {
+                    $query->find($name, $options);
+                } else {
+                    Log::write('debug', 'Finder (' . $finderFunction . ') does not exists.');
+                }
             }
             $extra['list'] = array_key_exists('list', $finders);
         }
@@ -170,7 +176,7 @@ class RestfulController extends AppController
             } else {
                 $contain = explode(',', $value);
             }
-            
+
             if (!empty($contain)) {
                 $query->contain($contain);
                 $fields = [];
@@ -195,7 +201,7 @@ class RestfulController extends AppController
             $conditions = [];
             $table = $extra['table'];
             $columns = $table->schema()->columns();
-           
+
             foreach ($value as $field => $val) {
                 if (in_array($field, $columns)) {
                     $conditions[$table->aliasField($field)] = $val;
@@ -205,6 +211,37 @@ class RestfulController extends AppController
             }
             $query->where($conditions);
         }
+    }
+
+    private function _orWhere(Query $query, $value, ArrayObject $extra)
+    {
+        $table = $extra['table'];
+        $fields = explode(',', $value);
+
+        $orWhere = [];
+        foreach ($fields as $field) {
+            $values = explode(':', $field);
+            $key = $values[0];
+            $value = $values[1];
+
+            $compareLike = false;
+            if ($this->startsWith($value, '_')) {
+                $value = '%' . substr($value, 1);
+                $compareLike = true;
+            }
+            if ($this->endsWith($value, '_')) {
+                $value = substr($value, 0, strlen($value)-1) . '%';
+                $compareLike = true;
+            }
+            if ($compareLike) {
+                $orWhere[$table->aliasField($key) . ' LIKE'] = $value;
+            } else {
+                $orWhere[$table->aliasField($key)] = $value;
+            }
+        }
+        // pr($orWhere);
+        $query->orWhere($orWhere);
+        // pr($query->sql());
     }
 
     private function _group(Query $query, $value, ArrayObject $extra)
@@ -268,7 +305,7 @@ class RestfulController extends AppController
         $requestQueries = $this->request->query;
         $extra = new ArrayObject(['table' => $table, 'fields' => []]);
         Log::write('debug', $requestQueries);
-        
+
         $default = ['_limit' => 30, '_page' => 1];
         $queryString = array_merge($default, $this->processQueryString($requestQueries));
 
@@ -320,7 +357,7 @@ class RestfulController extends AppController
         if ($target) {
             if ($target->exists([$target->aliasField($target->primaryKey()) => $id])) {
                 $requestQueries = $this->request->query;
-    
+
                 $query = $target->find();
                 $containments = $this->_setupContainments($target, $requestQueries, $query);
 
@@ -486,5 +523,11 @@ class RestfulController extends AppController
     {
         // search backwards starting from haystack length characters from the end
         return $needle === "" || strrpos($haystack, $needle, -strlen($haystack)) !== false;
+    }
+
+    private function endsWith($haystack, $needle)
+    {
+        // search forward starting from end minus needle length characters
+        return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== false);
     }
 }
