@@ -50,20 +50,20 @@ class EducationsControllerTest extends AppTestCase {
 		$this->assertEquals($data['name'], $entity->name);
 	}
 
-	// public function testDeleteEducationSystem() {
+	public function testDeleteEducationSystem() {
 
- // 		$this->setAuthSession();
- // 		$this->get('Educations/Systems/remove/1');
- // 		$this->assertResponseCode(200);
+ 		$this->setAuthSession();
+ 		$this->get('Educations/Systems/remove/1');
+ 		$this->assertResponseCode(200);
 
-	// 	$data = [
-	// 		'id' => 1,
-	// 		'_method' => 'DELETE',
-	// 	];
-	// 	$this->postData('/Educations/Systems/remove/1', $data);
-	// 	$table = TableRegistry::get('Education.EducationSystems');
-	// 	$exists = $table->exists([$table->primaryKey() => 1]);
-	// 	$this->assertFalse($exists);
-	// }
+		$data = [
+			'id' => 1,
+			'_method' => 'DELETE',
+		];
+		$this->postData('/Educations/Systems/remove/1', $data);
+		$table = TableRegistry::get('Education.EducationSystems');
+		$exists = $table->exists([$table->primaryKey() => 1]);
+		$this->assertFalse($exists);
+	}
 
 }
