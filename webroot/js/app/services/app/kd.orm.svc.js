@@ -11,7 +11,7 @@ angular.module('kd.orm.svc', [])
         _contain: [],
         _finder: [],
         _where: {},
-        _orWhere: {},
+        _orWhere: [],
         _group: [],
         _order: [],
         _limit: 0,
@@ -77,16 +77,27 @@ angular.module('kd.orm.svc', [])
             return this;
         },
 
-        // http://host/restful/Plugin-Table.json?_orWhere=field1:A,field2:B,field3:C
+        /* Eg.
+        var wc = KdOrmSvc.wildcard();
+        UsersTable
+        .orWhere({
+            'first_name': wc + 'do' + wc,
+            'last_name': 'ste' + wc
+        })
+        .ajax({defer: true});
+
+        which evaluates to
+
+        // http://host/restful/User-Users.json?_orWhere=first_name:_do_,last_name:ste_
+        */
         orWhere: function(orWhere) {
             if (angular.isObject(orWhere)) {
                 var paramsArray = [];
                 angular.forEach(orWhere, function(value, key) {
                     this.push(key + ':' + value);
                 }, paramsArray);
-                this._finder.push('[' + paramsArray.join(';') + ']');
+                this._orWhere.push(paramsArray.join(','));
             }
-            this._orWhere = orWhere;
             return this;
         },
 
@@ -232,12 +243,17 @@ angular.module('kd.orm.svc', [])
 
     return {
         base: base,
-        init: init
+        init: init,
+        wildcard: wildcard
     };
 
     function base(base) {
         query._base = base;
         return this;
+    };
+
+    function wildcard() {
+        return '_';
     };
 
     function init(className) {
