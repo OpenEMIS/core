@@ -11,19 +11,11 @@ use Cake\Utility\Inflector;
 class AreapickerBehavior extends Behavior {
 	public function implementedEvents() {
         $events = parent::implementedEvents();
-
-        $events['ControllerAction.Model.beforeAction'] = 'beforeAction';
 		$events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
 		$events['ControllerAction.Model.edit.afterQuery'] = 'editAfterQuery';
 		$events['ControllerAction.Model.edit.beforePatch'] = 'editBeforePatch';
 
         return $events;
-    }
-
-    public function beforeAction(Event $event) {
-    	$this->_table->Security->config('unlockedFields', [
-        	'area_picker'
-        ]);
     }
 
 	public function onGetAreapickerElement(Event $event, $action, Entity $entity, $attr, $options) {
