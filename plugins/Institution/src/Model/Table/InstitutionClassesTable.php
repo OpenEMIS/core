@@ -249,8 +249,9 @@ class InstitutionClassesTable extends ControllerActionTable {
     	}
 
 		$Classes = $this;
-		$academicPeriodOptions = $this->AcademicPeriods->getList();
-
+		//$academicPeriodOptions = $this->AcademicPeriods->getList();
+		$academicPeriodOptions = $this->AcademicPeriods->getYearList();
+		
 		$institutionId = $extra['institution_id'];
 		$selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
 		$this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriodId, [
@@ -394,7 +395,8 @@ class InstitutionClassesTable extends ControllerActionTable {
 	public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		$query->contain([
 			'AcademicPeriods',
-			'InstitutionShifts',
+			//'InstitutionShifts',
+			'InstitutionShifts.ShiftOptions',
 			'EducationGrades',
 			'Staff',
 			'ClassStudents' => [
@@ -462,7 +464,8 @@ class InstitutionClassesTable extends ControllerActionTable {
 	}
 
 	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
-		$academicPeriodOptions = $this->AcademicPeriods->getlist(['isEditable'=>true]);
+		//$academicPeriodOptions = $this->AcademicPeriods->getlist(['isEditable'=>true]);
+		$academicPeriodOptions = $this->AcademicPeriods->getYearList();
 		$this->fields['academic_period_id']['options'] = $academicPeriodOptions;
 		$this->fields['academic_period_id']['onChangeReload'] = true;
 		$this->fields['academic_period_id']['default'] = $this->AcademicPeriods->getCurrent();
@@ -663,13 +666,19 @@ class InstitutionClassesTable extends ControllerActionTable {
 		$selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
 
 		if ($selectedAcademicPeriodId > -1) {
-			$this->InstitutionShifts->createInstitutionDefaultShift($institutionId, $selectedAcademicPeriodId);
+			//$this->InstitutionShifts->createInstitutionDefaultShift($institutionId, $selectedAcademicPeriodId);
 			$shiftOptions = $this->InstitutionShifts->getShiftOptions($institutionId, $selectedAcademicPeriodId);
 		} else {
 			$shiftOptions = [];
 		}
 
 		$this->fields['institution_shift_id']['options'] = $shiftOptions;
+
+		$createShiftURL = "/core/Institutions/Shifts?toggle=" . $selectedAcademicPeriodId;
+
+		if (empty($shiftOptions)) {
+			$this->Alert->warning(__("There are no shifts configured for the selected academic period. Create shift <a href= '". $createShiftURL . "' target='_blank'>here</a>."), ['type' => 'text']);
+		}
 	}
 
 
@@ -678,6 +687,9 @@ class InstitutionClassesTable extends ControllerActionTable {
 ** field specific methods
 **
 ******************************************************************************************************************/
+	public function onGetInstitutionShiftId(Event $event, Entity $entity) {
+		return $entity->institution_shift->shift_option->name;
+	}
 	public function onGetStaffId(Event $event, Entity $entity) {
 		if ($this->action == 'view') {
 			if ($entity->has('staff')) {
