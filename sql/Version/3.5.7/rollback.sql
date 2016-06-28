@@ -13,6 +13,25 @@ DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3068';
 UPDATE `area_administratives` SET `parent_id` = -1 WHERE `parent_id` IS NULL;
 UPDATE `areas` SET `parent_id` = -1 WHERE `parent_id` IS NULL;
 
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3058';
+
+
+-- POCOR-2335
+-- staff_training_needs
+DROP TABLE `staff_training_needs`;
+ALTER TABLE `z_2335_staff_training_needs` RENAME `staff_training_needs`;
+>>>>>>> origin/POCOR-3048
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3068';
+
+
+-- POCOR-3058
+-- code here
+UPDATE `area_administratives` SET `parent_id` = -1 WHERE `parent_id` IS NULL;
+UPDATE `areas` SET `parent_id` = -1 WHERE `parent_id` IS NULL;
+
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3058';
