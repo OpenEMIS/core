@@ -6,20 +6,21 @@ use App\Test\AppTestCase;
 
 class EducationCyclesControllerTest extends AppTestCase
 {
-        public $fixtures = ['app.education_systems', 'app.education_levels', 'app.education_cycles'];
+    public $fixtures = ['app.education_systems', 'app.education_level_isced', 'app.education_levels', 'app.education_cycles'];
 
-    private $testingId = 2;
+    private $id = 1;
+    private $table;
 
     public function setup()
     {
         parent::setUp();
         $this->urlPrefix('/Educations/Cycles/');
+        $this->table = TableRegistry::get('Education.EducationCycles');
     }
 
     public function testIndex()
     {
-        // http://localhost:8888/core/Educations/Cycles/index?level=5
-        $testUrl = $this->url('index', ['level' => 1]);
+        $testUrl = $this->url('index');
 
         $this->get($testUrl);
         $this->assertResponseCode(200);
@@ -28,105 +29,86 @@ class EducationCyclesControllerTest extends AppTestCase
 
     public function testSearchFound()
     {
-        $testUrl = $this->url('index', ['level' => 1]);
+        $testUrl = $this->url('index');
         $data = [
             'Search' => [
                 'searchField' => 'education'
             ]
         ];
-        $this->post($testUrl, $data);
+        $this->postData($testUrl, $data);
 
         $this->assertEquals(true, (count($this->viewVariable('data')) >= 1));
     }
 
     public function testSearchNotFound()
     {
-        $testUrl = $this->url('index', ['level' => 1]);
+        $testUrl = $this->url('index');
         $data = [
             'Search' => [
                 'searchField' => '@#!@!cantFindThis!@#!'
             ]
         ];
-        $this->post($testUrl, $data);
+        $this->postData($testUrl, $data);
 
         $this->assertEquals(true, (count($this->viewVariable('data')) == 0));
     }
 
     public function testCreate()
     {
-        $testUrl = $this->url('add', ['level' => 11]);
+        $alias = $this->table->alias();
+        $testUrl = $this->url('add');
 
         $this->get($testUrl);
         $this->assertResponseCode(200);
 
-        $table = TableRegistry::get('EducationCycle.EducationCycles');
         $data = [
-            'EducationCycles' => [
+            $alias => [
                 'name' => 'EducationCyclesControllerTest_testCreate',
                 'admission_age' => '6',
-                'education_level_id' => '11',
+                'education_level_id' => '1'
             ],
             'submit' => 'save'
         ];
-        $this->post($testUrl, $data);
+        $this->postData($testUrl, $data);
 
-        $lastInsertedRecord = $table->find()
-            ->where([$table->aliasField('name') => $data['EducationCycles']['name']])
+        $lastInsertedRecord = $this->table->find()
+            ->where([$this->table->aliasField('name') => $data[$alias]['name']])
             ->first();
         $this->assertEquals(true, (!empty($lastInsertedRecord)));
     }
 
     public function testRead()
     {
-        $testUrl = $this->url('view/'.$this->testingId, ['level' => 11]);
+        $testUrl = $this->url('view/'.$this->id);
 
         $table = TableRegistry::get('EducationCycle.EducationCycles');
         $this->get($testUrl);
 
         $this->assertResponseCode(200);
-        $this->assertEquals(true, ($this->viewVariable('data')->id == $this->testingId));
+        $this->assertEquals(true, ($this->viewVariable('data')->id == $this->id));
     }
 
-    public function testUpdate() {
-        $testUrl = $this->url('edit/'.$this->testingId, ['level' => 11]);
+    public function testUpdate()
+    {
+        $alias = $this->table->alias();
+        $testUrl = $this->url('edit/'.$this->id);
 
         // TODO: DO A GET FIRST
-        $table = TableRegistry::get('EducationCycle.EducationCycles');
         $this->get($testUrl);
-
         $this->assertResponseCode(200);
 
         $data = [
-            'EducationCycles' => [
+            $alias => [
                 'name' => 'EducationCyclesControllerTest_testUpdate',
                 'admission_age' => '7',
-                'education_level_id' => '12',
+                'visible' => '1',
+                'education_level_id' => '2'
             ],
             'submit' => 'save'
         ];
+        $this->postData($testUrl, $data);
 
-        $this->post($testUrl, $data);
-
-        $entity = $table->get($this->testingId);
-        $this->assertEquals($data['EducationCycles']['name'], $entity->name);
-    }
-
-    public function testDelete() {
-        $testUrl = $this->url('remove');
-
-        $table = TableRegistry::get('EducationCycle.EducationCycles');
-
-        $exists = $table->exists([$table->primaryKey() => $this->testingId]);
-        $this->assertTrue($exists);
-
-        $data = [
-            'id' => $this->testingId,
-            '_method' => 'DELETE'
-        ];
-
-        $this->post($testUrl, $data);
-
-        $exists = $table->exists([$table->primaryKey() => $this->testingId]);
-        $this->assertFalse($exists);
+        $entity = $this->table->get($this->id);
+        $this->assertEquals($data[$alias]['name'], $entity->name);
     }
 }
