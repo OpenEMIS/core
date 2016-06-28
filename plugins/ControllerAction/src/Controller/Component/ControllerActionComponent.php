@@ -180,6 +180,10 @@ class ControllerActionComponent extends Component {
 
         if (isset($pass[0])) {
             if ($pass[0] == 'reorder') {
+                if ($this->request->is('post')) {
+                    $token = isset($this->request->cookies['csrfToken']) ? $this->request->cookies['csrfToken'] : '';
+                    $this->request->env('HTTP_X_CSRF_TOKEN', $token);
+                }
                 $controller->Security->config('unlockedActions', [
                     $this->request->params['action']
                 ]);
