@@ -703,7 +703,7 @@ class StaffAttendancesTable extends AppTable {
 
 			$InstitutionArray = [];
 			if ($selectedDay != -1) {
-				$InstitutionArray[__('Attendance')] = $this->getDonutChart('institution_staff_attendance', ['query' => $query, 'key' => __('Attendance')]);
+				$InstitutionArray[__('Absence')] = $this->getDonutChart('institution_staff_attendance', ['query' => $query, 'key' => '']);
 			}
 
 			$totalStaff = $query->count();
