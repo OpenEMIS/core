@@ -1,6 +1,7 @@
 <?php
 namespace App\Test;
 use Cake\TestSuite\IntegrationTestCase;
+use Cake\Utility\Hash;
 
 // attempt to create extending classes and traits fail maybe because of link below
 // https://getcomposer.org/doc/04-schema.md#autoload-dev
@@ -51,31 +52,41 @@ class AppTestCase extends IntegrationTestCase
         return $this->urlPrefix . $action . $namedParamsString;
     }
 
+    private function generateSecurityToken($url, &$data)
+    {
+        $keys = array_map(function ($field) {
+            return preg_replace('/(\.\d+)+$/', '', $field);
+        }, array_keys(Hash::flatten($data)));
+        $tokenData = $this->_buildFieldToken($url, array_unique($keys));
+        $data['_Token'] = $tokenData;
+        $data['_Token']['debug'] = 'SecurityComponent debug data would be added here';
+    }
+
     public function postData($url, $data = [])
     {
         $this->enableCsrfToken();
-        $this->enableSecurityToken();
+        $this->generateSecurityToken($url, $data);
         $this->post($url, $data);
     }
 
     public function putData($url, $data = [])
     {
         $this->enableCsrfToken();
-        $this->enableSecurityToken();
+        $this->generateSecurityToken($url, $data);
         $this->put($url, $data);
     }
 
     public function patchData($url, $data = [])
     {
         $this->enableCsrfToken();
-        $this->enableSecurityToken();
+        $this->generateSecurityToken($url, $data);
         $this->patch($url, $data);
     }
 
     public function deleteData($url)
     {
         $this->enableCsrfToken();
-        $this->enableSecurityToken();
+        $this->generateSecurityToken($url, $data);
         $this->delete($url);
     }
 }
