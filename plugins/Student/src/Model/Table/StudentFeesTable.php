@@ -92,17 +92,13 @@ class StudentFeesTable extends ControllerActionTable {
 ** index action methods
 **
 ******************************************************************************************************************/
-	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) { 
 		$query
 			->contain([
 				'EducationGrades.EducationProgrammes',
 				'InstitutionFeeTypes',
 				'StudentFeesAbstract'
-			])
-			->where([
-				$this->aliasField('institution_id') . ' IN ' => array_keys($this->_conditions['institutionIds']),
-				$this->aliasField('academic_period_id') . ' IN ' => array_keys($this->_conditions['academicPeriodIds']),
-				$this->aliasField('education_grade_id') . ' IN ' => array_keys($this->_conditions['educationGradeIds'])
 			])
 			->join([
 				[
@@ -118,6 +114,21 @@ class StudentFeesTable extends ControllerActionTable {
 			->group(['StudentFees.id'])
 			;
 
+		if (!empty(array_keys($this->_conditions['institutionIds'])) 
+			&& !empty(array_keys($this->_conditions['academicPeriodIds'])) 
+			&& !empty(array_keys($this->_conditions['educationGradeIds']))){
+				$query
+					->where([
+					$this->aliasField('institution_id') . ' IN ' => array_keys($this->_conditions['institutionIds']),
+					$this->aliasField('academic_period_id') . ' IN ' => array_keys($this->_conditions['academicPeriodIds']),
+					$this->aliasField('education_grade_id') . ' IN ' => array_keys($this->_conditions['educationGradeIds'])
+				]);
+		} else {
+			$query
+				->where([
+				$this->aliasField('id') => -1 // the student doesnt have a student record, this is to make sure no record return
+			]);
+		}
 	}
 
 	public function indexAfterAction(Event $event, ResultSet $resultSet, ArrayObject $extra) {
