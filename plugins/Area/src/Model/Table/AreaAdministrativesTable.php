@@ -29,6 +29,9 @@ class AreaAdministrativesTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
+		$this->ControllerAction->field('area_administrative_level_id');
+		$this->ControllerAction->field('is_main_country', ['visible' => false]);
+		$this->ControllerAction->field('name');
 		$count = $this->find()->where([
 				'OR' => [
 					[$this->aliasField('lft').' IS NULL'],
@@ -49,9 +52,6 @@ class AreaAdministrativesTable extends AppTable {
 	}
 
 	public function afterAction(Event $event) {
-		$this->ControllerAction->field('area_administrative_level_id');
-		$this->ControllerAction->field('is_main_country', ['visible' => false]);
-		$this->ControllerAction->field('name');
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 
