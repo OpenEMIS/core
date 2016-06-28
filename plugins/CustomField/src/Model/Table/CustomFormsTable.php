@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
+use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
@@ -48,6 +49,11 @@ class CustomFormsTable extends AppTable {
 		$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
 		$this->belongsToMany('CustomFilters', $this->extra['filterClass']);
 		$this->belongsToMany('CustomFields', $this->extra['fieldClass']);
+	}
+
+	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+		return $validator;
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
