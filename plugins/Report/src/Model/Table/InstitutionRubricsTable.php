@@ -36,7 +36,7 @@ class InstitutionRubricsTable extends AppTable {
 		$this->addBehavior('Report.ReportList');
 	}
 
-	public function afterAction(Event $event) {
+	public function beforeAction(Event $event) {
 		$controllerName = $this->controller->name;
 		$reportName = __('Rubrics');
 		$this->controller->Navigation->substituteCrumb($this->alias(), $reportName);

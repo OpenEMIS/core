@@ -42,7 +42,7 @@ class InstitutionsTable extends AppTable  {
 		]);
 	}
 
-	public function afterAction(Event $event) {
+	public function beforeAction(Event $event) {
 		$this->fields = [];
 		$this->ControllerAction->field('feature', ['select' => false]);
 		$this->ControllerAction->field('format');
