@@ -17,9 +17,7 @@ class RestfulController extends AppController
     private $_debug = false;
     private $model = null;
 
-    public $components = [
-        'RequestHandler'
-    ];
+    public $components = ['RequestHandler'];
 
     public function initialize()
     {
@@ -46,16 +44,10 @@ class RestfulController extends AppController
             	$this->model = $model;
 
                 // Event to get allowed action and allowed table to be accessible via restful
-            	$allowedActions = [];
                 $event = $model->dispatchEvent('Restful.Model.onGetAllowedActions', null, $this);
-                if ($event->result)
-                {
-                    $allowedActions = $event->result;
+                if (is_array($event->result)) {
+                    $this->Auth->allow($event->result);
                 }
-            	if (!empty($allowedActions))
-                {
-            		$this->Auth->allow($allowedActions);
-            	}
             }
         }
     }
