@@ -17,6 +17,8 @@ class CustomTableRowsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 			->requirePresence('name')
 			->notEmpty('name', 'Please enter a name.');
