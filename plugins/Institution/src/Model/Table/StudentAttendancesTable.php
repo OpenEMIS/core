@@ -50,6 +50,12 @@ class StudentAttendancesTable extends AppTable {
 		$AbsenceTypesTable = TableRegistry::get('Institution.AbsenceTypes');
 		$this->absenceList = $AbsenceTypesTable->getAbsenceTypeList();
 		$this->absenceCodeList = $AbsenceTypesTable->getCodeList();
+
+		$this->addBehavior('HighChart', [
+			'institution_student_attendance' => [
+				'_function' => 'getNumberOfStudentsByAttendance'
+			]
+		]);
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
@@ -257,6 +263,43 @@ class StudentAttendancesTable extends AppTable {
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 
+	// Mini dashboard
+	// Function use by the mini dashboard
+	public function getNumberOfStudentsByAttendance($params=[]) {
+		$query = $params['query'];
+		$StudentAttendancesQuery = clone $query;
+			
+		// Creating the data set		
+		$dataSet = [];
+		$data = [];
+		foreach ($StudentAttendancesQuery as $entity) {
+			// //Compile the dataset
+			if (empty($entity->StudentAbsences['id'])) {
+				if (isset($data[__('Present')])) {
+					$data[__('Present')] = ++$data[__('Present')];
+				} else {
+					$data[__('Present')] = 1;
+				}
+			} else {
+				$absenceTypeId = $entity->StudentAbsences['absence_type_id'];
+				$typeName = $this->absenceList[$absenceTypeId];
+				if (isset($data[__($typeName)])) {
+					$data[__($typeName)] = ++$data[__($typeName)];
+				} else {
+					$data[__($typeName)] = 1;
+				}
+			}
+		}
+
+		foreach ($data as $key => $value) {
+			$dataSet[] = [$key, $value];
+		}
+		$params['dataSet'] = $dataSet;
+		unset($StudentAttendancesQuery);
+		return $params;
+	}
+
+
 	// Event: ControllerAction.Model.onGetOpenemisNo
 	public function onGetOpenemisNo(Event $event, Entity $entity) {		
 		$sessionPath = 'Users.institution_student_absences.';
@@ -309,7 +352,6 @@ class StudentAttendancesTable extends AppTable {
 			$attr['value'] = $configItemsTable->value('start_time');
 			$attr['default_time'] = false;
 			$attr['null'] = true;
-			
 			if (empty($entity->StudentAbsences['id'])) {
 				$options['value'] = self::PRESENT;
 				$html .= $Form->input($fieldPrefix.".absence_type_id", $options);
@@ -345,7 +387,6 @@ class StudentAttendancesTable extends AppTable {
 			$html .= $Form->hidden($fieldPrefix.".end_date", ['value' => $selectedDate]);
 		} else {
 			$absenceTypeList = $this->absenceList;
-
 			if (empty($entity->StudentAbsences['id'])) {
 				$type = '<i class="fa fa-check"></i>';
 			} else {
@@ -534,11 +575,6 @@ class StudentAttendancesTable extends AppTable {
 
 	// Event: ControllerAction.Model.index.beforeAction
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
-		$toolbarElements = [
-			['name' => 'Institution.Attendance/controls', 'data' => [], 'options' => []]
-		];
-		$this->controller->set('toolbarElements', $toolbarElements);
-
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$periodOptions = $AcademicPeriod->getList();
@@ -725,6 +761,31 @@ class StudentAttendancesTable extends AppTable {
 				])
 				->where([$this->aliasField('institution_class_id') => $selectedClass])
 				->where($conditions);
+
+			$totalStudent = $query->count();
+
+			$indexDashboard = 'dashboard';
+			$InstitutionArray = [];
+			if ($selectedDay != -1) {
+				$InstitutionArray[__('Attendance')] = $this->getDonutChart('institution_student_attendance', ['query' => $query, 'key' => __('Attendance')]);
+			}
+			
+			$toolbarElements[] = [
+				'name' => $indexDashboard,
+				'data' => [
+					'model' => 'students',
+					'modelCount' => $totalStudent,
+					'modelArray' => $InstitutionArray,
+				],
+				'options' => []
+			];
+			$toolbarElements[] = [
+				'name' => 'Institution.Attendance/controls', 
+				'data' => [], 
+				'options' => []
+			];
+
+			$this->controller->set('toolbarElements', $toolbarElements);
 
 			if ($selectedDay == -1) {
 				foreach ($this->allDayOptions as $key => $obj) {
