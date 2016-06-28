@@ -366,7 +366,7 @@ class DirectoriesTable extends AppTable {
 
 	public function addBeforeAction(Event $event)
 	{
-		if (isset($this->request->query['user_type'])) {
+		if (!isset($this->request->data[$this->alias()]['user_type'])) {
 			$this->request->data[$this->alias()]['user_type'] = $this->request->query('user_type');
 		}
 	}

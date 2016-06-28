@@ -174,11 +174,6 @@ class ControllerActionComponent extends Component {
                     }
                 }
             }
-            $this->debug(__METHOD__, ': Event -> ControllerAction.Model.beforeAction');
-            $event = new Event('ControllerAction.Model.beforeAction', $this);
-            $event = $this->model->eventManager()->dispatch($event);
-            if ($event->isStopped()) { return $event->result; }
-            $this->buildDefaultValidation();
         }
 
         $pass = $this->request->pass;
@@ -567,6 +562,13 @@ class ControllerActionComponent extends Component {
 
     public function processAction() {
         $result = null;
+
+        $this->debug(__METHOD__, ': Event -> ControllerAction.Model.beforeAction');
+        $event = new Event('ControllerAction.Model.beforeAction', $this);
+        $event = $this->model->eventManager()->dispatch($event);
+        if ($event->isStopped()) { return $event->result; }
+        $this->buildDefaultValidation();
+
         if ($this->autoProcess) {
             if ($this->triggerFrom == 'Controller') {
                 if (in_array($this->currentAction, $this->defaultActions)) {
