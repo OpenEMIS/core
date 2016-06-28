@@ -1,8 +1,8 @@
 <?php
 namespace CustomField\Model\Table;
 
-use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
+use Cake\Validation\Validator;
 
 class CustomTableColumnsTable extends AppTable {
 	public function initialize(array $config) {
