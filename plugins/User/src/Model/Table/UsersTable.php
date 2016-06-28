@@ -450,7 +450,6 @@ class UsersTable extends AppTable {
 			->allowEmpty('username')
 			->allowEmpty('password')
 			// password validation now in behavior
-			->add('address', [])
 			->allowEmpty('photo_content')
 			;
 		return $validator;
