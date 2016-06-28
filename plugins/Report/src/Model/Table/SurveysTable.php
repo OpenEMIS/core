@@ -34,7 +34,7 @@ class SurveysTable extends AppTable  {
 		$this->addBehavior('Report.InstitutionSecurity');
 	}
 
-	public function beforeAction(Event $event) {
+	public function afterAction(Event $event) {
 		$this->fields = [];
 		$this->ControllerAction->field('feature', ['select' => false]);
 		$this->ControllerAction->field('format');
