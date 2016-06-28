@@ -45,6 +45,7 @@ class RestController extends AppController
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
+		$this->eventManager()->off($this->Csrf);
 		$this->Security->config('unlockedActions', ['survey']);
         if (isset($this->request->query['version'])) {
             $this->RestVersion = $this->request->query('version');
