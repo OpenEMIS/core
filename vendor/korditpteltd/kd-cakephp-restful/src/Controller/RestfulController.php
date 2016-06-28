@@ -217,6 +217,7 @@ class RestfulController extends AppController
     {
         $table = $extra['table'];
         $fields = explode(',', $value);
+        $columns = $table->schema()->columns();
 
         $orWhere = [];
         foreach ($fields as $field) {
@@ -229,19 +230,24 @@ class RestfulController extends AppController
                 $value = '%' . substr($value, 1);
                 $compareLike = true;
             }
+
             if ($this->endsWith($value, '_')) {
                 $value = substr($value, 0, strlen($value)-1) . '%';
                 $compareLike = true;
             }
+
+            if (in_array($key, $columns)) {
+                $key = $table->aliasField($key);
+            }
+
             if ($compareLike) {
-                $orWhere[$table->aliasField($key) . ' LIKE'] = $value;
+                $orWhere[$key . ' LIKE'] = $value;
             } else {
-                $orWhere[$table->aliasField($key)] = $value;
+                $orWhere[$key] = $value;
             }
         }
-        // pr($orWhere);
+
         $query->orWhere($orWhere);
-        // pr($query->sql());
     }
 
     private function _group(Query $query, $value, ArrayObject $extra)
