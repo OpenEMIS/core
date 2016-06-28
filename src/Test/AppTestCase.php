@@ -54,12 +54,18 @@ class AppTestCase extends IntegrationTestCase
 
     private function generateSecurityToken($url, &$data)
     {
+        $newData = $data;
+        if (isset($newData['_method'])) {
+            unset($newData['_method']);
+        }
         $keys = array_map(function ($field) {
             return preg_replace('/(\.\d+)+$/', '', $field);
-        }, array_keys(Hash::flatten($data)));
+        }, array_keys(Hash::flatten($newData)));
         $tokenData = $this->_buildFieldToken($url, array_unique($keys));
-        $data['_Token'] = $tokenData;
-        $data['_Token']['debug'] = 'SecurityComponent debug data would be added here';
+        $newData['_Token'] = $tokenData;
+        $newData['_Token']['debug'] = 'SecurityComponent debug data would be added here';
+
+        $data = array_merge($data, $newData);
     }
 
     public function postData($url, $data = [])
