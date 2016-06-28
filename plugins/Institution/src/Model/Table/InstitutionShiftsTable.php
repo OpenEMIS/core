@@ -16,6 +16,11 @@ use App\Model\Traits\MessagesTrait;
 class InstitutionShiftsTable extends ControllerActionTable {
 	use MessagesTrait;
 
+	const SINGLE_OWNER = 1;
+    const SINGLE_OCCUPIER = 2;
+    const MULTIPLE_OWNER = 3;
+    const MULTIPLE_OCCUPIER = 4;
+
 	public function initialize(array $config) {
 		parent::initialize($config);
 		
@@ -23,10 +28,13 @@ class InstitutionShiftsTable extends ControllerActionTable {
 		$this->belongsTo('Institutions', 			['className' => 'Institution.Institutions', 			'foreignKey' => 'institution_id']);
 		$this->belongsTo('LocationInstitutions',	['className' => 'Institution.LocationInstitutions']);
 		$this->hasMany('InstitutionClasses', 		['className' => 'Institution.InstitutionClasses', 	'foreignKey' => 'institution_shift_id']);
+
+		$this->belongsTo('ShiftOptions', 			['className' => 'Institution.ShiftOptions']);
+		
 		$this->addBehavior('OpenEmis.Autocomplete');
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		
-		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
+		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -38,71 +46,87 @@ class InstitutionShiftsTable extends ControllerActionTable {
  	        		'rule' => ['checkInstitutionLocation']
  	        	])
 			->add('location', 'ruleCheckShiftAvailable', [
-        		'rule' => ['checkShiftAvailable'],
+					'rule' => ['checkShiftAvailable'],
         		])
 			;
 		return $validator;
 	}
 
-	public function beforeAction(Event $event, ArrayObject $extra) {
-		$this->field('academic_period_id', ['type' => 'select']);
-		$this->field('name', ['type' => 'string']);
-		$this->field('period', ['type' => 'string']);	
-	}
+	public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events['ControllerAction.Model.ajaxInstitutionsAutocomplete'] = 'ajaxInstitutionsAutocomplete';
+    	return $events;
+    }
 
-	public function indexBeforeAction(Event $event, ArrayObject $extra){
-		$this->field('period', ['visible' => false]);
+	public function indexBeforeAction(Event $event, ArrayObject $extra)
+	{
+		//to show list of academic period for selection
+		$academicPeriodOptions = $this->AcademicPeriods->getYearList();
 
-		$toggleOptions = [
-			'OurShifts' => $this->getMessage('InstitutionShifts.our_shifts'),
-			'ExternalShifts' => $this->getMessage('InstitutionShifts.external_shifts')
-		];
-		$extra['selectedToggleOption'] = $this->queryString('toggle', $toggleOptions);
+		$extra['selectedAcademicPeriodOptions'] = $this->queryString('toggle', $academicPeriodOptions);
 		$extra['elements']['control'] = [
 			'name' => 'Institution.Shifts/controls', 
 			'data' => [
-				'toggleOptions'=> $toggleOptions,
-				'selectedToggleOption'=> $extra['selectedToggleOption']
+				'toggleOptions'=> $academicPeriodOptions,
+				'selectedToggleOption'=> $extra['selectedAcademicPeriodOptions']
 			],
 			'order' => 3
 		];
+
+		//logic to remove 'add' button if the institution has received shift from other based on the academic period
+		$toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+		if ($this->checkShiftOccupier($extra['selectedAcademicPeriodOptions'])) { //if occupier, then remove the 'add' button
+			unset($toolbarButtonsArray['add']);
+		}
+		$extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+
+		$this->field('location');
+		$this->setFieldOrder([
+			'academic_period_id', 'shift_option_id', 'start_time', 'end_time', 'location', 'location_institution_id'
+		]);
 	}
 
-	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) 
+	{
 		$institutionId = $this->Session->read('Institution.Institutions.id');
-		if (array_key_exists('selectedToggleOption', $extra)) {
-			switch ($extra['selectedToggleOption']) {
-				case 'OurShifts': //institution_id == current school id
-					$this->field('location', ['visible' => false]);
-					// already automatically done in controller
-					break;
-
-				case 'ExternalShifts': //location == current school id 
-					$this->field('location_institution_id', ['visible' => false]);
-					$query->where([
-						$this->aliasField('location_institution_id') => $institutionId
-					], [], true); // undoing all where before this
-					$query->where([$this->aliasField('institution_id') . ' != ' .$institutionId]);
-					$extra['indexButtons'] = [];
-					break;
-				
-				default:
-					# code...
-					break;
-			}
+		if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
+			
+			$query->where([
+						'OR' => [
+							[$this->aliasField('location_institution_id') => $institutionId],
+							[$this->aliasField('institution_id') => $institutionId]
+						],
+						$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']
+					], [], true); //this parameter will remove all where before this and replace it with new where.
 		}
 	}
 
-	public function transferOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$currentInstitutionId = $this->Session->read('Institution.Institutions.id');
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
+		//logic that if the owner != occupier then if the active session is the occupier, then remove edit and delete button.
+		if (($entity->institution_id) != ($entity->location_institution_id)) {
+			if (($entity->institution_id) != $currentInstitutionId) {
+				unset($buttons['remove']);
+				unset($buttons['edit']);
+			}
+		}
+
+		return $buttons;
+	}
+
+	public function transferOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) 
+	{
 		$query->where([
 			'institution_id' => $entity->institution_id,
 			'academic_period_id' => $entity->academic_period_id
 		]);
 	}
 
-	public function afterAction(Event $event, ArrayObject $extra) {
-		$this->field('location', ['after' => 'end_time', 'attr' => ['label' => $this->getMessage('InstitutionShifts.location')]]);
-		$this->field('location_institution_id', ['after' => 'location']);
+	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
+	{
+		$this->setupFields($entity);
 	}
 
 /******************************************************************************************************************
@@ -111,9 +135,14 @@ class InstitutionShiftsTable extends ControllerActionTable {
 **
 ******************************************************************************************************************/
 
-	public function viewBeforeAction($event) {
-		$this->field('period', ['visible' => false]);
-		$this->field('location', ['visible' => false]);
+	public function viewBeforeAction(Event $event, ArrayObject $extra)
+	{
+		$toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+		if ($this->checkShiftOccupier($this->getSelectedAcademicPeriod())) { //if occupier, then remove the 'edit / remove' button
+			unset($toolbarButtonsArray['edit']);
+			unset($toolbarButtonsArray['remove']);
+		}
+		$extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
 	}
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
@@ -130,20 +159,47 @@ class InstitutionShiftsTable extends ControllerActionTable {
 **
 ******************************************************************************************************************/
 
-	public function addEditBeforeAction(Event $event, ArrayObject $extra) {
-		$this->field('period', ['visible' => false]);
-		$this->fields['start_time']['visible'] = true;
-		$this->fields['start_time']['type'] = 'time';
-		$this->fields['end_time']['visible'] = true;
-		$this->fields['end_time']['type'] = 'time';
-	}
-	
-	public function addEditOnChangeLocation(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
-		unset($data[$this->alias()]['location_institution_id']);
-	}
-
 	public function onGetLocation(Event $event, Entity $entity) {
 		return $entity->institution->name;
+	}
+
+	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
+		//$academicPeriodOptions = $this->AcademicPeriods->getlist(['isEditable'=>true]);
+		$academicPeriodOptions = $this->AcademicPeriods->getYearList();
+		$attr['options'] = $academicPeriodOptions;
+		if (($action == 'add') || ($action == 'edit')) {
+
+			$attr['attr']['value'] = $this->getSelectedAcademicPeriod();
+		}
+		$attr['onChangeReload'] = 'changeAcademicPeriod';
+		return $attr;
+	}
+
+	public function onUpdateFieldShiftOptionId(Event $event, array $attr, $action, $request) {
+		$attr['onChangeReload'] = 'changeShiftOption';
+		return $attr;
+	}
+
+	public function onUpdateFieldStartTime(Event $event, array $attr, $action, Request $request) {
+		if ($request->data) {
+			$submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
+			if ($submit == 'changeShiftOption') {
+				$shiftOption = $request->query['shiftoption'];
+				$attr['value'] = $this->ShiftOptions->getStartEndTime($shiftOption, 'start')->format('H:i');
+				return $attr;
+			}
+		};
+	}
+
+	public function onUpdateFieldEndTime(Event $event, array $attr, $action, Request $request) {
+		if ($request->data) {
+			$submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
+				if ($submit == 'changeShiftOption') {
+				$shiftOption = $request->query['shiftoption'];
+				$attr['value'] = $this->ShiftOptions->getStartEndTime($shiftOption, 'end')->format('H:i');
+				return $attr;
+			}
+		}
 	}
 
 	public function onUpdateFieldLocation(Event $event, array $attr, $action, $request) {
@@ -157,18 +213,11 @@ class InstitutionShiftsTable extends ControllerActionTable {
 					$entity = $this->get($params['pass'][1]);
 					if($entity->institution_id != $entity->location_institution_id) {
 						$attr['default'] = 'OTHER';
+					} else {
+						$attr['default'] = 'CURRENT';
 					} 
 				}
 			}
-		}
-		return $attr;
-	}
-
-	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
-		$academicPeriodOptions = $this->AcademicPeriods->getlist(['isEditable'=>true]);
-		$attr['options'] = $academicPeriodOptions;
-		if ($action == 'add' && empty($request->data)) {
-			$attr['attr']['value'] = $this->AcademicPeriods->getCurrent();
 		}
 		return $attr;
 	}
@@ -179,22 +228,24 @@ class InstitutionShiftsTable extends ControllerActionTable {
 			$attr['target'] = ['key' => 'location_institution_id', 'name' => $this->aliasField('location_institution_id')];
 			$attr['noResults'] = __('No Institutions found');
 			$attr['attr'] = ['placeholder' => __('Institution Code or Name')];
-			$attr['url'] = ['controller' => $this->controller->name, 'action' => 'ajaxInstitutionAutocomplete'];
 			$attr['attr']['value'] = '';
 			$attr['attr']['label'] = $this->getMessage('InstitutionShifts.institution');
-			// pr('ere');
+
+			$attr['url'] = ['academicperiod' => $this->getSelectedAcademicPeriod(), 'controller' => 'Institutions', 'action' => 'Shifts', 'ajaxInstitutionsAutocomplete'];
+			
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+
 			if($request->data){
 				$data = $request->data[$this->alias()];
-				if($data['location'] == 'CURRENT'){
-					// pr('here');
+				if (($data['location'] == 'CURRENT') || (!$data['location'])){
 					$attr['type'] = 'hidden';
-					$institutionId = $this->Session->read('Institution.Institutions.id');
+					//$institutionId = $this->Session->read('Institution.Institutions.id');
 					$attr['value'] = $institutionId;
 				} else {
 					if($action == 'edit') {
-						if ($request->is(['post', 'put']) && !empty($request->data)) {
+						if ($request->is(['post', 'put']) && !empty($data['location_institution_id'])) {
 							$Institutions = TableRegistry::get('Institution.Institutions');
-							$entity = $Institutions->findById($request->data[$this->alias()]['location_institution_id'])->first(); 
+							$entity = $Institutions->findById($data['location_institution_id'])->first(); 
 							$attr['attr']['value'] = $entity->name;
 						}
 					}
@@ -210,18 +261,128 @@ class InstitutionShiftsTable extends ControllerActionTable {
 							$attr['attr']['value'] = $entity->location_institution->name;
 							$attr['fieldName'] = $this->aliasField('institution_name');
 						} 
-						else {
-							$attr['visible'] = false;
+						else { 
+							$attr['type'] = 'hidden';
+							$attr['value'] = '';
 						}
 					}
 				} else {
 					$attr['type'] = 'hidden';
-					$institutionId = $this->Session->read('Institution.Institutions.id');
 					$attr['value'] = $institutionId;
 				}
 			}
 		}
 		return $attr;
+	}
+
+	public function addEditOnChangeShiftOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
+		$request = $this->request;
+		unset($request->query['shiftoption']);
+
+		if ($request->is(['post', 'put'])) {
+			if (array_key_exists($this->alias(), $request->data)) {
+				if (array_key_exists('shift_option_id', $request->data[$this->alias()])) {
+					$request->query['shiftoption'] = $request->data[$this->alias()]['shift_option_id'];
+				}
+			}
+		}
+	}
+
+	public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
+		$request = $this->request;
+		unset($request->query['toggle']);
+
+		if ($request->is(['post', 'put'])) {
+			if (array_key_exists($this->alias(), $request->data)) {
+				if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
+					$request->query['toggle'] = $request->data[$this->alias()]['academic_period_id'];
+				}
+			}
+		}
+	}
+
+	public function addEditOnChangeLocation(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
+		//unset($data[$this->alias()]['location_institution_id']);
+	}
+
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
+	{
+    	if (!$entity->isNew()) { //this logic is for edit operation need to store the previous occupier so then the shift_type can be updated later on afterSave.
+    		$previousOccupier = $this->findById($entity->id)->toArray()[0]->location_institution_id;			
+    		$this->Session->write('Institution.Shifts.previousOccupier', $previousOccupier);		
+    	}
+	}
+
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) 
+	{
+		if ($this->AcademicPeriods->getCurrent() == $entity->academic_period_id) { //if the one that being added / edited is the current academic period
+			
+			$owner = $entity->institution_id;
+			$occupier = $entity->location_institution_id;
+
+			if ($owner == $occupier) {
+				$ownerEqualOccupier = true;
+			} else {
+				$ownerEqualOccupier = false;
+			}
+
+			if ((!$ownerEqualOccupier) && (!$entity->isNew())){
+				$shiftType = 0;
+				$ownerOwnedShift = $this->find()
+									->where([
+										$this->aliasField('institution_id').' = '.$owner,
+										$this->aliasField('location_institution_id').' != '.$owner,
+										$this->aliasField('academic_period_id').' = '.$entity->academic_period_id
+									])
+									->count();
+
+				if ($ownerOwnedShift > 1) {
+					$shiftType = self::MULTIPLE_OWNER;
+				} elseif ($ownerOwnedShift == 1) {
+					$shiftType = self::SINGLE_OWNER;
+				}
+				$this->Institutions->updateAll(['shift_type' => $shiftType], ['id' => $owner]);
+			}
+
+			if (!$ownerEqualOccupier) {	
+				$shiftType = 0;
+				$occupierOccupiedShift = $this->find()
+										->where([
+											$this->aliasField('institution_id').' != '.$occupier,
+											$this->aliasField('location_institution_id').' = '.$occupier,
+											$this->aliasField('academic_period_id').' = '.$entity->academic_period_id
+										])
+										->count();
+
+				if ($occupierOccupiedShift > 1) {
+					$shiftType = self::MULTIPLE_OCCUPIER;
+				} elseif ($occupierOccupiedShift == 1) {
+					$shiftType = self::SINGLE_OCCUPIER;
+				}
+				$this->Institutions->updateAll(['shift_type' => $shiftType], ['id' => $occupier]);
+			}
+			
+
+			if (!$entity->isNew()) { //this logic is for edit operation need to updated the previous occupier shift_type.
+				$shiftType = 0;
+	    		$previousOccupier = $this->Session->read('Institution.Shifts.previousOccupier');
+
+	    		$previousOccupierOccupiedShift = $this->find()
+												->where([
+													$this->aliasField('institution_id').' != '.$previousOccupier,
+													$this->aliasField('location_institution_id').' = '.$previousOccupier,
+													$this->aliasField('academic_period_id').' = '.$entity->academic_period_id
+												])
+												->count();
+
+				if ($previousOccupierOccupiedShift > 1) {
+					$shiftType = self::MULTIPLE_OCCUPIER;
+				} elseif ($previousOccupierOccupiedShift == 1) {
+					$shiftType = self::SINGLE_OCCUPIER;
+				}
+				$this->Institutions->updateAll(['shift_type' => $shiftType], ['id' => $previousOccupier]);
+	    	}
+		}
 	}
 
 /******************************************************************************************************************
@@ -296,5 +457,86 @@ class InstitutionShiftsTable extends ControllerActionTable {
 		}
 
 		return $list;
+	}
+
+	public function checkShiftOccupier($selectedAcademicPeriodOptions)
+	{
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+
+		return $this->find()
+					->where([
+						'AND' => [
+							[$this->aliasField('location_institution_id') . " = " . $institutionId],
+							[$this->aliasField('institution_id') . ' != ' . $institutionId],
+							[$this->aliasField('academic_period_id') . ' = ' . $selectedAcademicPeriodOptions]
+						]
+					])
+					->count();
+	}
+
+	public function getSelectedAcademicPeriod()
+	{
+		$request = $this->request;
+		if (array_key_exists('toggle', $request->query)) {
+			$selectedAcademicPeriod = $request->query['toggle'];
+		} else {
+			$selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
+		}
+		return $selectedAcademicPeriod;
+	}
+
+	public function ajaxInstitutionsAutocomplete(Event $mainEvent, ArrayObject $extra) 
+	{
+		$this->ControllerAction->autoRender = false;
+		$this->controller->autoRender = false;
+
+		if ($this->request->is(['ajax'])) {
+
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+			$Institutions = $this->Institutions;
+
+			$term = trim($this->request->query['term']);
+			$selectedAcademicPeriod = trim($this->request->query['academicperiod']);
+			$search = '%' . $term . '%';
+
+			$query = $Institutions->find('list')
+				->where([
+					'NOT EXISTS ('.
+						$this->find('list')
+							->where([
+								$this->aliasField('institution_id').' = '.$Institutions->aliasField('id'),
+								$this->aliasField('institution_id').' != '.$this->aliasField('location_institution_id'),
+								$this->aliasField('academic_period_id') . ' = ' . $selectedAcademicPeriod
+							])
+					.')',
+					$Institutions->aliasField('name') . ' LIKE ' => $search,
+					$Institutions->aliasField('id').' IS NOT ' => $institutionId
+				]);
+
+			$list = $query->toArray();
+			
+			$data = [];
+			foreach ($list as $id => $value) {
+				$label = $value;
+				$data[] = ['label' => $label, 'value' => $id];
+			}
+
+			echo json_encode($data);
+			return true;
+		}
+	}
+
+	public function setupFields(Entity $entity) {
+		$this->field('academic_period_id', ['type' => 'select']);
+		$this->field('shift_option_id', ['type' => 'select']);
+		$this->field('start_time', ['type' => 'time']);
+		$this->field('end_time', ['type' => 'time']);
+		$this->field('location', [
+			'after' => 'end_time', 
+			'attr' => [
+				'label' => $this->getMessage('InstitutionShifts.occupier')
+			]
+		]);
+		$this->field('location_institution_id', ['after' => 'location']);
 	}
 }

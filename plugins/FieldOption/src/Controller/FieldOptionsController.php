@@ -48,7 +48,8 @@ class FieldOptionsController extends AppController {
 				"$controller.SpecialNeedDifficulties" 		=> "$controller.%s",
 				"$controller.StaffAbsenceReasons" 			=> "$controller.%s",
 				"$controller.StudentAbsenceReasons" 		=> "$controller.%s",
-                "$controller.Nationalities" => "$controller.%s"
+                "$controller.Nationalities" 				=> "$controller.%s",
+                "$controller.ShiftOptions" 					=> "$controller.%s"
 			]
 		]);
 	}
@@ -104,6 +105,6 @@ class FieldOptionsController extends AppController {
 	public function SpecialNeedDifficulties() { $this->ControllerAction->process(['alias' => __FUNCTION__, 		'className' => 'FieldOption.SpecialNeedDifficulties']); }
 	public function StaffAbsenceReasons() { $this->ControllerAction->process(['alias' => __FUNCTION__, 			'className' => 'FieldOption.StaffAbsenceReasons']); }
 	public function StudentAbsenceReasons() { $this->ControllerAction->process(['alias' => __FUNCTION__, 		'className' => 'FieldOption.StudentAbsenceReasons']); }
-    public function Nationalities() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'FieldOption.Nationalities']); }
-
+    public function Nationalities() { $this->ControllerAction->process(['alias' => __FUNCTION__, 				'className' => 'FieldOption.Nationalities']); }
+    public function ShiftOptions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 				'className' => 'Institution.ShiftOptions']); }
 }
