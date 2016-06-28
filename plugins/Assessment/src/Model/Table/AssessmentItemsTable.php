@@ -52,6 +52,8 @@ class AssessmentItemsTable extends AssessmentsAppTable {
 
 	public function validationDefault(Validator $validator) 
 	{
+		$validator = parent::validationDefault($validator);
+
 		$validator
 			->requirePresence('assessment_id', 'update')
 			->requirePresence('assessment_grading_type_id')
