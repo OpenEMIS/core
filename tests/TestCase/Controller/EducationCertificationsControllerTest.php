@@ -10,12 +10,14 @@ class EducationCertificationsControllerTest extends AppTestCase
 {
     public $fixtures = ['app.education_certifications'];
 
-    private $testingId = 2;
+    private $id = 1;
+    private $table;
 
     public function setup()
     {
         parent::setUp();
         $this->urlPrefix('/Educations/Certifications/');
+        $this->table = TableRegistry::get('Education.EducationCertifications');
     }
 
     public function testIndex()
@@ -32,10 +34,10 @@ class EducationCertificationsControllerTest extends AppTestCase
         $testUrl = $this->url('index', ['setup' => 1]);
         $data = [
             'Search' => [
-                'searchField' => 'primary'
+                'searchField' => 'cert'
             ]
         ];
-        $this->post($testUrl, $data);
+        $this->postData($testUrl, $data);
 
         $this->assertEquals(true, (count($this->viewVariable('data')) >= 1));
     }
@@ -48,21 +50,21 @@ class EducationCertificationsControllerTest extends AppTestCase
                 'searchField' => '@#!@!cantFindThis!@#!'
             ]
         ];
-        $this->post($testUrl, $data);
+        $this->postData($testUrl, $data);
 
         $this->assertEquals(true, (count($this->viewVariable('data')) == 0));
     }
 
     public function testCreate()
     {
+        $alias = $this->table->alias();
         $testUrl = $this->url('add', ['setup' => 1]);
 
         $this->get($testUrl);
         $this->assertResponseCode(200);
 
-        $table = TableRegistry::get('EducationCertification.EducationCertifications');
         $data = [
-            'EducationCertifications' => [
+            $alias => [
                 'id' => 4,
                 'name' => 'EducationCertificationsControllerTest_testCreate',
                 'order' => 4,
@@ -70,64 +72,44 @@ class EducationCertificationsControllerTest extends AppTestCase
             ],
             'submit' => 'save'
         ];
-        $this->post($testUrl, $data);
+        $this->postData($testUrl, $data);
 
-        $lastInsertedRecord = $table->find()
-            ->where([$table->aliasField('name') => $data['EducationCertifications']['name']])
+        $lastInsertedRecord = $this->table->find()
+            ->where([$this->table->aliasField('name') => $data[$alias]['name']])
             ->first();
         $this->assertEquals(true, (!empty($lastInsertedRecord)));
     }
 
     public function testRead()
     {
-        $testUrl = $this->url('view/'.$this->testingId, ['setup' => 1]);
+        $testUrl = $this->url('view/'.$this->id, ['setup' => 1]);
 
-        $table = TableRegistry::get('EducationCertification.EducationCertifications');
         $this->get($testUrl);
 
         $this->assertResponseCode(200);
-        $this->assertEquals(true, ($this->viewVariable('data')->id == $this->testingId));
+        $this->assertEquals(true, ($this->viewVariable('data')->id == $this->id));
     }
 
-    public function testUpdate() {
-        $testUrl = $this->url('edit/'.$this->testingId, ['setup' => 1]);
+    public function testUpdate()
+    {
+        $alias = $this->table->alias();
+        $testUrl = $this->url('edit/'.$this->id, ['setup' => 1]);
 
         // TODO: DO A GET FIRST
-        $table = TableRegistry::get('EducationCertification.EducationCertifications');
         $this->get($testUrl);
-
         $this->assertResponseCode(200);
 
         $data = [
-            'EducationCertifications' => [
+            $alias => [
                 'name' => 'EducationCertificationsControllerTest_testUpdate',
                 'visible' => 1
             ],
             'submit' => 'save'
         ];
 
-        $this->post($testUrl, $data);
+        $this->postData($testUrl, $data);
 
-        $entity = $table->get($this->testingId);
-        $this->assertEquals($data['EducationCertifications']['name'], $entity->name);
-    }
-
-    public function testDelete() {
-        $testUrl = $this->url('remove');
-
-        $table = TableRegistry::get('EducationCertification.EducationCertifications');
-
-        $exists = $table->exists([$table->primaryKey() => $this->testingId]);
-        $this->assertTrue($exists);
-
-        $data = [
-            'id' => $this->testingId,
-            '_method' => 'DELETE'
-        ];
-
-        $this->post($testUrl, $data);
-
-        $exists = $table->exists([$table->primaryKey() => $this->testingId]);
-        $this->assertFalse($exists);
+        $entity = $this->table->get($this->id);
+        $this->assertEquals($data[$alias]['name'], $entity->name);
     }
 }
