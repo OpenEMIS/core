@@ -58,6 +58,12 @@ class StaffAttendancesTable extends AppTable {
 		$AbsenceTypesTable = TableRegistry::get('Institution.AbsenceTypes');
 		$this->absenceList = $AbsenceTypesTable->getAbsenceTypeList();
 		$this->absenceCodeList = $AbsenceTypesTable->getCodeList();
+
+		$this->addBehavior('HighChart', [
+			'institution_staff_attendance' => [
+				'_function' => 'getNumberOfStaffByAttendance'
+			]
+		]);
 	}
 
 	public function implementedEvents() {
@@ -267,6 +273,42 @@ class StaffAttendancesTable extends AppTable {
 			}
 		}
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	}
+
+	// Mini dashboard
+	// Function use by the mini dashboard
+	public function getNumberOfStaffByAttendance($params=[]) {
+		$query = $params['query'];
+		$StaffAttendancesQuery = clone $query;
+			
+		// Creating the data set		
+		$dataSet = [];
+		$data = [];
+		foreach ($StaffAttendancesQuery as $entity) {
+			// //Compile the dataset
+			if (empty($entity->StaffAbsences['id'])) {
+				if (isset($data[__('Present')])) {
+					$data[__('Present')] = ++$data[__('Present')];
+				} else {
+					$data[__('Present')] = 1;
+				}
+			} else {
+				$absenceTypeId = $entity->StaffAbsences['absence_type_id'];
+				$typeName = $this->absenceList[$absenceTypeId];
+				if (isset($data[__($typeName)])) {
+					$data[__($typeName)] = ++$data[__($typeName)];
+				} else {
+					$data[__($typeName)] = 1;
+				}
+			}
+		}
+
+		foreach ($data as $key => $value) {
+			$dataSet[] = [$key, $value];
+		}
+		$params['dataSet'] = $dataSet;
+		unset($StaffAttendancesQuery);
+		return $params;
 	}
 
 	// Event: ControllerAction.Model.onGetOpenemisNo
@@ -516,11 +558,6 @@ class StaffAttendancesTable extends AppTable {
 
 	// Event: ControllerAction.Model.index.beforeAction
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
-		$toolbarElements = [
-			['name' => 'Institution.Attendance/controls', 'data' => [], 'options' => []]
-		];
-		$this->controller->set('toolbarElements', $toolbarElements);
-
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$periodOptions = $AcademicPeriod->getList();
@@ -663,6 +700,34 @@ class StaffAttendancesTable extends AppTable {
 				->where([$this->aliasField('institution_id') => $institutionId])
 				->distinct()
 				;
+
+			$InstitutionArray = [];
+			if ($selectedDay != -1) {
+				$InstitutionArray[__('Attendance')] = $this->getDonutChart('institution_staff_attendance', ['query' => $query, 'key' => __('Attendance')]);
+			}
+
+			$totalStaff = $query->count();
+
+			$indexDashboard = 'dashboard';
+			
+			
+			$toolbarElements[] = [
+				'name' => $indexDashboard,
+				'data' => [
+					'model' => 'staff',
+					'modelCount' => $totalStaff,
+					'modelArray' => $InstitutionArray,
+				],
+				'options' => []
+			];
+
+			$toolbarElements[] = [
+				'name' => 'Institution.Attendance/controls', 
+				'data' => [], 
+				'options' => []
+			];
+
+			$this->controller->set('toolbarElements', $toolbarElements);
 
 			if ($selectedDay == -1) {
 				foreach ($this->allDayOptions as $key => $obj) {
