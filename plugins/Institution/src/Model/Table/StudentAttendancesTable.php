@@ -767,7 +767,7 @@ class StudentAttendancesTable extends AppTable {
 			$indexDashboard = 'dashboard';
 			$InstitutionArray = [];
 			if ($selectedDay != -1) {
-				$InstitutionArray[__('Attendance')] = $this->getDonutChart('institution_student_attendance', ['query' => $query, 'key' => __('Attendance')]);
+				$InstitutionArray[__('Presence')] = $this->getDonutChart('institution_student_attendance', ['query' => $query, 'key' => '']);
 			}
 			
 			$toolbarElements[] = [
