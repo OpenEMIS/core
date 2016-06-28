@@ -79,6 +79,7 @@
 												}
 												echo $this->Form->input("$alias.custom_field_options.$key.name", ['label' => false]);
 												echo $this->Form->hidden("$alias.custom_field_options.$key.is_default", ['value' => 0]);
+												$this->Form->unlockField("$alias.is_default");
 											?>
 										</td>
 										<td>
