@@ -883,7 +883,7 @@ class StudentAttendancesTable extends AppTable {
 								$obj['start_time'] = new Time ($obj['start_time']);
 							}
 							$startTime = $obj['start_time'];
-							$endTime = Time::parseTime($obj['late_time']);
+							$endTime = new Time ($obj['late_time']);
 							$obj['end_time'] = $endTime;
 
 							$startTimestamp = intval($startTime->toUnixString());

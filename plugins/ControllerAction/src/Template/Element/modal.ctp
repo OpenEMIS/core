@@ -12,6 +12,12 @@
 					echo $this->Form->create($modal['form']['model'], $modal['form']['formOptions']);
 					if (isset($modal['form']['fields'])) {
 						foreach ($modal['form']['fields'] as $name => $attr) {
+							if (isset($attr['unlockField'])) {
+								if ($attr['unlockField']) {
+									$this->Form->unlockField($name);
+								}
+								unset($attr['unlockField']);
+							}
 							echo $this->Form->input($name, $attr);
 						}
 					}
@@ -23,6 +29,14 @@
 				</div>
 
 				<div class="modal-body">
+					<?php 
+					if (isset($modal['contentFields'])) {
+						$contentFields = $modal['contentFields'];
+						foreach ($contentFields as $name => $attr) {
+							echo $this->Form->input($name, $attr);
+						}
+					}
+					?>
 					<?php
 					if (isset($modal['type']) && $modal['type'] == 'element') {
 						echo $this->element($content);
