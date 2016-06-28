@@ -11,7 +11,7 @@
             } else {
                 $errorMsg = $this->Form->error($attr['field']);
             }
-            $fieldName = (array_key_exists('fieldName', $attr))? $attr['fieldName']: $attr['model'].'['.$attr['field'].']';
+            $fieldName = (array_key_exists('fieldName', $attr))? $attr['fieldName']: $attr['model'].'.'.$attr['field'];
             // need to format this string
             $tokens = explode('.', $fieldName);
             $firstToken = array_shift($tokens);
