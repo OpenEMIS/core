@@ -118,6 +118,10 @@ class AppController extends Controller {
 			'loginPageURL' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'login'],
 		]); // for single sign on authentication
 
-		$this->loadComponent('Security');
+		$this->loadComponent('Security', [
+			'unlockedFields' => [
+				'area_picker', 'AdvanceSearch'
+			]
+		]);
 	}
 }
