@@ -50,4 +50,32 @@ class AppTestCase extends IntegrationTestCase
         
         return $this->urlPrefix . $action . $namedParamsString;
     }
+
+    public function postData($url, $data = [])
+    {
+        $this->enableCsrfToken();
+        $this->enableSecurityToken();
+        $this->post($url, $data);
+    }
+
+    public function putData($url, $data = [])
+    {
+        $this->enableCsrfToken();
+        $this->enableSecurityToken();
+        $this->put($url, $data);
+    }
+
+    public function patchData($url, $data = [])
+    {
+        $this->enableCsrfToken();
+        $this->enableSecurityToken();
+        $this->patch($url, $data);
+    }
+
+    public function deleteData($url)
+    {
+        $this->enableCsrfToken();
+        $this->enableSecurityToken();
+        $this->delete($url);
+    }
 }
