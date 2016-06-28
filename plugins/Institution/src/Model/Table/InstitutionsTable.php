@@ -44,7 +44,7 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('InstitutionAttachments', 			['className' => 'Institution.InstitutionAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
         
 		$this->hasMany('InstitutionPositions', 				['className' => 'Institution.InstitutionPositions', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('InstitutionShifts', 				['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionShifts', 				['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);
 		$this->hasMany('InstitutionClasses', 				['className' => 'Institution.InstitutionClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
         // Note: InstitutionClasses already cascade deletes 'InstitutionSubjectStudents' - dependent and cascade not neccessary
         $this->hasMany('InstitutionSubjectStudents',        ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -197,6 +197,49 @@ class InstitutionsTable extends AppTable  {
 		return $name;
 	}
 
+	public function onGetShiftType(Event $event, Entity $entity) 
+	{
+		if (($entity->shift_type)==1) {
+			return __('Single Shift Owner');
+		} elseif (($entity->shift_type)==2) {
+			return __('Single Shift Occupier');
+		} elseif (($entity->shift_type)==3) {
+			return __('Multiple Shift Owner');
+		} elseif (($entity->shift_type)==4) {
+			return __('Multiple Shift Occupier');
+		} else {
+			return '-';
+		}
+	}
+
+	public function getViewShiftDetail() 
+	{
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+		$currenAcademicPeriod = $this->InstitutionShifts->AcademicPeriods->getCurrent();
+
+		$data = $this->InstitutionShifts->find()
+				->innerJoinWith('Institutions')
+				->innerJoinWith('LocationInstitutions')
+				->innerJoinWith('ShiftOptions')
+				->select([
+					'Owner' => 'Institutions.name',
+					'Occupier' => 'LocationInstitutions.name',
+					'Shift' => 'ShiftOptions.name',
+					'StartTime' => 'ShiftOptions.start_time',
+					'EndTime' => 'ShiftOptions.end_time'
+				])
+				->where([
+					'OR' => [
+						[$this->InstitutionShifts->aliasField('location_institution_id') => $institutionId],
+						[$this->InstitutionShifts->aliasField('institution_id') => $institutionId]
+					],
+					$this->InstitutionShifts->aliasField('academic_period_id') => $currenAcademicPeriod
+				])
+				->toArray();
+		
+		return $data;
+	}
+
 	public function onUpdateDefaultActions(Event $event) {
 		return ['downloadFile'];
 	}
@@ -220,6 +263,17 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
 
 		$this->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information')]);
+		
+		$this->ControllerAction->field('shift_section', ['type' => 'section', 'title' => __('Shift'), 'visible' => ['view'=>true]]);
+		$this->ControllerAction->field('shift_type', ['visible' => ['view'=>true]]);
+		
+		$this->ControllerAction->field('shift_detail', [
+			'type' => 'element',
+			'element' => 'Institution.Shifts/details',
+			'visible' => ['view'=>true],
+			'data' => $this->getViewShiftDetail()
+		]);
+		
 		$this->ControllerAction->field('location_section', ['type' => 'section', 'title' => __('Location')]);
 		
 		$language = I18n::locale();
@@ -482,6 +536,9 @@ class InstitutionsTable extends AppTable  {
 			'information_section',
 			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id', 
 			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
+
+			'shift_section',
+			'shift_type', 'shift_detail',
 			
 			'location_section',
 			'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
@@ -675,6 +732,32 @@ class InstitutionsTable extends AppTable  {
 		$groupIds = $this->getSecurityGroupId($userId, $institutionId);
 		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 		return $SecurityGroupUsers->getRolesByUserAndGroup($groupIds, $userId);
+	}
+
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$newEvent = [
+			'AdvanceSearch.getCustomFilter' => 'getCustomFilter'
+		];
+		$events = array_merge($events, $newEvent);
+		return $events;
+	}
+
+	public function getCustomFilter(Event $event) {
+
+		$shiftTypeOptions = new ArrayObject;
+
+		$shiftTypeOptions[1] = __('Single Shift Owner');
+		$shiftTypeOptions[2] = __('Single Shift Occupier');
+		$shiftTypeOptions[3] = __('Multiple Shift Owner');
+		$shiftTypeOptions[4] = __('Multiple Shift Occupier');
+
+		$filters['shift_type'] = [
+			'label' => __('Shift Type'),
+			'options' => $shiftTypeOptions
+		];
+
+		return $filters;
 	}
 
 }

@@ -87,7 +87,7 @@ class OpenEmisBehavior extends Behavior {
 
         if (array_key_exists('toolbarButtons', $extra)) {
 			$toolbarButtons = $extra['toolbarButtons'];
-			if ($model->action == 'view' && $model->actions('remove') != 'transfer' && $model->actions('remove')) {
+			if ($model->action == 'view' && $model->actions('remove') != 'transfer' && $model->actions('remove') != 'restrict' && $model->actions('remove')) {
 				// not checking existence of entity in $extra so that errors will be shown if entity is removed unexpectedly
 				$toolbarButtons['remove']['attr']['field-value'] = $extra['entity']->{$model->primaryKey()};
 			}

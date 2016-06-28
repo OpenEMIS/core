@@ -60,11 +60,13 @@ class AdvanceSearchBehavior extends Behavior {
 
 			foreach ($fields as $key) {
 				if (!in_array($key , $this->config('exclude'))) {
+
+					$selected = (isset($advanceSearchModelData['belongsTo']) && isset($advanceSearchModelData['belongsTo'][$key])) ? $advanceSearchModelData['belongsTo'][$key] : '' ;
+
 					if ($this->isForeignKey($key)) {
 						$label = $labels->getLabel($this->_table->alias(), $key, $language);
 						$relatedModel = $this->getAssociatedBelongsToModel($key);
-						$selected = (isset($advanceSearchModelData['belongsTo']) && isset($advanceSearchModelData['belongsTo'][$key])) ? $advanceSearchModelData['belongsTo'][$key] : '' ;
-
+						
 						$filters[$key] = [
 							'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->alias()),
 							'options' => $relatedModel->getList(),
@@ -85,6 +87,21 @@ class AdvanceSearchBehavior extends Behavior {
 								$filters[$key]['options'] = $options;
 							}
 						}
+					}
+
+					$customFilter  = $this->_table->dispatchEvent('AdvanceSearch.getCustomFilter'); //get custom filter set by the table
+
+					if ($customFilter->result) {
+						$result = $customFilter->result;
+						$customFilterKey = key($result);
+
+						if ($key == $customFilterKey) {
+							$filters[$customFilterKey] = [
+								'label' => $result[$customFilterKey]['label'],
+								'options' => $result[$customFilterKey]['options'],
+								'selected' => $selected
+							];
+						}		
 					}
 				}
 			}
