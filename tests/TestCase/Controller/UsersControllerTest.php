@@ -26,7 +26,8 @@ class UsersControllerTest extends IntegrationTestCase {
 	}
 
 	public function testLogout() {
-
+		$this->enableCsrfToken();
+		$this->enableSecurityToken();
 		$this->post('/Users/logout');
 		$this->assertArrayNotHasKey('Auth', $_SESSION, 'Error logging out!');
 	}
