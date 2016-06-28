@@ -179,11 +179,21 @@ class MandatoryBehavior extends Behavior {
 						foreach ($data[$this->_table->alias()][$tableName][0] as $ckey => $check) { //value each form element
 
 							// done for controller v4 for add saving by association 'security_user_id' is pre-set and replaced by cake later with the correct id
-							if ((in_array($key, ['SpecialNeeds'])) || (in_array($key, ['Nationalities']))) {
+
+							if ( in_array($key, ['SpecialNeeds', 'Nationalities', 'Contacts']) ) {
 								
 								if (array_key_exists($tableName, $data[$this->_table->alias()])) {
-
 	                                foreach ($data[$this->_table->alias()][$tableName] as $tkey => $tvalue) {
+	                                	// logic to get contact_option_id from contact_type_id as contact_option_id is set as requirePresence, otherwise will have validation error
+	                                	if ($key == 'Contacts' && $ckey == 'contact_type_id') {
+	                                		$contactTypeId = $check;
+	                                		if (!empty($contactTypeId)) {
+	                                			$ContactTypes = TableRegistry::get('User.ContactTypes');
+	                                			$contactOptionId = $ContactTypes->get($contactTypeId)->contact_option_id;
+	                                			$data[$this->_table->alias()][$tableName][$tkey]['contact_option_id'] = $contactOptionId;
+	                                		}
+	                                	}
+	                                	// End
 	                                	$data[$this->_table->alias()][$tableName][$tkey]['security_user_id'] = '0';
 	                                }
 	                            }
