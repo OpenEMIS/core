@@ -35,6 +35,7 @@ class EducationCyclesTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
 		return $validator;
 	}
 
