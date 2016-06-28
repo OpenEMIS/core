@@ -398,37 +398,37 @@ class InstitutionShiftsTable extends ControllerActionTable {
 ** essential methods
 **
 ******************************************************************************************************************/
-	public function createInstitutionDefaultShift($institutionsId, $academicPeriodId){
-		$data = $this->getShifts($institutionsId, $academicPeriodId);
+	// public function createInstitutionDefaultShift($institutionsId, $academicPeriodId){
+	// 	$data = $this->getShifts($institutionsId, $academicPeriodId);
 
-		if (empty($data)) {			
-			$schoolAcademicPeriod = $this->AcademicPeriods->get($academicPeriodId);
+	// 	if (empty($data)) {			
+	// 		$schoolAcademicPeriod = $this->AcademicPeriods->get($academicPeriodId);
 
-			$ConfigItem = TableRegistry::get('ConfigItems');
-			$settingStartTime = $ConfigItem->value('start_time');
-			$hoursPerDay = intval($ConfigItem->value('hours_per_day'));
-			if ($hoursPerDay > 1) {
-				$endTimeStamp = strtotime('+' . $hoursPerDay . ' hours', strtotime($settingStartTime));
-			} else {
-				$endTimeStamp = strtotime('+' . $hoursPerDay . ' hour', strtotime($settingStartTime));
-			}
-			$endTime = date('h:i A', $endTimeStamp);
+	// 		$ConfigItem = TableRegistry::get('ConfigItems');
+	// 		$settingStartTime = $ConfigItem->value('start_time');
+	// 		$hoursPerDay = intval($ConfigItem->value('hours_per_day'));
+	// 		if ($hoursPerDay > 1) {
+	// 			$endTimeStamp = strtotime('+' . $hoursPerDay . ' hours', strtotime($settingStartTime));
+	// 		} else {
+	// 			$endTimeStamp = strtotime('+' . $hoursPerDay . ' hour', strtotime($settingStartTime));
+	// 		}
+	// 		$endTime = date('h:i A', $endTimeStamp);
 
-			$defaultShift = [
-				'name' => __('Default') . ' ' . __('Shift') . ' ' . $schoolAcademicPeriod->name,
-				'academic_period_id' => $academicPeriodId,
-				'start_time' => $settingStartTime,
-				'end_time' => $endTime,
-				'institution_id' => $institutionsId,
-				'location_institution_id' => $institutionsId,
-				'location_institution_name' => 'Institution Site Name (Shift Location)'
-			];
+	// 		$defaultShift = [
+	// 			'name' => __('Default') . ' ' . __('Shift') . ' ' . $schoolAcademicPeriod->name,
+	// 			'academic_period_id' => $academicPeriodId,
+	// 			'start_time' => $settingStartTime,
+	// 			'end_time' => $endTime,
+	// 			'institution_id' => $institutionsId,
+	// 			'location_institution_id' => $institutionsId,
+	// 			'location_institution_name' => 'Institution Site Name (Shift Location)'
+	// 		];
 
-			$data = $this->newEntity();
-			$data = $this->patchEntity($data, $defaultShift);
-			$this->save($data);
-		}
-	}
+	// 		$data = $this->newEntity();
+	// 		$data = $this->patchEntity($data, $defaultShift);
+	// 		$this->save($data);
+	// 	}
+	// }
 
 	public function getShifts($institutionsId, $periodId) {
 		$conditions = [
@@ -442,13 +442,19 @@ class InstitutionShiftsTable extends ControllerActionTable {
 		return $data;
 	}
 	
-	public function getShiftOptions($institutionsId, $periodId) {
-		$query = $this->find('all')
-					->where([
-						'institution_id' => $institutionsId,
+	public function getShiftOptions($institutionsId, $periodId) 
+	{
+		$query = $this->find()
+				->innerJoinWith('ShiftOptions')
+				->select([
+					'id' => 'InstitutionShifts.id',
+					'name' => 'ShiftOptions.name'
+				])
+				->where([
+						'location_institution_id' => $institutionsId,
 						'academic_period_id' => $periodId
-					])
-					;
+				]);
+
 		$data = $query->toArray();
 
 		$list = [];
