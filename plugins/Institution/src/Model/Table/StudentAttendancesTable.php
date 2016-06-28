@@ -606,7 +606,6 @@ class StudentAttendancesTable extends AppTable {
 			}
 
 			$week = $weeks[$selectedWeek];
-			$dayOptions = [];
 			if(is_null($this->request->query('mode'))){
     			$dayOptions = [-1 => ['value' => -1, 'text' => __('All Days')]];
 			}
