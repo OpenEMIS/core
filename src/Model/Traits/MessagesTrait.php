@@ -142,6 +142,7 @@ trait MessagesTrait {
 			'our_shifts' => 'Our Shifts',
 			'external_shifts' => 'External Shifts',
 			'location' => 'Location',
+			'occupier' => 'Occupier',
 			'institution' => 'Institution',
 		],
 		'InstitutionClasses' => [
