@@ -28,7 +28,7 @@ class AreasControllerTest extends AppTestCase {
 			'visible' => 1
 		];
 
-		$this->postData('/Areas/Areas/add?parent=1', $data);
+		$this->postData('/Areas/Areas/add', $data);
 
 		$table = TableRegistry::get('Area.Areas');
 		$this->assertNotEmpty($table->get(2));
@@ -51,7 +51,7 @@ class AreasControllerTest extends AppTestCase {
 			'area_level_id' => 2,
 		];
 
-		$this->postData('/Areas/Areas/edit/2?parent=1', $data);
+		$this->postData('/Areas/Areas/edit/2', $data);
 
 		$table = TableRegistry::get('Area.Areas');
 		$entity = $table->get(2);

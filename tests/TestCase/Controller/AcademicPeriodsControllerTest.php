@@ -28,19 +28,19 @@ class AcademicPeriodsControllerTest extends AppTestCase
     public function testSearchFound() 
     {
         $testUrl = $this->url('index', ['parent' => 1]);
+
         $data = [
             'Search' => [
                 'searchField' => '2015'
             ]
         ];
         $this->postData($testUrl, $data);
-
         $this->assertEquals(true, (count($this->viewVariable('data')) >= 1));
     }
 
     public function testSearchNotFound() 
     {
-        $testUrl = $this->url('index', ['parent' => 1]);
+        $testUrl = $this->url('index');
         $data = [
             'Search' => [
                 'searchField' => '@#!@!cantFindThis!@#!'
@@ -53,7 +53,7 @@ class AcademicPeriodsControllerTest extends AppTestCase
 
     public function testCreate() 
     {
-        $testUrl = $this->url('add', ['parent' => 1]);
+        $testUrl = $this->url('add');
 
         $this->get($testUrl);
         $this->assertResponseCode(200);
@@ -93,7 +93,7 @@ class AcademicPeriodsControllerTest extends AppTestCase
     }
 
     public function testUpdate() {
-        $testUrl = $this->url('edit/'.$this->testingId, ['parent' => 1]);
+        $testUrl = $this->url('edit/'.$this->testingId);
 
         // TODO: DO A GET FIRST
         $table = TableRegistry::get('AcademicPeriod.AcademicPeriods');
