@@ -58,6 +58,10 @@ class RestfulController extends AppController
             	}
             }
         }
+        if ($this->request->is(['put', 'post', 'delete', 'patch']) || !empty($this->request->data)) {
+            $token = isset($this->request->cookies['csrfToken']) ? $this->request->cookies['csrfToken'] : '';
+            $this->request->env('HTTP_X_CSRF_TOKEN', $token);
+        }
     }
 
     public function beforeRender(Event $event)
