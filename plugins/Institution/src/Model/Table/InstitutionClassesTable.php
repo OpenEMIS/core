@@ -14,6 +14,8 @@ use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use Cake\Collection\Collection;
 
+use Cake\Routing\Router;
+
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 
@@ -674,9 +676,8 @@ class InstitutionClassesTable extends ControllerActionTable {
 
 		$this->fields['institution_shift_id']['options'] = $shiftOptions;
 
-		$createShiftURL = "/core/Institutions/Shifts?toggle=" . $selectedAcademicPeriodId;
-
 		if (empty($shiftOptions)) {
+			$createShiftURL = Router::url(['controller' => 'Institutions', 'action' => 'Shifts', 'period' => $selectedAcademicPeriodId]);
 			$this->Alert->warning(__("There are no shifts configured for the selected academic period. Create shift <a href= '". $createShiftURL . "' target='_blank'>here</a>."), ['type' => 'text']);
 		}
 	}
