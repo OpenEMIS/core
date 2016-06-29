@@ -22,6 +22,8 @@ class RubricTemplatesTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 	    	->add('name', [
 	    		'unique' => [
