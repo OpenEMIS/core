@@ -804,7 +804,7 @@ class StudentAttendancesTable extends AppTable {
     	return $query
     		->select([
     			$this->aliasField('student_id'), 
-    			'Users.openemis_no', 'Users.first_name', 'Users.last_name', 'Users.id',
+    			'Users.openemis_no', 'Users.first_name', 'Users.middle_name', 'Users.third_name','Users.last_name', 'Users.id',
     			'StudentAbsences.id',
     			'StudentAbsences.start_date',
     			'StudentAbsences.end_date',
