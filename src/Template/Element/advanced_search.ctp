@@ -44,6 +44,10 @@ use Cake\Utility\Inflector;
 		<input type="hidden" name="AdvanceSearch[<?= $model ?>][isSearch]" value="" id="isSearch" />
 		<button class="btn btn-default btn-xs" href="" ng-click="submitSearch()"><?= __('Search') ?></button>
 		<button id="reset" class="btn btn-outline btn-xs" name="reset" value="Reset"><?= __('Reset') ?></button>
+		<?php 
+			$this->Form->unlockField('reset'); 
+			$this->Form->unlockField('AdvanceSearch');
+		?>
 	</div>
 
 </div>

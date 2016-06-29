@@ -4,9 +4,9 @@ namespace App\Test\TestCases;
 use Cake\ORM\TableRegistry;
 use App\Test\AppTestCase;
 
-class EducationLevelsControllerTest extends AppTestCase
+class EducationCyclesControllerTest extends AppTestCase
 {
-    public $fixtures = ['app.education_systems', 'app.education_level_isced', 'app.education_levels'];
+    public $fixtures = ['app.education_systems', 'app.education_level_isced', 'app.education_levels', 'app.education_cycles'];
 
     private $id = 1;
     private $table;
@@ -14,8 +14,8 @@ class EducationLevelsControllerTest extends AppTestCase
     public function setup()
     {
         parent::setUp();
-        $this->urlPrefix('/Educations/Levels/');
-        $this->table = TableRegistry::get('Education.EducationLevels');
+        $this->urlPrefix('/Educations/Cycles/');
+        $this->table = TableRegistry::get('Education.EducationCycles');
     }
 
     public function testIndex()
@@ -24,7 +24,7 @@ class EducationLevelsControllerTest extends AppTestCase
 
         $this->get($testUrl);
         $this->assertResponseCode(200);
-        $this->assertEquals(true, (count($this->viewVariable('data')) == 2));
+        $this->assertEquals(true, (count($this->viewVariable('data')) >= 1));
     }
 
     public function testSearchFound()
@@ -32,12 +32,12 @@ class EducationLevelsControllerTest extends AppTestCase
         $testUrl = $this->url('index');
         $data = [
             'Search' => [
-                'searchField' => 'Primary'
+                'searchField' => 'education'
             ]
         ];
         $this->postData($testUrl, $data);
 
-        $this->assertEquals(true, (count($this->viewVariable('data')) == 1));
+        $this->assertEquals(true, (count($this->viewVariable('data')) >= 1));
     }
 
     public function testSearchNotFound()
@@ -63,10 +63,9 @@ class EducationLevelsControllerTest extends AppTestCase
 
         $data = [
             $alias => [
-                'name' => 'Kindergarten',
-                'education_system_id' => 1,
-                'education_level_isced_id' => 1,
-                'visible' => 1
+                'name' => 'EducationCyclesControllerTest_testCreate',
+                'admission_age' => '6',
+                'education_level_id' => '1'
             ],
             'submit' => 'save'
         ];
@@ -82,6 +81,7 @@ class EducationLevelsControllerTest extends AppTestCase
     {
         $testUrl = $this->url('view/'.$this->id);
 
+        $table = TableRegistry::get('EducationCycle.EducationCycles');
         $this->get($testUrl);
 
         $this->assertResponseCode(200);
@@ -99,37 +99,16 @@ class EducationLevelsControllerTest extends AppTestCase
 
         $data = [
             $alias => [
-                'id' => $this->id,
-                'name' => 'Kindergarten (changed)',
-                'education_system_id' => 1,
-                'education_level_isced_id' => 1,
-                'visible' => 0
+                'name' => 'EducationCyclesControllerTest_testUpdate',
+                'admission_age' => '7',
+                'visible' => '1',
+                'education_level_id' => '2'
             ],
             'submit' => 'save'
         ];
         $this->postData($testUrl, $data);
 
         $entity = $this->table->get($this->id);
-        $this->assertEquals($data[$alias]['visible'], $entity->visible);
+        $this->assertEquals($data[$alias]['name'], $entity->name);
     }
-
-    // Need to implement for delete transfer
-    // public function testDelete() {
-    //     $testUrl = $this->url('remove');
-
-    //     $table = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-
-    //     $exists = $table->exists([$table->primaryKey() => $this->id]);
-    //     $this->assertTrue($exists);
-
-    //     $data = [
-    //         'id' => $this->id,
-    //         '_method' => 'DELETE'
-    //     ];
-
-    //     $this->post($testUrl, $data);
-
-    //     $exists = $table->exists([$table->primaryKey() => $this->id]);
-    //     $this->assertFalse($exists);
-    // }
 }

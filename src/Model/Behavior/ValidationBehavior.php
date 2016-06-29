@@ -59,10 +59,6 @@ class ValidationBehavior extends Behavior {
 					$validator->field($column)->remove($rkey);
 				}
 
-				if ($columnAttr['null'] == 1) {
-					$validator->allowEmpty($column);
-				}
-
 				// inserting these rules first
 				$validator->add($column, [
 					'ruleValidDate' => [
