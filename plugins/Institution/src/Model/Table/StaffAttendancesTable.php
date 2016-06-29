@@ -275,7 +275,6 @@ class StaffAttendancesTable extends AppTable {
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 
-	// Mini dashboard
 	// Function use by the mini dashboard
 	public function getNumberOfStaffByAttendance($params=[]) {
 		$query = $params['query'];
@@ -287,28 +286,23 @@ class StaffAttendancesTable extends AppTable {
 		foreach ($StaffAttendancesQuery as $entity) {
 			// //Compile the dataset
 			if (empty($entity->StaffAbsences['id'])) {
-				if (isset($data[__('Present')])) {
-					$data[__('Present')] = ++$data[__('Present')];
+				if (isset($data['Present'])) {
+					$data['Present'] = ++$data['Present'];
 				} else {
-					$data[__('Present')] = 1;
+					$data['Present'] = 1;
 				}
 			} else {
 				$absenceTypeId = $entity->StaffAbsences['absence_type_id'];
 				$typeName = $this->absenceList[$absenceTypeId];
-				if (isset($data[__($typeName)])) {
-					$data[__($typeName)] = ++$data[__($typeName)];
+				if (isset($data[$typeName])) {
+					$data[$typeName] = ++$data[$typeName];
 				} else {
-					$data[__($typeName)] = 1;
+					$data[$typeName] = 1;
 				}
 			}
 		}
-
-		foreach ($data as $key => $value) {
-			$dataSet[] = [$key, $value];
-		}
-		$params['dataSet'] = $dataSet;
 		unset($StaffAttendancesQuery);
-		return $params;
+		return $data;
 	}
 
 	// Event: ControllerAction.Model.onGetOpenemisNo
@@ -703,20 +697,44 @@ class StaffAttendancesTable extends AppTable {
 
 			$InstitutionArray = [];
 			if ($selectedDay != -1) {
-				$InstitutionArray[__('Absence')] = $this->getDonutChart('institution_staff_attendance', ['query' => $query, 'key' => '']);
+				
 			}
 
 			$totalStaff = $query->count();
 
-			$indexDashboard = 'dashboard';
+			$indexDashboard = 'attendance';
 			
+			$dataSet = $this->getNumberOfStaffByAttendance(['query' => $query]);
+			$present = 0;
+			$absent = 0;
+			$late = 0;
+			foreach ($dataSet as $key => $data) {
+				if ($key == 'Present') {
+					$present = $data;
+				} elseif ($key == 'Late') {
+					$late = $data;
+				} else {
+					$absent += $data;
+				}
+			}
+
+			$staffAttendanceArray = [];
+
+			if ($selectedDay != -1) {
+				$staffAttendanceArray[] = ['label' => 'No. of Staff Present', 'value' => $present];
+				$staffAttendanceArray[] = ['label' => 'No. of Staff Absent', 'value' => $absent];
+				$staffAttendanceArray[] = ['label' => 'No. of Staff Late', 'value' => $late];
+			} else {
+				$staffAttendanceArray[] = ['label' => 'No. of Staff Absent for the week', 'value' => $absent];
+				$staffAttendanceArray[] = ['label' => 'No. of Staff Late for the week', 'value' => $late];
+			}
 			
 			$toolbarElements[] = [
 				'name' => $indexDashboard,
 				'data' => [
 					'model' => 'staff',
 					'modelCount' => $totalStaff,
-					'modelArray' => $InstitutionArray,
+					'modelArray' => $staffAttendanceArray,
 				],
 				'options' => []
 			];
