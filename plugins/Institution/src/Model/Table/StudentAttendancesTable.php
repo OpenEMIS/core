@@ -535,16 +535,11 @@ class StudentAttendancesTable extends AppTable {
 					->contain('StudentAbsenceReasons');
 				$absenceResult = $absenceQuery->first();
 
-				$typeOptions = $this->getSelectOptions('Absence.types');
-				if (empty($absenceResult->student_absence_reason)) {
-					$absenceType = 'UNEXCUSED';
-				} else {
-					$absenceType = 'EXCUSED';
-				}
+				$absenceType = $this->absenceList[$entity->StudentAbsences['absence_type_id']];
 				if ($absenceResult->full_day == 0) {
-					$urlLink = sprintf(__('Absent') . ' - ' . $typeOptions[$absenceType]. ' (%s - %s)' , $absenceResult->start_time, $absenceResult->end_time);
+					$urlLink = sprintf(__($absenceType) . ' - (%s - %s)' , $absenceResult->start_time, $absenceResult->end_time);
 				} else {
-					$urlLink = __('Absent') . ' - ' . $typeOptions[$absenceType]. ' (full day)';
+					$urlLink = __($absenceType) . ' - ('.__('Full Day').')';
 				}
 
 				$StudentAbsences = TableRegistry::get('Institution.StudentAbsences');
