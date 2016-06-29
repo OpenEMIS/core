@@ -119,7 +119,7 @@ class AppController extends Controller {
 		]); // for single sign on authentication
 		$this->loadComponent('Security', [
 			'unlockedFields' => [
-				'area_picker', 'AdvanceSearch'
+				'area_picker'
 			]
 		]);
 		$this->loadComponent('Csrf');
