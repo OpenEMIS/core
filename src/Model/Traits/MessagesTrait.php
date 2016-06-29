@@ -597,7 +597,7 @@ trait MessagesTrait {
 				'institution_name' => [
 					'ruleCheckLocationInstitutionId' => 'Please select an institution location.'
 				],
-				'location' => [
+				'start_time' => [
 					'ruleCheckShiftAvailable' => 'Shift timing is not available.'
 				]
 			],
