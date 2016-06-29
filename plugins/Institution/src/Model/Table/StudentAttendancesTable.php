@@ -805,13 +805,8 @@ class StudentAttendancesTable extends AppTable {
 		}
     	return $query
     		->select([
-<<<<<<< HEAD
     			$this->aliasField('student_id'), 
     			'Users.openemis_no', 'Users.first_name', 'Users.middle_name', 'Users.third_name','Users.last_name', 'Users.id',
-=======
-    			$this->aliasField('student_id'),
-    			'Users.openemis_no', 'Users.first_name', 'Users.last_name', 'Users.id',
->>>>>>> origin_ssh/tst
     			'StudentAbsences.id',
     			'StudentAbsences.start_date',
     			'StudentAbsences.end_date',
