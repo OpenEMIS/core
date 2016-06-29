@@ -264,10 +264,10 @@ class InstitutionsTable extends AppTable  {
 
 		$this->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information')]);
 		
-		$this->ControllerAction->field('shift_section', ['type' => 'section', 'title' => __('Shift'), 'visible' => ['view'=>true]]);
+		$this->ControllerAction->field('shift_section', ['type' => 'section', 'title' => __('Shifts'), 'visible' => ['view'=>true]]);
 		$this->ControllerAction->field('shift_type', ['visible' => ['view'=>true]]);
 		
-		$this->ControllerAction->field('shift_detail', [
+		$this->ControllerAction->field('shift_details', [
 			'type' => 'element',
 			'element' => 'Institution.Shifts/details',
 			'visible' => ['view'=>true],
@@ -538,7 +538,7 @@ class InstitutionsTable extends AppTable  {
 			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
 
 			'shift_section',
-			'shift_type', 'shift_detail',
+			'shift_type', 'shift_details',
 			
 			'location_section',
 			'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
