@@ -58,12 +58,6 @@ class StaffAttendancesTable extends AppTable {
 		$AbsenceTypesTable = TableRegistry::get('Institution.AbsenceTypes');
 		$this->absenceList = $AbsenceTypesTable->getAbsenceTypeList();
 		$this->absenceCodeList = $AbsenceTypesTable->getCodeList();
-
-		$this->addBehavior('HighChart', [
-			'institution_staff_attendance' => [
-				'_function' => 'getNumberOfStaffByAttendance'
-			]
-		]);
 	}
 
 	public function implementedEvents() {
