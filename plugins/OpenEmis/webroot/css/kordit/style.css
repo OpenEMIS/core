@@ -1,13 +1,12 @@
-/* KORDIT FONT PACK v.1.0.8 */
-
+/* KORDIT FONT PACK v.1.0.10 */
 
 @font-face {
     font-family: 'kordit-fonts';
-    src:    url('fonts/kordit-fonts.eot?kbh5l7');
-    src:    url('fonts/kordit-fonts.eot?kbh5l7#iefix') format('embedded-opentype'),
-        url('fonts/kordit-fonts.ttf?kbh5l7') format('truetype'),
-        url('fonts/kordit-fonts.woff?kbh5l7') format('woff'),
-        url('fonts/kordit-fonts.svg?kbh5l7#kordit-fonts') format('svg');
+    src:    url('fonts/kordit-fonts.eot?p3j2mj');
+    src:    url('fonts/kordit-fonts.eot?p3j2mj#iefix') format('embedded-opentype'),
+        url('fonts/kordit-fonts.ttf?p3j2mj') format('truetype'),
+        url('fonts/kordit-fonts.woff?p3j2mj') format('woff'),
+        url('fonts/kordit-fonts.svg?p3j2mj#kordit-fonts') format('svg');
     font-weight: normal;
     font-style: normal;
 }
@@ -27,6 +26,18 @@
     -moz-osx-font-smoothing: grayscale;
 }
 
+.kd-close-round:before {
+    content: "\e913";
+}
+.kd-close:before {
+    content: "\e914";
+}
+.kd-tab:before {
+    content: "\e912";
+}
+.kd-add-tab:before {
+    content: "\e911";
+}
 .kd-validate-row:before {
     content: "\e90f";
 }
