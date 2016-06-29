@@ -1,4 +1,4 @@
-//Layout Splitter v.2.0.1
+//Layout Splitter v.2.0.2
 
 // Fixing the issue on first load when left navigation is overlaping the view before the angular has been initialize
 var sheet = (function() {
@@ -83,7 +83,7 @@ function bgSplitter($compile) {
         scope: {
             orientation: "@",
             collapse: "@",
-            resizeCallback: "=",
+            // resizeCallback: "=",
             floatBtn: "@",
             getElements: "=elements"
         },
@@ -107,37 +107,53 @@ function bgSpiltterCtrl($scope) {
 }
 
 function bgSplitterLink(scope, element, attrs, $compile) {
+    var animationTime = 550;
     var isMobileView = (window.innerWidth <= 1024) ? true : false;
     var showHideIcon = 'kd-lists';
+
     var vertical = scope.orientation == 'vertical';
+    var defaultConfig = {
+        collapse: null
+    };
     var panelObj = {};
     var drag = false;
     var paneElems = getChildPanes(element[0].childNodes);
     var elemName = element.parent()[0].localName + '.' + element.parent()[0].className.replace(/ /g, '.').replace(/.ng-scope/g, '');
+
     var handlerSessionID = sessionName + elemName;
-    var handler = angular.element('<div class="split-handler"></div>');
+    var handlerMenuID = sessionName + "_menu_status";
+
+    var handler = angular.element('<div class="split-handler"><div class="menu-btn"><i class="fa"></i></div></div>');
     var button = angular.element('<div class="mobile-split-btn"><button class="btn btn-default btn-circle btn-medium btn-float-bottom-right" type="button"><i class="fa"></i></button></div>');
-    // console.log(handlerSessionID);
+
     angular.element(document).ready(function() {
         init();
     });
 
     function init() {
-        // if (!vertical && window.innerWidth > 1024) {
-        //     setPanes(getSizePixel(), getSizePixel());
-        // } else if (!vertical && window.innerWidth <= 1024) {
-        //     setPanes(getSizePixel(), 0);
-        // }
-
         //add handler to the view
         paneElems.left.after(handler).injector().invoke(function($compile) {
             var scope = angular.element(handler).scope();
             $compile(handler)(scope);
         });
 
-
         paneElems.splitter = handler;
         panelObj = reCalPanelSize();
+
+        if (!angular.isDefined(attrs.collapse)) {
+            defaultConfig.collapse = 'false';
+            if (panelObj.isRoot === false) {
+                // panelObj.collapse = (window.innerWidth <= 1024) ? 'true' : panelObj.collapse;
+
+                if (window.innerWidth <= 1024) {
+                    panelObj.collapse = 'true';
+                }
+            }
+
+            console.log('initial load = ' + panelObj.collapse);
+        }
+
+        // defaultConfig.collapse = paneObj.collapse;
         //reupdate paneElems to get handler;
         paneElems = getChildPanes(element[0].childNodes);
 
@@ -145,34 +161,14 @@ function bgSplitterLink(scope, element, attrs, $compile) {
             scope.getElements(paneElems);
         }
 
-        if (panelObj.isRoot === false && panelObj.floatBtn === 'true') {
-            //add button 
-            paneElems.right.after(button).injector().invoke(function($compile) {
-                var btnWrapperElem = angular.element(button);
-                var scope = btnWrapperElem.scope();
-                var iconElem = angular.element(btnWrapperElem[0].childNodes[0].childNodes[0]);
-                var btnElem = angular.element(btnWrapperElem[0].childNodes[0]);
+        if (panelObj.isRoot === false) {
 
-                iconElem.addClass(showHideIcon);
-                paneElems['floatBtn'] = btnElem;
-                btnElem.bind('click', function(_event) {
-                    if (window.innerWidth <= 1024) {
-                        // console.log("close click");
-                        iconElem.removeClass(showHideIcon);
-                        if (showHideIcon === "kd-lists") {
-                            showHideIcon = "kd-close-round";
-                            addSlideInAnimation(paneElems.right);
-                        } else {
-                            showHideIcon = "kd-lists";
-                            addSlideOutAnimation(paneElems.right);
-                        }
-                        iconElem.addClass(showHideIcon);
-                    }
-                });
+            addFloatButton();
 
-                $compile(handler)(scope);
-            });
+        } else {
+            collapseMainMenu();
         }
+
         //Add in splitter slide out class on the handler so that it won't appear on load
         showHideSidePane();
 
@@ -184,8 +180,6 @@ function bgSplitterLink(scope, element, attrs, $compile) {
                 showHideSidePane(true);
             }
         });
-
-
 
         /* ===============
          * Bind events
@@ -203,28 +197,19 @@ function bgSplitterLink(scope, element, attrs, $compile) {
         angular.element(window).bind('resize', function(_event) {
             panelObj = reCalPanelSize();
             if (window.innerWidth <= 1024) { //mobile view
-                // isMobileView = true;
                 disableDrag();
                 paneElems.right.css(affectedDir, '0px');
 
-                if (!isMobileView) {
-                    if (angular.isDefined(paneElems.floatBtn)) {
-                        angular.element(paneElems.floatBtn[0].childNodes[0]).removeClass('kd-close-round').addClass('kd-lists');
-                    }
-
-                    //animations
-                    if (panelObj.isRoot === false) {
-                        addOverlayContent(paneElems.left);
-                        addSlideOutContent(paneElems.splitter);
-                        addSlideOutAnimation(paneElems.right);
-                    }
-                    isMobileView = true;
+                if (angular.isDefined(paneElems.floatBtn)) {
+                    angular.element(paneElems.floatBtn[0].childNodes[0]).removeClass('kd-close-round').addClass('kd-lists');
                 }
-
-
+                if (!isMobileView) {
+                    isMobileView = true;
+                    if (panelObj.isRoot === false && angular.isUndefined(scope.collapse)) panelObj.collapse = 'true';
+                    showHideSidePane(true);
+                }
             } else { //web view
                 // isMobileView = false;
-
                 if (isMobileView) {
                     isMobileView = false;
                 }
@@ -238,8 +223,15 @@ function bgSplitterLink(scope, element, attrs, $compile) {
                         addSlideInContent(paneElems.right);
                         addSlideInContent(paneElems.splitter);
                     }
+                } else {
+                    var menuBtnElem = paneElems.splitter.find('.menu-btn');
+                    var menuIconElem = menuBtnElem.find('.fa');
+                    updateBtnMenuStatus(menuIconElem, false);
                 }
 
+                if (defaultConfig.collapse != null) {
+                    panelObj.collapse = defaultConfig.collapse;
+                }
             }
         });
 
@@ -249,17 +241,14 @@ function bgSplitterLink(scope, element, attrs, $compile) {
     function enableDrag() {
         element.bind('mousemove touchmove', function(_event) {
             if (!drag) return;
-            // console.log(_event);
+
             var moveObj = _event;
             var bounds = element[0].getBoundingClientRect();
             var pos = 0;
             panelObj = reCalPanelSize();
 
-            // $.each($('.highchart'), function(key, group) {
-            //     $(group).highcharts().reflow();
-            // });
-            if(angular.isDefined(_event.originalEvent.touches)){ // check is using touch event or mousemove event
-                moveObj = _event.originalEvent.touches[0]; 
+            if (angular.isDefined(_event.originalEvent.touches)) { // check is using touch event or mousemove event
+                moveObj = _event.originalEvent.touches[0];
             }
 
             if (vertical) {
@@ -286,23 +275,25 @@ function bgSplitterLink(scope, element, attrs, $compile) {
             }
             var selectedWrapper = (element.parent()[0].localName == 'body') ? "pane-wrapper" : "content-splitter";
 
-            if (angular.isFunction(scope.resizeCallback)) {
-                scope.resizeCallback(selectedWrapper);
-            }
+            scope.$broadcast('onSplitterResize', selectedWrapper);
 
             setPanes(vertical, paneElems, { pos1: pos, pos2: pos });
         });
     }
 
     function disableDrag() {
-        element.unbind('mousemove');
+        element.unbind('mousemove touchmove');
     }
 
     function showHideSidePane(_withAnimation) {
-        var time = 550;
+        console.log('after click = ' + panelObj.collapse);
         // var paneElems = getChildPanes(element[0].childNodes); //Get updated dom when angular is ready
-        if ((panelObj.isRoot === false) && (window.innerWidth <= 1024)) {
-            paneElems.right.addClass('splitter-slide-out');
+        if ((panelObj.isRoot === false) && (window.innerWidth <= 1024)) { // mobile view
+            if (panelObj.collapse === "true") {
+                addSlideOutAnimation(paneElems.right);
+            } else {
+                addSlideInAnimation(paneElems.right);
+            }
         } else if (panelObj.collapse === "true") {
             if (_withAnimation) {
                 addSlideOutAnimation(paneElems.splitter);
@@ -314,7 +305,7 @@ function bgSplitterLink(scope, element, attrs, $compile) {
                     removeTransition(paneElems.splitter);
                     removeTransition(paneElems.right);
                     removeTransition(paneElems.left);
-                }, time);
+                }, animationTime);
             } else {
                 addSlideOutContent(paneElems.splitter);
                 addOverlayContent(paneElems.left);
@@ -331,7 +322,7 @@ function bgSplitterLink(scope, element, attrs, $compile) {
                     removeTransition(paneElems.left);
                     removeTransition(paneElems.right);
                     removeTransition(paneElems.splitter);
-                }, time);
+                }, animationTime);
             } else {
                 addSlideInContent(paneElems.splitter);
                 removeOverlayContent(paneElems.left);
@@ -339,6 +330,142 @@ function bgSplitterLink(scope, element, attrs, $compile) {
             }
         }
     }
+
+    //Collapse the Main Menu
+    function collapseMainMenu() {
+        var menuBtnElem = paneElems.splitter.find('.menu-btn');
+        var menuIconElem = menuBtnElem.find('.fa').addClass(getMenuIconClass().current);
+        updateBtnMenuStatus(menuIconElem, false);
+        menuBtnElem.bind('click', function(_event) {
+            if (window.innerWidth >= 1024) {
+                updateBtnMenuStatus(menuIconElem, true);
+            }
+        });
+    }
+
+    function addFloatButton() {
+        angular.element('.menu-btn').remove();
+        if (panelObj.floatBtn === 'true') {
+            //add button 
+            paneElems.right.after(button).injector().invoke(function($compile) {
+                var btnWrapperElem = angular.element(button);
+                var scope = btnWrapperElem.scope();
+                var iconElem = angular.element(btnWrapperElem[0].childNodes[0].childNodes[0]);
+                var btnElem = angular.element(btnWrapperElem[0].childNodes[0]);
+
+                iconElem.addClass(showHideIcon);
+                paneElems['floatBtn'] = btnElem;
+                btnElem.bind('click', function(_event) {
+
+                    if (window.innerWidth <= 1024) {
+                        iconElem.removeClass(showHideIcon);
+                        if (showHideIcon === "kd-lists") {
+                            showHideIcon = "kd-close-round";
+                            panelObj.collapse = "false";
+                        } else {
+                            showHideIcon = "kd-lists";
+                            panelObj.collapse = "true";
+                        }
+                        iconElem.addClass(showHideIcon);
+                        showHideSidePane();
+                    }
+                });
+
+                $compile(handler)(scope);
+            });
+        }
+    }
+
+    function updateBtnMenuStatus(_elem, _updateDirection) { //console.log('run updateBtnMenuStatus')
+        //this function needs to update the status and save into the localstorage
+        _updateDirection = (angular.isDefined(_updateDirection)) ? _updateDirection : false;
+        var curState = getCurrentSplitterStatus();
+        var iconClassObj = getMenuIconClass();
+
+        if (curState == "collapse") {
+            if (_updateDirection) {
+                _elem.addClass(iconClassObj.opposite).removeClass(iconClassObj.current);
+                addAnimationDelay();
+                showMenu();
+                setCurrentSplitterStatus(false);
+            } else {
+                _elem.addClass(iconClassObj.current).removeClass(iconClassObj.opposite);
+                hideMenu();
+            }
+        } else {
+
+            if (_updateDirection) {
+                addAnimationDelay();
+                hideMenu();
+                _elem.addClass(iconClassObj.opposite).removeClass(iconClassObj.current);
+                setCurrentSplitterStatus(true);
+            } else {
+                _elem.addClass(iconClassObj.current).removeClass(iconClassObj.opposite);
+                showMenu();
+            }
+        }
+    }
+
+    function getMenuIconClass() {
+        var curState = getCurrentSplitterStatus();
+        var curDirection = oppDirection = "";
+        var iconClassPrefix = "fa-angle-";
+
+        if (vertical) {
+            if (bodyDir == 'ltr') {
+                curDirection = (curState == 'collapse') ? "down" : "up";
+                oppDirection = (curDirection == 'down') ? 'up' : 'down';
+            } else {
+                curDirection = (curState == 'collapse') ? "up" : "down";
+                oppDirection = (curDirection == 'up') ? 'down' : 'up';
+            }
+        } else {
+            if (bodyDir == 'ltr') {
+                curDirection = (curState == 'collapse') ? "right" : "left";
+                oppDirection = (curDirection == 'right') ? 'left' : 'right';
+            } else {
+                curDirection = (curState == 'collapse') ? "left" : "right";
+                oppDirection = (curDirection == 'left') ? 'right' : 'left';
+            }
+        }
+
+        return { current: iconClassPrefix + curDirection, opposite: iconClassPrefix + oppDirection };
+    }
+
+    function getCurrentSplitterStatus() {
+        /* console.log('handlerMenuID = ' + handlerMenuID);
+         console.log(localStorage[handlerMenuID]);*/
+        return (angular.isDefined(localStorage[handlerMenuID])) ? localStorage[handlerMenuID] : 'uncollapse';
+    }
+
+    function setCurrentSplitterStatus(_isCollapse) {
+        localStorage[handlerMenuID] = (_isCollapse) ? "collapse" : "uncollapse";
+        // console.log('update localStorage = ' + localStorage[handlerMenuID]);
+    }
+
+    function hideMenu() {
+        paneElems.right.css(affectedDir, '0');
+        paneElems.splitter.css(affectedDir, '-1px');
+        disableDrag();
+    }
+
+    function showMenu() {
+        setPanes(vertical, paneElems, { pos1: panelObj.current, pos2: panelObj.current });
+        enableDrag();
+    }
+
+    function addAnimationDelay() {
+        //Adding animation 
+        addTransition(paneElems.right);
+        addTransition(paneElems.splitter);
+
+        setTimeout(function() {
+            removeTransition(paneElems.splitter);
+            removeTransition(paneElems.right);
+        }, animationTime);
+    }
+
+    //End of Collapse Main Menu
 
     function reCalPanelSize() {
         var bounds = element.parent()[0].getBoundingClientRect();
@@ -353,13 +480,13 @@ function bgSplitterLink(scope, element, attrs, $compile) {
             var paneObj = panesObj[key];
             // var reverse = (i == 0) ? false : true;
             if (angular.isDefined(pane.minSizeP)) {
-                paneObj['min'] = calRatioInPixal(pane.minSizeP, boundSize, false); //(pane1.minSizeP / 100) * boundSize;
+                paneObj['min'] = calRatioInPixel(pane.minSizeP, boundSize, false); //(pane1.minSizeP / 100) * boundSize;
             } else if (angular.isDefined(pane.minSize)) {
                 paneObj['min'] = pane.minSize;
             }
 
             if (angular.isDefined(pane.maxSizeP)) {
-                paneObj['max'] = calRatioInPixal(pane.maxSizeP, boundSize, false); //(pane1.maxSizeP / 100) * boundSize;
+                paneObj['max'] = calRatioInPixel(pane.maxSizeP, boundSize, false); //(pane1.maxSizeP / 100) * boundSize;
             } else if (angular.isDefined(pane.maxSize)) {
                 paneObj['max'] = pane.maxSize;
             }
@@ -413,12 +540,25 @@ function getChildPanes(_childNodes) {
     return obj;
 }
 
-function calRatioInPixal(_val, _boundSize, _reverse) {
-    var ratio = Number(_val) / 100;
-    if (_reverse) {
-        ratio = 1 - ratio;
+function calRatioInPixel(_val, _boundSize, _reverse) {
+    var sizePixel = 0;
+
+    if (_val.match(/px$/)) {
+        sizePixel = _val.replace('px', "");
+    } else {
+        // backward compatible (default percent)
+        var ratio = _val;
+        if (ratio.match(/\%$/)) {
+            ratio = ratio.replace('%', "");
+        }
+        ratio = Number(ratio) / 100;
+        if (_reverse) {
+            ratio = 1 - ratio;
+        }
+
+        sizePixel = ratio * _boundSize;
     }
-    return ratio * _boundSize;
+    return sizePixel;
 }
 
 function initCSS() {
@@ -427,10 +567,7 @@ function initCSS() {
     var layoutPaneObj = getPanesObjFromDOM(elemNode.childNodes, 'localName', 'bg-pane', window.innerWidth);
     var rightPaneWidth = window.innerWidth - layoutPaneObj.current;
     var elemSubNode = document.getElementsByClassName(subPanesObj.wrapper)[0];
-    /*    console.log('>> window = '+ window);
-        console.log(typeof layoutPaneObj.current);
-        console.log(layoutPaneObj.current);
-        console.log('>> rightPaneWidth = '+ window.innerWidth);*/
+
     //insert for session
     for (var session in localStorage) {
         if (session.match(matchCase)) {
@@ -439,7 +576,7 @@ function initCSS() {
                 // console.log('load main session');
                 loadDefaultPanes.layoutPane = false;
                 var pos = Math.floor(window.innerWidth * localStorage[session]);
-                var subPanePadding = 15 * 2; // Do check the class in ",has-breadcrumnb" class
+                var subPanePadding = 15 * 2; // Do check the class in ",has-breadcrumb" class
                 rightPaneWidth = window.innerWidth - pos - subPanePadding;
                 insertCSSRules(className, panesObj, pos);
             } else {
@@ -507,14 +644,14 @@ function getPanesObjFromDOM(_childNodes, _type, _strMatch, _boundSize) {
             var paneKey = (count == 0) ? 'pane1' : 'pane2';
             var reverse = (count == 0) ? false : true;
             if (_childNodes[i].hasAttribute('size-p')) {
-                panelObj[paneKey]['size'] = calRatioInPixal(_childNodes[i].getAttribute('size-p'), _boundSize, reverse);
+                panelObj[paneKey]['size'] = calRatioInPixel(_childNodes[i].getAttribute('size-p'), _boundSize, reverse);
                 if (!sizeFound) {
                     sizeFound = true;
                     current = panelObj[paneKey]['size'];
                 }
             }
             if (_childNodes[i].hasAttribute('min-size-p')) {
-                panelObj[paneKey]['minSize'] = calRatioInPixal(_childNodes[i].getAttribute('min-size-p'), _boundSize, reverse);
+                panelObj[paneKey]['minSize'] = calRatioInPixel(_childNodes[i].getAttribute('min-size-p'), _boundSize, reverse);
                 if (!sizeFound) {
                     sizeFound = true;
                     current = panelObj[paneKey]['minSize'];
