@@ -1,6 +1,8 @@
 <?php
 	$model = $ControllerAction['table'];
 	$alias = $model->alias();
+	$this->Form->unlockField("$alias.custom_field_options");
+	$this->Form->unlockField("$alias.is_default");
 ?>
 
 <?php if ($ControllerAction['action'] == 'view') : ?>
@@ -79,7 +81,6 @@
 												}
 												echo $this->Form->input("$alias.custom_field_options.$key.name", ['label' => false]);
 												echo $this->Form->hidden("$alias.custom_field_options.$key.is_default", ['value' => 0]);
-												$this->Form->unlockField("$alias.is_default");
 											?>
 										</td>
 										<td>
