@@ -1,19 +1,7 @@
-<?php
-/**
-* Mini Dashboard
-*/
-echo $this->Html->script('highchart/highcharts', ['block' => true]);
-echo $this->Html->script('dashboards', ['block' => true]);
-?>
 <!-- Please take note of the CSS for this chart place holder -->
 <style type="text/css">
 	.data-section {
 		vertical-align: middle;
-	}
-	.minidashboard-donut {
-		height: 100px;
-		width: 100px;
-		visibility: hidden;
 	}
 </style>
 <div class="overview-box alert" ng-class="disableElement">
