@@ -775,7 +775,8 @@ class ControllerActionComponent extends Component {
 
         if ($options['auto_order']) {
             if (empty($order) && array_key_exists($this->orderField, $schema)) {
-                $query->order([$model->aliasField($this->orderField) => 'asc']);
+                $options['sort'] = 'order';
+                $options['direction'] = 'asc';
             }
         }
 
