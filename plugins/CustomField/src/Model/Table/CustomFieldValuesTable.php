@@ -17,7 +17,6 @@ class CustomFieldValuesTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		// pr($this->text_value);
 		$validator = parent::validationDefault($validator);
 		$scope = $this->extra['scope'];
 
