@@ -58,6 +58,12 @@ class StaffAttendancesTable extends AppTable {
 		$AbsenceTypesTable = TableRegistry::get('Institution.AbsenceTypes');
 		$this->absenceList = $AbsenceTypesTable->getAbsenceTypeList();
 		$this->absenceCodeList = $AbsenceTypesTable->getCodeList();
+
+		$this->addBehavior('HighChart', [
+			'institution_staff_attendance' => [
+				'_function' => 'getNumberOfStaffByAttendance'
+			]
+		]);
 	}
 
 	public function implementedEvents() {
@@ -267,6 +273,36 @@ class StaffAttendancesTable extends AppTable {
 			}
 		}
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	}
+
+	// Function use by the mini dashboard
+	public function getNumberOfStaffByAttendance($params=[]) {
+		$query = $params['query'];
+		$StaffAttendancesQuery = clone $query;
+			
+		// Creating the data set		
+		$dataSet = [];
+		$data = [];
+		foreach ($StaffAttendancesQuery as $entity) {
+			// //Compile the dataset
+			if (empty($entity->StaffAbsences['id'])) {
+				if (isset($data['Present'])) {
+					$data['Present'] = ++$data['Present'];
+				} else {
+					$data['Present'] = 1;
+				}
+			} else {
+				$absenceTypeId = $entity->StaffAbsences['absence_type_id'];
+				$typeName = $this->absenceList[$absenceTypeId];
+				if (isset($data[$typeName])) {
+					$data[$typeName] = ++$data[$typeName];
+				} else {
+					$data[$typeName] = 1;
+				}
+			}
+		}
+		unset($StaffAttendancesQuery);
+		return $data;
 	}
 
 	// Event: ControllerAction.Model.onGetOpenemisNo
@@ -516,11 +552,6 @@ class StaffAttendancesTable extends AppTable {
 
 	// Event: ControllerAction.Model.index.beforeAction
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
-		$toolbarElements = [
-			['name' => 'Institution.Attendance/controls', 'data' => [], 'options' => []]
-		];
-		$this->controller->set('toolbarElements', $toolbarElements);
-
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$periodOptions = $AcademicPeriod->getList();
@@ -663,6 +694,58 @@ class StaffAttendancesTable extends AppTable {
 				->where([$this->aliasField('institution_id') => $institutionId])
 				->distinct()
 				;
+
+			$InstitutionArray = [];
+			if ($selectedDay != -1) {
+				
+			}
+
+			$totalStaff = $query->count();
+
+			$indexDashboard = 'attendance';
+			
+			$dataSet = $this->getNumberOfStaffByAttendance(['query' => $query]);
+			$present = 0;
+			$absent = 0;
+			$late = 0;
+			foreach ($dataSet as $key => $data) {
+				if ($key == 'Present') {
+					$present = $data;
+				} elseif ($key == 'Late') {
+					$late = $data;
+				} else {
+					$absent += $data;
+				}
+			}
+
+			$staffAttendanceArray = [];
+
+			if ($selectedDay != -1) {
+				$staffAttendanceArray[] = ['label' => 'No. of Staff Present', 'value' => $present];
+				$staffAttendanceArray[] = ['label' => 'No. of Staff Absent', 'value' => $absent];
+				$staffAttendanceArray[] = ['label' => 'No. of Staff Late', 'value' => $late];
+			} else {
+				$staffAttendanceArray[] = ['label' => 'No. of Staff Absent for the week', 'value' => $absent];
+				$staffAttendanceArray[] = ['label' => 'No. of Staff Late for the week', 'value' => $late];
+			}
+			
+			$toolbarElements[] = [
+				'name' => $indexDashboard,
+				'data' => [
+					'model' => 'staff',
+					'modelCount' => $totalStaff,
+					'modelArray' => $staffAttendanceArray,
+				],
+				'options' => []
+			];
+
+			$toolbarElements[] = [
+				'name' => 'Institution.Attendance/controls', 
+				'data' => [], 
+				'options' => []
+			];
+
+			$this->controller->set('toolbarElements', $toolbarElements);
 
 			if ($selectedDay == -1) {
 				foreach ($this->allDayOptions as $key => $obj) {
