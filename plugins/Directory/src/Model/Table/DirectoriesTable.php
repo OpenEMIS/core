@@ -60,6 +60,7 @@ class DirectoriesTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
 		$BaseUsers = TableRegistry::get('User.Users');
 		return $BaseUsers->setUserValidation($validator, $this);
 	}
@@ -308,8 +309,7 @@ class DirectoriesTable extends AppTable {
 			} else {
 				$this->request->query['user_type'] = self::GUARDIAN;
 			}
-			$userType = $this->request->query('user_type');
-			
+			$userType = isset($this->request->data[$this->alias()]['user_type']) ? $this->request->data[$this->alias()]['user_type'] : $this->request->query('user_type');
 			$this->ControllerAction->field('openemis_no', ['user_type' => $userType]);
 
 			switch ($userType) {
@@ -366,7 +366,7 @@ class DirectoriesTable extends AppTable {
 
 	public function addBeforeAction(Event $event)
 	{
-		if (isset($this->request->query['user_type'])) {
+		if (!isset($this->request->data[$this->alias()]['user_type'])) {
 			$this->request->data[$this->alias()]['user_type'] = $this->request->query('user_type');
 		}
 	}
