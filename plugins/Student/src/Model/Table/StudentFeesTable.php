@@ -230,7 +230,6 @@ class StudentFeesTable extends ControllerActionTable {
 
 	public function getTotalFee(Entity $entity)
 	{
-		$amount = 0.00;
 		$amount = $entity->total;
 		return $amount;
 	}
