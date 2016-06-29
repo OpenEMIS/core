@@ -121,6 +121,8 @@ class StaffTable extends AppTable {
     }
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator = $this->buildStaffValidation();
 		return $validator
 			->allowEmpty('staff_name')

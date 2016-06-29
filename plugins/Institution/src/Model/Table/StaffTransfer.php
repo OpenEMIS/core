@@ -38,6 +38,7 @@ class StaffTransfer extends ControllerActionTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
 		return $validator->requirePresence('previous_institution_id');
 	}
 

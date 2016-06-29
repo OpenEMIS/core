@@ -32,6 +32,8 @@ class StudentPromotionTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		return $validator
 			->requirePresence('from_academic_period_id')
 			->requirePresence('next_academic_period_id')
