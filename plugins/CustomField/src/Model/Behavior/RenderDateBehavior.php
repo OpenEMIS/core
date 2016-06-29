@@ -101,6 +101,7 @@ class RenderDateBehavior extends RenderBehavior {
 			$value = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
 
 			$form = $event->subject()->Form;
+			$form->unlockField($attr['model'].".custom_field_values");
 			$value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
             if (!is_null($savedId)) {
                 $value .= $form->hidden($fieldPrefix.".id", ['value' => $savedId]);
