@@ -93,6 +93,8 @@ class AssessmentPeriodsTable extends AssessmentsAppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 			->requirePresence('assessment_id', 'update')
 			->requirePresence('name')
