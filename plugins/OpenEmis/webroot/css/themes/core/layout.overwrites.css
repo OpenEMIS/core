@@ -543,3 +543,12 @@ a,
 .rtl .form-horizontal option {
     direction: ltr;
 }
+
+/* For Checkbox iCheck - To be depreciate */
+
+.icheck-input[type="checkbox"],
+.icheck-input[type="radio"] {
+    z-index: -1 !important;
+}
+
+/* End of iCheck */
