@@ -524,16 +524,11 @@ class StaffAttendancesTable extends AppTable {
 					->contain('StaffAbsenceReasons');
 				$absenceResult = $absenceQuery->first();
 
-				$typeOptions = $this->getSelectOptions('Absence.types');
-				if (empty($absenceResult->staff_absence_reason)) {
-					$absenceType = 'UNEXCUSED';
-				} else {
-					$absenceType = 'EXCUSED';
-				}
+				$absenceType = $this->absenceList[$entity->StaffAbsences['absence_type_id']];
 				if ($absenceResult->full_day == 0) {
-					$urlLink = sprintf(__('Absent') . ' - ' . $typeOptions[$absenceType]. ' (%s - %s)' , $absenceResult->start_time, $absenceResult->end_time);
+					$urlLink = sprintf(__($absenceType) . ' - (%s - %s)' , $absenceResult->start_time, $absenceResult->end_time);
 				} else {
-					$urlLink = __('Absent') . ' - ' . $typeOptions[$absenceType]. ' (full day)';
+					$urlLink = __($absenceType) . ' - ('.__('Full Day').')';
 				}
 
 				$StaffAbsences = TableRegistry::get('Institution.StaffAbsences');
