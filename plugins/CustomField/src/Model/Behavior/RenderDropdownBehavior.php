@@ -17,15 +17,13 @@ class RenderDropdownBehavior extends RenderBehavior {
         $value = '';
 
         $dropdownOptions = [];
-        $dropdownDefault = null;
+        $dropdownDefault = '';
         foreach ($attr['customField']['custom_field_options'] as $key => $obj) {
             $dropdownOptions[$obj->id] = $obj->name;
             if ($obj->is_default == 1) {
                 $dropdownDefault = $obj->id;
             }
         }
-        // default to first key if is not set
-        $dropdownDefault = !is_null($dropdownDefault) ? $dropdownDefault : key($dropdownOptions);
 
         // for edit
         $fieldKey = $attr['attr']['fieldKey'];
@@ -53,6 +51,7 @@ class RenderDropdownBehavior extends RenderBehavior {
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
             $options['type'] = 'select';
+            $options['empty'] = '-- ' . __('Select') . ' --';
             $options['options'] = $dropdownOptions;
             $options['ng-model'] = 'RelevancyRulesController.Dropdown["'.$fieldId.'"]';
 
