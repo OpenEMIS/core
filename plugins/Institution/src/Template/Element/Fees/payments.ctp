@@ -1,3 +1,7 @@
+<?php
+	$this->Form->unlockField("StudentFeesAbstract");
+?>
+
 <?php if ($action == 'add' || $action == 'edit') : ?>
 <?php $action = 'edit'; ?>
 <script type="text/javascript">
@@ -32,7 +36,7 @@
 									<th></th>
 								<?php endif; ?>
 							<?php endif; ?>
-			
+
 						<?php endforeach ?>
 
 						<th class="cell-delete"></th>
@@ -49,12 +53,12 @@
 							<?php foreach ($attr['fields'] as $key=>$field) : ?>
 
 								<?php if (isset($field['field'])) : ?>
-									<?php 
+									<?php
 										$field['attr']['name'] = $field['model'].'['.$recordKey.']['.$field['field'].']';
 										$field['attr']['id'] = strtolower($field['model']).'-'.$recordKey.'-'.$field['field'];
 										$field['attr']['value'] = $record->$field['field'];
 										$field['fieldName'] = $field['model'].'['.$recordKey.']['.$field['field'].']';
-										$tdClass = ''; 
+										$tdClass = '';
 										if ($record->errors($field['field'])) {
 											$field['attr']['class'] = 'form-error';
 											$tdClass = 'error';
@@ -68,7 +72,7 @@
 										<td class="<?= $tdClass ?>">
 											<?= $this->HtmlField->{$field['type']}($action, $record, $field, $field['attr']);?>
 										</td>
-										
+
 										<td class="<?= $tdClass ?>">
 											<?php if ($record->errors($field['field'])) : ?>
 												<ul class="error-message">
@@ -80,14 +84,14 @@
 												&nbsp;
 											<?php endif; ?>
 										</td>
-										
+
 									<?php endif; ?>
 
 								<?php endif; ?>
-					
+
 							<?php endforeach ?>
-								
-							<td> 
+
+							<td>
 								<?php
 								echo $this->Form->input('<i class="fa fa-trash"></i> <span>Delete</span>', [
 									'label' => false,
@@ -114,16 +118,16 @@
 									<td></td>
 								<?php endif; ?>
 							<?php endif; ?>
-			
+
 						<?php endforeach ?>
 						<td></td>
 					</tr>
-				
+
 				<?php endif; ?>
 
 				</tbody>
-				
-				<?php 
+
+				<?php
 					$tdClass = '';
 					$ulClass = 'hidden';
 					$spanClass = '';
@@ -166,11 +170,11 @@
 					<th><?= $attr['fields']['payment_date']['tableHeader'] ?></th>
 					<th class="text-right"><?= $attr['fields']['amount']['tableHeader'] ?></th>
 					<th><?= $attr['fields']['comments']['tableHeader'] ?></th>
-					<th><?= $attr['fields']['created_user_id']['tableHeader'] ?></th>	
+					<th><?= $attr['fields']['created_user_id']['tableHeader'] ?></th>
 				</tr>
 			</thead>
 			<tbody>
-			<?php 
+			<?php
 			if (isset($attr['data']) && !empty($attr['data'])) :
 				foreach ($attr['data'] as $key=>$record) : ?>
 				<tr>
@@ -187,14 +191,14 @@
 			?>
 			</tbody>
 			<?php if (isset($attr['data']) && !empty($attr['data'])) : ?>
-			
+
 			<tfoot>
 				<td class="bold"><?php echo $this->Label->get('general.total') ?></td>
 				<td class="text-right bold"><?php echo $attr['total'] ?></td>
 				<td></td>
 				<td></td>
 			</tfoot>
-			
+
 			<?php endif;?>
 		</table>
 	</div>
