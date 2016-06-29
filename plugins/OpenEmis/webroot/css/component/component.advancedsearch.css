@@ -1,4 +1,4 @@
-/* ADVANCED SEARCH v.1.0.0 */
+/* ADVANCED SEARCH v.1.0.1 */
 
 select:focus,
 .close:focus {
@@ -15,7 +15,7 @@ select:focus,
     -webkit-border-radius: 4px;
     border-radius: 4px;
     position: relative;
-    margin: 10px 0;
+    margin: 14px 0;
     padding: 20px 10px 10px;
     position: relative;
     -webkit-animation: display-block-transition 0.2s;
