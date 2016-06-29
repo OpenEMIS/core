@@ -81,6 +81,8 @@ class InstitutionStudentAbsencesTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$this->setValidationCode('start_date.ruleNoOverlappingAbsenceDate', 'Institution.Absences');
 		$this->setValidationCode('start_date.ruleInAcademicPeriod', 'Institution.Absences');
 		$this->setValidationCode('end_date.ruleCompareDateReverse', 'Institution.Absences');
@@ -273,12 +275,14 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		$StudentTable = TableRegistry::get('Institution.Students');
 		$studentId = $entity->student_id;
 		$institutionId = $entity->institution_id;
-		if(! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
-			$process = function ($model, $entity) {
-				return false;
-			};
-			$this->Alert->error('InstitutionStudentAbsences.notEnrolled');
-			return $process;
+		if (!is_null($studentId)) {
+			if(! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
+				$process = function ($model, $entity) {
+					return false;
+				};
+				$this->Alert->error('InstitutionStudentAbsences.notEnrolled');
+				return $process;
+			}
 		}
 	}
 
