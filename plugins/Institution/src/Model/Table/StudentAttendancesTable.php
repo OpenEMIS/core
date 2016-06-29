@@ -50,12 +50,6 @@ class StudentAttendancesTable extends AppTable {
 		$AbsenceTypesTable = TableRegistry::get('Institution.AbsenceTypes');
 		$this->absenceList = $AbsenceTypesTable->getAbsenceTypeList();
 		$this->absenceCodeList = $AbsenceTypesTable->getCodeList();
-
-		$this->addBehavior('HighChart', [
-			'institution_student_attendance' => [
-				'_function' => 'getNumberOfStudentsByAttendance'
-			]
-		]);
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
@@ -263,9 +257,8 @@ class StudentAttendancesTable extends AppTable {
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 
-	// Mini dashboard
 	// Function use by the mini dashboard
-	public function getNumberOfStudentsByAttendance($params=[]) {
+	public function getNumberOfStudentByAttendance($params=[]) {
 		$query = $params['query'];
 		$StudentAttendancesQuery = clone $query;
 			
@@ -275,28 +268,23 @@ class StudentAttendancesTable extends AppTable {
 		foreach ($StudentAttendancesQuery as $entity) {
 			// //Compile the dataset
 			if (empty($entity->StudentAbsences['id'])) {
-				if (isset($data[__('Present')])) {
-					$data[__('Present')] = ++$data[__('Present')];
+				if (isset($data['Present'])) {
+					$data['Present'] = ++$data['Present'];
 				} else {
-					$data[__('Present')] = 1;
+					$data['Present'] = 1;
 				}
 			} else {
 				$absenceTypeId = $entity->StudentAbsences['absence_type_id'];
 				$typeName = $this->absenceList[$absenceTypeId];
-				if (isset($data[__($typeName)])) {
-					$data[__($typeName)] = ++$data[__($typeName)];
+				if (isset($data[$typeName])) {
+					$data[$typeName] = ++$data[$typeName];
 				} else {
-					$data[__($typeName)] = 1;
+					$data[$typeName] = 1;
 				}
 			}
 		}
-
-		foreach ($data as $key => $value) {
-			$dataSet[] = [$key, $value];
-		}
-		$params['dataSet'] = $dataSet;
 		unset($StudentAttendancesQuery);
-		return $params;
+		return $data;
 	}
 
 
@@ -764,10 +752,31 @@ class StudentAttendancesTable extends AppTable {
 
 			$totalStudent = $query->count();
 
-			$indexDashboard = 'dashboard';
-			$InstitutionArray = [];
+			$indexDashboard = 'attendance';
+			
+			$dataSet = $this->getNumberOfStudentByAttendance(['query' => $query]);
+			$present = 0;
+			$absent = 0;
+			$late = 0;
+			foreach ($dataSet as $key => $data) {
+				if ($key == 'Present') {
+					$present = $data;
+				} elseif ($key == 'Late') {
+					$late = $data;
+				} else {
+					$absent += $data;
+				}
+			}
+
+			$studentAttendanceArray = [];
+
 			if ($selectedDay != -1) {
-				$InstitutionArray[__('Presence')] = $this->getDonutChart('institution_student_attendance', ['query' => $query, 'key' => '']);
+				$studentAttendanceArray[] = ['label' => 'No. of Students Present', 'value' => $present];
+				$studentAttendanceArray[] = ['label' => 'No. of Students Absent', 'value' => $absent];
+				$studentAttendanceArray[] = ['label' => 'No. of Students Late', 'value' => $late];
+			} else {
+				$studentAttendanceArray[] = ['label' => 'No. of Students Absent for the week', 'value' => $absent];
+				$studentAttendanceArray[] = ['label' => 'No. of Students Late for the week', 'value' => $late];
 			}
 			
 			$toolbarElements[] = [
@@ -775,7 +784,7 @@ class StudentAttendancesTable extends AppTable {
 				'data' => [
 					'model' => 'students',
 					'modelCount' => $totalStudent,
-					'modelArray' => $InstitutionArray,
+					'modelArray' => $studentAttendanceArray,
 				],
 				'options' => []
 			];
