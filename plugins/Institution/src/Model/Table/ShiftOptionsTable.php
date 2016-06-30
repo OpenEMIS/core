@@ -36,8 +36,8 @@ class ShiftOptionsTable extends ControllerActionTable {
 	}
 
 	public function getStartEndTime($shiftOptionId, $select) {
-		$data = $this->find()->where(['id' => $shiftOptionId])->toArray();
-		return $data[0][$select.'_time'];
+		$data = $this->get($shiftOptionId)->toArray();
+		return $data[$select.'_time'];
 	}
 }
 ?>

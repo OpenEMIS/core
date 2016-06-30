@@ -688,8 +688,14 @@ class InstitutionClassesTable extends ControllerActionTable {
 ** field specific methods
 **
 ******************************************************************************************************************/
-	public function onGetInstitutionShiftId(Event $event, Entity $entity) {
-		return $entity->institution_shift->shift_option->name;
+	public function onGetInstitutionShiftId(Event $event, Entity $entity) 
+	{
+		if ($entity->institution_shift->institution_id != $entity->institution_id) { //if the current institution is not the owner of the shift.
+			$ownerInfo = $this->Institutions->get($entity->institution_shift->institution_id)->toArray(); //show more information of the shift owner
+			return $ownerInfo['code_name'] . ' - ' . $entity->institution_shift->shift_option->name;
+		} else {
+			return $entity->institution_shift->shift_option->name;
+		}
 	}
 	public function onGetStaffId(Event $event, Entity $entity) {
 		if ($this->action == 'view') {
