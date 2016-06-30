@@ -1,14 +1,13 @@
 angular.module('app.ctrl', ['app.svc', 'utils.svc'])
-	.controller('AppCtrl', function($rootScope, $scope) {
-    	$scope.getSplitterElements = function (_response){
-    		$scope.splitElems = _response;
-    	};
-  		$scope.splitterDragCallback = function (_response){
-  			console.log("From AppCtrl >> splitterDragCallback = "+ _response);
+    .controller('AppCtrl', function($rootScope, $scope) {
+        $scope.getSplitterElements = function(_response) {
+            $scope.splitElems = _response;
+        };
 
-  			$.each($('.highchart'), function(key, group) {
+        $rootScope.$on('onSplitterResize', function() {
+            $.each($('.highchart'), function(key, group) {
                 $(group).highcharts().reflow();
             });
-  		}
+            console.log("on spliter resize");
+        });
     });
-
