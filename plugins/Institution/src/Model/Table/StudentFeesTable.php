@@ -41,14 +41,14 @@ class StudentFeesTable extends ControllerActionTable {
 		$this->belongsTo('AcademicPeriods',	['className' => 'AcademicPeriod.AcademicPeriods']);
 
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
-		
+
 		if ($this->behaviors()->has('ControllerAction')) {
             $this->behaviors()->get('ControllerAction')->config([
                 'actions' => [
-					'index' => true, 
-					'view' => true, 
-					'edit' => true, 
-					'add' => false, 
+					'index' => true,
+					'view' => true,
+					'edit' => true,
+					'add' => false,
 					'remove' => false,
 					'search' => false,
 					'reorder' => false
@@ -88,22 +88,22 @@ class StudentFeesTable extends ControllerActionTable {
     	$this->StudentFeesAbstract->fields['comments'] = array_merge($this->StudentFeesAbstract->fields['comments'], ['type' => 'string', 'tableHeader' => __('Comments'), 'attr'=>['label' => false, 'name'=>'']]);
     	$this->StudentFeesAbstract->fields['student_id'] = array_merge($this->StudentFeesAbstract->fields['student_id'], ['type' => 'hidden', 'tableHeader' => __(''), 'attr'=>['label' => false, 'name'=>'']]);
     	$this->StudentFeesAbstract->fields['institution_fee_id'] = array_merge($this->StudentFeesAbstract->fields['institution_fee_id'], ['type' => 'hidden', 'tableHeader' => __(''), 'attr'=>['label' => false, 'name'=>'']]);
-		
+
 		$this->StudentFeesAbstract->fields['payment_date'] = array_merge($this->StudentFeesAbstract->fields['payment_date'], [
-			'type' => 'date', 
-			'label' => false, 
-			'tableHeader' => __('Payment Date'), 
+			'type' => 'date',
+			'label' => false,
+			'tableHeader' => __('Payment Date'),
 			'attr'=>[
 				'name'=>''
 			],
 			'inputWrapperStyle'=>'margin-bottom:0;'
 		]);
     	$this->StudentFeesAbstract->fields['amount'] = array_merge($this->StudentFeesAbstract->fields['amount'], [
-			'type' => 'float', 
-			'length'=>'14', 
-			'tableHeader' => __('Amount ('.$this->currency.')'), 
+			'type' => 'float',
+			'length'=>'14',
+			'tableHeader' => __('Amount ('.$this->currency.')'),
 			'attr'=>[
-				'label' => false, 
+				'label' => false,
 				'name'=>'',
 				'class' => "form-control inputs_total_payments",
 				'computetype' => "total_payments",
@@ -116,7 +116,7 @@ class StudentFeesTable extends ControllerActionTable {
 				'data-compute-operand' => "plus"
 			]
 		]);
-    	
+
     	unset($this->StudentFeesAbstract->fields['modified_user_id']);
     	unset($this->StudentFeesAbstract->fields['modified']);
     	$this->StudentFeesAbstract->fields['created'] = false;
@@ -180,7 +180,7 @@ class StudentFeesTable extends ControllerActionTable {
 			;
 
 		$extra['elements']['custom'] = [
-			'name' => 'Institution.StudentFees/controls', 
+			'name' => 'Institution.StudentFees/controls',
 			'data' => [
 				'academicPeriodOptions'=>$academicPeriodOptions,
 				'gradeOptions'=>$gradeOptions,
@@ -202,8 +202,8 @@ class StudentFeesTable extends ControllerActionTable {
 			$this->Alert->warning('InstitutionFees.noProgrammeGradeFees');
 			$query->where([
 				' EXISTS (
-  					SELECT `id` 
-  					FROM `student_fees` 
+  					SELECT `id`
+  					FROM `student_fees`
   					WHERE `student_fees`.`student_id` = ' . $this->aliasField('student_id') . '
   					AND `student_fees`.`institution_fee_id` = 0)'
 			])
@@ -538,7 +538,7 @@ class StudentFeesTable extends ControllerActionTable {
 	}
 
 	public function onGetOutstandingFee(Event $event, Entity $entity) {
-		return $this->currency.' '.$this->getOutstandingFee($entity);	
+		return $this->currency.' '.$this->getOutstandingFee($entity);
 	}
 
 	public function getOutstandingFee(Entity $entity) {
@@ -609,4 +609,28 @@ class StudentFeesTable extends ControllerActionTable {
 			$toolbarButtons['back']['url'] = $buttons['view']['url'];
 		}
 	}
+
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
+        $newButtons = [];
+        if (array_key_exists('view', $buttons)) {
+            $newButtons['view'] = $buttons['view'];
+        }
+
+        if (array_key_exists('edit', $buttons)) {
+            $addPayment = $buttons['edit'];
+            $addPayment['label'] = '<i class="fa kd-add"></i>' . __('Add Payment');
+            $newButtons['addPayment'] = $addPayment;
+            $newButtons['addPayment']['url'] = [
+                'plugin' => $this->controller->plugin,
+                'controller' => $this->controller->name,
+                'add',
+                $entity->id
+            ];
+        }
+
+        return $newButtons;
+    }
 }

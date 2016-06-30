@@ -52,7 +52,7 @@ class TransferRequestsTable extends AppTable {
 
 	public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona) {
 		$Navigation->substituteCrumb('Transfers', 'TransferRequests', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'TransferRequests']);
-		$Navigation->addCrumb('Edit');
+		$Navigation->addCrumb(ucfirst($this->ControllerAction->action()));
 	}
 
     public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -108,6 +108,8 @@ class TransferRequestsTable extends AppTable {
 
 	public function validationDefault(Validator $validator)
 	{
+		$validator = parent::validationDefault($validator);
+
 		return $validator
 			->add('student_id', 'ruleNoNewDropoutRequestInGradeAndInstitution', [
 				'rule' => ['noNewDropoutRequestInGradeAndInstitution'],
