@@ -1,3 +1,6 @@
+v3.5.9.3
+- Added new permissions for creating Student or Staff Profile
+
 v3.5.9
 - Fixed a bug that caused 404 error page when deleting a Specialisation in Field Options
 - Fixed a bug that caused 404 error page when removing a user from a security group

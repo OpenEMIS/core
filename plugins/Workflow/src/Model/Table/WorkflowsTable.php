@@ -48,6 +48,8 @@ class WorkflowsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator->add('code', [
 			'ruleUnique' => [
 				'rule' => ['validateUnique', ['scope' => 'workflow_model_id']],
