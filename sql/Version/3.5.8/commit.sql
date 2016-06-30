@@ -1,12 +1,3 @@
--- POCOR-3037
--- db_patches
-INSERT INTO `db_patches` (issue, created) VALUES ('POCOR-3037', NOW());
-
-
--- code here
-INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES ('7047', 'New Guardian Profile', 'Directories', 'Directory', 'Students - Guardians', '7000', NULL, NULL, 'StudentGuardianUser.add', NULL, NULL, '7047', '1', NULL, NULL, '1', NOW());
-
-
 -- POCOR-2780
 --
 
@@ -24,6 +15,15 @@ INSERT INTO `import_mapping` (`id`, `model`, `column_name`, `description`, `orde
 DELETE FROM `security_functions` WHERE `id` = 7047;
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
 (1042, 'Import Staff', 'Institutions', 'Institutions', 'Staff', 1016, NULL, NULL, NULL, NULL, 'ImportStaff.add|ImportStaff.template|ImportStaff.results|ImportStaff.downloadFailed|ImportStaff.downloadPassed', 1042, 1, NULL, NULL, 1, NOW());
+
+
+-- POCOR-3037
+-- db_patches
+INSERT INTO `db_patches` (issue, created) VALUES ('POCOR-3037', NOW());
+
+
+-- code here
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES ('7047', 'New Guardian Profile', 'Directories', 'Directory', 'Students - Guardians', '7000', NULL, NULL, 'StudentGuardianUser.add', NULL, NULL, '7047', '1', NULL, NULL, '1', NOW());
 
 
 -- POCOR-2416
