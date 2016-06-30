@@ -59,6 +59,7 @@ UPDATE `security_functions` SET `order` = 2029 WHERE id = 2010;
 
 -- Added by Jeff to fix incorrect type
 ALTER TABLE `contact_types` CHANGE `contact_option_id` `contact_option_id` INT(11) NOT NULL;
+ALTER TABLE `institution_staff_assignments` CHANGE `institution_id` `institution_id` INT(11) NOT NULL;
 
 -- 3.5.10
 UPDATE config_items SET value = '3.5.10' WHERE code = 'db_version';
