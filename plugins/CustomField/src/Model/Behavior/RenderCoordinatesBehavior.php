@@ -56,11 +56,16 @@ class RenderCoordinatesBehavior extends RenderBehavior {
         } else if ($action == 'edit') {
 
             $form = $event->subject()->Form;
-            $form->unlockField($attr['model'].".custom_field_values");
             $html = '';
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
             $attr['fieldPrefix'] = $fieldPrefix;
             $attr['form'] = $form;
+            $unlockFields = [];
+
+            $unlockFields[] = $attr['fieldPrefix'].".latitude";
+            $unlockFields[] = $attr['fieldPrefix'].".longitude";
+            $unlockFields[] = $attr['fieldPrefix'].".".$attr['attr']['fieldKey'];
+            $unlockFields[] = $attr['fieldPrefix'].".id";
 
             // $postData = $entity->custom_field_values[$attr['attr']['seq']];
             $postData = null;
@@ -73,7 +78,6 @@ class RenderCoordinatesBehavior extends RenderBehavior {
                     }
                 }
             }
-
             if ($postData instanceof Entity && !empty($postData->dirty())) {
                 $values = ($postData->invalid('coordinates_value')) ? json_decode(json_encode($postData->invalid('coordinates_value'))) : json_decode(json_encode($postData->coordinates_value));
             } elseif (!is_null($savedValue)) {
@@ -87,7 +91,9 @@ class RenderCoordinatesBehavior extends RenderBehavior {
         }
 
         $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['action' => $action, 'values' => $values, 'errors' => $errors, 'id' => $savedId, 'attr' => $attr]);
-        $value = $this->processRelevancyDisabled($entity, $value, $fieldId);
+        if ($action == 'edit') {
+            $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
+        }
         $event->stopPropagation();
         return $value;
     }
