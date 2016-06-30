@@ -13,6 +13,7 @@ use Cake\I18n\Date;
 use Cake\I18n\I18n;
 use Cake\View\Helper\IdGeneratorTrait;
 use Cake\View\NumberHelper;
+use Cake\Network\Session;
 
 use Cake\Log\Log;
 
@@ -229,6 +230,7 @@ class HtmlFieldHelper extends Helper {
 	public function select($action, Entity $data, $attr, $options=[]) {
 		$value = '';
 		$field = $attr['field'];
+		$arrayKeys = [];
 		if ($action == 'index' || $action == 'view') {
 			if (!empty($attr['options'])) {
 				if ($data->$field === '') {
@@ -276,6 +278,9 @@ class HtmlFieldHelper extends Helper {
 							if (is_array($opt) && isset($opt['text'])) {
 								$opt['text'] = __($opt['text']);
 								$list[$key] = $opt;
+								if (!in_array('disabled', $opt, true)) {
+									$arrayKeys[] = $key;
+								}
 							} else if (is_array($opt)) {
 								$subList = [];
 								foreach ($opt as $k => $subOption) {
@@ -287,8 +292,10 @@ class HtmlFieldHelper extends Helper {
 									}
 								}
 								$list[__($key)] = $subList;
+								$arrayKeys = array_merge($arrayKeys, array_keys($subList));
 							} else {
 								$list[$key] = __($opt);
+								$arrayKeys[] = $key;
 							}
 						}
 						$attr['options'] = $list;
@@ -318,6 +325,11 @@ class HtmlFieldHelper extends Helper {
 			$fieldName = $attr['model'] . '.' . $attr['field'];
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
+			}
+
+			if ($action == 'edit') {
+				$session = new Session();
+				$session->write('FormTampering.'.$fieldName, $arrayKeys);
 			}
 			$value = $this->Form->input($fieldName, $options);
 		}
