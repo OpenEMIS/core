@@ -77,7 +77,7 @@ class RenderFileBehavior extends RenderBehavior {
             }
         } else if ($action == 'edit') {
             $form = $event->subject()->Form;
-            $form->unlockField($attr['model'].".custom_field_values");
+            $unlockFields = [];
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
             if (!is_null($savedValue)) {
@@ -94,14 +94,17 @@ class RenderFileBehavior extends RenderBehavior {
             // End
 
             $attr['fieldName'] = $fieldPrefix.".file";
+            $form->unlockField($attr['fieldName']);
             $attr['comment'] = $this->getFileComment();
 
             $value .= $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
             $value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
+            $unlockFields[] = $fieldPrefix.".".$attr['attr']['fieldKey'];
             if (!is_null($savedId)) {
                 $value .= $form->hidden($fieldPrefix.".id", ['value' => $savedId]);
+                $unlockFields[] = $fieldPrefix.".id";
             }
-            $value = $this->processRelevancyDisabled($entity, $value, $fieldId);
+            $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
         }
 
         $event->stopPropagation();

@@ -119,10 +119,7 @@ class AppController extends Controller {
 		]); // for single sign on authentication
 		$this->loadComponent('Security', [
 			'unlockedFields' => [
-				'area_picker',
-				'InstitutionSurveys.institution_repeater_surveys',
-				'InstitutionSurveys.custom_field_values',
-				'InstitutionSurveys.custom_table_cells'
+				'area_picker'
 			]
 		]);
 		$this->loadComponent('Csrf');
