@@ -177,7 +177,6 @@ class Hash
                 $next = $filter;
             }
             $context = [$_key => $next];
-
         }
         return $context[$_key];
     }
@@ -277,7 +276,6 @@ class Hash
             ) {
                 return false;
             }
-
         }
         return true;
     }
@@ -749,9 +747,11 @@ class Hash
         while (!empty($stack)) {
             foreach ($stack as $curKey => &$curMerge) {
                 foreach ($curMerge[0] as $key => &$val) {
-                    if (!empty($curMerge[1][$key]) && (array)$curMerge[1][$key] === $curMerge[1][$key] && (array)$val === $val) {
+                    $isArray = is_array($curMerge[1]);
+                    if ($isArray && !empty($curMerge[1][$key]) && (array)$curMerge[1][$key] === $curMerge[1][$key] && (array)$val === $val) {
+                        // Recurse into the current merge data as it is an array.
                         $stack[] = [&$val, &$curMerge[1][$key]];
-                    } elseif ((int)$key === $key && isset($curMerge[1][$key])) {
+                    } elseif ((int)$key === $key && $isArray && isset($curMerge[1][$key])) {
                         $curMerge[1][] = $val;
                     } else {
                         $curMerge[1][$key] = $val;
