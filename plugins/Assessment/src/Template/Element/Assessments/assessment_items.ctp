@@ -1,6 +1,10 @@
 <?php use Cake\Utility\Inflector;?>
 
-<?php if ($action == 'add' || $action == 'edit') : ?>
+<?php 
+    $this->Form->unlockField('Assessments.assessment_items');
+    $this->Form->unlockField('Assessments.assessment_periods');
+    $this->Form->unlockField('Assessments.education_grade_id');
+    if ($action == 'add' || $action == 'edit') : ?>
     <style>
         table.table-body-scrollable  {
             width: 100%;
