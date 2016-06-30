@@ -26,6 +26,8 @@ class InstitutionGradesTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 			->allowEmpty('end_date')
  			->add('end_date', 'ruleCompareDateReverse', [
