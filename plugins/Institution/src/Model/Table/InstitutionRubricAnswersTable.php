@@ -22,6 +22,8 @@ class InstitutionRubricAnswersTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 			->requirePresence('rubric_criteria_option_id')
 			->notEmpty('rubric_criteria_option_id', 'Please select a criteria option.');

@@ -11,7 +11,6 @@ use Cake\Utility\Inflector;
 class AreapickerBehavior extends Behavior {
 	public function implementedEvents() {
         $events = parent::implementedEvents();
-
 		$events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
 		$events['ControllerAction.Model.edit.afterQuery'] = 'editAfterQuery';
 		$events['ControllerAction.Model.edit.beforePatch'] = 'editBeforePatch';
