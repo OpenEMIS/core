@@ -21,6 +21,8 @@ class UsersTable extends AppTable {
 		$this->entityClass('User.User');
 
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
+		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
+		$this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
 
 		$this->belongsToMany('Roles', [
 			'className' => 'Security.SecurityRoles',
