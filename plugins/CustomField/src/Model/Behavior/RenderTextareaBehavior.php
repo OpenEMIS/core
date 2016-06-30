@@ -35,7 +35,7 @@ class RenderTextareaBehavior extends RenderBehavior {
             }
         } else if ($action == 'edit') {
             $form = $event->subject()->Form;
-            $form->unlockField($attr['model'].".custom_field_values");
+            $unlockFields = [];
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
             $options['type'] = 'textarea';
@@ -44,10 +44,13 @@ class RenderTextareaBehavior extends RenderBehavior {
             }
             $value .= $form->input($fieldPrefix.".textarea_value", $options);
             $value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
+            $unlockFields[] = $fieldPrefix.".textarea_value";
+            $unlockFields[] = $fieldPrefix.".".$attr['attr']['fieldKey'];
             if (!is_null($savedId)) {
                 $value .= $form->hidden($fieldPrefix.".id", ['value' => $savedId]);
+                $unlockFields[] = $fieldPrefix.".id";
             }
-            $value = $this->processRelevancyDisabled($entity, $value, $fieldId);
+            $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
         }
 
         $event->stopPropagation();
