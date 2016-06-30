@@ -90,7 +90,7 @@ class ModelTask extends BakeTask
             foreach ($this->listUnskipped() as $table) {
                 $this->out('- ' . $this->_camelize($table));
             }
-            return true;
+            return;
         }
 
         $this->bake($this->_camelize($name));
@@ -280,7 +280,6 @@ class ModelTask extends BakeTask
                 if ($schema->column($fieldName)['null'] === false) {
                     $assoc['joinType'] = 'INNER';
                 }
-
             }
 
             if ($this->plugin && empty($assoc['className'])) {
