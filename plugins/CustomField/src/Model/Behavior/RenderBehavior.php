@@ -65,7 +65,7 @@ class RenderBehavior extends Behavior {
         $settings['fieldValues'] = $fieldValues;
     }
 
-    protected function processRelevancyDisabled($entity, $html, $fieldId) {
+    protected function processRelevancyDisabled($entity, $html, $fieldId, &$formHelper, $unlockFields) {
         if (is_null($this->surveyRules)) {
             $rules = $this->SurveyRulesTable
                 ->find()
@@ -94,7 +94,9 @@ class RenderBehavior extends Behavior {
                 ng-show="RelevancyRulesController.showDropdown('.$this->surveyRules[$fieldId]['dependent_question_id'].', '.$this->surveyRules[$fieldId]['show_options'].');"
                 >' . $html;
             $value .= '</fieldset>';
-
+            foreach ($unlockFields as $field) {
+                $formHelper->unlockField($field);
+            }
             $html = $value;
         }
         return $html;
