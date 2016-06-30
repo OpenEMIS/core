@@ -23,6 +23,8 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 			->allowEmpty('code')
 			->add('code', 'ruleUniqueCode', [

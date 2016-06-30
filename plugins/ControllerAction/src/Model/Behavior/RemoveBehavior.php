@@ -279,9 +279,9 @@ class RemoveBehavior extends Behavior {
 
 		// List of the target foreign keys for subqueries
 		$targetForeignKeys = $modelAssociationTable->find()
-			->select(['target' => $modelAssociationTable->aliasField($assoc->targetForeignKey())])
+			->select(['target' => $modelAssociationTable->aliasField($association->targetForeignKey())])
 			->where([
-				$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferTo
+				$modelAssociationTable->aliasField($association->foreignKey()) => $to
 			]);
 
 		$notUpdateQuery = $modelAssociationTable->query()
@@ -292,16 +292,16 @@ class RemoveBehavior extends Behavior {
 			$condition = [];
 
 			$condition = [
-				$assoc->foreignKey() => $transferFrom, 
+				$association->foreignKey() => $from, 
 				'NOT' => [
-					$assoc->foreignKey() => $transferFrom,
-					$assoc->targetForeignKey().' IN ' => $notUpdateQuery
+					$association->foreignKey() => $from,
+					$association->targetForeignKey().' IN ' => $notUpdateQuery
 				]
 			];
 			
 			// Update all transfer records
 			$modelAssociationTable->updateAll(
-				[$assoc->foreignKey() => $transferTo],
+				[$association->foreignKey() => $to],
 				$condition
 			);
 		}
