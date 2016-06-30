@@ -60,9 +60,7 @@ class SingleGradeBehavior extends Behavior {
 			$gradeOptions = $model->Institutions->InstitutionGrades->getGradeOptions($institutionId, $selectedAcademicPeriodId);
 		}
 
-        if (!empty($gradeOptions)) {
-            $selectedEducationGradeId = 0;
-        } else {
+        if (empty($gradeOptions)) {
             $gradeOptions[''] = $model->Alert->getMessage($model->aliasField('education_grade_options_empty'));
             $selectedEducationGradeId = 0;
         }
