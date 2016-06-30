@@ -106,6 +106,8 @@ class StudentsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 			->add('start_date', 'ruleCompareDate', [
 				'rule' => ['compareDate', 'end_date', false]
@@ -886,18 +888,14 @@ class StudentsTable extends AppTable {
 			$this->ControllerAction->field('student_status_id', ['type' => 'readonly', 'attr' => ['value' => $entity->student_status->name]]);
 			
 			$period = $entity->academic_period;
-			$endDate = $period->end_date->copy();
+
+            $dateOptions = [
+                'startDate' => $period->start_date->format('d-m-Y'),
+                'endDate' => $period->end_date->format('d-m-Y')
+            ];
 			
-			$this->fields['start_date']['date_options'] = [
-				'startDate' => $period->start_date->format('d-m-Y'),
-				'endDate' => $endDate->subDay()->format('d-m-Y')
-			];
-
-
-			$this->fields['end_date']['date_options'] = [
-				'startDate' => $period->start_date->format('d-m-Y'),
-				'endDate' => $endDate->subDay()->format('d-m-Y')
-			];
+			$this->fields['start_date']['date_options'] = $dateOptions;
+			$this->fields['end_date']['date_options'] = $dateOptions;
 
 			$this->Session->write('Student.Students.id', $entity->student_id);
 			$this->Session->write('Student.Students.name', $entity->user->name);
@@ -922,9 +920,8 @@ class StudentsTable extends AppTable {
 		if ($action == 'add') {
 			$period = $attr['period'];
 			if ($period instanceOf Entity) {
-				$endDate = $period->end_date->copy();
 				$attr['date_options']['startDate'] = $period->start_date->format('d-m-Y');
-				$attr['date_options']['endDate'] = $endDate->subDay()->format('d-m-Y');
+				$attr['date_options']['endDate'] = $period->end_date->format('d-m-Y');
 				$attr['value'] = $period->start_date->format('d-m-Y');
 			} else {
 				$attr['date_options']['startDate'] = '';

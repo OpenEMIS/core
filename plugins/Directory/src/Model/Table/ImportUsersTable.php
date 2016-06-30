@@ -278,7 +278,6 @@ class ImportUsersTable extends AppTable {
 
 	public function onImportCheckIdentityConfig(Event $event, $tempRow, $cellValue) 
 	{
-
 		$result = true;
 
 		$ConfigItems = TableRegistry::get('ConfigItems');
@@ -293,6 +292,32 @@ class ImportUsersTable extends AppTable {
 	    	$result = 'Student identity is mandatory';
 	    };
 
+	    if ($result === true) { //if checking mandatory is ok, then check the uniqueness of the Identity
+
+	    	if (!empty($cellValue)) { //if Identity Number is not empty
+
+	    		$userIdentitiesTable = $this->Users->Identities;
+
+	    		$defaultIdentityType = $userIdentitiesTable->IdentityTypes->getDefaultValue();
+
+	    		if ($defaultIdentityType) { //if has default identity
+
+					$countIdentity = $userIdentitiesTable->find()
+										->where([
+											'number'=>$cellValue,
+											'identity_type_id'=>$defaultIdentityType
+										])
+										->count(); //get the record which has same identity number and type
+
+					if ($countIdentity) {
+						$result = "Identity number must be unique";
+					}
+
+				} else {
+					$result = "No default identity type set";
+				}
+			}
+	    }
 		return $result;
 	}
 }

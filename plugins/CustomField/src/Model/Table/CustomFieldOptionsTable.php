@@ -2,6 +2,7 @@
 namespace CustomField\Model\Table;
 
 use App\Model\Table\AppTable;
+use Cake\Validation\Validator;
 
 class CustomFieldOptionsTable extends AppTable {
 	public function initialize(array $config) {
@@ -13,5 +14,15 @@ class CustomFieldOptionsTable extends AppTable {
 				'filter' => 'custom_field_id',
 			]);
 		}
+	}
+
+	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
+		$validator
+			->requirePresence('name')
+			->notEmpty('name', 'Please enter a name.');
+
+		return $validator;
 	}
 }
