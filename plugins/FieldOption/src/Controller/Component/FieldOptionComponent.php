@@ -65,8 +65,8 @@ class FieldOptionComponent extends Component
     // Is called before the controller's beforeFilter method.
     public function initialize(array $config)
     {
-        $controller = $this->name;
         $this->controller = $this->_registry->getController();
+        $controller = $this->controller->name;
         $accessMap = [];
         foreach ($this->fieldOptions as $key => $className) {
             $accessMap["$controller.$key"] = "$controller.%s";
