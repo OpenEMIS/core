@@ -40,7 +40,10 @@ class SelectOptionsTamperingComponent extends Component {
                     $diffResult = $this->multiDiff($v, $arr2[$k], $tmpKeyName);
                     $result = $result + $diffResult;
                 } else {
-                    if (!in_array($arr2[$k], $v)) {
+                    // all comparison value to string so that in_array strict mode can check
+                    // if both values are the same
+                    $v = array_map('strval', $v);
+                    if (!in_array(strval($arr2[$k]), $v, true)) {
                         $result[] = substr($tmpKeyName, 1);
                     }
                 }
