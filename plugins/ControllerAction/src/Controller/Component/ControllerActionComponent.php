@@ -1360,7 +1360,7 @@ class ControllerActionComponent extends Component {
                     $notRestrictedCheck = $event->result;
                 }
 
-                if ($notRestrictedCheck($model, $id, $deleteOptions)) {
+                if ($notRestrictedCheck($model, $id, $deleteOptions, $extra)) {
                     if ($process($model, $id, $deleteOptions, $extra)) {
                         $this->Alert->success('general.delete.success');
                     } else {
