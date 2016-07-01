@@ -231,7 +231,7 @@ class EducationProgrammesTable extends AppTable {
 						];
 					}
 				}
-
+				$form->unlockField($attr['model'] . '.education_next_programmes');
 				foreach ($arrayNextProgrammes as $key => $obj) {
 					$fieldPrefix = $attr['model'] . '.education_next_programmes.' . $cellCount++;
 					$joinDataPrefix = $fieldPrefix . '._joinData';

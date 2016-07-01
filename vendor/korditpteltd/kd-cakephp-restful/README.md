@@ -9,7 +9,6 @@ KORDIT CakePHP V3 Restful Plugin.
 The `master` branch has the following requirements:
 
 * [![CakePHP](https://img.shields.io/badge/CakePHP->3.0.9-yellowgreen.svg)](http://cakephp.org)
-* [![CakePHP](https://img.shields.io/badge/CakePHP-<3.2.7-yellowgreen.svg)](http://cakephp.org)
 * [![PHP](https://img.shields.io/badge/PHP->%3D5.4.16-yellowgreen.svg)](http://cakephp.org)
 
 
