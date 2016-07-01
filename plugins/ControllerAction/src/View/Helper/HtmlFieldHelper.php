@@ -260,79 +260,61 @@ class HtmlFieldHelper extends Helper {
 				}
 			}
 			if (isset($attr['options'])) {
-				if (empty($attr['options'])) {
-					//$options['empty'] = isset($attr['empty']) ? $attr['empty'] : $this->getLabel('general.noData');
-				} else {
+				if (!empty($attr['options'])) {
 					if (isset($attr['default'])) {
 						$options['default'] = $attr['default'];
-					} else {
-						// if (!empty($this->request->data)) {
-						// 	if(!empty($this->request->data->$attr['field'])) {
-						// 		$options['default'] = $this->request->data->$attr['field'];
-						// 	}
-						// }
 					}
-					if (!isset($attr['translate']) || (isset($attr['translate']) && !$attr['translate'])) {
-						$list = [];
-						foreach ($attr['options'] as $key => $opt) {
-							if (is_array($opt) && isset($opt['text'])) {
-								$opt['text'] = __($opt['text']);
-								$list[$key] = $opt;
-								if (!in_array('disabled', $opt, true)) {
-									$arrayKeys[] = $key;
-								}
-							} else if (is_array($opt)) {
-								$subList = [];
-								foreach ($opt as $k => $subOption) {
-									if (is_array($subOption) && isset($subOption['text'])) {
-										$subOption['text'] = __($subOption['text']);
-										$subList[$k] = $subOption;
-									} else {
-										$subList[$k] = __($subOption);
-									}
-								}
-								$list[__($key)] = $subList;
-								$arrayKeys = array_merge($arrayKeys, array_keys($subList));
-							} else {
-								$list[$key] = __($opt);
-								$arrayKeys[] = $key;
-							}
-						}
-						$attr['options'] = $list;
-					}
-					$options['options'] = $attr['options'];
 				}
+				$options['options'] = $attr['options'];
 			}
 			if (isset($attr['attr'])) {
 				$options = array_merge($options, $attr['attr']);
 			}
 
-			// get rid of options that obsolete and not the default
-			// if (!empty($attr['options'])) {
-			// 	reset($attr['options']);
-			// 	$first_key = key($attr['options']);
-			// 	if (is_array($attr['options'][$first_key])) {
-			// 		foreach ($options['options'] as $okey => $ovalue) {
-			// 			if (isset($ovalue['obsolete']) && $ovalue['obsolete'] == '1') {
-			// 				if (!array_key_exists('default', $options) || $ovalue['value']!=$options['default']) {
-			// 					unset($options['options'][$okey]);
-			// 				}
-			// 			}
-			// 		}
-			// 	}
-			// }
-
 			$fieldName = $attr['model'] . '.' . $attr['field'];
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
 			}
-
-			if ($action == 'edit') {
-				$session = new Session();
-				$session->write('FormTampering.'.$fieldName, $arrayKeys);
-			}
-			$value = $this->Form->input($fieldName, $options);
+			$value = $this->secureSelect($fieldName, $options);
 		}
+		return $value;
+	}
+
+	public function secureSelect($fieldName, $options)
+	{
+		$arrayKeys = [];
+		$list = [];
+		foreach ($options['options'] as $key => $opt) {
+			if (is_array($opt) && isset($opt['text'])) {
+				$opt['text'] = __($opt['text']);
+				$list[$key] = $opt;
+				if (!in_array('disabled', $opt, true)) {
+					$arrayKeys[] = $key;
+				}
+			} else if (is_array($opt)) {
+				$subList = [];
+				foreach ($opt as $k => $subOption) {
+					if (is_array($subOption) && isset($subOption['text'])) {
+						$subOption['text'] = __($subOption['text']);
+						$subList[$k] = $subOption;
+					} else {
+						$subList[$k] = __($subOption);
+					}
+				}
+				$list[__($key)] = $subList;
+				$arrayKeys = array_merge($arrayKeys, array_keys($subList));
+			} else {
+				$list[$key] = __($opt);
+				$arrayKeys[] = $key;
+			}
+		}
+		$options['options'] = $list;
+		if (isset($options['empty'])) {
+			$arrayKeys[] = '';
+		}
+		$session = $this->request->session();
+		$session->write('FormTampering.'.$fieldName, $arrayKeys);
+		$value = $this->Form->input($fieldName, $options);
 		return $value;
 	}
 
