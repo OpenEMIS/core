@@ -14,6 +14,29 @@ use Restful\Controller\RestfulController as BaseController;
 
 class RestfulController extends BaseController
 {
+    public function initialize($config) {
+        parent::initialize($config);
+        $this->Auth->config('authenticate', [
+            'Form' => [
+                'userModel' => 'User.Users',
+                'passwordHasher' => [
+                    'className' => 'Fallback',
+                    'hashers' => ['Default', 'Legacy']
+                ]
+            ]
+        ]);
+        $this->Auth->config('loginAction', [
+            'plugin' => 'User',
+            'controller' => 'Users',
+            'action' => 'login'
+        ]);
+        $this->Auth->config('logoutRedirect', [
+            'plugin' => 'User',
+            'controller' => 'Users',
+            'action' => 'login'
+        ]);
+    }
+
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
