@@ -11,48 +11,8 @@ use Cake\ORM\TableRegistry;
 class FieldOptionsController extends AppController {
     public function initialize() {
         parent::initialize();
-        $controller = $this->name;
         $this->loadComponent('FieldOption.FieldOption');
         $this->ControllerAction->model('FieldOption.FieldOptionValues', ['!search'], ['deleteStrategy' => 'transfer']);
-
-
-        // $this->request->addParams([
-        //     'accessMap' => [
-        //         "$controller.Genders"                         => "$controller.%s",
-        //         "$controller.Localities"                     => "$controller.%s",
-        //         "$controller.Ownerships"                     => "$controller.%s",
-        //         "$controller.Providers"                     => "$controller.%s",
-        //         "$controller.Sectors"                         => "$controller.%s",
-        //         "$controller.Statuses"                         => "$controller.%s",
-        //         "$controller.Types"                         => "$controller.%s",
-        //         "$controller.NetworkConnectivities"         => "$controller.%s",
-        //         "$controller.StaffPositionGrades"             => "$controller.%s",
-        //         "$controller.StaffPositionTitles"             => "$controller.%s",
-        //         "$controller.AllergyTypes"                     => "$controller.%s",
-        //         "$controller.ConsultationTypes"             => "$controller.%s",
-        //         "$controller.Relationships"                 => "$controller.%s",
-        //         "$controller.Conditions"                     => "$controller.%s",
-        //         "$controller.ImmunizationTypes"             => "$controller.%s",
-        //         "$controller.TestTypes"                     => "$controller.%s",
-        //         "$controller.QualityVisitTypes"             => "$controller.%s",
-        //         "$controller.InfrastructureOwnerships"         => "$controller.%s",
-        //         "$controller.InfrastructureConditions"         => "$controller.%s",
-        //         "$controller.QualificationSpecialisations"     => "$controller.%s",
-        //         "$controller.QualificationLevels"             => "$controller.%s",
-        //         "$controller.FeeTypes"                         => "$controller.%s",
-        //         "$controller.EmploymentTypes"                 => "$controller.%s",
-        //         "$controller.ExtracurricularTypes"             => "$controller.%s",
-        //         "$controller.IdentityTypes"                 => "$controller.%s",
-        //         "$controller.Languages"                     => "$controller.%s",
-        //         "$controller.LicenseTypes"                     => "$controller.%s",
-        //         "$controller.SpecialNeedTypes"                 => "$controller.%s",
-        //         "$controller.SpecialNeedDifficulties"         => "$controller.%s",
-        //         "$controller.StaffAbsenceReasons"             => "$controller.%s",
-        //         "$controller.StudentAbsenceReasons"         => "$controller.%s",
-  //               "$controller.Nationalities"                 => "$controller.%s",
-  //               "$controller.GuardianRelations"             => "$controller.%s"
-        //     ]
-        // ]);
     }
 
     public function beforeFilter(Event $event) {
@@ -108,5 +68,7 @@ class FieldOptionsController extends AppController {
     public function StudentAbsenceReasons()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
     public function Nationalities()                 { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
     public function GuardianRelations()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
+    public function StaffTypes()                    { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
+    public function StaffLeaveTypes()               { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
 
 }

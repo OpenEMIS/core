@@ -57,12 +57,15 @@ class FieldOptionComponent extends Component
         'StaffAbsenceReasons' => 'FieldOption.StaffAbsenceReasons',
         'StudentAbsenceReasons' => 'FieldOption.StudentAbsenceReasons',
         'Nationalities' => 'FieldOption.Nationalities',
-        'GuardianRelations' => 'Student.GuardianRelations'
+        'GuardianRelations' => 'Student.GuardianRelations',
+        'StaffTypes' => 'Staff.StaffTypes',
+        'StaffLeaveTypes' => 'Staff.StaffLeaveTypes'
     ];
 
     // Is called before the controller's beforeFilter method.
     public function initialize(array $config)
     {
+        $controller = $this->name;
         $this->controller = $this->_registry->getController();
         $accessMap = [];
         foreach ($this->fieldOptions as $key => $className) {
