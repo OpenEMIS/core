@@ -15,7 +15,7 @@
         "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
     },
     "require": {
-        "cakephp/cakephp": ">3.0.9 <3.2.7"
+        "cakephp/cakephp": ">3.0.9"
     },
     "require-dev": {
         "cakephp/cakephp-codesniffer": "dev-master",
@@ -35,7 +35,7 @@
     },
     "extra": {
         "branch-alias": {
-            "master": "1.0.1-dev"
+            "master": "1.0.2"
         }
     },
     "minimum-stability": "beta"
