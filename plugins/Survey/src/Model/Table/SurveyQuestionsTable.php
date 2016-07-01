@@ -30,6 +30,8 @@ class SurveyQuestionsTable extends CustomFieldsTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 	    	->add('code', [
 	    		'unique' => [

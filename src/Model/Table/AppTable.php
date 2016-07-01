@@ -89,6 +89,24 @@ class AppTable extends Table {
 		$this->addBehavior('Modification');
 
         $this->addBehavior('TrackDelete');
+        $this->addBehavior('Security.SelectOptionsTampering');
+	}
+
+	public function validationDefault(Validator $validator) {
+		$schema = $this->schema();
+		$columns = $schema->columns();
+
+		foreach ($columns as $column) {
+			if ($schema->columnType($column) == 'date') {
+				$attr = $schema->column($column);
+				// check if is nullable
+				if (array_key_exists('null', $attr) && $attr['null'] === true) {
+					$validator->allowEmpty($column);
+				}
+			}
+		}
+
+		return $validator;
 	}
 
 	// Function to get the entity property from the entity. If data validation occur,

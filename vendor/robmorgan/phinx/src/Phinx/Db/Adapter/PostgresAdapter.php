@@ -263,6 +263,17 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
         // execute the sql
         $this->writeCommand('createTable', array($table->getName()));
         $this->execute($sql);
+
+        // process table comments
+        if (isset($options['comment'])) {
+            $sql = sprintf(
+                'COMMENT ON TABLE %s IS %s',
+                $this->quoteTableName($table->getName()),
+                $this->getConnection()->quote($options['comment'])
+            );
+            $this->execute($sql);
+        }
+
         $this->endCommandTimer();
     }
 
@@ -913,7 +924,7 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
     {
         $buffer = array();
         if ($column->isIdentity()) {
-            $buffer[] = 'SERIAL';
+            $buffer[] = $column->getType() == 'biginteger' ? 'BIGSERIAL' : 'SERIAL';
         } else {
             $sqlType = $this->getSqlType($column->getType(), $column->getLimit());
             $buffer[] = strtoupper($sqlType['name']);
@@ -1042,9 +1053,10 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
         if (strcasecmp($direction, MigrationInterface::UP) === 0) {
             // up
             $sql = sprintf(
-                "INSERT INTO %s (version, start_time, end_time) VALUES ('%s', '%s', '%s');",
+                "INSERT INTO %s (version, migration_name, start_time, end_time) VALUES ('%s', '%s', '%s', '%s');",
                 $this->getSchemaTableName(),
                 $migration->getVersion(),
+                substr($migration->getName(), 0, 100),
                 $startTime,
                 $endTime
             );
