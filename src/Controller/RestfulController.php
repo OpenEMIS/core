@@ -14,8 +14,8 @@ use Restful\Controller\RestfulController as BaseController;
 
 class RestfulController extends BaseController
 {
-    public function initialize($config) {
-        parent::initialize($config);
+    public function initialize() {
+        parent::initialize();
         $this->Auth->config('authenticate', [
             'Form' => [
                 'userModel' => 'User.Users',
