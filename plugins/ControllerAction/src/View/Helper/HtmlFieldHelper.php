@@ -13,6 +13,7 @@ use Cake\I18n\Date;
 use Cake\I18n\I18n;
 use Cake\View\Helper\IdGeneratorTrait;
 use Cake\View\NumberHelper;
+use Cake\Network\Session;
 
 use Cake\Log\Log;
 
@@ -229,6 +230,7 @@ class HtmlFieldHelper extends Helper {
 	public function select($action, Entity $data, $attr, $options=[]) {
 		$value = '';
 		$field = $attr['field'];
+		$arrayKeys = [];
 		if ($action == 'index' || $action == 'view') {
 			if (!empty($attr['options'])) {
 				if ($data->$field === '') {
@@ -276,6 +278,9 @@ class HtmlFieldHelper extends Helper {
 							if (is_array($opt) && isset($opt['text'])) {
 								$opt['text'] = __($opt['text']);
 								$list[$key] = $opt;
+								if (!in_array('disabled', $opt, true)) {
+									$arrayKeys[] = $key;
+								}
 							} else if (is_array($opt)) {
 								$subList = [];
 								foreach ($opt as $k => $subOption) {
@@ -287,8 +292,10 @@ class HtmlFieldHelper extends Helper {
 									}
 								}
 								$list[__($key)] = $subList;
+								$arrayKeys = array_merge($arrayKeys, array_keys($subList));
 							} else {
 								$list[$key] = __($opt);
+								$arrayKeys[] = $key;
 							}
 						}
 						$attr['options'] = $list;
@@ -318,6 +325,11 @@ class HtmlFieldHelper extends Helper {
 			$fieldName = $attr['model'] . '.' . $attr['field'];
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
+			}
+
+			if ($action == 'edit') {
+				$session = new Session();
+				$session->write('FormTampering.'.$fieldName, $arrayKeys);
 			}
 			$value = $this->Form->input($fieldName, $options);
 		}
@@ -472,7 +484,8 @@ class HtmlFieldHelper extends Helper {
 																							'showRemoveButton' => $showRemoveButton,
 																							'defaultImgMsg' => $defaultImgMsg,
 																							'defaultImgView' => $defaultImgView]);
-
+			$name = $attr['model'].'.'.$attr['field'];
+			$this->Form->unlockField($name);
 		} 
 
 		return $value;
@@ -620,6 +633,8 @@ class HtmlFieldHelper extends Helper {
 			}
 			$value = $this->_View->element('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
 			$this->includes['datepicker']['include'] = true;
+			$fieldName = $attr['model'] . '.' . $attr['field'];
+			$this->Form->unlockField($fieldName);
 		}
 		return $value;
 	}
@@ -666,16 +681,6 @@ class HtmlFieldHelper extends Helper {
 			if (array_key_exists('fieldName', $attr)) {
 				$attr['id'] = $this->_domId($attr['fieldName']);
 			}
-			$model = split('\.', $attr['model']);
-			$newModel = '';
-			foreach($model as $part) {
-				if (empty($newModel)) {
-					$newModel = $part;
-				} else {
-					$newModel .= '['.$part.']';
-				}
-			}
-			$attr['model'] = $newModel;
 			$attr['time_options'] = array_merge($_options, $attr['time_options']);
 
 			if (!array_key_exists('value', $attr)) {
@@ -704,6 +709,8 @@ class HtmlFieldHelper extends Helper {
 			}
 			$value = $this->_View->element('ControllerAction.bootstrap-timepicker/timepicker_input', ['attr' => $attr]);
 			$this->includes['timepicker']['include'] = true;
+			$fieldName = $attr['model'] . '.' . $attr['field'];
+			$this->Form->unlockField($fieldName);
 		}
 
 		return $value;
@@ -776,6 +783,8 @@ class HtmlFieldHelper extends Helper {
 				$attr['value'] = $data->$name;
 			}
 			$value = $this->_View->element('ControllerAction.file_input', ['attr' => $attr]);
+			$fieldName = $attr['model'] . '.' . $attr['field'];
+			$this->Form->unlockField($fieldName);
 		}
 		return $value;
 	}
@@ -818,6 +827,8 @@ class HtmlFieldHelper extends Helper {
 			}
 
 			$value = $this->_View->element('ControllerAction.autocomplete', ['attr' => $attr, 'options' => $options]);
+			$fieldName = $attr['model'] . '.' . $attr['field'];
+			$this->Form->unlockField($fieldName);
 		}
 		return $value;
 	}
