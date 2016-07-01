@@ -17,11 +17,11 @@ class RestfulController extends AppController
     private $_debug = false;
     private $model = null;
 
-    public $components = ['RequestHandler'];
-
     public function initialize()
     {
         parent::initialize();
+        $this->loadComponent('RequestHandler');
+        $this->loadComponent('Auth');
     }
 
 /***************************************************************************************************************************************************
