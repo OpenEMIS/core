@@ -1,4 +1,4 @@
-//Layout Splitter v.2.0.4
+//Layout Splitter v.2.0.5
 
 // Fixing the issue on first load when left navigation is overlaping the view before the angular has been initialize
 var sheet = (function() {
@@ -75,7 +75,7 @@ function bgPane() {
     return directive;
 }
 
-function bgSplitter($compile, $rootScope) {
+function bgSplitter($compile, $rootScope, $interval) {
     var directive = {
         restrict: 'E',
         replace: true,
@@ -278,11 +278,10 @@ function bgSplitter($compile, $rootScope) {
                     }
                     localStorage[handlerSessionID] = pos / width;
                 }
-                var selectedWrapper = (element.parent()[0].localName == 'body') ? "pane-wrapper" : "content-splitter";
-
-                $rootScope.$broadcast('onSplitterResize', selectedWrapper);
 
                 setPanes(vertical, paneElems, { pos1: pos, pos2: pos });
+
+                broadcastResizeEvent();
             });
         }
 
@@ -387,29 +386,33 @@ function bgSplitter($compile, $rootScope) {
             _updateDirection = (angular.isDefined(_updateDirection)) ? _updateDirection : false;
             var curState = getCurrentSplitterStatus();
             var iconClassObj = getMenuIconClass();
-            var selectedWrapper = (element.parent()[0].localName == 'body') ? "pane-wrapper" : "content-splitter";
-            $rootScope.$broadcast('onSplitterResize', selectedWrapper);
+
 
             if (curState == "collapse") {
                 if (_updateDirection) {
                     _elem.addClass(iconClassObj.opposite).removeClass(iconClassObj.current);
                     addAnimationDelay();
                     showMenu();
+                    broadcastResizeEvent(true);
                     setCurrentSplitterStatus(false);
                 } else {
                     _elem.addClass(iconClassObj.current).removeClass(iconClassObj.opposite);
                     hideMenu();
+                    broadcastResizeEvent();
                 }
             } else {
 
                 if (_updateDirection) {
                     addAnimationDelay();
                     hideMenu();
+
+                    broadcastResizeEvent(true);
                     _elem.addClass(iconClassObj.opposite).removeClass(iconClassObj.current);
                     setCurrentSplitterStatus(true);
                 } else {
                     _elem.addClass(iconClassObj.current).removeClass(iconClassObj.opposite);
                     showMenu();
+                    broadcastResizeEvent();
                 }
             }
         }
@@ -455,6 +458,16 @@ function bgSplitter($compile, $rootScope) {
             paneElems.right.css(affectedDir, '0');
             paneElems.splitter.css(affectedDir, '-1px');
             disableDrag();
+        }
+
+        function broadcastResizeEvent(_withDelay) {
+            var selectedWrapper = (element.parent()[0].localName == 'body') ? "pane-wrapper" : "content-splitter";
+            var intervalTime = (!_withDelay) ? 0 : 25;
+            var loopCount = (!_withDelay) ? 1 : Math.ceil(animationTime / intervalTime);
+
+            $interval(function() {
+                $rootScope.$broadcast('onSplitterResize', selectedWrapper);
+            }, intervalTime, loopCount);
         }
 
         function showMenu() {
