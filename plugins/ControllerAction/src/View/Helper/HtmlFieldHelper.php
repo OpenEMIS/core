@@ -289,7 +289,11 @@ class HtmlFieldHelper extends Helper {
 				$opt['text'] = __($opt['text']);
 				$list[$key] = $opt;
 				if (!in_array('disabled', $opt, true)) {
-					$arrayKeys[] = $key;
+					if (isset($opt['value'])) {
+						$arrayKeys[] = $opt['value'];
+					} else {
+						$arrayKeys[] = $key;
+					}
 				}
 			} else if (is_array($opt)) {
 				$subList = [];
