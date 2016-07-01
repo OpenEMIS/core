@@ -1,5 +1,5 @@
 /* 
-Core Overwrites: v.1.0.8
+Core Overwrites: v.1.0.9
 */
 
 
@@ -552,3 +552,11 @@ a,
 }
 
 /* End of iCheck */
+
+/* Fixed Navigation Menu in RTL (Force font to always align right) */
+
+.rtl .left-menu .nav-level-1 i {
+    float: right;
+}
+
+/* End of Fixed Navigation Menu in RTL (Force font to always align right) */
