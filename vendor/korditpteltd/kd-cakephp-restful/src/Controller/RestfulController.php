@@ -41,7 +41,7 @@ class RestfulController extends AppController
             $tableAlias = $this->request->model;
             $model = $this->_instantiateModel($tableAlias);
             if ($model != false) {
-            	$this->model = $model;
+                $this->model = $model;
 
                 // Event to get allowed action and allowed table to be accessible via restful
                 $event = $model->dispatchEvent('Restful.Model.onGetAllowedActions', null, $this);
@@ -50,6 +50,7 @@ class RestfulController extends AppController
                 }
             }
         }
+
         if ($this->request->is(['put', 'post', 'delete', 'patch']) || !empty($this->request->data)) {
             $token = isset($this->request->cookies['csrfToken']) ? $this->request->cookies['csrfToken'] : '';
             $this->request->env('HTTP_X_CSRF_TOKEN', $token);

@@ -2755,7 +2755,7 @@
         "source": {
             "type": "git",
             "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git",
-            "reference": "236d4cce6dc6912e828893a6c64623f1f42c32d3"
+            "reference": "0e32095fd5df85975cfb62f3889120b5dc33069d"
         },
         "require": {
             "cakephp/cakephp": ">3.0.9"
