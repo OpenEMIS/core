@@ -156,8 +156,10 @@ class DirectoriesController extends AppController {
 	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
         if ($model instanceof \Staff\Model\Table\StaffClassesTable || $model instanceof \Staff\Model\Table\StaffSubjectsTable) {
             $model->toggle('add', false);
+        } else if ($model->alias() == 'Guardians') {
+        	$model->editButtonAction('StudentGuardianUser');
         }
-        
+
 		/**
 		 * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
 		 */
@@ -187,7 +189,7 @@ class DirectoriesController extends AppController {
 						$model->aliasField($model->primaryKey()) => $modelId,
 						$model->aliasField('security_user_id') => $userId
 					]);
-					
+
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
 					 */
@@ -207,7 +209,7 @@ class DirectoriesController extends AppController {
 						$model->aliasField($model->primaryKey()) => $modelId,
 						$model->aliasField('staff_id') => $userId
 					]);
-					
+
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
 					 */
@@ -227,7 +229,7 @@ class DirectoriesController extends AppController {
 						$model->aliasField($model->primaryKey()) => $modelId,
 						$model->aliasField('student_id') => $userId
 					]);
-					
+
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
 					 */
@@ -291,7 +293,7 @@ class DirectoriesController extends AppController {
 		$name = $this->name;
 
 		$id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($plugin.'.'.$name.'.id');
-		
+
 		$tabElements = [
 			$this->name => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $id],
@@ -299,31 +301,31 @@ class DirectoriesController extends AppController {
 			],
 			'Accounts' => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
-				'text' => __('Account')	
+				'text' => __('Account')
 			],
 			'Identities' => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Identities', $id],
-				'text' => __('Identities')	
+				'text' => __('Identities')
 			],
 			'UserNationalities' => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Nationalities', $id],
-				'text' => __('Nationalities')	
+				'text' => __('Nationalities')
 			],
 			'Contacts' => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Contacts', $id],
-				'text' => __('Contacts')	
+				'text' => __('Contacts')
 			],
 			'Languages' => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Languages', $id],
-				'text' => __('Languages')	
+				'text' => __('Languages')
 			],
 			'Comments' => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Comments', $id],
-				'text' => __('Comments')	
+				'text' => __('Comments')
 			],
 			'Attachments' => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Attachments', $id],
-				'text' => __('Attachments')	
+				'text' => __('Attachments')
 			],
 			'SpecialNeeds' => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'SpecialNeeds', $id],
@@ -331,7 +333,7 @@ class DirectoriesController extends AppController {
 			],
 			'History' => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'History', $id],
-				'text' => __('History')	
+				'text' => __('History')
 			]
 		];
 		return $tabElements;
@@ -344,7 +346,7 @@ class DirectoriesController extends AppController {
 		$tabElements = [
 			'Guardians' => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'StudentGuardians', 'type' => $type],
-				'text' => __('Guardians')	
+				'text' => __('Guardians')
 			],
 		];
 		return $tabElements;

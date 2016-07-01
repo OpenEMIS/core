@@ -12,6 +12,8 @@ class CountriesTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 			->notEmpty('name', 'Please enter a name.');
 
