@@ -471,7 +471,6 @@ class HtmlFieldHelper extends Helper {
 																							'defaultImgMsg' => $defaultImgMsg,
 																							'defaultImgView' => $defaultImgView]);
 			$name = $attr['model'].'.'.$attr['field'];
-			$this->Form->unlockField($name);
 		} 
 
 		return $value;
@@ -768,7 +767,6 @@ class HtmlFieldHelper extends Helper {
 			}
 			$value = $this->_View->element('ControllerAction.file_input', ['attr' => $attr]);
 			$fieldName = $attr['model'] . '.' . $attr['field'];
-			$this->Form->unlockField($fieldName);
 		}
 		return $value;
 	}
