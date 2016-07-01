@@ -20,13 +20,13 @@ class InstitutionStaffTable extends AppTable  {
 		$this->belongsTo('Users',			['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('Positions',		['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
 		$this->belongsTo('Institutions',	['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
-		$this->belongsTo('StaffTypes',		['className' => 'FieldOption.StaffTypes']);
+		$this->belongsTo('StaffTypes',		['className' => 'Staff.StaffTypes']);
 		$this->belongsTo('StaffStatuses',	['className' => 'Staff.StaffStatuses']);
 		$this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
 
 		$this->addBehavior('Report.ReportList');
 		$this->addBehavior('Excel', [
-			'excludes' => ['start_year', 'end_year', 'FTE', 'security_group_user_id'], 
+			'excludes' => ['start_year', 'end_year', 'FTE', 'security_group_user_id'],
 			'pages' => false
 		]);
 		$this->addBehavior('Report.InstitutionSecurity');
@@ -74,10 +74,10 @@ class InstitutionStaffTable extends AppTable  {
 			'first_name' => 'Users.first_name',
 			'middle_name' => 'Users.middle_name',
 			'last_name' => 'Users.last_name',
-			'number' => 'Identities.number', 
-			'code' => 'Institutions.code', 
-			'gender' => 'Genders.name', 
-			'area_name' => 'Areas.name', 
+			'number' => 'Identities.number',
+			'code' => 'Institutions.code',
+			'gender' => 'Genders.name',
+			'area_name' => 'Areas.name',
 			'area_code' => 'Areas.code',
 			'position_title_teaching' => 'StaffPositionTitles.type'
 		]);
@@ -124,7 +124,7 @@ class InstitutionStaffTable extends AppTable  {
 				break;
 			}
 		}
-		
+
 		$extraField[] = [
 			'key' => 'Institutions.code',
 			'field' => 'code',
