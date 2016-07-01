@@ -1,6 +1,6 @@
 {
     "name": "korditpteltd/kd-cakephp-restful",
-    "description": "KORDIT CakePHP Restfull Plugin",
+    "description": "KORDIT CakePHP Restful Plugin",
     "type": "cakephp-plugin",
     "keywords": ["kordit", "cakephp", "restful"],
     "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-restful",
