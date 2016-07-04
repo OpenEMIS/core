@@ -34,18 +34,17 @@
                                 $selected = false;
                                 if(!empty($this->request->data)) {
                                     if ($this->request->data['submit'] == 'save') {
-                                        $selected = (isset($this->request->data['Subjects'][$key]))? 'checked': '';
+                                        $selected = ((isset($this->request->data['Subjects'][$key]['subject_id']) && !empty($this->request->data['Subjects'][$key]['subject_id']))) ? 'checked': '';
                                     } else {
                                         $selected = ($value->has('teachers') && !empty($value->teachers) && in_array($staffId, array_keys($value->teachers)))? 'checked': '';
                                     }
                                 }
-                                echo $this->Form->input(sprintf('Subjects[%d][subject_id]', $key),[
+                                echo $this->Form->input('Subjects.' . $key . '.subject_id', [
                                     'type'      => 'checkbox',
                                     'checked'   => $selected,
                                     'class'     => 'icheck-input',
                                     'value'     => $n,
                                     'label'     => false
-
                                 ]);
                                 ?>
                             </td>
