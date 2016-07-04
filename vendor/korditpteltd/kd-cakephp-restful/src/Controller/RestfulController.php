@@ -283,7 +283,25 @@ class RestfulController extends AppController
         }
     }
 
-    private function _formatBinaryValue($data) {
+    private function convertBase64ToBinary(Entity $entity)
+    {
+        $table = $this->model;
+        $schema = $table->schema();
+        $columns = $schema->columns();
+
+        foreach ($columns as $column) {
+            $attr = $schema->column($column);
+            if ($attr['type'] == 'binary' && $entity->has($column)) {
+                $value = urldecode($entity->$column);
+                $split = explode('base64,', $value);
+                $entity->$column = base64_decode($split[1]);
+            }
+        }
+        return $entity;
+    }
+
+    private function _formatBinaryValue($data)
+    {
         if ($data instanceof Entity) {
             $this->convertBinaryToBase64($data);
         } else {
@@ -342,6 +360,7 @@ class RestfulController extends AppController
         $target = $this->_instantiateModel($model);
         if ($target) {
             $entity = $target->newEntity($this->request->data);
+            $entity = $this->convertBase64ToBinary($entity);
             $target->save($entity);
             $this->set([
                 'data' => $entity,
@@ -392,6 +411,7 @@ class RestfulController extends AppController
             if ($target->exists([$target->aliasField($target->primaryKey()) => $id])) {
                 $entity = $target->get($id);
                 $entity = $target->patchEntity($entity, $this->request->data);
+                $entity = $this->convertBase64ToBinary($entity);
                 if (empty($entity->errors())) {
                     $target->save($entity);
                     $this->set([
