@@ -139,7 +139,8 @@ class MysqlAdapterTest extends \PHPUnit_Framework_TestCase
 
     public function testCreateTableWithComment()
     {
-        $table = new \Phinx\Db\Table('ntable', array('comment'=>$tableComment = 'Table comment'), $this->adapter);
+        $tableComment = 'Table comment';
+        $table = new \Phinx\Db\Table('ntable', ['comment' => $tableComment], $this->adapter);
         $table->addColumn('realname', 'string')
               ->save();
         $this->assertTrue($this->adapter->hasTable('ntable'));
@@ -251,6 +252,16 @@ class MysqlAdapterTest extends \PHPUnit_Framework_TestCase
         $table = new \Phinx\Db\Table('table1', array(), $this->adapter);
         $table->addColumn('email', 'string')
               ->addIndex('email', array('unique' => true))
+              ->save();
+        $this->assertTrue($this->adapter->hasIndex('table1', array('email')));
+        $this->assertFalse($this->adapter->hasIndex('table1', array('email', 'user_email')));
+    }
+
+    public function testCreateTableWithFullTextIndex()
+    {
+        $table = new \Phinx\Db\Table('table1', array('engine' => 'MyISAM'), $this->adapter);
+        $table->addColumn('email', 'string')
+              ->addIndex('email', array('type' => 'fulltext'))
               ->save();
         $this->assertTrue($this->adapter->hasIndex('table1', array('email')));
         $this->assertFalse($this->adapter->hasIndex('table1', array('email', 'user_email')));
@@ -676,6 +687,20 @@ class MysqlAdapterTest extends \PHPUnit_Framework_TestCase
         $table->addIndex('email')
               ->save();
         $this->assertTrue($table->hasIndex('email'));
+    }
+
+    public function testAddIndexWithLimit()
+    {
+        $table = new \Phinx\Db\Table('table1', array(), $this->adapter);
+        $table->addColumn('email', 'string')
+            ->save();
+        $this->assertFalse($table->hasIndex('email'));
+        $table->addIndex('email', array('limit' => 50))
+            ->save();
+        $this->assertTrue($table->hasIndex('email'));
+        $index_data = $this->adapter->query('SELECT SUB_PART FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = "phinx_testing" AND TABLE_NAME = "table1" AND INDEX_NAME = "email"')->fetch(\PDO::FETCH_ASSOC);
+        $expected_limit = $index_data['SUB_PART'];
+        $this->assertEquals($expected_limit, 50);
     }
 
     public function testDropIndex()
