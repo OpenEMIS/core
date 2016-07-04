@@ -16,19 +16,19 @@
                     </tr>
                 </thead>
                 <?php if (isset($attr['data'])) : ?>
-                <?php 
+                <?php
                     $elementData = $attr['data'];
                     $classesData = $elementData['classes'];
                     // pr($classesData);
                  ?>
                 <tbody>
-                    <?php 
+                    <?php
                     $staffId = $data->staff_id;
-                    foreach ($classesData as $key => $value) { 
+                    foreach ($classesData as $key => $value) {
                     ?>
                         <tr>
                             <td class="checkbox-column">
-                                <?php 
+                                <?php
                                 $n = intval($value->id);
 
                                 $selected = false;
@@ -45,17 +45,24 @@
                                         }
                                     }
                                 }
+                                echo $this->Form->input(sprintf('Classes[%d][class_id]', $key),[
+                                    'type'      => 'checkbox',
+                                    'class'     => 'icheck-input',
+                                    'value'     => $n,
+                                    'checked'   => $selected,
+                                    'label'     => false,
+                                    'disabled'  => $disabled
+                                ]);
                                 ?>
-                                <input type="checkbox" class="icheck-input" name="<?php echo sprintf('Classes[%d][class_id]', $key) ?>" value="<?php echo $n?>" <?php echo $selected;?> <?php echo $disabled;?> />
                             </td>
-                            
+
                             <td><?=$value->name?></td>
                             <td><?php echo ($value->has('user') && !empty($value->user))? $value->user->name: '-'; ?></td>
                         </tr>
-                        
+
 
                     <?php } ?>
-                    
+
                 </tbody>
                 <?php endif ?>
             </table>
