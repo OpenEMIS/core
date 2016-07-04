@@ -39,13 +39,13 @@
                                 } else {
                                     if(!empty($this->request->data)) {
                                         if ($this->request->data['submit'] == 'save') {
-                                            $selected = (isset($this->request->data['Classes'][$key]))? 'checked': '';
+                                            $selected = (isset($this->request->data['Classes'][$key]['class_id']) && !empty($this->request->data['Classes'][$key]['class_id']))? 'checked': '';
                                         } else {
                                             $selected = ($value->staff_id == $staffId)? 'checked': '';
                                         }
                                     }
                                 }
-                                echo $this->Form->input(sprintf('Classes[%d][class_id]', $key),[
+                                echo $this->Form->input('Classes.' . $key . '.class_id', [
                                     'type'      => 'checkbox',
                                     'class'     => 'icheck-input',
                                     'value'     => $n,
