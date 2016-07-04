@@ -293,7 +293,9 @@ class RestfulController extends AppController
             $attr = $schema->column($column);
             if ($attr['type'] == 'binary' && $entity->has($column)) {
                 $value = urldecode($entity->$column);
+                Log::write('debug', $value);
                 $split = explode('base64,', $value);
+                Log::write('debug', $split);
                 $entity->$column = base64_decode($split[1]);
             }
         }
