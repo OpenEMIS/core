@@ -65,8 +65,9 @@ class RenderDateBehavior extends RenderBehavior {
 		} else if ($action == 'edit') {
 			$attr['date_options'] = $_options;
 			$fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
-			
-			$attr['fieldName'] = $fieldPrefix.".date_value"; 
+			$unlockFields = [];
+			$attr['fieldName'] = $fieldPrefix.".date_value";
+			$unlockFields[] = $attr['fieldName'];
 
 			$attr['id'] = $attr['model'] . '_' . $attr['field']; 
 			if (array_key_exists('fieldName', $attr)) {
@@ -101,11 +102,14 @@ class RenderDateBehavior extends RenderBehavior {
 			$value = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
 
 			$form = $event->subject()->Form;
+			
 			$value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
+			$unlockFields[] = $fieldPrefix.".".$attr['attr']['fieldKey'];
             if (!is_null($savedId)) {
                 $value .= $form->hidden($fieldPrefix.".id", ['value' => $savedId]);
+                $unlockFields[] = $fieldPrefix.".id";
             }
-            $value = $this->processRelevancyDisabled($entity, $value, $fieldId);
+            $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
 		}
 
         $event->stopPropagation();

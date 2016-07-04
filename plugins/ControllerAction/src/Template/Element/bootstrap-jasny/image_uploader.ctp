@@ -50,7 +50,11 @@
             <i class="fa fa-folder"></i> 
             <span><?= __('Change') ?></span>
           </span>
-      <input type="file" name="<?= $attr['model'] ?>[<?= $attr['field'] ?>]" id="file-input"></span>
+      <?= $this->Form->file($attr['model'].'.'.$attr['field'], [
+            'id' => 'file-input'
+          ])
+      ?>
+      </span>
           <span class="fileinput-exists"  id="removeBtn">
             <a href="#" class="btn btn-default" data-dismiss="fileinput">
               <i class="fa fa-close"></i> 
