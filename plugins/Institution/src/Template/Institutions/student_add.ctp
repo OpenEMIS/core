@@ -106,10 +106,6 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <label>Gender</label>
                     <input ng-model="selectedStudentData.gender.name" type="string" disabled="disabled">
                 </div>
-                <div class="input string">
-                    <label>Address</label>
-                    <input ng-model="selectedStudentData.address" type="string" disabled="disabled">
-                </div>
                 <div class="input select required" ng-model="postResponse">
                     <label>AcademicPeriod</label>
                     <div class="input-select-wrapper">
