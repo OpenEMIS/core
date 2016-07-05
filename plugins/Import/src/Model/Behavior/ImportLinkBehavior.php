@@ -6,6 +6,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Behavior;
+use Cake\ORM\ResultSet;
 use Cake\I18n\Time;
 use Cake\Utility\Inflector;
 use ControllerAction\Model\Traits\EventTrait;
@@ -25,8 +26,43 @@ class ImportLinkBehavior extends Behavior {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 1];
+
+        if ($this->isCAv4()) {
+            $events['ControllerAction.Model.index.afterAction'] = ['callable' => 'indexAfterActionImportv4'];
+        }
+
 		return $events;
 	}
+
+    //using after action for ordering of toolbar buttons (because export also using afteraction)
+    public function indexAfterActionImportv4(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    {
+        $attr = $this->_table->getButtonAttr();
+        $action = $this->_table->action;
+        $customButton = [];
+        switch ($action) {
+            case 'index':
+                if ($extra['indexButtons']['view']['url']['action']=='Surveys') {
+                    break;
+                }
+                $customButton['url'] = $this->_table->request->params;
+                $customButton['url']['action'] = $this->config('import_model');
+
+                $this->generateImportButton($extra['toolbarButtons'], $attr, $customButton);
+                break;
+
+            case 'view':
+                if ($extra['indexButtons']['index']['url']['action']!='Surveys') {
+                    break;
+                }
+                $customButton['url'] = $extra['indexButtons']['index']['url'];
+                $customButton['url']['action'] = 'Import'.$this->_table->alias();
+
+                $this->generateImportButton($extra['toolbarButtons'], $attr, $customButton);
+                break;
+        }
+
+    }
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		$customButton = [];
@@ -78,7 +114,9 @@ class ImportLinkBehavior extends Behavior {
 
 			$toolbarButtons['import'] = $customButton;
 		}
-
 	}
 
+    private function isCAv4() {
+        return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
+    }
 }

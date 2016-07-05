@@ -1002,4 +1002,42 @@ class InstitutionClassesTable extends ControllerActionTable {
 		$multiGradeData = $this->find('list', $multiGradeOptions);
 		return $multiGradeData->toArray();
 	}
+
+    public function findClassOptions(Query $query, array $options) 
+    {
+        $session = $options['_Session'];
+        $institutionId = null;
+        if ($session->check('Institution.Institutions.id')) {
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+
+        $academicPeriodId = array_key_exists('academic_period_id', $options)? $options['academic_period_id']: null;
+        $gradeId = array_key_exists('grade_id', $options)? $options['grade_id']: null;
+
+        if (!is_null($academicPeriodId) && !is_null($institutionId) && !is_null($gradeId)) {
+            $query->select(['InstitutionClasses.id', 'InstitutionClasses.name']);
+            $query->where([
+                'InstitutionClasses.academic_period_id' => $academicPeriodId,
+                'InstitutionClasses.institution_id' => $institutionId
+            ]);
+            if($gradeId != false) {
+                $query->join([
+                        [
+                            'table' => 'institution_class_grades',
+                            'alias' => 'InstitutionClassGrades',
+                            'conditions' => [
+                                'InstitutionClassGrades.institution_class_id = InstitutionClasses.id',
+                                'InstitutionClassGrades.education_grade_id = ' . $gradeId
+                            ]
+                        ]
+                    ]
+                );
+                $query->group(['InstitutionClasses.id']);
+            }
+        } else {
+            // incomplete data return nothing
+            $query->where([$this->aliasField('id') => -1]);
+        }
+        return $query;
+    }
 }

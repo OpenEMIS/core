@@ -40,7 +40,7 @@ class StaffAttendancesTable extends AppTable {
 		$this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
 		$this->addBehavior('Excel', [
 			'excludes' => [
-				'start_date', 
+				'start_date',
 				'end_date',
 				'start_year',
 				'end_year',
@@ -198,7 +198,7 @@ class StaffAttendancesTable extends AppTable {
 					'full_day' => $StaffAbsencesTable->aliasField('full_day'),
 					'start_time' => $StaffAbsencesTable->aliasField('start_time'),
 					'end_time' => $StaffAbsencesTable->aliasField('end_time'),
-					'absence_type_id' => $StaffAbsencesTable->aliasField('absence_type_id'), 
+					'absence_type_id' => $StaffAbsencesTable->aliasField('absence_type_id'),
 					'absence_type_name' => 'AbsenceTypes.name',
 					'absence_reason' => 'StaffAbsenceReasons.name'
 				])
@@ -212,7 +212,7 @@ class StaffAttendancesTable extends AppTable {
 			if ($absenceUnit['full_day'] && !empty($absenceUnit['end_date']) && $absenceUnit['end_date'] > $absenceUnit['start_date']) {
 				$tempStartDate = date("Y-m-d", strtotime($absenceUnit['start_date']));
 				$formatedLastDate = date("Y-m-d", strtotime($absenceUnit['end_date']));
-				
+
 				while ($tempStartDate <= $formatedLastDate) {
 					$stampTempDate = strtotime($tempStartDate);
 					$tempIndex = date('Y-m-d', $stampTempDate);
@@ -298,15 +298,15 @@ class StaffAttendancesTable extends AppTable {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$id = $entity->staff_id;
 			$StaffAbsences = TableRegistry::get('Institution.StaffAbsences');
-			
+
 			$alias = Inflector::underscore($StaffAbsences->alias());
 			$fieldPrefix = $StaffAbsences->Users->alias() . '.'.$alias.'.' . $id;
 			$absenceCodeList = $this->absenceCodeList;
 			$codeAbsenceTypeList = array_flip($absenceCodeList);
 			$options = [
-				'type' => 'select', 
-				'label' => false, 
-				'options' => $this->typeOptions, 
+				'type' => 'select',
+				'label' => false,
+				'options' => $this->typeOptions,
 				'onChange' => '$(".type_'.$id.'").hide();$("#type_'.$id.'_"+$(this).val()).show();$("#late_time__'.$id.'").hide();$(".late_time__'.$id.'_"+$(this).val()).show();'
 			];
 			$displayTime = 'display:none;';
@@ -335,10 +335,10 @@ class StaffAttendancesTable extends AppTable {
 			$attr['model'] = $fieldPrefix;
 			$attr['id'] = 'late_time_'.$id;
 			$attr['label'] = false;
-			
+
 			$time = $HtmlField->time('edit', $entity, $attr);
 			$html .= '<div id="late_time__'.$id.'" class="late_time__'.$id.'_'.$codeAbsenceTypeList['LATE'].'" style="'.$displayTime.'">'.$time.'</div>';
-			
+
 			$html .= $Form->hidden($fieldPrefix.".institution_id", ['value' => $institutionId]);
 			$html .= $Form->hidden($fieldPrefix.".staff_id", ['value' => $id]);
 
@@ -384,7 +384,7 @@ class StaffAttendancesTable extends AppTable {
 			} else {
 				$reasonId = $entity->StaffAbsences['staff_absence_reason_id'];
 			}
-			
+
 			if (empty($entity->StaffAbsences['id'])) {
 				$presentDisplay = '';	// PRESENT
 			} else {
@@ -398,7 +398,7 @@ class StaffAttendancesTable extends AppTable {
 				}
 			}
 			$codeAbsenceType = array_flip($absenceCodeList);
-			
+
 			foreach ($this->typeOptions as $key => $value) {
 				switch($key) {
 					case self::PRESENT:
@@ -515,7 +515,9 @@ class StaffAttendancesTable extends AppTable {
 	}
 
 	// Event: ControllerAction.Model.index.beforeAction
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+	public function indexBeforeAction(Event $event, ArrayObject $settings) {
+        $query = $settings['query'];
+
 		$toolbarElements = [
 			['name' => 'Institution.Attendance/controls', 'data' => [], 'options' => []]
 		];
@@ -631,7 +633,7 @@ class StaffAttendancesTable extends AppTable {
 				}
 			}
 			$dayOptions[$selectedDay][] = 'selected';
-			
+
 			$currentDay = $week[0]->copy();
 			if ($selectedDay != -1) {
 				if ($currentDay->dayOfWeek != $selectedDay) {
@@ -738,7 +740,7 @@ class StaffAttendancesTable extends AppTable {
 		}
     	return $query
     		->select([
-    			$this->aliasField('staff_id'), 
+    			$this->aliasField('staff_id'),
     			'Users.openemis_no', 'Users.first_name', 'Users.last_name', 'Users.id',
     			'StaffAbsences.id',
     			'StaffAbsences.start_date',
