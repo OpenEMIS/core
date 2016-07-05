@@ -113,6 +113,27 @@ Follow Rob (@\_rjm\_) on Twitter to stay up to date (http://twitter.com/_rjm_)
 
 ### Version History
 
+**0.5.3** (Monday, 7th March 2016)
+
+* Critical fix: allow `migration_name` to be `null`. Introduced in 0.5.2
+* Status command now shows migration start and end times
+* Bug fix for rolling back by date
+* Documentation improvements
+
+**0.5.2** (Tuesday, 1st March 2016)
+
+* Status command now includes missing migration names
+* Added support for Postgres table comments
+* Added `insert()` for the TablePrefixAdapter
+* Fixed the migration verbosity flag
+* Added MySQL 5.7 JSON support
+* Added support for MySQL `FULLTEXT` indexes
+* Postgres now supports `BIGSERIAL` for primary keys
+* Added support for MySQL index limits
+* Initial support for multiple migration paths (using glob)
+* Documentation improvements
+* Unit test enhancements
+
 **0.5.1** (Wednesday, 30th December 2015)
 
 * **PHP 5.3 is no longer supported!**
