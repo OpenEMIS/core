@@ -38,6 +38,8 @@ class InstitutionShiftsTable extends ControllerActionTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
  	        ->add('start_time', 'ruleCompareDate', [
 		            'rule' => ['compareDate', 'end_time', true]

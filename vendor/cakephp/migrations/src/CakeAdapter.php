@@ -57,6 +57,7 @@ class CakeAdapter implements AdapterInterface
         if ($pdo->getAttribute(PDO::ATTR_ERRMODE) !== PDO::ERRMODE_EXCEPTION) {
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         }
+        $connection->cacheMetadata(false);
         $connection->driver()->connection($pdo);
     }
 
@@ -78,6 +79,16 @@ class CakeAdapter implements AdapterInterface
     public function getVersions()
     {
         return $this->adapter->getVersions();
+    }
+
+    /**
+     * Get all migration log entries, indexed by version number.
+     *
+     * @return array
+     */
+    public function getVersionLog()
+    {
+        return $this->adapter->getVersionLog();
     }
 
     /**
