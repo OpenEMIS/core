@@ -411,6 +411,8 @@ class UsersTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 			->add('first_name', [
 					'ruleCheckIfStringGotNoNumber' => [

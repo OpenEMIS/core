@@ -1,13 +1,20 @@
 <div class="search">
 	<div class="input-group">
+<<<<<<< HEAD
 		<?=
 		$this->Form->input('Search.searchField', [
 			'label' => false,
+=======
+		<?php
+		echo $this->Form->input('Search.searchField', [
+			'label' => false, 
+>>>>>>> 64d4280521dffc9b20d125b9224bd6cd2433e62f
 			'class' => 'form-control search-input focus',
 			'data-input-name' => 'Search[searchField]',
 			'placeholder' => __('Search'),
 			'onkeypress' => 'if (event.keyCode == 13) jsForm.submit()'
 		]);
+		$this->Form->unlockField('Search.searchField');
 		?>
 		<span class="input-group-btn">
 			<button class="btn btn-xs btn-reset" type="button" onclick="$('.search-input').val('');jsForm.submit()"><i class="fa fa-close"></i></button>

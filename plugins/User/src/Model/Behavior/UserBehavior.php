@@ -40,6 +40,7 @@ class UserBehavior extends Behavior {
 				'field' => 'password',
 				'passwordAllowEmpty' => true
 			]);
+			$this->_table->addBehavior('Area.Areapicker');
 		}
 	}
 
@@ -94,7 +95,6 @@ class UserBehavior extends Behavior {
 		}
 
 		if ($this->_table->table() == 'security_users') {
-			$this->_table->addBehavior('Area.Areapicker');
 			$this->_table->addBehavior('OpenEmis.Section');
 			$this->_table->fields['photo_name']['visible'] = false;
 			$this->_table->fields['super_admin']['visible'] = false;
