@@ -278,7 +278,7 @@ class RestfulController extends AppController
     {
         foreach ($entity->visibleProperties() as $property) {
             if (is_resource($entity->$property)) {
-                $entity->$property = base64_encode("data:image/jpeg;base64,".stream_get_contents($entity->$property));
+                $entity->$property = "data:image/jpeg;base64,".base64_encode(stream_get_contents($entity->$property));
             }
         }
     }
