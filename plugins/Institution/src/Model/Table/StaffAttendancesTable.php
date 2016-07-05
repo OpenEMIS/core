@@ -273,6 +273,7 @@ class StaffAttendancesTable extends AppTable {
 	public function getNumberOfStaffByAttendance($params=[]) {
 		$query = $params['query'];
 		$StaffAttendancesQuery = clone $query;
+		$StaffAttendancesQuery->distinct([$this->aliasField('staff_id')]);
 			
 		// Creating the data set		
 		$dataSet = [];
@@ -690,8 +691,8 @@ class StaffAttendancesTable extends AppTable {
 			if ($selectedDay != -1) {
 				
 			}
-
-			$totalStaff = $query->count();
+			$queryClone = clone $query;
+			$totalStaff = $queryClone->distinct([$this->aliasField('staff_id')])->count();
 
 			$indexDashboard = 'attendance';
 			
