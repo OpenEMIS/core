@@ -23,7 +23,7 @@ class AdvanceSearchBehavior extends Behavior {
 	public function initialize(array $config) {
 		$this->_table->addBehavior('Area.Area');
 	}
-	
+
 
 /******************************************************************************************************************
 **
@@ -32,10 +32,15 @@ class AdvanceSearchBehavior extends Behavior {
 ******************************************************************************************************************/
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
-		$newEvent = [
-			'ControllerAction.Model.index.beforePaginate' => 'indexBeforePaginate',
-			'ControllerAction.Model.afterAction' => 'afterAction',
-		];
+        $newEvent = [];
+        $newEvent['ControllerAction.Model.afterAction'] = 'afterAction';
+
+        if($this->isCAv4()) {
+            $newEvent['ControllerAction.Model.index.beforeQuery'] = 'indexBeforeQuery';
+        } else{
+            $newEvent['ControllerAction.Model.index.beforePaginate'] = 'indexBeforePaginate';
+        }
+
 		$events = array_merge($events,$newEvent);
 		return $events;
 	}
@@ -46,7 +51,7 @@ class AdvanceSearchBehavior extends Behavior {
 ** CakePhp events
 **
 ******************************************************************************************************************/
-	public function afterAction(Event $event) {
+	public function afterAction(Event $event, ArrayObject $extra) {
 		if ($this->_table->action == 'index') {
 		    $labels = TableRegistry::get('Labels');
 			$filters = [];
@@ -113,12 +118,23 @@ class AdvanceSearchBehavior extends Behavior {
 	        // trigger events for additional searchable fields
 	        $this->_table->dispatchEvent('AdvanceSearch.onSetupFormField', [$searchables, $advanceSearchModelData], $this);
 
-			$this->_table->controller->viewVars['indexElements']['advanced_search'] = [
-	            'name' => 'advanced_search',
-	            'data' => compact('filters', 'searchables', 'advancedSearch'),
-	            'options' => [],
-	            'order' => 0
-	        ];
+            if($this->isCAv4()) {
+                $this->_table->controller->viewVars['advanced_search'] = [
+                    'name' => 'advanced_search',
+                    'data' => compact('filters', 'searchables', 'advancedSearch'),
+                    'options' => [],
+                    'order' => 0
+                ];
+            }
+
+            // adding of the indexElement
+            $this->_table->controller->viewVars['indexElements']['advanced_search'] = [
+                'name' => 'advanced_search',
+                'data' => compact('filters', 'searchables', 'advancedSearch'),
+                'options' => [],
+                'order' => 0
+            ];
+
 		}
 	}
 
@@ -128,7 +144,14 @@ class AdvanceSearchBehavior extends Behavior {
 ** index action methods
 **
 ******************************************************************************************************************/
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $paginateOptions) {
+
+    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+        $this->indexBeforeQuery($event, $query, $options);
+    }
+
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $request = $this->_table->request;
 		$reset = $request->data('reset');
 		if (!empty($reset)) {
 			if ($reset == 'Reset') {
@@ -136,10 +159,10 @@ class AdvanceSearchBehavior extends Behavior {
 				$alias = $model->alias();
 				// clear session
 				if ($model->Session->check($alias.'.advanceSearch.belongsTo')) {
-					 $model->Session->delete($alias.'.advanceSearch.belongsTo');	
+					 $model->Session->delete($alias.'.advanceSearch.belongsTo');
 				}
 				if ($model->Session->check($alias.'.advanceSearch.hasMany')) {
-					 $model->Session->delete($alias.'.advanceSearch.hasMany');	
+					 $model->Session->delete($alias.'.advanceSearch.hasMany');
 				}
 				// clear fields value
 				if (array_key_exists('belongsTo', $request->data['AdvanceSearch'][$alias])) {
@@ -155,10 +178,10 @@ class AdvanceSearchBehavior extends Behavior {
 				$request->data['AdvanceSearch'][$alias]['isSearch'] = false;
 			}
 		}
-		return $this->advancedSearchQuery ($request, $query);
+		return $this->advancedSearchQuery($request, $query);
 	}
 
-	public function advancedSearchQuery (Request $request, Query $query) {
+	public function advancedSearchQuery(Request $request, Query $query) {
 		$conditions = '';
 
 		$model = $this->_table;
@@ -243,7 +266,7 @@ class AdvanceSearchBehavior extends Behavior {
 		return $relatedModel;
 	}
 
-	public function isForeignKey($field) {
+	private function isForeignKey($field) {
 		foreach ($this->_table->associations() as $assoc) {
 			if ($assoc->type() == 'manyToOne') { // belongsTo associations
 				if ($field === $assoc->foreignKey()) {
@@ -264,5 +287,9 @@ class AdvanceSearchBehavior extends Behavior {
 		}
 		return $associatedEntityArrayKey;
 	}
+
+    private function isCAv4() {
+        return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
+    }
 
 }

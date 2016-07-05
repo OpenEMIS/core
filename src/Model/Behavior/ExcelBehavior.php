@@ -6,6 +6,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Behavior;
+use Cake\ORM\ResultSet;
 use Cake\I18n\Time;
 use Cake\Utility\Inflector;
 use ControllerAction\Model\Traits\EventTrait;
@@ -72,6 +73,13 @@ class ExcelBehavior extends Behavior {
 		return $exists;
 	}
 
+
+    public function excelv4(Event $event, ArrayObject $extra) {
+        $id = (array_key_exists('id', $extra))? $extra['id']: null;
+        $this->generateXLXS(['id' => $id]);
+        return true;
+    }
+
 	public function excel($id=0) {
 		$this->generateXLXS(['id' => $id]);
 	}
@@ -104,7 +112,7 @@ class ExcelBehavior extends Behavior {
 		if (is_callable($event->result)) {
 			$generate = $event->result;
 		}
-		
+
 		$generate($_settings);
 
 		$filepath = $_settings['path'] . $_settings['file'];
@@ -161,7 +169,7 @@ class ExcelBehavior extends Behavior {
 				}
 				if (strlen($sheetName) > 27) {
 					$sheetName = substr($sheetName,0,27).'('.$counter++.')';
-				} else {	
+				} else {
 					$sheetName = $sheetName.'('.$counter++.')';
 				}
 			}
@@ -229,7 +237,7 @@ class ExcelBehavior extends Behavior {
 
 					// process each row based on the result set
 					foreach ($resultSet as $entity) {
-						
+
 						$settings['entity'] = $entity;
 
 						$row = [];
@@ -376,7 +384,7 @@ class ExcelBehavior extends Behavior {
 					}
 				}
 			}
-		}	
+		}
 		return __($value);
 	}
 
@@ -427,7 +435,7 @@ class ExcelBehavior extends Behavior {
 
 	private function download($path) {
 		$filename = basename($path);
-		
+
 		header("Pragma: public", true);
 		header("Expires: 0"); // set expiration time
 		header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
@@ -443,46 +451,83 @@ class ExcelBehavior extends Behavior {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 0];
+
+        if ($this->isCAv4()) {
+            $events['ControllerAction.Model.index.afterAction'] = ['callable' => 'indexAfterActionExcelv4'];
+            $events['ControllerAction.Model.excel'] = 'excelv4';
+        }
+
 		return $events;
 	}
 
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($buttons->offsetExists('view')) {
-			$export = $buttons['view'];
-			$export['type'] = 'button';
-			$export['label'] = '<i class="fa kd-export"></i>';
-			$export['attr'] = $attr;
-			$export['attr']['title'] = __('Export');
 
-			if ($isFromModel) {
-				$export['url'][0] = 'excel';
-			} else {
-				$export['url']['action'] = 'excel';
-			}
+    private function handleToolbarButtons(ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    {
+        if ($buttons->offsetExists('view')) {
+            $export = $buttons['view'];
+            $export['type'] = 'button';
+            $export['label'] = '<i class="fa kd-export"></i>';
+            $export['attr'] = $attr;
+            $export['attr']['title'] = __('Export');
 
-			$pages = $this->config('pages');
-			if (in_array($action, $pages)) {
-				$toolbarButtons['export'] = $export;
-			}
-		} else if ($buttons->offsetExists('back')) {
-			$export = $buttons['back'];
-			$export['type'] = 'button';
-			$export['label'] = '<i class="fa kd-export"></i>';
-			$export['attr'] = $attr;
-			$export['attr']['title'] = __('Export');
+            if ($isFromModel) {
+                $export['url'][0] = 'excel';
+            } else {
+                $export['url']['action'] = 'excel';
+            }
+            if($this->isCAv4()) {
+                $export['url'] = array_merge($export['url'], $this->_table->request->query);
+            }
 
-			if ($isFromModel) {
-				$export['url'][0] = 'excel';
-			} else {
-				$export['url']['action'] = 'excel';
-			}
+            $pages = $this->config('pages');
+            if (in_array($action, $pages)) {
+                $toolbarButtons['export'] = $export;
+            }
+        } else if ($buttons->offsetExists('back')) {
+            $export = $buttons['back'];
+            $export['type'] = 'button';
+            $export['label'] = '<i class="fa kd-export"></i>';
+            $export['attr'] = $attr;
+            $export['attr']['title'] = __('Export');
 
-			$pages = $this->config('pages');
-			if ($pages != false) {
-				if (in_array($action, $pages)) {
-					$toolbarButtons['export'] = $export;
-				}
-			}
-		}
+            if ($isFromModel) {
+                $export['url'][0] = 'excel';
+            } else {
+                $export['url']['action'] = 'excel';
+            }
+
+            $pages = $this->config('pages');
+            if ($pages != false) {
+                if (in_array($action, $pages)) {
+                    $toolbarButtons['export'] = $export;
+                }
+            }
+        }
+    }
+
+    public function indexAfterActionExcelv4(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    {
+        $action = $this->_table->action;
+        $isFromModel = (array_key_exists('isFromModel', $extra))? $extra['isFromModel']: null;
+
+        if (is_null($isFromModel)) {
+            // this doesnt work without isFromModel in $extra;
+            return;
+        }
+
+        // from onUpdateToolbarButtons for v4
+        $attr = $this->_table->getButtonAttr();
+
+        $this->handleToolbarButtons($extra['indexButtons'], $extra['toolbarButtons'], $attr, $action, $isFromModel);
+    }
+
+    // used for v3
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    {
+		$this->handleToolbarButtons($buttons, $toolbarButtons, $attr, $action, $isFromModel);
 	}
+
+    private function isCAv4() {
+        return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
+    }
 }
