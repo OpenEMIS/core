@@ -104,17 +104,47 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
         if (!$AccessControl->isAdmin()) 
         {
-            if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles))
+            if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles) && !$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles) )
             {
-                if (!$AccessControl->check(['Institutions', 'Classes', 'index'], $roles)) 
+            	$classPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
+            	$subjectPermission = $AccessControl->check(['Institutions', 'Subjects', 'index'], $roles);
+                if (!$classPermission && !$subjectPermission) 
                 {
                     $query->where(['1 = 0'], [], true);
                 } else 
                 {
                     $query->innerJoin(['InstitutionClasses' => 'institution_classes'], [
                         'InstitutionClasses.id = '.$ClassGrades->aliasField('institution_class_id'),
-                        'InstitutionClasses.staff_id' => $userId
-                    ]);
+                    	])
+	                    ;
+
+                    // If only class permission is available but no subject permission available
+                    if ($classPermission && !$subjectPermission) {
+                    	$query->where(['InstitutionClasses.staff_id' => $userId]);
+                    } else {
+                    	$query
+	                    	->innerJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
+	                        	'InstitutionClassSubjects.institution_class_id = InstitutionClasses.id',
+	                       		'InstitutionClassSubjects.status =	 1'
+		                    ])
+		                    ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
+		                        'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id'
+		                    ]);
+
+	                    // If both class and subject permission is available
+	                    if ($subjectPermission && $subjectPermission) {
+	                    	$query->where([
+	                    		'OR' => [
+	                    			['InstitutionClasses.staff_id' => $userId],
+	                    			['InstitutionSubjectStaff.staff_id' => $userId]
+	                    		]
+	                    	]);
+	                    } 
+	                    // If only subject permission is available
+	                    else {
+							$query->where(['InstitutionSubjectStaff.staff_id' => $userId]);
+	                    }
+                    }
                 }
             }   
         }

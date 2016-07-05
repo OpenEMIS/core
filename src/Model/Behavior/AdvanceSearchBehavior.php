@@ -46,6 +46,7 @@ class AdvanceSearchBehavior extends Behavior {
 ** CakePhp events
 **
 ******************************************************************************************************************/
+
 	public function afterAction(Event $event) {
 		if ($this->_table->action == 'index') {
 		    $labels = TableRegistry::get('Labels');
