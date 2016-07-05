@@ -832,8 +832,8 @@ class StaffAttendancesTable extends AppTable {
 		}
     	return $query
     		->select([
-    			$this->aliasField('staff_id'),
-    			'Users.openemis_no', 'Users.first_name', 'Users.last_name', 'Users.id',
+    			$this->aliasField('staff_id'), 
+    			'Users.openemis_no', 'Users.first_name', 'Users.middle_name', 'Users.third_name','Users.last_name', 'Users.id',
     			'StaffAbsences.id',
     			'StaffAbsences.start_date',
     			'StaffAbsences.end_date',
