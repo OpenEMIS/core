@@ -52,6 +52,8 @@ class AssessmentItemsTable extends AssessmentsAppTable {
 
 	public function validationDefault(Validator $validator) 
 	{
+		$validator = parent::validationDefault($validator);
+
 		$validator
 			->requirePresence('assessment_id', 'update')
 			->requirePresence('assessment_grading_type_id')
@@ -119,31 +121,17 @@ class AssessmentItemsTable extends AssessmentsAppTable {
 			$staffId = $options['staff_id'];
 
 			$query->where([
-					'OR' => [
-						// For subject teachers
-						'EXISTS (
-							SELECT 1 
-							FROM institution_subjects InstitutionSubjects
-							INNER JOIN institution_class_subjects InstitutionClassSubjects
-								ON InstitutionClassSubjects.institution_class_id = '.$classId.'
-								AND InstitutionClassSubjects.institution_subject_id = InstitutionSubjects.id
-							INNER JOIN institution_subject_staff InstitutionSubjectStaff
-								ON InstitutionSubjectStaff.institution_subject_id = InstitutionSubjects.id
-								AND InstitutionSubjectStaff.staff_id = '.$staffId.'
-							WHERE InstitutionSubjects.education_subject_id = ' . $this->aliasField('education_subject_id') .')',
-
-						// Homeroom teacher for the class should see all the subjects also
-						'EXISTS (
-							SELECT 1 
-							FROM institution_classes InstitutionClasses
-							INNER JOIN institution_class_subjects InstitutionClassSubjects
-								ON InstitutionClassSubjects.institution_class_id = InstitutionClasses.id
-							INNER JOIN institution_subjects InstitutionSubjects
-								ON InstitutionSubjects.id = InstitutionClassSubjects.institution_subject_id
-							WHERE InstitutionClasses.staff_id = '.$staffId.' 
-								AND InstitutionClasses.id = '.$classId.' 
-								AND InstitutionSubjects.education_subject_id = '.$this->aliasField('education_subject_id').')'
-					]
+					// For subject teachers
+					'EXISTS (
+						SELECT 1 
+						FROM institution_subjects InstitutionSubjects
+						INNER JOIN institution_class_subjects InstitutionClassSubjects
+							ON InstitutionClassSubjects.institution_class_id = '.$classId.'
+							AND InstitutionClassSubjects.institution_subject_id = InstitutionSubjects.id
+						INNER JOIN institution_subject_staff InstitutionSubjectStaff
+							ON InstitutionSubjectStaff.institution_subject_id = InstitutionSubjects.id
+							AND InstitutionSubjectStaff.staff_id = '.$staffId.'
+						WHERE InstitutionSubjects.education_subject_id = ' . $this->aliasField('education_subject_id') .')'
 				]);
 
 			return $query;

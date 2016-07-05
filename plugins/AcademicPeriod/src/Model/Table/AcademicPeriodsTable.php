@@ -24,6 +24,8 @@ class AcademicPeriodsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$additionalParameters = ['editable = 1 AND visible > 0'];
 
 		return $validator

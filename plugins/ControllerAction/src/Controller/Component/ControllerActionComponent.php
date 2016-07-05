@@ -175,12 +175,27 @@ class ControllerActionComponent extends Component {
                     }
                 }
             }
-            $this->debug(__METHOD__, ': Event -> ControllerAction.Model.beforeAction');
-            $event = new Event('ControllerAction.Model.beforeAction', $this);
-            $event = $this->model->eventManager()->dispatch($event);
-            if ($event->isStopped()) { return $event->result; }
-            $this->buildDefaultValidation();
         }
+
+        $pass = $this->request->pass;
+        if (isset($pass[0])) {
+            if ($pass[0] == 'reorder') {
+                $this->enableReorder($this->request->params['action'], $controller);
+            }
+        } elseif ($action == 'reorder') {
+            $this->enableReorder($this->request->params['action'], $controller);
+        }
+    }
+
+    private function enableReorder($action, $controller)
+    {
+        if ($this->request->is('post')) {
+            $token = isset($this->request->cookies['csrfToken']) ? $this->request->cookies['csrfToken'] : '';
+            $this->request->env('HTTP_X_CSRF_TOKEN', $token);
+        }
+        $controller->Security->config('unlockedActions', [
+            $action
+        ]);
     }
 
     public function renderFields() {
@@ -558,6 +573,13 @@ class ControllerActionComponent extends Component {
 
     public function processAction() {
         $result = null;
+
+        $this->debug(__METHOD__, ': Event -> ControllerAction.Model.beforeAction');
+        $event = new Event('ControllerAction.Model.beforeAction', $this);
+        $event = $this->model->eventManager()->dispatch($event);
+        if ($event->isStopped()) { return $event->result; }
+        $this->buildDefaultValidation();
+
         if ($this->autoProcess) {
             if ($this->triggerFrom == 'Controller') {
                 if (in_array($this->currentAction, $this->defaultActions)) {
@@ -667,7 +689,7 @@ class ControllerActionComponent extends Component {
             $modal['form'] = [
                 'model' => $this->model,
                 'formOptions' => ['type' => 'delete', 'url' => $this->url('remove')],
-                'fields' => ['id' => ['type' => 'hidden', 'id' => 'recordId']]
+                'fields' => ['id' => ['type' => 'hidden', 'id' => 'recordId', 'unlockField' => true]]
             ];
 
             $modal['buttons'] = [

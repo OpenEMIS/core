@@ -23,6 +23,8 @@ class StaffPositionProfilesTable extends ControllerActionTable {
  	];
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator = $this->buildStaffValidation();
 		return $validator
 			->allowEmpty('end_date')
