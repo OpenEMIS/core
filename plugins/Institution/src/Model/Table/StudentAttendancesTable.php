@@ -268,12 +268,7 @@ class StudentAttendancesTable extends AppTable {
 			if (!empty($dateRange)) {
 				$startDate = $dateRange[0];
 				$endDate = $dateRange[count($dateRange) - 1];
-				$dateRangeCondition = [
-					'OR' => [
-						['StudentAbsences.start_date <=' => $startDate],
-						['StudentAbsences.start_date <=' => $endDate]
-					]
-				];
+				$dateRangeCondition = ['StaffAbsences.end_date >=' => $startDate];
 			} else {
 				$dateRangeCondition = ['1 = 0'];
 			}
