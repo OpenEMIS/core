@@ -278,7 +278,7 @@ class RestfulController extends AppController
     {
         foreach ($entity->visibleProperties() as $property) {
             if (is_resource($entity->$property)) {
-                $entity->$property = "data:image/jpeg;base64,".base64_encode(stream_get_contents($entity->$property));
+                $entity->$property = base64_encode(stream_get_contents($entity->$property));
             }
         }
     }
@@ -293,10 +293,7 @@ class RestfulController extends AppController
             $attr = $schema->column($column);
             if ($attr['type'] == 'binary' && $entity->has($column)) {
                 $value = urldecode($entity->$column);
-                Log::write('debug', $value);
-                $split = explode('base64,', $value);
-                Log::write('debug', $split);
-                $entity->$column = base64_decode($split[1]);
+                $entity->$column = base64_decode($value);
             }
         }
         return $entity;
