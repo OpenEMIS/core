@@ -272,18 +272,25 @@ class StaffAttendancesTable extends AppTable {
 	// Function use by the mini dashboard
 	public function getNumberOfStaffByAttendance($params=[]) {
 		$query = $params['query'];
-		$dateRange = array_column($this->allDayOptions, 'date');
-		if (!empty($dateRange)) {
-			$startDate = $dateRange[0];
-			$endDate = $dateRange[count($dateRange) - 1];
-			$dateRangeCondition = [
-				'OR' => [
-					['StaffAbsences.start_date <=' => $startDate],
-					['StaffAbsences.start_date <=' => $endDate]
-				]
-			];
+		$selectedDay = $params['selectedDay'];
+		
+		// Add this condition if the selected day is all day
+		if ($selectedDay == -1) {
+			$dateRange = array_column($this->allDayOptions, 'date');
+			if (!empty($dateRange)) {
+				$startDate = $dateRange[0];
+				$endDate = $dateRange[count($dateRange) - 1];
+				$dateRangeCondition = [
+					'OR' => [
+						['StaffAbsences.start_date <=' => $startDate],
+						['StaffAbsences.start_date <=' => $endDate]
+					]
+				];
+			} else {
+				$dateRangeCondition = ['1 = 0'];
+			}
 		} else {
-			$dateRangeCondition = ['1 = 0'];
+			$dateRangeCondition = [];
 		}
 		$StaffAttendancesQuery = clone $query;
 		$staffAbsenceArray = $StaffAttendancesQuery
@@ -729,7 +736,7 @@ class StaffAttendancesTable extends AppTable {
 
 			$indexDashboard = 'attendance';
 			
-			$dataSet = $this->getNumberOfStaffByAttendance(['query' => $query]);
+			$dataSet = $this->getNumberOfStaffByAttendance(['query' => $query, 'selectedDay' => $selectedDay]);
 			$present = 0;
 			$absent = 0;
 			$late = 0;
