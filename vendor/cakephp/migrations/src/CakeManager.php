@@ -12,6 +12,7 @@
 namespace Migrations;
 
 use Phinx\Migration\Manager;
+use Symfony\Component\Console\Input\InputInterface;
 
 /**
  * Overrides Phinx Manager class in order to provide an interface
@@ -19,6 +20,15 @@ use Phinx\Migration\Manager;
  */
 class CakeManager extends Manager
 {
+
+    public $maxNameLength = 0;
+
+    /**
+     * Instance of InputInterface the Manager is dealing with for the current shell call
+     *
+     * @var \Symfony\Component\Console\Input\InputInterface
+     */
+    protected $input;
 
     /**
      * Reset the migrations stored in the object
@@ -50,31 +60,54 @@ class CakeManager extends Manager
     public function printStatus($environment, $format = null)
     {
         $migrations = [];
+        $isJson = $format === 'json';
         if (count($this->getMigrations())) {
             $env = $this->getEnvironment($environment);
-            $versions = $env->getVersions();
+            $versions = $env->getVersionLog();
+            $this->maxNameLength = $versions ? max(array_map(function ($version) {
+                return strlen($version['migration_name']);
+            }, $versions)) : 0;
 
             foreach ($this->getMigrations() as $migration) {
-                if (in_array($migration->getVersion(), $versions)) {
+                if (array_key_exists($migration->getVersion(), $versions)) {
                     $status = 'up';
-                    unset($versions[array_search($migration->getVersion(), $versions)]);
+                    unset($versions[$migration->getVersion()]);
                 } else {
                     $status = 'down';
                 }
 
-                $migrations[] = [
+                $version = $migration->getVersion();
+                $migrationParams = [
                     'status' => $status,
                     'id' => $migration->getVersion(),
                     'name' => $migration->getName()
                 ];
+
+                $migrations[$version] = $migrationParams;
             }
 
             foreach ($versions as $missing) {
-                $migrations[] = ['status' => 'up', 'id' => $missing, 'name' => false];
+                $version = $missing['version'];
+                $migrationParams = [
+                    'status' => 'up',
+                    'id' => $version,
+                    'name' => $missing['migration_name']
+                ];
+
+                if (!$isJson) {
+                    $migrationParams = array_merge($migrationParams, [
+                        'missing' => true
+                    ]);
+                }
+
+                $migrations[$version] = $migrationParams;
             }
         }
 
-        if ($format === 'json') {
+        ksort($migrations);
+        $migrations = array_values($migrations);
+
+        if ($isJson) {
             $migrations = json_encode($migrations);
         }
 
@@ -292,5 +325,39 @@ class CakeManager extends Manager
         }
 
         return $class;
+    }
+
+    /**
+     * Sets the InputInterface the Manager is dealing with for the current shell call
+     *
+     * @param \Symfony\Component\Console\Input\InputInterface $input Instance of InputInterface
+     * @return void
+     */
+    public function setInput(InputInterface $input)
+    {
+        $this->input = $input;
+    }
+
+    /**
+     * Overload the basic behavior to add an instance of the InputInterface the shell call is
+     * using in order to gives the ability to the AbstractSeed::call() method to propagate options
+     * to the other MigrationsDispatcher it is generating.
+     *
+     * {@inheritdoc}
+     */
+    public function getSeeds()
+    {
+        parent::getSeeds();
+        if (empty($this->seeds)) {
+            return $this->seeds;
+        }
+
+        foreach ($this->seeds as $class => $instance) {
+            if ($instance instanceof AbstractSeed) {
+                $instance->setInput($this->input);
+            }
+        }
+
+        return $this->seeds;
     }
 }
