@@ -273,7 +273,7 @@ class StaffAttendancesTable extends AppTable {
 	public function getNumberOfStaffByAttendance($params=[]) {
 		$query = $params['query'];
 		$selectedDay = $params['selectedDay'];
-		
+
 		// Add this condition if the selected day is all day
 		if ($selectedDay == -1) {
 			$dateRange = array_column($this->allDayOptions, 'date');
@@ -287,7 +287,7 @@ class StaffAttendancesTable extends AppTable {
 				$startDate = $dateRange[0];
 				$endDate = $dateRange[count($dateRange) - 1];
 				$dateRangeCondition = [
-					'StaffAbsences.end_date >=' => $startDate, 
+					'StaffAbsences.end_date >=' => $startDate,
 					'StaffAbsences.start_date <=' => $endDate
 				];
 			} else {
@@ -297,10 +297,6 @@ class StaffAttendancesTable extends AppTable {
 			$dateRangeCondition = [];
 		}
 		$StaffAttendancesQuery = clone $query;
-<<<<<<< HEAD
-
-		// Creating the data set
-=======
 		$staffAbsenceArray = $StaffAttendancesQuery
 			->find('list', [
 				'groupField' => 'staff_id',
@@ -311,9 +307,8 @@ class StaffAttendancesTable extends AppTable {
 			->group(['staff_id', 'absence_type'])
 			->where($dateRangeCondition)
 			->toArray();
-			
-		// Creating the data set		
->>>>>>> 97993635d1be9f3b4e8288d1a48c50fb1ea43f6f
+
+		// Creating the data set
 		$dataSet = [];
 		$data = [];
 		foreach ($staffAbsenceArray as $userAbsenceType) {
@@ -338,7 +333,7 @@ class StaffAttendancesTable extends AppTable {
 							$data[$typeName] = 1;
 						}
 					}
-					
+
 					if ($typeName == 'Absence') {
 						$absenceForTheWeek = true;
 					}
@@ -744,13 +739,8 @@ class StaffAttendancesTable extends AppTable {
 			$totalStaff = $queryClone->distinct([$this->aliasField('staff_id')])->count();
 
 			$indexDashboard = 'attendance';
-<<<<<<< HEAD
 
-			$dataSet = $this->getNumberOfStaffByAttendance(['query' => $query]);
-=======
-			
 			$dataSet = $this->getNumberOfStaffByAttendance(['query' => $query, 'selectedDay' => $selectedDay]);
->>>>>>> 97993635d1be9f3b4e8288d1a48c50fb1ea43f6f
 			$present = 0;
 			$absent = 0;
 			$late = 0;
