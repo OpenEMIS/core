@@ -137,7 +137,6 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
             if (angular.isObject(defaultIdentityType) && defaultIdentityType.length > 0) {
                 deferred.resolve(defaultIdentityType);
             } else {
-                console.log(defaultIdentityType);
                 deferred.resolve(defaultIdentityType);
             }
         };
