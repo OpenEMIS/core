@@ -309,12 +309,7 @@ class DirectoriesTable extends AppTable {
 			} else {
 				$this->request->query['user_type'] = self::GUARDIAN;
 			}
-<<<<<<< HEAD
-			$userType = $this->request->data[$this->alias()]['user_type'];
-
-=======
 			$userType = isset($this->request->data[$this->alias()]['user_type']) ? $this->request->data[$this->alias()]['user_type'] : $this->request->query('user_type');
->>>>>>> 64d4280521dffc9b20d125b9224bd6cd2433e62f
 			$this->ControllerAction->field('openemis_no', ['user_type' => $userType]);
 
 			switch ($userType) {
@@ -369,18 +364,14 @@ class DirectoriesTable extends AppTable {
 		}
 	}
 
-<<<<<<< HEAD
-	public function addAfterAction(Event $event) {
-=======
-	public function addBeforeAction(Event $event)
-	{
-		if (!isset($this->request->data[$this->alias()]['user_type'])) {
-			$this->request->data[$this->alias()]['user_type'] = $this->request->query('user_type');
-		}
-	}
+    public function addBeforeAction(Event $event)
+    {
+        if (!isset($this->request->data[$this->alias()]['user_type'])) {
+            $this->request->data[$this->alias()]['user_type'] = $this->request->query('user_type');
+        }
+    }
 
-	public function addAfterAction(Event $event) { 
->>>>>>> 64d4280521dffc9b20d125b9224bd6cd2433e62f
+	public function addAfterAction(Event $event) {
 		// need to find out order values because recordbehavior changes it
 		$allOrderValues = [];
 		foreach ($this->fields as $key => $value) {
