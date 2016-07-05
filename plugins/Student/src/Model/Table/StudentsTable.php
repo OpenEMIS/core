@@ -447,15 +447,17 @@ class StudentsTable extends AppTable {
             ]
         ]);
 
-        // getting only enrolled records
-        $query->contain([
-            'InstitutionStudents.AcademicPeriods',
-            'InstitutionStudents.Institutions',
-            'InstitutionStudents.EducationGrades'
-            ]
-            , function($q) {
-            return $q->where(['InstitutionStudents.student_status_id' => 1]);
-        });
+        // getting only enrolled student
+        $allInstitutionStudents = $this->InstitutionStudents->find()
+            ->select([
+                $this->InstitutionStudents->aliasField('student_id')
+            ])
+            ->where([
+                $this->InstitutionStudents->aliasField('student_status_id').' = 1',
+                $this->InstitutionStudents->aliasField('student_id').' = '.$this->aliasField('id')
+            ])
+            ->bufferResults(false);
+        $query->where(['NOT EXISTS ('.$allInstitutionStudents->sql().')']);
 
         if (!empty($conditions)) $query->where($conditions);
         if (!is_null($limit)) $query->limit($limit);
