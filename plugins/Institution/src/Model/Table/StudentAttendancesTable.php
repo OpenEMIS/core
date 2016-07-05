@@ -268,7 +268,11 @@ class StudentAttendancesTable extends AppTable {
 			if (!empty($dateRange)) {
 				$startDate = $dateRange[0];
 				$endDate = $dateRange[count($dateRange) - 1];
-				$dateRangeCondition = ['StaffAbsences.end_date >=' => $startDate];
+				$dateRangeCondition = [
+					'StudentAbsences.end_date <=' => $endDate, 
+					'StudentAbsences.end_date >=' => $startDate, 
+					'StudentAbsences.start_date <=' => $endDate
+				];
 			} else {
 				$dateRangeCondition = ['1 = 0'];
 			}
@@ -288,7 +292,6 @@ class StudentAttendancesTable extends AppTable {
 			->group(['student_id', 'absence_type'])
 			->where($dateRangeCondition)
 			->toArray();
-			
 		// Creating the data set		
 		$dataSet = [];
 		$data = [];
