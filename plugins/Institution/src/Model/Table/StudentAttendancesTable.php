@@ -262,7 +262,14 @@ class StudentAttendancesTable extends AppTable {
 		$query = $params['query'];
 		$dateRange = array_column($this->allDayOptions, 'date');
 		if (!empty($dateRange)) {
-			$dateRangeCondition = ['StudentAbsences.start_date IN ' => $dateRange];
+			$startDate = $dateRange[0];
+			$endDate = $dateRange[count($dateRange) - 1];
+			$dateRangeCondition = [
+				'OR' => [
+					['StudentAbsences.start_date <=' => $startDate],
+					['StudentAbsences.start_date <=' => $endDate]
+				]
+			];
 		} else {
 			$dateRangeCondition = ['1 = 0'];
 		}
