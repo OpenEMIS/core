@@ -273,26 +273,35 @@ class StaffAttendancesTable extends AppTable {
 	public function getNumberOfStaffByAttendance($params=[]) {
 		$query = $params['query'];
 		$StaffAttendancesQuery = clone $query;
-		$StaffAttendancesQuery->distinct([$this->aliasField('staff_id')]);
+		$staffAbsenceArray = $StaffAttendancesQuery
+			->find('list', [
+				'groupField' => 'staff_id',
+				'keyField' => 'absence_id',
+				'valueField' => 'absence_type'
+			])
+			->select(['absence_id' => 'StaffAbsences.id', 'staff_id' => $this->aliasField('staff_id'), 'absence_type' => 'StaffAbsences.absence_type_id'])
+			->group(['staff_id', 'absence_type'])
+			->toArray();
 			
 		// Creating the data set		
 		$dataSet = [];
 		$data = [];
-		foreach ($StaffAttendancesQuery as $entity) {
+		foreach ($staffAbsenceArray as $userAbsenceType) {
 			// //Compile the dataset
-			if (empty($entity->StaffAbsences['id'])) {
-				if (isset($data['Present'])) {
-					$data['Present'] = ++$data['Present'];
+			foreach ($userAbsenceType as $absenceType) {
+				if (empty($absenceType)) {
+					if (isset($data['Present'])) {
+						$data['Present'] = ++$data['Present'];
+					} else {
+						$data['Present'] = 1;
+					}
 				} else {
-					$data['Present'] = 1;
-				}
-			} else {
-				$absenceTypeId = $entity->StaffAbsences['absence_type_id'];
-				$typeName = $this->absenceList[$absenceTypeId];
-				if (isset($data[$typeName])) {
-					$data[$typeName] = ++$data[$typeName];
-				} else {
-					$data[$typeName] = 1;
+					$typeName = $this->absenceList[$absenceType];
+					if (isset($data[$typeName])) {
+						$data[$typeName] = ++$data[$typeName];
+					} else {
+						$data[$typeName] = 1;
+					}
 				}
 			}
 		}
