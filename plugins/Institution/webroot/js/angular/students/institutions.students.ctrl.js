@@ -89,9 +89,9 @@ angular.module('institutions.students.ctrl', ['utils.svc', 'alert.svc', 'institu
                 {headerName: "Last Name", field: "last_name", suppressMenu: true, suppressSorting: true},
 
                 {headerName: (angular.isDefined($scope.defaultIdentityTypeName))? $scope.defaultIdentityTypeName: "[default identity type not set]", field: "default_identity_type", suppressMenu: true, suppressSorting: true},
-                {headerName: "Currrent Institution", field: "institution_name", suppressMenu: true, suppressSorting: true},
-                {headerName: "Currrent Academic Period", field: "academic_period_name", suppressMenu: true, suppressSorting: true},
-                {headerName: "Currrent Education Grade", field: "education_grade_name", suppressMenu: true, suppressSorting: true}
+                // {headerName: "Currrent Institution", field: "institution_name", suppressMenu: true, suppressSorting: true},
+                // {headerName: "Currrent Academic Period", field: "academic_period_name", suppressMenu: true, suppressSorting: true},
+                // {headerName: "Currrent Education Grade", field: "education_grade_name", suppressMenu: true, suppressSorting: true}
 
             ],
             enableColResize: false,
@@ -148,6 +148,7 @@ angular.module('institutions.students.ctrl', ['utils.svc', 'alert.svc', 'institu
                 )
                     .then(function(response) {
                         var studentRecords = response.data;
+
 
                         for(var key in studentRecords) {
                             // default values
@@ -236,7 +237,7 @@ angular.module('institutions.students.ctrl', ['utils.svc', 'alert.svc', 'institu
         var startDatePicker = angular.element(document.getElementById('Students_start_date'));
         startDatePicker.datepicker("setStartDate", $scope.formatDateReverse($scope.academicPeriodOptions.selectedOption.start_date));
         startDatePicker.datepicker("setEndDate", $scope.formatDateReverse($scope.academicPeriodOptions.selectedOption.end_date));
-        startDatePicker.datepicker("setDate", new Date());
+        startDatePicker.datepicker("setDate", $scope.formatDateReverse($scope.academicPeriodOptions.selectedOption.start_date));
 
         $scope.educationGradeOptions = null;
         InstitutionsStudentsSvc.getEducationGrades({
