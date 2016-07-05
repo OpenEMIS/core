@@ -43,7 +43,8 @@ trait ControllerActionTrait {
 		// public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel) {}
 
 		'ControllerAction.Model.index.beforeAction'			=> 'indexBeforeAction',
-		// public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {}
+		// public function indexBeforeAction(Event $event, ArrayObject $settings) {}
+        // if u need query look for it in $settings['query']
 
 		'ControllerAction.Model.index.beforePaginate'		=> 'indexBeforePaginate',
 		// public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {}
@@ -52,7 +53,8 @@ trait ControllerActionTrait {
 		// public function indexAfterPaginate(Event $event, $data) {}
 
 		'ControllerAction.Model.index.afterAction'			=> 'indexAfterAction',
-		// public function indexAfterAction(Event $event, $data) {}
+		// v4 - public function indexAfterAction(Event $event, Query $query, $data) {}
+        // v3 - public function indexAfterAction(Event $event, $data) {}
 
 		'ControllerAction.Model.view.beforeAction'			=> 'viewBeforeAction',
 		// public function viewBeforeAction(Event $event) {}
@@ -174,9 +176,9 @@ trait ControllerActionTrait {
 
 	public function implementedEvents() {
         $events = parent::implementedEvents();
-        
+
         $controllerActionEvents = $this->getControllerActionEvents();
-        
+
         foreach ($controllerActionEvents as $event => $method) {
             if (!method_exists($this, $method)) {
                 continue;

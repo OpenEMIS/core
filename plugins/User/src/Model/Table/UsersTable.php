@@ -92,7 +92,7 @@ class UsersTable extends AppTable {
         } else {
         	$dateOfBirth = Time::createFromFormat('Y-m-d', '1970-01-01');
         }
-        
+
 
         $date = Time::now();
         $data = [
@@ -105,14 +105,14 @@ class UsersTable extends AppTable {
             'super_admin' => 0,
             'status' => 1,
             'created_user_id' => 1,
-            'created' => $date,    
+            'created' => $date,
         ];
         $userEntity = $this->newEntity($data, ['validate' => false]);
         if ($this->save($userEntity)) {
         	return $userName;
         } else {
         	return false;
-        }  
+        }
 	}
 
 	public static function handleAssociations($model) {
@@ -183,7 +183,7 @@ class UsersTable extends AppTable {
 		if ($this->alias() != 'Users') {
 			return;
 		}
-		
+
 		$plugin = $this->controller->plugin;
 		$name = $this->controller->name;
 
@@ -204,7 +204,7 @@ class UsersTable extends AppTable {
 			],
 			'Accounts' => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
-				'text' => __('Account')	
+				'text' => __('Account')
 			]
 		];
 
@@ -219,7 +219,7 @@ class UsersTable extends AppTable {
         $this->controller->set('tabElements', $tabElements);
 	}
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		$this->ControllerAction->field('first_name', ['visible' => false]);
 		$this->ControllerAction->field('middle_name', ['visible' => false]);
 		$this->ControllerAction->field('third_name', ['visible' => false]);
@@ -251,7 +251,7 @@ class UsersTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$queryParams = $request->query;
-		
+
 		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
 			// $query->order(['name' => 'asc']);
 		}
@@ -287,7 +287,7 @@ class UsersTable extends AppTable {
         }
         $name = trim(sprintf('%s', $name));
         $name = str_replace($this->alias,"inner_users",$name);
-			
+
 		return $query
 			->join([
 					'table' => 'security_users',
@@ -297,15 +297,15 @@ class UsersTable extends AppTable {
 					'conditions' => ['inner_users.id' => $this->aliasField('id')],
 					'order' => ['inner_users.inner_name' => $options['direction']]
 				])
-			->order([$this->aliasField('first_name') => $options['direction']]);	   
-			
+			->order([$this->aliasField('first_name') => $options['direction']]);
+
 		// return $query
 		// 		->order([$this->aliasField('first_name') => $options['direction'],
 		// 				$this->aliasField('middle_name') => $options['direction'],
 		// 				$this->aliasField('third_name') => $options['direction'],
 		// 				$this->aliasField('last_name') => $options['direction']
-		// 			]);	
-	}	
+		// 			]);
+	}
 
 	public function findWithDefaultIdentityType(Query $query, array $options) {
 		return $query
@@ -331,7 +331,7 @@ class UsersTable extends AppTable {
 					}
 				])
 			->group(['Identities.number'])
-			->order(['Identities.number' => $options['direction']]);	   
+			->order(['Identities.number' => $options['direction']]);
 	}
 
 	public function viewBeforeAction(Event $event) {
@@ -346,7 +346,7 @@ class UsersTable extends AppTable {
 			$roleName = $this->controller->name.'.'.$this->alias();
 			if (array_key_exists('pass', $this->request->params)) {
 				$id = $this->request->params['pass'][1];
-			}	
+			}
 		}
 
 		if (isset($id)) {
@@ -374,7 +374,7 @@ class UsersTable extends AppTable {
 
 	public function getUniqueOpenemisId($options = []) {
 		$prefix = '';
-		
+
 		if (array_key_exists('model', $options)) {
 			switch ($options['model']) {
 				case 'Student': case 'Staff': case 'Guardian':
@@ -399,7 +399,7 @@ class UsersTable extends AppTable {
 		}else{
 			$latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
 		}
-		
+
 		$currentStamp = time();
 		if($latestDbStamp >= $currentStamp){
 			$newStamp = $latestDbStamp + 1;
@@ -456,7 +456,7 @@ class UsersTable extends AppTable {
 		return $validator;
 	}
 
-	// this is the method to call for user validation - currently in use by Student Staff.. 
+	// this is the method to call for user validation - currently in use by Student Staff..
 	public function setUserValidation(Validator $validator, $thisModel = null) {
 		$validator
 			->add('first_name', [
@@ -571,7 +571,7 @@ class UsersTable extends AppTable {
 
 	public function getDefaultImgView() {
 		$value = "";
-		$controllerName = $this->controller->name;	
+		$controllerName = $this->controller->name;
 
 		if($this->hasBehavior('Student')){
 			$value = $this->defaultStudentProfileView;
@@ -581,7 +581,7 @@ class UsersTable extends AppTable {
 			$value = $this->defaultGuardianProfileView;
 		} else if($this->hasBehavior('User')){
 			$value = $this->defaultUserProfileView;
-		} 
+		}
 		return $value;
 	}
 
@@ -599,7 +599,7 @@ class UsersTable extends AppTable {
 				$buttons['remove']['attr']['field-value'] = $entity->security_user_id;
 			}
 		}
-		
+
 		return $buttons;
 	}
 
@@ -619,7 +619,7 @@ class UsersTable extends AppTable {
 			])
 			->order([$this->aliasField('first_name')])
 			->all();
-		
+
 		$data = array();
 		foreach($list as $obj) {
 			$data[] = [
