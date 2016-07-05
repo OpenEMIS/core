@@ -15,7 +15,7 @@ class StudentBehavioursTable extends AppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Students', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('StudentBehaviourCategories', ['className' => 'FieldOption.StudentBehaviourCategories']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
@@ -36,7 +36,7 @@ class StudentBehavioursTable extends AppTable {
 
 	// Jeff: is this validation still necessary? perhaps it is already handled by onUpdateFieldAcademicPeriod date_options
 	// public function validationDefault(Validator $validator) {
-		// get start and end date of selected academic period 
+		// get start and end date of selected academic period
 		// $selectedPeriod = $this->request->query('period');
 		// if($selectedPeriod) {
 		// 	$selectedPeriodEntity = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($selectedPeriod);
@@ -44,10 +44,10 @@ class StudentBehavioursTable extends AppTable {
 		// 	$endDateFormatted = date_format($selectedPeriodEntity->end_date,'d-m-Y');
 
 		// 	$validator
-		// 	->add('date_of_behaviour', 
-		// 			'ruleCheckInputWithinRange', 
+		// 	->add('date_of_behaviour',
+		// 			'ruleCheckInputWithinRange',
 		// 				['rule' => ['checkInputWithinRange', 'date_of_behaviour', $startDateFormatted, $endDateFormatted]]
-				
+
 		// 		)
 		// 	;
 		// 	return $validator;
@@ -72,13 +72,13 @@ class StudentBehavioursTable extends AppTable {
 		$this->ControllerAction->field('openemis_no');
 		$this->ControllerAction->field('student_id');
 		$this->ControllerAction->field('student_behaviour_category_id', ['type' => 'select']);
-		
+
 		if ($this->action == 'view' || $this->action = 'edit') {
 			$this->ControllerAction->setFieldOrder(['openemis_no', 'student_id', 'date_of_behaviour', 'time_of_behaviour', 'title', 'student_behaviour_category_id']);
 		}
 	}
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		$this->ControllerAction->field('description', ['visible' => false]);
 		$this->ControllerAction->field('action', ['visible' => false]);
 		$this->ControllerAction->field('time_of_behaviour', ['visible' => false]);
@@ -123,11 +123,11 @@ class StudentBehavioursTable extends AppTable {
 			$classOptions = $classOptions + $Classes
 			->find('list')
 			->where([
-				$Classes->aliasField('institution_id') => $institutionId, 
+				$Classes->aliasField('institution_id') => $institutionId,
 				$Classes->aliasField('academic_period_id') => $selectedPeriod
 			])
 			->toArray();
-			
+
 			$query->find('inPeriod', ['field' => 'date_of_behaviour', 'academic_period_id' => $selectedPeriod]);
 		}
 
@@ -180,7 +180,7 @@ class StudentBehavioursTable extends AppTable {
 		// 					])
 		// 				->innerJoin(['AcademicPeriods' => 'academic_periods'], [
 		// 						'AcademicPeriods.id = InstitutionClasses.academic_period_id',
-		// 						'AcademicPeriods.start_date <= ' => $entity->date_of_behaviour->format('Y-m-d'), 
+		// 						'AcademicPeriods.start_date <= ' => $entity->date_of_behaviour->format('Y-m-d'),
 		// 						'AcademicPeriods.end_date >= ' => $entity->date_of_behaviour->format('Y-m-d')
 		// 					])
 		// 				->select(['id' => 'AcademicPeriods.id', 'editable' => 'AcademicPeriods.editable'])
@@ -210,7 +210,7 @@ class StudentBehavioursTable extends AppTable {
 	// 					])
 	// 				->innerJoin(['AcademicPeriods' => 'academic_periods'], [
 	// 						'AcademicPeriods.id = InstitutionClasses.academic_period_id',
-	// 						'AcademicPeriods.start_date <= ' => $dateOfBehaviour->format('Y-m-d'), 
+	// 						'AcademicPeriods.start_date <= ' => $dateOfBehaviour->format('Y-m-d'),
 	// 						'AcademicPeriods.end_date >= ' => $dateOfBehaviour->format('Y-m-d')
 	// 					])
 	// 				->select(['id' => 'AcademicPeriods.id', 'editable' => 'AcademicPeriods.editable'])
@@ -266,7 +266,7 @@ class StudentBehavioursTable extends AppTable {
 			if (!empty($selectedPeriod)) {
 				$periodEntity = $AcademicPeriod->get($selectedPeriod);
 				$dateOptions = [
-					'startDate' => $periodEntity->start_date->format('d-m-Y'), 
+					'startDate' => $periodEntity->start_date->format('d-m-Y'),
 					'endDate' => $periodEntity->end_date->format('d-m-Y')
 				];
 				$this->fields['date_of_behaviour']['date_options'] = $dateOptions;
@@ -379,7 +379,7 @@ class StudentBehavioursTable extends AppTable {
 				->where([$Students->aliasField('institution_class_id') => $selectedClass])
 				->toArray();
 			}
-			
+
 			$attr['options'] = $studentOptions;
 		} else if ($action == 'edit') {
 			$attr['type'] = 'readonly';

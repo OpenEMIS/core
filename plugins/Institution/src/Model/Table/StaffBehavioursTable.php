@@ -15,7 +15,7 @@ class StaffBehavioursTable extends AppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Staff', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('StaffBehaviourCategories', ['className' => 'FieldOption.StaffBehaviourCategories']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
@@ -43,13 +43,13 @@ class StaffBehavioursTable extends AppTable {
 		$this->ControllerAction->field('openemis_no');
 		$this->ControllerAction->field('staff_id');
 		$this->ControllerAction->field('staff_behaviour_category_id', ['type' => 'select']);
-		
+
 		if ($this->action == 'view' || $this->action == 'edit') {
 			$this->ControllerAction->setFieldOrder(['openemis_no', 'staff_id', 'date_of_behaviour', 'time_of_behaviour', 'title', 'staff_behaviour_category_id']);
 		}
 	}
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		$this->ControllerAction->field('description', ['visible' => false]);
 		$this->ControllerAction->field('action', ['visible' => false]);
 		$this->ControllerAction->field('time_of_behaviour', ['visible' => false]);
@@ -87,7 +87,7 @@ class StaffBehavioursTable extends AppTable {
 		if (!empty($selectedPeriod)) {
 			$query->find('inPeriod', ['field' => 'date_of_behaviour', 'academic_period_id' => $selectedPeriod]);
 		}
-		
+
 		$this->controller->set(compact('periodOptions'));
 
 		// will need to check for search by name: AdvancedNameSearchBehavior
@@ -153,7 +153,7 @@ class StaffBehavioursTable extends AppTable {
 			if (!empty($selectedPeriod)) {
 				$periodEntity = $AcademicPeriod->get($selectedPeriod);
 				$dateOptions = [
-					'startDate' => $periodEntity->start_date->format('d-m-Y'), 
+					'startDate' => $periodEntity->start_date->format('d-m-Y'),
 					'endDate' => $periodEntity->end_date->format('d-m-Y')
 				];
 				$this->fields['date_of_behaviour']['date_options'] = $dateOptions;
@@ -181,7 +181,7 @@ class StaffBehavioursTable extends AppTable {
 				->where([$Staff->aliasField('institution_id') => $institutionId])
 				->toArray();
 			}
-			
+
 			$attr['options'] = $staffOptions;
 		} else if ($action == 'edit') {
 			$attr['type'] = 'readonly';

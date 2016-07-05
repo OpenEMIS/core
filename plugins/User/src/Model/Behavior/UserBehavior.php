@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace User\Model\Behavior;
 
 use ArrayObject;
@@ -74,6 +74,12 @@ class UserBehavior extends Behavior {
 	}
 
 	public function beforeAction(Event $event) {
+        if ($this->isCAv4()) {
+            $ControllerAction = $this->_table;
+        } else {
+            $ControllerAction = $this->_table->ControllerAction;
+        }
+
 		$this->_table->fields['is_student']['type'] = 'hidden';
 		$this->_table->fields['is_staff']['type'] = 'hidden';
 		$this->_table->fields['is_guardian']['type'] = 'hidden';
@@ -86,7 +92,7 @@ class UserBehavior extends Behavior {
 				$this->_table->fields['username']['visible'] = false;
 				$this->_table->fields['last_login']['visible'] = false;
 			break;
-		}	
+		}
 
 		if ($this->_table->table() == 'security_users') {
 			$this->_table->addBehavior('OpenEmis.Section');
@@ -108,7 +114,7 @@ class UserBehavior extends Behavior {
 			$this->_table->fields['preferred_name']['order'] = $i++;
 			$this->_table->fields['gender_id']['order'] = $i++;
 
-			$this->_table->ControllerAction->field('date_of_birth', [
+			$ControllerAction->field('date_of_birth', [
 					'date_options' => [
 						'endDate' => date('d-m-Y')
 					],
@@ -116,31 +122,31 @@ class UserBehavior extends Behavior {
 				]
 			);
 			$this->_table->fields['date_of_birth']['order'] = $i++;
-			
+
 			$this->_table->fields['address']['order'] = $i++;
 			$this->_table->fields['postal_code']['order'] = $i++;
 			$this->_table->fields['address_area_id']['order'] = $i++;
 			$this->_table->fields['birthplace_area_id']['order'] = $i++;
 
 			if ($this->_table->action != 'index') {
-				$this->_table->ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
-				$this->_table->ControllerAction->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
+				$ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
+				$ControllerAction->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
 			}
 
 			if ($this->_table->registryAlias() != 'Security.Users') {
-				$this->_table->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information'), 'before' => 'photo_content', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
-				$this->_table->ControllerAction->field('location_section', ['type' => 'section', 'title' => __('Location'), 'before' => 'address', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+				$ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information'), 'before' => 'photo_content', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+				$ControllerAction->field('location_section', ['type' => 'section', 'title' => __('Location'), 'before' => 'address', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
 
 				$language = I18n::locale();
 				$field = 'address_area_id';
 				$userTableLabelAlias = 'Users';
 				$areaLabel = $this->onGetFieldLabel($event, $userTableLabelAlias, $field, $language, true);
-				$this->_table->ControllerAction->field('address_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+				$ControllerAction->field('address_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
 				$field = 'birthplace_area_id';
 				$areaLabel = $this->onGetFieldLabel($event, $userTableLabelAlias, $field, $language, true);
-				$this->_table->ControllerAction->field('birthplace_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
-				$this->_table->ControllerAction->field('other_information_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
-			}	
+				$ControllerAction->field('birthplace_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+				$ControllerAction->field('other_information_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+			}
 		}
 	}
 
@@ -150,10 +156,16 @@ class UserBehavior extends Behavior {
 		$this->_table->fields['is_guardian']['value'] = 0;
 	}
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+	public function indexBeforeAction(Event $event) {
+        if ($this->isCAv4()) {
+            $ControllerAction = $this->_table;
+        } else {
+            $ControllerAction = $this->_table->ControllerAction;
+        }
+
 		$plugin = $this->_table->controller->plugin;
 		$name = $this->_table->controller->name;
-		
+
 		switch ($this->_table->alias()) {
 			case 'Students':
 				$imageDefault = 'kd-students';
@@ -185,27 +197,31 @@ class UserBehavior extends Behavior {
 				$imageDefault = 'fa fa-user';
 				break;
 		}
-		
-		if ($this->_table->ControllerAction->getTriggerFrom() == 'Controller') {
-			// for controlleraction->model
-			$imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => 'getImage'];
-		} else {
-			// for controlleraction->modelS 
-			$imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->_table->alias(), 'getImage'];
-		}
+
+        if (!$this->isCAv4()) {
+    		if ($ControllerAction->getTriggerFrom() == 'Controller') {
+    			// for controlleraction->model
+    			$imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => 'getImage'];
+    		} else {
+    			// for controlleraction->modelS
+    			$imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->_table->alias(), 'getImage'];
+    		}
+        } else{
+            $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->_table->alias(), 'image'];
+        }
 
 		// need to find out what kind of user is it
-		$this->_table->ControllerAction->field('photo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"'.$imageDefault.'"', 'order' => 0]);
-		$this->_table->ControllerAction->field('openemis_no', [
+		$ControllerAction->field('photo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"'.$imageDefault.'"', 'order' => 0]);
+		$ControllerAction->field('openemis_no', [
 			'type' => 'readonly',
 			'order' => 1,
 			'sort' => true
 		]);
-		$this->_table->ControllerAction->field('identity', ['order' => 2]);
+		$ControllerAction->field('identity', ['order' => 2]);
 
 		if ($this->_table->table() == 'security_users') {
-			$this->_table->ControllerAction->field('name', [
-				'order' => 3, 
+			$ControllerAction->field('name', [
+				'order' => 3,
 				'sort' => ['field' => 'first_name']
 			]);
 		}
@@ -284,7 +300,7 @@ class UserBehavior extends Behavior {
 			$fileContent = $entity->user->photo_content;
 			$userEntity = $entity->user;
 		}
-		
+
 		$value = "";
 		$alias = $this->_table->alias();
 		if (empty($fileContent) && is_null($fileContent)) {
@@ -356,7 +372,7 @@ class UserBehavior extends Behavior {
 
 	public function getUniqueOpenemisId($options = []) {
 		$prefix = '';
-		
+
 		if (array_key_exists('model', $options)) {
 			switch ($options['model']) {
 				case 'Student': case 'Staff': case 'Guardian':
@@ -371,7 +387,7 @@ class UserBehavior extends Behavior {
 			->order($this->_table->aliasField('id').' DESC')
 			->first();
 
-		
+
 		$latestOpenemisNo = $latest->openemis_no;
 		$latestOpenemisNo = 0;
 		if(empty($prefix)){
@@ -379,7 +395,7 @@ class UserBehavior extends Behavior {
 		}else{
 			$latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
 		}
-		
+
 		$currentStamp = time();
 		if($latestDbStamp >= $currentStamp){
 			$newStamp = $latestDbStamp + 1;
@@ -406,7 +422,7 @@ class UserBehavior extends Behavior {
 
 		if (!empty($photoData) && $photoData->has('Users') && $photoData->Users->has('photo_content')) {
 			$phpResourceFile = $photoData->Users->photo_content;
-			
+
 			if ($base64Format) {
 				echo base64_encode(stream_get_contents($phpResourceFile));
 			} else {
@@ -415,5 +431,9 @@ class UserBehavior extends Behavior {
 			}
 		}
 	}
+
+    private function isCAv4() {
+        return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
+    }
 
 }

@@ -102,7 +102,7 @@ class StaffTable extends AppTable {
 		$this->setupTabElements(['id' => $entity->id]);
 	}
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		// fields are set in UserBehavior
 		$this->fields = []; // unset all fields first
 
@@ -165,7 +165,7 @@ class StaffTable extends AppTable {
 
 	public function addBeforeAction(Event $event) {
 		$openemisNo = $this->getUniqueOpenemisId(['model' => 'Staff']);
-		$this->ControllerAction->field('openemis_no', [ 
+		$this->ControllerAction->field('openemis_no', [
 			'attr' => ['value' => $openemisNo],
 			'value' => $openemisNo
 		]);
@@ -175,7 +175,7 @@ class StaffTable extends AppTable {
 		$this->ControllerAction->field('is_staff', ['value' => 1]);
 	}
 
-	public function addAfterAction(Event $event) { 
+	public function addAfterAction(Event $event) {
 		// need to find out order values because recordbehavior changes it
 		$allOrderValues = [];
 		foreach ($this->fields as $key => $value) {
@@ -183,7 +183,7 @@ class StaffTable extends AppTable {
 		}
 		$highestOrder = max($allOrderValues);
 
-		// username and password is always last... 
+		// username and password is always last...
 		$this->ControllerAction->field('username', ['order' => ++$highestOrder, 'visible' => true]);
 		$this->ControllerAction->field('password', ['order' => ++$highestOrder, 'visible' => true, 'type' => 'password', 'attr' => ['value' => '', 'autocomplete' => 'off']]);
 	}
@@ -246,7 +246,7 @@ class StaffTable extends AppTable {
 	        ];
 	    }
 	}
-	
+
 	private function setupTabElements($options) {
 		$this->controller->set('selectedAction', $this->alias);
 		$this->controller->set('tabElements', $this->controller->getUserTabElements($options));

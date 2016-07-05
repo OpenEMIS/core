@@ -4,6 +4,7 @@ namespace OpenEmis\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\Event\Event;
 
@@ -54,7 +55,7 @@ class OpenEmisBehavior extends Behavior {
 
     public function afterAction(Event $event, ArrayObject $extra) {
         $model = $this->_table;
-        
+
         if ($model->action == 'index' || $model->action == 'view') {
             $modal = [];
             $modal['title'] = $model->getHeader($model->alias()); //$modal['title'] = $model->alias();
@@ -142,7 +143,8 @@ class OpenEmisBehavior extends Behavior {
         }
     }
 
-    public function indexAfterAction(Event $event, ResultSet $resultSet, ArrayObject $extra) {
+    public function indexAfterAction(Event $event, Query $query, ResultSet $resultSet, ArrayObject $extra)
+    {
         if ($resultSet->count() == 0) {
             $this->_table->Alert->info('general.noData');
         }
@@ -219,7 +221,7 @@ class OpenEmisBehavior extends Behavior {
     private function initializeButtons(ArrayObject $extra) {
         $model = $this->_table;
         $controller = $model->controller;
-        
+
         $toolbarButtons = new ArrayObject([]);
         $indexButtons = new ArrayObject([]);
 
@@ -263,7 +265,7 @@ class OpenEmisBehavior extends Behavior {
             }
             if ($model->actions('search')) {
                 $toolbarButtons['search'] = [
-                    'type' => 'element', 
+                    'type' => 'element',
                     'element' => 'OpenEmis.search',
                     'data' => ['url' => $model->url('index')],
                     'options' => []
@@ -311,7 +313,7 @@ class OpenEmisBehavior extends Behavior {
                     $toolbarButtons['download']['attr']['title'] = __('Download');
                 }
             }
-            
+
         } else if ($action == 'transfer') {
             $toolbarButtons['back']['url'] = $model->url('index', 'QUERY');
             $toolbarButtons['back']['type'] = 'button';
@@ -362,7 +364,7 @@ class OpenEmisBehavior extends Behavior {
                 }
             }
         }
-        
+
         if ($model->actions('reorder') && $indexButtons->offsetExists('edit')) {
             $controller->set('reorder', true);
         }
@@ -372,5 +374,9 @@ class OpenEmisBehavior extends Behavior {
 
         // entity information will be attached to toolbar in afterAction()
         // refer to attachEntityInfoToToolBar() in afterAction()
+    }
+
+    private function isCAv4() {
+        return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
 }

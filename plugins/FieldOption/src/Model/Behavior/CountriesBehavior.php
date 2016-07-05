@@ -25,24 +25,24 @@ class CountriesBehavior extends DisplayBehavior {
 	}
 
 	public function initialize(array $config) {
-		parent::initialize($config);	
+		parent::initialize($config);
 		$this->fieldOptionName = $config['fieldOptionName'];
-	}	
+	}
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {		
-		parent::indexBeforeAction($event, $query, $settings);
-		
+	public function indexBeforeAction(Event $event, ArrayObject $settings) {
+        parent::indexBeforeAction($event, $settings);
+        $query = $settings['query'];
 		$table = TableRegistry::get($this->fieldOptionName);
 		$query = $table->find();
 		$this->displayAssociatedFields($table);
 		return $query;
-	}	
+	}
 
 	public function viewBeforeAction(Event $event) {
 		parent::viewBeforeAction($event);
 
 		$table = TableRegistry::get($this->fieldOptionName);
-		$this->displayAssociatedFields($table);		
+		$this->displayAssociatedFields($table);
 		return $table;
 	}
 
@@ -71,41 +71,41 @@ class CountriesBehavior extends DisplayBehavior {
 		/**
 		 * end assignment
 		 */
-		
+
 		$schema = $table->schema();
 		$columns = $schema->columns();
 		foreach ($columns as $key => $attr) {
 			//check whether column has another set of values to be retrieved
 			if(array_key_exists($attr, $this->associations)) {
-				
-				$attrFieldOptionPluginName = $this->associations[$attr]['plugin']; 
-				$attrFieldOptionCodeName = $this->associations[$attr]['code']; 
+
+				$attrFieldOptionPluginName = $this->associations[$attr]['plugin'];
+				$attrFieldOptionCodeName = $this->associations[$attr]['code'];
 				$attrFieldOptionId = TableRegistry::get('FieldOption.FieldOptions')->find()
 										->where(['plugin' => $attrFieldOptionPluginName])
 										->andWhere(['code' => $attrFieldOptionCodeName])
 										->first();
 				$options = TableRegistry::get('FieldOption.FieldOptionValues')->find('list')->where(['field_option_id' => $attrFieldOptionId->id])->toArray();
-				
+
 				switch ($this->_table->action) {
 				 	case 'index':case 'view':
 				 		$options = [0 => '']+$options;
 				 		break;
-				 	
+
 				 	case 'edit':case 'add':
 				 		break;
-				 	
+
 				 	default:
 				 		break;
 				}
-				$this->_table->ControllerAction->field($attr, ['type' => 'select', 
-															   'options' => $options, 
-															   'visible' => true, 
+				$this->_table->ControllerAction->field($attr, ['type' => 'select',
+															   'options' => $options,
+															   'visible' => true,
 															   'model' => $table->alias(),
 															   'className' => $this->fieldOptionName
 															   ]);
 			}
-			
-		}	
+
+		}
 	}
 
 	public function onGetIdentityTypeId(Event $event, Entity $entity) {

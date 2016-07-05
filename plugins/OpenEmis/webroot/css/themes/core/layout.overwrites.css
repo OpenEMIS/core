@@ -1,5 +1,5 @@
 /* 
-Core Overwrites: v.1.0.8
+Core Overwrites: v.1.0.9
 */
 
 
@@ -564,3 +564,29 @@ a,
 }
 
 /* End of Enable Search for Chosen Select */
+
+/* Add style for text input in filter */
+
+.dropdown-filter .text input {
+    background-color: #FFF;
+    width: 100%;
+    min-width: 150px;
+    height: 25px;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    border: 1px solid #CCC;
+    padding: 3px 25px 4px 5px!important;
+}
+
+.chrome .dropdown-filter .text input, 
+.safari .dropdown-filter .text input {
+    padding: 4px 25px 4px 5px!important;
+}
+
+.dropdown-filter .text {
+    display: inline-block;
+    margin-right: 10px;
+    width: 15%;
+}
+
+/* End of Add style for text input in filter */
