@@ -272,6 +272,12 @@ class StaffAttendancesTable extends AppTable {
 	// Function use by the mini dashboard
 	public function getNumberOfStaffByAttendance($params=[]) {
 		$query = $params['query'];
+		$dateRange = array_column($this->allDayOptions, 'date');
+		if (!empty($dateRange)) {
+			$dateRangeCondition = ['StaffAbsences.start_date IN ' => $dateRange];
+		} else {
+			$dateRangeCondition = ['1 = 0'];
+		}
 		$StaffAttendancesQuery = clone $query;
 		$staffAbsenceArray = $StaffAttendancesQuery
 			->find('list', [
@@ -281,6 +287,7 @@ class StaffAttendancesTable extends AppTable {
 			])
 			->select(['absence_id' => 'StaffAbsences.id', 'staff_id' => $this->aliasField('staff_id'), 'absence_type' => 'StaffAbsences.absence_type_id'])
 			->group(['staff_id', 'absence_type'])
+			->where($dateRangeCondition)
 			->toArray();
 			
 		// Creating the data set		
