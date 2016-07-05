@@ -1,14 +1,8 @@
 <div class="search">
 	<div class="input-group">
-<<<<<<< HEAD
 		<?=
 		$this->Form->input('Search.searchField', [
 			'label' => false,
-=======
-		<?php
-		echo $this->Form->input('Search.searchField', [
-			'label' => false, 
->>>>>>> 64d4280521dffc9b20d125b9224bd6cd2433e62f
 			'class' => 'form-control search-input focus',
 			'data-input-name' => 'Search[searchField]',
 			'placeholder' => __('Search'),
