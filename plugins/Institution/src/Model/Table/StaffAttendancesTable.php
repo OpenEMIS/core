@@ -277,6 +277,12 @@ class StaffAttendancesTable extends AppTable {
 		// Add this condition if the selected day is all day
 		if ($selectedDay == -1) {
 			$dateRange = array_column($this->allDayOptions, 'date');
+			// Sort the date range
+			usort($dateRange, function($a, $b) {
+			    $dateTimestamp1 = strtotime($a);
+			    $dateTimestamp2 = strtotime($b);
+			    return $dateTimestamp1 < $dateTimestamp2 ? -1: 1;
+			});
 			if (!empty($dateRange)) {
 				$startDate = $dateRange[0];
 				$endDate = $dateRange[count($dateRange) - 1];
