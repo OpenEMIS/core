@@ -19,7 +19,7 @@ class StudentsTable extends AppTable {
 		$this->table('security_users');
 		$this->entityClass('User.User');
 		parent::initialize($config);
-		
+
 		// Associations
 		BaseUsers::handleAssociations($this);
 		self::handleAssociations($this);
@@ -84,6 +84,7 @@ class StudentsTable extends AppTable {
 			'dependent' => true
 		]);
 
+        $model->hasMany('InstitutionStudents', ['className' => 'Institution.Students',    'foreignKey' => 'student_id', 'dependent' => true]);
 		$model->hasMany('StudentAbsences', ['className' => 'Institution.InstitutionSiteStudentAbsences',	'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$model->hasMany('StudentBehaviours', ['className' => 'Institution.StudentBehaviours',	'foreignKey' => 'student_id', 'dependent' => true]);
 		$model->hasMany('AssessmentItemResults', ['className' => 'Assessment.AssessmentItemResults',	'foreignKey' => 'student_id', 'dependent' => true]);
@@ -114,7 +115,7 @@ class StudentsTable extends AppTable {
 		$this->setupTabElements(['id' => $entity->id]);
 	}
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		// fields are set in UserBehavior
 		$this->fields = []; // unset all fields first
 
@@ -159,11 +160,11 @@ class StudentsTable extends AppTable {
 						 ->contain(['Institutions'])
 						 ->matching('StudentStatuses', function ($q) use ($selectedStudentStatusId) {
 						    return $q->where(['StudentStatuses.id' => $selectedStudentStatusId]);
-						 })	
+						 })
 						 ->where([$this->InstitutionStudent->aliasField('student_id') => $userId])
 						 ->andWhere([$this->InstitutionStudent->aliasField('academic_period_id') => $currentAcademicPeriod])
 						 ->order([$this->InstitutionStudent->aliasField('start_date') => 'DESC'])
-						 ;	
+						 ;
 
 		$value = '';
 		if ($query->count() > 0) {
@@ -238,7 +239,7 @@ class StudentsTable extends AppTable {
 
 	public function addBeforeAction(Event $event) {
 		$openemisNo = $this->getUniqueOpenemisId(['model' => Inflector::singularize('Student')]);
-		$this->ControllerAction->field('openemis_no', [ 
+		$this->ControllerAction->field('openemis_no', [
 			'attr' => ['value' => $openemisNo],
 			'value' => $openemisNo
 		]);
@@ -248,7 +249,7 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->field('is_student', ['value' => 1]);
 	}
 
-	public function addAfterAction(Event $event) { 
+	public function addAfterAction(Event $event) {
 		// need to find out order values because recordbehavior changes it
 		$allOrderValues = [];
 		foreach ($this->fields as $key => $value) {
@@ -256,7 +257,7 @@ class StudentsTable extends AppTable {
 		}
 		$highestOrder = max($allOrderValues);
 
-		// username and password is always last... 
+		// username and password is always last...
 		$this->ControllerAction->field('username', ['order' => ++$highestOrder, 'visible' => false]);
 		$this->ControllerAction->field('password', ['order' => ++$highestOrder, 'visible' => false, 'type' => 'password', 'attr' => ['value' => '', 'autocomplete' => 'off']]);
 	}
@@ -266,7 +267,7 @@ class StudentsTable extends AppTable {
 	// 	$process = function($model, $id, $options) {
 	// 		$studentData = $model->find()->where([$model->aliasField('id') => $id])->first();
 	// 		// contain was used to test newly created associations
-	// 		// $studentData->contain(['StudentAbsences', 'StudentBehaviours', 'AssessmentItemResults', 'Guardians', 'StudentAdmission', 'StudentCustomFieldValues', 'StudentCustomTableCells', 'StudentFees', 'Extracurriculars']); 
+	// 		// $studentData->contain(['StudentAbsences', 'StudentBehaviours', 'AssessmentItemResults', 'Guardians', 'StudentAdmission', 'StudentCustomFieldValues', 'StudentCustomTableCells', 'StudentFees', 'Extracurriculars']);
 
 	// 		if ($studentData) {
 	// 			if ($studentData->is_staff || $studentData->is_guardian) {
@@ -296,17 +297,17 @@ class StudentsTable extends AppTable {
 	// 				$model->updateAll(['is_student' => 0], [$model->primaryKey() => $id]);
 	// 			} else {
 	// 				// student is neither a guardian or staff... delete the user record along with all associated data
-	// 				$model->delete($studentData);	
+	// 				$model->delete($studentData);
 	// 			}
 	// 		}
 
 	// 		// die('dead');
-			
+
 	// 		return true;
 	// 	};
 	// 	return $process;
 	// }
-	
+
 	// Logic for the mini dashboard
 	public function afterAction(Event $event) {
 		if ($this->action == 'index') {
@@ -353,7 +354,7 @@ class StudentsTable extends AppTable {
 			]
 		);
 	}
-	
+
 	private function setupTabElements($options) {
 		$this->controller->set('selectedAction', $this->alias);
 		$this->controller->set('tabElements', $this->controller->getUserTabElements($options));
@@ -411,4 +412,57 @@ class StudentsTable extends AppTable {
 		}
 		return $tabElements;
 	}
+
+    public function findStudents(Query $query, array $options = []) {
+        $query->where([$this->aliasField('is_student') => 1]);
+
+        $limit = (array_key_exists('limit', $options))? $options['limit']: null;
+        $page = (array_key_exists('page', $options))? $options['page']: null;
+
+        // conditions
+        $firstName = (array_key_exists('first_name', $options))? $options['first_name']: null;
+        $lastName = (array_key_exists('last_name', $options))? $options['last_name']: null;
+        $openemisNo = (array_key_exists('openemis_no', $options))? $options['openemis_no']: null;
+        $identityNumber = (array_key_exists('identity_number', $options))? $options['identity_number']: null;
+
+        $conditions = [];
+        if (!empty($firstName)) $conditions['first_name LIKE'] = '%' . $firstName . '%';
+        if (!empty($lastName)) $conditions['last_name LIKE'] = '%' . $lastName . '%';
+        if (!empty($openemisNo)) $conditions['openemis_no LIKE'] = '%' . $openemisNo . '%';
+
+        $identityConditions = [];
+        if (!empty($identityNumber)) $identityConditions['Identities.number LIKE'] = '%' . $identityNumber . '%';
+
+        $identityJoinType = (empty($identityNumber))? 'LEFT': 'INNER';
+        $default_identity_type = $this->Identities->IdentityTypes->getDefaultValue();
+        $query->join([
+            [
+                'type' => $identityJoinType,
+                'table' => 'user_identities',
+                'alias' => 'Identities',
+                'conditions' => array_merge([
+                        'Identities.security_user_id = ' . $this->aliasField('id'),
+                        'Identities.identity_type_id' => $default_identity_type
+                    ], $identityConditions)
+            ]
+        ]);
+
+        // getting only enrolled student
+        $allInstitutionStudents = $this->InstitutionStudents->find()
+            ->select([
+                $this->InstitutionStudents->aliasField('student_id')
+            ])
+            ->where([
+                $this->InstitutionStudents->aliasField('student_status_id').' = 1',
+                $this->InstitutionStudents->aliasField('student_id').' = '.$this->aliasField('id')
+            ])
+            ->bufferResults(false);
+        $query->where(['NOT EXISTS ('.$allInstitutionStudents->sql().')']);
+
+        if (!empty($conditions)) $query->where($conditions);
+        if (!is_null($limit)) $query->limit($limit);
+        if (!is_null($page)) $query->page($page);
+
+        return $query;
+    }
 }

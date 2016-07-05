@@ -23,7 +23,7 @@ class AppTable extends Table {
 	public function initialize(array $config) {
 		Time::$defaultLocale = 'en_US';
 		Date::$defaultLocale = 'en_US';
-		
+
 		$_config = [
 			'Modified' => true,
 			'Created' => true
@@ -281,6 +281,15 @@ class AppTable extends Table {
 		return __($this->getFieldLabel($module, $col, $language));
 	}
 
+    public function getButtonAttr() {
+        return [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+    }
+
 	// Event: 'ControllerAction.Model.onInitializeButtons'
 	public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel) {
 		// needs clean up
@@ -290,19 +299,14 @@ class AppTable extends Table {
 		$toolbarButtons = new ArrayObject([]);
 		$indexButtons = new ArrayObject([]);
 
-		$toolbarAttr = [
-			'class' => 'btn btn-xs btn-default',
-			'data-toggle' => 'tooltip',
-			'data-placement' => 'bottom',
-			'escape' => false
-		];
+		$toolbarAttr = $this->getButtonAttr();
 		$indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
 
 		// Set for roles belonging to the controller
 		$roles = [];
 		$event = $controller->dispatchEvent('Controller.Buttons.onUpdateRoles', null, $this);
     	if ($event->result) {
-    		$roles = $event->result;	
+    		$roles = $event->result;
     	}
 
 		if ($action != 'index') {
@@ -330,7 +334,7 @@ class AppTable extends Table {
 			}
 			if ($buttons->offsetExists('search')) {
 				$toolbarButtons['search'] = [
-					'type' => 'element', 
+					'type' => 'element',
 					'element' => 'OpenEmis.search',
 					'data' => ['url' => $buttons['index']['url']],
 					'options' => []
