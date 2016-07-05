@@ -455,65 +455,6 @@ class InstitutionShiftsTable extends ControllerActionTable {
 					$this->Institutions->updateAll(['shift_type' => $shiftType], ['id' => $previousOccupier]);
 	    		}
 	    	}
-
-			// if (!(($ownerEqualOccupier) && ($entity->isNew()))){
-			// 	$shiftType = 0;
-			// 	$ownerOwnedShift = $this->find()
-			// 						->where([
-			// 							$this->aliasField('institution_id').' = '.$owner,
-			// 							$this->aliasField('location_institution_id').' != '.$owner,
-			// 							$this->aliasField('academic_period_id').' = '.$entity->academic_period_id
-			// 						])
-			// 						->count();
-
-			// 	if ($ownerOwnedShift > 1) {
-			// 		$shiftType = self::MULTIPLE_OWNER;
-			// 	} else if ($ownerOwnedShift == 1) {
-			// 		$shiftType = self::SINGLE_OWNER;
-			// 	}
-			// 	$this->Institutions->updateAll(['shift_type' => $shiftType], ['id' => $owner]);
-			// }
-
-			// if (!$ownerEqualOccupier) {	
-			// 	$shiftType = 0;
-			// 	$occupierOccupiedShift = $this->find()
-			// 							->where([
-			// 								$this->aliasField('institution_id').' != '.$occupier,
-			// 								$this->aliasField('location_institution_id').' = '.$occupier,
-			// 								$this->aliasField('academic_period_id').' = '.$entity->academic_period_id
-			// 							])
-			// 							->count();
-
-			// 	if ($occupierOccupiedShift > 1) {
-			// 		$shiftType = self::MULTIPLE_OCCUPIER;
-			// 	} else if ($occupierOccupiedShift == 1) {
-			// 		$shiftType = self::SINGLE_OCCUPIER;
-			// 	}
-			// 	$this->Institutions->updateAll(['shift_type' => $shiftType], ['id' => $occupier]);
-			// }
-			
-
-			// if (!$entity->isNew()) { //this logic is for edit operation need to update the previous occupier.
-			// 	$shiftType = 0;
-	  //   		$previousOccupier = $this->Session->read('Institution.Shifts.previousOccupier');
-
-	  //   		if ($owner != $previousOccupier) { //if prev occupier = owner then no need to update because owner already updated above.
-	  //   			$previousOccupierOccupiedShift = $this->find()
-			// 										->where([
-			// 											$this->aliasField('institution_id').' != '.$previousOccupier,
-			// 											$this->aliasField('location_institution_id').' = '.$previousOccupier,
-			// 											$this->aliasField('academic_period_id').' = '.$entity->academic_period_id
-			// 										])
-			// 										->count();
-
-			// 		if ($previousOccupierOccupiedShift > 1) {
-			// 			$shiftType = self::MULTIPLE_OCCUPIER;
-			// 		} else if ($previousOccupierOccupiedShift == 1) {
-			// 			$shiftType = self::SINGLE_OCCUPIER;
-			// 		}
-			// 		$this->Institutions->updateAll(['shift_type' => $shiftType], ['id' => $previousOccupier]);
-	  //   		}
-	  //   	}
 		}
 	}
 
