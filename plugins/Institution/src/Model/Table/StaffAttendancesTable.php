@@ -287,7 +287,6 @@ class StaffAttendancesTable extends AppTable {
 				$startDate = $dateRange[0];
 				$endDate = $dateRange[count($dateRange) - 1];
 				$dateRangeCondition = [
-					'StaffAbsences.end_date <=' => $endDate, 
 					'StaffAbsences.end_date >=' => $startDate, 
 					'StaffAbsences.start_date <=' => $endDate
 				];
