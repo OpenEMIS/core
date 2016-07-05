@@ -261,6 +261,7 @@ class StudentAttendancesTable extends AppTable {
 	public function getNumberOfStudentByAttendance($params=[]) {
 		$query = $params['query'];
 		$StudentAttendancesQuery = clone $query;
+		$StudentAttendancesQuery->distinct(['InstitutionStudents.student_id']);
 			
 		// Creating the data set		
 		$dataSet = [];
@@ -748,7 +749,8 @@ class StudentAttendancesTable extends AppTable {
 				->where([$this->aliasField('institution_class_id') => $selectedClass])
 				->where($conditions);
 
-			$totalStudent = $query->count();
+			$queryClone = clone $query;
+			$totalStudent = $queryClone->distinct(['InstitutionStudents.student_id'])->count();
 
 			$indexDashboard = 'attendance';
 			
