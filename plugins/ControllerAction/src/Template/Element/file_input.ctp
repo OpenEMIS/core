@@ -1,5 +1,4 @@
 <?php
-$fieldName = '%s[%s]';
 if (isset($attr['null']) && empty($attr['null'])) {
 	$required = 'required';
 } else {
@@ -95,7 +94,10 @@ if (isset($attr['alwaysShowOneButton'])) {
 			<div class="input-group-addon btn btn-default btn-file" data-toggle="tooltip" data-container="body" data-placement="bottom" title="<?=__('Browse') ?>">
 				<span class="fileinput-new"><i class="fa fa-folder"></i></span>
 				<span class="fileinput-exists fa fa-folder"></span>
-				<input type="file" name="<?= sprintf($fieldName, $attr['model'], $attr['field']) ?>" class="fa fa-folder">
+				<?=	$this->Form->file($attr['model'].'.'.$attr['field'], [
+						'class' => 'fa fa-folder'
+					]) 
+				?>
 			</div>
 
 			<div class="file-input-text">
