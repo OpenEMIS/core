@@ -260,6 +260,13 @@ class StudentAttendancesTable extends AppTable {
 	// Function use by the mini dashboard
 	public function getNumberOfStudentByAttendance($params=[]) {
 		$query = $params['query'];
+		$dateRange = array_column($this->allDayOptions, 'date');
+		if (!empty($dateRange)) {
+			$dateRangeCondition = ['StudentAbsences.start_date IN ' => $dateRange];
+		} else {
+			$dateRangeCondition = ['1 = 0'];
+		}
+		
 		$StudentAttendancesQuery = clone $query;
 
 		$studentAbsenceArray = $StudentAttendancesQuery
@@ -270,6 +277,7 @@ class StudentAttendancesTable extends AppTable {
 			])
 			->select(['absence_id' => 'StudentAbsences.id', 'student_id' => $this->aliasField('student_id'), 'absence_type' => 'StudentAbsences.absence_type_id'])
 			->group(['student_id', 'absence_type'])
+			->where($dateRangeCondition)
 			->toArray();
 			
 		// Creating the data set		
