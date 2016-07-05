@@ -481,4 +481,26 @@ class InstitutionGradesTable extends AppTable {
         };
         return $restrictCheck;
     }
+
+    public function findEducationGradeInCurrentInstitution(Query $query, array $options) 
+    {
+        $academicPeriodId = (array_key_exists('academic_period_id', $options))? $options['academic_period_id']: null;
+        $session = $options['_Session'];
+
+        $institutionId = -1;
+        if ($session->check('Institution.Institutions.id')) {
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+
+        $query->contain('EducationGrades.EducationProgrammes');
+        $query->where([
+            $this->aliasField('institution_id') => $institutionId
+        ]);
+        if (!is_null($academicPeriodId)) {
+            $query->find('academicPeriod', ['academic_period_id' => $academicPeriodId]);
+        }
+        $query->group([$this->aliasField('education_grade_id')]);
+
+        return $query;
+    }
 }

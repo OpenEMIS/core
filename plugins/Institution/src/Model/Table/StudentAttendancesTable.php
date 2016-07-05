@@ -261,8 +261,8 @@ class StudentAttendancesTable extends AppTable {
 	public function getNumberOfStudentByAttendance($params=[]) {
 		$query = $params['query'];
 		$StudentAttendancesQuery = clone $query;
-			
-		// Creating the data set		
+
+		// Creating the data set
 		$dataSet = [];
 		$data = [];
 		foreach ($StudentAttendancesQuery as $entity) {
@@ -340,7 +340,7 @@ class StudentAttendancesTable extends AppTable {
 			$attr['value'] = $configItemsTable->value('start_time');
 			$attr['default_time'] = false;
 			$attr['null'] = true;
-			
+
 			if (empty($entity->StudentAbsences['id'])) {
 				$options['value'] = self::PRESENT;
 				$html .= $Form->input($fieldPrefix.".absence_type_id", $options);
@@ -558,7 +558,8 @@ class StudentAttendancesTable extends AppTable {
 	}
 
 	// Event: ControllerAction.Model.index.beforeAction
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+    public function indexBeforeAction(Event $event, ArrayObject $settings) {
+        $query = $settings['query'];
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$periodOptions = $AcademicPeriod->getList();
@@ -751,7 +752,7 @@ class StudentAttendancesTable extends AppTable {
 			$totalStudent = $query->count();
 
 			$indexDashboard = 'attendance';
-			
+
 			$dataSet = $this->getNumberOfStudentByAttendance(['query' => $query]);
 			$present = 0;
 			$absent = 0;
@@ -776,7 +777,7 @@ class StudentAttendancesTable extends AppTable {
 				$studentAttendanceArray[] = ['label' => 'No. of Students Absent for the week', 'value' => $absent];
 				$studentAttendanceArray[] = ['label' => 'No. of Students Late for the week', 'value' => $late];
 			}
-			
+
 			$toolbarElements[] = [
 				'name' => $indexDashboard,
 				'data' => [
@@ -787,8 +788,8 @@ class StudentAttendancesTable extends AppTable {
 				'options' => []
 			];
 			$toolbarElements[] = [
-				'name' => 'Institution.Attendance/controls', 
-				'data' => [], 
+				'name' => 'Institution.Attendance/controls',
+				'data' => [],
 				'options' => []
 			];
 
@@ -871,7 +872,7 @@ class StudentAttendancesTable extends AppTable {
 		}
     	return $query
     		->select([
-    			$this->aliasField('student_id'), 
+    			$this->aliasField('student_id'),
     			'Users.openemis_no', 'Users.first_name', 'Users.middle_name', 'Users.third_name','Users.last_name', 'Users.id',
     			'StudentAbsences.id',
     			'StudentAbsences.start_date',

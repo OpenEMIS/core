@@ -69,7 +69,7 @@ class PositionsTable extends ControllerActionTable {
 		return $buttons;
 	}
 
-	public function indexAfterAction(Event $event, ResultSet $data, ArrayObject $extra) {
+	public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra) {
 		$options = ['type' => 'staff'];
 		$tabElements = $this->controller->getCareerTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
