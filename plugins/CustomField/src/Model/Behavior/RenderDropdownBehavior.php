@@ -17,15 +17,13 @@ class RenderDropdownBehavior extends RenderBehavior {
         $value = '';
 
         $dropdownOptions = [];
-        $dropdownDefault = null;
+        $dropdownDefault = '';
         foreach ($attr['customField']['custom_field_options'] as $key => $obj) {
             $dropdownOptions[$obj->id] = $obj->name;
             if ($obj->is_default == 1) {
                 $dropdownDefault = $obj->id;
             }
         }
-        // default to first key if is not set
-        $dropdownDefault = !is_null($dropdownDefault) ? $dropdownDefault : key($dropdownOptions);
 
         // for edit
         $fieldKey = $attr['attr']['fieldKey'];
@@ -50,9 +48,11 @@ class RenderDropdownBehavior extends RenderBehavior {
             }
         } else if ($action == 'edit') {
             $form = $event->subject()->Form;
+            $unlockFields = [];
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
             $options['type'] = 'select';
+            $options['empty'] = '-- ' . __('Select') . ' --';
             $options['options'] = $dropdownOptions;
             $options['ng-model'] = 'RelevancyRulesController.Dropdown["'.$fieldId.'"]';
 
@@ -78,11 +78,14 @@ class RenderDropdownBehavior extends RenderBehavior {
 
             $value .= $form->input($fieldPrefix.".number_value", $options);
             $value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
+            $unlockFields[] = $fieldPrefix.".number_value";
+            $unlockFields[] = $fieldPrefix.".".$attr['attr']['fieldKey'];
             if (!is_null($savedId)) {
                 $value .= $form->hidden($fieldPrefix.".id", ['value' => $savedId]);
+                $unlockFields[] = $fieldPrefix.".id";
             }
 
-            $value = $this->processRelevancyDisabled($entity, $value, $fieldId);
+            $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
         }
 
         $event->stopPropagation();

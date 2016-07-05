@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
+use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
@@ -48,6 +49,11 @@ class CustomFormsTable extends AppTable {
 		$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
 		$this->belongsToMany('CustomFilters', $this->extra['filterClass']);
 		$this->belongsToMany('CustomFields', $this->extra['fieldClass']);
+	}
+
+	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+		return $validator;
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
@@ -163,6 +169,7 @@ class CustomFormsTable extends AppTable {
 	    	$attr['tableCells'] = $tableCells;
 		} else if ($action == 'add' || $action == 'edit') {
 			$form = $event->subject()->Form;
+			$form->unlockField($attr['model'] . '.custom_fields');
 			$formKey = $this->extra['fieldClass']['foreignKey'];
 			$fieldKey = $this->extra['fieldClass']['targetForeignKey'];
 
@@ -287,6 +294,8 @@ class CustomFormsTable extends AppTable {
 				$cellData .= $form->hidden($joinDataPrefix.".".$fieldKey, ['value' => $customFieldId]);
 				$cellData .= $form->hidden($joinDataPrefix.".order", ['value' => ++$order, 'class' => 'order']);
 				$cellData .= $form->hidden($joinDataPrefix.".section", ['value' => $customSection, 'class' => 'section']);
+				$form->unlockField($joinDataPrefix.".order");
+				$form->unlockField($joinDataPrefix.".section");
 				
 				if (isset($obj['id'])) {
 					$cellData .= $form->hidden($joinDataPrefix.".id", ['value' => $obj['id']]);
