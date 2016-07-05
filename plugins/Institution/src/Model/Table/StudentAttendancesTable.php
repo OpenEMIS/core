@@ -261,26 +261,36 @@ class StudentAttendancesTable extends AppTable {
 	public function getNumberOfStudentByAttendance($params=[]) {
 		$query = $params['query'];
 		$StudentAttendancesQuery = clone $query;
-		$StudentAttendancesQuery->distinct(['InstitutionStudents.student_id']);
+
+		$studentAbsenceArray = $StudentAttendancesQuery
+			->find('list', [
+				'groupField' => 'student_id',
+				'keyField' => 'absence_id',
+				'valueField' => 'absence_type'
+			])
+			->select(['absence_id' => 'StudentAbsences.id', 'student_id' => $this->aliasField('student_id'), 'absence_type' => 'StudentAbsences.absence_type_id'])
+			->group(['student_id', 'absence_type'])
+			->toArray();
 			
 		// Creating the data set		
 		$dataSet = [];
 		$data = [];
-		foreach ($StudentAttendancesQuery as $entity) {
+		foreach ($studentAbsenceArray as $userAbsenceType) {
 			// //Compile the dataset
-			if (empty($entity->StudentAbsences['id'])) {
-				if (isset($data['Present'])) {
-					$data['Present'] = ++$data['Present'];
+			foreach ($userAbsenceType as $absenceType) {
+				if (empty($absenceType)) {
+					if (isset($data['Present'])) {
+						$data['Present'] = ++$data['Present'];
+					} else {
+						$data['Present'] = 1;
+					}
 				} else {
-					$data['Present'] = 1;
-				}
-			} else {
-				$absenceTypeId = $entity->StudentAbsences['absence_type_id'];
-				$typeName = $this->absenceList[$absenceTypeId];
-				if (isset($data[$typeName])) {
-					$data[$typeName] = ++$data[$typeName];
-				} else {
-					$data[$typeName] = 1;
+					$typeName = $this->absenceList[$absenceType];
+					if (isset($data[$typeName])) {
+						$data[$typeName] = ++$data[$typeName];
+					} else {
+						$data[$typeName] = 1;
+					}
 				}
 			}
 		}
