@@ -31,7 +31,7 @@ class StaffAttendancesTable extends AppTable {
 		$config['Created'] = false;
 		parent::initialize($config);
 
-		$this->belongsTo('StaffTypes', ['className' => 'FieldOption.StaffTypes']);
+		$this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes']);
 		$this->belongsTo('StaffStatuses', ['className' => 'Staff.StaffStatuses']);
 		$this->belongsTo('InstitutionPositions', ['className' => 'Institution.InstitutionPositions']);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'staff_id']);
@@ -273,8 +273,8 @@ class StaffAttendancesTable extends AppTable {
 	public function getNumberOfStaffByAttendance($params=[]) {
 		$query = $params['query'];
 		$StaffAttendancesQuery = clone $query;
-			
-		// Creating the data set		
+
+		// Creating the data set
 		$dataSet = [];
 		$data = [];
 		foreach ($StaffAttendancesQuery as $entity) {
@@ -688,13 +688,13 @@ class StaffAttendancesTable extends AppTable {
 
 			$InstitutionArray = [];
 			if ($selectedDay != -1) {
-				
+
 			}
 
 			$totalStaff = $query->count();
 
 			$indexDashboard = 'attendance';
-			
+
 			$dataSet = $this->getNumberOfStaffByAttendance(['query' => $query]);
 			$present = 0;
 			$absent = 0;
@@ -719,7 +719,7 @@ class StaffAttendancesTable extends AppTable {
 				$staffAttendanceArray[] = ['label' => 'No. of Staff Absent for the week', 'value' => $absent];
 				$staffAttendanceArray[] = ['label' => 'No. of Staff Late for the week', 'value' => $late];
 			}
-			
+
 			$toolbarElements[] = [
 				'name' => $indexDashboard,
 				'data' => [
@@ -731,8 +731,8 @@ class StaffAttendancesTable extends AppTable {
 			];
 
 			$toolbarElements[] = [
-				'name' => 'Institution.Attendance/controls', 
-				'data' => [], 
+				'name' => 'Institution.Attendance/controls',
+				'data' => [],
 				'options' => []
 			];
 
@@ -812,7 +812,7 @@ class StaffAttendancesTable extends AppTable {
 		}
     	return $query
     		->select([
-    			$this->aliasField('staff_id'), 
+    			$this->aliasField('staff_id'),
     			'Users.openemis_no', 'Users.first_name', 'Users.middle_name', 'Users.third_name','Users.last_name', 'Users.id',
     			'StaffAbsences.id',
     			'StaffAbsences.start_date',

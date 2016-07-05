@@ -5,12 +5,12 @@
 OpenEMIS
 Open Education Management Information System
 
-Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by the Free Software Foundation
-, either version 3 of the License, or any later version.  This program is distributed in the hope 
+, either version 3 of the License, or any later version.  This program is distributed in the hope
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should 
-have received a copy of the GNU General Public License along with this program.  If not, see 
+or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should
+have received a copy of the GNU General Public License along with this program.  If not, see
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
 ControllerActionComponent - Current Version 3.1.20
@@ -18,9 +18,9 @@ ControllerActionComponent - Current Version 3.1.20
 3.1.19 (Malcolm) - Fixed an error issue when using getFields() on tables with joint primary keys
 3.1.18 (Malcolm) - remove() - If id(to be deleted) cannot be found, return a successful deletion message
 3.1.17 (Malcolm) - buildDefaultValidation() - Added condition '&& strlen($attr['default']) == 0' when it comes to determining whether should automatically add 'notBlank' and 'requirePresence' validations
-3.1.16 (Malcolm) - renderFields() - '-- Select --' is added if ($attr['type'] != 'chosenSelect') 
+3.1.16 (Malcolm) - renderFields() - '-- Select --' is added if ($attr['type'] != 'chosenSelect')
 3.1.15 (Malcolm) - renderFields() - for automatic adding of '-- Select --' if (there are no '' value fields in dropdown) and $attr['select'] != false (default true)
-3.1.14 (Malcolm) - supported default selection for select boxes - renderFields() edit 
+3.1.14 (Malcolm) - supported default selection for select boxes - renderFields() edit
 3.1.13 (Thed) - added new event editAfterQuery to modified $entity after query is executed
 3.1.12 (Zack) - added new event onGetConvertOptions to add additional condition to the query to generate the convert options for delete and transfer
 3.1.11 (Zack) - added logic to reorder() to swap the order of the list that is pass over with the original list
@@ -40,7 +40,7 @@ ControllerActionComponent - Current Version 3.1.20
 3.0.7 (Jeff) - edited ControllerAction.Controller.beforePaginate to use $this->model instead of $model
 3.0.6 (Malcolm) - $request->data = $requestData->getArrayCopy(); added after addAfterPatch dispatch event
              - for purpose of modifying request->data after validation (eg. unsetting a field the value can be removed from the input field after validation)
-3.0.5 (Jeff) - renamed beforeRender to afterAction, afterAction is called in processAction() now. 
+3.0.5 (Jeff) - renamed beforeRender to afterAction, afterAction is called in processAction() now.
              - this change is necessary to be compatible with CakePHP v3.1.0
              - optimized getContains to only fetch id and name instead of all fields which are not being used most of the time
 3.0.4 (Jeff) - added sortable types in renderFields() to be able to sort by date/time
@@ -70,7 +70,7 @@ use ControllerAction\Model\Traits\ControllerActionV4Trait;
 
 class ControllerActionComponent extends Component {
     use ControllerActionV4Trait; // extended functionality from v4
-    
+
     private $plugin;
     private $controller;
     private $triggerFrom = 'Controller';
@@ -78,7 +78,7 @@ class ControllerActionComponent extends Component {
     private $ctpFolder;
     private $paramsPass;
     private $config;
-    private $defaultActions = ['search', 'index', 'add', 'view', 'edit', 'remove', 'download', 'reorder']; 
+    private $defaultActions = ['search', 'index', 'add', 'view', 'edit', 'remove', 'download', 'reorder'];
     private $deleteStrategy = 'cascade'; // cascade | transfer | restrict
     private $view = '';
 
@@ -119,7 +119,7 @@ class ControllerActionComponent extends Component {
     // Is called after the controller's beforeFilter method but before the controller executes the current action handler.
     public function startup(Event $event) {
         $controller = $this->controller;
-        
+
         $action = $this->request->params['action'];
         $this->debug('Startup');
         if (!method_exists($controller, $action)) { // method cannot be found in controller
@@ -168,7 +168,7 @@ class ControllerActionComponent extends Component {
                         $event = new Event('ControllerAction.Controller.onInitialize', $this, [$this->model, new ArrayObject([])]);
                         $event = $this->controller->eventManager()->dispatch($event);
                         if ($event->isStopped()) { return $event->result; }
-                        
+
                         $this->triggerFrom = 'Model';
                         break;
                     }
@@ -244,9 +244,9 @@ class ControllerActionComponent extends Component {
                     // $associatedObjectName = Inflector::pluralize(str_replace('_id', '', $key));
                     // $associatedObject = $this->model->{Inflector::camelize($associatedObjectName)};
                     $associatedObject = $this->getAssociatedBelongsToModel($key);
-                    
+
                     $query = $associatedObject->find();
-                    
+
                     $event = new Event('ControllerAction.Model.onPopulateSelectOptions', $this, [$query]);
                     $event = $associatedObject->eventManager()->dispatch($event);
                     if ($event->isStopped()) { return $event->result; }
@@ -275,7 +275,7 @@ class ControllerActionComponent extends Component {
                         if ($attr['type'] != 'chosenSelect') {
                             $optionsArray = ['' => __('-- Select --')] + $optionsArray;
                         }
-                        
+
                         $this->model->fields[$key]['options'] = $optionsArray;
                     } else {
                         $this->model->fields[$key]['options'] = $query;
@@ -506,7 +506,7 @@ class ControllerActionComponent extends Component {
                     } elseif (isset($pass[0]) && $pass[0]==$action) {
                         if ($this->Session->check($sessionKey)) {
                             $pass[1] = $this->Session->read($sessionKey);
-                        }       
+                        }
                     }
                 }
                 $actionUrl = array_merge($actionUrl, $pass);
@@ -582,7 +582,7 @@ class ControllerActionComponent extends Component {
         if ($this->autoProcess) {
             if ($this->triggerFrom == 'Controller') {
                 if (in_array($this->currentAction, $this->defaultActions)) {
-                    if (method_exists($this->model, $this->currentAction) || $this->model->behaviors()->hasMethod($this->currentAction)) {                    
+                    if (method_exists($this->model, $this->currentAction) || $this->model->behaviors()->hasMethod($this->currentAction)) {
                         $result = call_user_func_array([$this->model, $this->currentAction], $this->paramsPass);
                     } else {
                         $result = call_user_func_array([$this, $this->currentAction], $this->paramsPass);
@@ -605,7 +605,7 @@ class ControllerActionComponent extends Component {
         }
         $this->debug('processAction');
         $this->afterAction();
-        
+
         if (!$result instanceof Response) {
             $this->render();
         }
@@ -626,7 +626,7 @@ class ControllerActionComponent extends Component {
             if (!array_key_exists('formButtons', $this->config)) {
                 $this->config['formButtons'] = true; // need better solution
             }
-            
+
             $this->debug(__METHOD__, ': Event -> ControllerAction.Model.afterAction');
             $event = new Event('ControllerAction.Model.afterAction', $this, [$this->config]);
             $event = $this->model->eventManager()->dispatch($event);
@@ -638,7 +638,7 @@ class ControllerActionComponent extends Component {
 
             uasort($this->model->fields, [$this, 'sortFields']);
             $this->config['fields'] = $this->model->fields;
-            
+
             $controller->set('ControllerAction', $this->config);
 
             // deprecated: backward compatible
@@ -750,7 +750,7 @@ class ControllerActionComponent extends Component {
         $query = $model->find();
 
         $options = new ArrayObject([
-            'limit' => $this->pageOptions[$limit], 
+            'limit' => $this->pageOptions[$limit],
             'auto_contain' => true,
             'auto_search' => true,
             'auto_order' => true
@@ -759,7 +759,7 @@ class ControllerActionComponent extends Component {
         $this->Session->write($alias.'.search.key', $search);
         $this->request->data['Search']['searchField'] = $search;
         $this->request->data['Search']['limit'] = $limit;
-        
+
         $this->config['search'] = $search;
         $this->config['pageOptions'] = $this->pageOptions;
 
@@ -814,13 +814,13 @@ class ControllerActionComponent extends Component {
         if (!empty($event->result)) {
             $data = $event->result;
         }
-        
+
         return $data;
     }
 
     public function index() {
         $model = $this->model;
-        
+
         $settings = new ArrayObject(['pagination' => true, 'model' => $model->registryAlias()]);
         $query = $model->find();
 
@@ -854,7 +854,7 @@ class ControllerActionComponent extends Component {
             }
             return $this->controller->redirect($action);
         }
-        
+
         if ($data instanceof \Cake\Network\Response || (!($data instanceof \Cake\Network\Response) && $data->count() == 0)) {
             $this->Alert->info('general.noData');
         }
@@ -901,7 +901,7 @@ class ControllerActionComponent extends Component {
                 $id = $this->Session->read($sessionKey);
             }
         }
-        
+
         if ($model->exists([$idKey => $id])) {
             $query = $model->find()->where([$idKey => $id])->contain($contain);
 
@@ -984,7 +984,7 @@ class ControllerActionComponent extends Component {
                 $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.addEdit.beforePatch', null, $params);
                 if ($event->isStopped()) { return $event->result; }
                 // End Event
-                
+
                 // Event: addBeforePatch
                 $this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.beforePatch');
                 $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.beforePatch', null, $params);
@@ -1047,7 +1047,7 @@ class ControllerActionComponent extends Component {
                 $event = $this->dispatchEvent($this->model, $eventKey, $method, $params);
                 if ($event->isStopped()) { return $event->result; }
                 // End Event
-                
+
                 $patchOptionsArray = $patchOptions->getArrayCopy();
                 $request->data = $requestData->getArrayCopy();
                 $entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
@@ -1081,7 +1081,7 @@ class ControllerActionComponent extends Component {
             $model = $event->result;
         }
         // End Event
-        
+
         // Event: editBeforeAction
         $this->debug(__METHOD__, ': Event -> ControllerAction.Model.edit.beforeAction');
         $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.edit.beforeAction');
@@ -1121,7 +1121,7 @@ class ControllerActionComponent extends Component {
                 $this->Alert->warning('general.notExists');
                 return $this->controller->redirect($this->url('index'));
             }
-            
+
             if ($this->request->is(['get'])) {
                 // Event: editOnInitialize
                 $this->debug(__METHOD__, ': Event -> ControllerAction.Model.edit.onInitialize');
@@ -1141,7 +1141,7 @@ class ControllerActionComponent extends Component {
                     $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.addEdit.beforePatch', null, $params);
                     if ($event->isStopped()) { return $event->result; }
                     // End Event
-                    
+
                     // Event: editBeforePatch
                     $this->debug(__METHOD__, ': Event -> ControllerAction.Model.edit.beforePatch');
                     $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.edit.beforePatch', null, $params);
@@ -1174,7 +1174,7 @@ class ControllerActionComponent extends Component {
                         $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.edit.afterSave', null, $params);
                         if ($event->isStopped()) { return $event->result; }
                         // End Event
-                        
+
                         return $this->controller->redirect($this->url('view'));
                     } else {
                         // event: onSaveFailed
@@ -1317,6 +1317,7 @@ class ControllerActionComponent extends Component {
             $this->autoRender = false;
             $id = $request->data[$primaryKey];
             $deleteOptions = new ArrayObject([]);
+            $extra = new ArrayObject(['excludedModels' => []]);
 
             $process = function ($model, $id, $deleteOptions) {
                 $primaryKey = $model->primaryKey();
@@ -1331,7 +1332,7 @@ class ControllerActionComponent extends Component {
             };
 
             // Event: onBeforeDelete
-            $params = [$deleteOptions, $id];
+            $params = [$deleteOptions, $id, $extra];
             $this->debug(__METHOD__, ': Event -> ControllerAction.Model.onBeforeDelete');
             $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onBeforeDelete', null, $params);
             if ($event->isStopped()) { return $event->result; }
@@ -1347,9 +1348,9 @@ class ControllerActionComponent extends Component {
                 }
                 return $this->controller->redirect($this->url('index'));
             } else if ($this->deleteStrategy == 'restrict') {
-                $notRestrictedCheck = function ($model, $id, $deleteOptions) {
+                $notRestrictedCheck = function ($model, $id, $deleteOptions, $extra) {
                     $newEntity = $model->newEntity([$model->primaryKey() => $id]);
-                    return !$this->hasAssociatedRecords($model, $newEntity);
+                    return !$this->hasAssociatedRecords($model, $newEntity, $extra);
                 };
 
                 $this->debug(__METHOD__, ': Event -> ControllerAction.Model.onBeforeRestrictDelete');
@@ -1359,8 +1360,8 @@ class ControllerActionComponent extends Component {
                     $notRestrictedCheck = $event->result;
                 }
 
-                if ($notRestrictedCheck($model, $id, $deleteOptions)) {
-                    if ($process($model, $id, $deleteOptions)) {
+                if ($notRestrictedCheck($model, $id, $deleteOptions, $extra)) {
+                    if ($process($model, $id, $deleteOptions, $extra)) {
                         $this->Alert->success('general.delete.success');
                     } else {
                         $this->Alert->error('general.delete.failed');
@@ -1368,7 +1369,7 @@ class ControllerActionComponent extends Component {
                 } else {
                     $this->Alert->error('general.delete.restrictDeleteBecauseAssociation');
                 }
-                
+
                 return $this->controller->redirect($this->url('index'));
             } else {
                 $transferFrom = $this->request->data('id');
@@ -1445,13 +1446,13 @@ class ControllerActionComponent extends Component {
                                         $condition = [];
 
                                         $condition = [
-                                            $assoc->foreignKey() => $transferFrom, 
+                                            $assoc->foreignKey() => $transferFrom,
                                             'NOT' => [
                                                 $assoc->foreignKey() => $transferFrom,
                                                 $assoc->targetForeignKey().' IN ' => $notUpdateQuery
                                             ]
                                         ];
-                                        
+
                                         // Update all transfer records
                                         $modelAssociationTable->updateAll(
                                             [$assoc->foreignKey() => $transferTo],
@@ -1525,7 +1526,7 @@ class ControllerActionComponent extends Component {
             $model = $this->model;
             $primaryKey = $model->primaryKey();
             $orderField = $this->orderField;
-            
+
             $ids = json_decode($request->data("ids"));
             if (!empty($ids)) {
                 $originalOrder = $model->find('list')
@@ -1543,7 +1544,7 @@ class ControllerActionComponent extends Component {
             }
         }
     }
-    
+
     // NOT IN USED
     // public function fixOrder($conditions) {
     //  $model = $this->model;
@@ -1611,11 +1612,11 @@ class ControllerActionComponent extends Component {
             $before = $attr['before'];
             $order = $this->getOrderValue($model, $before, 'before');
         }
-        
+
         if (!empty($this->plugin)) {
             $className = $this->plugin . '.' . $className;
         }
-        
+
         $_attr = [
             'type' => 'string',
             'null' => true,
@@ -1645,7 +1646,7 @@ class ControllerActionComponent extends Component {
 
         return $model->fields[$field];
     }
-    
+
     public function getFields($model) {
         $ignoreFields = $this->ignoreFields;
         $className = $model->alias();
@@ -1695,7 +1696,7 @@ class ControllerActionComponent extends Component {
         $model->fields = $fields;
         return $fields;
     }
-    
+
     public function setFieldOrder($field, $order=0) {
         $fields = $this->model->fields;
 
@@ -1711,7 +1712,7 @@ class ControllerActionComponent extends Component {
                 if (!isset($fields[$key]['order'])) {
                     $fields[$key]['order'] = $count;
                 }
-                
+
                 if ($found && $key !== $field) {
                     $fields[$key]['order'] = $fields[$key]['order'] + 1;
                 } else {
@@ -1741,7 +1742,7 @@ class ControllerActionComponent extends Component {
             }
         }
     }
-    
+
     public static function sortFields($a, $b) {
         if (isset($a['order']) && isset($b['order'])) {
             return $a['order'] >= $b['order'];
@@ -1813,12 +1814,13 @@ class ControllerActionComponent extends Component {
         return $order;
     }
 
-    public function getAssociatedRecords($model, $entity) {
+    public function getAssociatedRecords($model, $entity, $extra)
+    {
         $primaryKey = $model->primaryKey();
         $id = $entity->$primaryKey;
         $associations = [];
         foreach ($model->associations() as $assoc) {
-            if (!$assoc->dependent() && ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany')) {
+            if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
                 if (!array_key_exists($assoc->alias(), $associations)) {
                     $count = 0;
                     if ($assoc->type() == 'oneToMany') {
@@ -1836,15 +1838,25 @@ class ControllerActionComponent extends Component {
                     if (!is_null($event->result)) {
                         $title = $event->result;
                     }
-                    $associations[$assoc->alias()] = ['model' => $title, 'count' => $count];
+
+                    $isAssociated = true;
+                    if ($extra->offsetExists('excludedModels')) {
+                        if (in_array($title, $extra['excludedModels'])) {
+                            $isAssociated = false;
+                        }
+                    }
+                    if ($isAssociated) {
+                        $associations[$assoc->alias()] = ['model' => $title, 'count' => $count];
+                    }
                 }
             }
         }
         return $associations;
     }
 
-    public function hasAssociatedRecords($model, $entity) {
-        $records = $this->getAssociatedRecords($model, $entity);
+    public function hasAssociatedRecords($model, $entity, $extra)
+    {
+        $records = $this->getAssociatedRecords($model, $entity, $extra);
         $found = false;
         foreach ($records as $count) {
             if ($count['count'] > 0) {
