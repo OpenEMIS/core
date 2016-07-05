@@ -59,7 +59,18 @@ class FieldOptionComponent extends Component
         'Nationalities' => 'FieldOption.Nationalities',
         'GuardianRelations' => 'Student.GuardianRelations',
         'StaffTypes' => 'Staff.StaffTypes',
-        'StaffLeaveTypes' => 'Staff.StaffLeaveTypes'
+        'StaffLeaveTypes' => 'Staff.StaffLeaveTypes',
+        'TrainingAchievementTypes' => 'Training.TrainingAchievementTypes',
+        'TrainingCourseTypes' => 'Training.TrainingCourseTypes',
+        'TrainingFieldStudies' => 'Training.TrainingFieldStudies',
+        'TrainingLevels' => 'Training.TrainingLevels',
+        'TrainingModeDeliveries' => 'Training.TrainingModeDeliveries',
+        'TrainingNeedCategories' => 'Training.TrainingNeedCategories',
+        'TrainingPriorities' => 'Training.TrainingPriorities',
+        'TrainingProviders' => 'Training.TrainingProviders',
+        'TrainingRequirements' => 'Training.TrainingRequirements',
+        'TrainingResultTypes' => 'Training.TrainingResultTypes',
+        'TrainingSpecialisations' => 'Training.TrainingSpecialisations'
     ];
 
     // Is called before the controller's beforeFilter method.
