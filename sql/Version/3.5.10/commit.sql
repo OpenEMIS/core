@@ -31,23 +31,6 @@ ALTER TABLE `academic_periods` CHANGE `end_date` `end_date` DATE NOT NULL;
 ALTER TABLE `academic_periods` CHANGE `end_year` `end_year` INT(4) NOT NULL;
 
 
--- POCOR-3115
--- db_patches
-INSERT INTO `db_patches` (issue, created) VALUES ('POCOR-3115', NOW());
-
-
--- code here
--- Student
-UPDATE `security_functions` SET `_add` = 'Students.add' WHERE id = 1012;
-UPDATE `security_functions` SET `order` = `order`+1 WHERE `order` >= 1013 AND `order` <= 1043;
-INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES ('1043', 'Student Profile', 'Institutions', 'Institutions', 'Students', '8', NULL, NULL, 'StudentUser.add', NULL, NULL, '1013', '1', NULL, NULL, '1', NOW());
-
--- Staff
-UPDATE `security_functions` SET `_add` = 'Staff.add' WHERE id = 1016;
-UPDATE `security_functions` SET `order` = `order`+1 WHERE `order` >= 1018 AND `order` <= 1044;
-INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES ('1044', 'Staff Profile', 'Institutions', 'Institutions', 'Staff', '8', NULL, NULL, 'StaffUser.add', NULL, NULL, '1018', '1', NULL, NULL, '1', NOW());
-
-
 -- POCOR-3067
 -- db_patches
 INSERT INTO `db_patches` (issue, created) VALUES ('POCOR-3067', NOW());
@@ -74,6 +57,9 @@ INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `categor
 
 UPDATE `security_functions` SET `order` = 2029 WHERE id = 2010;
 
+-- Added by Jeff to fix incorrect type
+ALTER TABLE `contact_types` CHANGE `contact_option_id` `contact_option_id` INT(11) NOT NULL;
+ALTER TABLE `institution_staff_assignments` CHANGE `institution_id` `institution_id` INT(11) NOT NULL;
 
 -- 3.5.10
 UPDATE config_items SET value = '3.5.10' WHERE code = 'db_version';
