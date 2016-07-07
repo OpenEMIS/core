@@ -18,14 +18,16 @@ class UsersControllerTest extends IntegrationTestCase {
 			'username' => 'admin',
 			'password' => 'demo',
 			'submit' => 'login'
-		];		
-
+		];
+		$this->enableCsrfToken();
+		$this->enableSecurityToken();
 		$this->post('/Users/postLogin', $data);
 		$this->assertArrayHasKey('Auth', $_SESSION, 'Error logging in!');
 	}
 
 	public function testLogout() {
-
+		$this->enableCsrfToken();
+		$this->enableSecurityToken();
 		$this->post('/Users/logout');
 		$this->assertArrayNotHasKey('Auth', $_SESSION, 'Error logging out!');
 	}

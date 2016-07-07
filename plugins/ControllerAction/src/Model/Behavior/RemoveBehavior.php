@@ -44,7 +44,7 @@ class RemoveBehavior extends Behavior {
 			$entity = $extra['entity'];
 			$convertOptions = $extra['convertOptions'];
 			$cells = $extra['cells'];
-			
+
 			$model->fields = [];
 			$model->field('id', ['type' => 'hidden']);
 			$model->field('convert_from', ['type' => 'readonly', 'attr' => ['value' => $entity->name]]);
@@ -61,6 +61,7 @@ class RemoveBehavior extends Behavior {
 		$model = $this->_table;
 		$request = $model->request;
 		$extra['options'] = [];
+		$extra['excludedModels'] = [];
 
 		$event = $model->dispatchEvent('ControllerAction.Model.delete.beforeAction', [$extra], $this);
 		if ($event->isStopped()) { return $event->result; }
@@ -77,14 +78,14 @@ class RemoveBehavior extends Behavior {
             if ($model->actions('remove') == 'restrict') {
                 $notRestrictedCheck = function ($model, $id, $extra) {
                     $newEntity = $model->newEntity([$model->primaryKey() => $id]);
-                    return !$model->hasAssociatedRecords($model, $newEntity);
+                    return !$model->hasAssociatedRecords($model, $newEntity, $extra);
                 };
 
                 $event = $model->dispatchEvent('ControllerAction.Model.onBeforeRestrictDelete', [$id, $extra], $this);
                 if ($event->isStopped()) { return $event->result; }
                 if (is_callable($event->result)) {
                     $notRestrictedCheck = $event->result;
-                    
+
                 }
                 if (is_callable($notRestrictedCheck)) {
                     $notRestrictedCheck = $notRestrictedCheck($model, $id, $extra);
@@ -125,7 +126,7 @@ class RemoveBehavior extends Behavior {
 
 		$event = $model->dispatchEvent('ControllerAction.Model.transfer.beforeAction', [$extra], $this);
 		if ($event->isStopped()) { return $event->result; }
-		
+
 		$primaryKey = $model->primaryKey();
 		$idKey = $model->aliasField($primaryKey);
 
@@ -149,7 +150,7 @@ class RemoveBehavior extends Behavior {
 					$convertOptions[''] = __('No Available Options');
 				}
 
-				$associations = $this->getAssociatedRecords($model, $entity);
+				$associations = $this->getAssociatedRecords($model, $entity, $extra);
 				$cells = [];
 				foreach ($associations as $row) {
 					$cells[] = [$row['model'], $row['count']];
@@ -178,23 +179,23 @@ class RemoveBehavior extends Behavior {
 					$mainEvent->stopPropagation();
 					return $model->controller->redirect($model->url('index', 'QUERY'));
 				}
-				
+
 				$convertTo = $request->data($model->aliasField('convert_to'));
 				$entity->convert_to = $convertTo;
 				$doDelete = true;
 
 				if (empty($convertTo)) {
-					if ($this->hasAssociatedRecords($model, $entity)) {
+					if ($this->hasAssociatedRecords($model, $entity, $extra)) {
 						$doDelete = false;
 					}
 				}
-				
+
 				$result = false;
 				if ($doDelete) {
 					$result = $this->doDelete($entity, $extra);
 				}
 				$extra['result'] = $result;
-				
+
 				$event = $model->dispatchEvent('ControllerAction.Model.transfer.afterAction', [$entity, $extra], $this);
 				if ($event->isStopped()) { return $event->result; }
 
@@ -218,16 +219,17 @@ class RemoveBehavior extends Behavior {
 
 		$options = $extra['options'];
 		$result = $process($model, $entity, $options);
-		
+
 		return $result;
 	}
 
-	private function getAssociatedRecords($model, $entity) {
+	private function getAssociatedRecords($model, $entity, $extra)
+	{
 		$primaryKey = $model->primaryKey();
 		$id = $entity->$primaryKey;
 		$associations = [];
 		foreach ($model->associations() as $assoc) {
-			if (!$assoc->dependent() && ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany')) {
+			if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
 				if (!array_key_exists($assoc->alias(), $associations)) {
 					$count = 0;
 					if ($assoc->type() == 'oneToMany') {
@@ -245,15 +247,25 @@ class RemoveBehavior extends Behavior {
 					if (!is_null($event->result)) {
 						$title = $event->result;
 					}
-					$associations[$assoc->alias()] = ['model' => $title, 'count' => $count];
+
+					$isAssociated = true;
+                    if ($extra->offsetExists('excludedModels')) {
+                        if (in_array($title, $extra['excludedModels'])) {
+                            $isAssociated = false;
+                        }
+                    }
+                    if ($isAssociated) {
+						$associations[$assoc->alias()] = ['model' => $title, 'count' => $count];
+					}
 				}
 			}
 		}
 		return $associations;
 	}
 
-	public function hasAssociatedRecords($model, $entity) {
-		$records = $this->getAssociatedRecords($model, $entity);
+	public function hasAssociatedRecords($model, $entity, $extra)
+	{
+		$records = $this->getAssociatedRecords($model, $entity, $extra);
 		$found = false;
 		foreach ($records as $count) {
 			if ($count['count'] > 0) {
@@ -292,13 +304,13 @@ class RemoveBehavior extends Behavior {
 			$condition = [];
 
 			$condition = [
-				$association->foreignKey() => $from, 
+				$association->foreignKey() => $from,
 				'NOT' => [
 					$association->foreignKey() => $from,
 					$association->targetForeignKey().' IN ' => $notUpdateQuery
 				]
 			];
-			
+
 			// Update all transfer records
 			$modelAssociationTable->updateAll(
 				[$association->foreignKey() => $to],

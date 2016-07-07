@@ -1,8 +1,8 @@
 <?php
 namespace CustomField\Model\Table;
 
-use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
+use Cake\Validation\Validator;
 
 class CustomTableRowsTable extends AppTable {
 	public function initialize(array $config) {
@@ -17,6 +17,8 @@ class CustomTableRowsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 			->requirePresence('name')
 			->notEmpty('name', 'Please enter a name.');
