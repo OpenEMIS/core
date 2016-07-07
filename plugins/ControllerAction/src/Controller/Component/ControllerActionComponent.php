@@ -497,6 +497,9 @@ class ControllerActionComponent extends Component {
                 if ($this->currentAction != 'index') {
                     $model = $this->model;
                     $primaryKey = $model->primaryKey();
+                    if (is_array($primaryKey)) {
+                        $primaryKey = 'id';
+                    }
                     $idKey = $model->aliasField($primaryKey);
                     $sessionKey = $model->registryAlias() . '.' . $primaryKey;
                     if (empty($pass)) {
@@ -886,6 +889,9 @@ class ControllerActionComponent extends Component {
         // End Event
 
         $primaryKey = $model->primaryKey();
+        if (is_array($primaryKey)) {
+            $primaryKey = 'id';
+        }
         $idKey = $model->aliasField($primaryKey);
         $sessionKey = $model->registryAlias() . '.' . $primaryKey;
         $contain = [];
@@ -1092,6 +1098,10 @@ class ControllerActionComponent extends Component {
         // End Event
 
         $primaryKey = $model->primaryKey();
+        if (is_array($primaryKey)) {
+            $primaryKey = 'id';
+        }
+
         $idKey = $model->aliasField($primaryKey);
 
         if ($model->exists([$idKey => $id])) {
@@ -1249,11 +1259,19 @@ class ControllerActionComponent extends Component {
         // End Event
 
         $primaryKey = $model->primaryKey();
+        if (is_array($primaryKey)) {
+            $primaryKey = 'id';
+        }
         $idKey = $model->aliasField($primaryKey);
 
         if ($request->is('get')) {
             if ($model->exists([$idKey => $id])) {
-                $entity = $model->get($id);
+                if (is_array($model->primaryKey())) {
+                    // For table with composite primary key
+                    $entity = $model->find()->where([$idKey => $id])->first();
+                } else {
+                    $entity = $model->get($id);
+                }
 
                 $query = $model->find();
                 $listOptions = new ArrayObject([]);
@@ -1320,9 +1338,17 @@ class ControllerActionComponent extends Component {
 
             $process = function ($model, $id, $deleteOptions) {
                 $primaryKey = $model->primaryKey();
+                if (is_array($primaryKey)) {
+                    $primaryKey = 'id';
+                }
                 $idKey = $model->aliasField($primaryKey);
                 if ($model->exists([$idKey => $id])) {
-                    $entity = $model->get($id);
+                    if (is_array($model->primaryKey())) {
+                        // For table with composite primary key
+                        $entity = $model->find()->where([$idKey => $id])->first();
+                    } else {
+                        $entity = $model->get($id);
+                    }
                     return $model->delete($entity, $deleteOptions->getArrayCopy());
                 } else {
                     // If id(to be deleted) cannot be found, return a successful deletion message

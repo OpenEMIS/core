@@ -24,6 +24,10 @@ class ViewBehavior extends Behavior {
 		}
 
 		$primaryKey = $model->primaryKey();
+		if (is_array($primaryKey)) {
+			$primaryKey = 'id';
+		}
+		
 		$idKey = $model->aliasField($primaryKey);
 		$sessionKey = $model->registryAlias() . '.' . $primaryKey;
 		$contain = [];

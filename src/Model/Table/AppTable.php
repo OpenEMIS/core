@@ -407,26 +407,32 @@ class AppTable extends Table {
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
         $primaryKey = $this->primaryKey();
-
+        $id = null;
         if (!is_array($primaryKey)) {
             $id = $entity->$primaryKey;
-            if (array_key_exists('view', $buttons)) {
-                $buttons['view']['url'][1] = $id;
-            }
-            if (array_key_exists('edit', $buttons)) {
-                $buttons['edit']['url'][1] = $id;
-            }
+        } else {
+        	if ($entity->has('id')) {
+        		$id = $entity->id;
+        	} else {
+        		return $buttons;
+        	}
+        }
 
-            if (array_key_exists('remove', $buttons)) {
-                if (in_array($buttons['remove']['strategy'], ['cascade', 'restrict'])) {
-                    $buttons['remove']['attr']['data-toggle'] = 'modal';
-                    $buttons['remove']['attr']['data-target'] = '#delete-modal';
-                    $buttons['remove']['attr']['field-target'] = '#recordId';
-                    $buttons['remove']['attr']['field-value'] = $id;
-                    $buttons['remove']['attr']['onclick'] = 'ControllerAction.fieldMapping(this)';
-                } else {
-                    $buttons['remove']['url'][1] = $id;
-                }
+        if (array_key_exists('view', $buttons)) {
+            $buttons['view']['url'][1] = $id;
+        }
+        if (array_key_exists('edit', $buttons)) {
+            $buttons['edit']['url'][1] = $id;
+        }
+        if (array_key_exists('remove', $buttons)) {
+            if (in_array($buttons['remove']['strategy'], ['cascade', 'restrict'])) {
+                $buttons['remove']['attr']['data-toggle'] = 'modal';
+                $buttons['remove']['attr']['data-target'] = '#delete-modal';
+                $buttons['remove']['attr']['field-target'] = '#recordId';
+                $buttons['remove']['attr']['field-value'] = $id;
+                $buttons['remove']['attr']['onclick'] = 'ControllerAction.fieldMapping(this)';
+            } else {
+                $buttons['remove']['url'][1] = $id;
             }
         }
         return $buttons;

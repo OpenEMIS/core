@@ -161,6 +161,13 @@ class StudentsController extends AppController {
 				$header = $session->read('Student.Students.name');
 			}
 
+			$idKey = $model->primaryKey();
+
+			// For composite keys
+			if (is_array($idKey)) {
+				$idKey = 'id';
+			}
+
 			$alias = $model->alias;
 			$this->Navigation->addCrumb($model->getHeader($alias));
 			$header = $header . ' - ' . $model->getHeader($alias);
@@ -176,7 +183,7 @@ class StudentsController extends AppController {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
 					$exists = $model->exists([
-						$model->aliasField($model->primaryKey()) => $modelId,
+						$model->aliasField($idKey) => $modelId,
 						$model->aliasField('security_user_id') => $userId
 					]);
 					
@@ -196,7 +203,7 @@ class StudentsController extends AppController {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
 					$exists = $model->exists([
-						$model->aliasField($model->primaryKey()) => $modelId,
+						$model->aliasField($idKey) => $modelId,
 						$model->aliasField('student_id') => $userId
 					]);
 					
