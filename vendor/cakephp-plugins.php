@@ -24,6 +24,7 @@ return [
         'Infrastructure' => $baseDir . '/plugins/Infrastructure/',
         'Institution' => $baseDir . '/plugins/Institution/',
         'InstitutionCustomField' => $baseDir . '/plugins/InstitutionCustomField/',
+        'InstitutionRepeater' => $baseDir . '/plugins/InstitutionRepeater/',
         'Localization' => $baseDir . '/plugins/Localization/',
         'Log' => $baseDir . '/plugins/Log/',
         'Map' => $baseDir . '/plugins/Map/',

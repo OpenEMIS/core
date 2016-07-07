@@ -64,6 +64,8 @@ class InstitutionClassesTable extends ControllerActionTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 			->requirePresence('name')
 			->add('name', 'ruleUniqueNamePerAcademicPeriod', [
