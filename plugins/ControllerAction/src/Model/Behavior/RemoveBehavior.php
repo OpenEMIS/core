@@ -69,6 +69,11 @@ class RemoveBehavior extends Behavior {
 		$result = true;
 		$entity = null;
 
+		if (is_array($primaryKey) && isset($request->data['id'])) {
+			$primaryKey = 'id';
+		}
+		
+
 		if ($request->is('delete') && !empty($request->data[$primaryKey])) {
             $id = $request->data[$primaryKey];
 
@@ -93,7 +98,16 @@ class RemoveBehavior extends Behavior {
 
             if ($notRestrictedCheck) {
                 try {
-                    $entity = $model->get($id);
+                	if (is_array($model->primaryKey())) {
+                		if (in_array('id', $model->schema()->columns())) {
+                			$entity = $model->find()->where([$model->aliasField('id') => $id])->first();
+                		}
+                		if (empty($entity)) {
+                			throw new RecordNotFoundException();
+                		}
+                	} else {
+                		$entity = $model->get($id);
+                	}
                 } catch (RecordNotFoundException $exception) { // to handle concurrent deletes
                     $mainEvent->stopPropagation();
                     return $model->controller->redirect($model->url('index', 'QUERY'));
