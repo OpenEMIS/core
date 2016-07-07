@@ -58,10 +58,8 @@ class InlineTest extends \PHPUnit_Framework_TestCase
 
             $this->assertEquals('1.2', Inline::dump(1.2));
             $this->assertContains('fr', strtolower(setlocale(LC_NUMERIC, 0)));
+        } finally {
             setlocale(LC_NUMERIC, $locale);
-        } catch (\Exception $e) {
-            setlocale(LC_NUMERIC, $locale);
-            throw $e;
         }
     }
 
@@ -70,6 +68,23 @@ class InlineTest extends \PHPUnit_Framework_TestCase
         $value = '686e444';
 
         $this->assertSame($value, Inline::parse(Inline::dump($value)));
+    }
+
+    /**
+     * @expectedException        \Symfony\Component\Yaml\Exception\ParseException
+     * @expectedExceptionMessage Found unknown escape character "\V".
+     */
+    public function testParseScalarWithNonEscapedBlackslashShouldThrowException()
+    {
+        Inline::parse('"Foo\Var"');
+    }
+
+    /**
+     * @expectedException \Symfony\Component\Yaml\Exception\ParseException
+     */
+    public function testParseScalarWithNonEscapedBlackslashAtTheEndShouldThrowException()
+    {
+        Inline::parse('"Foo\\"');
     }
 
     /**
@@ -173,6 +188,36 @@ class InlineTest extends \PHPUnit_Framework_TestCase
         Inline::parse('{ foo: * #foo }');
     }
 
+    /**
+     * @dataProvider getReservedIndicators
+     * @expectedException Symfony\Component\Yaml\Exception\ParseException
+     * @expectedExceptionMessage cannot start a plain scalar; you need to quote the scalar.
+     */
+    public function testParseUnquotedScalarStartingWithReservedIndicator($indicator)
+    {
+        Inline::parse(sprintf('{ foo: %sfoo }', $indicator));
+    }
+
+    public function getReservedIndicators()
+    {
+        return array(array('@'), array('`'));
+    }
+
+    /**
+     * @dataProvider getScalarIndicators
+     * @expectedException Symfony\Component\Yaml\Exception\ParseException
+     * @expectedExceptionMessage cannot start a plain scalar; you need to quote the scalar.
+     */
+    public function testParseUnquotedScalarStartingWithScalarIndicator($indicator)
+    {
+        Inline::parse(sprintf('{ foo: %sfoo }', $indicator));
+    }
+
+    public function getScalarIndicators()
+    {
+        return array(array('|'), array('>'));
+    }
+
     public function getTestsForParse()
     {
         return array(
@@ -206,7 +251,7 @@ class InlineTest extends \PHPUnit_Framework_TestCase
             array("'on'", 'on'),
             array("'off'", 'off'),
 
-            array('2007-10-30', mktime(0, 0, 0, 10, 30, 2007)),
+            array('2007-10-30', gmmktime(0, 0, 0, 10, 30, 2007)),
             array('2007-10-30T02:59:43Z', gmmktime(2, 59, 43, 10, 30, 2007)),
             array('2007-10-30 02:59:43 Z', gmmktime(2, 59, 43, 10, 30, 2007)),
             array('1960-10-30 02:59:43 Z', gmmktime(2, 59, 43, 10, 30, 1960)),
@@ -273,7 +318,7 @@ class InlineTest extends \PHPUnit_Framework_TestCase
             array("'#cfcfcf'", '#cfcfcf'),
             array('::form_base.html.twig', '::form_base.html.twig'),
 
-            array('2007-10-30', mktime(0, 0, 0, 10, 30, 2007)),
+            array('2007-10-30', gmmktime(0, 0, 0, 10, 30, 2007)),
             array('2007-10-30T02:59:43Z', gmmktime(2, 59, 43, 10, 30, 2007)),
             array('2007-10-30 02:59:43 Z', gmmktime(2, 59, 43, 10, 30, 2007)),
             array('1960-10-30 02:59:43 Z', gmmktime(2, 59, 43, 10, 30, 1960)),
@@ -293,8 +338,8 @@ class InlineTest extends \PHPUnit_Framework_TestCase
             array('{ foo  : bar, bar : foo,  false  :   false,  null  :   null,  integer :  12  }', (object) array('foo' => 'bar', 'bar' => 'foo', 'false' => false, 'null' => null, 'integer' => 12)),
             array('{foo: \'bar\', bar: \'foo: bar\'}', (object) array('foo' => 'bar', 'bar' => 'foo: bar')),
             array('{\'foo\': \'bar\', "bar": \'foo: bar\'}', (object) array('foo' => 'bar', 'bar' => 'foo: bar')),
-            array('{\'foo\'\'\': \'bar\', "bar\"": \'foo: bar\'}', (object) array('foo\'' => 'bar', "bar\"" => 'foo: bar')),
-            array('{\'foo: \': \'bar\', "bar: ": \'foo: bar\'}', (object) array('foo: ' => 'bar', "bar: " => 'foo: bar')),
+            array('{\'foo\'\'\': \'bar\', "bar\"": \'foo: bar\'}', (object) array('foo\'' => 'bar', 'bar"' => 'foo: bar')),
+            array('{\'foo: \': \'bar\', "bar: ": \'foo: bar\'}', (object) array('foo: ' => 'bar', 'bar: ' => 'foo: bar')),
 
             // nested sequences and mappings
             array('[foo, [bar, foo]]', array('foo', array('bar', 'foo'))),

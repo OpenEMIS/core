@@ -44,7 +44,7 @@ class InstitutionsTable extends AppTable  {
 
 	public function beforeAction(Event $event) {
 		$this->fields = [];
-		$this->ControllerAction->field('feature');
+		$this->ControllerAction->field('feature', ['select' => false]);
 		$this->ControllerAction->field('format');
 	}
 
@@ -216,7 +216,7 @@ class InstitutionsTable extends AppTable  {
 						break;
 					
 					case 'Report.InstitutionStaff':
-						$Statuses = TableRegistry::get('FieldOption.StaffStatuses');
+						$Statuses = TableRegistry::get('Staff.StaffStatuses');
 						$statusData = $Statuses->getList();
 						foreach ($statusData as $key => $value) {
 							$statusOptions[$key] = $value;
@@ -266,7 +266,7 @@ class InstitutionsTable extends AppTable  {
 					$request->data[$this->alias()]['academic_period_id'] = key($academicPeriodOptions);
 				}
 				return $attr;
-			} else if (in_array($feature, ['Report.StaffAbsences'])) {
+			} else if ((in_array($feature, ['Report.StaffAbsences'])) || (in_array($feature, ['Report.StudentAbsences']))) {
 				$academicPeriodOptions = [];
 				$academicPeriodOptions[0] = __('All Academic Periods');
 				$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');

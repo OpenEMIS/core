@@ -140,10 +140,14 @@ class AcademicPeriodBehavior extends Behavior {
 		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$isEditable = 1;
 		if ($entity->has('academic_period_id')) {
-			$isEditable = $AcademicPeriodTable->getEditable($entity->academic_period_id);
+			if (!empty($entity->academic_period_id)) {
+				$isEditable = $AcademicPeriodTable->getEditable($entity->academic_period_id);
+			}
 		} else if (isset($data[$this->_table->alias()]['academic_period_id']) && !empty($data[$this->_table->alias()]['academic_period_id'])) {
 			$academicPeriodId = $data[$this->_table->alias()]['academic_period_id'];
-			$isEditable = $AcademicPeriodTable->get($academicPeriodId)->editable;
+			if (!empty($academicPeriodId)) {
+				$isEditable = $AcademicPeriodTable->get($academicPeriodId)->editable;
+			}
 		}
 		if (! $isEditable) {
 			$urlParams = $this->_table->ControllerAction->url('add');

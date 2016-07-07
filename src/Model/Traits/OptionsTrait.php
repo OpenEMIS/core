@@ -15,8 +15,14 @@ trait OptionsTrait {
 				'types' => ['FULL_TIME' => __('Full-Time'), 'PART_TIME' => __('Part-Time')]
 			],
 			'Assessments' => [
-				'mark_types' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades')],
-				'status' => [0 => __('New'), 1 => __('Draft'), 2 => __('Completed')]
+				'status' => [0 => __('New'), 1 => __('Draft'), 2 => __('Completed')],
+				'types' => [1 => __('Non-Official'), 2 => __('Official')]
+			],
+			'AssessmentItems' => [
+				'mark_types' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades')]
+			],
+			'AssessmentGradingTypes' => [
+				'result_type' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades')]
 			],
 			'Surveys' => [
 				'status' => [0 => __('New'), 1 => __('Draft'), 2 => __('Completed')]
@@ -38,7 +44,15 @@ trait OptionsTrait {
 					'B+' => 'B+', 'B-' => 'B-',
 					'AB+' => 'AB+', 'AB-' => 'AB-'
 				]
-			]
+			],
+			'StaffPositionProfiles' => [
+				'FTE' => [
+					'0.25' => '25%', 
+					'0.5' => '50%', 
+					'0.75' => '75%', 
+					'1' => '100%'
+				],
+			],
 		];
 
 		$index = explode('.', $code);
@@ -51,15 +65,5 @@ trait OptionsTrait {
 			}
 		}
 		return $options;
-	}
-
-	public function selectEmpty($code) {
-		$codes = [
-			'period' => 'Period',
-			'class' => 'Class',
-			'student' => 'Student',
-			'staff' => 'Staff'
-		];
-		return '-- ' . __('Select ' . $codes[$code]) . ' --';
 	}
 }

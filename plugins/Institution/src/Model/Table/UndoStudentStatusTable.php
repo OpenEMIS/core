@@ -8,6 +8,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
 use Cake\Utility\Inflector;
+use Cake\Validation\Validator;
 use Cake\Controller\Component;
 
 class UndoStudentStatusTable extends AppTable {
@@ -42,7 +43,23 @@ class UndoStudentStatusTable extends AppTable {
 		$this->addBehavior('Institution.UndoGraduated', $settings);
 		$this->addBehavior('Institution.UndoPromoted', $settings);
 		$this->addBehavior('Institution.UndoRepeated', $settings);
+		$this->addBehavior('Institution.ClassStudents');
 		// End
+	}
+
+	public function beforeAction(Event $event) {
+		$institutionClassTable = TableRegistry::get('Institution.InstitutionClasses');
+		$this->institutionId = $this->Session->read('Institution.Institutions.id');
+		$this->institutionClasses = $institutionClassTable->find('list')
+			->where([$institutionClassTable->aliasField('institution_id') => $this->institutionId])
+			->toArray();
+	}
+
+	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
+		return $validator
+			->requirePresence('class');
 	}
 
 	public function implementedEvents() {
@@ -68,36 +85,39 @@ class UndoStudentStatusTable extends AppTable {
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		$studentIds = [];
-
-		if (array_key_exists($this->alias(), $data)) {
-			if (array_key_exists('students', $data[$this->alias()])) {
-				foreach ($data[$this->alias()]['students'] as $key => $obj) {
-					$studentId = $obj['id'];
-					if ($studentId != 0) {
-						$studentIds[$studentId] = $studentId;
-					} else {
-						unset($data[$this->alias()]['students'][$key]);
+		$errors = $entity->errors();
+		if (isset($errors['student_id'])) {
+			unset($errors['student_id']);
+		}
+		if (!$errors) {
+			if (array_key_exists($this->alias(), $data)) {
+				if (array_key_exists('students', $data[$this->alias()])) {
+					foreach ($data[$this->alias()]['students'] as $key => $obj) {
+						$studentId = $obj['id'];
+						if ($studentId != 0) {
+							$studentIds[$studentId] = $studentId;
+						} else {
+							unset($data[$this->alias()]['students'][$key]);
+						}
 					}
 				}
 			}
-		}
 
-		if (empty($studentIds)) {
-			$this->Alert->warning('general.notSelected', ['reset' => true]);
-			$url = $this->ControllerAction->url('add');
-		} else {
-			$data[$this->alias()]['student_ids'] = $studentIds;
-			// redirects to confirmation page
-			$url = $this->ControllerAction->url('view');
-			$url[0] = 'reconfirm';
-			$session = $this->Session;
-			$session->write($this->registryAlias().'.confirm', $entity);
-			$session->write($this->registryAlias().'.confirmData', $data->getArrayCopy());
-			$this->Alert->success('UndoStudentStatus.success', ['reset' => true]);
+			if (empty($studentIds)) {
+				$this->Alert->warning('general.notSelected', ['reset' => true]);
+			} else {
+				$data[$this->alias()]['student_ids'] = $studentIds;
+				// redirects to confirmation page
+				$url = $this->ControllerAction->url('view');
+				$url[0] = 'reconfirm';
+				$session = $this->Session;
+				$session->write($this->registryAlias().'.confirm', $entity);
+				$session->write($this->registryAlias().'.confirmData', $data->getArrayCopy());
+				$this->Alert->success('UndoStudentStatus.success', ['reset' => true]);
+				$event->stopPropagation();
+				return $this->controller->redirect($url);
+			}
 		}
-
-		$event->stopPropagation();
-		return $this->controller->redirect($url);
 	}
 
 	public function addAfterAction(Event $event, Entity $entity) {
@@ -112,7 +132,9 @@ class UndoStudentStatusTable extends AppTable {
 				break;
 			case 'reconfirm':
 				$buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Confirm');
-				$buttons[1]['url'] = $this->ControllerAction->url('add');
+				$cancelUrl = $this->ControllerAction->url('add');
+				$cancelUrl = array_diff_key($cancelUrl, $this->request->query);
+				$buttons[1]['url'] = $cancelUrl;
 				break;
 		}
 	}
@@ -133,12 +155,10 @@ class UndoStudentStatusTable extends AppTable {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$Grades = $this->Grades;
 
-			$periodOptions = $this->AcademicPeriods->getList();
-			if (empty($request->query['period'])) {
-				$request->query['period'] = $this->AcademicPeriods->getCurrent();
-			}
-			$selectedPeriod = $this->queryString('period', $periodOptions);
+			$periodOptions = $this->AcademicPeriods->getYearList();
+			$selectedPeriod = null;
 			$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+				'selectOption' => false,
 				'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
 				'callable' => function($id) use ($Grades, $institutionId) {
 					return $Grades
@@ -171,9 +191,8 @@ class UndoStudentStatusTable extends AppTable {
 		} else if ($action == 'add' || $action == 'edit') {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$selectedPeriod = $request->query('period');
-
 			$gradeOptions = [];
-			if (!is_null($selectedPeriod)) {
+			if (!empty($selectedPeriod)) {
 				$gradeOptions = $this->Grades
 					->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade.programme_grade_name'])
 					->contain(['EducationGrades.EducationProgrammes'])
@@ -181,16 +200,13 @@ class UndoStudentStatusTable extends AppTable {
 					->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
 					->order(['EducationProgrammes.order', 'EducationGrades.order'])
 					->toArray();
-				$selectedGrade = $request->query['grade'];
-				$gradeOptions = ['-1' => '-- Select Grade --'] + $gradeOptions;
-
+				$selectedGrade = $request->query('grade');
+				$gradeOptions = $gradeOptions;
 				$Students = $this->Students;
 				$this->advancedSelectOptions($gradeOptions, $selectedGrade, [
+					'selectOption' => false,
 					'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
 					'callable' => function($id) use ($Students, $institutionId, $selectedPeriod) {
-						if ($id == -1) {
-							return 1;
-						} else {
 							return $Students
 								->find()
 								->where([
@@ -199,7 +215,6 @@ class UndoStudentStatusTable extends AppTable {
 									'education_grade_id' => $id
 								])
 								->count();
-						}
 					}
 				]);
 			}
@@ -224,6 +239,7 @@ class UndoStudentStatusTable extends AppTable {
 			$attr['type'] = 'readonly';
 			$attr['attr']['value'] = $statusName;
 		} else if ($action == 'add' || $action == 'edit') {
+			// pr($request->query);
 			$statusOptions = [];
 
 			$codes = [];
@@ -239,8 +255,6 @@ class UndoStudentStatusTable extends AppTable {
 				])
 				->toArray();
 			$selectedStatus = $request->query['status'];
-			$statusOptions = ['-1' => '-- Select Status --'] + $statusOptions;
-			$this->advancedSelectOptions($statusOptions, $selectedStatus);
 
 			$attr['options'] = $statusOptions;
 			$attr['onChangeReload'] = 'changeStatus';
@@ -249,9 +263,49 @@ class UndoStudentStatusTable extends AppTable {
 		return $attr;
 	}
 
+	public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request) {
+		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+		if ($action == 'reconfirm') {
+			$attr['type'] = 'readonly';
+			$selectedClass = $request->query('class');
+			if ($selectedClass != -1) {
+				$institutionClassRecord = $InstitutionClasses->get($selectedClass)->name;
+			} else {
+				$institutionClassRecord = __('All Classes');
+			}
+			
+			$attr['attr']['value'] = $institutionClassRecord;
+		} else {
+			$institutionId = $institutionId = $this->Session->read('Institution.Institutions.id');
+			$selectedPeriod = $request->query('period');
+			$selectedGrade = $request->query('grade');
+			
+			$institutionClassRecords = $InstitutionClasses->find('list')
+				->innerJoinWith('ClassGrades')
+				->where([
+					$InstitutionClasses->aliasField('institution_id') => $institutionId, 
+					$InstitutionClasses->aliasField('academic_period_id') => $selectedPeriod,
+					'ClassGrades.education_grade_id' => $selectedGrade
+				])
+				->toArray();
+			$options = ['-1' => __('All Classes')] + $institutionClassRecords;
+			$selectedClass = $request->query('class');
+			if (empty($selectedClass)) {
+				if (!empty($classes)) {
+					$selectedClass = key($classes);
+				}		
+			}
+
+			$this->advancedSelectOptions($options, $selectedClass);
+			$request->query['class'] = $selectedClass;
+			$attr['options'] = $options;
+			$attr['onChangeReload'] = 'changeClass';
+		}
+		return $attr;
+	}
+
 	public function onUpdateFieldStudents(Event $event, array $attr, $action, Request $request) {
 		$data = [];
-		$model = $this->Students;
 
 		if ($action == 'reconfirm') {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
@@ -259,19 +313,27 @@ class UndoStudentStatusTable extends AppTable {
 			$selectedGrade = $request->data[$this->alias()]['education_grade_id'];
 			$selectedStatus = $request->data[$this->alias()]['student_status_id'];
 			$student_ids = $request->data[$this->alias()]['student_ids'];
+			$selectedClass = $request->query('class');
 
-			$data = $model
+			if ($selectedClass == -1) {
+				$selectedClass = '';
+			}
+
+			$data = $this
 				->find()
 	    		->matching('Users')
 	    		->matching('EducationGrades')
 	    		->where([
-	    			$model->aliasField('institution_id') => $institutionId,
-	    			$model->aliasField('academic_period_id') =>  $selectedPeriod,
-	    			$model->aliasField('education_grade_id') => $selectedGrade,
-	    			$model->aliasField('student_status_id') => $selectedStatus,
-	    			$model->aliasField('student_id IN') => $student_ids
+	    			$this->aliasField('institution_id') => $institutionId,
+	    			$this->aliasField('academic_period_id') =>  $selectedPeriod,
+	    			$this->aliasField('education_grade_id') => $selectedGrade,
+	    			$this->aliasField('student_status_id') => $selectedStatus,
+	    			$this->aliasField('student_id IN') => $student_ids
 	    		])
-	    		->all();
+	    		->find('studentClasses', ['institution_class_id' => $selectedClass])
+				->select(['institution_class_id' => 'InstitutionClassStudents.institution_class_id'])
+				->order(['Users.first_name'])
+				->autoFields(true);
 
 			$this->dataCount = $data->count();
 		} else if ($action == 'add' || $action == 'edit') {
@@ -279,19 +341,28 @@ class UndoStudentStatusTable extends AppTable {
 			$selectedPeriod = $request->query('period');
 			$selectedGrade = $request->query('grade');
 			$selectedStatus = $request->query('status');
+			$selectedClass = $request->query('class');
 
 			if (!is_null($selectedPeriod) && $selectedGrade != -1 && $selectedStatus != -1) {
-				$data = $model
+
+				if ($selectedClass == -1) {
+					$selectedClass = '';
+				}
+
+				$data = $this
 					->find()
 		    		->matching('Users')
 		    		->matching('EducationGrades')
 		    		->where([
-		    			$model->aliasField('institution_id') => $institutionId,
-		    			$model->aliasField('academic_period_id') =>  $selectedPeriod,
-		    			$model->aliasField('education_grade_id') => $selectedGrade,
-		    			$model->aliasField('student_status_id') => $selectedStatus
+		    			$this->aliasField('institution_id') => $institutionId,
+		    			$this->aliasField('academic_period_id') =>  $selectedPeriod,
+		    			$this->aliasField('education_grade_id') => $selectedGrade,
+		    			$this->aliasField('student_status_id') => $selectedStatus
 		    		])
-		    		->all();
+		    		->find('studentClasses', ['institution_class_id' => $selectedClass])
+					->select(['institution_class_id' => 'InstitutionClassStudents.institution_class_id'])
+					->order(['Users.first_name'])
+					->autoFields(true);
 
 		    	// update students count here and show / hide form buttons in onGetFormButtons()
 		    	$this->dataCount = $data->count();
@@ -316,6 +387,7 @@ class UndoStudentStatusTable extends AppTable {
     	$attr['type'] = 'element';
 		$attr['element'] = 'Institution.UndoStudentStatus/students';
 		$attr['data'] = $data;
+		$attr['classOptions'] = $this->institutionClasses;
 
 		return $attr;
 	}
@@ -325,6 +397,7 @@ class UndoStudentStatusTable extends AppTable {
 		$request->query['period'] = -1;
 		$request->query['grade'] = -1;
 		$request->query['status'] = -1;
+		$request->query['class'] = -1;
 
 		if ($request->is(['post', 'put'])) {
 			if (array_key_exists($this->alias(), $request->data)) {
@@ -341,10 +414,36 @@ class UndoStudentStatusTable extends AppTable {
 		}
 	}
 
+	public function addEditOnChangeClass(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$request = $this->request;
+		$request->query['period'] = -1;
+		$request->query['grade'] = -1;
+		$request->query['status'] = -1;
+		$request->query['class'] = -1;
+
+		if ($request->is(['post', 'put'])) {
+			if (array_key_exists($this->alias(), $request->data)) {
+				if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
+					$request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
+				}
+				if (array_key_exists('education_grade_id', $request->data[$this->alias()])) {
+					$request->query['grade'] = $request->data[$this->alias()]['education_grade_id'];
+				}
+				if (array_key_exists('student_status_id', $request->data[$this->alias()])) {
+					$request->query['status'] = $request->data[$this->alias()]['student_status_id'];
+				}
+				if (array_key_exists('class', $request->data[$this->alias()])) {
+					$request->query['class'] = $request->data[$this->alias()]['class'];
+				}
+			}
+		}
+	}
+
 	public function addEditOnChangeGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$request = $this->request;
 		$request->query['grade'] = -1;
 		$request->query['status'] = -1;
+		$request->query['class'] = -1;
 
 		if ($request->is(['post', 'put'])) {
 			if (array_key_exists($this->alias(), $request->data)) {
@@ -464,9 +563,10 @@ class UndoStudentStatusTable extends AppTable {
 
 		$this->ControllerAction->field('academic_period_id', ['type' => 'select']);
 		$this->ControllerAction->field('education_grade_id', ['type' => 'select']);
+		$this->ControllerAction->field('class', ['select' => false]);
 		$this->ControllerAction->field('student_status_id', ['type' => 'select']);
 		$this->ControllerAction->field('students');
 
-		$this->ControllerAction->setFieldOrder(['academic_period_id', 'education_grade_id', 'student_status_id', 'students']);
+		$this->ControllerAction->setFieldOrder(['academic_period_id', 'education_grade_id', 'class', 'student_status_id', 'students']);
 	}
 }

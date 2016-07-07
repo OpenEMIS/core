@@ -4,6 +4,8 @@ namespace OpenEmis\Controller\Component;
 use ArrayObject;
 use Cake\Controller\Component;
 use Cake\ORM\TableRegistry;
+use Cake\Utility\Security;
+use Firebase\JWT\JWT;
 
 class SSOComponent extends Component {
 	private $controller;
@@ -11,6 +13,7 @@ class SSOComponent extends Component {
 	protected $_defaultConfig = [
 		'homePageURL' => null,
 		'loginPageURL' => null,
+		'restful' => false
 	];
 
 	// Is called before the controller's beforeFilter method.
@@ -25,6 +28,7 @@ class SSOComponent extends Component {
 		}
 		$type = 'OpenEmis.' . ucfirst($authType) . 'Auth';
 		$this->controller->loadComponent($type, $this->_config);
+		$this->controller->loadComponent('Cookie');
 	}
 
 	public function implementedEvents() {
@@ -35,12 +39,19 @@ class SSOComponent extends Component {
 
     public function doAuthentication() {
     	$extra = new ArrayObject([]);
-
     	// $this->controller->dispatchEvent('Controller.Auth.beforeAuthenticate', [$extra], $this);
 
     	$event = $this->controller->dispatchEvent('Controller.Auth.authenticate', [$extra], $this);
     	if ($event->result) {
-    		return $this->controller->redirect($this->_config['homePageURL']);
+    		$restfulCall = false;
+    		if ($this->controller->Cookie->check('Restful.Call')) {
+    			$restfulCall = $this->controller->Cookie->read('Restful.Call');
+    		}
+    		if ($restfulCall) {
+    			return $this->controller->redirect(['plugin' => null, 'controller' => 'Rest', 'action' => 'auth', 'payload' => $this->generateToken(), 'version' => '2.0']);
+    		} else {
+    			return $this->controller->redirect($this->_config['homePageURL']);
+    		}
     	} else {
     		$this->controller->Auth->logout();
     		return $this->controller->redirect($this->_config['homePageURL']);
@@ -48,4 +59,16 @@ class SSOComponent extends Component {
 
     	// $this->controller->dispatchEvent('Controller.Auth.afterAuthenticate', [$extra], $this);
     }
+
+    public function generateToken() {
+    	$user = $this->controller->Auth->user();
+
+    	// Expiry change to 24 hours
+	    return JWT::encode([
+	                'sub' => $user['id'],
+	                'exp' =>  time() + 10800
+	            ],
+	            Security::salt());
+    }
+    
 }

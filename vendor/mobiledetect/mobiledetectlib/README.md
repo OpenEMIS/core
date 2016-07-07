@@ -52,13 +52,13 @@ composer require mobiledetect/mobiledetectlib
 
 |Pledgie|Paypal|
 |-------|------|
-|[Donate :+1:](http://pledgie.com/campaigns/21856)|[Donate :beer:](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=mobiledetectlib%40gmail%2ecom&lc=US&item_name=Mobile%20Detect&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted)|
+|[Donate :+1:](https://pledgie.com/campaigns/21856)|[Donate :beer:](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=mobiledetectlib%40gmail%2ecom&lc=US&item_name=Mobile%20Detect&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted)|
 
 
 I'm currently paying for hosting and spend a lot of my family time to maintain the project and planning the future releases.
 I would highly appreciate any money donations that will keep the research going.
 
-Special thanks to the community :+1: for donations, [BrowserStack](http://browserstack.com) - for providing access to their great platform, [Zend](http://zend.com) - for donating licenses, [Dragos Gavrila](https://twitter.com/grafician) who contributed with the logo.
+Special thanks to the community :+1: for donations, [BrowserStack](https://www.browserstack.com/) - for providing access to their great platform, [Zend](http://www.zend.com/) - for donating licenses, [Dragos Gavrila](https://twitter.com/grafician) who contributed with the logo.
 
 ##### 3rd party modules / [Submit new](../../issues/new?title=New%203rd%20party%20module&body=Name, Link and Description of the module.)
 
@@ -78,9 +78,9 @@ Special thanks to the community :+1: for donations, [BrowserStack](http://browse
 <tr>
   <td>WordPress</td>
   <td>
-    <p><a href="http://wordpress.org/extend/plugins/wp-mobile-detect/">WordPress Mobile Detect</a> - Gives you the ability to wrap that infographic in a <code>[notdevice][/notdevice]</code> shortcode so at the server level <code>WordPress</code> will decide to show that content only if the user is NOT on a phone or tablet. Made by <a href="http://profiles.wordpress.org/professor44/">Jesse Friedman</a>.</p>
+    <p><a href="https://wordpress.org/plugins/wp-mobile-detect/">WordPress Mobile Detect</a> - Gives you the ability to wrap that infographic in a <code>[notdevice][/notdevice]</code> shortcode so at the server level <code>WordPress</code> will decide to show that content only if the user is NOT on a phone or tablet. Made by <a href="https://profiles.wordpress.org/professor44/">Jesse Friedman</a>.</p>
 
-    <p><a href="http://wordpress.org/plugins/mobble/">mobble</a> - provides mobile related conditional functions for your site. e.g. is_iphone(), is_mobile() and is_tablet(). Made by Scott Evans.</p>
+    <p><a href="https://wordpress.org/plugins/mobble/">mobble</a> - provides mobile related conditional functions for your site. e.g. is_iphone(), is_mobile() and is_tablet(). Made by Scott Evans.</p>
 
     <p><a href="https://github.com/iamspacehead/responsage">WordPress Responsage</a> - A small <code>WordPress</code> theme plugin that allows you to make your images responsive. Made by <a href="https://github.com/iamspacehead">Adrian Ciaschetti</a>.</p>
     
@@ -91,19 +91,26 @@ Special thanks to the community :+1: for donations, [BrowserStack](http://browse
 <tr>
   <td>Drupal</td>
   <td>
-    <p><a href="http://drupal.org/project/mobile_switch">Drupal Mobile Switch</a> - The Mobile Switch <code>Drupal</code> module provides a automatic theme switch functionality for mobile devices,
-    detected by Browscap or Mobile Detect. Made by <a href="http://drupal.org/user/45267">Siegfried Neumann</a>.</p>
+    <p><a href="https://www.drupal.org/project/mobile_switch">Drupal Mobile Switch</a> - The Mobile Switch <code>Drupal</code> module provides a automatic theme switch functionality for mobile devices,
+    detected by Browscap or Mobile Detect. Made by <a href="https://www.drupal.org/user/45267">Siegfried Neumann</a>.</p>
 
-   <p><a href="http://drupal.org/project/context_mobile_detect">Drupal Context Mobile Detect</a> - This is a <code>Drupal context</code> module which integrates Context and PHP Mobile Detect library.
-      Created by <a href="http://drupal.org/user/432492">Artem Shymko</a>.</p>
+   <p><a href="https://www.drupal.org/project/context_mobile_detect">Drupal Context Mobile Detect</a> - This is a <code>Drupal context</code> module which integrates Context and PHP Mobile Detect library.
+      Created by <a href="https://www.drupal.org/user/432492">Artem Shymko</a>.</p>
 
-   <p><a href="http://drupal.org/project/mobile_detect">Drupal Mobile Detect</a> - Lightweight mobile detect module for <code>Drupal</code> created by <a href="http://drupal.org/user/325244">Matthew Donadio</a></p>
+   <p><a href="https://www.drupal.org/project/mobile_detect">Drupal Mobile Detect</a> - Lightweight mobile detect module for <code>Drupal</code> created by <a href="https://www.drupal.org/user/325244">Matthew Donadio</a></p>
   </td>
 </tr>
 
   <tr>
     <td>Joomla</td>
-    <td><p><a href="http://www.yagendoo.com/en/blog/free-mobile-detection-plugin-for-joomla.html">yagendoo Joomla! Mobile Detection Plugin</a> - Lightweight PHP plugin for Joomla! that detects a mobile browser using the Mobile Detect class. Made by <a href="http://www.yagendoo.com/">yagendoo media</a>.</p></td>
+    <td>
+        <p><a href="http://www.yagendoo.com/en/blog/free-mobile-detection-plugin-for-joomla.html">yagendoo Joomla! Mobile Detection Plugin</a> - Lightweight PHP plugin for Joomla! 
+        that detects a mobile browser using the Mobile Detect class. Made by <a href="http://www.yagendoo.com/">yagendoo media</a>.</p>
+    
+        <p><a href="https://github.com/renekreijveld/UserAgentDetector">User Agent Detector plugin</a> by @ReneKreijveld. This system plugin detects the user agent of your 
+        website visitor and sets a session variable accordingly. Based on the user agent, the plugin detects if the site is running on a desktop pc, tablet or smartphone. 
+        It can also detect if the visitor is a spider bot (search engine). Session variable that is set: ualayout. Possible values: desktop, tablet, mobile, bot..</p>
+    </td>
  </tr>
 
  <tr>
@@ -114,7 +121,7 @@ Special thanks to the community :+1: for donations, [BrowserStack](http://browse
 
  <tr>
   <td>PrestaShop</td>
-  <td><p><a href="http://www.prestashop.com/">PrestaShop</a> is a free, secure and open source shopping cart platform. Mobile_Detect is included in the default package since 1.5.x.</p></td>
+  <td><p><a href="https://www.prestashop.com/">PrestaShop</a> is a free, secure and open source shopping cart platform. Mobile_Detect is included in the default package since 1.5.x.</p></td>
  </tr>
 
  <tr>
@@ -137,7 +144,7 @@ Special thanks to the community :+1: for donations, [BrowserStack](http://browse
   <tr>
     <td>Laravel</td>
     <td>
-    <p><a href="https://github.com/jenssegers/Laravel-Agent">Laravel-Agent</a> a user agent class for Laravel, based on Mobile Detect with some additional functionality. Made by <a href="https://github.com/jenssegers">Jens Segers</a>.</p>
+    <p><a href="https://github.com/jenssegers/agent">Agent</a> a user agent class for Laravel, based on Mobile Detect with some additional functionality. Made by <a href="https://github.com/jenssegers">Jens Segers</a>.</p>
     <p><a href="https://github.com/hisorange/browser-detect">BrowserDetect</a> is a browser &amp; mobile detection package, collects and wrap together the best user-agent identifiers for Laravel. Created by <a href="https://github.com/hisorange">Varga Zsolt</a>.</p>
     </td>
   </tr>
@@ -170,8 +177,8 @@ It overrides the Fuelphp Agent class its methods. Made by <a href="https://githu
 </tr>
 
 <tr>
-  <td>Typo3</td>
-  <td><a href="http://docs.typo3.org/typo3cms/extensions/px_mobiledetect/1.0.2/">px_mobiledetect</a> is an extension that helps to detect visitor's mobile device class (if that’s tablet or mobile device like smartphone). Made by Alexander Tretyak.</td>
+  <td>TYPO3</td>
+  <td><a href="https://typo3.org/extensions/repository/view/px_mobiledetect">px_mobiledetect</a> is an extension that helps to detect visitor's mobile device class (if that’s tablet or mobile device like smartphone). Made by Alexander Tretyak.</td>
 </tr>
 
 <tr>
@@ -191,12 +198,12 @@ It overrides the Fuelphp Agent class its methods. Made by <a href="https://githu
 
  <tr>
       <td>Perl</td>
-      <td><p><a href="http://www.buzzerstar.com/development/">MobileDetect.pm</a> - <code>Perl module</code> for  Mobile Detect. Made by <a href="http://www.buzzerstar.com/">Sebastian Enger</a>.</p></td>
+      <td><p><a href="https://www.buzzerstar.com/development/">MobileDetect.pm</a> - <code>Perl module</code> for  Mobile Detect. Made by <a href="https://www.buzzerstar.com/">Sebastian Enger</a>.</p></td>
  </tr>
 
  <tr>
       <td>python</td>
-      <td><p><a href="http://pypi.python.org/pypi/pymobiledetect">pymobiledetect</a> - Mobile detect <code>python package</code>. Made by Bas van Oostveen.</p></td>
+      <td><p><a href="https://pypi.python.org/pypi/pymobiledetect">pymobiledetect</a> - Mobile detect <code>python package</code>. Made by Bas van Oostveen.</p></td>
  </tr>
  
  <tr>
@@ -216,7 +223,7 @@ It overrides the Fuelphp Agent class its methods. Made by <a href="https://githu
 
  <tr>
     <td>MemHT</td>
-    <td><p><a href="http://www.memht.com/">MemHT</a> is a Free PHP CMS and Blog that permit the creation and the management online of websites with few and easy steps. Has the class included in the core.</p></td>
+    <td><p><a href="https://www.memht.com/">MemHT</a> is a Free PHP CMS and Blog that permit the creation and the management online of websites with few and easy steps. Has the class included in the core.</p></td>
  </tr>
 
  <tr>
@@ -226,7 +233,7 @@ It overrides the Fuelphp Agent class its methods. Made by <a href="https://githu
 
  <tr>
   <td>engine7</td>
-  <td><p><a href="https://github.com/gchiappe/exengine7">ExEngine 7</a> PHP Open Source Framework. The Mobile_Detect class is included in the engine.</p></td>
+  <td><p><a href="https://github.com/QOXCorp/exengine">ExEngine 7</a> PHP Open Source Framework. The Mobile_Detect class is included in the engine.</p></td>
  </tr>
 
  <tr>

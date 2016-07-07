@@ -8,6 +8,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
+use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 
@@ -43,42 +44,6 @@ class AccountBehavior extends Behavior {
 			'passwordAllowEmpty' => $this->passwordAllowEmpty,
 			'createRetype' => true,
 		]);
-	}
-
-	public function getAccountValidation(Validator $validator) {
-		$this->_table->setValidationCode('username.ruleUnique', 'User.Accounts');
-		$this->_table->setValidationCode('username.ruleCheckUsername', 'User.Accounts');
-		$this->_table->setValidationCode('password.ruleNoSpaces', 'User.Accounts');
-		$this->_table->setValidationCode('password.ruleMinLength', 'User.Accounts');
-		$this->_table->setValidationCode('retype_password.ruleCompare', 'User.Accounts');
-		return $validator
-			->requirePresence('gender_id', 'create')
-			->add('username', [
-				'ruleUnique' => [
-					'rule' => 'validateUnique',
-					'provider' => 'table',
-				],
-				'ruleCheckUsername' => [
-					'rule' => 'checkUsername',
-					'provider' => 'table',
-				]
-			])
-			->add('password' , [
-				'ruleNoSpaces' => [
-					'rule' => 'checkNoSpaces'
-				],
-				'ruleMinLength' => [
-					'rule' => ['minLength', 6],
-					'on' => 'update'
-				]
-			])
-			->add('retype_password' , [
-				'ruleCompare' => [
-					'rule' => ['comparePasswords', 'password'],
-					'on' => 'update'
-				]
-			])
-			;
 	}
 
 	private function setupTabElements($entity) {
@@ -121,6 +86,7 @@ class AccountBehavior extends Behavior {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity)  {
+		$this->_table->ControllerAction->field('username');
 		$this->_table->ControllerAction->setFieldOrder(['username', 'password', 'retype_password']);
 
 		$this->afterActionCode($event, $entity);
@@ -193,6 +159,19 @@ class AccountBehavior extends Behavior {
 				unset($toolbarButtons['back']);
 			}
 		}
+	}
+
+	public function onUpdateFieldUsername(Event $event, array $attr, $action, Request $request)
+	{
+		$isAdmin = $this->_table->AccessControl->isAdmin();
+		$loginUserId = $this->_table->Auth->user('id');
+		$id = $request->params['pass'][1];
+
+		if ($action == 'edit' && (($isAdmin && $loginUserId == $id) || !$isAdmin)) {
+			$attr['type'] = 'readonly';
+		}
+
+		return $attr;
 	}
 
 	public function onGetRoleTableElement(Event $event, $action, $entity, $attr, $options=[]) {
