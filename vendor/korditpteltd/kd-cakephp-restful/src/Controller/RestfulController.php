@@ -277,7 +277,9 @@ class RestfulController extends AppController
     private function convertBinaryToBase64(Entity $entity)
     {
         foreach ($entity->visibleProperties() as $property) {
-            if (is_resource($entity->$property)) {
+            if ($entity->$property instanceof Entity) {
+                $this->convertBinaryToBase64($entity->$property);
+            } else if (is_resource($entity->$property)) {
                 $entity->$property = base64_encode(stream_get_contents($entity->$property));
             }
         }
@@ -373,7 +375,12 @@ class RestfulController extends AppController
     {
         $target = $this->_instantiateModel($model);
         if ($target) {
-            if ($target->exists([$target->aliasField($target->primaryKey()) => $id])) {
+            if (strtolower($id) == 'schema') {
+                $fields = $this->schema($target);
+                $serialize = ['data' => $fields];
+                $serialize['_serialize'] = array_keys($serialize);
+                $this->set($serialize);
+            } else if ($target->exists([$target->aliasField($target->primaryKey()) => $id])) {
                 $requestQueries = $this->request->query;
 
                 $query = $target->find();
@@ -445,6 +452,18 @@ class RestfulController extends AppController
                 $this->_outputError('Record does not exists');
             }
         }
+    }
+
+    public function schema($table)
+    {
+        $fields = [];
+        $schema = $table->schema();
+        $columns = $schema->columns();
+        foreach ($columns as $col) {
+            $attr = $schema->column($col);
+            $fields[$col] = $attr;
+        }
+        return $fields;
     }
 
 
