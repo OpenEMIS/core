@@ -256,8 +256,12 @@ class InstitutionsController extends AppController  {
 							$model->aliasField('previous_institution_id') => $institutionId
 						]);
 					} else {
+						$primaryKey = $model->primaryKey();
+						if (is_array($primaryKey)) {
+							$primaryKey = 'id';
+						}
 						$exists = $model->exists([
-							$model->aliasField($model->primaryKey()) => $modelId,
+							$model->aliasField($primaryKey) => $modelId,
 							$model->aliasField('institution_id') => $institutionId
 						]);
 					}

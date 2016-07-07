@@ -38,6 +38,10 @@ class EditBehavior extends Behavior {
 		}
 
 		$primaryKey = $model->primaryKey();
+		if (is_array($primaryKey)) {
+			$primaryKey = 'id';
+		}
+		
 		$idKey = $model->aliasField($primaryKey);
 
 		$id = $model->paramsPass(0);
