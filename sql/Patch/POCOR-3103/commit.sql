@@ -7,9 +7,30 @@ INSERT INTO `db_patches` (issue, created) VALUES ('POCOR-3103', NOW());
 ALTER TABLE `user_comments` ADD `comment_type_id` int(11) NOT NULL AFTER `comment_date`;
 
 -- field_options table
-INSERT INTO `field_options` (`id`, `plugin`, `code`, `name`, `parent`, `params`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES (101, 'FieldOption', 'CommentTypes', 'Comment Types', 'Others', '{"model":"FieldOption.CommentTypes"}', '60', '1', NULL, NULL, '1', NOW());
+INSERT INTO `field_options` (`id`, `plugin`, `code`, `name`, `parent`, `params`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES (101, 'User', 'CommentTypes', 'Comment Types', 'Others', '{"model":"User.CommentTypes"}', '60', '1', NULL, NULL, '1', NOW());
 
 
+-- CommentTypes comment_types
+DROP TABLE IF EXISTS `comment_types`;
+CREATE TABLE `comment_types` LIKE `institution_network_connectivities`;
+INSERT INTO `comment_types`
+SELECT
+    `fov`.`id` as `id`,
+    `fov`.`name` as `name`,
+    `fov`.`order` as `order`,
+    `fov`.`visible` as `visible`,
+    `fov`.`editable` as `editable`,
+    `fov`.`default` as `default`,
+    `fov`.`international_code` as `international_code`,
+    `fov`.`national_code` as `national_code`,
+    `fov`.`modified_user_id` as `modified_user_id`,
+    `fov`.`modified` as `modified`,
+    `fov`.`created_user_id` as `created_user_id`,
+    `fov`.`created` as `created`
+FROM `field_option_values` as `fov`
+WHERE `fov`.`field_option_id`=(SELECT `id` FROM `field_options` WHERE `code` = 'CommentTypes');
+
+UPDATE `field_option_values` set `visible`=0 WHERE `field_option_id`=(SELECT `id` FROM `field_options` WHERE `code` = 'CommentTypes');
 
 
 -- TrainingAchievementTypes training_achievement_types
