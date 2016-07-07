@@ -142,10 +142,10 @@ trait ControllerActionTrait {
 		// public function onGetConvertOptions(Event $event, Entity $entity, Query $query) {}
 
 		'ControllerAction.Model.onBeforeDelete'               => 'onBeforeDelete',
-        // public function onBeforeDelete(Event $event, ArrayObject $options, $id) {}
+        // public function onBeforeDelete(Event $event, ArrayObject $options, $id, ArrayObject $extra) {}
 
         'ControllerAction.Model.onBeforeRestrictDelete'             => 'onBeforeRestrictDelete',
-        // public function onBeforeRestrictDelete(Event $event, ArrayObject $options, $id) {}
+        // public function onBeforeRestrictDelete(Event $event, ArrayObject $options, $id, ArrayObject $extra) {}
 
 		'ControllerAction.Model.onDeleteTransfer'			=> 'onDeleteTransfer',
 		// public function onDeleteTransfer(Event $event, ArrayObject $options, $id) {}
@@ -174,9 +174,9 @@ trait ControllerActionTrait {
 
 	public function implementedEvents() {
         $events = parent::implementedEvents();
-        
+
         $controllerActionEvents = $this->getControllerActionEvents();
-        
+
         foreach ($controllerActionEvents as $event => $method) {
             if (!method_exists($this, $method)) {
                 continue;
