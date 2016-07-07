@@ -7,7 +7,7 @@ use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
 class NationalitiesTable extends ControllerActionTable {
-	public function initialize(array $config) 
+	public function initialize(array $config)
     {
 		$this->addBehavior('ControllerAction.FieldOption');
 		$this->table('nationalities');
@@ -22,14 +22,4 @@ class NationalitiesTable extends ControllerActionTable {
     public function afterAction(Event $event) {
         $this->field('identity_type_id', ['type' => 'select', 'after' => 'name']);
     }
-
-	public function validationDefault(Validator $validator) 
-    {
-    	$validator = parent::validationDefault($validator);
-
-		$validator
-			->notEmpty('name', 'Please enter a name.');
-
-		return $validator;
-	}
 }
