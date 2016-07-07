@@ -1,11 +1,17 @@
 <?php
 namespace User\Model\Table;
 
-use App\Model\Table\AppTable;
+use ArrayObject;
+
+use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use Cake\Network\Request;
 
-class CommentsTable extends AppTable {
+use App\Model\Table\ControllerActionTable;
+
+class CommentsTable extends ControllerActionTable
+{
 	public function initialize(array $config) {
 		$this->table('user_comments');
 		parent::initialize($config);
@@ -14,22 +20,32 @@ class CommentsTable extends AppTable {
 		$this->belongsTo('CommentTypes', ['className' => 'User.CommentTypes', 'foreignKey' => 'comment_type_id']);
 	}
 
-	public function beforeAction()
+	public function beforeAction(Event $event, ArrayObject $extra)
 	{
-		$this->ControllerAction->field('comment_type_id', ['type' => 'select']);
-		$this->ControllerAction->setFieldOrder('comment_type_id', 'title', 'comment', 'comment_date');
+		$this->field('comment_type_id', ['type' => 'select', 'sort' => ['field' => 'CommentTypes.name']]);
+		$this->setFieldOrder('comment_type_id', 'title', 'comment', 'comment_date');
 	}
 
-	public function indexBeforeAction(Event $event)
+	public function indexBeforeAction(Event $event, ArrayObject $extra)
 	{
-		$order = 0;
-		$this->ControllerAction->setFieldOrder('comment_date', $order++);
-		$this->ControllerAction->setFieldOrder('comment_type_id', $order++);
-		$this->ControllerAction->setFieldOrder('title', $order++);
-		$this->ControllerAction->setFieldOrder('comment', $order++);
+		$this->setFieldOrder('comment_date', 'comment_type_id', 'title', 'comment');
 	}
 
-	private function setupTabElements() {
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	{
+		if (!empty($this->request->query['sort']) && ($this->request->query['sort'] == $this->fields['comment_type_id']['sort']['field'])) {
+			$sortList = [
+				$this->fields['comment_type_id']['sort']['field']
+			];
+			if (array_key_exists('sortWhitelist', $extra['options'])) {
+				$sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+			}
+			$extra['options']['sortWhitelist'] = $sortList;
+		}
+	}
+
+	private function setupTabElements()
+	{
 		$options = [
 			'userRole' => '',
 		];
@@ -48,7 +64,8 @@ class CommentsTable extends AppTable {
 		$this->controller->set('selectedAction', $this->alias());
 	}
 
-	public function afterAction(Event $event) {
+	public function afterAction(Event $event)
+	{
 		$this->setupTabElements();
 	}
 
