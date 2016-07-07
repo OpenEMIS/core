@@ -29,14 +29,6 @@ class CommentsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder('comment', $order++);
 	}
 
-	public function validationDefault(Validator $validator) {
-		$validator = parent::validationDefault($validator);
-
-		return $validator
-			->allowEmpty('comment_date')
-		;
-	}
-
 	private function setupTabElements() {
 		$options = [
 			'userRole' => '',
