@@ -304,6 +304,11 @@ class RemoveBehavior extends Behavior {
 				[$association->foreignKey() => $to],
 				$condition
 			);
+
+			// Delete orphan records
+			$modelAssociationTable->deleteAll(
+				[$assoc->foreignKey() => $from]
+			);
 		}
 	}
 }
