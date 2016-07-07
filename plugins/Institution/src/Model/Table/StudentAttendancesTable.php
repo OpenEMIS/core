@@ -260,26 +260,72 @@ class StudentAttendancesTable extends AppTable {
 	// Function use by the mini dashboard
 	public function getNumberOfStudentByAttendance($params=[]) {
 		$query = $params['query'];
+		$selectedDay = $params['selectedDay'];
+
+		// Add this condition if the selected day is all day
+		if ($selectedDay == -1) {
+			$dateRange = array_column($this->allDayOptions, 'date');
+			// Sort the date range
+			usort($dateRange, function($a, $b) {
+			    $dateTimestamp1 = strtotime($a);
+			    $dateTimestamp2 = strtotime($b);
+			    return $dateTimestamp1 < $dateTimestamp2 ? -1: 1;
+			});
+			if (!empty($dateRange)) {
+				$startDate = $dateRange[0];
+				$endDate = $dateRange[count($dateRange) - 1];
+				$dateRangeCondition = [
+					'StudentAbsences.end_date >=' => $startDate, 
+					'StudentAbsences.start_date <=' => $endDate
+				];
+			} else {
+				$dateRangeCondition = ['1 = 0'];
+			}
+		} else {
+			$dateRangeCondition = [];
+		}
+		
 		$StudentAttendancesQuery = clone $query;
-			
+
+		$studentAbsenceArray = $StudentAttendancesQuery
+			->find('list', [
+				'groupField' => 'student_id',
+				'keyField' => 'absence_id',
+				'valueField' => 'absence_type'
+			])
+			->select(['absence_id' => 'StudentAbsences.id', 'student_id' => $this->aliasField('student_id'), 'absence_type' => 'StudentAbsences.absence_type_id'])
+			->group(['student_id', 'absence_type'])
+			->where($dateRangeCondition)
+			->toArray();
 		// Creating the data set		
 		$dataSet = [];
 		$data = [];
-		foreach ($StudentAttendancesQuery as $entity) {
-			// //Compile the dataset
-			if (empty($entity->StudentAbsences['id'])) {
-				if (isset($data['Present'])) {
-					$data['Present'] = ++$data['Present'];
+		foreach ($studentAbsenceArray as $userAbsenceType) {
+			// Compile the dataset
+			$absenceForTheWeek = false;
+			foreach ($userAbsenceType as $absenceType) {
+				if (empty($absenceType)) {
+					if (isset($data['Present'])) {
+						$data['Present'] = ++$data['Present'];
+					} else {
+						$data['Present'] = 1;
+					}
 				} else {
-					$data['Present'] = 1;
-				}
-			} else {
-				$absenceTypeId = $entity->StudentAbsences['absence_type_id'];
-				$typeName = $this->absenceList[$absenceTypeId];
-				if (isset($data[$typeName])) {
-					$data[$typeName] = ++$data[$typeName];
-				} else {
-					$data[$typeName] = 1;
+					$typeName = $this->absenceList[$absenceType];
+					if ($typeName != __('Late')) {
+						$typeName = 'Absence';
+					}
+					if (!$absenceForTheWeek || $typeName == __('Late')) {
+						if (isset($data[$typeName])) {
+							$data[$typeName] = ++$data[$typeName];
+						} else {
+							$data[$typeName] = 1;
+						}
+					}
+					
+					if ($typeName == 'Absence') {
+						$absenceForTheWeek = true;
+					}
 				}
 			}
 		}
@@ -748,18 +794,19 @@ class StudentAttendancesTable extends AppTable {
 				->where([$this->aliasField('institution_class_id') => $selectedClass])
 				->where($conditions);
 
-			$totalStudent = $query->count();
+			$queryClone = clone $query;
+			$totalStudent = $queryClone->distinct(['InstitutionStudents.student_id'])->count();
 
 			$indexDashboard = 'attendance';
 			
-			$dataSet = $this->getNumberOfStudentByAttendance(['query' => $query]);
+			$dataSet = $this->getNumberOfStudentByAttendance(['query' => $query, 'selectedDay' => $selectedDay]);
 			$present = 0;
 			$absent = 0;
 			$late = 0;
 			foreach ($dataSet as $key => $data) {
 				if ($key == 'Present') {
 					$present = $data;
-				} elseif ($key == 'Late') {
+				} elseif ($key == __('Late')) {
 					$late = $data;
 				} else {
 					$absent += $data;
