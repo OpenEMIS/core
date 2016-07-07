@@ -70,7 +70,8 @@ class FieldOptionComponent extends Component
         'TrainingProviders' => 'Training.TrainingProviders',
         'TrainingRequirements' => 'Training.TrainingRequirements',
         'TrainingResultTypes' => 'Training.TrainingResultTypes',
-        'TrainingSpecialisations' => 'Training.TrainingSpecialisations'
+        'TrainingSpecialisations' => 'Training.TrainingSpecialisations',
+        'CommentTypes' => 'User.CommentTypes'
     ];
 
     // Is called before the controller's beforeFilter method.
