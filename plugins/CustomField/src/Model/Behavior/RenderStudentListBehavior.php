@@ -37,6 +37,8 @@ class RenderStudentListBehavior extends RenderBehavior {
         
         $form = $event->subject()->Form;
         $fieldPrefix = $attr['model'] . '.institution_student_surveys.' . $fieldId;
+        $unlockFields = [];
+        $unlockFields[] = $fieldPrefix.".institution_class";
 
         $classOptions = [];
         $tableHeaders = [];
@@ -102,6 +104,7 @@ class RenderStudentListBehavior extends RenderBehavior {
                 // Build table header
                 $headerHtml = __('OpenEMIS ID');
                 $headerHtml .= $form->hidden("$fieldPrefix.$formKey", ['value' => $formId]);
+                $unlockFields[] = "$fieldPrefix.$formKey";
                 $tableHeaders[] = $headerHtml;
                 $tableHeaders[] = __('Student Name');
                 $colOffset = 2; // 0 -> OpenEMIS ID, 1 -> Student Name
@@ -189,6 +192,7 @@ class RenderStudentListBehavior extends RenderBehavior {
                             } else if ($action == 'edit') {
                                 if (isset($entity->institution_student_surveys[$fieldId][$studentId]['id'])) {
                                     $rowInput .= $form->hidden($rowPrefix.".id", ['value' => $entity->institution_student_surveys[$fieldId][$studentId]['id']]);
+                                    $unlockFields[] = $rowPrefix.".id";
                                 }
 
                                 $rowData[] = $student->user->openemis_no . $rowInput;
@@ -254,6 +258,7 @@ class RenderStudentListBehavior extends RenderBehavior {
                                 }
 
                                 $cellInput .= $form->input($cellPrefix.".".$fieldTypes[$questionType], $cellOptions);
+                                $unlockFields[] = $cellPrefix.".".$fieldTypes[$questionType];
 
                                 if ($action == 'view') {
                                     $rowData[$colKey+$colOffset] = $cellValue;
@@ -289,7 +294,7 @@ class RenderStudentListBehavior extends RenderBehavior {
             $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
         } else if ($action == 'edit') {
             $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
-            $value = $this->processRelevancyDisabled($entity, $value, $fieldId);
+            $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
         }
 
         $event->stopPropagation();
