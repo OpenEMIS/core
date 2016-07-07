@@ -1258,6 +1258,18 @@ class ControllerActionComponent extends Component {
                 $query = $model->find();
                 $listOptions = new ArrayObject([]);
 
+                $label = [
+                    'nameLabel' => 'Convert From',
+                    'tableLabel' => 'Apply To'
+                ];
+                if ($this->deleteStrategy == 'transfer') {
+                    $label['nameLabel'] = 'Convert From';
+                    $label['tableLabel'] = 'Apply To';
+                } elseif ($this->deleteStrategy == 'restrict') {
+                    $label['nameLabel'] = 'Delete From';
+                    $label['tableLabel'] = 'Associated Records';
+                }
+
                 // Event: deleteOnInitialize
                 $this->debug(__METHOD__, ': Event -> ControllerAction.Model.delete.onInitialize');
                 $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.delete.onInitialize', null, [$entity, $query, $listOptions]);
@@ -1279,7 +1291,7 @@ class ControllerActionComponent extends Component {
                 if (empty($convertOptions)) {
                     $convertOptions[''] = __('No Available Options');
                 }
-
+                $totalCount = 0;
                 $associations = [];
                 foreach ($model->associations() as $assoc) {
                     if (!$assoc->dependent()) {
@@ -1301,11 +1313,19 @@ class ControllerActionComponent extends Component {
                                     $title = $assoc->name();
                                 }
                                 $associations[$assoc->alias()] = ['model' => $title, 'count' => $count];
+                                $totalCount += $count;
                             }
                         }
                     }
                 }
-
+                $showFormButton = true;
+                if ($this->deleteStrategy == 'restrict' && $totalCount > 0) {
+                    $showFormButton = false;
+                    $this->Alert->error('general.delete.restrictDeleteBecauseAssociation');
+                }
+                $this->controller->set('label', $label);
+                $this->controller->set(compact('showFormButton'));
+                $this->controller->set('deleteStrategy', $this->deleteStrategy);
                 $this->controller->set('data', $entity);
                 $this->controller->set('convertOptions', $convertOptions);
                 $this->controller->set('associations', $associations);
