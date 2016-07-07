@@ -23,7 +23,7 @@ $this->start('panelBody');
 	
 	$tableData = [];
 	foreach ($associations as $row) {
-		$tableData[] = [$row['model'], $row['count']];
+		$tableData[] = [__($row['model']), $row['count']];
 	}
 ?>
 
