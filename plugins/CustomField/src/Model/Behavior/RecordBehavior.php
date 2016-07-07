@@ -11,10 +11,13 @@ use Cake\Utility\Inflector;
 use Cake\ORM\Table;
 use Cake\Log\Log;
 use Cake\I18n\Time;
+use Cake\I18n\Date;
 
 class RecordBehavior extends Behavior {
 	protected $_defaultConfig = [
 		'events' => [
+			'ControllerAction.Model.add.onInitialize'		=> ['callable' => 'addOnInitialize', 'priority' => 100],
+			'ControllerAction.Model.edit.onInitialize'		=> ['callable' => 'editOnInitialize', 'priority' => 100],
 			'ControllerAction.Model.viewEdit.beforeQuery'	=> ['callable' => 'viewEditBeforeQuery', 'priority' => 100],
 			'ControllerAction.Model.view.afterAction'		=> ['callable' => 'viewAfterAction', 'priority' => 100],
 			'ControllerAction.Model.addEdit.beforePatch' 	=> ['callable' => 'addEditBeforePatch', 'priority' => 100],
@@ -47,7 +50,7 @@ class RecordBehavior extends Behavior {
 	];
 
 	// value for these field types will be saved on custom_field_values
-	private $fieldValueArray = ['TEXT', 'NUMBER', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'DATE', 'TIME'];
+	private $fieldValueArray = ['TEXT', 'NUMBER', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'DATE', 'TIME', 'COORDINATES', 'FILE'];
 
 	private $CustomFieldValues = null;
 	private $CustomTableCells = null;
@@ -85,6 +88,7 @@ class RecordBehavior extends Behavior {
 		$this->CustomFormsFields = TableRegistry::get($this->config('formFieldClass.className'));
 		$this->CustomFormsFilters = TableRegistry::get($this->config('formFilterClass.className'));
 
+		// Each field type will have one behavior attached
 		$this->_table->addBehavior('CustomField.RenderText');
 		$this->_table->addBehavior('CustomField.RenderNumber');
 		$this->_table->addBehavior('CustomField.RenderTextarea');
@@ -94,6 +98,10 @@ class RecordBehavior extends Behavior {
 		$this->_table->addBehavior('CustomField.RenderDate');
 		$this->_table->addBehavior('CustomField.RenderTime');
 		$this->_table->addBehavior('CustomField.RenderStudentList');
+		$this->_table->addBehavior('CustomField.RenderCoordinates');
+		$this->_table->addBehavior('CustomField.RenderFile');
+		$this->_table->addBehavior('CustomField.RenderRepeater');
+		// End
 
 		// If tabSection is not set, added to handle Section Header
 		if (!$this->config('tabSection')) {
@@ -125,6 +133,14 @@ class RecordBehavior extends Behavior {
 		}
 	}
 
+	public function addOnInitialize(Event $event, Entity $entity) {
+		$this->deleteUploadSessions();
+	}
+
+	public function editOnInitialize(Event $event, Entity $entity) {
+		$this->deleteUploadSessions();
+	}
+
 	public function viewEditBeforeQuery(Event $event, Query $query) {
 		// do not contain CustomFieldValues
 		$query->contain(['CustomTableCells']);
@@ -141,22 +157,38 @@ class RecordBehavior extends Behavior {
     }
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-    	$alias = $this->_table->alias();
+    	$model = $this->_table;
+    	$alias = $model->alias();
 
-    	if (array_key_exists('custom_field_values', $data[$alias])) {
-			$values = $data[$alias]['custom_field_values'];
-			$fieldValues = $this->_table->array_column($values, $this->config('fieldKey'));
+    	if (array_key_exists($alias, $data)) {
+	    	if (array_key_exists('custom_field_values', $data[$alias])) {
+				$values = $data[$alias]['custom_field_values'];
+				$fieldValues = $model->array_column($values, $this->config('fieldKey'));
 
-			$CustomFields = TableRegistry::get($this->config('fieldClass.className'));
-			$fields = $CustomFields->find()->where(['id IN' => $fieldValues])->all();
+				$CustomFields = TableRegistry::get($this->config('fieldClass.className'));
+				$fields = $CustomFields->find()->where(['id IN' => $fieldValues])->all();
 
-			foreach ($values as $key => $attr) {
-				foreach ($fields as $f) {
-					if ($f->id == $attr[$this->config('fieldKey')]) {
-						$data[$alias]['custom_field_values'][$key]['field_type'] = $f->field_type;
-						$data[$alias]['custom_field_values'][$key]['mandatory'] = $f->is_mandatory;
-						$data[$alias]['custom_field_values'][$key]['unique'] = $f->is_unique;
-						$data[$alias]['custom_field_values'][$key]['params'] = $f->params;
+				foreach ($values as $key => $attr) {
+					foreach ($fields as $f) {
+						if ($f->id == $attr[$this->config('fieldKey')]) {
+							$data[$alias]['custom_field_values'][$key]['field_type'] = $f->field_type;
+							$data[$alias]['custom_field_values'][$key]['mandatory'] = $f->is_mandatory;
+							$data[$alias]['custom_field_values'][$key]['unique'] = $f->is_unique;
+							$data[$alias]['custom_field_values'][$key]['params'] = $f->params;
+
+							// logic to patch request data
+							$fieldType = Inflector::camelize(strtolower($f->field_type));
+			        		$settings = new ArrayObject([
+								'recordKey' => $this->config('recordKey'),
+								'fieldKey' => $this->config('fieldKey'),
+								'tableColumnKey' => $this->config('tableColumnKey'),
+								'tableRowKey' => $this->config('tableRowKey'),
+								'customValue' => $attr
+							]);
+			        		$event = $model->dispatchEvent('Render.patch'.$fieldType.'Values', [$entity, $data, $settings], $model);
+							if ($event->isStopped()) { return $event->result; }
+							// End
+						}
 					}
 				}
 			}
@@ -186,7 +218,14 @@ class RecordBehavior extends Behavior {
     	$process = function($model, $entity) use ($data, $model) {
     		$errors = $entity->errors();
 
-			if (empty($errors)) {
+    		$fileErrors = [];
+    		$session = $model->request->session();
+    		$sessionErrors = $model->registryAlias().'.parseFileError';
+    		if ($session->check($sessionErrors)) {
+    			$fileErrors = $session->read($sessionErrors);
+    		}
+
+			if (empty($errors) && empty($fileErrors)) {
 				$settings = new ArrayObject([
 					'recordKey' => $this->config('recordKey'),
 					'fieldKey' => $this->config('fieldKey'),
@@ -199,22 +238,43 @@ class RecordBehavior extends Behavior {
 					'deleteFieldIds' => []
 				]);
 
-				if (array_key_exists('custom_field_values', $data[$model->alias()])) {
-					$values = $data[$model->alias()]['custom_field_values'];
-					foreach ($values as $key => $obj) {
-						$fieldType = Inflector::camelize(strtolower($obj['field_type']));
-						$settings['customValue'] = $obj;
+				if (array_key_exists($model->alias(), $data)) {
+					if (array_key_exists('custom_field_values', $data[$model->alias()])) {
+						$values = $data[$model->alias()]['custom_field_values'];
+						foreach ($values as $key => $obj) {
+							$fieldType = Inflector::camelize(strtolower($obj['field_type']));
+							$settings['customValue'] = $obj;
 
-						$event = $model->dispatchEvent('Render.process'.$fieldType.'Values', [$entity, $data, $settings], $model);
-						if ($event->isStopped()) { return $event->result; }
+							$event = $model->dispatchEvent('Render.process'.$fieldType.'Values', [$entity, $data, $settings], $model);
+							if ($event->isStopped()) { return $event->result; }
+						}
 					}
 				}
 
 				if ($this->_table->hasBehavior('RenderTable')) {
-					if (array_key_exists('custom_table_cells', $data[$model->alias()])) {
-						$event = $model->dispatchEvent('Render.processTableValues', [$entity, $data, $settings], $model);
-						if ($event->isStopped()) { return $event->result; }
+					if (array_key_exists($model->alias(), $data)) {
+						if (array_key_exists('custom_table_cells', $data[$model->alias()])) {
+							$event = $model->dispatchEvent('Render.processTableValues', [$entity, $data, $settings], $model);
+							if ($event->isStopped()) { return $event->result; }
+						}
 					}
+				}
+
+				// Logic to delete all the answer for rules
+				if (is_null($this->config('moduleKey'))) {
+					$surveyFormId = $data[$this->_table->alias()]['survey_form_id'];
+	        		$SurveyRules = TableRegistry::get('Survey.SurveyRules');
+	        		$rules = $SurveyRules
+	        			->find()
+	        			->where([
+	        				$SurveyRules->aliasField('survey_form_id') => $surveyFormId,
+	        				$SurveyRules->aliasField('enabled') => 1
+	        			])
+	        			->toArray();
+	        		$showRules = [];
+	        		foreach ($rules as $rule) {
+	        			$settings['deleteFieldIds'][] = $rule->survey_question_id;
+	        		}	        		
 				}
 
 				// when edit always delete all the checkbox values before reinsert,
@@ -234,6 +294,7 @@ class RecordBehavior extends Behavior {
 			                $this->CustomTableCells->aliasField($settings['recordKey']) => $id,
 			                $this->CustomTableCells->aliasField($settings['fieldKey'] . ' IN ') => $deleteFieldIds
 			            ]);
+			            // $event = $model->dispatchEvent('Render.deleteCustomFieldValues', [$entity, $deleteFieldIds], $model);
 		            }
 				}
 
@@ -242,18 +303,14 @@ class RecordBehavior extends Behavior {
 				$data[$model->alias()]['custom_table_cells'] = $settings['tableCells'];
 
 				$requestData = $data->getArrayCopy();
-				$patchOptions['associated'] = [
-					'CustomFieldValues' => ['validate' => false],
-					'CustomTableCells' => ['validate' => false]
-				];
-        		$entity = $model->patchEntity($entity, $requestData, $patchOptions);
+        		$entity = $model->patchEntity($entity, $requestData);
         		// End
 
         		return $model->save($entity);
 			} else {
+				$indexedErrors = [];
+				$fields = ['text_value', 'number_value', 'textarea_value', 'date_value', 'time_value', 'file'];
 				if (array_key_exists('custom_field_values', $errors)) {
-					$fields = ['text_value', 'number_value', 'textarea_value', 'date_value', 'time_value'];
-					$indexedErrors = [];
 					if ($entity->has('custom_field_values')) {
 						foreach ($entity->custom_field_values as $key => $obj) {
 							$fieldId = $obj->{$this->config('fieldKey')};
@@ -266,16 +323,22 @@ class RecordBehavior extends Behavior {
 							}
 						}
 					}
+				}
 
-					if (array_key_exists('custom_field_values', $data[$model->alias()])) {
-						foreach ($data[$model->alias()]['custom_field_values'] as $key => $obj) {
-							$fieldId = $obj[$this->config('fieldKey')];
+				$indexedErrors = $indexedErrors + $fileErrors;
 
-							if (array_key_exists($fieldId, $indexedErrors)) {
-								foreach ($fields as $field) {
-									if (array_key_exists($field, $indexedErrors[$fieldId])) {
-										$error = $indexedErrors[$fieldId][$field];
-										$entity->custom_field_values[$key]->errors($field, $error, true);
+				if (!empty($indexedErrors)) {
+					if (array_key_exists($model->alias(), $data)) {
+						if (array_key_exists('custom_field_values', $data[$model->alias()])) {
+							foreach ($data[$model->alias()]['custom_field_values'] as $key => $obj) {
+								$fieldId = $obj[$this->config('fieldKey')];
+
+								if (array_key_exists($fieldId, $indexedErrors)) {
+									foreach ($fields as $field) {
+										if (array_key_exists($field, $indexedErrors[$fieldId])) {
+											$error = $indexedErrors[$fieldId][$field];
+											$entity->custom_field_values[$key]->errors($field, $error, true);
+										}
 									}
 								}
 							}
@@ -283,6 +346,7 @@ class RecordBehavior extends Behavior {
 					}
 				}
 				Log::write('debug', $entity->errors());
+				Log::write('debug', $fileErrors);
 
 				return false;
 			}
@@ -381,37 +445,39 @@ class RecordBehavior extends Behavior {
 			$customFormIds = $customFormQuery
 				->toArray();
 
-			$query = $this->CustomFormsFields
-				->find('all')
-				->find('order')
-				->where([
-					$this->CustomFormsFields->aliasField($this->config('formKey') . ' IN') => $customFormIds
-				])
-				->group([
-					$this->CustomFormsFields->aliasField($this->config('fieldKey'))
-				]);
-
-			if ($withContain) {
-				if (is_array($withContain)) {
-					$query->contain($withContain);
-				} else {
-					$query->contain([
-						'CustomFields.CustomFieldOptions' => function($q) {
-							return $q
-								->find('visible')
-								->find('order');
-						},
-						'CustomFields.CustomTableColumns' => function ($q) {
-					       return $q
-					       		->find('visible')
-					       		->find('order');
-					    },
-						'CustomFields.CustomTableRows' => function ($q) {
-					       return $q
-					       		->find('visible')
-					       		->find('order');
-					    }
+			if (!empty($customFormIds)) {
+				$query = $this->CustomFormsFields
+					->find('all')
+					->find('order')
+					->where([
+						$this->CustomFormsFields->aliasField($this->config('formKey') . ' IN') => $customFormIds
+					])
+					->group([
+						$this->CustomFormsFields->aliasField($this->config('fieldKey'))
 					]);
+
+				if ($withContain) {
+					if (is_array($withContain)) {
+						$query->contain($withContain);
+					} else {
+						$query->contain([
+							'CustomFields.CustomFieldOptions' => function($q) {
+								return $q
+									->find('visible')
+									->find('order');
+							},
+							'CustomFields.CustomTableColumns' => function ($q) {
+						       return $q
+						       		->find('visible')
+						       		->find('order');
+						    },
+							'CustomFields.CustomTableRows' => function ($q) {
+						       return $q
+						       		->find('visible')
+						       		->find('order');
+						    }
+						]);
+					}
 				}
 			}
 		}
@@ -497,6 +563,7 @@ class RecordBehavior extends Behavior {
 
 	public function setupCustomFields(Entity $entity) {
 		$model = $this->_table;
+		$session = $model->request->session();
 		$query = $this->getCustomFieldQuery($entity);
 
 		// If tabSection is set, setup Tab Section
@@ -572,6 +639,19 @@ class RecordBehavior extends Behavior {
 								$fieldData['textarea_value'] = $obj->textarea_value;
 								$fieldData['date_value'] = $obj->date_value;
 								$fieldData['time_value'] = $obj->time_value;
+
+								// logic for Initialize
+								$fieldType = Inflector::camelize(strtolower($obj->custom_field->field_type));
+				        		$settings = new ArrayObject([
+									'recordKey' => $this->config('recordKey'),
+									'fieldKey' => $this->config('fieldKey'),
+									'tableColumnKey' => $this->config('tableColumnKey'),
+									'tableRowKey' => $this->config('tableRowKey'),
+									'customValue' => $obj
+								]);
+				        		$event = $model->dispatchEvent('Render.on'.$fieldType.'Initialize', [$entity, $settings], $model);
+								if ($event->isStopped()) { return $event->result; }
+								// End
 							} else if ($model->request->is(['post', 'put'])) {
 					        	// onPost, no actions
 					        }
@@ -654,6 +734,13 @@ class RecordBehavior extends Behavior {
 			ksort($fieldOrder);
 			$model->ControllerAction->setFieldOrder($fieldOrder);
 		}
+	}
+
+	private function deleteUploadSessions() {
+		$model = $this->_table;
+		$session = $model->request->session();
+		$session->delete($model->registryAlias().'.parseFile');
+		$session->delete($model->registryAlias().'.parseFileError');
 	}
 
 	// Model.excel.onExcelBeforeStart
@@ -873,7 +960,7 @@ class RecordBehavior extends Behavior {
 	private function date($data, $fieldInfo, $options=[]) {
 		if (isset($data[$fieldInfo['id']])) {
 			$date = date_create_from_format('Y-m-d', $data[$fieldInfo['id']]);
-			return $this->_table->formatDate(new Time($date));
+			return $this->_table->formatDate(new Date($date));
 		} else {
 			return '';
 		}

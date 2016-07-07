@@ -2,6 +2,7 @@
 namespace Workflow\Model\Behavior;
 
 use ArrayObject;
+use Cake\I18n\Time;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -56,6 +57,7 @@ class WorkflowBehavior extends Behavior {
 	}
 
 	public function implementedEvents() {
+
 		$events = parent::implementedEvents();
 		// priority has to be set at 1000 so that method(s) in model will be triggered first
 		// priority of indexBeforeAction and indexBeforePaginate is set to 1 for it to run first before the event in model
@@ -533,7 +535,9 @@ class WorkflowBehavior extends Behavior {
 				$data = [
 					'model_reference' => $entity->id,
 					'workflow_model_id' => $workflowModelId,
-					'workflow_step_id' => $workflowStep->id
+					'workflow_step_id' => $workflowStep->id,
+					'created_user_id' => 1,
+					'created' => new Time('NOW')
 				];
 				$entity = $this->WorkflowRecords->newEntity($data, ['validate' => false]);
 				if ($this->WorkflowRecords->save($entity)) {
@@ -608,7 +612,7 @@ class WorkflowBehavior extends Behavior {
 		$fields = [
 			$alias.'.prev_workflow_step_id' => [
 				'type' => 'hidden',
-				'value' => $step->id,
+				'value' => $step->id
 			],
 			$alias.'.prev_workflow_step_name' => [
 				'type' => 'hidden',
@@ -617,63 +621,98 @@ class WorkflowBehavior extends Behavior {
 			$alias.'.workflow_step_id' => [
 				'type' => 'hidden',
 				'value' => 0,
-				'class' => 'workflowtransition-step-id'
+				'class' => 'workflowtransition-step-id',
+				'unlockField' => true
 			],
 			$alias.'.workflow_step_name' => [
 				'type' => 'hidden',
 				'value' => '',
-				'class' => 'workflowtransition-step-name'
+				'class' => 'workflowtransition-step-name',
+				'unlockField' => true
 			],
 			$alias.'.workflow_action_id' => [
 				'type' => 'hidden',
 				'value' => 0,
-				'class' => 'workflowtransition-action-id'
+				'class' => 'workflowtransition-action-id',
+				'unlockField' => true
 			],
 			$alias.'.workflow_action_name' => [
 				'type' => 'hidden',
 				'value' => '',
-				'class' => 'workflowtransition-action-name'
+				'class' => 'workflowtransition-action-name',
+				'unlockField' => true
 			],
 			$alias.'.workflow_action_description' => [
 				'type' => 'hidden',
 				'value' => '',
-				'class' => 'workflowtransition-action-description'
+				'class' => 'workflowtransition-action-description',
+				'unlockField' => true
 			],
 			$alias.'.workflow_record_id' => [
 				'type' => 'hidden',
 				'value' => $record->id
 			],
+			$alias.'.model_reference' => [
+				'type' => 'hidden',
+				'value' => $record->model_reference
+			],
 			$alias.'.comment_required' => [
 				'type' => 'hidden',
 				'value' => 0,
-				'class' => 'workflowtransition-comment-required'
+				'class' => 'workflowtransition-comment-required',
+				'unlockField' => true
+			]
+		];
+
+		$contentFields = [];
+		$contentFields = [
+			$alias.'.action_name' => [
+				'label' => __('Action'),
+				'type' => 'string',
+				'readonly' => 'readonly',
+				'disabled' => 'disabled',
+				'class'=> 'workflowtransition-action-name'
+			],
+			$alias.'.action_description' => [
+				'label' => __('Description'),
+				'type' => 'textarea',
+				'readonly' => 'readonly',
+				'disabled' => 'disabled',
+				'class'=> 'workflowtransition-action-description'
+			],
+			$alias.'.step_name' => [
+				'label' => __('Next Step'),
+				'type' => 'string',
+				'readonly' => 'readonly',
+				'disabled' => 'disabled',
+				'class'=> 'workflowtransition-step-name'
+			],
+			$alias.'.comment' => [
+				'label' => __('Comment'),
+				'type' => 'textarea',
+				'class'=> 'workflowtransition-comment'
 			]
 		];
 
 		$content = '';
 		$content = '<style type="text/css">.modal-footer { clear: both; } .modal-body textarea { width: 60%; }</style>';
-		$content .= '<div class="input string"><label>'.__('Action').'</label><input name="WorkflowTransitions[action_name]" maxlength="250" value="" type="string" class="workflowtransition-action-name" readonly="readonly" disabled="disabled"></div>';
-		$content .= '<BR><BR>';
-		$content .= '<div class="input textarea"><label>'.__('Description').'</label><textarea name="WorkflowTransitions[action_description]" rows="5" class="workflowtransition-action-description" readonly="readonly" disabled="disabled"></textarea></div>';
-		$content .= '<BR><BR>';
-		$content .= '<div class="input string"><label>'.__('Next Step').'</label><input name="WorkflowTransitions[step_name]" maxlength="250" value="" type="string" class="workflowtransition-step-name" readonly="readonly" disabled="disabled"></div>';
-		$content .= '<BR><BR>';
-		$content .= '<div class="input textarea"><label>'.__('Comment').'</label><textarea name="WorkflowTransitions[comment]" rows="5" class="workflowtransition-comment"></textarea></div>';
 		$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-comment-error error-message">' . __('This field cannot be left empty') . '</div></div>';
 
 		$buttons = [
-			'<button type="submit" class="btn btn-default" onclick="return Workflow.onSubmit();">' . __('Save') . '</button>'
+			'<button id="workflow-submit" type="submit" class="btn btn-default" onclick="return Workflow.onSubmit();">' . __('Save') . '</button>'
 		];
 
 		$modal = [
 			'id' => 'workflowTransition',
 			'title' => __('Add Comment'),
 			'content' => $content,
+			'contentFields' => $contentFields, 
 			'form' => [
 				'model' => $this->_table,
 				'formOptions' => [
 					'class' => 'form-horizontal',
-					'url' => $this->isCAv4() ? $this->_table->url('processWorkflow') : $this->_table->ControllerAction->url('processWorkflow')
+					'url' => $this->isCAv4() ? $this->_table->url('processWorkflow') : $this->_table->ControllerAction->url('processWorkflow'),
+					'onSubmit' => 'document.getElementById("workflow-submit").disabled=true;'
 				],
 				'fields' => $fields
 			],
@@ -831,12 +870,19 @@ class WorkflowBehavior extends Behavior {
 		if($this->_table->hasBehavior('Workflow')) {
 			$workflowRecord = $this->getRecord($this->_table->registryAlias(), $entity);
 			if (!empty($workflowRecord)) {
+				$statusId = $workflowRecord->workflow_step_id;
 				if ($entity->has('status_id')) {
 					$this->_table->updateAll(
-						['status_id' => $workflowRecord->workflow_step_id],
+						['status_id' => $statusId],
 						['id' => $entity->id]
 					);
 				}
+
+				$subject = $this->_table;
+				// Trigger workflow update status event here
+				$event = $subject->dispatchEvent('Workflow.updateWorkflowStatus', [$entity, $statusId], $subject);
+				if ($event->isStopped()) { return $event->result; }
+				// End
 			}
 		}
 	}
@@ -851,14 +897,21 @@ class WorkflowBehavior extends Behavior {
 		if ($request->is(['post', 'put'])) {
 			$requestData = $request->data;
 
+			$subject = $this->_table;
+			// Trigger workflow before save event here
+			$event = $subject->dispatchEvent('Workflow.beforeTransition', [$requestData], $subject);
+			if ($event->isStopped()) { return $event->result; }
+			// End
+
 			// Insert into workflow_transitions.
 			$entity = $this->WorkflowTransitions->newEntity($requestData, ['validate' => false]);
+			
+			// $workflowRecord = $this->WorkflowRecords->get($entity->workflow_record_id);
+			// $id = $workflowRecord->model_reference;
+			$id = $requestData['WorkflowTransitions']['model_reference'];
+
 			if ($this->WorkflowTransitions->save($entity)) {
 				$this->_table->controller->Alert->success('general.edit.success', ['reset' => true]);
-
-				$subject = $this->_table;
-				$workflowRecord = $this->WorkflowRecords->get($entity->workflow_record_id);
-				$id = $workflowRecord->model_reference;
 
 				// Trigger workflow after save event here
 				$event = $subject->dispatchEvent('Workflow.afterTransition', [$id, $entity], $subject);

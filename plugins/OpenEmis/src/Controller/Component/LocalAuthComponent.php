@@ -55,7 +55,9 @@ class LocalAuthComponent extends Component {
 
     private function checkLogin($username) {
 		$session = $this->request->session();
-		$this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'debug');
+		if (array_key_exists('REMOTE_ADDR', $_SERVER)) {
+			$this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'debug');
+		}
 		$user = $this->Auth->identify();
 		if ($user) {
 			if ($user['status'] != 1) {
@@ -67,6 +69,7 @@ class LocalAuthComponent extends Component {
 			$labels = TableRegistry::get('Labels');
 			$labels->storeLabelsInCache();
 			if ($this->Auth->authenticationProvider()->needsPasswordRehash()) {
+				// $this->Users = TableRegistry::get('User.Users');
 				$user = $this->Users->get($this->Auth->user('id'));
 				$user->password = $this->request->data('password');
 				$this->Users->save($user);

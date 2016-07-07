@@ -70,14 +70,39 @@ class RemoveBehavior extends Behavior {
 		$entity = null;
 
 		if ($request->is('delete') && !empty($request->data[$primaryKey])) {
-			$id = $request->data[$primaryKey];
-			try {
-				$entity = $model->get($id);
-			} catch (RecordNotFoundException $exception) { // to handle concurrent deletes
-				$mainEvent->stopPropagation();
-				return $model->controller->redirect($model->url('index', 'QUERY'));
-			}
-			$result = $this->doDelete($entity, $extra);
+            $id = $request->data[$primaryKey];
+
+            // default is no restriction
+            $notRestrictedCheck = true;
+            if ($model->actions('remove') == 'restrict') {
+                $notRestrictedCheck = function ($model, $id, $extra) {
+                    $newEntity = $model->newEntity([$model->primaryKey() => $id]);
+                    return !$model->hasAssociatedRecords($model, $newEntity);
+                };
+
+                $event = $model->dispatchEvent('ControllerAction.Model.onBeforeRestrictDelete', [$id, $extra], $this);
+                if ($event->isStopped()) { return $event->result; }
+                if (is_callable($event->result)) {
+                    $notRestrictedCheck = $event->result;
+                    
+                }
+                if (is_callable($notRestrictedCheck)) {
+                    $notRestrictedCheck = $notRestrictedCheck($model, $id, $extra);
+                }
+            }
+
+            if ($notRestrictedCheck) {
+                try {
+                    $entity = $model->get($id);
+                } catch (RecordNotFoundException $exception) { // to handle concurrent deletes
+                    $mainEvent->stopPropagation();
+                    return $model->controller->redirect($model->url('index', 'QUERY'));
+                }
+                $result = $this->doDelete($entity, $extra);
+            } else {
+                $extra['Alert']['message'] = 'general.delete.restrictDeleteBecauseAssociation';
+                $result = false;
+            }
 		}
 		$extra['result'] = $result;
 
@@ -254,17 +279,19 @@ class RemoveBehavior extends Behavior {
 
 		// List of the target foreign keys for subqueries
 		$targetForeignKeys = $modelAssociationTable->find()
-			->select(['target' => $modelAssociationTable->aliasField($assoc->targetForeignKey())])
+			->select(['target' => $modelAssociationTable->aliasField($association->targetForeignKey())])
 			->where([
-				$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferTo
+				$modelAssociationTable->aliasField($association->foreignKey()) => $to
 			]);
 
 		$notUpdateQuery = $modelAssociationTable->query()
 			->select(['target_foreign_key' => 'TargetTable.target'])
 			->from(['TargetTable' => $targetForeignKeys]);
 
-		$condition = [];
+		if (!empty($notUpdateQuery)) {
+			$condition = [];
 
+<<<<<<< HEAD
 		$condition = [
 			$assoc->foreignKey() => $transferFrom, 
 			'NOT' => [
@@ -283,5 +310,21 @@ class RemoveBehavior extends Behavior {
 		$modelAssociationTable->deleteAll(
 			[$assoc->foreignKey() => $transferFrom]
 		);
+=======
+			$condition = [
+				$association->foreignKey() => $from, 
+				'NOT' => [
+					$association->foreignKey() => $from,
+					$association->targetForeignKey().' IN ' => $notUpdateQuery
+				]
+			];
+			
+			// Update all transfer records
+			$modelAssociationTable->updateAll(
+				[$association->foreignKey() => $to],
+				$condition
+			);
+		}
+>>>>>>> 97993635d1be9f3b4e8288d1a48c50fb1ea43f6f
 	}
 }

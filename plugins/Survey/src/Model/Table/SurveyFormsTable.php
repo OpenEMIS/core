@@ -34,6 +34,8 @@ class SurveyFormsTable extends CustomFormsTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 	    	->add('name', [
 	    		'unique' => [
@@ -112,7 +114,7 @@ class SurveyFormsTable extends CustomFormsTable {
 				$id = $buttons['download']['url'][1];
 				$toolbarButtons['download'] = $buttons['download'];
 				$toolbarButtons['download']['url'] = [
-					'plugin' => 'Restful',
+					'plugin' => 'Rest',
 					'controller' => 'Rest',
 					'action' => 'survey',
 					'download',
@@ -145,7 +147,7 @@ class SurveyFormsTable extends CustomFormsTable {
 			if (array_key_exists('view', $buttons)) {
 				$downloadButton = $buttons['view'];
 				$downloadButton['url'] = [
-					'plugin' => 'Restful',
+					'plugin' => 'Rest',
 					'controller' => 'Rest',
 					'action' => 'survey',
 					'download',

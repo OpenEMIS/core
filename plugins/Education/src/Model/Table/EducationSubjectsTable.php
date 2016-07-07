@@ -7,7 +7,8 @@ class EducationSubjectsTable extends ControllerActionTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->addBehavior('Education.Setup');
-		$this->hasMany('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects', 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true]);
 		$this->belongsToMany('EducationGrades', [
 			'className' => 'Education.EducationGrades',
 			'joinTable' => 'education_grades_subjects',
@@ -16,6 +17,6 @@ class EducationSubjectsTable extends ControllerActionTable {
 			'through' => 'Education.EducationGradesSubjects',
 			'dependent' => false
 		]);
-		$this->addBehavior('RestrictAssociatedDelete');
+        $this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
 	}
 }
