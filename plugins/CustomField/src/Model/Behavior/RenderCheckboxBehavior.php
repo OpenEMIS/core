@@ -49,6 +49,7 @@ class RenderCheckboxBehavior extends RenderBehavior {
             }
         } else if ($action == 'edit') {
             $form = $event->subject()->Form;
+            $unlockFields = [];
 
             $html = '';
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
@@ -62,14 +63,16 @@ class RenderCheckboxBehavior extends RenderBehavior {
                         }
                     }
                     $html .= $form->checkbox("$fieldPrefix.number_value.$key", $option);
+                    $unlockFields[] = "$fieldPrefix.number_value.$key";
                     $html .= '<label class="selection-label">'. $value .'</label>';
                 $html .= '</div>';
             }
             $html .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
+            $unlockFields[] = $fieldPrefix.".".$attr['attr']['fieldKey'];
 
             $attr['output'] = $html;
             $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
-            $value = $this->processRelevancyDisabled($entity, $value, $fieldId);
+            $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
         }
 
         $event->stopPropagation();
