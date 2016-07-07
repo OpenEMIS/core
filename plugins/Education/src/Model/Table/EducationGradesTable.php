@@ -273,7 +273,7 @@ class EducationGradesTable extends AppTable {
 						];
 					}
 				}
-
+				$form->unlockField($attr['model'] . '.education_subjects');
 				foreach ($arraySubjects as $key => $obj) {
 					$fieldPrefix = $attr['model'] . '.education_subjects.' . $cellCount++;
 					$joinDataPrefix = $fieldPrefix . '._joinData';
