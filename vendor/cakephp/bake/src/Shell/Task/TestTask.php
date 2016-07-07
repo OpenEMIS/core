@@ -215,13 +215,15 @@ class TestTask extends BakeTask
 
         $fullClassName = $this->getRealClassName($type, $className);
 
-        if (!empty($this->params['fixtures'])) {
-            $fixtures = array_map('trim', explode(',', $this->params['fixtures']));
-            $this->_fixtures = array_filter($fixtures);
-        } elseif ($this->typeCanDetectFixtures($type) && class_exists($fullClassName)) {
-            $this->out('Bake is detecting possible fixtures...');
-            $testSubject = $this->buildTestSubject($type, $fullClassName);
-            $this->generateFixtureList($testSubject);
+        if (empty($this->params['no-fixture'])) {
+            if (!empty($this->params['fixtures'])) {
+                $fixtures = array_map('trim', explode(',', $this->params['fixtures']));
+                $this->_fixtures = array_filter($fixtures);
+            } elseif ($this->typeCanDetectFixtures($type) && class_exists($fullClassName)) {
+                $this->out('Bake is detecting possible fixtures...');
+                $testSubject = $this->buildTestSubject($type, $fullClassName);
+                $this->generateFixtureList($testSubject);
+            }
         }
 
         $methods = [];
@@ -304,7 +306,13 @@ class TestTask extends BakeTask
             if ($this->plugin) {
                 $name = $this->plugin . '.' . $name;
             }
-            $instance = TableRegistry::get($name);
+            if (TableRegistry::exists($name)) {
+                $instance = TableRegistry::get($name);
+            } else {
+                $instance = TableRegistry::get($name, [
+                    'connectionName' => $this->connection
+                ]);
+            }
         } elseif (strtolower($type) === 'controller') {
             $instance = new $class(new Request(), new Response());
         } else {
@@ -694,6 +702,10 @@ class TestTask extends BakeTask
             'help' => 'An existing class to bake tests for.'
         ])->addOption('fixtures', [
             'help' => 'A comma separated list of fixture names you want to include.'
+        ])->addOption('no-fixture', [
+            'boolean' => true,
+            'default' => false,
+            'help' => 'Select if you want to bake without fixture.'
         ])->addOption('all', [
             'boolean' => true,
             'help' => 'Bake all classes of the given type'
