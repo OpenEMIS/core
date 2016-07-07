@@ -297,10 +297,6 @@ class StaffAttendancesTable extends AppTable {
 			$dateRangeCondition = [];
 		}
 		$StaffAttendancesQuery = clone $query;
-<<<<<<< HEAD
-=======
-
->>>>>>> cd5715623dea69da1174b255692071588ea89086
 		$staffAbsenceArray = $StaffAttendancesQuery
 			->find('list', [
 				'groupField' => 'staff_id',
