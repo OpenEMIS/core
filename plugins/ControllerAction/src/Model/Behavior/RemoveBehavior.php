@@ -291,26 +291,6 @@ class RemoveBehavior extends Behavior {
 		if (!empty($notUpdateQuery)) {
 			$condition = [];
 
-<<<<<<< HEAD
-		$condition = [
-			$assoc->foreignKey() => $transferFrom, 
-			'NOT' => [
-				$assoc->foreignKey() => $transferFrom,
-				$assoc->targetForeignKey().' IN ' => $notUpdateQuery
-			]
-		];
-		
-		// Update all transfer records
-		$modelAssociationTable->updateAll(
-			[$assoc->foreignKey() => $transferTo],
-			$condition
-		);
-
-		// Delete orphan records
-		$modelAssociationTable->deleteAll(
-			[$assoc->foreignKey() => $transferFrom]
-		);
-=======
 			$condition = [
 				$association->foreignKey() => $from, 
 				'NOT' => [
@@ -324,7 +304,11 @@ class RemoveBehavior extends Behavior {
 				[$association->foreignKey() => $to],
 				$condition
 			);
+
+			// Delete orphan records
+			$modelAssociationTable->deleteAll(
+				[$assoc->foreignKey() => $from]
+			);
 		}
->>>>>>> 97993635d1be9f3b4e8288d1a48c50fb1ea43f6f
 	}
 }
