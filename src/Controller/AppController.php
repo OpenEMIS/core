@@ -93,6 +93,15 @@ class AppController extends Controller {
 			],
 			'theme' => 'core'
 		]);
+
+		// Angular initialization
+		$this->loadComponent('Angular.Angular', [
+			'app' => 'OE_Core',
+			'modules' => [
+				'bgDirectives', 'ui.bootstrap', 'ui.bootstrap-slider', 'ui.tab.scroll', 'agGrid', 'app.ctrl', 'advanced.search.ctrl'
+			]
+		]);
+
 		$this->loadComponent('ControllerAction.Alert');
 		$this->loadComponent('AccessControl', [
 			'ignoreList' => [
@@ -108,5 +117,11 @@ class AppController extends Controller {
 			'homePageURL' => ['plugin' => null, 'controller' => 'Dashboard', 'action' => 'index'],
 			'loginPageURL' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'login'],
 		]); // for single sign on authentication
+		$this->loadComponent('Security', [
+			'unlockedFields' => [
+				'area_picker'
+			]
+		]);
+		$this->loadComponent('Csrf');
 	}
 }

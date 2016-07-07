@@ -7,6 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use CustomField\Model\Behavior\RenderBehavior;
 use Cake\I18n\Time;
+use Cake\I18n\Date;
 
 use Cake\View\Helper\IdGeneratorTrait;
 use ControllerAction\Model\Traits\PickerTrait;
@@ -79,7 +80,7 @@ class RenderDateBehavior extends RenderBehavior {
 
 			if (!array_key_exists('value', $attr)) {
 				if (!is_null($savedValue)) {
-					if ($savedValue instanceof Time) {
+					if ($savedValue instanceof Time || $savedValue instanceof Date) {
 						$attr['value'] = $savedValue->format('d-m-Y');
 					} else {
 						$attr['value'] = date('d-m-Y', strtotime($savedValue));
@@ -88,7 +89,7 @@ class RenderDateBehavior extends RenderBehavior {
 					$attr['value'] = date('d-m-Y');
 				}
 			} else {	
-				if ($attr['value'] instanceof Time) {
+				if ($attr['value'] instanceof Time || $savedValue instanceof Date) {
 					$attr['value'] = $attr['value']->format('d-m-Y');
 				} else {
 					$attr['value'] = date('d-m-Y', strtotime($attr['value']));
@@ -104,6 +105,7 @@ class RenderDateBehavior extends RenderBehavior {
             if (!is_null($savedId)) {
                 $value .= $form->hidden($fieldPrefix.".id", ['value' => $savedId]);
             }
+            $value = $this->processRelevancyDisabled($entity, $value, $fieldId);
 		}
 
         $event->stopPropagation();

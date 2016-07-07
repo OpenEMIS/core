@@ -5,6 +5,7 @@ use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use Cake\ORM\Entity;
 use Exception;
 use DateTime;
 
@@ -71,4 +72,5 @@ class IdentitiesTable extends AppTable {
 		$this->validationDefault($validator);
 		return $validator->allowEmpty('number');
 	}
+
 }

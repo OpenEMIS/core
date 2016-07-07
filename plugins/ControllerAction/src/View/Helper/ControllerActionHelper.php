@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\I18n\I18n;
+use Cake\ORM\Table;
 
 class ControllerActionHelper extends Helper {
 	public $helpers = ['Html', 'ControllerAction.HtmlField', 'Form', 'Paginator', 'Label', 'Url'];
@@ -48,6 +49,7 @@ class ControllerActionHelper extends Helper {
 
 	public function getFormOptions() {
 		$options = [
+			'id' => 'content-main-form',
 			'class' => 'form-horizontal',
 			'novalidate' => true
 		];
@@ -55,7 +57,7 @@ class ControllerActionHelper extends Helper {
 		$config = $this->_View->get('ControllerAction');
 		$fields = $config['fields'];
 		if (!empty($fields)) {
-			$types = ['binary','image'];
+			$types = ['binary','image', 'custom_file'];
 			foreach ($fields as $key => $attr) {
 				if (in_array($attr['type'], $types)) {
 					$options['type'] = 'file';
@@ -63,7 +65,7 @@ class ControllerActionHelper extends Helper {
 				}
 			}
 		}
-		
+
 		return $options;
 	}
 
@@ -213,7 +215,7 @@ class ControllerActionHelper extends Helper {
 		return $tableHeaders;
 	}
 
-	public function getTableRow(Entity $entity, array $fields) {
+	public function getTableRow(Entity $entity, array $fields, $searchableFields = []) {
 		$row = [];
 
 		$search = '';
@@ -228,10 +230,6 @@ class ControllerActionHelper extends Helper {
 			$value = $entity->$field;
 			$type = $attr['type'];
 
-			if (!empty($search)) {
-				$value = $this->highlight($search, $value);
-			}
-
 			if (is_null($table)) {
 				$table = TableRegistry::get($attr['className']);
 			}
@@ -240,13 +238,22 @@ class ControllerActionHelper extends Helper {
 			// EventManager->on is triggered at getTableHeader()
 			$method = 'onGet' . Inflector::camelize($field);
 			$eventKey = 'ControllerAction.Model.' . $method;
+
+			// For XSS
+			$this->escapeHtmlSpecialCharacters($entity, $table);
+
 			$event = new Event($eventKey, $this, [$entity]);
 			$event = $table->eventManager()->dispatch($event);
 			// end attach event
 
 			$associatedFound = false;
 			if (strlen($event->result) > 0) {
-				$value = __($event->result);
+				$allowedTranslation = ['string','text'];//array that will be translate
+				if (in_array($attr['type'], $allowedTranslation)) {
+					$value = __($event->result);
+				} else {
+					$value = $event->result;
+				}
 				$entity->$field = $value;
 			} else if ($this->endsWith($field, '_id')) {
 				$associatedObject = '';
@@ -256,14 +263,20 @@ class ControllerActionHelper extends Helper {
 					$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);
 				}
 				
-				if ($entity->has($associatedObject) && $entity->$associatedObject->has('name')) {
-					$value = $entity->$associatedObject->name;
-					$associatedFound = true;
-				}
+                if ($entity->has($associatedObject) && $entity->$associatedObject instanceof Entity && $entity->$associatedObject->has('name')) {
+                    $value = __($entity->$associatedObject->name);
+                    $associatedFound = true;
+                }
 			}
 
 			if (!$associatedFound) {
 				$value = $this->HtmlField->render($type, 'index', $entity, $attr);
+			}
+
+			if (!empty($search)) {
+				if (in_array($field, $searchableFields)) {
+					$value = $this->highlight($search, $value);
+				}
 			}
 
 			if (isset($attr['tableColumnClass'])) {
@@ -401,6 +414,22 @@ class ControllerActionHelper extends Helper {
 		return $html;
 	}
 
+	private function escapeHtmlSpecialCharacters(Entity $entity, Table $table)
+	{
+		// For XSS
+		$schema = $table->schema();
+		$columns = $schema->columns();
+		foreach ($columns as $key => $col) {
+			$fieldCol = $schema->column($col);
+			if ($fieldCol['type'] == 'string' || $fieldCol['type'] == 'text') {
+				if ($entity->has($col)) {
+					$htmlInfo = htmlentities($entity->$col, ENT_COMPAT | ENT_HTML401, 'UTF-8');
+					$entity->$col = $htmlInfo;
+				}
+			}
+		}
+	}
+
 	public function getViewElements(Entity $data, $fields = [], $exclude = []) {
 		//  1. implemented override param for nav_tabs to omit label
 		//  2. for case 'element', implemented $elementData for $this->_View->element($element, $elementData)
@@ -473,6 +502,9 @@ class ControllerActionHelper extends Helper {
 					$label = $options['label'];
 				}
 
+				// For XSS
+				$this->escapeHtmlSpecialCharacters($data, $table);
+
 				// attach event for index columns
 				$method = 'onGet' . Inflector::camelize($_field);
 				$eventKey = 'ControllerAction.Model.' . $method;
@@ -493,7 +525,7 @@ class ControllerActionHelper extends Helper {
 					}
 					
 					if ($data->has($associatedObject)) {
-						$value = $data->$associatedObject->name;
+						$value = __($data->$associatedObject->name);
 						$associatedFound = true;
 					}
 				}

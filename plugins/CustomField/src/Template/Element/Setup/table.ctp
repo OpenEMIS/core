@@ -1,6 +1,8 @@
 <?php
 	$model = $ControllerAction['table'];
 	$alias = $model->alias();
+	$this->Form->unlockField("$alias.custom_table_columns");
+	$this->Form->unlockField("$alias.custom_table_rows");
 ?>
 
 <?php if ($ControllerAction['action'] == 'view') : ?>

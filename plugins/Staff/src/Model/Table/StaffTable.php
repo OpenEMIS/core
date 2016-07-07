@@ -74,15 +74,15 @@ class StaffTable extends AppTable {
 			'dependent' => true
 		]);
 
-		// section should never cascade delete
-		$model->hasMany('InstitutionSections', 		['className' => 'Institution.InstitutionSections', 'foreignKey' => 'staff_id']);
+		// class should never cascade delete
+		$model->hasMany('InstitutionClasses', 		['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'staff_id']);
 
 		$model->belongsToMany('Subjects', [
-			'className' => 'Institution.InstitutionClass',
-			'joinTable' => 'institution_class_staff',
+			'className' => 'Institution.InstitutionSubject',
+			'joinTable' => 'institution_subject_staff',
 			'foreignKey' => 'staff_id',
-			'targetForeignKey' => 'institution_class_id',
-			'through' => 'Institution.InstitutionClassStaff',
+			'targetForeignKey' => 'institution_subject_id',
+			'through' => 'Institution.InstitutionSubjectStaff',
 			'dependent' => true
 		]);
 
@@ -92,6 +92,7 @@ class StaffTable extends AppTable {
 
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
 		$BaseUsers = TableRegistry::get('User.Users');
 		return $BaseUsers->setUserValidation($validator, $this);
 	}
@@ -189,9 +190,9 @@ class StaffTable extends AppTable {
 
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
 		$process = function($model, $id, $options) {
-			// sections are not to be deleted (cascade delete is not set and need to change id)
-			$InstitutionSections = TableRegistry::get('Institution.InstitutionSections');
-			$InstitutionSections->updateAll(
+			// classes are not to be deleted (cascade delete is not set and need to change id)
+			$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+			$InstitutionClasses->updateAll(
 					['staff_id' => 0],
 					['staff_id' => $id]
 				);
@@ -284,10 +285,10 @@ class StaffTable extends AppTable {
 		$studentTabElements = [
 			'Employments' => ['text' => __('Employments')],
 			'Positions' => ['text' => __('Positions')],
-			'Sections' => ['text' => __('Classes')],
-			'Classes' => ['text' => __('Subjects')],
+			'Classes' => ['text' => __('Classes')],
+			'Subjects' => ['text' => __('Subjects')],
 			'Absences' => ['text' => __('Absences')],
-			'Leaves' => ['text' => __('Leaves')],
+			'Leave' => ['text' => __('Leave')],
 			'Behaviours' => ['text' => __('Behaviours')],
 			'Awards' => ['text' => __('Awards')],
 		];

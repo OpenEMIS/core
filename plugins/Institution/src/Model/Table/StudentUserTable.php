@@ -14,7 +14,6 @@ use Cake\Network\Session;
 use Student\Model\Table\StudentsTable as UserTable;
 
 class StudentUserTable extends UserTable {
-
 	public function initialize(array $config) {
 		parent::initialize($config);
 	}
@@ -50,10 +49,8 @@ class StudentUserTable extends UserTable {
 		if ($this->Session->check($sessionKey)) {
 			$academicData = $this->Session->read($sessionKey);
 			$academicData['student_id'] = $entity->id;
-			// $class = $academicData['class'];
-			// unset($academicData['class']);
 			$StudentStatusesTable = TableRegistry::get('Student.StudentStatuses');
-			$pendingAdmissionCode = $StudentStatusesTable->getIdByCode('PENDING_ADMISSION');
+			$pendingAdmissionCode = $StudentStatusesTable->PENDING_ADMISSION;
 			if ($academicData['student_status_id'] != $pendingAdmissionCode) {
 				$Student = TableRegistry::get('Institution.Students');
 				if (empty($academicData['student_name'])) {
@@ -76,12 +73,12 @@ class StudentUserTable extends UserTable {
 					$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
 					return $this->controller->redirect($action);
 					// if ($class > 0) {
-					// 	$sectionData = [];
-					// 	$sectionData['student_id'] = $entity->id;
-					// 	$sectionData['education_grade_id'] = $academicData['education_grade_id'];
-					// 	$sectionData['institution_section_id'] = $class;
-					// 	$InstitutionSectionStudents = TableRegistry::get('Institution.InstitutionSectionStudents');
-					// 	$InstitutionSectionStudents->autoInsertSectionStudent($sectionData);
+					// 	$classData = [];
+					// 	$classData['student_id'] = $entity->id;
+					// 	$classData['education_grade_id'] = $academicData['education_grade_id'];
+					// 	$classData['institution_class_id'] = $class;
+					// 	$InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+					// 	$InstitutionClassStudents->autoInsertClassStudent($classData);
 					// }
 				}
 				//  else {
@@ -109,6 +106,7 @@ class StudentUserTable extends UserTable {
 					'institution_id' => $academicData['institution_id'],
 					'academic_period_id' => $academicData['academic_period_id'],
 					'education_grade_id' => $academicData['education_grade_id'],
+					'institution_class_id' => $academicData['class'],
 					'previous_institution_id' => 0,
 					'student_transfer_reason_id' => 0,
 					'type' => $admissionStatus,
@@ -143,6 +141,16 @@ class StudentUserTable extends UserTable {
 		$this->Session->write('Student.Students.id', $entity->id);
 		$this->Session->write('Student.Students.name', $entity->name);
 		$this->setupTabElements($entity);
+
+		// POCOR-3010
+		$userId = $this->Auth->user('id');
+		if (!$this->checkClassPermission($entity->id, $userId)) {
+			$this->Alert->error('security.noAccess');
+			$event->stopPropagation();
+			$url = $this->ControllerAction->url('view');
+			return $this->controller->redirect($url);
+		}
+		// End POCOR-3010
 	}
 
 	private function setupTabElements($entity) {
@@ -170,29 +178,16 @@ class StudentUserTable extends UserTable {
     	$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
 		$statuses = $InstitutionStudentsTable->StudentStatuses->findCodeList();
 		$id = $session->read('Institution.Students.id');
-		$studentStatusId = $InstitutionStudentsTable->get($id)->student_status_id;	
 		if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])) {
 			$TransferRequests = TableRegistry::get('Institution.TransferRequests');
-			$StudentPromotion = TableRegistry::get('Institution.StudentPromotion');
 			$studentData = $InstitutionStudentsTable->get($id);
 			$selectedStudent = $studentData->student_id;
-			$selectedPeriod = $studentData->academic_period_id;
 			$selectedGrade = $studentData->education_grade_id;
 			$session->write($TransferRequests->registryAlias().'.id', $id);
 
 			// Show Transfer button only if the Student Status is Current
 			$institutionId = $session->read('Institution.Institutions.id');
-			$student = $StudentPromotion
-				->find()
-				->where([
-					$StudentPromotion->aliasField('institution_id') => $institutionId,
-					$StudentPromotion->aliasField('student_id') => $selectedStudent,
-					$StudentPromotion->aliasField('academic_period_id') => $selectedPeriod,
-					$StudentPromotion->aliasField('education_grade_id') => $selectedGrade
-				])
-				->first();
-				
-			$checkIfCanTransfer = $InstitutionStudentsTable->checkIfCanTransfer($student, $institutionId);
+			$checkIfCanTransfer = $InstitutionStudentsTable->checkIfCanTransfer($studentData, $institutionId);
 			// End
 
 			// Transfer button
@@ -330,6 +325,16 @@ class StudentUserTable extends UserTable {
 				}
 			}
 			// End PHPOE-1897
+
+			// POCOR-3010
+			$userId = $this->Auth->user('id');
+			$studentId = $this->request->pass[1];
+			if (!$this->checkClassPermission($studentId, $userId)) {
+				if (isset($toolbarButtons['edit'])) {
+					unset($toolbarButtons['edit']);
+				}
+			}
+			// End POCOR-3010
 			
 			$session = $this->request->session();
 			$this->addTransferButton($buttons, $toolbarButtons, $attr, $session);
@@ -342,6 +347,40 @@ class StudentUserTable extends UserTable {
 				unset($toolbarButtons['export']);
 			}
 		}
+	}
+
+	private function checkClassPermission($studentId, $userId)
+	{
+		$permission = false;
+		if (!$this->AccessControl->isAdmin()) {
+			$event = $this->controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
+			$roles = [];
+            if (is_array($event->result)) {
+                $roles = $event->result;    
+            }
+			if (!$this->AccessControl->check(['Institutions', 'AllClasses', $permission], $roles)) {
+				$Class = TableRegistry::get('Institution.InstitutionClasses');
+				$classStudentRecord = $Class
+					->find('ByAccess', [
+						'accessControl' => $this->AccessControl,
+						'controller' => $this->controller,
+						'userId' => $userId,
+						'permission' => 'edit'
+					])
+					->innerJoinWith('ClassStudents')
+					->where(['ClassStudents.student_id' => $studentId])
+					->toArray();
+				if (!empty($classStudentRecord)) {
+					$permission = true;
+				}
+			} else {
+				$permission = true;
+			}
+			
+		} else {
+			$permission = true;
+		}
+		return $permission;
 	}
 
 }

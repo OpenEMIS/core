@@ -43,6 +43,7 @@ class ApiSISBComponent extends Component {
 		})->toArray();
 
 		if (array_key_exists('id', $params) && $params['id']!='') {
+			$Students = TableRegistry::get('API.Students');
 
 			$message = 'User ' . $params['user_id'] . ' from ' . $externalApplication->name . ' queries for ' . $params['id'];
 			Log::info($message, ['scope' => ['api']]);
@@ -58,12 +59,107 @@ class ApiSISBComponent extends Component {
 			} else {
 				$PersonaIdentities = TableRegistry::get('API.StudentIdentities');
 			}
-
+			
 			if (isset($result)) { return $result; }
 
 			$conditions = [];
 			if ($paramIdentityType=='openemis_no') {
 				$conditions[] = ['Student.openemis_no' => $params['id']];
+				$resultSet = $Students
+					->find()
+					->contain(['Identities.IdentityTypes'])
+					->where([$Students->aliasField('openemis_no') => $params['id']])
+					->all();
+
+				if ($resultSet->count() > 0) {
+					$entity = $resultSet->first();
+					$identities = $entity->identities;
+
+					$result = [
+						'id' => [
+							'label' => 'Not Available',
+							'value' => 'Not Available'
+						],
+						'name' => [
+							'label' => 'Name'
+						],
+						'status' => [
+							'label' => 'Last known status',
+							'value' =>  'Not Available',
+						],
+						'school_name' => [
+							'label' => 'Last known school',
+							'value' =>  'Not Available',
+						],
+						'school_code' => [
+							'label' => 'Last known school #',
+							'value' =>  'Not Available',
+						],
+						'level' => [
+							'label' => 'Highest education level',
+							'value' =>  'Not Available',
+						],
+						'openemis_id' => [
+							'label' => 'OpenEMIS ID#'
+						]
+					];
+
+					if (count($identities) > 0) {
+						$result['id'] = [
+							'label' => $identities[0]->identity_type->name . ' #',
+							'value' => $identities[0]->number
+						];
+					}
+
+					$result['name'] = [
+						'label' => 'Name',
+						'value' => implode(' ', [$entity['first_name'], $entity['middle_name'], $entity['third_name'], $entity['last_name']])
+					];
+
+					$InstitutionStudents = TableRegistry::get('InstitutionStudents');
+					$academicEntity = $InstitutionStudents
+						->find()
+						->select([
+							'EducationGrades.name', 'Institutions.name', 
+							'Institutions.code', 'Statuses.name',
+							'InstitutionStudents.start_date', 'InstitutionStudents.end_date'
+						])
+						->innerJoin(
+							['EducationGrades' => 'education_grades'],
+							['EducationGrades.id = ' . $InstitutionStudents->aliasField('education_grade_id')]
+						)
+						->innerJoin(
+							['Institutions' => 'institutions'],
+							['Institutions.id = ' . $InstitutionStudents->aliasField('institution_id')]
+						)
+						->innerJoin(
+							['Statuses' => 'student_statuses'],
+							['Statuses.id = ' . $InstitutionStudents->aliasField('student_status_id')]
+						)
+						->where([
+							$InstitutionStudents->aliasField('student_id') => $entity->id
+						])
+						->order([$InstitutionStudents->aliasField('created') => 'DESC'])
+						->autoFields(true)
+						->first();
+
+					if ($academicEntity) {
+						// pr($academicEntity);
+						$result['status']['value'] = $academicEntity->Statuses['name'];
+						$result['status']['start_date'] = $academicEntity->start_date->format('d-M-Y');
+						$result['status']['end_date'] = $academicEntity->end_date->format('d-M-Y');
+						$result['school_name']['value'] = $academicEntity->Institutions['name'];
+						$result['school_code']['value'] = $academicEntity->Institutions['code'];
+						$result['level']['value'] = $academicEntity->EducationGrades['name'];
+						$result['openemis_id']['value'] = $entity->openemis_no;
+					}
+
+					$result['error'] = $ApiAuthorizations->getErrorMessage(0);
+
+					// pr($result);
+					// pr($entity);die;
+				}
+
 			} else {
 				if (empty($identity_type)) {
 					$result = [
@@ -91,7 +187,7 @@ class ApiSISBComponent extends Component {
 						'value' =>  'Not Available' ,
 					],
 					'status' => [
-						'label' => 'Currently in school',
+						'label' => 'Last known status',
 						'value' =>  'Not Available',
 					],
 					'school_name' => [
@@ -103,7 +199,7 @@ class ApiSISBComponent extends Component {
 						'value' =>  'Not Available',
 					],
 					'level' => [
-						'label' => 'Highest completed level',
+						'label' => 'Highest education level',
 						'value' =>  'Not Available',
 					],
 					'openemis_id' => [

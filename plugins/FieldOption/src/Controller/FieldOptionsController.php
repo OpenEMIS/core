@@ -38,14 +38,17 @@ class FieldOptionsController extends AppController {
 				"$controller.InfrastructureConditions" 		=> "$controller.%s",
 				"$controller.QualificationSpecialisations" 	=> "$controller.%s",
 				"$controller.QualificationLevels" 			=> "$controller.%s",
+				"$controller.FeeTypes" 						=> "$controller.%s",
 				"$controller.EmploymentTypes" 				=> "$controller.%s",
 				"$controller.ExtracurricularTypes" 			=> "$controller.%s",
 				"$controller.IdentityTypes" 				=> "$controller.%s",
 				"$controller.Languages" 					=> "$controller.%s",
 				"$controller.LicenseTypes" 					=> "$controller.%s",
 				"$controller.SpecialNeedTypes" 				=> "$controller.%s",
+				"$controller.SpecialNeedDifficulties" 		=> "$controller.%s",
 				"$controller.StaffAbsenceReasons" 			=> "$controller.%s",
-				"$controller.StudentAbsenceReasons" 		=> "$controller.%s"
+				"$controller.StudentAbsenceReasons" 		=> "$controller.%s",
+                "$controller.Nationalities" => "$controller.%s"
 			]
 		]);
 	}
@@ -91,12 +94,16 @@ class FieldOptionsController extends AppController {
 	public function InfrastructureConditions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 	'className' => 'FieldOption.InfrastructureConditions']); }
 	public function QualificationSpecialisations() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'FieldOption.QualificationSpecialisations']); }
 	public function QualificationLevels() { $this->ControllerAction->process(['alias' => __FUNCTION__, 			'className' => 'FieldOption.QualificationLevels']); }
+	public function FeeTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 					'className' => 'FieldOption.FeeTypes']); }
 	public function EmploymentTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 				'className' => 'FieldOption.EmploymentTypes']); }
 	public function ExtracurricularTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 		'className' => 'FieldOption.ExtracurricularTypes']); }
 	public function IdentityTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 				'className' => 'FieldOption.IdentityTypes']); }
 	public function Languages() { $this->ControllerAction->process(['alias' => __FUNCTION__, 					'className' => 'Languages']); }
 	public function LicenseTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 				'className' => 'FieldOption.LicenseTypes']); }
 	public function SpecialNeedTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 			'className' => 'FieldOption.SpecialNeedTypes']); }
+	public function SpecialNeedDifficulties() { $this->ControllerAction->process(['alias' => __FUNCTION__, 		'className' => 'FieldOption.SpecialNeedDifficulties']); }
 	public function StaffAbsenceReasons() { $this->ControllerAction->process(['alias' => __FUNCTION__, 			'className' => 'FieldOption.StaffAbsenceReasons']); }
 	public function StudentAbsenceReasons() { $this->ControllerAction->process(['alias' => __FUNCTION__, 		'className' => 'FieldOption.StudentAbsenceReasons']); }
+    public function Nationalities() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'FieldOption.Nationalities']); }
+
 }
