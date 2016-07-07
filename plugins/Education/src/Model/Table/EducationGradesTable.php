@@ -129,11 +129,6 @@ class EducationGradesTable extends AppTable {
 		}
 	}
 
-	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
-		$this->association('Institutions')->name('Institution Programmes');
-		$query->where([$this->aliasField('education_programme_id') => $entity->education_programme_id]);
-	}
-
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('subjects', ['type' => 'custom_subject', 'valueClass' => 'table-full-width']);
 		$this->_fieldOrder[] = 'subjects';
