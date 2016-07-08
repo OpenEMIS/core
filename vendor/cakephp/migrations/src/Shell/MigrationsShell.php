@@ -28,6 +28,7 @@ class MigrationsShell extends Shell
      */
     public $tasks = [
         'Migrations.Create',
+        'Migrations.Dump',
         'Migrations.MarkMigrated',
         'Migrations.Migrate',
         'Migrations.Rollback',
@@ -74,7 +75,7 @@ class MigrationsShell extends Shell
     public function initialize()
     {
         if (!defined('PHINX_VERSION')) {
-            define('PHINX_VERSION', (0 === strpos('@PHINX_VERSION@', '@PHINX_VERSION')) ? '0.4.1' : '@PHINX_VERSION@');
+            define('PHINX_VERSION', (0 === strpos('@PHINX_VERSION@', '@PHINX_VERSION')) ? '0.4.3' : '@PHINX_VERSION@');
         }
         parent::initialize();
     }
@@ -87,14 +88,33 @@ class MigrationsShell extends Shell
      * The input parameter of the ``MigrationDispatcher::run()`` method is manually built
      * in case a MigrationsShell is dispatched using ``Shell::dispatch()``.
      *
-     * @return void
+     * @return bool Success of the call.
      */
     public function main()
     {
         $app = new MigrationsDispatcher(PHINX_VERSION);
         $input = new ArgvInput($this->argv);
         $app->setAutoExit(false);
-        $app->run($input);
+        $exitCode = $app->run($input);
+
+        if (isset($this->argv[1]) && in_array($this->argv[1], ['migrate', 'rollback']) && $exitCode === 0) {
+            $dispatchCommand = 'migrations dump';
+            if (!empty($this->params['connection'])) {
+                $dispatchCommand .= ' -c ' . $this->params['connection'];
+            }
+
+            if (!empty($this->params['plugin'])) {
+                $dispatchCommand .= ' -p ' . $this->params['plugin'];
+            }
+
+            $dumpExitCode = $this->dispatchShell($dispatchCommand);
+        }
+
+        if (isset($dumpExitCode) && $exitCode === 0 && $dumpExitCode !== 0) {
+            $exitCode = 1;
+        }
+
+        return $exitCode === 0;
     }
 
     /**

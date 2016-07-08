@@ -31,23 +31,6 @@ ALTER TABLE `academic_periods` CHANGE `end_date` `end_date` DATE NOT NULL;
 ALTER TABLE `academic_periods` CHANGE `end_year` `end_year` INT(4) NOT NULL;
 
 
--- POCOR-3115
--- db_patches
-INSERT INTO `db_patches` (issue, created) VALUES ('POCOR-3115', NOW());
-
-
--- code here
--- Student
-UPDATE `security_functions` SET `_add` = 'Students.add' WHERE id = 1012;
-UPDATE `security_functions` SET `order` = `order`+1 WHERE `order` >= 1013 AND `order` <= 1043;
-INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES ('1043', 'Student Profile', 'Institutions', 'Institutions', 'Students', '8', NULL, NULL, 'StudentUser.add', NULL, NULL, '1013', '1', NULL, NULL, '1', NOW());
-
--- Staff
-UPDATE `security_functions` SET `_add` = 'Staff.add' WHERE id = 1016;
-UPDATE `security_functions` SET `order` = `order`+1 WHERE `order` >= 1018 AND `order` <= 1044;
-INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES ('1044', 'Staff Profile', 'Institutions', 'Institutions', 'Staff', '8', NULL, NULL, 'StaffUser.add', NULL, NULL, '1018', '1', NULL, NULL, '1', NOW());
-
-
 -- POCOR-3067
 -- db_patches
 INSERT INTO `db_patches` (issue, created) VALUES ('POCOR-3067', NOW());
@@ -74,6 +57,89 @@ INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `categor
 
 UPDATE `security_functions` SET `order` = 2029 WHERE id = 2010;
 
+-- db_patches
+INSERT INTO `db_patches` (issue, created) VALUES ('POCOR-2467', NOW());
+
+
+-- Guardian Relations
+DROP TABLE IF EXISTS `guardian_relations`;
+CREATE TABLE `guardian_relations` LIKE `institution_network_connectivities`;
+INSERT INTO `guardian_relations`
+SELECT
+    `fov`.`id` as `id`,
+    `fov`.`name` as `name`,
+    `fov`.`order` as `order`,
+    `fov`.`visible` as `visible`,
+    `fov`.`editable` as `editable`,
+    `fov`.`default` as `default`,
+    `fov`.`international_code` as `international_code`,
+    `fov`.`national_code` as `national_code`,
+    `fov`.`modified_user_id` as `modified_user_id`,
+    `fov`.`modified` as `modified`,
+    `fov`.`created_user_id` as `created_user_id`,
+    `fov`.`created` as `created`
+FROM `field_option_values` as `fov`
+WHERE `fov`.`field_option_id`=(SELECT `id` FROM `field_options` WHERE `code` = 'GuardianRelations');
+
+UPDATE `field_option_values` set `visible`=0 WHERE `field_option_id`=(SELECT `id` FROM `field_options` WHERE `code` = 'GuardianRelations');
+
+UPDATE `field_options` SET `plugin` = 'Student' WHERE `code` = 'GuardianRelations';
+
+
+-- Staff Type
+DROP TABLE IF EXISTS `staff_types`;
+CREATE TABLE `staff_types` LIKE `institution_network_connectivities`;
+INSERT INTO `staff_types`
+SELECT
+    `fov`.`id` as `id`,
+    `fov`.`name` as `name`,
+    `fov`.`order` as `order`,
+    `fov`.`visible` as `visible`,
+    `fov`.`editable` as `editable`,
+    `fov`.`default` as `default`,
+    `fov`.`international_code` as `international_code`,
+    `fov`.`national_code` as `national_code`,
+    `fov`.`modified_user_id` as `modified_user_id`,
+    `fov`.`modified` as `modified`,
+    `fov`.`created_user_id` as `created_user_id`,
+    `fov`.`created` as `created`
+FROM `field_option_values` as `fov`
+WHERE `fov`.`field_option_id`=(SELECT `id` FROM `field_options` WHERE `code` = 'StaffTypes');
+
+UPDATE `field_option_values` set `visible`=0 WHERE `field_option_id`=(SELECT `id` FROM `field_options` WHERE `code` = 'StaffTypes');
+
+UPDATE `field_options` SET `plugin` = 'Staff' WHERE `code` = 'StaffTypes';
+
+
+-- Staff Leave Type
+DROP TABLE IF EXISTS `staff_leave_types`;
+CREATE TABLE `staff_leave_types` LIKE `institution_network_connectivities`;
+INSERT INTO `staff_leave_types`
+SELECT
+    `fov`.`id` as `id`,
+    `fov`.`name` as `name`,
+    `fov`.`order` as `order`,
+    `fov`.`visible` as `visible`,
+    `fov`.`editable` as `editable`,
+    `fov`.`default` as `default`,
+    `fov`.`international_code` as `international_code`,
+    `fov`.`national_code` as `national_code`,
+    `fov`.`modified_user_id` as `modified_user_id`,
+    `fov`.`modified` as `modified`,
+    `fov`.`created_user_id` as `created_user_id`,
+    `fov`.`created` as `created`
+FROM `field_option_values` as `fov`
+WHERE `fov`.`field_option_id`=(SELECT `id` FROM `field_options` WHERE `code` = 'StaffLeaveTypes');
+
+UPDATE `field_option_values` set `visible`=0 WHERE `field_option_id`=(SELECT `id` FROM `field_options` WHERE `code` = 'StaffLeaveTypes');
+
+UPDATE `field_options` SET `plugin` = 'Staff' WHERE `code` = 'StaffLeaveTypes';
+UPDATE `workflow_models` SET `filter` = 'Staff.StaffLeaveTypes' WHERE `model` = 'Staff.Leaves';
+UPDATE `import_mapping` SET `lookup_plugin` = 'Staff' WHERE `model` = 'Institution.Staff' AND `column_name` = 'staff_type_id';
+
+-- Added by Jeff to fix incorrect type
+ALTER TABLE `contact_types` CHANGE `contact_option_id` `contact_option_id` INT(11) NOT NULL;
+ALTER TABLE `institution_staff_assignments` CHANGE `institution_id` `institution_id` INT(11) NOT NULL;
 
 -- 3.5.10
 UPDATE config_items SET value = '3.5.10' WHERE code = 'db_version';

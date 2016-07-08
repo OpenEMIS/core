@@ -11,23 +11,6 @@ DELETE FROM `db_patches` WHERE `issue`='POCOR-2634';
 DELETE FROM `db_patches` WHERE `issue`='POCOR-3093';
 
 
--- POCOR-3115
--- code here
--- Staff
-UPDATE `security_functions` SET `_add` = 'Staff.add|StaffUser.add' WHERE id = 1016;
-DELETE FROM `security_functions` WHERE `security_functions`.`id` = 1044;
-UPDATE `security_functions` SET `order` = `order`-1 WHERE `order` >= 1018 AND `order` <= 1044;
-
--- Student
-UPDATE `security_functions` SET `_add` = 'Students.add|StudentUser.add' WHERE id = 1012;
-DELETE FROM `security_functions` WHERE `security_functions`.`id` = 1043;
-UPDATE `security_functions` SET `order` = `order`-1 WHERE `order` >= 1013 AND `order` <= 1043;
-
-
--- db_patches
-DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3115';
-
-
 -- POCOR-3067
 -- code here
 -- Directoriy module
@@ -53,6 +36,27 @@ UPDATE `security_functions` SET `order` = 2002 WHERE id = 2010;
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3067';
+
+-- Guardian Relations
+DROP TABLE `guardian_relations`;
+UPDATE `field_option_values` set `visible`=1 WHERE `field_option_id`=(SELECT `id` FROM `field_options` WHERE `code` = 'GuardianRelations');
+UPDATE `field_options` SET `plugin` = 'FieldOption' WHERE `code` = 'GuardianRelations';
+
+
+-- Staff Type
+DROP TABLE `staff_types`;
+UPDATE `field_option_values` set `visible`=1 WHERE `field_option_id`=(SELECT `id` FROM `field_options` WHERE `code` = 'StaffTypes');
+UPDATE `field_options` SET `plugin` = 'FieldOption' WHERE `code` = 'StaffTypes';
+
+
+-- Staff Leave Type
+DROP TABLE `staff_leave_types`;
+UPDATE `field_option_values` set `visible`=1 WHERE `field_option_id`=(SELECT `id` FROM `field_options` WHERE `code` = 'StaffLeaveTypes');
+UPDATE `field_options` SET `plugin` = 'FieldOption' WHERE `code` = 'StaffLeaveTypes';
+
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2467';
 
 
 -- 3.5.9
