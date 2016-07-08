@@ -218,7 +218,8 @@ class RemoveBehavior extends Behavior {
 				$associations = $this->getAssociatedRecords($model, $entity);
 				$cells = [];
 				foreach ($associations as $row) {
-					$cells[] = [$row['model'], $row['count']];
+					$modelName = Inflector::humanize(Inflector::underscore($row['model']));
+					$cells[] = [__($row['model']), $row['count']];
 				}
 
 				$extra['convertOptions'] = $convertOptions;
