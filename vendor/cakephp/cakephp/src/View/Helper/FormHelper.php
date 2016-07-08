@@ -117,7 +117,7 @@ class FormHelper extends Helper
             'optgroup' => '<optgroup label="{{label}}"{{attrs}}>{{content}}</optgroup>',
             'select' => '<select name="{{name}}"{{attrs}}>{{content}}</select>',
             'selectMultiple' => '<select name="{{name}}[]" multiple="multiple"{{attrs}}>{{content}}</select>',
-            'radio' => '<input type="radio" name="{{name}}" value="{{value}}"{{attrs}}>',
+            'radio' => '<input class = "iradio_minimal-grey icheck-input" type="radio" name="{{name}}" value="{{value}}"{{attrs}}>',
             'radioWrapper' => '{{label}}',
             'textarea' => '<textarea name="{{name}}"{{attrs}}>{{value}}</textarea>',
             'submitContainer' => '<div class="submit">{{content}}</div>',
