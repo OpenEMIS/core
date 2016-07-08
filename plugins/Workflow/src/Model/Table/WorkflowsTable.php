@@ -107,9 +107,8 @@ class WorkflowsTable extends AppTable {
 		$selectedModel = $this->queryString('model', $modelOptions);
 		$this->controller->set(compact('modelOptions', 'selectedModel'));
 		
-		$query
-			->matching('WorkflowModels')
-			->order([$this->aliasField('workflow_model_id'), $this->aliasField('code'), $this->aliasField('name')]);
+		$query->matching('WorkflowModels');
+		$options['order'] = [$this->aliasField('workflow_model_id'), $this->aliasField('code'), $this->aliasField('name')];
 
 		if ($selectedModel != -1) {
 			$query->where([$this->aliasField('workflow_model_id') => $selectedModel]);
