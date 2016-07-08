@@ -1138,7 +1138,11 @@ class StaffTable extends AppTable {
 
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$currentYearId = $AcademicPeriod->getCurrent();
-		$currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
+		if (!empty($currentYearId)) {
+			$currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
+		} else {
+			$currentYear = __('Not Defined');
+		}
 
 		$staffsByPositionConditions = ['Genders.name IS NOT NULL'];
 		$staffsByPositionConditions = array_merge($staffsByPositionConditions, $_conditions);
