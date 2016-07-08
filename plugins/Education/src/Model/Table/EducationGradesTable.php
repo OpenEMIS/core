@@ -15,8 +15,16 @@ class EducationGradesTable extends AppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
+
+		$this->belongsToMany('Institutions', [
+			'className' => 'Institution.Institutions',
+			'joinTable' => 'institution_grades',
+			'foreignKey' => 'education_grade_id',
+			'targetForeignKey' => 'Institution_id',
+			'through' => 'Institution.InstitutionGrades',
+			'dependent' => false
+		]);
 		$this->belongsTo('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
-		$this->hasMany('Programmes', ['className' => 'Institution.InstitutionGrades']);
 		$this->hasMany('Assessments', ['className' => 'Assessment.Assessments']);
 		$this->hasMany('InstitutionFees', ['className' => 'Institution.InstitutionFees']);
 		$this->hasMany('Rubrics', ['className' => 'Institution.InstitutionRubrics']);
@@ -122,7 +130,7 @@ class EducationGradesTable extends AppTable {
 	}
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
-		$query->where([$this->aliasField('education_programme_id') => $entity->education_programme_id]);
+		$this->association('Institutions')->name('InstitutionProgrammes');
 	}
 
 	public function beforeAction(Event $event) {
