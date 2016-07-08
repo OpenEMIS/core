@@ -130,7 +130,7 @@ class EducationGradesTable extends AppTable {
 	}
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
-		$this->association('Institutions')->name('Institution Programmes');
+		$this->association('Institutions')->name('InstitutionProgrammes');
 	}
 
 	public function beforeAction(Event $event) {
