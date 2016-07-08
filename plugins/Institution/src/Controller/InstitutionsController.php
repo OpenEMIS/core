@@ -315,6 +315,12 @@ class InstitutionsController extends AppController  {
 	public function dashboard($id) {
 		$this->ControllerAction->model->action = $this->request->action;
 
+		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$currentPeriod = $AcademicPeriods->getCurrent();
+		if (empty($currentPeriod)) {
+			$this->Alert->warning('Institution.Institutions.academicPeriod');
+		}
+
 		// $highChartDatas = ['{"chart":{"type":"column","borderWidth":1},"xAxis":{"title":{"text":"Position Type"},"categories":["Non-Teaching","Teaching"]},"yAxis":{"title":{"text":"Total"}},"title":{"text":"Number Of Staff"},"subtitle":{"text":"For Year 2015-2016"},"series":[{"name":"Male","data":[0,2]},{"name":"Female","data":[0,1]}]}'];
 		$highChartDatas = [];
 
