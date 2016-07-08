@@ -1312,6 +1312,7 @@ class ControllerActionComponent extends Component {
                                 if ($title == '[Message Not Found]') {
                                     $title = $assoc->name();
                                 }
+                                $title = Inflector::humanize(Inflector::underscore($title));
                                 $associations[$assoc->alias()] = ['model' => $title, 'count' => $count];
                                 $totalCount += $count;
                             }
