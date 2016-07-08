@@ -995,7 +995,7 @@ class ControllerActionComponent extends Component {
                 $patchOptionsArray = $patchOptions->getArrayCopy();
                 $request->data = $requestData->getArrayCopy();
                 $entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
-// pr($entity);die;
+
                 // Event: addAfterPatch
                 $this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.afterPatch');
                 $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.afterPatch', null, $params);
@@ -1259,6 +1259,18 @@ class ControllerActionComponent extends Component {
                 $query = $model->find();
                 $listOptions = new ArrayObject([]);
 
+                $label = [
+                    'nameLabel' => 'Convert From',
+                    'tableLabel' => 'Apply To'
+                ];
+                if ($this->deleteStrategy == 'transfer') {
+                    $label['nameLabel'] = 'Convert From';
+                    $label['tableLabel'] = 'Apply To';
+                } elseif ($this->deleteStrategy == 'restrict') {
+                    $label['nameLabel'] = 'Delete From';
+                    $label['tableLabel'] = 'Associated Records';
+                }
+
                 // Event: deleteOnInitialize
                 $this->debug(__METHOD__, ': Event -> ControllerAction.Model.delete.onInitialize');
                 $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.delete.onInitialize', null, [$entity, $query, $listOptions]);
@@ -1280,7 +1292,7 @@ class ControllerActionComponent extends Component {
                 if (empty($convertOptions)) {
                     $convertOptions[''] = __('No Available Options');
                 }
-
+                $totalCount = 0;
                 $associations = [];
                 foreach ($model->associations() as $assoc) {
                     if (!$assoc->dependent()) {
@@ -1301,12 +1313,21 @@ class ControllerActionComponent extends Component {
                                 if ($title == '[Message Not Found]') {
                                     $title = $assoc->name();
                                 }
+                                $title = Inflector::humanize(Inflector::underscore($title));
                                 $associations[$assoc->alias()] = ['model' => $title, 'count' => $count];
+                                $totalCount += $count;
                             }
                         }
                     }
                 }
-
+                $showFormButton = true;
+                if ($this->deleteStrategy == 'restrict' && $totalCount > 0) {
+                    $showFormButton = false;
+                    $this->Alert->error('general.delete.restrictDeleteBecauseAssociation');
+                }
+                $this->controller->set('label', $label);
+                $this->controller->set(compact('showFormButton'));
+                $this->controller->set('deleteStrategy', $this->deleteStrategy);
                 $this->controller->set('data', $entity);
                 $this->controller->set('convertOptions', $convertOptions);
                 $this->controller->set('associations', $associations);
@@ -1458,6 +1479,11 @@ class ControllerActionComponent extends Component {
                                         $modelAssociationTable->updateAll(
                                             [$assoc->foreignKey() => $transferTo],
                                             $condition
+                                        );
+
+                                        // Delete orphan records
+                                        $modelAssociationTable->deleteAll(
+                                            [$assoc->foreignKey() => $transferFrom]
                                         );
                                     }
                                 }
