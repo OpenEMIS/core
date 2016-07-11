@@ -490,14 +490,10 @@ class HtmlFieldHelper extends Helper {
 		$value = '';
 
 		$element = $attr['element'];
+
 		$attr['id'] = $attr['model'] . '_' . $attr['field'];
 		$attr['label'] = array_key_exists('label', $options) ? $options['label'] : Inflector::humanize($attr['field']);
-		
-		if ($action == 'view' || $action == 'index') {
-			$value = $this->_View->element($element, ['entity' => $data, 'attr' => $attr]);
-		} else if ($action == 'edit') {
-			$value = $this->_View->element($element, ['entity' => $data, 'attr' => $attr]);
-		}
+		$value = $this->_View->element($element, ['entity' => $data, 'attr' => $attr]);
 		return $value;
 	}
 

@@ -255,6 +255,14 @@ class InstitutionsController extends AppController  {
 							$model->aliasField($model->primaryKey()) => $modelId,
 							$model->aliasField('previous_institution_id') => $institutionId
 						]);
+					} else if (in_array($model->alias(), ['InstitutionShifts'])) { //this is to show information for the occupier 
+						$exists = $model->exists([
+							$model->aliasField($model->primaryKey()) => $modelId,
+							'OR' => [ //logic to check institution_id or location_institution_id equal to $institutionId
+								$model->aliasField('institution_id') => $institutionId,
+								$model->aliasField('location_institution_id') => $institutionId
+							]
+						]);
 					} else {
 						$exists = $model->exists([
 							$model->aliasField($model->primaryKey()) => $modelId,
