@@ -536,13 +536,10 @@ class InstitutionsTable extends AppTable  {
 			'information_section',
 			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id',
 			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
-
-<<<<<<< HEAD
-=======
+			
 			'shift_section',
 			'shift_type', 'shift_details',
 			
->>>>>>> origin/POCOR-2602-dev
 			'location_section',
 			'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
 
@@ -737,12 +734,12 @@ class InstitutionsTable extends AppTable  {
 		return $SecurityGroupUsers->getRolesByUserAndGroup($groupIds, $userId);
 	}
 
-<<<<<<< HEAD
+
 	public function onBeforeRestrictDelete(Event $event, ArrayObject $options, $id, ArrayObject $extra)
     {
     	$extra['excludedModels'] = [$this->SecurityGroups->alias(), $this->InstitutionSurveys->alias(), $this->StudentSurveys->alias()];
     }
-=======
+
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$newEvent = [
@@ -768,6 +765,4 @@ class InstitutionsTable extends AppTable  {
 
 		return $filters;
 	}
-
->>>>>>> origin/POCOR-2602-dev
 }

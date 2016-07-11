@@ -59,7 +59,8 @@ class FieldOptionComponent extends Component
         'Nationalities' => 'FieldOption.Nationalities',
         'GuardianRelations' => 'Student.GuardianRelations',
         'StaffTypes' => 'Staff.StaffTypes',
-        'StaffLeaveTypes' => 'Staff.StaffLeaveTypes'
+        'StaffLeaveTypes' => 'Staff.StaffLeaveTypes',
+        'ShiftOptions' => 'Institution.ShiftOptions'
     ];
 
     // Is called before the controller's beforeFilter method.
