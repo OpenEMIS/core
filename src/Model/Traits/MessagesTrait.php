@@ -142,6 +142,7 @@ trait MessagesTrait {
 			'our_shifts' => 'Our Shifts',
 			'external_shifts' => 'External Shifts',
 			'location' => 'Location',
+			'occupier' => 'Occupier',
 			'institution' => 'Institution',
 		],
 		'InstitutionClasses' => [
@@ -596,7 +597,7 @@ trait MessagesTrait {
 				'institution_name' => [
 					'ruleCheckLocationInstitutionId' => 'Please select an institution location.'
 				],
-				'location' => [
+				'start_time' => [
 					'ruleCheckShiftAvailable' => 'Shift timing is not available.'
 				]
 			],
