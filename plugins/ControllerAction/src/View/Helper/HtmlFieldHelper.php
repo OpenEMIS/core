@@ -107,13 +107,21 @@ class HtmlFieldHelper extends Helper {
 		return $html;
 	}
 
-	public function includes($table=null, $action) {
+	public function includes($table=null, $action=null) {
 		$includes = new ArrayObject($this->includes);
 
 		if (!is_null($table)) {
 			// trigger event to update inclusion of css/js files
 			$eventKey = 'ControllerAction.Model.onUpdateIncludes';
 			$event = $this->dispatchEvent($table, $eventKey, null, [$includes, $action]);
+			$session = $this->request->session();
+			if ($session->check('HtmlField.extraIncludes')) {
+				$extraIncludes = $session->read('HtmlField.extraIncludes');
+			} else {
+				$extraIncludes = [];
+			}
+			$extraIncludes = array_merge($extraIncludes, $includes->getArrayCopy());
+			$session->write('HtmlField.extraIncludes', $extraIncludes);
 		}
 
 		foreach ($includes as $include) {
