@@ -465,6 +465,9 @@ class InstitutionClassesTable extends ControllerActionTable {
 			],
 		];
         $this->controller->set('tabElements', $tabElements);
+
+  		// $institutionId = $this->Session->read('Institution.Institutions.id');
+		// $this->InstitutionShifts->duplicateInstitutionShifts($institutionId);
 	}
 
 	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra) {

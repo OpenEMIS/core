@@ -214,19 +214,19 @@ class InstitutionsTable extends AppTable  {
 		}
 	}
 
-	public function getViewShiftDetail() 
+	public function getViewShiftDetail($institutionId, $academicPeriod) 
 	{
-		$institutionId = $this->Session->read('Institution.Institutions.id');
-		$currenAcademicPeriod = $this->InstitutionShifts->AcademicPeriods->getCurrent();
-
 		$data = $this->InstitutionShifts->find()
 				->innerJoinWith('Institutions')
 				->innerJoinWith('LocationInstitutions')
 				->innerJoinWith('ShiftOptions')
 				->select([
 					'Owner' => 'Institutions.name',
+					'OwnerId' => 'Institutions.id',
 					'Occupier' => 'LocationInstitutions.name',
+					'OccupierId' => 'LocationInstitutions.id',
 					'Shift' => 'ShiftOptions.name',
+					'ShiftId' => 'ShiftOptions.id',
 					'StartTime' => 'ShiftOptions.start_time',
 					'EndTime' => 'ShiftOptions.end_time'
 				])
@@ -235,7 +235,7 @@ class InstitutionsTable extends AppTable  {
 						[$this->InstitutionShifts->aliasField('location_institution_id') => $institutionId],
 						[$this->InstitutionShifts->aliasField('institution_id') => $institutionId]
 					],
-					$this->InstitutionShifts->aliasField('academic_period_id') => $currenAcademicPeriod
+					$this->InstitutionShifts->aliasField('academic_period_id') => $academicPeriod
 				])
 				->toArray();
 		
@@ -273,7 +273,7 @@ class InstitutionsTable extends AppTable  {
 			'type' => 'element',
 			'element' => 'Institution.Shifts/details',
 			'visible' => ['view'=>true],
-			'data' => $this->getViewShiftDetail()
+			'data' => $this->getViewShiftDetail($this->Session->read('Institution.Institutions.id'), $this->InstitutionShifts->AcademicPeriods->getCurrent())
 		]);
 		
 		$this->ControllerAction->field('location_section', ['type' => 'section', 'title' => __('Location')]);
