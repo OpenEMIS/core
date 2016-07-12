@@ -31,7 +31,7 @@ class StaffAttendancesTable extends AppTable {
 		$config['Created'] = false;
 		parent::initialize($config);
 
-		$this->belongsTo('StaffTypes', ['className' => 'FieldOption.StaffTypes']);
+		$this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes']);
 		$this->belongsTo('StaffStatuses', ['className' => 'Staff.StaffStatuses']);
 		$this->belongsTo('InstitutionPositions', ['className' => 'Institution.InstitutionPositions']);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'staff_id']);
@@ -273,7 +273,7 @@ class StaffAttendancesTable extends AppTable {
 	public function getNumberOfStaffByAttendance($params=[]) {
 		$query = $params['query'];
 		$selectedDay = $params['selectedDay'];
-		
+
 		// Add this condition if the selected day is all day
 		if ($selectedDay == -1) {
 			$dateRange = array_column($this->allDayOptions, 'date');
@@ -287,7 +287,7 @@ class StaffAttendancesTable extends AppTable {
 				$startDate = $dateRange[0];
 				$endDate = $dateRange[count($dateRange) - 1];
 				$dateRangeCondition = [
-					'StaffAbsences.end_date >=' => $startDate, 
+					'StaffAbsences.end_date >=' => $startDate,
 					'StaffAbsences.start_date <=' => $endDate
 				];
 			} else {
@@ -297,6 +297,7 @@ class StaffAttendancesTable extends AppTable {
 			$dateRangeCondition = [];
 		}
 		$StaffAttendancesQuery = clone $query;
+
 		$staffAbsenceArray = $StaffAttendancesQuery
 			->find('list', [
 				'groupField' => 'staff_id',
@@ -307,8 +308,8 @@ class StaffAttendancesTable extends AppTable {
 			->group(['staff_id', 'absence_type'])
 			->where($dateRangeCondition)
 			->toArray();
-			
-		// Creating the data set		
+
+		// Creating the data set
 		$dataSet = [];
 		$data = [];
 		foreach ($staffAbsenceArray as $userAbsenceType) {
@@ -333,7 +334,7 @@ class StaffAttendancesTable extends AppTable {
 							$data[$typeName] = 1;
 						}
 					}
-					
+
 					if ($typeName == 'Absence') {
 						$absenceForTheWeek = true;
 					}
@@ -733,13 +734,13 @@ class StaffAttendancesTable extends AppTable {
 
 			$InstitutionArray = [];
 			if ($selectedDay != -1) {
-				
+
 			}
 			$queryClone = clone $query;
 			$totalStaff = $queryClone->distinct([$this->aliasField('staff_id')])->count();
 
 			$indexDashboard = 'attendance';
-			
+
 			$dataSet = $this->getNumberOfStaffByAttendance(['query' => $query, 'selectedDay' => $selectedDay]);
 			$present = 0;
 			$absent = 0;
@@ -764,7 +765,7 @@ class StaffAttendancesTable extends AppTable {
 				$staffAttendanceArray[] = ['label' => 'No. of Staff Absent for the week', 'value' => $absent];
 				$staffAttendanceArray[] = ['label' => 'No. of Staff Late for the week', 'value' => $late];
 			}
-			
+
 			$toolbarElements[] = [
 				'name' => $indexDashboard,
 				'data' => [
@@ -776,8 +777,8 @@ class StaffAttendancesTable extends AppTable {
 			];
 
 			$toolbarElements[] = [
-				'name' => 'Institution.Attendance/controls', 
-				'data' => [], 
+				'name' => 'Institution.Attendance/controls',
+				'data' => [],
 				'options' => []
 			];
 
@@ -857,7 +858,7 @@ class StaffAttendancesTable extends AppTable {
 		}
     	return $query
     		->select([
-    			$this->aliasField('staff_id'), 
+    			$this->aliasField('staff_id'),
     			'Users.openemis_no', 'Users.first_name', 'Users.middle_name', 'Users.third_name','Users.last_name', 'Users.id',
     			'StaffAbsences.id',
     			'StaffAbsences.start_date',

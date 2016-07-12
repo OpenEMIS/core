@@ -18,24 +18,20 @@
 	<div class="input-group date <?php echo $divErrorCSS; ?>" id="<?= $attr['id'] ?>" style="<?= $inputWrapperStyle; ?>">
 		<?php 
 			$fieldName = (array_key_exists('fieldName', $attr))? $attr['fieldName']: $attr['model'].'['.$attr['field'].']';
-			// need to format this string
-			$tokens = explode('.', $fieldName);
-			$firstToken = array_shift($tokens);
-			foreach ($tokens as $key => $value) {
-				$tokens[$key] = '['.$value.']';
-			}
-			$tokens = array_reverse($tokens);
-			$tokens[] = $firstToken;
-			$tokens = array_reverse($tokens);
-			$fieldName = implode('', $tokens);
-		 ?>
-		<input type="text" class="form-control <?php echo $inputErrorCSS; ?>" name="<?= $fieldName; ?>" value="<?= isset($attr['value']) ? $attr['value'] : '' ?>" 
-		<?php 
+			$inputAttr = [
+				'class' => 'form-control '.$inputErrorCSS,
+				'value' => isset($attr['value']) ? $attr['value'] : '',
+				'type' => 'text',
+				'label' => false
+			];
+
 			if (array_key_exists('attr', $attr)) {
-				echo (array_key_exists('onchange', $attr['attr']))? 'onchange="'.$attr['attr']['onchange'].'"':'';
+				if (array_key_exists('onchange', $attr['attr'])) {
+					$inputAttr = array_merge($inputAttr, ['onchange' => $attr['attr']['onchange']]);
+				}
 			}
+			echo $this->Form->input($fieldName, $inputAttr);
 		 ?>
-		/>
 		<span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
 	</div>
 	<?php
