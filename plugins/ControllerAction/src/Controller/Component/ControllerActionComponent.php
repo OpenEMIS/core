@@ -156,7 +156,7 @@ class ControllerActionComponent extends Component {
 
                         $actions = isset($attr['actions']) ? $attr['actions'] : $this->defaultActions;
                         $options = isset($attr['options']) ? $attr['options'] : [];
-
+                        $options = array_merge($options, ['deleteStrategy' => 'cascade']);
                         $this->model($attr['className'], $actions, $options);
                         $this->model->alias = $name;
                         $this->currentAction = $currentAction;
@@ -1295,7 +1295,7 @@ class ControllerActionComponent extends Component {
                 $totalCount = 0;
                 $associations = [];
                 foreach ($model->associations() as $assoc) {
-                    if (!$assoc->dependent()) {
+                    if (!$assoc->dependent() || $this->deleteStrategy == 'restrict') {
                         if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
                             if (!array_key_exists($assoc->alias(), $associations)) {
                                 $count = 0;
