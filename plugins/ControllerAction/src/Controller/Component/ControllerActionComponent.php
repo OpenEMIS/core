@@ -1301,7 +1301,11 @@ class ControllerActionComponent extends Component {
                 foreach ($model->associations() as $assoc) {
                     if (!$assoc->dependent() || $this->deleteStrategy == 'restrict') {
                         if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
-                            if (!array_key_exists($assoc->alias(), $associations)) {
+                            $excludedModels = [];
+                            if ($extra->offsetExists('excludedModels')) {
+                                $excludedModels = $extra['excludedModels'];
+                            }
+                            if (!array_key_exists($assoc->alias(), $associations) && !in_array($assoc->alias(), $excludedModels)) {
                                 $count = 0;
                                 if($assoc->type() == 'oneToMany') {
                                     $count = $assoc->find()
