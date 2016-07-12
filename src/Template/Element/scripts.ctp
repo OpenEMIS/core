@@ -17,15 +17,6 @@ echo $this->Html->script('app/services/app/kd.orm.svc');
 echo $this->Html->script('app/services/app/kd.session.svc');
 echo $this->Html->script('app/services/app/kd.access.svc');
 
-if ($this->request->action == 'error404' || $this->request->action == 'error403') {
-	$session = $this->request->session();
-	if ($session->check('HtmlField.extraIncludes')) {
-		$includes = $session->read('HtmlField.extraIncludes');
-		$this->HtmlField->includes = array_merge($this->HtmlField->includes, $includes);
-		$this->HtmlField->includes();
-	}
-}
-
 echo $this->Html->script('angular/kdModule/controllers/kd.ctrl');
 echo $this->Html->script('angular/kdModule/directives/kd.drt');
 echo $this->Html->script('angular/kdModule/services/kd.common.svc');
