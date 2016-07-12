@@ -88,15 +88,16 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 				$ClassGrades->aliasField('institution_class_id'),
 				$Assessments->aliasField('id')
 			])
-			->order([
-				$EducationProgrammes->aliasField('order'),
-				$EducationGrades->aliasField('order'),
-				$Assessments->aliasField('code'),
-				$Assessments->aliasField('name'),
-				$this->aliasField('name')
-			])
 			->autoFields(true)
 			;
+
+		$extra['options']['order'] = [
+			$EducationProgrammes->aliasField('order'),
+			$EducationGrades->aliasField('order'),
+			$Assessments->aliasField('code'),
+			$Assessments->aliasField('name'),
+			$this->aliasField('name')
+		];
         
         // For filtering all classes and my classes
         $AccessControl = $this->AccessControl;

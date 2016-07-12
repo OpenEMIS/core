@@ -143,7 +143,7 @@ class PaginatorComponent extends Component
      *
      * @param \Cake\Datasource\RepositoryInterface|\Cake\Datasource\QueryInterface $object The table or query to paginate.
      * @param array $settings The settings/configuration used for pagination.
-     * @return array Query results
+     * @return \Cake\Datasource\ResultSetInterface Query results
      * @throws \Cake\Network\Exception\NotFoundException
      */
     public function paginate($object, array $settings = [])
@@ -386,7 +386,7 @@ class PaginatorComponent extends Component
         if (empty($options['limit']) || $options['limit'] < 1) {
             $options['limit'] = 1;
         }
-        $options['limit'] = min($options['limit'], $options['maxLimit']);
+        $options['limit'] = max(min($options['limit'], $options['maxLimit']), 1);
         return $options;
     }
 }

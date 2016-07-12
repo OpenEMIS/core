@@ -169,6 +169,7 @@ class CustomFormsTable extends AppTable {
 	    	$attr['tableCells'] = $tableCells;
 		} else if ($action == 'add' || $action == 'edit') {
 			$form = $event->subject()->Form;
+			$form->unlockField($attr['model'] . '.custom_fields');
 			$formKey = $this->extra['fieldClass']['foreignKey'];
 			$fieldKey = $this->extra['fieldClass']['targetForeignKey'];
 
@@ -293,7 +294,8 @@ class CustomFormsTable extends AppTable {
 				$cellData .= $form->hidden($joinDataPrefix.".".$fieldKey, ['value' => $customFieldId]);
 				$cellData .= $form->hidden($joinDataPrefix.".order", ['value' => ++$order, 'class' => 'order']);
 				$cellData .= $form->hidden($joinDataPrefix.".section", ['value' => $customSection, 'class' => 'section']);
-				$form->unlockField($attr['model'] . '.custom_fields');
+				$form->unlockField($joinDataPrefix.".order");
+				$form->unlockField($joinDataPrefix.".section");
 				
 				if (isset($obj['id'])) {
 					$cellData .= $form->hidden($joinDataPrefix.".id", ['value' => $obj['id']]);
