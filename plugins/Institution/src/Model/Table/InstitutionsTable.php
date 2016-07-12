@@ -677,7 +677,7 @@ class InstitutionsTable extends AppTable  {
 		return $SecurityGroupUsers->getRolesByUserAndGroup($groupIds, $userId);
 	}
 
-	public function onBeforeRestrictDelete(Event $event, ArrayObject $options, $id, ArrayObject $extra)
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
     	$extra['excludedModels'] = [$this->SecurityGroups->alias(), $this->InstitutionSurveys->alias(), $this->StudentSurveys->alias()];
     }
