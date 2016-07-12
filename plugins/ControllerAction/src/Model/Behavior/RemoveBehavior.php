@@ -58,12 +58,12 @@ class RemoveBehavior extends Behavior {
 				'headers' => [__('Feature'), __('No of Records')],
 				'cells' => $cells
 			]);
-		} elseif ($model->actions('remove') == 'restrict' && $model->action == 'remove') {
+		} else if ($model->actions('remove') == 'restrict' && $model->action == 'remove') {
 			$entity = $extra['entity'];
 			$cells = $extra['cells'];
 			$model->fields = [];
 			$model->field('id', ['type' => 'hidden']);
-			$model->field('delete_from', ['type' => 'readonly', 'attr' => ['value' => $entity->name]]);
+			$model->field('to_be_deleted', ['type' => 'readonly', 'attr' => ['value' => $entity->name]]);
 			$model->field('associated_records', [
 				'type' => 'table',
 				'headers' => [__('Feature'), __('No of Records')],
@@ -99,8 +99,12 @@ class RemoveBehavior extends Behavior {
 				if ($event->isStopped()) { return $event->result; }
 
 				$associations = $this->getAssociatedRecords($model, $entity, $extra);
+				if ($extra->offsetExists('associatedRecords')) {
+					$associations = array_merge($associations, $extra['associatedRecords']);
+				}
 				$cells = [];
 				$totalCount = 0;
+
 				foreach ($associations as $row) {
 					$modelName = Inflector::humanize(Inflector::underscore($row['model']));
 					$cells[] = [__($modelName), $row['count']];
@@ -119,7 +123,7 @@ class RemoveBehavior extends Behavior {
 				$controller->set('data', $entity);
 			}
 			return $entity;
-		} elseif ($request->is('delete')) {
+		} else if ($request->is('delete')) {
 			$id = null;
 			if ($model->actions('remove') == 'restrict' && !empty($request->data[$model->alias()][$primaryKey])) {
 				$id = $request->data[$model->alias()][$primaryKey];
@@ -128,37 +132,13 @@ class RemoveBehavior extends Behavior {
 			} 
             
 			if (!empty($id)) {
-	            // default is no restriction
-	            $notRestrictedCheck = true;
-	            if ($model->actions('remove') == 'restrict') {
-	                $notRestrictedCheck = function ($model, $id, $extra) {
-	                    $newEntity = $model->newEntity([$model->primaryKey() => $id]);
-	                    return !$model->hasAssociatedRecords($model, $newEntity);
-	                };
-
-	                $event = $model->dispatchEvent('ControllerAction.Model.onBeforeRestrictDelete', [$id, $extra], $this);
-	                if ($event->isStopped()) { return $event->result; }
-	                if (is_callable($event->result)) {
-	                    $notRestrictedCheck = $event->result;
-	                    
-	                }
-	                if (is_callable($notRestrictedCheck)) {
-	                    $notRestrictedCheck = $notRestrictedCheck($model, $id, $extra);
-	                }
-	            }
-
-	            if ($notRestrictedCheck) {
-	                try {
-	                    $entity = $model->get($id);
-	                } catch (RecordNotFoundException $exception) { // to handle concurrent deletes
-	                    $mainEvent->stopPropagation();
-	                    return $model->controller->redirect($model->url('index', 'QUERY'));
-	                }
-	                $result = $this->doDelete($entity, $extra);
-	            } else {
-	                $extra['Alert']['message'] = 'general.delete.restrictDeleteBecauseAssociation';
-	                $result = false;
-	            }
+                try {
+                    $entity = $model->get($id);
+                } catch (RecordNotFoundException $exception) { // to handle concurrent deletes
+                    $mainEvent->stopPropagation();
+                    return $model->controller->redirect($model->url('index', 'QUERY'));
+                }
+                $result = $this->doDelete($entity, $extra);
         	}
 		}
 		$extra['result'] = $result;
