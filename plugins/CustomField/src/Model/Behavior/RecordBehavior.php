@@ -603,6 +603,18 @@ class RecordBehavior extends Behavior {
 		}
 		// End
 
+		// For survey only
+		// To get the rules for the survey form
+		if (is_null($this->config('moduleKey')) && $this->_table->action == 'view') {
+			$SurveyRules = TableRegistry::get('Survey.SurveyRules');
+			$surveyFormId = $entity->survey_form_id;
+			$rules = $SurveyRules
+				->find('SurveyRulesList', [
+					'survey_form_id' => $surveyFormId
+				])
+				->toArray();
+		}
+
 		if (!is_null($query)) {
 			$customFields = $query->toArray();
 
@@ -721,8 +733,28 @@ class RecordBehavior extends Behavior {
 					$attr['attr']['seq'] = $count++;
 				}
 
-				$model->ControllerAction->field($fieldName, $attr);
-				$fieldOrder[++$order] = $fieldName;
+				// For survey only
+				// To show the field in the view page base on the rules
+				if (is_null($this->config('moduleKey')) && $this->_table->action == 'view') {
+					$id = $attr['customField']['id'];
+					if (isset($rules[$id])) {
+						$answer = $this->_table->array_column($attr['customFieldValues'], 'number_value');
+						foreach ($rules[$id] as $ruleKey => $ruleOpt) {
+							if (isset($answer[$ruleKey])) {
+								if (in_array($answer[$ruleKey], json_decode($ruleOpt, true))) {
+									$model->ControllerAction->field($fieldName, $attr);
+									$fieldOrder[++$order] = $fieldName;
+								}
+							}
+						}
+					} else {
+						$model->ControllerAction->field($fieldName, $attr);
+						$fieldOrder[++$order] = $fieldName;
+					}
+				} else {
+					$model->ControllerAction->field($fieldName, $attr);
+					$fieldOrder[++$order] = $fieldName;
+				}
 			}
 
 			foreach ($ignoreFields as $key => $field) {
