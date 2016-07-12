@@ -1061,6 +1061,11 @@ trait MessagesTrait {
 			'failed' => 'The language has not been compiled due to errors encountered.',
 		],
 		'Security' => [
+			'SecurityRoles' => [
+				'name' => [
+					'ruleUnique' => 'This role name already exists in the system'
+				],
+			],
 			'Users' => [
 				'username' => [
 					'ruleUnique' => 'This username is already in use',
