@@ -99,6 +99,9 @@ class RemoveBehavior extends Behavior {
 				if ($event->isStopped()) { return $event->result; }
 
 				$associations = $this->getAssociatedRecords($model, $entity, $extra);
+				if ($extra->offsetExists('excludedModels')) {
+					$associations = array_diff_key($associations, array_flip($extra['excludedModels']));
+				}
 				if ($extra->offsetExists('associatedRecords')) {
 					$associations = array_merge($associations, $extra['associatedRecords']);
 				}
