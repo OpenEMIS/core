@@ -30,7 +30,7 @@ class EducationCyclesTable extends AppTable {
 
 		$this->controller->set('toolbarElements', $toolbarElements);
 	}
-	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
 		$query->where([$this->aliasField('education_level_id') => $entity->education_level_id]);
 	}
 
