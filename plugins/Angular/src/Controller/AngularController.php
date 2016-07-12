@@ -6,24 +6,28 @@ use Angular\Controller\AppController;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 
-class AngularController extends AppController {
+class AngularController extends AppController
+{
 	public $helpers = ['ControllerAction.HtmlField'];
-	public function initialize() {
+	public function initialize()
+	{
 		parent::initialize();
-		$this->Angular->resetConfig = false;
 	}
 
-	public function beforeFilter(Event $event) {
+	public function beforeFilter(Event $event)
+	{
 		parent::beforeFilter($event);
 
 		$this->Auth->allow(['app', 'inputs']);
 	}
 
-	public function app() {
+	public function app()
+	{
 		$this->viewBuilder()->layout(false);
 	}
 
-	public function inputs() {
+	public function inputs()
+	{
 		$this->viewBuilder()->layout(false);
 		$requestAttr = json_decode($this->request->query['attributes'], true);
 		if (is_array($requestAttr)) {
