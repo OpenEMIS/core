@@ -1,4 +1,4 @@
-/* TOGGLE SWITCH v1.0.5 */
+/* TOGGLE SWITCH v1.0.8 */
 
 .switch-toggle {
     height: 26px !important;
@@ -69,8 +69,32 @@
 }
 
 
-/* BUTTON TOGGLE */
+/* Hides default checkbox */
 
+.switch-toggle [type="radio"]:checked + label,
+.switch-toggle [type="radio"]:not(:checked) + label {
+    padding: 3px 5px !important;
+}
+
+.switch-toggle [type="radio"]:checked + label:after,
+.switch-toggle [type="radio"]:not(:checked) + label:before,
+.switch-toggle [type="radio"]:checked + label:before {
+    display: none;
+}
+
+.switch-toggle [type="radio"]:checked + label,
+.switch-toggle [type="radio"]:not(:checked) + label {
+    top: 0 !important;
+}
+
+.switch-toggle [type="radio"]:not(:checked) + label,
+.switch-toggle [type="radio"]:checked + label {
+    width: 100px !important;
+    outline: 0;
+}
+
+
+/* BUTTON TOGGLE */
 
 .toggle-slider-header {
     display: table-cell;
@@ -100,6 +124,7 @@
 .input .switch-toggle.switch-5 a {
     background-color: transparent !important;
     border: transparent;
+    outline: 0 !important;
 }
 
 .input .toggle-switch {
@@ -111,7 +136,7 @@
 }
 
 .switch-toggle input + label {
-    padding: 3px 5px;
+    padding: 3px 5px !important;
     text-align: center !important;
 }
 
@@ -224,6 +249,13 @@
 .rtl .toggle-switch label {
     margin: 0 !important;
     text-align: center !important;
+}
+
+/* Checkbox RTL */
+
+.rtl .switch-toggle [type="radio"]:checked + label,
+.rtl .switch-toggle [type="radio"]:not(:checked) + label {
+    padding-right: 5px !important;
 }
 
 @media only screen and (max-width: 480px) {
