@@ -375,7 +375,9 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 			list($error, $subjects, $data) = $model->prepareEntityObjects($model, $data, $extra);
 			if (!$error && $subjects) {
 				foreach ($subjects as $subject) {
-			    	$model->save($subject);
+					if ($subject->education_subject_id) {
+						$model->save($subject);
+					}
 				}
 				$extra[$this->aliasField('notice')] = 'passed';
 				return true;
