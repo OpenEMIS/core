@@ -46,7 +46,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		$this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('StaffChangeTypes', ['className' => 'Staff.StaffChangeTypes', 'foreignKey' => 'staff_change_type_id']);
 		$this->belongsTo('Institutions',	['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
-		$this->belongsTo('StaffTypes',		['className' => 'FieldOption.StaffTypes']);
+		$this->belongsTo('StaffTypes',		['className' => 'Staff.StaffTypes']);
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
 		$this->staffChangeTypesList = $this->StaffChangeTypes->findCodeList();
@@ -109,7 +109,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 				return $this->controller->redirect($url);
 			}
 		}
-		
+
 	}
 
 	public function getWorkflowEvents(Event $event, ArrayObject $eventsObject) {
@@ -159,15 +159,15 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		if ($this->action == 'view') {
 			$oldValue = ($entity->institution_staff->FTE * 100). '%';
 			$newValue = '100%';
-			if ($entity->FTE < 1) {	
+			if ($entity->FTE < 1) {
 				$newValue = ($entity->FTE * 100) . '%';
 			}
-	
+
 			if ($newValue != $oldValue) {
 				return $this->getStyling($oldValue, $newValue);
 			} else {
 				return $newValue;
-			}	
+			}
 		}
 	}
 
@@ -257,7 +257,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 				$endDate = (new Date($newEndDate))->modify('-1 day');
 				$requestData[$this->alias()]['end_date'] = $endDate->format('Y-m-d');
 			}
-		}		
+		}
 	}
 
 	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
@@ -306,7 +306,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 				}
 			} else {
 				$attr['visible'] = false;
-				
+
 			}
 		}
 		return $attr;
@@ -393,7 +393,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 					$entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
 					$startDateClone = clone ($entity->start_date);
 					$startDate = $startDateClone->modify('+1 day');
-					$attr['date_options']['startDate'] = $startDate->format('d-m-Y');	
+					$attr['date_options']['startDate'] = $startDate->format('d-m-Y');
 				}
 				$attr['value'] = (new Date())->modify('+1 day');
 			} else {
@@ -410,14 +410,14 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 				$attr['type'] = 'date';
 				if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
 					$entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
-					$attr['date_options']['startDate'] = $entity->start_date->format('d-m-Y');	
+					$attr['date_options']['startDate'] = $entity->start_date->format('d-m-Y');
 				}
 			} else {
 				$attr['type'] = 'hidden';
 				if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
 					$entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
 					if (!empty($entity->end_date)) {
-						$attr['value'] = $entity->end_date->format('Y-m-d');	
+						$attr['value'] = $entity->end_date->format('Y-m-d');
 					} else {
 						$attr['value'] = '';
 					}
