@@ -39,6 +39,7 @@ class OpenEmisBehavior extends Behavior {
                 break;
             case 'edit':
             case 'add':
+            case 'remove':
             case 'transfer':
                 $extra['config']['form'] = true;
                 $extra['elements']['edit'] = ['name' => 'OpenEmis.ControllerAction/edit', 'order' => 5];
@@ -246,7 +247,7 @@ class OpenEmisBehavior extends Behavior {
             $toolbarButtons['back']['attr'] = $toolbarAttr;
             $toolbarButtons['back']['attr']['title'] = __('Back');
 
-            if ($action == 'remove' && $model->actions('remove') == 'transfer') {
+            if ($action == 'remove' && ($model->actions('remove') == 'transfer' || $model->actions('remove') == 'restrict')) {
                 $toolbarButtons['list']['url'] = $model->url('index', 'QUERY');
                 $toolbarButtons['list']['type'] = 'button';
                 $toolbarButtons['list']['label'] = '<i class="fa kd-lists"></i>';
@@ -314,7 +315,8 @@ class OpenEmisBehavior extends Behavior {
                 }
             }
 
-        } else if ($action == 'transfer') {
+            
+        } else if ($action == 'transfer' || ($action == 'remove' && $model->actions('remove') == 'restrict')) {
             $toolbarButtons['back']['url'] = $model->url('index', 'QUERY');
             $toolbarButtons['back']['type'] = 'button';
             $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';

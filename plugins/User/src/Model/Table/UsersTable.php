@@ -252,10 +252,6 @@ class UsersTable extends AppTable {
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$queryParams = $request->query;
 
-		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
-			// $query->order(['name' => 'asc']);
-		}
-
 		if (array_key_exists('sort', $queryParams) && $queryParams['sort'] == 'name') {
 			$query->find('withName', ['direction' => $queryParams['direction']]);
 			$query->order([$this->aliasField('name') => $queryParams['direction']]);
