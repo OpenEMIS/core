@@ -8,21 +8,35 @@ use Cake\Event\Event;
 use Cake\Utility\Inflector;
 
 class FormNotesBehavior extends Behavior {
+	public function initialize(array $config) {
+		parent::initialize($config);
+	}
 
-    public function onGetFormNotesElement(Event $event, $action, $entity, $attr, $options=[]) {
-		$fieldLabel = Inflector::humanize($attr['field']);
-		if (array_key_exists('label', $attr)) {
-			$fieldName = $attr['label'];
-		}
-		$fieldName = strtolower($attr['model'] . '-' . $attr['field']);
-		if (array_key_exists('fieldName', $attr)) {
-			$fieldName = $attr['fieldName'];
-		}
-		if (!array_key_exists('value', $attr)) {
-			$attr['value'] = '* Please set the note in your model *';
-		}
-		$value = '<div class="input text"><label for="'.$fieldName.'">'.$fieldLabel.'</label><div class="button-label" style="width: 65%;">'.$attr['value'].'</div></div>';
-		return $value;
-    }
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
+		$events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
 
+		return $events;
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->setupFormNotes($entity);
+	}
+
+	public function editAfterAction(Event $event, Entity $entity) {
+		$this->setupFormNotes($entity);
+	}
+
+	private function setupFormNotes(Entity $entity) {
+		if ($entity->type == 'Custom Validation') {
+			$this->_table->fields['value']['attr']['onkeypress'] = 'return Config.inputMaskCheck(event)';
+			$this->_table->ControllerAction->field('form_notes', [
+				'type' => 'element',
+	            'element' => 'Configurations/form_notes',
+	            'valueClass' => 'table-full-width',
+	            'before' => 'value'
+			]);
+		}
+	}
 }
