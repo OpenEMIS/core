@@ -7,6 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
 
@@ -35,6 +36,16 @@ class SecurityRolesTable extends AppTable {
 					'filter' => 'security_group_id'
 				]);
 		}
+	}
+
+	public function validationDefault(Validator $validator) {
+		$validator
+			->add('name', 'ruleUnique', [
+	        		'rule' => 'validateUnique',
+	        		'provider' => 'table'
+			    ])
+	        ;
+		return $validator;
 	}
 
 	public function beforeAction(Event $event) {
