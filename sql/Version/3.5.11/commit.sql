@@ -1,3 +1,7 @@
+-- Update 3.4.15a to 3.4.15.1 for sorting consistency
+UPDATE `db_patches` SET `version`='3.4.15.1' WHERE `version`='3.4.15a';
+
+
 -- POCOR-3103
 -- db_patches
 INSERT INTO `db_patches` (issue, created) VALUES ('POCOR-3103', NOW());
