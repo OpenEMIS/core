@@ -47,6 +47,12 @@ class UndoStudentStatusTable extends AppTable {
 		// End
 	}
 
+	public function addOnInitialize(Event $event, Entity $entity)
+	{
+		// To clear the query string from the previous page to prevent logic conflict on this page
+		$this->request->query = [];
+	}
+
 	public function beforeAction(Event $event) {
 		$institutionClassTable = TableRegistry::get('Institution.InstitutionClasses');
 		$this->institutionId = $this->Session->read('Institution.Institutions.id');
@@ -271,7 +277,7 @@ class UndoStudentStatusTable extends AppTable {
 			if ($selectedClass != -1) {
 				$institutionClassRecord = $InstitutionClasses->get($selectedClass)->name;
 			} else {
-				$institutionClassRecord = __('All Classes');
+				$institutionClassRecord = __('Students without Class');
 			}
 			
 			$attr['attr']['value'] = $institutionClassRecord;
@@ -288,7 +294,7 @@ class UndoStudentStatusTable extends AppTable {
 					'ClassGrades.education_grade_id' => $selectedGrade
 				])
 				->toArray();
-			$options = ['-1' => __('All Classes')] + $institutionClassRecords;
+			$options = ['-1' => __('Students without Class')] + $institutionClassRecords;
 			$selectedClass = $request->query('class');
 			if (empty($selectedClass)) {
 				if (!empty($classes)) {
@@ -314,10 +320,6 @@ class UndoStudentStatusTable extends AppTable {
 			$selectedStatus = $request->data[$this->alias()]['student_status_id'];
 			$student_ids = $request->data[$this->alias()]['student_ids'];
 			$selectedClass = $request->query('class');
-
-			if ($selectedClass == -1) {
-				$selectedClass = '';
-			}
 
 			$data = $this
 				->find()

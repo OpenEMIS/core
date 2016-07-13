@@ -1,3 +1,7 @@
+v3.5.11
+- Added new field called Type in Comments feature
+- Class field in Student Transfer Approval page is now an optional field
+
 v3.5.10
 - User must enter a valid end date when creating a new academic period now
 - Fixed a bug that prevented user from viewing guardian profile
