@@ -30,6 +30,7 @@ class WorkflowStepsTable extends AppTable {
 		$this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
 		$this->hasMany('WorkflowActions', ['className' => 'Workflow.WorkflowActions', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('WorkflowRecords', ['className' => 'Workflow.WorkflowRecords', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('NextWorkflowSteps', ['className' => 'Workflow.WorkflowActions', 'foreignKey' => 'next_workflow_step_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('WorkflowStatuses' , [
 			'className' => 'Workflow.WorkflowStatuses',
 			'joinTable' => 'workflow_statuses_steps',
@@ -263,6 +264,12 @@ class WorkflowStepsTable extends AppTable {
 		list(, , , $selectedWorkflow) = array_values($this->_getSelectOptions());
 		$entity->workflow_id = $selectedWorkflow;
 	}
+
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
+    	$extra['excludedModels'] = [
+    		$this->WorkflowActions->alias()
+    	];
+    }
 
 	public function onUpdateFieldIsEditable(Event $event, array $attr, $action, Request $request) {
 		$attr['options'] = $this->getSelectOptions('general.yesno');
