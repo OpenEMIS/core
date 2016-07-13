@@ -21,7 +21,13 @@ class ClassStudentsBehavior extends Behavior {
 
 		if (array_key_exists('institution_class_id', $options)) {
 			if (!empty($options['institution_class_id'])) {
-				$query->where(['InstitutionClassStudents.institution_class_id' => $options['institution_class_id']]);
+				if ($options['institution_class_id'] != -1) {
+					$query->where(['InstitutionClassStudents.institution_class_id' => $options['institution_class_id']]);
+				} else {
+					$query->where(['InstitutionClassStudents.institution_class_id IS NULL']);
+				}
+			} else {
+				$query->where(['1 = 0']);
 			}
 		}
 		return $query;
