@@ -178,12 +178,6 @@ class InstitutionsController extends AppController  {
 			}
 		}
 
-		if ($action == 'index') {
-			if (isset($this->request->pass[0])) {
-				return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
-			}
-		}
-
 		$this->set('contentHeader', $header);
 	}
 

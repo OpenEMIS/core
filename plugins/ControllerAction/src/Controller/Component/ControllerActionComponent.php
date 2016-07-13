@@ -376,9 +376,7 @@ class ControllerActionComponent extends Component {
     public function paramsPass() {
         $params = $this->request->pass;
         if ($this->triggerFrom == 'Model') {
-            if ($this->triggerFrom == 'Model') {
-                unset($params[0]);
-            }
+            unset($params[0]);
         }
         return $params;
     }
@@ -392,7 +390,7 @@ class ControllerActionComponent extends Component {
         return array_merge($params, $this->paramsQuery());
     }
 
-    public function url($action) {
+    public function url($action, $params = true /* 'PASS' | 'QUERY' | false */) {
         $controller = $this->controller;
         $url = ['plugin' => $controller->plugin, 'controller' => $controller->name];
 
@@ -402,7 +400,14 @@ class ControllerActionComponent extends Component {
         } else {
             $url['action'] = $action;
         }
-        $url = array_merge($url, $this->params());
+
+        if ($params === true) {
+            $url = array_merge($url, $this->params());
+        } else if ($params === 'PASS') {
+            $url = array_merge($url, $this->paramsPass());
+        } else if ($params === 'QUERY') {
+            $url = array_merge($url, $this->paramsQuery());
+        }
         return $url;
     }
 
@@ -1349,7 +1354,7 @@ class ControllerActionComponent extends Component {
                 $this->controller->set('associations', $associations);
             } else {
                 $this->Alert->warning('general.notExists');
-                return $this->controller->redirect($this->url('index'));
+                return $this->controller->redirect($this->url('index', 'QUERY'));
             }
         } else if ($request->is('delete') && !empty($request->data[$primaryKey])) {
             $this->autoRender = false;
@@ -1384,7 +1389,7 @@ class ControllerActionComponent extends Component {
                 } else {
                     $this->Alert->error('general.delete.failed');
                 }
-                return $this->controller->redirect($this->url('index'));
+                return $this->controller->redirect($this->url('index', 'QUERY'));
             } else {
                 $transferFrom = $this->request->data('id');
                 $transferTo = $this->request->data('transfer_to');
@@ -1496,12 +1501,12 @@ class ControllerActionComponent extends Component {
                     } else {
                         $this->Alert->error('general.delete.failed');
                     }
-                    return $this->controller->redirect($this->url('index'));
+                    return $this->controller->redirect($this->url('index', 'QUERY'));
                 }
             }
         } else {
             $this->Alert->error('general.delete.failed');
-            return $this->controller->redirect($this->url('index'));
+            return $this->controller->redirect($this->url('index', 'QUERY'));
         }
     }
 
