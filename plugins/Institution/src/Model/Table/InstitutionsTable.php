@@ -188,7 +188,7 @@ class InstitutionsTable extends AppTable  {
 		$name = $entity->name;
 
 		if ($this->AccessControl->check([$this->controller->name, 'dashboard'])) {
-			$name = $event->subject()->Html->link($entity->name, [
+			$name = $event->subject()->HtmlField->link($entity->name, [
 				'plugin' => $this->controller->plugin,
 				'controller' => $this->controller->name,
 				'action' => 'dashboard',
