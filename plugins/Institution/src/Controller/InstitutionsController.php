@@ -18,7 +18,7 @@ class InstitutionsController extends AppController  {
 	public function initialize() {
 		parent::initialize();
 
-		$this->ControllerAction->model('Institution.Institutions');
+		$this->ControllerAction->model('Institution.Institutions', [], ['deleteStrategy' => 'restrict']);
 		$this->ControllerAction->models = [
 			'Attachments' 		=> ['className' => 'Institution.InstitutionAttachments'],
 			'History' 			=> ['className' => 'Institution.InstitutionActivities', 'actions' => ['search', 'index']],

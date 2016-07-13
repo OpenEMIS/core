@@ -31,7 +31,7 @@ class StaffAttendancesTable extends AppTable {
 		$config['Created'] = false;
 		parent::initialize($config);
 
-		$this->belongsTo('StaffTypes', ['className' => 'FieldOption.StaffTypes']);
+		$this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes']);
 		$this->belongsTo('StaffStatuses', ['className' => 'Staff.StaffStatuses']);
 		$this->belongsTo('InstitutionPositions', ['className' => 'Institution.InstitutionPositions']);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'staff_id']);
@@ -272,26 +272,72 @@ class StaffAttendancesTable extends AppTable {
 	// Function use by the mini dashboard
 	public function getNumberOfStaffByAttendance($params=[]) {
 		$query = $params['query'];
+		$selectedDay = $params['selectedDay'];
+
+		// Add this condition if the selected day is all day
+		if ($selectedDay == -1) {
+			$dateRange = array_column($this->allDayOptions, 'date');
+			// Sort the date range
+			usort($dateRange, function($a, $b) {
+			    $dateTimestamp1 = strtotime($a);
+			    $dateTimestamp2 = strtotime($b);
+			    return $dateTimestamp1 < $dateTimestamp2 ? -1: 1;
+			});
+			if (!empty($dateRange)) {
+				$startDate = $dateRange[0];
+				$endDate = $dateRange[count($dateRange) - 1];
+				$dateRangeCondition = [
+					'StaffAbsences.end_date >=' => $startDate,
+					'StaffAbsences.start_date <=' => $endDate
+				];
+			} else {
+				$dateRangeCondition = ['1 = 0'];
+			}
+		} else {
+			$dateRangeCondition = [];
+		}
 		$StaffAttendancesQuery = clone $query;
+
+		$staffAbsenceArray = $StaffAttendancesQuery
+			->find('list', [
+				'groupField' => 'staff_id',
+				'keyField' => 'absence_id',
+				'valueField' => 'absence_type'
+			])
+			->select(['absence_id' => 'StaffAbsences.id', 'staff_id' => $this->aliasField('staff_id'), 'absence_type' => 'StaffAbsences.absence_type_id'])
+			->group(['staff_id', 'absence_type'])
+			->where($dateRangeCondition)
+			->toArray();
 
 		// Creating the data set
 		$dataSet = [];
 		$data = [];
-		foreach ($StaffAttendancesQuery as $entity) {
-			// //Compile the dataset
-			if (empty($entity->StaffAbsences['id'])) {
-				if (isset($data['Present'])) {
-					$data['Present'] = ++$data['Present'];
+		foreach ($staffAbsenceArray as $userAbsenceType) {
+			// Compile the dataset
+			$absenceForTheWeek = false;
+			foreach ($userAbsenceType as $absenceType) {
+				if (empty($absenceType)) {
+					if (isset($data['Present'])) {
+						$data['Present'] = ++$data['Present'];
+					} else {
+						$data['Present'] = 1;
+					}
 				} else {
-					$data['Present'] = 1;
-				}
-			} else {
-				$absenceTypeId = $entity->StaffAbsences['absence_type_id'];
-				$typeName = $this->absenceList[$absenceTypeId];
-				if (isset($data[$typeName])) {
-					$data[$typeName] = ++$data[$typeName];
-				} else {
-					$data[$typeName] = 1;
+					$typeName = $this->absenceList[$absenceType];
+					if ($typeName != __('Late')) {
+						$typeName = 'Absence';
+					}
+					if (!$absenceForTheWeek || $typeName == __('Late')) {
+						if (isset($data[$typeName])) {
+							$data[$typeName] = ++$data[$typeName];
+						} else {
+							$data[$typeName] = 1;
+						}
+					}
+
+					if ($typeName == 'Absence') {
+						$absenceForTheWeek = true;
+					}
 				}
 			}
 		}
@@ -688,22 +734,20 @@ class StaffAttendancesTable extends AppTable {
 				;
 
 			$InstitutionArray = [];
-			if ($selectedDay != -1) {
-
-			}
-
-			$totalStaff = $query->count();
+			
+			$queryClone = clone $query;
+			$totalStaff = $queryClone->distinct([$this->aliasField('staff_id')])->count();
 
 			$indexDashboard = 'attendance';
 
-			$dataSet = $this->getNumberOfStaffByAttendance(['query' => $query]);
+			$dataSet = $this->getNumberOfStaffByAttendance(['query' => $query, 'selectedDay' => $selectedDay]);
 			$present = 0;
 			$absent = 0;
 			$late = 0;
 			foreach ($dataSet as $key => $data) {
 				if ($key == 'Present') {
 					$present = $data;
-				} elseif ($key == 'Late') {
+				} elseif ($key == __('Late')) {
 					$late = $data;
 				} else {
 					$absent += $data;

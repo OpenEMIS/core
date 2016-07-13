@@ -13,8 +13,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.1.21
-3.1.21 (Malcolm) - For 'ControllerAction.Model.index.beforeAction' removed $query from parameters and added it to $settings['query']
+ControllerActionComponent - Current Version 3.1.22
+3.1.22 (Malcolm) - For 'ControllerAction.Model.index.beforeAction' removed $query from parameters and added it to $settings['query']
+3.1.21 (Zack) - Amended restrict delete page and remove (event - ControllerAction.Model.onBeforeRestrictDelete). To use (event - deleteOnInitialize) instead.
 3.1.20 (Malcolm) - Added (deleteStrategy type - 'restrict') and (event - ControllerAction.Model.onBeforeRestrictDelete)
 3.1.19 (Malcolm) - Fixed an error issue when using getFields() on tables with joint primary keys
 3.1.18 (Malcolm) - remove() - If id(to be deleted) cannot be found, return a successful deletion message
@@ -156,9 +157,13 @@ class ControllerActionComponent extends Component {
                         }
 
                         $actions = isset($attr['actions']) ? $attr['actions'] : $this->defaultActions;
-                        $options = isset($attr['options']) ? $attr['options'] : [];
+                        $_options = ['deleteStrategy' => 'cascade'];
 
-                        $this->model($attr['className'], $actions, $options);
+                        if (isset($attr['options'])) {
+                            $_options = array_merge($_options, $attr['options']);
+                        }
+                        
+                        $this->model($attr['className'], $actions, $_options);
                         $this->model->alias = $name;
                         $this->currentAction = $currentAction;
                         $this->ctpFolder = $this->model->alias();
@@ -798,7 +803,8 @@ class ControllerActionComponent extends Component {
 
         if ($options['auto_order']) {
             if (empty($order) && array_key_exists($this->orderField, $schema)) {
-                $query->order([$model->aliasField($this->orderField) => 'asc']);
+                $options['sort'] = 'order';
+                $options['direction'] = 'asc';
             }
         }
 
@@ -996,7 +1002,7 @@ class ControllerActionComponent extends Component {
                 $patchOptionsArray = $patchOptions->getArrayCopy();
                 $request->data = $requestData->getArrayCopy();
                 $entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
-// pr($entity);die;
+
                 // Event: addAfterPatch
                 $this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.afterPatch');
                 $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.afterPatch', null, $params);
@@ -1258,19 +1264,30 @@ class ControllerActionComponent extends Component {
                 $entity = $model->get($id);
 
                 $query = $model->find();
-                $listOptions = new ArrayObject([]);
+                $extra = new ArrayObject([]);
+
+                $label = [
+                    'nameLabel' => 'Convert From',
+                    'tableLabel' => 'Apply To'
+                ];
+                if ($this->deleteStrategy == 'transfer') {
+                    $label['nameLabel'] = 'Convert From';
+                    $label['tableLabel'] = 'Apply To';
+                } elseif ($this->deleteStrategy == 'restrict') {
+                    $label['nameLabel'] = 'To Be Deleted';
+                    $label['tableLabel'] = 'Associated Records';
+                }
+
+                $extra['keyField'] = 'id';
+                $extra['valueField'] = 'name';
 
                 // Event: deleteOnInitialize
                 $this->debug(__METHOD__, ': Event -> ControllerAction.Model.delete.onInitialize');
-                $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.delete.onInitialize', null, [$entity, $query, $listOptions]);
+                $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.delete.onInitialize', null, [$entity, $query, $extra]);
                 if ($event->isStopped()) { return $event->result; }
                 // End Event
 
-                if ($listOptions->count() == 0) {
-                    $listOptions['keyField'] = 'id';
-                    $listOptions['valueField'] = 'name';
-                }
-                $query->find('list', $listOptions->getArrayCopy())->where([$idKey . ' <> ' => $id]);
+                $query->find('list', $extra->getArrayCopy())->where([$idKey . ' <> ' => $id]);
 
                 // Event: deleteUpdateCovertOptions
                 $this->debug(__METHOD__, ': Event -> ControllerAction.Model.onGetConvertOptions');
@@ -1281,12 +1298,16 @@ class ControllerActionComponent extends Component {
                 if (empty($convertOptions)) {
                     $convertOptions[''] = __('No Available Options');
                 }
-
+                $totalCount = 0;
                 $associations = [];
                 foreach ($model->associations() as $assoc) {
-                    if (!$assoc->dependent()) {
+                    if (!$assoc->dependent() || $this->deleteStrategy == 'restrict') {
                         if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
-                            if (!array_key_exists($assoc->alias(), $associations)) {
+                            $excludedModels = [];
+                            if ($extra->offsetExists('excludedModels')) {
+                                $excludedModels = $extra['excludedModels'];
+                            }
+                            if (!array_key_exists($assoc->alias(), $associations) && !in_array($assoc->alias(), $excludedModels)) {
                                 $count = 0;
                                 if($assoc->type() == 'oneToMany') {
                                     $count = $assoc->find()
@@ -1302,12 +1323,29 @@ class ControllerActionComponent extends Component {
                                 if ($title == '[Message Not Found]') {
                                     $title = $assoc->name();
                                 }
+                                $title = Inflector::humanize(Inflector::underscore($title));
                                 $associations[$assoc->alias()] = ['model' => $title, 'count' => $count];
+                                $totalCount += $count;
                             }
                         }
                     }
                 }
-
+                if ($extra->offsetExists('associatedRecords')) {
+                    foreach ($extra['associatedRecords'] as $key => $record) {
+                        $title = Inflector::humanize(Inflector::underscore($record['model']));
+                        $extra['associatedRecords'][$key]['model'] = $title;
+                        $totalCount += $record['count'];
+                    }
+                    $associations = array_merge($associations, $extra['associatedRecords']);
+                }
+                $showFormButton = true;
+                if ($this->deleteStrategy == 'restrict' && $totalCount > 0) {
+                    $showFormButton = false;
+                    $this->Alert->error('general.delete.restrictDeleteBecauseAssociation');
+                }
+                $this->controller->set('label', $label);
+                $this->controller->set(compact('showFormButton'));
+                $this->controller->set('deleteStrategy', $this->deleteStrategy);
                 $this->controller->set('data', $entity);
                 $this->controller->set('convertOptions', $convertOptions);
                 $this->controller->set('associations', $associations);
@@ -1319,6 +1357,7 @@ class ControllerActionComponent extends Component {
             $this->autoRender = false;
             $id = $request->data[$primaryKey];
             $deleteOptions = new ArrayObject([]);
+            $extra = new ArrayObject(['excludedModels' => []]);
 
             $process = function ($model, $id, $deleteOptions) {
                 $primaryKey = $model->primaryKey();
@@ -1333,7 +1372,7 @@ class ControllerActionComponent extends Component {
             };
 
             // Event: onBeforeDelete
-            $params = [$deleteOptions, $id];
+            $params = [$deleteOptions, $id, $extra];
             $this->debug(__METHOD__, ': Event -> ControllerAction.Model.onBeforeDelete');
             $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onBeforeDelete', null, $params);
             if ($event->isStopped()) { return $event->result; }
@@ -1341,36 +1380,12 @@ class ControllerActionComponent extends Component {
                 $process = $event->result;
             }
             // End Event
-            if ($this->deleteStrategy == 'cascade') {
+            if ($this->deleteStrategy == 'cascade' || $this->deleteStrategy == 'restrict') {
                 if ($process($model, $id, $deleteOptions)) {
                     $this->Alert->success('general.delete.success');
                 } else {
                     $this->Alert->error('general.delete.failed');
                 }
-                return $this->controller->redirect($this->url('index'));
-            } else if ($this->deleteStrategy == 'restrict') {
-                $notRestrictedCheck = function ($model, $id, $deleteOptions) {
-                    $newEntity = $model->newEntity([$model->primaryKey() => $id]);
-                    return !$this->hasAssociatedRecords($model, $newEntity);
-                };
-
-                $this->debug(__METHOD__, ': Event -> ControllerAction.Model.onBeforeRestrictDelete');
-                $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onBeforeRestrictDelete', null, $params);
-                if ($event->isStopped()) { return $event->result; }
-                if (is_callable($event->result)) {
-                    $notRestrictedCheck = $event->result;
-                }
-
-                if ($notRestrictedCheck($model, $id, $deleteOptions)) {
-                    if ($process($model, $id, $deleteOptions)) {
-                        $this->Alert->success('general.delete.success');
-                    } else {
-                        $this->Alert->error('general.delete.failed');
-                    }
-                } else {
-                    $this->Alert->error('general.delete.restrictDeleteBecauseAssociation');
-                }
-
                 return $this->controller->redirect($this->url('index'));
             } else {
                 $transferFrom = $this->request->data('id');
@@ -1458,6 +1473,11 @@ class ControllerActionComponent extends Component {
                                         $modelAssociationTable->updateAll(
                                             [$assoc->foreignKey() => $transferTo],
                                             $condition
+                                        );
+
+                                        // Delete orphan records
+                                        $modelAssociationTable->deleteAll(
+                                            [$assoc->foreignKey() => $transferFrom]
                                         );
                                     }
                                 }
@@ -1815,12 +1835,13 @@ class ControllerActionComponent extends Component {
         return $order;
     }
 
-    public function getAssociatedRecords($model, $entity) {
+    public function getAssociatedRecords($model, $entity, $extra)
+    {
         $primaryKey = $model->primaryKey();
         $id = $entity->$primaryKey;
         $associations = [];
         foreach ($model->associations() as $assoc) {
-            if (!$assoc->dependent() && ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany')) {
+            if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
                 if (!array_key_exists($assoc->alias(), $associations)) {
                     $count = 0;
                     if ($assoc->type() == 'oneToMany') {
@@ -1838,15 +1859,25 @@ class ControllerActionComponent extends Component {
                     if (!is_null($event->result)) {
                         $title = $event->result;
                     }
-                    $associations[$assoc->alias()] = ['model' => $title, 'count' => $count];
+
+                    $isAssociated = true;
+                    if ($extra->offsetExists('excludedModels')) {
+                        if (in_array($title, $extra['excludedModels'])) {
+                            $isAssociated = false;
+                        }
+                    }
+                    if ($isAssociated) {
+                        $associations[$assoc->alias()] = ['model' => $title, 'count' => $count];
+                    }
                 }
             }
         }
         return $associations;
     }
 
-    public function hasAssociatedRecords($model, $entity) {
-        $records = $this->getAssociatedRecords($model, $entity);
+    public function hasAssociatedRecords($model, $entity, $extra)
+    {
+        $records = $this->getAssociatedRecords($model, $entity, $extra);
         $found = false;
         foreach ($records as $count) {
             if ($count['count'] > 0) {
