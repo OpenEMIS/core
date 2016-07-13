@@ -44,7 +44,7 @@ class StaffTable extends AppTable {
 		$this->belongsTo('Users',			['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('Positions',		['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
 		$this->belongsTo('Institutions',	['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
-		$this->belongsTo('StaffTypes',		['className' => 'FieldOption.StaffTypes']);
+		$this->belongsTo('StaffTypes',		['className' => 'Staff.StaffTypes']);
 		$this->belongsTo('StaffStatuses',	['className' => 'Staff.StaffStatuses']);
 		$this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
 		$this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
