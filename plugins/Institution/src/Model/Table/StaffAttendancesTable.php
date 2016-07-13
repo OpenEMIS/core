@@ -509,7 +509,7 @@ class StaffAttendancesTable extends AppTable {
 			}
 		} else {
 			$reasonId = $entity->StaffAbsences['staff_absence_reason_id'];
-			$StaffAbsenceReasons = TableRegistry::get('FieldOption.StaffAbsenceReasons');
+			$StaffAbsenceReasons = TableRegistry::get('Institution.StaffAbsenceReasons');
 
 			if (!empty($reasonId)) {
 				$obj = $StaffAbsenceReasons->findById($reasonId)->first();
@@ -797,7 +797,7 @@ class StaffAttendancesTable extends AppTable {
 				$typeOptions = [self::PRESENT => __('Present')];
 				$this->typeOptions = $typeOptions + $this->absenceList;
 
-				$StaffAbsenceReasons = TableRegistry::get('FieldOption.StaffAbsenceReasons');
+				$StaffAbsenceReasons = TableRegistry::get('Institution.StaffAbsenceReasons');
 				$this->reasonOptions = $StaffAbsenceReasons->getList()->toArray();
 			}
 		} else {
