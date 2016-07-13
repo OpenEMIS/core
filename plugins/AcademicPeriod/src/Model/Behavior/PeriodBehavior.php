@@ -16,29 +16,32 @@ class PeriodBehavior extends Behavior {
 			$periodObj = $AcademicPeriods
 				->findById($options['academic_period_id'])
 				->first();
-				
-			if ($periodObj->start_date instanceof Time || $periodObj->start_date instanceof Date) {
-				$startDate = $periodObj->start_date->format('Y-m-d');
-			} else {
-				$startDate = date('Y-m-d', strtotime($periodObj->start_date));
-			}
+			if (!empty($periodObj)) {
+				if ($periodObj->start_date instanceof Time || $periodObj->start_date instanceof Date) {
+					$startDate = $periodObj->start_date->format('Y-m-d');
+				} else {
+					$startDate = date('Y-m-d', strtotime($periodObj->start_date));
+				}
 
-			if ($periodObj->end_date instanceof Time || $periodObj->end_date instanceof Date) {
-				$endDate = $periodObj->end_date->format('Y-m-d');
-			} else {
-				$endDate = date('Y-m-d', strtotime($periodObj->end_date));
-			}
+				if ($periodObj->end_date instanceof Time || $periodObj->end_date instanceof Date) {
+					$endDate = $periodObj->end_date->format('Y-m-d');
+				} else {
+					$endDate = date('Y-m-d', strtotime($periodObj->end_date));
+				}
 
-			if (array_key_exists('beforeEndDate', $options)) {
-				$conditions = [];
-				$conditions['OR'] = [
-					[
-						$options['beforeEndDate'] . ' <=' => $endDate
-					]
-				];
-				return $query->where($conditions);
+				if (array_key_exists('beforeEndDate', $options)) {
+					$conditions = [];
+					$conditions['OR'] = [
+						[
+							$options['beforeEndDate'] . ' <=' => $endDate
+						]
+					];
+					return $query->where($conditions);
+				} else {
+					return $query->find('InDateRange', ['start_date' => $startDate, 'end_date' => $endDate]);
+				}
 			} else {
-				return $query->find('InDateRange', ['start_date' => $startDate, 'end_date' => $endDate]);
+				return $query->where(['0 = 1']);
 			}
 		} else {
 			return $query;

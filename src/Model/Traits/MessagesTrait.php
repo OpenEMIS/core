@@ -493,6 +493,7 @@ trait MessagesTrait {
 		// Validation Messages
 		'Institution' => [
 			'Institutions' => [
+				'academicPeriod' => 'There are no Academic Periods in the system.',
 				'noActiveInstitution' => 'There is no active institution',
 				'noSubjectsInClass' => 'There are no subjects in the assigned grade',
 				'noSubjectSelected' => 'There is no subject selected',
