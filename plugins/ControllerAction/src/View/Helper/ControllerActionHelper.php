@@ -425,7 +425,6 @@ class ControllerActionHelper extends Helper {
 				if ($entity->has($col)) {
 					$htmlInfo = htmlentities($entity->$col, ENT_QUOTES, 'UTF-8');
 					$htmlInfo = str_replace('/', '&#x2F;', $htmlInfo);
-					$htmlInfo = htmlentities($htmlInfo, ENT_QUOTES, 'UTF-8');
 					$entity->$col = $htmlInfo;
 				}
 			}
