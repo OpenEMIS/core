@@ -183,36 +183,4 @@ UPDATE `field_options` SET `plugin` = 'Staff' WHERE `code` = 'SalaryDeductionTyp
 
 
 -- Drop batch_processes
--- DROP TABLE batch_processes;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+DROP TABLE batch_processes;
