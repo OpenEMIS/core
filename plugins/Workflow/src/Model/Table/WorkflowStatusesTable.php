@@ -108,6 +108,8 @@ class WorkflowStatusesTable extends AppTable {
 			case 'edit':
 				$tableHeaders = [__('Workflow Step Name'), __('Workflow Name'),''];
 				$form = $event->subject()->Form;
+				$form->unlockField('WorkflowStatuses.workflow_steps');
+				$form->unlockField('WorkflowStatuses.temporary');
 				$tableCells = [];
 				$arraySteps = [];
 
