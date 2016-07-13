@@ -30,7 +30,7 @@ class SqlserverSchema extends BaseSchema
         $sql = "SELECT TABLE_NAME
             FROM INFORMATION_SCHEMA.TABLES
             WHERE TABLE_SCHEMA = ?
-            AND TABLE_TYPE = 'BASE TABLE'
+            AND (TABLE_TYPE = 'BASE TABLE' OR TABLE_TYPE = 'VIEW')
             ORDER BY TABLE_NAME";
         $schema = empty($config['schema']) ? static::DEFAULT_SCHEMA_NAME : $config['schema'];
         return [$sql, [$schema]];
@@ -51,7 +51,7 @@ class SqlserverSchema extends BaseSchema
             AC.is_identity AS [autoincrement],
             AC.is_nullable AS [null],
             OBJECT_DEFINITION(AC.default_object_id) AS [default]
-            FROM sys.[tables] T
+            FROM sys.[objects] T
             INNER JOIN sys.[schemas] S ON S.[schema_id] = T.[schema_id]
             INNER JOIN sys.[all_columns] AC ON T.[object_id] = AC.[object_id]
             INNER JOIN sys.[types] TY ON TY.[user_type_id] = AC.[user_type_id]
@@ -161,9 +161,32 @@ class SqlserverSchema extends BaseSchema
 
         $field += [
             'null' => $row['null'] === '1' ? true : false,
-            'default' => $row['default'],
+            'default' => $this->_defaultValue($row['default']),
         ];
         $table->addColumn($row['name'], $field);
+    }
+
+    /**
+     * Manipulate the default value.
+     *
+     * Sqlite includes quotes and bared NULLs in default values.
+     * We need to remove those.
+     *
+     * @param string|null $default The default value.
+     * @return string|null
+     */
+    protected function _defaultValue($default)
+    {
+        if ($default === 'NULL') {
+            return null;
+        }
+
+        // Remove quotes
+        if (preg_match("/^'(.*)'$/", $default, $matches)) {
+            return str_replace("''", "'", $matches[1]);
+        }
+
+        return $default;
     }
 
     /**
@@ -302,10 +325,8 @@ class SqlserverSchema extends BaseSchema
             'integer' => ' INTEGER',
             'biginteger' => ' BIGINT',
             'boolean' => ' BIT',
-            'binary' => ' VARBINARY(MAX)',
             'float' => ' FLOAT',
             'decimal' => ' DECIMAL',
-            'text' => ' NVARCHAR(MAX)',
             'date' => ' DATE',
             'time' => ' TIME',
             'datetime' => ' DATETIME',
@@ -324,7 +345,21 @@ class SqlserverSchema extends BaseSchema
             }
         }
 
-        if ($data['type'] === 'string') {
+        if ($data['type'] === 'text' && $data['length'] !== Table::LENGTH_TINY) {
+            $out .= ' NVARCHAR(MAX)';
+        }
+
+        if ($data['type'] === 'binary') {
+            $out .= ' VARBINARY';
+
+            if ($data['length'] !== Table::LENGTH_TINY) {
+                $out .= '(MAX)';
+            } else {
+                $out .= sprintf('(%s)', Table::LENGTH_TINY);
+            }
+        }
+
+        if ($data['type'] === 'string' || ($data['type'] === 'text' && $data['length'] === Table::LENGTH_TINY)) {
             $type = ' NVARCHAR';
 
             if (!empty($data['fixed'])) {

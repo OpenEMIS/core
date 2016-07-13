@@ -21,7 +21,7 @@ class GuardiansTable extends AppTable {
 
         $this->belongsTo('Students',            ['className' => 'Student.Students', 'foreignKey' => 'student_id']);
         $this->belongsTo('Users',               ['className' => 'Security.Users', 'foreignKey' => 'guardian_id']);
-        $this->belongsTo('GuardianRelations',   ['className' => 'FieldOption.GuardianRelations', 'foreignKey' => 'guardian_relation_id']);
+        $this->belongsTo('GuardianRelations',   ['className' => 'Student.GuardianRelations', 'foreignKey' => 'guardian_relation_id']);
 
         // to handle field type (autocomplete)
         $this->addBehavior('OpenEmis.Autocomplete');
