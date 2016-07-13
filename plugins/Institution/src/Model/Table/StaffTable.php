@@ -304,13 +304,8 @@ class StaffTable extends AppTable {
 		$StaffPositionProfilesTable = TableRegistry::get('Institution.StaffPositionProfiles');
 		$staffPositionProfilesRecordCount = $StaffPositionProfilesTable->find()
 			->where([
-<<<<<<< HEAD
 				$StaffPositionProfilesTable->aliasField('institution_id') => $institutionId, 
 				$StaffPositionProfilesTable->aliasField('status_id'). ' NOT IN ' => $staffPositionProfileStatuses
-=======
-				$StaffPositionProfilesTable->aliasField('institution_id') => $institutionId,
-				$StaffPositionProfilesTable->aliasField('status_id'). ' NOT IN ' => $approvedStatus
->>>>>>> origin_ssh/tst
 			])
 			->count();
 
