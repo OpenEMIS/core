@@ -1,5 +1,5 @@
 /* 
-Dashboard Overwrites: v.1.0.3
+Dashboard Overwrites: v.1.0.4
 */
 
 
@@ -18,6 +18,10 @@ Dashboard Overwrites: v.1.0.3
         position: relative !important;
         top: 0 !important;
         padding: 10px 0 !important;
+    }
+    .chart-container {
+        position: relative !important;
+        top: 0 !important;
     }
 }
 
@@ -87,8 +91,14 @@ tags-input .tags .tag-list {
     min-height: 768px;
     background: rgba(0, 0, 0, 0) url("../../../../img/dashboard-canvas.png") repeat scroll 0 0;
     border: 1px solid #DDD;
-    margin: -10px auto;
+    margin: 0 auto;
     padding: 5px;
+}
+
+@media only screen and (max-width: 800px) {
+    .dashboard-canvas {
+        min-width: 100%;
+    }
 }
 
 
@@ -595,33 +605,6 @@ ul li.list-item {
 }
 
 
-/* Search close button on the accordion */
-
-.visualization-search .btn-reset,
-.visualization-search .btn-reset:hover {
-    right: 5px;
-}
-
-.visualization-search .btn-reset,
-.visualization-search .btn-reset:hover,
-.rtl .visualization-search .btn-reset,
-.rtl .visualization-search .btn-reset:hover {
-    top: -10px;
-}
-
-.chrome .visualization-search .btn-reset,
-.chrome .visualization-search .btn-reset:hover {
-    right: 2px;
-}
-
-.chrome .visualization-search .btn-reset,
-.chrome .visualization-search .btn-reset:hover,
-.rtl .chrome .visualization-search .btn-reset,
-.rtl .chrome .visualization-search .btn-reset:hover {
-    top: -7px;
-}
-
-
 /* Accordion */
 
 @media only screen and (max-width: 1024px) {
@@ -724,15 +707,13 @@ ul li.list-item {
     overflow: scroll;
 }
 
+
+/* End of dragdrop-wrapper overflow (Tini) */
+
+
 /* Overwrite highcharts title/subtitle (Naqiyah) */
 
-.highcharts-title {
-    left: 0 !important;
-    width: 100% !important;
-    padding: 10px !important;
-    text-align: center;
-}
-
+.highcharts-title,
 .highcharts-subtitle {
     left: 0 !important;
     width: 100% !important;
@@ -740,4 +721,33 @@ ul li.list-item {
     text-align: center;
 }
 
+
 /* End Overwrite highcharts title/subtitle (Naqiyah) */
+
+/* Add Accordion Format Pagination (Tini) */
+
+.accordion-pagination {
+    position: absolute;
+    width: 40px;
+    left: 0;
+    background-color: #FFF;
+}
+
+.accordion-anchor {
+    margin-left: 50px;
+    margin-bottom: 30px;
+    height: 100px;
+    vertical-align: middle;
+}
+
+.accordion-anchor:last-child {
+    margin-bottom: 0 !important;
+}
+
+.scroll-arrow-up,
+.scroll-arrow-down {
+    font-size: 16px;
+}
+
+/* End of Accordion Format Pagination (Tini) */
+

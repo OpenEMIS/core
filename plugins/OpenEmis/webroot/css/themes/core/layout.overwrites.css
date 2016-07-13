@@ -565,7 +565,6 @@ a,
 
 /* End of Enable Search for Chosen Select */
 
-
 /* Temporary fix for POCOR-1855 */
 
 .form-horizontal input[type="checkbox"],
@@ -575,3 +574,31 @@ a,
 }
 
 /* End of Temporary fix for POCOR-1855 */
+
+/* For Checkbox iCheck - To be depreciate */
+
+.icheck-input[type="checkbox"],
+.icheck-input[type="radio"] {
+    z-index: -1 !important;
+}
+
+/* End of iCheck */
+
+
+/* Fixed Navigation Menu in RTL (Force font to always align right) */
+
+.rtl .left-menu .nav-level-1 i {
+    float: right;
+}
+
+/* End of Fixed Navigation Menu in RTL (Force font to always align right) */
+
+
+/* Temporary Overwrites (to remove after 2.5.1 new components is implemented) */
+
+.rtl .toolbar-wrapper .form-control {
+    height: 25px;
+    padding: 2px 6px 2px 25px !important;
+    font-size: 11px;
+    margin: 3px 0;
+}

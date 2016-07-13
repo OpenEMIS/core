@@ -1,5 +1,5 @@
 /* 
-Core Theme: v.1.0.4
+Core Theme: v.1.0.7
 Product Color: #6699CC
 Darker Shade Color: #476B8F
 */
@@ -20,8 +20,7 @@ Darker Shade Color: #476B8F
 #seriesDrag li:hover,
 #selector li:active,
 #xDrag li:active,
-#seriesDrag li:active,
-.switch-candy a {
+#seriesDrag li:active {
     background-color: #6699CC;
 }
 
@@ -30,7 +29,9 @@ a:active,
 a:focus,
 .panel-breadcrumb li a,
 .panel-breadcrumb i,
-.loader-text i {
+.loader-text i,
+.btn-outline,
+.btn-circle {
     color: #6699CC;
 }
 
@@ -46,7 +47,8 @@ a:focus,
     color: #fff;
 }
 
-.selected {
+.selected,
+.switch-candy a {
     background-color: #6699CC !important;
 }
 
@@ -77,7 +79,8 @@ a:focus,
 .fileinput .btn-file-cancel,
 .input-left-btn button,
 .tabs-action-btn,
-.customize-tab .tab-icon a {
+.customize-tab .tab-icon a,
+.sg-theme .ag-filter-header-container label {
     color: #6699CC !important;
 }
 
@@ -124,7 +127,20 @@ a:hover,
 .panel-breadcrumb a:hover,
 .panel-breadcrumb i:hover,
 .ellipsis,
-.btn-outline {
+.btn-outline,
+.sg-theme .ag-filter-header-container label:hover,
+[type="checkbox"]:not(:checked) + label:after,
+[type="checkbox"]:checked + label:after,
+[type="checkbox"]:not(:checked) + .ag-cell-value:after,
+[type="checkbox"]:checked + .ag-cell-value:after,
+[type="checkbox"]:not(:checked) + .ag-filter-value:after,
+[type="checkbox"]:checked + .ag-filter-value:after,
+[type="radio"]:not(:checked) + label:after,
+[type="radio"]:checked + label:after,
+[type="radio"]:not(:checked) + .ag-cell-value:after,
+[type="radio"]:checked + .ag-cell-value:after,
+[type="radio"]:not(:checked) + .ag-filter-value:after,
+[type="radio"]:checked + .ag-filter-value:after {
     color: #476B8F;
 }
 
@@ -153,7 +169,14 @@ a:hover,
 .input-left-btn button:focus,
 .scrolltabs .ui-tabs-scrollable > .nav-button.left-nav-button,
 .scrolltabs .ui-tabs-scrollable > .nav-button.right-nav-button,
-.scrolltabs .ui-tabs-scrollable > .btn-group > .btn.dropdown-toggle {
+.scrolltabs .ui-tabs-scrollable > .btn-group > .btn.dropdown-toggle,
+.sg-theme .ag-paging-button:hover,
+[type="checkbox"]:checked + label:before,
+[type="checkbox"]:checked + .ag-cell-value:before,
+[type="checkbox"]:checked + .ag-filter-value:before,
+[type="radio"]:checked + label:before,
+[type="radio"]:checked + .ag-cell-value:before,
+[type="radio"]:checked + .ag-filter-value:before {
     border: 1px solid #476B8F !important;
 }
 
@@ -208,10 +231,12 @@ a:hover,
 .btn-dropdown:hover,
 .input-left-btn button:hover,
 .input-left-btn button:focus,
-.scrolltabs .dropdown-menu>li>a:focus, 
+.scrolltabs .dropdown-menu>li>a:focus,
 .scrolltabs .dropdown-menu>li>a:hover,
 .customize-tab .tab-icon .nav-pills > li.active > a:hover,
-.btn-toggled {
+.btn-toggled,
+.sg-theme .ag-menu-option-active,
+.sg-theme .ag-paging-button:hover {
     background-color: #476B8F !important;
     color: #FFF !important;
     background-image: none !important;
