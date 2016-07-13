@@ -304,10 +304,11 @@ class WorkflowStepsTable extends AppTable {
 
 			$registryAlias = $workflow->_matchingData['WorkflowModels']->model;
 			$subject = TableRegistry::get($registryAlias);
-			$subjectEvent = $subject->dispatchEvent('Workflow.getEvents', null, $subject);
+			$eventsObject = new ArrayObject();
+			$subjectEvent = $subject->dispatchEvent('Workflow.getEvents', [$eventsObject], $subject);
 			if ($subjectEvent->isStopped()) { return $subjectEvent->result; }
 
-			$events = $subjectEvent->result;
+			$events = $eventsObject;
 			if (empty($events)) {
 				$eventOptions = [
 					0 => [
