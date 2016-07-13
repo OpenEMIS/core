@@ -16,33 +16,39 @@
                     </tr>
                 </thead>
                 <?php if (isset($attr['data'])) : ?>
-                <?php 
+                <?php
                     $elementData = $attr['data'];
                     $subjectsData = $elementData['subjects'];
                     $staffId = $elementData['staffId'];
                  ?>
                 <tbody>
-                    <?php 
+                    <?php
                     $staffId = $data->staff_id;
-                    foreach ($subjectsData as $key => $value) { 
+                    foreach ($subjectsData as $key => $value) {
                     ?>
                         <tr>
                             <td class="checkbox-column">
-                                <?php 
+                                <?php
                                 $n = intval($value->id);
 
                                 $selected = false;
                                 if(!empty($this->request->data)) {
                                     if ($this->request->data['submit'] == 'save') {
-                                        $selected = (isset($this->request->data['Subjects'][$key]))? 'checked': '';
+                                        $selected = ((isset($this->request->data['Subjects'][$key]['subject_id']) && !empty($this->request->data['Subjects'][$key]['subject_id']))) ? 'checked': '';
                                     } else {
                                         $selected = ($value->has('teachers') && !empty($value->teachers) && in_array($staffId, array_keys($value->teachers)))? 'checked': '';
                                     }
                                 }
+                                echo $this->Form->input('Subjects.' . $key . '.subject_id', [
+                                    'type'      => 'checkbox',
+                                    'checked'   => $selected,
+                                    'class'     => 'icheck-input',
+                                    'value'     => $n,
+                                    'label'     => false
+                                ]);
                                 ?>
-                                <input type="checkbox" class="icheck-input" name="<?php echo sprintf('Subjects[%d][subject_id]', $key) ?>" value="<?php echo $n?>" <?php echo $selected;?> 
                             </td>
-                            
+
                             <td><?=$value->name?></td>
                             <td><?php echo ($value->has('teachers') && !empty($value->teachers))? implode(', ', array_values($value->teachers)): '-'; ?></td>
                         </tr>

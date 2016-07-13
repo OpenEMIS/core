@@ -29,14 +29,14 @@ class StudentFeesTable extends ControllerActionTable {
 
 		$this->hasMany('InstitutionFeeTypes', ['className' => 'Institution.InstitutionFeeTypes', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StudentFeesAbstract', ['className' => 'Institution.StudentFeesAbstract', 'dependent' => true, 'cascadeCallbacks' => true]);
-		
+
 		if ($this->behaviors()->has('ControllerAction')) {
             $this->behaviors()->get('ControllerAction')->config([
                 'actions' => [
-					'index' => true, 
-					'view' => true, 
-					'add' => false, 
-					'edit' => false, 
+					'index' => true,
+					'view' => true,
+					'add' => false,
+					'edit' => false,
 					'remove' => false,
 					'search' => false,
 					'reorder' => false
@@ -93,7 +93,8 @@ class StudentFeesTable extends ControllerActionTable {
 **
 ******************************************************************************************************************/
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) { 
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	{
 		$query
 			->contain([
 				'EducationGrades.EducationProgrammes',
@@ -114,8 +115,8 @@ class StudentFeesTable extends ControllerActionTable {
 			->group(['StudentFees.id'])
 			;
 
-		if (!empty(array_keys($this->_conditions['institutionIds'])) 
-			&& !empty(array_keys($this->_conditions['academicPeriodIds'])) 
+		if (!empty(array_keys($this->_conditions['institutionIds']))
+			&& !empty(array_keys($this->_conditions['academicPeriodIds']))
 			&& !empty(array_keys($this->_conditions['educationGradeIds']))){
 				$query
 					->where([
@@ -138,7 +139,7 @@ class StudentFeesTable extends ControllerActionTable {
 		$this->controller->set('selectedAction', $this->alias());
 	}
 
-	
+
 /******************************************************************************************************************
 **
 ** view action methods
@@ -175,10 +176,10 @@ class StudentFeesTable extends ControllerActionTable {
 
     	$StudentFeesAbstract = TableRegistry::get('Institution.StudentFeesAbstract');
     	$fields = $StudentFeesAbstract->fields;
-    	$fields['payment_date']['tableHeader'] = __('Payment Date'); 
-    	$fields['created_user_id']['tableHeader'] = __('Created By'); 
-    	$fields['comments']['tableHeader'] = __('Comments'); 
-    	$fields['amount']['tableHeader'] = __('Amount' . ' (' . $this->currency . ')'); 
+    	$fields['payment_date']['tableHeader'] = __('Payment Date');
+    	$fields['created_user_id']['tableHeader'] = __('Created By');
+    	$fields['comments']['tableHeader'] = __('Comments');
+    	$fields['amount']['tableHeader'] = __('Amount' . ' (' . $this->currency . ')');
 		$this->fields['payments']['fields'] = $fields;
     	$this->fields['payments']['data'] = $this->getPaymentRecords($entity);
     	$this->fields['payments']['total'] = $this->onGetAmountPaid($event, $entity);
@@ -217,24 +218,24 @@ class StudentFeesTable extends ControllerActionTable {
 		}
 	}
 
-	public function onGetEducationGradeId(Event $event, Entity $entity) {
-		return $entity->education_grade->education_programme->name . ' - ' . $entity->education_grade->name;
+	public function onGetEducationGradeId(Event $event, Entity $entity)
+	{
+		return $entity->education_grade->programme_name . ' - ' . $entity->education_grade->name;
 	}
 
-	public function onGetTotalFee(Event $event, Entity $entity) {
+	public function onGetTotalFee(Event $event, Entity $entity)
+	{
 		return $this->currency.' '.number_format($this->getTotalFee($entity), 2);
 	}
 
-	public function getTotalFee(Entity $entity) {
-		$amount = 0.00;
-		foreach ($entity->institution_fee_types as $key=>$feeType) {
-			$amount = (float)$amount + (float)$feeType->amount;
-		}
+	public function getTotalFee(Entity $entity)
+	{
+		$amount = $entity->total;
 		return $amount;
 	}
 
 	public function onGetOutstandingFee(Event $event, Entity $entity) {
-		return $this->currency.' '.$this->getOutstandingFee($entity);	
+		return $this->currency.' '.$this->getOutstandingFee($entity);
 	}
 
 	public function getOutstandingFee(Entity $entity) {
