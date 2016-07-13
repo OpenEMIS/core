@@ -1539,7 +1539,7 @@ class StudentsTable extends AppTable {
 				'total' => $query->func()->count($this->aliasField('id'))
 			])
 			->contain([
-				'EducationGrades',
+				'EducationGrades.EducationProgrammes.EducationCycles.EducationLevels',
 				'Users.Genders'
 			])
 			->where($studentsByGradeConditions)
@@ -1548,8 +1548,7 @@ class StudentsTable extends AppTable {
 				'Genders.name'
 			])
 			->order(
-				'EducationGrades.order',
-				$this->aliasField('institution_id')
+				['EducationLevels.order', 'EducationCycles.order', 'EducationProgrammes.order', 'EducationGrades.order']
 			)
 			->toArray()
 			;
