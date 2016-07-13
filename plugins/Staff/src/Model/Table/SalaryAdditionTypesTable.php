@@ -1,12 +1,13 @@
 <?php
-namespace FieldOption\Model\Table;
+namespace Staff\Model\Table;
 
-use App\Model\Table\AppTable;
-use Cake\Validation\Validator;
+use App\Model\Table\ControllerActionTable;
 
-class SalaryAdditionTypesTable extends AppTable {
-	public function initialize(array $config) {
+class SalaryAdditionTypesTable extends ControllerActionTable {
+	public function initialize(array $config)
+    {
 		$this->addBehavior('ControllerAction.FieldOption');
+        $this->table('salary_addition_types');
 		parent::initialize($config);
 
 		$this->hasMany('StaffSalaryAdditions', ['className' => 'Staff.StaffSalaryAdditions', 'foreignKey' => 'salary_addition_type_id']);
