@@ -87,6 +87,7 @@ class TransferApprovalsTable extends AppTable {
 			$studentId = $entity->student_id;
             $periodId = $entity->academic_period_id;
 			$gradeId = $entity->new_education_grade_id;
+			$oldGradeId = $entity->education_grade_id;
 			$newSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($gradeId);
 
 			$validateEnrolledInAnyInstitutionResult = $Students->validateEnrolledInAnyInstitution($studentId, $newSystemId, ['excludeInstitutions' => [$previousSchoolId], 'targetInstitutionId' => $newSchoolId]);
@@ -102,7 +103,7 @@ class TransferApprovalsTable extends AppTable {
                         $Students->aliasField('institution_id') => $previousSchoolId,
                         $Students->aliasField('student_id') => $studentId,
                         $Students->aliasField('academic_period_id') => $periodId,
-                        $Students->aliasField('education_grade_id') => $gradeId,
+                        $Students->aliasField('education_grade_id') => $oldGradeId,
                         $Students->aliasField('student_status_id') => $statuses['CURRENT']
                     ])
                     ->first();
