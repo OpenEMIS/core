@@ -1,5 +1,5 @@
-/* 
-Core Overwrites: v.1.0.8
+/*
+Core Overwrites: v.1.0.9
 */
 
 
@@ -564,3 +564,14 @@ a,
 }
 
 /* End of Enable Search for Chosen Select */
+
+
+/* Temporary fix for POCOR-1855 */
+
+.form-horizontal input[type="checkbox"],
+.form-horizontal input[type="radio"] {
+    width: 18px !important;
+    min-width: 18px !important;
+}
+
+/* End of Temporary fix for POCOR-1855 */
