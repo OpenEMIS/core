@@ -70,11 +70,14 @@ class StaffTransfer extends ControllerActionTable {
 		$query->contain(['Users', 'Institutions', 'PreviousInstitutions', 'Positions']);
 	}
 
-	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+	{
+		$institution_name_with_code = $entity->institution->code . " - " . $entity->institution->name;
+
 		$this->field('status', ['type' => 'readonly']);
 		$this->field('staff_id', ['type' => 'readonly', 'attr' => ['value' => $entity->user->name_with_id]]);
 		$this->field('previous_institution_id', ['type' => 'readonly', 'attr' => ['value' => $entity->previous_institution->name]]);
-		$this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $entity->institution->name]]);
+		$this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $institution_name_with_code]]);
 		$this->field('institution_position_id', ['type' => 'readonly', 'after' => 'institution_id', 'attr' => ['value' => $entity->position->name]]);
 	}
 
