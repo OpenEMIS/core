@@ -65,12 +65,12 @@ class FieldOptionComponent extends Component
         'StudentDropoutReasons' => 'Student.StudentDropoutReasons',
         'StaffBehaviourCategories' => 'Staff.StaffBehaviourCategories',
         'StaffTrainingCategories' => 'Staff.StaffTrainingCategories',
-        // 'Banks' => 'FieldOption.Banks',
-        // 'BankBranches' => 'FieldOption.BankBranches'
+        'Banks' => 'FieldOption.Banks',
+        'BankBranches' => 'FieldOption.BankBranches',
         'SalaryAdditionTypes' => 'Staff.SalaryAdditionTypes',
         'SalaryDeductionTypes' => 'Staff.SalaryDeductionTypes',
         'Countries' => 'FieldOption.Countries',
-        // 'ContactTypes' => 'User.ContactTypes'
+        'ContactTypes' => 'User.ContactTypes'
     ];
 
     // Is called before the controller's beforeFilter method.
