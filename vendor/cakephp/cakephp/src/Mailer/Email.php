@@ -22,6 +22,7 @@ use Cake\Filesystem\File;
 use Cake\Log\Log;
 use Cake\Network\Http\FormData\Part;
 use Cake\Utility\Hash;
+use Cake\Utility\Security;
 use Cake\Utility\Text;
 use Cake\View\ViewVarsTrait;
 use Closure;
@@ -314,13 +315,6 @@ class Email implements JsonSerializable, Serializable
      * @var string
      */
     protected $_emailPattern = self::EMAIL_PATTERN;
-
-    /**
-     * The class name used for email configuration.
-     *
-     * @var string
-     */
-    protected $_configClass = 'EmailConfig';
 
     /**
      * Constructor
@@ -1010,14 +1004,16 @@ class Email implements JsonSerializable, Serializable
         $className = App::className($config['className'], 'Mailer/Transport', 'Transport');
         if (!$className) {
             $className = App::className($config['className'], 'Network/Email', 'Transport');
-            trigger_error(
-                'Transports in "Network/Email" are deprecated, use "Mailer/Transport" instead.',
-                E_USER_DEPRECATED
-            );
+            if ($className) {
+                trigger_error(
+                    'Transports in "Network/Email" are deprecated, use "Mailer/Transport" instead.',
+                    E_USER_DEPRECATED
+                );
+            }
         }
 
         if (!$className) {
-            throw new InvalidArgumentException(sprintf('Transport class "%s" not found.', $name));
+            throw new InvalidArgumentException(sprintf('Transport class "%s" not found.', $config['className']));
         } elseif (!method_exists($className, 'send')) {
             throw new InvalidArgumentException(sprintf('The "%s" does not have a send() method.', $className));
         }
@@ -1615,7 +1611,7 @@ class Email implements JsonSerializable, Serializable
     protected function _createBoundary()
     {
         if (!empty($this->_attachments) || $this->_emailFormat === 'both') {
-            $this->_boundary = md5(uniqid(time()));
+            $this->_boundary = md5(Security::randomBytes(16));
         }
     }
 

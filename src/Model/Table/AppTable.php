@@ -304,15 +304,13 @@ class AppTable extends Table {
     	if ($event->result) {
     		$roles = $event->result;	
     	}
-
 		if ($action != 'index') {
 			$toolbarButtons['back'] = $buttons['back'];
 			$toolbarButtons['back']['type'] = 'button';
 			$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
 			$toolbarButtons['back']['attr'] = $toolbarAttr;
 			$toolbarButtons['back']['attr']['title'] = __('Back');
-
-			if ($action == 'remove' && $buttons['remove']['strategy'] == 'transfer') {
+			if ($action == 'remove' && ($buttons['remove']['strategy'] == 'transfer' || $buttons['remove']['strategy'] == 'restrict')) {
 				$toolbarButtons['list'] = $buttons['index'];
 				$toolbarButtons['list']['type'] = 'button';
 				$toolbarButtons['list']['label'] = '<i class="fa kd-lists"></i>';
@@ -418,7 +416,7 @@ class AppTable extends Table {
             }
 
             if (array_key_exists('remove', $buttons)) {
-                if (in_array($buttons['remove']['strategy'], ['cascade', 'restrict'])) {
+                if (in_array($buttons['remove']['strategy'], ['cascade'])) {
                     $buttons['remove']['attr']['data-toggle'] = 'modal';
                     $buttons['remove']['attr']['data-target'] = '#delete-modal';
                     $buttons['remove']['attr']['field-target'] = '#recordId';
