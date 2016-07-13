@@ -125,6 +125,20 @@ class InstitutionsController extends AppController  {
 		return $ignore;
 	}
 
+	private function checkInstitutionAccess($id, $event)
+	{
+		if (!$this->AccessControl->isAdmin()) {
+			$institutionIds = $this->AccessControl->getInstitutionsByUser();
+
+			if (!array_key_exists($id, $institutionIds)) {
+				$this->Alert->error('security.noAccess');
+				$refererUrl = $this->request->referer();
+				$event->stopPropagation();
+				return $this->redirect($refererUrl);
+			}
+		}
+	}
+
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 		$this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
@@ -137,16 +151,7 @@ class InstitutionsController extends AppController  {
 
 		if (array_key_exists('institution_id', $query)) {
 			//check for permission
-			if (!$this->AccessControl->isAdmin()) {
-				$institutionIds = $this->AccessControl->getInstitutionsByUser();
-
-				if (!array_key_exists($query['institution_id'], $institutionIds)) {
-					$this->Alert->error('security.noAccess');
-					$refererUrl = $this->request->referer();
-					$event->stopPropagation();
-					return $this->redirect($refererUrl);
-				}
-			}
+			$this->checkInstitutionAccess($query['institution_id'], $event);
 			$session->write('Institution.Institutions.id', $query['institution_id']);
 		}
 
@@ -158,6 +163,7 @@ class InstitutionsController extends AppController  {
 			$id = 0;
 			if (isset($this->request->pass[0]) && (in_array($action, ['view', 'edit', 'dashboard']))) {
 				$id = $this->request->pass[0];
+				$this->checkInstitutionAccess($id, $event);
 				$session->write('Institution.Institutions.id', $id);
 
 			} else if ($session->check('Institution.Institutions.id')) {
