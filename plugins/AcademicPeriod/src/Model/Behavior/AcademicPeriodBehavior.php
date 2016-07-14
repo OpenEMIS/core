@@ -22,7 +22,7 @@ class AcademicPeriodBehavior extends Behavior {
 			'Model.custom.onUpdateActionButtons' => ['callable' => 'onUpdateActionButtons', 'priority' => 100]
 		];
 
-		if ($this->_table->hasBehavior('ControllerAction')) {
+		if ($this->isCAv4()) {
 			$newEvent['ControllerAction.Model.afterAction'] = 'afterAction';
 		}
 
@@ -42,12 +42,16 @@ class AcademicPeriodBehavior extends Behavior {
 		return $events;
 	}
 
+	private function isCAv4() {
+		return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
+	}
+
 	public function indexBeforeAction(Event $event) {
 		if(isset($this->_table->request->query['mode'])) {
 			$academicPeriodId = $this->_table->request->query['academic_period_id'];
 			$editable = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getEditable($academicPeriodId);
 			if (!$editable) {
-				if ($this->_table->hasBehavior('ControllerAction')) {
+				if ($this->isCAv4()) {
 					$urlParams = $this->_table->url('index');
 				} else {
 					$urlParams = $this->_table->ControllerAction->url('index');
@@ -66,7 +70,7 @@ class AcademicPeriodBehavior extends Behavior {
 			$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			$isEditable = $AcademicPeriodTable->getEditable($entity->academic_period_id);
 			if (! $isEditable) {
-				if ($this->_table->hasBehavior('ControllerAction')) {
+				if ($this->isCAv4()) {
 					$urlParams = $this->_table->url('view');
 				} else {
 					$urlParams = $this->_table->ControllerAction->url('view');
