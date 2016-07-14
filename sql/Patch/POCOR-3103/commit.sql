@@ -7,7 +7,7 @@ INSERT INTO `db_patches` (issue, created) VALUES ('POCOR-3103', NOW());
 ALTER TABLE `user_comments` ADD `comment_type_id` int(11) NOT NULL AFTER `comment_date`;
 
 -- field_options table
-INSERT INTO `field_options` (`id`, `plugin`, `code`, `name`, `parent`, `params`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES (101, 'User', 'CommentTypes', 'Comment Types', 'Others', '{"model":"User.CommentTypes"}', '60', '1', NULL, NULL, '1', NOW());
+INSERT INTO `field_options` (`plugin`, `code`, `name`, `parent`, `params`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES ('User', 'CommentTypes', 'Comment Types', 'Others', '{"model":"User.CommentTypes"}', '60', '1', NULL, NULL, '1', NOW());
 
 
 -- CommentTypes comment_types
