@@ -423,8 +423,7 @@ class ControllerActionHelper extends Helper {
 			$fieldCol = $schema->column($col);
 			if ($fieldCol['type'] == 'string' || $fieldCol['type'] == 'text') {
 				if ($entity->has($col)) {
-					$htmlInfo = htmlentities($entity->$col, ENT_QUOTES, 'UTF-8');
-					$htmlInfo = str_replace('/', '&#x2F;', $htmlInfo);
+					$htmlInfo = $this->HtmlField->escapeHtmlEntity($entity->$col);
 					$entity->$col = $htmlInfo;
 				}
 			}
@@ -504,8 +503,6 @@ class ControllerActionHelper extends Helper {
 				if (isset($options['label'])) {
 					$label = $options['label'];
 				}
-
-				
 
 				// attach event for index columns
 				$method = 'onGet' . Inflector::camelize($_field);
