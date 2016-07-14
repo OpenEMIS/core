@@ -759,7 +759,7 @@ class HtmlFieldHelper extends Helper {
 			$buttons = $this->_View->get('ControllerAction');
 			$buttons = $buttons['buttons'];
 			$action = $buttons['download']['url'];
-			$value = $this->Html->link($data->$name, $action);
+			$value = $this->link($data->$name, $action);
 		} else if ($action == 'edit') {
 			$this->includes['jasny']['include'] = true;
 			if (isset($data->$name)) {
@@ -835,6 +835,26 @@ class HtmlFieldHelper extends Helper {
 
 		$html = sprintf($html, $attr['label'], $headers, $cells);
 		return $html;
+	}
+
+	public function escapeHtmlEntity($text)
+	{
+		$htmlInfo = htmlentities($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+		$htmlInfo = str_replace('/', '&#x2F;', $htmlInfo);
+		return $htmlInfo;
+	}
+
+	public function decodeEscapeHtmlEntity($encodedText)
+	{
+		$htmlInfo = str_replace('&#x2F;', '/', $encodedText);
+		$htmlInfo = html_entity_decode($htmlInfo, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+		return $htmlInfo;
+	}
+
+	public function link($title, $url = null, array $options = [])
+	{
+		$title = $this->decodeEscapeHtmlEntity($title);
+        return $this->Html->link($title, $url, $options);
 	}
 
 	// a template function for creating new elements
