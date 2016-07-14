@@ -55,7 +55,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 	}
 
 	public function onGetCode(Event $event, Entity $entity) {
-		return $event->subject()->Html->link($entity->code, [
+		return $event->subject()->HtmlField->link($entity->code, [
 			'plugin' => $this->controller->plugin,
 			'controller' => $this->controller->name,
 			'action' => $this->alias,
