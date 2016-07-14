@@ -175,9 +175,9 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                         if (studentRecords.length < $scope.pageSize) {
                             $scope.lastRow = params.endRow - ($scope.pageSize % studentRecords.length);
                         }
-                        StudentController.rowsThisPage = studentRecords;
+                        $scope.rowsThisPage = studentRecords;
                         
-                        params.successCallback(StudentController.rowsThisPage, $scope.lastRow);
+                        params.successCallback($scope.rowsThisPage, $scope.lastRow);
                         UtilsSvc.isAppendLoader(false);
                         $scope.initialLoad = false;
                         return studentRecords;
