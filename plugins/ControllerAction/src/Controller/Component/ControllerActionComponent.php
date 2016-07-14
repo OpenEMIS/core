@@ -161,7 +161,7 @@ class ControllerActionComponent extends Component {
                         if (isset($attr['options'])) {
                             $_options = array_merge($_options, $attr['options']);
                         }
-                        
+
                         $this->model($attr['className'], $actions, $_options);
                         $this->model->alias = $name;
                         $this->currentAction = $currentAction;
@@ -1396,22 +1396,24 @@ class ControllerActionComponent extends Component {
                 if (empty($transferTo)) {
                     $associations = [];
                     foreach ($model->associations() as $assoc) {
-                        if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
-                            if (!array_key_exists($assoc->alias(), $associations)) {
-                                $count = 0;
-                                if($assoc->type() == 'oneToMany') {
-                                    $count = $assoc->find()
-                                    ->where([$assoc->aliasField($assoc->foreignKey()) => $transferFrom])
-                                    ->count();
-                                    $totalCount = $totalCount + $count;
-                                } else {
-                                    $modelAssociationTable = $assoc->junction();
-                                    $count += $modelAssociationTable->find()
-                                        ->where([$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferFrom])
+                        if (!$assoc->dependent()) {
+                            if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
+                                if (!array_key_exists($assoc->alias(), $associations)) {
+                                    $count = 0;
+                                    if($assoc->type() == 'oneToMany') {
+                                        $count = $assoc->find()
+                                        ->where([$assoc->aliasField($assoc->foreignKey()) => $transferFrom])
                                         ->count();
-                                    $totalCount = $totalCount + $count;
+                                        $totalCount = $totalCount + $count;
+                                    } else {
+                                        $modelAssociationTable = $assoc->junction();
+                                        $count += $modelAssociationTable->find()
+                                            ->where([$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferFrom])
+                                            ->count();
+                                        $totalCount = $totalCount + $count;
+                                    }
+                                    $associations[$assoc->alias()] = $assoc->table();
                                 }
-                                $associations[$assoc->alias()] = $assoc->table();
                             }
                         }
                     }
