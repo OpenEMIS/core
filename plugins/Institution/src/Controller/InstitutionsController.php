@@ -85,12 +85,9 @@ class InstitutionsController extends AppController  {
 	// public function StaffAbsences() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
 	// End
 
-    public function Students() {
-        if (
-            array_key_exists('0', $this->request->param('pass')) &&
-            $this->request->param('pass')[0] == 'addExisting'
-        ) {
-            $this->set('ngController', 'InstitutionsStudentsCtrl');
+    public function Students($pass = 'index') {
+        if ($pass == 'addExisting') {
+            $this->set('ngController', 'InstitutionsStudentsCtrl as InstitutionStudentController');
             $this->render('studentAdd');
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Students']);
