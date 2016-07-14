@@ -22,6 +22,10 @@ class AcademicPeriodBehavior extends Behavior {
 			'Model.custom.onUpdateActionButtons' => ['callable' => 'onUpdateActionButtons', 'priority' => 100]
 		];
 
+		if ($this->_table->hasBehavior('ControllerAction')) {
+			$newEvent['ControllerAction.Model.afterAction'] = 'afterAction';
+		}
+
 		$tableAlias = $this->_table->alias();
 
 		switch ($tableAlias) {
@@ -31,7 +35,7 @@ class AcademicPeriodBehavior extends Behavior {
 
 			case 'StaffAttendances':
 			case 'StudentAttendances':
-				$newEvent = ['ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',] + $newEvent;
+				$newEvent = ['ControllerAction.Model.index.beforeAction' => 'indexBeforeAction'] + $newEvent;
 				break;
 		}
 		$events = array_merge($events, $newEvent);
@@ -43,7 +47,11 @@ class AcademicPeriodBehavior extends Behavior {
 			$academicPeriodId = $this->_table->request->query['academic_period_id'];
 			$editable = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getEditable($academicPeriodId);
 			if (!$editable) {
-				$urlParams = $this->_table->ControllerAction->url('index');
+				if ($this->_table->hasBehavior('ControllerAction')) {
+					$urlParams = $this->_table->url('index');
+				} else {
+					$urlParams = $this->_table->ControllerAction->url('index');
+				}
 				if (isset($urlParams['mode'])) {
 					unset($urlParams['mode']);
 				}
@@ -58,7 +66,11 @@ class AcademicPeriodBehavior extends Behavior {
 			$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			$isEditable = $AcademicPeriodTable->getEditable($entity->academic_period_id);
 			if (! $isEditable) {
-				$urlParams = $this->_table->ControllerAction->url('view');
+				if ($this->_table->hasBehavior('ControllerAction')) {
+					$urlParams = $this->_table->url('view');
+				} else {
+					$urlParams = $this->_table->ControllerAction->url('view');
+				}
 				$event->stopPropagation();
 				return $this->_table->controller->redirect($urlParams);
 			}
@@ -72,6 +84,13 @@ class AcademicPeriodBehavior extends Behavior {
 		}
 	}
 
+	public function afterAction(Event $event, $extra)
+	{	
+		$action = $this->_table->action;
+		$toolbarButtons = new ArrayObject($extra['toolbarButtons']);
+		$this->onUpdateToolbarButtons($event, new ArrayObject(), $toolbarButtons, [], $action, null);
+	}
+
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		switch ($action) {
 			case 'view':
@@ -80,6 +99,9 @@ class AcademicPeriodBehavior extends Behavior {
 					if (!$isEditable) {
 						if(isset($toolbarButtons['edit'])) {
 							unset($toolbarButtons['edit']);
+						}
+						if(isset($toolbarButtons['remove'])) {
+							unset($toolbarButtons['remove']);
 						}
 					}
 				}
