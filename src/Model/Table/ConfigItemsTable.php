@@ -22,6 +22,7 @@ class ConfigItemsTable extends AppTable {
 		parent::initialize($config);
 
 		$this->addBehavior('Authentication');
+		$this->addBehavior('ExternalDataSource');
 
 		// $this->belongsTo('ConfigItemOptions', ['foreignKey'=>'value']);
 	}
