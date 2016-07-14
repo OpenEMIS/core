@@ -171,8 +171,14 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                         }
 
                         $scope.lastRow = -1;
-
-                        if (studentRecords.length < $scope.pageSize) {
+                        if (studentRecords.length == 0) {
+                            if (params.startRow == 0) {
+                                $scope.lastRow = 0;
+                            } else {
+                                $scope.lastRow = params.endRow - ($scope.pageSize % studentRecords.length);
+                            }
+                            studentRecords = null;
+                        } else if (studentRecords.length < $scope.pageSize) {
                             $scope.lastRow = params.endRow - ($scope.pageSize % studentRecords.length);
                         }
                         $scope.rowsThisPage = studentRecords;
