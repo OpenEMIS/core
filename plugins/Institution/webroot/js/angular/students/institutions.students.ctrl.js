@@ -1,7 +1,15 @@
-angular.module('institutions.students.ctrl', ['utils.svc', 'alert.svc', 'institutions.students.svc'])
-.controller('InstitutionsStudentsCtrl', function($scope, $window, $filter, UtilsSvc, AlertSvc, InstitutionsStudentsSvc) {
+angular
+    .module('institutions.students.ctrl', ['utils.svc', 'alert.svc', 'institutions.students.svc'])
+    .controller('InstitutionsStudentsCtrl', InstitutionStudentController);
+
+InstitutionStudentController.$inject = ['$scope', '$window', '$filter', 'UtilsSvc', 'AlertSvc', 'InstitutionsStudentsSvc'];
+
+function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertSvc, InstitutionsStudentsSvc) {
     // ag-grid vars
     $scope.rowsThisPage = null;
+
+    var StudentController = this;
+    
     $scope.pageSize = 10;
     $scope.gridOptions = null;
 
@@ -162,13 +170,14 @@ angular.module('institutions.students.ctrl', ['utils.svc', 'alert.svc', 'institu
                             }
                         }
 
-                        // to cater to ng-if="(!rowsThisPage
-                        if (studentRecords.length === 0) studentRecords = null;
-                        $scope.rowsThisPage = studentRecords
-                        // console.log(studentRecords);
-
                         $scope.lastRow = -1;
-                        params.successCallback($scope.rowsThisPage, $scope.lastRow);
+
+                        if (studentRecords.length < $scope.pageSize) {
+                            $scope.lastRow = params.endRow - ($scope.pageSize % studentRecords.length);
+                        }
+                        StudentController.rowsThisPage = studentRecords;
+                        
+                        params.successCallback(StudentController.rowsThisPage, $scope.lastRow);
                         UtilsSvc.isAppendLoader(false);
                         $scope.initialLoad = false;
                         return studentRecords;
@@ -322,4 +331,4 @@ angular.module('institutions.students.ctrl', ['utils.svc', 'alert.svc', 'institu
         }
 
     });
-});
+}
