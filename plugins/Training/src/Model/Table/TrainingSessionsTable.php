@@ -78,6 +78,7 @@ class TrainingSessionsTable extends AppTable {
 		} else if ($action == 'edit') {
 			$tableHeaders[] = ''; // for delete column
 			$Form = $event->subject()->Form;
+			$Form->unlockField('TrainingSessions.trainees');
 
 			if ($this->request->is(['get'])) {
 				if (!array_key_exists($alias, $this->request->data)) {
