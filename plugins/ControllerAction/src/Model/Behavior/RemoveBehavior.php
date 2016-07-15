@@ -233,10 +233,9 @@ class RemoveBehavior extends Behavior {
 				$convertTo = $request->data($model->aliasField('convert_to'));
 				$entity->convert_to = $convertTo;
 				$doDelete = true;
-				$extra['dependent']= '';
 
 				if (empty($convertTo)) {
-					$extra['dependent'] = false;
+					$extra['deleteStrategy'] = 'transfer';
 					if ($this->hasAssociatedRecords($model, $entity, $extra)) {
 						$doDelete = false;
 					}
@@ -277,17 +276,16 @@ class RemoveBehavior extends Behavior {
 
 	private function getAssociatedRecords($model, $entity, $extra)
 	{
-		// if its transfer delete it will check only the dependant false,
-        // if its restrict delete then it will check all the dependent regardless true or false.
-        $dependent = [true, false];
-        if ($extra->offsetExists('dependent')) {
-            unset(
-                $dependent[
-                    key(
-                        array_diff($dependent, [$extra['dependent']])
-                    )
-                ]
-            );
+		$dependent = [true, false];
+        if ($extra->offsetExists('deleteStrategy')) {
+            switch ($extra['deleteStrategy']) {
+                case 'restrict':
+                    $dependent = [true, false];
+                    break;
+                case 'transfer':
+                    $dependent = [false];
+                    break;
+            }
         }
 		$primaryKey = $model->primaryKey();
 		$id = $entity->$primaryKey;
