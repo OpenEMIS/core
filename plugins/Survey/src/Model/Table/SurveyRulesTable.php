@@ -55,9 +55,8 @@ class SurveyRulesTable extends ControllerActionTable
     public function onGetShowOptions(Event $event, Entity $entity) 
     {
         $showOptions = $entity->show_options;
-        $showOptions = rtrim($showOptions, "]");
-        $showOptions = ltrim($showOptions, "[");
-        $showOptions = array_map(function($n){ return trim($n,'&amp;quot;');}, explode(",", $showOptions));
+        $showOptions = $event->subject()->HtmlField->decodeEscapeHtmlEntity($showOptions);
+        $showOptions = json_decode($showOptions, true);
         $SurveyQuestionChoicesTable = TableRegistry::get('Survey.SurveyQuestionChoices');
         if (!empty($showOptions)) {
             $options = $SurveyQuestionChoicesTable
