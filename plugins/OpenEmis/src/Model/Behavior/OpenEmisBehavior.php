@@ -38,6 +38,7 @@ class OpenEmisBehavior extends Behavior {
                 break;
             case 'edit':
             case 'add':
+            case 'remove':
             case 'transfer':
                 $extra['config']['form'] = true;
                 $extra['elements']['edit'] = ['name' => 'OpenEmis.ControllerAction/edit', 'order' => 5];
@@ -88,15 +89,10 @@ class OpenEmisBehavior extends Behavior {
         if (array_key_exists('toolbarButtons', $extra)) {
 			$toolbarButtons = $extra['toolbarButtons'];
 			if ($model->action == 'view' && $model->actions('remove') != 'transfer' && $model->actions('remove')) {
-
-                // Logic to handle composite primary key
-                $idKey = $model->primaryKey();
-                if (is_array($idKey)) {
-                    $idKey = 'id';
-                }
-
 				// not checking existence of entity in $extra so that errors will be shown if entity is removed unexpectedly
-				$toolbarButtons['remove']['attr']['field-value'] = $extra['entity']->$idKey;
+                if (isset($toolbarButtons['remove'])) {
+                    $toolbarButtons['remove']['attr']['field-value'] = $extra['entity']->{$model->getPrimaryKey()};
+                }
 			}
 			$model->controller->set('toolbarButtons', $toolbarButtons);
 		}
@@ -255,7 +251,7 @@ class OpenEmisBehavior extends Behavior {
             $toolbarButtons['back']['attr'] = $toolbarAttr;
             $toolbarButtons['back']['attr']['title'] = __('Back');
 
-            if ($action == 'remove' && $model->actions('remove') == 'transfer') {
+            if ($action == 'remove' && ($model->actions('remove') == 'transfer' || $model->actions('remove') == 'restrict')) {
                 $toolbarButtons['list']['url'] = $model->url('index', 'QUERY');
                 $toolbarButtons['list']['type'] = 'button';
                 $toolbarButtons['list']['label'] = '<i class="fa kd-lists"></i>';
@@ -323,7 +319,7 @@ class OpenEmisBehavior extends Behavior {
                 }
             }
             
-        } else if ($action == 'transfer') {
+        } else if ($action == 'transfer' || ($action == 'remove' && $model->actions('remove') == 'restrict')) {
             $toolbarButtons['back']['url'] = $model->url('index', 'QUERY');
             $toolbarButtons['back']['type'] = 'button';
             $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
