@@ -37,10 +37,7 @@ class EditBehavior extends Behavior {
 			$model = $event->result;
 		}
 
-		$primaryKey = $model->primaryKey();
-		if (is_array($primaryKey)) {
-			$primaryKey = 'id';
-		}
+		$primaryKey = $model->getPrimaryKey();
 		
 		$idKey = $model->aliasField($primaryKey);
 

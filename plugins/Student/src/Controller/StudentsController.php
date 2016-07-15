@@ -161,12 +161,7 @@ class StudentsController extends AppController {
 				$header = $session->read('Student.Students.name');
 			}
 
-			$idKey = $model->primaryKey();
-
-			// For composite keys
-			if (is_array($idKey)) {
-				$idKey = 'id';
-			}
+			$idKey = $this->ControllerAction->getPrimaryKey($model);
 
 			$alias = $model->alias;
 			$this->Navigation->addCrumb($model->getHeader($alias));

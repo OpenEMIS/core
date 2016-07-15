@@ -117,10 +117,7 @@ class OpenEmisBehavior extends Behavior {
             if ($isViewPage) {
                 $isDeleteButtonEnabled = $toolbarButtons->offsetExists('remove');
                 $isNotTransferOperation = $model->actions('remove') != 'transfer';
-                $idKey = $model->primaryKey();
-                if (is_array($idKey)) {
-                    $idKey = 'id';
-                }
+                $idKey = $model->getPrimaryKey();
                 $primaryKey = $entity->$idKey;
                 if ($isDeleteButtonEnabled && $isNotTransferOperation) {
                     // not checking existence of entity in $extra so that errors will be shown if entity is removed unexpectedly

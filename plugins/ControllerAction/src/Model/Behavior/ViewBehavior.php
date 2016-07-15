@@ -23,11 +23,7 @@ class ViewBehavior extends Behavior {
 			$model = $event->result;
 		}
 
-		$primaryKey = $model->primaryKey();
-		if (is_array($primaryKey)) {
-			$primaryKey = 'id';
-		}
-		
+		$primaryKey = $model->getPrimaryKey();
 		$idKey = $model->aliasField($primaryKey);
 		$sessionKey = $model->registryAlias() . '.' . $primaryKey;
 		$contain = [];

@@ -171,12 +171,7 @@ class DirectoriesController extends AppController {
 			if ($session->check('Directory.Directories.name')) {
 				$header = $session->read('Directory.Directories.name');
 			}
-			$idKey = $model->primaryKey();
-
-			// For composite keys
-			if (is_array($idKey)) {
-				$idKey = 'id';
-			}
+			$idKey = $this->ControllerAction->getPrimaryKey($model);
 
 			$alias = $model->alias;
 			$this->Navigation->addCrumb($model->getHeader($alias));
