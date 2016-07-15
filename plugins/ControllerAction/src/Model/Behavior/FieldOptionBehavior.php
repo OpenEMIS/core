@@ -5,12 +5,12 @@
 OpenEMIS
 Open Education Management Information System
 
-Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by the Free Software Foundation
-, either version 3 of the License, or any later version.  This program is distributed in the hope 
+, either version 3 of the License, or any later version.  This program is distributed in the hope
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should 
-have received a copy of the GNU General Public License along with this program.  If not, see 
+or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should
+have received a copy of the GNU General Public License along with this program.  If not, see
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
@@ -59,7 +59,7 @@ class FieldOptionBehavior extends Behavior {
 				->find('order')->find('visible')
 				->where([$this->_table->aliasField('default') => 1])
 				->first();
-				
+
 			if (is_null($entity)) {
 				$entity = $this->_table
 					->find()
@@ -100,7 +100,7 @@ class FieldOptionBehavior extends Behavior {
 
 		foreach ($data as $obj) {
 			$key = $obj->id;
-			
+
 			$parent = __($obj->parent);
 			if (!array_key_exists($parent, $fieldOptions)) {
 				$fieldOptions[$parent] = [];
@@ -155,7 +155,19 @@ class FieldOptionBehavior extends Behavior {
 		$fields = ['visible', 'default', 'editable', 'name', 'international_code', 'national_code'];
 		foreach ($fields as $field) {
 			if (array_key_exists($field, $model->fields)) {
-				$model->fields[$field]['visible']['index'] = true;
+				if (is_array($model->fields[$field]['visible'])) {
+					$model->fields[$field]['visible']['index'] = true;
+				} else {
+					if ($model->fields[$field]['visible']) {
+						$model->fields[$field]['visible'] = [
+							'view' => true,
+							'edit' => true,
+							'index' => true
+						];
+					} else {
+						$model->fields[$field]['visible'] = ['index' => true];
+					}
+				}
 			}
 		}
 	}

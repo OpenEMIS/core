@@ -14,7 +14,7 @@ class TransferApprovalsTable extends AppTable {
 	const NEW_REQUEST = 0;
 	const APPROVED = 1;
 	const REJECTED = 2;
-	
+
 	// Type status for admission
 	const TRANSFER = 2;
 	const ADMISSION = 1;
@@ -27,7 +27,7 @@ class TransferApprovalsTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions']);
-		$this->belongsTo('StudentTransferReasons', ['className' => 'FieldOption.StudentTransferReasons']);
+		$this->belongsTo('StudentTransferReasons', ['className' => 'Student.StudentTransferReasons']);
 		$this->belongsTo('NewEducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
 		$this->addBehavior('OpenEmis.Section');
@@ -138,7 +138,7 @@ class TransferApprovalsTable extends AppTable {
 					$InstitutionClassStudentsTable->autoInsertClassStudent($institutionClassStudentObj);
 
 					$this->Alert->success('TransferApprovals.approve');
-					
+
 					$EducationGradesTable = TableRegistry::get('Education.EducationGrades');
 
 					$educationSystemId = $EducationGradesTable->getEducationSystemId($gradeId);
@@ -150,7 +150,7 @@ class TransferApprovalsTable extends AppTable {
 						'education_grade_id IN' => $educationGradesToUpdate
 					];
 
-					// Reject all other new pending admission / transfer application entry of the 
+					// Reject all other new pending admission / transfer application entry of the
 					// same student for the same academic period
 					$this->updateAll(
 						['status' => self::REJECTED],
@@ -196,7 +196,7 @@ class TransferApprovalsTable extends AppTable {
 		}
 	}
 
-	private function addSections() 
+	private function addSections()
     {
 		$this->ControllerAction->field('transfer_status_header', ['type' => 'section', 'title' => __('Transfer Status')]);
 		$this->ControllerAction->field('existing_information_header', ['type' => 'section', 'title' => __('Transfer From')]);
@@ -217,7 +217,7 @@ class TransferApprovalsTable extends AppTable {
 		$this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('education_grade_id');
 		$this->ControllerAction->field('new_education_grade_id', [
-			'type' => 'readonly', 
+			'type' => 'readonly',
 			'attr' => [
 				'value' => $this->NewEducationGrades->get($entity->new_education_grade_id)->programme_grade_name
 			]]);
@@ -233,7 +233,7 @@ class TransferApprovalsTable extends AppTable {
 		$this->ControllerAction->field('institution_class_id', ['visible' => false]);
 
 		$this->ControllerAction->setFieldOrder([
-			'transfer_status_header', 'created', 'transfer_status', 
+			'transfer_status_header', 'created', 'transfer_status',
 			'existing_information_header', 'student', 'previous_institution_id', 'academic_period_id', 'education_grade_id',
 			'new_information_header', 'institution_id', 'new_education_grade_id', 'institution_class',
 			'status', 'start_date', 'end_date',
@@ -370,7 +370,7 @@ class TransferApprovalsTable extends AppTable {
 				$attr['attr']['value'] = $startDate->format('d-m-Y');
 				return $attr;
 			}
-			
+
 			$selectedPeriod = $request->data[$this->alias()]['academic_period_id'];
 			$startDate = $request->data[$this->alias()]['start_date'];
 			if (!is_object($startDate)) {
@@ -500,7 +500,7 @@ class TransferApprovalsTable extends AppTable {
 				} else {
 					$receivedDate = $this->formatDate($obj->modified);
 				}
-				
+
 				$data[] = [
 					'request_title' => ['title' => $requestTitle, 'url' => $url],
 					'receive_date' => $receivedDate,
@@ -514,7 +514,7 @@ class TransferApprovalsTable extends AppTable {
 
 	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
 		if ($this->action == 'edit') {
-			// If the status is new application then display the approve and reject button, 
+			// If the status is new application then display the approve and reject button,
 			// if not remove the button just in case the user gets to access the edit page
 			if ($this->request->data[$this->alias()]['status'] == self::NEW_REQUEST || !($this->AccessControl->check(['Institutions', 'TransferApprovals', 'edit']))) {
 				$buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Approve');
@@ -557,7 +557,7 @@ class TransferApprovalsTable extends AppTable {
 		// End
 
 		$this->Alert->success('TransferApprovals.reject');
-		
+
 		// To redirect back to the student admission if it is not access from the workbench
 		$urlParams = $this->ControllerAction->url('index');
 		$plugin = false;

@@ -1,11 +1,13 @@
 <?php
-namespace FieldOption\Model\Table;
+namespace Student\Model\Table;
 
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 
-class StudentTransferReasonsTable extends AppTable {
-	public function initialize(array $config) {
+class StudentTransferReasonsTable extends ControllerActionTable {
+	public function initialize(array $config)
+    {
 		$this->addBehavior('ControllerAction.FieldOption');
+        $this->table('student_transfer_reasons');
 		parent::initialize($config);
 		$this->hasMany('TransferRequests', ['className' => 'Institution.TransferRequests', 'foreignKey' => 'student_transfer_reason_id']);
 		$this->hasMany('TransferApprovals', ['className' => 'Institution.TransferApprovals', 'foreignKey' => 'student_transfer_reason_id']);
