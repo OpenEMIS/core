@@ -1396,24 +1396,23 @@ class ControllerActionComponent extends Component {
                 if (empty($transferTo)) {
                     $associations = [];
                     foreach ($model->associations() as $assoc) {
-                        if (!$assoc->dependent()) {
-                            if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
-                                if (!array_key_exists($assoc->alias(), $associations)) {
-                                    $count = 0;
-                                    if($assoc->type() == 'oneToMany') {
-                                        $count = $assoc->find()
-                                        ->where([$assoc->aliasField($assoc->foreignKey()) => $transferFrom])
+                        // if dependent is false then it will count the associations
+                        if (!$assoc->dependent() && ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany')) {
+                            if (!array_key_exists($assoc->alias(), $associations)) {
+                                $count = 0;
+                                if($assoc->type() == 'oneToMany') {
+                                    $count = $assoc->find()
+                                    ->where([$assoc->aliasField($assoc->foreignKey()) => $transferFrom])
+                                    ->count();
+                                    $totalCount = $totalCount + $count;
+                                } else {
+                                    $modelAssociationTable = $assoc->junction();
+                                    $count += $modelAssociationTable->find()
+                                        ->where([$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferFrom])
                                         ->count();
-                                        $totalCount = $totalCount + $count;
-                                    } else {
-                                        $modelAssociationTable = $assoc->junction();
-                                        $count += $modelAssociationTable->find()
-                                            ->where([$modelAssociationTable->aliasField($assoc->foreignKey()) => $transferFrom])
-                                            ->count();
-                                        $totalCount = $totalCount + $count;
-                                    }
-                                    $associations[$assoc->alias()] = $assoc->table();
+                                    $totalCount = $totalCount + $count;
                                 }
+                                $associations[$assoc->alias()] = $assoc->table();
                             }
                         }
                     }
@@ -1835,19 +1834,18 @@ class ControllerActionComponent extends Component {
         return $order;
     }
 
-    private function getAssociatedRecords($model, $entity, $extra)
+    public function getAssociatedRecords($model, $entity, $extra)
     {
-        // if its transfer delete it will check only the dependant false,
-        // if its restrict delete then it will check all the dependent regardless true or false.
         $dependent = [true, false];
-        if ($extra->offsetExists('dependent')) {
-            unset(
-                $dependent[
-                    key(
-                        array_diff($dependent, [$extra['dependent']])
-                    )
-                ]
-            );
+        if ($extra->offsetExists('deleteStrategy')) {
+            switch ($extra['deleteStrategy']) {
+                case 'restrict':
+                    $dependent = [true, false];
+                    break;
+                case 'transfer':
+                    $dependent = [false];
+                    break;
+            }
         }
         $primaryKey = $model->primaryKey();
         $id = $entity->$primaryKey;
