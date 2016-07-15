@@ -472,6 +472,15 @@ class ControllerActionComponent extends Component {
         return $associatedEntityArrayKey;
     }
 
+    private function primaryKey(Table $model)
+    {
+        $primaryKey = $model->primaryKey();
+        if (is_array($primaryKey)) {
+            $primaryKey = 'id';
+        }
+        return $primaryKey;
+    }
+
     private function initButtons() {
         $controller = $this->controller;
 
@@ -496,10 +505,7 @@ class ControllerActionComponent extends Component {
             if ($action != 'index') {
                 if ($this->currentAction != 'index') {
                     $model = $this->model;
-                    $primaryKey = $model->primaryKey();
-                    if (is_array($primaryKey)) {
-                        $primaryKey = 'id';
-                    }
+                    $primaryKey = $this->primaryKey()
                     $idKey = $model->aliasField($primaryKey);
                     $sessionKey = $model->registryAlias() . '.' . $primaryKey;
                     if (empty($pass)) {
@@ -888,10 +894,8 @@ class ControllerActionComponent extends Component {
         }
         // End Event
 
-        $primaryKey = $model->primaryKey();
-        if (is_array($primaryKey)) {
-            $primaryKey = 'id';
-        }
+        $primaryKey = $this->primaryKey()
+
         $idKey = $model->aliasField($primaryKey);
         $sessionKey = $model->registryAlias() . '.' . $primaryKey;
         $contain = [];
@@ -1097,10 +1101,7 @@ class ControllerActionComponent extends Component {
         }
         // End Event
 
-        $primaryKey = $model->primaryKey();
-        if (is_array($primaryKey)) {
-            $primaryKey = 'id';
-        }
+        $primaryKey = $this->primaryKey()
 
         $idKey = $model->aliasField($primaryKey);
 
@@ -1258,10 +1259,8 @@ class ControllerActionComponent extends Component {
         }
         // End Event
 
-        $primaryKey = $model->primaryKey();
-        if (is_array($primaryKey)) {
-            $primaryKey = 'id';
-        }
+        $primaryKey = $this->primaryKey()
+
         $idKey = $model->aliasField($primaryKey);
 
         if ($request->is('get')) {
@@ -1337,10 +1336,8 @@ class ControllerActionComponent extends Component {
             $deleteOptions = new ArrayObject([]);
 
             $process = function ($model, $id, $deleteOptions) {
-                $primaryKey = $model->primaryKey();
-                if (is_array($primaryKey)) {
-                    $primaryKey = 'id';
-                }
+                $primaryKey = $this->primaryKey()
+
                 $idKey = $model->aliasField($primaryKey);
                 if ($model->exists([$idKey => $id])) {
                     if (is_array($model->primaryKey())) {
