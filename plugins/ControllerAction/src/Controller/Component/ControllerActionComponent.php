@@ -472,7 +472,7 @@ class ControllerActionComponent extends Component {
         return $associatedEntityArrayKey;
     }
 
-    private function primaryKey(Table $model)
+    public function getPrimaryKey(Table $model)
     {
         $primaryKey = $model->primaryKey();
         if (is_array($primaryKey)) {
@@ -505,7 +505,7 @@ class ControllerActionComponent extends Component {
             if ($action != 'index') {
                 if ($this->currentAction != 'index') {
                     $model = $this->model;
-                    $primaryKey = $this->primaryKey($model);
+                    $primaryKey = $this->getPrimaryKey($model);
                     $idKey = $model->aliasField($primaryKey);
                     $sessionKey = $model->registryAlias() . '.' . $primaryKey;
                     if (empty($pass)) {
@@ -894,7 +894,7 @@ class ControllerActionComponent extends Component {
         }
         // End Event
 
-        $primaryKey = $this->primaryKey($model);
+        $primaryKey = $this->getPrimaryKey($model);
 
         $idKey = $model->aliasField($primaryKey);
         $sessionKey = $model->registryAlias() . '.' . $primaryKey;
@@ -1101,7 +1101,7 @@ class ControllerActionComponent extends Component {
         }
         // End Event
 
-        $primaryKey = $this->primaryKey($model);
+        $primaryKey = $this->getPrimaryKey($model);
 
         $idKey = $model->aliasField($primaryKey);
 
@@ -1259,7 +1259,7 @@ class ControllerActionComponent extends Component {
         }
         // End Event
 
-        $primaryKey = $this->primaryKey($model);
+        $primaryKey = $this->getPrimaryKey($model);
 
         $idKey = $model->aliasField($primaryKey);
 
@@ -1336,7 +1336,7 @@ class ControllerActionComponent extends Component {
             $deleteOptions = new ArrayObject([]);
 
             $process = function ($model, $id, $deleteOptions) {
-                $primaryKey = $this->primaryKey($model);
+                $primaryKey = $this->getPrimaryKey($model);
 
                 $idKey = $model->aliasField($primaryKey);
                 if ($model->exists([$idKey => $id])) {
