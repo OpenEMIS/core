@@ -82,7 +82,7 @@ class FieldOptionComponent extends Component
         foreach ($this->fieldOptions as $key => $className) {
             $accessMap["$controller.$key"] = "$controller.%s";
         }
-        $this->request->addParams($accessMap);
+        $this->request->addParams(['accessMap' => $accessMap]);
     }
 
     public function getFieldOptions()
