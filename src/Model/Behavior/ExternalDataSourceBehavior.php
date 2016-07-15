@@ -113,50 +113,50 @@ class ExternalDataSourceBehavior extends Behavior {
 		}
 	}
 
-	// protected function processAuthentication(&$attribute, $authenticationType) {
-	// 	$ExternalDataSourceAttributesTable = TableRegistry::get('ExternalDataSourceAttributes');
-	// 	$attributesArray = $AuthenticationTypeAttributesTable->find()->where([$AuthenticationTypeAttributesTable->aliasField('authentication_type') => $authenticationType])->toArray();
-	// 	$attributeFieldsArray = $this->_table->array_column($attributesArray, 'attribute_field');
-	// 	foreach ($attribute as $key => $values) {
-	// 		$attributeValue = '';
-	// 		if (array_search($key, $attributeFieldsArray) !== false) {
-	// 			$attributeValue = $attributesArray[array_search($key, $attributeFieldsArray)]['value'];
-	// 		}
-	// 		if (method_exists($this, strtolower($authenticationType).'ModifyValue')) {
-	// 			$method = strtolower($authenticationType).'ModifyValue';
-	// 			$result = $this->$method($key, $attributeValue);
-	// 			if ($result !== false) {
-	// 				$attributeValue = $result;
-	// 			}
-	// 		}
-	// 		$attribute[$key]['value'] = $attributeValue;
-	// 	}
-	// }
+	protected function processAuthentication(&$attribute, $authenticationType) {
+		$ExternalDataSourceAttributesTable = TableRegistry::get('ExternalDataSourceAttributes');
+		$attributesArray = $ExternalDataSourceAttributesTable->find()->where([$ExternalDataSourceAttributesTable->aliasField('external_data_source_type') => $authenticationType])->toArray();
+		$attributeFieldsArray = $this->_table->array_column($attributesArray, 'attribute_field');
+		foreach ($attribute as $key => $values) {
+			$attributeValue = '';
+			if (array_search($key, $attributeFieldsArray) !== false) {
+				$attributeValue = $attributesArray[array_search($key, $attributeFieldsArray)]['value'];
+			}
+			if (method_exists($this, lcfirst(Inflector::camelize($authenticationType, ' ')).'ModifyValue')) {
+				$method = lcfirst(Inflector::camelize($authenticationType, ' ')).'ModifyValue';
+				$result = $this->$method($key, $attributeValue);
+				if ($result !== false) {
+					$attributeValue = $result;
+				}
+			}
+			$attribute[$key]['value'] = $attributeValue;
+		}
+	}
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		// $AuthenticationTypeAttributesTable = TableRegistry::get('AuthenticationTypeAttributes');
-		// if ($data[$this->alias]['value'] != 'Local' && $data[$this->alias]['type'] == 'Authentication') {
-		// 	$authenticationType = $data[$this->alias]['value'];
-		// 	$AuthenticationTypeAttributesTable->deleteAll(
-		// 		['authentication_type' => $authenticationType]
-		// 	);
+		$ExternalDataSourceAttributesTable = TableRegistry::get('ExternalDataSourceAttributes');
+		if ($data[$this->alias]['value'] != 'None' && $data[$this->alias]['type'] == 'External Data Source') {
+			$externalDataSourceType = $data[$this->alias]['value'];
+			$ExternalDataSourceAttributesTable->deleteAll(
+				['external_data_source_type' => $externalDataSourceType]
+			);
 
-		// 	foreach ($data['AuthenticationTypeAttributes'] as $key => $value) {
-		// 		$entityData = [
-		// 			'authentication_type' => $authenticationType,
-		// 			'attribute_field' => $key,
-		// 			'attribute_name' => $value['name'],
-		// 			'value' => $value['value']
-		// 		];
-		// 		$entity = $AuthenticationTypeAttributesTable->newEntity($entityData);
-		// 		$AuthenticationTypeAttributesTable->save($entity);
-		// 	}
+			foreach ($data['ExternalDataSourceTypeAttributes'] as $key => $value) {
+				$entityData = [
+					'external_data_source_type' => $externalDataSourceType,
+					'attribute_field' => $key,
+					'attribute_name' => $value['name'],
+					'value' => $value['value']
+				];
+				$entity = $ExternalDataSourceAttributesTable->newEntity($entityData);
+				$ExternalDataSourceAttributesTable->save($entity);
+			}
 
-		// 	if (method_exists($this, strtolower($authenticationType).'AfterSave')) {
-		// 		$method = strtolower($authenticationType).'AfterSave';
-		// 		$this->$method($data['AuthenticationTypeAttributes']);
-		// 	}
-		// }
+			if (method_exists($this, lcfirst(Inflector::camelize($externalDataSourceType, ' ')).'AfterSave')) {
+				$method = lcfirst(Inflector::camelize($externalDataSourceType, ' ')).'AfterSave';
+				$this->$method($data['ExternalDataSourceTypeAttributes']);
+			}
+		}
 	}
 
 	// public function saml2AfterSave($samlAttributes) {
@@ -303,7 +303,14 @@ class ExternalDataSourceBehavior extends Behavior {
 		$attribute['redirect_uri'] = ['label' => 'Redirect URI', 'type' => 'text', 'readonly' => true];
 		$attribute['hd'] = ['label' => 'Hosted Domain', 'type' => 'text', 'required' => false];
 		$attribute['user_record_uri'] = ['label' => 'User Record URI', 'type' => 'text'];
-		// $attribute['user_record_uri'] = ['label' => 'User Record URI', 'type' => 'text'];
+		$attribute['mapping_openemis_no'] = ['label' => 'Openemis No Field Mapping', 'type' => 'text'];
+		$attribute['mapping_first_name'] = ['label' => 'First Name Field Mapping', 'type' => 'text'];
+		$attribute['mapping_middle_name'] = ['label' => 'Middle Name Field Mapping', 'type' => 'text'];
+		$attribute['mapping_third_name'] = ['label' => 'Third Name Field Mapping', 'type' => 'text'];
+		$attribute['mapping_last_name'] = ['label' => 'Last Name Field Mapping', 'type' => 'text'];
+		$attribute['mapping_gender'] = ['label' => 'Gender Field Mapping', 'type' => 'text'];
+		$attribute['mapping_date_of_birth'] = ['label' => 'Date of Birth Field Mapping', 'type' => 'text'];
+		$attribute['mapping_identity_no'] = ['label' => 'Identity No Field Mapping', 'type' => 'text'];
 	}
 
 	public function openemisIdentitiesModifyValue($key, $attributeValue) {
@@ -321,7 +328,7 @@ class ExternalDataSourceBehavior extends Behavior {
 				$methodName = lcfirst(Inflector::camelize($externalDataSourceType, ' ')).'ExternalSource';
 				if (method_exists($this, $methodName)) {
 					$this->$methodName($attribute);
-					// $this->processAuthentication($attribute, $authenticationType);
+					$this->processAuthentication($attribute, $externalDataSourceType);
 				}
 
 				$tableHeaders = [__('Attribute Name'), __('Value')];
@@ -342,12 +349,12 @@ class ExternalDataSourceBehavior extends Behavior {
 				$methodName = lcfirst(Inflector::camelize($externalDataSourceType, ' ')).'ExternalSource';
 				if (method_exists($this, $methodName)) {
 					$this->$methodName($attribute);
-					// $this->processAuthentication($attribute, $authenticationType);
+					$this->processAuthentication($attribute, $externalDataSourceType);
 				}
 
 				$attr = $attribute;
 				break;
 		}
-		return $event->subject()->renderElement('Configurations/authentication', ['attr' => $attr]);
+		return $event->subject()->renderElement('Configurations/external_data_source', ['attr' => $attr]);
 	}
 }
