@@ -1,11 +1,15 @@
 <?php
 namespace User\Model\Table;
 
-use App\Model\Table\AppTable;
+
+use ArrayObject;
+use App\Model\Table\ControllerActionTable;
+use Cake\Event\Event;
 use Cake\Validation\Validator;
+use Cake\Network\Request;
 use Cake\ORM\Query;
 
-class ContactTypesTable extends AppTable {
+class ContactTypesTable extends ControllerActionTable {
 	public function initialize(array $config) {
 		$this->addBehavior('ControllerAction.FieldOption');
 		$this->table('contact_types');
@@ -21,18 +25,43 @@ class ContactTypesTable extends AppTable {
 		}
 	}
 
-	public function findWithContactOptions(Query $query, array $options) {
-		return $query
-			->contain(['ContactOptions'])
-			->order([$this->aliasField('order') => 'ASC']);
-	}
-
-	public function beforeAction() {
-		$this->fields['contact_type_id']['type'] = 'select';
-	}
-
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
 		return $validator;
+	}
+
+	public function indexBeforeAction(Event $event, ArrayObject $extra)
+	{
+		$this->field('contact_option_id', ['visible' => 'false']);
+	}
+
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	{
+		$parentFieldOptions = $this->ContactOptions->find('list')->toArray();
+		$selectedParentFieldOption = $this->queryString('parent_field_option_id', $parentFieldOptions);
+
+		if (!empty($selectedParentFieldOption)) {
+			$query->where([$this->aliasField('contact_option_id') => $selectedParentFieldOption]);
+		}
+
+		$this->controller->set(compact('parentFieldOptions', 'selectedParentFieldOption'));
+	}
+
+	public function addEditBeforeAction(Event $event, ArrayObject $extra)
+	{
+		$this->field('contact_option_id');
+	}
+
+	public function onUpdateFieldContactOptionId(Event $event, array $attr, $action, Request $request)
+	{
+		if ($action == 'add' || $action == 'edit') {
+			$parentFieldOptions = $this->ContactOptions->find('list')->toArray();
+			$selectedParentFieldOption = $this->queryString('parent_field_option_id', $parentFieldOptions);
+
+			$attr['type'] = 'readonly';
+			$attr['value'] = $selectedParentFieldOption;
+			$attr['attr']['value'] = $parentFieldOptions[$selectedParentFieldOption];
+		}
+		return $attr;
 	}
 }

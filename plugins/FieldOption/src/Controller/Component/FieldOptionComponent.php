@@ -54,12 +54,23 @@ class FieldOptionComponent extends Component
         'LicenseTypes' => 'FieldOption.LicenseTypes',
         'SpecialNeedTypes' => 'FieldOption.SpecialNeedTypes',
         'SpecialNeedDifficulties' => 'FieldOption.SpecialNeedDifficulties',
-        'StaffAbsenceReasons' => 'FieldOption.StaffAbsenceReasons',
-        'StudentAbsenceReasons' => 'FieldOption.StudentAbsenceReasons',
+        'StaffAbsenceReasons' => 'Institution.StaffAbsenceReasons',
+        'StudentAbsenceReasons' => 'Institution.StudentAbsenceReasons',
         'Nationalities' => 'FieldOption.Nationalities',
         'GuardianRelations' => 'Student.GuardianRelations',
         'StaffTypes' => 'Staff.StaffTypes',
-        'StaffLeaveTypes' => 'Staff.StaffLeaveTypes'
+        'StaffLeaveTypes' => 'Staff.StaffLeaveTypes',
+        'StudentBehaviourCategories' => 'Student.StudentBehaviourCategories',
+        'StudentTransferReasons' => 'Student.StudentTransferReasons',
+        'StudentDropoutReasons' => 'Student.StudentDropoutReasons',
+        'StaffBehaviourCategories' => 'Staff.StaffBehaviourCategories',
+        'StaffTrainingCategories' => 'Staff.StaffTrainingCategories',
+        'Banks' => 'FieldOption.Banks',
+        'BankBranches' => 'FieldOption.BankBranches',
+        'SalaryAdditionTypes' => 'Staff.SalaryAdditionTypes',
+        'SalaryDeductionTypes' => 'Staff.SalaryDeductionTypes',
+        'Countries' => 'FieldOption.Countries',
+        'ContactTypes' => 'User.ContactTypes'
     ];
 
     // Is called before the controller's beforeFilter method.
@@ -71,7 +82,7 @@ class FieldOptionComponent extends Component
         foreach ($this->fieldOptions as $key => $className) {
             $accessMap["$controller.$key"] = "$controller.%s";
         }
-        $this->request->addParams($accessMap);
+        $this->request->addParams(['accessMap' => $accessMap]);
     }
 
     public function getFieldOptions()

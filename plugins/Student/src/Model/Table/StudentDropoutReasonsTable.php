@@ -1,14 +1,14 @@
 <?php
-namespace FieldOption\Model\Table;
+namespace Student\Model\Table;
 
-use App\Model\Table\AppTable;
-use Cake\Validation\Validator;
+use App\Model\Table\ControllerActionTable;
 
-class StudentDropoutReasonsTable extends AppTable {
-	public function initialize(array $config) {
+class StudentDropoutReasonsTable extends ControllerActionTable {
+	public function initialize(array $config)
+    {
 		$this->addBehavior('ControllerAction.FieldOption');
+        $this->table('student_dropout_reasons');
 		parent::initialize($config);
-		
 		$this->hasMany('DropoutRequests', ['className' => 'Institution.DropoutRequests', 'foreignKey' => 'student_dropout_reason_id']);
 		$this->hasMany('StudentDropout', ['className' => 'Institution.StudentDropout', 'foreignKey' => 'student_dropout_reason_id']);
 	}

@@ -1,12 +1,11 @@
 <?php
-namespace FieldOption\Model\Table;
+namespace Institution\Model\Table;
 
-use App\Model\Table\AppTable;
-use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
 class StudentAbsenceReasonsTable extends ControllerActionTable {
-	public function initialize(array $config) {
+	public function initialize(array $config)
+    {
 		$this->addBehavior('ControllerAction.FieldOption');
 		$this->table('student_absence_reasons');
 		parent::initialize($config);
