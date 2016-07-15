@@ -60,15 +60,7 @@ class SingleGradeBehavior extends Behavior {
 			$gradeOptions = $model->Institutions->InstitutionGrades->getGradeOptions($institutionId, $selectedAcademicPeriodId);
 		}
 
-        if (!empty($gradeOptions)) {
-            if ($selectedEducationGradeId > 0) {
-                if (!array_key_exists($selectedEducationGradeId, $gradeOptions)) {
-                    $selectedEducationGradeId = key($gradeOptions);
-                }
-            } else {
-                $selectedEducationGradeId = key($gradeOptions);
-            }
-        } else {
+        if (empty($gradeOptions)) {
             $gradeOptions[''] = $model->Alert->getMessage($model->aliasField('education_grade_options_empty'));
             $selectedEducationGradeId = 0;
         }
@@ -78,11 +70,14 @@ class SingleGradeBehavior extends Behavior {
         $institutionId = $session->read('Institution.Institutions.id');
 
         $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $gradeOptions = [0 => '-- '.__('Select').' --'] + $gradeOptions;
        
         $this->_table->advancedSelectOptions($gradeOptions, $selectedEducationGradeId, [
 			'message' => '{{label}} - ' . $this->_table->getMessage($this->_table->aliasField('expiredGrade')),
 			'callable' => function($id) use ($InstitutionGrades, $institutionId, $AcademicPeriodTable, $selectedAcademicPeriodId) {
-			
+				if ($id == 0) {
+					return true;
+				}
 				$functionQuery = $InstitutionGrades->find();
 				$query = $InstitutionGrades->find()
 					->where([
