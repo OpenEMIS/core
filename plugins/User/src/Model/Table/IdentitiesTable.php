@@ -73,4 +73,30 @@ class IdentitiesTable extends AppTable {
 		return $validator->allowEmpty('number');
 	}
 
+	public function afterSave(Event $event, Entity $entity) 
+	{	
+		$this->Users->updateIdentityNumber($entity->security_user_id, $this->getLatestDefaultIdentityNo($entity->security_user_id)); //update identity_number field on security_user table on add/edit action
+	}
+
+	public function afterDelete(Event $event, Entity $entity)
+	{	
+		$this->Users->updateIdentityNumber($entity->security_user_id, $this->getLatestDefaultIdentityNo($entity->security_user_id)); //update identity_number field on security_user table on delete action
+	}
+
+	public function getLatestDefaultIdentityNo($userId)
+	{	
+		$defaultIdentityType = $this->IdentityTypes->getDefaultValue();
+
+		$latestDefaultIdentityNo = NULL;
+		$latestDefaultIdentityNo = $this->find()
+										->select('number')
+										->where([
+											'identity_type_id' => $defaultIdentityType,
+											'security_user_id' => $userId
+										])
+										->order(['created DESC'])
+										->first();
+
+		return $latestDefaultIdentityNo->number;
+	}
 }
