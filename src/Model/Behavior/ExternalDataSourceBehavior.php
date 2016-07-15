@@ -9,6 +9,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\Routing\Router;
 use Cake\Validation\Validator;
+use Cake\Utility\Inflector;
 
 class ExternalDataSourceBehavior extends Behavior {
 
@@ -294,41 +295,59 @@ class ExternalDataSourceBehavior extends Behavior {
 	// 	return false;
 	// }
 
-	// public function onGetAuthenticationTypeElement(Event $event, $action, $entity, $attr, $options=[]) {
-	// 	switch ($action){
-	// 		case "view":			
-	// 			$authenticationType = $this->_table->request->data[$this->alias]['value'];
-	// 			$attribute = [];
-	// 			$methodName = strtolower($authenticationType).'Authentication';
-	// 			if (method_exists($this, $methodName)) {
-	// 				$this->$methodName($attribute);
-	// 				$this->processAuthentication($attribute, $authenticationType);
-	// 			}
+	public function openemisIdentitiesExternalSource(&$attribute)
+	{
+		$attribute['authentication_uri'] = ['label' => 'Authentication URI', 'type' => 'text'];
+		$attribute['client_id'] = ['label' => 'Client ID', 'type' => 'text'];
+		$attribute['client_secret'] = ['label' => 'Client Secret', 'type' => 'text'];
+		$attribute['redirect_uri'] = ['label' => 'Redirect URI', 'type' => 'text', 'readonly' => true];
+		$attribute['hd'] = ['label' => 'Hosted Domain', 'type' => 'text', 'required' => false];
+		$attribute['user_record_uri'] = ['label' => 'User Record URI', 'type' => 'text'];
+		// $attribute['user_record_uri'] = ['label' => 'User Record URI', 'type' => 'text'];
+	}
 
-	// 			$tableHeaders = [__('Attribute Name'), __('Value')];
-	// 			$tableCells = [];
-	// 			foreach ($attribute as $value) {
-	// 				$row = [];
-	// 				$row[] = $value['label'];
-	// 				$row[] = $value['value'];
-	// 				$tableCells[] = $row;
-	// 			}
-	// 			$attr['tableHeaders'] = $tableHeaders;
-	// 	    	$attr['tableCells'] = $tableCells;
-	// 			break;
+	public function openemisIdentitiesModifyValue($key, $attributeValue) {
+		if ($key == 'redirect_uri') {
+			return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'],true);
+		}
+		return false;
+	}
 
-	// 		case "edit":
-	// 			$authenticationType = $this->_table->request->data[$this->alias]['value'];
-	// 			$attribute = [];
-	// 			$methodName = strtolower($authenticationType).'Authentication';
-	// 			if (method_exists($this, $methodName)) {
-	// 				$this->$methodName($attribute);
-	// 				$this->processAuthentication($attribute, $authenticationType);
-	// 			}
+	public function onGetExternalDataSourceTypeElement(Event $event, $action, $entity, $attr, $options=[]) {
+		switch ($action){
+			case "view":			
+				$externalDataSourceType = $this->_table->request->data[$this->alias]['value'];
+				$attribute = [];
+				$methodName = lcfirst(Inflector::camelize($externalDataSourceType, ' ')).'ExternalSource';
+				if (method_exists($this, $methodName)) {
+					$this->$methodName($attribute);
+					// $this->processAuthentication($attribute, $authenticationType);
+				}
 
-	// 			$attr = $attribute;
-	// 			break;
-	// 	}
-	// 	return $event->subject()->renderElement('Configurations/authentication', ['attr' => $attr]);
-	// }
+				$tableHeaders = [__('Attribute Name'), __('Value')];
+				$tableCells = [];
+				foreach ($attribute as $value) {
+					$row = [];
+					$row[] = $value['label'];
+					$row[] = $value['value'];
+					$tableCells[] = $row;
+				}
+				$attr['tableHeaders'] = $tableHeaders;
+		    	$attr['tableCells'] = $tableCells;
+				break;
+
+			case "edit":
+				$externalDataSourceType = $this->_table->request->data[$this->alias]['value'];
+				$attribute = [];
+				$methodName = lcfirst(Inflector::camelize($externalDataSourceType, ' ')).'ExternalSource';
+				if (method_exists($this, $methodName)) {
+					$this->$methodName($attribute);
+					// $this->processAuthentication($attribute, $authenticationType);
+				}
+
+				$attr = $attribute;
+				break;
+		}
+		return $event->subject()->renderElement('Configurations/authentication', ['attr' => $attr]);
+	}
 }

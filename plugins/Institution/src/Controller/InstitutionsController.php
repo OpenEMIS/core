@@ -89,6 +89,9 @@ class InstitutionsController extends AppController  {
         if ($pass == 'addExisting') {
             $this->set('ngController', 'InstitutionsStudentsCtrl as InstitutionStudentController');
             $this->render('studentAdd');
+        } elseif ($pass == 'addExternal') {
+        	$this->set('ngController', 'InstitutionsStudentsCtrl as InstitutionStudentController');
+            $this->render('studentAddExternal');
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Students']);
         }
@@ -205,17 +208,21 @@ class InstitutionsController extends AppController  {
 				$this->set('ngController', 'RelevancyRulesCtrl as RelevancyRulesController');
 				break;
             case 'Students':
-                if (
-                    array_key_exists('0', $this->request->param('pass')) &&
-                    $this->request->param('pass')[0] == 'addExisting'
-                ) {
-                    $this->Angular->addModules([
-                        'alert.svc',
-                        'institutions.students.ctrl',
-                        'institutions.students.svc'
-                    ]);
-                }
-
+            	if (isset($this->request->pass[0])) {
+            		if ($this->request->param('pass')[0] == 'addExisting') {
+	                    $this->Angular->addModules([
+	                        'alert.svc',
+	                        'institutions.students.ctrl',
+	                        'institutions.students.svc'
+	                    ]);
+	                } elseif ($this->request->param('pass')[0] == 'addExternal') {
+	                	$this->Angular->addModules([
+	                        'alert.svc',
+	                        'institutions.external_students.ctrl',
+	                        'institutions.external_students.svc'
+	                    ]);
+	                }
+            	}
                 break;
 		}
 	}

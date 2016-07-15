@@ -18,4 +18,17 @@ CREATE TABLE `external_data_source_attributes` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE `refresh_tokens` (
+  `id` INT NOT NULL AUTO_INCREMENT COMMENT '',
+  `security_user_id` INT NOT NULL COMMENT '',
+  `module` VARCHAR(100) NOT NULL COMMENT '',
+  `module_type` VARCHAR(100) NULL COMMENT '',
+  `modified_user_id` INT NULL COMMENT '',
+  `modified` DATETIME NULL COMMENT '',
+  `created_user_id` INT NOT NULL COMMENT '',
+  `created` DATETIME NOT NULL COMMENT '',
+  PRIMARY KEY (`id`)  COMMENT '',
+  INDEX `security_user_id` (`security_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 
