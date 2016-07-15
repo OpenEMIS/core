@@ -18,7 +18,7 @@ class InstitutionsController extends AppController  {
 	public function initialize() {
 		parent::initialize();
 
-		$this->ControllerAction->model('Institution.Institutions');
+		$this->ControllerAction->model('Institution.Institutions', [], ['deleteStrategy' => 'restrict']);
 		$this->ControllerAction->models = [
 			'Attachments' 		=> ['className' => 'Institution.InstitutionAttachments'],
 			'History' 			=> ['className' => 'Institution.InstitutionActivities', 'actions' => ['search', 'index']],
@@ -113,7 +113,7 @@ class InstitutionsController extends AppController  {
 					'Infrastructures' => ['downloadFile'],
 					'Surveys' => ['downloadFile']
 				];
-				
+
 				if (array_key_exists($action, $ignoredList)) {
 					$pass = $this->request->params['pass'];
 					if (count($pass) > 0 && in_array($pass[0], $ignoredList[$action])) {
@@ -159,7 +159,7 @@ class InstitutionsController extends AppController  {
 			if (isset($this->request->pass[0]) && (in_array($action, ['view', 'edit', 'dashboard']))) {
 				$id = $this->request->pass[0];
 				$session->write('Institution.Institutions.id', $id);
-				
+
 			} else if ($session->check('Institution.Institutions.id')) {
 				$id = $session->read('Institution.Institutions.id');
 			}
@@ -183,7 +183,7 @@ class InstitutionsController extends AppController  {
 
 	private function attachAngularModules() {
 		$action = $this->request->action;
-		
+
 		switch ($action) {
 			case 'Results':
 				$this->Angular->addModules([
@@ -240,7 +240,7 @@ class InstitutionsController extends AppController  {
 
 			$event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
 			$event = $model->eventManager()->dispatch($event);
-			
+
 			if ($model->hasField('institution_id')) {
 				if (!in_array($model->alias(), ['TransferRequests'])) {
 					$model->fields['institution_id']['type'] = 'hidden';
@@ -265,7 +265,7 @@ class InstitutionsController extends AppController  {
 							$model->aliasField('institution_id') => $institutionId
 						]);
 					}
-				
+
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
 					 */
@@ -328,7 +328,7 @@ class InstitutionsController extends AppController  {
 		);
 		$InstitutionStudents = TableRegistry::get('Institution.Students');
 		$highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_year', $params);
-		
+
 		//Students By Grade for current year
 		$params = array(
 			'conditions' => array('institution_id' => $id)
@@ -356,9 +356,9 @@ class InstitutionsController extends AppController  {
 			$session = $this->request->session();
 			$institutionId = $session->read('Institution.Institutions.id');
 			$params['conditions'] = [$Institutions->aliasField('id').' IS NOT ' => $institutionId];
-			if (!empty($term)) 
+			if (!empty($term))
 				$data = $Institutions->autocomplete($term, $params);
-				
+
 			echo json_encode($data);
 			die;
 		}
@@ -387,8 +387,8 @@ class InstitutionsController extends AppController  {
 		$tabElements = [
 			$pluralUserRole => ['text' => __('Academic')],
 			$userRole.'User' => ['text' => __('Overview')],
-			$userRole.'Account' => ['text' => __('Account')], 
-			
+			$userRole.'Account' => ['text' => __('Account')],
+
 			// $userRole.'Nationality' => ['text' => __('Identities')],
 		];
 
@@ -420,7 +420,7 @@ class InstitutionsController extends AppController  {
 			// $tabElements[$pluralUserRole]['url'] = array_merge($url, ['action' => $pluralUserRole, 'view']);
 			$tabElements[$userRole.'User']['url'] = array_merge($url, ['action' => $userRole.'User', 'view']);
 			$tabElements[$userRole.'Account']['url'] = array_merge($url, ['action' => $userRole.'Account', 'view']);
-			
+
 			// $tabElements[$userRole.'Account']['url'] = array_merge($url, ['action' => $userRole.'Account', 'view']);
 
 			// Only Student has Survey tab
