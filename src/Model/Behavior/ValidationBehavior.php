@@ -437,14 +437,15 @@ class ValidationBehavior extends Behavior {
 				$newEntity = TableRegistry::get($className);
 				$recordWithField = $newEntity->find()
 											->select([$fieldName])
-											->where([
-												$fieldName => 1,
-												$newEntity->aliasField('id').' IS NOT ' => $globalData['data']['id']
-											]);
+											->where([$fieldName => 1]);
+
+				if (!$globalData['newRecord']) { //for edit, need to ensure that there is other record which is set as default, or else this one must be set as default.
+					$recordWithField ->andWhere([$newEntity->aliasField('id').' IS NOT ' => $globalData['data']['id']]);
+				}
 
 				if(!empty($additionalParameters)) {
 					$recordWithField->andWhere($additionalParameters);
-				}								
+				}							
 				$total = $recordWithField->count();		
 				$flag = ($total > 0) ? true : false;
 			}
