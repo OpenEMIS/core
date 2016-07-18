@@ -10,15 +10,19 @@ class InfrastructuresController extends AppController
 {
 	public function initialize() {
 		parent::initialize();
-
+		// pr($this->request->query);
 		$this->ControllerAction->models = [
 			'Fields' => ['className' => 'Infrastructure.InfrastructureCustomFields'],
-			'Pages' => ['className' => 'Infrastructure.InfrastructureCustomForms'],
-			'Levels' => ['className' => 'Infrastructure.InfrastructureLevels'],
-			'Types' => ['className' => 'Infrastructure.InfrastructureTypes']
+			'Pages' => ['className' => 'Infrastructure.InfrastructureCustomForms']
 		];
 		$this->loadComponent('Paginator');
     }
+
+    // CAv4
+    public function Levels() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Infrastructure.InfrastructureLevels']); }
+    public function Types() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Infrastructure.InfrastructureTypes']); }
+    public function RoomTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Infrastructure.RoomTypes']); }
+    // End
 
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
@@ -42,8 +46,10 @@ class InfrastructuresController extends AppController
 			]
 		];
 
+		// Types and RoomTypes share one tab
+		$selectedAction = ($this->request->action == 'Types' || $this->request->action == 'RoomTypes') ? 'Types' : $this->request->action;
         $this->set('tabElements', $tabElements);
-        $this->set('selectedAction', $this->request->action);
+        $this->set('selectedAction', $selectedAction);
 	}
 
 	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
