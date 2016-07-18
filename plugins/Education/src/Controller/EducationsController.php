@@ -16,7 +16,7 @@ class EducationsController extends AppController
 			'Levels' => ['className' => 'Education.EducationLevels', 'options' => ['deleteStrategy' => 'transfer']],
 			'Cycles' => ['className' => 'Education.EducationCycles', 'options' => ['deleteStrategy' => 'transfer']],
 			'Programmes' => ['className' => 'Education.EducationProgrammes', 'options' => ['deleteStrategy' => 'transfer']],
-			'Grades' => ['className' => 'Education.EducationGrades', 'options' => ['deleteStrategy' => 'transfer']],
+			'Grades' => ['className' => 'Education.EducationGrades', 'options' => ['deleteStrategy' => 'restrict']],
 		];
 		$this->loadComponent('Paginator');
     }
