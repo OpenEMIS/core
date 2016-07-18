@@ -1,10 +1,12 @@
 angular
     .module('institutions.external_students.svc', ['kd.orm.svc', 'kd.session.svc'])
-    .service('InstitutionsStudentsSvc', InstitutionsStudentsSvc);
+    .service('InstitutionsExternalStudentsSvc', InstitutionsStudentsSvc);
 
 InstitutionsStudentsSvc.$inject = ['$q', '$filter', 'KdOrmSvc', 'KdSessionSvc'];
 
 function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
+
+    var vm = this;
 
     var service = {
         init: init,
@@ -16,7 +18,8 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         getClasses: getClasses,
         getColumnDefs: getColumnDefs,
         getStudentData: getStudentData,
-        postEnrolledStudent: postEnrolledStudent
+        postEnrolledStudent: postEnrolledStudent,
+        getExternalSourceUrl: getExternalSourceUrl
     };
 
     var models = {
@@ -28,6 +31,7 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
         InstitutionClasses: 'Institution.InstitutionClasses',
         IdentityTypes: 'FieldOption.IdentityTypes',
+        ExternalDataSourceAttributes: 'ExternalDataSourceAttributes'
     };
 
     return service;
@@ -38,12 +42,28 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         KdOrmSvc.init(models);
     };
 
+    function getExternalSourceUrl()
+    {
+        return ExternalDataSourceAttributes
+            .find('Uri', {record_type: 'user_record_uri'})
+            .ajax({defer: true});
+    };
+
     function getStudentRecords(options) {
         var deferred = $q.defer();
 
-        this.getInstitutionId()
-        .then(function(response) {
-            var institutionId = response[0];
+        this.getExternalSourceUrl()
+        .then(function(sourceUrl) {
+            var promises = [];
+            promises.push(sourceUrl.data);
+            return $q.all(promises);
+        }, function(error) {
+            console.log('error:');
+            console.log(error);
+            deferred.reject(error);
+        })
+        .then(function(returnSource) {
+            console.log(returnSource);
             var params = {
                 limit: options['endRow'] - options['startRow'],
                 page: options['endRow'] / (options['endRow'] - options['startRow']),
@@ -61,18 +81,13 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                 }
             }
 
-            Students.reset();
-            Students.find('Students', params);
 
-            return Students.ajax({defer: true});
-        }, function(error) {
-            console.log(error);
-            deferred.reject(error);
-        }).then(function(response) {
-            deferred.resolve(response);
-        }, function(error) {
-            console.log(error);
-            deferred.reject(error);
+
+            Students.reset();
+            Students
+                .page(params.page)
+                .limit(params.limit);
+            return Students.ajax({defer: true, url: 'http://localhost:8080/school/api/restful/SecurityUsers.json'});
         });
 
         return deferred.promise;
