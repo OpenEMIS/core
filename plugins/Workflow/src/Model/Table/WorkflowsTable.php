@@ -207,7 +207,7 @@ class WorkflowsTable extends AppTable {
     	$this->setupFields($entity);
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
 		$query->where([
 			$this->aliasField('workflow_model_id') => $entity->workflow_model_id
 		]);
