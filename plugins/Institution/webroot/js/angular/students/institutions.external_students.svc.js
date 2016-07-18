@@ -52,16 +52,20 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
     function getStudentRecords(options) {
         var deferred = $q.defer();
 
-        // this.getInstitutionId()
-        // .then(function(response) {
-            // var institutionId = response[0];
+        this.getExternalSourceUrl()
+        .then(function(sourceUrl) {
+            var source = sourceUrl.data;
+            var sourceUrl = null;
+            if (source.length > 0) {
+                sourceUrl = source[0].value;
+            }
             var pageParams = {
                 limit: options['endRow'] - options['startRow'],
                 page: options['endRow'] / (options['endRow'] - options['startRow']),
             };
 
             var params = {};
-
+            Students.reset();
             Students
                 .page(pageParams.page)
                 .limit(pageParams.limit);
@@ -70,29 +74,27 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                 for (var key in options['conditions']) {
                     if (typeof options['conditions'][key] == 'string') {
                         options['conditions'][key] = options['conditions'][key].trim();
-
                         if (options['conditions'][key] !== '') {
                             params[key] = options['conditions'][key];
                         }
                     }
                 }
-                console.log(params);
-                if (params.count() > 0) {
-                   Students.orWhere(params); 
+                if (Object.getOwnPropertyNames(params).length !== 0) {
+                    Students.orWhere(params);
                 }
             }
-            console.log(params);
             
-            return Students.ajax({defer: true, url: 'http://localhost:8080/school/api/restful/SecurityUsers.json'});
-        // }, function(error) {
-        //     console.log(error);
-        //     deferred.reject(error);
-        // }).then(function(response) {
-        //     deferred.resolve(response);
-        // }, function(error) {
-        //     console.log(error);
-        //     deferred.reject(error);
-        // });
+            
+            return Students.ajax({defer: true, url: sourceUrl});
+        }, function(error) {
+            console.log(error);
+            deferred.reject(error);
+        }).then(function(response) {
+            deferred.resolve(response);
+        }, function(error) {
+            console.log(error);
+            deferred.reject(error);
+        });
 
         // this.getExternalSourceUrl()
         // .then(function(sourceUrl) {
@@ -132,7 +134,7 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         //     return Students.ajax({defer: true, url: 'http://localhost:8080/school/api/restful/SecurityUsers.json'});
         // });
 
-        // return deferred.promise;
+        return deferred.promise;
     };
 
     function getStudentData(id) {
