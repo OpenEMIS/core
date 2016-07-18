@@ -60,6 +60,7 @@ class FieldOptionComponent extends Component
         'GuardianRelations' => 'Student.GuardianRelations',
         'StaffTypes' => 'Staff.StaffTypes',
         'StaffLeaveTypes' => 'Staff.StaffLeaveTypes',
+<<<<<<< HEAD
         'StudentBehaviourCategories' => 'Student.StudentBehaviourCategories',
         'StudentTransferReasons' => 'Student.StudentTransferReasons',
         'StudentDropoutReasons' => 'Student.StudentDropoutReasons',
@@ -71,6 +72,20 @@ class FieldOptionComponent extends Component
         'SalaryDeductionTypes' => 'Staff.SalaryDeductionTypes',
         'Countries' => 'FieldOption.Countries',
         'ContactTypes' => 'User.ContactTypes'
+=======
+        'TrainingAchievementTypes' => 'Training.TrainingAchievementTypes',
+        'TrainingCourseTypes' => 'Training.TrainingCourseTypes',
+        'TrainingFieldStudies' => 'Training.TrainingFieldStudies',
+        'TrainingLevels' => 'Training.TrainingLevels',
+        'TrainingModeDeliveries' => 'Training.TrainingModeDeliveries',
+        'TrainingNeedCategories' => 'Training.TrainingNeedCategories',
+        'TrainingPriorities' => 'Training.TrainingPriorities',
+        'TrainingProviders' => 'Training.TrainingProviders',
+        'TrainingRequirements' => 'Training.TrainingRequirements',
+        'TrainingResultTypes' => 'Training.TrainingResultTypes',
+        'TrainingSpecialisations' => 'Training.TrainingSpecialisations',
+        'CommentTypes' => 'User.CommentTypes'
+>>>>>>> b5983232dcf638a65794617739389cdc68201811
     ];
 
     // Is called before the controller's beforeFilter method.
