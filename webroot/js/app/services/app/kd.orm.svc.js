@@ -101,6 +101,7 @@ angular.module('kd.orm.svc', [])
             var error = null;
             var type = 'json';
             var deferred = null;
+            var customUrl = null;
 
             var requireDeferred = settings.defer != undefined && settings.defer == true;
 
@@ -110,6 +111,10 @@ angular.module('kd.orm.svc', [])
 
             if (settings.type != undefined) {
                 type = settings.type;
+            }
+
+            if (settings.url != undefined) {
+                customUrl = settings.url;
             }
 
             var hasSuccessCallback = settings.success != undefined;
@@ -151,7 +156,7 @@ angular.module('kd.orm.svc', [])
             if (settings.headers == undefined) {
                 settings.headers = {'Content-Type': 'application/x-www-form-urlencoded'};
             }
-            var url = this.toURL();
+            var url = this.toURL(customUrl);
             settings.url = url.replace('@type', type);
 
             if (success == null && error == null) {
@@ -162,7 +167,7 @@ angular.module('kd.orm.svc', [])
             return requireDeferred ? deferred.promise : httpResponse;
         },
 
-        toURL: function() {
+        toURL: function(customUrl) {
             var model = this._className.replace('.', '-');
             var url = [this._base, this._controller, model].join('/');
             var params = [];
@@ -197,9 +202,13 @@ angular.module('kd.orm.svc', [])
 
             url += '.@type';
 
+            if (customUrl != null) {
+                url = customUrl;
+            }
+
             if (params.length > 0) {
                 url += '?' + params.join('&');
-            }
+            }  
             return url;
         },
 
