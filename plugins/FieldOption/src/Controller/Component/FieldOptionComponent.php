@@ -25,52 +25,53 @@ class FieldOptionComponent extends Component
 {
     private $controller;
     private $fieldOptions = [
+    // Institution
         'Genders' => 'Institution.Genders',
+        'NetworkConnectivities' => 'Institution.NetworkConnectivities',
         'Localities' => 'Institution.Localities',
         'Ownerships' => 'Institution.Ownerships',
         'Providers' => 'Institution.Providers',
         'Sectors' => 'Institution.Sectors',
         'Statuses' => 'Institution.Statuses',
         'Types' => 'Institution.Types',
-        'NetworkConnectivities' => 'Institution.NetworkConnectivities',
-        'StaffPositionGrades' => 'Institution.StaffPositionGrades',
-        'StaffPositionTitles' => 'Institution.StaffPositionTitles',
-        'AllergyTypes' => 'Health.AllergyTypes',
-        'ConsultationTypes' => 'Health.ConsultationTypes',
-        'Relationships' => 'Health.Relationships',
-        'Conditions' => 'Health.Conditions',
-        'ImmunizationTypes' => 'Health.ImmunizationTypes',
-        'TestTypes' => 'Health.TestTypes',
-        'QualityVisitTypes' => 'FieldOption.QualityVisitTypes',
-        'InfrastructureOwnerships' => 'FieldOption.InfrastructureOwnerships',
-        'InfrastructureConditions' => 'FieldOption.InfrastructureConditions',
-        'QualificationSpecialisations' => 'FieldOption.QualificationSpecialisations',
-        'QualificationLevels' => 'FieldOption.QualificationLevels',
-        'FeeTypes' => 'FieldOption.FeeTypes',
-        'EmploymentTypes' => 'FieldOption.EmploymentTypes',
-        'ExtracurricularTypes' => 'FieldOption.ExtracurricularTypes',
-        'IdentityTypes' => 'FieldOption.IdentityTypes',
-        'Languages' => 'Languages',
-        'LicenseTypes' => 'FieldOption.LicenseTypes',
-        'SpecialNeedTypes' => 'FieldOption.SpecialNeedTypes',
-        'SpecialNeedDifficulties' => 'FieldOption.SpecialNeedDifficulties',
-        'StaffAbsenceReasons' => 'Institution.StaffAbsenceReasons',
+
+    // Student
         'StudentAbsenceReasons' => 'Institution.StudentAbsenceReasons',
-        'Nationalities' => 'FieldOption.Nationalities',
-        'GuardianRelations' => 'Student.GuardianRelations',
-        'StaffTypes' => 'Staff.StaffTypes',
-        'StaffLeaveTypes' => 'Staff.StaffLeaveTypes',
         'StudentBehaviourCategories' => 'Student.StudentBehaviourCategories',
         'StudentTransferReasons' => 'Student.StudentTransferReasons',
         'StudentDropoutReasons' => 'Student.StudentDropoutReasons',
+
+    // Staff
+        'StaffAbsenceReasons' => 'Institution.StaffAbsenceReasons',
         'StaffBehaviourCategories' => 'Staff.StaffBehaviourCategories',
+        'StaffLeaveTypes' => 'Staff.StaffLeaveTypes',
+        'StaffTypes' => 'Staff.StaffTypes',
         'StaffTrainingCategories' => 'Staff.StaffTrainingCategories',
+
+    // Finance
         'Banks' => 'FieldOption.Banks',
         'BankBranches' => 'FieldOption.BankBranches',
+        'FeeTypes' => 'FieldOption.FeeTypes',
+
+    // Guardian
+        'GuardianRelations' => 'Student.GuardianRelations',
+
+    // Position
+        'StaffPositionGrades' => 'Institution.StaffPositionGrades',
+        'StaffPositionTitles' => 'Institution.StaffPositionTitles',
+
+    // Qualification
+        'QualificationLevels' => 'FieldOption.QualificationLevels',
+        'QualificationSpecialisations' => 'FieldOption.QualificationSpecialisations',
+
+    // Quality
+        'QualityVisitTypes' => 'FieldOption.QualityVisitTypes',
+
+    // Salary
         'SalaryAdditionTypes' => 'Staff.SalaryAdditionTypes',
         'SalaryDeductionTypes' => 'Staff.SalaryDeductionTypes',
-        'Countries' => 'FieldOption.Countries',
-        'ContactTypes' => 'User.ContactTypes',
+
+    // Training
         'TrainingAchievementTypes' => 'Training.TrainingAchievementTypes',
         'TrainingCourseTypes' => 'Training.TrainingCourseTypes',
         'TrainingFieldStudies' => 'Training.TrainingFieldStudies',
@@ -82,7 +83,31 @@ class FieldOptionComponent extends Component
         'TrainingRequirements' => 'Training.TrainingRequirements',
         'TrainingResultTypes' => 'Training.TrainingResultTypes',
         'TrainingSpecialisations' => 'Training.TrainingSpecialisations',
-        'CommentTypes' => 'User.CommentTypes'
+
+    // Others
+        'ContactTypes' => 'User.ContactTypes',
+        'EmploymentTypes' => 'FieldOption.EmploymentTypes',
+        'ExtracurricularTypes' => 'FieldOption.ExtracurricularTypes',
+        'IdentityTypes' => 'FieldOption.IdentityTypes',
+        'Languages' => 'Languages',
+        'LicenseTypes' => 'FieldOption.LicenseTypes',
+        'SpecialNeedTypes' => 'FieldOption.SpecialNeedTypes',
+        'SpecialNeedDifficulties' => 'FieldOption.SpecialNeedDifficulties',
+        'Countries' => 'FieldOption.Countries',
+        'Nationalities' => 'FieldOption.Nationalities',
+        'CommentTypes' => 'User.CommentTypes',
+
+    // Infrastructure
+        'InfrastructureOwnerships' => 'FieldOption.InfrastructureOwnerships',
+        'InfrastructureConditions' => 'FieldOption.InfrastructureConditions',
+
+    // Health
+        'AllergyTypes' => 'Health.AllergyTypes',
+        'Conditions' => 'Health.Conditions',
+        'ConsultationTypes' => 'Health.ConsultationTypes',
+        'ImmunizationTypes' => 'Health.ImmunizationTypes',
+        'Relationships' => 'Health.Relationships',
+        'TestTypes' => 'Health.TestTypes'
     ];
 
     // Is called before the controller's beforeFilter method.
