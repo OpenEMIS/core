@@ -15,8 +15,8 @@ RENAME TABLE `z_3017_infrastructure_custom_table_cells` TO `infrastructure_custo
 DROP TABLE IF EXISTS `room_custom_field_values`;
 
 -- custom_modules
-DELETE FROM `custom_modules` WHERE `code` = 'Room';
-UPDATE `custom_modules` SET `name` = 'Institution - Infrastructure', `filter` = 'Infrastructure.InfrastructureLevels', `supported_field_types` = 'TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,TABLE,DATE,TIME,FILE,COORDINATES' WHERE `custom_modules`.`code` = 'Infrastructure';
+DROP TABLE IF EXISTS `custom_modules`;
+RENAME TABLE `z_3017_custom_modules` TO `custom_modules`;
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue`='POCOR-3017';

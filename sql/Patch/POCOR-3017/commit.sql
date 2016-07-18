@@ -126,6 +126,11 @@ CREATE TABLE IF NOT EXISTS `room_custom_field_values` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- custom_modules
-UPDATE `custom_modules` SET `name` = 'Institution > Infrastructure', `filter` = NULL, `supported_field_types` = 'TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,DATE,TIME,FILE,COORDINATES' WHERE `custom_modules`.`code` = 'Infrastructure';
-INSERT INTO `custom_modules` (`code`, `name`, `model`, `behavior`, `filter`, `supported_field_types`, `visible`, `parent_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-('Room', 'Institution > Room', 'Institution.InstitutionRooms', NULL, NULL, 'TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,TABLE,DATE,TIME,FILE,COORDINATES', 1, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
+CREATE TABLE `z_3017_custom_modules` LIKE  `custom_modules`;
+INSERT INTO `z_3017_custom_modules` SELECT * FROM `custom_modules` WHERE 1;
+
+ALTER TABLE `custom_modules` DROP `filter`;
+
+UPDATE `custom_modules` SET `name` = 'Institution > Infrastructure', `supported_field_types` = 'TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,DATE,TIME,FILE,COORDINATES' WHERE `custom_modules`.`code` = 'Infrastructure';
+INSERT INTO `custom_modules` (`code`, `name`, `model`, `behavior`, `supported_field_types`, `visible`, `parent_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
+('Room', 'Institution > Room', 'Institution.InstitutionRooms', NULL, 'TEXT,NUMBER,TEXTAREA,DROPDOWN,CHECKBOX,TABLE,DATE,TIME,FILE,COORDINATES', 1, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
