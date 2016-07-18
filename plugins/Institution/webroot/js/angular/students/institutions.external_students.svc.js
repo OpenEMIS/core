@@ -52,22 +52,19 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
     function getStudentRecords(options) {
         var deferred = $q.defer();
 
-        this.getExternalSourceUrl()
-        .then(function(sourceUrl) {
-            var promises = [];
-            promises.push(sourceUrl.data);
-            return $q.all(promises);
-        }, function(error) {
-            console.log('error:');
-            console.log(error);
-            deferred.reject(error);
-        })
-        .then(function(returnSource) {
-            console.log(returnSource);
-            var params = {
+        // this.getInstitutionId()
+        // .then(function(response) {
+            // var institutionId = response[0];
+            var pageParams = {
                 limit: options['endRow'] - options['startRow'],
                 page: options['endRow'] / (options['endRow'] - options['startRow']),
-            }
+            };
+
+            var params = {};
+
+            Students
+                .page(pageParams.page)
+                .limit(pageParams.limit);
 
             if (options.hasOwnProperty('conditions')) {
                 for (var key in options['conditions']) {
@@ -79,18 +76,63 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                         }
                     }
                 }
+                console.log(params);
+                if (params.count() > 0) {
+                   Students.orWhere(params); 
+                }
             }
-
-
-
-            Students.reset();
-            Students
-                .page(params.page)
-                .limit(params.limit);
+            console.log(params);
+            
             return Students.ajax({defer: true, url: 'http://localhost:8080/school/api/restful/SecurityUsers.json'});
-        });
+        // }, function(error) {
+        //     console.log(error);
+        //     deferred.reject(error);
+        // }).then(function(response) {
+        //     deferred.resolve(response);
+        // }, function(error) {
+        //     console.log(error);
+        //     deferred.reject(error);
+        // });
 
-        return deferred.promise;
+        // this.getExternalSourceUrl()
+        // .then(function(sourceUrl) {
+        //     var promises = [];
+        //     promises.push(sourceUrl.data);
+        //     return $q.all(promises);
+        // }, function(error) {
+        //     console.log('error:');
+        //     console.log(error);
+        //     deferred.reject(error);
+        // })
+        // .then(function(returnSource) {
+        //     console.log(returnSource);
+        //     var params = {
+        //         limit: options['endRow'] - options['startRow'],
+        //         page: options['endRow'] / (options['endRow'] - options['startRow']),
+        //     }
+
+        //     if (options.hasOwnProperty('conditions')) {
+        //         for (var key in options['conditions']) {
+        //             if (typeof options['conditions'][key] == 'string') {
+        //                 options['conditions'][key] = options['conditions'][key].trim();
+
+        //                 if (options['conditions'][key] !== '') {
+        //                     params[key] = options['conditions'][key];
+        //                 }
+        //             }
+        //         }
+        //     }
+
+
+
+        //     Students.reset();
+        //     Students
+        //         .page(params.page)
+        //         .limit(params.limit);
+        //     return Students.ajax({defer: true, url: 'http://localhost:8080/school/api/restful/SecurityUsers.json'});
+        // });
+
+        // return deferred.promise;
     };
 
     function getStudentData(id) {
