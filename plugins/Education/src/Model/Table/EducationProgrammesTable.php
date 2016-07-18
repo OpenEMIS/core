@@ -90,7 +90,7 @@ class EducationProgrammesTable extends AppTable {
 		return $attr;
 	}
 
-	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
 		$query->where([$this->aliasField('education_cycle_id') => $entity->education_cycle_id]);
 	}
 

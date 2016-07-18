@@ -6,22 +6,26 @@ use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
+use Cake\Utility\Inflector;
 use Cake\Datasource\Exception\RecordNotFoundException;
 
 class RemoveBehavior extends Behavior {
+	private $recordHasAssociatedRecords = false;
+
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.remove'] = 'remove';
 		$events['ControllerAction.Model.transfer'] = 'transfer';
 		$events['ControllerAction.Model.transfer.afterAction'] = ['callable' => 'transferAfterAction', 'priority' => 5];
 		$events['ControllerAction.Model.afterAction'] = ['callable' => 'afterAction', 'priority' => 100];
+		$events['ControllerAction.Model.onGetFormButtons'] = 'onGetFormButtons';
 		return $events;
 	}
 
 	public function transferAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$model = $this->_table;
 		$request = $model->request;
-		if ($model->actions('remove') == 'transfer' && $request->is('delete') && $extra['result'] == true) {
+		if (($model->actions('remove') == 'transfer') && $request->is('delete') && $extra['result'] == true) {
 			$convertFrom = $entity->id;
 			$convertTo = $entity->convert_to;
 
@@ -54,6 +58,17 @@ class RemoveBehavior extends Behavior {
 				'headers' => [__('Feature'), __('No of Records')],
 				'cells' => $cells
 			]);
+		} else if ($model->actions('remove') == 'restrict' && $model->action == 'remove') {
+			$entity = $extra['entity'];
+			$cells = $extra['cells'];
+			$model->fields = [];
+			$model->field('id', ['type' => 'hidden']);
+			$model->field('to_be_deleted', ['type' => 'readonly', 'attr' => ['value' => $entity->name]]);
+			$model->field('associated_records', [
+				'type' => 'table',
+				'headers' => [__('Feature'), __('No of Records')],
+				'cells' => $cells
+			]);
 		}
 	}
 
@@ -70,29 +85,56 @@ class RemoveBehavior extends Behavior {
 		$result = true;
 		$entity = null;
 
-		if ($request->is('delete') && !empty($request->data[$primaryKey])) {
-            $id = $request->data[$primaryKey];
+		if ($request->is('get') && $model->actions('remove') == 'restrict') {
+			// Logic for restrict delete
+			$entity = $model->newEntity();
+			$controller = $model->controller;
+			$id = $model->paramsPass(0);
+			$idKey = $model->aliasField($primaryKey);
+			if ($model->exists([$idKey => $id])) {
+				$entity = $model->get($id);
 
-            // default is no restriction
-            $notRestrictedCheck = true;
-            if ($model->actions('remove') == 'restrict') {
-                $notRestrictedCheck = function ($model, $id, $extra) {
-                    $newEntity = $model->newEntity([$model->primaryKey() => $id]);
-                    return !$model->hasAssociatedRecords($model, $newEntity, $extra);
-                };
+				$query = $model->find();
+				$event = $model->dispatchEvent('ControllerAction.Model.delete.onInitialize', [$entity, $query, $extra], $this);
+				if ($event->isStopped()) { return $event->result; }
 
-                $event = $model->dispatchEvent('ControllerAction.Model.onBeforeRestrictDelete', [$id, $extra], $this);
-                if ($event->isStopped()) { return $event->result; }
-                if (is_callable($event->result)) {
-                    $notRestrictedCheck = $event->result;
+				$associations = $this->getAssociatedRecords($model, $entity, $extra);
+				if ($extra->offsetExists('excludedModels')) {
+					$associations = array_diff_key($associations, array_flip($extra['excludedModels']));
+				}
+				if ($extra->offsetExists('associatedRecords')) {
+					$associations = array_merge($associations, $extra['associatedRecords']);
+				}
+				$cells = [];
+				$totalCount = 0;
 
-                }
-                if (is_callable($notRestrictedCheck)) {
-                    $notRestrictedCheck = $notRestrictedCheck($model, $id, $extra);
-                }
-            }
+				foreach ($associations as $row) {
+					$modelName = Inflector::humanize(Inflector::underscore($row['model']));
+					$cells[] = [__($modelName), $row['count']];
+					$totalCount += $row['count'];
+				}
+				if ($totalCount > 0) {
+					$model->Alert->error('general.delete.restrictDeleteBecauseAssociation');
+					$this->recordHasAssociatedRecords = true;
+				} else {
+					// Change the method to delete if the record can be deleted
+					$extra['config']['form'] = ['type' => 'DELETE'];
+					$this->recordHasAssociatedRecords = false;
+				}
+				$extra['cells'] = $cells;
 
-            if ($notRestrictedCheck) {
+				$controller->set('data', $entity);
+			}
+			return $entity;
+		} else if ($request->is('delete')) {
+			$id = null;
+			if ($model->actions('remove') == 'restrict' && !empty($request->data[$model->alias()][$primaryKey])) {
+				$id = $request->data[$model->alias()][$primaryKey];
+			} elseif (!empty($request->data[$primaryKey])) {
+				$id = $request->data[$primaryKey];
+			} 
+            
+			if (!empty($id)) {
                 try {
                     $entity = $model->get($id);
                 } catch (RecordNotFoundException $exception) { // to handle concurrent deletes
@@ -100,10 +142,7 @@ class RemoveBehavior extends Behavior {
                     return $model->controller->redirect($model->url('index', 'QUERY'));
                 }
                 $result = $this->doDelete($entity, $extra);
-            } else {
-                $extra['Alert']['message'] = 'general.delete.restrictDeleteBecauseAssociation';
-                $result = false;
-            }
+        	}
 		}
 		$extra['result'] = $result;
 
@@ -112,6 +151,16 @@ class RemoveBehavior extends Behavior {
 
 		$mainEvent->stopPropagation();
 		return $model->controller->redirect($model->url('index', 'QUERY'));
+	}
+
+	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+		$model = $this->_table;
+		if ($model->action == 'remove' && $model->actions('remove') == 'restrict') {
+			if ($this->recordHasAssociatedRecords) {
+				unset($buttons[0]);
+				unset($buttons[1]);
+			}
+		}
 	}
 
 	public function transfer(Event $mainEvent, ArrayObject $extra) {
@@ -153,7 +202,8 @@ class RemoveBehavior extends Behavior {
 				$associations = $this->getAssociatedRecords($model, $entity, $extra);
 				$cells = [];
 				foreach ($associations as $row) {
-					$cells[] = [$row['model'], $row['count']];
+					$modelName = Inflector::humanize(Inflector::underscore($row['model']));
+					$cells[] = [__($row['model']), $row['count']];
 				}
 
 				$extra['convertOptions'] = $convertOptions;
@@ -315,6 +365,11 @@ class RemoveBehavior extends Behavior {
 			$modelAssociationTable->updateAll(
 				[$association->foreignKey() => $to],
 				$condition
+			);
+
+			// Delete orphan records
+			$modelAssociationTable->deleteAll(
+				[$assoc->foreignKey() => $from]
 			);
 		}
 	}

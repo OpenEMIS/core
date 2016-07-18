@@ -224,6 +224,8 @@ class ControllerActionHelper extends Helper {
 		}
 
 		$table = null;
+		// For XSS
+		$this->escapeHtmlSpecialCharacters($entity);
 
 		foreach ($fields as $field => $attr) {
 			$model = $attr['model'];
@@ -238,9 +240,6 @@ class ControllerActionHelper extends Helper {
 			// EventManager->on is triggered at getTableHeader()
 			$method = 'onGet' . Inflector::camelize($field);
 			$eventKey = 'ControllerAction.Model.' . $method;
-
-			// For XSS
-			$this->escapeHtmlSpecialCharacters($entity, $table);
 
 			$event = new Event($eventKey, $this, [$entity]);
 			$event = $table->eventManager()->dispatch($event);
@@ -414,16 +413,17 @@ class ControllerActionHelper extends Helper {
 		return $html;
 	}
 
-	private function escapeHtmlSpecialCharacters(Entity $entity, Table $table)
-	{
+	private function escapeHtmlSpecialCharacters(Entity $entity)
+	{	
+		$model = TableRegistry::get($entity->source());
 		// For XSS
-		$schema = $table->schema();
+		$schema = $model->schema();
 		$columns = $schema->columns();
 		foreach ($columns as $key => $col) {
 			$fieldCol = $schema->column($col);
 			if ($fieldCol['type'] == 'string' || $fieldCol['type'] == 'text') {
 				if ($entity->has($col)) {
-					$htmlInfo = htmlentities($entity->$col, ENT_COMPAT | ENT_HTML401, 'UTF-8');
+					$htmlInfo = $this->HtmlField->escapeHtmlEntity($entity->$col);
 					$entity->$col = $htmlInfo;
 				}
 			}
@@ -470,6 +470,8 @@ class ControllerActionHelper extends Helper {
 		$table = null;
 		$session = $this->request->session();
 		$language = $session->read('System.language');
+		// For XSS
+		$this->escapeHtmlSpecialCharacters($data);
 
 		foreach ($displayFields as $_field => $attr) {
 			$_rowClass = array('row');
@@ -501,9 +503,6 @@ class ControllerActionHelper extends Helper {
 				if (isset($options['label'])) {
 					$label = $options['label'];
 				}
-
-				// For XSS
-				$this->escapeHtmlSpecialCharacters($data, $table);
 
 				// attach event for index columns
 				$method = 'onGet' . Inflector::camelize($_field);
