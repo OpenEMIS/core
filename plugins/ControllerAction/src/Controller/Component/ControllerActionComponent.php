@@ -161,7 +161,7 @@ class ControllerActionComponent extends Component {
                         if (isset($attr['options'])) {
                             $_options = array_merge($_options, $attr['options']);
                         }
-                        
+
                         $this->model($attr['className'], $actions, $_options);
                         $this->model->alias = $name;
                         $this->currentAction = $currentAction;
@@ -1409,7 +1409,8 @@ class ControllerActionComponent extends Component {
                 if (empty($transferTo)) {
                     $associations = [];
                     foreach ($model->associations() as $assoc) {
-                        if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
+                        // if dependent is false then it will count the associations
+                        if (!$assoc->dependent() && ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany')) {
                             if (!array_key_exists($assoc->alias(), $associations)) {
                                 $count = 0;
                                 if($assoc->type() == 'oneToMany') {
@@ -1848,37 +1849,50 @@ class ControllerActionComponent extends Component {
 
     public function getAssociatedRecords($model, $entity, $extra)
     {
+        $dependent = [true, false];
+        if ($extra->offsetExists('deleteStrategy')) {
+            switch ($extra['deleteStrategy']) {
+                case 'restrict':
+                    $dependent = [true, false];
+                    break;
+                case 'transfer':
+                    $dependent = [false];
+                    break;
+            }
+        }
         $primaryKey = $model->primaryKey();
         $id = $entity->$primaryKey;
         $associations = [];
         foreach ($model->associations() as $assoc) {
-            if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
-                if (!array_key_exists($assoc->alias(), $associations)) {
-                    $count = 0;
-                    if ($assoc->type() == 'oneToMany') {
-                        $count = $assoc->find()
-                        ->where([$assoc->aliasField($assoc->foreignKey()) => $id])
-                        ->count();
-                    } else {
-                        $modelAssociationTable = $assoc->junction();
-                        $count = $modelAssociationTable->find()
-                            ->where([$modelAssociationTable->aliasField($assoc->foreignKey()) => $id])
+            if (in_array($assoc->dependent(), $dependent)) {
+                if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
+                    if (!array_key_exists($assoc->alias(), $associations)) {
+                        $count = 0;
+                        if ($assoc->type() == 'oneToMany') {
+                            $count = $assoc->find()
+                            ->where([$assoc->aliasField($assoc->foreignKey()) => $id])
                             ->count();
-                    }
-                    $title = $assoc->name();
-                    $event = $assoc->dispatchEvent('ControllerAction.Model.transfer.getModelTitle', [], $this);
-                    if (!is_null($event->result)) {
-                        $title = $event->result;
-                    }
-
-                    $isAssociated = true;
-                    if ($extra->offsetExists('excludedModels')) {
-                        if (in_array($title, $extra['excludedModels'])) {
-                            $isAssociated = false;
+                        } else {
+                            $modelAssociationTable = $assoc->junction();
+                            $count = $modelAssociationTable->find()
+                                ->where([$modelAssociationTable->aliasField($assoc->foreignKey()) => $id])
+                                ->count();
                         }
-                    }
-                    if ($isAssociated) {
-                        $associations[$assoc->alias()] = ['model' => $title, 'count' => $count];
+                        $title = $assoc->name();
+                        $event = $assoc->dispatchEvent('ControllerAction.Model.transfer.getModelTitle', [], $this);
+                        if (!is_null($event->result)) {
+                            $title = $event->result;
+                        }
+
+                        $isAssociated = true;
+                        if ($extra->offsetExists('excludedModels')) {
+                            if (in_array($title, $extra['excludedModels'])) {
+                                $isAssociated = false;
+                            }
+                        }
+                        if ($isAssociated) {
+                            $associations[$assoc->alias()] = ['model' => $title, 'count' => $count];
+                        }
                     }
                 }
             }
