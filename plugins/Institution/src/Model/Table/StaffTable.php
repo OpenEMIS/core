@@ -648,17 +648,28 @@ class StaffTable extends AppTable {
 			$userId = $this->Auth->user('id');
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 
-			// // excluding positions where 'InstitutionStaff.end_date is NULL'
-			$excludePositions = $this->Positions->find('list');
-			$excludePositions->matching('InstitutionStaff', function ($q) {
-					return $q->where(['InstitutionStaff.end_date is NULL', 'InstitutionStaff.FTE' => 1]);
-				});
-			$excludePositions->where([$this->Positions->aliasField('institution_id') => $institutionId])
-				->toArray()
-				;
+			$excludePositions = $this->find();
+
+			//to exclude position which total FTE equal or more than 1 and has end_date either NULL or later than today.
+			$excludePositions = $excludePositions
+								->select([
+									'position_id' => $this->aliasField('institution_position_id'),
+									'total_fte' => $excludePositions->func()->sum($this->aliasField('FTE'))
+								])
+								->where([
+									$this->aliasField('institution_id') => $institutionId,
+									'OR' => [
+										'DATE(' . $this->aliasField('end_date') . ') > DATE(NOW())',
+										$this->aliasField('end_date') . ' IS NULL'
+									]
+								])
+								->group($this->aliasField('institution_position_id'))
+								->having('total_fte >= 1')
+								->toArray();
+			
 			$excludeArray = [];
 			foreach ($excludePositions as $key => $value) {
-				$excludeArray[] = $value;
+				$excludeArray[] = $value['position_id'];
 			}
 
 			if ($this->AccessControl->isAdmin()) {
