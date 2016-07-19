@@ -46,6 +46,7 @@ var ReportList = {
 
 					if (data['status'] != -1 && data['percent'] == 100 && data['modified'] != null) {
 						$(selector).find('.modified').html(data['modified']);
+						$(selector).find('.modified').next().html(data['expiry_date']);
 					} else if (data['status'] == -1) {
 						progressbar.closest('.progress').fadeOut(1000, function() {
 							$('[data-toggle="tooltip"]').removeClass('none').tooltip();
