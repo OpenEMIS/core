@@ -11,6 +11,7 @@ angular.module('kd.orm.svc', [])
         _contain: [],
         _finder: [],
         _where: {},
+        _orWhere: [],
         _group: [],
         _order: [],
         _limit: 0,
@@ -32,6 +33,7 @@ angular.module('kd.orm.svc', [])
             this._contain = [];
             this._finder = [];
             this._where = {};
+            this._orWhere = [];
             this._limit = 0;
             this._group = [];
             this._order = [];
@@ -73,6 +75,17 @@ angular.module('kd.orm.svc', [])
 
         where: function(where) {
             this._where = where;
+            return this;
+        },
+
+        orWhere: function(orWhere) {
+            if (angular.isObject(orWhere)) {
+                var paramsArray = [];
+                angular.forEach(orWhere, function(value, key) {
+                    this.push(key + ':' + value);
+                }, paramsArray);
+                this._orWhere.push(paramsArray.join(','));
+            }
             return this;
         },
 
@@ -158,7 +171,7 @@ angular.module('kd.orm.svc', [])
             }
             var url = this.toURL(customUrl);
             settings.url = url.replace('@type', type);
-
+            console.log(url);
             if (success == null && error == null) {
                 return $http(settings);
             }
@@ -190,6 +203,9 @@ angular.module('kd.orm.svc', [])
                 angular.forEach(this._where, function(value, key) {
                     this.push(key + '=' + value);
                 }, params);
+            }
+            if (this._orWhere.length > 0) {
+                params.push('_orWhere=' + this._orWhere.join(','));
             }
             params.push('_limit=' + this._limit);
             if (this._page > 0) {
