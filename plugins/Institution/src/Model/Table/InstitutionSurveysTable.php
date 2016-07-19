@@ -28,8 +28,6 @@ class InstitutionSurveysTable extends AppTable {
 	public $openStatusId = null;
 	public $closedStatusId = null;
 
-	private $workflowEvents = [];
-
 	public function initialize(array $config) {
 		parent::initialize($config);
 
@@ -66,10 +64,7 @@ class InstitutionSurveysTable extends AppTable {
     	$events = parent::implementedEvents();
     	$events['Model.custom.onUpdateActionButtons'] = 'onUpdateActionButtons';
     	$events['Workflow.getFilterOptions'] = 'getWorkflowFilterOptions';
-    	$events['Workflow.getEvents'] = 'getWorkflowEvents';
-    	foreach ($this->workflowEvents as $event) {
-    		$events[$event['value']] = $event['method'];
-    	}
+
     	$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
 
     	return $events;
@@ -146,12 +141,6 @@ class InstitutionSurveysTable extends AppTable {
 
 		return $list;
 	}
-
-    public function getWorkflowEvents(Event $event, ArrayObject $eventsObject) {
-    	$attr['text'] = __($attr['text']);
-    	$attr['description'] = __($attr['description']);
-		$eventsObject[] = $attr;
-    }
 
     public function triggerBuildSurveyRecordsShell($params) {
     	$cmd = ROOT . DS . 'bin' . DS . 'cake Survey ' . implode(',', $params);
