@@ -736,6 +736,18 @@ class HtmlFieldHelper extends Helper {
 			} else {
 				if ($options['multiple']) {
 					$fieldName = $attr['model'] . '.' . $attr['field'] . '._ids';
+					
+					//logic when there is no option on multiple chosen select which unselectable
+					if (isset($options['empty'])) {
+						unset($options['empty']);
+
+						$options['options'][] = [
+                            'text' => __('No options'), 
+                            'value' => '', 
+                            'disabled' => 'disabled'
+                        ];
+					}
+					
 				} else {
 					$fieldName = $attr['model'] . '.' . $attr['field'];
 				}
