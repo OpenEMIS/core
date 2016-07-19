@@ -23,16 +23,16 @@ class PreferencesController extends AppController {
 			'Identities' 			=> ['className' => 'User.Identities'],
 			'Languages' 			=> ['className' => 'User.UserLanguages'],
 			'Nationalities' 		=> ['className' => 'User.Nationalities'],
-			'Comments' 				=> ['className' => 'User.Comments'],
 			'Attachments' 			=> ['className' => 'User.Attachments'],
 			'History' 				=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 		];
 	}
 
     // CAv4
-    public function Nationalities() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
-    public function Languages() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
-    public function SpecialNeeds() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
+    public function Nationalities()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
+    public function Languages()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
+    public function SpecialNeeds()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
+    public function Comments()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
     // End
 
 	public function beforeFilter(Event $event) {
@@ -92,19 +92,19 @@ class PreferencesController extends AppController {
 			],
 			'UserNationalities' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Nationalities'],
-				'text' => __('Nationalities')	
+				'text' => __('Nationalities')
 			],
 			'Languages' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Languages'],
-				'text' => __('Languages')	
+				'text' => __('Languages')
 			],
 			'Comments' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Comments'],
-				'text' => __('Comments')	
+				'text' => __('Comments')
 			],
 			'Attachments' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Attachments'],
-				'text' => __('Attachments')	
+				'text' => __('Attachments')
 			],
 			'SpecialNeeds' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'SpecialNeeds'],
@@ -112,7 +112,7 @@ class PreferencesController extends AppController {
 			],
 			'History' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'History'],
-				'text' => __('History')	
+				'text' => __('History')
 			]
 		];
 		if (!$canChangeAdminPassword && $isSuperAdmin) {
