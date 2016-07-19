@@ -10,8 +10,9 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
 
     var StudentController = this;
     
+    $scope.currentStep = 1;
     $scope.pageSize = 10;
-    $scope.gridOptions = null;
+    $scope.internalGridOptions = null;
 
     $scope.selectedStudent;
     $scope.selectedStudentData;
@@ -77,7 +78,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
     });
 
     $scope.initGrid = function() {
-        $scope.gridOptions = {
+        $scope.internalGridOptions = {
             columnDefs: [
                 {
                     field:'id',
@@ -114,7 +115,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
             angularCompileRows: true,
             onGridReady: function() {
                 $scope.reloadDatasource();
-                $scope.gridOptions.api.sizeColumnsToFit();
+                $scope.internalGridOptions.api.sizeColumnsToFit();
             },
         };
     };
@@ -123,12 +124,13 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
         $scope.createNewDatasource();
     }
 
-    $scope.clearFilters = function () {
+    $scope.clearInternalSearchFilters = function () {
         $scope.filterOpenemisNo = '';
         $scope.filterFirstName = '';
         $scope.filterLastName = '';
         $scope.filterIdentityNumber = '';
         $scope.createNewDatasource();
+        $scope.currentStep = 1;
     }
 
     $scope.$watch('endDate', function (newValue) {
@@ -196,7 +198,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
             }
         };
 
-        $scope.gridOptions.api.setDatasource(dataSource);
+        $scope.internalGridOptions.api.setDatasource(dataSource);
     };
 
     $scope.onAddNewStudentClick = function() {
@@ -325,11 +327,22 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
         $scope.postForm();
     });
 
+    angular.element(document.querySelector('#wizard')).on('changed.fu.wizard', function(evt, data) {
+        $scope.currentStep = data.step;
+    });
+
     angular.element(document.querySelector('#wizard')).on('actionclicked.fu.wizard', function(evt, data) {
         // evt.preventDefault();
-        // console.log('angular.element ACTIONCLICKED');
+        console.log('angular.element ACTIONCLICKED');
         AlertSvc.reset($scope);
-        // console.log(angular.copy($scope.postResponse));
+
+        // To go to add student page if there is a student selected from the internal search
+        // or external search
+        if ($scope.selectedStudent && (data.step == 1 || data.step == 2) && data.direction == 'next') {
+            angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
+                step: 3
+            });
+        }
 
         if (angular.isDefined($scope.postResponse)){
             delete $scope.postResponse;

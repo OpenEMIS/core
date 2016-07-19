@@ -142,7 +142,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
             getRows: function (params) {
                 AlertSvc.reset($scope);
                 delete $scope.selectedStudent;
-                InstitutionsStudentsSvc.getStudentRecords(
+                InstitutionsStudentsSvc.getExternalStudentRecords(
                     {
                         startRow: params.startRow,
                         endRow: params.endRow,
@@ -211,6 +211,18 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
     $scope.getStudentData = function() {
         InstitutionsStudentsSvc.getStudentData($scope.selectedStudent)
             .then(function(studentData) {
+                if (!studentData.hasOwnProperty('name')) {
+                    studentData.name = studentData.first_name;
+                    if (studentData.middle_name != null) {
+                        studentData.name = studentData.name + ' ' + studentData.middle_name;
+                    }
+                    if (studentData.third_name != null) {
+                        studentData.name = studentData.name + ' ' + studentData.third_name;
+                    }
+                    if (studentData.last_name != null) {
+                        studentData.name = studentData.name + ' ' + studentData.last_name;
+                    }
+                }
                 studentData.date_of_birth = $scope.formatDate(studentData.date_of_birth);
                 $scope.selectedStudentData = studentData
                 return studentData;
@@ -304,6 +316,8 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
         data['start_date'] = $scope.startDate;
         data['end_date'] = $scope.endDate;
 
+        
+
         InstitutionsStudentsSvc.postEnrolledStudent(data).then(function(postResponse) {
             $scope.postResponse = postResponse.data;
             UtilsSvc.isAppendLoader(false);
@@ -318,6 +332,18 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
             AlertSvc.warning($scope, error);
         });
     };
+
+    angular.element(document.querySelector('#wizard')).on('changed.fu.wizard', function(evt, data) {
+        // console.log($scope.selectedStudent);
+        InstitutionsStudentsSvc.getStudentData($scope.selectedStudent)
+        .then(function(studentData){
+            InstitutionsStudentsSvc.addUser(studentData)
+            .then(function(stuData){
+                console.log(stuData);
+            });
+            
+        });
+    });
 
     angular.element(document.querySelector('#wizard')).on('finished.fu.wizard', function(evt, data) {
         // evt.preventDefault();
