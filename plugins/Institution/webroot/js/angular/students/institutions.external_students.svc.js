@@ -10,7 +10,7 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
 
     var service = {
         init: init,
-        getStudentRecords: getStudentRecords,
+        getExternalStudentRecords: getExternalStudentRecords,
         getInstitutionId: getInstitutionId,
         getDefaultIdentityType: getDefaultIdentityType,
         getAcademicPeriods: getAcademicPeriods,
@@ -19,7 +19,8 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         getColumnDefs: getColumnDefs,
         getStudentData: getStudentData,
         postEnrolledStudent: postEnrolledStudent,
-        getExternalSourceUrl: getExternalSourceUrl
+        getExternalSourceUrl: getExternalSourceUrl,
+        addUser: addUser
     };
 
     var models = {
@@ -49,7 +50,7 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
             .ajax({defer: true});
     };
 
-    function getStudentRecords(options) {
+    function getExternalStudentRecords(options) {
         var deferred = $q.defer();
 
         this.getExternalSourceUrl()
@@ -96,66 +97,54 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
             deferred.reject(error);
         });
 
-        // this.getExternalSourceUrl()
-        // .then(function(sourceUrl) {
-        //     var promises = [];
-        //     promises.push(sourceUrl.data);
-        //     return $q.all(promises);
-        // }, function(error) {
-        //     console.log('error:');
-        //     console.log(error);
-        //     deferred.reject(error);
-        // })
-        // .then(function(returnSource) {
-        //     console.log(returnSource);
-        //     var params = {
-        //         limit: options['endRow'] - options['startRow'],
-        //         page: options['endRow'] / (options['endRow'] - options['startRow']),
-        //     }
-
-        //     if (options.hasOwnProperty('conditions')) {
-        //         for (var key in options['conditions']) {
-        //             if (typeof options['conditions'][key] == 'string') {
-        //                 options['conditions'][key] = options['conditions'][key].trim();
-
-        //                 if (options['conditions'][key] !== '') {
-        //                     params[key] = options['conditions'][key];
-        //                 }
-        //             }
-        //         }
-        //     }
-
-
-
-        //     Students.reset();
-        //     Students
-        //         .page(params.page)
-        //         .limit(params.limit);
-        //     return Students.ajax({defer: true, url: 'http://localhost:8080/school/api/restful/SecurityUsers.json'});
-        // });
-
         return deferred.promise;
     };
 
     function getStudentData(id) {
-        var success = function(response, deferred) {
-            var studentData = response.data.data;
-            if (angular.isObject(studentData) && studentData.length > 0) {
-                deferred.resolve(studentData[0]);
-            } else {
-                deferred.reject('Student not found');
-            }
-        };
+        var deferred = $q.defer();
 
-        Students.reset();
-        return Students.select()
-            .contain(['Genders'])
-            .where(
-                {
-                    id: id
+        this.getExternalSourceUrl()
+        .then(function(sourceUrl) {
+            var source = sourceUrl.data;
+            var sourceUrl = null;
+            if (source.length > 0) {
+                sourceUrl = source[0].value;
+            }
+            var success = function(response, deferred) {
+                var studentData = response.data.data;
+                if (angular.isObject(studentData) && studentData.length > 0) {
+                    deferred.resolve(studentData[0]);
+                } else {
+                    deferred.reject('Student not found');
                 }
-            )
-            .ajax({success: success, defer: true});
+            };
+
+            Students.reset();
+            return Students.select()
+                .where(
+                    {
+                        id: id
+                    }
+                )
+                .ajax({success: success, defer: true, url: sourceUrl});
+        }, function(error) {
+            console.log(error);
+            deferred.reject(error);
+        }).then(function(response) {
+            deferred.resolve(response);
+        }, function(error) {
+            console.log(error);
+            deferred.reject(error);
+        });
+
+        return deferred.promise;
+    };
+
+    function addUser(userRecord) {
+        delete userRecord['id'];
+        delete userRecord['username'];
+        delete userRecord['password'];
+        return Students.save(userRecord);
     };
 
     function postEnrolledStudent(data) {

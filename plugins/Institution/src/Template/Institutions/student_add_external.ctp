@@ -20,11 +20,11 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
         <ul class="steps" style="margin-left: 0">
             <li data-step="1" class="active">
                 <div class="step-wrapper">
-                    Internal Search
+                    External Search
                     <span class="chevron"></span>
                 </div>
             </li>
-            <li data-step="2">
+            <li data-step="2" ng-disabled="!selectedStudent" ng-show="selectedStudent">
                 <div class="step-wrapper">
                     Add Students
                     <span class="chevron"></span>

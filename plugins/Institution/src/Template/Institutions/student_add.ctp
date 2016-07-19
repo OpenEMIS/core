@@ -24,7 +24,13 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <span class="chevron"></span>
                 </div>
             </li>
-            <li data-step="2">
+            <li data-step="2" ng-show="(!rowsThisPage && !initialLoad)">
+                <div class="step-wrapper">
+                    External Search
+                    <span class="chevron"></span>
+                </div>
+            </li>
+            <li data-step="3" ng-show="selectedStudent">
                 <div class="step-wrapper">
                     Add Students
                     <span class="chevron"></span>
@@ -40,7 +46,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
         </button>
         <button type="button" class="btn btn-default btn-prev" disabled="disabled">Previous</button>
         <button type="button" class="btn btn-default btn-next"
-            ng-model="selectedStudent" ng-disabled="!selectedStudent"
+            ng-model="selectedStudent"
             data-last="Complete">
             Next
         </button>
@@ -71,7 +77,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
 
                 <div class="search-action-btn margin-top-10 margin-bottom-10">
                     <button class="btn btn-default btn-xs" ng-click="reloadDatasource()">Filter</button>
-                    <button class="btn btn-outline btn-xs" ng-click="clearFilters()" type="reset" value="Clear">Clear</button>
+                    <button class="btn btn-outline btn-xs" ng-click="clearInternalSearchFilters()" type="reset" value="Clear">Clear</button>
                 </div>
             </div>
 
@@ -79,13 +85,52 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 <div ng-init="institution_id=<?= $institutionId; ?>">
                     <div class="scrolltabs sticky-content">
                         <div id="institution-student-table" class="table-wrapper">
-                            <div ng-if="gridOptions" ag-grid="gridOptions" class="ag-fresh ag-height-fixed"></div>
+                            <div ng-if="internalGridOptions" ag-grid="internalGridOptions" class="ag-fresh ag-height-fixed"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="step-pane sample-pane" data-step="2">
+        <div class="step-pane sample-pane active" data-step="2">
+            <div class="dropdown-filter">
+                <div class="filter-label">
+                    <i class="fa fa-filter"></i>
+                    <label>Filter</label>
+                </div>
+                <div class="text">
+                    <label>Openemis No.</label>
+                    <input ng-model="filterOpenemisNo" ng-keyup="$event.keyCode == 13 ? reloadDatasource() : null" type="text" id="" maxlength="150">
+                </div>
+                <div class="text">
+                    <label>First Name</label>
+                    <input ng-model="filterFirstName" ng-keyup="$event.keyCode == 13 ? reloadDatasource() : null" type="text" id="" maxlength="150">
+                </div>
+                <div class="text">
+                    <label>Last Name</label>
+                    <input ng-model="filterLastName" ng-keyup="$event.keyCode == 13 ? reloadDatasource() : null" type="text" id="" maxlength="150">
+                </div>
+                <div class="text">
+                    <label>{{ defaultIdentityTypeName }}</label>
+                    <input ng-model="filterIdentityNumber" ng-keyup="$event.keyCode == 13 ? reloadDatasource() : null" type="text" id="" maxlength="150">
+                </div>
+
+                <div class="search-action-btn margin-top-10 margin-bottom-10">
+                    <!-- <button class="btn btn-default btn-xs" ng-click="reloadDatasource()">Filter</button> -->
+                    <button class="btn btn-outline btn-xs" ng-click="clearInternalSearchFilters()" type="reset" value="Clear">Clear</button>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <div ng-init="institution_id=<?= $institutionId; ?>">
+                    <div class="scrolltabs sticky-content">
+                        <div id="institution-student-table" class="table-wrapper">
+                            <div ng-if="externalGridOptions" ag-grid="externalGridOptions" class="ag-fresh ag-height-fixed"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="step-pane sample-pane" data-step="3">
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
                 <div class="input string" ng-model="postResponse">
                     <label>Student</label>
