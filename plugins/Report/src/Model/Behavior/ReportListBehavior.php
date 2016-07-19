@@ -127,7 +127,7 @@ class ReportListBehavior extends Behavior {
 	public function onExcelGenerateComplete(Event $event, ArrayObject $settings) {
 		$process = $settings['process'];
 		$expiryDate = new Time();
-		$expiryDate->addDays(3);
+		$expiryDate->addDays(5);
 		$this->ReportProgress->updateAll(
 			['status' => Process::COMPLETED, 'file_path' => $settings['file_path'], 'expiry_date' => $expiryDate],
 			['id' => $process->id]
