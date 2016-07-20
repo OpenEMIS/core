@@ -12,7 +12,7 @@ class FieldOptionsController extends AppController {
     public function initialize() {
         parent::initialize();
         $this->loadComponent('FieldOption.FieldOption');
-        $this->ControllerAction->model('FieldOption.FieldOptionValues', ['!search'], ['deleteStrategy' => 'transfer']);
+        // $this->ControllerAction->model('FieldOption.FieldOptionValues', ['!search'], ['deleteStrategy' => 'transfer']);
     }
 
     public function beforeFilter(Event $event) {
@@ -33,6 +33,15 @@ class FieldOptionsController extends AppController {
         $this->Navigation->addCrumb($model->getHeader($alias));
 
         $this->set('contentHeader', $header);
+    }
+
+    public function index() {
+        $action = !is_null($this->request->query('field_option_id')) ? $this->request->query('field_option_id') : key($this->FieldOption->getFieldOptions());
+
+        $url = ['action' => $action];
+        $url = array_merge($url, $this->request->query);
+
+        return $this->redirect($url);
     }
 
     public function Genders()                       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
