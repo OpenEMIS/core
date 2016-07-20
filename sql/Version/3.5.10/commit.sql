@@ -1,3 +1,17 @@
+-- POCOR-3115
+DELETE FROM `security_role_functions` WHERE `security_function_id` = 1043;
+INSERT INTO `security_role_functions` (`id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `security_role_id`, `security_function_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT NULL, '0', '0', '1', '0', '0', `security_role_id`, '1043', NULL, NULL, '1', NOW()
+    FROM `security_role_functions`
+    WHERE `security_function_id` = 1012 AND `_add` = '1';
+
+DELETE FROM `security_role_functions` WHERE `security_function_id` = 1044;
+INSERT INTO `security_role_functions` (`id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `security_role_id`, `security_function_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT NULL, '0', '0', '1', '0', '0', `security_role_id`, '1044', NULL, NULL, '1', NOW()
+    FROM `security_role_functions`
+    WHERE `security_function_id` = 1016 AND `_add` = '1';
+
+
 -- POCOR-2634
 -- db_patches
 INSERT INTO `db_patches` (`issue`, `created`) VALUES('POCOR-2634', NOW());
@@ -134,6 +148,8 @@ WHERE `fov`.`field_option_id`=(SELECT `id` FROM `field_options` WHERE `code` = '
 UPDATE `field_option_values` set `visible`=0 WHERE `field_option_id`=(SELECT `id` FROM `field_options` WHERE `code` = 'StaffLeaveTypes');
 
 UPDATE `field_options` SET `plugin` = 'Staff' WHERE `code` = 'StaffLeaveTypes';
+UPDATE `workflow_models` SET `filter` = 'Staff.StaffLeaveTypes' WHERE `model` = 'Staff.Leaves';
+UPDATE `import_mapping` SET `lookup_plugin` = 'Staff' WHERE `model` = 'Institution.Staff' AND `column_name` = 'staff_type_id';
 
 -- Added by Jeff to fix incorrect type
 ALTER TABLE `contact_types` CHANGE `contact_option_id` `contact_option_id` INT(11) NOT NULL;

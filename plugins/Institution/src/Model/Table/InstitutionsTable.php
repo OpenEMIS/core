@@ -188,7 +188,7 @@ class InstitutionsTable extends AppTable  {
 		$name = $entity->name;
 
 		if ($this->AccessControl->check([$this->controller->name, 'dashboard'])) {
-			$name = $event->subject()->Html->link($entity->name, [
+			$name = $event->subject()->HtmlField->link($entity->name, [
 				'plugin' => $this->controller->plugin,
 				'controller' => $this->controller->name,
 				'action' => 'dashboard',
@@ -450,9 +450,7 @@ class InstitutionsTable extends AppTable  {
 		$query->join($options['query']['join']);
 
 		$queryParams = $request->query;
-		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
-			$query->order([$this->aliasField('name') => 'asc']);
-		}
+		$options['order'] = [$this->aliasField('name')];
 	}
 
 	public function indexAfterPaginate(Event $event, ResultSet $resultSet, Query $query) {
@@ -679,8 +677,13 @@ class InstitutionsTable extends AppTable  {
 		return $SecurityGroupUsers->getRolesByUserAndGroup($groupIds, $userId);
 	}
 
-	public function onBeforeRestrictDelete(Event $event, ArrayObject $options, $id, ArrayObject $extra)
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
-    	$extra['excludedModels'] = [$this->SecurityGroups->alias(), $this->InstitutionSurveys->alias(), $this->StudentSurveys->alias()];
+    	$extra['excludedModels'] = [
+    		$this->SecurityGroups->alias(), $this->InstitutionSurveys->alias(), $this->StudentSurveys->alias(),
+    		$this->StaffPositionProfiles->alias(), $this->InstitutionActivities->alias(), $this->StudentPromotion->alias(),
+    		$this->StudentAdmission->alias(), $this->StudentDropout->alias(), $this->TransferApprovals->alias(),
+            $this->CustomFieldValues->alias(), $this->CustomTableCells->alias()
+    	];
     }
 }
