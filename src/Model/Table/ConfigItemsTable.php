@@ -127,9 +127,7 @@ class ConfigItemsTable extends AppTable {
 			if ($entity->code == 'student_prefix' || $entity->code == 'staff_prefix' || $entity->code == 'guardian_prefix') {
 				$value = $data[$this->alias()]['value']['prefix'];
 				if (isset($data[$this->alias()]['value']['enable'])) {
-					$value .= ',1';
-				} else {
-					$value .= ',0';
+					$value .= ','.$data[$this->alias()]['value']['enable'];
 				}
 				$data[$this->alias()]['value'] = $value;
 			}
