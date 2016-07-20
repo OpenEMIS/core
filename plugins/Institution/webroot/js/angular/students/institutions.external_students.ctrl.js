@@ -53,7 +53,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
             };
 
             if ($scope.academicPeriodOptions.hasOwnProperty('selectedOption')) {
-                $scope.endDate = $scope.formatDate($scope.academicPeriodOptions.selectedOption.end_date);
+                $scope.endDate = InstitutionsStudentsSvc.formatDate($scope.academicPeriodOptions.selectedOption.end_date);
                 $scope.onChangeAcademicPeriod();
             }
 
@@ -223,7 +223,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                         studentData.name = studentData.name + ' ' + studentData.last_name;
                     }
                 }
-                studentData.date_of_birth = $scope.formatDate(studentData.date_of_birth);
+                studentData.date_of_birth = InstitutionsStudentsSvc.formatDate(studentData.date_of_birth);
                 $scope.selectedStudentData = studentData
                 return studentData;
             }, function(error) {
@@ -233,16 +233,6 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
             })
             ;
     };
-
-    $scope.formatDate = function(datetime) {
-        datetime = new Date(datetime);
-
-        var yyyy = datetime.getFullYear().toString();
-        var mm = (datetime.getMonth()+1).toString(); // getMonth() is zero-based
-        var dd  = datetime.getDate().toString();
-
-        return yyyy + '-' + (mm[1]?mm:"0"+mm[0]) + '-' + (dd[1]?dd:"0"+dd[0]); // padding
-    }
 
     $scope.formatDateReverse = function(datetime) {
         datetime = new Date(datetime);
@@ -258,7 +248,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
         AlertSvc.reset($scope);
 
         if ($scope.academicPeriodOptions.hasOwnProperty('selectedOption')) {
-            $scope.endDate = $scope.formatDate($scope.academicPeriodOptions.selectedOption.end_date);
+            $scope.endDate = InstitutionsStudentsSvc.formatDate($scope.academicPeriodOptions.selectedOption.end_date);
         }
 
         var startDatePicker = angular.element(document.getElementById('Students_start_date'));
@@ -300,49 +290,60 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
     };
 
     $scope.postForm = function() {
-        UtilsSvc.isAppendLoader(true);
 
-        AlertSvc.reset($scope);
-        var data = {student_id: $scope.selectedStudent};
-        // student_name validation
-        data['student_name'] = $scope.selectedStudent;
-        data['academic_period_id'] = ($scope.academicPeriodOptions.hasOwnProperty('selectedOption'))? $scope.academicPeriodOptions.selectedOption.id: '';
-        data['education_grade_id'] = ($scope.educationGradeOptions.hasOwnProperty('selectedOption'))? $scope.educationGradeOptions.selectedOption.education_grade_id: '';
-
-        if ($scope.classOptions.hasOwnProperty('selectedOption')) {
-            data['class'] = $scope.classOptions.selectedOption.id;
-        }
-
-        data['start_date'] = $scope.startDate;
-        data['end_date'] = $scope.endDate;
-
-        
-
-        InstitutionsStudentsSvc.postEnrolledStudent(data).then(function(postResponse) {
-            $scope.postResponse = postResponse.data;
-            UtilsSvc.isAppendLoader(false);
-            if (postResponse.data.error.length === 0) {
-                AlertSvc.success($scope, 'The record has been added successfully.');
-                $window.location.href = 'index'
-            } else {
-                AlertSvc.error($scope, 'The record is not added due to errors encountered.');
-            }
-        }, function(error) {
-            console.log(error);
-            AlertSvc.warning($scope, error);
-        });
-    };
-
-    angular.element(document.querySelector('#wizard')).on('changed.fu.wizard', function(evt, data) {
         // console.log($scope.selectedStudent);
         InstitutionsStudentsSvc.getStudentData($scope.selectedStudent)
         .then(function(studentData){
             InstitutionsStudentsSvc.addUser(studentData)
-            .then(function(stuData){
-                console.log(stuData);
+            .then(function(response) {
+                console.log(response);
+                var userId = response.data.id;
+                UtilsSvc.isAppendLoader(true);
+                AlertSvc.reset($scope);
+                var data = {student_id: userId};
+                // student_name validation
+                data['student_name'] = userId;
+                data['academic_period_id'] = ($scope.academicPeriodOptions.hasOwnProperty('selectedOption'))? $scope.academicPeriodOptions.selectedOption.id: '';
+                data['education_grade_id'] = ($scope.educationGradeOptions.hasOwnProperty('selectedOption'))? $scope.educationGradeOptions.selectedOption.education_grade_id: '';
+
+                if ($scope.classOptions.hasOwnProperty('selectedOption')) {
+                    data['class'] = $scope.classOptions.selectedOption.id;
+                }
+
+                data['start_date'] = $scope.startDate;
+                data['end_date'] = $scope.endDate;
+
+                
+
+                InstitutionsStudentsSvc.postEnrolledStudent(data).then(function(postResponse) {
+                    $scope.postResponse = postResponse.data;
+                    UtilsSvc.isAppendLoader(false);
+                    if (postResponse.data.error.length === 0) {
+                        AlertSvc.success($scope, 'The record has been added successfully.');
+                        $window.location.href = 'index'
+                    } else {
+                        console.log(postResponse.data.error);
+                        AlertSvc.error($scope, 'The record is not added due to errors encountered.');
+                    }
+                }, function(error) {
+                    console.log(error);
+                    AlertSvc.warning($scope, error);
+                });
+                
+            }, function(error) {
+                deferred.reject(error);
+                console.log(error);
             });
+            // .then(function(stuData){
+            //     console.log(stuData);
+            // });
             
         });
+        
+    };
+
+    angular.element(document.querySelector('#wizard')).on('changed.fu.wizard', function(evt, data) {
+
     });
 
     angular.element(document.querySelector('#wizard')).on('finished.fu.wizard', function(evt, data) {
