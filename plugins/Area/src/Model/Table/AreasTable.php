@@ -180,7 +180,7 @@ class AreasTable extends AppTable {
 	}
 
 	public function onGetName(Event $event, Entity $entity) {
-		return $event->subject()->Html->link($entity->name, [
+		return $event->subject()->HtmlField->link($entity->name, [
 			'plugin' => $this->controller->plugin,
 			'controller' => $this->controller->name,
 			'action' => $this->alias,

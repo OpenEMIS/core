@@ -117,6 +117,12 @@ class ReportsController extends AppController {
 			} else {
 				$data['modified'] = $ReportProgress->formatDateTime($entity->modified);
 			}
+
+			if (!is_null($entity->expiry_date)) {
+				$data['expiry_date'] = $ReportProgress->formatDateTime($entity->expiry_date);
+			} else {
+				$data['expiry_date'] = null;
+			}
 			$data['status'] = $entity->status;
 		}
 		echo json_encode($data);
