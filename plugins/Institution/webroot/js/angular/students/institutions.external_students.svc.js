@@ -20,7 +20,8 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         getStudentData: getStudentData,
         postEnrolledStudent: postEnrolledStudent,
         getExternalSourceUrl: getExternalSourceUrl,
-        addUser: addUser
+        addUser: addUser,
+        formatDate: formatDate
     };
 
     var models = {
@@ -144,7 +145,21 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         delete userRecord['id'];
         delete userRecord['username'];
         delete userRecord['password'];
-        return Students.save(userRecord);
+        userRecord['date_of_birth'] = this.formatDate(userRecord['date_of_birth']);
+        delete userRecord['created'];
+        delete userRecord['gender'];
+        userRecord['openemis_no'] = 'OPENEMIS-POCOR';
+        var deferred = $q.defer();
+
+        Students.save(userRecord)
+        .then(function(response) {
+            deferred.resolve(response.data);
+        }, function(error) {
+            deferred.reject(error);
+            console.log(error);
+        });
+
+        return deferred.promise;
     };
 
     function postEnrolledStudent(data) {
@@ -155,6 +170,8 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
             var institutionId = response[0];
             data['institution_id'] = institutionId;
             data['student_status_id'] = 1;
+
+            console.log(data);
 
             // console.log('posting...');
             // console.log(data);
@@ -192,6 +209,16 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         return IdentityTypes
             .find('DefaultIdentityType')
             .ajax({success: success, defer: true});
+    };
+
+    function formatDate(datetime) {
+        datetime = new Date(datetime);
+
+        var yyyy = datetime.getFullYear().toString();
+        var mm = (datetime.getMonth()+1).toString(); // getMonth() is zero-based
+        var dd  = datetime.getDate().toString();
+
+        return yyyy + '-' + (mm[1]?mm:"0"+mm[0]) + '-' + (dd[1]?dd:"0"+dd[0]); // padding
     };
 
     function getAcademicPeriods() {
