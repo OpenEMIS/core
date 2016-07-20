@@ -25,7 +25,7 @@ use Cake\Event\Event;
 
 class FieldOptionBehavior extends Behavior {
 	public function initialize(array $config) {
-		$this->_table->table('field_option_values');
+		// $this->_table->table('field_option_values');
 	}
 
 	public function getDefaultValue() {
