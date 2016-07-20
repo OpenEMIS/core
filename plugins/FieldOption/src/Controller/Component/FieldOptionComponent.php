@@ -26,88 +26,88 @@ class FieldOptionComponent extends Component
     private $controller;
     private $fieldOptions = [
     // Institution
-        'Genders' => 'Institution.Genders',
-        'NetworkConnectivities' => 'Institution.NetworkConnectivities',
-        'Localities' => 'Institution.Localities',
-        'Ownerships' => 'Institution.Ownerships',
-        'Providers' => 'Institution.Providers',
-        'Sectors' => 'Institution.Sectors',
-        'Statuses' => 'Institution.Statuses',
-        'Types' => 'Institution.Types',
+        'Genders' => ['className' => 'Institution.Genders', 'parent' => 'Institution'],
+        'NetworkConnectivities' => ['className' => 'Institution.NetworkConnectivities', 'parent' => 'Institution'],
+        'Localities' => ['className' => 'Institution.Localities', 'parent' => 'Institution'],
+        'Ownerships' => ['className' => 'Institution.Ownerships', 'parent' => 'Institution'],
+        'Providers' => ['className' => 'Institution.Providers', 'parent' => 'Institution'],
+        'Sectors' => ['className' => 'Institution.Sectors', 'parent' => 'Institution'],
+        'Statuses' => ['className' => 'Institution.Statuses', 'parent' => 'Institution'],
+        'Types' => ['className' => 'Institution.Types', 'parent' => 'Institution'],
 
     // Student
-        'StudentAbsenceReasons' => 'Institution.StudentAbsenceReasons',
-        'StudentBehaviourCategories' => 'Student.StudentBehaviourCategories',
-        'StudentTransferReasons' => 'Student.StudentTransferReasons',
-        'StudentDropoutReasons' => 'Student.StudentDropoutReasons',
+        'StudentAbsenceReasons' => ['className' => 'Institution.StudentAbsenceReasons', 'parent' => 'Student'],
+        'StudentBehaviourCategories' => ['className' => 'Student.StudentBehaviourCategories', 'parent' => 'Student'],
+        'StudentTransferReasons' => ['className' => 'Student.StudentTransferReasons', 'parent' => 'Student'],
+        'StudentDropoutReasons' => ['className' => 'Student.StudentDropoutReasons', 'parent' => 'Student'],
 
     // Staff
-        'StaffAbsenceReasons' => 'Institution.StaffAbsenceReasons',
-        'StaffBehaviourCategories' => 'Staff.StaffBehaviourCategories',
-        'StaffLeaveTypes' => 'Staff.StaffLeaveTypes',
-        'StaffTypes' => 'Staff.StaffTypes',
-        'StaffTrainingCategories' => 'Staff.StaffTrainingCategories',
+        'StaffAbsenceReasons' => ['className' => 'Institution.StaffAbsenceReasons', 'parent' => 'Staff'],
+        'StaffBehaviourCategories' => ['className' => 'Staff.StaffBehaviourCategories', 'parent' => 'Staff'],
+        'StaffLeaveTypes' => ['className' => 'Staff.StaffLeaveTypes', 'parent' => 'Staff'],
+        'StaffTypes' => ['className' => 'Staff.StaffTypes', 'parent' => 'Staff'],
+        'StaffTrainingCategories' => ['className' => 'Staff.StaffTrainingCategories', 'parent' => 'Staff'],
 
     // Finance
-        'Banks' => 'FieldOption.Banks',
-        'BankBranches' => 'FieldOption.BankBranches',
-        'FeeTypes' => 'FieldOption.FeeTypes',
+        'Banks' => ['className' => 'FieldOption.Banks', 'parent' => 'Finance'],
+        'BankBranches' => ['className' => 'FieldOption.BankBranches', 'parent' => 'Finance'],
+        'FeeTypes' => ['className' => 'FieldOption.FeeTypes', 'parent' => 'Finance'],
 
     // Guardian
-        'GuardianRelations' => 'Student.GuardianRelations',
+        'GuardianRelations' => ['className' => 'Student.GuardianRelations', 'parent' => 'Guardian'],
 
     // Position
-        'StaffPositionGrades' => 'Institution.StaffPositionGrades',
-        'StaffPositionTitles' => 'Institution.StaffPositionTitles',
+        'StaffPositionGrades' => ['className' => 'Institution.StaffPositionGrades', 'parent' => 'Position'],
+        'StaffPositionTitles' => ['className' => 'Institution.StaffPositionTitles', 'parent' => 'Position'],
 
     // Qualification
-        'QualificationLevels' => 'FieldOption.QualificationLevels',
-        'QualificationSpecialisations' => 'FieldOption.QualificationSpecialisations',
+        'QualificationLevels' => ['className' => 'FieldOption.QualificationLevels', 'parent' => 'Qualification'],
+        'QualificationSpecialisations' => ['className' => 'FieldOption.QualificationSpecialisations', 'parent' => 'Qualification'],
 
     // Quality
-        'QualityVisitTypes' => 'FieldOption.QualityVisitTypes',
+        'QualityVisitTypes' => ['className' => 'FieldOption.QualityVisitTypes', 'parent' => 'Quality'],
 
     // Salary
-        'SalaryAdditionTypes' => 'Staff.SalaryAdditionTypes',
-        'SalaryDeductionTypes' => 'Staff.SalaryDeductionTypes',
+        'SalaryAdditionTypes' => ['className' => 'Staff.SalaryAdditionTypes', 'parent' => 'Salary'],
+        'SalaryDeductionTypes' => ['className' => 'Staff.SalaryDeductionTypes', 'parent' => 'Salary'],
 
     // Training
-        'TrainingAchievementTypes' => 'Training.TrainingAchievementTypes',
-        'TrainingCourseTypes' => 'Training.TrainingCourseTypes',
-        'TrainingFieldStudies' => 'Training.TrainingFieldStudies',
-        'TrainingLevels' => 'Training.TrainingLevels',
-        'TrainingModeDeliveries' => 'Training.TrainingModeDeliveries',
-        'TrainingNeedCategories' => 'Training.TrainingNeedCategories',
-        'TrainingPriorities' => 'Training.TrainingPriorities',
-        'TrainingProviders' => 'Training.TrainingProviders',
-        'TrainingRequirements' => 'Training.TrainingRequirements',
-        'TrainingResultTypes' => 'Training.TrainingResultTypes',
-        'TrainingSpecialisations' => 'Training.TrainingSpecialisations',
+        'TrainingAchievementTypes' => ['className' => 'Training.TrainingAchievementTypes', 'parent' => 'Training'],
+        'TrainingCourseTypes' => ['className' => 'Training.TrainingCourseTypes', 'parent' => 'Training'],
+        'TrainingFieldStudies' => ['className' => 'Training.TrainingFieldStudies', 'parent' => 'Training'],
+        'TrainingLevels' => ['className' => 'Training.TrainingLevels', 'parent' => 'Training'],
+        'TrainingModeDeliveries' => ['className' => 'Training.TrainingModeDeliveries', 'parent' => 'Training'],
+        'TrainingNeedCategories' => ['className' => 'Training.TrainingNeedCategories', 'parent' => 'Training'],
+        'TrainingPriorities' => ['className' => 'Training.TrainingPriorities', 'parent' => 'Training'],
+        'TrainingProviders' => ['className' => 'Training.TrainingProviders', 'parent' => 'Training'],
+        'TrainingRequirements' => ['className' => 'Training.TrainingRequirements', 'parent' => 'Training'],
+        'TrainingResultTypes' => ['className' => 'Training.TrainingResultTypes', 'parent' => 'Training'],
+        'TrainingSpecialisations' => ['className' => 'Training.TrainingSpecialisations', 'parent' => 'Training'],
 
     // Others
-        'ContactTypes' => 'User.ContactTypes',
-        'EmploymentTypes' => 'FieldOption.EmploymentTypes',
-        'ExtracurricularTypes' => 'FieldOption.ExtracurricularTypes',
-        'IdentityTypes' => 'FieldOption.IdentityTypes',
-        'Languages' => 'Languages',
-        'LicenseTypes' => 'FieldOption.LicenseTypes',
-        'SpecialNeedTypes' => 'FieldOption.SpecialNeedTypes',
-        'SpecialNeedDifficulties' => 'FieldOption.SpecialNeedDifficulties',
-        'Countries' => 'FieldOption.Countries',
-        'Nationalities' => 'FieldOption.Nationalities',
-        'CommentTypes' => 'User.CommentTypes',
+        'ContactTypes' => ['className' => 'User.ContactTypes', 'parent' => 'Others'],
+        'EmploymentTypes' => ['className' => 'FieldOption.EmploymentTypes', 'parent' => 'Others'],
+        'ExtracurricularTypes' => ['className' => 'FieldOption.ExtracurricularTypes', 'parent' => 'Others'],
+        'IdentityTypes' => ['className' => 'FieldOption.IdentityTypes', 'parent' => 'Others'],
+        'Languages' => ['className' => 'Languages', 'parent' => 'Others'],
+        'LicenseTypes' => ['className' => 'FieldOption.LicenseTypes', 'parent' => 'Others'],
+        'SpecialNeedTypes' => ['className' => 'FieldOption.SpecialNeedTypes', 'parent' => 'Others'],
+        'SpecialNeedDifficulties' => ['className' => 'FieldOption.SpecialNeedDifficulties', 'parent' => 'Others'],
+        'Countries' => ['className' => 'FieldOption.Countries', 'parent' => 'Others'],
+        'Nationalities' => ['className' => 'FieldOption.Nationalities', 'parent' => 'Others'],
+        'CommentTypes' => ['className' => 'User.CommentTypes', 'parent' => 'Others'],
 
     // Infrastructure
-        'InfrastructureOwnerships' => 'FieldOption.InfrastructureOwnerships',
-        'InfrastructureConditions' => 'FieldOption.InfrastructureConditions',
+        'InfrastructureOwnerships' => ['className' => 'FieldOption.InfrastructureOwnerships', 'parent' => 'Infrastructure'],
+        'InfrastructureConditions' => ['className' => 'FieldOption.InfrastructureConditions', 'parent' => 'Infrastructure'],
 
     // Health
-        'AllergyTypes' => 'Health.AllergyTypes',
-        'Conditions' => 'Health.Conditions',
-        'ConsultationTypes' => 'Health.ConsultationTypes',
-        'ImmunizationTypes' => 'Health.ImmunizationTypes',
-        'Relationships' => 'Health.Relationships',
-        'TestTypes' => 'Health.TestTypes'
+        'AllergyTypes' => ['className' => 'Health.AllergyTypes', 'parent' => 'Health'],
+        'Conditions' => ['className' => 'Health.Conditions', 'parent' => 'Guardian'],
+        'ConsultationTypes' => ['className' => 'Health.ConsultationTypes', 'parent' => 'Health'],
+        'ImmunizationTypes' => ['className' => 'Health.ImmunizationTypes', 'parent' => 'Health'],
+        'Relationships' => ['className' => 'Health.Relationships', 'parent' => 'Health'],
+        'TestTypes' => ['className' => 'Health.TestTypes', 'parent' => 'Health'],
     ];
 
     // Is called before the controller's beforeFilter method.
@@ -127,9 +127,23 @@ class FieldOptionComponent extends Component
         return $this->fieldOptions;
     }
 
+    // public function getParentFieldOptions()
+    // {
+    //     $fieldOptions = [];
+    //     $data = $this->fieldOptions;
+    //     foreach ($data as $obj) {
+    //         $parent = __($obj['parent']);
+    //         if ($obj['parent']) {
+    //             $fieldOptions[$parent][$obj['className']] = $obj['className'];
+    //         }
+    //     }
+    //     return $fieldOptions;
+    // }
+
     public function getClassName($key)
     {
-        return $this->fieldOptions[$key];
+        // pr($this->fieldOptions[$key]['className']);
+        return $this->fieldOptions[$key]['className'];
     }
 }
 

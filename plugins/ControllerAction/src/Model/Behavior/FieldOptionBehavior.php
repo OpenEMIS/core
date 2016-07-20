@@ -20,6 +20,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
+use Cake\Utility\Inflector;
 use Cake\Event\Event;
 
 class FieldOptionBehavior extends Behavior {
@@ -94,18 +95,15 @@ class FieldOptionBehavior extends Behavior {
 	}
 
 	private function buildFieldOptions() {
-		$model = TableRegistry::get('FieldOption.FieldOptions');
+		$data = $this->_table->FieldOption->getFieldOptions();
 		$fieldOptions = [];
-		$data = $model->find()->find('visible')->find('order')->all();
-
-		foreach ($data as $obj) {
-			$key = $obj->id;
-
-			$parent = __($obj->parent);
+		foreach ($data as $key => $obj) {
+			$parent = __($obj['parent']);
 			if (!array_key_exists($parent, $fieldOptions)) {
 				$fieldOptions[$parent] = [];
 			}
-			$fieldOptions[$parent][$key] = __($obj->name);
+			$keyName = Inflector::humanize(Inflector::underscore($key));
+			$fieldOptions[$parent][$key] = __($keyName);
 		}
 		return $fieldOptions;
 	}
@@ -138,10 +136,10 @@ class FieldOptionBehavior extends Behavior {
 	public function beforeAction(Event $event, ArrayObject $extra) {
 		$model = $this->_table;
 		$fieldOptions = $this->buildFieldOptions();
-		$selectedOption = $this->_table->queryString('field_option_id', $fieldOptions);
+		$selectedOption = $model->alias;
 		$this->addFieldOptionControl($extra, ['fieldOptions' => $fieldOptions, 'selectedOption' => $selectedOption]);
 
-		$this->checkFieldOption($event, $selectedOption); // deprecated
+		// $this->checkFieldOption($event, $selectedOption); // deprecated
 
 		$model->field('default', ['options' => $model->getSelectOptions('general.yesno'), 'after' => 'visible']);
 		$model->field('editable', ['options' => $model->getSelectOptions('general.yesno'), 'visible' => ['index' => true], 'after' => 'default']);
