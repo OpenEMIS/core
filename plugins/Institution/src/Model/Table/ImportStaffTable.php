@@ -179,11 +179,35 @@ class ImportStaffTable extends AppTable
     {
         $institutionId = ($this->_institution instanceof Entity) ? $this->_institution->id : false;
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        $modelData = $lookedUpTable->find()
-                                ->where(['institution_id'=>$institutionId])
-                                ->contain(['StaffPositionTitles', 'Statuses'])
-                                ;
-
+        
+        //select necessary field for position which total FTE not used of not fully used based on the end_date of the staff
+        $modelData = $lookedUpTable->find();
+        $modelData = $modelData
+                    ->select([
+                        $lookedUpTable->aliasField('position_no'),
+                        'StaffPositionTitles.name',
+                        'Statuses.name',
+                        $lookedUpTable->aliasField('is_homeroom'),
+                        'total_fte' => $modelData->func()->sum('InstitutionStaff.FTE')
+                    ])
+                    ->contain(['StaffPositionTitles', 'Statuses'])
+                    ->leftJoin(['InstitutionStaff' => 'institution_staff'], [ 
+                        'InstitutionStaff.institution_position_id = ' . $lookedUpTable->aliasField('id'),
+                        'OR' => [
+                            'DATE(InstitutionStaff.end_date) > DATE(NOW())',
+                            'InstitutionStaff.end_date IS NULL'
+                        ]
+                    ])
+                    ->where([$lookedUpTable->aliasField('institution_id') => $institutionId])                   
+                    ->group($lookedUpTable->aliasField('id'))
+                    ->having([
+                        'OR' => [
+                            'total_fte < 1',
+                            'total_fte IS NULL' //FTE not used at all
+                        ]
+                    ])
+                    ->toArray();
+        
         $codeLabel = $this->getExcelLabel($lookedUpTable, 'code');
         $nameLabel = $this->getExcelLabel($lookedUpTable, 'name');
         $statusLabel = $this->getExcelLabel($lookedUpTable, 'status');
