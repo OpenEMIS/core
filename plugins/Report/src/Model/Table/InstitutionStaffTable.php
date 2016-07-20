@@ -69,7 +69,7 @@ class InstitutionStaffTable extends AppTable  {
 			]
 		);
 
-		$query->contain(['Users.Genders', 'Institutions.Areas', 'Positions.StaffPositionTitles'])->select([
+		$query->contain(['Users.Genders', 'Institutions.Areas', 'Positions.StaffPositionTitles', 'Institutions.Types'])->select([
 			'openemis_no' => 'Users.openemis_no',
 			'first_name' => 'Users.first_name',
 			'middle_name' => 'Users.middle_name',
@@ -79,7 +79,8 @@ class InstitutionStaffTable extends AppTable  {
 			'gender' => 'Genders.name',
 			'area_name' => 'Areas.name',
 			'area_code' => 'Areas.code',
-			'position_title_teaching' => 'StaffPositionTitles.type'
+			'position_title_teaching' => 'StaffPositionTitles.type', 
+			'institution_type' => 'Types.name'
 		]);
 
 		if (!$superAdmin) {
@@ -135,6 +136,13 @@ class InstitutionStaffTable extends AppTable  {
 		$extraField[] = [
 			'key' => 'Staff.institution_id',
 			'field' => 'institution_id',
+			'type' => 'integer',
+			'label' => '',
+		];
+
+		$extraField[] = [
+			'key' => 'Institutions.institution_type_id',
+			'field' => 'institution_type',
 			'type' => 'integer',
 			'label' => '',
 		];
