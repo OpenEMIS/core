@@ -571,10 +571,7 @@ class UserGroupsTable extends AppTable {
 				]
 			]);
 		}
-
-		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
-			$query->order([$this->aliasField('name') => 'asc']);
-		}
+		$options['order'] = [$this->aliasField('name')];
 
 		$search = $this->ControllerAction->getSearchKey();
 

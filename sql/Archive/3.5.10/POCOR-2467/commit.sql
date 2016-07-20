@@ -75,3 +75,5 @@ WHERE `fov`.`field_option_id`=(SELECT `id` FROM `field_options` WHERE `code` = '
 UPDATE `field_option_values` set `visible`=0 WHERE `field_option_id`=(SELECT `id` FROM `field_options` WHERE `code` = 'StaffLeaveTypes');
 
 UPDATE `field_options` SET `plugin` = 'Staff' WHERE `code` = 'StaffLeaveTypes';
+UPDATE `workflow_models` SET `filter` = 'Staff.StaffLeaveTypes' WHERE `model` = 'Staff.Leaves';
+UPDATE `import_mapping` SET `lookup_plugin` = 'Staff' WHERE `model` = 'Institution.Staff' AND `column_name` = 'staff_type_id';
