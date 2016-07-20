@@ -11,24 +11,28 @@ class SelectOptionsTamperingComponent extends Component {
     public function startup(Event $event) {
         // Select options form tampering
         $session = $this->request->session();
-        if ($session->check('FormTampering') && $this->request->is(['post', 'put', 'delete'])) {
+        if ($session->check('FormTampering')) {
+            if ($this->request->is(['post', 'put', 'delete'])) {
+                $formTamperingSession = $session->read('FormTampering');
+                $formTamperingReload = $session->read('FormTamperingReload');
+                $requestData = $this->request->data;
 
-            $formTamperingSession = $session->read('FormTampering');
-            $formTamperingReload = $session->read('FormTamperingReload');
-            $requestData = $this->request->data;
-
-            $msg = [];
-            if ($requestData !== $formTamperingReload) {
-                $msg = $this->multiDiff($formTamperingSession, $requestData);
-            }
-            if (!empty($msg)) {
-                $exceptionMessage = implode(', ', $msg);
-                throw new AuthSecurityException($exceptionMessage.' - '.self::DEFAULT_MESSAGE);
+                $msg = [];
+                if ($requestData !== $formTamperingReload) {
+                    $msg = $this->multiDiff($formTamperingSession, $requestData);
+                }
+                if (!empty($msg)) {
+                    $exceptionMessage = implode(', ', $msg);
+                    throw new AuthSecurityException($exceptionMessage.' - '.self::DEFAULT_MESSAGE);
+                } else {
+                    $session->delete('FormTampering');
+                    $session->write('FormTamperingReload', $requestData);
+                }
             } else {
                 $session->delete('FormTampering');
-                $session->write('FormTamperingReload', $requestData);
+                $session->delete('FormTamperingReload');
             }
-        }
+        } 
     }
 
     public function multiDiff($arr1, $arr2, $keyName = '') {
