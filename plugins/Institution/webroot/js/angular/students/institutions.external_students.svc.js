@@ -76,7 +76,7 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                     if (typeof options['conditions'][key] == 'string') {
                         options['conditions'][key] = options['conditions'][key].trim();
                         if (options['conditions'][key] !== '') {
-                            params[key] = options['conditions'][key];
+                            params[key] = '_' + options['conditions'][key] + '_';
                         }
                     }
                 }
@@ -84,7 +84,6 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                     Students.orWhere(params);
                 }
             }
-            
             
             return Students.ajax({defer: true, url: sourceUrl});
         }, function(error) {
@@ -121,6 +120,7 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
 
             Students.reset();
             return Students.select()
+                .contain(['Genders'])
                 .where(
                     {
                         id: id
