@@ -9,13 +9,14 @@ use Cake\Utility\Inflector;
 use Cake\ORM\TableRegistry;
 
 class FieldOptionsController extends AppController {
-    public function initialize() {
+    public function initialize()
+    {
         parent::initialize();
         $this->loadComponent('FieldOption.FieldOption');
-        // $this->ControllerAction->model('FieldOption.FieldOptionValues', ['!search'], ['deleteStrategy' => 'transfer']);
     }
 
-    public function beforeFilter(Event $event) {
+    public function beforeFilter(Event $event)
+    {
         parent::beforeFilter($event);
         $header = 'Field Options';
 
@@ -26,7 +27,8 @@ class FieldOptionsController extends AppController {
         $this->set('contentHeader', __($header));
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
+    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    {
         $alias = $model->alias;
         $header = __('Field Options') . ' - ' . $model->getHeader($alias);
 
@@ -35,7 +37,8 @@ class FieldOptionsController extends AppController {
         $this->set('contentHeader', $header);
     }
 
-    public function index() {
+    public function index()
+    {
         $action = !is_null($this->request->query('field_option_id')) ? $this->request->query('field_option_id') : key($this->FieldOption->getFieldOptions());
 
         $url = ['action' => $action];

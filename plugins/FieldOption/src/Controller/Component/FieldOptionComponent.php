@@ -103,7 +103,7 @@ class FieldOptionComponent extends Component
 
     // Health
         'AllergyTypes' => ['className' => 'Health.AllergyTypes', 'parent' => 'Health'],
-        'Conditions' => ['className' => 'Health.Conditions', 'parent' => 'Guardian'],
+        'Conditions' => ['className' => 'Health.Conditions', 'parent' => 'Health'],
         'ConsultationTypes' => ['className' => 'Health.ConsultationTypes', 'parent' => 'Health'],
         'ImmunizationTypes' => ['className' => 'Health.ImmunizationTypes', 'parent' => 'Health'],
         'Relationships' => ['className' => 'Health.Relationships', 'parent' => 'Health'],
@@ -127,22 +127,8 @@ class FieldOptionComponent extends Component
         return $this->fieldOptions;
     }
 
-    // public function getParentFieldOptions()
-    // {
-    //     $fieldOptions = [];
-    //     $data = $this->fieldOptions;
-    //     foreach ($data as $obj) {
-    //         $parent = __($obj['parent']);
-    //         if ($obj['parent']) {
-    //             $fieldOptions[$parent][$obj['className']] = $obj['className'];
-    //         }
-    //     }
-    //     return $fieldOptions;
-    // }
-
     public function getClassName($key)
     {
-        // pr($this->fieldOptions[$key]['className']);
         return $this->fieldOptions[$key]['className'];
     }
 }
