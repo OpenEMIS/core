@@ -40,7 +40,6 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         InstitutionClasses: 'Institution.InstitutionClasses',
         IdentityTypes: 'FieldOption.IdentityTypes',
         ExternalDataSourceAttributes: 'ExternalDataSourceAttributes',
-        IdentityTypes: 'FieldOption.IdentityTypes',
         Identities: 'User.Identities'
     };
 
@@ -141,12 +140,16 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
             var data = response.data;
             var promises = [];
             for (var i = 0; i < identitiesRecord.length; i++) {
+                var identityTypeId = null;
                 for(var j = 0; j < data.length ; j++) {
                     if (identitiesRecord[i].identity_type.name == data[j].name) {
-                        promises.push(data[j].id);
-                    } else {
-                        promises.push(vm.addIdentityType(identitiesRecord[i].identity_type));
+                        identityTypeId = data[j].id;
                     }
+                }
+                if (identityTypeId != null) {
+                    promises.push(identityTypeId);
+                } else {
+                    promises.push(vm.addIdentityType(identitiesRecord[i].identity_type));
                 }
             }
             return $q.all(promises);
@@ -213,7 +216,7 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         var deferred = $q.defer();
         var vm = this;
         // please remove this line (for debugging purposes only)
-        // userRecord['openemis_no'] = 'OPENEMIS-55562';
+        // userRecord['openemis_no'] = 'OPENEMIS-55563';
         vm.getUserRecord(userRecord['openemis_no'])
         .then(function(response) {
             if (response.data.length > 0) {
@@ -270,7 +273,7 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
             deferred.reject(error);
             console.log(error);
         });
-        
+
         return deferred.promise;
     };
 
