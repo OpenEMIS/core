@@ -81,14 +81,6 @@ class UndoStudentStatusTable extends AppTable {
 		$Navigation->addCrumb('Undo');
 	}
 
-	public function addOnInitialize(Event $event, Entity $entity) {
-		$selectedGrade = !is_null($this->request->query('grade')) ? $this->request->query('grade') : -1;
-		$selectedStatus = !is_null($this->request->query('status')) ? $this->request->query('status') : -1;
-
-		$this->request->query['grade'] = $selectedGrade;
-		$this->request->query['status'] = $selectedStatus;
-	}
-
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		$studentIds = [];
 		$errors = $entity->errors();
@@ -260,7 +252,6 @@ class UndoStudentStatusTable extends AppTable {
 					$this->StudentStatuses->aliasField('id IN') => $codes
 				])
 				->toArray();
-			$selectedStatus = $request->query['status'];
 
 			$attr['options'] = $statusOptions;
 			$attr['onChangeReload'] = 'changeStatus';
