@@ -454,6 +454,10 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
         // External Search
         if (data.step == 2) {
             $scope.reloadExternalDatasource();
+            $scope.selectedStudent = null;
+        } else if (data.step == 1) {
+            $scope.reloadInternalDatasource();
+            $scope.selectedStudent = null;
         }
     });
 
@@ -465,9 +469,10 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
         // or external search
         if ($scope.selectedStudent && (data.step == 1 || data.step == 2) && data.direction == 'next') {
             angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
-                step: 3
+                step: 2
             });
         }
+        console.log(data);
 
         if (angular.isDefined($scope.postResponse)){
             delete $scope.postResponse;
