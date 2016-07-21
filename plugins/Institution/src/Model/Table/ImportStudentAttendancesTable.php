@@ -42,6 +42,7 @@ class ImportStudentAttendancesTable extends AppTable {
             'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
             'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
             'Model.import.onImportPopulateUsersData' => 'onImportPopulateUsersData',
+            'Model.import.onImportPopulateAbsenceTypesData' => 'onImportPopulateAbsenceTypesData',
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
             'Model.Navigation.breadcrumb' => 'onGetBreadcrumb'
         ];
@@ -168,6 +169,28 @@ class ImportStudentAttendancesTable extends AppTable {
     //      }
     //  }
     // }
+
+    public function onImportPopulateAbsenceTypesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $modelData = $lookedUpTable->find('all')->select(['id', 'name', $lookupColumn]);
+
+        $nameHeader = $this->getExcelLabel($lookedUpTable, 'name');
+        $columnHeader = $this->getExcelLabel($lookedUpTable, $lookupColumn);
+        $data[$columnOrder]['lookupColumn'] = 2;
+        $data[$columnOrder]['data'][] = [
+            $nameHeader,
+            $columnHeader
+        ];
+
+        if (!empty($modelData)) {
+            foreach($modelData->toArray() as $row) {
+                $data[$columnOrder]['data'][] = [
+                    $row->name,
+                    $row->$lookupColumn
+                ];
+            }
+        }
+    }
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
         if (empty($tempRow['student_id'])) {
