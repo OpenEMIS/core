@@ -12,29 +12,47 @@ class SelectOptionsTamperingComponent extends Component {
         // Select options form tampering
         $session = $this->request->session();
         if ($session->check('FormTampering')) {
-            $formTamperingSession = $session->read('FormTampering');
-            $requestData = $this->request->data;
-            // pr('here');
-            $formTamperingKeys = array_keys($formTamperingSession);
-            $msg = [];
-            foreach ($formTamperingKeys as $formTamperingKey) {
-                $intersectFields = [];
-                if (isset($requestData[$formTamperingKey])) {
-                    $intersectFields = array_intersect_key($requestData[$formTamperingKey], $formTamperingSession[$formTamperingKey]);
+            if ($this->request->is(['post', 'put', 'delete'])) {
+                $formTamperingSession = $session->read('FormTampering');
+                $formTamperingReload = $session->read('FormTamperingReload');
+                $requestData = $this->request->data;
+
+                $msg = [];
+                if ($requestData !== $formTamperingReload) {
+                    $msg = $this->multiDiff($formTamperingSession, $requestData);
                 }
-                
-                foreach ($intersectFields as $key => $value) {
-                    if (!in_array($value, $formTamperingSession[$formTamperingKey][$key])) {
-                        $msg[] = "$formTamperingKey.$key";
+                if (!empty($msg)) {
+                    $exceptionMessage = implode(', ', $msg);
+                    throw new AuthSecurityException($exceptionMessage.' - '.self::DEFAULT_MESSAGE);
+                } else {
+                    $session->delete('FormTampering');
+                    $session->write('FormTamperingReload', $requestData);
+                }
+            } else {
+                $session->delete('FormTampering');
+                $session->delete('FormTamperingReload');
+            }
+        } 
+    }
+
+    public function multiDiff($arr1, $arr2, $keyName = '') {
+        $result = [];
+        foreach ($arr1 as $k => $v){
+            $tmpKeyName = "$keyName.$k";
+            if(isset($arr2[$k])) {
+                if (is_array($v) && is_array($arr2[$k])) {
+                    $diffResult = $this->multiDiff($v, $arr2[$k], $tmpKeyName);
+                    $result = $result + $diffResult;
+                } else {
+                    // all comparison value to string so that in_array strict mode can check
+                    // if both values are the same
+                    $v = array_map('strval', $v);
+                    if (!in_array(strval($arr2[$k]), $v, true)) {
+                        $result[] = substr($tmpKeyName, 1);
                     }
                 }
             }
-
-            if (!empty($msg)) {
-                $exceptionMessage = implode(', ', $msg);
-
-                throw new AuthSecurityException($exceptionMessage.' - '.self::DEFAULT_MESSAGE);
-            }
-        } 
+        }
+        return $result;
     }
 }

@@ -1,4 +1,4 @@
-/* HYPERLINK v.1.0.0 */
+/* HYPERLINK v.1.0.1 */
 
 a,
 a:active,
@@ -15,6 +15,11 @@ a:hover {
     text-decoration: none;
 }
 
+a.btn-red:hover,
+a.btn-green:hover {
+    text-decoration: none;
+}
+
 .panel-body a:hover {
-	text-decoration: underline;
+    text-decoration: underline;
 }

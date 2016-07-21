@@ -17,6 +17,25 @@ class RestfulController extends BaseController
     public function initialize() {
         parent::initialize();
         $this->loadComponent('Csrf');
+        $this->Auth->config('authenticate', [
+            'Form' => [
+                'userModel' => 'User.Users',
+                'passwordHasher' => [
+                    'className' => 'Fallback',
+                    'hashers' => ['Default', 'Legacy']
+                ]
+            ]
+        ]);
+        $this->Auth->config('loginAction', [
+            'plugin' => 'User',
+            'controller' => 'Users',
+            'action' => 'login'
+        ]);
+        $this->Auth->config('logoutRedirect', [
+            'plugin' => 'User',
+            'controller' => 'Users',
+            'action' => 'login'
+        ]);
     }
 
     public function beforeFilter(Event $event)
