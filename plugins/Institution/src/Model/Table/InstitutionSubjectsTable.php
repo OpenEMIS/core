@@ -25,9 +25,9 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 		$this->belongsTo('Institutions', 				['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('EducationSubjects', 			['className' => 'Education.EducationSubjects']);
 		
-		$this->hasMany('ClassSubjects', 		['className' => 'Institution.InstitutionClassSubjects', 'dependent' => true]);
-		$this->hasMany('SubjectStudents', 	['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true]);
-		$this->hasMany('SubjectStaff', 		['className' => 'Institution.InstitutionSubjectStaff', 'dependent' => true]);
+		$this->hasMany('ClassSubjects', 		['className' => 'Institution.InstitutionClassSubjects', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('SubjectStudents', 	['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('SubjectStaff', 		['className' => 'Institution.InstitutionSubjectStaff', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->belongsToMany('Classes', [
 			'className' => 'Institution.InstitutionClasses',
@@ -40,8 +40,7 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 			'className' => 'User.Users',
 			'through' => 'Institution.InstitutionSubjectStaff',
 			'foreignKey' => 'institution_subject_id',
-			'targetForeignKey' => 'staff_id',
-			'conditions' => ['InstitutionSubjectStaff.status' => 1],
+			'targetForeignKey' => 'staff_id'
 		]);
 
 		$this->belongsToMany('Students', [
@@ -65,6 +64,7 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
 		$validator->requirePresence('name');
 		return $validator;
 	}
@@ -354,6 +354,22 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 		$this->fields['class_name']['options'] = $classOptions;
 	}
 
+    //// POCOR-2781 - Remove 'status' from institution_subject_staff
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
+        // handle association subject_staff separately - from logic in editBeforePatch()
+        $subjectId = ($entity->has('id'))? $entity->id: null;
+        $subjectStaffData = (array_key_exists($this->alias(), $requestData) && array_key_exists('_subject_staff_data', $requestData[$this->alias()]))? $requestData[$this->alias()]['_subject_staff_data']: [];
+        if (!empty($subjectId) && !empty($subjectStaffData)) {
+            foreach ($subjectStaffData as $key => $value) {
+                if ($value['status'] == 1) {
+                    $this->SubjectStaff->addStaffToSubject($value['staff_id'], $subjectId);
+                }  else {
+                    $this->SubjectStaff->removeStaffFromSubject($value['staff_id'], $subjectId);
+                }
+            }
+        }
+    }
+
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra) {
 		$process = function ($model, $entity) use ($data, $extra) {
 			list($error, $subjects, $data) = $model->prepareEntityObjects($model, $data, $extra);
@@ -506,6 +522,8 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 		}
 
 		$checkedStaff = [];
+        // POCOR-2781 - Remove 'status' from institution_subject_staff
+        // note that this has been converted from saving of 'association data' to saving using editAfterSave
 		foreach($entity->subject_staff as $key => $record) {
 			$k = $record->staff_id;
 			if (	array_key_exists('teachers', $data[$this->alias()])	
@@ -513,21 +531,23 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 				&&  !empty($data[$this->alias()]['teachers']['_ids'])
 			) {
 				if (!in_array($k, $data[$this->alias()]['teachers']['_ids'])) {
-					$data[$this->alias()]['subject_staff'][$k] = [
+					$data[$this->alias()]['_subject_staff_data'][$k] = [
 						'id' => $record->id,
+                        'staff_id' => $k,
 						'status' => 0 
 					];
 				} else {
 					$checkedStaff[] = $k;
-					$data[$this->alias()]['subject_staff'][$k] = [
+					$data[$this->alias()]['_subject_staff_data'][$k] = [
 						'id' => $record->id,
 						'staff_id' => $k,
 						'status' => 1
 					];
 				}
 			} else {
-				$data[$this->alias()]['subject_staff'][$k] = [
+				$data[$this->alias()]['_subject_staff_data'][$k] = [
 					'id' => $record->id,
+                    'staff_id' => $k,
 					'status' => 0 
 				];
 			}
@@ -538,7 +558,7 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 			) {
 			$balance = array_diff($data[$this->alias()]['teachers']['_ids'], $checkedStaff);
 			foreach ($balance as $bal) {
-				$data[$this->alias()]['subject_staff'][$bal] = [
+				$data[$this->alias()]['_subject_staff_data'][$bal] = [
 					'staff_id' => $bal,
 					'status' => 1
 				];
@@ -1168,5 +1188,8 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 		}
 	}
 
-	
+	//called by ControllerActionHelper incase extra search highlighted
+	// public function getSearchableFields(Event $event, $fields, ArrayObject $searchableFields) {
+	// 	$searchableFields[] = "education_subject_id";
+	// }
 }

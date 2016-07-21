@@ -20,26 +20,17 @@ class TrainingSessionsTable extends AppTable {
 	use HtmlTrait;
 	use ImportExcelTrait;
 
-	private $_contain = ['Trainers', 'Trainees'];
+	private $_contain = ['Trainers.Users', 'Trainees'];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('Courses', ['className' => 'Training.TrainingCourses', 'foreignKey' => 'training_course_id']);
 		$this->belongsTo('TrainingProviders', ['className' => 'Training.TrainingProviders', 'foreignKey' => 'training_provider_id']);
+		// revert back the association for Trainers to hasMany to handle saving of External Trainers
+		$this->hasMany('Trainers', ['className' => 'Training.TrainingSessionTrainers', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('SessionResults', ['className' => 'Training.TrainingSessionResults', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('TraineeResults', ['className' => 'Training.TrainingSessionTraineeResults', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		
-		// For these two belongsToMany relation, dependent is set to false.
-		// If dependent is set to true, the actual record in User.Users will be removed when a training session is removed.
-		$this->belongsToMany('Trainers', [
-			'className' => 'User.Users',
-			'joinTable' => 'training_session_trainers',
-			'foreignKey' => 'training_session_id',
-			'targetForeignKey' => 'trainer_id',
-			'through' => 'Training.TrainingSessionTrainers',
-			'dependent' => false
-		]);
 		$this->belongsToMany('Trainees', [
 			'className' => 'User.Users',
 			'joinTable' => 'training_sessions_trainees',
@@ -87,6 +78,7 @@ class TrainingSessionsTable extends AppTable {
 		} else if ($action == 'edit') {
 			$tableHeaders[] = ''; // for delete column
 			$Form = $event->subject()->Form;
+			$Form->unlockField('TrainingSessions.trainees');
 
 			if ($this->request->is(['get'])) {
 				if (!array_key_exists($alias, $this->request->data)) {
@@ -170,8 +162,7 @@ class TrainingSessionsTable extends AppTable {
 			'associated' => [
 				'Trainers' => ['validate' => false],
 				'Trainees' => ['validate' => false],
-				'Trainers._joinData',
-				'Trainees._joinData',
+				'Trainees._joinData'
 			],
 		];
 
@@ -192,12 +183,6 @@ class TrainingSessionsTable extends AppTable {
 			}
 			if (!isset($data['TrainingSessions']['trainers'])) {
 				$data['TrainingSessions']['trainers'] = [];
-			} else {
-				foreach ($data['TrainingSessions']['trainers'] as $key => $trainer) {
-					if (isset($trainer['_joinData']['trainer_id'])) {
-						$data['TrainingSessions']['trainers'][$key]['id'] = $trainer['_joinData']['trainer_id'];
-					}
-				}
 			}
 		}
 	}
@@ -217,12 +202,9 @@ class TrainingSessionsTable extends AppTable {
 
 	public function addEditOnAddTrainer(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$dataOptions = [
-			'_joinData' => [
-				'type' => key($this->getSelectOptions($this->aliasField('trainer_types'))),
-				'trainer_id' => '',
-				'name' => '',
-				'training_session_id' => $entity->id
-			]
+			'type' => key($this->getSelectOptions($this->aliasField('trainer_types'))),
+			'trainer_id' => '',
+			'name' => ''
 		];
 		$data[$this->alias()]['trainers'][] = $dataOptions;
 
@@ -261,6 +243,31 @@ class TrainingSessionsTable extends AppTable {
 
 	public function editOnInitialize(Event $event, Entity $entity) {
 		$this->request->query['course'] = $entity->training_course_id;
+	}
+
+	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+		$model = $this;
+    	$process = function($model, $entity) use ($data) {
+    		$errors = $entity->errors();
+
+    		if (empty($errors)) {
+				// always manual delete all trainers and re-insert
+				$trainerRecords = $this->Trainers
+					->find()
+					->where([$this->Trainers->aliasField('training_session_id') => $entity->id])
+					->all();
+
+				foreach ($trainerRecords as $key => $obj) {
+					$this->Trainers->delete($obj);
+				}
+
+    			return $model->save($entity);
+    		} else {
+    			return false;
+    		}
+    	};
+
+		return $process;
 	}
 
 	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
@@ -387,7 +394,7 @@ class TrainingSessionsTable extends AppTable {
 
 	public function onUpdateFieldTrainers(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add' || $action == 'edit') {
-			$Users = $this->Trainers;
+			$Users = $this->Trainers->Users;
 			$trainerOptions = $Users
 				->find('list', ['keyField' => 'id', 'valueField' => 'name_with_id'])
 				->where([

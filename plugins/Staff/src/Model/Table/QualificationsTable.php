@@ -4,6 +4,7 @@ namespace Staff\Model\Table;
 use ArrayObject;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use Cake\I18n\Date;
 use Cake\ORM\Entity;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
@@ -14,7 +15,7 @@ class QualificationsTable extends ControllerActionTable {
 		$this->table('staff_qualifications');
 		parent::initialize($config);
 
-		$this->addBehavior('ControllerAction.FileUpload', ['size' => '2MB', 'contentEditable' => false, 'allowable_file_types' => 'all']);
+		$this->addBehavior('ControllerAction.FileUpload', ['size' => '2MB', 'contentEditable' => false, 'allowable_file_types' => 'all', 'useDefaultName' => true]);
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('QualificationLevels', ['className' => 'FieldOption.QualificationLevels']);
@@ -47,7 +48,7 @@ class QualificationsTable extends ControllerActionTable {
 		$this->fields['qualification_level_id']['type'] = 'select';
 		$this->fields['qualification_specialisation_id']['type'] = 'select';
 
-		$this->field('graduate_year');
+		$this->field('graduate_year', ['type' => 'select']);
 		$this->field('qualification_institution_id');
 
 		// temporary disable
@@ -125,10 +126,13 @@ class QualificationsTable extends ControllerActionTable {
 	}
 
 	public function onUpdateFieldGraduateYear(Event $event, array $attr, $action, Request $request) {
-		if ($action == 'add') {
-			$attr['attr'] = [
-				'onkeypress' => 'return utility.integerCheck(event)'
-			];
+		//generate manually year 50 to now.
+		$currentYear = new Date();
+		$currentYear = $currentYear->format('Y');
+		if (($action == 'add') || ($action == 'edit')) {
+			for ($i=1950;$i<=$currentYear;$i++) {
+				$attr['options'][$i] = $i;
+			}
 		}
 		return $attr;
 	}

@@ -28,9 +28,9 @@ class InstitutionClassesTable extends ControllerActionTable {
 		$this->belongsTo('InstitutionShifts',		['className' => 'Institution.InstitutionShifts', 	'foreignKey' => 'institution_shift_id']);
 		$this->belongsTo('Institutions', 			['className' => 'Institution.Institutions', 		'foreignKey' => 'institution_id']);
 
-		$this->hasMany('ClassGrades', 				['className' => 'Institution.InstitutionClassGrades', 'dependent' => true]);
-		$this->hasMany('ClassStudents', 			['className' => 'Institution.InstitutionClassStudents', 'dependent' => true]);
-		$this->hasMany('SubjectStudents', 			['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true]);
+		$this->hasMany('ClassGrades', 				['className' => 'Institution.InstitutionClassGrades', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('ClassStudents', 			['className' => 'Institution.InstitutionClassStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('SubjectStudents', 			['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->belongsToMany('EducationGrades', [
 			'className' => 'Education.EducationGrades',
@@ -64,6 +64,8 @@ class InstitutionClassesTable extends ControllerActionTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 			->requirePresence('name')
 			->add('name', 'ruleUniqueNamePerAcademicPeriod', [
@@ -324,22 +326,11 @@ class InstitutionClassesTable extends ControllerActionTable {
     }
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
-		/**
-		 * Added on PHPOE-1762 (extra feature)
-		 */
-		$sort = $this->queryString('sort', ['name'=>'name']);
-		$direction = $this->queryString('direction', ['asc'=>'asc', 'desc'=>'desc']);
-		/**/
-
 		$query
 		->find('byGrades', ['education_grade_id' => $extra['selectedEducationGradeId']])
 		->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
-		/**
-		 * Added on PHPOE-1762 (extra feature)
-		 */
-		->order([$this->aliasField('name')=>$direction])
-		/**/
 		;
+		$extra['options']['order'] = [$this->aliasField('name')];
 	}
 
     public function findByGrades(Query $query, array $options) {

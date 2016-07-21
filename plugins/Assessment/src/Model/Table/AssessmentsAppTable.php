@@ -3,6 +3,7 @@ namespace Assessment\Model\Table;
 
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\Validation\Validator;
 
 class AssessmentsAppTable extends AppTable {
 	use OptionsTrait;
@@ -25,6 +26,11 @@ class AssessmentsAppTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->_initializeFields();
+	}
+
+	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+		return $validator;
 	}
 
 	private function _initializeFields() {

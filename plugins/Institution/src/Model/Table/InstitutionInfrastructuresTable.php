@@ -55,7 +55,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 	}
 
 	public function onGetCode(Event $event, Entity $entity) {
-		return $event->subject()->Html->link($entity->code, [
+		return $event->subject()->HtmlField->link($entity->code, [
 			'plugin' => $this->controller->plugin,
 			'controller' => $this->controller->name,
 			'action' => $this->alias,
@@ -137,7 +137,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 				$after = $field;
 				foreach ($list as $key => $infrastructure) {
 					$this->ControllerAction->field($field.$key, [
-						'type' => 'readonly', 
+						'type' => 'readonly',
 						'attr' => ['label' => $infrastructure->_matchingData['Levels']->name],
 						'value' => $infrastructure->code_name,
 						'after' => $after
@@ -162,13 +162,15 @@ class InstitutionInfrastructuresTable extends AppTable {
 	}
 
 	private function getAutogenerateCode($institutionId, $infrastructureLevelId, $parentId) {
-		if (!empty($parentId)) {
-			$conditions[$this->aliasField('parent_id')] = $parentId;
-		} else {
-			$conditions[$this->aliasField('institution_id')] = $institutionId;
-			$conditions[$this->aliasField('infrastructure_level_id')] = $infrastructureLevelId;
+
+		if (!empty($parentId)) { //if have parent, then count number of child of parent
+			$conditions[] = $this->aliasField('parent_id') . " = " . $parentId;
+		} else { // no parent, means 1st level (parent = null), then count number of infra of the institution.
+			$conditions[] = $this->aliasField('parent_id') . ' IS NULL';
+			$conditions[] = $this->aliasField('institution_id') . " = " . $institutionId;
 		}
-		// getting suffix of code by counting 
+
+		// getting suffix of code by counting
 		$indexData = $this->find()
 			->where($conditions)
 			->count();
@@ -178,7 +180,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 		// if 1 character prepend '0'
 		$indexData = (strlen($indexData) == 1)? '0'.$indexData: $indexData;
 		if (empty($parentId)) {
-			// hasParent
+			// no Parent then get institutionID followed by counter
 			$institutionData = $this->Institutions->find()
 				->where([
 					$this->Institutions->aliasField($this->Institutions->primaryKey()) => $institutionId
@@ -191,7 +193,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 				return $indexData;
 			}
 		} else {
-			// hasParent
+			// has Parent then get the ID of the parent then followed by counter
 			$parentData = $this->find()
 				->where([
 					$this->aliasField($this->primaryKey()) => $parentId
@@ -202,7 +204,6 @@ class InstitutionInfrastructuresTable extends AppTable {
 			if (!empty($parentData)) {
 				return $parentData->code . $indexData;
 			} else {
-				// no parent data just return the 
 				return $indexData;
 			}
 		}
@@ -221,15 +222,15 @@ class InstitutionInfrastructuresTable extends AppTable {
 		$query->where([
 			$this->aliasField('institution_id') => $entity->institution_id,
 			$this->aliasField('parent_id') => $entity->parent_id
-		]);	
+		]);
 	}
 
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id, ArrayObject $extra) {
 		$entity = $this->get($id);
 		$transferTo = $this->request->data['transfer_to'];
 		$transferFrom = $id;
 
-		if (empty($transferTo) && $this->ControllerAction->hasAssociatedRecords($this, $entity)) {
+		if (empty($transferTo) && $this->ControllerAction->hasAssociatedRecords($this, $entity, $extra)) {
 			$event->stopPropagation();
 			$this->Alert->error('general.deleteTransfer.restrictDelete');
 			$url = $this->ControllerAction->url('remove');
@@ -252,7 +253,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 
 	public function onUpdateFieldParentId(Event $event, array $attr, $action, Request $request) {
 		$parentId = $this->request->query('parent');
-		
+
 		if (is_null($parentId)) {
 			$attr['type'] = 'hidden';
 			$attr['value'] = null;
@@ -414,7 +415,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 		$ConfigItems = TableRegistry::get('ConfigItems');
 		$lowestYear = $ConfigItems->value('lowest_year');
 		$currentYear = date("Y");
-		
+
 		for($i=$currentYear; $i >= $lowestYear; $i--){
 			$yearOptions[$i] = $i;
 		}

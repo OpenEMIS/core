@@ -26,6 +26,8 @@ class InstitutionGradesTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 			->allowEmpty('end_date')
  			->add('end_date', 'ruleCompareDateReverse', [
@@ -67,7 +69,7 @@ class InstitutionGradesTable extends AppTable {
 ******************************************************************************************************************/
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$query->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels']);
-		$query->order(['EducationLevels.order', 'EducationCycles.order', 'EducationProgrammes.order', 'EducationGrades.order']);
+		$options['order'] = ['EducationLevels.order', 'EducationCycles.order', 'EducationProgrammes.order', 'EducationGrades.order'];
 	}
 
 
@@ -453,4 +455,20 @@ class InstitutionGradesTable extends AppTable {
 		return (($a->toUnixString() >= $b->toUnixString()) ? $a : $b);
 	}
 
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+	{
+		$EducationGrades = TableRegistry::get('Education.EducationGrades');
+		$educationGradeId = $entity->education_grade_id;
+		$entity->name = $EducationGrades->get($educationGradeId)->name;
+        $institutionId = $entity->institution_id;
+
+        $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+        $associatedStudentRecordsCount = $InstitutionStudents->find()
+            ->where([
+                $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
+                $InstitutionStudents->aliasField('institution_id') => $institutionId
+            ])
+            ->count();
+        $extra['associatedRecords'][] = ['model' => 'InstitutionStudents', 'count' => $associatedStudentRecordsCount];
+	}
 }

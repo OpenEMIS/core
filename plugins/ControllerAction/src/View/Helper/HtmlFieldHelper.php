@@ -10,8 +10,10 @@ use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
+use Cake\I18n\I18n;
 use Cake\View\Helper\IdGeneratorTrait;
 use Cake\View\NumberHelper;
+use Cake\Network\Session;
 
 use Cake\Log\Log;
 
@@ -94,8 +96,8 @@ class HtmlFieldHelper extends Helper {
 		$method = 'onGet' . Inflector::camelize($type) . 'Element';
 		$eventKey = 'ControllerAction.Model.' . $method;
 		$event = $this->dispatchEvent($this->table, $eventKey, $method, ['action' => $action, 'entity' => $data, 'attr' => $attr, 'options' => $options]);
-		
-		if (!empty($event->result)) {
+
+		if (isset($event->result)) {
 			$html = $event->result;
 		} else {
 			if (method_exists($this, $type)) {
@@ -228,6 +230,7 @@ class HtmlFieldHelper extends Helper {
 	public function select($action, Entity $data, $attr, $options=[]) {
 		$value = '';
 		$field = $attr['field'];
+		$arrayKeys = [];
 		if ($action == 'index' || $action == 'view') {
 			if (!empty($attr['options'])) {
 				if ($data->$field === '') {
@@ -257,69 +260,65 @@ class HtmlFieldHelper extends Helper {
 				}
 			}
 			if (isset($attr['options'])) {
-				if (empty($attr['options'])) {
-					//$options['empty'] = isset($attr['empty']) ? $attr['empty'] : $this->getLabel('general.noData');
-				} else {
+				if (!empty($attr['options'])) {
 					if (isset($attr['default'])) {
 						$options['default'] = $attr['default'];
-					} else {
-						// if (!empty($this->request->data)) {
-						// 	if(!empty($this->request->data->$attr['field'])) {
-						// 		$options['default'] = $this->request->data->$attr['field'];
-						// 	}
-						// }
 					}
-					if (!isset($attr['translate']) || (isset($attr['translate']) && !$attr['translate'])) {
-						$list = [];
-						foreach ($attr['options'] as $key => $opt) {
-							if (is_array($opt) && isset($opt['text'])) {
-								$opt['text'] = __($opt['text']);
-								$list[$key] = $opt;
-							} else if (is_array($opt)) {
-								$subList = [];
-								foreach ($opt as $k => $subOption) {
-									if (is_array($subOption) && isset($subOption['text'])) {
-										$subOption['text'] = __($subOption['text']);
-										$subList[$k] = $subOption;
-									} else {
-										$subList[$k] = __($subOption);
-									}
-								}
-								$list[__($key)] = $subList;
-							} else {
-								$list[$key] = __($opt);
-							}
-						}
-						$attr['options'] = $list;
-					}
-					$options['options'] = $attr['options'];
 				}
+				$options['options'] = $attr['options'];
 			}
 			if (isset($attr['attr'])) {
 				$options = array_merge($options, $attr['attr']);
 			}
 
-			// get rid of options that obsolete and not the default
-			// if (!empty($attr['options'])) {
-			// 	reset($attr['options']);
-			// 	$first_key = key($attr['options']);
-			// 	if (is_array($attr['options'][$first_key])) {
-			// 		foreach ($options['options'] as $okey => $ovalue) {
-			// 			if (isset($ovalue['obsolete']) && $ovalue['obsolete'] == '1') {
-			// 				if (!array_key_exists('default', $options) || $ovalue['value']!=$options['default']) {
-			// 					unset($options['options'][$okey]);
-			// 				}
-			// 			}
-			// 		}
-			// 	}
-			// }
-
 			$fieldName = $attr['model'] . '.' . $attr['field'];
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
 			}
-			$value = $this->Form->input($fieldName, $options);
+			$value = $this->secureSelect($fieldName, $options);
 		}
+		return $value;
+	}
+
+	public function secureSelect($fieldName, $options)
+	{
+		$arrayKeys = [];
+		$list = [];
+		foreach ($options['options'] as $key => $opt) {
+			if (is_array($opt) && isset($opt['text'])) {
+				$opt['text'] = __($opt['text']);
+				$list[$key] = $opt;
+				if (!in_array('disabled', $opt, true)) {
+					if (isset($opt['value'])) {
+						$arrayKeys[] = $opt['value'];
+					} else {
+						$arrayKeys[] = $key;
+					}
+				}
+			} else if (is_array($opt)) {
+				$subList = [];
+				foreach ($opt as $k => $subOption) {
+					if (is_array($subOption) && isset($subOption['text'])) {
+						$subOption['text'] = __($subOption['text']);
+						$subList[$k] = $subOption;
+					} else {
+						$subList[$k] = __($subOption);
+					}
+				}
+				$list[__($key)] = $subList;
+				$arrayKeys = array_merge($arrayKeys, array_keys($subList));
+			} else {
+				$list[$key] = __($opt);
+				$arrayKeys[] = $key;
+			}
+		}
+		$options['options'] = $list;
+		if (isset($options['empty'])) {
+			$arrayKeys[] = '';
+		}
+		$session = $this->request->session();
+		$session->write('FormTampering.'.$fieldName, $arrayKeys);
+		$value = $this->Form->input($fieldName, $options);
 		return $value;
 	}
 
@@ -471,7 +470,7 @@ class HtmlFieldHelper extends Helper {
 																							'showRemoveButton' => $showRemoveButton,
 																							'defaultImgMsg' => $defaultImgMsg,
 																							'defaultImgView' => $defaultImgView]);
-
+			$name = $attr['model'].'.'.$attr['field'];
 		} 
 
 		return $value;
@@ -553,7 +552,7 @@ class HtmlFieldHelper extends Helper {
 		$columnAttr = $schema->column($field);
 		$defaultDate = true;
 		if ($columnAttr['null'] == true) {
-			$defaultDate = false;
+			$defaultDate = date('d-m-Y');
 		}
 
 		if (!isset($attr['date_options'])) {
@@ -619,6 +618,7 @@ class HtmlFieldHelper extends Helper {
 			}
 			$value = $this->_View->element('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
 			$this->includes['datepicker']['include'] = true;
+			$fieldName = $attr['model'] . '.' . $attr['field'];
 		}
 		return $value;
 	}
@@ -665,16 +665,6 @@ class HtmlFieldHelper extends Helper {
 			if (array_key_exists('fieldName', $attr)) {
 				$attr['id'] = $this->_domId($attr['fieldName']);
 			}
-			$model = split('\.', $attr['model']);
-			$newModel = '';
-			foreach($model as $part) {
-				if (empty($newModel)) {
-					$newModel = $part;
-				} else {
-					$newModel .= '['.$part.']';
-				}
-			}
-			$attr['model'] = $newModel;
 			$attr['time_options'] = array_merge($_options, $attr['time_options']);
 
 			if (!array_key_exists('value', $attr)) {
@@ -703,6 +693,7 @@ class HtmlFieldHelper extends Helper {
 			}
 			$value = $this->_View->element('ControllerAction.bootstrap-timepicker/timepicker_input', ['attr' => $attr]);
 			$this->includes['timepicker']['include'] = true;
+			$fieldName = $attr['model'] . '.' . $attr['field'];
 		}
 
 		return $value;
@@ -710,11 +701,14 @@ class HtmlFieldHelper extends Helper {
 
 	public function chosenSelect($action, Entity $data, $attr, $options=[]) {
 		$value = '';
-
 		$_options = [
 			'class' => 'chosen-select',
-			'multiple' => true
+			'multiple' => 'true',
+			'type' => 'select'
 		];
+		if (I18n::locale() == 'ar') {
+			$_options['class'] = 'chosen-select chosen-rtl';
+		}
 
 		if ($action == 'index' || $action == 'view') {
 			$value = $data->$attr['field'];
@@ -740,7 +734,11 @@ class HtmlFieldHelper extends Helper {
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
 			} else {
-				$fieldName = $attr['model'] . '.' . $attr['field'] . '._ids';
+				if ($options['multiple']) {
+					$fieldName = $attr['model'] . '.' . $attr['field'] . '._ids';
+				} else {
+					$fieldName = $attr['model'] . '.' . $attr['field'];
+				}
 			}
 			$value = $this->Form->input($fieldName, $options);
 		}
@@ -761,13 +759,14 @@ class HtmlFieldHelper extends Helper {
 			$buttons = $this->_View->get('ControllerAction');
 			$buttons = $buttons['buttons'];
 			$action = $buttons['download']['url'];
-			$value = $this->Html->link($data->$name, $action);
+			$value = $this->link($data->$name, $action);
 		} else if ($action == 'edit') {
 			$this->includes['jasny']['include'] = true;
 			if (isset($data->$name)) {
 				$attr['value'] = $data->$name;
 			}
 			$value = $this->_View->element('ControllerAction.file_input', ['attr' => $attr]);
+			$fieldName = $attr['model'] . '.' . $attr['field'];
 		}
 		return $value;
 	}
@@ -810,6 +809,8 @@ class HtmlFieldHelper extends Helper {
 			}
 
 			$value = $this->_View->element('ControllerAction.autocomplete', ['attr' => $attr, 'options' => $options]);
+			$fieldName = $attr['model'] . '.' . $attr['field'];
+			$this->Form->unlockField($fieldName);
 		}
 		return $value;
 	}
@@ -834,6 +835,26 @@ class HtmlFieldHelper extends Helper {
 
 		$html = sprintf($html, $attr['label'], $headers, $cells);
 		return $html;
+	}
+
+	public function escapeHtmlEntity($text)
+	{
+		$htmlInfo = htmlentities($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+		$htmlInfo = str_replace('/', '&#x2F;', $htmlInfo);
+		return $htmlInfo;
+	}
+
+	public function decodeEscapeHtmlEntity($encodedText)
+	{
+		$htmlInfo = str_replace('&#x2F;', '/', $encodedText);
+		$htmlInfo = html_entity_decode($htmlInfo, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+		return $htmlInfo;
+	}
+
+	public function link($title, $url = null, array $options = [])
+	{
+		$title = $this->decodeEscapeHtmlEntity($title);
+        return $this->Html->link($title, $url, $options);
 	}
 
 	// a template function for creating new elements

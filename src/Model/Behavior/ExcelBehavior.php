@@ -32,7 +32,7 @@ class ExcelBehavior extends Behavior {
 		'folder' => 'export',
 		'default_excludes' => ['modified_user_id', 'modified', 'created', 'created_user_id', 'password'],
 		'excludes' => [],
-		'limit' => 100,
+		'limit' => 1000,
 		'pages' => [],
 		'orientation' => 'landscape' // or portrait
 	];
@@ -285,7 +285,11 @@ class ExcelBehavior extends Behavior {
 		$schema = $table->schema();
 		$columns = $schema->columns();
 		$excludes = $this->config('excludes');
-		$excludes[] = $table->primaryKey();
+
+		if (!is_array($table->primaryKey())) { //if not composite key
+			$excludes[] = $table->primaryKey();
+		}
+
 		$fields = new ArrayObject();
 		$module = $table->alias();
 		$language = I18n::locale();

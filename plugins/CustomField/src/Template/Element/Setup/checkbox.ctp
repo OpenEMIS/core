@@ -1,6 +1,7 @@
 <?php
 	$model = $ControllerAction['table'];
 	$alias = $model->alias();
+	$this->Form->unlockField("$alias.custom_field_options");
 ?>
 
 <?php if ($ControllerAction['action'] == 'view') : ?>

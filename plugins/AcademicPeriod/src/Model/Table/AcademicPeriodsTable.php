@@ -24,6 +24,8 @@ class AcademicPeriodsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$additionalParameters = ['editable = 1 AND visible > 0'];
 
 		return $validator
@@ -45,7 +47,7 @@ class AcademicPeriodsTable extends AppTable {
 			$this->updateAll(['current' => 0], []);
 		}
 	}
-	public function beforeAction (Event $event) {
+	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('academic_period_level_id');
 		$this->fields['start_year']['visible'] = false;
 		$this->fields['end_year']['visible'] = false;
@@ -57,6 +59,11 @@ class AcademicPeriodsTable extends AppTable {
 	public function afterAction(Event $event) {
 		$this->ControllerAction->field('current');
 		$this->ControllerAction->field('editable');
+        foreach ($this->_fieldOrder as $key => $value) {
+            if (!in_array($value, array_keys($this->fields))) {
+                unset($this->_fieldOrder[$key]);
+            }
+        }
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 
@@ -133,7 +140,7 @@ class AcademicPeriodsTable extends AppTable {
 				'attr' => ['value' => $parentPath]
 			]);
 
-			array_unshift($this->_fieldOrder, "parent");
+			array_unshift($this->_fieldOrder, 'parent');
 		}
 	}
 	
@@ -148,7 +155,7 @@ class AcademicPeriodsTable extends AppTable {
 	// End PHPOE-1916
 
 	public function onGetName(Event $event, Entity $entity) {
-		return $event->subject()->Html->link($entity->name, [
+		return $event->subject()->HtmlField->link($entity->name, [
 			'plugin' => $this->controller->plugin,
 			'controller' => $this->controller->name,
 			'action' => $this->alias,
@@ -229,10 +236,8 @@ class AcademicPeriodsTable extends AppTable {
 
 		$data = $this
 			->find('list')
-			->find('visible')
-			->find('order')
+			->find('years')
 			->find('editable', ['isEditable' => $isEditable])
-			->where([$this->aliasField('academic_period_level_id') => $level->id])
 			->where($conditions)
 			->toArray();
 
@@ -291,11 +296,6 @@ class AcademicPeriodsTable extends AppTable {
 				->find('visible')
 				->find('editable', ['isEditable' => $isEditable])
 				->contain(['Levels'])
-				->select([
-						'id' => $this->aliasField('id'),
-						'name' => $this->aliasField('name'),
-						'level' => 'Levels.name'
-					])
 				->where($where)
 				->order([$this->aliasField('academic_period_level_id'), $this->aliasField('order')])
 				->toArray();
@@ -303,10 +303,12 @@ class AcademicPeriodsTable extends AppTable {
 			$levelName = "";
 			$list = [];
 
-			foreach ($data as $obj) {
-				if ($levelName != $obj->level) {
-					$levelName = __($obj->level);
+			foreach ($data as $key => $obj) {
+
+				if ($levelName != $obj->level->name) {
+					$levelName = __($obj->level->name);
 				}
+
 				$list[$levelName][$obj->id] = __($obj->name);
 			}
 
@@ -337,14 +339,24 @@ class AcademicPeriodsTable extends AppTable {
 	}
 
 	public function getWorkingDaysOfWeek() {
+		// $weekdays = [
+		// 	0 => __('Sunday'),
+		// 	1 => __('Monday'),
+		// 	2 => __('Tuesday'),
+		// 	3 => __('Wednesday'),
+		// 	4 => __('Thursday'),
+		// 	5 => __('Friday'),
+		// 	6 => __('Saturday'),
+		// ];
+
 		$weekdays = [
-			0 => __('Sunday'),
-			1 => __('Monday'),
-			2 => __('Tuesday'),
-			3 => __('Wednesday'),
-			4 => __('Thursday'),
-			5 => __('Friday'),
-			6 => __('Saturday'),
+			0 => 'Sunday',
+			1 => 'Monday',
+			2 => 'Tuesday',
+			3 => 'Wednesday',
+			4 => 'Thursday',
+			5 => 'Friday',
+			6 => 'Saturday',
 		];
 		$ConfigItems = TableRegistry::get('ConfigItems');
 		$firstDayOfWeek = $ConfigItems->value('first_day_of_week');
@@ -356,6 +368,7 @@ class AcademicPeriodsTable extends AppTable {
 			$firstDayOfWeek = $firstDayOfWeek % 7;
 		}
 		return $week;
+
 	}
 
 	public function getAttendanceWeeks($id) {
@@ -520,5 +533,17 @@ class AcademicPeriodsTable extends AppTable {
 		}
 
 		return $days;
+	}
+
+	public function findYears(Query $query, array $options) {
+		$level = $this->Levels
+			->find()
+			->order([$this->Levels->aliasField('level ASC')])
+			->first();
+
+		return $query
+			->find('visible')
+			->find('order')
+			->where([$this->aliasField('academic_period_level_id') => $level->id]);
 	}
 }
