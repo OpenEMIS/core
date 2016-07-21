@@ -24,18 +24,33 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <span class="chevron"></span>
                 </div>
             </li>
-            <li data-step="2" ng-show="(!rowsThisPage && !initialLoad)">
+            <?php 
+                if ($externalDataSource) {
+            ?>
+            <li data-step="2">
                 <div class="step-wrapper">
                     External Search
                     <span class="chevron"></span>
                 </div>
             </li>
-            <li data-step="3" ng-show="selectedStudent">
+            <li data-step="3">
                 <div class="step-wrapper">
                     Add Students
                     <span class="chevron"></span>
                 </div>
             </li>
+            <?php 
+                } else {
+            ?>
+            <li data-step="2">
+                <div class="step-wrapper">
+                    Add Students
+                    <span class="chevron"></span>
+                </div>
+            </li>
+            <?php 
+                }
+            ?>
         </ul>
     </div>
     <div class="actions top">
@@ -60,23 +75,23 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 </div>
                 <div class="text">
                     <label>Openemis No.</label>
-                    <input ng-model="filterOpenemisNo" ng-keyup="$event.keyCode == 13 ? reloadDatasource() : null" type="text" id="" maxlength="150">
+                    <input ng-model="internalFilterOpenemisNo" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource() : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
                     <label>First Name</label>
-                    <input ng-model="filterFirstName" ng-keyup="$event.keyCode == 13 ? reloadDatasource() : null" type="text" id="" maxlength="150">
+                    <input ng-model="internalFilterFirstName" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource() : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
                     <label>Last Name</label>
-                    <input ng-model="filterLastName" ng-keyup="$event.keyCode == 13 ? reloadDatasource() : null" type="text" id="" maxlength="150">
+                    <input ng-model="internalFilterLastName" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource() : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
                     <label>{{ defaultIdentityTypeName }}</label>
-                    <input ng-model="filterIdentityNumber" ng-keyup="$event.keyCode == 13 ? reloadDatasource() : null" type="text" id="" maxlength="150">
+                    <input ng-model="internalFilterIdentityNumber" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource() : null" type="text" id="" maxlength="150">
                 </div>
 
                 <div class="search-action-btn margin-top-10 margin-bottom-10">
-                    <button class="btn btn-default btn-xs" ng-click="reloadDatasource()">Filter</button>
+                    <button class="btn btn-default btn-xs" ng-click="reloadInternalDatasource()">Filter</button>
                     <button class="btn btn-outline btn-xs" ng-click="clearInternalSearchFilters()" type="reset" value="Clear">Clear</button>
                 </div>
             </div>
@@ -99,24 +114,24 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 </div>
                 <div class="text">
                     <label>Openemis No.</label>
-                    <input ng-model="filterOpenemisNo" ng-keyup="$event.keyCode == 13 ? reloadDatasource() : null" type="text" id="" maxlength="150">
+                    <input ng-model="externalFilterOpenemisNo" ng-keyup="$event.keyCode == 13 ? reloadExternalDatasource() : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
                     <label>First Name</label>
-                    <input ng-model="filterFirstName" ng-keyup="$event.keyCode == 13 ? reloadDatasource() : null" type="text" id="" maxlength="150">
+                    <input ng-model="externalFilterFirstName" ng-keyup="$event.keyCode == 13 ? reloadExternalDatasource() : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
                     <label>Last Name</label>
-                    <input ng-model="filterLastName" ng-keyup="$event.keyCode == 13 ? reloadDatasource() : null" type="text" id="" maxlength="150">
+                    <input ng-model="externalFilterLastName" ng-keyup="$event.keyCode == 13 ? reloadExternalDatasource() : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
                     <label>{{ defaultIdentityTypeName }}</label>
-                    <input ng-model="filterIdentityNumber" ng-keyup="$event.keyCode == 13 ? reloadDatasource() : null" type="text" id="" maxlength="150">
+                    <input ng-model="externalFilterIdentityNumber" ng-keyup="$event.keyCode == 13 ? reloadExternalDatasource() : null" type="text" id="" maxlength="150">
                 </div>
 
                 <div class="search-action-btn margin-top-10 margin-bottom-10">
-                    <!-- <button class="btn btn-default btn-xs" ng-click="reloadDatasource()">Filter</button> -->
-                    <button class="btn btn-outline btn-xs" ng-click="clearInternalSearchFilters()" type="reset" value="Clear">Clear</button>
+                    <button class="btn btn-default btn-xs" ng-click="reloadExternalDatasource()">Filter</button>
+                    <button class="btn btn-outline btn-xs" ng-click="clearExternalSearchFilters()" type="reset" value="Clear">Clear</button>
                 </div>
             </div>
 
