@@ -337,11 +337,7 @@ class UndoStudentStatusTable extends AppTable {
 			$selectedClass = $request->query('class');
 
 			if (!is_null($selectedPeriod) && $selectedGrade != -1 && $selectedStatus != -1) {
-
-				if ($selectedClass == -1) {
-					$selectedClass = '';
-				}
-
+				
 				$data = $this
 					->find()
 		    		->matching('Users')
