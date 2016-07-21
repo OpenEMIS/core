@@ -7,7 +7,7 @@ use Cake\Validation\Validator;
 class CountriesTable extends ControllerActionTable {
 	public function initialize(array $config)
 	{
-		$this->addBehavior('ControllerAction.FieldOption');
+		$this->addBehavior('FieldOption.FieldOption');
 		$this->table('countries');
 		parent::initialize($config);
 	}

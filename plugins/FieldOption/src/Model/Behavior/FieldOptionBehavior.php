@@ -14,73 +14,77 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-namespace ControllerAction\Model\Behavior;
+namespace FieldOption\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
+use Cake\Utility\Inflector;
 use Cake\Event\Event;
+use Cake\Validation\Validator;
 
 class FieldOptionBehavior extends Behavior {
 	public function initialize(array $config) {
-		$this->_table->table('field_option_values');
+		// $this->_table->table('field_option_values');
 	}
 
 	public function getDefaultValue() {
-		$value = '';
-		$primaryKey = $this->_table->primaryKey();
-		$entity = $this->getDefaultEntity();
-		return $entity->$primaryKey;
+		// $value = '';
+		// $primaryKey = $this->_table->primaryKey();
+		// $entity = $this->getDefaultEntity();
+		// return $entity->$primaryKey;
 	}
 
 	public function getDefaultEntity() {
-		if ($this->_table->table() != 'field_option_values') {
-			$query = $this->_table->find();
-			$entity = $query
-				->where([$this->_table->aliasField('default') => 1])
-				->first();
+		// if ($this->_table->table() != 'field_option_values') {
+		// 	$query = $this->_table->find();
+		// 	$entity = $query
+		// 		->where([$this->_table->aliasField('default') => 1])
+		// 		->first();
 
-			if (is_null($entity)) {
-				$query = $this->_table->find();
-				$entity = $query
-					->first();
-			}
-		} else {
-			$entity = $this->_table
-				->find()
-				->innerJoin(
-					['FieldOption' => 'field_options'],
-					[
-						'FieldOption.id = ' . $this->_table->aliasField('field_option_id'),
-						'FieldOption.code' => $this->_table->alias()
-					]
-				)
-				->find('order')->find('visible')
-				->where([$this->_table->aliasField('default') => 1])
-				->first();
+		// 	if (is_null($entity)) {
+		// 		$query = $this->_table->find();
+		// 		$entity = $query
+		// 			->first();
+		// 	}
+		// } else {
+		// 	$entity = $this->_table
+		// 		->find()
+		// 		->innerJoin(
+		// 			['FieldOption' => 'field_options'],
+		// 			[
+		// 				'FieldOption.id = ' . $this->_table->aliasField('field_option_id'),
+		// 				'FieldOption.code' => $this->_table->alias()
+		// 			]
+		// 		)
+		// 		->find('order')->find('visible')
+		// 		->where([$this->_table->aliasField('default') => 1])
+		// 		->first();
 
-			if (is_null($entity)) {
-				$entity = $this->_table
-					->find()
-					->innerJoin(
-						['FieldOption' => 'field_options'],
-						[
-							'FieldOption.id = ' . $this->_table->aliasField('field_option_id'),
-							'FieldOption.code' => $this->_table->alias()
-						]
-					)
-					->find('order')->find('visible')
-					->first();
-			}
-		}
-		return $entity;
+		// 	if (is_null($entity)) {
+		// 		$entity = $this->_table
+		// 			->find()
+		// 			->innerJoin(
+		// 				['FieldOption' => 'field_options'],
+		// 				[
+		// 					'FieldOption.id = ' . $this->_table->aliasField('field_option_id'),
+		// 					'FieldOption.code' => $this->_table->alias()
+		// 				]
+		// 			)
+		// 			->find('order')->find('visible')
+		// 			->first();
+		// 	}
+		// }
+		// return $entity;
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents()
+	{
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction'];
 		$events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction'];
+		$events['ControllerAction.Model.addEdit.beforePatch'] = ['callable' => 'addEditBeforePatch'];
 		return $events;
 	}
 
@@ -94,32 +98,34 @@ class FieldOptionBehavior extends Behavior {
 	}
 
 	private function buildFieldOptions() {
-		$model = TableRegistry::get('FieldOption.FieldOptions');
+		$data = $this->_table->FieldOption->getFieldOptions();
 		$fieldOptions = [];
-		$data = $model->find()->find('visible')->find('order')->all();
-
-		foreach ($data as $obj) {
-			$key = $obj->id;
-
-			$parent = __($obj->parent);
+		foreach ($data as $key => $obj) {
+			$parent = __($obj['parent']);
 			if (!array_key_exists($parent, $fieldOptions)) {
 				$fieldOptions[$parent] = [];
 			}
-			$fieldOptions[$parent][$key] = __($obj->name);
+			$keyName = Inflector::humanize(Inflector::underscore($key));
+			$fieldOptions[$parent][$key] = __($keyName);
 		}
 		return $fieldOptions;
 	}
 
-	private function checkFieldOption($event, $selected) {
-		if (!$this->_table->request->is('ajax')) { // to work with reorder
-			$FieldOptions = TableRegistry::get('FieldOption.FieldOptions');
-			$entity = $FieldOptions->get($selected);
+	// private function checkFieldOption($event, $selected) {
+	// 	if (!$this->_table->request->is('ajax')) { // to work with reorder
+	// 		$FieldOptions = TableRegistry::get('FieldOption.FieldOptions');
+	// 		$entity = $FieldOptions->get($selected);
 
-			if ($entity->code != $this->_table->alias) {
-				$event->stopPropagation();
-				return $this->_table->controller->redirect(['action' => 'index', 'field_option_id' => $selected]);
-			}
-		}
+	// 		if ($entity->code != $this->_table->alias) {
+	// 			$event->stopPropagation();
+	// 			return $this->_table->controller->redirect(['action' => 'index', 'field_option_id' => $selected]);
+	// 		}
+	// 	}
+	// }
+
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
+	{
+		$patchOptions['validate'] = 'update';
 	}
 
 	private function addFieldOptionControl(ArrayObject $extra, $data = []) {
@@ -138,10 +144,10 @@ class FieldOptionBehavior extends Behavior {
 	public function beforeAction(Event $event, ArrayObject $extra) {
 		$model = $this->_table;
 		$fieldOptions = $this->buildFieldOptions();
-		$selectedOption = $this->_table->queryString('field_option_id', $fieldOptions);
+		$selectedOption = $model->alias;
 		$this->addFieldOptionControl($extra, ['fieldOptions' => $fieldOptions, 'selectedOption' => $selectedOption]);
 
-		$this->checkFieldOption($event, $selectedOption); // deprecated
+		// $this->checkFieldOption($event, $selectedOption); // deprecated
 
 		$model->field('default', ['options' => $model->getSelectOptions('general.yesno'), 'after' => 'visible']);
 		$model->field('editable', ['options' => $model->getSelectOptions('general.yesno'), 'visible' => ['index' => true], 'after' => 'default']);
@@ -171,4 +177,18 @@ class FieldOptionBehavior extends Behavior {
 			}
 		}
 	}
+
+	public function validationUpdate($validator)
+	{
+        $validator
+            ->add('name', [
+                    'ruleUnique' => [
+                        'rule' => 'validateUnique',
+                        'provider' => 'table',
+                        'message' => __('This field has to be unique')
+                    ]
+                ]);
+
+        return $validator;
+    }
 }

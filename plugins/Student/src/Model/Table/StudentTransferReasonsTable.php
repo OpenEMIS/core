@@ -6,7 +6,7 @@ use App\Model\Table\ControllerActionTable;
 class StudentTransferReasonsTable extends ControllerActionTable {
 	public function initialize(array $config)
     {
-		$this->addBehavior('ControllerAction.FieldOption');
+		$this->addBehavior('FieldOption.FieldOption');
         $this->table('student_transfer_reasons');
 		parent::initialize($config);
 		$this->hasMany('TransferRequests', ['className' => 'Institution.TransferRequests', 'foreignKey' => 'student_transfer_reason_id']);

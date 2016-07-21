@@ -9,7 +9,7 @@ use App\Model\Table\ControllerActionTable;
 class NationalitiesTable extends ControllerActionTable {
 	public function initialize(array $config)
     {
-		$this->addBehavior('ControllerAction.FieldOption');
+		$this->addBehavior('FieldOption.FieldOption');
 		$this->table('nationalities');
 		parent::initialize($config);
 

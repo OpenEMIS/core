@@ -6,7 +6,7 @@ use App\Model\Table\ControllerActionTable;
 class StaffBehaviourCategoriesTable extends ControllerActionTable {
 	public function initialize(array $config)
     {
-		$this->addBehavior('ControllerAction.FieldOption');
+		$this->addBehavior('FieldOption.FieldOption');
         $this->table('staff_behaviour_categories');
 		parent::initialize($config);
 		$this->hasMany('StaffBehaviours', ['className' => 'Staff.StaffBehaviours', 'foreignKey' => 'staff_behaviour_category_id']);
