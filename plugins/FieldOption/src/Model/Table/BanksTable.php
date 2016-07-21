@@ -10,7 +10,6 @@ class BanksTable extends ControllerActionTable {
 	public function initialize(array $config)
 	{
 		$this->addBehavior('FieldOption.FieldOption');
-		$this->table('banks');
 		parent::initialize($config);
 		$this->hasMany('BankBranches', ['className' => 'FieldOption.BankBranches', 'foreignKey' => 'bank_id']);
 	}
