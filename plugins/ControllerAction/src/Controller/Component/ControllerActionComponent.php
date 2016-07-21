@@ -161,7 +161,7 @@ class ControllerActionComponent extends Component {
                         if (isset($attr['options'])) {
                             $_options = array_merge($_options, $attr['options']);
                         }
-                        
+
                         $this->model($attr['className'], $actions, $_options);
                         $this->model->alias = $name;
                         $this->currentAction = $currentAction;
@@ -376,9 +376,7 @@ class ControllerActionComponent extends Component {
     public function paramsPass() {
         $params = $this->request->pass;
         if ($this->triggerFrom == 'Model') {
-            if ($this->triggerFrom == 'Model') {
-                unset($params[0]);
-            }
+            unset($params[0]);
         }
         return $params;
     }
@@ -392,7 +390,7 @@ class ControllerActionComponent extends Component {
         return array_merge($params, $this->paramsQuery());
     }
 
-    public function url($action) {
+    public function url($action, $params = true /* 'PASS' | 'QUERY' | false */) {
         $controller = $this->controller;
         $url = ['plugin' => $controller->plugin, 'controller' => $controller->name];
 
@@ -402,7 +400,14 @@ class ControllerActionComponent extends Component {
         } else {
             $url['action'] = $action;
         }
-        $url = array_merge($url, $this->params());
+
+        if ($params === true) {
+            $url = array_merge($url, $this->params());
+        } else if ($params === 'PASS') {
+            $url = array_merge($url, $this->paramsPass());
+        } else if ($params === 'QUERY') {
+            $url = array_merge($url, $this->paramsQuery());
+        }
         return $url;
     }
 
@@ -1349,7 +1354,7 @@ class ControllerActionComponent extends Component {
                 $this->controller->set('associations', $associations);
             } else {
                 $this->Alert->warning('general.notExists');
-                return $this->controller->redirect($this->url('index'));
+                return $this->controller->redirect($this->url('index', 'QUERY'));
             }
         } else if ($request->is('delete') && !empty($request->data[$primaryKey])) {
             $this->autoRender = false;
@@ -1384,7 +1389,7 @@ class ControllerActionComponent extends Component {
                 } else {
                     $this->Alert->error('general.delete.failed');
                 }
-                return $this->controller->redirect($this->url('index'));
+                return $this->controller->redirect($this->url('index', 'QUERY'));
             } else {
                 $transferFrom = $this->request->data('id');
                 $transferTo = $this->request->data('transfer_to');
@@ -1396,7 +1401,8 @@ class ControllerActionComponent extends Component {
                 if (empty($transferTo)) {
                     $associations = [];
                     foreach ($model->associations() as $assoc) {
-                        if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
+                        // if dependent is false then it will count the associations
+                        if (!$assoc->dependent() && ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany')) {
                             if (!array_key_exists($assoc->alias(), $associations)) {
                                 $count = 0;
                                 if($assoc->type() == 'oneToMany') {
@@ -1496,12 +1502,12 @@ class ControllerActionComponent extends Component {
                     } else {
                         $this->Alert->error('general.delete.failed');
                     }
-                    return $this->controller->redirect($this->url('index'));
+                    return $this->controller->redirect($this->url('index', 'QUERY'));
                 }
             }
         } else {
             $this->Alert->error('general.delete.failed');
-            return $this->controller->redirect($this->url('index'));
+            return $this->controller->redirect($this->url('index', 'QUERY'));
         }
     }
 
@@ -1835,37 +1841,50 @@ class ControllerActionComponent extends Component {
 
     public function getAssociatedRecords($model, $entity, $extra)
     {
+        $dependent = [true, false];
+        if ($extra->offsetExists('deleteStrategy')) {
+            switch ($extra['deleteStrategy']) {
+                case 'restrict':
+                    $dependent = [true, false];
+                    break;
+                case 'transfer':
+                    $dependent = [false];
+                    break;
+            }
+        }
         $primaryKey = $model->primaryKey();
         $id = $entity->$primaryKey;
         $associations = [];
         foreach ($model->associations() as $assoc) {
-            if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
-                if (!array_key_exists($assoc->alias(), $associations)) {
-                    $count = 0;
-                    if ($assoc->type() == 'oneToMany') {
-                        $count = $assoc->find()
-                        ->where([$assoc->aliasField($assoc->foreignKey()) => $id])
-                        ->count();
-                    } else {
-                        $modelAssociationTable = $assoc->junction();
-                        $count = $modelAssociationTable->find()
-                            ->where([$modelAssociationTable->aliasField($assoc->foreignKey()) => $id])
+            if (in_array($assoc->dependent(), $dependent)) {
+                if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
+                    if (!array_key_exists($assoc->alias(), $associations)) {
+                        $count = 0;
+                        if ($assoc->type() == 'oneToMany') {
+                            $count = $assoc->find()
+                            ->where([$assoc->aliasField($assoc->foreignKey()) => $id])
                             ->count();
-                    }
-                    $title = $assoc->name();
-                    $event = $assoc->dispatchEvent('ControllerAction.Model.transfer.getModelTitle', [], $this);
-                    if (!is_null($event->result)) {
-                        $title = $event->result;
-                    }
-
-                    $isAssociated = true;
-                    if ($extra->offsetExists('excludedModels')) {
-                        if (in_array($title, $extra['excludedModels'])) {
-                            $isAssociated = false;
+                        } else {
+                            $modelAssociationTable = $assoc->junction();
+                            $count = $modelAssociationTable->find()
+                                ->where([$modelAssociationTable->aliasField($assoc->foreignKey()) => $id])
+                                ->count();
                         }
-                    }
-                    if ($isAssociated) {
-                        $associations[$assoc->alias()] = ['model' => $title, 'count' => $count];
+                        $title = $assoc->name();
+                        $event = $assoc->dispatchEvent('ControllerAction.Model.transfer.getModelTitle', [], $this);
+                        if (!is_null($event->result)) {
+                            $title = $event->result;
+                        }
+
+                        $isAssociated = true;
+                        if ($extra->offsetExists('excludedModels')) {
+                            if (in_array($title, $extra['excludedModels'])) {
+                                $isAssociated = false;
+                            }
+                        }
+                        if ($isAssociated) {
+                            $associations[$assoc->alias()] = ['model' => $title, 'count' => $count];
+                        }
                     }
                 }
             }

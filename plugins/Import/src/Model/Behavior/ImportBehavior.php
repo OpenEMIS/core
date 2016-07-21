@@ -155,7 +155,12 @@ class ImportBehavior extends Behavior {
                 break;
         }
         if ($this->institutionId && $toolbarButtons['back']['url']['plugin']=='Institution') {
-            $back = str_replace('Import', '', $this->_table->alias());
+            if ($this->_table->request->params['pass'][0] == 'add') {
+                $back = str_replace('Import', '', $this->_table->alias());
+            } else  if ($this->_table->request->params['pass'][0] == 'results') {
+                $back = $this->_table->alias() . '/add';
+            };
+
             if (!array_key_exists($back, $this->_table->ControllerAction->models)) {
                 $back = str_replace('Institution', '', $back);
             }
