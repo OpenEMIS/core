@@ -18,19 +18,19 @@ use App\Model\Traits\OptionsTrait;
 class InstitutionPositionsTable extends AppTable {
 	use OptionsTrait;
 	public $CAVersion = '4.0';
-	
+
 	public function initialize(array $config) {
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('StaffPositionTitles', ['className' => 'Institution.StaffPositionTitles']);
 		$this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
 		$this->belongsTo('Institutions', 		['className' => 'Institution.Institutions']);
 
-		$this->hasMany('InstitutionStaff', 		['className' => 'Institution.Staff']);
-		$this->hasMany('StaffPositions', 		['className' => 'Staff.Positions']);
-		$this->hasMany('StaffAttendances', 		['className' => 'Institution.StaffAttendances']);
-        $this->hasMany('StaffTransferRequests',      ['className' => 'Institution.StaffTransferRequests']);
+		$this->hasMany('InstitutionStaff',		['className' => 'Institution.Staff', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StaffPositions',		['className' => 'Staff.Positions', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StaffAttendances',		['className' => 'Institution.StaffAttendances', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffTransferRequests',	['className' => 'Institution.StaffTransferRequests', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 
 		$this->addBehavior('OpenEmis.OpenEmis');
@@ -62,7 +62,7 @@ class InstitutionPositionsTable extends AppTable {
 			['id IN ' => $securityGroupUserIds]
 		);
 	}
-	
+
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
     	$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
@@ -75,15 +75,15 @@ class InstitutionPositionsTable extends AppTable {
 
 		$validator
 			->add('position_no', 'ruleUnique', [
-				'rule' => 'validateUnique', 
+				'rule' => 'validateUnique',
 				'provider' => 'table'
 			])
-			
+
 			->add('position_no', 'ruleNoSpaces', [
 				'rule' => 'checkNoSpaces',
 				'provider' => 'custom'
 			]);
-		
+
 		return $validator;
 	}
 
@@ -153,7 +153,7 @@ class InstitutionPositionsTable extends AppTable {
 		$this->field('current_staff_list', [
 			'label' => '',
 			'override' => true,
-			'type' => 'element', 
+			'type' => 'element',
 			'element' => 'Institution.Positions/current',
 			'visible' => true
 		]);
@@ -222,15 +222,15 @@ class InstitutionPositionsTable extends AppTable {
 			} else {
 				$roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
 			}
-			
+
 			$staffTitleOptions = $this->StaffPositionTitles
 					->find()
 					->innerJoinWith('SecurityRoles')
 					->select([
-						'security_role_id' => 'SecurityRoles.id', 
+						'security_role_id' => 'SecurityRoles.id',
 						'name' => $this->StaffPositionTitles->aliasField('name')])
 					->order([
-						$this->StaffPositionTitles->aliasField('type') => 'DESC', 
+						$this->StaffPositionTitles->aliasField('type') => 'DESC',
 						$this->StaffPositionTitles->aliasField('order'),
 					])
 					->autoFields(true)
@@ -289,7 +289,7 @@ class InstitutionPositionsTable extends AppTable {
 		$this->fields['staff_position_grade_id']['sort'] = ['field' => 'StaffPositionGrades.order'];
 
 		$this->setFieldOrder([
-			'position_no', 'staff_position_title_id', 
+			'position_no', 'staff_position_title_id',
 			'staff_position_grade_id',
 		]);
 
@@ -328,7 +328,7 @@ class InstitutionPositionsTable extends AppTable {
 		$this->fields['past_staff_list']['visible'] = false;
 
 		$this->setFieldOrder([
-			'position_no', 'staff_position_title_id', 
+			'position_no', 'staff_position_title_id',
 			'staff_position_grade_id',
 		]);
 
@@ -343,7 +343,7 @@ class InstitutionPositionsTable extends AppTable {
 	public function viewBeforeAction(Event $event) {
 
 		$this->setFieldOrder([
-			'position_no', 'staff_position_title_id', 
+			'position_no', 'staff_position_title_id',
 			'staff_position_grade_id',
 			'modified_user_id', 'modified', 'created_user_id', 'created',
 			'current_staff_list', 'past_staff_list'
@@ -446,7 +446,7 @@ class InstitutionPositionsTable extends AppTable {
 			} else {
 				$roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
 			}
-			
+
 			// Filter by active status
 			$activeStatusId = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'ACTIVE');
 			$positionConditions = [];

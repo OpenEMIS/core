@@ -132,8 +132,8 @@ class RemoveBehavior extends Behavior {
 				$id = $request->data[$model->alias()][$primaryKey];
 			} elseif (!empty($request->data[$primaryKey])) {
 				$id = $request->data[$primaryKey];
-			} 
-            
+			}
+
 			if (!empty($id)) {
                 try {
                     $entity = $model->get($id);
@@ -235,6 +235,7 @@ class RemoveBehavior extends Behavior {
 				$doDelete = true;
 
 				if (empty($convertTo)) {
+					$extra['deleteStrategy'] = 'transfer';
 					if ($this->hasAssociatedRecords($model, $entity, $extra)) {
 						$doDelete = false;
 					}
@@ -275,37 +276,50 @@ class RemoveBehavior extends Behavior {
 
 	private function getAssociatedRecords($model, $entity, $extra)
 	{
+		$dependent = [true, false];
+        if ($extra->offsetExists('deleteStrategy')) {
+            switch ($extra['deleteStrategy']) {
+                case 'restrict':
+                    $dependent = [true, false];
+                    break;
+                case 'transfer':
+                    $dependent = [false];
+                    break;
+            }
+        }
 		$primaryKey = $model->primaryKey();
 		$id = $entity->$primaryKey;
 		$associations = [];
 		foreach ($model->associations() as $assoc) {
-			if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
-				if (!array_key_exists($assoc->alias(), $associations)) {
-					$count = 0;
-					if ($assoc->type() == 'oneToMany') {
-						$count = $assoc->find()
-						->where([$assoc->aliasField($assoc->foreignKey()) => $id])
-						->count();
-					} else {
-						$modelAssociationTable = $assoc->junction();
-						$count = $modelAssociationTable->find()
-							->where([$modelAssociationTable->aliasField($assoc->foreignKey()) => $id])
+			if (in_array($assoc->dependent(), $dependent)) {
+				if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
+					if (!array_key_exists($assoc->alias(), $associations)) {
+						$count = 0;
+						if ($assoc->type() == 'oneToMany') {
+							$count = $assoc->find()
+							->where([$assoc->aliasField($assoc->foreignKey()) => $id])
 							->count();
-					}
-					$title = $assoc->name();
-					$event = $assoc->dispatchEvent('ControllerAction.Model.transfer.getModelTitle', [], $this);
-					if (!is_null($event->result)) {
-						$title = $event->result;
-					}
+						} else {
+							$modelAssociationTable = $assoc->junction();
+							$count = $modelAssociationTable->find()
+								->where([$modelAssociationTable->aliasField($assoc->foreignKey()) => $id])
+								->count();
+						}
+						$title = $assoc->name();
+						$event = $assoc->dispatchEvent('ControllerAction.Model.transfer.getModelTitle', [], $this);
+						if (!is_null($event->result)) {
+							$title = $event->result;
+						}
 
-					$isAssociated = true;
-                    if ($extra->offsetExists('excludedModels')) {
-                        if (in_array($title, $extra['excludedModels'])) {
-                            $isAssociated = false;
-                        }
-                    }
-                    if ($isAssociated) {
-						$associations[$assoc->alias()] = ['model' => $title, 'count' => $count];
+						$isAssociated = true;
+	                    if ($extra->offsetExists('excludedModels')) {
+	                        if (in_array($title, $extra['excludedModels'])) {
+	                            $isAssociated = false;
+	                        }
+	                    }
+	                    if ($isAssociated) {
+							$associations[$assoc->alias()] = ['model' => $title, 'count' => $count];
+						}
 					}
 				}
 			}
