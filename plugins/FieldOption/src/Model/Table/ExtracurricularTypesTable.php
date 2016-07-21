@@ -6,8 +6,9 @@ use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
 class ExtracurricularTypesTable extends ControllerActionTable {
-	public function initialize(array $config) {
-		$this->addBehavior('ControllerAction.FieldOption');
+	public function initialize(array $config)
+    {
+		$this->addBehavior('FieldOption.FieldOption');
 		$this->table('extracurricular_types');
 		parent::initialize($config);
 		$this->hasMany('StaffExtracurricular', ['className' => 'Staff.Extracurriculars', 'foreignKey' => 'extracurricular_type_id']);
