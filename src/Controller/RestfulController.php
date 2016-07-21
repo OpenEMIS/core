@@ -14,6 +14,11 @@ use Restful\Controller\RestfulController as BaseController;
 
 class RestfulController extends BaseController
 {
+    public function initialize() {
+        parent::initialize();
+        $this->loadComponent('Csrf');
+    }
+
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
@@ -28,5 +33,10 @@ class RestfulController extends BaseController
                 'queryDatasource' => true
             ]
         ]);
+
+        if ($this->request->is(['put', 'post', 'delete', 'patch']) || !empty($this->request->data)) {
+            $token = isset($this->request->cookies['csrfToken']) ? $this->request->cookies['csrfToken'] : '';
+            $this->request->env('HTTP_X_CSRF_TOKEN', $token);
+        }
     }
 }

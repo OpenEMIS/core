@@ -24,11 +24,6 @@ class RestfulController extends AppController
         $this->loadComponent('Auth');
     }
 
-/***************************************************************************************************************************************************
- *
- * CakePHP events
- *
- ***************************************************************************************************************************************************/
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
@@ -50,11 +45,6 @@ class RestfulController extends AppController
                 }
             }
         }
-
-        if ($this->request->is(['put', 'post', 'delete', 'patch']) || !empty($this->request->data)) {
-            $token = isset($this->request->cookies['csrfToken']) ? $this->request->cookies['csrfToken'] : '';
-            $this->request->env('HTTP_X_CSRF_TOKEN', $token);
-        }
     }
 
     public function beforeRender(Event $event)
@@ -69,13 +59,6 @@ class RestfulController extends AppController
             ]);
         }
     }
-
-
-/***************************************************************************************************************************************************
- *
- * Controller action functions
- *
- ***************************************************************************************************************************************************/
 
     public function nothing()
     {
@@ -281,6 +264,8 @@ class RestfulController extends AppController
                 $this->convertBinaryToBase64($entity->$property);
             } else if (is_resource($entity->$property)) {
                 $entity->$property = base64_encode(stream_get_contents($entity->$property));
+            } else if ($property == 'password') { // removing password from entity so that the value will not be exposed
+                $entity->unsetProperty($property);
             }
         }
     }
@@ -311,6 +296,41 @@ class RestfulController extends AppController
             }
         }
         return $data;
+    }
+
+    // this function will be called if accessed from other domain
+    // Reference: http://www.html5rocks.com/en/tutorials/cors/
+    // The logic in this function is not finalised
+    public function options()
+    {
+        $this->autoRender = false;
+        $supportedMethods = ['GET', 'POST', 'PUT', 'DELETE'];
+        $headers = getallheaders();
+
+        header('Access-Control-Allow-Origin: ' . $headers['Origin']);
+        header('Access-Control-Allow-Methods: ' . implode(', ', $supportedMethods));
+        header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Authorization');
+        header('Content-Type: text/html; charset=utf-8');
+
+        Log::write('debug', getallheaders());
+
+        /*
+        OPTIONS /cors HTTP/1.1
+        Origin: http://api.bob.com
+        Access-Control-Request-Method: PUT
+        Access-Control-Request-Headers: X-Custom-Header
+        Host: api.alice.com
+        Accept-Language: en-US
+        Connection: keep-alive
+        User-Agent: Mozilla/5.0...
+        */
+
+        /*
+        Access-Control-Allow-Origin: http://api.bob.com
+        Access-Control-Allow-Methods: GET, POST, PUT
+        Access-Control-Allow-Headers: X-Custom-Header
+        Content-Type: text/html; charset=utf-8
+        */
     }
 
     public function index()
@@ -465,13 +485,6 @@ class RestfulController extends AppController
         }
         return $fields;
     }
-
-
-/***************************************************************************************************************************************************
- *
- * private functions
- *
- ***************************************************************************************************************************************************/
 
     private function _instantiateModel($model)
     {
