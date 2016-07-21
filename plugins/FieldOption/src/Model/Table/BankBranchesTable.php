@@ -24,16 +24,26 @@ class BankBranchesTable extends ControllerActionTable {
 		}
 	}
 
-	public function validationDefault(Validator $validator)
+	public function validationUpdate($validator)
 	{
-		$validator = parent::validationDefault($validator);
+        $validator
+            ->add('name', [
+                    'ruleUnique' => [
+                        'rule' => 'validateUnique',
+                        'provider' => 'table',
+                        'message' => __('This field has to be unique')
+                    ]
+                ])
+            ->add('code', [
+                    'ruleUnique' => [
+                        'rule' => 'validateUnique',
+                        'provider' => 'table',
+                        'message' => __('This field has to be unique')
+                    ]
+                ]);
 
-		$validator
-			->notEmpty('name', 'Please enter a name.')
-			->notEmpty('code', 'Please enter a code.');;
-
-		return $validator;
-	}
+        return $validator;
+    }
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra)
 	{

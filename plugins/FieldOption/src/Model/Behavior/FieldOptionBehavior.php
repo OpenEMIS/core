@@ -22,6 +22,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Event\Event;
+use Cake\Validation\Validator;
 
 class FieldOptionBehavior extends Behavior {
 	public function initialize(array $config) {
@@ -78,10 +79,12 @@ class FieldOptionBehavior extends Behavior {
 		// return $entity;
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents()
+	{
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction'];
 		$events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction'];
+		$events['ControllerAction.Model.addEdit.beforePatch'] = ['callable' => 'addEditBeforePatch'];
 		return $events;
 	}
 
@@ -119,6 +122,11 @@ class FieldOptionBehavior extends Behavior {
 	// 		}
 	// 	}
 	// }
+
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
+	{
+		$patchOptions['validate'] = 'update';
+	}
 
 	private function addFieldOptionControl(ArrayObject $extra, $data = []) {
 		$extra['elements']['controls'] = ['name' => 'FieldOption.controls', 'data' => $data, 'order' => 2];
@@ -169,4 +177,18 @@ class FieldOptionBehavior extends Behavior {
 			}
 		}
 	}
+
+	public function validationUpdate($validator)
+	{
+        $validator
+            ->add('name', [
+                    'ruleUnique' => [
+                        'rule' => 'validateUnique',
+                        'provider' => 'table',
+                        'message' => __('This field has to be unique')
+                    ]
+                ]);
+
+        return $validator;
+    }
 }
