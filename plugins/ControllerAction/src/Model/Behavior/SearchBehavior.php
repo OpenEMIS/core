@@ -97,7 +97,8 @@ class SearchBehavior extends Behavior {
 
 		if ($extra['auto_order']) {
 			if (in_array($this->config('orderField'), $columns)) {
-				$query->order([$model->aliasField($this->config('orderField')) => 'asc']);
+				$extra['options']['sort'] = 'order';
+                $extra['options']['direction'] = 'asc';
 			}
 		}
 	}

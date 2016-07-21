@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace App\Model\Behavior;
 
 use ArrayObject;
@@ -21,7 +21,7 @@ class RestrictAssociatedDeleteBehavior extends Behavior {
 	}
 
 	public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra) {
-		if ($this->_table->hasAssociatedRecords($this->_table, $entity)) {
+		if ($this->_table->hasAssociatedRecords($this->_table, $entity, $extra)) {
 			$event->stopPropagation();
 			$extra['Alert']['message'] = $this->config('message');
 			return false;

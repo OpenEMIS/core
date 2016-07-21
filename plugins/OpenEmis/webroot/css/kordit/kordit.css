@@ -72,5 +72,6 @@
 .kd-identity {
 	color: #FFF;
 	-webkit-border-radius: 8px;
-	        border-radius: 8px;
+	border-radius: 8px;
+	padding: 5px;
 }
