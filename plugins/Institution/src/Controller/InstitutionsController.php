@@ -88,6 +88,13 @@ class InstitutionsController extends AppController  {
     public function Students($pass = 'index') {
         if ($pass == 'addExisting') {
             $this->set('ngController', 'InstitutionsStudentsCtrl as InstitutionStudentController');
+            $externalDataSource = false;
+        	$ConfigItemTable = TableRegistry::get('ConfigItems');
+        	$externalSourceType = $ConfigItemTable->find()->where([$ConfigItemTable->aliasField('code') => 'external_data_source_type'])->first();
+        	if (!empty($externalSourceType) && $externalSourceType['value'] != 'None') {
+        		$externalDataSource = true;
+        	}
+        	$this->set('externalDataSource', $externalDataSource);
             $this->render('studentAdd');
         } elseif ($pass == 'addExternal') {
         	$this->set('ngController', 'InstitutionsStudentsCtrl as InstitutionStudentController');

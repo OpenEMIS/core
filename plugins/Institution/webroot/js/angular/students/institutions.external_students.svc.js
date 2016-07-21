@@ -26,7 +26,8 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         getGenderRecord: getGenderRecord,
         importIdentities: importIdentities,
         getInternalIdentityTypes: getInternalIdentityTypes,
-        addIdentityType: addIdentityType
+        addIdentityType: addIdentityType,
+        setExternalSourceUrl: setExternalSourceUrl
     };
 
     var models = {
@@ -56,6 +57,11 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         return ExternalDataSourceAttributes
             .find('Uri', {record_type: 'user_record_uri'})
             .ajax({defer: true});
+    };
+
+    function setExternalSourceUrl(url)
+    {
+        var externalSource = url;
     };
 
     function getExternalStudentRecords(options) {
