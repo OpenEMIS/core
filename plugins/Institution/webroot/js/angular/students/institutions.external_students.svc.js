@@ -25,11 +25,11 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         getUserRecord: getUserRecord,
         getGenderRecord: getGenderRecord,
         importIdentities: importIdentities,
-        getInternalIdentityTypes: getInternalIdentityTypes
+        getInternalIdentityTypes: getInternalIdentityTypes,
+        addIdentityType: addIdentityType
     };
 
     var models = {
-        Users: 'User.Users',
         Genders: 'User.Genders',
         StudentRecords: 'Institution.Students',
         Students: 'Student.Students',
@@ -134,27 +134,65 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
 
     function importIdentities(userId, identitiesRecord)
     {
-        var promises = [];
+        var deferred = $q.defer();
         var vm = this;
-        var identitiesId = [];
         vm.getInternalIdentityTypes()
         .then(function(response) {
             var data = response.data;
+            var promises = [];
             for (var i = 0; i < identitiesRecord.length; i++) {
                 for(var j = 0; j < data.length ; j++) {
                     if (identitiesRecord[i].identity_type.name == data[j].name) {
-                        identitiesRecord[i].identity_type_id = data[j].id;
+                        promises.push(data[j].id);
+                    } else {
+                        promises.push(vm.addIdentityType(identitiesRecord[i].identity_type));
                     }
                 }
             }
+            return $q.all(promises);
         }, function(error) {
-
+            deferred.reject(error);
+        })
+        .then(function(identityTypeIds){
+            var promises = [];
+            for (var i = 0; i < identitiesRecord.length; i++) {
+                identitiesRecord[i].identity_type_id = identityTypeIds[i];
+                delete(identitiesRecord[i]['id'])
+                delete(identitiesRecord[i]['identity_type']);
+                delete(identitiesRecord[i]['created']);
+                delete(identitiesRecord[i]['modified']);
+                delete(identitiesRecord[i]['modified_user_id']);
+                delete(identitiesRecord[i]['created_user_id']);
+                identitiesRecord[i]['security_user_id'] = userId;
+                if (identitiesRecord[i]['issue_date'] != null) {
+                    identitiesRecord[i]['issue_date'] = vm.formatDate(identitiesRecord[i]['issue_date']);
+                }
+                if (identitiesRecord[i]['expiry_date'] != null) {
+                    identitiesRecord[i]['expiry_date'] = vm.formatDate(identitiesRecord[i]['expiry_date']);
+                }
+                promises.push(Identities.save(identitiesRecord[i]));
+            }
+            return $q.all(promises);
+        }, function(error) {
+            deferred.reject(error);
+        })
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error){
+            deferred.reject(error);
         });
+
+        return deferred.promise;
     };
 
     function addIdentityType(identityType)
     {
         var deferred = $q.defer();
+        delete(identityType['id']);
+        delete(identityType['created']);
+        delete(identityType['modified']);
+        delete(identityType['modified_user_id']);
+        delete(identityType['created_user_id']);
         IdentityTypes.save(identityType)
         .then(function(response) {
             deferred.resolve(response.data.data.id);
@@ -175,13 +213,13 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         var deferred = $q.defer();
         var vm = this;
         // please remove this line (for debugging purposes only)
-        userRecord['openemis_no'] = 'OPENEMIS-POCOR111asd2';
+        // userRecord['openemis_no'] = 'OPENEMIS-55562';
         vm.getUserRecord(userRecord['openemis_no'])
         .then(function(response) {
             if (response.data.length > 0) {
                 userData = response.data[0];
                 modifiedUser = {id: userData.id, is_student: 1};
-                Users.save(modifiedUser)
+                Students.save(modifiedUser)
                 .then(function(response) {
                     deferred.resolve(response.data.data);
                 }, function(error) {
@@ -194,21 +232,30 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                 delete userRecord['username'];
                 delete userRecord['password'];
                 delete userRecord['created'];
-                console.log(userRecord['identities']);
+                delete userRecord['modified'];
+                delete userRecord['modified_user_id'];
+                delete userRecord['created_user_id'];
                 userRecord['date_of_birth'] = vm.formatDate(userRecord['date_of_birth']);
                 userRecord['is_student'] = 1;
                 vm.getGenderRecord(userRecord['gender']['code'])
                 .then(function(genderRecord) {
                     if (genderRecord.data.length > 0) {
                         delete userRecord['gender'];
-                        delete userRecord['identities']
+                        var identitiesRecord = userRecord['identities'];
+                        delete userRecord['identities'];
                         userRecord['gender_id'] = genderRecord.data[0].id;
-                        console.log(genderRecord.data[0]);
-                        Users.save(userRecord)
-                        .then(function(response) {
-                            deferred.resolve(response.data.data);
+                        Students.reset();
+                        Students.save(userRecord)
+                        .then(function(studentRecord) {
+                            var userEntity = studentRecord.data.data;
+                            var userId = userEntity.id;
+                            vm.importIdentities(userId, identitiesRecord)
+                            .then(function(res){
+                                deferred.resolve(userEntity);
+                            }, function(error){
+                                deferred.reject(error);
+                            });
                         }, function(error) {
-                            deferred.reject(error);
                             console.log(error);
                         });
                     }
@@ -223,16 +270,13 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
             deferred.reject(error);
             console.log(error);
         });
-        // please remove this line (for debugging purposes only)
-        // userRecord['openemis_no'] = 'OPENEMIS-POCOR';
         
-
         return deferred.promise;
     };
 
     function getUserRecord(openemisNo)
     {
-        return Users
+        return Students
             .select()
             .where({
                 'openemis_no': openemisNo
