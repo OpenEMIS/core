@@ -4,8 +4,9 @@ namespace Health\Model\Table;
 use App\Model\Table\AppTable;
 
 class ImmunizationTypesTable extends AppTable {
-	public function initialize(array $config) {
-		$this->addBehavior('ControllerAction.FieldOption');
+	public function initialize(array $config)
+	{
+		$this->addBehavior('FieldOption.FieldOption');
 		$this->table('health_immunization_types');
 		parent::initialize($config);
 

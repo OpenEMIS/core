@@ -14,7 +14,7 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-namespace ControllerAction\Model\Behavior;
+namespace FieldOption\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Entity;
@@ -29,53 +29,53 @@ class FieldOptionBehavior extends Behavior {
 	}
 
 	public function getDefaultValue() {
-		$value = '';
-		$primaryKey = $this->_table->primaryKey();
-		$entity = $this->getDefaultEntity();
-		return $entity->$primaryKey;
+		// $value = '';
+		// $primaryKey = $this->_table->primaryKey();
+		// $entity = $this->getDefaultEntity();
+		// return $entity->$primaryKey;
 	}
 
 	public function getDefaultEntity() {
-		if ($this->_table->table() != 'field_option_values') {
-			$query = $this->_table->find();
-			$entity = $query
-				->where([$this->_table->aliasField('default') => 1])
-				->first();
+		// if ($this->_table->table() != 'field_option_values') {
+		// 	$query = $this->_table->find();
+		// 	$entity = $query
+		// 		->where([$this->_table->aliasField('default') => 1])
+		// 		->first();
 
-			if (is_null($entity)) {
-				$query = $this->_table->find();
-				$entity = $query
-					->first();
-			}
-		} else {
-			$entity = $this->_table
-				->find()
-				->innerJoin(
-					['FieldOption' => 'field_options'],
-					[
-						'FieldOption.id = ' . $this->_table->aliasField('field_option_id'),
-						'FieldOption.code' => $this->_table->alias()
-					]
-				)
-				->find('order')->find('visible')
-				->where([$this->_table->aliasField('default') => 1])
-				->first();
+		// 	if (is_null($entity)) {
+		// 		$query = $this->_table->find();
+		// 		$entity = $query
+		// 			->first();
+		// 	}
+		// } else {
+		// 	$entity = $this->_table
+		// 		->find()
+		// 		->innerJoin(
+		// 			['FieldOption' => 'field_options'],
+		// 			[
+		// 				'FieldOption.id = ' . $this->_table->aliasField('field_option_id'),
+		// 				'FieldOption.code' => $this->_table->alias()
+		// 			]
+		// 		)
+		// 		->find('order')->find('visible')
+		// 		->where([$this->_table->aliasField('default') => 1])
+		// 		->first();
 
-			if (is_null($entity)) {
-				$entity = $this->_table
-					->find()
-					->innerJoin(
-						['FieldOption' => 'field_options'],
-						[
-							'FieldOption.id = ' . $this->_table->aliasField('field_option_id'),
-							'FieldOption.code' => $this->_table->alias()
-						]
-					)
-					->find('order')->find('visible')
-					->first();
-			}
-		}
-		return $entity;
+		// 	if (is_null($entity)) {
+		// 		$entity = $this->_table
+		// 			->find()
+		// 			->innerJoin(
+		// 				['FieldOption' => 'field_options'],
+		// 				[
+		// 					'FieldOption.id = ' . $this->_table->aliasField('field_option_id'),
+		// 					'FieldOption.code' => $this->_table->alias()
+		// 				]
+		// 			)
+		// 			->find('order')->find('visible')
+		// 			->first();
+		// 	}
+		// }
+		// return $entity;
 	}
 
 	public function implementedEvents() {
@@ -108,17 +108,17 @@ class FieldOptionBehavior extends Behavior {
 		return $fieldOptions;
 	}
 
-	private function checkFieldOption($event, $selected) {
-		if (!$this->_table->request->is('ajax')) { // to work with reorder
-			$FieldOptions = TableRegistry::get('FieldOption.FieldOptions');
-			$entity = $FieldOptions->get($selected);
+	// private function checkFieldOption($event, $selected) {
+	// 	if (!$this->_table->request->is('ajax')) { // to work with reorder
+	// 		$FieldOptions = TableRegistry::get('FieldOption.FieldOptions');
+	// 		$entity = $FieldOptions->get($selected);
 
-			if ($entity->code != $this->_table->alias) {
-				$event->stopPropagation();
-				return $this->_table->controller->redirect(['action' => 'index', 'field_option_id' => $selected]);
-			}
-		}
-	}
+	// 		if ($entity->code != $this->_table->alias) {
+	// 			$event->stopPropagation();
+	// 			return $this->_table->controller->redirect(['action' => 'index', 'field_option_id' => $selected]);
+	// 		}
+	// 	}
+	// }
 
 	private function addFieldOptionControl(ArrayObject $extra, $data = []) {
 		$extra['elements']['controls'] = ['name' => 'FieldOption.controls', 'data' => $data, 'order' => 2];
