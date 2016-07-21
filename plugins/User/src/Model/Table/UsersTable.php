@@ -53,7 +53,8 @@ class UsersTable extends AppTable {
 			'content' => 'photo_content',
 			'size' => '2MB',
 			'contentEditable' => true,
-			'allowable_file_types' => 'image'
+			'allowable_file_types' => 'image',
+			'useDefaultName' => true
 		]);
 
 		$this->addBehavior('Area.Areapicker');
@@ -120,7 +121,7 @@ class UsersTable extends AppTable {
 		$model->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
 
 		$model->hasMany('Identities', 		['className' => 'User.Identities',		'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$model->hasMany('Nationalities', 	['className' => 'User.Nationalities',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Nationalities', 	['className' => 'User.UserNationalities',	'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$model->hasMany('SpecialNeeds', 	['className' => 'User.SpecialNeeds',	'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$model->hasMany('Contacts', 		['className' => 'User.Contacts',		'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$model->hasMany('Attachments', 		['className' => 'User.Attachments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
@@ -250,10 +251,6 @@ class UsersTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$queryParams = $request->query;
-		
-		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
-			// $query->order(['name' => 'asc']);
-		}
 
 		if (array_key_exists('sort', $queryParams) && $queryParams['sort'] == 'name') {
 			$query->find('withName', ['direction' => $queryParams['direction']]);
@@ -410,6 +407,8 @@ class UsersTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 			->add('first_name', [
 					'ruleCheckIfStringGotNoNumber' => [
@@ -434,6 +433,9 @@ class UsersTable extends AppTable {
 					]
 				])
 			->add('username', [
+                'ruleMinLength' => [
+                    'rule' => ['minLength', 6]
+                ],
 				'ruleUnique' => [
 					'rule' => 'validateUnique',
 					'provider' => 'table',
@@ -475,6 +477,9 @@ class UsersTable extends AppTable {
 					]
 				])
 			->add('username', [
+                'ruleMinLength' => [
+                    'rule' => ['minLength', 6]
+                ],
 				'ruleUnique' => [
 					'rule' => 'validateUnique',
 					'provider' => 'table',
@@ -495,6 +500,7 @@ class UsersTable extends AppTable {
 		$thisModel->setValidationCode('first_name.ruleNotBlank', 'User.Users');
 		$thisModel->setValidationCode('last_name.ruleCheckIfStringGotNoNumber', 'User.Users');
 		$thisModel->setValidationCode('openemis_no.ruleUnique', 'User.Users');
+        $thisModel->setValidationCode('username.ruleMinLength', 'User.Users');
 		$thisModel->setValidationCode('username.ruleUnique', 'User.Users');
 		$thisModel->setValidationCode('username.ruleAlphanumeric', 'User.Users');
 		$thisModel->setValidationCode('username.ruleCheckUsername', 'User.Users');
@@ -620,5 +626,30 @@ class UsersTable extends AppTable {
 			];
 		}
 		return $data;
+	}
+
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+	{
+		// This logic is meant for Import
+		if ($entity->has('customColumns')) {
+			foreach ($entity->customColumns as $column => $value) {
+				switch ($column) {
+					case 'Identity':
+						$userIdentitiesTable = TableRegistry::get('User.Identities');
+
+						$defaultValue = $userIdentitiesTable->IdentityTypes->getDefaultValue();
+
+						if ($defaultValue) {
+							$userIdentityData = $userIdentitiesTable->newEntity([
+							    'identity_type_id' => $defaultValue,
+							    'number' => $value,
+							    'security_user_id' => $entity->id
+							]);
+							$userIdentitiesTable->save($userIdentityData);
+						}
+						break;
+				}
+			}
+		}
 	}
 }

@@ -38,6 +38,8 @@ class StudentPromotionTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		return $validator
 			->requirePresence('from_academic_period_id')
 			->requirePresence('next_academic_period_id')
@@ -559,7 +561,7 @@ class StudentPromotionTable extends AppTable {
 						$conditions = [
 							'student_id' => $value->student_id, 
 							'status' => $StudentAdmissionTable::NEW_REQUEST,
-							'education_grade_id' => $value->education_grade_id,
+							'new_education_grade_id' => $value->education_grade_id,
 							'previous_institution_id' => $value->institution_id,
 							'type' => $StudentAdmissionTable::TRANSFER,
 						];

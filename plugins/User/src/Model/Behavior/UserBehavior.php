@@ -40,6 +40,7 @@ class UserBehavior extends Behavior {
 				'field' => 'password',
 				'passwordAllowEmpty' => true
 			]);
+			$this->_table->addBehavior('Area.Areapicker');
 		}
 	}
 
@@ -88,7 +89,6 @@ class UserBehavior extends Behavior {
 		}	
 
 		if ($this->_table->table() == 'security_users') {
-			$this->_table->addBehavior('Area.Areapicker');
 			$this->_table->addBehavior('OpenEmis.Section');
 			$this->_table->fields['photo_name']['visible'] = false;
 			$this->_table->fields['super_admin']['visible'] = false;
@@ -139,7 +139,7 @@ class UserBehavior extends Behavior {
 				$field = 'birthplace_area_id';
 				$areaLabel = $this->onGetFieldLabel($event, $userTableLabelAlias, $field, $language, true);
 				$this->_table->ControllerAction->field('birthplace_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
-				$this->_table->ControllerAction->field('contact_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+				$this->_table->ControllerAction->field('other_information_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
 			}	
 		}
 	}

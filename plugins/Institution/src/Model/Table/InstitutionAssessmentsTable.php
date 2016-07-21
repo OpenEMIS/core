@@ -88,15 +88,16 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 				$ClassGrades->aliasField('institution_class_id'),
 				$Assessments->aliasField('id')
 			])
-			->order([
-				$EducationProgrammes->aliasField('order'),
-				$EducationGrades->aliasField('order'),
-				$Assessments->aliasField('code'),
-				$Assessments->aliasField('name'),
-				$this->aliasField('name')
-			])
 			->autoFields(true)
 			;
+
+		$extra['options']['order'] = [
+			$EducationProgrammes->aliasField('order'),
+			$EducationGrades->aliasField('order'),
+			$Assessments->aliasField('code'),
+			$Assessments->aliasField('name'),
+			$this->aliasField('name')
+		];
         
         // For filtering all classes and my classes
         $AccessControl = $this->AccessControl;
@@ -104,17 +105,47 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
         if (!$AccessControl->isAdmin()) 
         {
-            if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles))
+            if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles) && !$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles) )
             {
-                if (!$AccessControl->check(['Institutions', 'Classes', 'index'], $roles)) 
+            	$classPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
+            	$subjectPermission = $AccessControl->check(['Institutions', 'Subjects', 'index'], $roles);
+                if (!$classPermission && !$subjectPermission) 
                 {
                     $query->where(['1 = 0'], [], true);
                 } else 
                 {
                     $query->innerJoin(['InstitutionClasses' => 'institution_classes'], [
                         'InstitutionClasses.id = '.$ClassGrades->aliasField('institution_class_id'),
-                        'InstitutionClasses.staff_id' => $userId
-                    ]);
+                    	])
+	                    ;
+
+                    // If only class permission is available but no subject permission available
+                    if ($classPermission && !$subjectPermission) {
+                    	$query->where(['InstitutionClasses.staff_id' => $userId]);
+                    } else {
+                    	$query
+	                    	->innerJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
+	                        	'InstitutionClassSubjects.institution_class_id = InstitutionClasses.id',
+	                       		'InstitutionClassSubjects.status =	 1'
+		                    ])
+		                    ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
+		                        'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id'
+		                    ]);
+
+	                    // If both class and subject permission is available
+	                    if ($subjectPermission && $subjectPermission) {
+	                    	$query->where([
+	                    		'OR' => [
+	                    			['InstitutionClasses.staff_id' => $userId],
+	                    			['InstitutionSubjectStaff.staff_id' => $userId]
+	                    		]
+	                    	]);
+	                    } 
+	                    // If only subject permission is available
+	                    else {
+							$query->where(['InstitutionSubjectStaff.staff_id' => $userId]);
+	                    }
+                    }
                 }
             }   
         }
@@ -202,16 +233,6 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 		}
 	}
 
-	public function onGetName(Event $event, Entity $entity) {
-		return $event->subject()->Html->link($entity->name, [
-			'plugin' => $this->controller->plugin,
-			'controller' => $this->controller->name,
-			'action' => 'Results',
-			'class_id' => $entity->institution_class_id,
-			'assessment_id' => $entity->assessment_id
-		]);
-	}
-
 	public function onGetEducationGrade(Event $event, Entity $entity) {
 		$EducationGrades = TableRegistry::get('Education.EducationGrades');
 		$grade = $EducationGrades->get($entity->education_grade_id);
@@ -221,6 +242,15 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
     	$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+    	if (isset($buttons['view']['url'])) {
+    		$buttons['view']['url'] = [
+				'plugin' => $this->controller->plugin,
+				'controller' => $this->controller->name,
+				'action' => 'Results',
+				'class_id' => $entity->institution_class_id,
+				'assessment_id' => $entity->assessment_id
+			];
+		}
     	unset($buttons['edit']);//remove edit action from the action button
     	unset($buttons['remove']);// remove delete action from the action button
     	return $buttons;

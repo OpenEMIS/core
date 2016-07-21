@@ -1,5 +1,5 @@
 /* 
-Core Overwrites: v.1.0.7
+Core Overwrites: v.1.0.8
 */
 
 
@@ -414,6 +414,12 @@ a,
     float: left;
 }
 
+/* Error message on the fileinput */
+
+.fileinput-preview {
+    width: 25% !important;
+}
+
 
 /* Advanced Search alignment */
 
@@ -537,3 +543,24 @@ a,
 .rtl .form-horizontal option {
     direction: ltr;
 }
+
+/* End of Fixed for POCOR-3001, select option order is not consistent in RTL */
+
+
+/* Enable Search for Chosen Select */
+
+.chosen-container-single .chosen-single abbr,
+.chosen-container-single .chosen-search {
+    display: block !important;
+}
+
+.form-horizontal .input-select-wrapper .chosen-container,
+.input-select-wrapper .chosen-container {
+    width: 100% !important;
+}
+
+.chosen-container-single .chosen-single div b {
+    display: none !important;
+}
+
+/* End of Enable Search for Chosen Select */
