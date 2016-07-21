@@ -1,9 +1,9 @@
 <?php
 namespace Health\Model\Table;
 
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 
-class AllergyTypesTable extends AppTable {
+class AllergyTypesTable extends ControllerActionTable {
 	public function initialize(array $config)
 	{
 		$this->addBehavior('FieldOption.FieldOption');
@@ -12,10 +12,6 @@ class AllergyTypesTable extends AppTable {
 
 		$this->hasMany('Allergies', ['className' => 'Health.Allergies', 'foreignKey' => 'health_allergy_type_id']);
 
-		$this->addBehavior('OpenEmis.OpenEmis');
-		$this->addBehavior('ControllerAction.ControllerAction', [
-			'actions' => ['remove' => 'transfer'],
-			'fields' => ['excludes' => ['modified_user_id', 'created_user_id']]
-		]);
+		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
 	}
 }

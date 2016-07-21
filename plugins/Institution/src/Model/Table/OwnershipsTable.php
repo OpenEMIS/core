@@ -1,10 +1,9 @@
 <?php
 namespace Institution\Model\Table;
 
-use App\Model\Table\AppTable;
-use Cake\Validation\Validator;
+use App\Model\Table\ControllerActionTable;
 
-class OwnershipsTable extends AppTable
+class OwnershipsTable extends ControllerActionTable
 {
 	public function initialize(array $config) {
         $this->addBehavior('FieldOption.FieldOption');
@@ -13,10 +12,6 @@ class OwnershipsTable extends AppTable
 
 		$this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_ownership_id']);
 
-		$this->addBehavior('OpenEmis.OpenEmis');
-		$this->addBehavior('ControllerAction.ControllerAction', [
-			'actions' => ['remove' => 'transfer'],
-			'fields' => ['excludes' => ['modified_user_id', 'created_user_id']]
-		]);
+		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
 	}
 }
