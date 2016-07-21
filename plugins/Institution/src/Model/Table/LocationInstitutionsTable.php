@@ -1,10 +1,10 @@
 <?php
 namespace Institution\Model\Table;
 
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 use Cake\Validation\Validator;
 
-class LocationInstitutionsTable extends AppTable {
+class LocationInstitutionsTable extends ControllerActionTable {
 	public function initialize(array $config)
     {
         // $this->addBehavior('FieldOption.FieldOption');

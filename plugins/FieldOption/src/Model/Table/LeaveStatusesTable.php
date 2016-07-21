@@ -1,10 +1,10 @@
 <?php
 namespace FieldOption\Model\Table;
 
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 use Cake\Validation\Validator;
 
-class LeaveStatusesTable extends AppTable {
+class LeaveStatusesTable extends ControllerActionTable {
 	public function initialize(array $config)
     {
 		$this->addBehavior('FieldOption.FieldOption');
