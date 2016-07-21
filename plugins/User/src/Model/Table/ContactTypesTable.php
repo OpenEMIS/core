@@ -10,8 +10,9 @@ use Cake\Network\Request;
 use Cake\ORM\Query;
 
 class ContactTypesTable extends ControllerActionTable {
-	public function initialize(array $config) {
-		$this->addBehavior('ControllerAction.FieldOption');
+	public function initialize(array $config)
+	{
+		$this->addBehavior('FieldOption.FieldOption');
 		$this->table('contact_types');
 		parent::initialize($config);
 
@@ -33,6 +34,8 @@ class ContactTypesTable extends ControllerActionTable {
 	public function indexBeforeAction(Event $event, ArrayObject $extra)
 	{
 		$this->field('contact_option_id', ['visible' => 'false']);
+		$this->field('default', ['visible' => 'false']);
+		$this->field('editable', ['visible' => 'false']);
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -49,6 +52,7 @@ class ContactTypesTable extends ControllerActionTable {
 
 	public function addEditBeforeAction(Event $event, ArrayObject $extra)
 	{
+		$this->field('default', ['visible' => 'false']);
 		$this->field('contact_option_id');
 	}
 

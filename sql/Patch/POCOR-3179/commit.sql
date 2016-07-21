@@ -182,5 +182,9 @@ UPDATE `field_option_values` set `visible`=0 WHERE `field_option_id`=(SELECT `id
 UPDATE `field_options` SET `plugin` = 'Staff' WHERE `code` = 'SalaryDeductionTypes';
 
 
--- Drop batch_processes
+-- Drop table
 DROP TABLE batch_processes;
+DROP TABLE field_options;
+DROP TABLE field_option_values;
+
+

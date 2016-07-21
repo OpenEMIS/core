@@ -6,7 +6,7 @@ use App\Model\Table\ControllerActionTable;
 class StudentDropoutReasonsTable extends ControllerActionTable {
 	public function initialize(array $config)
     {
-		$this->addBehavior('ControllerAction.FieldOption');
+		$this->addBehavior('FieldOption.FieldOption');
         $this->table('student_dropout_reasons');
 		parent::initialize($config);
 		$this->hasMany('DropoutRequests', ['className' => 'Institution.DropoutRequests', 'foreignKey' => 'student_dropout_reason_id']);
