@@ -1,3 +1,17 @@
+v3.5.11
+- Student and Staff Reports now include Institution Types
+- Fixed a bug that prevented users from deleting Infrastructure records
+- Fixed a bug that caused 404 error page when adding Staff Behaviour
+- Fixed a bug that shows incorrect message to the user after deleting an institution	
+- Fixed a bug that caused the system to add un-selected subjects when adding new subjects
+- Class field in Student Transfer Approval page is now an optional field	
+- Fixed a bug that removes Group Administrator when editing User Groups
+- Added new field called Type in Comments feature
+- Fixed a bug that creates 2 Enrolled records when performing Student Transfers
+- Added new workflow event to delete the record when Cancel is clicked during Open status
+- The number of credit hours in Training Courses should fetch the correct value from System Configuration now	 
+- Security role names are now unique in the system
+
 v3.5.10
 - User must enter a valid end date when creating a new academic period now
 - Fixed a bug that prevented user from viewing guardian profile
