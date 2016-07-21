@@ -40,10 +40,10 @@ class StudentAttendancesTable extends AppTable {
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
-        
+
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->addBehavior('Excel', [
-			'excludes' => ['status', 'education_grade_id'],
+			'excludes' => ['status', 'education_grade_id', 'id', 'academic_period_id', 'institution_id'],
 			'pages' => ['index']
 		]);
 		$this->addBehavior('Import.ImportLink');
@@ -95,7 +95,7 @@ class StudentAttendancesTable extends AppTable {
 			'type' => 'string',
 			'label' => ''
 		];
-		
+
 		$newFields = array_merge($newArray, $fields->getArrayCopy());
 		$fields->exchangeArray($newFields);
 		$sheet = $settings['sheet'];
@@ -114,7 +114,7 @@ class StudentAttendancesTable extends AppTable {
 					'key' => 'AcademicPeriod.days',
 					'field' => 'attendance_field',
 					'type' => 'attendance',
-					'label' => sprintf('%s (%s)', $item['day'], $item['weekDay']),
+					'label' => sprintf('%s (%s)', $item['day'], __($item['weekDay'])),
 					'date' => $item['date']
 				];
 			}
@@ -162,7 +162,7 @@ class StudentAttendancesTable extends AppTable {
 		}
 	}
 
-	public function getData($monthStartDay, $monthEndDay, $institutionId, $classId) {		
+	public function getData($monthStartDay, $monthEndDay, $institutionId, $classId) {
 		$StudentAbsenceTable = TableRegistry::get('Institution.InstitutionStudentAbsences');
 
 		$absenceData = $StudentAbsenceTable->find('all')
@@ -186,7 +186,7 @@ class StudentAttendancesTable extends AppTable {
 					'full_day' => $StudentAbsenceTable->aliasField('full_day'),
 					'start_time' => $StudentAbsenceTable->aliasField('start_time'),
 					'end_time' => $StudentAbsenceTable->aliasField('end_time'),
-					'absence_type_id' => $StudentAbsenceTable->aliasField('absence_type_id'), 
+					'absence_type_id' => $StudentAbsenceTable->aliasField('absence_type_id'),
 					'absence_type_name' => 'AbsenceTypes.name',
 					'absence_reason' => 'StudentAbsenceReasons.name'
 				])
@@ -201,7 +201,7 @@ class StudentAttendancesTable extends AppTable {
 			if ($absenceUnit['full_day'] && !empty($absenceUnit['end_date']) && $absenceUnit['end_date'] > $absenceUnit['start_date']) {
 				$tempStartDate = date("Y-m-d", strtotime($absenceUnit['start_date']));
 				$formatedLastDate = date("Y-m-d", strtotime($absenceUnit['end_date']));
-				
+
 				while ($tempStartDate <= $formatedLastDate) {
 					$stampTempDate = strtotime($tempStartDate);
 					$tempIndex = date('Y-m-d', $stampTempDate);
@@ -257,8 +257,85 @@ class StudentAttendancesTable extends AppTable {
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 
+	// Function use by the mini dashboard
+	public function getNumberOfStudentByAttendance($params=[]) {
+		$query = $params['query'];
+		$selectedDay = $params['selectedDay'];
+
+		// Add this condition if the selected day is all day
+		if ($selectedDay == -1) {
+			$dateRange = array_column($this->allDayOptions, 'date');
+			// Sort the date range
+			usort($dateRange, function($a, $b) {
+			    $dateTimestamp1 = strtotime($a);
+			    $dateTimestamp2 = strtotime($b);
+			    return $dateTimestamp1 < $dateTimestamp2 ? -1: 1;
+			});
+			if (!empty($dateRange)) {
+				$startDate = $dateRange[0];
+				$endDate = $dateRange[count($dateRange) - 1];
+				$dateRangeCondition = [
+					'StudentAbsences.end_date >=' => $startDate, 
+					'StudentAbsences.start_date <=' => $endDate
+				];
+			} else {
+				$dateRangeCondition = ['1 = 0'];
+			}
+		} else {
+			$dateRangeCondition = [];
+		}
+		
+		$StudentAttendancesQuery = clone $query;
+
+		$studentAbsenceArray = $StudentAttendancesQuery
+			->find('list', [
+				'groupField' => 'student_id',
+				'keyField' => 'absence_id',
+				'valueField' => 'absence_type'
+			])
+			->select(['absence_id' => 'StudentAbsences.id', 'student_id' => $this->aliasField('student_id'), 'absence_type' => 'StudentAbsences.absence_type_id'])
+			->group(['student_id', 'absence_type'])
+			->where($dateRangeCondition)
+			->toArray();
+		// Creating the data set		
+		$dataSet = [];
+		$data = [];
+		foreach ($studentAbsenceArray as $userAbsenceType) {
+			// Compile the dataset
+			$absenceForTheWeek = false;
+			foreach ($userAbsenceType as $absenceType) {
+				if (empty($absenceType)) {
+					if (isset($data['Present'])) {
+						$data['Present'] = ++$data['Present'];
+					} else {
+						$data['Present'] = 1;
+					}
+				} else {
+					$typeName = $this->absenceList[$absenceType];
+					if ($typeName != __('Late')) {
+						$typeName = 'Absence';
+					}
+					if (!$absenceForTheWeek || $typeName == __('Late')) {
+						if (isset($data[$typeName])) {
+							$data[$typeName] = ++$data[$typeName];
+						} else {
+							$data[$typeName] = 1;
+						}
+					}
+					
+					if ($typeName == 'Absence') {
+						$absenceForTheWeek = true;
+					}
+				}
+			}
+		}
+		unset($StudentAttendancesQuery);
+		return $data;
+	}
+
+
 	// Event: ControllerAction.Model.onGetOpenemisNo
-	public function onGetOpenemisNo(Event $event, Entity $entity) {		
+	public function onGetOpenemisNo(Event $event, Entity $entity) {
 		$sessionPath = 'Users.institution_student_absences.';
 		$timeError = $this->Session->read($sessionPath.$entity->student_id.'.timeError');
 		$this->Session->delete($sessionPath.$entity->student_id.'.timeError');
@@ -274,7 +351,7 @@ class StudentAttendancesTable extends AppTable {
 			$error = $this->getMessage('StudentAttendances.lateTime');
 			$html .= '&nbsp;<i class="fa fa-exclamation-circle fa-lg table-tooltip icon-red" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="'.$error.'"></i>';
 		}
-		
+
 		return $html;
 	}
 
@@ -291,16 +368,16 @@ class StudentAttendancesTable extends AppTable {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$id = $entity->student_id;
 			$StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
-			
+
 			$alias = Inflector::underscore($StudentAbsences->alias());
 			$fieldPrefix = $StudentAbsences->Users->alias() . '.'.$alias.'.' . $id;
 			$absenceCodeList = $this->absenceCodeList;
 			$codeAbsenceTypeList = array_flip($absenceCodeList);
 			$options = [
 				'error' => true,
-				'type' => 'select', 
-				'label' => false, 
-				'options' => $this->typeOptions, 
+				'type' => 'select',
+				'label' => false,
+				'options' => $this->typeOptions,
 				'onChange' => '$(".type_'.$id.'").hide();$("#type_'.$id.'_"+$(this).val()).show();$("#late_time__'.$id.'").hide();$(".late_time__'.$id.'_"+$(this).val()).show();',
 			];
 			$displayTime = 'display:none;';
@@ -322,18 +399,19 @@ class StudentAttendancesTable extends AppTable {
 					$displayTime = '';
 					$endTime = new Time ($entity->StudentAbsences['end_time']);
 					$attr['value'] = $endTime->format('h:i A');
-					
+
 				}
 
 			}
 			$attr['time_options']['defaultTime'] = $attr['value'];
+			$attr['class'] = 'margin-top-10 no-margin-bottom';
 			$attr['field'] = 'late_time';
 			$attr['model'] = $fieldPrefix;
 			$attr['id'] = 'late_time_'.$id;
 			$attr['label'] = false;
-			
+
 			$time = $HtmlField->time('edit', $entity, $attr);
-			$html .= '<div id="late_time__'.$id.'" class="late_time__'.$id.'_'.$codeAbsenceTypeList['LATE'].'" style="'.$displayTime.'width:100px">'.$time.'</div>';
+			$html .= '<div id="late_time__'.$id.'" class="late_time__'.$id.'_'.$codeAbsenceTypeList['LATE'].'" style="'.$displayTime.'">'.$time.'</div>';
 
 			$html .= $Form->hidden($fieldPrefix.".institution_id", ['value' => $institutionId]);
 			$html .= $Form->hidden($fieldPrefix.".student_id", ['value' => $id]);
@@ -344,7 +422,6 @@ class StudentAttendancesTable extends AppTable {
 			$html .= $Form->hidden($fieldPrefix.".end_date", ['value' => $selectedDate]);
 		} else {
 			$absenceTypeList = $this->absenceList;
-
 			if (empty($entity->StudentAbsences['id'])) {
 				$type = '<i class="fa fa-check"></i>';
 			} else {
@@ -505,16 +582,11 @@ class StudentAttendancesTable extends AppTable {
 					->contain('StudentAbsenceReasons');
 				$absenceResult = $absenceQuery->first();
 
-				$typeOptions = $this->getSelectOptions('Absence.types');
-				if (empty($absenceResult->student_absence_reason)) {
-					$absenceType = 'UNEXCUSED';
-				} else {
-					$absenceType = 'EXCUSED';
-				}
+				$absenceType = $this->absenceList[$entity->StudentAbsences['absence_type_id']];
 				if ($absenceResult->full_day == 0) {
-					$urlLink = sprintf(__('Absent') . ' - ' . $typeOptions[$absenceType]. ' (%s - %s)' , $absenceResult->start_time, $absenceResult->end_time);
+					$urlLink = sprintf(__($absenceType) . ' - (%s - %s)' , $absenceResult->start_time, $absenceResult->end_time);
 				} else {
-					$urlLink = __('Absent') . ' - ' . $typeOptions[$absenceType]. ' (full day)';
+					$urlLink = __($absenceType) . ' - ('.__('Full Day').')';
 				}
 
 				$StudentAbsences = TableRegistry::get('Institution.StudentAbsences');
@@ -533,18 +605,13 @@ class StudentAttendancesTable extends AppTable {
 
 	// Event: ControllerAction.Model.index.beforeAction
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
-		$toolbarElements = [
-			['name' => 'Institution.Attendance/controls', 'data' => [], 'options' => []]
-		];
-		$this->controller->set('toolbarElements', $toolbarElements);
-
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$periodOptions = $AcademicPeriod->getList();
 		if (empty($this->request->query['academic_period_id'])) {
 			$this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
 		}
-		
+
 		$Classes = TableRegistry::get('Institution.InstitutionClasses');
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
@@ -605,7 +672,9 @@ class StudentAttendancesTable extends AppTable {
 			}
 
 			$week = $weeks[$selectedWeek];
-			$dayOptions = [-1 => ['value' => -1, 'text' => __('All Days')]];
+			if(is_null($this->request->query('mode'))){
+    			$dayOptions = [-1 => ['value' => -1, 'text' => __('All Days')]];
+			}
 			$firstDayOfWeek = $week[0]->copy();
 			$firstDay = -1;
 			$today = null;
@@ -644,7 +713,7 @@ class StudentAttendancesTable extends AppTable {
 				}
 			}
 			$dayOptions[$selectedDay][] = 'selected';
-			
+
 			$currentDay = $week[0]->copy();
 			if ($selectedDay != -1) {
 				if ($currentDay->dayOfWeek != $selectedDay) {
@@ -665,7 +734,7 @@ class StudentAttendancesTable extends AppTable {
 				->find('list')
 				->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl, 'controller' => $this->controller]) // restrict user to see own class if permission is set
 				->where([
-					$Classes->aliasField('institution_id') => $institutionId, 
+					$Classes->aliasField('institution_id') => $institutionId,
 					$Classes->aliasField('academic_period_id') => $selectedPeriod
 				])
 				->toArray();
@@ -725,14 +794,61 @@ class StudentAttendancesTable extends AppTable {
 				->where([$this->aliasField('institution_class_id') => $selectedClass])
 				->where($conditions);
 
+			$queryClone = clone $query;
+			$totalStudent = $queryClone->distinct(['InstitutionStudents.student_id'])->count();
+
+			$indexDashboard = 'attendance';
+			
+			$dataSet = $this->getNumberOfStudentByAttendance(['query' => $query, 'selectedDay' => $selectedDay]);
+			$present = 0;
+			$absent = 0;
+			$late = 0;
+			foreach ($dataSet as $key => $data) {
+				if ($key == 'Present') {
+					$present = $data;
+				} elseif ($key == __('Late')) {
+					$late = $data;
+				} else {
+					$absent += $data;
+				}
+			}
+
+			$studentAttendanceArray = [];
+
+			if ($selectedDay != -1) {
+				$studentAttendanceArray[] = ['label' => 'No. of Students Present', 'value' => $present];
+				$studentAttendanceArray[] = ['label' => 'No. of Students Absent', 'value' => $absent];
+				$studentAttendanceArray[] = ['label' => 'No. of Students Late', 'value' => $late];
+			} else {
+				$studentAttendanceArray[] = ['label' => 'No. of Students Absent for the week', 'value' => $absent];
+				$studentAttendanceArray[] = ['label' => 'No. of Students Late for the week', 'value' => $late];
+			}
+			
+			$toolbarElements[] = [
+				'name' => $indexDashboard,
+				'data' => [
+					'model' => 'students',
+					'modelCount' => $totalStudent,
+					'modelArray' => $studentAttendanceArray,
+				],
+				'options' => []
+			];
+			$toolbarElements[] = [
+				'name' => 'Institution.Attendance/controls', 
+				'data' => [], 
+				'options' => []
+			];
+
+			$this->controller->set('toolbarElements', $toolbarElements);
+
 			if ($selectedDay == -1) {
 				foreach ($this->allDayOptions as $key => $obj) {
 					$this->ControllerAction->addField($key);
 					$this->_fieldOrder[] = $key;
 				}
 			} else {
-				$this->ControllerAction->field('type');
-				$this->ControllerAction->field('reason');
+				$this->ControllerAction->field('type', ['tableColumnClass' => 'vertical-align-top']);
+				$this->ControllerAction->field('reason', ['tableColumnClass' => 'vertical-align-top']);
 				$this->_fieldOrder[] = 'type';
 				$this->_fieldOrder[] = 'reason';
 
@@ -803,7 +919,7 @@ class StudentAttendancesTable extends AppTable {
     	return $query
     		->select([
     			$this->aliasField('student_id'), 
-    			'Users.openemis_no', 'Users.first_name', 'Users.last_name', 'Users.id',
+    			'Users.openemis_no', 'Users.first_name', 'Users.middle_name', 'Users.third_name','Users.last_name', 'Users.id',
     			'StudentAbsences.id',
     			'StudentAbsences.start_date',
     			'StudentAbsences.end_date',
@@ -844,13 +960,13 @@ class StudentAttendancesTable extends AppTable {
 				} else {
 					$toolbarButtons['back'] = $buttons['back'];
 					$toolbarButtons['back']['type'] = null;
-				}	
+				}
+			} else { // if user selected All Days, Edit operation will not be allowed
+				if ($toolbarButtons->offsetExists('edit')) {
+					$toolbarButtons->offsetUnset('edit');
+				}
 			}
 		}
-
-		// if ($action == 'index') {
-		// 	$toolbarButtons['export']['url']['action'] = 'AttendanceExport';
-		// }
 	}
 
 	public function indexEdit() {
@@ -880,7 +996,7 @@ class StudentAttendancesTable extends AppTable {
 								$obj['start_time'] = new Time ($obj['start_time']);
 							}
 							$startTime = $obj['start_time'];
-							$endTime = Time::parseTime($obj['late_time']);
+							$endTime = new Time ($obj['late_time']);
 							$obj['end_time'] = $endTime;
 
 							$startTimestamp = intval($startTime->toUnixString());

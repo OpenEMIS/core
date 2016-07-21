@@ -12,6 +12,7 @@
 			'onchange' => "$('#reload').val('add').click();",
             'options' => $attr['data']['studentOptions']
 		]);
+		$this->Form->unlockField('InstitutionSubjects.subject_students');
 		?>
 	</div>
 	<?php endif;?>

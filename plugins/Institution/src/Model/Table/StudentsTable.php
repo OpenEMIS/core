@@ -25,12 +25,17 @@ class StudentsTable extends AppTable {
 		$this->table('institution_students');
 		parent::initialize($config);
 
+		// Associations
 		$this->belongsTo('Users',			['className' => 'Security.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('StudentStatuses',	['className' => 'Student.StudentStatuses']);
 		$this->belongsTo('EducationGrades',	['className' => 'Education.EducationGrades']);
 		$this->belongsTo('Institutions',	['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('AcademicPeriods',	['className' => 'AcademicPeriod.AcademicPeriods']);
 
+
+
+
+		// Behaviors
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 		$this->addBehavior('AcademicPeriod.Period');
 		// to handle field type (autocomplete)
@@ -101,6 +106,8 @@ class StudentsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 			->add('start_date', 'ruleCompareDate', [
 				'rule' => ['compareDate', 'end_date', false]
@@ -120,7 +127,7 @@ class StudentsTable extends AppTable {
 				'last' => true
 			])
 			->add('student_name', 'ruleStudentNotCompletedGrade', [
-				'rule' => ['studentNotCompletedGrade'],
+				'rule' => ['studentNotCompletedGrade', []],
 				'on' => 'create',
 				'last' => true
 			])
@@ -146,7 +153,7 @@ class StudentsTable extends AppTable {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$query->where([$this->aliasField('institution_id') => $institutionId]);
-		$query->contain(['Users.Nationalities.Countries', 'Users.Identities.IdentityTypes', 'Users.Genders']);
+		$query->contain(['Users.Nationalities.NationalitiesLookUp', 'Users.Identities.IdentityTypes', 'Users.Genders']);
 		$query->select(['openemis_no' => 'Users.openemis_no', 'gender_id' => 'Genders.name', 'date_of_birth' => 'Users.date_of_birth', 'code' => 'Institutions.code']);
 		$periodId = $this->request->query['academic_period_id'];
 		if ($periodId > 0) {
@@ -255,8 +262,8 @@ class StudentsTable extends AppTable {
 		if(!empty($entity['user']['nationalities'])) {
 			$nationalities = $entity['user']['nationalities'];
 			foreach ($nationalities as $nationality) {
-				if (isset($nationality['country']['name'])) {
-					$str .= $nationality['country']['name'].', ';
+				if (isset($nationality['nationalities_look_up']['name'])) {
+					$str .= $nationality['nationalities_look_up']['name'].', ';
 				}			
 			}
 		}
@@ -278,29 +285,31 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->field('student_status_id', ['type' => 'select']);
 	}
 
-	// Start PHPOE-2123
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-        // POCOR-2884 - If id cannot be found, return a successful deletion message
-        $primaryKey = $this->primaryKey();
-        $idKey = $this->aliasField($primaryKey);
-        if (!$this->exists([$idKey => $id])) {
+    public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+        // PHPOE-2123 moved.. 'Another check to check before deletion. In case of concurrency issue.'
+        $status = $this->get($id)->student_status_id;
+        $studentStatuses = $this->StudentStatuses->findCodeList();
+        if ($status != $studentStatuses['CURRENT']) {
             $process = function() use ($id, $options) {
-                return true;
+                $this->Alert->error('Institution.InstitutionSiteStudents.deleteNotEnrolled');
             };
             return $process;
         }
 
-		// Another check to check before deletion. In case of concurrency issue.
-		$status = $this->get($id)->student_status_id;
-		$studentStatuses = $this->StudentStatuses->findCodeList();
-		if ($status != $studentStatuses['CURRENT']) {
-			$process = function() use ($id, $options) {
-				$this->Alert->error('Institution.InstitutionStudents.deleteNotEnrolled');
-			};
-			return $process;
-		}
-	}
-	// End PHPOE-2123
+        $process = function ($model, $id, $deleteOptions) {
+            $primaryKey = $model->primaryKey();
+            $idKey = $model->aliasField($primaryKey);
+            if ($model->exists([$idKey => $id])) {
+                $entity = $model->get($id);
+                return $model->delete($entity, $deleteOptions->getArrayCopy());
+            } else {
+                // If id(to be deleted) cannot be found, return a successful deletion message
+                return true;
+            }
+        };
+
+        return $process;
+    }
 
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$this->ControllerAction->field('academic_period_id', ['visible' => false]);
@@ -784,6 +793,7 @@ class StudentsTable extends AppTable {
 							'institution_id' => $studentData['institution_id'],
 							'academic_period_id' => $studentData['academic_period_id'],
 							'education_grade_id' => $studentData['education_grade_id'],
+							'institution_class_id' => $studentData['class'],
 							'previous_institution_id' => 0,
 							'student_transfer_reason_id' => 0,
 							'type' => $admissionStatus,
@@ -878,18 +888,14 @@ class StudentsTable extends AppTable {
 			$this->ControllerAction->field('student_status_id', ['type' => 'readonly', 'attr' => ['value' => $entity->student_status->name]]);
 			
 			$period = $entity->academic_period;
-			$endDate = $period->end_date->copy();
+
+            $dateOptions = [
+                'startDate' => $period->start_date->format('d-m-Y'),
+                'endDate' => $period->end_date->format('d-m-Y')
+            ];
 			
-			$this->fields['start_date']['date_options'] = [
-				'startDate' => $period->start_date->format('d-m-Y'),
-				'endDate' => $endDate->subDay()->format('d-m-Y')
-			];
-
-
-			$this->fields['end_date']['date_options'] = [
-				'startDate' => $period->start_date->format('d-m-Y'),
-				'endDate' => $endDate->subDay()->format('d-m-Y')
-			];
+			$this->fields['start_date']['date_options'] = $dateOptions;
+			$this->fields['end_date']['date_options'] = $dateOptions;
 
 			$this->Session->write('Student.Students.id', $entity->student_id);
 			$this->Session->write('Student.Students.name', $entity->user->name);
@@ -914,9 +920,8 @@ class StudentsTable extends AppTable {
 		if ($action == 'add') {
 			$period = $attr['period'];
 			if ($period instanceOf Entity) {
-				$endDate = $period->end_date->copy();
 				$attr['date_options']['startDate'] = $period->start_date->format('d-m-Y');
-				$attr['date_options']['endDate'] = $endDate->subDay()->format('d-m-Y');
+				$attr['date_options']['endDate'] = $period->end_date->format('d-m-Y');
 				$attr['value'] = $period->start_date->format('d-m-Y');
 			} else {
 				$attr['date_options']['startDate'] = '';
@@ -1150,18 +1155,12 @@ class StudentsTable extends AppTable {
 			$buttons['view']['url'] = $url;
 		}
 
+		// Remove in POCOR-3010
 		if (isset($buttons['edit'])) {
-			$url = $this->ControllerAction->url('edit');
-			$url['action'] = 'StudentUser';
-			$url[1] = $entity['_matchingData']['Users']['id'];
-			$url['id'] = $entity->id;
-			$buttons['edit']['url'] = $url;
+			unset($buttons['edit']);
 		}
 
 		if (! $this->checkEnrolledInInstitution($studentId, $institutionId)) {
-			if (isset($buttons['edit'])) {
-				unset($buttons['edit']);
-			}
 			if (isset($buttons['remove'])) {
 				unset($buttons['remove']);
 			}
@@ -1438,70 +1437,65 @@ class StudentsTable extends AppTable {
 			$_conditions[$this->alias().'.'.$key] = $value;
 		}
 
-		$periodConditions = $_conditions;
-		$query = $this->find();
-		$periodResult = $query
-			->select([
-				'min_year' => $query->func()->min($this->aliasField('start_year')),
-				'max_year' => $query->func()->max($this->aliasField('end_year'))
-			])
-			->where($periodConditions)
-			->first();
 		$AcademicPeriod = $this->AcademicPeriods;
 		$currentPeriodId = $AcademicPeriod->getCurrent();
 		$currentPeriodObj = $AcademicPeriod->get($currentPeriodId);
-		$thisYear = $currentPeriodObj->end_year;
-		$minYear = $thisYear - 2;
-		$minYear = $minYear > $periodResult->min_year ? $minYear : $periodResult->min_year;
-		$maxYear = $thisYear;
-
-		$years = [];
 
 		$genderOptions = $this->Users->Genders->getList();
-		$dataSet = [];
+		$dataSet = new ArrayObject();
 		foreach ($genderOptions as $key => $value) {
 			$dataSet[$value] = ['name' => __($value), 'data' => []];
 		}
 
-		$studentsByYearConditions = array('Genders.name IS NOT NULL');
-		$studentsByYearConditions = array_merge($studentsByYearConditions, $_conditions);
-
-		for ($currentYear = $minYear; $currentYear <= $maxYear; $currentYear++) {
-			$years[$currentYear] = $currentYear;
-			$studentsByYearConditions['OR'] = [
-				[
-					$this->aliasField('end_year').' IS NOT NULL',
-					$this->aliasField('start_year').' <= "' . $currentYear . '"',
-					$this->aliasField('end_year').' >= "' . $currentYear . '"'
-				]
-			];
-
-			$query = $this->find();
-			$studentsByYear = $query
-				->contain(['Users.Genders'])
-				->select([
-					'Users.first_name',
-					'Genders.name',
-					'total' => $query->func()->count('DISTINCT '.$this->aliasField('student_id'))
-				])
-				->where($studentsByYearConditions)
-				->group('Genders.name')
-				->toArray()
-				;
- 			foreach ($dataSet as $key => $value) {
- 				if (!array_key_exists($currentYear, $dataSet[$key]['data'])) {
- 					$dataSet[$key]['data'][$currentYear] = 0;
- 				}				
+		$academicPeriodList = [];
+		$found = false;
+		foreach ($AcademicPeriod->getYearList() as $periodId => $periodName) {
+			if ($found) {
+				$academicPeriodList[$periodId] = $periodName;
+				break;
 			}
-
-			foreach ($studentsByYear as $key => $studentByYear) {
-				$studentGender = isset($studentByYear->user->gender->name) ? $studentByYear->user->gender->name : null;
-				$studentTotal = isset($studentByYear->total) ? $studentByYear->total : 0;
-				$dataSet[$studentGender]['data'][$currentYear] = $studentTotal;
+			if ($periodId == $currentPeriodId) {
+				$academicPeriodList[$periodId] = $periodName;
+				$found = true;
+			} else {
+				$academicPeriodList = [$periodId => $periodName];
 			}
 		}
+		$academicPeriodList = array_reverse($academicPeriodList, true);
 
-		$params['dataSet'] = $dataSet;
+		$academicPeriodCondition = ['academic_period_id IN ' => array_keys($academicPeriodList)];
+		$queryCondition = array_merge($academicPeriodCondition, $_conditions);
+		$studentsByYear = $this
+			->find('list',[
+				'groupField' => 'gender_name',
+				'keyField' => 'period_name',
+				'valueField' => 'total'
+			])
+			->matching('Users.Genders')
+			->matching('AcademicPeriods')
+			->select([
+				'gender_name' => 'Genders.name',
+				'period_name' => 'AcademicPeriods.name',
+				'total' => $this->find()->func()->count('DISTINCT '.$this->aliasField('student_id'))
+			])
+			->where($queryCondition)
+			->group(['gender_name', $this->aliasField('academic_period_id')])
+			->order('AcademicPeriods.order DESC')
+			->hydrate(false)
+			->toArray()
+			;
+
+		foreach ($dataSet as $key => $data) {
+			foreach ($academicPeriodList as $period) {
+
+				if (isset($studentsByYear[$key][$period])) {
+					$dataSet[$key]['data'][$period] = $studentsByYear[$key][$period];
+				} else {
+					$dataSet[$key]['data'][$period] = 0;
+				}	
+			}
+		}
+		$params['dataSet'] = $dataSet->getArrayCopy();
 
 		return $params;
 	}

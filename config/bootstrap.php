@@ -76,9 +76,16 @@ try {
     Configure::config('default', new PhpConfig());
     Configure::load('app', 'default', false);
     Configure::load('app_extra', 'default');
-    Configure::load('datasource', 'default', false);
+    Configure::load('datasource', 'default');
 } catch (\Exception $e) {
     exit($e->getMessage() . "\n");
+}
+
+// For unit testing
+try {
+    Configure::load('test_datasource', 'default');
+} catch (\Exception $e) {
+    // do nothing if test_datasource.php is not found
 }
 
 // Load an environment local configuration file.
@@ -245,7 +252,7 @@ Plugin::load('InstitutionRepeater', ['routes' => true, 'autoload' => true]);
 // Only try to load DebugKit in development mode
 // Debug Kit should not be installed on a production system
 if (Configure::read('debug')) {
-    //Plugin::load('DebugKit', ['bootstrap' => true]);
+    // Plugin::load('DebugKit', ['bootstrap' => true]);
 }
 
 /**

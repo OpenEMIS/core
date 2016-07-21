@@ -200,6 +200,7 @@ class UserGroupsTable extends AppTable {
 		} else if ($action == 'edit') {
 			$tableHeaders[] = ''; // for delete column
 			$Form = $event->subject()->Form;
+			$Form->unlockField('area_id');
 
 			if ($this->request->is(['get'])) {
 				if (!array_key_exists($alias, $this->request->data)) {
@@ -231,6 +232,11 @@ class UserGroupsTable extends AppTable {
 					$name .= $Form->hidden("$alias.$key.$i._joinData.code", ['value' => $joinData['code']]);
 					$name .= $Form->hidden("$alias.$key.$i._joinData.area_id", ['value' => $joinData['area_id']]);
 					$name .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $joinData['name']]);
+					$Form->unlockField("$alias.$key.$i.id");
+					$Form->unlockField("$alias.$key.$i._joinData.level");
+					$Form->unlockField("$alias.$key.$i._joinData.code");
+					$Form->unlockField("$alias.$key.$i._joinData.area_id");
+					$Form->unlockField("$alias.$key.$i._joinData.name");
 					$rowData[] = [$joinData['level'], ['autocomplete-exclude' => $joinData['area_id']]];
 					$rowData[] = $joinData['code'];
 					$rowData[] = $name;
@@ -287,7 +293,7 @@ class UserGroupsTable extends AppTable {
 		} else if ($action == 'edit') {
 			$tableHeaders[] = ''; // for delete column
 			$Form = $event->subject()->Form;
-
+			$Form->unlockField('institution_id');
 			if ($this->request->is(['get'])) {
 
 				if (!array_key_exists($alias, $this->request->data)) {
@@ -318,6 +324,10 @@ class UserGroupsTable extends AppTable {
 					$name .= $Form->hidden("$alias.$key.$i._joinData.code", ['value' => $joinData['code']]);
 					$name .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $joinData['name']]);
 					$name .= $Form->hidden("$alias.$key.$i._joinData.institution_id", ['value' => $joinData['institution_id']]);
+					$Form->unlockField("$alias.$key.$i.id");
+					$Form->unlockField("$alias.$key.$i._joinData.code");
+					$Form->unlockField("$alias.$key.$i._joinData.institution_id");
+					$Form->unlockField("$alias.$key.$i._joinData.name");
 					$rowData[] = [$joinData['code'], ['autocomplete-exclude' => $joinData['institution_id']]];
 					$rowData[] = $name;
 					$rowData[] = $this->getDeleteButton();
@@ -387,7 +397,8 @@ class UserGroupsTable extends AppTable {
 		} else if ($action == 'edit') {
 			$tableHeaders[] = ''; // for delete column
 			$Form = $event->subject()->Form;
-
+			$HtmlField = $event->subject();
+			$Form->unlockField('user_id');
 			$user = $this->Auth->user();
 			$userId = $user['id'];
 			if ($user['super_admin'] == 1) { // super admin will show all roles
@@ -478,9 +489,14 @@ class UserGroupsTable extends AppTable {
 						$name .= $Form->hidden("$alias.$key.$i._joinData.openemis_no", ['value' => $joinData['openemis_no']]);
 						$name .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $joinData['name']]);
 						$name .= $Form->hidden("$alias.$key.$i._joinData.security_user_id", ['value' => $joinData['security_user_id']]);
+						$Form->unlockField("$alias.$key.$i.id");
+						$Form->unlockField("$alias.$key.$i._joinData.openemis_no");
+						$Form->unlockField("$alias.$key.$i._joinData.name");
+						$Form->unlockField("$alias.$key.$i._joinData.security_user_id");
 						$rowData[] = $joinData['openemis_no'];
 						$rowData[] = $name;
-						$rowData[] = $Form->input("$alias.$key.$i._joinData.security_role_id", ['label' => false, 'options' => $roleOptions]);
+						$rowData[] = $HtmlField->secureSelect("$alias.$key.$i._joinData.security_role_id", ['label' => false, 'options' => $roleOptions]);
+						$Form->unlockField("$alias.$key.$i._joinData.security_role_id");
 						$rowData[] = $this->getDeleteButton();
 						$tableCells[] = $rowData;
 					} else if ($entity->isNew()) {
@@ -492,7 +508,12 @@ class UserGroupsTable extends AppTable {
 							$name .= $Form->hidden("$alias.$key.$i._joinData.openemis_no", ['value' => $joinData['openemis_no']]);
 							$name .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $joinData['name']]);
 							$name .= $Form->hidden("$alias.$key.$i._joinData.security_user_id", ['value' => $joinData['security_user_id']]);
-							$name .= $Form->hidden("$alias.$key.$i._joinData.security_role_id", ['value' => $joinData['security_role_id']]);
+							$name .= $Form->hidden("$alias.$key.$i._joinData.security_role_id", ['value' => $this->Roles->getGroupAdministratorEntity()->id]); //get the Group Administrator role ID
+							$Form->unlockField("$alias.$key.$i.id");
+							$Form->unlockField("$alias.$key.$i._joinData.openemis_no");
+							$Form->unlockField("$alias.$key.$i._joinData.name");
+							$Form->unlockField("$alias.$key.$i._joinData.security_user_id");
+							$Form->unlockField("$alias.$key.$i._joinData.security_role_id");
 							$rowData[] = $joinData['openemis_no'];
 							$rowData[] = $name;
 							$rowData[] = __('Group Administrator');
@@ -550,10 +571,7 @@ class UserGroupsTable extends AppTable {
 				]
 			]);
 		}
-
-		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
-			$query->order([$this->aliasField('name') => 'asc']);
-		}
+		$options['order'] = [$this->aliasField('name')];
 
 		$search = $this->ControllerAction->getSearchKey();
 

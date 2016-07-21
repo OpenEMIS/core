@@ -40,44 +40,45 @@ class InstitutionsTable extends AppTable  {
 		$this->belongsTo('Areas', 							['className' => 'Area.Areas']);
 		$this->belongsTo('AreaAdministratives', 			['className' => 'Area.AreaAdministratives']);
 
-		$this->hasMany('InstitutionActivities', 			['className' => 'Institution.InstitutionActivities', 'dependent' => true]);
-		$this->hasMany('InstitutionAttachments', 			['className' => 'Institution.InstitutionAttachments', 'dependent' => true]);
+		$this->hasMany('InstitutionActivities', 			['className' => 'Institution.InstitutionActivities', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionAttachments', 			['className' => 'Institution.InstitutionAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-		$this->hasMany('InstitutionPositions', 				['className' => 'Institution.InstitutionPositions', 'dependent' => true]);
-		$this->hasMany('InstitutionShifts', 				['className' => 'Institution.InstitutionShifts', 'dependent' => true]);
+		$this->hasMany('InstitutionPositions', 				['className' => 'Institution.InstitutionPositions', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionShifts', 				['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionClasses', 				['className' => 'Institution.InstitutionClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
+        // Note: InstitutionClasses already cascade deletes 'InstitutionSubjectStudents' - dependent and cascade not neccessary
+        $this->hasMany('InstitutionSubjectStudents',        ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionSubjects', 				['className' => 'Institution.InstitutionSubjects', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('InstitutionSubjectStudents', 		['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true]);
 		$this->hasMany('Infrastructures',					['className' => 'Institution.InstitutionInfrastructures', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-		$this->hasMany('Staff',				 				['className' => 'Institution.Staff', 'dependent' => true]);
-		$this->hasMany('StaffPositionProfiles',				['className' => 'Institution.StaffPositionProfiles', 'dependent' => true]);
-		$this->hasMany('StaffBehaviours', 					['className' => 'Institution.StaffBehaviours', 'dependent' => true]);
-		$this->hasMany('InstitutionStaffAbsences', 			['className' => 'Institution.StaffAbsences', 'dependent' => true]);
+		$this->hasMany('Staff',				 				['className' => 'Institution.Staff', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StaffPositionProfiles',				['className' => 'Institution.StaffPositionProfiles', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StaffBehaviours', 					['className' => 'Institution.StaffBehaviours', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionStaffAbsences', 			['className' => 'Institution.StaffAbsences', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-		$this->hasMany('Students', 							['className' => 'Institution.Students', 'dependent' => true]);
-		$this->hasMany('StudentBehaviours', 				['className' => 'Institution.StudentBehaviours', 'dependent' => true]);
-		$this->hasMany('InstitutionStudentAbsences', 		['className' => 'Institution.InstitutionStudentAbsences', 'dependent' => true]);
+		$this->hasMany('Students', 							['className' => 'Institution.Students', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StudentBehaviours', 				['className' => 'Institution.StudentBehaviours', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionStudentAbsences', 		['className' => 'Institution.InstitutionStudentAbsences', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-		$this->hasMany('InstitutionBankAccounts', 			['className' => 'Institution.InstitutionBankAccounts', 'dependent' => true]);
-		$this->hasMany('InstitutionFees', 					['className' => 'Institution.InstitutionFees', 'dependent' => true]);
+		$this->hasMany('InstitutionBankAccounts', 			['className' => 'Institution.InstitutionBankAccounts', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionFees', 					['className' => 'Institution.InstitutionFees', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-		$this->hasMany('InstitutionGrades', 				['className' => 'Institution.InstitutionGrades', 'dependent' => true]);
-		
-		$this->hasMany('StudentPromotion', 					['className' => 'Institution.StudentPromotion', 'dependent' => true]);
-		$this->hasMany('StudentAdmission', 					['className' => 'Institution.StudentAdmission', 'dependent' => true]);
-		$this->hasMany('StudentDropout', 					['className' => 'Institution.StudentDropout', 'dependent' => true]);
-		$this->hasMany('TransferApprovals', 				['className' => 'Institution.TransferApprovals', 'dependent' => true, 'foreignKey' => 'previous_institution_id']);
-		$this->hasMany('AssessmentItemResults', 			['className' => 'Institution.AssessmentItemResults', 'dependent' => true]);
-		$this->hasMany('InstitutionRubrics', 				['className' => 'Institution.InstitutionRubrics', 'dependent' => true]);
-		$this->hasMany('InstitutionQualityVisits', 			['className' => 'Institution.InstitutionQualityVisits', 'dependent' => true]);
-		$this->hasMany('StudentSurveys', 					['className' => 'Student.StudentSurveys', 'dependent' => true]);
-		$this->hasMany('InstitutionSurveys', 				['className' => 'Institution.InstitutionSurveys', 'dependent' => true]);
+		$this->hasMany('InstitutionGrades', 				['className' => 'Institution.InstitutionGrades', 'dependent' => true, 'cascadeCallbacks' => true]);
+
+		$this->hasMany('StudentPromotion', 					['className' => 'Institution.StudentPromotion', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StudentAdmission', 					['className' => 'Institution.StudentAdmission', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StudentDropout', 					['className' => 'Institution.StudentDropout', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('TransferApprovals', 				['className' => 'Institution.TransferApprovals', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'previous_institution_id']);
+		$this->hasMany('AssessmentItemResults', 			['className' => 'Institution.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionRubrics', 				['className' => 'Institution.InstitutionRubrics', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionQualityVisits', 			['className' => 'Institution.InstitutionQualityVisits', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StudentSurveys', 					['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSurveys', 				['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->belongsToMany('SecurityGroups', [
 			'className' => 'Security.SystemGroups',
 			'joinTable' => 'security_group_institutions',
-			'foreignKey' => 'institution_id', 
+			'foreignKey' => 'institution_id',
 			'targetForeignKey' => 'security_group_id',
 			'through' => 'Security.SecurityGroupInstitutions',
 			'dependent' => true
@@ -111,6 +112,8 @@ class InstitutionsTable extends AppTable  {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 			->add('date_opened', [
 					'ruleCompare' => [
@@ -127,12 +130,12 @@ class InstitutionsTable extends AppTable  {
 			->add('longitude', 'ruleLongitude', [
 					'rule' => 'checkLongitude'
 				])
-		
+
 	        ->allowEmpty('latitude')
 			->add('latitude', 'ruleLatitude', [
 					'rule' => 'checkLatitude'
 				])
-		
+
 			// ->add('address', 'ruleMaximum255', [
 			// 		'rule' => ['maxLength', 255],
 			// 		'message' => 'Maximum allowable character is 255',
@@ -185,14 +188,14 @@ class InstitutionsTable extends AppTable  {
 		$name = $entity->name;
 
 		if ($this->AccessControl->check([$this->controller->name, 'dashboard'])) {
-			$name = $event->subject()->Html->link($entity->name, [
+			$name = $event->subject()->HtmlField->link($entity->name, [
 				'plugin' => $this->controller->plugin,
 				'controller' => $this->controller->name,
 				'action' => 'dashboard',
 				'0' => $entity->id
 			]);
 		}
-		
+
 		return $name;
 	}
 
@@ -220,7 +223,7 @@ class InstitutionsTable extends AppTable  {
 
 		$this->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information')]);
 		$this->ControllerAction->field('location_section', ['type' => 'section', 'title' => __('Location')]);
-		
+
 		$language = I18n::locale();
 		$field = 'area_id';
 		$areaLabel = $this->onGetFieldLabel($event, $this->alias(), $field, $language, true);
@@ -247,7 +250,7 @@ class InstitutionsTable extends AppTable  {
 			if ($securityGroup) {
 				// add the relationship of security group and institutions
 				$securityInstitution = $SecurityInstitutions->newEntity([
-					'security_group_id' => $securityGroup->id, 
+					'security_group_id' => $securityGroup->id,
 					'institution_id' => $entity->id
 				]);
 				$SecurityInstitutions->save($securityInstitution);
@@ -257,7 +260,7 @@ class InstitutionsTable extends AppTable  {
 				if (!$this->save($entity)) {
 					return false;
 				}
-				
+
 			} else {
 				return false;
 			}
@@ -311,7 +314,7 @@ class InstitutionsTable extends AppTable  {
 			unset($institutionCount);
 			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
 	            'name' => $indexDashboard,
-	            'data' => [ 
+	            'data' => [
 	            	'model' => 'institutions',
 	            	'modelCount' => $count,
 	            	'modelArray' => $institutionArray,
@@ -334,7 +337,7 @@ class InstitutionsTable extends AppTable  {
 			$params['key'] = __($key);
 
 			$institutionRecords = clone $query;
-			
+
 			$selectString = $modelName.'.name';
 			$institutionTypesCount = $institutionRecords
 				->contain([$modelName])
@@ -347,7 +350,7 @@ class InstitutionsTable extends AppTable  {
 
 			$this->advancedSearchQuery($this->request, $institutionTypesCount);
 
-			// Creating the data set		
+			// Creating the data set
 			$dataSet = [];
 			foreach ($institutionTypesCount->toArray() as $key => $value) {
 	            // Compile the dataset
@@ -410,7 +413,7 @@ class InstitutionsTable extends AppTable  {
 	public function onGetAreaAdministrativeId(Event $event, Entity $entity) {
 		if ($this->action == 'view') {
 			return $entity->area_administrative_id;
-		}	
+		}
 	}
 
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
@@ -447,9 +450,7 @@ class InstitutionsTable extends AppTable  {
 		$query->join($options['query']['join']);
 
 		$queryParams = $request->query;
-		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
-			$query->order([$this->aliasField('name') => 'asc']);
-		}
+		$options['order'] = [$this->aliasField('name')];
 	}
 
 	public function indexAfterPaginate(Event $event, ResultSet $resultSet, Query $query) {
@@ -479,14 +480,14 @@ class InstitutionsTable extends AppTable  {
 	public function viewBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
-			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id', 
+			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id',
 			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
-			
+
 			'location_section',
 			'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
 
 			'area_section',
-			'area_id', 
+			'area_id',
 
 			'area_administrative_section',
 			'area_administrative_id',
@@ -508,9 +509,9 @@ class InstitutionsTable extends AppTable  {
 	public function addEditBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
-			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id', 
+			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id',
 			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
-			
+
 			'location_section',
 			'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
 
@@ -534,7 +535,7 @@ class InstitutionsTable extends AppTable  {
 ** essential methods
 **
 ******************************************************************************************************************/
-	
+
 	// autocomplete used for UserGroups
 	public function autocomplete($search, $params = []) {
 		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
@@ -551,7 +552,7 @@ class InstitutionsTable extends AppTable  {
 			->where([$conditions])
 			->order([$this->aliasField('name')])
 			->all();
-		
+
 		$data = array();
 		foreach($list as $obj) {
 			$data[] = [
@@ -618,7 +619,7 @@ class InstitutionsTable extends AppTable  {
 ** Security Functions
 **
 ******************************************************************************************************************/
-	
+
 	/**
 	 * To get the list of security group id for the particular institution and user
 	 *
@@ -676,4 +677,13 @@ class InstitutionsTable extends AppTable  {
 		return $SecurityGroupUsers->getRolesByUserAndGroup($groupIds, $userId);
 	}
 
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+    	$extra['excludedModels'] = [
+    		$this->SecurityGroups->alias(), $this->InstitutionSurveys->alias(), $this->StudentSurveys->alias(),
+    		$this->StaffPositionProfiles->alias(), $this->InstitutionActivities->alias(), $this->StudentPromotion->alias(),
+    		$this->StudentAdmission->alias(), $this->StudentDropout->alias(), $this->TransferApprovals->alias(),
+            $this->CustomFieldValues->alias(), $this->CustomTableCells->alias()
+    	];
+    }
 }

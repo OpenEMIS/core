@@ -87,6 +87,25 @@ class AppTable extends Table {
 		$this->addBehavior('Validation');
 		$this->attachWorkflow();
 		$this->addBehavior('Modification');
+
+        $this->addBehavior('TrackDelete');
+	}
+
+	public function validationDefault(Validator $validator) {
+		$schema = $this->schema();
+		$columns = $schema->columns();
+
+		foreach ($columns as $column) {
+			if ($schema->columnType($column) == 'date') {
+				$attr = $schema->column($column);
+				// check if is nullable
+				if (array_key_exists('null', $attr) && $attr['null'] === true) {
+					$validator->allowEmpty($column);
+				}
+			}
+		}
+
+		return $validator;
 	}
 
 	// Function to get the entity property from the entity. If data validation occur,
@@ -285,15 +304,13 @@ class AppTable extends Table {
     	if ($event->result) {
     		$roles = $event->result;	
     	}
-
 		if ($action != 'index') {
 			$toolbarButtons['back'] = $buttons['back'];
 			$toolbarButtons['back']['type'] = 'button';
 			$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
 			$toolbarButtons['back']['attr'] = $toolbarAttr;
 			$toolbarButtons['back']['attr']['title'] = __('Back');
-
-			if ($action == 'remove' && $buttons['remove']['strategy'] == 'transfer') {
+			if ($action == 'remove' && ($buttons['remove']['strategy'] == 'transfer' || $buttons['remove']['strategy'] == 'restrict')) {
 				$toolbarButtons['list'] = $buttons['index'];
 				$toolbarButtons['list']['type'] = 'button';
 				$toolbarButtons['list']['label'] = '<i class="fa kd-lists"></i>';
@@ -399,7 +416,7 @@ class AppTable extends Table {
             }
 
             if (array_key_exists('remove', $buttons)) {
-                if ($buttons['remove']['strategy'] == 'cascade') {
+                if (in_array($buttons['remove']['strategy'], ['cascade'])) {
                     $buttons['remove']['attr']['data-toggle'] = 'modal';
                     $buttons['remove']['attr']['data-target'] = '#delete-modal';
                     $buttons['remove']['attr']['field-target'] = '#recordId';
