@@ -25,161 +25,114 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 
 class FieldOptionBehavior extends Behavior {
-	public function initialize(array $config) {
-		// $this->_table->table('field_option_values');
-	}
+    public function getDefaultValue() {
+        $value = '';
+        $primaryKey = $this->_table->primaryKey();
+        $entity = $this->getDefaultEntity();
+        return $entity->$primaryKey;
+    }
 
-	public function getDefaultValue() {
-		// $value = '';
-		// $primaryKey = $this->_table->primaryKey();
-		// $entity = $this->getDefaultEntity();
-		// return $entity->$primaryKey;
-	}
+    public function getDefaultEntity() {
+        $query = $this->_table->find();
+        $entity = $query
+            ->where([$this->_table->aliasField('default') => 1])
+            ->first();
 
-	public function getDefaultEntity() {
-		// if ($this->_table->table() != 'field_option_values') {
-		// 	$query = $this->_table->find();
-		// 	$entity = $query
-		// 		->where([$this->_table->aliasField('default') => 1])
-		// 		->first();
+        if (is_null($entity)) {
+            $query = $this->_table->find();
+            $entity = $query->first();
+        }
 
-		// 	if (is_null($entity)) {
-		// 		$query = $this->_table->find();
-		// 		$entity = $query
-		// 			->first();
-		// 	}
-		// } else {
-		// 	$entity = $this->_table
-		// 		->find()
-		// 		->innerJoin(
-		// 			['FieldOption' => 'field_options'],
-		// 			[
-		// 				'FieldOption.id = ' . $this->_table->aliasField('field_option_id'),
-		// 				'FieldOption.code' => $this->_table->alias()
-		// 			]
-		// 		)
-		// 		->find('order')->find('visible')
-		// 		->where([$this->_table->aliasField('default') => 1])
-		// 		->first();
+        return $entity;
+    }
 
-		// 	if (is_null($entity)) {
-		// 		$entity = $this->_table
-		// 			->find()
-		// 			->innerJoin(
-		// 				['FieldOption' => 'field_options'],
-		// 				[
-		// 					'FieldOption.id = ' . $this->_table->aliasField('field_option_id'),
-		// 					'FieldOption.code' => $this->_table->alias()
-		// 				]
-		// 			)
-		// 			->find('order')->find('visible')
-		// 			->first();
-		// 	}
-		// }
-		// return $entity;
-	}
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction'];
+        $events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction'];
+        $events['ControllerAction.Model.addEdit.beforePatch'] = ['callable' => 'addEditBeforePatch'];
+        return $events;
+    }
 
-	public function implementedEvents()
-	{
-		$events = parent::implementedEvents();
-		$events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction'];
-		$events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction'];
-		$events['ControllerAction.Model.addEdit.beforePatch'] = ['callable' => 'addEditBeforePatch'];
-		return $events;
-	}
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+        // only perform for v4
+        if ($this->_table->hasBehavior('ControllerAction')) {
+            if ($entity->has('default') && $entity->default == 1) {
+                $this->_table->updateAll(['default' => 0], [$this->_table->primaryKey().' != ' => $entity->{$this->_table->primaryKey()}]);
+            }
+        }
+    }
 
-	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-		// only perform for v4
-		if ($this->_table->hasBehavior('ControllerAction')) {
-			if ($entity->has('default') && $entity->default == 1) {
-				$this->_table->updateAll(['default' => 0], [$this->_table->primaryKey().' != ' => $entity->{$this->_table->primaryKey()}]);
-			}
-		}
-	}
+    private function buildFieldOptions() {
+        $data = $this->_table->FieldOption->getFieldOptions();
+        $fieldOptions = [];
+        foreach ($data as $key => $obj) {
+            $parent = __($obj['parent']);
+            if (!array_key_exists($parent, $fieldOptions)) {
+                $fieldOptions[$parent] = [];
+            }
+            $keyName = Inflector::humanize(Inflector::underscore($key));
+            $fieldOptions[$parent][$key] = __($keyName);
+        }
+        return $fieldOptions;
+    }
 
-	private function buildFieldOptions() {
-		$data = $this->_table->FieldOption->getFieldOptions();
-		$fieldOptions = [];
-		foreach ($data as $key => $obj) {
-			$parent = __($obj['parent']);
-			if (!array_key_exists($parent, $fieldOptions)) {
-				$fieldOptions[$parent] = [];
-			}
-			$keyName = Inflector::humanize(Inflector::underscore($key));
-			$fieldOptions[$parent][$key] = __($keyName);
-		}
-		return $fieldOptions;
-	}
+    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
+    {
+        $patchOptions['validate'] = 'update';
+    }
 
-	// private function checkFieldOption($event, $selected) {
-	// 	if (!$this->_table->request->is('ajax')) { // to work with reorder
-	// 		$FieldOptions = TableRegistry::get('FieldOption.FieldOptions');
-	// 		$entity = $FieldOptions->get($selected);
+    private function addFieldOptionControl(ArrayObject $extra, $data = []) {
+        $extra['elements']['controls'] = ['name' => 'FieldOption.controls', 'data' => $data, 'order' => 2];
+    }
 
-	// 		if ($entity->code != $this->_table->alias) {
-	// 			$event->stopPropagation();
-	// 			return $this->_table->controller->redirect(['action' => 'index', 'field_option_id' => $selected]);
-	// 		}
-	// 	}
-	// }
+    // for CA v4
+    public function onGetEditable(Event $event, Entity $entity) {
+        return $entity->editable == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
+    }
 
-	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
-	{
-		$patchOptions['validate'] = 'update';
-	}
+    public function onGetDefault(Event $event, Entity $entity) {
+        return $entity->default == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
+    }
 
-	private function addFieldOptionControl(ArrayObject $extra, $data = []) {
-		$extra['elements']['controls'] = ['name' => 'FieldOption.controls', 'data' => $data, 'order' => 2];
-	}
+    public function beforeAction(Event $event, ArrayObject $extra) {
+        $model = $this->_table;
+        $fieldOptions = $this->buildFieldOptions();
+        $selectedOption = $model->alias;
+        $this->addFieldOptionControl($extra, ['fieldOptions' => $fieldOptions, 'selectedOption' => $selectedOption]);
 
-	// for CA v4
-	public function onGetEditable(Event $event, Entity $entity) {
-		return $entity->editable == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
-	}
+        $model->field('default', ['options' => $model->getSelectOptions('general.yesno'), 'after' => 'visible']);
+        $model->field('editable', ['options' => $model->getSelectOptions('general.yesno'), 'visible' => ['index' => true], 'after' => 'default']);
 
-	public function onGetDefault(Event $event, Entity $entity) {
-		return $entity->default == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
-	}
+        $extra['config']['selectedLink'] = ['controller' => 'FieldOptions', 'action' => 'index'];
+    }
 
-	public function beforeAction(Event $event, ArrayObject $extra) {
-		$model = $this->_table;
-		$fieldOptions = $this->buildFieldOptions();
-		$selectedOption = $model->alias;
-		$this->addFieldOptionControl($extra, ['fieldOptions' => $fieldOptions, 'selectedOption' => $selectedOption]);
+    public function indexBeforeAction(Event $event) {
+        $model = $this->_table;
+        $model->field('name', ['after' => 'editable']);
+        $fields = ['visible', 'default', 'editable', 'name', 'international_code', 'national_code'];
+        foreach ($fields as $field) {
+            if (array_key_exists($field, $model->fields)) {
+                if (is_array($model->fields[$field]['visible'])) {
+                    $model->fields[$field]['visible']['index'] = true;
+                } else {
+                    if ($model->fields[$field]['visible']) {
+                        $model->fields[$field]['visible'] = [
+                            'view' => true,
+                            'edit' => true,
+                            'index' => true
+                        ];
+                    } else {
+                        $model->fields[$field]['visible'] = ['index' => true];
+                    }
+                }
+            }
+        }
+    }
 
-		// $this->checkFieldOption($event, $selectedOption); // deprecated
-
-		$model->field('default', ['options' => $model->getSelectOptions('general.yesno'), 'after' => 'visible']);
-		$model->field('editable', ['options' => $model->getSelectOptions('general.yesno'), 'visible' => ['index' => true], 'after' => 'default']);
-
-		$extra['config']['selectedLink'] = ['controller' => 'FieldOptions', 'action' => 'index'];
-	}
-
-	public function indexBeforeAction(Event $event) {
-		$model = $this->_table;
-		$model->field('name', ['after' => 'editable']);
-		$fields = ['visible', 'default', 'editable', 'name', 'international_code', 'national_code'];
-		foreach ($fields as $field) {
-			if (array_key_exists($field, $model->fields)) {
-				if (is_array($model->fields[$field]['visible'])) {
-					$model->fields[$field]['visible']['index'] = true;
-				} else {
-					if ($model->fields[$field]['visible']) {
-						$model->fields[$field]['visible'] = [
-							'view' => true,
-							'edit' => true,
-							'index' => true
-						];
-					} else {
-						$model->fields[$field]['visible'] = ['index' => true];
-					}
-				}
-			}
-		}
-	}
-
-	public function validationUpdate($validator)
-	{
+    public function validationUpdate($validator)
+    {
         $validator
             ->add('name', [
                     'ruleUnique' => [

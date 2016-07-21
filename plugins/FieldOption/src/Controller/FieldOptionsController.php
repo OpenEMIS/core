@@ -39,12 +39,7 @@ class FieldOptionsController extends AppController {
 
     public function index()
     {
-        $action = !is_null($this->request->query('field_option_id')) ? $this->request->query('field_option_id') : key($this->FieldOption->getFieldOptions());
-
-        $url = ['action' => $action];
-        $url = array_merge($url, $this->request->query);
-
-        return $this->redirect($url);
+        return $this->redirect(['plugin' => $this->plugin, 'controller' => $this->name, 'action' => key($this->FieldOption->getFieldOptions())]);
     }
 
     public function Genders()                       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
