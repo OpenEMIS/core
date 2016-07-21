@@ -6,7 +6,7 @@ InstitutionsStudentsSvc.$inject = ['$q', '$filter', 'KdOrmSvc', 'KdSessionSvc'];
 
 function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
 
-    var vm = this;
+    var externalSource = null;
 
     var service = {
         init: init,
@@ -21,10 +21,18 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         postEnrolledStudent: postEnrolledStudent,
         getExternalSourceUrl: getExternalSourceUrl,
         addUser: addUser,
-        formatDate: formatDate
+        formatDate: formatDate,
+        getUserRecord: getUserRecord,
+        getGenderRecord: getGenderRecord,
+        importIdentities: importIdentities,
+        getExternalIdentityTypes: getExternalIdentityTypes,
+        getInternalIdentityTypes: getInternalIdentityTypes,
+        getExternalIdentities: getExternalIdentities
     };
 
     var models = {
+        Users: 'User.Users',
+        Genders: 'User.Genders',
         StudentRecords: 'Institution.Students',
         Students: 'Student.Students',
         StudentStatuses: 'Student.StudentStatuses',
@@ -33,7 +41,9 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
         InstitutionClasses: 'Institution.InstitutionClasses',
         IdentityTypes: 'FieldOption.IdentityTypes',
-        ExternalDataSourceAttributes: 'ExternalDataSourceAttributes'
+        ExternalDataSourceAttributes: 'ExternalDataSourceAttributes',
+        IdentityTypes: 'FieldOption.IdentityTypes',
+        Identities: 'User.Identities'
     };
 
     return service;
@@ -53,6 +63,7 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
 
     function getExternalStudentRecords(options) {
         var deferred = $q.defer();
+        var vm = this;
 
         this.getExternalSourceUrl()
         .then(function(sourceUrl) {
@@ -60,6 +71,7 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
             var sourceUrl = null;
             if (source.length > 0) {
                 sourceUrl = source[0].value;
+                externalSource = sourceUrl;
             }
             var pageParams = {
                 limit: options['endRow'] - options['startRow'],
@@ -101,65 +113,125 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
     };
 
     function getStudentData(id) {
-        var deferred = $q.defer();
-
-        this.getExternalSourceUrl()
-        .then(function(sourceUrl) {
-            var source = sourceUrl.data;
-            var sourceUrl = null;
-            if (source.length > 0) {
-                sourceUrl = source[0].value;
+        var sourceUrl = externalSource;
+        var success = function(response, deferred) {
+            var studentData = response.data.data;
+            if (angular.isObject(studentData) && studentData.length > 0) {
+                deferred.resolve(studentData[0]);
+            } else {
+                deferred.reject('Student not found');
             }
-            var success = function(response, deferred) {
-                var studentData = response.data.data;
-                if (angular.isObject(studentData) && studentData.length > 0) {
-                    deferred.resolve(studentData[0]);
-                } else {
-                    deferred.reject('Student not found');
-                }
-            };
+        };
 
-            Students.reset();
-            return Students.select()
-                .contain(['Genders'])
-                .where(
-                    {
-                        id: id
+        Students.reset();
+        return Students.select()
+            .contain(['Genders'])
+            .where(
+                {
+                    id: id
+                }
+            )
+            .ajax({success: success, defer: true, url: sourceUrl});
+    };
+
+    function importIdentities(userId)
+    {
+        var promises = [];
+
+
+    };
+
+    function getExternalIdentityTypes()
+    {
+        
+    };
+
+    function getInternalIdentityTypes()
+    {
+        
+    };
+
+    function getExternalIdentities()
+    {
+        var sourceUrl = externalSource;
+    };
+
+    function addUser(userRecord) 
+    {
+        var deferred = $q.defer();
+        var vm = this;
+        // please remove this line (for debugging purposes only)
+        // userRecord['openemis_no'] = 'OPENEMIS-POCOR111';
+        vm.getUserRecord(userRecord['openemis_no'])
+        .then(function(response) {
+            if (response.data.length > 0) {
+                userData = response.data[0];
+                modifiedUser = {id: userData.id, is_student: 1};
+                Users.save(modifiedUser)
+                .then(function(response) {
+                    deferred.resolve(response.data.data);
+                }, function(error) {
+                    deferred.reject(error);
+                    console.log(error);
+                });
+                deferred.resolve(userData);
+            } else {
+                delete userRecord['id'];
+                delete userRecord['username'];
+                delete userRecord['password'];
+                delete userRecord['created'];
+                userRecord['date_of_birth'] = vm.formatDate(userRecord['date_of_birth']);
+                userRecord['is_student'] = 1;
+                vm.getGenderRecord(userRecord['gender']['code'])
+                .then(function(genderRecord) {
+                    if (genderRecord.data.length > 0) {
+                        delete userRecord['gender'];
+                        userRecord['gender_id'] = genderRecord.data[0].id;
+                        console.log(genderRecord.data[0]);
+                        Users.save(userRecord)
+                        .then(function(response) {
+                            deferred.resolve(response.data.data);
+                        }, function(error) {
+                            deferred.reject(error);
+                            console.log(error);
+                        });
                     }
-                )
-                .ajax({success: success, defer: true, url: sourceUrl});
+                    
+                }, function(error) {
+                    deferred.reject(error);
+                    console.log(error);
+                });
+                
+            }
         }, function(error) {
-            console.log(error);
             deferred.reject(error);
-        }).then(function(response) {
-            deferred.resolve(response);
-        }, function(error) {
             console.log(error);
-            deferred.reject(error);
         });
+        // please remove this line (for debugging purposes only)
+        // userRecord['openemis_no'] = 'OPENEMIS-POCOR';
+        
 
         return deferred.promise;
     };
 
-    function addUser(userRecord) {
-        delete userRecord['id'];
-        delete userRecord['username'];
-        delete userRecord['password'];
-        userRecord['date_of_birth'] = this.formatDate(userRecord['date_of_birth']);
-        delete userRecord['created'];
-        delete userRecord['gender'];
-        userRecord['openemis_no'] = 'OPENEMIS-POCOR';
-        var deferred = $q.defer();
+    function getUserRecord(openemisNo)
+    {
+        return Users
+            .select()
+            .where({
+                'openemis_no': openemisNo
+            })
+            .ajax({defer: true});
+    };
 
-        Students.save(userRecord)
-        .then(function(response) {
-            deferred.resolve(response.data);
-        }, function(error) {
-            deferred.reject(error);
-            console.log(error);
-        });
-
-        return deferred.promise;
+    function getGenderRecord(code)
+    {
+        return Genders
+            .select()
+            .where({
+                'code': code
+            })
+            .ajax({defer: true});
     };
 
     function postEnrolledStudent(data) {

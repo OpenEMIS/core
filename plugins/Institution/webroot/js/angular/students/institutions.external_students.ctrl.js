@@ -296,8 +296,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
         .then(function(studentData){
             InstitutionsStudentsSvc.addUser(studentData)
             .then(function(response) {
-                console.log(response);
-                var userId = response.data.id;
+                var userId = response.id;
                 UtilsSvc.isAppendLoader(true);
                 AlertSvc.reset($scope);
                 var data = {student_id: userId};
@@ -313,8 +312,6 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                 data['start_date'] = $scope.startDate;
                 data['end_date'] = $scope.endDate;
 
-                
-
                 InstitutionsStudentsSvc.postEnrolledStudent(data).then(function(postResponse) {
                     $scope.postResponse = postResponse.data;
                     UtilsSvc.isAppendLoader(false);
@@ -322,7 +319,6 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                         AlertSvc.success($scope, 'The record has been added successfully.');
                         $window.location.href = 'index'
                     } else {
-                        console.log(postResponse.data.error);
                         AlertSvc.error($scope, 'The record is not added due to errors encountered.');
                     }
                 }, function(error) {
@@ -334,10 +330,6 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                 deferred.reject(error);
                 console.log(error);
             });
-            // .then(function(stuData){
-            //     console.log(stuData);
-            // });
-            
         });
         
     };
