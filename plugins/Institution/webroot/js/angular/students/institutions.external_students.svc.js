@@ -25,9 +25,7 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         getUserRecord: getUserRecord,
         getGenderRecord: getGenderRecord,
         importIdentities: importIdentities,
-        getExternalIdentityTypes: getExternalIdentityTypes,
-        getInternalIdentityTypes: getInternalIdentityTypes,
-        getExternalIdentities: getExternalIdentities
+        getInternalIdentityTypes: getInternalIdentityTypes
     };
 
     var models = {
@@ -125,7 +123,7 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
 
         Students.reset();
         return Students.select()
-            .contain(['Genders'])
+            .contain(['Genders', 'Identities.IdentityTypes'])
             .where(
                 {
                     id: id
@@ -134,26 +132,42 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
             .ajax({success: success, defer: true, url: sourceUrl});
     };
 
-    function importIdentities(userId)
+    function importIdentities(userId, identitiesRecord)
     {
         var promises = [];
+        var vm = this;
+        var identitiesId = [];
+        vm.getInternalIdentityTypes()
+        .then(function(response) {
+            var data = response.data;
+            for (var i = 0; i < identitiesRecord.length; i++) {
+                for(var j = 0; j < data.length ; j++) {
+                    if (identitiesRecord[i].identity_type.name == data[j].name) {
+                        identitiesRecord[i].identity_type_id = data[j].id;
+                    }
+                }
+            }
+        }, function(error) {
 
-
+        });
     };
 
-    function getExternalIdentityTypes()
+    function addIdentityType(identityType)
     {
-        
-    };
+        var deferred = $q.defer();
+        IdentityTypes.save(identityType)
+        .then(function(response) {
+            deferred.resolve(response.data.data.id);
+        }, function(error) {
+            deferred.reject(error);
+            console.log(error);
+        });
+        return deferred.promise;
+    }
 
     function getInternalIdentityTypes()
     {
-        
-    };
-
-    function getExternalIdentities()
-    {
-        var sourceUrl = externalSource;
+        return IdentityTypes.select().ajax({defer:true});
     };
 
     function addUser(userRecord) 
@@ -161,7 +175,7 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         var deferred = $q.defer();
         var vm = this;
         // please remove this line (for debugging purposes only)
-        // userRecord['openemis_no'] = 'OPENEMIS-POCOR111';
+        userRecord['openemis_no'] = 'OPENEMIS-POCOR111asd2';
         vm.getUserRecord(userRecord['openemis_no'])
         .then(function(response) {
             if (response.data.length > 0) {
@@ -180,12 +194,14 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                 delete userRecord['username'];
                 delete userRecord['password'];
                 delete userRecord['created'];
+                console.log(userRecord['identities']);
                 userRecord['date_of_birth'] = vm.formatDate(userRecord['date_of_birth']);
                 userRecord['is_student'] = 1;
                 vm.getGenderRecord(userRecord['gender']['code'])
                 .then(function(genderRecord) {
                     if (genderRecord.data.length > 0) {
                         delete userRecord['gender'];
+                        delete userRecord['identities']
                         userRecord['gender_id'] = genderRecord.data[0].id;
                         console.log(genderRecord.data[0]);
                         Users.save(userRecord)
