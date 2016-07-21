@@ -6,7 +6,7 @@ use App\Model\Table\ControllerActionTable;
 class SalaryAdditionTypesTable extends ControllerActionTable {
 	public function initialize(array $config)
     {
-		$this->addBehavior('ControllerAction.FieldOption');
+		$this->addBehavior('FieldOption.FieldOption');
         $this->table('salary_addition_types');
 		parent::initialize($config);
 
