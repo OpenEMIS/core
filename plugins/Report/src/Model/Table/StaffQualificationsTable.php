@@ -18,7 +18,7 @@ class StaffQualificationsTable extends AppTable  {
 		$this->belongsTo('QualificationLevels', ['className' => 'FieldOption.QualificationLevels']);
 		$this->belongsTo('QualificationInstitutions', ['className' => 'Staff.QualificationInstitutions']);
 		$this->belongsTo('QualificationSpecialisations', ['className' => 'FieldOption.QualificationSpecialisations']);
-		
+
 		$this->addBehavior('Excel', [
 			'excludes' => [
 				'file_name'
@@ -42,7 +42,7 @@ class StaffQualificationsTable extends AppTable  {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 
 		$requestData = json_decode($settings['process']['params']);
-		
+
 		$userId = $requestData->user_id;
 		$superAdmin = $requestData->super_admin;
 
@@ -51,7 +51,7 @@ class StaffQualificationsTable extends AppTable  {
 				'institution_name' => 'Institutions.name',
 				'institution_code' => 'Institutions.code',
 				'staff_position_name' => 'StaffPositionTitles.name',
-				'staff_type_name' => 'FieldOptionValues.name'
+				'staff_type_name' => 'StaffTypes.name'
 			])
 			->innerJoin(
 				['InstitutionStaff' => 'institution_staff'],
@@ -70,8 +70,8 @@ class StaffQualificationsTable extends AppTable  {
 					['StaffPositionTitles.id = InstitutionPositions.staff_position_title_id']
 			)
 			->innerJoin(
-				['FieldOptionValues' => 'field_option_values'],
-					['InstitutionStaff.staff_type_id = FieldOptionValues.id']
+				['StaffTypes' => 'staff_types'],
+					['InstitutionStaff.staff_type_id = StaffTypes.id']
 			);
 
 		if (!$superAdmin) {
@@ -100,12 +100,12 @@ class StaffQualificationsTable extends AppTable  {
 			'label' => __('Position')
 		];
 		$newArray[] = [
-			'key' => 'FieldOptionValues.name',
+			'key' => 'StaffTypes.name',
 			'field' => 'staff_type_name',
 			'type' => 'string',
 			'label' => __('Staff Type')
 		];
-		
+
 		$newFields = array_merge($newArray, $fields->getArrayCopy());
 		$fields->exchangeArray($newFields);
 	}
