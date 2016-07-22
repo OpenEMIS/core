@@ -36,15 +36,17 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             <li data-step="3">
                 <div class="step-wrapper">
                     Add Students
+                    <input type="hidden" ng-model="InstitutionStudentController.hasExternalDataSource" ng-init="InstitutionStudentController.hasExternalDataSource = true"/>
                     <span class="chevron"></span>
                 </div>
             </li>
             <?php 
                 } else {
             ?>
-            <li data-step="2">
+            <li data-step="3">
                 <div class="step-wrapper">
                     Add Students
+                    <input type="hidden" ng-model="InstitutionStudentController.hasExternalDataSource" ng-init="InstitutionStudentController.hasExternalDataSource = false"/>
                     <span class="chevron"></span>
                 </div>
             </li>
@@ -61,7 +63,8 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
         </button>
         <button type="button" class="btn btn-default btn-prev" disabled="disabled">Previous</button>
         <button type="button" class="btn btn-default btn-next"
-            ng-model="selectedStudent"
+            ng-model="InstitutionStudentController.selectedStudent"
+            ng-disabled="!InstitutionStudentController.selectedStudent && (InstitutionStudentController.externalSearch || !InstitutionStudentController.hasExternalDataSource)"
             data-last="Complete">
             Next
         </button>
@@ -75,19 +78,19 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 </div>
                 <div class="text">
                     <label>Openemis No.</label>
-                    <input ng-model="internalFilterOpenemisNo" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource() : null" type="text" id="" maxlength="150">
+                    <input ng-model="InstitutionStudentController.internalFilterOpenemisNo" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource() : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
                     <label>First Name</label>
-                    <input ng-model="internalFilterFirstName" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource() : null" type="text" id="" maxlength="150">
+                    <input ng-model="InstitutionStudentController.internalFilterFirstName" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource() : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
                     <label>Last Name</label>
-                    <input ng-model="internalFilterLastName" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource() : null" type="text" id="" maxlength="150">
+                    <input ng-model="InstitutionStudentController.internalFilterLastName" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource() : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
                     <label>{{ defaultIdentityTypeName }}</label>
-                    <input ng-model="internalFilterIdentityNumber" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource() : null" type="text" id="" maxlength="150">
+                    <input ng-model="InstitutionStudentController.internalFilterIdentityNumber" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource() : null" type="text" id="" maxlength="150">
                 </div>
 
                 <div class="search-action-btn margin-top-10 margin-bottom-10">
@@ -100,7 +103,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 <div ng-init="institution_id=<?= $institutionId; ?>">
                     <div class="scrolltabs sticky-content">
                         <div id="institution-student-table" class="table-wrapper">
-                            <div ng-if="internalGridOptions" ag-grid="internalGridOptions" class="ag-fresh ag-height-fixed"></div>
+                            <div ng-if="InstitutionStudentController.internalGridOptions" ag-grid="InstitutionStudentController.internalGridOptions" class="ag-fresh ag-height-fixed"></div>
                         </div>
                     </div>
                 </div>
@@ -114,19 +117,19 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 </div>
                 <div class="text">
                     <label>Openemis No.</label>
-                    <input ng-model="externalFilterOpenemisNo" ng-keyup="$event.keyCode == 13 ? reloadExternalDatasource() : null" type="text" id="" maxlength="150">
+                    <input ng-model="InstitutionStudentController.externalFilterOpenemisNo" ng-keyup="$event.keyCode == 13 ? reloadExternalDatasource() : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
                     <label>First Name</label>
-                    <input ng-model="externalFilterFirstName" ng-keyup="$event.keyCode == 13 ? reloadExternalDatasource() : null" type="text" id="" maxlength="150">
+                    <input ng-model="InstitutionStudentController.externalFilterFirstName" ng-keyup="$event.keyCode == 13 ? reloadExternalDatasource() : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
                     <label>Last Name</label>
-                    <input ng-model="externalFilterLastName" ng-keyup="$event.keyCode == 13 ? reloadExternalDatasource() : null" type="text" id="" maxlength="150">
+                    <input ng-model="InstitutionStudentController.externalFilterLastName" ng-keyup="$event.keyCode == 13 ? reloadExternalDatasource() : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
                     <label>{{ defaultIdentityTypeName }}</label>
-                    <input ng-model="externalFilterIdentityNumber" ng-keyup="$event.keyCode == 13 ? reloadExternalDatasource() : null" type="text" id="" maxlength="150">
+                    <input ng-model="InstitutionStudentController.externalFilterIdentityNumber" ng-keyup="$event.keyCode == 13 ? reloadExternalDatasource() : null" type="text" id="" maxlength="150">
                 </div>
 
                 <div class="search-action-btn margin-top-10 margin-bottom-10">
@@ -139,7 +142,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 <div ng-init="institution_id=<?= $institutionId; ?>">
                     <div class="scrolltabs sticky-content">
                         <div id="institution-student-table" class="table-wrapper">
-                            <div ng-if="externalGridOptions" ag-grid="externalGridOptions" class="ag-fresh ag-height-fixed"></div>
+                            <div ng-if="InstitutionStudentController.externalGridOptions" ag-grid="InstitutionStudentController.externalGridOptions" class="ag-fresh ag-height-fixed"></div>
                         </div>
                     </div>
                 </div>
@@ -149,22 +152,22 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
                 <div class="input string" ng-model="postResponse">
                     <label>Student</label>
-                    <input ng-model="selectedStudentData.name" type="string" disabled="disabled">
+                    <input ng-model="InstitutionStudentController.selectedStudentData.name" type="string" disabled="disabled">
                     <div ng-if="postResponse.error.student_name" class="error-message">
                         <p ng-repeat="error in postResponse.error.student_name">{{ error }}</p>
                     </div>
                 </div>
                 <div class="input string">
                     <label>Identity Number</label>
-                    <input ng-model="selectedStudentData.default_identity_type" type="string" disabled="disabled">
+                    <input ng-model="InstitutionStudentController.selectedStudentData.default_identity_type" type="string" disabled="disabled">
                 </div>
                 <div class="input string">
                     <label>Date of Birth</label>
-                    <input ng-model="selectedStudentData.date_of_birth" type="string" disabled="disabled">
+                    <input ng-model="InstitutionStudentController.selectedStudentData.date_of_birth" type="string" disabled="disabled">
                 </div>
                 <div class="input string">
                     <label>Gender</label>
-                    <input ng-model="selectedStudentData.gender.name" type="string" disabled="disabled">
+                    <input ng-model="InstitutionStudentController.selectedStudentData.gender.name" type="string" disabled="disabled">
                 </div>
                 <div class="input select required" ng-model="postResponse">
                     <label>AcademicPeriod</label>
@@ -216,7 +219,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 <div class="input date required">
                     <label for="Students_start_date">Start Date</label>
                     <div class="input-group date " id="Students_start_date" style="">
-                        <input type="text" class="form-control " name="Students[start_date]" ng-model="startDate">
+                        <input type="text" class="form-control " name="Students[start_date]" ng-model="InstitutionStudentController.startDate">
                         <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
                     </div>
                     <div ng-if="postResponse.error.start_date" class="error-message">
@@ -227,7 +230,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
 
                 <div class="input text required">
                     <label for="students-end-date">End Date</label>
-                    <input ng-model="endDateFormatted" type="text" disabled="disabled">
+                    <input ng-model="InstitutionStudentController.endDateFormatted" type="text" disabled="disabled">
                 </div>
             </form>
         </div>
@@ -235,8 +238,10 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
     <div class="actions bottom">
         <button type="button" class="btn btn-default btn-prev" disabled="disabled">Previous</button>
         <button type="button"
-            ng-model="selectedStudent"
-            class="btn btn-default btn-next">
+            ng-model="InstitutionStudentController.selectedStudent"
+            class="btn btn-default btn-next"
+            ng-disabled="!InstitutionStudentController.selectedStudent && (InstitutionStudentController.externalSearch || !InstitutionStudentController.hasExternalDataSource)"
+            >
             Next
         </button>
     </div>
