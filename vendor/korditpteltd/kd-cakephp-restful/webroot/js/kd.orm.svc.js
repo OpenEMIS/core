@@ -73,7 +73,11 @@ angular.module('kd.orm.svc', [])
         },
 
         where: function(where) {
-            this._where = where;
+            var encodedWhere = {}
+            angular.forEach(where, function(value, key) {
+                encodedWhere[key.replace(".", "-")] = value;
+            });
+            this._where = encodedWhere;
             return this;
         },
 
