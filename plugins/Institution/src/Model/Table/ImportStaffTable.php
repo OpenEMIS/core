@@ -230,6 +230,18 @@ class ImportStaffTable extends AppTable
         }
         $tempRow['staff_name'] = $tempRow['staff_id'];
 
+        //logic to check whether staff tried to be imported from one institution to another.
+        $staffRecord = $this->InstitutionStaff
+            ->find('staffRecords', ['staffId' => $tempRow['staff_id']])
+            ->toArray();
+        
+        $currentInstitutionId = $staffRecord[0]['institution_id'];
+        
+        if ($currentInstitutionId != $this->_institution->id) {
+            $rowInvalidCodeCols['staff_id'] = __('The staff is already assigned to another school');
+            return false;
+        }
+
         if (!$this->_institution instanceof Entity) {
             $rowInvalidCodeCols['institution_id'] = __('No active institution');
             return false;
