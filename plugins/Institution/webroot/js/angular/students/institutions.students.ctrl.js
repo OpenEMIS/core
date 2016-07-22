@@ -9,6 +9,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
     $scope.rowsThisPage = null;
 
     var StudentController = this;
+    var externalSearch = false;
 
     StudentController.externalSearch = false;
 
@@ -16,6 +17,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
     StudentController.processStudentRecord = processStudentRecord;
     StudentController.createNewInternalDatasource = createNewInternalDatasource;
     StudentController.createNewExternalDatasource = createNewExternalDatasource;
+    StudentController.insertStudentData = insertStudentData;
     
     $scope.currentStep = 1;
     $scope.pageSize = 10;
@@ -203,7 +205,6 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
     });
 
     function createNewInternalDatasource(gridObj) {
-        var totalCount = 0;
         var dataSource = {
             //rowCount: ???, - not setting the row count, infinite paging will be used
             pageSize: $scope.pageSize, // changing to number, as scope keeps it as a string
@@ -224,7 +225,6 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                 )
                 .then(function(response) {
                     var studentRecords = response.data;
-                    totalCount = response.total;
                     return StudentController.processStudentRecord(studentRecords, params);
                 }, function(error) {
                     // No Assessment
@@ -237,7 +237,6 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
     }
 
     function createNewExternalDatasource(gridObj) {
-        var totalCount = 0;
         var dataSource = {
             //rowCount: ???, - not setting the row count, infinite paging will be used
             pageSize: $scope.pageSize, // changing to number, as scope keeps it as a string
@@ -258,7 +257,6 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                 )
                 .then(function(response) {
                     var studentRecords = response.data;
-                    totalCount = response.total;
                     return StudentController.processStudentRecord(studentRecords, params);
                 }, function(error) {
                     // No Assessment
@@ -270,8 +268,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
         gridObj.api.setDatasource(dataSource);
     }
 
-    function processStudentRecord(studentRecords, params)
-    {
+    function processStudentRecord(studentRecords, params) {
         for(var key in studentRecords) {
             // default values
             studentRecords[key]['institution_name'] = '-';
@@ -383,7 +380,6 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
     };
 
     $scope.postForm = function() {
-        var studentId = null;
         var academicPeriodId = ($scope.academicPeriodOptions.hasOwnProperty('selectedOption'))? $scope.academicPeriodOptions.selectedOption.id: '';
         var educationGradeId = ($scope.educationGradeOptions.hasOwnProperty('selectedOption'))? $scope.educationGradeOptions.selectedOption.education_grade_id: '';
         var classId = null;
@@ -395,10 +391,21 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
         startDate = startDateArr[2] + '-' + startDateArr[1] + '-' + startDateArr[0];
         var endDate = $scope.endDate;
 
-        
+        InstitutionsStudentsSvc.getStudentData($scope.selectedStudent)
+        .then(function(studentData){
+            if (externalSearch) {
+                var studentId = 0;
+                StudentController.insertStudentData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate);
+            } else {
+                var studentId = $scope.selectedStudent;
+                StudentController.insertStudentData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate);
+            }
+        }, function(error){
+
+        });
     };
 
-    $scope.insertStudentData = function(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate) {
+    function insertStudentData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate) {
         UtilsSvc.isAppendLoader(true);
         AlertSvc.reset($scope);
         var data = {
@@ -414,7 +421,8 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
             data['class'] = classId;
         }
 
-        InstitutionsStudentsSvc.postEnrolledStudent(data).then(function(postResponse) {
+        InstitutionsStudentsSvc.postEnrolledStudent(data)
+        .then(function(postResponse) {
             $scope.postResponse = postResponse.data;
             console.log($scope.postResponse);
             UtilsSvc.isAppendLoader(false);
@@ -428,7 +436,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
             console.log(error);
             AlertSvc.warning($scope, error);
         });
-    };
+    }
 
     angular.element(document.querySelector('#wizard')).on('actionclicked.fu.wizard', function(evt, data) {
         // evt.preventDefault();
@@ -460,8 +468,10 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
         // External Search
         if (data.step == 2) {
             $scope.reloadExternalDatasource();
+            externalSearch = true;
         } else if (data.step == 1) {
             $scope.reloadInternalDatasource();
+            externalSearch = false;
         }
         console.log(data);
     });
