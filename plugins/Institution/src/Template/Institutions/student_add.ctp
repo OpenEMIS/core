@@ -235,7 +235,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
     <div class="actions bottom">
         <button type="button" class="btn btn-default btn-prev" disabled="disabled">Previous</button>
         <button type="button"
-            ng-model="selectedStudent" ng-disabled="!selectedStudent"
+            ng-model="selectedStudent"
             class="btn btn-default btn-next">
             Next
         </button>
