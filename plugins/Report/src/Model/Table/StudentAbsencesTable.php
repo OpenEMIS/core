@@ -44,9 +44,6 @@ class StudentAbsencesTable extends AppTable {
 		$requestData = json_decode($settings['process']['params']);
 		$academicPeriodId = $requestData->academic_period_id;
 
-		$userId = $requestData->user_id;
-		$superAdmin = $requestData->super_admin;
-
 		if (!is_null($academicPeriodId) && $academicPeriodId != 0) {
 			$query->find('academicPeriod', ['academic_period_id' => $academicPeriodId]);
 		}
@@ -66,10 +63,6 @@ class StudentAbsencesTable extends AppTable {
 				$this->aliasField('institution_id'), 
 				$this->aliasField('start_date')
 			]);
-
-		if (!$superAdmin) {
-			$query->find('ByAccess', ['user_id' => $userId, 'institution_field_alias' => $this->aliasField('institution_id')]);
-		}
 	}
 
 	// To select another one more field from the containable data
