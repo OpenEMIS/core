@@ -18,14 +18,6 @@ class CustomFormsTable extends AppTable {
 	const APPLY_TO_ALL_NO = 0;
 
 	private $extra = [
-		'filterClass' => [
-			'className' => 'FieldOption.FieldOptionValues',
-			'joinTable' => 'custom_forms_filters',
-			'foreignKey' => 'custom_form_id',
-			'targetForeignKey' => 'custom_filter_id',
-			'through' => 'CustomField.CustomFormsFilters',
-			'dependent' => true
-		],
 		'fieldClass' => [
 			'className' => 'CustomField.CustomFields',
 			'joinTable' => 'custom_forms_fields',
@@ -34,21 +26,33 @@ class CustomFormsTable extends AppTable {
 			'through' => 'CustomField.CustomFormsFields',
 			'dependent' => true
 		],
+		'filterClass' => null,
 		'label' => [
 			'custom_fields' => 'Custom Fields',
 			'add_field' => 'Add Field',
 			'fields' => 'Fields'
 		]
 	];
+	private $hasFilter = false;
 
 	public function initialize(array $config) {
 		if (array_key_exists('extra', $config)) {
 			$this->extra = array_merge($this->extra, $config['extra']);
-		}		
+		}
 		parent::initialize($config);
 		$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
-		$this->belongsToMany('CustomFilters', $this->extra['filterClass']);
 		$this->belongsToMany('CustomFields', $this->extra['fieldClass']);
+
+		if (array_key_exists('filterClass', $this->extra) && !is_null($this->extra['filterClass'])) {
+			$this->hasFilter = true;
+		}
+
+		if ($this->hasFilter) {
+			$this->belongsToMany('CustomFilters', $this->extra['filterClass']);
+
+			$junctionTable = $this->extra['filterClass']['through'];
+			$this->CustomFormsFilters = TableRegistry::get($junctionTable);
+		}
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -88,18 +92,63 @@ class CustomFormsTable extends AppTable {
 					$CustomFormsFilters->log($filterEntity->errors(), 'debug');
 				}
 			} else {
-				$this->log('customFormIds is empty...', 'debug');
+				$this->log('customFormIds is empty ...', 'debug');
 			}
 		}
 	}
 
 	public function onGetApplyToAll(Event $event, Entity $entity) {
-		$selectedApplyToAll = $this->getApplyToAll($entity);
+		if ($this->action == 'index') {
+			$entity->custom_filters = [];
 
-		if (!is_null($selectedApplyToAll)) {
-			$applyToAllOptions = $this->getSelectOptions('general.yesno');
-			return $applyToAllOptions[$selectedApplyToAll];
-		} else {
+			if (!is_null($entity->_matchingData['CustomModules']->filter)) {
+				$filter = $entity->_matchingData['CustomModules']->filter;
+
+				$formKey = $this->extra['filterClass']['foreignKey'];
+				$filterKey = $this->extra['filterClass']['targetForeignKey'];
+				$filterIds = $this->CustomFormsFilters
+					->find('list', ['keyField' => $filterKey, 'valueField' => $filterKey])
+					->where([
+						$this->CustomFormsFilters->aliasField($formKey) => $entity->id
+					])
+					->toArray();
+
+				if (array_key_exists(0, $filterIds)) {
+					$value = __('Yes');
+				} else {
+					$value = __('No');
+
+					$filters = [];
+					$filterModel = TableRegistry::get($filter);
+					if (!empty($filterIds)) {
+						$filters = $filterModel
+							->getList()
+							->where([$filterModel->aliasField('id IN ') => $filterIds])
+							->toArray();
+					}
+
+					$entity->custom_filters = $filters;
+				}
+
+				return $value;
+			}
+
+			return '<i class="fa fa-minus"></i>';
+		}
+	}
+
+	public function onGetCustomFilters(Event $event, Entity $entity) {
+		if ($this->action == 'index') {
+			if (!is_null($entity->_matchingData['CustomModules']->filter)) {
+				if (sizeof($entity->custom_filters) > 0) {
+					$chosenSelectList = [];
+					foreach ($entity->custom_filters as $key => $value) {
+						$chosenSelectList[] = $value;
+					}
+					return implode(', ', $chosenSelectList);
+				}
+			}
+
 			return '<i class="fa fa-minus"></i>';
 		}
 	}
@@ -178,7 +227,7 @@ class CustomFormsTable extends AppTable {
 			$moduleOptions = $moduleQuery->toArray();
 			$selectedModule = isset($this->request->query['module']) ? $this->request->query['module'] : key($moduleOptions);
 			$customModule = $this->CustomModules->get($selectedModule);
-			$supportedFieldTypes = explode(",", $customModule->supported_field_types);
+			$supportedFieldTypes = $customModule->supported_field_types;
 
 			$Fields = TableRegistry::get($this->extra['fieldClass']['className']);
 			$customFieldOptions = $this->CustomFields
@@ -350,14 +399,20 @@ class CustomFormsTable extends AppTable {
 		return $event->subject()->renderElement('CustomField.form_fields', ['attr' => $attr]);
 	}
 
-	public function indexAfterAction(Event $event, $data) {
-		$this->setupFields();
-		$this->ControllerAction->field('custom_fields', ['visible' => false]);
+	public function indexBeforeAction(Event $event) {
+		$this->ControllerAction->setFieldOrder(['custom_module_id', 'name', 'description']);
+
+		if ($this->hasFilter) {
+			$this->ControllerAction->field('apply_to_all', ['after' => 'custom_module_id']);
+			$this->ControllerAction->field('custom_filters', ['after' => 'apply_to_all']);
+		}
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$moduleQuery = $this->getModuleQuery();
 		$moduleOptions = $moduleQuery->toArray();
+
+		$query->matching('CustomModules');
 
 		if (!empty($moduleOptions)) {
 			$selectedModule = $this->queryString('module', $moduleOptions);
@@ -372,11 +427,19 @@ class CustomFormsTable extends AppTable {
 	        $this->controller->set(compact('toolbarElements', 'moduleOptions'));
 		}
 
-        $query->contain(['CustomFilters', 'CustomFields']);
+		if ($this->hasFilter) {
+        	$query->contain(['CustomFilters', 'CustomFields']);
+        } else {
+        	$query->contain(['CustomFields']);
+        }
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
-		$query->contain(['CustomFilters', 'CustomFields']);
+		if ($this->hasFilter) {
+			$query->contain(['CustomFilters', 'CustomFields']);
+		} else {
+			$query->contain(['CustomFields']);
+        }
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -399,7 +462,11 @@ class CustomFormsTable extends AppTable {
 
 		// Required by patchEntity for associated data
 		$newOptions = [];
-		$newOptions['associated'] = ['CustomFilters', 'CustomFields._joinData'];
+		if ($this->hasFilter) {
+			$newOptions['associated'] = ['CustomFilters', 'CustomFields._joinData'];
+		} else {
+			$newOptions['associated'] = ['CustomFields._joinData'];
+		}
 
 		$arrayOptions = $options->getArrayCopy();
 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
@@ -418,63 +485,40 @@ class CustomFormsTable extends AppTable {
 
 		$attr['type'] = 'select';
 		$attr['options'] = $moduleOptions;
+		$attr['select'] = false;
 		$attr['onChangeReload'] = 'changeModule';
 
 		return $attr;
 	}
 
 	public function onUpdateFieldApplyToAll(Event $event, array $attr, $action, Request $request) {
-		if ($action == 'view' || $action == 'add' || $action == 'edit') {
-			// default hide
-			$attr['visible'] = false;
-			$attr['type'] = 'hidden';
-			$attr['value'] = 0;
+		if ($action == 'view') {
+    		$applyToAllOptions = $attr['options'];
+    		$attr['value'] = $applyToAllOptions[$attr['value']];
+    	}
 
-			$selectedModule = $request->query('module');
-			$filterAlias = $this->getFilterAlias($selectedModule);
-
-			if (!empty($filterAlias)) {
-				$applyToAllOptions = $this->getSelectOptions('general.yesno');
-				$selectedApplyToAll = $this->queryString('apply_all', $applyToAllOptions);
-				$this->advancedSelectOptions($applyToAllOptions, $selectedApplyToAll);
-
-				// show selection if the module has filter
-				$attr['visible'] = true;
-				$attr['type'] = 'select';
-				$attr['options'] = $applyToAllOptions;
-				$attr['onChangeReload'] = 'changeApplyAll';
-			}
-		}
-
-		return $attr;
+    	return $attr;
 	}
 
 	public function onUpdateFieldCustomFilters(Event $event, array $attr, $action, Request $request) {
-		if ($action == 'view' || $action == 'add' || $action == 'edit') {
-			// default hide
-			$attr['visible'] = false;
-			$attr['type'] = 'hidden';
-			$attr['value'] = 0;
+		if ($action == 'view') {
+			$customModule = $attr['attr']['customModule'];
+    		$filter = $customModule->filter;
+    		list($plugin, $modelAlias) = explode('.', $filter, 2);
+    		$labelText = Inflector::underscore(Inflector::singularize($modelAlias));
 
-			$selectedModule = $request->query('module');
-			$filterAlias = $this->getFilterAlias($selectedModule);
+    		$attr['attr']['label'] = __(Inflector::humanize($labelText));
+		} else if ($action == 'add' || $action == 'edit') {
+			$customModule = $attr['attr']['customModule'];
+    		$filter = $customModule->filter;
 
-			if (!empty($filterAlias)) {
-				$selectedApplyToAll = $request->query('apply_all');
+    		list($plugin, $modelAlias) = explode('.', $filter, 2);
+			$labelText = Inflector::underscore(Inflector::singularize($modelAlias));
+			$filterOptions = TableRegistry::get($filter)->getList()->toArray();
 
-				if ($selectedApplyToAll == self::APPLY_TO_ALL_NO) {
-					list($plugin, $modelAlias) = explode('.', $filterAlias, 2);
-					$labelText = Inflector::underscore(Inflector::singularize($modelAlias));
-					$filterOptions = TableRegistry::get($filterAlias)->getList()->toArray();
-
-					// show selection if the module has filter and not apply to all
-					$attr['visible'] = true;
-					$attr['type'] = 'chosenSelect';
-					$attr['placeholder'] = __('Select ') . __(Inflector::humanize($labelText));
-					$attr['options'] = $filterOptions;
-					$attr['attr']['label'] = __(Inflector::humanize($labelText));
-				}
-			}
+			$attr['placeholder'] = __('Select ') . __(Inflector::humanize($labelText));
+			$attr['options'] = $filterOptions;
+			$attr['attr']['label'] = __(Inflector::humanize($labelText));
 		}
 
 		return $attr;
@@ -513,34 +557,74 @@ class CustomFormsTable extends AppTable {
 			->find('visible');
 	}
 
-	private function setupFields(Entity $entity=null) {
+	private function setupFields(Entity $entity) {
 		$selectedModule = $this->request->query('module');
-		$filterAlias = $this->getFilterAlias($selectedModule);
+		$customModule = $this->CustomModules->get($selectedModule);
 
-		$fieldOrder = [];
+		$this->ControllerAction->setFieldOrder(['custom_module_id', 'name', 'description', 'custom_fields']);
 		$this->ControllerAction->field('custom_module_id');
-		$fieldOrder[] = 'custom_module_id';
 
-		if (!empty($filterAlias)) {
-			$this->ControllerAction->field('apply_to_all');
-			$this->ControllerAction->field('custom_filters', [
-				'type' => 'chosenSelect',
-				'placeholder' => __('Select Filters')
-			]);
+		// for model that has filter:
+		// If no pages is added before, show apply_to_all = Yes
+		// else show apply_to_all = No and Filters
 
-			$fieldOrder[] = 'apply_to_all';
-			$fieldOrder[] = 'custom_filters';
+		if ($this->hasFilter) {
+			$showFilters = false;
+
+			$customFormIds = $this
+				->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+				->where([
+					$this->aliasField('custom_module_id') => $selectedModule
+				])
+				->toArray();
+
+			if (!empty($customFormIds)) {
+				$formKey = $this->extra['filterClass']['foreignKey'];
+				$filterKey = $this->extra['filterClass']['targetForeignKey'];
+				$filterResults = $this->CustomFormsFilters
+					->find()
+					->where([
+						$this->CustomFormsFilters->aliasField($formKey.' IN ') => $customFormIds,
+						$this->CustomFormsFilters->aliasField($filterKey) => 0
+					])
+					->all();
+
+				if (!$filterResults->isEmpty()) {
+					$showFilters = true;
+				}
+			}
+
+			$applyToAllOptions = $this->getSelectOptions('general.yesno');
+			$inputOptions = [
+				'type' => 'readonly',
+				'options' => $applyToAllOptions,
+				'after' => 'custom_module_id'
+			];
+
+			if ($showFilters) {
+				$inputOptions['value'] = self::APPLY_TO_ALL_NO;
+				$inputOptions['attr']['value'] = $applyToAllOptions[self::APPLY_TO_ALL_NO];
+
+				$this->ControllerAction->field('apply_to_all', $inputOptions);
+				$this->ControllerAction->field('custom_filters', [
+					'type' => 'chosenSelect',
+					'placeholder' => __('Select Filters'),
+					'attr' => ['customModule' => $customModule],
+					'after' => 'apply_to_all'
+				]);
+			} else {
+				$inputOptions['value'] = self::APPLY_TO_ALL_YES;
+				$inputOptions['attr']['value'] = $applyToAllOptions[self::APPLY_TO_ALL_YES];
+
+				$this->ControllerAction->field('apply_to_all', $inputOptions);
+			}
 		}
+
 		$this->ControllerAction->field('custom_fields', [
 			'type' => 'custom_order_field',
-			'valueClass' => 'table-full-width'
+			'valueClass' => 'table-full-width',
+			'after' => 'description'
 		]);
-
-		$fieldOrder[] = 'name';
-		$fieldOrder[] = 'description';
-		$fieldOrder[] = 'custom_fields';
-
-		$this->ControllerAction->setFieldOrder($fieldOrder);
 	}
 
 	private function getFilterAlias($selectedModule=null) {
@@ -555,7 +639,7 @@ class CustomFormsTable extends AppTable {
 	private function getApplyToAll(Entity $entity) {
 		$filterAlias = $this->getFilterAlias($entity->custom_module_id);
 
-		if (!empty($filterAlias)) {
+		if ($this->hasFilter) {
 			$CustomFormsFilters = TableRegistry::get($this->extra['filterClass']['through']);
 			$results = $CustomFormsFilters
 				->find()
