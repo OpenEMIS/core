@@ -1,4 +1,3 @@
--- POCOR-3179
 -- StudentBehaviourCategories student_behaviour_categories
 DROP TABLE `student_behaviour_categories`;
 UPDATE `field_option_values` set `visible`=1 WHERE `field_option_id`=(SELECT `id` FROM `field_options` WHERE `code` = 'StudentBehaviourCategories');
@@ -49,21 +48,3 @@ UPDATE `field_options` SET `plugin` = 'FieldOption' WHERE `code` = 'SalaryDeduct
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3179';
-
-
--- POCOR-3198
--- db_patches
-DELETE FROM `db_patches` WHERE `issue`='POCOR-3198';
-
--- import_mapping
-DELETE FROM `import_mapping`
-WHERE `model` = 'Institution.StaffAbsences'
-AND `column_name` = 'absence_type_id';
-
-DELETE FROM `import_mapping`
-WHERE `model` = 'Institution.InstitutionStudentAbsences'
-AND `column_name` = 'absence_type_id';
-
-
--- 3.5.11
-UPDATE config_items SET value = '3.5.11' WHERE code = 'db_version';
