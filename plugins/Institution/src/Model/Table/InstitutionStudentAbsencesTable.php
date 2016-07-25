@@ -23,7 +23,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->addBehavior('Institution.Absence');
-		
+
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
 		$this->belongsTo('StudentAbsenceReasons', ['className' => 'FieldOption.StudentAbsenceReasons']);
 		$this->belongsTo('AbsenceTypes', ['className' => 'Institution.AbsenceTypes', 'foreignKey' =>'absence_type_id']);
@@ -34,9 +34,9 @@ class InstitutionStudentAbsencesTable extends AppTable {
 				'end_year',
 				'institution_id',
 				'student_id',
-				'full_day', 
-				'start_date', 
-				'start_time', 
+				'full_day',
+				'start_date',
+				'start_time',
 				'end_time',
 				'end_date'
 			],
@@ -86,6 +86,8 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		$this->setValidationCode('start_date.ruleNoOverlappingAbsenceDate', 'Institution.Absences');
 		$this->setValidationCode('start_date.ruleInAcademicPeriod', 'Institution.Absences');
 		$this->setValidationCode('end_date.ruleCompareDateReverse', 'Institution.Absences');
+		$this->setValidationCode('end_date.ruleInAcademicPeriod', 'Institution.Absences');
+
 
 		$codeList = array_flip($this->absenceCodeList);
 		$validator
@@ -94,12 +96,16 @@ class InstitutionStudentAbsencesTable extends AppTable {
 					'rule' => ['noOverlappingAbsenceDate', $this]
 				],
 				'ruleInAcademicPeriod' => [
-					'rule' => ['inAcademicPeriod', 'academic_period_id'],
-					'on' => 'create'
+					'rule' => ['inAcademicPeriod', 'academic_period_id']
 				]
 			])
-			->add('end_date', 'ruleCompareDateReverse', [
-				'rule' => ['compareDateReverse', 'start_date', true]
+			->add('end_date', [
+				'ruleCompareDateReverse' => [
+					'rule' => ['compareDateReverse', 'start_date', true]
+				],
+				'ruleInAcademicPeriod' => [
+					'rule' => ['inAcademicPeriod', 'academic_period_id']
+				]
 			])
 			->add('end_time', 'ruleCompareAbsenceTimeReverse', [
 				'rule' => ['compareAbsenceTimeReverse', 'start_time', $codeList['LATE']]
@@ -130,7 +136,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		} else {
 			$endDate = $entity->end_date;
 		}
-		
+
 		if ($entity->full_day) {
 			return sprintf('%s %s (%s - %s)', __('Full'), __('Day'), $startDate, $endDate);
 		} else {
@@ -167,7 +173,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 				$value = sprintf('%s (%s - %s)', $startDate, $this->formatTime($entity->start_time), $this->formatTime($entity->end_time));
 			}
 		}
-		
+
 		return $value;
 	}
 
@@ -297,6 +303,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		list($periodOptions, $selectedPeriod, $classOptions, $selectedClass, $studentOptions, $selectedStudent) = array_values($this->_getSelectOptions());
 		$fullDayOptions = $this->getSelectOptions('general.yesno');
 		$absenceTypeOptions = $this->absenceList;
+
 		$this->ControllerAction->field('absence_type_id', [
 			'options' => $absenceTypeOptions
 		]);
@@ -315,9 +322,11 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		// Start Date and End Date
 		if ($this->action == 'add') {
 			// Malcolm discussed with Umairah and Thed - will revisit this when default date of htmlhelper is capable of setting 'defaultViewDate' ($entity->start_date = $todayDate; was: causing validation error to disappear)
-			// $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-			// $startDate = $AcademicPeriod->get($selectedPeriod)->start_date;
-			// $endDate = $AcademicPeriod->get($selectedPeriod)->end_date;
+			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			$startDate = $AcademicPeriod->get($selectedPeriod)->start_date;
+			$endDate = $AcademicPeriod->get($selectedPeriod)->end_date;
+			// pr($startDate);
+			// pr($endDate);
 
 			// $this->ControllerAction->field('start_date', [
 			// 	'date_options' => ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')]
@@ -332,8 +341,13 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			// 	$entity->end_date = $todayDate;
 			// } else {
 			// 	$entity->start_date = $startDate->format('Y-m-d');
-			// 	$entity->end_date = $startDate->format('Y-m-d');
+			// 	$entity->end_date = $endDate->format('Y-m-d');
 			// }
+
+			$this->fields['start_date']['date_options']['startDate'] = $startDate->format('d-m-Y');
+			$this->fields['start_date']['date_options']['endDate'] = $endDate->format('d-m-Y');
+			$this->fields['end_date']['date_options']['startDate'] = $startDate->format('d-m-Y');
+			$this->fields['end_date']['date_options']['endDate'] = $endDate->format('d-m-Y');
 
 		} else if ($this->action == 'edit') {
 			$this->ControllerAction->field('start_date');
@@ -409,6 +423,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			}
 		}
 
+		$attr['select'] = false;
 		$attr['options'] = $fullDayOptions;
 		$attr['onChangeReload'] = 'changeFullDay';
 
@@ -426,7 +441,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			$selectedAbsenceType = $request->data[$this->alias()]['absence_type_id'];
 			$attr['options'] = $absenceTypeOptions;
 			$attr['default'] = $selectedAbsenceType;
-			$attr['onChangeReload'] = 'changeAbsenceType';			
+			$attr['onChangeReload'] = 'changeAbsenceType';
 		}
 		return $attr;
 	}
@@ -506,7 +521,8 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 
 		// Academic Period
-		$periodOptions = $AcademicPeriod->getList(['isEditable'=>true]);
+		$periodOptionsData = $AcademicPeriod->getList(['isEditable'=>true]);
+		$periodOptions = $periodOptionsData['Year'];
 		$selectedPeriod = $this->queryString('period', $periodOptions);
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
@@ -535,9 +551,13 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			->order([$Classes->aliasField('class_number') => 'ASC'])
 			->toArray();
 		$selectedClass = !is_null($this->request->query('class')) ? $this->request->query('class') : key($classOptions);
+		$classOptions = ['' => '-- '.('Select').' --'] + $classOptions;
 		$this->advancedSelectOptions($classOptions, $selectedClass, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
 			'callable' => function($id) use ($Students) {
+				if (empty($id)) {
+					return 1;
+				}
 				return $Students
 					->find()
 					->where([
@@ -547,7 +567,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			}
 		]);
 		// End
-		
+
 		// Student
 		$Students = TableRegistry::get('Institution.InstitutionClassStudents');
 		$studentOptions = $Students
