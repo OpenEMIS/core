@@ -46,8 +46,6 @@ class InstitutionStaffTable extends AppTable  {
 		$requestData = json_decode($settings['process']['params']);
 		$statusId = $requestData->status;
 		$typeId = $requestData->type;
-		$userId = $requestData->user_id;
-		$superAdmin = $requestData->super_admin;
 
 		if ($statusId!=0) {
 			$query->where([
@@ -82,10 +80,6 @@ class InstitutionStaffTable extends AppTable  {
 			'position_title_teaching' => 'StaffPositionTitles.type', 
 			'institution_type' => 'Types.name'
 		]);
-
-		if (!$superAdmin) {
-			$query->find('ByAccess', ['user_id' => $userId, 'institution_field_alias' => $this->aliasField('institution_id')]);
-		}
 	}
 
 	public function onExcelGetFTE(Event $event, Entity $entity) {

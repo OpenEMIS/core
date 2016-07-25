@@ -26,6 +26,16 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
 		]);
 
 		$this->addBehavior('AcademicPeriod.Period');
+		$this->addBehavior('Report.InstitutionSecurity');
+	}
+
+	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+		$requestData = json_decode($settings['process']['params']);
+		$superAdmin = $requestData->super_admin;
+		$userId = $requestData->user_id;
+		if (!$superAdmin) {
+			$query->find('ByAccess', ['user_id' => $userId, 'institution_field_alias' => $this->aliasField('id')]);
+		}
 	}
 
 	public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {

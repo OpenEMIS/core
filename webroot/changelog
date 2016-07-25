@@ -1,3 +1,7 @@
+v3.5.11.2
+- Student out of school has been moved from Institution Reports to Student Reports 
+- All Institution Reports are now generated based on Area access of the user
+
 v3.5.11
 - Student and Staff Reports now include Institution Types
 - Fixed a bug that prevented users from deleting Infrastructure records
