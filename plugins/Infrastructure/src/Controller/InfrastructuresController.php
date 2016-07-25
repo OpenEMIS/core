@@ -13,7 +13,8 @@ class InfrastructuresController extends AppController
 		// pr($this->request->query);
 		$this->ControllerAction->models = [
 			'Fields' => ['className' => 'Infrastructure.InfrastructureCustomFields'],
-			'Pages' => ['className' => 'Infrastructure.InfrastructureCustomForms']
+			'Pages' => ['className' => 'Infrastructure.InfrastructureCustomForms'],
+			'RoomPages' => ['className' => 'Infrastructure.RoomCustomForms']
 		];
 		$this->loadComponent('Paginator');
     }
@@ -48,6 +49,7 @@ class InfrastructuresController extends AppController
 
 		// Types and RoomTypes share one tab
 		$selectedAction = ($this->request->action == 'Types' || $this->request->action == 'RoomTypes') ? 'Types' : $this->request->action;
+		$selectedAction = ($this->request->action == 'Pages' || $this->request->action == 'RoomPages') ? 'Pages' : $this->request->action;
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $selectedAction);
 	}
