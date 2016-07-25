@@ -232,12 +232,26 @@ class ImportStaffTable extends AppTable
 
         //logic to check whether staff tried to be imported from one institution to another.
         $staffRecord = $this->InstitutionStaff
-            ->find('staffRecords', ['staffId' => $tempRow['staff_id']])
+            ->find()
+            ->select([
+                'institution_id'
+            ])
+            ->innerJoin(
+                ['StaffStatuses' => 'staff_statuses'], [
+                    'StaffStatuses.id = ' . $this->InstitutionStaff->aliasField('staff_status_id'),
+                    'StaffStatuses.code' => 'ASSIGNED'
+                ]
+            )
+            ->where([$this->InstitutionStaff->aliasField('staff_Id') => $tempRow['staff_id']])
+            ->distinct() //to cater when staff have few position on same institution
             ->toArray();
-        
-        $currentInstitutionId = $staffRecord[0]['institution_id'];
-        
-        if ($currentInstitutionId != $this->_institution->id) {
+
+        //the result of institution_id can be array of multiple institution where the staff is assigned to
+        foreach ($staffRecord as $key => $value) {
+            $institutionList[] = $staffRecord[$key]['institution_id'];
+        }
+
+        if (!array_search($this->_institution->id, $institutionList)) { //if the current session not on the institution list on where the staff assigned to.
             $rowInvalidCodeCols['staff_id'] = __('The staff is already assigned to another school');
             return false;
         }
