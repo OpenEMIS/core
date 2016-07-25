@@ -21,6 +21,7 @@ class InstitutionProgrammesTable extends AppTable  {
 		
 		$this->addBehavior('Excel', ['excludes' => ['start_year', 'end_year', 'institution_programme_id']]);
 		$this->addBehavior('Report.ReportList');
+		$this->addBehavior('Report.InstitutionSecurity');
 	}
 
 	public function beforeAction(Event $event) {
