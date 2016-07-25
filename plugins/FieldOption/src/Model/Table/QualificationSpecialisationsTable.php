@@ -11,8 +11,9 @@ use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
 class QualificationSpecialisationsTable extends ControllerActionTable {
-	public function initialize(array $config) {
-		$this->addBehavior('ControllerAction.FieldOption');
+	public function initialize(array $config)
+	{
+		$this->addBehavior('FieldOption.FieldOption');
 		$this->table('qualification_specialisations');
 		parent::initialize($config);
 		$this->hasMany('Qualifications', ['className' => 'Staff.Qualifications', 'foreignKey' => 'qualification_specialisation_id']);
@@ -30,7 +31,7 @@ class QualificationSpecialisationsTable extends ControllerActionTable {
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
-		$query->contain(['EducationSubjects']);	
+		$query->contain(['EducationSubjects']);
 	}
 
 	public function afterAction(Event $event) {
@@ -52,12 +53,12 @@ class QualificationSpecialisationsTable extends ControllerActionTable {
 				foreach ($subjectData as $key => $value) {
 					$subjectOptions[$value->id] = $value->code . ' - ' . $value->name;
 				}
-				
+
 				$attr['type'] = 'chosenSelect';
 				$attr['options'] = $subjectOptions;
 				$attr['model'] = 'QualificationSpecialisations';
 				break;
-			
+
 			default:
 				# code...
 				break;
