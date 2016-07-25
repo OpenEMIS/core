@@ -165,17 +165,19 @@ class DirectoriesTable extends AppTable {
     {
         $institutionIds = (array_key_exists('institutionIds', $options))? $options['institutionIds']: [];
         if (!empty($institutionIds)) {
-            $query->join([
-                [
-                    'type' => 'INNER',
-                    'table' => 'institution_students',
-                    'alias' => 'InstitutionStudents',
-                    'conditions' => [
-                        'InstitutionStudents.institution_id'.' IN ('.$institutionIds.')',
-                        'InstitutionStudents.student_id = '. $this->aliasField('id')
-                    ]
-                ]
-            ]);
+            $query
+            	->join([
+	                [
+	                    'type' => 'INNER',
+	                    'table' => 'institution_students',
+	                    'alias' => 'InstitutionStudents',
+	                    'conditions' => [
+	                        'InstitutionStudents.institution_id'.' IN ('.$institutionIds.')',
+	                        'InstitutionStudents.student_id = '. $this->aliasField('id')
+	                    ]
+	                ]
+	            ])
+	            ->group('InstitutionStudents.student_id');
         } else {
             // return nothing if $institutionIds is empty
             $query->where([$this->aliasField('id') => -1]);
