@@ -571,11 +571,14 @@ class CustomFormsTable extends AppTable {
 		if ($this->hasFilter) {
 			$showFilters = false;
 
+			$where = [$this->aliasField('custom_module_id') => $selectedModule];
+			if (isset($entity->id)) {
+				$where[$this->aliasField('id <>')] = $entity->id;
+			}
+
 			$customFormIds = $this
 				->find('list', ['keyField' => 'id', 'valueField' => 'id'])
-				->where([
-					$this->aliasField('custom_module_id') => $selectedModule
-				])
+				->where($where)
 				->toArray();
 
 			if (!empty($customFormIds)) {
