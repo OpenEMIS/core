@@ -61,6 +61,8 @@ class GuardianUserTable extends UserTable {
 		$tabElements = $this->controller->getStudentGuardianTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
 		$this->ControllerAction->field('user_type', ['type' => 'hidden', 'value' => UserTable::GUARDIAN]);
+		$this->ControllerAction->field('username', ['visible' => false]);
+		$this->ControllerAction->field('password', ['visible' => false]);
 	}
 
 	private function setupTabElements($entity) {
