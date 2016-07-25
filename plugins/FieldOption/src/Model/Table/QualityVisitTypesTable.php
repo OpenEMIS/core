@@ -1,19 +1,16 @@
 <?php
 namespace FieldOption\Model\Table;
 
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 
-class QualityVisitTypesTable extends AppTable {
-	public function initialize(array $config) {
-		$this->addBehavior('ControllerAction.FieldOption');
+class QualityVisitTypesTable extends ControllerActionTable {
+	public function initialize(array $config)
+	{
+		$this->addBehavior('FieldOption.FieldOption');
 		$this->table('quality_visit_types');
 		parent::initialize($config);
 		$this->hasMany('InstitutionQualityVisits', ['className' => 'Institution.InstitutionQualityVisits', 'foreignKey' => 'quality_visit_type_id']);
 
-		$this->addBehavior('OpenEmis.OpenEmis');
-		$this->addBehavior('ControllerAction.ControllerAction', [
-			'actions' => ['remove' => 'transfer'],
-			'fields' => ['excludes' => ['modified_user_id', 'created_user_id']]
-		]);
+		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
 	}
 }
