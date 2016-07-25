@@ -34,6 +34,7 @@ class StaffAbsencesTable extends AppTable {
 			],
 			'pages' => false
 		]);
+		$this->addBehavior('Report.InstitutionSecurity');
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
