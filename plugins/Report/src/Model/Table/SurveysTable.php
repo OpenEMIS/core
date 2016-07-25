@@ -167,8 +167,6 @@ class SurveysTable extends AppTable  {
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
 		$requestData = json_decode($settings['process']['params']);
-		$userId = $requestData->user_id;
-		$superAdmin = $requestData->super_admin;
 		$query
 			->select([
 				'code' => 'Institutions.code', 
@@ -179,9 +177,6 @@ class SurveysTable extends AppTable  {
 				'Institutions.Areas', 
 				'Institutions.AreaAdministratives'
 			]);
-		if (!$superAdmin) {
-			$query->find('ByAccess', ['user_id' => $userId, 'institution_field_alias' => $this->aliasField('institution_id')]);
-		}
 	}
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
