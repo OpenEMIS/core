@@ -40,6 +40,7 @@ class InstitutionsTable extends AppTable  {
 			'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true],
 			'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
+		$this->addBehavior('Report.InstitutionSecurity');
 	}
 
 	public function beforeAction(Event $event) {
@@ -290,6 +291,8 @@ class InstitutionsTable extends AppTable  {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$requestData = json_decode($settings['process']['params']);
 		$filter = $requestData->institution_filter;
+		$superAdmin = $requestData->super_admin;
+		$userId = $requestData->user_id;
 		$query
 			->contain(['Areas'])
 			->select(['area_code' => 'Areas.code']);
@@ -318,6 +321,9 @@ class InstitutionsTable extends AppTable  {
 
 			case self::NO_FILTER:
 				break;
+		}
+		if (!$superAdmin) {
+			$query->find('ByAccess', ['user_id' => $userId, 'institution_field_alias' => $this->aliasField('id')]);
 		}
 	}
 }

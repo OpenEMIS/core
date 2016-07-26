@@ -24,6 +24,7 @@ class InstitutionStudentsTable extends AppTable  {
 			'excludes' => ['start_year', 'end_year'], 
 			'pages' => false
 		]);
+		$this->addBehavior('Report.InstitutionSecurity');
 	}
 
 	public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
