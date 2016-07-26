@@ -31,7 +31,6 @@
 					'class' => 'form-control',
 					'label' => false,
 					'options' => $levelOptions,
-					'default' => $selectedLevel,
 					'url' => $baseUrl,
 					'data-named-key' => 'level',
 					'escape' => false
