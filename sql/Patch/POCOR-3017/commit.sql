@@ -122,7 +122,12 @@ CREATE TABLE IF NOT EXISTS `room_custom_field_values` (
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `infrastructure_custom_field_id` (`infrastructure_custom_field_id`),
+  KEY `institution_room_id` (`institution_room_id`),
+  KEY `modified_user_id` (`modified_user_id`),
+  KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- custom_modules
