@@ -200,7 +200,12 @@ class RecordBehavior extends Behavior {
 
 		$arrayOptions = $options->getArrayCopy();
 		if (!empty($arrayOptions)) {
-			$arrayOptions = array_merge_recursive($arrayOptions, ['associated' => ['CustomFieldValues', 'CustomTableCells']]);
+			if (!is_null($this->config('tableCellClass'))) {
+				$associated = ['CustomFieldValues', 'CustomTableCells'];
+			} else {
+				$associated = ['CustomFieldValues'];
+			}
+			$arrayOptions = array_merge_recursive($arrayOptions, ['associated' => $associated]);
 			$options->exchangeArray($arrayOptions);
 		}
     }
@@ -294,10 +299,12 @@ class RecordBehavior extends Behavior {
 						]);
 
 						// when edit always delete all the cell values before reinsert
-			            $this->CustomTableCells->deleteAll([
-			                $this->CustomTableCells->aliasField($settings['recordKey']) => $id,
-			                $this->CustomTableCells->aliasField($settings['fieldKey'] . ' IN ') => $deleteFieldIds
-			            ]);
+						if (!is_null($this->config('tableCellClass'))) {
+				            $this->CustomTableCells->deleteAll([
+				                $this->CustomTableCells->aliasField($settings['recordKey']) => $id,
+				                $this->CustomTableCells->aliasField($settings['fieldKey'] . ' IN ') => $deleteFieldIds
+				            ]);
+				        }
 			            // $event = $model->dispatchEvent('Render.deleteCustomFieldValues', [$entity, $deleteFieldIds], $model);
 		            }
 				}

@@ -56,24 +56,30 @@ class InstitutionInfrastructuresTable extends AppTable {
 			'controller' => $this->controller->name,
 			'action' => $this->alias,
 			'index',
-			'parent' => $entity->id
+			'parent' => $entity->id,
+			'parent_level' => $entity->infrastructure_level_id
 		]);
 	}
 
 	public function indexBeforeAction(Event $event) {
 		$parentId = $this->request->query('parent');
 		if (!is_null($parentId)) {
-			$roomLevelId = $this->Levels->getFieldByCode('ROOM', 'id');
-			if ($parentId == $roomLevelId) {
-				$url = [
-					'plugin' => 'Institution',
-					'controller' => 'Institutions',
-					'action' => 'Rooms',
-					'parent' => $parentId
-				];
+			$parentLevelId = $this->request->query('parent_level');
+			if (!is_null($parentLevelId)) {
+				$floorLevelId = $this->Levels->getFieldByCode('FLOOR', 'id');
 
-				$event->stopPropagation();
-				return $this->controller->redirect($url);
+				if ($parentLevelId == $floorLevelId) {
+					$url = [
+						'plugin' => 'Institution',
+						'controller' => 'Institutions',
+						'action' => 'Rooms',
+						'parent' => $parentId,
+						'parent_level' => $parentLevelId
+					];
+
+					$event->stopPropagation();
+					return $this->controller->redirect($url);
+				}
 			}
 
 			$crumbs = $this->findPath(['for' => $parentId]);
