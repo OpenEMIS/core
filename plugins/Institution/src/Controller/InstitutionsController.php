@@ -96,9 +96,6 @@ class InstitutionsController extends AppController  {
         	}
         	$this->set('externalDataSource', $externalDataSource);
             $this->render('studentAdd');
-        } elseif ($pass == 'addExternal') {
-        	$this->set('ngController', 'InstitutionsStudentsCtrl as InstitutionStudentController');
-            $this->render('studentAddExternal');
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Students']);
         }
