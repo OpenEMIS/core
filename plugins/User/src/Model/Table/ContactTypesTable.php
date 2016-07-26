@@ -26,6 +26,13 @@ class ContactTypesTable extends ControllerActionTable {
 		}
 	}
 
+	public function findWithContactOptions(Query $query, array $options)
+	{
+		return $query
+			->contain(['ContactOptions'])
+			->order([$this->aliasField('order') => 'ASC']);
+	}
+
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
 		return $validator;
