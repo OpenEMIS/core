@@ -9,6 +9,13 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 
 class InstitutionSecurityBehavior extends Behavior {
+	public function implementedEvents()
+	{
+		$eventMap = parent::implementedEvents();
+		$eventMap['Model.excel.onExcelBeforeQuery'] = ['callable' => 'onExcelBeforeQuery', 'priority' => 15];
+		return $eventMap;
+	}
+
 	public function findByAccess(Query $query, array $options) {
 		$userId = $options['user_id'];
 		$institutionIdFieldAlias = $options['institution_field_alias'];
@@ -57,5 +64,18 @@ class InstitutionSecurityBehavior extends Behavior {
 		]);
 
 		return $query;
+	}
+
+	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+	{
+		$requestData = json_decode($settings['process']['params']);
+		$superAdmin = $requestData->super_admin;
+		$userId = $requestData->user_id;
+		if (!$superAdmin) {
+			$model = $this->_table;
+			if (!is_null($model->association('Institutions'))) {
+				$query->find('ByAccess', ['user_id' => $userId, 'institution_field_alias' => $model->aliasField($model->association('Institutions')->foreignKey())]);
+			}
+		}
 	}
 }
