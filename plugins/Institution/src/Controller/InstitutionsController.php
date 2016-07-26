@@ -25,6 +25,7 @@ class InstitutionsController extends AppController  {
 
 			'Programmes' 		=> ['className' => 'Institution.InstitutionGrades', 'actions' => ['!search'], 'options' => ['deleteStrategy' => 'restrict']],
 			'Infrastructures' 	=> ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'transfer']],
+			'Rooms' 			=> ['className' => 'Institution.InstitutionRooms', 'options' => ['deleteStrategy' => 'restrict']],
 
 			'Staff' 			=> ['className' => 'Institution.Staff'],
 			'StaffUser' 		=> ['className' => 'Institution.StaffUser', 'actions' => ['add', 'view', 'edit']],
