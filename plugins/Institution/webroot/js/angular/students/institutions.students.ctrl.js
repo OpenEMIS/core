@@ -256,7 +256,15 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                     return StudentController.processStudentRecord(studentRecords, params);
                 }, function(error) {
                     console.log(error);
-                    AlertSvc.warning($scope, error);
+                    var status = error.status;
+                    if (status == '401') {
+                        var message = 'You have not been authorised to fetch from external data source.';
+                        AlertSvc.warning($scope, message);
+                    } else {
+                        AlertSvc.warning($scope, error);
+                    }
+                    var studentRecords = [];
+                    return StudentController.processStudentRecord(studentRecords, params);
                 });
             }
         };
