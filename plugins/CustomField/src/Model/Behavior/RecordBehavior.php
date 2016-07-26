@@ -74,10 +74,12 @@ class RecordBehavior extends Behavior {
 			$this->_table->belongsTo('CustomForms', $this->config('formClass'));
 		}
 		$this->_table->hasMany('CustomFieldValues', $this->config('fieldValueClass'));
-		$this->_table->hasMany('CustomTableCells', $this->config('tableCellClass'));
-
 		$this->CustomFieldValues = $this->_table->CustomFieldValues;
-		$this->CustomTableCells = $this->_table->CustomTableCells;
+
+		if (!is_null($this->config('tableCellClass'))) {
+			$this->_table->hasMany('CustomTableCells', $this->config('tableCellClass'));
+			$this->CustomTableCells = $this->_table->CustomTableCells;
+		}
 
 		$this->CustomModules = TableRegistry::get('CustomField.CustomModules');
 		$this->CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
@@ -143,7 +145,9 @@ class RecordBehavior extends Behavior {
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
 		// do not contain CustomFieldValues
-		$query->contain(['CustomTableCells']);
+		if (!is_null($this->config('tableCellClass'))) {
+			$query->contain(['CustomTableCells']);
+		}
 	}
 
 	public function editAfterQuery(Event $event, Entity $entity) {
@@ -397,10 +401,6 @@ class RecordBehavior extends Behavior {
 
 			$results = $this->CustomModules
 				->find('all')
-				->select([
-					$this->CustomModules->aliasField('id'),
-					$this->CustomModules->aliasField('filter')
-				])
 				->where($where)
 				->first();
 
@@ -465,18 +465,28 @@ class RecordBehavior extends Behavior {
 								return $q
 									->find('visible')
 									->find('order');
-							},
-							'CustomFields.CustomTableColumns' => function ($q) {
-						       return $q
-						       		->find('visible')
-						       		->find('order');
-						    },
-							'CustomFields.CustomTableRows' => function ($q) {
-						       return $q
-						       		->find('visible')
-						       		->find('order');
-						    }
+							}
 						]);
+
+						if (!is_null($this->config('tableColumnKey'))) {
+							$query->contain([
+								'CustomFields.CustomTableColumns' => function ($q) {
+							       return $q
+							       		->find('visible')
+							       		->find('order');
+							    }
+							]);
+						}
+
+						if (!is_null($this->config('tableRowKey'))) {
+							$query->contain([
+								'CustomFields.CustomTableRows' => function ($q) {
+							       return $q
+							       		->find('visible')
+							       		->find('order');
+							    }
+							]);
+						}
 					}
 				}
 			}
