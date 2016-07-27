@@ -23,7 +23,7 @@ class ConfigItemsTable extends AppTable {
 
 		$this->addBehavior('Authentication');
 		$this->addBehavior('ExternalDataSource');
-
+		$this->addBehavior('FormNotes');
 		// $this->belongsTo('ConfigItemOptions', ['foreignKey'=>'value']);
 	}
 
@@ -40,10 +40,6 @@ class ConfigItemsTable extends AppTable {
 		$this->ControllerAction->field('type', ['visible' => ['view'=>true, 'edit'=>true]]);
 		$this->ControllerAction->field('label', ['visible' => ['view'=>true, 'edit'=>true]]);
 		$this->ControllerAction->field('value', ['visible' => true]);
-
-		$this->ControllerAction->field('form_notes', ['type' => 'form_notes', 'visible' => false]);
-
-		$this->addBehavior('FormNotes');
 	}
 
 
@@ -112,12 +108,6 @@ class ConfigItemsTable extends AppTable {
 				if (isset($this->$validationRules)) {
 					$this->validator()->add('value', $this->$validationRules);
 				}
-			}
-			if ($entity->type == 'Custom Validation') {
-				$this->fields['form_notes']['visible'] = true;
-				$this->fields['form_notes']['value'] = '<ul><li>9 (Numbers)</li><li>a (Letter)</li><li>w (Alphanumeric)</li><li>* (Any Character)</li><li>? (Optional - any characters following will become optional)</li></ul>';
-		
-				$this->fields['value']['attr']['onkeypress'] = 'return Config.inputMaskCheck(event)';
 			}
 		}
 	}

@@ -30,6 +30,7 @@ class WorkflowStepsTable extends AppTable {
 		$this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
 		$this->hasMany('WorkflowActions', ['className' => 'Workflow.WorkflowActions', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('WorkflowRecords', ['className' => 'Workflow.WorkflowRecords', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('NextWorkflowSteps', ['className' => 'Workflow.WorkflowActions', 'foreignKey' => 'next_workflow_step_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('WorkflowStatuses' , [
 			'className' => 'Workflow.WorkflowStatuses',
 			'joinTable' => 'workflow_statuses_steps',
@@ -264,6 +265,12 @@ class WorkflowStepsTable extends AppTable {
 		$entity->workflow_id = $selectedWorkflow;
 	}
 
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
+    	$extra['excludedModels'] = [
+    		$this->WorkflowActions->alias()
+    	];
+    }
+
 	public function onUpdateFieldIsEditable(Event $event, array $attr, $action, Request $request) {
 		$attr['options'] = $this->getSelectOptions('general.yesno');
 
@@ -304,10 +311,11 @@ class WorkflowStepsTable extends AppTable {
 
 			$registryAlias = $workflow->_matchingData['WorkflowModels']->model;
 			$subject = TableRegistry::get($registryAlias);
-			$subjectEvent = $subject->dispatchEvent('Workflow.getEvents', null, $subject);
+			$eventsObject = new ArrayObject();
+			$subjectEvent = $subject->dispatchEvent('Workflow.getEvents', [$eventsObject], $subject);
 			if ($subjectEvent->isStopped()) { return $subjectEvent->result; }
 
-			$events = $subjectEvent->result;
+			$events = $eventsObject;
 			if (empty($events)) {
 				$eventOptions = [
 					0 => [

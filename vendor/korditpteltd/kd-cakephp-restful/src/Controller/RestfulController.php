@@ -24,11 +24,6 @@ class RestfulController extends AppController
         $this->loadComponent('Auth');
     }
 
-/***************************************************************************************************************************************************
- *
- * CakePHP events
- *
- ***************************************************************************************************************************************************/
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
@@ -50,11 +45,6 @@ class RestfulController extends AppController
                 }
             }
         }
-
-        if ($this->request->is(['put', 'post', 'delete', 'patch']) || !empty($this->request->data)) {
-            $token = isset($this->request->cookies['csrfToken']) ? $this->request->cookies['csrfToken'] : '';
-            $this->request->env('HTTP_X_CSRF_TOKEN', $token);
-        }
     }
 
     public function beforeRender(Event $event)
@@ -69,13 +59,6 @@ class RestfulController extends AppController
             ]);
         }
     }
-
-
-/***************************************************************************************************************************************************
- *
- * Controller action functions
- *
- ***************************************************************************************************************************************************/
 
     public function nothing()
     {
@@ -277,13 +260,34 @@ class RestfulController extends AppController
     private function convertBinaryToBase64(Entity $entity)
     {
         foreach ($entity->visibleProperties() as $property) {
-            if (is_resource($entity->$property)) {
-                $entity->$property = base64_encode("data:image/jpeg;base64,".stream_get_contents($entity->$property));
+            if ($entity->$property instanceof Entity) {
+                $this->convertBinaryToBase64($entity->$property);
+            } else if (is_resource($entity->$property)) {
+                $entity->$property = base64_encode(stream_get_contents($entity->$property));
+            } else if ($property == 'password') { // removing password from entity so that the value will not be exposed
+                $entity->unsetProperty($property);
             }
         }
     }
 
-    private function _formatBinaryValue($data) {
+    private function convertBase64ToBinary(Entity $entity)
+    {
+        $table = $this->model;
+        $schema = $table->schema();
+        $columns = $schema->columns();
+
+        foreach ($columns as $column) {
+            $attr = $schema->column($column);
+            if ($attr['type'] == 'binary' && $entity->has($column)) {
+                $value = urldecode($entity->$column);
+                $entity->$column = base64_decode($value);
+            }
+        }
+        return $entity;
+    }
+
+    private function _formatBinaryValue($data)
+    {
         if ($data instanceof Entity) {
             $this->convertBinaryToBase64($data);
         } else {
@@ -292,6 +296,41 @@ class RestfulController extends AppController
             }
         }
         return $data;
+    }
+
+    // this function will be called if accessed from other domain
+    // Reference: http://www.html5rocks.com/en/tutorials/cors/
+    // The logic in this function is not finalised
+    public function options()
+    {
+        $this->autoRender = false;
+        $supportedMethods = ['GET', 'POST', 'PUT', 'DELETE'];
+        $headers = getallheaders();
+
+        header('Access-Control-Allow-Origin: ' . $headers['Origin']);
+        header('Access-Control-Allow-Methods: ' . implode(', ', $supportedMethods));
+        header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Authorization');
+        header('Content-Type: text/html; charset=utf-8');
+
+        Log::write('debug', getallheaders());
+
+        /*
+        OPTIONS /cors HTTP/1.1
+        Origin: http://api.bob.com
+        Access-Control-Request-Method: PUT
+        Access-Control-Request-Headers: X-Custom-Header
+        Host: api.alice.com
+        Accept-Language: en-US
+        Connection: keep-alive
+        User-Agent: Mozilla/5.0...
+        */
+
+        /*
+        Access-Control-Allow-Origin: http://api.bob.com
+        Access-Control-Allow-Methods: GET, POST, PUT
+        Access-Control-Allow-Headers: X-Custom-Header
+        Content-Type: text/html; charset=utf-8
+        */
     }
 
     public function index()
@@ -342,6 +381,7 @@ class RestfulController extends AppController
         $target = $this->_instantiateModel($model);
         if ($target) {
             $entity = $target->newEntity($this->request->data);
+            $entity = $this->convertBase64ToBinary($entity);
             $target->save($entity);
             $this->set([
                 'data' => $entity,
@@ -355,7 +395,12 @@ class RestfulController extends AppController
     {
         $target = $this->_instantiateModel($model);
         if ($target) {
-            if ($target->exists([$target->aliasField($target->primaryKey()) => $id])) {
+            if (strtolower($id) == 'schema') {
+                $fields = $this->schema($target);
+                $serialize = ['data' => $fields];
+                $serialize['_serialize'] = array_keys($serialize);
+                $this->set($serialize);
+            } else if ($target->exists([$target->aliasField($target->primaryKey()) => $id])) {
                 $requestQueries = $this->request->query;
 
                 $query = $target->find();
@@ -392,6 +437,7 @@ class RestfulController extends AppController
             if ($target->exists([$target->aliasField($target->primaryKey()) => $id])) {
                 $entity = $target->get($id);
                 $entity = $target->patchEntity($entity, $this->request->data);
+                $entity = $this->convertBase64ToBinary($entity);
                 if (empty($entity->errors())) {
                     $target->save($entity);
                     $this->set([
@@ -428,12 +474,17 @@ class RestfulController extends AppController
         }
     }
 
-
-/***************************************************************************************************************************************************
- *
- * private functions
- *
- ***************************************************************************************************************************************************/
+    public function schema($table)
+    {
+        $fields = [];
+        $schema = $table->schema();
+        $columns = $schema->columns();
+        foreach ($columns as $col) {
+            $attr = $schema->column($col);
+            $fields[$col] = $attr;
+        }
+        return $fields;
+    }
 
     private function _instantiateModel($model)
     {

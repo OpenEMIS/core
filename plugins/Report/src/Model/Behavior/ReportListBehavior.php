@@ -11,6 +11,7 @@ use Cake\Network\Request;
 use Report\Model\Table\ReportProgressTable as Process;
 use Cake\I18n\I18n;
 use Cake\Network\Session;
+use Cake\I18n\Time;
 
 class ReportListBehavior extends Behavior {
 	public $ReportProgress;
@@ -62,17 +63,11 @@ class ReportListBehavior extends Behavior {
 		$expiredReports = $clonedQuery
 			->where([
 				$this->ReportProgress->aliasField('module') => $this->_table->alias(),
+				$this->ReportProgress->aliasField('expiry_date'). ' IS NOT NULL',
 				$this->ReportProgress->aliasField('expiry_date').' < ' => date('Y-m-d')])
 			->toArray();
 
-		foreach($expiredReports as $report) {
-			if (file_exists($report['file_path'])) {
-				unlink($report['file_path']);
-				$this->ReportProgress->delete($report);
-			} else {
-				$this->ReportProgress->delete($report);
-			}
-		}
+		$this->ReportProgress->purge();
 
 		$query = $this->ReportProgress->find()
 			->where([$this->ReportProgress->aliasField('module') => $this->_table->alias()])
@@ -133,8 +128,10 @@ class ReportListBehavior extends Behavior {
 
 	public function onExcelGenerateComplete(Event $event, ArrayObject $settings) {
 		$process = $settings['process'];
+		$expiryDate = new Time();
+		$expiryDate->addDays(5);
 		$this->ReportProgress->updateAll(
-			['status' => Process::COMPLETED, 'file_path' => $settings['file_path']],
+			['status' => Process::COMPLETED, 'file_path' => $settings['file_path'], 'expiry_date' => $expiryDate],
 			['id' => $process->id]
 		);
 	}
