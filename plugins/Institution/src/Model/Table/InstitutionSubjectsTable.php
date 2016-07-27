@@ -25,7 +25,7 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 		$this->belongsTo('Institutions', 				['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('EducationSubjects', 			['className' => 'Education.EducationSubjects']);
 		
-		$this->hasMany('ClassSubjects', 		['className' => 'Institution.InstitutionClassSubjects', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('ClassSubjects', 	['className' => 'Institution.InstitutionClassSubjects', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('SubjectStudents', 	['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('SubjectStaff', 		['className' => 'Institution.InstitutionSubjectStaff', 'dependent' => true, 'cascadeCallbacks' => true]);
 
@@ -370,12 +370,30 @@ class InstitutionSubjectsTable extends ControllerActionTable {
         }
     }
 
+    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) 
+    {
+    	foreach ($data as $key => $value) { //loop each subject then unset education_subject_id if not selected (so no validation is done).
+    		if ($key == 'MultiSubjects'){
+    			foreach ($data[$key] as $key1 => $value1) {
+    				if (array_key_exists('education_subject_id', $value1)) {
+    					if (!$value1['education_subject_id']) {
+    						unset($data[$key][$key1]['education_subject_id']);
+    						//unset($data[$key][$key1]['name']);
+    					}
+    				}
+    			}
+    		}
+    	}
+    }
+
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra) {
 		$process = function ($model, $entity) use ($data, $extra) {
 			list($error, $subjects, $data) = $model->prepareEntityObjects($model, $data, $extra);
 			if (!$error && $subjects) {
 				foreach ($subjects as $subject) {
-			    	$model->save($subject);
+					if ($subject->education_subject_id) {
+						$model->save($subject);
+					}
 				}
 				$extra[$this->aliasField('notice')] = 'passed';
 				return true;
@@ -385,8 +403,8 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 					return true;
 				} else {
 					$model->log($error, 'debug');
-					if (is_array($error)) {
-						$model->Alert->error('general.add.failed');
+					if (is_array($error)) { //this error is to validate "name" field, not for each subject name so not needed.
+						//$model->Alert->error('general.add.failed');
 					} else {
 						/**
 						 * unset all field validation except for "institution_id" to trigger validation error in ControllerActionComponent
@@ -396,6 +414,7 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 								$model->validator()->remove($value['field']);
 							}
 						}
+						$extra[$this->aliasField('notice')] = $error;
 						$model->Alert->error($error);
 					}
 					$model->request->data = $data;
@@ -406,16 +425,18 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 		return $process;
 	}
 
-	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra) {
+	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra) 
+	{
+		//pr($extra[$this->aliasField('notice')]);
 		if (isset($extra[$this->aliasField('notice')]) && !empty($extra[$this->aliasField('notice')])) {
 			$notice = $extra[$this->aliasField('notice')];
 			unset($extra[$this->aliasField('notice')]);
 			if ($notice=='passed') {
 				$this->Alert->success('general.add.success', ['reset'=>true]);
+				return $this->controller->redirect($this->url('index', 'QUERY'));
 			} else {
-				$this->Alert->warning($notice, ['reset'=>true]);
+				$this->Alert->error($notice, ['reset'=>true]);
 			}
-			return $this->controller->redirect($this->url('index', 'QUERY'));
 		}
 	}
 
@@ -714,6 +735,9 @@ class InstitutionSubjectsTable extends ControllerActionTable {
 					}
 				}
 			}
+
+			//pr($subjects);
+
 			if (!$subjects) {
 				$error = $this->aliasField('noSubjectSelected');
 			} else {
