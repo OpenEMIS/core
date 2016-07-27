@@ -89,7 +89,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <input ng-model="InstitutionStudentController.internalFilterLastName" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource() : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
-                    <label>{{ defaultIdentityTypeName }}</label>
+                    <label>{{ InstitutionStudentController.defaultIdentityTypeName }}</label>
                     <input ng-model="InstitutionStudentController.internalFilterIdentityNumber" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource() : null" type="text" id="" maxlength="150">
                 </div>
 
@@ -128,7 +128,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <input ng-model="InstitutionStudentController.externalFilterLastName" ng-keyup="$event.keyCode == 13 ? reloadExternalDatasource() : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
-                    <label>{{ defaultIdentityTypeName }}</label>
+                    <label>{{ InstitutionStudentController.defaultIdentityTypeName }}</label>
                     <input ng-model="InstitutionStudentController.externalFilterIdentityNumber" ng-keyup="$event.keyCode == 13 ? reloadExternalDatasource() : null" type="text" id="" maxlength="150">
                 </div>
 
