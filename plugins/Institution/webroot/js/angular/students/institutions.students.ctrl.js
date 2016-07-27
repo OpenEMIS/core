@@ -6,7 +6,7 @@ InstitutionStudentController.$inject = ['$scope', '$window', '$filter', 'UtilsSv
 
 function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertSvc, InstitutionsStudentsSvc) {
     // ag-grid vars
-    $scope.rowsThisPage = null;
+    
 
     var StudentController = this;
 
@@ -17,12 +17,18 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
     StudentController.hasExternalDataSource;
     StudentController.internalGridOptions = null;
     StudentController.externalGridOptions = null;
+    StudentController.rowsThisPage = null;
 
     // Controller functions
     StudentController.processStudentRecord = processStudentRecord;
     StudentController.createNewInternalDatasource = createNewInternalDatasource;
     StudentController.createNewExternalDatasource = createNewExternalDatasource;
     StudentController.insertStudentData = insertStudentData;
+    StudentController.onChangeAcademicPeriod = onChangeAcademicPeriod;
+    StudentController.onChangeEducationGrade = onChangeEducationGrade;
+    StudentController.getStudentData = getStudentData;
+    StudentController.selectStudent = selectStudent;
+    StudentController.postForm = postForm;
 
     StudentController.selectedStudent;
     StudentController.selectedStudentData;
@@ -30,11 +36,11 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
     $scope.endDate;
     StudentController.endDateFormatted;
 
-    $scope.defaultIdentityTypeName;
+    StudentController.defaultIdentityTypeName;
 
-    $scope.academicPeriodOptions = {};
-    $scope.educationGradeOptions = {};
-    $scope.classOptions = {};
+    StudentController.academicPeriodOptions = {};
+    StudentController.educationGradeOptions = {};
+    StudentController.classOptions = {};
 
     // not used
     // $scope.studentStatusOptions;
@@ -49,10 +55,10 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
     StudentController.externalFilterLastName;
     StudentController.externalFilterIdentityNumber;
 
-    $scope.postResponse;
+    StudentController.postResponse;
 
     // UI control vars
-    $scope.initialLoad = true;
+    StudentController.initialLoad = true;
 
 
     angular.element(document).ready(function () {
@@ -62,14 +68,14 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
 
         InstitutionsStudentsSvc.getAcademicPeriods()
         .then(function(periods) {
-            $scope.academicPeriodOptions = {
+            StudentController.academicPeriodOptions = {
                 availableOptions: periods,
                 selectedOption: periods[0]
             };
 
-            if ($scope.academicPeriodOptions.hasOwnProperty('selectedOption')) {
-                $scope.endDate = InstitutionsStudentsSvc.formatDate($scope.academicPeriodOptions.selectedOption.end_date);
-                $scope.onChangeAcademicPeriod();
+            if (StudentController.academicPeriodOptions.hasOwnProperty('selectedOption')) {
+                $scope.endDate = InstitutionsStudentsSvc.formatDate(StudentController.academicPeriodOptions.selectedOption.end_date);
+                StudentController.onChangeAcademicPeriod();
             }
 
             return InstitutionsStudentsSvc.getDefaultIdentityType();
@@ -79,7 +85,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
         })
         .then(function(defaultIdentityType) {
             if (defaultIdentityType.length > 0) {
-                $scope.defaultIdentityTypeName = defaultIdentityType[0].name;
+                StudentController.defaultIdentityTypeName = defaultIdentityType[0].name;
             }
             $scope.initGrid();
         }, function(error){
@@ -103,18 +109,13 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                     cellRenderer: function(params) {
                         // console.log();
                         var data = JSON.stringify(params.data);
-                        return '<div><input  name="ngSelectionCell" ng-click="selectStudent('+params.value+')" tabindex="-1" type="radio" selectedStudent="'+params.value+'"/></div>';
+                        return '<div><input  name="ngSelectionCell" ng-click="InstitutionStudentController.selectStudent('+params.value+')" tabindex="-1" type="radio" selectedStudent="'+params.value+'"/></div>';
                     }
                 },
                 {headerName: "Openemis No", field: "openemis_no", suppressMenu: true, suppressSorting: true},
                 {headerName: "First Name", field: "first_name", suppressMenu: true, suppressSorting: true},
                 {headerName: "Last Name", field: "last_name", suppressMenu: true, suppressSorting: true},
-
-                {headerName: (angular.isDefined($scope.defaultIdentityTypeName))? $scope.defaultIdentityTypeName: "[default identity type not set]", field: "default_identity_type", suppressMenu: true, suppressSorting: true},
-                // {headerName: "Currrent Institution", field: "institution_name", suppressMenu: true, suppressSorting: true},
-                // {headerName: "Currrent Academic Period", field: "academic_period_name", suppressMenu: true, suppressSorting: true},
-                // {headerName: "Currrent Education Grade", field: "education_grade_name", suppressMenu: true, suppressSorting: true}
-
+                {headerName: (angular.isDefined(StudentController.defaultIdentityTypeName))? StudentController.defaultIdentityTypeName: "[default identity type not set]", field: "default_identity_type", suppressMenu: true, suppressSorting: true},
             ],
             enableColResize: false,
             enableFilter: true,
@@ -144,18 +145,13 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                     cellRenderer: function(params) {
                         // console.log();
                         var data = JSON.stringify(params.data);
-                        return '<div><input  name="ngSelectionCell" ng-click="selectStudent('+params.value+')" tabindex="-1" type="radio" selectedStudent="'+params.value+'"/></div>';
+                        return '<div><input  name="ngSelectionCell" ng-click="InstitutionStudentController.selectStudent('+params.value+')" tabindex="-1" type="radio" selectedStudent="'+params.value+'"/></div>';
                     }
                 },
                 {headerName: "Openemis No", field: "openemis_no", suppressMenu: true, suppressSorting: true},
                 {headerName: "First Name", field: "first_name", suppressMenu: true, suppressSorting: true},
                 {headerName: "Last Name", field: "last_name", suppressMenu: true, suppressSorting: true},
-
-                {headerName: (angular.isDefined($scope.defaultIdentityTypeName))? $scope.defaultIdentityTypeName: "[default identity type not set]", field: "default_identity_type", suppressMenu: true, suppressSorting: true},
-                // {headerName: "Currrent Institution", field: "institution_name", suppressMenu: true, suppressSorting: true},
-                // {headerName: "Currrent Academic Period", field: "academic_period_name", suppressMenu: true, suppressSorting: true},
-                // {headerName: "Currrent Education Grade", field: "education_grade_name", suppressMenu: true, suppressSorting: true}
-
+                {headerName: (angular.isDefined(StudentController.defaultIdentityTypeName))? StudentController.defaultIdentityTypeName: "[default identity type not set]", field: "default_identity_type", suppressMenu: true, suppressSorting: true},
             ],
             enableColResize: false,
             enableFilter: true,
@@ -174,10 +170,12 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
     };
 
     $scope.reloadInternalDatasource = function () {
+        InstitutionsStudentsSvc.resetExternalVariable();
         StudentController.createNewInternalDatasource(StudentController.internalGridOptions);
     };
 
     $scope.reloadExternalDatasource = function () {
+        InstitutionsStudentsSvc.resetExternalVariable();
         StudentController.createNewExternalDatasource(StudentController.externalGridOptions);
     };
 
@@ -203,8 +201,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
 
     function createNewInternalDatasource(gridObj) {
         var dataSource = {
-            //rowCount: ???, - not setting the row count, infinite paging will be used
-            pageSize: pageSize, // changing to number, as scope keeps it as a string
+            pageSize: pageSize,
             getRows: function (params) {
                 AlertSvc.reset($scope);
                 delete StudentController.selectedStudent;
@@ -222,7 +219,8 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                 )
                 .then(function(response) {
                     var studentRecords = response.data;
-                    return StudentController.processStudentRecord(studentRecords, params);
+                    var totalRowCount = response.total;
+                    return StudentController.processStudentRecord(studentRecords, params, totalRowCount);
                 }, function(error) {
                     console.log(error);
                     AlertSvc.warning($scope, error);
@@ -234,8 +232,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
 
     function createNewExternalDatasource(gridObj) {
         var dataSource = {
-            //rowCount: ???, - not setting the row count, infinite paging will be used
-            pageSize: pageSize, // changing to number, as scope keeps it as a string
+            pageSize: pageSize,
             getRows: function (params) {
                 AlertSvc.reset($scope);
                 delete StudentController.selectedStudent;
@@ -253,7 +250,8 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                 )
                 .then(function(response) {
                     var studentRecords = response.data;
-                    return StudentController.processStudentRecord(studentRecords, params);
+                    var totalRowCount = response.total;
+                    return StudentController.processStudentRecord(studentRecords, params, totalRowCount);
                 }, function(error) {
                     console.log(error);
                     var status = error.status;
@@ -271,9 +269,8 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
         gridObj.api.setDatasource(dataSource);
     }
 
-    function processStudentRecord(studentRecords, params) {
+    function processStudentRecord(studentRecords, params, totalRowCount) {
         for(var key in studentRecords) {
-            // default values
             studentRecords[key]['institution_name'] = '-';
             studentRecords[key]['academic_period_name'] = '-';
             studentRecords[key]['education_grade_name'] = '-';
@@ -284,22 +281,12 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
             }
         }
 
-        $scope.lastRow = -1;
-        if (studentRecords.length == 0) {
-            if (params.startRow == 0) {
-                $scope.lastRow = 0;
-            } else {
-                $scope.lastRow = params.endRow - (pageSize % studentRecords.length);
-            }
-            studentRecords = null;
-        } else if (studentRecords.length < pageSize) {
-            $scope.lastRow = params.endRow - (pageSize % studentRecords.length);
-        }
-        $scope.rowsThisPage = studentRecords;
+        var lastRow = totalRowCount;
+        StudentController.rowsThisPage = studentRecords;
         
-        params.successCallback($scope.rowsThisPage, $scope.lastRow);
+        params.successCallback(StudentController.rowsThisPage, lastRow);
         UtilsSvc.isAppendLoader(false);
-        $scope.initialLoad = false;
+        StudentController.initialLoad = false;
         return studentRecords;
     }
 
@@ -321,8 +308,8 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
 
         InstitutionsStudentsSvc.postEnrolledStudent(data)
         .then(function(postResponse) {
-            $scope.postResponse = postResponse.data;
-            console.log($scope.postResponse);
+            StudentController.postResponse = postResponse.data;
+            console.log(StudentController.postResponse);
             UtilsSvc.isAppendLoader(false);
             if (postResponse.data.error.length === 0) {
                 AlertSvc.success($scope, 'The record has been added successfully.');
@@ -340,12 +327,12 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
         $window.location.href = 'add'
     };
 
-    $scope.selectStudent = function(id) {
+    function selectStudent(id) {
         StudentController.selectedStudent = id;
-        $scope.getStudentData();
-    };
+        StudentController.getStudentData();
+    }
 
-    $scope.getStudentData = function() {
+    function getStudentData() {
         InstitutionsStudentsSvc.getStudentData(StudentController.selectedStudent)
             .then(function(studentData) {
                 studentData.date_of_birth = InstitutionsStudentsSvc.formatDate(studentData.date_of_birth);
@@ -368,7 +355,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                 AlertSvc.warning($scope, error);
             })
             ;
-    };
+    }
 
     $scope.formatDateReverse = function(datetime) {
         datetime = new Date(datetime);
@@ -380,58 +367,58 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
         return (dd[1]?dd:"0"+dd[0]) + '-' + (mm[1]?mm:"0"+mm[0]) + '-' + yyyy; // padding
     }
 
-    $scope.onChangeAcademicPeriod = function() {
+    function onChangeAcademicPeriod() {
         AlertSvc.reset($scope);
 
-        if ($scope.academicPeriodOptions.hasOwnProperty('selectedOption')) {
-            $scope.endDate = InstitutionsStudentsSvc.formatDate($scope.academicPeriodOptions.selectedOption.end_date);
-            StudentController.startDate = $scope.formatDateReverse($scope.academicPeriodOptions.selectedOption.start_date);
+        if (StudentController.academicPeriodOptions.hasOwnProperty('selectedOption')) {
+            $scope.endDate = InstitutionsStudentsSvc.formatDate(StudentController.academicPeriodOptions.selectedOption.end_date);
+            StudentController.startDate = $scope.formatDateReverse(StudentController.academicPeriodOptions.selectedOption.start_date);
         }
 
         var startDatePicker = angular.element(document.getElementById('Students_start_date'));
-        startDatePicker.datepicker("setStartDate", $scope.formatDateReverse($scope.academicPeriodOptions.selectedOption.start_date));
-        startDatePicker.datepicker("setEndDate", $scope.formatDateReverse($scope.academicPeriodOptions.selectedOption.end_date));
-        startDatePicker.datepicker("setDate", $scope.formatDateReverse($scope.academicPeriodOptions.selectedOption.start_date));
+        startDatePicker.datepicker("setStartDate", $scope.formatDateReverse(StudentController.academicPeriodOptions.selectedOption.start_date));
+        startDatePicker.datepicker("setEndDate", $scope.formatDateReverse(StudentController.academicPeriodOptions.selectedOption.end_date));
+        startDatePicker.datepicker("setDate", $scope.formatDateReverse(StudentController.academicPeriodOptions.selectedOption.start_date));
 
-        $scope.educationGradeOptions = null;
+        StudentController.educationGradeOptions = null;
         InstitutionsStudentsSvc.getEducationGrades({
-            academicPeriodId: $scope.academicPeriodOptions.selectedOption.id
+            academicPeriodId: StudentController.academicPeriodOptions.selectedOption.id
         })
         .then(function(educationGrades) {
-            $scope.educationGradeOptions = {
+            StudentController.educationGradeOptions = {
                 availableOptions: educationGrades,
             };
         }, function(error) {
             console.log(error);
             AlertSvc.warning($scope, error);
         });
-    };
+    }
 
-    $scope.onChangeEducationGrade = function() {
+    function onChangeEducationGrade() {
         AlertSvc.reset($scope);
 
-        $scope.classOptions = null;
+        StudentController.classOptions = null;
 
         InstitutionsStudentsSvc.getClasses({
-            academicPeriodId: $scope.academicPeriodOptions.selectedOption.id,
-            gradeId: $scope.educationGradeOptions.selectedOption.education_grade_id
+            academicPeriodId: StudentController.academicPeriodOptions.selectedOption.id,
+            gradeId: StudentController.educationGradeOptions.selectedOption.education_grade_id
         })
         .then(function(classes) {
-            $scope.classOptions = {
+            StudentController.classOptions = {
                 availableOptions: classes,
             };
         }, function(error) {
             console.log(error);
             AlertSvc.warning($scope, error);
         });
-    };
+    }
 
-    $scope.postForm = function() {
-        var academicPeriodId = ($scope.academicPeriodOptions.hasOwnProperty('selectedOption'))? $scope.academicPeriodOptions.selectedOption.id: '';
-        var educationGradeId = ($scope.educationGradeOptions.hasOwnProperty('selectedOption'))? $scope.educationGradeOptions.selectedOption.education_grade_id: '';
+    function postForm() {
+        var academicPeriodId = (StudentController.academicPeriodOptions.hasOwnProperty('selectedOption'))? StudentController.academicPeriodOptions.selectedOption.id: '';
+        var educationGradeId = (StudentController.educationGradeOptions.hasOwnProperty('selectedOption'))? StudentController.educationGradeOptions.selectedOption.education_grade_id: '';
         var classId = null;
-        if ($scope.classOptions.hasOwnProperty('selectedOption')) {
-            classId = $scope.classOptions.selectedOption.id;
+        if (StudentController.classOptions.hasOwnProperty('selectedOption')) {
+            classId = StudentController.classOptions.selectedOption.id;
         }
         var startDate = StudentController.startDate;
         var startDateArr = startDate.split("-");
@@ -456,7 +443,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
         }, function(error){
 
         });
-    };
+    }
 
     angular.element(document.querySelector('#wizard')).on('actionclicked.fu.wizard', function(evt, data) {
         // evt.preventDefault();
@@ -471,15 +458,15 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
             evt.preventDefault()
         }
 
-        if (angular.isDefined($scope.postResponse)){
-            delete $scope.postResponse;
+        if (angular.isDefined(StudentController.postResponse)){
+            delete StudentController.postResponse;
             $scope.$apply();
         }
 
     });
 
     angular.element(document.querySelector('#wizard')).on('finished.fu.wizard', function(evt, data) {
-        $scope.postForm();
+        StudentController.postForm();
     });
 
     angular.element(document.querySelector('#wizard')).on('changed.fu.wizard', function(evt, data) {

@@ -57,7 +57,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
     </div>
     <div class="actions top">
         <button
-            ng-if="(!rowsThisPage && !initialLoad)"
+            ng-if="(!InstitutionStudentController.rowsThisPage && !InstitutionStudentController.initialLoad)"
             ng-click="onAddNewStudentClick()"
             type="button" class="btn btn-default">Add New Student
         </button>
@@ -150,11 +150,11 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
         </div>
         <div class="step-pane sample-pane" data-step="3">
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
-                <div class="input string" ng-model="postResponse">
+                <div class="input string" ng-model="InstitutionStudentController.postResponse">
                     <label>Student</label>
                     <input ng-model="InstitutionStudentController.selectedStudentData.name" type="string" disabled="disabled">
-                    <div ng-if="postResponse.error.student_name" class="error-message">
-                        <p ng-repeat="error in postResponse.error.student_name">{{ error }}</p>
+                    <div ng-if="InstitutionStudentController.postResponse.error.student_name" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.student_name">{{ error }}</p>
                     </div>
                 </div>
                 <div class="input string">
@@ -169,42 +169,42 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <label>Gender</label>
                     <input ng-model="InstitutionStudentController.selectedStudentData.gender.name" type="string" disabled="disabled">
                 </div>
-                <div class="input select required" ng-model="postResponse">
+                <div class="input select required" ng-model="InstitutionStudentController.postResponse">
                     <label>AcademicPeriod</label>
                     <div class="input-select-wrapper">
                         <select name="Students[academic_period_id]" id="students-academic-period-id"
-                            ng-options="option.name for option in academicPeriodOptions.availableOptions track by option.id"
-                            ng-model="academicPeriodOptions.selectedOption"
-                            ng-change="onChangeAcademicPeriod()"
+                            ng-options="option.name for option in InstitutionStudentController.academicPeriodOptions.availableOptions track by option.id"
+                            ng-model="InstitutionStudentController.academicPeriodOptions.selectedOption"
+                            ng-change="InstitutionStudentController.onChangeAcademicPeriod()"
                             >
                         </select>
                     </div>
-                    <div ng-if="postResponse.error.academic_period_id" class="error-message">
-                        <p ng-repeat="error in postResponse.error.academic_period_id">{{ error }}</p>
+                    <div ng-if="InstitutionStudentController.postResponse.error.academic_period_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.academic_period_id">{{ error }}</p>
                     </div>
                 </div>
-                <div class="input select required error" ng-model="postResponse">
+                <div class="input select required error" ng-model="InstitutionStudentController.postResponse">
                     <label>Education Grade</label>
                     <div class="input-select-wrapper">
                         <select name="Students[education_grade_id]" id="students-education-grade-id"
-                            ng-options="option.education_grade.name for option in educationGradeOptions.availableOptions track by option.id"
-                            ng-model="educationGradeOptions.selectedOption"
-                            ng-change="onChangeEducationGrade()"
+                            ng-options="option.education_grade.name for option in InstitutionStudentController.educationGradeOptions.availableOptions track by option.id"
+                            ng-model="InstitutionStudentController.educationGradeOptions.selectedOption"
+                            ng-change="InstitutionStudentController.onChangeEducationGrade()"
                             >
                             <option value="" >-- Select --</option>
                         </select>
                     </div>
-                    <div ng-if="postResponse.error.education_grade_id" class="error-message">
-                        <p ng-repeat="error in postResponse.error.education_grade_id">{{ error }}</p>
+                    <div ng-if="InstitutionStudentController.postResponse.error.education_grade_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.education_grade_id">{{ error }}</p>
                     </div>
                 </div>
                 <div class="input select" >
                     <label>Class</label>
                     <div class="input-select-wrapper">
                         <select name="Students[class]" id="students-class"
-                            ng-options="option.name for option in classOptions.availableOptions track by option.id"
-                            ng-model="classOptions.selectedOption"
-                            ng-change="onChangeClass()"
+                            ng-options="option.name for option in InstitutionStudentController.classOptions.availableOptions track by option.id"
+                            ng-model="InstitutionStudentController.classOptions.selectedOption"
+                            ng-change="InstitutionStudentController.onChangeClass()"
                             >
                             <option value="" >-- No Class Assignment --</option>
                         </select>
@@ -222,8 +222,8 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                         <input type="text" class="form-control " name="Students[start_date]" ng-model="InstitutionStudentController.startDate">
                         <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
                     </div>
-                    <div ng-if="postResponse.error.start_date" class="error-message">
-                        <p ng-repeat="error in postResponse.error.start_date">{{ error }}</p>
+                    <div ng-if="InstitutionStudentController.postResponse.error.start_date" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.start_date">{{ error }}</p>
                     </div>
                 </div>
 
