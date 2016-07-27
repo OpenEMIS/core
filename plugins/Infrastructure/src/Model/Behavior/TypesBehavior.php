@@ -19,7 +19,7 @@ class TypesBehavior extends Behavior {
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
-		$events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 1];
+		$events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 10];
 		$events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 1];
 		return $events;
 	}
@@ -52,6 +52,8 @@ class TypesBehavior extends Behavior {
 					return $model->controller->redirect($url);
 				}
 			}
+		} else {
+			unset($extra['elements']['controls']);
 		}
 	}
 
