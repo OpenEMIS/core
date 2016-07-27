@@ -1,10 +1,16 @@
 
+-- db_patches
+INSERT INTO `db_patches` (`issue`, `created`) VALUES ('POCOR-2827', NOW());
+
+-- config_items
 INSERT INTO `config_items` (`name`, `code`, `type`, `label`, `value`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `created_user_id`, `created`) 
 VALUES ('Type', 'external_data_source_type', 'External Data Source', 'Type', 'None', 'None', 1, 1, 'Dropdown', 'external_data_source_type', 1, NOW());
 
+-- config_item_options
 INSERT INTO `config_item_options` (`option_type`, `option`, `value`, `order`, `visible`) VALUES ('external_data_source_type', 'None', 'None', 1, 1);
 INSERT INTO `config_item_options` (`option_type`, `option`, `value`, `order`, `visible`) VALUES ('external_data_source_type', 'Openemis Identities', 'Openemis Identities', 2, 1);
 
+-- external_data_source_attributes
 CREATE TABLE `external_data_source_attributes` (
   `id` char(36) NOT NULL,
   `external_data_source_type` varchar(50) NOT NULL,
@@ -17,18 +23,3 @@ CREATE TABLE `external_data_source_attributes` (
   `created_user_id` int(11) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE `refresh_tokens` (
-  `id` INT NOT NULL AUTO_INCREMENT COMMENT '',
-  `security_user_id` INT NOT NULL COMMENT '',
-  `module` VARCHAR(100) NOT NULL COMMENT '',
-  `module_type` VARCHAR(100) NULL COMMENT '',
-  `modified_user_id` INT NULL COMMENT '',
-  `modified` DATETIME NULL COMMENT '',
-  `created_user_id` INT NOT NULL COMMENT '',
-  `created` DATETIME NOT NULL COMMENT '',
-  PRIMARY KEY (`id`)  COMMENT '',
-  INDEX `security_user_id` (`security_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-

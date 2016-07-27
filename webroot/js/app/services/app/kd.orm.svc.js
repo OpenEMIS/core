@@ -171,7 +171,6 @@ angular.module('kd.orm.svc', [])
             }
             var url = this.toURL(customUrl);
             settings.url = url.replace('@type', type);
-            console.log(url);
             if (success == null && error == null) {
                 return $http(settings);
             }
