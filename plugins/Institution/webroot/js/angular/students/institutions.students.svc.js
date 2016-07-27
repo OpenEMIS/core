@@ -96,7 +96,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
                             data: postData,
                             headers: {'Content-Type': 'application/x-www-form-urlencoded'}
                         }).then(function(res) {
-                            deferred.resolve(res.data.token);
+                            deferred.resolve(res.data.access_token);
                         }, function(error) {
                             deferred.reject(error);
                         });
