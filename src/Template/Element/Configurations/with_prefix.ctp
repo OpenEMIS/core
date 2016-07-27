@@ -26,11 +26,21 @@ if ($enable) {
 					<tr>
 						
 						<td class="checkbox-column">
-							<input type="checkbox" class="icheck-input" name="<?= $attr['model'].'[value][enable]' ?>" value="1" <?= $enable ?> />
+							<?= $this->Form->checkbox($attr['model'].'.value.enable', [
+									'value' => 1,
+									'class' => 'icheck-input',
+									'checked' => $enable
+								]);
+							?>
 						</td>
 						
 						<td>
-							<input type="text" name="<?= $attr['model'].'[value][prefix]' ?>" value="<?= $prefix ?>" />
+							<?=	$this->Form->input($attr['model'].'.value.prefix', [
+									'value' => $prefix,
+									'type' => 'text',
+									'label' => false
+								]);
+							?>
 						</td>
 
 					</tr>
