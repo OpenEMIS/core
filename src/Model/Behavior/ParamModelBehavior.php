@@ -181,7 +181,7 @@ class ParamModelBehavior extends Behavior {
 		$settings['model'] = $this->fieldOptionName;
 	}
 	
-	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
 		$table = TableRegistry::get($this->fieldOptionName);
 		$foreignKey = $this->parentFieldOptionList[$this->fieldOptionName]['foreignKey'];
 		
