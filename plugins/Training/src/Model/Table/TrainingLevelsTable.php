@@ -1,11 +1,13 @@
 <?php
 namespace Training\Model\Table;
 
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 
-class TrainingLevelsTable extends AppTable {
-	public function initialize(array $config) {
+class TrainingLevelsTable extends ControllerActionTable {
+	public function initialize(array $config)
+    {
 		$this->addBehavior('ControllerAction.FieldOption');
+        $this->table('training_levels');
 		parent::initialize($config);
 		$this->hasMany('TrainingCourses', ['className' => 'Training.TrainingCourses', 'foreignKey' => 'training_level_id']);
 	}
