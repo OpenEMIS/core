@@ -18,6 +18,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
  		[
  			'value' => 'Workflow.onApprove',
 			'text' => 'Approval of Changes to Staff Position Profiles',
+			'description' => 'Performing this action will apply the proposed changes to the staff record.',
  			'method' => 'OnApprove'
  		]
  	];
@@ -111,11 +112,12 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 
 	}
 
-	public function getWorkflowEvents(Event $event) {
+	public function getWorkflowEvents(Event $event, ArrayObject $eventsObject) {
 		foreach ($this->workflowEvents as $key => $attr) {
-			$this->workflowEvents[$key]['text'] = __($attr['text']);
+			$attr['text'] = __($attr['text']);
+			$attr['description'] = __($attr['description']);
+			$eventsObject[] = $attr;
 		}
-		return $this->workflowEvents;
 	}
 
 	public function onApprove(Event $event, $id, Entity $workflowTransitionEntity) {
@@ -216,6 +218,11 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
+		// Set the header of the page
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+		$institutionName = $this->Institutions->get($institutionId)->name;
+		$this->controller->set('contentHeader', $institutionName. ' - ' .__('Pending Change in Assignment'));
+
 		$this->field('institution_staff_id', ['visible' => false]);
 		$this->field('staff_id', ['before' => 'start_date']);
 		$this->field('FTE', ['type' => 'select','visible' => ['view' => true, 'edit' => true, 'add' => true]]);
@@ -453,10 +460,14 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		$InstitutionStaff = TableRegistry::get('Institution.Staff');
 		$staff = $InstitutionStaff->get($institutionStaffId);
 		$approvedStatus = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'APPROVED');
+		$closedStatus = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'CLOSED');
+
+		$statuses = array_merge($approvedStatus, $closedStatus);
+		
 		$staffPositionProfilesRecord = $this->find()
 			->where([
 				$this->aliasField('institution_staff_id') => $staff->id,
-				$this->aliasField('status_id').' NOT IN ' => $approvedStatus
+				$this->aliasField('status_id').' NOT IN ' => $statuses
 			])
 			->first();
 		if (empty($staffPositionProfilesRecord)) {

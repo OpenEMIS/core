@@ -31,6 +31,12 @@ class StudentPromotionTable extends AppTable {
 		$this->addBehavior('Institution.ClassStudents');
 	}
 
+	public function addOnInitialize(Event $event, Entity $entity)
+	{
+		// To clear the query string from the previous page to prevent logic conflict on this page
+		$this->request->query = [];
+	}
+
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
 
@@ -337,7 +343,7 @@ class StudentPromotionTable extends AppTable {
 				$institutionClassId = $currentData['class'];
 				if ($institutionClassId == -1) {
 					$attr['type'] = 'readonly';
-					$attr['attr']['value'] = __('All Classes');
+					$attr['attr']['value'] = __('Students without Class');
 				} else {
 					$attr['type'] = 'readonly';
 					$attr['attr']['value'] = $institutionClass->get($institutionClassId)->name;
@@ -349,7 +355,7 @@ class StudentPromotionTable extends AppTable {
 				$selectedPeriod = $request->query('from_period');
 				$educationGradeId = $request->query('grade_to_promote');
 				$classes = [];
-				$options = ['-1' => __('All Classes')];
+				$options = ['-1' => __('Students without Class')];
 				if (!empty($selectedPeriod) && $selectedPeriod != -1 && !empty($educationGradeId) && $educationGradeId != -1) {			
 					$classes = $institutionClass
 						->find('list')
@@ -518,9 +524,6 @@ class StudentPromotionTable extends AppTable {
 			if (!is_null($selectedGrade)) {
 				$studentStatuses = $this->statuses;
 				$selectedClass = $request->query('class');
-				if ($selectedClass == -1) {
-					$selectedClass = '';
-				}
 
 				$students = $this->find()
 					->matching('Users')
