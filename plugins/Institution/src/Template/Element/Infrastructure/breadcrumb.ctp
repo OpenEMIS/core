@@ -1,8 +1,12 @@
 <?php
+	$breadcrumbPlugin = isset($breadcrumbPlugin) ? $breadcrumbPlugin : $this->request->params['plugin'];
+	$breadcrumbController = isset($breadcrumbController) ? $breadcrumbController : $this->request->params['controller'];
+	$breadcrumbAction = isset($breadcrumbAction) ? $breadcrumbAction : $this->request->params['action'];
+	
 	$baseUrl = $this->Url->build([
-		'plugin' => $this->request->params['plugin'],
-	    'controller' => $this->request->params['controller'],
-	    'action' => $this->request->params['action'],
+		'plugin' => $breadcrumbPlugin,
+	    'controller' => $breadcrumbController,
+	    'action' => $breadcrumbAction,
 	    'index'
 	]);
 ?>

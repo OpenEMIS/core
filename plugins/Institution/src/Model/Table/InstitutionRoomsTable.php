@@ -37,6 +37,10 @@ class InstitutionRoomsTable extends AppTable {
 		]);
 	}
 
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
+    	$extra['excludedModels'] = [$this->CustomFieldValues->alias()];
+    }
+
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
 		return $validator
@@ -74,10 +78,21 @@ class InstitutionRoomsTable extends AppTable {
 		}
 
 		$toolbarElements = [
-			['name' => 'Institution.Infrastructure/breadcrumb', 'data' => [], 'options' => []]
+			['name' => 'Institution.Infrastructure/breadcrumb', 'data' => [
+				'breadcrumbPlugin' => 'Institution', 'breadcrumbController' => 'Institutions', 'breadcrumbAction' => 'Infrastructures'
+			], 'options' => []]
 		];
 
 		$this->controller->set('toolbarElements', $toolbarElements);
+	}
+
+	public function editBeforeAction(Event $event) {
+		// Add breadcrumb
+		$toolbarElements = [
+            ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => [], 'options' => []]
+        ];
+		$this->controller->set('toolbarElements', $toolbarElements);
+		// End
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -89,11 +104,71 @@ class InstitutionRoomsTable extends AppTable {
 	}
 
 	public function onUpdateFieldInstitutionInfrastructureId(Event $event, array $attr, $action, Request $request) {
-		if ($action == 'add' || $action == 'edit') {
-			$parentId = $this->request->query('parent');
+		if ($action == 'view') {
+			$entity = $attr['entity'];
 
 			$attr['type'] = 'hidden';
+			$parentId = $entity->institution_infrastructure_id;
+			if (!empty($parentId)) {
+				$list = $this->Parents->findPath(['for' => $parentId, 'withLevels' => true]);
+			} else {
+				$list = [];
+			}
+
+			$field = 'institution_infrastructure_id';
+			$after = $field;
+			foreach ($list as $key => $infrastructure) {
+				$this->ControllerAction->field($field.$key, [
+					'type' => 'readonly',
+					'attr' => ['label' => $infrastructure->_matchingData['Levels']->name],
+					'value' => $infrastructure->code_name,
+					'after' => $after
+				]);
+				$after = $field.$key;
+			}
+		} else if ($action == 'add' || $action == 'edit') {
+			$parentId = $this->request->query('parent');
+			
+			$attr['type'] = 'hidden';
 			$attr['value'] = $parentId;
+
+			if (!is_null($parentId)) {
+				if ($action == 'add') {
+					$this->ControllerAction->field('parent_id', [
+						'type' => 'readonly',
+						'attr' => [
+							'value' => $this->Parents->getParentPath($parentId)
+						],
+						'after' => 'institution_infrastructure_id'
+					]);
+				} else if ($action == 'edit') {
+					$Parents = $this->Parents;
+
+					$session = $request->session();
+					$institutionId = $session->read('Institution.Institutions.id');
+
+					$grandParentId = $Parents->get($parentId)->parent_id;
+					$where = [$Parents->Parents->aliasField('institution_id') => $institutionId];
+					if (is_null($grandParentId)) {
+						$where[] = $Parents->Parents->aliasField('parent_id IS NULL');
+					} else {
+						$where[$Parents->Parents->aliasField('parent_id')] = $grandParentId;
+						$crumbs = $Parents->findPath(['for' => $grandParentId]);
+						$this->controller->set('crumbs', $crumbs);
+					}
+					$parents = $Parents->Parents->find()->where($where)->all();
+
+					$parentOptions = [];
+					foreach ($parents as $key => $parent) {
+						$parentOptions[$parent->id] = $parent->code . " - " . $parent->name;
+					}
+					$this->advancedSelectOptions($parentOptions, $parentId);
+
+					$attr['type'] = 'select';
+					$attr['options'] = $parentOptions;
+					$attr['select'] = false;
+				}
+			}
 		}
 
 		return $attr;
@@ -106,6 +181,17 @@ class InstitutionRoomsTable extends AppTable {
 			$attr['options'] = $periodOptions;
 			$attr['select'] = false;
 			$attr['onChangeReload'] = 'changePeriod';
+		}
+
+		return $attr;
+	}
+
+	public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
+			$parentId = $request->query('parent');
+			$autoGenerateCode = $this->getAutoGenerateCode($parentId);
+
+			$attr['attr']['default'] = $autoGenerateCode;
 		}
 
 		return $attr;
@@ -147,5 +233,30 @@ class InstitutionRoomsTable extends AppTable {
 		$this->ControllerAction->field('code');
 		$this->ControllerAction->field('room_type_id', ['type' => 'select']);
 		$this->ControllerAction->field('infrastructure_condition_id', ['type' => 'select']);
+	}
+
+	private function getAutoGenerateCode($parentId) {
+		// getting suffix of code by counting
+		$indexData = $this->find()
+			->where([$this->aliasField('institution_infrastructure_id') => $parentId])
+			->count();
+		$indexData += 1; // starts counting from 1
+		$indexData = strval($indexData);
+
+		// if 1 character prepend '0'
+		$indexData = (strlen($indexData) == 1)? '0'.$indexData: $indexData;
+
+		// has Parent then get the ID of the parent then followed by counter
+		$parentData = $this->Parents->find()
+			->where([
+				$this->Parents->aliasField($this->Parents->primaryKey()) => $parentId
+			])
+			->first();
+
+		if (!empty($parentData)) {
+			return $parentData->code . $indexData;
+		} else {
+			return $indexData;
+		}
 	}
 }

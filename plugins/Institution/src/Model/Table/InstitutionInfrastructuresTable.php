@@ -50,6 +50,10 @@ class InstitutionInfrastructuresTable extends AppTable {
 		;
 	}
 
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
+    	$extra['excludedModels'] = [$this->CustomFieldValues->alias()];
+    }
+
 	public function onGetCode(Event $event, Entity $entity) {
 		return $event->subject()->HtmlField->link($entity->code, [
 			'plugin' => $this->controller->plugin,
