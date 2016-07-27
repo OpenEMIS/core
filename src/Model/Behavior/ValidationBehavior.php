@@ -801,6 +801,48 @@ class ValidationBehavior extends Behavior {
 		return false;
 	}
 
+	public static function inInstitutionShift($field, $academicFieldName, $globalData)
+	{
+		$model = $globalData['providers']['table'];
+		if (array_key_exists($academicFieldName, $globalData['data'])) {
+			$time = strtotime($field);
+			$selectedPeriod = $globalData['data'][$academicFieldName];
+			$institutionId = $globalData['data']['institution_id'];
+
+			$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+			$conditions = ([
+				$InstitutionShift->aliasField('academic_period_id') => $selectedPeriod,
+				$InstitutionShift->aliasField('institution_id') => $institutionId
+			]);
+
+			$startTime = $InstitutionShift
+					->find()
+					->where($conditions)
+					->first()->start_time;
+
+			$endTime = $InstitutionShift
+					->find()
+					->where($conditions)
+					->last()->end_time;
+
+			$institutionShiftStartTime = strtotime($InstitutionShift->formatTime($startTime));
+			$institutionShiftEndTime = strtotime($InstitutionShift->formatTime($endTime));
+
+			$rangecheck = ($time >= $institutionShiftStartTime && $time <= $institutionShiftEndTime);
+
+			//If validation is wrong it will gave message contain the start and end time.
+			if (!$rangecheck) {
+				$startTime = date('h:i A', $institutionShiftStartTime);
+				$endTime = date('h:i A', $institutionShiftEndTime);
+				return $model->getMessage('Institution.Absences.timeRangeHint', ['sprintf' => [$startTime, $endTime]]);
+			}
+
+			return $rangecheck;
+		}
+
+		return false;
+	}
+
 	public static function noOverlappingAbsenceDate($field, $SearchTable, array $globalData) {
 		if ($globalData['data']['start_date'] instanceof Time || $globalData['data']['start_date'] instanceof Date) {
 			$startDate = $globalData['data']['start_date']->format('Y-m-d');
