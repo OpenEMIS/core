@@ -236,12 +236,9 @@ class ImportStaffTable extends AppTable
             ->select([
                 'institution_id'
             ])
-            ->innerJoin(
-                ['StaffStatuses' => 'staff_statuses'], [
-                    'StaffStatuses.id = ' . $this->InstitutionStaff->aliasField('staff_status_id'),
-                    'StaffStatuses.code' => 'ASSIGNED'
-                ]
-            )
+            ->matching('StaffStatuses', function ($q) {
+                return $q->where(['StaffStatuses.code' => 'ASSIGNED']);
+            })
             ->where([$this->InstitutionStaff->aliasField('staff_Id') => $tempRow['staff_id']])
             ->distinct() //to cater when staff have few position on same institution
             ->toArray();
