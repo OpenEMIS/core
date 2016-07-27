@@ -183,6 +183,11 @@ angular.module('kd.orm.svc', [])
             if (settings.headers == undefined) {
                 settings.headers = {'Content-Type': 'application/x-www-form-urlencoded'};
             }
+
+            if (settings.authorizationHeader != undefined) {
+                settings.headers.authorization = settings.authorizationHeader;
+                delete settings.authorizationHeader;
+            }
             var url = this.toURL(customUrl);
             settings.url = url.replace('@type', type);
             if (success == null && error == null) {
