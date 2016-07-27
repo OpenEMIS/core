@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-/* 
-=======
 /*
->>>>>>> origin_ssh/master
 Core Overwrites: v.1.0.9
 */
 
@@ -569,7 +565,6 @@ a,
 
 /* End of Enable Search for Chosen Select */
 
-<<<<<<< HEAD
 /* Add style for text input in filter */
 
 .dropdown-filter .text input {
@@ -595,7 +590,7 @@ a,
 }
 
 /* End of Add style for text input in filter */
-=======
+
 /* Temporary fix for POCOR-1855 */
 
 .form-horizontal input[type="checkbox"],
@@ -633,4 +628,3 @@ a,
     font-size: 11px;
     margin: 3px 0;
 }
->>>>>>> origin_ssh/master
