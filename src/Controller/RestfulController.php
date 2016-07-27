@@ -16,6 +16,7 @@ class RestfulController extends BaseController
 {
     public function initialize() {
         parent::initialize();
+        $this->loadComponent('Csrf');
         $this->Auth->config('authenticate', [
             'Form' => [
                 'userModel' => 'User.Users',
@@ -51,5 +52,10 @@ class RestfulController extends BaseController
                 'queryDatasource' => true
             ]
         ]);
+
+        if ($this->request->is(['put', 'post', 'delete', 'patch']) || !empty($this->request->data)) {
+            $token = isset($this->request->cookies['csrfToken']) ? $this->request->cookies['csrfToken'] : '';
+            $this->request->env('HTTP_X_CSRF_TOKEN', $token);
+        }
     }
 }

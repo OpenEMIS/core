@@ -33,12 +33,6 @@ class TransferApprovalsTable extends AppTable {
 		$this->addBehavior('OpenEmis.Section');
 	}
 
-	public function validationDefault(Validator $validator) {
-		$validator = parent::validationDefault($validator);
-		$validator->notEmpty('institution_class');
-		return $validator;
-	}
-
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
@@ -87,6 +81,7 @@ class TransferApprovalsTable extends AppTable {
 			$studentId = $entity->student_id;
             $periodId = $entity->academic_period_id;
 			$gradeId = $entity->new_education_grade_id;
+			$oldGradeId = $entity->education_grade_id;
 			$newSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($gradeId);
 
 			$validateEnrolledInAnyInstitutionResult = $Students->validateEnrolledInAnyInstitution($studentId, $newSystemId, ['excludeInstitutions' => [$previousSchoolId], 'targetInstitutionId' => $newSchoolId]);
@@ -102,7 +97,7 @@ class TransferApprovalsTable extends AppTable {
                         $Students->aliasField('institution_id') => $previousSchoolId,
                         $Students->aliasField('student_id') => $studentId,
                         $Students->aliasField('academic_period_id') => $periodId,
-                        $Students->aliasField('education_grade_id') => $gradeId,
+                        $Students->aliasField('education_grade_id') => $oldGradeId,
                         $Students->aliasField('student_status_id') => $statuses['CURRENT']
                     ])
                     ->first();
@@ -126,16 +121,18 @@ class TransferApprovalsTable extends AppTable {
 				$newEntity = $Students->newEntity($newData);
 				if ($Students->save($newEntity)) {
 					$classId = $data[$this->alias()]['institution_class'];
-					$InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
-					$institutionClassStudentObj = [
-						'student_id' => $newEntity->student_id,
-						'institution_class_id' => $classId,
-						'education_grade_id' => $newEntity->education_grade_id,
-						'student_status_id' => $newEntity->student_status_id,
-						'institution_id' => $newEntity->institution_id,
-						'academic_period_id' => $newEntity->academic_period_id
-					];
-					$InstitutionClassStudentsTable->autoInsertClassStudent($institutionClassStudentObj);
+					if (!empty($classId)) {
+						$InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
+						$institutionClassStudentObj = [
+							'student_id' => $newEntity->student_id,
+							'institution_class_id' => $classId,
+							'education_grade_id' => $newEntity->education_grade_id,
+							'student_status_id' => $newEntity->student_status_id,
+							'institution_id' => $newEntity->institution_id,
+							'academic_period_id' => $newEntity->academic_period_id
+						];
+						$InstitutionClassStudentsTable->autoInsertClassStudent($institutionClassStudentObj);
+					}
 
 					$this->Alert->success('TransferApprovals.approve');
 					
