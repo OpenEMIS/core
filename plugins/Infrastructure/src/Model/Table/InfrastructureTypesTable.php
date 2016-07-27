@@ -8,12 +8,11 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 
 use App\Model\Table\ControllerActionTable;
-use FieldOption\Model\Traits\FieldOptionsTrait;
 
 class InfrastructureTypesTable extends ControllerActionTable {
-	use FieldOptionsTrait;
-
 	public function initialize(array $config) {
+		$this->addBehavior('FieldOption.FieldOption');
+		$this->table('infrastructure_types');
 		parent::initialize($config);
 
 		$this->belongsTo('Levels', ['className' => 'Infrastructure.InfrastructureLevels', 'foreignKey' => 'infrastructure_level_id']);

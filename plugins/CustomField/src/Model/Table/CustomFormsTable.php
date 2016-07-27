@@ -510,11 +510,43 @@ class CustomFormsTable extends AppTable {
     		$attr['attr']['label'] = __(Inflector::humanize($labelText));
 		} else if ($action == 'add' || $action == 'edit') {
 			$customModule = $attr['attr']['customModule'];
+			$selectedModule = $customModule->id;
     		$filter = $customModule->filter;
+    		$entity = $attr['attr']['entity'];
 
     		list($plugin, $modelAlias) = explode('.', $filter, 2);
 			$labelText = Inflector::underscore(Inflector::singularize($modelAlias));
 			$filterOptions = TableRegistry::get($filter)->getList()->toArray();
+
+			// Logic to remove filter from the list if already in used
+			$formKey = $this->extra['filterClass']['foreignKey'];
+			$filterKey = $this->extra['filterClass']['targetForeignKey'];
+
+			$filterQuery = $this->CustomFormsFilters
+				->find('list', ['keyField' => $filterKey, 'valueField' => $filterKey])
+				->matching('CustomForms', function ($q) use ($selectedModule) {
+					return $q->where([
+						'CustomForms.custom_module_id' => $selectedModule
+					]);
+				})
+				->where([
+					$this->CustomFormsFilters->aliasField($filterKey.' <> ') => 0
+				]);
+
+			if (isset($entity->id)) {	// edit
+				$customFormId = $entity->id;
+				$filterQuery->where([
+					$this->CustomFormsFilters->aliasField($formKey.' <> ') => $customFormId
+				]);
+			}
+			$filterIds = $filterQuery->toArray();
+
+			foreach ($filterOptions as $key => $value) {
+				if (array_key_exists($key, $filterIds)) {
+					unset($filterOptions[$key]);
+				}
+			}
+			// End
 
 			$attr['placeholder'] = __('Select ') . __(Inflector::humanize($labelText));
 			$attr['options'] = $filterOptions;
@@ -612,7 +644,7 @@ class CustomFormsTable extends AppTable {
 				$this->ControllerAction->field('custom_filters', [
 					'type' => 'chosenSelect',
 					'placeholder' => __('Select Filters'),
-					'attr' => ['customModule' => $customModule],
+					'attr' => ['customModule' => $customModule, 'entity' => $entity],
 					'after' => 'apply_to_all'
 				]);
 			} else {
