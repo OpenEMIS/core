@@ -2,11 +2,12 @@ angular
     .module('institutions.students.svc', ['kd.orm.svc', 'kd.session.svc'])
     .service('InstitutionsStudentsSvc', InstitutionsStudentsSvc);
 
-InstitutionsStudentsSvc.$inject = ['$q', '$filter', 'KdOrmSvc', 'KdSessionSvc'];
+InstitutionsStudentsSvc.$inject = ['$http', '$q', '$filter', 'KdOrmSvc', 'KdSessionSvc'];
 
-function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
+function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
 
     var externalSource = null;
+    var externalToken = null;
 
     var service = {
         init: init,
@@ -28,7 +29,9 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         importIdentities: importIdentities,
         getInternalIdentityTypes: getInternalIdentityTypes,
         addIdentityType: addIdentityType,
-        setExternalSourceUrl: setExternalSourceUrl
+        setExternalSourceUrl: setExternalSourceUrl,
+        getAccessToken: getAccessToken,
+        resetExternalVariable: resetExternalVariable
     };
 
     var models = {
@@ -53,6 +56,62 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         KdOrmSvc.init(models);
     };
 
+    function resetExternalVariable()
+    {
+        externalSource = null;
+        externalToken = null;
+    }
+
+    function getAccessToken()
+    {
+        var deferred = $q.defer();
+
+        ExternalDataSourceAttributes
+            .select()
+            .where({
+                external_data_source_type: 'Openemis Identities'
+            })
+            .ajax({defer: true})
+            .then(function(response) {
+                var data = response.data;
+                var externalDataSourceObject = new Object;
+                for(var i = 0; i < data.length; i++) {
+                    externalDataSourceObject[data[i].attribute_field] = data[i].value;
+                }
+                if (externalDataSourceObject.hasOwnProperty('authentication_uri')) {
+                    var authenticationUri = externalDataSourceObject.authentication_uri;
+
+                    if (authenticationUri != '') {
+                        delete externalDataSourceObject.authentication_uri;
+                        delete externalDataSourceObject.user_record_uri;
+                        delete externalDataSourceObject.redirect_uri;
+                        var postData = 'grant_type=refresh_token';
+                        var log = [];
+                        angular.forEach(externalDataSourceObject, function(value, key) {
+                          postData = postData + '&' + key + '=' + value;
+                        }, log);
+                        $http({
+                            method: 'POST',
+                            url: authenticationUri,
+                            data: postData,
+                            headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+                        }).then(function(res) {
+                            deferred.resolve(res.data.token);
+                        }, function(error) {
+                            deferred.reject(error);
+                        });
+                    } else {
+                        var error = 'No authentication URI';
+                        deferred.reject(error);
+                    }
+                }
+            }, function(error){
+                deferred.reject(error);
+            });
+
+        return deferred.promise;
+    }
+
     function getExternalSourceUrl()
     {
         return ExternalDataSourceAttributes
@@ -72,47 +131,53 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         this.getExternalSourceUrl()
         .then(function(sourceUrl) {
             var source = sourceUrl.data;
-            var sourceUrl = null;
-            if (source.length > 0) {
-                sourceUrl = source[0].value;
-                externalSource = sourceUrl;
-            }
-            var pageParams = {
-                limit: options['endRow'] - options['startRow'],
-                page: options['endRow'] / (options['endRow'] - options['startRow']),
-            };
+            vm.getAccessToken()
+            .then(function(token){
+                var sourceUrl = null;
+                if (source.length > 0) {
+                    sourceUrl = source[0].value;
+                    externalSource = sourceUrl;
+                    externalToken = token;
+                }
+                var pageParams = {
+                    limit: options['endRow'] - options['startRow'],
+                    page: options['endRow'] / (options['endRow'] - options['startRow']),
+                };
 
-            var params = {};
-            Students.reset();
-            Students
-                .page(pageParams.page)
-                .limit(pageParams.limit);
+                var params = {};
+                Students.reset();
+                Students
+                    .page(pageParams.page)
+                    .limit(pageParams.limit)
+                    .where({token: token});
 
-            if (options.hasOwnProperty('conditions')) {
-                for (var key in options['conditions']) {
-                    if (typeof options['conditions'][key] == 'string') {
-                        options['conditions'][key] = options['conditions'][key].trim();
-                        if (options['conditions'][key] !== '') {
-                            params[key] = '_' + options['conditions'][key] + '_';
+                if (options.hasOwnProperty('conditions')) {
+                    for (var key in options['conditions']) {
+                        if (typeof options['conditions'][key] == 'string') {
+                            options['conditions'][key] = options['conditions'][key].trim();
+                            if (options['conditions'][key] !== '') {
+                                params[key] = '_' + options['conditions'][key] + '_';
+                            }
                         }
                     }
+                    if (Object.getOwnPropertyNames(params).length !== 0) {
+                        Students.orWhere(params);
+                    }
                 }
-                if (Object.getOwnPropertyNames(params).length !== 0) {
-                    Students.orWhere(params);
-                }
-            }
-            
-            return Students.ajax({defer: true, url: sourceUrl});
-        }, function(error) {
-            console.log(error);
-            deferred.reject(error);
-        }).then(function(response) {
-            deferred.resolve(response);
+                
+                return Students.ajax({defer: true, url: sourceUrl});
+            }, function(error){
+                deferred.reject(error);
+            })
+            .then(function(response){
+                deferred.resolve(response);
+            }, function(error){
+                deferred.reject(error);
+            });
         }, function(error) {
             console.log(error);
             deferred.reject(error);
         });
-
         return deferred.promise;
     };
 
@@ -167,14 +232,15 @@ function InstitutionsStudentsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
             }
         };
 
-        Students.reset();
-        return Students.select()
+        Students.select();
+        var condition = {};
+        condition.id = id;
+        if (externalSource != null && externalToken !=null) {
+            condition.token = externalToken;
+        }
+        return Students
             .contain(['Genders', 'Identities.IdentityTypes'])
-            .where(
-                {
-                    id: id
-                }
-            )
+            .where(condition)
             .ajax({success: success, defer: true, url: sourceUrl});
     };
 
