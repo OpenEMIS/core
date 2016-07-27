@@ -148,8 +148,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
                 Students.reset();
                 Students
                     .page(pageParams.page)
-                    .limit(pageParams.limit)
-                    .where({token: token});
+                    .limit(pageParams.limit);
 
                 if (options.hasOwnProperty('conditions')) {
                     for (var key in options['conditions']) {
@@ -164,8 +163,9 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
                         Students.orWhere(params);
                     }
                 }
-                
-                return Students.ajax({defer: true, url: sourceUrl});
+                var authorizationHeader = 'Bearer ' + token;
+
+                return Students.ajax({defer: true, url: sourceUrl, authorizationHeader: authorizationHeader});
             }, function(error){
                 deferred.reject(error);
             })
@@ -233,15 +233,17 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
         };
 
         Students.select();
-        var condition = {};
-        condition.id = id;
+        var settings = {success: success, defer: true, url: sourceUrl};
         if (externalSource != null && externalToken !=null) {
-            condition.token = externalToken;
+            var authorizationHeader = 'Bearer ' + externalToken;
+            settings.authorizationHeader = authorizationHeader;
         }
         return Students
             .contain(['Genders', 'Identities.IdentityTypes'])
-            .where(condition)
-            .ajax({success: success, defer: true, url: sourceUrl});
+            .where({
+                id: id
+            })
+            .ajax(settings);
     };
 
     function importIdentities(userId, identitiesRecord)
