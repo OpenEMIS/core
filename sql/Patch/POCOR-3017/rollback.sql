@@ -23,5 +23,8 @@ UPDATE `security_functions`
 SET `_view` = 'Fields.index|Fields.view|Pages.index|Pages.view|Levels.index|Levels.view|Types.index|Types.view', `_edit` = 'Fields.edit|Pages.edit|Levels.edit|Types.edit', `_add` = 'Fields.add|Pages.add|Levels.add|Types.add', `_delete` = 'Fields.remove|Pages.remove|Levels.remove|Types.remove'
 WHERE id = 5018;
 
+-- labels
+DELETE FROM `labels` WHERE `module` = 'InstitutionRooms' AND `field` = 'institution_infrastructure_id';
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue`='POCOR-3017';

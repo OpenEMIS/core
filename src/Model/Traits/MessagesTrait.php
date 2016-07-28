@@ -674,7 +674,12 @@ trait MessagesTrait {
 				'code' => [
 					'ruleUnique' => 'Please enter a unique code'
 				]
-			]
+			],
+			'InstitutionRooms' => [
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				]
+			],
 		],
 		'User' => [
 			'Users' => [

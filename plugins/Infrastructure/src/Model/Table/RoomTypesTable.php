@@ -27,12 +27,12 @@ class RoomTypesTable extends ControllerActionTable {
 		$this->roomLevel = $InfrastructureLevels->getFieldByCode('ROOM', 'id');
 	}
 
-	public function onGetInfrastructureLevelId(Event $event, Entity $entity) {
+	public function onGetInfrastructureLevel(Event $event, Entity $entity) {
 		return $this->levelOptions[$this->roomLevel];
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra) {
-		$this->field('infrastructure_level_id', ['after' => 'national_code']);
+		$this->field('infrastructure_level', ['after' => 'national_code']);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
@@ -43,7 +43,7 @@ class RoomTypesTable extends ControllerActionTable {
 		$this->setupFields($entity);
 	}
 
-	public function onUpdateFieldInfrastructureLevelId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldInfrastructureLevel(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add' || $action == 'edit') {
 			$attr['type'] = 'readonly';
 			$attr['value'] = $this->roomLevel;
@@ -54,6 +54,6 @@ class RoomTypesTable extends ControllerActionTable {
 	}
 
 	private function setupFields(Entity $entity) {
-		$this->field('infrastructure_level_id', ['type' => 'select']);
+		$this->field('infrastructure_level', ['type' => 'select']);
 	}
 }

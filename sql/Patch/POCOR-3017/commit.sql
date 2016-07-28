@@ -145,3 +145,6 @@ INSERT INTO `custom_modules` (`code`, `name`, `model`, `visible`, `parent_id`, `
 UPDATE `security_functions`
 SET `_view` = 'Fields.index|Fields.view|Pages.index|Pages.view|Types.index|Types.view|RoomPages.index|RoomPages.view|RoomTypes.index|RoomTypes.view', `_edit` = 'Fields.edit|Pages.edit|Types.edit|RoomPages.edit|RoomTypes.edit', `_add` = 'Fields.add|Pages.add|Types.add|RoomPages.add|RoomTypes.add', `_delete` = 'Fields.remove|Pages.remove|Types.remove|RoomPages.remove|RoomTypes.remove'
 WHERE id = 5018;
+
+-- labels
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`)  VALUES (uuid(), 'InstitutionRooms', 'institution_infrastructure_id', 'Institutions -> Rooms', 'Parent', 1, 1, NOW());
