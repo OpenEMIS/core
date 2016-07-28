@@ -66,28 +66,10 @@ class InstitutionInfrastructuresTable extends AppTable {
 	}
 
 	public function indexBeforeAction(Event $event) {
-		$parentId = $this->request->query('parent');
-		if (!is_null($parentId)) {
-			$parentLevelId = $this->request->query('parent_level');
-			if (!is_null($parentLevelId)) {
-				$floorLevelId = $this->Levels->getFieldByCode('FLOOR', 'id');
-
-				if ($parentLevelId == $floorLevelId) {
-					$url = [
-						'plugin' => 'Institution',
-						'controller' => 'Institutions',
-						'action' => 'Rooms',
-						'parent' => $parentId,
-						'parent_level' => $parentLevelId
-					];
-
-					$event->stopPropagation();
-					return $this->controller->redirect($url);
-				}
-			}
-
-			$crumbs = $this->findPath(['for' => $parentId]);
-			$this->controller->set('crumbs', $crumbs);
+		$url = $this->getRedirectUrl();
+		if (!empty($url)) {
+			$event->stopPropagation();
+			return $this->controller->redirect($url);
 		}
 
 		$this->ControllerAction->setFieldOrder(['code', 'name', 'infrastructure_level_id', 'infrastructure_type_id']);
@@ -99,6 +81,11 @@ class InstitutionInfrastructuresTable extends AppTable {
 		$this->ControllerAction->field('year_disposed', ['visible' => false]);
 		$this->ControllerAction->field('infrastructure_condition_id', ['visible' => false]);
 		$this->ControllerAction->field('comment', ['visible' => false]);
+
+		$toolbarElements = [];
+		$toolbarElements = $this->addBreadcrumbElement($toolbarElements);
+		$toolbarElements = $this->addControlFilterElement($toolbarElements);
+		$this->controller->set('toolbarElements', $toolbarElements);
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -111,21 +98,21 @@ class InstitutionInfrastructuresTable extends AppTable {
 		}
 		// End
 
-		$toolbarElements = [
-			['name' => 'Institution.Infrastructure/breadcrumb', 'data' => [], 'options' => []]
-		];
-
-		// No need to show controls filter if only has one level options
-		list($levelOptions, $selectedLevel) = array_values($this->getLevelOptions(['withAll' => true]));
-		if (count($levelOptions) > 1) {
-			$toolbarElements[] = ['name' => 'Institution.Infrastructure/controls', 'data' => [], 'options' => []];
-			$this->controller->set(compact('levelOptions', 'selectedLevel'));
-		}
-		$this->controller->set('toolbarElements', $toolbarElements);
-
+		$selectedLevel = $this->request->query['level'];
 		if ($selectedLevel != '-1') {
 			$query->where([$this->aliasField('infrastructure_level_id') => $selectedLevel]);
 		}
+
+		$selectedType = $this->request->query['type'];
+		if ($selectedType != '-1') {
+			$query->where([$this->aliasField('infrastructure_type_id') => $selectedType]);
+		}
+	}
+
+
+	public function addEditBeforeAction(Event $event) {
+		$toolbarElements = $this->addBreadcrumbElement();
+		$this->controller->set('toolbarElements', $toolbarElements);
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity) {
@@ -136,18 +123,6 @@ class InstitutionInfrastructuresTable extends AppTable {
 	public function editOnInitialize(Event $event, Entity $entity) {
 		$this->request->query['level'] = $entity->infrastructure_level_id;
 		$this->request->query['type'] = $entity->infrastructure_type_id;
-	}
-
-	public function editBeforeAction(Event $event) {
-		// Add breadcrumb
-		$toolbarElements = [
-            ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => [], 'options' => []]
-        ];
-		$this->controller->set('toolbarElements', $toolbarElements);
-
-		list($levelOptions, $selectedLevel) = array_values($this->getLevelOptions(['withAll' => true]));
-		$this->controller->set(compact('levelOptions', 'selectedLevel'));
-		// End
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -204,13 +179,6 @@ class InstitutionInfrastructuresTable extends AppTable {
 				return $indexData;
 			}
 		}
-	}
-
-	public function onGetConvertOptions(Event $event, Entity $entity, Query $query) {
-		$query->where([
-			$this->aliasField('institution_id') => $entity->institution_id,
-			$this->aliasField('parent_id') => $entity->parent_id
-		]);
 	}
 
 	public function onUpdateFieldParentId(Event $event, array $attr, $action, Request $request) {
@@ -391,6 +359,47 @@ class InstitutionInfrastructuresTable extends AppTable {
 		$this->ControllerAction->field('infrastructure_condition_id', ['type' => 'select']);
 	}
 
+	private function addBreadcrumbElement($toolbarElements=[]) {
+		$parentId = $this->request->query('parent');
+		$crumbs = $this->findPath(['for' => $parentId]);
+		list($levelOptions, $selectedLevel) = array_values($this->getLevelOptions(['withAll' => true]));
+		$toolbarElements[] = ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => compact('crumbs', 'levelOptions', 'selectedLevel'), 'options' => []];
+
+		return $toolbarElements;
+	}
+
+	private function addControlFilterElement($toolbarElements=[]) {
+		list($typeOptions, $selectedType) = array_values($this->getTypeOptions(['withAll' => true]));
+		if (count($typeOptions) > 1) {	// No need to show controls filter if only has one type options
+			$toolbarElements[] = ['name' => 'Institution.Infrastructure/controls', 'data' => compact('typeOptions', 'selectedType'), 'options' => []];
+		}
+
+		return $toolbarElements;
+	}
+
+	private function getRedirectUrl() {
+		$url = [];
+
+		$parentId = $this->request->query('parent');
+		$parentLevelId = $this->request->query('parent_level');
+
+		if (!is_null($parentId) && !is_null($parentLevelId)) {
+			$floorLevelId = $this->Levels->getFieldByCode('FLOOR', 'id');
+
+			if ($parentLevelId == $floorLevelId) {
+				$url = [
+					'plugin' => 'Institution',
+					'controller' => 'Institutions',
+					'action' => 'Rooms',
+					'parent' => $parentId,
+					'parent_level' => $parentLevelId
+				];
+			}
+		}
+
+		return $url;
+	}
+
 	public function findPath($params=[]) {
 		$parentId = array_key_exists('for', $params) ? $params['for'] : null;
 		$withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : false;
@@ -439,6 +448,24 @@ class InstitutionInfrastructuresTable extends AppTable {
 		$this->advancedSelectOptions($levelOptions, $selectedLevel);
 
 		return compact('levelOptions', 'selectedLevel');
+	}
+
+	public function getTypeOptions($params=[]) {
+		$withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
+
+		$levelId = $this->request->query('level');
+		$typeQuery = $this->Types->find('list', ['keyField' => 'id', 'valueField' => 'name']);
+		if (!is_null($levelId)) {
+			$typeQuery->where([$this->Types->aliasField('infrastructure_level_id') => $levelId]);
+		}
+		$typeOptions = $typeQuery->toArray();
+		if($withAll && count($typeOptions) > 1) {
+			$typeOptions = ['-1' => __('All Types')] + $typeOptions;
+		}
+		$selectedType = $this->queryString('type', $typeOptions);
+		$this->advancedSelectOptions($typeOptions, $selectedType);
+
+		return compact('typeOptions', 'selectedType');
 	}
 
 	public function getYearOptionsByConfig() {
