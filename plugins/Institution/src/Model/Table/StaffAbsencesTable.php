@@ -289,8 +289,6 @@ class StaffAbsencesTable extends AppTable {
 				unset($this->_fieldOrder[$key]);
 			}
 		}
-		// pr($this->_fieldOrder);
-		// unset($this->_fieldOrder[0]);
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 
 
@@ -341,15 +339,16 @@ class StaffAbsencesTable extends AppTable {
 					->order([$StaffTable->aliasField('end_date')])
 					->first();
 			}
-			// $dateAttr = ['startDate' => Time::now(), 'endDate' => Time::now()];
-			// if (!empty($staffRecord)) {
-			// 	$dateAttr['startDate'] = $staffRecord->start_date;
-			// 	$dateAttr['endDate'] = $staffRecord->end_date;
-			// }
+			$dateAttr = ['startDate' => Time::now(), 'endDate' => Time::now()];
+			if (!empty($staffRecord)) {
+				$dateAttr['startDate'] = $staffRecord->start_date;
+				$dateAttr['endDate'] = $staffRecord->end_date;
+			}
 
-			// $this->ControllerAction->field('start_date', $dateAttr);
-			// $this->ControllerAction->field('end_date', $dateAttr);
+			$this->ControllerAction->field('start_date', $dateAttr);
+			$this->ControllerAction->field('end_date', $dateAttr);
 
+			// To put restiction on the calendar date field
 			$this->fields['start_date']['date_options']['startDate'] = $startDate->format('d-m-Y');
 			$this->fields['start_date']['date_options']['endDate'] = $endDate->format('d-m-Y');
 			$this->fields['end_date']['date_options']['startDate'] = $startDate->format('d-m-Y');
@@ -643,7 +642,6 @@ class StaffAbsencesTable extends AppTable {
 		$periodOptionsData = $AcademicPeriod->getList(['isEditable'=>true]);
 		$periodOptions = $periodOptionsData[key($periodOptionsData)];
 		$selectedPeriod = $this->queryString('period', $periodOptions);
-
 
 		// count staff on the academic period, if its empty the period will be disabled.
 		$newPeriodOptions = [];
