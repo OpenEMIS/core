@@ -25,6 +25,7 @@
 				'onclick' => "$('#reload').val('reload').click();",
 				'required' =>'required'
 			]);
+			$this->Form->unlockField('AssessmentGradingTypes.grading_options');
 		?>
 		</div>
 		<div class="table-wrapper full-width">
@@ -47,8 +48,8 @@
 					</thead>
 
 					<tbody id='table_grading_options'>
-						
-						<?php 
+
+						<?php
 						if (count($data->grading_options)>0) :
 							// iterate each row
 							foreach ($data->grading_options as $key => $record) :
@@ -61,7 +62,7 @@
 						?>
 						<tr class="<?= $trClass ?>">
 
-							<?php 
+							<?php
 								// iterate each field in a row
 								foreach ($attr['formFields'] as $i):
 									$field = $attr['fields'][$i];
@@ -103,9 +104,9 @@
 								<?php else : ?>
 									<?= $this->HtmlField->{$field['type']}('edit', $record, $field, $options);?>
 								<?php endif; ?>
-							
+
 							<?php endforeach;?>
-							
+
 							<td>
 								<?php
 								echo $this->Form->input('<i class="fa fa-trash"></i> <span>Delete</span>', [
@@ -119,13 +120,13 @@
 								?>
 							</td>
 						</tr>
-						<?php 
+						<?php
 							endforeach;
 						endif;
 						?>
 
 					</tbody>
-					
+
 				</table>
 			</div>
 		</div>
@@ -143,14 +144,14 @@
 				</tr>
 			</thead>
 			<tbody>
-			<?php 
+			<?php
 			if (count($data->grading_options)>0) :
 				// iterate each row
 				foreach ($data->grading_options as $key => $record) :
 			?>
 				<tr>
 
-				<?php 
+				<?php
 					// iterate each field in a row
 					foreach ($attr['formFields'] as $formField):
 						$field = $attr['fields'][$formField];
@@ -159,7 +160,7 @@
 					<td><?= $this->HtmlField->{$field['type']}('view', $record, $field, ['label'=>false, 'name'=>'']); ?></td>
 
 				<?php endforeach;?>
-				
+
 				</tr>
 			<?php
 				endforeach;
