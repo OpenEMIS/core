@@ -165,7 +165,7 @@ class ValidationBehavior extends Behavior {
 	 *                               - data 	 [array]  : the model's fields values
 	 *                               - field 	 [string] : current field name
 	 *                               - providers [object] : consists of provider objects and the current table object
-	 * 
+	 *
 	 * @return [type]                [description]
 	 */
 
@@ -191,13 +191,13 @@ class ValidationBehavior extends Behavior {
 	 *                               - data 	 [array]  : the model's fields values
 	 *                               - field 	 [string] : current field name
 	 *                               - providers [object] : consists of provider objects and the current table object
-	 * 
+	 *
 	 * @return [type]                [description]
 	 */
 
 	public static function compareAbsenceTimeReverse($field, $compareField, $absenceTypeId, array $globalData) {
 		$type = self::_getFieldType($compareField);
-		
+
 		$endTime = new DateTime($field);
 		if($compareField && $globalData['data']['absence_type_id'] == $absenceTypeId) {
 			$options = ['equals' => true, 'reverse' => true, 'type' => $type];
@@ -218,7 +218,7 @@ class ValidationBehavior extends Behavior {
 	 *                               - data 	 [array]  : the model's fields values
 	 *                               - field 	 [string] : current field name
 	 *                               - providers [object] : consists of provider objects and the current table object
-	 * 
+	 *
 	 * @return mixed                 returns true if validation passed or the error message if it fails
 	 */
 	public static function compareDate($field, $compareField, $equals, array $globalData) {
@@ -322,7 +322,7 @@ class ValidationBehavior extends Behavior {
 	 *                               - data 	 [array]  : the model's fields values
 	 *                               - field 	 [string] : current field name
 	 *                               - providers [object] : consists of provider objects and the current table object
-	 * 
+	 *
 	 * @return mixed                 returns true if validation passed or the error message if it fails
 	 */
 	public static function lessThanToday($field, $equal = false, array $globalData) {
@@ -345,7 +345,7 @@ class ValidationBehavior extends Behavior {
 	 *                               - data 	 [array]  : the model's fields values
 	 *                               - field 	 [string] : current field name
 	 *                               - providers [object] : consists of provider objects and the current table object
-	 * 
+	 *
 	 * @return mixed                 returns true if validation passed or the error message if it fails
 	 */
 	public static function moreThanToday($field, $equal = false, array $globalData) {
@@ -444,8 +444,8 @@ class ValidationBehavior extends Behavior {
 
 				if(!empty($additionalParameters)) {
 					$recordWithField->andWhere($additionalParameters);
-				}								
-				$total = $recordWithField->count();		
+				}
+				$total = $recordWithField->count();
 				$flag = ($total > 0) ? true : false;
 			}
 		} else {
@@ -453,7 +453,7 @@ class ValidationBehavior extends Behavior {
 		}
 
 		return $flag;
-	}	
+	}
 
 	public static function contactValueValidate($field, array $globalData) {
 		$flag = false;
@@ -470,7 +470,7 @@ class ValidationBehavior extends Behavior {
 		} else {
 			return false;
 		}
-		
+
 	}
 
 	/**
@@ -508,7 +508,7 @@ class ValidationBehavior extends Behavior {
 
 	public static function studentNotEnrolledInAnyInstitutionAndSameEducationSystem($field, $options = [], array $globalData) {
 		$data = $globalData['data'];
-        
+
         // excluding data by field name
         $excludeInstitutionsOptions = array_key_exists('excludeInstitutions', $options)? $options['excludeInstitutions']: null;
         $excludeInstitutions = [];
@@ -536,8 +536,8 @@ class ValidationBehavior extends Behavior {
             $validateOptions['excludeInstitutions'] = $excludeInstitutions;
         }
 		$validateEnrolledInAnyInstitution = $Students->validateEnrolledInAnyInstitution(
-			$globalData['data']['student_id'], 
-			$educationSystemId, 
+			$globalData['data']['student_id'],
+			$educationSystemId,
 			$validateOptions
 		);
 		return ($validateEnrolledInAnyInstitution === false)? true: $validateEnrolledInAnyInstitution;
@@ -563,7 +563,7 @@ class ValidationBehavior extends Behavior {
                         [$Staff->aliasField('end_date').' IS NULL'],
                         [$Staff->aliasField('end_date').' >= ' => $globalData['data']['start_date']]
                     ],
-                ]   
+                ]
             );
         return ($existingRecords->count() <= 0);
     }
@@ -632,7 +632,7 @@ class ValidationBehavior extends Behavior {
 
 		$timeConditions['OR'] = [
 			'OR' => [
-				[	
+				[
 					$InstitutionShifts->aliasField('start_time') . ' <= ' => $startTime,
 					$InstitutionShifts->aliasField('end_time') . ' > ' => $startTime,
 				],
@@ -646,7 +646,7 @@ class ValidationBehavior extends Behavior {
 				],
 				[
 					// means full day
-					$InstitutionShifts->aliasField('start_time') . ' IS NULL',	
+					$InstitutionShifts->aliasField('start_time') . ' IS NULL',
 					$InstitutionShifts->aliasField('end_time') . ' IS NULL',
 				]
 			]
@@ -701,7 +701,7 @@ class ValidationBehavior extends Behavior {
 			->first()
 			;
 		$admissionAge = $gradeEntity->education_programme->education_cycle->admission_age;
-		
+
 		if (array_key_exists('academic_period_id', $data) && !empty($data['academic_period_id'])) {
 			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			$academicPeriodData = $AcademicPeriods->get($data['academic_period_id']);
@@ -714,7 +714,7 @@ class ValidationBehavior extends Behavior {
 		if (!isset($academicStartYear)) return $validationErrorMsg;
 
         $programmeId = $gradeEntity->education_programme_id;
-        
+
 		$birthYear = $dateOfBirth->format('Y');
 		$ageOfStudent = $academicStartYear - $birthYear;
 
@@ -755,7 +755,7 @@ class ValidationBehavior extends Behavior {
 			$validationErrorMsg = $model->getMessage('Institution.Students.student_name.ageRangeHint', ['sprintf' => [$enrolmentMinimumAge, $enrolmentMaximumAge]]);
 		}
 
-		return ($ageOfStudent<=$enrolmentMaximumAge) && ($ageOfStudent>=$enrolmentMinimumAge)? true: $validationErrorMsg;	
+		return ($ageOfStudent<=$enrolmentMaximumAge) && ($ageOfStudent>=$enrolmentMinimumAge)? true: $validationErrorMsg;
 	}
 
 	// To allow case sensitive entry
@@ -775,7 +775,8 @@ class ValidationBehavior extends Behavior {
         return $count==0;
     }
 
-	public static function inAcademicPeriod($field, $academicFieldName, $globalData) {
+	public static function inAcademicPeriod($field, $academicFieldName, $globalData)
+	{
 		if (array_key_exists($academicFieldName, $globalData['data'])) {
 			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			$periodObj = $AcademicPeriods
@@ -787,14 +788,56 @@ class ValidationBehavior extends Behavior {
 			if (!empty($periodObj)) {
 				$academicPeriodStartDate = (!is_null($periodObj['start_date']))? $periodObj['start_date']->toUnixString(): null;
 				$academicPeriodEndDate = (!is_null($periodObj['end_date']))? $periodObj['end_date']->toUnixString(): null;
-			
-				$rangecheck = ($startDate >= $academicPeriodStartDate) && 
+
+				$rangecheck = ($startDate >= $academicPeriodStartDate && $startDate <= $academicPeriodEndDate) &&
 				(is_null($academicPeriodEndDate) ||
 					(!is_null($academicPeriodEndDate) && ($endDate <= $academicPeriodEndDate))
 				)
 				;
 				return $rangecheck;
 			}
+		}
+
+		return false;
+	}
+
+	public static function inInstitutionShift($field, $academicFieldName, $globalData)
+	{
+		$model = $globalData['providers']['table'];
+		if (array_key_exists($academicFieldName, $globalData['data'])) {
+			$time = strtotime($field);
+			$selectedPeriod = $globalData['data'][$academicFieldName];
+			$institutionId = $globalData['data']['institution_id'];
+
+			$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+			$conditions = ([
+				$InstitutionShift->aliasField('academic_period_id') => $selectedPeriod,
+				$InstitutionShift->aliasField('institution_id') => $institutionId
+			]);
+
+			$startTime = $InstitutionShift
+					->find()
+					->where($conditions)
+					->first()->start_time;
+
+			$endTime = $InstitutionShift
+					->find()
+					->where($conditions)
+					->last()->end_time;
+
+			$institutionShiftStartTime = strtotime($InstitutionShift->formatTime($startTime));
+			$institutionShiftEndTime = strtotime($InstitutionShift->formatTime($endTime));
+
+			$rangecheck = ($time >= $institutionShiftStartTime && $time <= $institutionShiftEndTime);
+
+			//If validation is wrong it will gave message contain the start and end time.
+			if (!$rangecheck) {
+				$startTime = date('h:i A', $institutionShiftStartTime);
+				$endTime = date('h:i A', $institutionShiftEndTime);
+				return $model->getMessage('Institution.Absences.timeRangeHint', ['sprintf' => [$startTime, $endTime]]);
+			}
+
+			return $rangecheck;
 		}
 
 		return false;
@@ -855,7 +898,7 @@ class ValidationBehavior extends Behavior {
 
 			$timeConditions['OR'] = [
 				'OR' => [
-					[	
+					[
 						$SearchTable->aliasField('start_time') . ' <=' => $startTime,
 						$SearchTable->aliasField('end_time') . ' >=' => $startTime,
 					],
@@ -869,7 +912,7 @@ class ValidationBehavior extends Behavior {
 					],
 					[
 						// means full day
-						$SearchTable->aliasField('start_time') . ' IS NULL',	
+						$SearchTable->aliasField('start_time') . ' IS NULL',
 						$SearchTable->aliasField('end_time') . ' IS NULL',
 					]
 				]
@@ -902,7 +945,7 @@ class ValidationBehavior extends Behavior {
 	public static function checkStaffExistWithinPeriod($field, array $globalData) {
 		// The logic below will prevent duplicate record that will be produce if the user amend the start or end date for a staff that is inactive when there is an active staff
 		// in the same institution
-		
+
 		$recordId = $globalData['data']['id'];
 		$institutionId = $globalData['data']['institution_id'];
 		$newEndDate = strtotime($globalData['data']['end_date']);
@@ -928,7 +971,7 @@ class ValidationBehavior extends Behavior {
 							'OR' => [
 								[$InstitutionStaffTable->aliasField('end_date').' IS NULL'],
 								[
-									$InstitutionStaffTable->aliasField('start_date').' >=' => $newStartDate, 
+									$InstitutionStaffTable->aliasField('start_date').' >=' => $newStartDate,
 								]
 							]
 						]);
@@ -987,7 +1030,7 @@ class ValidationBehavior extends Behavior {
 			->where(
 				[
 					$InstitutionStaff->aliasField('institution_position_id') => $globalData['data']['institution_position_id']
-					
+
 				]
 			);
 
@@ -1004,7 +1047,7 @@ class ValidationBehavior extends Behavior {
 
 		$todayDate = new Date();
 		$todayDate = $todayDate->format('Y-m-d');
-	
+
 		if (empty($endDate)) {
 			// current position has no end date
 			$dateCondition['OR'][] = 'end_date IS NULL';
@@ -1212,7 +1255,7 @@ class ValidationBehavior extends Behavior {
 				$academicPeriodStartDate = (!is_null($periodObj['start_date'])) ? $periodObj['start_date']->toUnixString() : null;
 				$academicPeriodEndDate = (!is_null($periodObj['end_date'])) ? $periodObj['end_date']->toUnixString() : null;
 
-				$rangecheck = ($date >= $academicPeriodStartDate) && 
+				$rangecheck = ($date >= $academicPeriodStartDate) &&
 				(is_null($academicPeriodEndDate) ||
 					(!is_null($academicPeriodEndDate) && ($date <= $academicPeriodEndDate))
 				)
@@ -1228,7 +1271,7 @@ class ValidationBehavior extends Behavior {
 
 		return true;
 	}
-    
+
     public static function latIsValid($field, array $globalData) {
         $error = false;
         $isRequired = $globalData['data']['mandatory'];
@@ -1276,10 +1319,10 @@ class ValidationBehavior extends Behavior {
         }
         return (!$error) ? true : $error;
     }
-    
+
 	public static function checkMinNotMoreThanMax($minValue, array $globalData) {
         return intVal($minValue) <= intVal($globalData['data']['max']);
-    } 
+    }
 
 	public static function noNewDropoutRequestInGradeAndInstitution($field, array $globalData)
 	{
@@ -1297,7 +1340,7 @@ class ValidationBehavior extends Behavior {
 
 		$StudentDropoutTable = TableRegistry::get('Institution.StudentDropout');
     	$conditions = [
-			'student_id' => $studentId, 
+			'student_id' => $studentId,
 			'status' => $model::NEW_REQUEST,
 			'education_grade_id' => $educationGradeId,
 			'institution_id' => $previousInstitutionId
