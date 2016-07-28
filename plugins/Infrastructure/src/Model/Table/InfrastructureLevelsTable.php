@@ -21,8 +21,10 @@ class InfrastructureLevelsTable extends ControllerActionTable {
 		return $data->$field;
 	}
 
-	public function getOptions() {
-		$levelOptions = $this->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])->toArray();
+	public function getOptions($params = []) {
+		$keyField = array_key_exists('keyField', $params) ? $params['keyField'] : 'id';
+		$valueField = array_key_exists('valueField', $params) ? $params['valueField'] : 'code_name';
+		$levelOptions = $this->find('list', ['keyField' => $keyField, 'valueField' => $valueField])->toArray();
 		return $levelOptions;
 	}
 }
