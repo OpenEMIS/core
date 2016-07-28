@@ -11,6 +11,10 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
 class InstitutionRoomsTable extends AppTable {
+	private $Levels = null;
+	private $levelOptions = [];
+	private $roomLevel = null;
+
 	public function initialize(array $config) {
 		parent::initialize($config);
 
@@ -35,6 +39,10 @@ class InstitutionRoomsTable extends AppTable {
 			'fieldValueClass' => ['className' => 'Infrastructure.RoomCustomFieldValues', 'foreignKey' => 'institution_room_id', 'dependent' => true, 'cascadeCallbacks' => true],
 			'tableCellClass' => null
 		]);
+
+		$this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
+		$this->levelOptions = $this->Levels->getOptions(['keyField' => 'id', 'valueField' => 'name']);
+		$this->roomLevel = $this->Levels->getFieldByCode('ROOM', 'id');
 	}
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
@@ -50,49 +58,55 @@ class InstitutionRoomsTable extends AppTable {
 			        'provider' => 'table'
 			    ]
 		    ])
+		    ->add('start_date', [
+				'ruleInAcademicPeriod' => [
+					'rule' => ['inAcademicPeriod', 'academic_period_id']
+				]
+			])
+			->add('end_date', 'ruleCompareDateReverse', [
+				'rule' => ['compareDateReverse', 'start_date', true]
+			])
 		;
 	}
 
-	public function indexBeforeAction(Event $event) {
-		$parentId = $this->request->query('parent');
-		
-		$this->ControllerAction->setFieldOrder(['code', 'name', 'institution_infrastructure_id', 'room_type_id']);
+	public function onGetInfrastructureLevel(Event $event, Entity $entity) {
+		return $this->levelOptions[$this->roomLevel];
+	}
 
+	public function indexBeforeAction(Event $event) {		
+		$this->ControllerAction->setFieldOrder(['code', 'name', 'room_type_id']);
+
+		$this->ControllerAction->field('infrastructure_level', ['after' => 'name']);
 		$this->ControllerAction->field('start_date', ['visible' => false]);
 		$this->ControllerAction->field('start_year', ['visible' => false]);
 		$this->ControllerAction->field('end_date', ['visible' => false]);
 		$this->ControllerAction->field('end_year', ['visible' => false]);
+		$this->ControllerAction->field('institution_infrastructure_id', ['visible' => false]);
 		$this->ControllerAction->field('academic_period_id', ['visible' => false]);
 		$this->ControllerAction->field('infrastructure_condition_id', ['visible' => false]);
+
+		$toolbarElements = $this->addBreadcrumbElement();
+		$this->controller->set('toolbarElements', $toolbarElements);
+
+		// For breadcrumb to build the baseUrl
+		$this->controller->set('breadcrumbPlugin', 'Institution');
+		$this->controller->set('breadcrumbController', 'Institutions');
+		$this->controller->set('breadcrumbAction', 'Infrastructures');
+		// End
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$parentId = $this->request->query('parent');
 		if (!is_null($parentId)) {
 			$query->where([$this->aliasField('institution_infrastructure_id') => $parentId]);
-
-			$crumbs = $this->Parents->findPath(['for' => $parentId]);
-			$this->controller->set('crumbs', $crumbs);
 		} else {
 			$query->where([$this->aliasField('institution_infrastructure_id IS NULL')]);
 		}
-
-		$toolbarElements = [
-			['name' => 'Institution.Infrastructure/breadcrumb', 'data' => [
-				'breadcrumbPlugin' => 'Institution', 'breadcrumbController' => 'Institutions', 'breadcrumbAction' => 'Infrastructures'
-			], 'options' => []]
-		];
-
-		$this->controller->set('toolbarElements', $toolbarElements);
 	}
 
-	public function editBeforeAction(Event $event) {
-		// Add breadcrumb
-		$toolbarElements = [
-            ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => [], 'options' => []]
-        ];
+	public function addEditBeforeAction(Event $event) {
+		$toolbarElements = $this->addBreadcrumbElement();
 		$this->controller->set('toolbarElements', $toolbarElements);
-		// End
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -128,19 +142,15 @@ class InstitutionRoomsTable extends AppTable {
 			}
 		} else if ($action == 'add' || $action == 'edit') {
 			$parentId = $this->request->query('parent');
-			
-			$attr['type'] = 'hidden';
-			$attr['value'] = $parentId;
 
-			if (!is_null($parentId)) {
+			if (is_null($parentId)) {
+				$attr['type'] = 'hidden';
+				$attr['value'] = null;
+			} else {
 				if ($action == 'add') {
-					$this->ControllerAction->field('parent_id', [
-						'type' => 'readonly',
-						'attr' => [
-							'value' => $this->Parents->getParentPath($parentId)
-						],
-						'after' => 'institution_infrastructure_id'
-					]);
+					$attr['type'] = 'readonly';
+					$attr['value'] = $parentId;
+					$attr['attr']['value'] = $this->Parents->getParentPath($parentId);
 				} else if ($action == 'edit') {
 					$Parents = $this->Parents;
 
@@ -258,5 +268,15 @@ class InstitutionRoomsTable extends AppTable {
 		} else {
 			return $indexData;
 		}
+	}
+
+	private function addBreadcrumbElement($toolbarElements=[]) {
+		$parentId = $this->request->query('parent');
+		$crumbs = $this->Parents->findPath(['for' => $parentId]);
+		$levelOptions = $this->Levels->getOptions();
+		$selectedLevel = $this->roomLevel;
+		$toolbarElements[] = ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => compact('crumbs', 'levelOptions', 'selectedLevel'), 'options' => []];
+
+		return $toolbarElements;
 	}
 }

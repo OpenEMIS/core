@@ -9,24 +9,28 @@
 	    'action' => $breadcrumbAction,
 	    'index'
 	]);
+
+	$levelHint = '';
+	if (!empty($levelOptions) && !is_null($selectedLevel)) {
+		$levelHint = " <span class='divider'></span> ";
+		if (is_array($levelOptions[$selectedLevel])) {
+			$levelHint .= $levelOptions[$selectedLevel]['text'];
+		} else {
+			$levelHint .= $levelOptions[$selectedLevel];
+		}
+	}
 ?>
 <div class="toolbar-responsive panel-toolbar">
 	<ul class="breadcrumb treemap-breadcrumb">
 		<?php if (empty($crumbs)) : ?>
-			<li><?= __('All')?></li>
+			<li><?= __('All') . $levelHint; ?></li>
 		<?php else : ?>
 			<li><a href="<?= $baseUrl; ?>"><?= __('All')?></a></li>
 			<?php foreach ($crumbs as $crumb) : ?>
 				<?php if ($crumb === end($crumbs)) : ?>
-					<?php
-						$crumbName = $crumb->name;
-						if (!empty($levelOptions) && !is_null($selectedLevel)) {
-							$crumbName .= " <span class='divider'></span> ".$levelOptions[$selectedLevel]['text'];
-						}
-					?>
-					<li class="active"><?= $crumbName; ?></li>
+					<li class="active"><?= $crumb->name . $levelHint; ?></li>
 		    	<?php else : ?>
-					<li><a href="<?= $baseUrl . "?parent=" . $crumb->id; ?>"><?= $crumb->name; ?></a></li>
+					<li><a href="<?= $baseUrl . "?parent=" . $crumb->id. "&parent_level=" . $crumb->infrastructure_level_id; ?>"><?= $crumb->name; ?></a></li>
 				<?php endif ?>
 			<?php endforeach ?>
 		<?php endif ?>
