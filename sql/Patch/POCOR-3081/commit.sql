@@ -20,7 +20,8 @@ INNER JOIN `institution_students` I2
 	ON I2.`start_date` = I1.`end_date` 
 	AND I2.`student_id` = I1.`student_id`
 	AND I2.`student_status_id` <> I1.`student_status_id`
-    AND I2.`start_date` <>  I2.`end_date` 
+    AND I2.`start_date` <>  I2.`end_date`
+    AND I2.`created` > I1.`created`
 WHERE I1.`student_status_id` = 3;
 
 -- patch the end_date for transfered records
@@ -29,7 +30,8 @@ INNER JOIN `institution_students` I2
 	ON I2.`start_date` = I1.`end_date`
 	AND I2.`student_id` = I1.`student_id` 
 	AND I2.`student_status_id` <> I1.`student_status_id`
-	AND I2.`start_date` <>  I2.`end_date` 
+	AND I2.`start_date` <>  I2.`end_date`
+	AND I2.`created` > I1.`created`
 SET I1.`end_date` = DATE_ADD(I1.`end_date`, INTERVAL -1 DAY)
 WHERE I1.`student_status_id` = 3;
 
@@ -40,7 +42,8 @@ FROM `institution_students` I1
 INNER JOIN `institution_students` I2 
 	ON I2.`start_date` = I1.`end_date` 
 	AND I2.`student_id` = I1.`student_id`
-	AND I2.`start_date` <>  I2.`end_date` 
+	AND I2.`start_date` <>  I2.`end_date`
+	AND I2.`created` > I1.`created`
 WHERE I1.`student_status_id` = 3;
 
 UPDATE `institution_students` I1
@@ -48,5 +51,6 @@ INNER JOIN `institution_students` I2
 	ON I2.`start_date` = I1.`end_date`
 	AND I2.`student_id` = I1.`student_id` 
 	AND I2.`start_date` <>  I2.`end_date` 
+	AND I2.`created` > I1.`created`
 SET I1.`end_date` = DATE_ADD(I1.`end_date`, INTERVAL -1 DAY)
 WHERE I1.`student_status_id` = 3;
