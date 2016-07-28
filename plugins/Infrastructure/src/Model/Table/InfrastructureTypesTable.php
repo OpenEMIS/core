@@ -4,6 +4,7 @@ namespace Infrastructure\Model\Table;
 use ArrayObject;
 
 use Cake\ORM\Query;
+use Cake\ORM\Entity;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
@@ -29,34 +30,32 @@ class InfrastructureTypesTable extends ControllerActionTable {
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		if ($extra->offsetExists('params') && array_key_exists('selectedLevel', $extra['params'])) {
 			$selectedLevel = $extra['params']['selectedLevel'];
-
-			if ($selectedLevel != '-1') {
-				$query->where([$this->aliasField('infrastructure_level_id') => $selectedLevel]);
-			}
+			$query->where([$this->aliasField('infrastructure_level_id') => $selectedLevel]);
 		}
 	}
 
-	public function viewBeforeAction(Event $event, ArrayObject $extra) {
-		$this->setupFields();
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		$this->setupFields($entity);
 	}
 
-	public function addEditBeforeAction(Event $event, ArrayObject $extra) {
-		$this->setupFields();
+	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		$this->setupFields($entity);
 	}
 
 	public function onUpdateFieldInfrastructureLevelId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add' || $action == 'edit') {
 			$levelOptions = $this->Levels->getOptions();
-			$selectedLevel = !is_null($request->query('level')) ? $request->query('level') : '';
+			$selectedLevel = $this->queryString('level', $levelOptions);
 
-			$attr['options'] = $levelOptions;
-			$attr['default'] = $selectedLevel;
+			$attr['type'] = 'readonly';
+			$attr['value'] = $selectedLevel;
+			$attr['attr']['value'] = $levelOptions[$selectedLevel];
 		}
 
 		return $attr;
 	}
 
-	private function setupFields() {
+	private function setupFields(Entity $entity) {
 		$this->field('infrastructure_level_id', ['type' => 'select']);
 	}
 }
