@@ -19,6 +19,7 @@ class PreferencesController extends AppController {
 		$this->ControllerAction->models = [
 			'Users' 				=> ['className' => 'Users'],
 			'Account' 				=> ['className' => 'UserAccounts'],
+			'Contacts'				=> ['className' => 'UserContacts'],
 			'Identities' 			=> ['className' => 'User.Identities'],
 			'Languages' 			=> ['className' => 'User.UserLanguages'],
 			'Nationalities' 		=> ['className' => 'User.Nationalities'],
@@ -32,7 +33,6 @@ class PreferencesController extends AppController {
     public function Languages()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
     public function SpecialNeeds()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
     public function Comments()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
-    public function Contacts()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'UserContacts']); }
     // End
 
 	public function beforeFilter(Event $event) {
