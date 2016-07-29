@@ -131,13 +131,8 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
         StudentController.internalGridOptions = gridOptions;
         StudentController.internalGridOptions.onGridReady = function() {
                 $scope.reloadInternalDatasource();
-                StudentController.internalGridOptions.api.sizeColumnsToFit();
             };
         StudentController.externalGridOptions = gridOptions;
-        StudentController.externalGridOptions.onGridReady = function() {
-                $scope.reloadInternalDatasource();
-                StudentController.internalGridOptions.api.sizeColumnsToFit();
-            };
     };
 
     $scope.reloadInternalDatasource = function () {
@@ -199,6 +194,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
             }
         };
         gridObj.api.setDatasource(dataSource);
+        gridObj.columnApi.autoSizeColumns();
     }
 
     function createNewExternalDatasource(gridObj) {
@@ -238,6 +234,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
             }
         };
         gridObj.api.setDatasource(dataSource);
+        gridObj.columnApi.autoSizeColumns();
     }
 
     function processStudentRecord(studentRecords, params, totalRowCount) {
