@@ -3,6 +3,7 @@
 namespace App\Error;
 
 use Cake\Error\ExceptionRenderer;
+use Exception;
 
 class AppExceptionRenderer extends ExceptionRenderer
 {
@@ -11,9 +12,10 @@ class AppExceptionRenderer extends ExceptionRenderer
     	return $this->controller->redirect(['controller' => 'Errors', 'action' => 'error403', 'plugin'=>'Error']);
     }
 
-    public function _template(\Exception $exception, $method, $code){
+    public function _template(Exception $exception, $method, $code){
     	if ($code!=403) {
-    		return $this->controller->redirect(['controller' => 'Errors', 'action' => 'error404', 'plugin'=>'Error']);
+    		$this->controller->redirect(['controller' => 'Errors', 'action' => 'error404', 'plugin'=>'Error']);
+    		return 'default';
     	}
     	return false;
     }

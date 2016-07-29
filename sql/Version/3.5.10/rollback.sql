@@ -1,3 +1,12 @@
+-- POCOR-3115
+-- code here
+-- Staff
+DELETE FROM `security_role_functions` WHERE `security_function_id` = 1044;
+
+-- Student
+DELETE FROM `security_role_functions` WHERE `security_function_id` = 1043;
+
+
 -- POCOR-2634
 -- custom_field_types
 UPDATE `custom_field_types` SET `is_mandatory` = 0 WHERE `code` = 'DROPDOWN';

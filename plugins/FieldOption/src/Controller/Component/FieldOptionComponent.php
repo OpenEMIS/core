@@ -60,7 +60,22 @@ class FieldOptionComponent extends Component
         'GuardianRelations' => 'Student.GuardianRelations',
         'StaffTypes' => 'Staff.StaffTypes',
         'StaffLeaveTypes' => 'Staff.StaffLeaveTypes',
+<<<<<<< HEAD
         'ShiftOptions' => 'Institution.ShiftOptions'
+=======
+        'TrainingAchievementTypes' => 'Training.TrainingAchievementTypes',
+        'TrainingCourseTypes' => 'Training.TrainingCourseTypes',
+        'TrainingFieldStudies' => 'Training.TrainingFieldStudies',
+        'TrainingLevels' => 'Training.TrainingLevels',
+        'TrainingModeDeliveries' => 'Training.TrainingModeDeliveries',
+        'TrainingNeedCategories' => 'Training.TrainingNeedCategories',
+        'TrainingPriorities' => 'Training.TrainingPriorities',
+        'TrainingProviders' => 'Training.TrainingProviders',
+        'TrainingRequirements' => 'Training.TrainingRequirements',
+        'TrainingResultTypes' => 'Training.TrainingResultTypes',
+        'TrainingSpecialisations' => 'Training.TrainingSpecialisations',
+        'CommentTypes' => 'User.CommentTypes'
+>>>>>>> origin/master
     ];
 
     // Is called before the controller's beforeFilter method.
@@ -72,7 +87,7 @@ class FieldOptionComponent extends Component
         foreach ($this->fieldOptions as $key => $className) {
             $accessMap["$controller.$key"] = "$controller.%s";
         }
-        $this->request->addParams($accessMap);
+        $this->request->addParams(['accessMap' => $accessMap]);
     }
 
     public function getFieldOptions()

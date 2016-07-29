@@ -1,10 +1,11 @@
-/* ABOUT v.1.0.3 */
+/* ABOUT v.1.0.4 */
 
 .about-wrapper {
     background-color: #FFF;
     border-left: 1px solid #DDD;
     border-right: 1px solid #DDD;
     border-bottom: 1px solid #DDD;
+    border-top: 0;
 }
 
 .about-container {
@@ -12,6 +13,7 @@
     padding: 15px !important;
     display: block;
     background-color: #FFF;
+    border-top: 0 !important;
 }
 
 .img-logo {
