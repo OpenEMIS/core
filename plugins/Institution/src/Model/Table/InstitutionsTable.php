@@ -199,7 +199,7 @@ class InstitutionsTable extends AppTable  {
 		return $name;
 	}
 
-	public function onGetShiftType(Event $event, Entity $entity) 
+	public function onGetShiftType(Event $event, Entity $entity)
 	{
 		if (($entity->shift_type)==1) {
 			return __('Single Shift Owner');
@@ -214,7 +214,7 @@ class InstitutionsTable extends AppTable  {
 		}
 	}
 
-	public function getViewShiftDetail($institutionId, $academicPeriod) 
+	public function getViewShiftDetail($institutionId, $academicPeriod)
 	{
 		$data = $this->InstitutionShifts->find()
 				->innerJoinWith('Institutions')
@@ -238,7 +238,7 @@ class InstitutionsTable extends AppTable  {
 					$this->InstitutionShifts->aliasField('academic_period_id') => $academicPeriod
 				])
 				->toArray();
-		
+
 		return $data;
 	}
 
@@ -265,17 +265,17 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
 
 		$this->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information')]);
-		
+
 		$this->ControllerAction->field('shift_section', ['type' => 'section', 'title' => __('Shifts'), 'visible' => ['view'=>true]]);
 		$this->ControllerAction->field('shift_type', ['visible' => ['view'=>true]]);
-		
+
 		$this->ControllerAction->field('shift_details', [
 			'type' => 'element',
 			'element' => 'Institution.Shifts/details',
 			'visible' => ['view'=>true],
 			'data' => $this->getViewShiftDetail($this->Session->read('Institution.Institutions.id'), $this->InstitutionShifts->AcademicPeriods->getCurrent())
 		]);
-		
+
 		$this->ControllerAction->field('location_section', ['type' => 'section', 'title' => __('Location')]);
 
 		$language = I18n::locale();
@@ -536,10 +536,10 @@ class InstitutionsTable extends AppTable  {
 			'information_section',
 			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id',
 			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
-			
+
 			'shift_section',
 			'shift_type', 'shift_details',
-			
+
 			'location_section',
 			'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
 
@@ -734,12 +734,7 @@ class InstitutionsTable extends AppTable  {
 		return $SecurityGroupUsers->getRolesByUserAndGroup($groupIds, $userId);
 	}
 
-<<<<<<< HEAD
-
-	public function onBeforeRestrictDelete(Event $event, ArrayObject $options, $id, ArrayObject $extra)
-=======
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
->>>>>>> origin/master
     {
     	$extra['excludedModels'] = [
     		$this->SecurityGroups->alias(), $this->InstitutionSurveys->alias(), $this->StudentSurveys->alias(),

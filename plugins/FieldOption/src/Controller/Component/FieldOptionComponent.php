@@ -60,9 +60,7 @@ class FieldOptionComponent extends Component
         'GuardianRelations' => 'Student.GuardianRelations',
         'StaffTypes' => 'Staff.StaffTypes',
         'StaffLeaveTypes' => 'Staff.StaffLeaveTypes',
-<<<<<<< HEAD
-        'ShiftOptions' => 'Institution.ShiftOptions'
-=======
+        'ShiftOptions' => 'Institution.ShiftOptions',
         'TrainingAchievementTypes' => 'Training.TrainingAchievementTypes',
         'TrainingCourseTypes' => 'Training.TrainingCourseTypes',
         'TrainingFieldStudies' => 'Training.TrainingFieldStudies',
@@ -75,7 +73,6 @@ class FieldOptionComponent extends Component
         'TrainingResultTypes' => 'Training.TrainingResultTypes',
         'TrainingSpecialisations' => 'Training.TrainingSpecialisations',
         'CommentTypes' => 'User.CommentTypes'
->>>>>>> origin/master
     ];
 
     // Is called before the controller's beforeFilter method.
