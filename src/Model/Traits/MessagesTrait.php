@@ -494,6 +494,7 @@ trait MessagesTrait {
 		// Validation Messages
 		'Institution' => [
 			'Institutions' => [
+				'academicPeriod' => 'There are no Academic Periods in the system.',
 				'noActiveInstitution' => 'There is no active institution',
 				'noSubjectsInClass' => 'There are no subjects in the assigned grade',
 				'noSubjectSelected' => 'There is no subject selected',
@@ -1062,6 +1063,11 @@ trait MessagesTrait {
 			'failed' => 'The language has not been compiled due to errors encountered.',
 		],
 		'Security' => [
+			'SecurityRoles' => [
+				'name' => [
+					'ruleUnique' => 'This role name already exists in the system'
+				],
+			],
 			'Users' => [
 				'username' => [
 					'ruleUnique' => 'This username is already in use',

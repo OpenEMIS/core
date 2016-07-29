@@ -55,7 +55,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 	}
 
 	public function onGetCode(Event $event, Entity $entity) {
-		return $event->subject()->Html->link($entity->code, [
+		return $event->subject()->HtmlField->link($entity->code, [
 			'plugin' => $this->controller->plugin,
 			'controller' => $this->controller->name,
 			'action' => $this->alias,
@@ -223,32 +223,6 @@ class InstitutionInfrastructuresTable extends AppTable {
 			$this->aliasField('institution_id') => $entity->institution_id,
 			$this->aliasField('parent_id') => $entity->parent_id
 		]);
-	}
-
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id, ArrayObject $extra) {
-		$entity = $this->get($id);
-		$transferTo = $this->request->data['transfer_to'];
-		$transferFrom = $id;
-
-		if (empty($transferTo) && $this->ControllerAction->hasAssociatedRecords($this, $entity, $extra)) {
-			$event->stopPropagation();
-			$this->Alert->error('general.deleteTransfer.restrictDelete');
-			$url = $this->ControllerAction->url('remove');
-			return $this->controller->redirect($url);
-		} else {
-			// Require to update the parent id
-			$this->updateAll(
-				['parent_id' => $transferTo],
-				['parent_id' => $transferFrom]
-			);
-
-			$process = function($model, $id, $options) {
-				$entity = $model->get($id);
-				return $model->delete($entity, $options->getArrayCopy());
-			};
-
-			return $process;
-		}
 	}
 
 	public function onUpdateFieldParentId(Event $event, array $attr, $action, Request $request) {

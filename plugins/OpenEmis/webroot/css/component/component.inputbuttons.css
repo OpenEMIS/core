@@ -1,4 +1,4 @@
-/* INPUT BUTTONS v.1.0.2 */
+/* INPUT BUTTONS v.1.0.3 */
 
 input .btn i {
     margin: 0;
@@ -73,7 +73,7 @@ input .btn i {
 }
 
 .fileinput-preview {
-    width: 30%;
+    width: 25%;
     clear: both;
 }
 
