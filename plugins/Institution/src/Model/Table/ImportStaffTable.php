@@ -247,8 +247,8 @@ class ImportStaffTable extends AppTable
         foreach ($staffRecord as $key => $value) {
             $institutionList[] = $staffRecord[$key]['institution_id'];
         }
-        
-        if ((isset($institutionList)) && (!is_numeric(array_search($this->_institution->id, $institutionList)))) { //if the current session not on the institution list on where the staff assigned to.
+
+        if (isset($institutionList) && !array_search($this->_institution->id, $institutionList)) { //if the current session not on the institution list on where the staff assigned to.
             $rowInvalidCodeCols['staff_id'] = __('The staff is already assigned to another school');
             return false;
         }
