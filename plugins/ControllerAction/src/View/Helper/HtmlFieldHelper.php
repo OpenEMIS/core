@@ -493,16 +493,7 @@ class HtmlFieldHelper extends Helper {
 
 		$attr['id'] = $attr['model'] . '_' . $attr['field'];
 		$attr['label'] = array_key_exists('label', $options) ? $options['label'] : Inflector::humanize($attr['field']);
-<<<<<<< HEAD
 		$value = $this->_View->element($element, ['entity' => $data, 'attr' => $attr]);
-=======
-
-		if ($action == 'view' || $action == 'index') {
-			$value = $this->_View->element($element, ['entity' => $data, 'attr' => $attr]);
-		} else if ($action == 'edit') {
-			$value = $this->_View->element($element, ['entity' => $data, 'attr' => $attr]);
-		}
->>>>>>> origin/master
 		return $value;
 	}
 
@@ -741,18 +732,18 @@ class HtmlFieldHelper extends Helper {
 			} else {
 				if ($options['multiple']) {
 					$fieldName = $attr['model'] . '.' . $attr['field'] . '._ids';
-					
+
 					//logic when there is no option on multiple chosen select which unselectable
 					if (isset($options['empty'])) {
 						unset($options['empty']);
 
 						$options['options'][] = [
-                            'text' => __('No options'), 
-                            'value' => '', 
+                            'text' => __('No options'),
+                            'value' => '',
                             'disabled' => 'disabled'
                         ];
 					}
-					
+
 				} else {
 					$fieldName = $attr['model'] . '.' . $attr['field'];
 				}
