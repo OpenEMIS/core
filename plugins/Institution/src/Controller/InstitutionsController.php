@@ -125,6 +125,20 @@ class InstitutionsController extends AppController  {
 		return $ignore;
 	}
 
+	private function checkInstitutionAccess($id, $event)
+	{
+		if (!$this->AccessControl->isAdmin()) {
+			$institutionIds = $this->AccessControl->getInstitutionsByUser();
+
+			if (!array_key_exists($id, $institutionIds)) {
+				$this->Alert->error('security.noAccess');
+				$refererUrl = $this->request->referer();
+				$event->stopPropagation();
+				return $this->redirect($refererUrl);
+			}
+		}
+	}
+
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 		$this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
@@ -137,16 +151,7 @@ class InstitutionsController extends AppController  {
 
 		if (array_key_exists('institution_id', $query)) {
 			//check for permission
-			if (!$this->AccessControl->isAdmin()) {
-				$institutionIds = $this->AccessControl->getInstitutionsByUser();
-
-				if (!array_key_exists($query['institution_id'], $institutionIds)) {
-					$this->Alert->error('security.noAccess');
-					$refererUrl = $this->request->referer();
-					$event->stopPropagation();
-					return $this->redirect($refererUrl);
-				}
-			}
+			$this->checkInstitutionAccess($query['institution_id'], $event);
 			$session->write('Institution.Institutions.id', $query['institution_id']);
 		}
 
@@ -158,6 +163,7 @@ class InstitutionsController extends AppController  {
 			$id = 0;
 			if (isset($this->request->pass[0]) && (in_array($action, ['view', 'edit', 'dashboard']))) {
 				$id = $this->request->pass[0];
+				$this->checkInstitutionAccess($id, $event);
 				$session->write('Institution.Institutions.id', $id);
 
 			} else if ($session->check('Institution.Institutions.id')) {
@@ -322,6 +328,12 @@ class InstitutionsController extends AppController  {
 
 	public function dashboard($id) {
 		$this->ControllerAction->model->action = $this->request->action;
+
+		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$currentPeriod = $AcademicPeriods->getCurrent();
+		if (empty($currentPeriod)) {
+			$this->Alert->warning('Institution.Institutions.academicPeriod');
+		}
 
 		// $highChartDatas = ['{"chart":{"type":"column","borderWidth":1},"xAxis":{"title":{"text":"Position Type"},"categories":["Non-Teaching","Teaching"]},"yAxis":{"title":{"text":"Total"}},"title":{"text":"Number Of Staff"},"subtitle":{"text":"For Year 2015-2016"},"series":[{"name":"Male","data":[0,2]},{"name":"Female","data":[0,1]}]}'];
 		$highChartDatas = [];
