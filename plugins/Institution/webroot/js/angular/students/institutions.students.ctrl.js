@@ -104,11 +104,11 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                     headerName:'',
                     suppressMenu: true,
                     suppressSorting: true,
-                    width: 30,
-                    maxWidth: 30,
+                    width: 40,
+                    maxWidth: 40,
                     cellRenderer: function(params) {
                         var data = JSON.stringify(params.data);
-                        return '<div><input  name="ngSelectionCell" ng-click="InstitutionStudentController.selectStudent('+params.value+')" tabindex="-1" type="radio" selectedStudent="'+params.value+'"/></div>';
+                        return '<div><input  name="ngSelectionCell" ng-click="InstitutionStudentController.selectStudent('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStudent="'+params.value+'"/></div>';
                     }
                 },
                 {headerName: "Openemis No", field: "openemis_no", suppressMenu: true, suppressSorting: true},
@@ -194,7 +194,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
             }
         };
         gridObj.api.setDatasource(dataSource);
-        gridObj.columnApi.autoSizeColumns();
+        gridObj.api.sizeColumnsToFit();
     }
 
     function createNewExternalDatasource(gridObj) {
@@ -234,7 +234,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
             }
         };
         gridObj.api.setDatasource(dataSource);
-        gridObj.columnApi.autoSizeColumns();
+        gridObj.api.sizeColumnsToFit();
     }
 
     function processStudentRecord(studentRecords, params, totalRowCount) {
