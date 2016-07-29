@@ -349,6 +349,9 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
                 delete userRecord['id'];
                 delete userRecord['username'];
                 delete userRecord['password'];
+                delete userRecord['last_login'];
+                delete userRecord['address_area_id'];
+                delete userRecord['birthplace_area_id'];
                 delete userRecord['created'];
                 delete userRecord['modified'];
                 delete userRecord['modified_user_id'];
