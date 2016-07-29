@@ -180,8 +180,6 @@ class ImportStaffTable extends AppTable
         $institutionId = ($this->_institution instanceof Entity) ? $this->_institution->id : false;
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         
-        $activeStatusId = $this->Workflow->getStepsByModelCode($lookedUpTable->registryAlias(), 'ACTIVE');
-        
         //select necessary field for position which total FTE not used of not fully used based on the end_date of the staff
         $modelData = $lookedUpTable->find();
         $modelData = $modelData
@@ -200,10 +198,7 @@ class ImportStaffTable extends AppTable
                             'InstitutionStaff.end_date IS NULL'
                         ]
                     ])
-                    ->where([
-                        $lookedUpTable->aliasField('institution_id') => $institutionId,
-                        $lookedUpTable->aliasField('status_id IN ') => $activeStatusId
-                    ])
+                    ->where([$lookedUpTable->aliasField('institution_id') => $institutionId])                   
                     ->group($lookedUpTable->aliasField('id'))
                     ->having([
                         'OR' => [
