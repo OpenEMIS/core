@@ -13,40 +13,34 @@ use SebastianBergmann\Exporter\Exporter;
 /**
  * Represents a static invocation.
  *
- * @package    PHPUnit_MockObject
- * @author     Sebastian Bergmann <sebastian@phpunit.de>
- * @copyright  Sebastian Bergmann <sebastian@phpunit.de>
- * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
- * @version    Release: @package_version@
- * @link       http://github.com/sebastianbergmann/phpunit-mock-objects
- * @since      Class available since Release 1.0.0
+ * @since Class available since Release 1.0.0
  */
 class PHPUnit_Framework_MockObject_Invocation_Static implements PHPUnit_Framework_MockObject_Invocation, PHPUnit_Framework_SelfDescribing
 {
     /**
      * @var array
      */
-    protected static $uncloneableExtensions = array(
-      'mysqli' => true,
-      'SQLite' => true,
-      'sqlite3' => true,
-      'tidy' => true,
-      'xmlwriter' => true,
-      'xsl' => true
-    );
+    protected static $uncloneableExtensions = [
+        'mysqli'    => true,
+        'SQLite'    => true,
+        'sqlite3'   => true,
+        'tidy'      => true,
+        'xmlwriter' => true,
+        'xsl'       => true
+    ];
 
     /**
      * @var array
      */
-    protected static $uncloneableClasses = array(
-      'Closure',
-      'COMPersistHelper',
-      'IteratorIterator',
-      'RecursiveIteratorIterator',
-      'SplFileObject',
-      'PDORow',
-      'ZipArchive'
-    );
+    protected static $uncloneableClasses = [
+        'Closure',
+        'COMPersistHelper',
+        'IteratorIterator',
+        'RecursiveIteratorIterator',
+        'SplFileObject',
+        'PDORow',
+        'ZipArchive'
+    ];
 
     /**
      * @var string
@@ -64,16 +58,23 @@ class PHPUnit_Framework_MockObject_Invocation_Static implements PHPUnit_Framewor
     public $parameters;
 
     /**
-     * @param string  $className
-     * @param string  $methodname
-     * @param array   $parameters
-     * @param boolean $cloneObjects
+     * @var string
      */
-    public function __construct($className, $methodName, array $parameters, $cloneObjects = false)
+    public $returnType;
+
+    /**
+     * @param string $className
+     * @param string $methodName
+     * @param array  $parameters
+     * @param string $returnType
+     * @param bool   $cloneObjects
+     */
+    public function __construct($className, $methodName, array $parameters, $returnType, $cloneObjects = false)
     {
         $this->className  = $className;
         $this->methodName = $methodName;
         $this->parameters = $parameters;
+        $this->returnType = $returnType;
 
         if (!$cloneObjects) {
             return;
@@ -94,21 +95,53 @@ class PHPUnit_Framework_MockObject_Invocation_Static implements PHPUnit_Framewor
         $exporter = new Exporter;
 
         return sprintf(
-            "%s::%s(%s)",
+            '%s::%s(%s)%s',
             $this->className,
             $this->methodName,
-            join(
+            implode(
                 ', ',
                 array_map(
-                    array($exporter, 'shortenedExport'),
+                    [$exporter, 'shortenedExport'],
                     $this->parameters
                 )
-            )
+            ),
+            $this->returnType ? sprintf(': %s', $this->returnType) : ''
         );
     }
 
     /**
-     * @param  object $original
+     * @return mixed Mocked return value.
+     */
+    public function generateReturnValue()
+    {
+        switch ($this->returnType) {
+            case '':       return;
+            case 'string': return '';
+            case 'float':  return 0.0;
+            case 'int':    return 0;
+            case 'bool':   return false;
+            case 'array':  return [];
+
+            case 'callable':
+            case 'Closure':
+                return function () {};
+
+            case 'Traversable':
+            case 'Generator':
+                $generator = function () { yield; };
+
+                return $generator();
+
+            default:
+                $generator = new PHPUnit_Framework_MockObject_Generator;
+
+                return $generator->getMock($this->returnType, [], [], '', false);
+        }
+    }
+
+    /**
+     * @param object $original
+     *
      * @return object
      */
     protected function cloneObject($original)

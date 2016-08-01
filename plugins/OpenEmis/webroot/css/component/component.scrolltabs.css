@@ -1,0 +1,307 @@
+/* ANGULAR SCROLL TABS v.1.0.6 */
+
+.scrolltabs {
+    position: relative;
+}
+
+.scrolltabs .nav-tabs {
+    border-bottom: 1px solid #DDD;
+    height: 33px;
+}
+
+.scrolltabs .nav-tabs li {
+    vertical-align: top;
+    width: auto;
+}
+
+.scrolltabs .nav > li:hover {
+    font-weight: normal;
+}
+
+.scrolltabs .tabs-divider {
+    display: block;
+    content: "";
+    position: absolute;
+    top: 28px;
+    width: 100%;
+    height: 4px;
+    left: 0;
+    right: 0;
+    background: #F2F2F2;
+    text-align: center;
+    border-left: 1px solid #DDD;
+    border-right: 1px solid #DDD;
+    border-top: 1px solid #DDD;
+}
+
+.scrolltabs .ui-tabs-scrollable > .spacer > div:first-child > .nav-tabs > li > a {
+    height: 29px;
+    z-index: 10;
+    line-height: 20px;
+    min-width: 58px;
+    text-align: center;
+    padding: 4px 10px !important;
+}
+
+.scrolltabs .nav-tabs li a,
+.chrome .scrolltabs .nav-tabs > li > a,
+.scrolltabs .nav-tabs li.active a:focus,
+.scrolltabs .nav-tabs li.active a:hover,
+.scrolltabs .nav-tabs li:active a,
+.scrolltabs .nav-tabs > li.active > a,
+.chrome .scrolltabs .nav-tabs > li.active > a {
+    padding: 4px 10px;
+    margin: 0 2px 0 0;
+}
+
+.scrolltabs .nav-tabs > li:last-child > a,
+.scrolltabs .nav-tabs > li.active:last-child > a {
+    margin: 0 !important;
+}
+
+.scrolltabs .tab-content {
+    padding: 10px 0;
+}
+
+.scrolltabs.sticky-content .tab-content {
+    padding: 0;
+}
+
+.scrolltabs .nav-tabs > li > a {
+    color: #888;
+    background: #FFF;
+}
+
+.scrolltabs .nav-tabs > li:hover {
+    color: #888;
+    font-weight: normal;
+}
+
+.scrolltabs .nav-tabs > li:active > a,
+.scrolltabs .nav-tabs > li.active > a {
+    color: #333;
+    font-weight: 500;
+    line-height: 15px;
+}
+
+.scrolltabs .nav-tabs > li > a:hover {
+    color: #FFF;
+    background-color: #6B6B6B;
+}
+
+.scrolltabs .nav-tabs > li:focus > a,
+.scrolltabs .nav-tabs > li > a:focus {
+    border-left-color: #DDD !important;
+    outline: none !important;
+}
+
+.scrolltabs .ui-tabs-scrollable > .nav-button.left-nav-button {
+    -moz-box-shadow: 7px 1px 3px -3px rgba(0, 0, 0, 0.1);
+    -webkit-box-shadow: 7px 1px 3px -3px rgba(0, 0, 0, 0.1);
+    box-shadow: 7px 1px 3px -3px rgba(0, 0, 0, 0.1);
+}
+
+.scrolltabs .ui-tabs-scrollable > .nav-button.right-nav-button {
+    -moz-box-shadow: -7px 1px 2px -3px rgba(0, 0, 0, 0.1);
+    -webkit-box-shadow: -7px 1px 2px -3px rgba(0, 0, 0, 0.1);
+    box-shadow: -7px 1px 2px -3px rgba(0, 0, 0, 0.1);
+}
+
+.scrolltabs .ui-tabs-scrollable > .nav-button.left-nav-button,
+.scrolltabs .ui-tabs-scrollable > .nav-button.right-nav-button,
+.scrolltabs .ui-tabs-scrollable > .btn-group > .btn.dropdown-toggle {
+    background-color: #999 !important;
+    color: #FFF !important;
+    border: 1px solid #6B6B6B !important;
+    z-index: 12 !important;
+}
+
+.scrolltabs .dropdown-menu>li>a:focus,
+.scrolltabs .dropdown-menu>li>a:hover {
+    background-color: #6B6B6B !important;
+    color: #FFF !important;
+}
+
+.scrolltabs .ui-tabs-scrollable > .nav-button.left-nav-button:focus,
+.scrolltabs .ui-tabs-scrollable > .nav-button.right-nav-button:focus,
+.scrolltabs .ui-tabs-scrollable > .btn-group > .btn.dropdown-toggle {
+    outline: none !important;
+}
+
+.scrolltabs .ui-tabs-scrollable > .nav-button.left-nav-button:before,
+.scrolltabs .ui-tabs-scrollable > .nav-button.right-nav-button:before,
+.scrolltabs .ui-tabs-scrollable > .btn-group > .btn.dropdown-toggle:before {
+    font-family: 'FontAwesome';
+    font-size: 16px;
+}
+
+.scrolltabs .ui-tabs-scrollable > .nav-button.left-nav-button:before {
+    content: "\f0d9";
+}
+
+.scrolltabs .ui-tabs-scrollable > .nav-button.right-nav-button:before {
+    content: "\f0da";
+}
+
+.scrolltabs .ui-tabs-scrollable > .btn-group > .btn.dropdown-toggle:before {
+    content: "\f0d7";
+}
+
+.scrolltabs .ui-tabs-scrollable > .btn-group > .btn.dropdown-toggle {
+    height: 34px;
+    width: 26px;
+    line-height: 34px;
+    padding: 0;
+    -webkit-border-top-left-radius: 0;
+            border-top-left-radius: 0;
+    -webkit-border-bottom-left-radius: 0;
+            border-bottom-left-radius: 0;
+}
+
+.scrolltabs .ui-tabs-scrollable > .nav-button.left-nav-button[disabled],
+.scrolltabs .ui-tabs-scrollable > .nav-button.right-nav-button[disabled] {
+    color: #C9C9C9 !important;
+    background-color: #F8F8F8 !important;
+    border-color: #DDD !important;
+    opacity: 1 !important;
+    z-index: 12 !important;
+}
+
+.scrolltabs .nav-tabs > .active > a {
+    border-bottom-color: #F2F2F2 !important;
+}
+
+.scrolltabs .ui-tabs-scrollable > .nav-button {
+    height: 34px;
+    line-height: 34px;
+}
+
+.scrolltabs .dropdown-menu {
+    height: auto !important;
+    left: auto;
+    right: 0;
+}
+
+.scrolltabs .dropdown-menu li a {
+    cursor: pointer;
+}
+
+.scrolltabs .ui-tabs-scrollable > .spacer:not(.hidden-buttons) > div:first-child > .nav-tabs > li:last-child.active a,
+.scrolltabs .ui-tabs-scrollable > .spacer:not(.hidden-buttons) > div:first-child > .nav-tabs > li:last-child a,
+.scrolltabs .ui-tabs-scrollable > .spacer:not(.hidden-buttons) > div:first-child > .nav-tabs > li:last-child a:hover {
+    -webkit-border-top-right-radius: 4px !important;
+    border-top-right-radius: 4px !important;
+    border-right: 1px solid #DDD !important;
+}
+
+.scrolltabs .ui-tabs-scrollable > .spacer:not(.hidden-buttons) > div:first-child > .nav-tabs > li:first-child.active a,
+.scrolltabs .ui-tabs-scrollable > .spacer:not(.hidden-buttons) > div:first-child > .nav-tabs > li:first-child a:hover {
+    -webkit-border-top-left-radius: 4px !important;
+    border-top-left-radius: 4px !important;
+    border-left: 1px solid #DDD !important;
+}
+
+
+/* RTL */
+
+.rtl .scrolltabs .nav-tabs li {
+    float: none !important;
+}
+
+.rtl .scrolltabs .nav-tabs > li:first-child > a,
+.rtl .scrolltabs .nav-tabs > li.active:first-child > a {
+    margin: 0 !important;
+}
+
+.rtl .scrolltabs .nav-tabs > li:last-child > a,
+.rtl .scrolltabs .nav-tabs > li.active:last-child > a {
+    margin: 0 2px 0 0 !important;
+}
+
+.rtl .scrolltabs .ui-tabs-scrollable > .btn-group {
+    right: auto !important;
+    left: 0;
+}
+
+.rtl .scrolltabs .ui-tabs-scrollable.show-drop-down > .nav-button.right-nav-button {
+    right: 0;
+    -webkit-border-top-right-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+.rtl .scrolltabs .ui-tabs-scrollable.show-drop-down > .spacer:not(.hidden-buttons) {
+    margin-right: 25px;
+    margin-left: calc(25px + 25px);
+}
+
+.rtl .scrolltabs .ui-tabs-scrollable.show-drop-down > .spacer:not(.hidden-buttons) > div:first-child > .tab-content {
+    margin-left: calc(-25px - 25px);
+    margin-right: -25px;
+}
+
+.rtl .scrolltabs .ui-tabs-scrollable.show-drop-down > .nav-button.left-nav-button {
+    left: 25px;
+    -webkit-border-top-left-radius: 0;
+    border-top-left-radius: 0;
+}
+
+.rtl .scrolltabs .ui-tabs-scrollable > .btn-group > .btn.dropdown-toggle {
+    -webkit-border-top-left-radius: 4px;
+    border-top-left-radius: 4px;
+    -webkit-border-top-right-radius: 0;
+    border-top-right-radius: 0;
+    -webkit-border-bottom-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.rtl .scrolltabs .dropdown-menu {
+    right: auto !important;
+    left: 0 !important;
+}
+
+@media only screen and (max-width: 1024px) {
+    .scrolltabs .ui-tabs-scrollable > .spacer > div:first-child > .nav-tabs > li > a {
+        min-width: 60px;
+    }
+    .scrolltabs .tabs-divider {
+        top: 35px;
+    }
+    .scrolltabs .nav-tabs {
+        height: 40px;
+    }
+    .scrolltabs .ui-tabs-scrollable > .nav-button,
+    .scrolltabs .ui-tabs-scrollable > .btn-group > .btn.dropdown-toggle {
+        height: 40px;
+        line-height: 40px;
+    }
+    .scrolltabs .ui-tabs-scrollable > .btn-group > .btn.dropdown-toggle {
+        width: 26px;
+    }
+    .scrolltabs .ui-tabs-scrollable > .spacer > div:first-child > .nav-tabs > li > a {
+        height: 36px;
+        line-height: 25px !important;
+        -webkit-border-bottom-left-radius: 0 !important;
+        border-bottom-left-radius: 0 !important;
+        -webkit-border-bottom-right-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+    }
+    .chrome .scrolltabs .ui-tabs-scrollable > .spacer > div:first-child > .nav-tabs > li > a,
+    .safari .scrolltabs .ui-tabs-scrollable > .spacer > div:first-child > .nav-tabs > li > a {
+        height: 36px;
+        line-height: 26px !important;
+    }
+    .scrolltabs .nav-tabs > li > a {
+        font-size: 14px;
+    }
+}
+
+@media only screen and (max-width: 600px) {
+    .scrolltabs [show-tooltips="true"] .ui-tabs-scrollable > .spacer > div:first-child > .nav-tabs > li > a,
+    .scrolltabs [show-drop-down="true"] .ui-tabs-scrollable > .spacer > div:first-child > .nav-tabs > li > a {
+        height: 36px;
+    }
+    .safari .scrolltabs [show-tooltips="true"] .ui-tabs-scrollable > .spacer > div:first-child > .nav-tabs > li > a,
+    .safari .scrolltabs [show-drop-down="true"] .ui-tabs-scrollable > .spacer > div:first-child > .nav-tabs > li > a {
+        height: 35px;
+    }
+}

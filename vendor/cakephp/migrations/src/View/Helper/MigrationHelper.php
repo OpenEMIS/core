@@ -11,12 +11,11 @@
  */
 namespace Migrations\View\Helper;
 
-use Cake\Database\Schema\Collection;
+use Cake\Database\Schema\Table;
 use Cake\Utility\Hash;
 use Cake\Utility\Inflector;
 use Cake\View\Helper;
 use Cake\View\View;
-use InvalidArgumentException;
 
 /**
  * Migration Helper class for output of field data in migration files.
@@ -32,6 +31,16 @@ class MigrationHelper extends Helper
      * @var array
      */
     protected $schemas = [];
+
+    /**
+     * Stores the ``$this->table()`` statements issued while baking.
+     * It helps prevent duplicate calls in case of complex conditions
+     *
+     * @var array
+     */
+    public $tableStatements = [];
+
+    public $returnedData = [];
 
     /**
      * Constructor
@@ -56,11 +65,11 @@ class MigrationHelper extends Helper
      */
     public function tableMethod($action)
     {
-        if ($action == 'drop_table') {
+        if ($action === 'drop_table') {
             return 'drop';
         }
 
-        if ($action == 'create_table') {
+        if ($action === 'create_table') {
             return 'create';
         }
 
@@ -75,7 +84,7 @@ class MigrationHelper extends Helper
      */
     public function indexMethod($action)
     {
-        if ($action == 'drop_field') {
+        if ($action === 'drop_field') {
             return 'removeIndex';
         }
 
@@ -90,7 +99,7 @@ class MigrationHelper extends Helper
      */
     public function columnMethod($action)
     {
-        if ($action == 'drop_field') {
+        if ($action === 'drop_field') {
             return 'removeColumn';
         }
 
@@ -101,12 +110,16 @@ class MigrationHelper extends Helper
      * Returns the Cake\Database\Schema\Table for $table
      *
      * @param string $table Name of the table to get the Schema for
-     * @return Cake\Database\Schema\Table
+     * @return \Cake\Database\Schema\Table
      */
     protected function schema($table)
     {
         if (isset($this->schemas[$table])) {
             return $this->schemas[$table];
+        }
+
+        if ($table instanceof Table) {
+            return $this->schemas[$table->name()] = $table;
         }
 
         $collection = $this->config('collection');
@@ -124,7 +137,10 @@ class MigrationHelper extends Helper
      */
     public function columns($table)
     {
-        $tableSchema = $this->schema($table);
+        $tableSchema = $table;
+        if (!($table instanceof Table)) {
+            $tableSchema = $this->schema($table);
+        }
         $columns = [];
         $tablePrimaryKeys = $tableSchema->primaryKey();
         foreach ($tableSchema->columns() as $column) {
@@ -145,7 +161,10 @@ class MigrationHelper extends Helper
      */
     public function indexes($table)
     {
-        $tableSchema = $this->schema($table);
+        $tableSchema = $table;
+        if (!($table instanceof Table)) {
+            $tableSchema = $this->schema($table);
+        }
 
         $tableIndexes = $tableSchema->indexes();
         $indexes = [];
@@ -166,10 +185,17 @@ class MigrationHelper extends Helper
      */
     public function constraints($table)
     {
-        $tableSchema = $this->schema($table);
+        $tableSchema = $table;
+        if (!($table instanceof Table)) {
+            $tableSchema = $this->schema($table);
+        }
 
-        $tableConstraints = $tableSchema->constraints();
         $constraints = [];
+        $tableConstraints = $tableSchema->constraints();
+        if (empty($tableConstraints)) {
+            return $constraints;
+        }
+
         if ($tableConstraints[0] === 'primary') {
             unset($tableConstraints[0]);
         }
@@ -195,8 +221,10 @@ class MigrationHelper extends Helper
      */
     public function primaryKeys($table)
     {
-        $collection = $this->config('collection');
-        $tableSchema = $collection->describe($table);
+        $tableSchema = $table;
+        if (!($table instanceof Table)) {
+            $tableSchema = $this->schema($table);
+        }
         $primaryKeys = [];
         $tablePrimaryKeys = $tableSchema->primaryKey();
         foreach ($tableSchema->columns() as $column) {
@@ -205,6 +233,33 @@ class MigrationHelper extends Helper
             }
         }
         return $primaryKeys;
+    }
+
+    /**
+     * Returns whether the $tables list given as arguments contains primary keys
+     * unsigned.
+     *
+     * @param array $tables List of tables to check
+     * @return bool
+     */
+    public function hasUnsignedPrimaryKey($tables)
+    {
+        foreach ($tables as $table) {
+            $tableSchema = $table;
+            if (!($table instanceof Table)) {
+                $tableSchema = $this->schema($table);
+            }
+            $tablePrimaryKeys = $tableSchema->primaryKey();
+
+            foreach ($tablePrimaryKeys as $primaryKey) {
+                $column = $tableSchema->column($primaryKey);
+                if (isset($column['unsigned']) && $column['unsigned'] === true) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -224,7 +279,7 @@ class MigrationHelper extends Helper
     /**
      * Returns an array of column data for a single column
      *
-     * @param Cake\Database\Schema\Table $tableSchema Name of the table to retrieve columns for
+     * @param \Cake\Database\Schema\Table $tableSchema Name of the table to retrieve columns for
      * @param string $column A column to retrieve data for
      * @return array
      */
@@ -232,8 +287,42 @@ class MigrationHelper extends Helper
     {
         return [
             'columnType' => $tableSchema->columnType($column),
-            'options' => $this->attributes($tableSchema->name(), $column),
+            'options' => $this->attributes($tableSchema, $column),
         ];
+    }
+
+    public function getColumnOption($options)
+    {
+        $wantedOptions = array_flip([
+            'length',
+            'limit',
+            'default',
+            'signed',
+            'null',
+            'comment',
+            'autoIncrement',
+            'precision'
+        ]);
+        $columnOptions = array_intersect_key($options, $wantedOptions);
+        if (empty($columnOptions['comment'])) {
+            unset($columnOptions['comment']);
+        }
+        if (empty($columnOptions['autoIncrement'])) {
+            unset($columnOptions['autoIncrement']);
+        }
+        if (isset($columnOptions['signed']) && $columnOptions['signed'] === true) {
+            unset($columnOptions['signed']);
+        }
+        if (empty($columnOptions['precision'])) {
+            unset($columnOptions['precision']);
+        } else {
+            // due to Phinx using different naming for the precision and scale to CakePHP
+            $columnOptions['scale'] = $columnOptions['precision'];
+            $columnOptions['precision'] = $columnOptions['limit'];
+            unset($columnOptions['limit']);
+        }
+
+        return $columnOptions;
     }
 
     /**
@@ -257,7 +346,7 @@ class MigrationHelper extends Helper
         }
 
         if (is_numeric($value) || ctype_digit($value)) {
-            return (int)$value;
+            return (float)$value;
         }
 
         return sprintf("'%s'", addslashes($value));
@@ -272,15 +361,18 @@ class MigrationHelper extends Helper
      */
     public function attributes($table, $column)
     {
-        $collection = $this->config('collection');
-        $tableSchema = $collection->describe($table);
+        $tableSchema = $table;
+        if (!($table instanceof Table)) {
+            $tableSchema = $this->schema($table);
+        }
         $validOptions = [
             'length', 'limit',
             'default', 'null',
             'precision', 'scale',
             'after', 'update',
             'comment', 'unsigned',
-            'signed', 'properties'
+            'signed', 'properties',
+            'autoIncrement'
         ];
 
         $attributes = [];
@@ -353,5 +445,26 @@ class MigrationHelper extends Helper
         }
 
         return $start . implode($join, $list) . ',' . $end;
+    }
+
+    /**
+     * Returns a $this->table() statement only if it was not issued already
+     *
+     * @param string $table Table for which the statement is needed
+     * @param bool $reset
+     * @return string
+     */
+    public function tableStatement($table, $reset = false)
+    {
+        if ($reset === true) {
+            unset($this->tableStatements[$table]);
+        }
+
+        if (!isset($this->tableStatements[$table])) {
+            $this->tableStatements[$table] = true;
+            return '$this->table(\'' . $table . '\')';
+        }
+
+        return '';
     }
 }

@@ -18,13 +18,6 @@ class TranslationsTable extends AppTable {
 		parent::initialize($config);
 	}
 
-	// Has to be implemented before a button can be added
-	public function implementedEvents() {
-    	$events = parent::implementedEvents();
-    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-    	return $events;
-    }
-
 	// Search component
 	public function indexBeforeAction(Event $event){
 		// By default English has to be there
@@ -61,14 +54,11 @@ class TranslationsTable extends AppTable {
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
 		if ($entity->editable == 0) {
-			$this->ControllerAction->field('en', ['type' => 'readonly']);
+			if ($this->action == 'edit') {
+				$this->ControllerAction->field('en', ['type' => 'readonly']);
+			}
 		}
 		$this->ControllerAction->field('editable', ['visible' => false]);
-	}
-
-	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
-		// Include the js file for the compiling
-		$includes['localization'] = ['include' => true, 'js' => 'Localization.translations'];
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -86,22 +76,6 @@ class TranslationsTable extends AppTable {
 		return ($entity->editable == 0)? __('No'): __('Yes');
 	}
 
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if($action == "index"){
-			$toolbarButtons['download']['type'] = 'button';
-			$toolbarButtons['download']['label'] = '<span class="icon-big"><i class="fa kd-compile"></i></span>';
-			$toolbarButtons['download']['attr'] = $attr;
-			$toolbarButtons['download']['attr']['title'] = __('Compile');
-			$toolbarButtons['download']['attr']['onclick'] = 'Translations.compile(this);';
-			$url = "";
-			$query = $this->request->query('translations_id');
-			if (isset($query)) {
-				$url['translations_id'] = $query;
-			}
-			$toolbarButtons['download']['url'] = $url;
-		}
-    }
-
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
     	$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 		if ($entity->editable == 0) {
@@ -112,6 +86,8 @@ class TranslationsTable extends AppTable {
     }
 
     public function validationDefault(Validator $validator) {
+    	$validator = parent::validationDefault($validator);
+
 		$validator
 			->add('en', 'ruleUnique', [
   				'rule' => 'checkUniqueEnglishField'

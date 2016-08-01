@@ -59,7 +59,6 @@ abstract class AbstractMigration implements MigrationInterface
      */
     protected $output;
 
-
     /**
      * Class Constructor.
      *
@@ -183,6 +182,18 @@ abstract class AbstractMigration implements MigrationInterface
     public function fetchAll($sql)
     {
         return $this->getAdapter()->fetchAll($sql);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function insert($table, $data)
+    {
+        // convert to table object
+        if (is_string($table)) {
+            $table = new Table($table, array(), $this->getAdapter());
+        }
+        return $table->insert($data)->save();
     }
 
     /**

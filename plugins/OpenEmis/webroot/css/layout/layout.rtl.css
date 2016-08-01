@@ -1,4 +1,4 @@
-/* RTL v1.0.8 */
+/* RTL v1.0.9 */
 
 .rtl html,
 .rtl body {
@@ -92,7 +92,7 @@
 }
 
 .rtl .navbar-left h1 {
-    padding: 7px 0;
+    padding: 0;
 }
 
 .rtl .list-unstyled i {
@@ -324,8 +324,8 @@
     clear: left;
 }
 
-.rtl .format-item .icheck-input,
-.rtl .chart-item .icheck-input {
+.rtl .format-item .check-input,
+.rtl .chart-item .check-input {
     margin: 0 5px;
 }
 
@@ -377,16 +377,11 @@
 
 /* TABLE DROPDOWN; ACTION & REORDER */
 
-.rtl .caret-down:after {
-    left: 5px;
-    top: 1px;
-}
-
 .rtl table .caret-down {
     float: left;
     display: inline-block;
     position: absolute;
-    left: 3px;
+    left: 0;
     top: 2px;
 }
 
@@ -454,12 +449,6 @@
 
 .rtl .input-select-wrapper {
     float: right;
-}
-
-.rtl .fileinput .btn-file {
-    left: 0px;
-    right: auto;
-    width: 53px !important;
 }
 
 .rtl .form-horizontal .file label {

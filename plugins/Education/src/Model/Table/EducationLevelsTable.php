@@ -14,6 +14,12 @@ class EducationLevelsTable extends AppTable {
 		$this->belongsTo('EducationLevelIsced', ['className' => 'Education.EducationLevelIsced']);
 		$this->belongsTo('EducationSystems', ['className' => 'Education.EducationSystems']);
 		$this->hasMany('EducationCycles', ['className' => 'Education.EducationCycles']);
+
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+				'filter' => 'education_system_id',
+			]);
+		}
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -25,7 +31,7 @@ class EducationLevelsTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 	}
 
-	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
 		$query->where([$this->aliasField('education_system_id') => $entity->education_system_id]);
 	}
 

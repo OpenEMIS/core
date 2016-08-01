@@ -92,7 +92,6 @@ class RubricsController extends AppController
 		        	$model->aliasField('rubric_template_id') => $selectedTemplate
 		        ];
 			}
-			$query->order([$model->aliasField('order')]);
 
 			$this->set(compact('templateOptions', 'selectedTemplate'));
     	}

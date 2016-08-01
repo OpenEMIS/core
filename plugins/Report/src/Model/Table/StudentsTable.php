@@ -26,12 +26,13 @@ class StudentsTable extends AppTable  {
 			'model' => 'Student.Students',
 			'formFilterClass' => null,
 			'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 	}
 
 	public function beforeAction(Event $event) {
 		$this->fields = [];
-		$this->ControllerAction->field('feature');
+		$this->ControllerAction->field('feature', ['select' => false]);
 		$this->ControllerAction->field('format');
 	}
 

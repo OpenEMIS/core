@@ -11,13 +11,7 @@
 /**
  * Builder interface for parameter matchers.
  *
- * @package    PHPUnit_MockObject
- * @author     Sebastian Bergmann <sebastian@phpunit.de>
- * @copyright  Sebastian Bergmann <sebastian@phpunit.de>
- * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
- * @version    Release: @package_version@
- * @link       http://github.com/sebastianbergmann/phpunit-mock-objects
- * @since      Interface available since Release 1.0.0
+ * @since Interface available since Release 1.0.0
  */
 interface PHPUnit_Framework_MockObject_Builder_ParametersMatch extends PHPUnit_Framework_MockObject_Builder_Match
 {
@@ -38,7 +32,7 @@ interface PHPUnit_Framework_MockObject_Builder_ParametersMatch extends PHPUnit_F
      *
      * @return PHPUnit_Framework_MockObject_Builder_ParametersMatch
      */
-    public function with();
+    public function with(...$arguments);
 
     /**
      * Sets a matcher which allows any kind of parameters.
@@ -46,7 +40,7 @@ interface PHPUnit_Framework_MockObject_Builder_ParametersMatch extends PHPUnit_F
      * Some examples:
      * <code>
      * // match any number of parameters
-     * $b->withAnyParamers();
+     * $b->withAnyParameters();
      * </code>
      *
      * @return PHPUnit_Framework_MockObject_Matcher_AnyParameters

@@ -19,7 +19,7 @@ class InstitutionQualityVisitsTable extends AppTable {
 
 		$this->belongsTo('QualityVisitTypes', ['className' => 'FieldOption.QualityVisitTypes', 'foreignKey' => 'quality_visit_type_id']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-		$this->belongsTo('Classes', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_class_id']);
+		$this->belongsTo('Subjects', ['className' => 'Institution.InstitutionSubjects', 'foreignKey' => 'institution_subject_id']);
 		$this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 
 		$this->addBehavior('AcademicPeriod.Period');
@@ -29,10 +29,11 @@ class InstitutionQualityVisitsTable extends AppTable {
 			// 'content' => 'file_content',
 			'size' => '10MB',
 			'contentEditable' => true,
-			'allowable_file_types' => 'all'
+			'allowable_file_types' => 'all',
+			'useDefaultName' => true
 		]);
 
-		$this->SubjectStaff = TableRegistry::get('Institution.InstitutionClassStaff');
+		$this->SubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -49,7 +50,7 @@ class InstitutionQualityVisitsTable extends AppTable {
 		$this->ControllerAction->field('academic_period_id', ['visible' => false]);
 
 		$this->ControllerAction->setFieldOrder([
-			'date', 'institution_class_id', 'staff_id', 'quality_visit_type_id'
+			'date', 'institution_subject_id', 'staff_id', 'quality_visit_type_id'
 		]);
 	}
 
@@ -88,7 +89,7 @@ class InstitutionQualityVisitsTable extends AppTable {
 		if ($action == 'view') {
 		} else if ($action == 'add' || $action == 'edit') {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
-			$Classes = $this->Classes;
+			$Subjects = $this->Subjects;
 
 			$periodOptions = $this->AcademicPeriods->getList(['withSelect' => true, 'isEditable'=>true]);
 			if (is_null($request->query('period'))) {
@@ -96,13 +97,13 @@ class InstitutionQualityVisitsTable extends AppTable {
 			}
 			$selectedPeriod = $this->queryString('period', $periodOptions);
 			$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
-				'message' => '{{label}} - ' . $this->getMessage('general.noClasses'),
-				'callable' => function($id) use ($Classes, $institutionId) {
-					return $Classes
+				'message' => '{{label}} - ' . $this->getMessage('general.noSubjects'),
+				'callable' => function($id) use ($Subjects, $institutionId) {
+					return $Subjects
 						->find()
 						->where([
-							$Classes->aliasField('institution_id') => $institutionId,
-							$Classes->aliasField('academic_period_id') => $id
+							$Subjects->aliasField('institution_id') => $institutionId,
+							$Subjects->aliasField('academic_period_id') => $id
 						])
 						->count();
 				}
@@ -115,7 +116,7 @@ class InstitutionQualityVisitsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldInstitutionSubjectId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'view') {
 		} else if ($action == 'add' || $action == 'edit') {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
@@ -124,11 +125,11 @@ class InstitutionQualityVisitsTable extends AppTable {
 
 			$classOptions = [];
 			if (!is_null($selectedPeriod)) {
-				$classOptions = $this->Classes
+				$classOptions = $this->Subjects
 					->find('list')
 					->where([
-						$this->Classes->aliasField('institution_id') => $institutionId,
-						$this->Classes->aliasField('academic_period_id') => $selectedPeriod
+						$this->Subjects->aliasField('institution_id') => $institutionId,
+						$this->Subjects->aliasField('academic_period_id') => $selectedPeriod
 					])
 					->toArray();
 				$classOptions = ['' => __('-- Select Subject --')] + $classOptions;
@@ -143,7 +144,7 @@ class InstitutionQualityVisitsTable extends AppTable {
 						return $SubjectStaff
 							->find()
 							->where([
-								$SubjectStaff->aliasField('institution_class_id') => $id
+								$SubjectStaff->aliasField('institution_subject_id') => $id
 							])
 							->count();
 					}
@@ -168,7 +169,7 @@ class InstitutionQualityVisitsTable extends AppTable {
 					->find()
 					->contain('Users')
 					->where([
-						$this->SubjectStaff->aliasField('institution_class_id') => $selectedClass
+						$this->SubjectStaff->aliasField('institution_subject_id') => $selectedClass
 					])
 					->all();
 
@@ -223,8 +224,8 @@ class InstitutionQualityVisitsTable extends AppTable {
 
 		if ($request->is(['post', 'put'])) {
 			if (array_key_exists($this->alias(), $request->data)) {
-				if (array_key_exists('institution_class_id', $request->data[$this->alias()])) {
-					$request->query['subject'] = $request->data[$this->alias()]['institution_class_id'];
+				if (array_key_exists('institution_subject_id', $request->data[$this->alias()])) {
+					$request->query['subject'] = $request->data[$this->alias()]['institution_subject_id'];
 				}
 			}
 		}
@@ -232,7 +233,7 @@ class InstitutionQualityVisitsTable extends AppTable {
 
 	public function setupFields(Entity $entity) {
 		$this->ControllerAction->field('academic_period_id', ['type' => 'select']);
-		$this->ControllerAction->field('institution_class_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_subject_id', ['type' => 'select']);
 		$this->ControllerAction->field('staff_id', ['type' => 'select']);
 		$this->ControllerAction->field('evaluator');
 		$this->ControllerAction->field('file_name', [
@@ -242,7 +243,7 @@ class InstitutionQualityVisitsTable extends AppTable {
 		$this->ControllerAction->field('quality_visit_type_id', ['type' => 'select']);
 
 		$this->ControllerAction->setFieldOrder([
-			'date', 'academic_period_id', 'institution_class_id', 'staff_id',
+			'date', 'academic_period_id', 'institution_subject_id', 'staff_id',
 			'evaluator', 'quality_visit_type_id', 'comment', 'file_name', 'file_content'
 		]);
 	}

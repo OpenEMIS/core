@@ -39,6 +39,7 @@ class Inflector
         '/(x|ch|ss|sh)$/i' => '\1es',
         '/([^aeiouy]|qu)y$/i' => '\1ies',
         '/(hive)$/i' => '\1s',
+        '/(chef)$/i' => '\1s',
         '/(?:([^f])fe|([lre])f)$/i' => '\1\2ves',
         '/sis$/i' => 'ses',
         '/([ti])um$/i' => '\1a',
@@ -46,7 +47,7 @@ class Inflector
         '/(?<!u)(m)an$/i' => '\1en',
         '/(c)hild$/i' => '\1hildren',
         '/(buffal|tomat)o$/i' => '\1\2oes',
-        '/(alumn|bacill|cact|foc|fung|nucle|radi|stimul|syllab|termin|vir)us$/i' => '\1i',
+        '/(alumn|bacill|cact|foc|fung|nucle|radi|stimul|syllab|termin)us$/i' => '\1i',
         '/us$/i' => 'uses',
         '/(alias)$/i' => '\1es',
         '/(ax|cris|test)is$/i' => '\1es',
@@ -181,11 +182,9 @@ class Inflector
         'Å' => 'A',
         'Ǻ' => 'A',
         'Ā' => 'A',
-        'Å' => 'A',
         'Ă' => 'A',
         'Ą' => 'A',
         'Ǎ' => 'A',
-        'Ä' => 'Ae',
         'à' => 'a',
         'á' => 'a',
         'â' => 'a',
@@ -222,7 +221,6 @@ class Inflector
         'Ė' => 'E',
         'Ę' => 'E',
         'Ě' => 'E',
-        'Ë' => 'E',
         'è' => 'e',
         'é' => 'e',
         'ê' => 'e',
@@ -304,7 +302,6 @@ class Inflector
         'Ơ' => 'O',
         'Ø' => 'O',
         'Ǿ' => 'O',
-        'Ö' => 'Oe',
         'ò' => 'o',
         'ó' => 'o',
         'ô' => 'o',
@@ -358,7 +355,6 @@ class Inflector
         'Ǘ' => 'U',
         'Ǚ' => 'U',
         'Ǜ' => 'U',
-        'Ü' => 'Ue',
         'ù' => 'u',
         'ú' => 'u',
         'û' => 'u',
@@ -592,7 +588,7 @@ class Inflector
 
         if ($result === false) {
             $result = str_replace(' ', '', static::humanize($string, $delimiter));
-            static::_cache(__FUNCTION__, $string, $result);
+            static::_cache($cacheKey, $string, $result);
         }
 
         return $result;
@@ -725,7 +721,7 @@ class Inflector
         if ($result === false) {
             $camelized = static::camelize(static::underscore($string));
             $replace = strtolower(substr($camelized, 0, 1));
-            $result = preg_replace('/\\w/', $replace, $camelized, 1);
+            $result = $replace . substr($camelized, 1);
             static::_cache(__FUNCTION__, $string, $result);
         }
 
@@ -736,6 +732,7 @@ class Inflector
      * Returns a string with all spaces converted to dashes (by default), accented
      * characters converted to non-accented characters, and non word characters removed.
      *
+     * @deprecated 3.2.7 Use Text::slug() instead.
      * @param string $string the string you want to slug
      * @param string $replacement will replace keys in map
      * @return string

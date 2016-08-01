@@ -38,7 +38,7 @@ class ProgrammesTable extends AppTable {
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$options['auto_contain'] = false;
 		$query->contain(['StudentStatuses', 'EducationGrades', 'Institutions']);
-		$query->order([$this->aliasField('start_date') => 'DESC']);
+		$options['order'] = [$this->aliasField('start_date') => 'DESC'];
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {

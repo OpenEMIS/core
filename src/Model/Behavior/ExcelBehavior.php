@@ -32,7 +32,7 @@ class ExcelBehavior extends Behavior {
 		'folder' => 'export',
 		'default_excludes' => ['modified_user_id', 'modified', 'created', 'created_user_id', 'password'],
 		'excludes' => [],
-		'limit' => 100,
+		'limit' => 1000,
 		'pages' => [],
 		'orientation' => 'landscape' // or portrait
 	];
@@ -93,17 +93,19 @@ class ExcelBehavior extends Behavior {
 		$writer = new \XLSXWriter();
 		$excel = $this;
 
-		$generate = function($writer, $settings) {
-			$this->generate($writer, $settings);
+		$generate = function($settings) {
+			$this->generate($settings);
 		};
 
-		$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$writer, $_settings]);
+		$_settings['writer'] = $writer;
+
+		$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$_settings]);
 		if ($event->isStopped()) { return $event->result; }
 		if (is_callable($event->result)) {
 			$generate = $event->result;
 		}
 		
-		$generate($writer, $_settings);
+		$generate($_settings);
 
 		$filepath = $_settings['path'] . $_settings['file'];
 		$_settings['file_path'] = $filepath;
@@ -115,7 +117,8 @@ class ExcelBehavior extends Behavior {
 		}
 	}
 
-	public function generate($writer, $settings=[]) {
+	public function generate($settings=[]) {
+		$writer = $settings['writer'];
 		$sheets = new ArrayObject();
 
 		// Event to get the sheets. If no sheet is specified, it will be by default one sheet
@@ -209,6 +212,8 @@ class ExcelBehavior extends Behavior {
 
 				$writer->writeSheetRow($sheetName, $row);
 
+				$this->dispatchEvent($table, $this->eventKey('onExcelAfterHeader'), 'onExcelAfterHeader', [$settings], true);
+
 				// process every page based on the limit
 				for ($pageNo=0; $pageNo<$pages; $pageNo++) {
 					$resultSet = $query
@@ -280,7 +285,11 @@ class ExcelBehavior extends Behavior {
 		$schema = $table->schema();
 		$columns = $schema->columns();
 		$excludes = $this->config('excludes');
-		$excludes[] = $table->primaryKey();
+
+		if (!is_array($table->primaryKey())) { //if not composite key
+			$excludes[] = $table->primaryKey();
+		}
+
 		$fields = new ArrayObject();
 		$module = $table->alias();
 		$language = I18n::locale();
@@ -368,7 +377,7 @@ class ExcelBehavior extends Behavior {
 				}
 			}
 		}	
-		return $value;
+		return __($value);
 	}
 
 	private function isForeignKey($table, $field) {

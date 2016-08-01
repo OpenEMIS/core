@@ -11,11 +11,7 @@
 /**
  * Utility class that can print to STDOUT or write to a file.
  *
- * @author     Sebastian Bergmann <sebastian@phpunit.de>
- * @copyright  Sebastian Bergmann <sebastian@phpunit.de>
- * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
- * @link       http://www.phpunit.de/
- * @since      Class available since Release 2.0.0
+ * @since Class available since Release 2.0.0
  */
 class PHPUnit_Util_Printer
 {
@@ -44,7 +40,8 @@ class PHPUnit_Util_Printer
     /**
      * Constructor.
      *
-     * @param  mixed                       $out
+     * @param mixed $out
+     *
      * @throws PHPUnit_Framework_Exception
      */
     public function __construct($out = null)
@@ -93,7 +90,7 @@ class PHPUnit_Util_Printer
                 $this->outTarget,
                 tidy_repair_file(
                     $this->outTarget,
-                    array('indent' => true, 'wrap' => 0),
+                    ['indent' => true, 'wrap' => 0],
                     'utf8'
                 )
             );
@@ -107,7 +104,7 @@ class PHPUnit_Util_Printer
      * since the flush() function may close the file being written to, rendering
      * the current object no longer usable.
      *
-     * @since  Method available since Release 3.3.0
+     * @since Method available since Release 3.3.0
      */
     public function incrementalFlush()
     {
@@ -130,7 +127,7 @@ class PHPUnit_Util_Printer
                 $this->incrementalFlush();
             }
         } else {
-            if (PHP_SAPI != 'cli') {
+            if (PHP_SAPI != 'cli' && PHP_SAPI != 'phpdbg') {
                 $buffer = htmlspecialchars($buffer);
             }
 
@@ -146,7 +143,8 @@ class PHPUnit_Util_Printer
      * Check auto-flush mode.
      *
      * @return bool
-     * @since  Method available since Release 3.3.0
+     *
+     * @since Method available since Release 3.3.0
      */
     public function getAutoFlush()
     {
@@ -160,7 +158,8 @@ class PHPUnit_Util_Printer
      * not be confused with the different effects of this class' flush() method.
      *
      * @param bool $autoFlush
-     * @since  Method available since Release 3.3.0
+     *
+     * @since Method available since Release 3.3.0
      */
     public function setAutoFlush($autoFlush)
     {

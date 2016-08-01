@@ -139,7 +139,7 @@ abstract class PdoAdapter implements AdapterInterface
      */
     public function getOutput()
     {
-        if (null == $this->output) {
+        if (null === $this->output) {
             $output = new NullOutput();
             $this->setOutput($output);
         }
@@ -181,6 +181,15 @@ abstract class PdoAdapter implements AdapterInterface
         // Create the schema table if it doesn't already exist
         if (!$this->hasSchemaTable()) {
             $this->createSchemaTable();
+        } else {
+            $table = new Table($this->getSchemaTableName(), array(), $this);
+            if (!$table->hasColumn('migration_name')) {
+                $table
+                    ->addColumn('migration_name', 'string', 
+                        array('limit' => 100, 'after' => 'version', 'default' => null, 'null' => true)
+                    )
+                    ->save();
+            }
         }
 
         return $this;
@@ -240,7 +249,7 @@ abstract class PdoAdapter implements AdapterInterface
     public function endCommandTimer()
     {
         $end = microtime(true);
-        if (OutputInterface::VERBOSITY_VERBOSE === $this->getOutput()->getVerbosity()) {
+        if (OutputInterface::VERBOSITY_VERBOSE <= $this->getOutput()->getVerbosity()) {
             $this->getOutput()->writeln('    -> ' . sprintf('%.4fs', $end - $this->getCommandStartTime()));
         }
     }
@@ -254,7 +263,7 @@ abstract class PdoAdapter implements AdapterInterface
      */
     public function writeCommand($command, $args = array())
     {
-        if (OutputInterface::VERBOSITY_VERBOSE === $this->getOutput()->getVerbosity()) {
+        if (OutputInterface::VERBOSITY_VERBOSE <= $this->getOutput()->getVerbosity()) {
             if (count($args)) {
                 $outArr = array();
                 foreach ($args as $arg) {
@@ -330,15 +339,47 @@ abstract class PdoAdapter implements AdapterInterface
     /**
      * {@inheritdoc}
      */
+    public function insert(Table $table, $row)
+    {
+        $this->startCommandTimer();
+        $this->writeCommand('insert', array($table->getName()));
+
+        $sql = sprintf(
+            "INSERT INTO %s ",
+            $this->quoteTableName($table->getName())
+        );
+
+        $columns = array_keys($row);
+        $sql .= "(". implode(', ', array_map(array($this, 'quoteColumnName'), $columns)) . ")";
+        $sql .= " VALUES (" . implode(', ', array_fill(0, count($columns), '?')) . ")";
+
+        $stmt = $this->getConnection()->prepare($sql);
+        $stmt->execute(array_values($row));
+        $this->endCommandTimer();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getVersions()
     {
+        $rows = $this->getVersionLog();
+
+        return array_keys($rows);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getVersionLog()
+    {
+        $result = array();
         $rows = $this->fetchAll(sprintf('SELECT * FROM %s ORDER BY version ASC', $this->getSchemaTableName()));
-        return array_map(
-            function ($v) {
-                return $v['version'];
-            },
-            $rows
-        );
+        foreach ($rows as $version) {
+            $result[$version['version']] = $version;
+        }
+
+        return $result;
     }
 
     /**
@@ -350,14 +391,16 @@ abstract class PdoAdapter implements AdapterInterface
             // up
             $sql = sprintf(
                 'INSERT INTO %s ('
-                . 'version, start_time, end_time'
+                . 'version, migration_name, start_time, end_time'
                 . ') VALUES ('
+                . '\'%s\','
                 . '\'%s\','
                 . '\'%s\','
                 . '\'%s\''
                 . ');',
                 $this->getSchemaTableName(),
                 $migration->getVersion(),
+                substr($migration->getName(), 0, 100),
                 $startTime,
                 $endTime
             );
@@ -392,14 +435,26 @@ abstract class PdoAdapter implements AdapterInterface
     {
         try {
             $options = array(
-                'id' => false
+                'id'          => false,
+                'primary_key' => 'version'
             );
 
             $table = new Table($this->getSchemaTableName(), $options, $this);
-            $table->addColumn('version', 'biginteger')
-                  ->addColumn('start_time', 'timestamp')
-                  ->addColumn('end_time', 'timestamp')
-                  ->save();
+
+            if ($this->getConnection()->getAttribute(\PDO::ATTR_DRIVER_NAME) === 'mysql'
+                && version_compare($this->getConnection()->getAttribute(\PDO::ATTR_SERVER_VERSION), '5.6.0', '>=')) {
+                $table->addColumn('version', 'biginteger', array('limit' => 14))
+                      ->addColumn('migration_name', 'string', array('limit' => 100, 'default' => null, 'null' => true))
+                      ->addColumn('start_time', 'timestamp', array('default' => 'CURRENT_TIMESTAMP'))
+                      ->addColumn('end_time', 'timestamp', array('default' => 'CURRENT_TIMESTAMP'))
+                      ->save();
+            } else {
+                $table->addColumn('version', 'biginteger')
+                      ->addColumn('migration_name', 'string', array('limit' => 100, 'default' => null, 'null' => true))
+                      ->addColumn('start_time', 'timestamp')
+                      ->addColumn('end_time', 'timestamp')
+                      ->save();
+            }
         } catch (\Exception $exception) {
             throw new \InvalidArgumentException('There was a problem creating the schema table: ' . $exception->getMessage());
         }
@@ -430,6 +485,7 @@ abstract class PdoAdapter implements AdapterInterface
             'timestamp',
             'time',
             'date',
+            'blob',
             'binary',
             'boolean',
             'uuid',

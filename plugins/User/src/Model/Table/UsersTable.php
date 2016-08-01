@@ -53,13 +53,12 @@ class UsersTable extends AppTable {
 			'content' => 'photo_content',
 			'size' => '2MB',
 			'contentEditable' => true,
-			'allowable_file_types' => 'image'
+			'allowable_file_types' => 'image',
+			'useDefaultName' => true
 		]);
 
 		$this->addBehavior('Area.Areapicker');
 		$this->addBehavior('User.AdvancedNameSearch');
-
-		
 	}
 
 	public function implementedEvents() {
@@ -117,17 +116,17 @@ class UsersTable extends AppTable {
 	}
 
 	public static function handleAssociations($model) {
-		$model->belongsTo('Genders', ['className' => 'User.Genders']);
-		$model->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
+		$model->belongsTo('Genders', 		 ['className' => 'User.Genders']);
+		$model->belongsTo('AddressAreas', 	 ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
 		$model->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
 
 		$model->hasMany('Identities', 		['className' => 'User.Identities',		'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$model->hasMany('Nationalities', 	['className' => 'User.Nationalities',	'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$model->hasMany('SpecialNeeds', 		['className' => 'User.SpecialNeeds',	'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$model->hasMany('Contacts', 			['className' => 'User.Contacts',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Nationalities', 	['className' => 'User.UserNationalities',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('SpecialNeeds', 	['className' => 'User.SpecialNeeds',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Contacts', 		['className' => 'User.Contacts',		'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$model->hasMany('Attachments', 		['className' => 'User.Attachments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$model->hasMany('BankAccounts', 		['className' => 'User.BankAccounts',	'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$model->hasMany('Comments', 			['className' => 'User.Comments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('BankAccounts', 	['className' => 'User.BankAccounts',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Comments', 		['className' => 'User.Comments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$model->hasMany('Languages', 		['className' => 'User.UserLanguages',	'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$model->hasMany('Awards', 			['className' => 'User.Awards',			'foreignKey' => 'security_user_id', 'dependent' => true]);
 
@@ -137,6 +136,11 @@ class UsersTable extends AppTable {
 			'targetForeignKey' => 'security_user_id',
 			'through' => 'Security.SecurityGroupUsers',
 			'dependent' => true
+		]);
+
+		$model->hasMany('ClassStudents', [
+			'className' => 'Institution.InstitutionClassStudents',
+			'foreignKey' => 'student_id'
 		]);
 	}
 
@@ -247,10 +251,6 @@ class UsersTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$queryParams = $request->query;
-		
-		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
-			// $query->order(['name' => 'asc']);
-		}
 
 		if (array_key_exists('sort', $queryParams) && $queryParams['sort'] == 'name') {
 			$query->find('withName', ['direction' => $queryParams['direction']]);
@@ -407,6 +407,8 @@ class UsersTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 			->add('first_name', [
 					'ruleCheckIfStringGotNoNumber' => [
@@ -431,25 +433,21 @@ class UsersTable extends AppTable {
 					]
 				])
 			->add('username', [
+                'ruleMinLength' => [
+                    'rule' => ['minLength', 6]
+                ],
 				'ruleUnique' => [
 					'rule' => 'validateUnique',
 					'provider' => 'table',
 				],
-				'ruleAlphanumeric' => [
-				    'rule' => 'alphanumeric',
+				'ruleCheckUsername' => [
+					'rule' => 'checkUsername',
+					'provider' => 'table',
 				]
 			])
 			->allowEmpty('username')
 			->allowEmpty('password')
-			->add('password' , [
-				'ruleNoSpaces' => [
-					'rule' => 'checkNoSpaces'
-				],
-				'ruleMinLength' => [
-					'rule' => ['minLength', 6]
-				]
-			])
-			->add('address', [])
+			// password validation now in behavior
 			->allowEmpty('photo_content')
 			;
 		return $validator;
@@ -478,24 +476,21 @@ class UsersTable extends AppTable {
 					]
 				])
 			->add('username', [
+                'ruleMinLength' => [
+                    'rule' => ['minLength', 6]
+                ],
 				'ruleUnique' => [
 					'rule' => 'validateUnique',
 					'provider' => 'table',
 				],
-				'ruleAlphanumeric' => [
-				    'rule' => 'alphanumeric',
+				'ruleCheckUsername' => [
+					'rule' => 'checkUsername',
+					'provider' => 'table',
 				]
 			])
 			->allowEmpty('username')
+			// password validation now in behavior
 			->allowEmpty('password')
-			->add('password' , [
-				'ruleNoSpaces' => [
-					'rule' => 'checkNoSpaces'
-				],
-				'ruleMinLength' => [
-					'rule' => ['minLength', 6]
-				]
-			])
 			->allowEmpty('photo_content')
 			;
 
@@ -504,8 +499,10 @@ class UsersTable extends AppTable {
 		$thisModel->setValidationCode('first_name.ruleNotBlank', 'User.Users');
 		$thisModel->setValidationCode('last_name.ruleCheckIfStringGotNoNumber', 'User.Users');
 		$thisModel->setValidationCode('openemis_no.ruleUnique', 'User.Users');
+        $thisModel->setValidationCode('username.ruleMinLength', 'User.Users');
 		$thisModel->setValidationCode('username.ruleUnique', 'User.Users');
 		$thisModel->setValidationCode('username.ruleAlphanumeric', 'User.Users');
+		$thisModel->setValidationCode('username.ruleCheckUsername', 'User.Users');
 		$thisModel->setValidationCode('password.ruleNoSpaces', 'User.Users');
 		$thisModel->setValidationCode('password.ruleMinLength', 'User.Users');
 		$thisModel->setValidationCode('date_of_birth.ruleValidDate', 'User.Users');
@@ -543,12 +540,7 @@ class UsersTable extends AppTable {
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
 		if ($field == 'default_identity_type') {
 			$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
-			$defaultIdentity = $IdentityType
-							   ->find()
-							   ->contain(['FieldOptions'])
-							   ->where(['FieldOptions.code' => 'IdentityTypes'])
-							   ->order(['IdentityTypes.default DESC'])
-							   ->first();
+			$defaultIdentity = $IdentityType->getDefaultEntity();
 			if ($defaultIdentity)
 				$value = $defaultIdentity->name;
 
@@ -633,5 +625,30 @@ class UsersTable extends AppTable {
 			];
 		}
 		return $data;
+	}
+
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+	{
+		// This logic is meant for Import
+		if ($entity->has('customColumns')) {
+			foreach ($entity->customColumns as $column => $value) {
+				switch ($column) {
+					case 'Identity':
+						$userIdentitiesTable = TableRegistry::get('User.Identities');
+
+						$defaultValue = $userIdentitiesTable->IdentityTypes->getDefaultValue();
+
+						if ($defaultValue) {
+							$userIdentityData = $userIdentitiesTable->newEntity([
+							    'identity_type_id' => $defaultValue,
+							    'number' => $value,
+							    'security_user_id' => $entity->id
+							]);
+							$userIdentitiesTable->save($userIdentityData);
+						}
+						break;
+				}
+			}
+		}
 	}
 }
