@@ -17,25 +17,17 @@ class StudentsController extends AppController {
 		$this->ControllerAction->model('Student.Students');
 		$this->ControllerAction->models = [
 			'Accounts' 			=> ['className' => 'Student.Accounts', 'actions' => ['view', 'edit']],
-			'Contacts' 			=> ['className' => 'User.Contacts'],
 			'Identities' 		=> ['className' => 'User.Identities'],
-			'Nationalities' 	=> ['className' => 'User.Nationalities'],
 			'Languages' 		=> ['className' => 'User.UserLanguages'],
-			'Comments' 			=> ['className' => 'User.Comments'],
-			'SpecialNeeds' 		=> ['className' => 'User.SpecialNeeds'],
+			'Nationalities' 	=> ['className' => 'User.Nationalities'],
 			'Awards' 			=> ['className' => 'User.Awards'],
 			'Attachments' 		=> ['className' => 'User.Attachments'],
 			'Guardians' 		=> ['className' => 'Student.Guardians'],
 			'GuardianUser' 		=> ['className' => 'Student.GuardianUser', 'actions' => ['add', 'view', 'edit']],
 			'Programmes' 		=> ['className' => 'Student.Programmes', 'actions' => ['index', 'view']],
-			'Sections'			=> ['className' => 'Student.StudentSections', 'actions' => ['index', 'view']],
-			'Classes' 			=> ['className' => 'Student.StudentClasses', 'actions' => ['index', 'view']],
 			'Absences' 			=> ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
 			'Behaviours' 		=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
-			'Results' 			=> ['className' => 'Student.Results', 'actions' => ['index']],
 			'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],
-			'BankAccounts' 		=> ['className' => 'User.BankAccounts'],
-			'Fees' 				=> ['className' => 'Student.StudentFees', 'actions' => ['index', 'view']],
 			'History' 			=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 			'ImportStudents' 	=> ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
 
@@ -51,8 +43,56 @@ class StudentsController extends AppController {
 		];
 
 		$this->loadComponent('User.Image');
+		$this->loadComponent('Institution.InstitutionAccessControl');
+		$this->attachAngularModules();
 
 		$this->set('contentHeader', 'Students');
+	}
+
+	// CAv4
+	public function StudentFees() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentFees']); }
+	public function Classes() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']); }
+	public function Subjects() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']); }
+    public function Nationalities() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
+    public function Languages() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
+    public function SpecialNeeds() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
+    public function Contacts() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Contacts']); }
+    public function BankAccounts() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.BankAccounts']); }
+    public function Comments() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
+	// End
+
+	// AngularJS
+	public function Results() {
+		$session = $this->request->session();
+
+		if ($session->check('Student.Students.id')) {
+			$studentId = $session->read('Student.Students.id');
+			$session->write('Student.Results.student_id', $studentId);
+
+			// tabs
+			$options = ['type' => 'student'];
+	        $tabElements = $this->getAcademicTabElements($options);
+	        $this->set('tabElements', $tabElements);
+	        $this->set('selectedAction', 'Results');
+	        // End
+
+			$this->set('ngController', 'StudentResultsCtrl as StudentResultsController');
+		}
+	}
+	// End
+
+	private function attachAngularModules() {
+		$action = $this->request->action;
+
+		switch ($action) {
+			case 'Results':
+				$this->Angular->addModules([
+					'alert.svc',
+					'student.results.ctrl',
+					'student.results.svc'
+				]);
+				break;
+		}
 	}
 
 	public function beforeFilter(Event $event) {
@@ -67,8 +107,8 @@ class StudentsController extends AppController {
 		$header = __('Students');
 
 		if ($action == 'index') {
-			
-		} else if ($session->check('Student.Students.id') || $action == 'view' || $action == 'edit') {
+
+		} else if ($session->check('Student.Students.id') || $action == 'view' || $action == 'edit' || $action == 'Results') {
 			// add the student name to the header
 			$id = 0;
 			if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
@@ -82,7 +122,7 @@ class StudentsController extends AppController {
 			if (!empty($id)) {
 				$entity = $this->Students->get($id);
 				$name = $entity->name;
-				$header = $name . ' - ' . __('Overview');
+				$header = $action == 'Results' ? $name . ' - ' . __('Results') : $name . ' - ' . __('Overview');
 				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $id]);
 			}
 		}
@@ -93,7 +133,7 @@ class StudentsController extends AppController {
 		/**
 		 * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
 		 */
-		
+
 		$session = $this->request->session();
 		if ($session->check('Student.Students.id')) {
 			$header = '';
@@ -122,9 +162,6 @@ class StudentsController extends AppController {
 			}
 
 			$alias = $model->alias;
-			// temporary fix for renaming Sections and Classes
-			if ($alias == 'Sections') $alias = 'Classes';
-			else if ($alias == 'Classes') $alias = 'Subjects';
 			$this->Navigation->addCrumb($model->getHeader($alias));
 			$header = $header . ' - ' . $model->getHeader($alias);
 
@@ -142,7 +179,7 @@ class StudentsController extends AppController {
 						$model->aliasField($model->primaryKey()) => $modelId,
 						$model->aliasField('security_user_id') => $userId
 					]);
-					
+
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
 					 */
@@ -162,7 +199,7 @@ class StudentsController extends AppController {
 						$model->aliasField($model->primaryKey()) => $modelId,
 						$model->aliasField('student_id') => $userId
 					]);
-					
+
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
 					 */
@@ -187,7 +224,7 @@ class StudentsController extends AppController {
 
 	public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {
 		$session = $this->request->session();
-		
+
 		if ($model->alias() != 'Students') {
 			if ($session->check('Student.Students.id')) {
 				if ($model->hasField('security_user_id')) {
@@ -203,6 +240,10 @@ class StudentsController extends AppController {
 				return $this->redirect(['action' => 'index']);
 			}
 		}
+	}
+
+	public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra) {
+		$this->beforePaginate($event, $model, $query, $extra);
 	}
 
 	public function excel($id=0) {
@@ -223,7 +264,7 @@ class StudentsController extends AppController {
 	// 		],
 	// 		'Accounts' => [
 	// 			'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
-	// 			'text' => __('Account')	
+	// 			'text' => __('Account')
 	// 		]
 	// 	];
 
@@ -233,7 +274,7 @@ class StudentsController extends AppController {
 	public function getUserTabElements($options = []) {
 		$session = $this->request->session();
 		$tabElements = $session->read('Institution.Students.tabElements');
-		
+
 		return $tabElements;
 	}
 
@@ -249,7 +290,7 @@ class StudentsController extends AppController {
 		$studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
 		$studentTabElements = [
 			'BankAccounts' => ['text' => __('Bank Accounts')],
-			'Fees' => ['text' => __('Fees')],
+			'StudentFees' => ['text' => __('Fees')],
 		];
 
 		$tabElements = array_merge($tabElements, $studentTabElements);
@@ -266,5 +307,18 @@ class StudentsController extends AppController {
 		$this->autoRender = false;
 		$this->ControllerAction->autoRender = false;
 		$this->Image->getUserImage($id);
+	}
+
+	public function getStudentGuardianTabElements($options = []) {
+		$type = (array_key_exists('type', $options))? $options['type']: null;
+		$plugin = $this->plugin;
+		$name = $this->name;
+		$tabElements = [
+			'Guardians' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Guardians', 'type' => $type],
+				'text' => __('Guardians')
+			],
+		];
+		return $tabElements;
 	}
 }

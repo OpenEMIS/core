@@ -16,11 +16,7 @@ class EducationsController extends AppController
 			'Levels' => ['className' => 'Education.EducationLevels', 'options' => ['deleteStrategy' => 'transfer']],
 			'Cycles' => ['className' => 'Education.EducationCycles', 'options' => ['deleteStrategy' => 'transfer']],
 			'Programmes' => ['className' => 'Education.EducationProgrammes', 'options' => ['deleteStrategy' => 'transfer']],
-			'Grades' => ['className' => 'Education.EducationGrades', 'options' => ['deleteStrategy' => 'transfer']],
-			'Subjects' => ['className' => 'Education.EducationSubjects'],
-			'Certifications' => ['className' => 'Education.EducationCertifications'],
-			'FieldOfStudies' => ['className' => 'Education.EducationFieldOfStudies'],
-			'ProgrammeOrientations' => ['className' => 'Education.EducationProgrammeOrientations']
+			'Grades' => ['className' => 'Education.EducationGrades', 'options' => ['deleteStrategy' => 'restrict']],
 		];
 		$this->loadComponent('Paginator');
     }
@@ -74,4 +70,9 @@ class EducationsController extends AppController
 
 		$this->set('contentHeader', $header);
     }
+
+    public function Subjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationSubjects']); }
+    public function Certifications() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationCertifications']); }
+    public function FieldOfStudies() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationFieldOfStudies']); }
+    public function ProgrammeOrientations() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationProgrammeOrientations']); }
 }

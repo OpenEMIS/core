@@ -81,6 +81,7 @@ class SystemGroupsTable extends AppTable {
 				return $this->controller->redirect($urlParams);
 			}
 		}
+		$this->request->data['user_search'] = '';
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
@@ -150,15 +151,24 @@ class SystemGroupsTable extends AppTable {
 
 		// filter groups by users permission
 		if ($this->Auth->user('super_admin') != 1) {
+
 			$userId = $this->Auth->user('id');
-			$query->innerJoin(
-				['GroupUsers' => 'security_group_users'],
-				[
-					'GroupUsers.security_group_id = ' . $this->aliasField('id'),
-					'GroupUsers.security_user_id = ' . $userId
-				]
-			);
-			$query->group([$this->aliasField('id')]);
+			
+			$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+			$SecurityGroupUsers = $SecurityGroupUsersTable
+				->find('list')
+				->where([
+					$SecurityGroupUsersTable->aliasField('security_group_id') .' = ' .$this->aliasField('id'),
+					$SecurityGroupUsersTable->aliasField('security_user_id') => $userId
+				]);
+
+			$query
+				->where([
+					'OR'=>[
+						'EXISTS ('.$SecurityGroupUsers->sql().')',
+						'Institutions.created_user_id' => $userId
+					]	
+				]);
 		}
 	}
 

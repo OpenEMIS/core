@@ -4,6 +4,8 @@ namespace Infrastructure\Model\Table;
 use CustomField\Model\Table\CustomFieldValuesTable;
 
 class InfrastructureCustomFieldValuesTable extends CustomFieldValuesTable {
+	protected $extra = ['scope' => 'infrastructure_custom_field_id'];
+
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('CustomFields', ['className' => 'Infrastructure.InfrastructureCustomFields', 'foreignKey' => 'infrastructure_custom_field_id']);

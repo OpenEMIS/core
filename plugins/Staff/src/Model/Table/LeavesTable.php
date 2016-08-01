@@ -13,20 +13,22 @@ class LeavesTable extends AppTable {
 		$this->table('staff_leaves');
 		parent::initialize($config);
 
-		$this->belongsTo('StaffLeaveTypes', ['className' => 'FieldOption.StaffLeaveTypes']);
+		$this->belongsTo('StaffLeaveTypes', ['className' => 'Staff.StaffLeaveTypes']);
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->addBehavior('ControllerAction.FileUpload', [
 			// 'name' => 'file_name',
 			// 'content' => 'file_content',
 			'size' => '10MB',
 			'contentEditable' => true,
-			'allowable_file_types' => 'all'
+			'allowable_file_types' => 'all',
+			'useDefaultName' => true
 		]);
+		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
 	}
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
-		
+
 		return $validator
 			->add('date_to', 'ruleCompareDateReverse', [
 				'rule' => ['compareDateReverse', 'date_from', true]
@@ -73,7 +75,7 @@ class LeavesTable extends AppTable {
 		$options['type'] = 'staff';
 		$tabElements = $this->controller->getCareerTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
+		$this->controller->set('selectedAction', 'Leave');
 	}
 
 	public function indexAfterAction(Event $event, $data) {

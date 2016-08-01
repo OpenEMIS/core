@@ -1,4 +1,47 @@
-    /* INPUT BUTTONS v.1.0.1 */
+/* INPUT BUTTONS v.1.0.3 */
+
+input .btn i {
+    margin: 0;
+}
+
+.input-group-addon.btn-default i {
+    margin-right: 0 !important;
+}
+
+.input-group-addon:not(:first-child) {
+    border-left: 1px solid #6B6B6B !important;
+}
+
+.input-btn-invert .btn-invert,
+.btn-invert,
+.input-btn-invert:focus {
+    background-color: #FFF;
+    color: #999;
+    border-color: #CCC;
+    outline: 0 !important;
+}
+
+.input-btn-invert {
+    width: 100%;
+    z-index: 5;
+}
+
+.input-group-invert input {
+    -webkit-border-top-right-radius: 5px !important;
+    border-top-right-radius: 5px !important;
+    -webkit-border-bottom-right-radius: 5px !important;
+    border-bottom-right-radius: 5px !important;
+}
+
+.input-btn-invert .btn-invert {
+    position: absolute;
+    right: 0;
+    height: 30px;
+}
+
+.input-dropdown-menu {
+    margin-top: 28px !important;
+}
 
 
 /* File Input Buttons */
@@ -30,7 +73,7 @@
 }
 
 .fileinput-preview {
-    width: 30%;
+    width: 25%;
     clear: both;
 }
 
@@ -320,6 +363,29 @@
 .rtl .input-double-btn .form-control {
     padding-right: 65px;
     padding-left: 0 !important;
+}
+
+.rtl .input-dropdown-menu .dropdown-arrow {
+    left: auto !important;
+    right: 12px !important;
+}
+
+.rtl .input-dropdown-menu.dropdown-menu-left .dropdown-arrow,
+.rtl .btn-group .action-dropdown.dropdown-menu-left .dropdown-arrow,
+.rtl .btn-group .action-dropdown.dropdown-menu-left {
+    right: auto !important;
+}
+
+.rtl .input-dropdown-menu.dropdown-menu-left .dropdown-arrow {
+    left: 6px !important;
+}
+
+.rtl .btn-group .action-dropdown.dropdown-menu-left .dropdown-arrow {
+    left: 4px !important;
+}
+
+.rtl .btn-group .action-dropdown.dropdown-menu-left {
+    left: 0 !important;
 }
 
 

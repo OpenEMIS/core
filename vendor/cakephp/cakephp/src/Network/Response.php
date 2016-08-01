@@ -17,6 +17,8 @@ namespace Cake\Network;
 use Cake\Core\Configure;
 use Cake\Filesystem\File;
 use Cake\Network\Exception\NotFoundException;
+use DateTime;
+use DateTimeZone;
 use InvalidArgumentException;
 
 /**
@@ -69,6 +71,7 @@ class Response
         415 => 'Unsupported Media Type',
         416 => 'Requested range not satisfiable',
         417 => 'Expectation Failed',
+        422 => 'Unprocessable Entity',
         429 => 'Too Many Requests',
         500 => 'Internal Server Error',
         501 => 'Not Implemented',
@@ -87,6 +90,8 @@ class Response
         'html' => ['text/html', '*/*'],
         'json' => 'application/json',
         'xml' => ['application/xml', 'text/xml'],
+        'xhtml' => ['application/xhtml+xml', 'application/xhtml', 'text/xhtml'],
+        'webp' => 'image/webp',
         'rss' => 'application/rss+xml',
         'ai' => 'application/postscript',
         'bcpio' => 'application/x-bcpio',
@@ -123,6 +128,7 @@ class Response
         'ips' => 'application/x-ipscript',
         'ipx' => 'application/x-ipix',
         'js' => 'application/javascript',
+        'jsonapi' => 'application/vnd.api+json',
         'latex' => 'application/x-latex',
         'lha' => 'application/octet-stream',
         'lsp' => 'application/x-lisp',
@@ -279,7 +285,6 @@ class Response
         'javascript' => 'application/javascript',
         'form' => 'application/x-www-form-urlencoded',
         'file' => 'multipart/form-data',
-        'xhtml' => ['application/xhtml+xml', 'application/xhtml', 'text/xhtml'],
         'xhtml-mobile' => 'application/vnd.wap.xhtml+xml',
         'atom' => 'application/atom+xml',
         'amf' => 'application/x-amf',
@@ -288,7 +293,6 @@ class Response
         'wmlscript' => 'text/vnd.wap.wmlscript',
         'wbmp' => 'image/vnd.wap.wbmp',
         'woff' => 'application/x-font-woff',
-        'webp' => 'image/webp',
         'appcache' => 'text/cache-manifest',
         'manifest' => 'text/cache-manifest',
         'htc' => 'text/x-component',
@@ -337,14 +341,14 @@ class Response
     /**
      * Buffer string or callable for response message
      *
-     * @var string
+     * @var string|callable
      */
     protected $_body = null;
 
     /**
      * File object for file to be read out as response
      *
-     * @var File
+     * @var \Cake\Filesystem\File
      */
     protected $_file = null;
 
@@ -794,7 +798,7 @@ class Response
      * e.g `mapType('application/pdf'); // returns 'pdf'`
      *
      * @param string|array $ctype Either a string content type to map, or an array of types.
-     * @return mixed Aliases for the types provided.
+     * @return string|array|null Aliases for the types provided.
      */
     public function mapType($ctype)
     {
@@ -880,7 +884,7 @@ class Response
             if (!$public && !$private && !$noCache) {
                 return null;
             }
-            $sharable = $public || ! ($private || $noCache);
+            $sharable = $public || !($private || $noCache);
             return $sharable;
         }
         if ($public) {
@@ -1119,14 +1123,14 @@ class Response
      */
     protected function _getUTCDate($time = null)
     {
-        if ($time instanceof \DateTime) {
+        if ($time instanceof DateTime) {
             $result = clone $time;
         } elseif (is_int($time)) {
-            $result = new \DateTime(date('Y-m-d H:i:s', $time));
+            $result = new DateTime(date('Y-m-d H:i:s', $time));
         } else {
-            $result = new \DateTime($time);
+            $result = new DateTime($time);
         }
-        $result->setTimeZone(new \DateTimeZone('UTC'));
+        $result->setTimeZone(new DateTimeZone('UTC'));
         return $result;
     }
 
@@ -1344,55 +1348,33 @@ class Response
      * cors($request, ['http://www.cakephp.org', '*.google.com', 'https://myproject.github.io']);
      * ```
      *
+     * *Note* The `$allowedDomains`, `$allowedMethods`, `$allowedHeaders` parameters are deprecated.
+     * Instead the builder object should be used.
+     *
      * @param \Cake\Network\Request $request Request object
      * @param string|array $allowedDomains List of allowed domains, see method description for more details
      * @param string|array $allowedMethods List of HTTP verbs allowed
      * @param string|array $allowedHeaders List of HTTP headers allowed
-     * @return void
+     * @return \Cake\Network\CorsBuilder A builder object the provides a fluent interface for defining
+     *   additional CORS headers.
      */
-    public function cors(Request $request, $allowedDomains, $allowedMethods = [], $allowedHeaders = [])
+    public function cors(Request $request, $allowedDomains = [], $allowedMethods = [], $allowedHeaders = [])
     {
         $origin = $request->header('Origin');
+        $ssl = $request->is('ssl');
+        $builder = new CorsBuilder($this, $origin, $ssl);
         if (!$origin) {
-            return;
+            return $builder;
+        }
+        if (empty($allowedDomains) && empty($allowedMethods) && empty($allowedHeaders)) {
+            return $builder;
         }
 
-        $allowedDomains = $this->_normalizeCorsDomains((array)$allowedDomains, $request->is('ssl'));
-        foreach ($allowedDomains as $domain) {
-            if (!preg_match($domain['preg'], $origin)) {
-                continue;
-            }
-            $this->header('Access-Control-Allow-Origin', $domain['original'] === '*' ? '*' : $origin);
-            $allowedMethods && $this->header('Access-Control-Allow-Methods', implode(', ', (array)$allowedMethods));
-            $allowedHeaders && $this->header('Access-Control-Allow-Headers', implode(', ', (array)$allowedHeaders));
-            break;
-        }
-    }
-
-    /**
-     * Normalize the origin to regular expressions and put in an array format
-     *
-     * @param array $domains Domain names to normalize.
-     * @param bool $requestIsSSL Whether it's a SSL request.
-     * @return array
-     */
-    protected function _normalizeCorsDomains($domains, $requestIsSSL = false)
-    {
-        $result = [];
-        foreach ($domains as $domain) {
-            if ($domain === '*') {
-                $result[] = ['preg' => '@.@', 'original' => '*'];
-                continue;
-            }
-
-            $original = $preg = $domain;
-            if (strpos($domain, '://') === false) {
-                $preg = ($requestIsSSL ? 'https://' : 'http://') . $domain;
-            }
-            $preg = '@' . str_replace('*', '.*', $domain) . '@';
-            $result[] = compact('original', 'preg');
-        }
-        return $result;
+        $builder->allowOrigin($allowedDomains)
+            ->allowMethods((array)$allowedMethods)
+            ->allowHeaders((array)$allowedHeaders)
+            ->build();
+        return $builder;
     }
 
     /**
@@ -1419,7 +1401,7 @@ class Response
             'download' => null
         ];
 
-        if (strpos(dirname($path), '..') !== false) {
+        if (strpos($path, '../') !== false || strpos($path, '..\\') !== false) {
             throw new NotFoundException('The requested file contains `..` and will not be read.');
         }
 
@@ -1471,8 +1453,17 @@ class Response
             $this->header('Content-Length', $fileSize);
         }
 
-        $this->_clearBuffer();
         $this->_file = $file;
+    }
+
+    /**
+     * Get the current file if one exists.
+     *
+     * @return \Cake\Filesystem\File|null The file to use in the response or null
+     */
+    public function getFile()
+    {
+        return $this->_file;
     }
 
     /**
@@ -1481,17 +1472,22 @@ class Response
      * If an invalid range is requested a 416 Status code will be used
      * in the response.
      *
-     * @param File $file The file to set a range on.
+     * @param \Cake\Filesystem\File $file The file to set a range on.
      * @param string $httpRange The range to use.
      * @return void
      */
     protected function _fileRange($file, $httpRange)
     {
-        list(, $range) = explode('=', $httpRange);
-        list($start, $end) = explode('-', $range);
-
         $fileSize = $file->size();
         $lastByte = $fileSize - 1;
+        $start = 0;
+        $end = $lastByte;
+
+        preg_match('/^bytes\s*=\s*(\d+)?\s*-\s*(\d+)?$/', $httpRange, $matches);
+        if ($matches) {
+            $start = $matches[1];
+            $end = isset($matches[2]) ? $matches[2] : '';
+        }
 
         if ($start === '') {
             $start = $fileSize - $end;
@@ -1521,13 +1517,15 @@ class Response
     /**
      * Reads out a file, and echos the content to the client.
      *
-     * @param File $file File object
+     * @param \Cake\Filesystem\File $file File object
      * @param array $range The range to read out of the file.
      * @return bool True is whole file is echoed successfully or false if client connection is lost in between
      */
     protected function _sendFile($file, $range)
     {
         $compress = $this->outputCompressed();
+        ob_implicit_flush(true);
+
         $file->open('rb');
 
         $end = $start = false;
@@ -1554,9 +1552,6 @@ class Response
                 $bufferSize = $end - $offset + 1;
             }
             echo fread($file->handle, $bufferSize);
-            if (!$compress) {
-                $this->_flushBuffer();
-            }
         }
         $file->close();
         return true;
@@ -1576,6 +1571,7 @@ class Response
      * Clears the contents of the topmost output buffer and discards them
      *
      * @return bool
+     * @deprecated 3.2.4 This function is not needed anymore
      */
     protected function _clearBuffer()
     {
@@ -1588,6 +1584,7 @@ class Response
      * Flushes the contents of the output buffer
      *
      * @return void
+     * @deprecated 3.2.4 This function is not needed anymore
      */
     protected function _flushBuffer()
     {

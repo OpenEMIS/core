@@ -30,9 +30,11 @@ var Workflow = {
 		$('.workflowtransition-comment').val('');
 		$('.workflowtransition-action-id').val(jsonObj.id);
 		$('.workflowtransition-action-name').val(jsonObj.name);
+		$('.workflowtransition-action-description').val(jsonObj.description);
 		$('.workflowtransition-step-id').val(jsonObj.next_step_id);
 		$('.workflowtransition-step-name').val(jsonObj.next_step_name);
 		$('.workflowtransition-comment-required').val(jsonObj.comment_required);
+		$('.workflowtransition-event-description').html(jsonObj.event_description);
 	},
 
 	showError: function() {
