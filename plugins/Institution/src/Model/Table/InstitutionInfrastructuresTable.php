@@ -199,7 +199,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 				$this->ControllerAction->field($field.$key, [
 					'type' => 'readonly',
 					'attr' => ['label' => $infrastructure->_matchingData['Levels']->name],
-					'value' => $infrastructure->code_name,
+					'value' => $infrastructure->name,
 					'after' => $after
 				]);
 				$after = $field.$key;
@@ -433,7 +433,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 		$withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
 
 		$parentId = $this->request->query('parent');
-		$levelQuery = $this->Levels->find('list', ['keyField' => 'id', 'valueField' => 'code_name']);
+		$levelQuery = $this->Levels->find('list', ['keyField' => 'id', 'valueField' => 'name']);
 		if (is_null($parentId)) {
 			$levelQuery->where([$this->Levels->aliasField('parent_id IS NULL')]);
 		} else {

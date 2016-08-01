@@ -106,6 +106,9 @@ trait MessagesTrait {
 			'noLevels' => 'No Available Levels',
 			'infrastructure_level_id' => 'Level Name'
 		],
+		'InstitutionRooms' => [
+			'noRooms' => 'No Room found'
+		],
 		'InfrastructureCustomFields' => [
 			'infrastructure_level_id' => 'Level Name'
 		],
@@ -676,6 +679,9 @@ trait MessagesTrait {
 				]
 			],
 			'InstitutionRooms' => [
+				'start_date' => [
+					'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+				],
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
 				]
