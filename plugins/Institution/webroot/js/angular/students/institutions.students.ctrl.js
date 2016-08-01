@@ -97,7 +97,42 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
     });
 
     $scope.initGrid = function() {
-        var gridOptions = {
+
+        StudentController.internalGridOptions = {
+            columnDefs: [
+                {
+                    field:'id',
+                    headerName:'',
+                    suppressMenu: true,
+                    suppressSorting: true,
+                    width: 40,
+                    maxWidth: 40,
+                    cellRenderer: function(params) {
+                        var data = JSON.stringify(params.data);
+                        return '<div><input  name="ngSelectionCell" ng-click="InstitutionStudentController.selectStudent('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStudent="'+params.value+'"/></div>';
+                    }
+                },
+                {headerName: "Openemis No", field: "openemis_no", suppressMenu: true, suppressSorting: true},
+                {headerName: "First Name", field: "first_name", suppressMenu: true, suppressSorting: true},
+                {headerName: "Last Name", field: "last_name", suppressMenu: true, suppressSorting: true},
+                {headerName: (angular.isDefined(StudentController.defaultIdentityTypeName))? StudentController.defaultIdentityTypeName: "[default identity type not set]", field: "identity_number", suppressMenu: true, suppressSorting: true},
+            ],
+            enableColResize: false,
+            enableFilter: true,
+            enableServerSideFilter: true,
+            enableServerSideSorting: true,
+            enableSorting: true,
+            headerHeight: 38,
+            rowData: [],
+            rowHeight: 38,
+            rowModelType: 'pagination',
+            onGridReady: function() {
+                $scope.reloadInternalDatasource();
+            },
+            angularCompileRows: true
+        };
+        
+        StudentController.externalGridOptions = {
             columnDefs: [
                 {
                     field:'id',
@@ -127,12 +162,6 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
             rowModelType: 'pagination',
             angularCompileRows: true
         };
-
-        StudentController.internalGridOptions = gridOptions;
-        StudentController.internalGridOptions.onGridReady = function() {
-                $scope.reloadInternalDatasource();
-            };
-        StudentController.externalGridOptions = gridOptions;
     };
 
     $scope.reloadInternalDatasource = function () {
@@ -229,7 +258,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                         AlertSvc.warning($scope, error);
                     }
                     var studentRecords = [];
-                    return StudentController.processStudentRecord(studentRecords, params);
+                    return StudentController.processStudentRecord(studentRecords, params, 0);
                 });
             }
         };
