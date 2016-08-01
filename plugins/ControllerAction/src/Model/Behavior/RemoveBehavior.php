@@ -81,7 +81,7 @@ class RemoveBehavior extends Behavior {
 		$event = $model->dispatchEvent('ControllerAction.Model.delete.beforeAction', [$extra], $this);
 		if ($event->isStopped()) { return $event->result; }
 
-		$primaryKey = $model->primaryKey();
+		$primaryKey = $model->getPrimaryKey();
 		$result = true;
 		$entity = null;
 
@@ -136,7 +136,17 @@ class RemoveBehavior extends Behavior {
 
 			if (!empty($id)) {
                 try {
-                    $entity = $model->get($id);
+                	if (is_array($model->primaryKey())) {
+                		$entity = null;
+                		if (in_array('id', $model->schema()->columns())) {
+                			$entity = $model->find()->where([$model->aliasField('id') => $id])->first();
+                		}
+                		if (empty($entity)) {
+                			throw new RecordNotFoundException();
+                		}
+                	} else {
+                		$entity = $model->get($id);
+                	}
                 } catch (RecordNotFoundException $exception) { // to handle concurrent deletes
                     $mainEvent->stopPropagation();
                     return $model->controller->redirect($model->url('index', 'QUERY'));
