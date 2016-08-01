@@ -456,4 +456,13 @@ class ControllerActionBehavior extends Behavior {
             return $a["order"] - $b["order"];
         }
     }
+
+    public function getPrimaryKey()
+    {
+        $primaryKey = $this->_table->primaryKey();
+        if (is_array($primaryKey)) {
+            $primaryKey = 'id';
+        }
+        return $primaryKey;
+    }
 }
