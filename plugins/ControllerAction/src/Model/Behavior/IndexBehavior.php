@@ -21,7 +21,7 @@ class IndexBehavior extends Behavior {
 		return $events;
 	}
 
-	public function index(Event $event, ArrayObject $extra) {
+	public function index(Event $mainEvent, ArrayObject $extra) {
 		$model = $this->_table;
 		
 		$extra['pagination'] = true;
@@ -46,12 +46,12 @@ class IndexBehavior extends Behavior {
 			try {
 				$data = $model->Paginator->paginate($query, $extra['options']);
 			} catch (NotFoundException $e) {
-				$this->log($e->getMessage(), 'debug');
+				Log::write('debug', $e->getMessage());
 				$action = $model->url('index', 'QUERY');
 				if (array_key_exists('page', $action)) {
 					unset($action['page']);
 				}
-				$event->stopPropagation();
+				$mainEvent->stopPropagation();
 				return $model->controller->redirect($action);
 			}
 		} else {

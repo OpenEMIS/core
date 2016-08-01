@@ -26,6 +26,7 @@ class TrainingNeedsTable extends AppTable {
 		$this->belongsTo('TrainingRequirements', ['className' => 'Training.TrainingRequirements', 'foreignKey' => 'training_requirement_id']);
 		$this->belongsTo('TrainingPriorities', ['className' => 'Training.TrainingPriorities', 'foreignKey' => 'training_priority_id']);
 		$this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -44,6 +45,18 @@ class TrainingNeedsTable extends AppTable {
 					'provider' => 'table'
 				]
 			])
+			->allowEmpty('training_need_category_id', function ($context) {
+				if (array_key_exists('type', $context['data'])) {
+					$type = $context['data']['type'];
+					if ($type == 'CATALOGUE') {
+						return true;
+					} else {
+						return false;
+					}
+				} else {
+					return false;
+				}
+			})
 			->allowEmpty('course_code', function ($context) {
 				if (array_key_exists('type', $context['data'])) {
 					$type = $context['data']['type'];
@@ -68,6 +81,7 @@ class TrainingNeedsTable extends AppTable {
 					return false;
 				}
 			})
+			->add('type', 'notBlank', ['rule' => 'notBlank'])
 			;
 	}
 
@@ -144,15 +158,21 @@ class TrainingNeedsTable extends AppTable {
 		} else if ($action == 'add' || $action == 'edit') {
 			list(, $selectedType) = array_values($this->_getSelectOptions());
 
-			if ($selectedType == self::CATALOGUE) {
-				$attr['type'] = 'hidden';
-				$attr['attr']['value'] = 0;
-			} else {
+			if ($selectedType == self::NEED) {
 				$attr['type'] = 'select';
+			} else {
+				$attr['visible'] = false;
 			}
 		}
 
 		return $attr;
+	}
+
+	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
+		$dataArray = $data->getArrayCopy();
+		if (array_key_exists('type', $dataArray) && $dataArray['type'] != self::NEED) {
+			$data['training_need_category_id'] = 0;
+		}
 	}
 
 	public function onUpdateFieldCourseId(Event $event, array $attr, $action, Request $request) {
@@ -163,7 +183,7 @@ class TrainingNeedsTable extends AppTable {
 
 			if ($selectedType == self::CATALOGUE) {
 				$courseOptions = $this->Training->getCourseList();
-				$selectedCourse = $this->queryString('course', $courseOptions);
+				$selectedCourse = (array_key_exists('course', $this->request->query) && array_key_exists($this->request->query['course'], $courseOptions))? $this->request->query['course']: null;
 				if (!is_null($selectedCourse)) {
 					$this->course = $this->Courses
 						->find()
@@ -191,7 +211,7 @@ class TrainingNeedsTable extends AppTable {
 			list(, $selectedType) = array_values($this->_getSelectOptions());
 
 			if ($selectedType == self::CATALOGUE) {
-				$attr['type'] = 'readonly';
+				$attr['attr']['disabled'] = 'disabled';
 				if (!is_null($this->course)) {
 					$attr['value'] = $this->course->code;
 					$attr['attr']['value'] = $this->course->code;
@@ -207,7 +227,7 @@ class TrainingNeedsTable extends AppTable {
 			list(, $selectedType) = array_values($this->_getSelectOptions());
 
 			if ($selectedType == self::CATALOGUE) {
-				$attr['type'] = 'readonly';
+				$attr['attr']['disabled'] = 'disabled';
 				if (!is_null($this->course)) {
 					$attr['value'] = $this->course->name;
 					$attr['attr']['value'] = $this->course->name;
@@ -264,6 +284,7 @@ class TrainingNeedsTable extends AppTable {
 	public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$request = $this->request;
 		unset($request->query['type']);
+		unset($request->query['course']);
 
 		if ($request->is(['post', 'put'])) {
 			if (array_key_exists($this->alias(), $request->data)) {
@@ -297,8 +318,8 @@ class TrainingNeedsTable extends AppTable {
 
 	public function setupValues(Entity $entity) {
 		if (!isset($entity->id)) {	// new record
-			list(, $selectedType) = array_values($this->_getSelectOptions());
-			$entity->type = $selectedType;
+			// list(, $selectedType) = array_values($this->_getSelectOptions());
+			$entity->type = '';
 		} else {	// existing record
 			if ($entity->training_need_category_id == 0) {
 				$entity->type = self::CATALOGUE;
@@ -341,7 +362,8 @@ class TrainingNeedsTable extends AppTable {
 	public function _getSelectOptions() {
 		//Return all required options and their key
 		$typeOptions = $this->getSelectOptions($this->aliasField('types'));
-		$selectedType = $this->queryString('type', $typeOptions);
+		// $selectedType = $this->queryString('type', $typeOptions);
+		$selectedType = array_key_exists('type', $this->request->query)? $this->request->query['type']: '';
 
 		return compact('typeOptions', 'selectedType');
 	}

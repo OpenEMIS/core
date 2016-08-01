@@ -1,14 +1,14 @@
-/* TOOLBAR WITH INPUTS v.1.0.5 */
+/* TOOLBAR WITH INPUTS v.1.0.8 */
 
 .toolbar-wrapper {
     height: auto;
-    padding: 2px 0 4px;
+    padding: 2px 0 5px;
 }
 
 .toolbar-wrapper .input {
     width: 20%;
     margin: 2px 10px 3px;
-    display: inline-block;    
+    display: inline-flex;    
 }
 
 .chrome .toolbar-wrapper .input {
@@ -52,10 +52,11 @@
 }
 
 /* RTL */
-.rtl .toolbar-wrapper .input {
-    margin: 1px 10px 0;
-}
 
 .rtl .toolbar-wrapper .form-control {
     padding: 2px 10px 2px 26px !important;
+}
+
+.rtl .toolbar-wrapper .form-control {
+    font-size: 14px;
 }

@@ -7,6 +7,8 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Table;
 
+use App\Controller\AppController;
+
 class PreferencesController extends AppController {
 	public $activeObj = null;
 
@@ -16,16 +18,22 @@ class PreferencesController extends AppController {
 		$this->ControllerAction->model('Users');
 		$this->ControllerAction->models = [
 			'Users' 				=> ['className' => 'Users'],
+			'Account' 				=> ['className' => 'UserAccounts'],
 			'Contacts'				=> ['className' => 'UserContacts'],
 			'Identities' 			=> ['className' => 'User.Identities'],
-			'Nationalities' 		=> ['className' => 'User.Nationalities'],
 			'Languages' 			=> ['className' => 'User.UserLanguages'],
-			'Comments' 				=> ['className' => 'User.Comments'],
+			'Nationalities' 		=> ['className' => 'User.Nationalities'],
 			'Attachments' 			=> ['className' => 'User.Attachments'],
 			'History' 				=> ['className' => 'User.UserActivities', 'actions' => ['index']],
-			'SpecialNeeds' 			=> ['className' => 'User.SpecialNeeds'],
 		];
 	}
+
+    // CAv4
+    public function Nationalities()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
+    public function Languages()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
+    public function SpecialNeeds()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
+    public function Comments()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
+    // End
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
@@ -66,13 +74,13 @@ class PreferencesController extends AppController {
 		$isSuperAdmin = $this->Auth->user('super_admin');
 		$userId = $this->Auth->user('id');
 		$tabElements = [
-			'Account' => [
+			'General' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'view', $userId],
-				'text' => __('Account')
+				'text' => __('General')
 			],
-			'Password' => [
-				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Users', 'password'],
-				'text' => __('Password')
+			'Account' => [
+				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Account', 'view', $userId],
+				'text' => __('Account')
 			],
 			'Contacts' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Contacts'],
@@ -82,21 +90,21 @@ class PreferencesController extends AppController {
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Identities'],
 				'text' => __('Identities')
 			],
-			'Nationalities' => [
+			'UserNationalities' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Nationalities'],
-				'text' => __('Nationalities')	
+				'text' => __('Nationalities')
 			],
 			'Languages' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Languages'],
-				'text' => __('Languages')	
+				'text' => __('Languages')
 			],
 			'Comments' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Comments'],
-				'text' => __('Comments')	
+				'text' => __('Comments')
 			],
 			'Attachments' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Attachments'],
-				'text' => __('Attachments')	
+				'text' => __('Attachments')
 			],
 			'SpecialNeeds' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'SpecialNeeds'],
@@ -104,7 +112,7 @@ class PreferencesController extends AppController {
 			],
 			'History' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'History'],
-				'text' => __('History')	
+				'text' => __('History')
 			]
 		];
 		if (!$canChangeAdminPassword && $isSuperAdmin) {
@@ -127,4 +135,8 @@ class PreferencesController extends AppController {
 			return $this->redirect(['action' => 'index']);
 		}
 	}
+
+    public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra) {
+        $this->beforePaginate($event, $model, $query, $extra);
+    }
 }

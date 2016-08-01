@@ -21,7 +21,7 @@ class InstitutionsTable extends AppTable  {
 	public function initialize(array $config) {
 		$this->table('institutions');
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Localities', 			['className' => 'Institution.Localities', 'foreignKey' => 'institution_locality_id']);
 		$this->belongsTo('Types', 				['className' => 'Institution.Types', 'foreignKey' => 'institution_type_id']);
 		$this->belongsTo('Ownerships',	 		['className' => 'Institution.Ownerships', 'foreignKey' => 'institution_ownership_id']);
@@ -31,19 +31,21 @@ class InstitutionsTable extends AppTable  {
 		$this->belongsTo('Genders',				['className' => 'Institution.Genders', 'foreignKey' => 'institution_gender_id']);
 		$this->belongsTo('Areas', 				['className' => 'Area.Areas']);
 		$this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
-		
+
 		$this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => false]);
 		$this->addBehavior('Report.ReportList');
 		$this->addBehavior('Report.CustomFieldList', [
 			'model' => 'Institution.Institutions',
 			'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
 			'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
+		$this->addBehavior('Report.InstitutionSecurity');
 	}
 
 	public function beforeAction(Event $event) {
 		$this->fields = [];
-		$this->ControllerAction->field('feature');
+		$this->ControllerAction->field('feature', ['select' => false]);
 		$this->ControllerAction->field('format');
 	}
 
@@ -182,7 +184,7 @@ class InstitutionsTable extends AppTable  {
 				$typeOptions = [];
 				$typeOptions[0] = __('All Types');
 
-				$Types = TableRegistry::get('FieldOption.StaffTypes');
+				$Types = TableRegistry::get('Staff.StaffTypes');
 				$typeData = $Types->getList();
 				foreach ($typeData as $key => $value) {
 					$typeOptions[$key] = $value;
@@ -213,9 +215,9 @@ class InstitutionsTable extends AppTable  {
 							$statusOptions[$value->id] = $value->name;
 						}
 						break;
-					
+
 					case 'Report.InstitutionStaff':
-						$Statuses = TableRegistry::get('FieldOption.StaffStatuses');
+						$Statuses = TableRegistry::get('Staff.StaffStatuses');
 						$statusData = $Statuses->getList();
 						foreach ($statusData as $key => $value) {
 							$statusOptions[$key] = $value;
@@ -265,7 +267,7 @@ class InstitutionsTable extends AppTable  {
 					$request->data[$this->alias()]['academic_period_id'] = key($academicPeriodOptions);
 				}
 				return $attr;
-			} else if (in_array($feature, ['Report.StaffAbsences'])) {
+			} else if ((in_array($feature, ['Report.StaffAbsences'])) || (in_array($feature, ['Report.StudentAbsences']))) {
 				$academicPeriodOptions = [];
 				$academicPeriodOptions[0] = __('All Academic Periods');
 				$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -289,6 +291,8 @@ class InstitutionsTable extends AppTable  {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$requestData = json_decode($settings['process']['params']);
 		$filter = $requestData->institution_filter;
+		$superAdmin = $requestData->super_admin;
+		$userId = $requestData->user_id;
 		$query
 			->contain(['Areas'])
 			->select(['area_code' => 'Areas.code']);
@@ -317,6 +321,9 @@ class InstitutionsTable extends AppTable  {
 
 			case self::NO_FILTER:
 				break;
+		}
+		if (!$superAdmin) {
+			$query->find('ByAccess', ['user_id' => $userId, 'institution_field_alias' => $this->aliasField('id')]);
 		}
 	}
 }

@@ -11,10 +11,6 @@
 /**
  * Tests for the BankAccount class.
  *
- * @author     Sebastian Bergmann <sebastian@phpunit.de>
- * @copyright  Sebastian Bergmann <sebastian@phpunit.de>
- * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
- * @link       http://www.phpunit.de/
  * @since      Class available since Release 2.3.0
  */
 class BankAccountTest extends PHPUnit_Framework_TestCase
@@ -33,7 +29,14 @@ class BankAccountTest extends PHPUnit_Framework_TestCase
      */
     public function testBalanceIsInitiallyZero()
     {
-        $this->assertEquals(0, $this->ba->getBalance());
+        /* @Given a fresh bank account */
+        $ba = new BankAccount;
+
+        /* @When I ask it for its balance */
+        $balance = $ba->getBalance();
+
+        /* @Then I should get 0 */
+        $this->assertEquals(0, $balance);
     }
 
     /**

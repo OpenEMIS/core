@@ -22,7 +22,7 @@ class AwardsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		
+		$validator = parent::validationDefault($validator);
 		return $validator;
 	}
 
@@ -60,7 +60,7 @@ class AwardsTable extends AppTable {
 	// public function autocompleteAward() {
 	// 	if ($this->request->is('ajax')) {
 	// 		$this->render = false;
-	// 		$this->getView()->layout(false);
+	// 		$this->viewBuilder()->layout(false);
 	// 		$search = $this->controller->params->query['term'];
 	// 		$data = $this->autocomplete($search, 'award');
 	// 		return json_encode($data);
@@ -70,7 +70,7 @@ class AwardsTable extends AppTable {
 	// public function autocompleteIssuer() {
 	// 	if ($this->request->is('ajax')) {
 	// 		$this->render = false;
-	// 		$this->getView()->layout(false);
+	// 		$this->viewBuilder()->layout(false);
 	// 		$search = $this->controller->params->query['term'];
 	// 		$data = $this->autocomplete($search, 'issuer');
 	// 		return json_encode($data);

@@ -11,11 +11,7 @@
 /**
  * Prettifies class and method names for use in TestDox documentation.
  *
- * @author     Sebastian Bergmann <sebastian@phpunit.de>
- * @copyright  Sebastian Bergmann <sebastian@phpunit.de>
- * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
- * @link       http://www.phpunit.de/
- * @since      Class available since Release 2.1.0
+ * @since Class available since Release 2.1.0
  */
 class PHPUnit_Util_TestDox_NamePrettifier
 {
@@ -32,12 +28,13 @@ class PHPUnit_Util_TestDox_NamePrettifier
     /**
      * @var array
      */
-    protected $strings = array();
+    protected $strings = [];
 
     /**
      * Prettifies the name of a test class.
      *
-     * @param  string $name
+     * @param string $name
+     *
      * @return string
      */
     public function prettifyTestClass($name)
@@ -64,7 +61,8 @@ class PHPUnit_Util_TestDox_NamePrettifier
     /**
      * Prettifies the name of a test method.
      *
-     * @param  string $name
+     * @param string $name
+     *
      * @return string
      */
     public function prettifyTestMethod($name)
@@ -83,23 +81,25 @@ class PHPUnit_Util_TestDox_NamePrettifier
             $this->strings[] = $string;
         }
 
-        if (strpos($name, '_') !== false) {
-            return str_replace('_', ' ', $name);
-        }
-
-        $max = strlen($name);
-
         if (substr($name, 0, 4) == 'test') {
-            $offset = 4;
-        } else {
-            $offset  = 0;
-            $name[0] = strtoupper($name[0]);
+            $name = substr($name, 4);
         }
 
+        if (strlen($name) == 0) {
+            return $buffer;
+        }
+
+        $name[0] = strtoupper($name[0]);
+
+        if (strpos($name, '_') !== false) {
+            return trim(str_replace('_', ' ', $name));
+        }
+
+        $max        = strlen($name);
         $wasNumeric = false;
 
-        for ($i = $offset; $i < $max; $i++) {
-            if ($i > $offset &&
+        for ($i = 0; $i < $max; $i++) {
+            if ($i > 0 &&
                 ord($name[$i]) >= 65 &&
                 ord($name[$i]) <= 90) {
                 $buffer .= ' ' . strtolower($name[$i]);

@@ -209,6 +209,9 @@ class Stream
         if (isset($options['redirect'])) {
             $this->_contextOptions['max_redirects'] = (int)$options['redirect'];
         }
+        if (isset($options['proxy']['proxy'])) {
+            $this->_contextOptions['proxy'] = $options['proxy']['proxy'];
+        }
     }
 
     /**
@@ -222,6 +225,7 @@ class Stream
     {
         $sslOptions = [
             'ssl_verify_peer',
+            'ssl_verify_peer_name',
             'ssl_verify_depth',
             'ssl_allow_self_signed',
             'ssl_cafile',
@@ -229,7 +233,7 @@ class Stream
             'ssl_passphrase',
         ];
         if (empty($options['ssl_cafile'])) {
-            $options['ssl_cafile'] = CORE_PATH . 'config' . DS . 'cacert.pem';
+            $options['ssl_cafile'] = CORE_PATH . 'config' . DIRECTORY_SEPARATOR . 'cacert.pem';
         }
         if (!empty($options['ssl_verify_host'])) {
             $url = $request->url();
@@ -253,18 +257,36 @@ class Stream
      */
     protected function _send(Request $request)
     {
+        $deadline = false;
+        if (isset($this->_contextOptions['timeout']) && $this->_contextOptions['timeout'] > 0) {
+            $deadline = time() + $this->_contextOptions['timeout'];
+        }
+
         $url = $request->url();
         $this->_open($url);
         $content = '';
+        $timedOut = false;
+
         while (!feof($this->_stream)) {
+            if ($deadline !== false) {
+                stream_set_timeout($this->_stream, max($deadline - time(), 1));
+            }
+
             $content .= fread($this->_stream, 8192);
+
+            $meta = stream_get_meta_data($this->_stream);
+            if ($meta['timed_out'] || ($deadline !== false && time() > $deadline)) {
+                $timedOut = true;
+                break;
+            }
         }
         $meta = stream_get_meta_data($this->_stream);
         fclose($this->_stream);
 
-        if ($meta['timed_out']) {
+        if ($timedOut) {
             throw new Exception('Connection timed out ' . $url);
         }
+
         $headers = $meta['wrapper_data'];
         if (isset($headers['headers']) && is_array($headers['headers'])) {
             $headers = $headers['headers'];

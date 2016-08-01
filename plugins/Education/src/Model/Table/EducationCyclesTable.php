@@ -14,6 +14,12 @@ class EducationCyclesTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('EducationLevels', ['className' => 'Education.EducationLevels']);
 		$this->hasMany('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
+
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+				'filter' => 'education_level_id',
+			]);
+		}
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -24,11 +30,12 @@ class EducationCyclesTable extends AppTable {
 
 		$this->controller->set('toolbarElements', $toolbarElements);
 	}
-	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
 		$query->where([$this->aliasField('education_level_id') => $entity->education_level_id]);
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
 		return $validator;
 	}
 
