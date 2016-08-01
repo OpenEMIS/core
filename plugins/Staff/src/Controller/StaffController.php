@@ -118,6 +118,8 @@ class StaffController extends AppController {
 				$header = $session->read('Staff.Staff.name');
 			}
 
+			$idKey = $this->ControllerAction->getPrimaryKey($model);
+
 			$alias = $model->alias;
 			$this->Navigation->addCrumb($model->getHeader($alias));
 			$header = $header . ' - ' . $model->getHeader($alias);
@@ -133,7 +135,7 @@ class StaffController extends AppController {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
 					$exists = $model->exists([
-						$model->aliasField($model->primaryKey()) => $modelId,
+						$model->aliasField($idKey) => $modelId,
 						$model->aliasField('security_user_id') => $userId
 					]);
 
@@ -153,7 +155,7 @@ class StaffController extends AppController {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
 					$exists = $model->exists([
-						$model->aliasField($model->primaryKey()) => $modelId,
+						$model->aliasField($idKey) => $modelId,
 						$model->aliasField('staff_id') => $userId
 					]);
 
