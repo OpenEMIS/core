@@ -85,7 +85,9 @@ class InstitutionRoomsTable extends AppTable {
 		$this->ControllerAction->field('academic_period_id', ['visible' => false]);
 		$this->ControllerAction->field('infrastructure_condition_id', ['visible' => false]);
 
-		$toolbarElements = $this->addBreadcrumbElement();
+		$toolbarElements = [];
+		$toolbarElements = $this->addBreadcrumbElement($toolbarElements);
+		$toolbarElements = $this->addControlFilterElement($toolbarElements);
 		$this->controller->set('toolbarElements', $toolbarElements);
 
 		// For breadcrumb to build the baseUrl
@@ -102,6 +104,20 @@ class InstitutionRoomsTable extends AppTable {
 		} else {
 			$query->where([$this->aliasField('institution_infrastructure_id IS NULL')]);
 		}
+
+		// Academic Period
+		list($periodOptions, $selectedPeriod) = array_values($this->getPeriodOptions());
+		$query->where([$this->aliasField('academic_period_id') => $selectedPeriod]);
+		$this->controller->set(compact('periodOptions', 'selectedPeriod'));
+		// End
+
+		// Room Types
+		list($typeOptions, $selectedType) = array_values($this->getTypeOptions(['withAll' => true]));
+		if ($selectedType != '-1') {
+			$query->where([$this->aliasField('room_type_id') => $selectedType]);
+		}
+		$this->controller->set(compact('typeOptions', 'selectedType'));
+		// End
 	}
 
 	public function addEditBeforeAction(Event $event) {
@@ -187,6 +203,11 @@ class InstitutionRoomsTable extends AppTable {
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add' || $action == 'edit') {
 			$periodOptions = $this->AcademicPeriods->getYearList(['withLevels' => true, 'isEditable' => true]);
+			if (is_null($request->query('period_id'))) {
+				$request->query['period_id'] = $this->AcademicPeriods->getCurrent();
+			}
+			$selectedPeriod = $this->queryString('period_id', $periodOptions);
+			$this->advancedSelectOptions($periodOptions, $selectedPeriod);
 
 			$attr['options'] = $periodOptions;
 			$attr['select'] = false;
@@ -213,6 +234,48 @@ class InstitutionRoomsTable extends AppTable {
 		}
 
 		return $attr;
+	}
+
+	public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add' || $action == 'edit') {
+			$selectedPeriod = $request->query('period_id');
+			$academicPeriodObj = $this->AcademicPeriods->get($selectedPeriod);
+			$startDate = $academicPeriodObj->start_date->format('d-m-Y');
+			$endDate = $academicPeriodObj->end_date->format('d-m-Y');
+
+			$attr['date_options']['startDate'] = $startDate;
+			$attr['date_options']['endDate'] = $endDate;
+		}
+
+		return $attr;
+	}
+
+	public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add' || $action == 'edit') {
+			$selectedPeriod = $request->query('period_id');
+			$academicPeriodObj = $this->AcademicPeriods->get($selectedPeriod);
+			$startDate = $academicPeriodObj->start_date->format('d-m-Y');
+			$endDate = $academicPeriodObj->end_date->format('d-m-Y');
+
+			$attr['date_options']['startDate'] = $startDate;
+			$attr['date_options']['endDate'] = $endDate;
+		}
+
+		return $attr;
+	}
+
+	public function addEditOnChangePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$request = $this->request;
+		unset($request->query['period_id']);
+
+		if ($request->is(['post', 'put'])) {
+			if (array_key_exists($this->alias(), $request->data)) {
+				if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
+					$selectedPeriod = $request->data[$this->alias()]['academic_period_id'];
+					$request->query['period_id'] = $selectedPeriod;
+				}
+			}
+		}
 	}
 
 	public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -242,6 +305,8 @@ class InstitutionRoomsTable extends AppTable {
 		$this->ControllerAction->field('academic_period_id', ['type' => 'select']);
 		$this->ControllerAction->field('code');
 		$this->ControllerAction->field('room_type_id', ['type' => 'select']);
+		$this->ControllerAction->field('start_date');
+		$this->ControllerAction->field('end_date');
 		$this->ControllerAction->field('infrastructure_condition_id', ['type' => 'select']);
 	}
 
@@ -278,5 +343,45 @@ class InstitutionRoomsTable extends AppTable {
 		$toolbarElements[] = ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => compact('crumbs', 'levelOptions', 'selectedLevel'), 'options' => []];
 
 		return $toolbarElements;
+	}
+
+	private function addControlFilterElement($toolbarElements=[]) {
+		$toolbarElements[] = ['name' => 'Institution.Room/controls', 'data' => compact('typeOptions', 'selectedType'), 'options' => []];
+
+		return $toolbarElements;
+	}
+
+	public function getPeriodOptions($params=[]) {
+		$periodOptions = $this->AcademicPeriods->getYearList(['withLevels' => true, 'isEditable' => true]);
+		if (is_null($this->request->query('period_id'))) {
+			$this->request->query['period_id'] = $this->AcademicPeriods->getCurrent();
+		}
+		$selectedPeriod = $this->queryString('period_id', $periodOptions);
+
+		$roomTable = $this;
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noRooms')),
+			'callable' => function($id) use ($roomTable, $institutionId) {
+				return $roomTable->find()->where(['institution_id'=>$institutionId, 'academic_period_id'=>$id])->count();
+			}
+		]);
+
+		return compact('periodOptions', 'selectedPeriod');
+	}
+
+	public function getTypeOptions($params=[]) {
+		$withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
+
+		$typeOptions = $this->RoomTypes
+			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+			->toArray();
+		if($withAll && count($typeOptions) > 1) {
+			$typeOptions = ['-1' => __('All Room Types')] + $typeOptions;
+		}
+		$selectedType = $this->queryString('type', $typeOptions);
+		$this->advancedSelectOptions($typeOptions, $selectedType);
+
+		return compact('typeOptions', 'selectedType');
 	}
 }
