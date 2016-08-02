@@ -439,13 +439,14 @@ class StaffTable extends AppTable {
 		$securityGroupId = $this->Institutions->get($institutionId)->security_group_id;
 		$this->security_group_id = $securityGroupId;
 		$this->ControllerAction->field('staff_name');
+		$this->ControllerAction->field('start_date');
+		$this->ControllerAction->field('end_date');
 		$this->ControllerAction->field('institution_position_id');
 		$this->ControllerAction->field('FTE');
-		$this->ControllerAction->field('end_date', ['visible' => false]);
 		$this->ControllerAction->field('staff_id', ['visible' => false]);
 		$this->ControllerAction->field('group_id', ['type' => 'hidden', 'value' => $securityGroupId]);
 		$this->ControllerAction->setFieldOrder([
-			'institution_position_id', 'start_date', 'position_type', 'FTE', 'staff_type_id', 'staff_status_id', 'staff_name'
+			'start_date', 'end_date', 'institution_position_id', 'position_type', 'FTE', 'staff_type_id', 'staff_status_id', 'staff_name'
 		]);
 	}
 
@@ -653,27 +654,31 @@ class StaffTable extends AppTable {
 
 			$excludePositions = $this->find();
 
+			$startDate = new Date($request->data[$this->alias()]['start_date']);
+
+			$orCondition = [
+				$this->aliasField('end_date') . ' >= ' => $startDate,
+				$this->aliasField('end_date') . ' IS NULL'
+			];
+
+			$endDate = null;
+			if (!empty($request->data[$this->alias()]['end_date'])) {
+				$endDate = new Date($request->data[$this->alias()]['end_date']);
+				$orCondition[$this->aliasField('end_date') . ' >= '] = $endDate;
+			}
+
 			//to exclude position which total FTE equal or more than 1 and has end_date either NULL or later than today.
 			$excludePositions = $excludePositions
 								->select([
 									'position_id' => $this->aliasField('institution_position_id'),
-									'total_fte' => $excludePositions->func()->sum($this->aliasField('FTE'))
 								])
 								->where([
 									$this->aliasField('institution_id') => $institutionId,
-									'OR' => [
-										'DATE(' . $this->aliasField('end_date') . ') > DATE(NOW())',
-										$this->aliasField('end_date') . ' IS NULL'
-									]
+									$this->aliasField('start_date').' <= ' => $startDate,
+									'OR' => $orCondition
 								])
 								->group($this->aliasField('institution_position_id'))
-								->having('total_fte >= 1')
-								->toArray();
-			
-			$excludeArray = [];
-			foreach ($excludePositions as $key => $value) {
-				$excludeArray[] = $value['position_id'];
-			}
+								->having(['SUM('.$this->aliasField('FTE') .') >= ' => 1]);
 
 			if ($this->AccessControl->isAdmin()) {
 				$userId = null;
@@ -689,13 +694,11 @@ class StaffTable extends AppTable {
 			if (!empty($activeStatusId)) {
 				$positionConditions[$this->Positions->aliasField('status_id').' IN '] = $activeStatusId;
 			}
-			if (!empty($excludeArray)) {
-				$positionConditions[$this->Positions->aliasField('id').' NOT IN '] = $excludeArray;
-			}
 			$staffPositionsOptions = $this->Positions
 					->find()
 					->innerJoinWith('StaffPositionTitles.SecurityRoles')
 					->where($positionConditions)
+					->where([$this->Positions->aliasField('id').' NOT IN ' => $excludePositions])
 					->select(['security_role_id' => 'SecurityRoles.id', 'type' => 'StaffPositionTitles.type'])
 					->order(['StaffPositionTitles.type' => 'DESC', 'StaffPositionTitles.order'])
 					->autoFields(true)
@@ -753,6 +756,34 @@ class StaffTable extends AppTable {
 			$attr['value'] = $assignedStatus;
 			return $attr;
 		}
+	}
+
+	public function addOnChangeDateRange(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) 
+	{
+
+	}
+
+	public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
+	{
+		if ($action == 'add') {
+			if (!isset($request->data[$this->alias()]['start_date'])) {
+				$request->data[$this->alias()]['start_date'] = date('d-m-Y');
+			}
+			$attr['onChangeReload'] = 'changeDateRange';
+		}
+		return $attr;
+	}
+
+	public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request)
+	{
+		if ($action == 'add') {
+			$attr['default_date'] = '';
+			$attr['onChangeReload'] = 'changeDateRange';
+			if (!isset($request->data[$this->alias()]['end_date'])) {
+				$request->data[$this->alias()]['end_date'] = '';
+			}
+		}
+		return $attr;
 	}
 
 	public function onUpdateFieldPositionType(Event $event, array $attr, $action, Request $request) {
