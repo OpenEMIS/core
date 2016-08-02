@@ -1,3 +1,8 @@
+-- POCOR-3241
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3241';
+
+
 -- POCOR-3081
 UPDATE `institution_students`
 INNER JOIN `z_3081_institution_students`
