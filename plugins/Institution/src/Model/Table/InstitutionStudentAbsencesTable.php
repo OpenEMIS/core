@@ -25,7 +25,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		$this->addBehavior('Institution.Absence');
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
-		$this->belongsTo('StudentAbsenceReasons', ['className' => 'FieldOption.StudentAbsenceReasons']);
+		$this->belongsTo('StudentAbsenceReasons', ['className' => 'Institution.StudentAbsenceReasons']);
 		$this->belongsTo('AbsenceTypes', ['className' => 'Institution.AbsenceTypes', 'foreignKey' =>'absence_type_id']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->addBehavior('Excel', [
@@ -92,6 +92,9 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		$codeList = array_flip($this->absenceCodeList);
 		$validator
 			->add('start_date', [
+				'ruleCompareJoinDate' => [
+					'rule' => ['compareJoinDate', 'student_id']
+				],
 				'ruleNoOverlappingAbsenceDate' => [
 					'rule' => ['noOverlappingAbsenceDate', $this]
 				],
@@ -101,6 +104,9 @@ class InstitutionStudentAbsencesTable extends AppTable {
 				]
 			])
 			->add('end_date', [
+				'ruleCompareJoinDate' => [
+					'rule' => ['compareJoinDate', 'student_id']
+				],
 				'ruleCompareDateReverse' => [
 					'rule' => ['compareDateReverse', 'start_date', true]
 				],
