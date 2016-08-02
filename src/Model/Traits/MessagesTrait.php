@@ -144,6 +144,10 @@ trait MessagesTrait {
 			'location' => 'Location',
 			'occupier' => 'Occupier',
 			'institution' => 'Institution',
+			'allShiftsUsed' => 'All shifts has been used for the selected academic period.',
+			'replicateShifts' => 'Should the system replicate the existing shifts for the latest academic period?.',
+			'replicateShiftsSuccess' => 'Shifts has been successfully replicated.',
+			'replicateShiftsNotChosen' => 'Replication was not chosen, please setup the shifts manually.',
 		],
 		'InstitutionClasses' => [
 			'expiredGrade' => 'Expired Grade',
