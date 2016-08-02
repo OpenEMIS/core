@@ -328,7 +328,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 			$currentFTE = strval($attr['currentFTE']);
 			foreach ($fteOptions as $key => $val) {
 				if (floatval($key) > floatval($currentFTE)) {
-					unset($fteOptions[$currentFTE]);
+					unset($fteOptions[$key]);
 				}
 			}
 			$this->advancedSelectOptions($fteOptions, $currentFTE);
