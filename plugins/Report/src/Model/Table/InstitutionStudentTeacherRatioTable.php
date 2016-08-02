@@ -73,7 +73,7 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
   		return $count;
   	}
 
-  	public function onExcelRenderTeacherCount(Event $event, EnperiodStartDatetity $entity, $attr) {
+  	public function onExcelRenderTeacherCount(Event $event, Entity $entity, $attr) {
 		// get all institution Staff where institution area id = that
 		$InstitutionStaff = TableRegistry::get('Institution.Staff');
 		$institutionId = $entity->id;
@@ -88,10 +88,10 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
 			$query->find('AcademicPeriod', ['academic_period_id' => $academic_period_id]);
 		}
 
-		$query->matching('Positions', function($q) {
+		$query->matching('Positions.StaffPositionTitles', function($q) {
 			return $q
 				->where([
-					'Positions.type' => 1
+					'StaffPositionTitles.type' => 1
 				]);
 		});
 
