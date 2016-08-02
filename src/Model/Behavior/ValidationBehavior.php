@@ -801,6 +801,78 @@ class ValidationBehavior extends Behavior {
 		return false;
 	}
 
+	public static function compareJoinDate($field, $academicFieldName, $globalData)
+	{
+		$model = $globalData['providers']['table'];
+		if (array_key_exists($academicFieldName, $globalData['data'])) {
+			if (!is_null($globalData['data'][$academicFieldName])) {
+				if ($academicFieldName == 'staff_id') {
+					$Table = TableRegistry::get('Institution.Staff');
+					$periodObj = $Table->find()
+							->where([
+				                $Table->aliasField('staff_id') => $globalData['data'][$academicFieldName],
+				                $Table->aliasField('staff_status_id') => 1
+							])
+							->toArray();
+				} else if ($academicFieldName == 'student_id') {
+					$Table = TableRegistry::get('Institution.Students');
+					$periodObj = $Table->find()
+							->where([
+				                $Table->aliasField('student_id') => $globalData['data'][$academicFieldName],
+				                $Table->aliasField('student_status_id') => 1
+							])
+							->toArray();
+				}
+
+				$startDate = strtotime($globalData['data']['start_date']);
+				$endDate = strtotime($globalData['data']['end_date']);
+
+				if (!empty($periodObj)) {
+					$joinStartDateData=[];
+					$joinEndDateData=[];
+
+					// Array of the startDate and endDate of the user if user have more than 1 position.
+					foreach ($periodObj as $key => $value) {
+						$joinStartDateData[$key] = $periodObj[$key]['start_date'];
+						$joinEndDateData[$key] = $periodObj[$key]['end_date'];
+					}
+
+					if (in_array('', $joinStartDateData)) {
+						$joinStartDate = null;
+					} else {
+						$joinStartDate = min($joinStartDateData)->toUnixString();
+					}
+
+					// will check if in the array have any null data, means no restriction on the end date of the staff
+					if (in_array('', $joinEndDateData)) {
+						$joinEndDate = null;
+					} else {
+						$joinEndDate = max($joinEndDateData)->toUnixString();
+					}
+
+					$joinRangeCheck = (($startDate >= $joinStartDate) && (is_null($joinEndDate))) || (($startDate >= $joinStartDate) && ($endDate <= $joinEndDate) );
+
+					if (!$joinRangeCheck) {
+						if (!is_null($joinEndDate)) {
+							$startDate = __('Absence date must be within the assigned period, from') . ' ' . date('d-m-Y', $joinStartDate);
+							$endDate = ' ' . __('to') . ' ' . date('d-m-Y', $joinEndDate);
+							return $startDate . $endDate;
+						} else {
+							$startDate = __('Absence date must be within the assigned period, from') . ' ' . date('d-m-Y', $joinStartDate);
+							return $startDate;
+						}
+					}
+
+					return $joinRangeCheck;
+				}
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
 	public static function inInstitutionShift($field, $academicFieldName, $globalData)
 	{
 		$model = $globalData['providers']['table'];
