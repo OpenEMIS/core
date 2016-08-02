@@ -767,6 +767,11 @@ class StaffTable extends AppTable {
 		$data[$this->alias()]['position_id_changed'] = true;
 	}
 
+	public function addOnChangeEndDate(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) 
+	{
+		$data[$this->alias()]['end_date_changed'] = true;
+	}
+
 	public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
 	{
 		if ($action == 'add') {
@@ -782,11 +787,11 @@ class StaffTable extends AppTable {
 	{
 		if ($action == 'add') {
 			$attr['default_date'] = '';
-			$attr['onChangeReload'] = true;
+			$attr['onChangeReload'] = 'changeEndDate';
+			$startDate = new Date($request->data[$this->alias()]['start_date']);
 			if (isset($request->data[$this->alias()]['institution_position_id'])) {
 				if (isset($request->data[$this->alias()]['position_id_changed'])) {
 					$institutionPositionId = $request->data[$this->alias()]['institution_position_id'];
-					$startDate = new Date($request->data[$this->alias()]['start_date']);
 					$endDate = $this->find()
 						->select(['endDate' => $this->aliasField('start_date')])
 						->where([
@@ -796,13 +801,24 @@ class StaffTable extends AppTable {
 						->order('endDate')
 						->first();
 					if (!empty($endDate)) {
-						$attr['value'] = $endDate->endDate;
+						$newDate = (new Date($endDate->endDate))->subDays(1);
+						$attr['value'] = $newDate->i18nFormat('yyyy-MM-dd');
 					} else {
 						$attr['special_value'] = true;
 						$attr['value'] = '';
 					}
-					$attr['date_options']['startDate'] = $startDate;
 					$request->data[$this->alias()]['end_date'] = $attr['value'];
+				}
+			}
+			$attr['date_options']['startDate'] = $startDate;
+
+			if (isset($request->data[$this->alias()]['end_date']) && !empty($request->data[$this->alias()]['end_date'])) {
+				$endDate = $request->data[$this->alias()]['end_date'];
+				$newEndDate = new Date($endDate);
+				if ($startDate->toUnixString() > $newEndDate->toUnixString()) {
+					$attr['value'] = $request->data[$this->alias()]['start_date'];
+					$request->data[$this->alias()]['end_date'] = $request->data[$this->alias()]['start_date'];
+					$request->data[$this->alias()]['end_date_changed'] = true;
 				}
 			}
 		}
@@ -812,6 +828,53 @@ class StaffTable extends AppTable {
 	public function onUpdateFieldPositionType(Event $event, array $attr, $action, Request $request) {
 		$options = $this->getSelectOptions('Position.types');
 		if ($action == 'add') {
+			$remainingFTE = 1;
+				$data = $request->data[$this->alias()];
+
+				if (isset($data['institution_position_id'])) {
+					$institutionPositionId = $data['institution_position_id'];
+					$startDate = new Date($data['start_date']);
+					$endDate = $data['end_date'];
+					$remainingFTE = $this->find()
+						->select(['fte_left' => '1-SUM('.$this->aliasField('FTE').')'])
+						->where([$this->aliasField('institution_position_id') => $institutionPositionId])
+						->group($this->aliasField('institution_position_id'))
+						->hydrate(false);
+					if (empty($endDate)) {
+						$condition = [
+							'OR' => [
+								[
+									$this->aliasField('start_date').' <= ' => $startDate,
+									$this->aliasField('end_date').' >= ' => $startDate,
+								],
+								[
+									$this->aliasField('start_date').' <= ' => $startDate,
+									$this->aliasField('end_date').' IS NULL',
+								],
+								[
+									$this->aliasField('start_date').' >= ' => $startDate,
+								]
+							]
+						];
+						$remainingFTE = $remainingFTE->where($condition);
+
+					} else {
+						$endDate = new Date($endDate);
+						$remainingFTE = $remainingFTE->find('InDateRange', ['start_date' => $startDate, 'end_date' => $endDate]);
+					}
+
+					$remainingFTE = $remainingFTE->first();
+
+					if (!empty($remainingFTE)) {
+						$remainingFTE = $remainingFTE['fte_left'];
+						if (isset($options['FULL_TIME'])) {
+							unset($options['FULL_TIME']);
+						}
+					} else {
+						$remainingFTE = 1;
+					}
+				
+			}
 			$attr['options'] = $options;
 			$attr['onChangeReload'] = true;
 			$this->fields['FTE']['type'] = 'hidden';
@@ -820,11 +883,17 @@ class StaffTable extends AppTable {
 				$type = $this->request->data($this->aliasField('position_type'));
 				if ($type == 'PART_TIME') {
 					$this->fields['FTE']['type'] = 'select';
-					$this->fields['FTE']['options'] = [
+					$fteOptions = [
 						['value' => '0.25', 'text' => '25%'],
-						['value' => '0.5', 'text' => '50%', 'selected'],
+						['value' => '0.5', 'text' => '50%'],
 						['value' => '0.75', 'text' => '75%']
 					];
+					foreach ($fteOptions as $key => $value) {
+						if (floatval($value['value']) > floatval($remainingFTE)) {
+							unset($fteOptions[$key]);
+						}
+					}
+					$this->fields['FTE']['options'] = $fteOptions;
 				}
 			}
 		} else if ($action == 'view') {
