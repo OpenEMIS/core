@@ -1,4 +1,4 @@
-/* TABLE v.1.0.15 */
+/* TABLE v.1.0.17 */
 
 .table-responsive {
     border: 0 !important;
@@ -113,6 +113,7 @@
 .table > tfoot > tr > th,
 .table > thead > tr > td,
 .table > thead > tr > th {
+    position: relative;
     padding: 10px;
     vertical-align: middle;
 }
@@ -380,6 +381,14 @@ table tr.sorting-row td {
     -webkit-overflow-x: scroll;
     -ms-overflow-x: scroll;
     overflow-x: scroll;
+    border-collapse: collapse !important;
+}
+
+.rtl.chrome .table-curved,
+.rtl.chrome .table,
+.rtl.safari .table-curved,
+.rtl.safari .table {
+    border-collapse: separate !important;
 }
 
 .table > thead:first-child > tr:first-child > th,
@@ -616,6 +625,19 @@ table .input-group {
     width: 100% !important;
 }
 
+
+/* TABLE WITH DATE/TIME PICKER */
+
+.table .input-group-addon {
+    position: absolute;
+    right: 0;
+    line-height: 0;
+    cursor: pointer;
+    font-size: 15px;
+    width: 52px;
+    height: 30px;
+}
+
 @media (max-width: 767px) {
     .table-responsive .dropdown-menu {
         position: relative !important;
@@ -734,4 +756,11 @@ table .input-group {
 
 .rtl .table .input-select-wrapper {
     float: none;
+}
+
+/* RTL TABLE WITH DATE/TIME PICKER */
+
+.rtl .table .input-group-addon {
+    left: 0;
+    right: auto !important;
 }

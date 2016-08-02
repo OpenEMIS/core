@@ -43,7 +43,7 @@ $this->start('panelBody');
 					<td><?= $obj->name ?></td>
 					<td><?= $table->formatDateTime($obj->created) ?></td>
 					<td class="modified"><?= !empty($obj->file_path) ? $table->formatDateTime($obj->modified) : '' ?></td>
-					<td><?= $table->formatDateTime($obj->expiry_date) ?></td>
+					<td class="expiryDate"><?= $table->formatDateTime($obj->expiry_date) ?></td>
 					<td>
 						<?php
 						$downloadClass = 'download';
