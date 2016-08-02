@@ -1,4 +1,4 @@
-/* FORM v.1.2.2 */
+/* FORM v.1.2.4 */
 
 .form-horizontal {
     margin: 20px 0;
@@ -263,8 +263,8 @@ input[type="file"] {
     font-size: 9px;
 }
 
-.section-header .icheck-input {
-    margin: 0 10px -3px 0 !important;
+.section-header .selection-wrapper label {
+    font-weight: 700;
 }
 
 .form-control {
@@ -350,6 +350,7 @@ option {
 
 .form-horizontal option {
     padding: 5px 10px;
+    direction: ltr;
 }
 
 .form-horizontal input[disabled="disabled"] {
@@ -439,7 +440,7 @@ option {
     padding: 4px 5px 5px 25px !important;
 }
 
-.rtl .section-header .icheck-input {
+.rtl .section-header .check-input {
     margin: 0 0 -3px 10px !important;
 }
 
@@ -476,9 +477,9 @@ option {
     }
     .input-form-wrapper,
     .input .table-wrapper {
-        width: -webkit-calc(70% - 15px) !important;
-        width: -moz-calc(70% - 15px) !important;
-        width: calc(70% - 15px) !important;
+        width: -webkit-calc(80% - 15px) !important;
+        width: -moz-calc(80% - 15px) !important;
+        width: calc(80% - 15px) !important;
     }
     .form-horizontal .input-inline.input-prefix {
         width: 15% !important;
@@ -592,12 +593,16 @@ option {
     padding-bottom: 3px;
 }
 
-.rtl .file-input-text p, 
-.rtl .file-input-buttons p, 
+.rtl .file-input-text p,
+.rtl .file-input-buttons p,
 .rtl .input-text p {
     font-size: 13px !important;
 }
 
 .rtl .form-input {
     padding: 5px 0;
+}
+
+.rtl .form-horizontal option {
+    direction: ltr;
 }
