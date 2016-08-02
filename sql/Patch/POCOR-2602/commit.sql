@@ -49,6 +49,7 @@ INSERT INTO `z_2602_institution_shifts` SELECT * FROM `institution_shifts`;
 
 ALTER TABLE `institution_shifts` ADD `shift_option_id` INT NOT NULL AFTER `location_institution_id`;
 ALTER TABLE `institution_shifts` DROP `name`;
+ALTER TABLE `institution_shifts` CHANGE `location_institution_id` `location_institution_id` INT(11) NOT NULL;
 
 --
 -- patch Institution Shift
@@ -112,6 +113,12 @@ UPDATE `labels`
 SET `field_name` = 'Owner' 
 WHERE `module` = 'InstitutionShifts'
 AND `field` = 'location'
+AND `module_name` = 'Institutions -> Shifts';
+
+UPDATE `labels` 
+SET `field` = 'institution_id' 
+WHERE `module` = 'InstitutionShifts'
+AND `field_name` = 'Owner'
 AND `module_name` = 'Institutions -> Shifts';
 
 UPDATE `labels` 
