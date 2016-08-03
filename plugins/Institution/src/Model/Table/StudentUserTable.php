@@ -28,6 +28,10 @@ class StudentUserTable extends UserTable {
 				'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
 				'on' => 'create'
 			])
+			->add('education_grade_id', [
+			])
+			->add('academic_period_id', [
+			])
 			;
 		return $validator;
 	}

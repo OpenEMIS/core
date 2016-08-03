@@ -17,7 +17,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
     StudentController.hasExternalDataSource;
     StudentController.internalGridOptions = null;
     StudentController.externalGridOptions = null;
-    StudentController.rowsThisPage = null;
+    StudentController.rowsThisPage = 0;
 
     // Controller functions
     StudentController.processStudentRecord = processStudentRecord;
@@ -425,10 +425,18 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
         InstitutionsStudentsSvc.getStudentData(StudentController.selectedStudent)
         .then(function(studentData){
             if (StudentController.externalSearch) {
-                InstitutionsStudentsSvc.addUser(studentData)
+                var newStudentData = studentData;
+                newStudentData['academic_period_id'] = academicPeriodId;
+                newStudentData['education_grade_id'] = educationGradeId;
+                InstitutionsStudentsSvc.addUser(newStudentData)
                 .then(function(user){
-                    var studentId = user.id;
-                    StudentController.insertStudentData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate);
+                    if (user.error.length === 0) {
+                        var studentId = user.data.id;
+                        StudentController.insertStudentData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate);
+                    } else {
+                        StudentController.postResponse = user;
+                        AlertSvc.error($scope, 'The record is not added due to errors encountered.');
+                    }
                 }, function(error){
                     console.log(error);
                     AlertSvc.warning($scope, error);
