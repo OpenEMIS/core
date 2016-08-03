@@ -109,14 +109,23 @@
 
 							<td>
 								<?php
-								echo $this->Form->input('<i class="fa fa-trash"></i> <span>Delete</span>', [
-									'label' => false,
-									'type' => 'button',
-									'class' => 'btn btn-dropdown action-toggle btn-single-action',
-									'title' => "Delete",
-									'aria-expanded' => 'true',
-									'onclick' => "jsTable.doRemove(this); "
-								]);
+									if ($action == 'edit' || $action == 'add') {
+										if (!is_null($gradingOptions)) {
+											// check the value of the gradingOptions, if have association will return true, and display 'in use'
+											if ($gradingOptions[$data->grading_options[$key]['id']]) {
+												echo __('In use');
+											} else {
+												echo $this->Form->input('<i class="fa fa-trash"></i> <span>Delete</span>', [
+													'label' => false,
+													'type' => 'button',
+													'class' => 'btn btn-dropdown action-toggle btn-single-action',
+													'title' => "Delete",
+													'aria-expanded' => 'true',
+													'onclick' => "jsTable.doRemove(this); "
+												]);
+											}
+										}
+									}
 								?>
 							</td>
 						</tr>
