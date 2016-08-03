@@ -106,8 +106,12 @@ DROP PROCEDURE IF EXISTS patchInstitutionShift;
 --
 -- Label
 --
-INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `code`, `name`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
-VALUES ('c934bb35-38ec-11e6-bc26-525400b263eb', 'InstitutionShifts', 'shift_option_id', 'Institution -> Shifts', 'Shift', NULL, NULL, '1', NULL, NULL, '1', '2016-06-23 00:00:00');
+UPDATE `labels` 
+SET `field` = 'shift_option_id', `field_name` = 'Shift' 
+WHERE `module` = 'InstitutionShifts'
+AND `field` = 'name'
+AND `module_name` = 'Institutions -> Shifts'
+AND `field_name` = 'Shift Name';
 
 UPDATE `labels` 
 SET `field_name` = 'Owner',
