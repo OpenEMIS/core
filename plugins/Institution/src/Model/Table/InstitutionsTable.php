@@ -19,11 +19,11 @@ class InstitutionsTable extends AppTable  {
 	private $dashboardQuery = null;
 
 	private $shiftTypes = [];
-	
-	public $SINGLE_OWNER = 1;
-	public $SINGLE_OCCUPIER = 2;
-	public $MULTIPLE_OWNER = 3;
-	public $MULTIPLE_OCCUPIER = 4;
+
+	CONST SINGLE_OWNER = 1;
+	CONST SINGLE_OCCUPIER = 2;
+	CONST MULTIPLE_OWNER = 3;
+	CONST MULTIPLE_OCCUPIER = 4;
 
 	public function initialize(array $config) {
 		$this->table('institutions');
