@@ -17,7 +17,8 @@
                     'type' => 'text',
                     'label' => false,
                     'class' => 'form-control',
-                    'value' => isset($attr['value']) ? $attr['value'] : ''
+                    'value' => isset($attr['value']) ? $attr['value'] : '',
+                    'error' => false
                 ]);
          ?>
         <span class="input-group-addon"><i class="glyphicon glyphicon-time"></i></span>

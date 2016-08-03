@@ -18,13 +18,6 @@ use App\Model\Table\AppTable;
 class InstitutionsTable extends AppTable  {
 	private $dashboardQuery = null;
 
-	private $shiftTypes = [];
-
-	CONST SINGLE_OWNER = 1;
-	CONST SINGLE_OCCUPIER = 2;
-	CONST MULTIPLE_OWNER = 3;
-	CONST MULTIPLE_OCCUPIER = 4;
-
 	public function initialize(array $config) {
 		$this->table('institutions');
         parent::initialize($config);
@@ -116,13 +109,6 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('OpenEmis.Map');
         $this->addBehavior('HighChart', ['institutions' => ['_function' => 'getNumberOfInstitutionsByModel']]);
         $this->addBehavior('Import.ImportLink');
-
-        $this->shiftTypes = [
-        	1 => __('Single Shift Owner'),
-			2 => __('Single Shift Occupier'),
-			3 => __('Multiple Shift Owner'),
-			4 => __('Multiple Shift Occupier')
-        ];
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -175,13 +161,6 @@ class InstitutionsTable extends AppTable  {
 		return $validator;
 	}
 
-	public function implementedEvents()
-	{
-		$events = parent::implementedEvents();
-		$events['AdvanceSearch.getCustomFilter'] = 'getCustomFilter';
-		return $events;
-	}
-
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
 		$cloneFields = $fields->getArrayCopy();
 		$newFields = [];
@@ -209,7 +188,7 @@ class InstitutionsTable extends AppTable  {
 		$name = $entity->name;
 
 		if ($this->AccessControl->check([$this->controller->name, 'dashboard'])) {
-			$name = $event->subject()->HtmlField->link($entity->name, [
+			$name = $event->subject()->Html->link($entity->name, [
 				'plugin' => $this->controller->plugin,
 				'controller' => $this->controller->name,
 				'action' => 'dashboard',
@@ -220,16 +199,22 @@ class InstitutionsTable extends AppTable  {
 		return $name;
 	}
 
-	public function onGetShiftType(Event $event, Entity $entity)
+	public function onGetShiftType(Event $event, Entity $entity) 
 	{
-		$type = '-';
-		if (array_key_exists($entity->shift_type, $this->shiftTypes)) {
-			$type = $this->shiftTypes[$entity->shift_type];
+		if (($entity->shift_type)==1) {
+			return __('Single Shift Owner');
+		} elseif (($entity->shift_type)==2) {
+			return __('Single Shift Occupier');
+		} elseif (($entity->shift_type)==3) {
+			return __('Multiple Shift Owner');
+		} elseif (($entity->shift_type)==4) {
+			return __('Multiple Shift Occupier');
+		} else {
+			return '-';
 		}
-		return $type;
 	}
 
-	public function getViewShiftDetail($institutionId, $academicPeriod)
+	public function getViewShiftDetail($institutionId, $academicPeriod) 
 	{
 		$data = $this->InstitutionShifts->find()
 				->innerJoinWith('Institutions')
@@ -253,7 +238,7 @@ class InstitutionsTable extends AppTable  {
 					$this->InstitutionShifts->aliasField('academic_period_id') => $academicPeriod
 				])
 				->toArray();
-
+		
 		return $data;
 	}
 
@@ -280,17 +265,17 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
 
 		$this->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information')]);
-
+		
 		$this->ControllerAction->field('shift_section', ['type' => 'section', 'title' => __('Shifts'), 'visible' => ['view'=>true]]);
 		$this->ControllerAction->field('shift_type', ['visible' => ['view'=>true]]);
-
+		
 		$this->ControllerAction->field('shift_details', [
 			'type' => 'element',
 			'element' => 'Institution.Shifts/details',
 			'visible' => ['view'=>true],
 			'data' => $this->getViewShiftDetail($this->Session->read('Institution.Institutions.id'), $this->InstitutionShifts->AcademicPeriods->getCurrent())
 		]);
-
+		
 		$this->ControllerAction->field('location_section', ['type' => 'section', 'title' => __('Location')]);
 
 		$language = I18n::locale();
@@ -552,9 +537,12 @@ class InstitutionsTable extends AppTable  {
 			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id',
 			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
 
+<<<<<<< HEAD
+=======
 			'shift_section',
 			'shift_type', 'shift_details',
-
+			
+>>>>>>> origin/POCOR-2602-dev
 			'location_section',
 			'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
 
@@ -749,22 +737,37 @@ class InstitutionsTable extends AppTable  {
 		return $SecurityGroupUsers->getRolesByUserAndGroup($groupIds, $userId);
 	}
 
-	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+<<<<<<< HEAD
+	public function onBeforeRestrictDelete(Event $event, ArrayObject $options, $id, ArrayObject $extra)
     {
-    	$extra['excludedModels'] = [
-    		$this->SecurityGroups->alias(), $this->InstitutionSurveys->alias(), $this->StudentSurveys->alias(),
-    		$this->StaffPositionProfiles->alias(), $this->InstitutionActivities->alias(), $this->StudentPromotion->alias(),
-    		$this->StudentAdmission->alias(), $this->StudentDropout->alias(), $this->TransferApprovals->alias(),
-            $this->CustomFieldValues->alias(), $this->CustomTableCells->alias()
-    	];
+    	$extra['excludedModels'] = [$this->SecurityGroups->alias(), $this->InstitutionSurveys->alias(), $this->StudentSurveys->alias()];
     }
+=======
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$newEvent = [
+			'AdvanceSearch.getCustomFilter' => 'getCustomFilter'
+		];
+		$events = array_merge($events, $newEvent);
+		return $events;
+	}
 
-	public function getCustomFilter(Event $event)
-	{
+	public function getCustomFilter(Event $event) {
+
+		$shiftTypeOptions = new ArrayObject;
+
+		$shiftTypeOptions[1] = __('Single Shift Owner');
+		$shiftTypeOptions[2] = __('Single Shift Occupier');
+		$shiftTypeOptions[3] = __('Multiple Shift Owner');
+		$shiftTypeOptions[4] = __('Multiple Shift Occupier');
+
 		$filters['shift_type'] = [
 			'label' => __('Shift Type'),
-			'options' => $this->shiftTypes
+			'options' => $shiftTypeOptions
 		];
+
 		return $filters;
 	}
+
+>>>>>>> origin/POCOR-2602-dev
 }
