@@ -13,6 +13,8 @@ use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 
+use Institution\Model\Table\Institutions;
+
 class InstitutionShiftsTable extends ControllerActionTable {
 	use MessagesTrait;
 
@@ -30,7 +32,6 @@ class InstitutionShiftsTable extends ControllerActionTable {
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 
 		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
-
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -153,7 +154,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
 		$academicPeriodOptions = $this->AcademicPeriods->getYearList(); //to show list of academic period for selection
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 
-		$extra['selectedAcademicPeriodOptions'] = $this->getSelectedAcademicPeriod();
+		$extra['selectedAcademicPeriodOptions'] = $this->getSelectedAcademicPeriod($this->request);
 
 		$extra['elements']['control'] = [
 			'name' => 'Institution.Shifts/controls',
@@ -260,7 +261,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
 	{
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 
-		if ($this->isOccupier($institutionId, $this->getSelectedAcademicPeriod())) { //if occupier, then redirect from trying to access add/edit page
+		if ($this->isOccupier($institutionId, $this->getSelectedAcademicPeriod($this->request))) { //if occupier, then redirect from trying to access add/edit page
 			$url = $this->url('index');
 			$event->stopPropagation();
 			return $this->controller->redirect($url);
@@ -283,7 +284,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
 
-		if ($this->isOccupier($institutionId, $this->getSelectedAcademicPeriod())) { //if occupier, then remove the 'edit / remove' button
+		if ($this->isOccupier($institutionId, $this->getSelectedAcademicPeriod($this->request))) { //if occupier, then remove the 'edit / remove' button
 			unset($toolbarButtonsArray['edit']);
 			unset($toolbarButtonsArray['remove']);
 		}
@@ -336,8 +337,8 @@ class InstitutionShiftsTable extends ControllerActionTable {
 		$attr['type'] = 'readonly';
 			
 		if ($action == 'add') { //set the academic period to thecurrent and readonly
-			$attr['attr']['value'] = $academicPeriodOptions[$this->getSelectedAcademicPeriod()];
-			$attr['value'] = $this->getSelectedAcademicPeriod();
+			$attr['attr']['value'] = $academicPeriodOptions[$this->getSelectedAcademicPeriod($this->request)];
+			$attr['value'] = $this->getSelectedAcademicPeriod($this->request);
 		} else if ($action == 'edit') {
 			$attr['attr']['value'] = $academicPeriodOptions[$attr['entity']->academic_period_id];
 			$attr['value'] = $attr['entity']->academic_period_id;
@@ -357,7 +358,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
 			->find('order');
 
 		if ($action == 'add') {
-			$selectedAcademicPeriod = $this->getSelectedAcademicPeriod();			
+			$selectedAcademicPeriod = $this->getSelectedAcademicPeriod($this->request);			
 			if (!empty($selectedAcademicPeriod)) {
 				//during add then need to exclude used shifts based on school and academic period
 				$options = $options
@@ -443,7 +444,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
 					$attr['noResults'] = __('No Institutions found');
 					$attr['attr'] = ['placeholder' => __('Institution Code or Name')];
 					$attr['attr']['value'] = '';
-					$attr['url'] = ['academicperiod' => $this->getSelectedAcademicPeriod(), 'controller' => 'Institutions', 'action' => 'Shifts', 'ajaxInstitutionsAutocomplete'];
+					$attr['url'] = ['academicperiod' => $this->getSelectedAcademicPeriod($this->request), 'controller' => 'Institutions', 'action' => 'Shifts', 'ajaxInstitutionsAutocomplete'];
 				}
 			}
 		} else if ($action == 'edit') {
@@ -505,9 +506,9 @@ class InstitutionShiftsTable extends ControllerActionTable {
 								->count();
 
 			if ($ownerOwnedShift > 1) {
-				$shiftType = $this->Institutions->MULTIPLE_OWNER;
+				$shiftType = InstitutionsTable::MULTIPLE_OWNER;
 			} else if ($ownerOwnedShift == 1) {
-				$shiftType = $this->Institutions->SINGLE_OWNER;
+				$shiftType = InstitutionsTable::SINGLE_OWNER;
 			}
 			$this->Institutions->updateAll(['shift_type' => $shiftType], ['id' => $owner]);
 
@@ -523,9 +524,9 @@ class InstitutionShiftsTable extends ControllerActionTable {
 										->count();
 
 				if ($occupierOccupiedShift > 1) {
-					$shiftType = $this->Institutions->MULTIPLE_OCCUPIER;
+					$shiftType = InstitutionsTable::MULTIPLE_OCCUPIER;
 				} else if ($occupierOccupiedShift == 1) {
-					$shiftType = $this->Institutions->SINGLE_OCCUPIER;
+					$shiftType = InstitutionsTable::SINGLE_OCCUPIER;
 				}
 				$this->Institutions->updateAll(['shift_type' => $shiftType], ['id' => $occupier]);
 			}
@@ -548,9 +549,9 @@ class InstitutionShiftsTable extends ControllerActionTable {
 								->count();
 
 			if ($ownerOwnedShift > 1) {
-				$shiftType = $this->Institutions->MULTIPLE_OWNER;
+				$shiftType = InstitutionsTable::MULTIPLE_OWNER;
 			} else if ($ownerOwnedShift == 1) {
-				$shiftType = $this->Institutions->SINGLE_OWNER;
+				$shiftType = InstitutionsTable::SINGLE_OWNER;
 			}
 			$this->Institutions->updateAll(['shift_type' => $shiftType], ['id' => $owner]);
 
@@ -566,9 +567,9 @@ class InstitutionShiftsTable extends ControllerActionTable {
 										->count();
 
 				if ($occupierOccupiedShift > 1) {
-					$shiftType = $this->Institutions->MULTIPLE_OCCUPIER;
+					$shiftType = InstitutionsTable::MULTIPLE_OCCUPIER;
 				} else if ($occupierOccupiedShift == 1) {
-					$shiftType = $this->Institutions->SINGLE_OCCUPIER;
+					$shiftType = InstitutionsTable::SINGLE_OCCUPIER;
 				}
 				$this->Institutions->updateAll(['shift_type' => $shiftType], ['id' => $occupier]);
 			}
@@ -704,9 +705,8 @@ class InstitutionShiftsTable extends ControllerActionTable {
 					->toArray();
 	}
 
-	private function getSelectedAcademicPeriod()
+	private function getSelectedAcademicPeriod($request)
 	{
-		$request = $this->request;
 		$selectedAcademicPeriod = '';
 
 		if ($this->action == 'index' || $this->action == 'view' || $this->action == 'edit') {
