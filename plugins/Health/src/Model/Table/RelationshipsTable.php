@@ -1,20 +1,17 @@
 <?php
 namespace Health\Model\Table;
 
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 
-class RelationshipsTable extends AppTable {
-	public function initialize(array $config) {
-		$this->addBehavior('ControllerAction.FieldOption');
+class RelationshipsTable extends ControllerActionTable {
+	public function initialize(array $config)
+	{
+		$this->addBehavior('FieldOption.FieldOption');
 		$this->table('health_relationships');
 		parent::initialize($config);
 
 		$this->hasMany('Families', ['className' => 'Health.Families', 'foreignKey' => 'health_relationship_id']);
 
-		$this->addBehavior('OpenEmis.OpenEmis');
-		$this->addBehavior('ControllerAction.ControllerAction', [
-			'actions' => ['remove' => 'transfer'],
-			'fields' => ['excludes' => ['modified_user_id', 'created_user_id']]
-		]);
+		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
 	}
 }

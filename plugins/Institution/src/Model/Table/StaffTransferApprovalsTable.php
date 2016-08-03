@@ -325,7 +325,14 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 	public function onUpdateFieldNewFTE(Event $event, array $attr, $action, Request $request) {
 		$fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
 		if (isset($fteOptions[strval($attr['currentFTE'])])) {
-			unset($fteOptions[strval($attr['currentFTE'])]);
+			$currentFTE = strval($attr['currentFTE']);
+			foreach ($fteOptions as $key => $val) {
+				if (floatval($key) > floatval($currentFTE)) {
+					unset($fteOptions[$key]);
+				}
+			}
+			$this->advancedSelectOptions($fteOptions, $currentFTE);
+			$fteOptions = array_values($fteOptions);
 		}
 		$transferType = $request->data[$this->alias()]['transfer_type'];
 

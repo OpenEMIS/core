@@ -25,9 +25,9 @@ class StaffAbsencesTable extends AppTable {
 		$this->table('institution_staff_absences');
 		parent::initialize($config);
 		$this->addBehavior('Institution.Absence');
-		
+
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'staff_id']);
-		$this->belongsTo('StaffAbsenceReasons', ['className' => 'FieldOption.StaffAbsenceReasons']);
+		$this->belongsTo('StaffAbsenceReasons', ['className' => 'Institution.StaffAbsenceReasons']);
 		$this->belongsTo('AbsenceTypes', ['className' => 'Institution.AbsenceTypes', 'foreignKey' =>'absence_type_id']);
 		$this->addBehavior('Excel', [
 			'excludes' => [
@@ -35,9 +35,9 @@ class StaffAbsencesTable extends AppTable {
 				'end_year',
 				'institution_id',
 				'staff_id',
-				'full_day', 
-				'start_date', 
-				'start_time', 
+				'full_day',
+				'start_date',
+				'start_time',
 				'end_time',
 				'end_date'
 			],
@@ -123,7 +123,7 @@ class StaffAbsencesTable extends AppTable {
 		} else {
 			$endDate = $entity->end_date;
 		}
-		
+
 		if ($entity->full_day) {
 			return sprintf('%s %s (%s - %s)', __('Full'), __('Day'), $startDate, $endDate);
 		} else {
@@ -160,7 +160,7 @@ class StaffAbsencesTable extends AppTable {
 				$value = sprintf('%s (%s - %s)', $startDate, $this->formatTime($entity->start_time), $this->formatTime($entity->end_time));
 			}
 		}
-		
+
 		return $value;
 	}
 
@@ -248,7 +248,7 @@ class StaffAbsencesTable extends AppTable {
 	public function viewAfterAction(Event $event, Entity $entity) {
 		unset($this->_fieldOrder[0]);// Academic period not in use in view page
 		// $this->ControllerAction->setFieldOrder($this->_fieldOrder);
-		
+
 		$absenceTypeOptions = $this->absenceList;
 		$this->ControllerAction->field('absence_type_id', [
 			'options' => $this->absenceList
@@ -274,7 +274,7 @@ class StaffAbsencesTable extends AppTable {
 		if ($this->action == 'add') {
 			$StaffTable = TableRegistry::get('Institution.Staff');
 			$staffRecord = $StaffTable->find()->where([
-					$StaffTable->aliasField('staff_id') => $this->request->data[$this->alias()]['staff_id'], 
+					$StaffTable->aliasField('staff_id') => $this->request->data[$this->alias()]['staff_id'],
 					$StaffTable->aliasField('end_date').' IS NULL'
 				])
 				->first();
@@ -282,7 +282,7 @@ class StaffAbsencesTable extends AppTable {
 			if (empty($staffRecord)) {
 				$staffRecord = $StaffTable->find()
 					->where([
-						$StaffTable->aliasField('staff_id') => $this->request->data[$this->alias()]['staff_id'], 
+						$StaffTable->aliasField('staff_id') => $this->request->data[$this->alias()]['staff_id'],
 					])
 					->order([$StaffTable->aliasField('end_date')])
 					->first();
@@ -337,7 +337,7 @@ class StaffAbsencesTable extends AppTable {
 			if (!empty($endDate)) {
 				$attr['date_options']['endDate'] = $endDate->format('d-m-Y');
 			}
-			
+
 		}
 		return $attr;
 	}
@@ -350,7 +350,7 @@ class StaffAbsencesTable extends AppTable {
 			$attr['date_options'] = ['startDate' => $startDate->format('d-m-Y')];
 			if (!empty($endDate)) {
 				$attr['date_options']['endDate'] = $endDate->format('d-m-Y');
-			}	
+			}
 		}
 		if ($action == 'edit' || $action == 'add') {
 			$selectedAbsenceType = $request->data[$this->alias()]['absence_type_id'];
