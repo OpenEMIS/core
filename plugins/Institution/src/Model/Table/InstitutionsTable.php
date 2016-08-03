@@ -17,6 +17,7 @@ use App\Model\Table\AppTable;
 
 class InstitutionsTable extends AppTable  {
 	private $dashboardQuery = null;
+	private $shiftTypes = [];
 
 	public function initialize(array $config) {
 		$this->table('institutions');
@@ -109,6 +110,13 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('OpenEmis.Map');
         $this->addBehavior('HighChart', ['institutions' => ['_function' => 'getNumberOfInstitutionsByModel']]);
         $this->addBehavior('Import.ImportLink');
+
+        $this->shiftTypes = [
+        	1 => __('Single Shift Owner'),
+			2 => __('Single Shift Occupier'),
+			3 => __('Multiple Shift Owner'),
+			4 => __('Multiple Shift Occupier')
+        ];
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -161,6 +169,13 @@ class InstitutionsTable extends AppTable  {
 		return $validator;
 	}
 
+	public function implementedEvents()
+	{
+		$events = parent::implementedEvents();
+		$events['AdvanceSearch.getCustomFilter'] = 'getCustomFilter';
+		return $events;
+	}
+
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
 		$cloneFields = $fields->getArrayCopy();
 		$newFields = [];
@@ -201,17 +216,11 @@ class InstitutionsTable extends AppTable  {
 
 	public function onGetShiftType(Event $event, Entity $entity)
 	{
-		if (($entity->shift_type)==1) {
-			return __('Single Shift Owner');
-		} elseif (($entity->shift_type)==2) {
-			return __('Single Shift Occupier');
-		} elseif (($entity->shift_type)==3) {
-			return __('Multiple Shift Owner');
-		} elseif (($entity->shift_type)==4) {
-			return __('Multiple Shift Occupier');
-		} else {
-			return '-';
+		$type = '-';
+		if (array_key_exists($entity->shift_type, $this->shiftTypes)) {
+			$type = $this->shiftTypes[$entity->shift_type];
 		}
+		return $type;
 	}
 
 	public function getViewShiftDetail($institutionId, $academicPeriod)
@@ -744,29 +753,12 @@ class InstitutionsTable extends AppTable  {
     	];
     }
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$newEvent = [
-			'AdvanceSearch.getCustomFilter' => 'getCustomFilter'
-		];
-		$events = array_merge($events, $newEvent);
-		return $events;
-	}
-
-	public function getCustomFilter(Event $event) {
-
-		$shiftTypeOptions = new ArrayObject;
-
-		$shiftTypeOptions[1] = __('Single Shift Owner');
-		$shiftTypeOptions[2] = __('Single Shift Occupier');
-		$shiftTypeOptions[3] = __('Multiple Shift Owner');
-		$shiftTypeOptions[4] = __('Multiple Shift Occupier');
-
+	public function getCustomFilter(Event $event)
+	{
 		$filters['shift_type'] = [
 			'label' => __('Shift Type'),
-			'options' => $shiftTypeOptions
+			'options' => $this->shiftTypes
 		];
-
 		return $filters;
 	}
 }
