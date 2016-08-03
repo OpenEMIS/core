@@ -546,4 +546,24 @@ class AcademicPeriodsTable extends AppTable {
 			->find('order')
 			->where([$this->aliasField('academic_period_level_id') => $level->id]);
 	}
+
+	public function getLatest()
+	{	
+		$query = $this->find()
+				->select([$this->aliasField('id')])
+				->where([
+					$this->aliasField('editable') => 1,
+					$this->aliasField('visible').' > 0',
+					$this->aliasField('parent_id').' > 0',
+					$this->aliasField('academic_period_level_id') => 1
+				])
+				->order(['start_date DESC']);
+		$countQuery = $query->count();
+		if($countQuery > 0) {
+			$result = $query->first();
+			return $result->id;
+		} else {
+			return 0;
+		}
+	}
 }
