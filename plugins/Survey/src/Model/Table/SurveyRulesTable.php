@@ -46,7 +46,7 @@ class SurveyRulesTable extends ControllerActionTable
             'title' => __('Edit')
         ];
         $extra['elements']['controls'] = ['name' => 'Survey.survey_rules_controls', 'data' => [], 'options' => [], 'order' => 2];
-
+        $this->fields['survey_question_id']['type'] = 'integer';
         if (!$this->request->query('survey_form_id')) {
             $this->fields['survey_form_id']['type'] = 'integer';
         }
@@ -55,7 +55,8 @@ class SurveyRulesTable extends ControllerActionTable
     public function onGetShowOptions(Event $event, Entity $entity) 
     {
         $showOptions = $entity->show_options;
-        $showOptions = json_decode($showOptions);
+        $showOptions = $event->subject()->HtmlField->decodeEscapeHtmlEntity($showOptions);
+        $showOptions = json_decode($showOptions, true);
         $SurveyQuestionChoicesTable = TableRegistry::get('Survey.SurveyQuestionChoices');
         if (!empty($showOptions)) {
             $options = $SurveyQuestionChoicesTable

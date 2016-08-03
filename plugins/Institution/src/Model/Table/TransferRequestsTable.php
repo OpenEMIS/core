@@ -36,7 +36,7 @@ class TransferRequestsTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions']);
-		$this->belongsTo('StudentTransferReasons', ['className' => 'FieldOption.StudentTransferReasons']);
+		$this->belongsTo('StudentTransferReasons', ['className' => 'Student.StudentTransferReasons']);
 		$this->belongsTo('NewEducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
 		$this->addBehavior('OpenEmis.Section');

@@ -6,8 +6,9 @@ use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
 class LicenseTypesTable extends ControllerActionTable {
-	public function initialize(array $config) {
-		$this->addBehavior('ControllerAction.FieldOption');
+	public function initialize(array $config)
+    {
+		$this->addBehavior('FieldOption.FieldOption');
 		$this->table('license_types');
 		parent::initialize($config);
 		$this->hasMany('Licenses', ['className' => 'Staff.Licenses', 'foreignKey' => 'license_type_id']);
