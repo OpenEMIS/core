@@ -25,6 +25,7 @@ class ReportListBehavior extends Behavior {
 		$events['ControllerAction.Model.add.beforeSave'] = 'addBeforeSave';
 		$events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
 		$events['ControllerAction.Model.afterAction'] = 'afterAction';
+		$events['Model.excel.onExcelBeforeWrite'] = 'onExcelBeforeWrite';
 		return $events;
 	}
 
