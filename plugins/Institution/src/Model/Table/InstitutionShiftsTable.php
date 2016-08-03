@@ -81,14 +81,16 @@ class InstitutionShiftsTable extends ControllerActionTable {
         }
  	}
 
- 	public function afterAction(Event $event, ArrayObject $extra) 
+ 	public function afterAction(Event $event, ArrayObject $extra)
  	{
  		if ($this->action == 'remove') {
  			$shiftName = $this->ShiftOptions->get($extra['entity']->shift_option_id); //since institution_shifts does not have field 'name', then need to pass shift name that will be use on remove action
- 			$extra['entity']->name = $shiftName->name; 
+ 			$extra['entity']->name = $shiftName->name;
  		}
  	}
 
+ 	// To disable the replicate logic for now, because we need to finalise the trigger point for the replication to happen
+ 	// Proposed implementation is to trigger from new Academic Period
     public function replicate() //logic to handle replicate action.
     {
     	$request = $this->request;
@@ -252,15 +254,15 @@ class InstitutionShiftsTable extends ControllerActionTable {
 		return $buttons;
 	}
 
-	public function addBeforeAction(Event $event) 
+	public function addBeforeAction(Event $event)
 	{
 		unset($this->request->query['replicate']);
 	}
 
-	public function addEditBeforeAction(Event $event) 
-	{	
+	public function addEditBeforeAction(Event $event)
+	{
 		$institutionId = $this->Session->read('Institution.Institutions.id');
-		
+
 		if ($this->isOccupier($institutionId, $this->getSelectedAcademicPeriod($this->request))) { //if occupier, then redirect from trying to access add/edit page
 			$url = $this->url('index');
 			$event->stopPropagation();
@@ -357,7 +359,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
 				->find('list')
 				->find('visible')
 				->find('order');
-				
+
 			if ($action == 'add') {
 				//during add then need to exclude used shifts based on school and academic period
 				$options = $options
@@ -407,7 +409,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
 		}
 	}
 
-	public function onUpdateFieldLocation(Event $event, array $attr, $action, $request) 
+	public function onUpdateFieldLocation(Event $event, array $attr, $action, $request)
 	{
 		$attr['options'] = ['CURRENT' => __('This Institution'), 'OTHER' => __('Other Institution')];
 		if ($action == 'add') {
@@ -425,7 +427,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldLocationInstitutionId(Event $event, array $attr, $action, $request) 
+	public function onUpdateFieldLocationInstitutionId(Event $event, array $attr, $action, $request)
 	{
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 
@@ -460,7 +462,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
 			$attr['attr']['value'] = $occupier->name;
 		}
 
-		
+
 
 			// if($request->data){
 			// 	$data = $request->data[$this->alias()];
