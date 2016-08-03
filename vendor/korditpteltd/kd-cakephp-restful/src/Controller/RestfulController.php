@@ -186,7 +186,7 @@ class RestfulController extends AppController
                 if (in_array($field, $columns)) {
                     $conditions[$table->aliasField($field)] = $val;
                 } else {
-                    $conditions[$field] = $val;
+                    $conditions[str_replace("-", ".", $field)] = $val;
                 }
             }
             $query->where($conditions);

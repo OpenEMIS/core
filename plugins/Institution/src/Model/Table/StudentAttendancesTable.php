@@ -275,7 +275,7 @@ class StudentAttendancesTable extends AppTable {
 				$startDate = $dateRange[0];
 				$endDate = $dateRange[count($dateRange) - 1];
 				$dateRangeCondition = [
-					'StudentAbsences.end_date >=' => $startDate, 
+					'StudentAbsences.end_date >=' => $startDate,
 					'StudentAbsences.start_date <=' => $endDate
 				];
 			} else {
@@ -284,7 +284,7 @@ class StudentAttendancesTable extends AppTable {
 		} else {
 			$dateRangeCondition = [];
 		}
-		
+
 		$StudentAttendancesQuery = clone $query;
 
 		$studentAbsenceArray = $StudentAttendancesQuery
@@ -297,7 +297,7 @@ class StudentAttendancesTable extends AppTable {
 			->group(['student_id', 'absence_type'])
 			->where($dateRangeCondition)
 			->toArray();
-		// Creating the data set		
+		// Creating the data set
 		$dataSet = [];
 		$data = [];
 		foreach ($studentAbsenceArray as $userAbsenceType) {
@@ -322,7 +322,7 @@ class StudentAttendancesTable extends AppTable {
 							$data[$typeName] = 1;
 						}
 					}
-					
+
 					if ($typeName == 'Absence') {
 						$absenceForTheWeek = true;
 					}
@@ -386,7 +386,7 @@ class StudentAttendancesTable extends AppTable {
 			$attr['value'] = $configItemsTable->value('start_time');
 			$attr['default_time'] = false;
 			$attr['null'] = true;
-			
+
 			if (empty($entity->StudentAbsences['id'])) {
 				$options['value'] = self::PRESENT;
 				$html .= $Form->input($fieldPrefix.".absence_type_id", $options);
@@ -508,7 +508,7 @@ class StudentAttendancesTable extends AppTable {
 			}
 		} else {
 			$reasonId = $entity->StudentAbsences['student_absence_reason_id'];
-			$StudentAbsenceReasons = TableRegistry::get('FieldOption.StudentAbsenceReasons');
+			$StudentAbsenceReasons = TableRegistry::get('Institution.StudentAbsenceReasons');
 
 			if (!empty($reasonId)) {
 				$obj = $StudentAbsenceReasons->findById($reasonId)->first();
@@ -798,7 +798,7 @@ class StudentAttendancesTable extends AppTable {
 			$totalStudent = $queryClone->distinct(['InstitutionStudents.student_id'])->count();
 
 			$indexDashboard = 'attendance';
-			
+
 			$dataSet = $this->getNumberOfStudentByAttendance(['query' => $query, 'selectedDay' => $selectedDay]);
 			$present = 0;
 			$absent = 0;
@@ -823,7 +823,7 @@ class StudentAttendancesTable extends AppTable {
 				$studentAttendanceArray[] = ['label' => 'No. of Students Absent for the week', 'value' => $absent];
 				$studentAttendanceArray[] = ['label' => 'No. of Students Late for the week', 'value' => $late];
 			}
-			
+
 			$toolbarElements[] = [
 				'name' => $indexDashboard,
 				'data' => [
@@ -834,8 +834,8 @@ class StudentAttendancesTable extends AppTable {
 				'options' => []
 			];
 			$toolbarElements[] = [
-				'name' => 'Institution.Attendance/controls', 
-				'data' => [], 
+				'name' => 'Institution.Attendance/controls',
+				'data' => [],
 				'options' => []
 			];
 
@@ -855,7 +855,7 @@ class StudentAttendancesTable extends AppTable {
 				$typeOptions = [self::PRESENT => __('Present')];
 				$this->typeOptions = $typeOptions + $this->absenceList;
 
-				$StudentAbsenceReasons = TableRegistry::get('FieldOption.StudentAbsenceReasons');
+				$StudentAbsenceReasons = TableRegistry::get('Institution.StudentAbsenceReasons');
 				$this->reasonOptions = $StudentAbsenceReasons->getList()->toArray();
 			}
 		} else {
@@ -918,7 +918,7 @@ class StudentAttendancesTable extends AppTable {
 		}
     	return $query
     		->select([
-    			$this->aliasField('student_id'), 
+    			$this->aliasField('student_id'),
     			'Users.openemis_no', 'Users.first_name', 'Users.middle_name', 'Users.third_name','Users.last_name', 'Users.id',
     			'StudentAbsences.id',
     			'StudentAbsences.start_date',

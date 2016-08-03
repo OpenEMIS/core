@@ -12,7 +12,7 @@ class AbsencesTable extends AppTable {
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
-		$this->belongsTo('StudentAbsenceReasons', ['className' => 'FieldOption.StudentAbsenceReasons']);
+		$this->belongsTo('StudentAbsenceReasons', ['className' => 'Institution.StudentAbsenceReasons']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('AbsenceTypes', ['className' => 'Institution.AbsenceTypes', 'foreignKey' =>'absence_type_id']);
 	}
@@ -43,12 +43,12 @@ class AbsencesTable extends AppTable {
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		parent::onUpdateActionButtons($event, $entity, $buttons);
-		
+
 		if (array_key_exists('view', $buttons)) {
 			$institutionId = $entity->institution->id;
 			$url = [
-				'plugin' => 'Institution', 
-				'controller' => 'Institutions', 
+				'plugin' => 'Institution',
+				'controller' => 'Institutions',
 				'action' => 'StudentAbsences',
 				'view', $entity->id,
 				'institution_id' => $institutionId,
