@@ -110,15 +110,10 @@ INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `cod
 VALUES ('c934bb35-38ec-11e6-bc26-525400b263eb', 'InstitutionShifts', 'shift_option_id', 'Institution -> Shifts', 'Shift', NULL, NULL, '1', NULL, NULL, '1', '2016-06-23 00:00:00');
 
 UPDATE `labels` 
-SET `field_name` = 'Owner' 
+SET `field_name` = 'Owner',
+`field` = 'institution_id' 
 WHERE `module` = 'InstitutionShifts'
 AND `field` = 'location'
-AND `module_name` = 'Institutions -> Shifts';
-
-UPDATE `labels` 
-SET `field` = 'institution_id' 
-WHERE `module` = 'InstitutionShifts'
-AND `field_name` = 'Owner'
 AND `module_name` = 'Institutions -> Shifts';
 
 UPDATE `labels` 
@@ -127,6 +122,15 @@ WHERE `module` = 'InstitutionShifts'
 AND `field` = 'location_institution_id'
 AND `module_name` = 'Institutions -> Shifts';
 
+UPDATE `labels` 
+SET `module_name` = 'Institutions -> Shifts'
+WHERE `module` = 'InstitutionShifts';
+
+UPDATE `labels`
+SET  `field` = 'academic_period_id'
+WHERE `module` = 'InstitutionShifts'
+AND `field` = 'Academic_period_id'
+AND `module_name` = 'Institutions -> Shifts';
 --
 -- institutions table
 --
