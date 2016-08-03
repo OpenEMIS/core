@@ -17,7 +17,13 @@ use App\Model\Table\AppTable;
 
 class InstitutionsTable extends AppTable  {
 	private $dashboardQuery = null;
+
 	private $shiftTypes = [];
+	
+	public $SINGLE_OWNER = 1;
+	public $SINGLE_OCCUPIER = 2;
+	public $MULTIPLE_OWNER = 3;
+	public $MULTIPLE_OCCUPIER = 4;
 
 	public function initialize(array $config) {
 		$this->table('institutions');
