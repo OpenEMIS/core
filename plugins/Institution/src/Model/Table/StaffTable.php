@@ -1230,7 +1230,11 @@ class StaffTable extends AppTable {
 				        ->toArray()
 				        ;
 			$positions = array_keys($positions);
-			return $query->where([$this->aliasField('institution_position_id IN') => $positions]);
+			if (!empty($positions)) {
+				return $query->where([$this->aliasField('institution_position_id IN') => $positions]);
+			} else {
+				return $query;
+			}
 		} else {
 			return $query;
 		}
