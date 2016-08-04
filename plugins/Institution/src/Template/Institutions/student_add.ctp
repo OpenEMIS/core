@@ -73,10 +73,9 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             ng-click="onAddNewStudentClick()"
             type="button" class="btn btn-default">Add New Student
         </button>
-        <button type="button" class="btn btn-default btn-prev" disabled="disabled">Previous</button>
         <button type="button" class="btn btn-default btn-next"
             ng-model="InstitutionStudentController.selectedStudent"
-            ng-disabled="!InstitutionStudentController.selectedStudent && (InstitutionStudentController.externalSearch || !InstitutionStudentController.hasExternalDataSource || InstitutionStudentController.step!='create_user')"
+            ng-disabled="!InstitutionStudentController.selectedStudent && (InstitutionStudentController.externalSearch || !InstitutionStudentController.hasExternalDataSource)"
             data-last="Complete">
             Next
         </button>
@@ -313,7 +312,6 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
         </div>
     </div>
     <div class="actions bottom">
-        <button type="button" class="btn btn-default btn-prev" disabled="disabled">Previous</button>
         <button type="button"
             ng-model="InstitutionStudentController.selectedStudent"
             class="btn btn-default btn-next"
