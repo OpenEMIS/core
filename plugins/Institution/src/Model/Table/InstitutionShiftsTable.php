@@ -43,21 +43,23 @@ class InstitutionShiftsTable extends ControllerActionTable {
 	    	    ])
  	        ->add('start_time', 'ruleCheckShiftAvailable', [
 					'rule' => ['checkShiftAvailable'],
-        		])
- 	        ->add('institution_name', 'ruleCheckLocationInstitutionId', [
- 	        		'rule' => ['checkInstitutionLocation']
- 	        	])
- 	        ->requirePresence('location');
-
+					'on' => function ($context) { //validate when only location_institution_id is not empty
+			        	return !empty($context['data']['location_institution_id']);
+			        }
+				])
+ 	        // ->add('location_institution_id', 'ruleCheckLocationInstitutionId', [
+ 	        // 		'rule' => ['checkInstitutionLocation']
+ 	        // 	])
+ 	        ->requirePresence('location_institution_id');
 		return $validator;
 	}
 
 	//this is to remove virtual field validation during duplicating institution shift
-	public function validationRemoveLocation(Validator $validator)
-	{
-		$validator->requirePresence('location', false);
-		return $validator;
-	}
+	// public function validationRemoveLocation(Validator $validator)
+	// {
+	// 	$validator->requirePresence('location', false);
+	// 	return $validator;
+	// }
 
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
@@ -430,12 +432,9 @@ class InstitutionShiftsTable extends ControllerActionTable {
 	public function onUpdateFieldLocationInstitutionId(Event $event, array $attr, $action, $request)
 	{
 		$institutionId = $this->Session->read('Institution.Institutions.id');
-
 		if ($action == 'add') {
-
-			$attr['type'] = 'hidden'; //default is hidden as location default also "CURRENT"
-			$attr['value'] = $institutionId; //default is current institution ID
-
+			//$attr['type'] = 'hidden'; //default is hidden as location default also "CURRENT"
+			//$attr['value'] = $institutionId; //default is current institution ID
 			if($request->data){
 				$data = $request->data[$this->alias()];
 				if ($data['location'] == 'OTHER') {
@@ -444,7 +443,11 @@ class InstitutionShiftsTable extends ControllerActionTable {
 					$attr['noResults'] = __('No Institutions found');
 					$attr['attr'] = ['placeholder' => __('Institution Code or Name')];
 					$attr['attr']['value'] = '';
+					$attr['value'] = '';
 					$attr['url'] = ['academicperiod' => $this->getSelectedAcademicPeriod($this->request), 'controller' => 'Institutions', 'action' => 'Shifts', 'ajaxInstitutionsAutocomplete'];
+				} else if ($data['location'] == 'CURRENT') {
+					$attr['type'] = 'hidden'; //default is hidden as location default also "CURRENT"
+					$attr['value'] = $institutionId; //default is current institution ID
 				}
 			}
 		} else if ($action == 'edit') {
@@ -453,21 +456,8 @@ class InstitutionShiftsTable extends ControllerActionTable {
 			$occupier = $Institutions->findById($attr['entity']->location_institution_id)->first();
 			$attr['attr']['value'] = $occupier->name;
 		}
-
+		// pr($attr['value']);
 		return $attr;
-	}
-
-	public function addEditOnChangeShiftOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
-		$request = $this->request;
-		unset($request->query['shiftoption']);
-
-		if ($request->is(['post', 'put'])) {
-			if (array_key_exists($this->alias(), $request->data)) {
-				if (array_key_exists('shift_option_id', $request->data[$this->alias()])) {
-					$request->query['shiftoption'] = $request->data[$this->alias()]['shift_option_id'];
-				}
-			}
-		}
 	}
 
 	public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
@@ -483,6 +473,25 @@ class InstitutionShiftsTable extends ControllerActionTable {
 		}
 	}
 
+	public function addEditOnChangeShiftOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
+		$request = $this->request;
+		unset($request->query['shiftoption']);
+
+		if ($request->is(['post', 'put'])) {
+			if (array_key_exists($this->alias(), $request->data)) {
+				if (array_key_exists('shift_option_id', $request->data[$this->alias()])) {
+					$request->query['shiftoption'] = $request->data[$this->alias()]['shift_option_id'];
+				}
+			}
+		}
+	}
+
+	public function addEditOnChangeLocation(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) 
+	{
+		$data['InstitutionShifts']['location_institution_id'] = ''; //value has to be reset each time location being updated.
+		// pr($data['InstitutionShifts']['location_institution_id']);
+	}
+	
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options)
 	{
 		if ($this->AcademicPeriods->getCurrent() == $entity->academic_period_id) { //if the one that being added / edited is the current academic period
@@ -779,6 +788,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
 			'entity' => $entity
 		]);
 		$this->field('location_institution_id', [
+			'type' => 'hidden',
 			'after' => 'institution_id',
 			'entity' => $entity
 		]);
