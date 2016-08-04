@@ -53,6 +53,19 @@ CREATE TABLE IF NOT EXISTS `infrastructure_types` (
   KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+DROP TABLE IF EXISTS `room_statuses`;
+CREATE TABLE IF NOT EXISTS `room_statuses` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `code` varchar(100) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `room_statuses` (`id`, `code`, `name`) VALUES
+(1, 'IN_USE', 'In Use'),
+(2, 'END_OF_USAGE', 'End of Usage'),
+(3, 'CHANGE_IN_ROOM_TYPE', 'Change in Room Type');
+
 -- room_types
 DROP TABLE IF EXISTS `room_types`;
 CREATE TABLE IF NOT EXISTS `room_types` (
@@ -81,13 +94,15 @@ CREATE TABLE IF NOT EXISTS `institution_rooms` (
   `name` varchar(250) NOT NULL,
   `start_date` date NOT NULL,
   `start_year` int(4) NOT NULL,
-  `end_date` date DEFAULT NULL,
-  `end_year` int(4) DEFAULT NULL,
+  `end_date` date NOT NULL,
+  `end_year` int(4) NOT NULL,
+  `room_status_id` int(11) NOT NULL,
   `institution_infrastructure_id` int(11) NOT NULL,
   `institution_id` int(11) NOT NULL,
   `academic_period_id` int(11) NOT NULL,
   `room_type_id` int(11) NOT NULL,
   `infrastructure_condition_id` int(11) NOT NULL,
+  `previous_room_usage_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,

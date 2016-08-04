@@ -53,6 +53,9 @@ trait OptionsTrait {
 					'1' => '100%'
 				],
 			],
+			'InstitutionRooms' => [
+				'change_types' => [1 => __('Update Details'), 2 => __('End of Usage'), 3 => __('Change in Room Type')]
+			],
 		];
 
 		$index = explode('.', $code);

@@ -5,6 +5,7 @@ RENAME TABLE `z_3017_infrastructure_levels` TO `infrastructure_levels`;
 DROP TABLE IF EXISTS `infrastructure_types`;
 RENAME TABLE `z_3017_infrastructure_types` TO `infrastructure_types`;
 
+DROP TABLE IF EXISTS `room_statuses`;
 DROP TABLE IF EXISTS `room_types`;
 DROP TABLE IF EXISTS `institution_rooms`;
 

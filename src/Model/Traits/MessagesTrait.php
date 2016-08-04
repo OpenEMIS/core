@@ -679,6 +679,9 @@ trait MessagesTrait {
 				]
 			],
 			'InstitutionRooms' => [
+				'code' => [
+					'ruleUnique' => 'Please enter a unique code'
+				],
 				'start_date' => [
 					'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
 				],
