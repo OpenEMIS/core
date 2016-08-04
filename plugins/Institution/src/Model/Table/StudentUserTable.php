@@ -36,6 +36,14 @@ class StudentUserTable extends UserTable {
 		return $validator;
 	}
 
+	public function findGetOpenEmisId(Query $query, array $options = []){
+		if (!isset($options['model'])) {
+			$options['model'] = 'Student';
+		}
+		$openemisId = $this->getUniqueOpenemisId($options);
+		$query->select(['openemis' => "CONCAT('', '".$openemisId."')"])->limit(1)->first();
+	}
+
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$sessionKey = 'Institution.Students.new';
 		if ($this->Session->check($sessionKey)) {
