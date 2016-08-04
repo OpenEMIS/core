@@ -270,8 +270,9 @@ class InstitutionsController extends AppController  {
 							]
 						]);
 					} else {
+						$primaryKey = $this->ControllerAction->getPrimaryKey($model);
 						$exists = $model->exists([
-							$model->aliasField($model->primaryKey()) => $modelId,
+							$model->aliasField($primaryKey) => $modelId,
 							$model->aliasField('institution_id') => $institutionId
 						]);
 					}
