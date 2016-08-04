@@ -242,8 +242,8 @@ class InstitutionsTable extends AppTable  {
 					'OccupierId' => 'LocationInstitutions.id',
 					'Shift' => 'ShiftOptions.name',
 					'ShiftId' => 'ShiftOptions.id',
-					'StartTime' => 'ShiftOptions.start_time',
-					'EndTime' => 'ShiftOptions.end_time'
+					'StartTime' => 'InstitutionShifts.start_time',
+					'EndTime' => 'InstitutionShifts.end_time'
 				])
 				->where([
 					'OR' => [
