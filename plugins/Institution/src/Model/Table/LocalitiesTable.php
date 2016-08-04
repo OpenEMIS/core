@@ -1,21 +1,18 @@
 <?php
 namespace Institution\Model\Table;
 
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 use Cake\Validation\Validator;
 
-class LocalitiesTable extends AppTable {
-	public function initialize(array $config) {
-        $this->addBehavior('ControllerAction.FieldOption');
+class LocalitiesTable extends ControllerActionTable {
+	public function initialize(array $config)
+    {
+        $this->addBehavior('FieldOption.FieldOption');
         $this->table('institution_localities');
         parent::initialize($config);
-		
+
 		$this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_locality_id']);
 
-		$this->addBehavior('OpenEmis.OpenEmis');
-		$this->addBehavior('ControllerAction.ControllerAction', [
-			'actions' => ['remove' => 'transfer'],
-			'fields' => ['excludes' => ['modified_user_id', 'created_user_id']]
-		]);		
+		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
 	}
 }
