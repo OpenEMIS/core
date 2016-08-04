@@ -49,6 +49,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
     StudentController.setStudentName = setStudentName;
     StudentController.appendName = appendName;
     StudentController.changeGender = changeGender;
+    StudentController.validateNewUser = validateNewUser;
 
     StudentController.selectedStudent;
     StudentController.selectedStudentData = null;
@@ -562,7 +563,6 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
             delete StudentController.postResponse;
             $scope.$apply();
         }
-
         // To go to add student page if there is a student selected from the internal search
         // or external search
         if (StudentController.selectedStudent && (data.step == 1 || data.step == 2) && data.direction == 'next') {
@@ -573,46 +573,62 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                 });
                 evt.preventDefault();
             } else {
-                angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
-                    step: 3
-                });
-                evt.preventDefault();
+                if (data.step == 1) {
+                    angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
+                        step: 3
+                    });
+                    evt.preventDefault(); 
+                } else {
+                    StudentController.validateNewUser();
+                }
+                
             }
             
-        } else if (data.step == 3 && StudentController.hasExternalDataSource && data.direction == 'next') {
+        } else if (
+            (
+                (data.step == 3 && StudentController.hasExternalDataSource)
+            ) && data.direction == 'next') {
+                StudentController.validateNewUser();
+        }
+    });
 
-            var remain = false;
-            StudentController.postResponse = {};
-            StudentController.postResponse.error = {};
-            if (StudentController.selectedStudentData.first_name == '') {
-                StudentController.postResponse.error.first_name = {'_empty': 'This field cannot be left empty'};
-                remain = true;
-            }
+    function validateNewUser() {
+        var remain = false;
+        StudentController.postResponse = {};
+        StudentController.postResponse.error = {};
+        if (StudentController.selectedStudentData.first_name == '') {
+            StudentController.postResponse.error.first_name = {'_empty': 'This field cannot be left empty'};
+            remain = true;
+        }
 
-            if (StudentController.selectedStudentData.last_name == '') {
-                StudentController.postResponse.error.last_name = {'_empty': 'This field cannot be left empty'};
-                remain = true;
-            }
-            if (StudentController.selectedStudentData.gender_id == '' || StudentController.selectedStudentData.gender_id == null) {
-                StudentController.postResponse.error.gender_id = {'_empty': 'This field cannot be left empty'};
-                remain = true;
-            }
+        if (StudentController.selectedStudentData.last_name == '') {
+            StudentController.postResponse.error.last_name = {'_empty': 'This field cannot be left empty'};
+            remain = true;
+        }
+        if (StudentController.selectedStudentData.gender_id == '' || StudentController.selectedStudentData.gender_id == null) {
+            StudentController.postResponse.error.gender_id = {'_empty': 'This field cannot be left empty'};
+            remain = true;
+        }
 
-            if (StudentController.selectedStudentData.date_of_birth == '') {
-                StudentController.postResponse.error.date_of_birth = {'_empty': 'This field cannot be left empty'};
-                remain = true;
-            }
+        if (StudentController.selectedStudentData.date_of_birth == '') {
+            StudentController.postResponse.error.date_of_birth = {'_empty': 'This field cannot be left empty'};
+            remain = true;
+        }
 
-            if (remain) {
-                AlertSvc.error($scope, 'Please review the errors in the form.');
-                $scope.$apply();
+        if (remain) {
+            AlertSvc.error($scope, 'Please review the errors in the form.');
+            $scope.$apply();
+            if (StudentController.hasExternalDataSource) {
                 angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
                     step: 'createUser'
+                });  
+            } else {
+                angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
+                    step: 2
                 });
-                evt.preventDefault();
             }
-        } 
-    });
+        }
+    }
 
     angular.element(document.querySelector('#wizard')).on('finished.fu.wizard', function(evt, data) {
         StudentController.postForm();
@@ -637,6 +653,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
         } else if (data.step == 2 && !StudentController.hasExternalDataSource) {
             StudentController.externalSearch = false;
             InstitutionsStudentsSvc.resetExternalVariable();
+            StudentController.selectedStudent = true;
             StudentController.step = 'create_user';
         } else {
             StudentController.step = 'add_student';
