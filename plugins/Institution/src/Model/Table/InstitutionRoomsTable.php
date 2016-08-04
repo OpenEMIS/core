@@ -62,6 +62,12 @@ class InstitutionRoomsTable extends AppTable {
     	$extra['excludedModels'] = [$this->CustomFieldValues->alias()];
     }
 
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+        return $events;
+    }
+
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
 		return $validator
@@ -96,9 +102,41 @@ class InstitutionRoomsTable extends AppTable {
 		}
 	}
 
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		if ($action == 'view') {
+			$paramsPass = $this->ControllerAction->paramsPass();
+			$id = current($paramsPass);
+			$entity = $this->get($id);
+
+			$endOfUsageId = $this->RoomStatuses->getIdByCode('END_OF_USAGE');
+    		if ($entity->room_status_id == $endOfUsageId) {
+    			if ($toolbarButtons->offsetExists('edit')) {
+    				unset($toolbarButtons['edit']);
+    			}
+    		}
+		}
+    }
+
 	public function onGetInfrastructureLevel(Event $event, Entity $entity) {
 		return $this->levelOptions[$this->roomLevel];
 	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+    	$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
+    	$endOfUsageId = $this->RoomStatuses->getIdByCode('END_OF_USAGE');
+    	if ($entity->room_status_id == $endOfUsageId) {
+    		if (array_key_exists('edit', $buttons)) {
+    			unset($buttons['edit']);	//remove edit action from the action button
+    		}
+
+    		if (array_key_exists('remove', $buttons)) {
+	    		unset($buttons['remove']);	// remove delete action from the action button
+	    	}
+    	}
+
+    	return $buttons;
+    }
 
 	public function indexBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder(['code', 'name', 'room_type_id', 'room_status_id']);
@@ -147,8 +185,28 @@ class InstitutionRoomsTable extends AppTable {
 		$this->controller->set(compact('typeOptions', 'selectedType'));
 		// End
 
-		$inUseId = $this->RoomStatuses->getIdByCode('IN_USE');
-		$query->where([$this->aliasField('room_status_id') => $inUseId]);
+		// Room Statuses
+		list($statusOptions, $selectedStatus) = array_values($this->getStatusOptions([
+			'conditions' => [
+				'code IN' => ['IN_USE', 'END_OF_USAGE']
+			],
+			'withAll' => true
+		]));
+		if ($selectedStatus != '-1') {
+			$query->where([$this->aliasField('room_status_id') => $selectedStatus]);
+		} else {
+			// default show In Use and End Of Usage
+			$query->matching('RoomStatuses', function ($q) {
+				return $q->where([
+					'RoomStatuses.code IN' => ['IN_USE', 'END_OF_USAGE']
+				]);
+			});
+		}
+		$this->controller->set(compact('statusOptions', 'selectedStatus'));
+		// End
+
+		// $inUseId = $this->RoomStatuses->getIdByCode('IN_USE');
+		// $query->where([$this->aliasField('room_status_id') => $inUseId]);
 	}
 
 	public function editOnInitialize(Event $event, Entity $entity) {
@@ -205,7 +263,9 @@ class InstitutionRoomsTable extends AppTable {
 	}
 
 	public function onUpdateFieldRoomStatusId(Event $event, array $attr, $action, Request $request) {
-		if ($action == 'add') {
+		if ($action == 'view') {
+			$attr['type'] = 'select';
+		} else if ($action == 'add') {
 			$inUseId = $this->RoomStatuses->getIdByCode('IN_USE');
 			$attr['value'] = $inUseId;
 		}
@@ -439,13 +499,13 @@ class InstitutionRoomsTable extends AppTable {
 
 	public function addEditOnChangeRoomType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$request = $this->request;
-		unset($request->query['type']);
+		unset($request->query['room_type_id']);
 
 		if ($request->is(['post', 'put'])) {
 			if (array_key_exists($this->alias(), $request->data)) {
 				if (array_key_exists('room_type_id', $request->data[$this->alias()])) {
 					$selectedType = $request->data[$this->alias()]['room_type_id'];
-					$request->query['type'] = $selectedType;
+					$request->query['room_type_id'] = $selectedType;
 				}
 
 				if (array_key_exists('custom_field_values', $request->data[$this->alias()])) {
@@ -457,7 +517,7 @@ class InstitutionRoomsTable extends AppTable {
 
 	private function setupFields(Entity $entity) {
 		$this->ControllerAction->setFieldOrder([
-			'institution_id', 'change_type', 'institution_infrastructure_id', 'academic_period_id', 'code', 'name', 'room_type_id', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_condition_id', 'previous_room_usage_id', 'new_room_type', 'new_start_date'
+			'institution_id', 'change_type', 'institution_infrastructure_id', 'academic_period_id', 'code', 'name', 'room_type_id', 'room_status_id', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_condition_id', 'previous_room_usage_id', 'new_room_type', 'new_start_date'
 		]);
 
 		$this->ControllerAction->field('change_type');
@@ -478,6 +538,11 @@ class InstitutionRoomsTable extends AppTable {
 	private function getAutoGenerateCode($parentId) {
 		// getting suffix of code by counting
 		$indexData = $this->find()
+			->matching('RoomStatuses', function ($q) {
+				return $q->where([
+					'RoomStatuses.code IN' => ['IN_USE', 'END_OF_USAGE']
+				]);
+			})
 			->where([$this->aliasField('institution_infrastructure_id') => $parentId])
 			->count();
 		$indexData += 1; // starts counting from 1
@@ -568,7 +633,7 @@ class InstitutionRoomsTable extends AppTable {
 		// End
 
 		$url = $this->ControllerAction->url('edit');
-		unset($url['type']);
+		unset($url['type_id']);
 		unset($url['edit_type']);
 		$url[1] = $newEntity->id;
 		return $this->controller->redirect($url);
@@ -594,9 +659,26 @@ class InstitutionRoomsTable extends AppTable {
 		if($withAll && count($typeOptions) > 1) {
 			$typeOptions = ['-1' => __('All Room Types')] + $typeOptions;
 		}
-		$selectedType = $this->queryString('type', $typeOptions);
+		$selectedType = $this->queryString('room_type_id', $typeOptions);
 		$this->advancedSelectOptions($typeOptions, $selectedType);
 
 		return compact('typeOptions', 'selectedType');
+	}
+
+	public function getStatusOptions($params=[]) {
+		$conditions = array_key_exists('conditions', $params) ? $params['conditions'] : [];
+		$withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
+
+		$statusOptions = $this->RoomStatuses
+			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+			->where($conditions)
+			->toArray();
+		if($withAll && count($statusOptions) > 1) {
+			$statusOptions = ['-1' => __('All Statuses')] + $statusOptions;
+		}
+		$selectedStatus = $this->queryString('room_status_id', $statusOptions);
+		$this->advancedSelectOptions($statusOptions, $selectedStatus);
+
+		return compact('statusOptions', 'selectedStatus');
 	}
 }
