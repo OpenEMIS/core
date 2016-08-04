@@ -2,10 +2,6 @@
 namespace App\Model\Table;
 
 use ArrayObject;
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/POCOR-2602
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\ORM\Query;
