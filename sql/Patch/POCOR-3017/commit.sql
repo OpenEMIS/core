@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS `institution_rooms` (
   `academic_period_id` int(11) NOT NULL,
   `room_type_id` int(11) NOT NULL,
   `infrastructure_condition_id` int(11) NOT NULL,
-  `previous_room_usage_id` int(11) NOT NULL,
+  `previous_room_usage_id` int(11) NOT NULL COMMENT 'links to institution_rooms.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
