@@ -43,7 +43,7 @@ class TrainingSessionsTable extends AppTable {
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
-		
+
 		return $validator
 			->add('code', [
 				'ruleUnique' => [
@@ -175,7 +175,7 @@ class TrainingSessionsTable extends AppTable {
 		// The same behavior occured on trainers.
 		// Additional logic written for trainers array is to add "id" parameter outside of each "_joinData" array so that each record
 		// will not be treated as a new User.Users record.
-		// Including the "id" parameter on the web form needs extra javascript or a page reload method to work since the trainers is selected 
+		// Including the "id" parameter on the web form needs extra javascript or a page reload method to work since the trainers is selected
 		// through a dropdown input.
 		if ($data->offsetExists('TrainingSessions')) {
 			if (!isset($data['TrainingSessions']['trainees'])) {
@@ -201,11 +201,24 @@ class TrainingSessionsTable extends AppTable {
 	}
 
 	public function addEditOnAddTrainer(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$dataOptions = [
-			'type' => key($this->getSelectOptions($this->aliasField('trainer_types'))),
-			'trainer_id' => '',
-			'name' => ''
-		];
+        if (empty($data[$this->alias()]['trainers'])) {
+            $data[$this->alias()]['trainers'] = [];
+        }
+
+        // rearranging the data so that it is an array where the numerals are in running order
+        $trainerData = $data[$this->alias()]['trainers'];
+        $rearrangedTrainerData = [];
+        foreach ($trainerData as $key => $value) {
+            $rearrangedTrainerData[] = $value;
+        }
+        $data[$this->alias()]['trainers'] = $rearrangedTrainerData;
+
+        // adds a new trainer
+        $dataOptions = [
+            'type' => key($this->getSelectOptions($this->aliasField('trainer_types'))),
+            'trainer_id' => '',
+            'name' => ''
+        ];
 		$data[$this->alias()]['trainers'][] = $dataOptions;
 
 		//Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
@@ -273,7 +286,7 @@ class TrainingSessionsTable extends AppTable {
 	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
 		if ($action == 'edit') {
 			$includes['autocomplete'] = [
-				'include' => true, 
+				'include' => true,
 				'css' => ['OpenEmis.../plugins/autocomplete/css/autocomplete'],
 				'js' => ['OpenEmis.../plugins/autocomplete/js/autocomplete']
 			];
@@ -506,7 +519,7 @@ class TrainingSessionsTable extends AppTable {
 	public function template() {
 		// prepareDownload() resides in ImportTrait
 		$folder = $this->prepareDownload();
-		// Do not localize file name as certain non-latin characters might cause issue 
+		// Do not localize file name as certain non-latin characters might cause issue
 		$excelFile = 'OpenEMIS_Core_Import_Training_Session_Trainees.xlsx';
 		$excelPath = $folder . DS . $excelFile;
 
@@ -538,16 +551,16 @@ class TrainingSessionsTable extends AppTable {
 		// MAX_SIZE resides in ImportTrait
 		if ($request->env('CONTENT_LENGTH') >= $this->MAX_SIZE) {
 			$error = $model->getMessage('Import.over_max');
-		} 
+		}
 		// file_upload_max_size() resides in ImportTrait
 		if ($request->env('CONTENT_LENGTH') >= $this->file_upload_max_size()) {
 			$error = $model->getMessage('Import.over_max');
-		} 
+		}
 		if ($request->env('CONTENT_LENGTH') >= $this->post_upload_max_size()) {
 			$error = $model->getMessage('Import.over_max');
 		}
 		if (!array_key_exists($alias, $data)) {
-			$error = $model->getMessage('Import.not_supported_format');	
+			$error = $model->getMessage('Import.not_supported_format');
 		}
 		if (!array_key_exists('trainees_import', $data[$alias])) {
 			$error = $model->getMessage('Import.not_supported_format');
@@ -573,13 +586,13 @@ class TrainingSessionsTable extends AppTable {
 		foreach ($supportedFormats as $eachformat) {
 			if (in_array($fileFormat, $eachformat)) {
 				$formatFound = true;
-			} 
+			}
 		}
 		if (!$formatFound) {
 			if (!empty($fileFormat)) {
 				$error = $model->getMessage('Import.not_supported_format');
 			}
-		}				
+		}
 
 		$fileExt = $fileObj['name'];
 		$fileExt = explode('.', $fileExt);
@@ -617,12 +630,12 @@ class TrainingSessionsTable extends AppTable {
 			$Staff = TableRegistry::get('Institution.Staff');
 			$Users = TableRegistry::get('User.Users');
 			$Positions = TableRegistry::get('Institution.InstitutionPositions');
-			
+
 			$targetPopulationIds = $TargetPopulations
 				->find('list', ['keyField' => 'target_population_id', 'valueField' => 'target_population_id'])
 				->where([$TargetPopulations->aliasField('training_course_id') => $entity->training_course_id])
 				->toArray();
-		
+
 			if (array_key_exists($key, $data[$alias])) {
 				$trainees = new Collection($data[$alias][$key]);
 				$traineeIds = $trainees->extract('_joinData.openemis_no');
@@ -645,7 +658,7 @@ class TrainingSessionsTable extends AppTable {
 						break;
 					}
 				}
-					
+
 				$cell = $sheet->getCellByColumnAndRow(0, $row);
 				$openemis_no = $cell->getValue();
 				if (empty($openemis_no)) {
