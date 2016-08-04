@@ -33,9 +33,15 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <span class="chevron"></span>
                 </div>
             </li>
-            <li data-step="3">
+            <li data-step="3" data-name="createUser" ng-show="InstitutionStudentController.createNewStudent">
                 <div class="step-wrapper">
-                    Add Students
+                    New Student Details
+                    <span class="chevron"></span>
+                </div>
+            </li>
+            <li data-step="4" data-name="addStudent">
+                <div class="step-wrapper">
+                    Add Student
                     <input type="hidden" ng-model="InstitutionStudentController.hasExternalDataSource" ng-init="InstitutionStudentController.hasExternalDataSource = true"/>
                     <span class="chevron"></span>
                 </div>
@@ -43,7 +49,13 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             <?php 
                 } else {
             ?>
-            <li data-step="3">
+            <li data-step="3" data-name="createUser" ng-show="InstitutionStudentController.createNewStudent">
+                <div class="step-wrapper">
+                    New Student Details
+                    <span class="chevron"></span>
+                </div>
+            </li>
+            <li data-step="4" data-name="addStudent">
                 <div class="step-wrapper">
                     Add Students
                     <input type="hidden" ng-model="InstitutionStudentController.hasExternalDataSource" ng-init="InstitutionStudentController.hasExternalDataSource = false"/>
@@ -57,14 +69,14 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
     </div>
     <div class="actions top">
         <button
-            ng-if="(InstitutionStudentController.rowsThisPage.length===0 && !InstitutionStudentController.initialLoad)"
+            ng-if="(InstitutionStudentController.rowsThisPage.length===0 && !InstitutionStudentController.initialLoad) && InstitutionStudentController.step!='create_user'"
             ng-click="onAddNewStudentClick()"
             type="button" class="btn btn-default">Add New Student
         </button>
         <button type="button" class="btn btn-default btn-prev" disabled="disabled">Previous</button>
         <button type="button" class="btn btn-default btn-next"
             ng-model="InstitutionStudentController.selectedStudent"
-            ng-disabled="!InstitutionStudentController.selectedStudent && (InstitutionStudentController.externalSearch || !InstitutionStudentController.hasExternalDataSource)"
+            ng-disabled="!InstitutionStudentController.selectedStudent && (InstitutionStudentController.externalSearch || !InstitutionStudentController.hasExternalDataSource || InstitutionStudentController.step!='create_user')"
             data-last="Complete">
             Next
         </button>
@@ -78,23 +90,23 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 </div>
                 <div class="text">
                     <label>Openemis No.</label>
-                    <input ng-model="InstitutionStudentController.internalFilterOpenemisNo" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource() : null" type="text" id="" maxlength="150">
+                    <input ng-model="InstitutionStudentController.internalFilterOpenemisNo" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
                     <label>First Name</label>
-                    <input ng-model="InstitutionStudentController.internalFilterFirstName" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource() : null" type="text" id="" maxlength="150">
+                    <input ng-model="InstitutionStudentController.internalFilterFirstName" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
                     <label>Last Name</label>
-                    <input ng-model="InstitutionStudentController.internalFilterLastName" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource() : null" type="text" id="" maxlength="150">
+                    <input ng-model="InstitutionStudentController.internalFilterLastName" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
                     <label>{{ InstitutionStudentController.defaultIdentityTypeName }}</label>
-                    <input ng-model="InstitutionStudentController.internalFilterIdentityNumber" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource() : null" type="text" id="" maxlength="150">
+                    <input ng-model="InstitutionStudentController.internalFilterIdentityNumber" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
                 </div>
 
                 <div class="search-action-btn margin-top-10 margin-bottom-10">
-                    <button class="btn btn-default btn-xs" ng-click="reloadInternalDatasource()">Filter</button>
+                    <button class="btn btn-default btn-xs" ng-click="reloadInternalDatasource(true)">Filter</button>
                     <button class="btn btn-outline btn-xs" ng-click="clearInternalSearchFilters()" type="reset" value="Clear">Clear</button>
                 </div>
             </div>
@@ -117,23 +129,23 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 </div>
                 <div class="text">
                     <label>Openemis No.</label>
-                    <input ng-model="InstitutionStudentController.externalFilterOpenemisNo" ng-keyup="$event.keyCode == 13 ? reloadExternalDatasource() : null" type="text" id="" maxlength="150">
+                    <input ng-model="InstitutionStudentController.externalFilterOpenemisNo" ng-keyup="$event.keyCode == 13 ? reloadExternalDatasource(true) : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
                     <label>First Name</label>
-                    <input ng-model="InstitutionStudentController.externalFilterFirstName" ng-keyup="$event.keyCode == 13 ? reloadExternalDatasource() : null" type="text" id="" maxlength="150">
+                    <input ng-model="InstitutionStudentController.externalFilterFirstName" ng-keyup="$event.keyCode == 13 ? reloadExternalDatasource(true) : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
                     <label>Last Name</label>
-                    <input ng-model="InstitutionStudentController.externalFilterLastName" ng-keyup="$event.keyCode == 13 ? reloadExternalDatasource() : null" type="text" id="" maxlength="150">
+                    <input ng-model="InstitutionStudentController.externalFilterLastName" ng-keyup="$event.keyCode == 13 ? reloadExternalDatasource(true) : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
                     <label>{{ InstitutionStudentController.defaultIdentityTypeName }}</label>
-                    <input ng-model="InstitutionStudentController.externalFilterIdentityNumber" ng-keyup="$event.keyCode == 13 ? reloadExternalDatasource() : null" type="text" id="" maxlength="150">
+                    <input ng-model="InstitutionStudentController.externalFilterIdentityNumber" ng-keyup="$event.keyCode == 13 ? reloadExternalDatasource(true) : null" type="text" id="" maxlength="150">
                 </div>
 
                 <div class="search-action-btn margin-top-10 margin-bottom-10">
-                    <button class="btn btn-default btn-xs" ng-click="reloadExternalDatasource()">Filter</button>
+                    <button class="btn btn-default btn-xs" ng-click="reloadExternalDatasource(true)">Filter</button>
                     <button class="btn btn-outline btn-xs" ng-click="clearExternalSearchFilters()" type="reset" value="Clear">Clear</button>
                 </div>
             </div>
@@ -148,16 +160,72 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 </div>
             </div>
         </div>
-        <div class="step-pane sample-pane" data-step="3">
+        <div class="step-pane sample-pane" data-step="3" data-name="createUser">
+            <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
+                <div class="input string required">
+                    <label>First Name</label>
+                    <input ng-model="InstitutionStudentController.selectedStudentData.first_name" ng-change="InstitutionStudentController.setStudentName()" type="string" ng-init="InstitutionStudentController.selectedStudentData.first_name='';">
+                    <div ng-if="InstitutionStudentController.postResponse.error.first_name" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.first_name">{{ error }}</p>
+                    </div>
+                </div>
+                <div class="input string">
+                    <label>Middle Name</label>
+                    <input ng-model="InstitutionStudentController.selectedStudentData.middle_name" ng-change="InstitutionStudentController.setStudentName()" type="string">
+                </div>
+                <div class="input string">
+                    <label>Third Name</label>
+                    <input ng-model="InstitutionStudentController.selectedStudentData.third_name" ng-change="InstitutionStudentController.setStudentName()" type="string">
+                </div>
+                <div class="input string required">
+                    <label>Last Name</label>
+                    <input ng-model="InstitutionStudentController.selectedStudentData.last_name" ng-change="InstitutionStudentController.setStudentName()" type="string" ng-init="InstitutionStudentController.selectedStudentData.last_name='';">
+                    <div ng-if="InstitutionStudentController.postResponse.error.last_name" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.last_name">{{ error }}</p>
+                    </div>
+                </div>
+                <div class="input string">
+                    <label>Preferred Name</label>
+                    <input ng-model="InstitutionStudentController.selectedStudentData.preferred_name" type="string">
+                </div>
+                <div class="input select required error">
+                    <label>Gender</label>
+                    <div class="input-select-wrapper">
+                        <select name="Students[gender_id]" id="students-gender_id"
+                            ng-options="option.id as option.name for option in InstitutionStudentController.genderOptions"
+                            ng-model="InstitutionStudentController.selectedStudentData.gender_id"
+                            ng-change="InstitutionStudentController.changeGender()"
+                            ng-init="InstitutionStudentController.selectedStudentData.gender_id='';"
+                            >
+                            <option value="" >-- Select --</option>
+                        </select>
+                    </div>
+                    <div ng-if="InstitutionStudentController.postResponse.error.gender_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.gender_id">{{ error }}</p>
+                    </div>
+                </div>
+                <div class="input date required">
+                    <label for="Students_date_of_birth">Date of Birth</label>
+                    <div class="input-group date " id="Students_date_of_birth" style="">
+                        <input type="text" class="form-control " name="Students[date_of_birth]" ng-model="InstitutionStudentController.selectedStudentData.date_of_birth" ng-init="InstitutionStudentController.selectedStudentData.date_of_birth='';">
+                        <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                    </div>
+                    <div ng-if="InstitutionStudentController.postResponse.error.date_of_birth" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.date_of_birth">{{ error }}</p>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="step-pane sample-pane" data-step="4" data-name="addStudent">
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
                 <div class="input string" ng-model="InstitutionStudentController.postResponse">
                     <label>Student</label>
                     <input ng-model="InstitutionStudentController.selectedStudentData.name" type="string" disabled="disabled">
-                    <div ng-if="InstitutionStudentController.postResponse.error.student_name" class="error-message">
-                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.student_name">{{ error }}</p>
+                    <div ng-if="InstitutionStudentController.postResponse.error.first_name" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.first_name">{{ error }}</p>
                     </div>
-                    <div ng-if="InstitutionStudentController.postResponse.error.date_of_birth" class="error-message">
-                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.date_of_birth">{{ error }}</p>
+                    <div ng-if="InstitutionStudentController.postResponse.error.last_name" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.last_name">{{ error }}</p>
                     </div>
                 </div>
                 <div class="input string">
@@ -167,13 +235,19 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 <div class="input string">
                     <label>Date of Birth</label>
                     <input ng-model="InstitutionStudentController.selectedStudentData.date_of_birth" type="string" disabled="disabled">
+                    <div ng-if="InstitutionStudentController.postResponse.error.student_name" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.student_name">{{ error }}</p>
+                    </div>
+                    <div ng-if="InstitutionStudentController.postResponse.error.date_of_birth" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.date_of_birth">{{ error }}</p>
+                    </div>
                 </div>
                 <div class="input string">
                     <label>Gender</label>
                     <input ng-model="InstitutionStudentController.selectedStudentData.gender.name" type="string" disabled="disabled">
                 </div>
                 <div class="input select required" ng-model="InstitutionStudentController.postResponse">
-                    <label>AcademicPeriod</label>
+                    <label>Academic Period</label>
                     <div class="input-select-wrapper">
                         <select name="Students[academic_period_id]" id="students-academic-period-id"
                             ng-options="option.name for option in InstitutionStudentController.academicPeriodOptions.availableOptions track by option.id"
@@ -253,13 +327,14 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
 <script>
 $(function () {
 var datepicker0 = $('#Students_start_date').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true});
+var datepicker1 = $('#Students_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true});
 $( document ).on('DOMMouseScroll mousewheel scroll', function(){
-window.clearTimeout( t );
-t = window.setTimeout( function(){
-datepicker0.datepicker('place');
+    window.clearTimeout( t );
+    t = window.setTimeout( function(){
+        datepicker0.datepicker('place');
+        datepicker1.datepicker('place');
+    });
 });
-}
-);
 });
 
 //]]>
