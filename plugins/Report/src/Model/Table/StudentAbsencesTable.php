@@ -16,7 +16,7 @@ class StudentAbsencesTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' =>'institution_id']);
-		$this->belongsTo('StudentAbsenceReasons', ['className' => 'FieldOption.StudentAbsenceReasons']);
+		$this->belongsTo('StudentAbsenceReasons', ['className' => 'Institution.StudentAbsenceReasons']);
 		$this->belongsTo('AbsenceTypes', ['className' => 'Institution.AbsenceTypes', 'foreignKey' =>'absence_type_id']);
 
 		$this->addBehavior('AcademicPeriod.Period');
@@ -27,9 +27,9 @@ class StudentAbsencesTable extends AppTable {
 				'end_year',
 				'student_id',
 				'institution_id',
-				'full_day', 
-				'start_date', 
-				'start_time', 
+				'full_day',
+				'start_date',
+				'start_time',
 				'end_time',
 				'end_date',
 				'student_absence_reason_id',
@@ -51,16 +51,16 @@ class StudentAbsencesTable extends AppTable {
 		$query
 			->select([
 				'openemis_no' => 'Users.openemis_no',
-				'code' => 'Institutions.code', 
-				'area_name' => 'Areas.name', 
+				'code' => 'Institutions.code',
+				'area_name' => 'Areas.name',
 				'area_level_name' => 'AreaLevels.name'
 			])
 			->contain([
 				'Institutions.Areas.AreaLevels'
 			])
 			->order([
-				$this->aliasField('student_id'), 
-				$this->aliasField('institution_id'), 
+				$this->aliasField('student_id'),
+				$this->aliasField('institution_id'),
 				$this->aliasField('start_date')
 			]);
 	}
@@ -142,7 +142,7 @@ class StudentAbsencesTable extends AppTable {
 		} else {
 			$endDate = $entity->end_date;
 		}
-		
+
 		if ($entity->full_day) {
 			return sprintf('%s %s (%s - %s)', __('Full'), __('Day'), $startDate, $endDate);
 		} else {

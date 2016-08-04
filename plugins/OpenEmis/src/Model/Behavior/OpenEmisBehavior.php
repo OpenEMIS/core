@@ -88,10 +88,10 @@ class OpenEmisBehavior extends Behavior {
 
         if (array_key_exists('toolbarButtons', $extra)) {
 			$toolbarButtons = $extra['toolbarButtons'];
-			if ($model->action == 'view' && $model->actions('remove') != 'transfer' && $model->actions('remove')) {
+			if ($model->action == 'view' && $model->actions('remove') != 'transfer' && $model->actions('remove') != 'restrict' && $model->actions('remove')) {
 				// not checking existence of entity in $extra so that errors will be shown if entity is removed unexpectedly
                 if (isset($toolbarButtons['remove'])) {
-                    $toolbarButtons['remove']['attr']['field-value'] = $extra['entity']->{$model->primaryKey()};
+                    $toolbarButtons['remove']['attr']['field-value'] = $extra['entity']->{$model->getPrimaryKey()};
                 }
 			}
 			$model->controller->set('toolbarButtons', $toolbarButtons);
@@ -117,7 +117,8 @@ class OpenEmisBehavior extends Behavior {
             if ($isViewPage) {
                 $isDeleteButtonEnabled = $toolbarButtons->offsetExists('remove');
                 $isNotTransferOperation = $model->actions('remove') != 'transfer';
-                $primaryKey = $entity->{$model->primaryKey()};
+                $idKey = $model->getPrimaryKey();
+                $primaryKey = $entity->$idKey;
                 if ($isDeleteButtonEnabled && $isNotTransferOperation) {
                     // not checking existence of entity in $extra so that errors will be shown if entity is removed unexpectedly
                     // to attach primary key to the button attributes for delete operation
