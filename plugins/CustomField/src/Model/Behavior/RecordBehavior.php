@@ -402,9 +402,6 @@ class RecordBehavior extends Behavior {
 			}
 		} else {
 			$where = [$this->CustomModules->aliasField('model') => $this->config('model')];
-			if ($this->config('behavior')) {
-				$where[$this->CustomModules->aliasField('behavior')] = $this->config('behavior');
-			}
 
 			$results = $this->CustomModules
 				->find('all')
