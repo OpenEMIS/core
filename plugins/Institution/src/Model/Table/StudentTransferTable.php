@@ -187,7 +187,7 @@ class StudentTransferTable extends AppTable {
 					$event->stopPropagation();
 					return $this->controller->redirect($url);
 				}
-			}			
+			}
 		}
     }
 
@@ -422,7 +422,7 @@ class StudentTransferTable extends AppTable {
     }
 
     public function onUpdateFieldStudentTransferReasonId(Event $event, array $attr, $action, Request $request) {
-    	$StudentTransferReasons = TableRegistry::get('FieldOption.StudentTransferReasons');
+    	$StudentTransferReasons = TableRegistry::get('Student.StudentTransferReasons');
 		$attr['options'] = $StudentTransferReasons->getList()->toArray();
     	return $attr;
     }
@@ -451,7 +451,7 @@ class StudentTransferTable extends AppTable {
                 ->find('studentClasses', ['institution_class_id' => $selectedClass])
                 ->select(['institution_class_id' => 'InstitutionClassStudents.institution_class_id'])
                 ->autoFields(true)
-                
+
 				->where([
 					$this->aliasField('institution_id') => $institutionId,
 					$this->aliasField('academic_period_id') => $selectedPeriod,
@@ -501,7 +501,7 @@ class StudentTransferTable extends AppTable {
 		if (empty($selectedClass)) {
 			if (!empty($classes)) {
 				$selectedClass = key($classes);
-			}		
+			}
 		}
 
 		$this->advancedSelectOptions($options, $selectedClass);
@@ -643,6 +643,6 @@ class StudentTransferTable extends AppTable {
 		$url = $this->ControllerAction->url('index');
 		$url['action'] = 'Students';
 
-		return $this->controller->redirect($url);		
+		return $this->controller->redirect($url);
 	}
 }

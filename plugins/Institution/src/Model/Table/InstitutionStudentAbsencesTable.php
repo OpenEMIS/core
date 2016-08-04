@@ -23,9 +23,9 @@ class InstitutionStudentAbsencesTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->addBehavior('Institution.Absence');
-		
+
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
-		$this->belongsTo('StudentAbsenceReasons', ['className' => 'FieldOption.StudentAbsenceReasons']);
+		$this->belongsTo('StudentAbsenceReasons', ['className' => 'Institution.StudentAbsenceReasons']);
 		$this->belongsTo('AbsenceTypes', ['className' => 'Institution.AbsenceTypes', 'foreignKey' =>'absence_type_id']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->addBehavior('Excel', [
@@ -34,9 +34,9 @@ class InstitutionStudentAbsencesTable extends AppTable {
 				'end_year',
 				'institution_id',
 				'student_id',
-				'full_day', 
-				'start_date', 
-				'start_time', 
+				'full_day',
+				'start_date',
+				'start_time',
 				'end_time',
 				'end_date'
 			],
@@ -130,7 +130,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		} else {
 			$endDate = $entity->end_date;
 		}
-		
+
 		if ($entity->full_day) {
 			return sprintf('%s %s (%s - %s)', __('Full'), __('Day'), $startDate, $endDate);
 		} else {
@@ -167,7 +167,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 				$value = sprintf('%s (%s - %s)', $startDate, $this->formatTime($entity->start_time), $this->formatTime($entity->end_time));
 			}
 		}
-		
+
 		return $value;
 	}
 
@@ -426,7 +426,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			$selectedAbsenceType = $request->data[$this->alias()]['absence_type_id'];
 			$attr['options'] = $absenceTypeOptions;
 			$attr['default'] = $selectedAbsenceType;
-			$attr['onChangeReload'] = 'changeAbsenceType';			
+			$attr['onChangeReload'] = 'changeAbsenceType';
 		}
 		return $attr;
 	}
@@ -547,7 +547,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			}
 		]);
 		// End
-		
+
 		// Student
 		$Students = TableRegistry::get('Institution.InstitutionClassStudents');
 		$studentOptions = $Students

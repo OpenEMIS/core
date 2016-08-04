@@ -2,7 +2,6 @@
 namespace App\Model\Table;
 
 use ArrayObject;
-
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\ORM\Query;
