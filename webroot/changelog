@@ -1,3 +1,6 @@
+v3.5.12
+- Fixed a bug that caused some Field Options not able to be sorted
+
 v3.5.11.2
 - Student out of school has been moved from Institution Reports to Student Reports 
 - All Institution Reports are now generated based on Area access of the user
