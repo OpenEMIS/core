@@ -449,8 +449,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 					'controller' => 'Institutions',
 					'action' => 'StaffUser',
 					'0' => 'view',
-					'1' => $staffId,
-					'institution_id' => $entity->institution_id
+					'1' => $staffId
 				]);
 	}
 }
