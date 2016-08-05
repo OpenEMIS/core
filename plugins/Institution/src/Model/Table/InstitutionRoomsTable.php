@@ -102,6 +102,11 @@ class InstitutionRoomsTable extends AppTable {
 		}
 	}
 
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		// logic to migrate custom fields (general only) where new room is created when change in room type
+		$this->processMigrate($entity);
+	}
+
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($action == 'view') {
 			$paramsPass = $this->ControllerAction->paramsPass();
@@ -124,16 +129,34 @@ class InstitutionRoomsTable extends AppTable {
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
     	$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-    	$endOfUsageId = $this->RoomStatuses->getIdByCode('END_OF_USAGE');
-    	if ($entity->room_status_id == $endOfUsageId) {
-    		if (array_key_exists('edit', $buttons)) {
-    			unset($buttons['edit']);	//remove edit action from the action button
-    		}
+    	$isEditable = true;
+    	$isDeletable = true;
 
-    		if (array_key_exists('remove', $buttons)) {
-	    		unset($buttons['remove']);	// remove delete action from the action button
-	    	}
+		$inUseId = $this->RoomStatuses->getIdByCode('IN_USE');
+    	$endOfUsageId = $this->RoomStatuses->getIdByCode('END_OF_USAGE');
+    	if ($entity->room_status_id == $inUseId) {	// If is in use, not allow to delete if the rooms is appear in other academic period
+    		$count = $this
+    			->find()
+    			->where([$this->aliasField('code') => $entity->code])
+    			->count();
+
+    		if ($count > 1) {
+    			$isDeletable = false;
+    		}
+    	} else if ($entity->room_status_id == $endOfUsageId) {	// If already end of usage, not allow to edit or delete
+			$isEditable = false;
+    		$isDeletable = false;
     	}
+    	// End
+
+		if (array_key_exists('edit', $buttons) && !$isEditable) {
+			unset($buttons['edit']);	//remove edit action from the action button
+		}
+
+		if (array_key_exists('remove', $buttons) && !$isDeletable) {
+    		unset($buttons['remove']);	// remove delete action from the action button
+    	}
+
 
     	return $buttons;
     }
@@ -204,9 +227,6 @@ class InstitutionRoomsTable extends AppTable {
 		}
 		$this->controller->set(compact('statusOptions', 'selectedStatus'));
 		// End
-
-		// $inUseId = $this->RoomStatuses->getIdByCode('IN_USE');
-		// $query->where([$this->aliasField('room_status_id') => $inUseId]);
 	}
 
 	public function editOnInitialize(Event $event, Entity $entity) {
@@ -248,9 +268,6 @@ class InstitutionRoomsTable extends AppTable {
 			$selectedEditType = $request->query('edit_type');
 			if ($selectedEditType == self::END_OF_USAGE || $selectedEditType == self::CHANGE_IN_ROOM_TYPE) {
 				$this->canUpdateDetails = false;
-				if ($this->hasBehavior('Record')) {
-					$this->removeBehavior('Record');
-				}
 			}
 
 			$attr['type'] = 'select';
@@ -568,9 +585,7 @@ class InstitutionRoomsTable extends AppTable {
 	private function addBreadcrumbElement($toolbarElements=[]) {
 		$parentId = $this->request->query('parent');
 		$crumbs = $this->Parents->findPath(['for' => $parentId]);
-		$levelOptions = $this->Levels->getOptions();
-		$selectedLevel = $this->roomLevel;
-		$toolbarElements[] = ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => compact('crumbs', 'levelOptions', 'selectedLevel'), 'options' => []];
+		$toolbarElements[] = ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => compact('crumbs'), 'options' => []];
 
 		return $toolbarElements;
 	}
@@ -680,5 +695,23 @@ class InstitutionRoomsTable extends AppTable {
 		$this->advancedSelectOptions($statusOptions, $selectedStatus);
 
 		return compact('statusOptions', 'selectedStatus');
+	}
+
+	public function processMigrate(Entity $entity) {
+		// if is new and room status of previous room usage is change in room type then migrate all general custom fields
+		if ($entity->isNew()) {
+			if ($entity->has('previous_room_usage_id') && $entity->previous_room_usage_id != 0) {
+				$migrateFrom = $entity->previous_room_usage_id;
+				$migrateTo = $entity->id;
+
+				$previousEntity = $this->get($migrateFrom);
+				$changeInRoomTypeId = $this->RoomStatuses->getIdByCode('CHANGE_IN_ROOM_TYPE');
+
+				if ($previousEntity->room_status_id == $changeInRoomTypeId) {
+					// third parameters set to true means migrate general only
+					$this->migrateCustomFields($migrateFrom, $migrateTo, true);
+				}
+			}
+		}
 	}
 }
