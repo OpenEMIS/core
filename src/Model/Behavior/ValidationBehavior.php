@@ -886,21 +886,29 @@ class ValidationBehavior extends Behavior {
 			$selectedPeriod = $globalData['data'][$academicFieldName];
 			$institutionId = $globalData['data']['institution_id'];
 
+			// get the shift using periodId and locationInstitutionId, due to changes made on institution_shift table
 			$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
 			$conditions = ([
 				$InstitutionShift->aliasField('academic_period_id') => $selectedPeriod,
-				$InstitutionShift->aliasField('institution_id') => $institutionId
+				$InstitutionShift->aliasField('location_institution_id') => $institutionId
 			]);
 
-			$startTime = $InstitutionShift
+			$shiftTime = $InstitutionShift
 					->find()
 					->where($conditions)
-					->first()->start_time;
+					->toArray();
 
-			$endTime = $InstitutionShift
-					->find()
-					->where($conditions)
-					->last()->end_time;
+			$shiftStartTimeArray = [];
+			$shiftEndTimeArray = [];
+			foreach ($shiftTime as $key => $value) {
+				$shiftStartTimeArray[$key] = $value->start_time;
+				$shiftEndTimeArray[$key] = $value->end_time;
+			}
+
+			// get the earliest shift start time for the start time.
+			// get the latest shift end time for the end time.
+			$startTime = min($shiftStartTimeArray);
+			$endTime = max($shiftEndTimeArray);
 
 			$institutionShiftStartTime = strtotime($InstitutionShift->formatTime($startTime));
 			$institutionShiftEndTime = strtotime($InstitutionShift->formatTime($endTime));
