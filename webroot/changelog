@@ -1,3 +1,7 @@
+v3.6.1
+- Attendance start and end time is now determined by Shift start and end time
+- Fixed a bug on Survey Rules where checkboxes are not shown properly
+
 v3.5.12
 - Fixed a bug that caused some Field Options not able to be sorted
 
