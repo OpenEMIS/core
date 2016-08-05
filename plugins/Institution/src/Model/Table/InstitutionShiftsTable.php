@@ -31,7 +31,14 @@ class InstitutionShiftsTable extends ControllerActionTable {
 		$this->addBehavior('OpenEmis.Autocomplete');
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 
-		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
+		if ($this->behaviors()->has('ControllerAction')) {
+            $this->behaviors()->get('ControllerAction')->config([
+                'actions' => [
+					'remove' => 'restrict',
+					'search' => false
+				],
+            ]);
+        }
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -442,12 +449,9 @@ class InstitutionShiftsTable extends ControllerActionTable {
 					$attr['noResults'] = __('No Institutions found');
 					$attr['attr'] = ['placeholder' => __('Institution Code or Name')];
 					if (isset($data['location_institution_id']) && !empty($data['location_institution_id'])) { //this is to regain institution name after validation / reload
-						pr("isset");
 						if ($data['location_institution_id'] == $institutionId) {
-							pr("equal");
 							$attr['attr']['value'] = '';
 						} else {
-							pr("not equal");
 							$institutionDetails = $this->Institutions->findById($data['location_institution_id'])->first();
 							$attr['attr']['value'] = $institutionDetails['code'] . " - " . $institutionDetails['name'];
 						}
