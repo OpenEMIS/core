@@ -481,9 +481,9 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		if ($action == 'edit') {
 			$attr['type'] = 'readonly';
 			if ($this->request->query['full_day']) {
-				$attr['attr']['value'] = 'Yes';
+				$attr['attr']['value'] = __('Yes');
 			} else {
-				$attr['attr']['value'] = 'No';
+				$attr['attr']['value'] = __('No');
 			}
 		}
 

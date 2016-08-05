@@ -329,28 +329,10 @@ class StaffAbsencesTable extends AppTable {
 		]);
 		// Start Date and End Date
 		if ($this->action == 'add') {
-<<<<<<< HEAD
 			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			$startDate = $AcademicPeriod->get($selectedPeriod)->start_date;
 			$endDate = $AcademicPeriod->get($selectedPeriod)->end_date;
 
-=======
-			$StaffTable = TableRegistry::get('Institution.Staff');
-			$staffRecord = $StaffTable->find()->where([
-					$StaffTable->aliasField('staff_id') => $this->request->data[$this->alias()]['staff_id'],
-					$StaffTable->aliasField('end_date').' IS NULL'
-				])
-				->first();
-
-			if (empty($staffRecord)) {
-				$staffRecord = $StaffTable->find()
-					->where([
-						$StaffTable->aliasField('staff_id') => $this->request->data[$this->alias()]['staff_id'],
-					])
-					->order([$StaffTable->aliasField('end_date')])
-					->first();
-			}
->>>>>>> c02435560644fe06f1bfa4ea7a1611b965ce0ea2
 			$dateAttr = ['startDate' => Time::now(), 'endDate' => Time::now()];
 			if (array_key_exists($this->alias(), $this->request->data)) {
 				if (array_key_exists('staff_id', $this->request->data[$this->alias()])) {
@@ -426,10 +408,6 @@ class StaffAbsencesTable extends AppTable {
 			if (!empty($endDate)) {
 				$attr['date_options']['endDate'] = $endDate->format('d-m-Y');
 			}
-<<<<<<< HEAD
-=======
-
->>>>>>> c02435560644fe06f1bfa4ea7a1611b965ce0ea2
 		}
 
 		if ($action == 'edit') {
@@ -440,23 +418,9 @@ class StaffAbsencesTable extends AppTable {
 		return $attr;
 	}
 
-<<<<<<< HEAD
 	public function onUpdateFieldEndDate(Event $event, array $attr, $action, $request)
 	{
 		if ($action == 'add') {
-=======
-	public function onUpdateFieldEndDate(Event $event, array $attr, $action, $request) {
-		if ($action == 'add'){
-			$startDate = $attr['startDate'];
-			$endDate = $attr['endDate'];
-			$attr['default_date'] = Time::now()->format('d-m-Y');
-			$attr['date_options'] = ['startDate' => $startDate->format('d-m-Y')];
-			if (!empty($endDate)) {
-				$attr['date_options']['endDate'] = $endDate->format('d-m-Y');
-			}
-		}
-		if ($action == 'edit' || $action == 'add') {
->>>>>>> c02435560644fe06f1bfa4ea7a1611b965ce0ea2
 			$selectedAbsenceType = $request->data[$this->alias()]['absence_type_id'];
 			if (array_key_exists($selectedAbsenceType, $this->absenceCodeList) && $this->absenceCodeList[$selectedAbsenceType] == 'LATE') {
 				$attr['type'] = 'hidden';
@@ -593,9 +557,9 @@ class StaffAbsencesTable extends AppTable {
 		if ($action == 'edit') {
 			$attr['type'] = 'readonly';
 			if ($this->request->query['full_day']) {
-				$attr['attr']['value'] = 'Yes';
+				$attr['attr']['value'] = __('Yes');
 			} else {
-				$attr['attr']['value'] = 'No';
+				$attr['attr']['value'] = __('No');
 			}
 		}
 
