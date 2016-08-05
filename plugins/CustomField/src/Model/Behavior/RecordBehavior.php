@@ -388,6 +388,7 @@ class RecordBehavior extends Behavior {
 	public function getCustomFieldQuery($entity, $params=[]) {
 		$query = null;
 		$withContain = array_key_exists('withContain', $params) ? $params['withContain'] : true;
+		$generalOnly = array_key_exists('generalOnly', $params) ? $params['generalOnly'] : false;
 
 		// For Institution Survey
 		if (is_null($this->config('moduleKey'))) {
@@ -424,22 +425,30 @@ class RecordBehavior extends Behavior {
 					}
 
 					$filterId = $entity->$filterKey;
+
+					// conditions
+					$generalConditions = [
+						$this->CustomFormsFilters->aliasField($this->config('formKey') . ' = ') . $this->CustomForms->aliasField('id'),
+						$this->CustomFormsFilters->aliasField($this->config('filterKey')) => 0
+					];
+					$filterConditions = [
+						$this->CustomFormsFilters->aliasField($this->config('formKey') . ' = ') . $this->CustomForms->aliasField('id'),
+						$this->CustomFormsFilters->aliasField($this->config('filterKey')) => $filterId
+					];
+					if ($generalOnly) {
+						$conditions = $generalConditions;
+					} else {
+						$conditions = [
+							'OR' => [$generalConditions, $filterConditions]
+						];
+					}
+					// End
+
 					$customFormQuery
 						->join([
 							'table' => $this->CustomFormsFilters->table(),
 							'alias' => $this->CustomFormsFilters->alias(),
-							'conditions' => [
-								'OR' => [
-									[
-										$this->CustomFormsFilters->aliasField($this->config('formKey') . ' = ') . $this->CustomForms->aliasField('id'),
-										$this->CustomFormsFilters->aliasField($this->config('filterKey')) => 0
-									],
-									[
-										$this->CustomFormsFilters->aliasField($this->config('formKey') . ' = ') . $this->CustomForms->aliasField('id'),
-										$this->CustomFormsFilters->aliasField($this->config('filterKey')) => $filterId
-									]
-								]
-							]
+							'conditions' => $conditions
 						]);
 				}
 			}
@@ -914,6 +923,67 @@ class RecordBehavior extends Behavior {
 			->toArray();
 
 		return $fieldValue;
+	}
+
+	public function migrateCustomFields($migrateFrom, $migrateTo, $generalOnly=false) {
+		// default is all
+		$model = $this->_table;
+		$registryAlias = $model->registryAlias();
+
+		$primaryKey = $model->primaryKey();
+		$idKey = $model->aliasField($primaryKey);
+
+		$fieldKey = $this->config('fieldKey');
+		$formKey = $this->config('formKey');
+		$filterKey = $this->config('filterKey');
+		$recordKey = $this->config('recordKey');
+		$supportTableType = !is_null($this->config('tableCellClass')) ? true: false;
+
+		if ($model->exists([$idKey => $migrateFrom]) && $model->exists([$idKey => $migrateTo])) {
+			$query = $model->find()->contain(['CustomFieldValues'])->where([$idKey => $migrateFrom]);
+			if ($supportTableType) {
+				$query->contain(['CustomTableCells']);
+			}
+			$entity = $query->first();
+			$requestData = $entity->toArray();
+
+			$newEntity = $model->find()->where([$idKey => $migrateTo])->first();
+			$newRequestData = $newEntity->toArray();
+
+			$customFieldQuery = $this->getCustomFieldQuery($entity, ['generalOnly' => $generalOnly]);
+			$customFields = $customFieldQuery->toArray();
+			$fieldIds = $model->array_column($customFields, $fieldKey);
+
+			$ignoreFields = ['id', 'modified_user_id', 'modified', 'created_user_id', 'created'];
+			if (array_key_exists('custom_field_values', $requestData)) {
+				$newRequestData['custom_field_values'] = [];
+				foreach ($requestData['custom_field_values'] as $key => $fieldValue) {
+					if (in_array($fieldValue[$fieldKey], $fieldIds)) {
+						foreach ($ignoreFields as $field) {
+							unset($fieldValue[$field]);
+						}
+						$fieldValue[$recordKey] = $newEntity->id;
+						$newRequestData['custom_field_values'][] = $fieldValue;
+					}
+				}
+			}
+
+			if (array_key_exists('custom_table_cells', $requestData)) {
+				$newRequestData['custom_table_cells'] = [];
+				foreach ($requestData['custom_table_cells'] as $key => $fieldCell) {
+					if (in_array($fieldCell[$fieldKey], $fieldIds)) {
+						foreach ($ignoreFields as $field) {
+							unset($fieldCell[$field]);
+						}
+						$fieldCell[$recordKey] = $newEntity->id;
+						$newRequestData['custom_table_cells'][] = $fieldCell;
+					}
+				}
+			}
+
+			$newEntity = $model->patchEntity($newEntity, $newRequestData, ['validate' => false]);
+			$model->save($newEntity);
+        }
 	}
 
 	private function text($data, $fieldInfo, $options=[]) {
