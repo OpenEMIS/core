@@ -347,7 +347,7 @@
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git",
-                "reference": "3d0df057d9455108445c119b43adec0d34c0192d"
+                "reference": "3e2d1b726facf302333fec5b538458e732d7c0d8"
             },
             "require": {
                 "cakephp/cakephp": ">3.0.9"
@@ -393,7 +393,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
             },
-            "time": "2016-07-21 08:43:30"
+            "time": "2016-07-22 07:45:31"
         },
         {
             "name": "mk-j/php_xlsxwriter",
