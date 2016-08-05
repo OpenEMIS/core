@@ -441,4 +441,22 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 			}
 		}
 	}
+
+	public function onGetStaffId(Event $event, Entity $entity) {
+
+		$staffId = $entity->staff_id;
+		if (in_array($entity->status_id, [self::PENDING, self::APPROVED])) {
+			if ($this->AccessControl->check(['Institutions', 'StaffTransferRequests', 'edit'])) {
+				$page = 'edit';
+			}
+		}
+		return $event->subject()->Html->link($entity->user->name, [
+					'plugin' => 'Institution',
+					'controller' => 'Institutions',
+					'action' => 'StaffUser',
+					'0' => 'view',
+					'1' => $staffId,
+					'institution_id' => $entity->institution_id
+				]);
+	}
 }
