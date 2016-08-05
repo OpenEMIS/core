@@ -85,7 +85,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
  	{
  		if ($this->action == 'remove') {
  			$shiftName = $this->ShiftOptions->get($extra['entity']->shift_option_id); //since institution_shifts does not have field 'name', then need to pass shift name that will be use on remove action
- 			$extra['entity']->name = $shiftName->name;
+ 			$extra['entity']->name = __($shiftName->name);
  		}
  	}
 
@@ -377,9 +377,10 @@ class InstitutionShiftsTable extends ControllerActionTable {
 			//for edit since it is read only, then no need to put conditions and get the value from the options populated.
 			$options = $options->toArray();
 			$attr['type'] = 'readonly';
-			$attr['attr']['value'] = $options[$attr['entity']->shift_option_id];
+			$attr['attr']['value'] = __($options[$attr['entity']->shift_option_id]);
 			$attr['value'] = $attr['entity']->shift_option_id;
 		}
+		//pr($options);
 		return $attr;
 	}
 
@@ -664,9 +665,9 @@ class InstitutionShiftsTable extends ControllerActionTable {
 		foreach ($data as $key => $obj) {
 
 			if ($obj->institutionId == $institutionsId) { //if the shift owned by itself, then no need to show the shift owner
-				$shiftName = $obj->shiftOptionName;
+				$shiftName = __($obj->shiftOptionName);
 			} else {
-				$shiftName = $obj->institutionCode . " - " . $obj->institutionName . " - " . $obj->shiftOptionName;
+				$shiftName = $obj->institutionCode . " - " . $obj->institutionName . " - " . __($obj->shiftOptionName);
 			}
 
 			$list[$obj->institutionShiftId] = $shiftName;
