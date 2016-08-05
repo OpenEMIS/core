@@ -703,7 +703,9 @@ class StaffTable extends AppTable {
 			if (!empty($activeStatusId)) {
 				$positionConditions[$this->Positions->aliasField('status_id').' IN '] = $activeStatusId;
 			}
-			$staffPositionsOptions = $this->Positions
+
+			if ($selectedFTE > 0) {
+				$staffPositionsOptions = $this->Positions
 					->find()
 					->innerJoinWith('StaffPositionTitles.SecurityRoles')
 					->where($positionConditions)
@@ -711,6 +713,9 @@ class StaffTable extends AppTable {
 					->order(['StaffPositionTitles.type' => 'DESC', 'StaffPositionTitles.order'])
 					->autoFields(true)
 				    ->toArray();
+			} else {
+				$staffPositionsOptions = [];
+			}
 
 			// Filter by role previlege
 			$SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
@@ -824,7 +829,7 @@ class StaffTable extends AppTable {
 			$attr['onChangeReload'] = 'changeEndDate';
 			$startDate = new Date($request->data[$this->alias()]['start_date']);
 			if (isset($request->data[$this->alias()]['institution_position_id'])) {
-				if (isset($request->data[$this->alias()]['position_id_changed'])) {
+				if (isset($request->data[$this->alias()]['position_id_changed']) && !$this->Session->check($this->registryAlias().'.end_date_changed')) {
 					$institutionPositionId = $request->data[$this->alias()]['institution_position_id'];
 					$endDate = $this->find()
 						->select(['endDate' => $this->aliasField('start_date')])
@@ -875,7 +880,6 @@ class StaffTable extends AppTable {
 			$attr['options'] = $options;
 			$attr['onChangeReload'] = 'ChangePositionType';
 			$this->fields['FTE']['type'] = 'hidden';
-			$this->fields['FTE']['value'] = 1;
 			if ($this->request->is(['post', 'put'])) {
 				$type = $this->request->data($this->aliasField('position_type'));
 				if ($type == 'PART_TIME') {
@@ -899,6 +903,9 @@ class StaffTable extends AppTable {
 	public function onUpdateFieldFTE(Event $event, array $attr, $action, Request $request) 
 	{
 		if ($action == 'add') {
+			if (!isset($request->data[$this->alias()]['FTE'])) {
+				$request->data[$this->alias()]['FTE'] = 0;
+			}
 			$attr['onChangeReload'] = true;
 		}
 		return $attr;
