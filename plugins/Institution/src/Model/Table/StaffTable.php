@@ -656,13 +656,6 @@ class StaffTable extends AppTable {
 
 			$startDate = new Date($request->data[$this->alias()]['start_date']);
 
-			$orCondition = [
-				$this->aliasField('end_date') . ' >= ' => $startDate,
-				$this->aliasField('end_date') . ' IS NULL'
-			];
-
-			$orWhereCondition = [];
-
 			//to exclude position which total FTE equal or more than 1 and has end_date either NULL or later than today.
 			$excludePositions = $excludePositions
 								->select([
@@ -670,11 +663,23 @@ class StaffTable extends AppTable {
 								])
 								->where([
 									$this->aliasField('institution_id') => $institutionId,
-									$this->aliasField('start_date').' <= ' => $startDate,
-									'OR' => $orCondition
 								])
 								->group($this->aliasField('institution_position_id'))
 								->having(['SUM('.$this->aliasField('FTE') .') >= ' => 1]);
+			$endDate = null;
+			if (isset($request->data[$this->alias()]['end_date']) && $this->Session->check($this->registryAlias().'.end_date_changed')) {
+				$endDate = $request->data[$this->alias()]['end_date'];
+				$excludePositions = $excludePositions->find('InDateRange', ['start_date' => $startDate, 'end_date' => $endDate]);
+			} else {
+				$orCondition = [
+					$this->aliasField('end_date') . ' >= ' => $startDate,
+					$this->aliasField('end_date') . ' IS NULL'
+				];
+				$excludePositions = $excludePositions->where([
+						$this->aliasField('start_date').' <= ' => $startDate,
+						'OR' => $orCondition
+					]);
+			}
 
 			if ($this->AccessControl->isAdmin()) {
 				$userId = null;
@@ -760,16 +765,17 @@ class StaffTable extends AppTable {
 		if (isset($data[$this->alias()]['institution_position_id'])) {
 			unset($data[$this->alias()]['institution_position_id']);
 		}
+		$this->Session->delete($this->registryAlias().'.end_date_changed');
+	}
+
+	public function addOnChangeEndDate(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) 
+	{
+		$this->Session->write($this->registryAlias().'.end_date_changed', true);
 	}
 
 	public function addOnChangePositionId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) 
 	{
 		$data[$this->alias()]['position_id_changed'] = true;
-	}
-
-	public function addOnChangeEndDate(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) 
-	{
-		$data[$this->alias()]['end_date_changed'] = true;
 	}
 
 	public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
@@ -818,7 +824,6 @@ class StaffTable extends AppTable {
 				if ($startDate->toUnixString() > $newEndDate->toUnixString()) {
 					$attr['value'] = $request->data[$this->alias()]['start_date'];
 					$request->data[$this->alias()]['end_date'] = $request->data[$this->alias()]['start_date'];
-					$request->data[$this->alias()]['end_date_changed'] = true;
 				}
 			}
 		}
@@ -828,40 +833,20 @@ class StaffTable extends AppTable {
 	public function onUpdateFieldPositionType(Event $event, array $attr, $action, Request $request) {
 		$options = $this->getSelectOptions('Position.types');
 		if ($action == 'add') {
-			$remainingFTE = 1;
-				$data = $request->data[$this->alias()];
+			$remainingFTE = 0;
+			$data = $request->data[$this->alias()];
 
-				if (isset($data['institution_position_id'])) {
-					$institutionPositionId = $data['institution_position_id'];
+			if (isset($data['institution_position_id'])) {
+				$institutionPositionId = $data['institution_position_id'];
+				if (!empty($institutionPositionId)) {
 					$startDate = new Date($data['start_date']);
 					$endDate = $data['end_date'];
 					$remainingFTE = $this->find()
+						->find('InDateRange', ['start_date' => $startDate, 'end_date' => $endDate])
 						->select(['fte_left' => '1-SUM('.$this->aliasField('FTE').')'])
 						->where([$this->aliasField('institution_position_id') => $institutionPositionId])
 						->group($this->aliasField('institution_position_id'))
 						->hydrate(false);
-					if (empty($endDate)) {
-						$condition = [
-							'OR' => [
-								[
-									$this->aliasField('start_date').' <= ' => $startDate,
-									$this->aliasField('end_date').' >= ' => $startDate,
-								],
-								[
-									$this->aliasField('start_date').' <= ' => $startDate,
-									$this->aliasField('end_date').' IS NULL',
-								],
-								[
-									$this->aliasField('start_date').' >= ' => $startDate,
-								]
-							]
-						];
-						$remainingFTE = $remainingFTE->where($condition);
-
-					} else {
-						$endDate = new Date($endDate);
-						$remainingFTE = $remainingFTE->find('InDateRange', ['start_date' => $startDate, 'end_date' => $endDate]);
-					}
 
 					$remainingFTE = $remainingFTE->first();
 
@@ -873,7 +858,11 @@ class StaffTable extends AppTable {
 					} else {
 						$remainingFTE = 1;
 					}
-				
+				}
+			}
+
+			if ($remainingFTE == 0) {
+				$options = [];
 			}
 			$attr['options'] = $options;
 			$attr['onChangeReload'] = true;
