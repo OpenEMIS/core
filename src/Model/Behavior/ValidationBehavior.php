@@ -601,6 +601,7 @@ class ValidationBehavior extends Behavior {
 		$existingId = (array_key_exists('id', $globalData['data']))? $globalData['data']['id']: null;
 
 		$academicPeriodId = (array_key_exists('academic_period_id', $globalData['data']))? $globalData['data']['academic_period_id']: null;
+		$institutionId = (array_key_exists('institution_id', $globalData['data']))? $globalData['data']['institution_id']: null;
 		$locationInstitutionId = (array_key_exists('location_institution_id', $globalData['data']))? $globalData['data']['location_institution_id']: null;
 		// no academic period or location fails
 		if (empty($academicPeriodId)) return false;
@@ -611,7 +612,10 @@ class ValidationBehavior extends Behavior {
 		$query = $InstitutionShifts->find()
 			->where([
 				$InstitutionShifts->aliasField('academic_period_id') => $academicPeriodId,
-				$InstitutionShifts->aliasField('location_institution_id') => $locationInstitutionId,
+				'OR' => [
+					$InstitutionShifts->aliasField('location_institution_id') => $locationInstitutionId,
+					$InstitutionShifts->aliasField('institution_id') => $institutionId
+				]
 			])
 			;
 

@@ -311,7 +311,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
 			$htmlHelper = $event->subject()->Html;
 			$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Shifts', 'view'];
 			$url[] = $entity->id;
-			return $htmlHelper->link($entity->shift_option->name, $url);
+			return $htmlHelper->link(__($entity->shift_option->name), $url);
 		}
 	}
 
@@ -433,8 +433,6 @@ class InstitutionShiftsTable extends ControllerActionTable {
 	{
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		if ($action == 'add') {
-			//$attr['type'] = 'hidden'; //default is hidden as location default also "CURRENT"
-			//$attr['value'] = $institutionId; //default is current institution ID
 			if($request->data){
 				$data = $request->data[$this->alias()];
 				if ($data['location'] == 'OTHER') {
@@ -442,8 +440,17 @@ class InstitutionShiftsTable extends ControllerActionTable {
 					$attr['target'] = ['key' => 'location_institution_id', 'name' => $this->aliasField('location_institution_id')];
 					$attr['noResults'] = __('No Institutions found');
 					$attr['attr'] = ['placeholder' => __('Institution Code or Name')];
-					$attr['attr']['value'] = '';
-					$attr['value'] = '';
+					if (isset($data['location_institution_id']) && !empty($data['location_institution_id'])) { //this is to regain institution name after validation / reload
+						pr("isset");
+						if ($data['location_institution_id'] == $institutionId) {
+							pr("equal");
+							$attr['attr']['value'] = '';
+						} else {
+							pr("not equal");
+							$institutionDetails = $this->Institutions->findById($data['location_institution_id'])->first();
+							$attr['attr']['value'] = $institutionDetails['code'] . " - " . $institutionDetails['name'];
+						}
+					}
 					$attr['url'] = ['academicperiod' => $this->getSelectedAcademicPeriod($this->request), 'controller' => 'Institutions', 'action' => 'Shifts', 'ajaxInstitutionsAutocomplete'];
 				} else if ($data['location'] == 'CURRENT') {
 					$attr['type'] = 'hidden'; //default is hidden as location default also "CURRENT"
@@ -489,7 +496,6 @@ class InstitutionShiftsTable extends ControllerActionTable {
 	public function addEditOnChangeLocation(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) 
 	{
 		$data['InstitutionShifts']['location_institution_id'] = ''; //value has to be reset each time location being updated.
-		// pr($data['InstitutionShifts']['location_institution_id']);
 	}
 	
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options)
@@ -745,7 +751,12 @@ class InstitutionShiftsTable extends ControllerActionTable {
 			$selectedAcademicPeriod = trim($this->request->query['academicperiod']);
 			$search = '%' . $term . '%';
 
-			$query = $Institutions->find('list')
+			$query = $Institutions->find()
+				->select([
+					$Institutions->aliasField('code'),
+					$Institutions->aliasField('id'),
+					$Institutions->aliasField('name')
+				])
 				->where([
 					'NOT EXISTS ('.
 						$this->find('list')
@@ -758,16 +769,21 @@ class InstitutionShiftsTable extends ControllerActionTable {
 								$this->aliasField('academic_period_id') . ' = ' . $selectedAcademicPeriod
 							])
 					.')',
-					$Institutions->aliasField('name') . ' LIKE ' => $search,
+					'OR' => [
+						$Institutions->aliasField('code') . ' LIKE ' => $search,
+						$Institutions->aliasField('name') . ' LIKE ' => $search
+					],
 					$Institutions->aliasField('id').' IS NOT ' => $institutionId
-				]);
+				])
+				->order([$Institutions->aliasField('name')]);
 
 			$list = $query->toArray();
 
 			$data = [];
+			//pr($list);
 			foreach ($list as $id => $value) {
-				$label = $value;
-				$data[] = ['label' => $label, 'value' => $id];
+				$label = $value['code'] . ' - ' . $value['name'];
+				$data[] = ['label' => $label, 'value' => $value['id']];
 			}
 
 			echo json_encode($data);
