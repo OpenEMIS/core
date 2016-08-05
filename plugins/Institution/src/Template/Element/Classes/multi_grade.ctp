@@ -23,7 +23,14 @@
 					<?php 	$selected = (isset($attr['selected']) && in_array($obj->education_grade_id, $attr['selected'])) ? true : false; ?>
 					<tr>
 						<td class="checkbox-column">
-						<input type="checkbox" class="icheck-input" name="<?php echo sprintf($attr['model'].'[education_grades][%d][id]', $i) ?>" value="<?php echo $obj->education_grade_id?>" <?php echo ($selected) ? 'checked' : '';?> />
+						<?= $this->Form->input(sprintf('MultiSubjects[%d][education_subject_id]', $i), [
+								'type' => 'checkbox',
+								'class' => 'icheck-input',
+								'name' => sprintf($attr['model'].'[education_grades][%d][id]', $i),
+								'value' => $obj->education_grade_id,
+								'label' => false
+							]);
+						?>
 						</td>
 						<td><?= $obj->education_grade->programme_name ?></td>
 						<td><?= $obj->education_grade->name ?></td>
