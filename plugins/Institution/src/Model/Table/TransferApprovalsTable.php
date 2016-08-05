@@ -42,7 +42,7 @@ class TransferApprovalsTable extends AppTable {
 
 	public function editOnInitialize(Event $event, Entity $entity) {
 		//set current date to start date
-		$entity->start_date = new Date();
+		//$entity->start_date = new Date(); //remove the wrong logic that automate the start date as today's date.
 
 		// Set all selected values only
 		$this->request->data[$this->alias()]['transfer_status'] = $entity->status;
@@ -51,7 +51,7 @@ class TransferApprovalsTable extends AppTable {
 		$this->request->data[$this->alias()]['academic_period_id'] = $entity->academic_period_id;
 		$this->request->data[$this->alias()]['education_grade_id'] = $entity->education_grade_id;
 		$this->request->data[$this->alias()]['new_education_grade_id'] = $entity->new_education_grade_id;
-		$this->request->data[$this->alias()]['start_date'] = $entity->start_date;
+		$this->request->data[$this->alias()]['start_date'] = ''; //index start_date is needed when the value being given later on.
 		$this->request->data[$this->alias()]['end_date'] = $entity->end_date;
 		$this->request->data[$this->alias()]['student_transfer_reason_id'] = $entity->student_transfer_reason_id;
 		$this->request->data[$this->alias()]['status'] = $entity->status;
@@ -80,8 +80,8 @@ class TransferApprovalsTable extends AppTable {
 			$previousSchoolId = $entity->previous_institution_id;
 			$studentId = $entity->student_id;
             $periodId = $entity->academic_period_id;
+            $prevGradeId = $entity->education_grade_id; //get the previous grade of the student.
 			$gradeId = $entity->new_education_grade_id;
-			$oldGradeId = $entity->education_grade_id;
 			$newSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($gradeId);
 
 			$validateEnrolledInAnyInstitutionResult = $Students->validateEnrolledInAnyInstitution($studentId, $newSystemId, ['excludeInstitutions' => [$previousSchoolId], 'targetInstitutionId' => $newSchoolId]);
@@ -90,22 +90,25 @@ class TransferApprovalsTable extends AppTable {
 			} else if ($Students->completedGrade($gradeId, $studentId)) {
 				$this->Alert->error('Institution.Students.student_name.ruleStudentNotCompletedGrade');
 			} else { // if not exists
-                $startDate = $data[$this->alias()]['start_date'];
+				$startDate = $data[$this->alias()]['start_date'];
                 $startDate = date('Y-m-d', strtotime($startDate));
+
+                $newEndDate = (new Date($startDate))->modify('-1 day'); //set the end date of the 'transfered' record to a day before the start date of the 'enrolled' record.
+				$newEndDate = date('Y-m-d', strtotime($newEndDate));
 
                 $existingStudentEntity = $Students->find()->where([
                         $Students->aliasField('institution_id') => $previousSchoolId,
                         $Students->aliasField('student_id') => $studentId,
                         $Students->aliasField('academic_period_id') => $periodId,
-                        $Students->aliasField('education_grade_id') => $oldGradeId,
+                        $Students->aliasField('education_grade_id') => $prevGradeId,
                         $Students->aliasField('student_status_id') => $statuses['CURRENT']
                     ])
-                    ->first();
+                	->first();
 
                 // if cannot be found (perhaps is a promoted/graduated transfer record). then dont change the record
                 if (!empty($existingStudentEntity)) {
-                    $prevEndDate = $existingStudentEntity->end_date;
-                    $this->updateStudentStatus($existingStudentEntity, 'CURRENT', 'TRANSFERRED', $startDate);
+                	$prevEndDate = $existingStudentEntity->end_date;
+                    $this->updateStudentStatus($existingStudentEntity, 'CURRENT', 'TRANSFERRED', $newEndDate);
                 }
 
 				// add the student to the new school
@@ -208,6 +211,7 @@ class TransferApprovalsTable extends AppTable {
 		}
 		$this->addSections();
 		$this->ControllerAction->field('transfer_status');
+		$this->ControllerAction->field('requested_on', ['type' => 'readonly', 'attr' => ['value' => $this->formatDate($entity->created)]]);
 		$this->ControllerAction->field('student');
 		$this->ControllerAction->field('student_id');
 		$this->ControllerAction->field('institution_id');
@@ -219,7 +223,7 @@ class TransferApprovalsTable extends AppTable {
 				'value' => $this->NewEducationGrades->get($entity->new_education_grade_id)->programme_grade_name
 			]]);
 		$this->ControllerAction->field('status', ['type' => 'hidden']);
-		$this->ControllerAction->field('start_date');
+		$this->ControllerAction->field('start_date', ['entity' => $entity]);
 		$this->ControllerAction->field('end_date');
 		$this->ControllerAction->field('student_transfer_reason_id', ['type' => 'select']);
 		$this->ControllerAction->field('comment');
@@ -230,7 +234,7 @@ class TransferApprovalsTable extends AppTable {
 		$this->ControllerAction->field('institution_class_id', ['visible' => false]);
 
 		$this->ControllerAction->setFieldOrder([
-			'transfer_status_header', 'created', 'transfer_status',
+			'transfer_status_header', 'created', 'transfer_status', 'requested_on', 
 			'existing_information_header', 'student', 'previous_institution_id', 'academic_period_id', 'education_grade_id',
 			'new_information_header', 'institution_id', 'new_education_grade_id', 'institution_class',
 			'status', 'start_date', 'end_date',
@@ -369,25 +373,38 @@ class TransferApprovalsTable extends AppTable {
 			}
 
 			$selectedPeriod = $request->data[$this->alias()]['academic_period_id'];
-			$startDate = $request->data[$this->alias()]['start_date'];
-			if (!is_object($startDate)) {
+
+			$academicPeriod = $this->AcademicPeriods->get($selectedPeriod);
+			$periodStartDate = $academicPeriod->start_date;
+			$periodEndDate = $academicPeriod->end_date;
+
+			$requestedOn = $attr['entity']->created; //this 'entity' attribute sent from the "editAfterAction".
+			$endDate = $request->data[$this->alias()]['end_date'];
+
+			if ($requestedOn >= $periodStartDate) { //if requested date more than the start date of academic period.
+				$startDate = $requestedOn; //start date at least must be equal to request date.
+				$periodStartDate = $requestedOn; //minimize the datepicker to show only from date requested to end of academic period.
+			} else { //if requested date before the start of academic period.
+				$startDate = $periodStartDate; //then use the start of academic period as minimum.
+			}
+
+			if (!empty($startDate)) {
 				$startDate = new Date(date('Y-m-d', strtotime($startDate)));
 				$request->data[$this->alias()]['start_date'] = $startDate;
 			}
-			$endDate = $request->data[$this->alias()]['end_date'];
-			if (!is_object($endDate)) {
+
+			if (!empty($endDate)) {
 				$endDate = new Date(date('Y-m-d', strtotime($endDate)));
 				$request->data[$this->alias()]['end_date'] = $endDate;
 			}
-
-			$periodStartDate = $this->AcademicPeriods->get($selectedPeriod)->start_date;
-			$periodEndDate = $this->AcademicPeriods->get($selectedPeriod)->end_date;
+			
 			if (!is_null($endDate)) {
 				$periodEndDate = $endDate->copy()->subDay();
 			}
 
-			$attr['attr']['value'] = date('d-m-Y', strtotime($startDate));
+			$attr['value'] =  date('d-m-Y', strtotime($startDate));
 			$attr['date_options'] = ['startDate' => $periodStartDate->format('d-m-Y'), 'endDate' => $periodEndDate->format('d-m-Y')];
+			$attr['date_options']['todayBtn'] = false; //since we limit the start date, should as well hide the 'today' button so no extra checking function needed
 		}
 
 		return $attr;
