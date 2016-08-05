@@ -311,7 +311,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
 			$htmlHelper = $event->subject()->Html;
 			$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Shifts', 'view'];
 			$url[] = $entity->id;
-			return $htmlHelper->link($entity->shift_option->name, $url);
+			return $htmlHelper->link(__($entity->shift_option->name), $url);
 		}
 	}
 
