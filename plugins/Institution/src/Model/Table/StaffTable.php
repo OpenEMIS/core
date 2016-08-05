@@ -440,13 +440,14 @@ class StaffTable extends AppTable {
 		$this->security_group_id = $securityGroupId;
 		$this->ControllerAction->field('staff_name');
 		$this->ControllerAction->field('start_date');
+		$this->ControllerAction->field('position_type');
+		$this->ControllerAction->field('FTE');
 		$this->ControllerAction->field('institution_position_id');
 		$this->ControllerAction->field('end_date');
-		$this->ControllerAction->field('FTE');
 		$this->ControllerAction->field('staff_id', ['visible' => false]);
 		$this->ControllerAction->field('group_id', ['type' => 'hidden', 'value' => $securityGroupId]);
 		$this->ControllerAction->setFieldOrder([
-			'start_date', 'end_date', 'institution_position_id', 'position_type', 'FTE', 'staff_type_id', 'staff_status_id', 'staff_name'
+			'start_date', 'end_date', 'position_type', 'FTE', 'institution_position_id', 'staff_type_id', 'staff_status_id', 'staff_name'
 		]);
 	}
 
@@ -652,20 +653,27 @@ class StaffTable extends AppTable {
 			$userId = $this->Auth->user('id');
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 
+			$selectedFTE = isset($request->data[$this->alias()]['FTE']) ? floatval($request->data[$this->alias()]['FTE']) : 0;
 			$excludePositions = $this->find();
 
 			$startDate = new Date($request->data[$this->alias()]['start_date']);
 
-			//to exclude position which total FTE equal or more than 1 and has end_date either NULL or later than today.
 			$excludePositions = $excludePositions
-								->select([
-									'position_id' => $this->aliasField('institution_position_id'),
-								])
-								->where([
-									$this->aliasField('institution_id') => $institutionId,
-								])
-								->group($this->aliasField('institution_position_id'))
-								->having(['SUM('.$this->aliasField('FTE') .') >= ' => 1]);
+				->select([
+					'position_id' => $this->aliasField('institution_position_id'),
+				])
+				->where([
+					$this->aliasField('institution_id') => $institutionId,
+				])
+				->group($this->aliasField('institution_position_id'))
+				->having([
+					'OR' => [
+						'SUM('.$this->aliasField('FTE') .') >= ' => 1,
+						'SUM('.$this->aliasField('FTE') .') > ' => (1-$selectedFTE),
+					]
+				])
+				->hydrate(false);
+
 			$endDate = null;
 			if (isset($request->data[$this->alias()]['end_date']) && $this->Session->check($this->registryAlias().'.end_date_changed')) {
 				$endDate = $request->data[$this->alias()]['end_date'];
@@ -699,7 +707,6 @@ class StaffTable extends AppTable {
 					->find()
 					->innerJoinWith('StaffPositionTitles.SecurityRoles')
 					->where($positionConditions)
-					->where([$this->Positions->aliasField('id').' NOT IN ' => $excludePositions])
 					->select(['security_role_id' => 'SecurityRoles.id', 'type' => 'StaffPositionTitles.type'])
 					->order(['StaffPositionTitles.type' => 'DESC', 'StaffPositionTitles.order'])
 					->autoFields(true)
@@ -714,13 +721,33 @@ class StaffTable extends AppTable {
 
 			// Adding the opt group
 			$types = $this->getSelectOptions('Staff.position_types');
-			$options = [];
+			$options = ['' => '-- '.__('Select').' --'];
+
 			foreach ($staffPositionsOptions as $position) {
 				$type = __($types[$position->type]);
 				$options[$type][$position->id] = $position->name;
 			}
 
+			$excludePositions = array_column($excludePositions->toArray(), 'position_id');
+			if (!isset($request->data[$this->alias()]['institution_position_id'])) {
+				$request->data[$this->alias()]['institution_position_id'] = '';
+			}
+			$selectedPosition = $request->data[$this->alias()]['institution_position_id'];
+			$this->advancedSelectOptions($options, $selectedPosition, [
+				'message' => '{{label}} - ' . $this->getMessage('Institution.InstitutionStaff.noAvailableFTE'),
+				'callable' => function($id) use ($excludePositions) {
+					return !in_array($id, $excludePositions);
+				},
+				'selectOption' => false
+			]);
+			if (is_null($selectedPosition)) {
+				$selectedPosition = '';
+			}
+			$request->data[$this->alias()]['institution_position_id'] = $selectedPosition;
+
 			$attr['options'] = $options;
+			$attr['type'] = 'chosenSelect';
+			$attr['attr']['multiple'] = false;
 			$attr['onChangeReload'] = 'changePositionId';
 		}
 		return $attr;
@@ -783,6 +810,7 @@ class StaffTable extends AppTable {
 		if ($action == 'add') {
 			if (!isset($request->data[$this->alias()]['start_date'])) {
 				$request->data[$this->alias()]['start_date'] = date('d-m-Y');
+				$this->Session->delete($this->registryAlias().'.end_date_changed');
 			}
 			$attr['onChangeReload'] = 'changeStartDate';
 		}
@@ -830,42 +858,22 @@ class StaffTable extends AppTable {
 		return $attr;
 	}
 
+	public function addOnChangePositionType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	{
+		if ($data[$this->alias()]['position_type'] == 'FULL_TIME') {
+			$data[$this->alias()]['FTE'] = 1;
+		} else {
+			$data[$this->alias()]['FTE'] = 0;
+		}
+		
+	}
+
 	public function onUpdateFieldPositionType(Event $event, array $attr, $action, Request $request) {
 		$options = $this->getSelectOptions('Position.types');
 		if ($action == 'add') {
-			$remainingFTE = 0;
 			$data = $request->data[$this->alias()];
-
-			if (isset($data['institution_position_id'])) {
-				$institutionPositionId = $data['institution_position_id'];
-				if (!empty($institutionPositionId)) {
-					$startDate = new Date($data['start_date']);
-					$endDate = $data['end_date'];
-					$remainingFTE = $this->find()
-						->find('InDateRange', ['start_date' => $startDate, 'end_date' => $endDate])
-						->select(['fte_left' => '1-SUM('.$this->aliasField('FTE').')'])
-						->where([$this->aliasField('institution_position_id') => $institutionPositionId])
-						->group($this->aliasField('institution_position_id'))
-						->hydrate(false);
-
-					$remainingFTE = $remainingFTE->first();
-
-					if (!empty($remainingFTE)) {
-						$remainingFTE = $remainingFTE['fte_left'];
-						if (isset($options['FULL_TIME'])) {
-							unset($options['FULL_TIME']);
-						}
-					} else {
-						$remainingFTE = 1;
-					}
-				}
-			}
-
-			if ($remainingFTE == 0) {
-				$options = [];
-			}
 			$attr['options'] = $options;
-			$attr['onChangeReload'] = true;
+			$attr['onChangeReload'] = 'ChangePositionType';
 			$this->fields['FTE']['type'] = 'hidden';
 			$this->fields['FTE']['value'] = 1;
 			if ($this->request->is(['post', 'put'])) {
@@ -877,11 +885,6 @@ class StaffTable extends AppTable {
 						['value' => '0.5', 'text' => '50%'],
 						['value' => '0.75', 'text' => '75%']
 					];
-					foreach ($fteOptions as $key => $value) {
-						if (floatval($value['value']) > floatval($remainingFTE)) {
-							unset($fteOptions[$key]);
-						}
-					}
 					$this->fields['FTE']['options'] = $fteOptions;
 				}
 			}
@@ -889,6 +892,14 @@ class StaffTable extends AppTable {
 			$this->fields['FTE']['type'] = 'string';
 		} else {
 			$attr['visible'] = false;
+		}
+		return $attr;
+	}
+
+	public function onUpdateFieldFTE(Event $event, array $attr, $action, Request $request) 
+	{
+		if ($action == 'add') {
+			$attr['onChangeReload'] = true;
 		}
 		return $attr;
 	}
@@ -969,7 +980,6 @@ class StaffTable extends AppTable {
 	}
 
 	public function afterAction(Event $event) {
-		$this->ControllerAction->field('position_type');
 		$this->ControllerAction->field('staff_type_id', ['type' => 'select', 'visible' => ['index' => false, 'view' => true, 'edit' => true]]);
 		$this->ControllerAction->field('staff_status_id', ['type' => 'select']);
 		$this->ControllerAction->field('staff_id');
