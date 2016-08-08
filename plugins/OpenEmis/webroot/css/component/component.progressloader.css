@@ -1,0 +1,295 @@
+/* PROGRESS LOADERS v.1.0.5 */
+
+
+/* Spinner */
+
+.spinner-wrapper,
+.load-content,
+.load-page {
+    display: block;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#ffffff+0,ffffff+100&amp;1+0,0+100 */
+    /* IE9 SVG, needs conditional override of 'filter' to 'none' */
+    background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPHJhZGlhbEdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgY3g9IjUwJSIgY3k9IjUwJSIgcj0iNzUlIj4KICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmZmZmZmYiIHN0b3Atb3BhY2l0eT0iMSIvPgogICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjZmZmZmZmIiBzdG9wLW9wYWNpdHk9IjAiLz4KICA8L3JhZGlhbEdyYWRpZW50PgogIDxyZWN0IHg9Ii01MCIgeT0iLTUwIiB3aWR0aD0iMTAxIiBoZWlnaHQ9IjEwMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
+    background: -moz-radial-gradient(center, ellipse cover,  rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%); /* FF3.6+ */
+    background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,rgba(255,255,255,1)), color-stop(100%,rgba(255,255,255,0))); /* Chrome,Safari4+ */
+    background: -webkit-radial-gradient(center, ellipse cover,  rgba(255,255,255,1) 0%,rgba(255,255,255,0) 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-radial-gradient(center, ellipse cover,  rgba(255,255,255,1) 0%,rgba(255,255,255,0) 100%); /* Opera 12+ */
+    background: -ms-radial-gradient(center, ellipse cover,  rgba(255,255,255,1) 0%,rgba(255,255,255,0) 100%); /* IE10+ */
+    background: radial-gradient(ellipse at center,  rgba(255,255,255,1) 0%,rgba(255,255,255,0) 100%); /* W3C */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#00ffffff',GradientType=1 ); /* IE6-8 fallback on horizontal gradient */
+}
+
+.spinner-wrapper,
+.load-page {
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.spinner-wrapper,
+.spinner {
+    z-index: 555;
+}
+
+.load-page,
+.load-content,
+.loader {
+    z-index: 99999;    
+}
+
+.loader-text,
+.spinner-text {
+    position: relative;
+    font-size: 40px;
+    color: #555;
+    margin: 0 auto;
+    top: 50%;
+    padding: 10px;
+    -webkit-transform: translateY(-50%);
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
+}
+
+.loader-text {
+    width: 100px;
+    height: 100px; 
+}
+
+.spinner-text {
+    width: 70px;
+    height: 70px;    
+}
+
+.loader-text i {
+    position: absolute;
+    top: 30px;
+    left: 30px;
+    color: #999;
+}
+
+.loader-text p,
+.spinner-text p {
+    display: block;
+    position: absolute;
+    text-align: center;
+}
+
+.loader-text p {
+    font-size: 22px;
+    top: 100px;
+    width: 80px;
+}
+
+.spinner-text p {
+    font-size: 18px;
+    top: 70px;
+    width: 70px;
+    left: 0;
+}
+
+.spinner-text .loading-percentage {
+    font-size: 14px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+       -moz-transform: translate(-50%, -50%);
+        -ms-transform: translate(-50%, -50%);
+         -o-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+}
+
+.spinner,
+.loader {
+    -webkit-animation: rotation 2s infinite linear;
+    -moz-animation: rotation 2s infinite linear;
+    -o-animation: rotation 2s infinite linear;
+    animation: rotation 2s infinite linear;
+    border-radius: 100%;
+    z-index: 999;
+}
+
+.spinner {
+    position: relative;
+    color: #333;
+    font-size: 40px;
+    width: 50px;
+    height: 50px;
+    margin: 0 auto;
+    padding: 10px;
+    -webkit-transform: translateY(-50%);
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
+    border-left: 4px solid #BBB;
+    border-right: 4px solid #BBB;
+    border-bottom: 4px solid #BBB;
+    border-top: 4px solid #999;   
+}
+
+.loader {
+    height: 80px;
+    width: 80px;
+    border-left: 5px solid #BBB;
+    border-right: 5px solid #BBB;
+    border-bottom: 5px solid #BBB;
+    border-top: 5px solid #999;  
+}
+
+.load-text {
+    display: block;
+    color: #FFF;
+}
+
+@-webkit-keyframes rotation {
+    from {
+        -webkit-transform: rotate(0deg);
+    }
+    to {
+        -webkit-transform: rotate(359deg);
+    }
+}
+
+@-moz-keyframes rotation {
+    from {
+        -moz-transform: rotate(0deg);
+    }
+    to {
+        -moz-transform: rotate(359deg);
+    }
+}
+
+@-o-keyframes rotation {
+    from {
+        -o-transform: rotate(0deg);
+    }
+    to {
+        -o-transform: rotate(359deg);
+    }
+}
+
+@keyframes rotation {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(359deg);
+    }
+}
+
+
+/* Page Load Animation */
+
+
+/* make keyframes that tell the start state and the end state of our object */
+
+@-webkit-keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@-moz-keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.fade-in {
+    opacity: 0;
+    /* make things invisible upon start */
+    -webkit-animation: fadeIn ease-in 1;
+    /* call our keyframe named fadeIn, use animattion ease-in and repeat it only 1 time */
+    -moz-animation: fadeIn ease-in 1;
+    animation: fadeIn ease-in 1;
+    -webkit-animation-fill-mode: forwards;
+    /* this makes sure that after animation is done we remain at the last keyframe value (opacity: 1)*/
+    -moz-animation-fill-mode: forwards;
+    animation-fill-mode: forwards;
+    -webkit-animation-duration: 1s;
+    -moz-animation-duration: 1s;
+    animation-duration: 1s;
+}
+
+.fade-in.faster {
+    -webkit-animation-delay: 0.01s;
+    -moz-animation-delay: 0.01s;
+    animation-delay: 0.01s;
+}
+
+.fade-in.fast {
+    -webkit-animation-delay: 0.2s;
+    -moz-animation-delay: 0.2s;
+    animation-delay: 0.2s;
+}
+
+.fade-in.slow {
+    -webkit-animation-delay: 1.2s;
+    -moz-animation-delay: 1.2s;
+    animation-delay: 1.2s;
+}
+
+.fade-in.slower {
+    -webkit-animation-delay: 1.6s;
+    -moz-animation-delay: 1.6s;
+    animation-delay: 1.6s;
+}
+
+
+/* Progress Bar */
+
+.progress-wrapper {
+    height: 3px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    background-color: #EEE;
+    margin: -10px 0 10px;
+}
+
+.progress-bar {
+    display: block;
+    position: absolute;
+    left: 0;
+    width: 40%;
+    height: 4px;
+    background-color: #999;
+}
+
+.rtl .progress-wrapper {
+    height: 3px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    background-color: #EEE;
+    margin: -10px 0 10px;
+}
+
+.rtl .progress-bar {
+    display: block;
+    position: absolute;
+    right: 0;
+    left: auto;
+    width: 40%;
+    height: 4px;
+    background-color: #999;
+}

@@ -1,0 +1,10 @@
+/* 
+Logistics Overwrites: v.1.0.1
+*/
+
+
+/* Homepage Background */
+
+.body-wrapper {
+    background-image: url('../../../img/logistics-login-bg.jpg') !important;
+}

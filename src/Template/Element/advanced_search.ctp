@@ -1,21 +1,23 @@
 <?php
-	// pr($filters);
+use Cake\Utility\Inflector;
 ?>
-<div id="advanced-search" class="advanced-search-wrapper alert search-box <?= !$advancedSearch ? 'hidden' : '' ?>">
 
-	<button id="search-toggle" class="btn btn-xs close" type="button" alt="Collapse">×</button>
-	<h4><?= __('Advanced Search')?></h4>
+<div class="adv-search" ng-show="showAdvSearch">
+	<button class="btn btn-xs close" type="button" alt="Collapse" ng-click="removeAdvSearch()">×</button>
+	<div class="adv-search-label">
+		<i class="fa fa-search-plus"></i>
+		<label><?= __('Advanced Search')?></label>
+	</div>
 
 	<?php
-		// pr($model);die;
 		foreach ($filters as $key=>$filter) :
 	?>
 
-		<div class="input select">
-		  <label class="form-label"><?= $filter['label'] ?>:</label>
+		<div class="select">
+		  <label><?= $filter['label'] ?>:</label>
 		  <div class="input-select-wrapper">	 
-			  <select name="AdvanceSearch[<?= $model ?>][<?= $key ?>]">
-				<option value="">&nbsp;</option>
+			  <select name="AdvanceSearch[<?= $model ?>][belongsTo][<?= $key ?>]">
+				<option value=""><?= __('-- Select --'); ?></option>
 				<?php foreach ($filter['options'] as $optKey=>$optVal): ?>
 					<?php $selected = ($optKey==$filter['selected']) ? 'selected' : ''; ?>
 					<option value="<?= $optKey ?>" <?= $selected ?>><?= $optVal ?></option>
@@ -26,30 +28,32 @@
 
 	<?php endforeach ?>
 
-	<hr>
-	<input type="hidden" name="AdvanceSearch[<?= $model ?>][isSearch]" value="" id="isSearch" />
-	<button class="btn btn-default btn-xs" href=""><?= __('Search') ?></button>
-	<button id="reset" class="btn btn-default btn-xs" value="Reset" href=""><?= __('Reset') ?></button>
+	<?php
+		foreach ($searchables as $key=>$searchable) :
+	?>
+
+		<div class="text" style="margin-bottom:10px;">
+			<label for="advancesearch-directories-identity-number"><?= $searchable['label'] ?>:</label>
+
+			<input type="text" name="AdvanceSearch[<?= $model ?>][hasMany][<?= $key ?>]" class="form-control focus" id="advancesearch-<?= strtolower($model) ?>-<?= Inflector::dasherize($key) ?>" value="<?= $searchable['value'] ?>" />
+		</div>
+
+	<?php endforeach ?>
+
+	<div class="search-action-btn">
+		<input type="hidden" name="AdvanceSearch[<?= $model ?>][isSearch]" value="" id="isSearch" />
+		<button class="btn btn-default btn-xs" href="" ng-click="submitSearch()"><?= __('Search') ?></button>
+		<button id="reset" class="btn btn-outline btn-xs" name="reset" value="Reset"><?= __('Reset') ?></button>
+		<?php 
+			$this->Form->unlockField('reset'); 
+			$this->Form->unlockField('AdvanceSearch');
+		?>
+	</div>
+
 </div>
 
-<script type="text/javascript">   
-	var box = $('#advanced-search');
-	var isSearch = $('#isSearch');
-	$('button#search-toggle').on('click', function () {
-		box.toggleClass('hidden');
-		if (! isSearch.val()) {
-			isSearch.val('true');
-		}else {
-			isSearch.val('');
-		}
-	});
-
-
-	//reset form 
-	$("#reset").click(function(){
-		box.find('input:text, select').val('');
-		$(".icheckbox_minimal-grey").removeClass("checked");
-		isSearch.val('true');
-	});
-
-</script>
+<?php if($advancedSearch):?>
+<h4 ng-class="disableElement">
+	<?= __('Search Results') ?>
+</h4>
+<?php endif;?>

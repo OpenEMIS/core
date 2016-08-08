@@ -1,12 +1,11 @@
-<?php $_edit = (array_key_exists('edit', $ControllerAction['buttons']) ? true : false);?>
-	<div class="clearfix"></div>
+<div class="clearfix"></div>
 
-	<hr>
+<hr>
 
-	<h3><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></h3>
-
+<h3><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></h3>
+<div class="table-wrapper">
 	<div class="table-responsive">
-		<table class="table table-striped table-hover table-bordered">
+		<table class="table table-curved">
 			<thead>
 				<tr>
 					<th><?= $this->Label->get('General.openemis_no'); ?></th>
@@ -14,7 +13,7 @@
 					<th><?= $this->Label->get('date.start'); ?></th>
 					<th><?= $this->Label->get('date.end'); ?></th>
 					<th><?= $this->Label->get('Users.status'); ?></th>
-					<th><?= $this->Label->get('InstitutionSiteStaff.fte'); ?></th>
+					<th><?= $this->Label->get('InstitutionStaff.fte'); ?></th>
 				</tr>
 			</thead>
 	
@@ -27,7 +26,14 @@
 								$link = '';
 							?>
 							<tr>
-								<td><?= $obj->user->openemis_no; ?></td>
+								<td><?= $this->html->link($obj->user->openemis_no, [
+										'plugin' => 'Institution',
+										'controller' => 'Institutions',
+										'action' => 'StaffUser',
+										'view',
+										$obj->user->id
+									]) ?>
+								</td>
 								<td><?= $obj->user->name ?></td>
 								<td><?= $ControllerAction['table']->formatDate($obj->start_date) ?></td>
 								<td><?= $ControllerAction['table']->formatDate($obj->end_date) ?></td>
@@ -40,3 +46,4 @@
 			</tbody>
 		</table>
 	</div>
+</div>

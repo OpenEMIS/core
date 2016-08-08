@@ -10,7 +10,7 @@ class EmploymentsTable extends AppTable {
 		$this->table('staff_employments');
 		parent::initialize($config);
 		
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('EmploymentTypes', ['className' => 'FieldOption.EmploymentTypes']);
 	}
 
@@ -33,6 +33,18 @@ class EmploymentsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
 		return $validator;
+	}
+
+	private function setupTabElements() {
+		$options['type'] = 'staff';
+		$tabElements = $this->controller->getCareerTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
 	}
 }

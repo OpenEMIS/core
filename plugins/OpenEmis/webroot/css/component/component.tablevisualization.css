@@ -1,0 +1,25 @@
+/* TABLE VISUALIZATION v.1.0.0 */
+
+.table-visualization {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+}
+
+.table-visualization thead th:not(:first-child):not(:last-child) {
+    border-left-color: transparent !important;
+    border-right-color: transparent !important;
+    border-left-width: 0px !important;
+    border-right-width: 0px !important;
+}
+
+[dir="ltr"] .table-visualization thead th:last-child,
+.rtl .table-visualization thead th:first-child {
+    border-left-width: 0px !important;
+    border-left-color: transparent !important;
+}
+
+[dir="ltr"] .table-visualization thead th:first-child,
+.rtl .table-visualization thead th:last-child {
+    border-right-width: 0px !important;
+    border-right-color: transparent !important;
+}

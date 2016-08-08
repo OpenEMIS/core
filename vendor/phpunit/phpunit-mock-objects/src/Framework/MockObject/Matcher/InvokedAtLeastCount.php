@@ -12,23 +12,17 @@
  * Invocation matcher which checks if a method has been invoked at least
  * N times.
  *
- * @package    PHPUnit_MockObject
- * @author     Sebastian Bergmann <sebastian@phpunit.de>
- * @copyright  Sebastian Bergmann <sebastian@phpunit.de>
- * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
- * @version    Release: @package_version@
- * @link       http://github.com/sebastianbergmann/phpunit-mock-objects
- * @since      Class available since Release 2.2.0
+ * @since Class available since Release 2.2.0
  */
 class PHPUnit_Framework_MockObject_Matcher_InvokedAtLeastCount extends PHPUnit_Framework_MockObject_Matcher_InvokedRecorder
 {
     /**
-     * @var integer
+     * @var int
      */
     private $requiredInvocations;
 
     /**
-     * @param integer $requiredInvocations
+     * @param int $requiredInvocations
      */
     public function __construct($requiredInvocations)
     {
@@ -56,7 +50,7 @@ class PHPUnit_Framework_MockObject_Matcher_InvokedAtLeastCount extends PHPUnit_F
         if ($count < $this->requiredInvocations) {
             throw new PHPUnit_Framework_ExpectationFailedException(
                 'Expected invocation at least ' . $this->requiredInvocations .
-                ' times but it occured ' . $count . ' time(s).'
+                ' times but it occurred ' . $count . ' time(s).'
             );
         }
     }

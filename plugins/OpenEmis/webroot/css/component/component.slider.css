@@ -1,0 +1,46 @@
+/* SLIDER v.1.0.1 */
+
+.slider-handle {
+    width: 10px !important;
+    height: 10px !important;
+}
+
+.slider.slider-horizontal .slider-track {
+    height: 2px !important;
+}
+
+.input-slider .form-control {
+    border: 0 !important;
+    height: auto !important;
+    padding: 0 10px !important;
+    margin: 0 !important;
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
+}
+
+.input-slider .slider-selection {
+    background: #999999;
+}
+
+.input-slider .slider-track-high {
+    background: transparent;
+}
+
+.input-slider .slider-handle {
+    background: #6B6B6B;
+}
+
+.slider-wrapper {
+    max-width: 305px;
+    padding: 10px;
+}
+
+/* RTL */
+
+.rtl .input-slider .slider-selection {
+    background: transparent;
+}
+
+.rtl .input-slider .slider-track-high {
+    background: #999999;
+}

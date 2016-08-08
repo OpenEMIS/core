@@ -1,6 +1,7 @@
 <?php
 namespace Security\Controller;
 
+use ArrayObject;
 use App\Controller\AppController;
 use Cake\Event\Event;
 use Cake\ORM\Table;
@@ -13,7 +14,7 @@ class SecuritiesController extends AppController {
 			'Accounts'		=> ['className' => 'Security.Accounts', 'actions' => ['view', 'edit']],
 			'Users'			=> ['className' => 'Security.Users'],
 			'UserGroups'	=> ['className' => 'Security.UserGroups'],
-			'SystemGroups'	=> ['className' => 'Security.SystemGroups', 'actions' => ['!add', '!remove']],
+			'SystemGroups'	=> ['className' => 'Security.SystemGroups', 'actions' => ['!add', '!edit', '!remove']],
 			'Roles'			=> ['className' => 'Security.SecurityRoles'],
 			'Permissions'	=> ['className' => 'Security.Permissions', 'actions' => ['index']]
 		];
@@ -28,7 +29,7 @@ class SecuritiesController extends AppController {
 		$this->set('contentHeader', __($header));
 	}
 
-	public function onInitialize(Event $event, Table $model) {
+	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		$header = __('Security');
 		$header .= ' - ' . __($model->getHeader($model->alias));
 		$this->set('contentHeader', $header);

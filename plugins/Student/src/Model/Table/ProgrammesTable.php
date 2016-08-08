@@ -17,7 +17,7 @@ class ProgrammesTable extends AppTable {
 		$this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.InstitutionSites', 'foreignKey' => 'institution_id']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 	}
 
 	public function onGetEducationGradeId(Event $event, Entity $entity) {		
@@ -38,7 +38,7 @@ class ProgrammesTable extends AppTable {
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$options['auto_contain'] = false;
 		$query->contain(['StudentStatuses', 'EducationGrades', 'Institutions']);
-		$query->order([$this->aliasField('start_date') => 'DESC']);
+		$options['order'] = [$this->aliasField('start_date') => 'DESC'];
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
@@ -55,5 +55,16 @@ class ProgrammesTable extends AppTable {
 			$buttons['view']['url'] = $url;
 		}
 		return $buttons;
+	}
+
+	private function setupTabElements() {
+		$options['type'] = 'student';
+		$tabElements = $this->controller->getAcademicTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
 	}
 }

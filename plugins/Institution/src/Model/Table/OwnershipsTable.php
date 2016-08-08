@@ -1,14 +1,17 @@
 <?php
 namespace Institution\Model\Table;
 
-use App\Model\Table\AppTable;
-use Cake\Validation\Validator;
+use App\Model\Table\ControllerActionTable;
 
-class OwnershipsTable extends AppTable {
+class OwnershipsTable extends ControllerActionTable
+{
 	public function initialize(array $config) {
-        $this->addBehavior('ControllerAction.FieldOption');
+        $this->addBehavior('FieldOption.FieldOption');
+        $this->table('institution_ownerships');
         parent::initialize($config);
-		
-		$this->hasMany('InstitutionSites', ['className' => 'Institution.InstitutionSites', 'foreignKey' => 'institution_site_locality_id']);
+
+		$this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_ownership_id']);
+
+		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
 	}
 }

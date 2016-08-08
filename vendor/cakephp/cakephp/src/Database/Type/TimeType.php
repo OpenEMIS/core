@@ -14,8 +14,6 @@
  */
 namespace Cake\Database\Type;
 
-use Cake\Database\Type\DateTimeType;
-
 /**
  * Time type converter.
  *
@@ -36,7 +34,7 @@ class TimeType extends DateTimeType
      */
     protected function _parseValue($value)
     {
-        $class = static::$dateTimeClass;
+        $class = $this->_className;
         return $class::parseTime($value, $this->_localeFormat);
     }
 }

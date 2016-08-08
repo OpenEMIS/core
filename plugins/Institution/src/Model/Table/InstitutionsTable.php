@@ -10,24 +10,29 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Datasource\Exception\InvalidPrimaryKeyException;
+use Cake\I18n\I18n;
+use Cake\ORM\ResultSet;
 
 use App\Model\Table\AppTable;
 
 class InstitutionsTable extends AppTable  {
+	private $dashboardQuery = null;
+
 	public function initialize(array $config) {
-		$this->table('institution_sites');
+		$this->table('institutions');
         parent::initialize($config);
 
 		/**
 		 * fieldOption tables
 		 */
-		$this->belongsTo('Localities', 						['className' => 'Institution.Localities', 'foreignKey' => 'institution_site_locality_id']);
-		$this->belongsTo('Types', 							['className' => 'Institution.Types', 'foreignKey' => 'institution_site_type_id']);
-		$this->belongsTo('Ownerships',				 		['className' => 'Institution.Ownerships', 'foreignKey' => 'institution_site_ownership_id']);
-		$this->belongsTo('Statuses', 						['className' => 'Institution.Statuses', 'foreignKey' => 'institution_site_status_id']);
-		$this->belongsTo('Sectors',				 			['className' => 'Institution.Sectors', 'foreignKey' => 'institution_site_sector_id']);
-		$this->belongsTo('Providers',				 		['className' => 'Institution.Providers', 'foreignKey' => 'institution_site_provider_id']);
-		$this->belongsTo('Genders',				 			['className' => 'Institution.Genders', 'foreignKey' => 'institution_site_gender_id']);
+		$this->belongsTo('Localities', 						['className' => 'Institution.Localities', 'foreignKey' => 'institution_locality_id']);
+		$this->belongsTo('Types', 							['className' => 'Institution.Types', 'foreignKey' => 'institution_type_id']);
+		$this->belongsTo('Ownerships',				 		['className' => 'Institution.Ownerships', 'foreignKey' => 'institution_ownership_id']);
+		$this->belongsTo('Statuses', 						['className' => 'Institution.Statuses', 'foreignKey' => 'institution_status_id']);
+		$this->belongsTo('Sectors',				 			['className' => 'Institution.Sectors', 'foreignKey' => 'institution_sector_id']);
+		$this->belongsTo('Providers',				 		['className' => 'Institution.Providers', 'foreignKey' => 'institution_provider_id']);
+		$this->belongsTo('Genders',				 			['className' => 'Institution.Genders', 'foreignKey' => 'institution_gender_id']);
+		$this->belongsTo('NetworkConnectivities', 			['className' => 'Institution.NetworkConnectivities', 'foreignKey' => 'institution_network_connectivity_id']);
 		/**
 		 * end fieldOption tables
 		 */
@@ -35,34 +40,45 @@ class InstitutionsTable extends AppTable  {
 		$this->belongsTo('Areas', 							['className' => 'Area.Areas']);
 		$this->belongsTo('AreaAdministratives', 			['className' => 'Area.AreaAdministratives']);
 
-		$this->hasMany('InstitutionSiteActivities', 		['className' => 'Institution.InstitutionSiteActivities', 'dependent' => true]);
-		$this->hasMany('InstitutionSiteAttachments', 		['className' => 'Institution.InstitutionSiteAttachments', 'dependent' => true]);
+		$this->hasMany('InstitutionActivities', 			['className' => 'Institution.InstitutionActivities', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionAttachments', 			['className' => 'Institution.InstitutionAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-		$this->hasMany('InstitutionSitePositions', 			['className' => 'Institution.InstitutionSitePositions', 'dependent' => true]);
-		$this->hasMany('InstitutionSiteShifts', 			['className' => 'Institution.InstitutionSiteShifts', 'dependent' => true]);
-		$this->hasMany('InstitutionSiteSections', 			['className' => 'Institution.InstitutionSiteSections', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('InstitutionSiteClasses', 			['className' => 'Institution.InstitutionSiteClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionPositions', 				['className' => 'Institution.InstitutionPositions', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionShifts', 				['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionClasses', 				['className' => 'Institution.InstitutionClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
+        // Note: InstitutionClasses already cascade deletes 'InstitutionSubjectStudents' - dependent and cascade not neccessary
+        $this->hasMany('InstitutionSubjectStudents',        ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSubjects', 				['className' => 'Institution.InstitutionSubjects', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('Infrastructures',					['className' => 'Institution.InstitutionInfrastructures', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-		$this->hasMany('InstitutionSiteStaff', 				['className' => 'Institution.InstitutionSiteStaff', 'dependent' => true]);
-		$this->hasMany('StaffBehaviours', 					['className' => 'Institution.StaffBehaviours', 'dependent' => true, 'foreignKey' => 'institution_id']);
-		$this->hasMany('InstitutionSiteStaffAbsences', 		['className' => 'Institution.InstitutionSiteStaffAbsences', 'dependent' => true]);
+		$this->hasMany('Staff',				 				['className' => 'Institution.Staff', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StaffPositionProfiles',				['className' => 'Institution.StaffPositionProfiles', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StaffBehaviours', 					['className' => 'Institution.StaffBehaviours', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionStaffAbsences', 			['className' => 'Institution.StaffAbsences', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-		$this->hasMany('Students', 							['className' => 'Institution.Students', 'dependent' => true, 'foreignKey' => 'institution_id']);
-		$this->hasMany('StudentBehaviours', 				['className' => 'Institution.StudentBehaviours', 'dependent' => true, 'foreignKey' => 'institution_id']);
-		$this->hasMany('InstitutionSiteStudentAbsences', 	['className' => 'Institution.InstitutionSiteStudentAbsences', 'dependent' => true]);
+		$this->hasMany('Students', 							['className' => 'Institution.Students', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StudentBehaviours', 				['className' => 'Institution.StudentBehaviours', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionStudentAbsences', 		['className' => 'Institution.InstitutionStudentAbsences', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-		$this->hasMany('InstitutionSiteBankAccounts', 		['className' => 'Institution.InstitutionSiteBankAccounts', 'dependent' => true]);
-		$this->hasMany('InstitutionFees', 					['className' => 'Institution.InstitutionFees', 'dependent' => true, 'foreignKey' => 'institution_id']);
+		$this->hasMany('InstitutionBankAccounts', 			['className' => 'Institution.InstitutionBankAccounts', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionFees', 					['className' => 'Institution.InstitutionFees', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-		$this->hasMany('InstitutionGrades', 				['className' => 'Institution.InstitutionGrades', 'dependent' => true]);
-		
-		$this->hasMany('StudentPromotion', 					['className' => 'Institution.StudentPromotion', 'foreignKey' => 'institution_id', 'dependent' => true]);
+		$this->hasMany('InstitutionGrades', 				['className' => 'Institution.InstitutionGrades', 'dependent' => true, 'cascadeCallbacks' => true]);
+
+		$this->hasMany('StudentPromotion', 					['className' => 'Institution.StudentPromotion', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StudentAdmission', 					['className' => 'Institution.StudentAdmission', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StudentDropout', 					['className' => 'Institution.StudentDropout', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('TransferApprovals', 				['className' => 'Institution.TransferApprovals', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'previous_institution_id']);
+		$this->hasMany('AssessmentItemResults', 			['className' => 'Institution.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionRubrics', 				['className' => 'Institution.InstitutionRubrics', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionQualityVisits', 			['className' => 'Institution.InstitutionQualityVisits', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StudentSurveys', 					['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSurveys', 				['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->belongsToMany('SecurityGroups', [
 			'className' => 'Security.SystemGroups',
-			'joinTable' => 'security_group_institution_sites',
-			'foreignKey' => 'institution_site_id', 
+			'joinTable' => 'security_group_institutions',
+			'foreignKey' => 'institution_id',
 			'targetForeignKey' => 'security_group_id',
 			'through' => 'Security.SecurityGroupInstitutions',
 			'dependent' => true
@@ -72,37 +88,37 @@ class InstitutionsTable extends AppTable  {
 			'fieldKey' => 'institution_custom_field_id',
 			'tableColumnKey' => 'institution_custom_table_column_id',
 			'tableRowKey' => 'institution_custom_table_row_id',
+			'fieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFields'],
 			'formKey' => 'institution_custom_form_id',
 			'filterKey' => 'institution_custom_filter_id',
 			'formFieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFields'],
 			'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
-			'recordKey' => 'institution_site_id',
-			'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_site_id', 'dependent' => true, 'cascadeCallbacks' => true]
+			'recordKey' => 'institution_id',
+			'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 		$this->addBehavior('Year', ['date_opened' => 'year_opened', 'date_closed' => 'year_closed']);
-        $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionSiteActivities', 'key' => 'institution_site_id', 'session' => 'Institution.Institutions.id']);
-        $this->addBehavior('AdvanceSearch');
+        $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionActivities', 'key' => 'institution_id', 'session' => 'Institution.Institutions.id']);
+        $this->addBehavior('AdvanceSearch', [
+        	'display_country' => false
+        ]);
         $this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
         $this->addBehavior('Security.Institution');
         $this->addBehavior('Area.Areapicker');
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('OpenEmis.Map');
-        $this->addBehavior('HighChart', ['institution_site' => ['_function' => 'getNumberOfInstitutionsByModel']]);
+        $this->addBehavior('HighChart', ['institutions' => ['_function' => 'getNumberOfInstitutionsByModel']]);
         $this->addBehavior('Import.ImportLink');
-
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 			->add('date_opened', [
 					'ruleCompare' => [
 						'rule' => ['comparison', 'notequal', '0000-00-00'],
-					],
-					'ruleCheckDateInput' => [
-			            'rule' => ['checkDateInput'],
-		        		'last' => true
-		    	    ]
+					]
 				])
 
 	        ->allowEmpty('date_closed')
@@ -114,12 +130,12 @@ class InstitutionsTable extends AppTable  {
 			->add('longitude', 'ruleLongitude', [
 					'rule' => 'checkLongitude'
 				])
-		
+
 	        ->allowEmpty('latitude')
 			->add('latitude', 'ruleLatitude', [
 					'rule' => 'checkLatitude'
 				])
-		
+
 			// ->add('address', 'ruleMaximum255', [
 			// 		'rule' => ['maxLength', 255],
 			// 		'message' => 'Maximum allowable character is 255',
@@ -134,56 +150,87 @@ class InstitutionsTable extends AppTable  {
 
 	        ->allowEmpty('email')
 			->add('email', [
-					'ruleUnique' => [
-		        		'rule' => 'validateUnique',
-		        		'provider' => 'table',
-		        		// 'message' => 'Email has to be unique',
-		        		'last' => true
-				    ],
 					'ruleValidEmail' => [
 						'rule' => 'email'
 					]
 				])
+			->add('area_id', 'ruleAuthorisedArea', [
+					'rule' => 'checkAuthorisedArea'
+				])
 	        ;
 		return $validator;
+	}
+
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
+		$cloneFields = $fields->getArrayCopy();
+		$newFields = [];
+		foreach ($cloneFields as $key => $value) {
+			$newFields[] = $value;
+			if ($value['field'] == 'area_id') {
+				$newFields[] = [
+					'key' => 'Areas.code',
+					'field' => 'area_code',
+					'type' => 'string',
+					'label' => ''
+				];
+			}
+		}
+		$fields->exchangeArray($newFields);
+	}
+
+	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+		$query
+			->contain(['Areas'])
+			->select(['area_code' => 'Areas.code']);
 	}
 
 	public function onGetName(Event $event, Entity $entity) {
 		$name = $entity->name;
 
 		if ($this->AccessControl->check([$this->controller->name, 'dashboard'])) {
-			$name = $event->subject()->Html->link($entity->name, [
+			$name = $event->subject()->HtmlField->link($entity->name, [
 				'plugin' => $this->controller->plugin,
 				'controller' => $this->controller->name,
 				'action' => 'dashboard',
 				'0' => $entity->id
 			]);
 		}
-		
+
 		return $name;
+	}
+
+	public function onUpdateDefaultActions(Event $event) {
+		return ['downloadFile'];
 	}
 
 	public function beforeAction($event) {
 		$this->ControllerAction->field('security_group_id', ['visible' => false]);
-		$this->ControllerAction->field('institution_site_area_id', ['visible' => false]);
+		// $this->ControllerAction->field('institution_site_area_id', ['visible' => false]);
 		$this->ControllerAction->field('modified', ['visible' => false]);
 		$this->ControllerAction->field('modified_user_id', ['visible' => false]);
 		$this->ControllerAction->field('created', ['visible' => false]);
 		$this->ControllerAction->field('created_user_id', ['visible' => false]);
 
-		$this->ControllerAction->field('institution_site_type_id', ['type' => 'select']);
-		$this->ControllerAction->field('institution_site_locality_id', ['type' => 'select']);
-		$this->ControllerAction->field('institution_site_ownership_id', ['type' => 'select']);
-		$this->ControllerAction->field('institution_site_status_id', ['type' => 'select']);
-		$this->ControllerAction->field('institution_site_sector_id', ['type' => 'select']);
-		$this->ControllerAction->field('institution_site_provider_id', ['type' => 'select']);
-		$this->ControllerAction->field('institution_site_gender_id', ['type' => 'select']);
-		$this->ControllerAction->field('area_administrative_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
-		$this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas']);
+		$this->ControllerAction->field('institution_locality_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_ownership_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_status_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_sector_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_provider_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_gender_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_network_connectivity_id', ['type' => 'select']);
+		$this->ControllerAction->field('area_administrative_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives', 'displayCountry' => false]);
+		$this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
 
 		$this->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information')]);
 		$this->ControllerAction->field('location_section', ['type' => 'section', 'title' => __('Location')]);
-		$this->ControllerAction->field('area_section', ['type' => 'section', 'title' => __('Area')]);
+
+		$language = I18n::locale();
+		$field = 'area_id';
+		$areaLabel = $this->onGetFieldLabel($event, $this->alias(), $field, $language, true);
+		$this->ControllerAction->field('area_section', ['type' => 'section', 'title' => $areaLabel]);
+		$field = 'area_administrative_id';
+		$areaAdministrativesLabel = $this->onGetFieldLabel($event, $this->alias(), $field, $language, true);
+		$this->ControllerAction->field('area_administrative_section', ['type' => 'section', 'title' => $areaAdministrativesLabel]);
 		$this->ControllerAction->field('contact_section', ['type' => 'section', 'title' => __('Contact')]);
 		$this->ControllerAction->field('map_section', ['type' => 'section', 'title' => __('Map'), 'visible' => ['view'=>true]]);
 		$this->ControllerAction->field('map', ['type' => 'map', 'visible' => ['view'=>true]]);
@@ -203,8 +250,8 @@ class InstitutionsTable extends AppTable  {
 			if ($securityGroup) {
 				// add the relationship of security group and institutions
 				$securityInstitution = $SecurityInstitutions->newEntity([
-					'security_group_id' => $securityGroup->id, 
-					'institution_site_id' => $entity->id
+					'security_group_id' => $securityGroup->id,
+					'institution_id' => $entity->id
 				]);
 				$SecurityInstitutions->save($securityInstitution);
 
@@ -213,6 +260,7 @@ class InstitutionsTable extends AppTable  {
 				if (!$this->save($entity)) {
 					return false;
 				}
+
 			} else {
 				return false;
 			}
@@ -248,34 +296,28 @@ class InstitutionsTable extends AppTable  {
 			$institutionCount = $this->find();
 			$conditions = [];
 
-			if (! $this->AccessControl->isAdmin()) {
-
-				$institutionIds = $this->AccessControl->getInstitutionsByUser();
-
-				// Total Institutions: number
-				$institutionCount = $institutionCount
-					->where([$this->aliasField('id').' IN' => $institutionIds]);
-
-				$conditions['id IN'] = $institutionIds;
-			}
+			$institutionCount = clone $this->dashboardQuery;
+			$cloneClass = clone $this->dashboardQuery;
 
 			$models = [
-				['Types', 'institution_site_type_id', 'Type', 'conditions' => $conditions],
-				['Sectors', 'institution_site_sector_id', 'Sector', 'conditions' => $conditions],
-				['Localities', 'institution_site_locality_id', 'Locality', 'conditions' => $conditions],
+				['Types', 'institution_type_id', 'Type', 'query' => $this->dashboardQuery],
+				['Sectors', 'institution_sector_id', 'Sector', 'query' => $this->dashboardQuery],
+				['Localities', 'institution_locality_id', 'Locality', 'query' => $this->dashboardQuery],
 			];
 
 			foreach ($models as $key => $model) {
-				$institutionSiteArray[$key] = $this->getDonutChart('institution_site', $model);
+				$institutionArray[$key] = $this->getDonutChart('institutions', $model);
 			}
 
 			$indexDashboard = 'dashboard';
+			$count = $institutionCount->count();
+			unset($institutionCount);
 			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
 	            'name' => $indexDashboard,
-	            'data' => [ 
+	            'data' => [
 	            	'model' => 'institutions',
-	            	'modelCount' => $institutionCount->count(),
-	            	'modelArray' => $institutionSiteArray,
+	            	'modelCount' => $count,
+	            	'modelArray' => $institutionArray,
 	            ],
 	            'options' => [],
 	            'order' => 1
@@ -287,39 +329,36 @@ class InstitutionsTable extends AppTable  {
 	public function getNumberOfInstitutionsByModel($params=[]) {
 
 		if (!empty($params)) {
-			$conditions = isset($params['conditions']) ? $params['conditions'] : [];
-			$_conditions = [];
+			$query = $params['query'];
 
 			$modelName = $params[0];
 			$modelId = $params[1];
 			$key = $params[2];
 			$params['key'] = __($key);
 
-			foreach ($conditions as $key => $value) {
-				$_conditions[$this->aliasField($key)] = $value;
-			}
+			$institutionRecords = clone $query;
 
-			$institutionRecords = $this->find();
-			
 			$selectString = $modelName.'.name';
-			$institutionSiteTypesCount = $institutionRecords
+			$institutionTypesCount = $institutionRecords
 				->contain([$modelName])
 				->select([
 					'count' => $institutionRecords->func()->count($modelId),
 					'name' => $selectString
 				])
 				->group($modelId)
-				->where($_conditions)
-				->toArray();
+				;
 
-			// Creating the data set		
+			$this->advancedSearchQuery($this->request, $institutionTypesCount);
+
+			// Creating the data set
 			$dataSet = [];
-			foreach ($institutionSiteTypesCount as $key => $value) {
+			foreach ($institutionTypesCount->toArray() as $key => $value) {
 	            // Compile the dataset
 				$dataSet[] = [__($value['name']), $value['count']];
 			}
 			$params['dataSet'] = $dataSet;
 		}
+		unset($institutionRecords);
 		return $params;
 	}
 
@@ -333,18 +372,18 @@ class InstitutionsTable extends AppTable  {
 		$this->Session->delete('Institutions.id');
 
 		$this->ControllerAction->setFieldOrder([
-			'code', 'name', 'area_id', 'institution_site_type_id'
+			'code', 'name', 'area_id', 'institution_type_id'
 		]);
 
 		$this->ControllerAction->setFieldVisible(['index'], [
-			'code', 'name', 'area_id', 'institution_site_type_id'
+			'code', 'name', 'area_id', 'institution_type_id'
 		]);
+		$this->controller->set('ngController', 'AdvancedSearchCtrl');
 	}
 
 	public function onGetAreaId(Event $event, Entity $entity) {
-		$areaName = $entity->Areas['name'];
-
 		if($this->action == 'index'){
+			$areaName = $entity->Areas['name'];
 			// Getting the system value for the area
 			$ConfigItems = TableRegistry::get('ConfigItems');
 			$areaLevel = $ConfigItems->value('institution_area_level_id');
@@ -366,9 +405,15 @@ class InstitutionsTable extends AppTable  {
 			} catch (InvalidPrimaryKeyException $ex) {
 				$this->log($ex->getMessage(), 'error');
 			}
+			return $areaName;
 		}
+		return $entity->area_id;
+	}
 
-		return $areaName;
+	public function onGetAreaAdministrativeId(Event $event, Entity $entity) {
+		if ($this->action == 'view') {
+			return $entity->area_administrative_id;
+		}
 	}
 
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
@@ -405,9 +450,11 @@ class InstitutionsTable extends AppTable  {
 		$query->join($options['query']['join']);
 
 		$queryParams = $request->query;
-		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
-			$query->order([$this->aliasField('name') => 'asc']);
-		}
+		$options['order'] = [$this->aliasField('name')];
+	}
+
+	public function indexAfterPaginate(Event $event, ResultSet $resultSet, Query $query) {
+		$this->dashboardQuery = clone $query;
 	}
 
 	public function indexAfterAction(Event $event, $data) {
@@ -433,14 +480,17 @@ class InstitutionsTable extends AppTable  {
 	public function viewBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
-			'name', 'alternative_name', 'code', 'institution_site_provider_id', 'institution_site_sector_id', 'institution_site_type_id', 
-			'institution_site_ownership_id', 'institution_site_gender_id', 'institution_site_status_id', 'date_opened', 'date_closed',
-			
+			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id',
+			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
+
 			'location_section',
-			'address', 'postal_code', 'institution_site_locality_id', 'latitude', 'longitude',
+			'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
 
 			'area_section',
-			'area_id', 'area_administrative_id',
+			'area_id',
+
+			'area_administrative_section',
+			'area_administrative_id',
 
 			'contact_section',
 			'contact_person', 'telephone', 'fax', 'email', 'website',
@@ -451,7 +501,6 @@ class InstitutionsTable extends AppTable  {
 		]);
 	}
 
-
 /******************************************************************************************************************
 **
 ** addEdit action methods
@@ -460,29 +509,36 @@ class InstitutionsTable extends AppTable  {
 	public function addEditBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
-			'name', 'alternative_name', 'code', 'institution_site_provider_id', 'institution_site_sector_id', 'institution_site_type_id', 
-			'institution_site_ownership_id', 'institution_site_gender_id', 'institution_site_status_id', 'date_opened', 'date_closed',
-			
+			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id',
+			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
+
 			'location_section',
-			'address', 'postal_code', 'institution_site_locality_id', 'latitude', 'longitude',
+			'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
 
 			'area_section',
-			'area_id', 'area_administrative_id',
+			'area_id',
+
+			'area_administrative_section',
+			'area_administrative_id',
 
 			'contact_section',
 			'contact_person', 'telephone', 'fax', 'email', 'website',
 		]);
 	}
 
+	public function addEditAfterAction(Event $event, Entity $entity) {
+		$this->ControllerAction->field('institution_type_id', ['type' => 'select']);
+	}
 
 /******************************************************************************************************************
 **
 ** essential methods
 **
 ******************************************************************************************************************/
-	
+
 	// autocomplete used for UserGroups
-	public function autocomplete($search) {
+	public function autocomplete($search, $params = []) {
+		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
 		$search = sprintf('%%%s%%', $search);
 
 		$list = $this
@@ -493,9 +549,10 @@ class InstitutionsTable extends AppTable  {
 					$this->aliasField('code') . ' LIKE' => $search
 				]
 			])
+			->where([$conditions])
 			->order([$this->aliasField('name')])
 			->all();
-		
+
 		$data = array();
 		foreach($list as $obj) {
 			$data[] = [
@@ -506,11 +563,127 @@ class InstitutionsTable extends AppTable  {
 		return $data;
 	}
 
-	public function onUpdateFieldInstitutionSiteTypeId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add' || $action == 'edit') {
-			$attr['onChangeReload'] = true;
+			// list($typeOptions, $selectedType) = array_values($this->getTypeOptions());
+
+			// $attr['options'] = $typeOptions;
+			$attr['onChangeReload'] = 'changeType';
 		}
 
 		return $attr;
 	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+		if (!$this->AccessControl->isAdmin()) {
+			$userId = $this->Auth->user('id');
+			$institutionId = $entity->id;
+			$securityRoles = $this->getInstitutionRoles($userId, $institutionId);
+			foreach ($buttons as $key => $b) {
+				$url = $this->ControllerAction->url($key);
+				if (!$this->AccessControl->check($url, $securityRoles)) {
+					unset($buttons[$key]);
+				}
+			}
+		}
+		return $buttons;
+	}
+
+	public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$request = $this->request;
+
+		if ($request->is(['post', 'put'])) {
+			if (array_key_exists($this->alias(), $request->data)) {
+				if (array_key_exists('institution_type_id', $request->data[$this->alias()])) {
+					$selectedType = $request->data[$this->alias()]['institution_type_id'];
+					$entity->institution_type_id = $selectedType;
+				}
+			}
+		}
+	}
+
+	public function getTypeOptions() {
+		$typeOptions = $this->Types->getList()->toArray();
+		$selectedType = $this->Types->getDefaultValue();
+
+		// $selectedType = $this->queryString('type', $typeOptions);
+		// $this->advancedSelectOptions($typeOptions, $selectedType);
+		// , ['default' => $typeDefault]
+
+		return compact('typeOptions', 'selectedType');
+	}
+
+/******************************************************************************************************************
+**
+** Security Functions
+**
+******************************************************************************************************************/
+
+	/**
+	 * To get the list of security group id for the particular institution and user
+	 *
+	 * @param integer $userId User Id
+	 * @param integer $institutionId Institution id
+	 * @return array The list of security group id that the current user for access to the institution
+	 */
+	public function getSecurityGroupId($userId, $institutionId) {
+		$institutionEntity = $this->get($institutionId);
+
+		// Get parent of the area and the current area
+		$areaId = $institutionEntity->area_id;
+		$Areas = $this->Areas;
+		$institutionArea = $Areas->get($areaId);
+
+		// Getting the security groups
+		$SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+		$securityGroupIds = $SecurityGroupAreas->find()
+			->innerJoinWith('Areas')
+			->innerJoinWith('SecurityGroups.Users')
+			->where([
+				'Areas.lft <= ' => $institutionArea->lft,
+				'Areas.rght >= ' => $institutionArea->rght,
+				'Users.id' => $userId
+			])
+			->union(
+				$SecurityGroupInstitutions->find()
+					->innerJoinWith('SecurityGroups.Users')
+					->where([
+						$SecurityGroupInstitutions->aliasField('institution_id') => $institutionId,
+						'Users.id' => $userId
+					])
+					->select([$SecurityGroupInstitutions->aliasField('security_group_id')])
+					->distinct([$SecurityGroupInstitutions->aliasField('security_group_id')])
+			)
+			->select([$SecurityGroupAreas->aliasField('security_group_id')])
+			->distinct([$SecurityGroupAreas->aliasField('security_group_id')])
+			->hydrate(false)
+			->toArray();
+		$securityGroupIds = $this->array_column($securityGroupIds, 'security_group_id');
+		return $securityGroupIds;
+	}
+
+	/**
+	 * To list of roles that are authorised for access to a particular institution
+	 *
+	 * @param integer $userId User Id
+	 * @param integer $institutionId Institution id
+	 * @return array The list of security roles id that the current user for access to the institution
+	 */
+	public function getInstitutionRoles($userId, $institutionId) {
+		$groupIds = $this->getSecurityGroupId($userId, $institutionId);
+		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+		return $SecurityGroupUsers->getRolesByUserAndGroup($groupIds, $userId);
+	}
+
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+    	$extra['excludedModels'] = [
+    		$this->SecurityGroups->alias(), $this->InstitutionSurveys->alias(), $this->StudentSurveys->alias(),
+    		$this->StaffPositionProfiles->alias(), $this->InstitutionActivities->alias(), $this->StudentPromotion->alias(),
+    		$this->StudentAdmission->alias(), $this->StudentDropout->alias(), $this->TransferApprovals->alias(),
+            $this->CustomFieldValues->alias(), $this->CustomTableCells->alias()
+    	];
+    }
 }

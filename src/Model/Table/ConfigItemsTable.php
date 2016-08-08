@@ -21,6 +21,8 @@ class ConfigItemsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 
+		$this->addBehavior('Authentication');
+		$this->addBehavior('FormNotes');
 		// $this->belongsTo('ConfigItemOptions', ['foreignKey'=>'value']);
 	}
 
@@ -37,10 +39,6 @@ class ConfigItemsTable extends AppTable {
 		$this->ControllerAction->field('type', ['visible' => ['view'=>true, 'edit'=>true]]);
 		$this->ControllerAction->field('label', ['visible' => ['view'=>true, 'edit'=>true]]);
 		$this->ControllerAction->field('value', ['visible' => true]);
-
-		$this->ControllerAction->field('form_notes', ['type' => 'form_notes', 'visible' => false]);
-
-		$this->addBehavior('FormNotes');
 	}
 
 
@@ -50,6 +48,10 @@ class ConfigItemsTable extends AppTable {
 **
 ******************************************************************************************************************/
 	public function indexBeforeAction(Event $event) {
+		$this->buildSystemConfigFilters();
+	}
+
+	public function buildSystemConfigFilters() {
 		$toolbarElements = [
 			['name' => 'Configurations/controls', 'data' => [], 'options' => []]
 		];
@@ -58,15 +60,16 @@ class ConfigItemsTable extends AppTable {
 		$typeOptions = array_keys($this->find('list', ['keyField' => 'type', 'valueField' => 'type'])->order('type')->toArray());
 
 		$selectedType = $this->queryString('type', $typeOptions);
-		$this->advancedSelectOptions($typeOptions, $selectedType);
+
 		$buffer = $typeOptions;
 		foreach ($buffer as $key => $value) {
-			$result = $this->find()->where([$this->aliasField('type') => $value['text'], $this->aliasField('visible') => 1])->count();
+			$result = $this->find()->where([$this->aliasField('type') => $value, $this->aliasField('visible') => 1])->count();
 			if (!$result) {
 				unset($typeOptions[$key]);
 			}
 		}
-		$this->request->query['type_value'] = $typeOptions[$selectedType]['text'];
+		$this->request->query['type_value'] = $typeOptions[$selectedType];
+		$this->advancedSelectOptions($typeOptions, $selectedType);
 		$this->controller->set('typeOptions', $typeOptions);
 	}
 
@@ -105,12 +108,6 @@ class ConfigItemsTable extends AppTable {
 					$this->validator()->add('value', $this->$validationRules);
 				}
 			}
-			if ($entity->type == 'Custom Validation') {
-				$this->fields['form_notes']['visible'] = true;
-				$this->fields['form_notes']['value'] = '<ul><li>9 (Numbers)</li><li>a (Letter)</li><li>w (Alphanumeric)</li><li>* (Any Character)</li><li>? (Optional - any characters following will become optional)</li></ul>';
-		
-				$this->fields['value']['attr']['onkeypress'] = 'return Config.inputMaskCheck(event)';
-			}
 		}
 	}
 
@@ -119,9 +116,7 @@ class ConfigItemsTable extends AppTable {
 			if ($entity->code == 'student_prefix' || $entity->code == 'staff_prefix' || $entity->code == 'guardian_prefix') {
 				$value = $data[$this->alias()]['value']['prefix'];
 				if (isset($data[$this->alias()]['value']['enable'])) {
-					$value .= ',1';
-				} else {
-					$value .= ',0';
+					$value .= ','.$data[$this->alias()]['value']['enable'];
 				}
 				$data[$this->alias()]['value'] = $value;
 			}
@@ -161,11 +156,17 @@ class ConfigItemsTable extends AppTable {
 						$optionTable = TableRegistry::get('ConfigItemOptions');
 						$options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
 							->where([
-								'ConfigItemOptions.option_type' => $entity->option_type
+								'ConfigItemOptions.option_type' => $entity->option_type,
+								'ConfigItemOptions.visible' => 1
 							])
 							->toArray();
 						$attr['options'] = $options;
 					}
+
+					if (isset($this->request->data[$this->alias()]['value'])) {
+						$attr['onChangeReload'] = true;	
+					}
+
 				} else {
 					if ($entity->code == 'start_time') {
 						$attr['type'] = 'time';
@@ -375,11 +376,6 @@ class ConfigItemsTable extends AppTable {
 	];
 	   
 	private $validateStartTime = [
-		'dateInput' => [
-			'rule'	=> ['checkDateInput'],
-			'provider' => 'table',
-			'last' => true
-		],
 		'aPValue' => [
 			'rule'	=> ['amPmValue'],
 			'provider' => 'table',
@@ -455,12 +451,12 @@ class ConfigItemsTable extends AppTable {
   	private $validateStudentAdmissionAge = [
 		'num' => [
 			'rule'  => 'numeric',
-			'message' => 'Numeric Value should be between 0 to 101',
+			'message' => 'Numeric Value should be between -1 to 101',
 			'last' => true
 		],
 		'bet' => [
-			'rule'	=> ['range', 1, 100],
-			'message' => 'Numeric Value should be between 0 to 101',
+			'rule'	=> ['range', 0, 100],
+			'message' => 'Numeric Value should be between -1 to 101',
 			'last' => true
 		]
   	];
@@ -510,4 +506,18 @@ class ConfigItemsTable extends AppTable {
 			'last' => true
 		]
 	];
+
+	private $validatePasswordMinLength = [
+		'num' => [
+			'rule'  => 'numeric',
+			'message' => 'Numeric Value should be between 6 to 50',
+			'last' => true
+		],
+		'bet' => [
+			'rule'	=> ['range', 6, 50],
+			'message' => 'Numeric Value should be between 6 to 50',
+			'last' => true
+		]
+	];
+
 }

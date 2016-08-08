@@ -12,17 +12,19 @@
  */
 namespace DebugKit\Panel;
 
+use Cake\Collection\Collection;
 use Cake\Controller\Controller;
-use Cake\Database\Query;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\Event;
 use Cake\Form\Form;
+use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\Utility\Hash;
 use Closure;
 use DebugKit\DebugPanel;
 use Exception;
 use PDO;
+use RuntimeException;
 use SimpleXmlElement;
 
 /**
@@ -71,11 +73,17 @@ class VariablesPanel extends DebugPanel
         $errors = [];
 
         $walker = function (&$item) use (&$walker) {
-            if ($item instanceof Query || $item instanceof ResultSet) {
+            if ($item instanceof Collection ||
+                $item instanceof Query ||
+                $item instanceof ResultSet
+            ) {
                 try {
                     $item = $item->toArray();
                 } catch (\Cake\Database\Exception $e) {
                     //Likely issue is unbuffered query; fall back to __debugInfo
+                    $item = array_map($walker, $item->__debugInfo());
+                } catch (RuntimeException $e) {
+                    // Likely a non-select query.
                     $item = array_map($walker, $item->__debugInfo());
                 }
             } elseif ($item instanceof Closure ||
