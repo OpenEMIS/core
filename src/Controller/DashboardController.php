@@ -1,6 +1,7 @@
 <?php
 namespace App\Controller;
 
+use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\ORM\Table;
@@ -21,9 +22,14 @@ class DashboardController extends AppController {
 		
 		$this->loadComponent('Workbench', [
 			'models' => [
-				'Institution.TransferApprovals',
-				'Institution.StudentAdmission',
-				'Institution.StudentDropout'
+				'Institution.TransferApprovals' => ['version' => 1],
+				'Institution.StudentAdmission' => ['version' => 1],
+				'Institution.StudentDropout' => ['version' => 1],
+				'Institution.InstitutionSurveys' => ['version' => 2],
+				'Institution.InstitutionPositions' => ['version' => 2],
+				'Institution.StaffPositionProfiles' => ['version' => 2],
+				'Institution.StaffTransferApprovals' => ['version' => 1],
+				'Institution.StaffTransferRequests' => ['version' => 1]
 			]
 		]);
     }
@@ -35,7 +41,7 @@ class DashboardController extends AppController {
 		$this->set('contentHeader', $header);
     }
 
-    public function onInitialize(Event $event, Table $model) {
+    public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
     	$header = $model->getHeader($model->alias);
     	$this->set('contentHeader', $header);
     }

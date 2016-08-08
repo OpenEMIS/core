@@ -219,7 +219,7 @@ class RubricsReportBehavior extends Behavior {
 		$RubricCriteriaOptionsTable = $this->_table->InstitutionRubricAnswers;
 		$sectionAnswer = $RubricCriteriaOptionsTable->find()
 			->contain(['RubricCriteriaOptions'])
-			->where([$RubricCriteriaOptionsTable->aliasField('institution_site_quality_rubric_id') => $rubricId])
+			->where([$RubricCriteriaOptionsTable->aliasField('institution_quality_rubric_id') => $rubricId])
 			->hydrate(false)
 			->toArray();
 

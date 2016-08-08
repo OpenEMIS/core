@@ -1,20 +1,21 @@
 <?php
 namespace FieldOption\Model\Table;
 
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 use Cake\Validation\Validator;
 
-class CountriesTable extends AppTable {
-	public function initialize(array $config) {
-		$this->addBehavior('ControllerAction.FieldOption');
+class CountriesTable extends ControllerActionTable {
+	public function initialize(array $config)
+	{
+		$this->addBehavior('FieldOption.FieldOption');
 		$this->table('countries');
 		parent::initialize($config);
-
-		$this->belongsTo('IdentityTypes', ['className' => 'FieldOption.IdentityTypes']);
-		$this->hasMany('Nationalities', ['className' => 'User.Nationalities', 'foreignKey' => 'country_id']);
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator)
+	{
+		$validator = parent::validationDefault($validator);
+
 		$validator
 			->notEmpty('name', 'Please enter a name.');
 

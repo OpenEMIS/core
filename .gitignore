@@ -1,6 +1,7 @@
 # User specific & automatically generated files #
 #################################################
 datasource.php
+test_datasource.php
 tmp
 tmp/*
 tmp/Bake*
@@ -11,6 +12,7 @@ tmp/tests/*
 logs/*.log*
 webroot/export/*
 webroot/import/*
+webroot/analytics.txt
 /build
 /dist
 /tags

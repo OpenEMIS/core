@@ -2,11 +2,14 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+use Cake\I18n\Time;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\Network\Session;
+use Cake\Log\Log;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\MessagesTrait;
@@ -25,16 +28,13 @@ class InstitutionSurveysTable extends AppTable {
 	public $openStatusId = null;
 	public $closedStatusId = null;
 
-	private $workflowEvents = [];
-
 	public function initialize(array $config) {
-		$this->table('institution_site_surveys');
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->addBehavior('Survey.Survey', [
 			'module' => $this->module
 		]);
@@ -44,26 +44,28 @@ class InstitutionSurveysTable extends AppTable {
 			'fieldKey' => 'survey_question_id',
 			'tableColumnKey' => 'survey_table_column_id',
 			'tableRowKey' => 'survey_table_row_id',
+			'fieldClass' => ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id'],
 			'formKey' => 'survey_form_id',
 			// 'filterKey' => 'custom_filter_id',
+			'formClass' => ['className' => 'Survey.SurveyForms', 'foreignKey' => 'survey_form_id'],
 			'formFieldClass' => ['className' => 'Survey.SurveyFormsQuestions'],
 			// 'formFilterClass' => ['className' => 'CustomField.CustomFormsFilters'],
-			'recordKey' => 'institution_site_survey_id',
-			'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
-			'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_site_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
+			'recordKey' => 'institution_survey_id',
+			'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 		$this->addBehavior('Excel', ['pages' => ['view']]);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
+        $this->addBehavior('Import.ImportLink');
+        $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
 	}
 
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
+    	$events['Model.custom.onUpdateActionButtons'] = 'onUpdateActionButtons';
     	$events['Workflow.getFilterOptions'] = 'getWorkflowFilterOptions';
-    	$events['Workflow.getEvents'] = 'getWorkflowEvents';
-    	$events['Workflow.afterTransition'] = 'workflowAfterTransition';
-    	foreach ($this->workflowEvents as $event) {
-    		$events[$event['value']] = $event['method'];
-    	}
+
+    	$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
 
     	return $events;
     }
@@ -77,10 +79,10 @@ class InstitutionSurveysTable extends AppTable {
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
 
 		// To update to this code when upgrade server to PHP 5.5 and above
-		// unset($fields[array_search('institution_site_id', array_column($fields, 'field'))]);
+		// unset($fields[array_search('institution_id', array_column($fields, 'field'))]);
 		
 		foreach ($fields as $key => $field) {
-			if ($field['field'] == 'institution_site_id') {
+			if ($field['field'] == 'institution_id') {
 				unset($fields[$key]);
 				break;
 			}
@@ -94,8 +96,8 @@ class InstitutionSurveysTable extends AppTable {
 		];
 
 		$fields[] = [
-			'key' => 'InstitutionSurveys.institution_site_id',
-            'field' => 'institution_site_id',
+			'key' => 'InstitutionSurveys.institution_id',
+            'field' => 'institution_id',
             'type' => 'integer',
             'label' => '',
 		];
@@ -116,8 +118,6 @@ class InstitutionSurveysTable extends AppTable {
 	}
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-    	$this->updateStatusId($entity);
-
     	// add this checking to avoid error when download from mobile
     	if (isset($this->ControllerAction)) {
 			$currentAction = $this->ControllerAction->action();
@@ -142,16 +142,140 @@ class InstitutionSurveysTable extends AppTable {
 		return $list;
 	}
 
-    public function getWorkflowEvents(Event $event) {
-    	foreach ($this->workflowEvents as $key => $attr) {
-    		$this->workflowEvents[$key]['text'] = __($attr['text']);
-    	}
-
-    	return $this->workflowEvents;
+    public function triggerBuildSurveyRecordsShell($params) {
+    	$cmd = ROOT . DS . 'bin' . DS . 'cake Survey ' . implode(',', $params);
+		$logs = ROOT . DS . 'logs' . DS . 'survey.log & echo $!';
+		$shellCmd = $cmd . ' >> ' . $logs;
+		$pid = exec($shellCmd);
+		Log::write('debug', $shellCmd);
     }
 
-    public function onGetStatusId(Event $event, Entity $entity) {
-		return '<span class="status highlight">' . $entity->status->name . '</span>';
+    // Workbench.Model.onGetList
+	public function onGetWorkbenchList(Event $event, $isAdmin, $institutionRoles, ArrayObject $data) {
+		// Results of all Not Completed survey in all institutions that the login user can access
+		$statusIds = $event->subject()->Workflow->getStepsByModelCode($this->registryAlias(), 'NOT_COMPLETED');
+
+		if ($isAdmin) {
+			return []; // remove this line once workbench pagination is implemented
+		} else {
+			$accessibleStatusIds = [];
+			$where = [];
+			// returns empty list if there is no status mapping for workflows OR if the user does not have access to any schools
+			// Should never return all rows without any conditions because it may cause out of memory error
+			if (empty($statusIds) || empty($institutionRoles)) {
+				return [];
+			} else {
+				$where[$this->aliasField('institution_id') . ' IN '] = array_keys($institutionRoles);
+			}
+
+			$WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+
+			// Array to store security roles in each Workflow Step
+			$stepRoles = [];
+			$shellParams = [];
+			foreach ($institutionRoles as $institutionId => $roles) {
+				foreach ($statusIds as $key => $statusId) {
+					if (!array_key_exists($statusId, $stepRoles)) {
+						$stepRoles[$statusId] = $WorkflowStepsRoles->getRolesByStep($statusId);
+					}
+
+					// logic to pre-insert survey in school only when user's roles is configured to access the step
+					$hasAccess = count(array_intersect_key($roles, $stepRoles[$statusId])) > 0;
+					if ($hasAccess) {
+						$accessibleStatusIds[$statusId] = $statusId;
+						if (!in_array($institutionId, $shellParams)) {
+							$shellParams[] = $institutionId;
+						}
+					}
+					// End
+				}
+			}
+			// End
+
+			if (empty($accessibleStatusIds)) {
+				return [];
+			} else {
+				$where[$this->aliasField('status_id') . ' IN '] = $accessibleStatusIds;
+			}
+
+			// create shell to process building of survey records
+			// only build survey once on every user session
+			$session = new Session;
+			if (!$session->check('BuildSurvey')) {
+				$session->write('BuildSurvey', true);
+				$this->triggerBuildSurveyRecordsShell($shellParams);
+			}
+
+			$resultSetQuery = $this
+				->find()
+				->select([
+					$this->aliasField('id'),
+					$this->aliasField('status_id'),
+					$this->aliasField('modified'),
+					$this->aliasField('created'),
+					'Statuses.name',
+					'AcademicPeriods.name',
+					'SurveyForms.name',
+					'Institutions.id',
+					'Institutions.name',
+					'CreatedUser.username'
+				])
+				->contain(['Statuses', 'AcademicPeriods', 'SurveyForms', 'Institutions', 'CreatedUser'])
+				->where($where)
+				->order([$this->aliasField('created')]);
+			// End
+			$resultSet = $resultSetQuery->all();
+
+			$stepRoles = [];
+
+			$resultCount = 0;
+			foreach ($resultSet as $key => $obj) {
+				$institutionId = $obj->institution->id;
+				$stepId = $obj->status_id;
+				$roles = $institutionRoles[$institutionId];
+
+				// Permission
+				$hasAccess = false;
+
+				// Array to store security roles in each Workflow Step
+				if (!array_key_exists($stepId, $stepRoles)) {
+					$stepRoles[$stepId] = $WorkflowStepsRoles->getRolesByStep($stepId);
+				}
+				// access is true if user roles exists in step roles
+				$hasAccess = count(array_intersect_key($roles, $stepRoles[$stepId])) > 0;
+				// End
+
+				if ($hasAccess) {
+					if ($resultCount++ == 30) {
+						break;
+					}
+
+					$requestTitle = sprintf('%s - %s of %s in %s', $obj->status->name, $obj->survey_form->name, $obj->institution->name, $obj->academic_period->name);
+					$url = [
+						'plugin' => 'Institution',
+						'controller' => 'Institutions',
+						'action' => 'Surveys',
+						'view',
+						$obj->id,
+						'institution_id' => $institutionId
+					];
+
+					if (is_null($obj->modified)) {
+						$receivedDate = $this->formatDate($obj->created);
+					} else {
+						$receivedDate = $this->formatDate($obj->modified);
+					}
+
+					$data[] = [
+						'request_title' => ['title' => $requestTitle, 'url' => $url],
+						'receive_date' => $receivedDate,
+						'due_date' => '<i class="fa fa-minus"></i>',
+						'requester' => $obj->has('created_user') ? $obj->created_user->username : '',
+						'type' => __('Institution > Survey > Forms')
+					];
+				}
+			}
+		}
 	}
 
 	public function onGetDescription(Event $event, Entity $entity) {
@@ -160,7 +284,11 @@ class InstitutionSurveysTable extends AppTable {
 	}
 
 	public function onGetLastModified(Event $event, Entity $entity) {
-		return $this->formatDateTime($entity->modified);
+		if (is_null($entity->modified)) {
+			return $this->formatDateTime($entity->created);
+		} else {
+			return $this->formatDateTime($entity->modified);
+		}
 	}
 
 	public function onGetToBeCompletedBy(Event $event, Entity $entity) {
@@ -225,7 +353,7 @@ class InstitutionSurveysTable extends AppTable {
 		}
 
 		$this->ControllerAction->field('description');
-		$fieldOrder = ['status_id', 'survey_form_id', 'description', 'academic_period_id'];
+		$fieldOrder = ['survey_form_id', 'description', 'academic_period_id'];
 		$selectedStatus = $this->ControllerAction->getVar('selectedStatus');
 
 		if (is_null($selectedStatus) || $selectedStatus == -1) {
@@ -258,7 +386,6 @@ class InstitutionSurveysTable extends AppTable {
 	}
 
 	public function viewBeforeAction(Event $event) {
-		$this->ControllerAction->field('status_id');
 		$this->ControllerAction->field('academic_period_id');
 		$this->ControllerAction->field('survey_form_id');
 	}
@@ -273,17 +400,30 @@ class InstitutionSurveysTable extends AppTable {
 		$this->ControllerAction->field('survey_form_id', [
 			'attr' => ['value' => $entity->survey_form_id]
 		]);
+		// this extra field is use by repeater type to know user click add on which repeater question
+		$this->ControllerAction->field('repeater_question_id');
+	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
+		// For Institution Survey, delete button will be disabled regardless settings in Workflow
+		if (array_key_exists('remove', $buttons)) {
+			unset($buttons['remove']);
+		}
+
+		return $buttons;
 	}
 
 	public function onUpdateFieldStatusId(Event $event, array $attr, $action, $request) {
-		if ($action == 'view') {
-			$attr['type'] = 'hidden';
-		} else if ($action == 'edit') {
+		if ($action == 'edit') {
 			$statusOptions = $this->getWorkflowStepList();
-			$statusId = $attr['attr']['value'];
+			if (isset($attr['attr']['value'])) {
+				$statusId = $attr['attr']['value'];
 
-			$attr['type'] = 'readonly';
-			$attr['attr']['value'] = $statusOptions[$statusId];
+				$attr['type'] = 'readonly';
+				$attr['attr']['value'] = $statusOptions[$statusId];
+			}
 		}
 
 		return $attr;
@@ -317,6 +457,18 @@ class InstitutionSurveysTable extends AppTable {
 		return $attr;
 	}
 
+	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
+		$includes['ruleCtrl'] = ['include' => true, 'js' => 'CustomField.angular/rules/relevancy.rules.ctrl'];
+	}
+	
+	public function onUpdateFieldRepeaterQuestionId(Event $event, array $attr, $action, $request) {
+		$attr['type'] = 'hidden';
+		$attr['value'] = 0;
+		$attr['attr']['class'] = 'repeater-question-id';
+
+		return $attr;
+	}
+
 	public function buildSurveyRecords($institutionId=null) {
 		if (is_null($institutionId)) {
 			$session = $this->controller->request->session();
@@ -341,10 +493,12 @@ class InstitutionSurveysTable extends AppTable {
 					}
 				}
 
+
+
 				// Update all New Survey to Expired by Institution Id
 				$this->updateAll(['status_id' => self::EXPIRED],
 					[
-						'institution_site_id' => $institutionId,
+						'institution_id' => $institutionId,
 						'survey_form_id' => $surveyFormId,
 						'status_id' => $openStatusId
 					]
@@ -368,7 +522,7 @@ class InstitutionSurveysTable extends AppTable {
 						$where = [
 							$this->aliasField('academic_period_id') => $periodId,
 							$this->aliasField('survey_form_id') => $surveyFormId,
-							$this->aliasField('institution_site_id') => $institutionId
+							$this->aliasField('institution_id') => $institutionId
 						];
 
 						$results = $this
@@ -382,7 +536,9 @@ class InstitutionSurveysTable extends AppTable {
 								'status_id' => $openStatusId,
 								'academic_period_id' => $periodId,
 								'survey_form_id' => $surveyFormId,
-								'institution_site_id' => $institutionId
+								'institution_id' => $institutionId,
+								'created_user_id' => 1,
+								'created' => new Time('NOW')
 							];
 
 							$surveyEntity = $this->newEntity($surveyData, ['validate' => false]);
@@ -396,30 +552,13 @@ class InstitutionSurveysTable extends AppTable {
 								[
 									'academic_period_id' => $periodId,
 									'survey_form_id' => $surveyFormId,
-									'institution_site_id' => $institutionId,
+									'institution_id' => $institutionId,
 									'status_id' => self::EXPIRED
 								]
 							);
 						}
 					}
 				}
-			}
-		}
-	}
-
-	public function workflowAfterTransition(Event $event, $id=null) {
-		$entity = $this->get($id);
-		$this->updateStatusId($entity);
-	}
-
-	public function updateStatusId(Entity $entity) {
-		if($this->hasBehavior('Workflow')) {
-			$workflowRecord = $this->getRecord($this->registryAlias(), $entity);
-			if (!empty($workflowRecord)) {
-				$this->updateAll(
-					['status_id' => $workflowRecord->workflow_step_id],
-					['id' => $entity->id]
-				);
 			}
 		}
 	}

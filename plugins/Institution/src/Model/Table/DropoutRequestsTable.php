@@ -20,15 +20,16 @@ class DropoutRequestsTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-		$this->belongsTo('StudentDropoutReasons', ['className' => 'FieldOption.StudentDropoutReasons']);
+		$this->belongsTo('StudentDropoutReasons', ['className' => 'Student.StudentDropoutReasons', 'foreignKey' => 'student_dropout_reason_id']);
 	}
 
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
-    	$id = $this->Session->read($this->registryAlias().'.id');
+    	$id = $this->Session->read('Student.Students.id');
     	$action = $this->ControllerAction->url('add');
-		$action['action'] = 'Students';
+		$action['action'] = 'StudentUser';
 		$action[0] = 'view';
 		$action[1] = $id;
+		$action['id'] = $this->Session->read($this->registryAlias().'.id');
     	$event->stopPropagation();
     	$this->Session->delete($this->registryAlias().'.id');
     	return $this->controller->redirect($action);
@@ -38,7 +39,7 @@ class DropoutRequestsTable extends AppTable {
 		$StudentAdmissionTable = TableRegistry::get('Institution.StudentAdmission');
 
 		$conditions = [
-			'student_id' => $entity->student_id, 
+			'student_id' => $entity->student_id,
 			'status' => self::NEW_REQUEST,
 			'type' => 2,
 			'education_grade_id' => $entity->education_grade_id,
@@ -58,11 +59,12 @@ class DropoutRequestsTable extends AppTable {
 	}
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data) {
-		$id = $this->Session->read($this->registryAlias().'.id');
+		$id = $this->Session->read('Student.Students.id');
     	$action = $this->ControllerAction->url('edit');
-		$action['action'] = 'Students';
+		$action['action'] = 'StudentUser';
 		$action[0] = 'view';
 		$action[1] = $id;
+		$action['id'] = $this->Session->read($this->registryAlias().'.id');
     	$event->stopPropagation();
     	$this->Session->delete($this->registryAlias().'.id');
     	return $this->controller->redirect($action);
@@ -154,7 +156,7 @@ class DropoutRequestsTable extends AppTable {
 				}
 				break;
 		}
-		return $attr;		
+		return $attr;
 	}
 
 	public function implementedEvents() {
@@ -165,10 +167,10 @@ class DropoutRequestsTable extends AppTable {
 
    	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($action == 'add' || $action == 'edit') {
-			$Students = TableRegistry::get('Institution.Students');
+			$Students = TableRegistry::get('Institution.StudentUser');
 			$toolbarButtons['back']['url']['action'] = $Students->alias();
 			$toolbarButtons['back']['url'][0] = 'view';
-			$toolbarButtons['back']['url'][1] = $this->Session->read($this->registryAlias().'.id');
+			$toolbarButtons['back']['url'][1] = $this->Session->read('Student.Students.id');
 		}
 	}
 }

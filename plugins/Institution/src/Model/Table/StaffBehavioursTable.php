@@ -15,9 +15,9 @@ class StaffBehavioursTable extends AppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Staff', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
-		$this->belongsTo('StaffBehaviourCategories', ['className' => 'FieldOption.StaffBehaviourCategories']);
+		$this->belongsTo('StaffBehaviourCategories', ['className' => 'Staff.StaffBehaviourCategories']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 
 		$this->addBehavior('AcademicPeriod.Period');
@@ -25,14 +25,25 @@ class StaffBehavioursTable extends AppTable {
 	}
 
 	public function onGetOpenemisNo(Event $event, Entity $entity) {
-		return $entity->staff->openemis_no;
+
+		if ($this->action == 'view') {
+			return $event->subject()->Html->link($entity->staff->openemis_no , [
+				'plugin' => 'Institution',
+				'controller' => 'Institutions',
+				'action' => 'StaffUser',
+				'view',
+				$entity->staff->id
+			]);
+		} else {
+			return $entity->staff->openemis_no;
+		}
 	}
 
 	public function beforeAction() {
 		$this->ControllerAction->field('openemis_no');
 		$this->ControllerAction->field('staff_id');
 		$this->ControllerAction->field('staff_behaviour_category_id', ['type' => 'select']);
-		
+
 		if ($this->action == 'view' || $this->action == 'edit') {
 			$this->ControllerAction->setFieldOrder(['openemis_no', 'staff_id', 'date_of_behaviour', 'time_of_behaviour', 'title', 'staff_behaviour_category_id']);
 		}
@@ -67,7 +78,7 @@ class StaffBehavioursTable extends AppTable {
 			'message' => '{{label}} - ' . $this->getMessage('general.noStaff'),
 			'callable' => function($id) use ($Staff, $institutionId) {
 				return $Staff
-					->findByInstitutionSiteId($institutionId)
+					->findByInstitutionId($institutionId)
 					->find('academicPeriod', ['academic_period_id' => $id])
 					->count();
 			}
@@ -76,7 +87,7 @@ class StaffBehavioursTable extends AppTable {
 		if (!empty($selectedPeriod)) {
 			$query->find('inPeriod', ['field' => 'date_of_behaviour', 'academic_period_id' => $selectedPeriod]);
 		}
-		
+
 		$this->controller->set(compact('periodOptions'));
 
 		// will need to check for search by name: AdvancedNameSearchBehavior
@@ -129,13 +140,11 @@ class StaffBehavioursTable extends AppTable {
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 
 		if ($action == 'add') {
-			$periodOptions = ['0' => $this->selectEmpty('period')];
-			$periodOptions = $periodOptions + $AcademicPeriod->getList();
+			$periodOptions = $AcademicPeriod->getList(['isEditable'=>true]);
 			$selectedPeriod = 0;
 			if ($request->is(['post', 'put'])) {
 				$selectedPeriod = $request->data($this->aliasField('academic_period_id'));
 			}
-			$this->advancedSelectOptions($periodOptions, $selectedPeriod);
 
 			$attr['options'] = $periodOptions;
 			$attr['onChangeReload'] = 'changePeriod';
@@ -144,7 +153,7 @@ class StaffBehavioursTable extends AppTable {
 			if (!empty($selectedPeriod)) {
 				$periodEntity = $AcademicPeriod->get($selectedPeriod);
 				$dateOptions = [
-					'startDate' => $periodEntity->start_date->format('d-m-Y'), 
+					'startDate' => $periodEntity->start_date->format('d-m-Y'),
 					'endDate' => $periodEntity->end_date->format('d-m-Y')
 				];
 				$this->fields['date_of_behaviour']['date_options'] = $dateOptions;
@@ -155,7 +164,7 @@ class StaffBehavioursTable extends AppTable {
 
 	public function onUpdateFieldStaffId(Event $event, array $attr, $action, $request) {
 		if ($action == 'add') {
-			$staffOptions = ['' => $this->selectEmpty('staff')];
+			$staffOptions = [];
 
 			$selectedPeriod = 0;
 			if ($request->is(['post', 'put'])) {
@@ -165,14 +174,14 @@ class StaffBehavioursTable extends AppTable {
 			if (!empty($selectedPeriod)) {
 				$institutionId = $this->Session->read('Institution.Institutions.id');
 				$Staff = TableRegistry::get('Institution.Staff');
-				$staffOptions = $staffOptions + $Staff
-				->find('list', ['keyField' => 'security_user_id', 'valueField' => 'name'])
+				$staffOptions = $Staff
+				->find('list', ['keyField' => 'staff_id', 'valueField' => 'name'])
 				->matching('Users')
 				->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
-				->where([$Staff->aliasField('institution_site_id') => $institutionId])
+				->where([$Staff->aliasField('institution_id') => $institutionId])
 				->toArray();
 			}
-			
+
 			$attr['options'] = $staffOptions;
 		} else if ($action == 'edit') {
 			$attr['type'] = 'readonly';

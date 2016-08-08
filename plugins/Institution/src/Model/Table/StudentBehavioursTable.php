@@ -15,9 +15,9 @@ class StudentBehavioursTable extends AppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Students', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
-		$this->belongsTo('StudentBehaviourCategories', ['className' => 'FieldOption.StudentBehaviourCategories']);
+		$this->belongsTo('StudentBehaviourCategories', ['className' => 'Student.StudentBehaviourCategories']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 
 		$this->addBehavior('AcademicPeriod.Period');
@@ -36,7 +36,7 @@ class StudentBehavioursTable extends AppTable {
 
 	// Jeff: is this validation still necessary? perhaps it is already handled by onUpdateFieldAcademicPeriod date_options
 	// public function validationDefault(Validator $validator) {
-		// get start and end date of selected academic period 
+		// get start and end date of selected academic period
 		// $selectedPeriod = $this->request->query('period');
 		// if($selectedPeriod) {
 		// 	$selectedPeriodEntity = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($selectedPeriod);
@@ -44,10 +44,10 @@ class StudentBehavioursTable extends AppTable {
 		// 	$endDateFormatted = date_format($selectedPeriodEntity->end_date,'d-m-Y');
 
 		// 	$validator
-		// 	->add('date_of_behaviour', 
-		// 			'ruleCheckInputWithinRange', 
+		// 	->add('date_of_behaviour',
+		// 			'ruleCheckInputWithinRange',
 		// 				['rule' => ['checkInputWithinRange', 'date_of_behaviour', $startDateFormatted, $endDateFormatted]]
-				
+
 		// 		)
 		// 	;
 		// 	return $validator;
@@ -55,14 +55,24 @@ class StudentBehavioursTable extends AppTable {
 	// }
 
 	public function onGetOpenemisNo(Event $event, Entity $entity) {
-		return $entity->student->openemis_no;
+		if ($this->action == 'view') {
+			return $event->subject()->Html->link($entity->student->openemis_no , [
+				'plugin' => 'Institution',
+				'controller' => 'Institutions',
+				'action' => 'StudentUser',
+				'view',
+				$entity->student->id
+			]);
+		} else {
+			return $entity->student->openemis_no;
+		}
 	}
 
 	public function beforeAction() {
 		$this->ControllerAction->field('openemis_no');
 		$this->ControllerAction->field('student_id');
 		$this->ControllerAction->field('student_behaviour_category_id', ['type' => 'select']);
-		
+
 		if ($this->action == 'view' || $this->action = 'edit') {
 			$this->ControllerAction->setFieldOrder(['openemis_no', 'student_id', 'date_of_behaviour', 'time_of_behaviour', 'title', 'student_behaviour_category_id']);
 		}
@@ -90,7 +100,7 @@ class StudentBehavioursTable extends AppTable {
 			$this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
 		}
 
-		$Classes = TableRegistry::get('Institution.InstitutionSiteSections');
+		$Classes = TableRegistry::get('Institution.InstitutionClasses');
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
 
@@ -99,7 +109,7 @@ class StudentBehavioursTable extends AppTable {
 			'callable' => function($id) use ($Classes, $institutionId) {
 				$count = $Classes->find()
 				->where([
-					$Classes->aliasField('institution_site_id') => $institutionId,
+					$Classes->aliasField('institution_id') => $institutionId,
 					$Classes->aliasField('academic_period_id') => $id
 				])
 				->count();
@@ -113,11 +123,11 @@ class StudentBehavioursTable extends AppTable {
 			$classOptions = $classOptions + $Classes
 			->find('list')
 			->where([
-				$Classes->aliasField('institution_site_id') => $institutionId, 
+				$Classes->aliasField('institution_id') => $institutionId,
 				$Classes->aliasField('academic_period_id') => $selectedPeriod
 			])
 			->toArray();
-			
+
 			$query->find('inPeriod', ['field' => 'date_of_behaviour', 'academic_period_id' => $selectedPeriod]);
 		}
 
@@ -129,10 +139,10 @@ class StudentBehavioursTable extends AppTable {
 
 		if ($selectedClass > 0) {
 			$query->innerJoin(
-				['class_student' => 'institution_site_section_students'],
+				['class_student' => 'institution_class_students'],
 				[
 					'class_student.student_id = ' . $this->aliasField('student_id'),
-					'class_student.institution_site_section_id = ' . $selectedClass
+					'class_student.institution_class_id = ' . $selectedClass
 				]
 			);
 		}
@@ -161,16 +171,16 @@ class StudentBehavioursTable extends AppTable {
 
 		// PHPOE-1916
 		// Not yet implemented due to possible performance issue
-		// $InstitutionClassStudentTable = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+		// $InstitutionClassStudentTable = TableRegistry::get('Institution.InstitutionClassStudents');
 		// $AcademicPeriodId = $InstitutionClassStudentTable->find()
 		// 				->where([$InstitutionClassStudentTable->aliasField('student_id') => $entity->student_id])
-		// 				->innerJoin(['InstitutionSiteClasses' => 'institution_site_sections'],[
-		// 						'InstitutionSiteClasses.id = '.$InstitutionClassStudentTable->aliasField('institution_site_section_id'),
-		// 						'InstitutionSiteClasses.institution_site_id' => $entity->institution_id
+		// 				->innerJoin(['InstitutionClasses' => 'institution_classes'],[
+		// 						'InstitutionClasses.id = '.$InstitutionClassStudentTable->aliasField('institution_class_id'),
+		// 						'InstitutionClasses.institution_id' => $entity->institution_id
 		// 					])
 		// 				->innerJoin(['AcademicPeriods' => 'academic_periods'], [
-		// 						'AcademicPeriods.id = InstitutionSiteClasses.academic_period_id',
-		// 						'AcademicPeriods.start_date <= ' => $entity->date_of_behaviour->format('Y-m-d'), 
+		// 						'AcademicPeriods.id = InstitutionClasses.academic_period_id',
+		// 						'AcademicPeriods.start_date <= ' => $entity->date_of_behaviour->format('Y-m-d'),
 		// 						'AcademicPeriods.end_date >= ' => $entity->date_of_behaviour->format('Y-m-d')
 		// 					])
 		// 				->select(['id' => 'AcademicPeriods.id', 'editable' => 'AcademicPeriods.editable'])
@@ -191,16 +201,16 @@ class StudentBehavioursTable extends AppTable {
 	// 		$institutionId = $this->Session->read('Institution.Institutions.id');
 	// 		$studentId = $this->request->data[$this->alias()]['student_id'];
 	// 		$dateOfBehaviour = $this->request->data[$this->alias()]['date_of_behaviour'];
-	// 		$InstitutionClassStudentTable = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+	// 		$InstitutionClassStudentTable = TableRegistry::get('Institution.InstitutionClassStudents');
 	// 		$AcademicPeriodId = $InstitutionClassStudentTable->find()
 	// 				->where([$InstitutionClassStudentTable->aliasField('student_id') => $studentId])
-	// 				->innerJoin(['InstitutionSiteClasses' => 'institution_site_sections'],[
-	// 						'InstitutionSiteClasses.id = '.$InstitutionClassStudentTable->aliasField('institution_site_section_id'),
-	// 						'InstitutionSiteClasses.institution_site_id' => $institutionId
+	// 				->innerJoin(['InstitutionClasses' => 'institution_classes'],[
+	// 						'InstitutionClasses.id = '.$InstitutionClassStudentTable->aliasField('institution_class_id'),
+	// 						'InstitutionClasses.institution_id' => $institutionId
 	// 					])
 	// 				->innerJoin(['AcademicPeriods' => 'academic_periods'], [
-	// 						'AcademicPeriods.id = InstitutionSiteClasses.academic_period_id',
-	// 						'AcademicPeriods.start_date <= ' => $dateOfBehaviour->format('Y-m-d'), 
+	// 						'AcademicPeriods.id = InstitutionClasses.academic_period_id',
+	// 						'AcademicPeriods.start_date <= ' => $dateOfBehaviour->format('Y-m-d'),
 	// 						'AcademicPeriods.end_date >= ' => $dateOfBehaviour->format('Y-m-d')
 	// 					])
 	// 				->select(['id' => 'AcademicPeriods.id', 'editable' => 'AcademicPeriods.editable'])
@@ -226,11 +236,12 @@ class StudentBehavioursTable extends AppTable {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 
-		$Classes = TableRegistry::get('Institution.InstitutionSiteSections');
+		$Classes = TableRegistry::get('Institution.InstitutionClasses');
 
 		if ($action == 'add') {
-			$periodOptions = ['0' => $this->selectEmpty('period')];
-			$periodOptions = $periodOptions + $AcademicPeriod->getList();
+			$attr['select'] = false;
+			$periodOptions = ['0' => __('-- Select --')];
+			$periodOptions = $periodOptions + $AcademicPeriod->getList(['isEditable'=>true]);
 			$selectedPeriod = 0;
 			if ($request->is(['post', 'put'])) {
 				$selectedPeriod = $request->data($this->aliasField('academic_period_id'));
@@ -240,7 +251,7 @@ class StudentBehavioursTable extends AppTable {
 				'callable' => function($id) use ($Classes, $institutionId) {
 					$count = $Classes->find()
 					->where([
-						$Classes->aliasField('institution_site_id') => $institutionId,
+						$Classes->aliasField('institution_id') => $institutionId,
 						$Classes->aliasField('academic_period_id') => $id
 					])
 					->count();
@@ -255,7 +266,7 @@ class StudentBehavioursTable extends AppTable {
 			if (!empty($selectedPeriod)) {
 				$periodEntity = $AcademicPeriod->get($selectedPeriod);
 				$dateOptions = [
-					'startDate' => $periodEntity->start_date->format('d-m-Y'), 
+					'startDate' => $periodEntity->start_date->format('d-m-Y'),
 					'endDate' => $periodEntity->end_date->format('d-m-Y')
 				];
 				$this->fields['date_of_behaviour']['date_options'] = $dateOptions;
@@ -276,18 +287,19 @@ class StudentBehavioursTable extends AppTable {
 				$selectedPeriod = $request->data($this->aliasField('academic_period_id'));
 			}
 
-			$classOptions = ['0' => $this->selectEmpty('class')];
+			$attr['select'] = false;
+			$classOptions = ['0' => __('-- Select --')];
 
 			if ($selectedPeriod != 0) {
-				$Classes = TableRegistry::get('Institution.InstitutionSiteSections');
-				$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+				$Classes = TableRegistry::get('Institution.InstitutionClasses');
+				$Students = TableRegistry::get('Institution.InstitutionClassStudents');
 				$classOptions = $classOptions + $Classes
 					->find('list')
 					->where([
-						$Classes->aliasField('institution_site_id') => $institutionId,
+						$Classes->aliasField('institution_id') => $institutionId,
 						$Classes->aliasField('academic_period_id') => $selectedPeriod
 					])
-					->order([$Classes->aliasField('section_number') => 'ASC'])
+					->order([$Classes->aliasField('class_number') => 'ASC'])
 					->toArray();
 
 				$selectedClass = 0;
@@ -300,8 +312,7 @@ class StudentBehavioursTable extends AppTable {
 						return $Students
 							->find()
 							->where([
-								$Students->aliasField('institution_site_section_id') => $id,
-								$Students->aliasField('status') => 1
+								$Students->aliasField('institution_class_id') => $id
 							])
 							->count();
 					}
@@ -322,7 +333,7 @@ class StudentBehavioursTable extends AppTable {
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-		// $ClassStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+		// $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
 		$studentId = $entity->student_id;
 		$institutionId = $entity->institution_id;
 		$StudentTable = TableRegistry::get('Institution.Students');
@@ -354,21 +365,21 @@ class StudentBehavioursTable extends AppTable {
 
 	public function onUpdateFieldStudentId(Event $event, array $attr, $action, $request) {
 		if ($action == 'add') {
-			$studentOptions = ['' => $this->selectEmpty('student')];
+			$studentOptions = [];
 
 			$selectedClass = 0;
 			if ($request->is(['post', 'put'])) {
 				$selectedClass = $request->data($this->aliasField('class'));
 			}
 			if (! $selectedClass==0	&& ! empty($selectedClass)) {
-				$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+				$Students = TableRegistry::get('Institution.InstitutionClassStudents');
 				$studentOptions = $studentOptions + $Students
 				->find('list', ['keyField' => 'student_id', 'valueField' => 'student_name'])
 				->contain(['Users'])
-				->where([$Students->aliasField('institution_site_section_id') => $selectedClass])
+				->where([$Students->aliasField('institution_class_id') => $selectedClass])
 				->toArray();
 			}
-			
+
 			$attr['options'] = $studentOptions;
 		} else if ($action == 'edit') {
 			$attr['type'] = 'readonly';

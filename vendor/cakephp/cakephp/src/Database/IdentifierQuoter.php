@@ -14,7 +14,6 @@
  */
 namespace Cake\Database;
 
-use Cake\Database\ExpressionInterface;
 use Cake\Database\Expression\FieldInterface;
 use Cake\Database\Expression\IdentifierExpression;
 use Cake\Database\Expression\OrderByExpression;
@@ -192,7 +191,7 @@ class IdentifierQuoter
     protected function _quoteUpdate($query)
     {
         $table = $query->clause('update')[0];
-        
+
         if (is_string($table)) {
             $query->update($this->_driver->quoteIdentifier($table));
         }

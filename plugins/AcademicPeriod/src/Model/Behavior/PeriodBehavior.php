@@ -5,6 +5,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\I18n\Time;
+use Cake\I18n\Date;
 
 class PeriodBehavior extends Behavior {
 	public function findAcademicPeriod(Query $query, array $options) {
@@ -15,20 +16,33 @@ class PeriodBehavior extends Behavior {
 			$periodObj = $AcademicPeriods
 				->findById($options['academic_period_id'])
 				->first();
+			if (!empty($periodObj)) {
+				if ($periodObj->start_date instanceof Time || $periodObj->start_date instanceof Date) {
+					$startDate = $periodObj->start_date->format('Y-m-d');
+				} else {
+					$startDate = date('Y-m-d', strtotime($periodObj->start_date));
+				}
 
-			if ($periodObj->start_date instanceof Time) {
-				$startDate = $periodObj->start_date->format('Y-m-d');
+				if ($periodObj->end_date instanceof Time || $periodObj->end_date instanceof Date) {
+					$endDate = $periodObj->end_date->format('Y-m-d');
+				} else {
+					$endDate = date('Y-m-d', strtotime($periodObj->end_date));
+				}
+
+				if (array_key_exists('beforeEndDate', $options)) {
+					$conditions = [];
+					$conditions['OR'] = [
+						[
+							$options['beforeEndDate'] . ' <=' => $endDate
+						]
+					];
+					return $query->where($conditions);
+				} else {
+					return $query->find('InDateRange', ['start_date' => $startDate, 'end_date' => $endDate]);
+				}
 			} else {
-				$startDate = date('Y-m-d', strtotime($periodObj->start_date));
+				return $query->where(['0 = 1']);
 			}
-
-			if ($periodObj->end_date instanceof Time) {
-				$endDate = $periodObj->end_date->format('Y-m-d');
-			} else {
-				$endDate = date('Y-m-d', strtotime($periodObj->end_date));
-			}
-
-			return $query->find('InDateRange', ['start_date' => $startDate, 'end_date' => $endDate]);
 		} else {
 			return $query;
 		}
@@ -42,13 +56,13 @@ class PeriodBehavior extends Behavior {
 			$startDate = $options['start_date'];
 			$endDate = $options['end_date'];
 
-			if ($startDate instanceof Time) {
+			if ($startDate instanceof Time || $startDate instanceof Date) {
 				$startDate = $startDate->format('Y-m-d');
 			} else {
 				$startDate = date('Y-m-d', strtotime($startDate));
 			}
 
-			if ($endDate instanceof Time) {
+			if ($endDate instanceof Time || $endDate instanceof Date) {
 				$endDate = $endDate->format('Y-m-d');
 			} else {
 				$endDate = date('Y-m-d', strtotime($endDate));
