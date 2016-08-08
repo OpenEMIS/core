@@ -348,7 +348,11 @@ class StaffAttendancesTable extends AppTable {
 	public function onGetOpenemisNo(Event $event, Entity $entity) {
 		$sessionPath = 'Users.staff_absences.';
 		$timeError = $this->Session->read($sessionPath.$entity->staff_id.'.timeError');
+		$startTimestamp = $this->Session->read($sessionPath.$entity->staff_id.'.startTimestamp');
+		$endTimestamp = $this->Session->read($sessionPath.$entity->staff_id.'.endTimestamp');
 		$this->Session->delete($sessionPath.$entity->staff_id.'.timeError');
+		$this->Session->delete($sessionPath.$entity->staff_id.'.startTimestamp');
+		$this->Session->delete($sessionPath.$entity->staff_id.'.endTimestamp');
 		$html = $event->subject()->Html->link($entity->user->openemis_no , [
 			'plugin' => 'Institution',
 			'controller' => 'Institutions',
@@ -357,7 +361,10 @@ class StaffAttendancesTable extends AppTable {
 			$entity->user->id
 		]);
 		if ($timeError) {
-			$error = $this->getMessage('StudentAttendances.lateTime');
+			$startTime = __('Must be within shift timing, from') . ' ' . date('h:i A', $startTimestamp);
+			$endTime = __('to') . ' ' . date('h:i A', $endTimestamp);
+
+			$error = $startTime . ' ' . $endTime;
 			$html .= '&nbsp;<i class="fa fa-exclamation-circle fa-lg table-tooltip icon-red" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="'.$error.'"></i>';
 		}
 		return $html;
@@ -926,23 +933,44 @@ class StaffAttendancesTable extends AppTable {
 						} else if ($obj['absence_type_id'] == $codeAbsenceType['LATE']) {
 							$obj['staff_absence_reason_id'] = $obj['late_staff_absence_reason_id'];
 							$obj['full_day'] = 0;
-							$configItemsTable =  TableRegistry::get('ConfigItems');
-							if (!isset($obj['start_time'])) {
-								$obj['start_time'] = $configItemsTable->value('start_time');
-								$obj['start_time'] = Time::parseTime($obj['start_time']);
-							} else {
-								$obj['start_time'] = new Time ($obj['start_time']);
+							$lateTime = strtotime($obj['late_time']);
+
+							$selectedPeriod = $obj['academic_period_id'];
+							$institutionId = $obj['institution_id'];
+
+							$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+							$conditions = ([
+								$InstitutionShift->aliasField('academic_period_id') => $selectedPeriod,
+								$InstitutionShift->aliasField('location_institution_id') => $institutionId
+							]);
+
+							$shiftTime = $InstitutionShift
+									->find()
+									->where($conditions)
+									->toArray();
+
+							$shiftStartTimeArray = [];
+							$shiftEndTimeArray = [];
+							foreach ($shiftTime as $key => $value) {
+								$shiftStartTimeArray[$key] = $value->start_time;
+								$shiftEndTimeArray[$key] = $value->end_time;
 							}
-							$startTime = $obj['start_time'];
-							$endTime = new Time ($obj['late_time']);
+
+							$startTime = min($shiftStartTimeArray);
+							$obj['start_time'] = $startTime;
+							$endTime = $obj['late_time'];
 							$obj['end_time'] = $endTime;
 
-							$startTimestamp = intval($startTime->toUnixString());
-							$endTimestamp = intval($endTime->toUnixString());
-							if ($startTimestamp > $endTimestamp) {
+							$startTimestamp = intval(min($shiftStartTimeArray)->toUnixString());
+							$endTimestamp = intval(max($shiftEndTimeArray)->toUnixString());
+
+							if (($lateTime < $startTimestamp) || ($lateTime > $endTimestamp)) {
+								$key = $obj['staff_id'];
 								$timeError = true;
 								$error = true;
 								$this->Session->write($StaffAbsences->Users->alias().'.'.$alias.'.'.$key.'.timeError', true);
+								$this->Session->write($StaffAbsences->Users->alias().'.'.$alias.'.'.$key.'.startTimestamp', $startTimestamp);
+								$this->Session->write($StaffAbsences->Users->alias().'.'.$alias.'.'.$key.'.endTimestamp', $endTimestamp);
 							}
 						}
 
