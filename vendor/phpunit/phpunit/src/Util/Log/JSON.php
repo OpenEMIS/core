@@ -8,18 +8,10 @@
  * file that was distributed with this source code.
  */
 
-if (!defined('JSON_PRETTY_PRINT')) {
-    define('JSON_PRETTY_PRINT', 128);
-}
-
 /**
  * A TestListener that generates JSON messages.
  *
- * @author     Sebastian Bergmann <sebastian@phpunit.de>
- * @copyright  Sebastian Bergmann <sebastian@phpunit.de>
- * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
- * @link       http://www.phpunit.de/
- * @since      Class available since Release 3.0.0
+ * @since Class available since Release 3.0.0
  */
 class PHPUnit_Util_Log_JSON extends PHPUnit_Util_Printer implements PHPUnit_Framework_TestListener
 {
@@ -51,7 +43,29 @@ class PHPUnit_Util_Log_JSON extends PHPUnit_Util_Printer implements PHPUnit_Fram
             'error',
             $time,
             PHPUnit_Util_Filter::getFilteredStacktrace($e, false),
-            $e->getMessage(),
+            PHPUnit_Framework_TestFailure::exceptionToString($e),
+            $test
+        );
+
+        $this->currentTestPass = false;
+    }
+
+    /**
+     * A warning occurred.
+     *
+     * @param PHPUnit_Framework_Test    $test
+     * @param PHPUnit_Framework_Warning $e
+     * @param float                     $time
+     *
+     * @since Method available since Release 5.1.0
+     */
+    public function addWarning(PHPUnit_Framework_Test $test, PHPUnit_Framework_Warning $e, $time)
+    {
+        $this->writeCase(
+            'warning',
+            $time,
+            PHPUnit_Util_Filter::getFilteredStacktrace($e, false),
+            PHPUnit_Framework_TestFailure::exceptionToString($e),
             $test
         );
 
@@ -71,7 +85,7 @@ class PHPUnit_Util_Log_JSON extends PHPUnit_Util_Printer implements PHPUnit_Fram
             'fail',
             $time,
             PHPUnit_Util_Filter::getFilteredStacktrace($e, false),
-            $e->getMessage(),
+            PHPUnit_Framework_TestFailure::exceptionToString($e),
             $test
         );
 
@@ -104,7 +118,8 @@ class PHPUnit_Util_Log_JSON extends PHPUnit_Util_Printer implements PHPUnit_Fram
      * @param PHPUnit_Framework_Test $test
      * @param Exception              $e
      * @param float                  $time
-     * @since  Method available since Release 4.0.0
+     *
+     * @since Method available since Release 4.0.0
      */
     public function addRiskyTest(PHPUnit_Framework_Test $test, Exception $e, $time)
     {
@@ -150,11 +165,11 @@ class PHPUnit_Util_Log_JSON extends PHPUnit_Util_Printer implements PHPUnit_Fram
         $this->currentTestName      = '';
 
         $this->write(
-            array(
+            [
             'event' => 'suiteStart',
             'suite' => $this->currentTestSuiteName,
             'tests' => count($suite)
-            )
+            ]
         );
     }
 
@@ -180,11 +195,11 @@ class PHPUnit_Util_Log_JSON extends PHPUnit_Util_Printer implements PHPUnit_Fram
         $this->currentTestPass = true;
 
         $this->write(
-            array(
+            [
             'event' => 'testStart',
             'suite' => $this->currentTestSuiteName,
             'test'  => $this->currentTestName
-            )
+            ]
         );
     }
 
@@ -197,7 +212,7 @@ class PHPUnit_Util_Log_JSON extends PHPUnit_Util_Printer implements PHPUnit_Fram
     public function endTest(PHPUnit_Framework_Test $test, $time)
     {
         if ($this->currentTestPass) {
-            $this->writeCase('pass', $time, array(), '', $test);
+            $this->writeCase('pass', $time, [], '', $test);
         }
     }
 
@@ -208,7 +223,7 @@ class PHPUnit_Util_Log_JSON extends PHPUnit_Util_Printer implements PHPUnit_Fram
      * @param string                          $message
      * @param PHPUnit_Framework_TestCase|null $test
      */
-    protected function writeCase($status, $time, array $trace = array(), $message = '', $test = null)
+    protected function writeCase($status, $time, array $trace = [], $message = '', $test = null)
     {
         $output = '';
         // take care of TestSuite producing error (e.g. by running into exception) as TestSuite doesn't have hasOutput
@@ -216,7 +231,7 @@ class PHPUnit_Util_Log_JSON extends PHPUnit_Util_Printer implements PHPUnit_Fram
             $output = $test->getActualOutput();
         }
         $this->write(
-            array(
+            [
             'event'   => 'test',
             'suite'   => $this->currentTestSuiteName,
             'test'    => $this->currentTestName,
@@ -225,7 +240,7 @@ class PHPUnit_Util_Log_JSON extends PHPUnit_Util_Printer implements PHPUnit_Fram
             'trace'   => $trace,
             'message' => PHPUnit_Util_String::convertToUtf8($message),
             'output'  => $output,
-            )
+            ]
         );
     }
 

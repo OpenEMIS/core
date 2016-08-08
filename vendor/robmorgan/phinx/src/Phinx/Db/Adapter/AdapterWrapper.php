@@ -122,7 +122,7 @@ abstract class AdapterWrapper implements AdapterInterface, WrapperInterface
      */
     public function getOutput()
     {
-        return $this->adapter->getOutput($output);
+        return $this->adapter->getOutput();
     }
 
     /**
@@ -160,6 +160,14 @@ abstract class AdapterWrapper implements AdapterInterface, WrapperInterface
     /**
      * {@inheritdoc}
      */
+    public function insert(Table $table, $row)
+    {
+        return $this->getAdapter()->insert($table, $row);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function fetchRow($sql)
     {
         return $this->getAdapter()->fetchRow($sql);
@@ -179,6 +187,14 @@ abstract class AdapterWrapper implements AdapterInterface, WrapperInterface
     public function getVersions()
     {
         return $this->getAdapter()->getVersions();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getVersionLog()
+    {
+        return $this->getAdapter()->getVersionLog();
     }
 
     /**
@@ -356,6 +372,14 @@ abstract class AdapterWrapper implements AdapterInterface, WrapperInterface
     public function hasIndex($tableName, $columns)
     {
         return $this->getAdapter()->hasIndex($tableName, $columns);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function hasIndexByName($tableName, $indexName)
+    {
+        return $this->getAdapter()->hasIndexByName($tableName, $indexName);
     }
 
     /**

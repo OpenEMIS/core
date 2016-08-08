@@ -54,7 +54,7 @@ class RubricsController extends AppController
         $this->set('selectedAction', $this->request->action);
 	}
 
-    public function onInitialize(Event $event, Table $model) {
+    public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		$header = __('Rubric');
 
 		$header .= ' - ' . $model->getHeader($model->alias);
@@ -92,7 +92,6 @@ class RubricsController extends AppController
 		        	$model->aliasField('rubric_template_id') => $selectedTemplate
 		        ];
 			}
-			$query->order([$model->aliasField('order')]);
 
 			$this->set(compact('templateOptions', 'selectedTemplate'));
     	}

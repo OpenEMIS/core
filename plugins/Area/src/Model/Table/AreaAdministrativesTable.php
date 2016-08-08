@@ -14,21 +14,84 @@ class AreaAdministrativesTable extends AppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->belongsTo('Parents', ['className' => 'Area.AreaAdministratives']);
-		$this->belongsTo('Levels', ['className' => 'Area.AreaAdministrativeLevels', 'foreignKey' => 'area_administrative_level_id']);
+		$this->belongsTo('AreaAdministrativeParents', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'parent_id']);
+		$this->belongsTo('AreaAdministrativeLevels', ['className' => 'Area.AreaAdministrativeLevels', 'foreignKey' => 'area_administrative_level_id']);
+		$this->hasMany('AreaAdministratives', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'parent_id']);
+		$this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
+		$this->hasMany('UsersAddressAreas', ['className' => 'Directory.Directories', 'foreignKey' => 'address_area_id']);
+		$this->hasMany('UsersBirthplaceAreas', ['className' => 'Directory.Directories', 'foreignKey' => 'birthplace_area_id']);
 		$this->addBehavior('Tree');
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+				'filter' => 'parent_id',
+			]);
+		}
 	}
 
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('area_administrative_level_id');
+		$this->ControllerAction->field('is_main_country', ['visible' => false]);
 		$this->ControllerAction->field('name');
-
+		$count = $this->find()->where([
+				'OR' => [
+					[$this->aliasField('lft').' IS NULL'],
+					[$this->aliasField('rght').' IS NULL']
+				]
+			])
+			->count();
+		if ($count) {
+			$this->rebuildLftRght();
+		}
 		$this->fields['lft']['visible'] = false;
 		$this->fields['rght']['visible'] = false;
 	}
 
+
+	public function rebuildLftRght() {
+		$this->recover();
+	}
+
 	public function afterAction(Event $event) {
 		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	}
+
+	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+		$transferTo = $this->request->data['transfer_to'];
+		$transferFrom = $id;
+		// Require to update the parent id of the children before removing the node from the tree
+		$this->updateAll(
+				[
+					'parent_id' => $transferTo, 
+					'lft' => null,
+					'rght' => null
+				],
+				['parent_id' => $transferFrom]
+			);
+
+		$entity = $this->get($id);
+		$left = $entity->lft;
+		$right = $entity->rght;
+
+		// The left and right value of the children will all have to be rebuilt
+		$this->updateAll(
+				[
+					'lft' => null,
+					'rght' => null
+				],
+				[ 
+					'lft > ' => $left, 
+					'rght < ' => $right
+				]
+			);
+
+		$this->rebuildLftRght();
+	}
+
+	public function onGetConvertOptions(Event $event, Entity $entity, Query $query) {
+		$level = $entity->area_administrative_level_id;
+		$query->where([
+				$this->aliasField('area_administrative_level_id') => $level
+			]);
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -40,8 +103,8 @@ class AreaAdministrativesTable extends AppTable {
 
 		$this->fields['parent_id']['visible'] = false;
 
-		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : -1;
-		if ($parentId != -1) {
+		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+		if ($parentId != null) {
 			$crumbs = $this
 				->find('path', ['for' => $parentId])
 				->order([$this->aliasField('lft')])
@@ -54,7 +117,7 @@ class AreaAdministrativesTable extends AppTable {
 			$results = $this
 				->find()
 				->select([$this->aliasField('id')])
-				->where([$this->aliasField('parent_id') => -1])
+				->where([$this->aliasField('parent_id') . ' IS NULL'])
 				->all();
 
 			if ($results->count() == 1) {
@@ -69,9 +132,22 @@ class AreaAdministrativesTable extends AppTable {
 		}
 	}
 
+	public function editAfterAction(Event $event, Entity $entity) {
+		$this->request->data[$this->alias()]['area_administrative_level_id'] = $entity->area_administrative_level_id;
+		$this->ControllerAction->field('is_main_country');
+	}
+
+	public function addBeforeAction(Event $event) {
+		$this->ControllerAction->field('is_main_country');
+	}
+
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : -1;
-        $query->where([$this->aliasField('parent_id') => $parentId]);
+		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+        if ($parentId != null) {
+        	$query->where([$this->aliasField('parent_id') => $parentId]);
+        } else {
+        	$query->where([$this->aliasField('parent_id') . ' IS NULL']);
+        }
 	}
 
 	public function addEditBeforeAction(Event $event) {
@@ -82,7 +158,7 @@ class AreaAdministrativesTable extends AppTable {
 		$parentId = $this->request->query('parent');
 
 		if (is_null($parentId)) {
-			$this->fields['parent_id']['attr']['value'] = -1;
+			$this->fields['parent_id']['attr']['value'] = null;
 		} else {
 			$this->fields['parent_id']['attr']['value'] = $parentId;
 			
@@ -108,7 +184,7 @@ class AreaAdministrativesTable extends AppTable {
 	}
 
 	public function onGetName(Event $event, Entity $entity) {
-		return $event->subject()->Html->link($entity->name, [
+		return $event->subject()->HtmlField->link($entity->name, [
 			'plugin' => $this->controller->plugin,
 			'controller' => $this->controller->name,
 			'action' => $this->alias,
@@ -117,8 +193,34 @@ class AreaAdministrativesTable extends AppTable {
 		]);
 	}
 
+	public function onUpdateFieldIsMainCountry(Event $event, array $attr, $action, Request $request) {
+		if ($action=='add') {
+			$attr['visible'] = true;
+			$areaAdministrativeLevelId = $request->data[$this->alias()]['area_administrative_level_id'];
+			if ($areaAdministrativeLevelId == 1) {
+				$attr['options'] = $this->getSelectOptions('general.yesno');
+				return $attr;
+			} else {
+				$attr['value'] = 0;
+				$attr['type'] = 'hidden';
+				return $attr;
+			}
+		} elseif ($action == 'edit') {
+			$attr['visible'] = true;
+			$areaAdministrativeLevelId = $request->data[$this->alias()]['area_administrative_level_id'];
+			if ($areaAdministrativeLevelId == 1) {
+				$attr['options'] = $this->getSelectOptions('general.yesno');
+				return $attr;
+			} else {
+				$attr['value'] = 0;
+				$attr['type'] = 'hidden';
+				return $attr;
+			}
+		}
+	}
+
 	public function onUpdateFieldAreaAdministrativeLevelId(Event $event, array $attr, $action, Request $request) {
-		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : -1;
+		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
 		$results = $this
 			->find()
 			->select([
@@ -135,22 +237,22 @@ class AreaAdministrativesTable extends AppTable {
 			// $parentId = $data->parent_id;
 			$levelId = $data->area_administrative_level_id;
 
-			if ($data->parent_id == -1) {	//World
-				$levelOptions = $this->Levels
+			if ($data->parent_id == null) {	//World
+				$levelOptions = $this->AreaAdministrativeLevels
 					->find('list')
-					->where([$this->Levels->aliasField('level') => 0])
+					->where([$this->AreaAdministrativeLevels->aliasField('level') => 0])
 					->toArray();
 
 				$attr['options'] = $levelOptions;
 			} else {
 				// Filter levelOptions by Country
-				$levelResults = $this->Levels
+				$levelResults = $this->AreaAdministrativeLevels
 					->find()
 					->select([
-						$this->Levels->aliasField('level'),
-						$this->Levels->aliasField('area_administrative_id')
+						$this->AreaAdministrativeLevels->aliasField('level'),
+						$this->AreaAdministrativeLevels->aliasField('area_administrative_id')
 					])
-					->where([$this->Levels->aliasField('id') => $levelId])
+					->where([$this->AreaAdministrativeLevels->aliasField('id') => $levelId])
 					->all();
 
 				if (!$levelResults->isEmpty()) {
@@ -160,18 +262,21 @@ class AreaAdministrativesTable extends AppTable {
 					$countryId = $levelResults
 						->first()
 						->area_administrative_id;
-					$countryId = $level < 1 ? $parentId : $countryId;	//-1 => World, 0 => Country
+					$countryId = $level < 1 ? $parentId : $countryId;	//null => World, 0 => Country
 
-					$levelOptions = $this->Levels
+					$levelOptions = $this->AreaAdministrativeLevels
 						->find('list')
 						->where([
-							$this->Levels->aliasField('area_administrative_id') => $countryId,
-							$this->Levels->aliasField('level >') => $level
+							$this->AreaAdministrativeLevels->aliasField('area_administrative_id') => $countryId,
+							$this->AreaAdministrativeLevels->aliasField('level >') => $level
 						])
 						->toArray();
 
 					$attr['options'] = $levelOptions;
 				}
+			}
+			if (!isset($request->data[$this->alias()]['area_administrative_level_id'])) {
+				$request->data[$this->alias()]['area_administrative_level_id'] = key($attr['options']);
 			}
 		}
 
@@ -179,7 +284,7 @@ class AreaAdministrativesTable extends AppTable {
 	}
 
 	public function onUpdateFieldName(Event $event, array $attr, $action, Request $request) {
-		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : -1;
+		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
 		$results = $this
 			->find()
 			->select([$this->aliasField('parent_id'), $this->aliasField('area_administrative_level_id')])
@@ -191,7 +296,7 @@ class AreaAdministrativesTable extends AppTable {
 				->first();
 			$parentId = $data->parent_id;
 
-			if ($parentId == -1) {	//World
+			if ($parentId == null) {	//World
 				$Countries = TableRegistry::get('FieldOption.Countries');
 				$countryOptions = $Countries
 					->find('list', ['keyField' => 'name', 'valueField' => 'name'])
@@ -210,7 +315,7 @@ class AreaAdministrativesTable extends AppTable {
 	public function prepareCrumbs(array $crumbs) {
 		// Replace the code and name of World with All
 		foreach ($crumbs as $key => $crumb) {
-			if ($crumb->parent_id == -1) {
+			if ($crumb->parent_id == null) {
 				$crumb->code = __('All');
 				$crumb->name = __('All');
 				$crumbs[$key] = $crumb;

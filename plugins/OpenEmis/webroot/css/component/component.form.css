@@ -1,0 +1,608 @@
+/* FORM v.1.2.4 */
+
+.form-horizontal {
+    margin: 20px 0;
+}
+
+.form-horizontal label {
+    margin: 0 10px 15px 0;
+    padding: 5px 20px;
+    font-size: 12px;
+    text-align: left;
+    width: 18%;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.form-horizontal label {
+    border-bottom: 2px solid #EEE;
+}
+
+.form-horizontal input {
+    height: 30px;
+    font-size: 12px;
+}
+
+input[disabled="disabled"],
+textarea[disabled="disabled"] {
+    color: #AAA !important;
+    background-color: #EEE !important;
+}
+
+input:focus {
+    outline: 0 !important;
+}
+
+.form-horizontal input,
+.form-horizontal textarea,
+.form-horizontal .input-group,
+.form-horizontal .input-select-wrapper,
+.form-horizontal .chosen-container,
+.fileinput-preview {
+    width: 25%;
+    font-size: 12px;
+}
+
+.form-horizontal input,
+.form-horizontal textarea,
+.form-horizontal .chosen-choices {
+    display: inline-block;
+    padding: 5px 10px;
+    margin-bottom: 15px;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+.form-horizontal input,
+.form-horizontal textarea {
+    border: 1px solid #CCC;
+}
+
+.form-horizontal .chosen-choices {
+    border: 1px solid #CCC !important;
+}
+
+.form-label {
+    font-weight: bold;
+    text-align: left;
+    padding: 5px 10px;
+    font-size: 12px !important;
+    min-height: 30px;
+    width: 15%;
+    margin-right: 10px;
+}
+
+.form-label:after {
+    content: ":";
+    position: absolute;
+    right: 0;
+    top: 4px;
+    color: #BBB;
+    font-weight: 300;
+}
+
+.form-input {
+    min-height: 30px;
+    width: -webkit-calc(80% - 10px);
+    width: -moz-calc(80% - 10px);
+    width: calc(80% - 10px);
+    padding: 7px 0;
+    display: inline-block;
+    font-size: 12px;
+}
+
+.form-horizontal label,
+.row:nth-of-type(even) {
+    background-color: #F9F9F9;
+    border-left: 2px solid #F5F5F5;
+    border-bottom: 2px solid #F5F5F5;
+}
+
+.row:nth-of-type(odd) {
+    background-color: #FFF;
+    border-left: 2px solid #FFF;
+}
+
+
+/* Time picker */
+
+.bootstrap-timepicker-widget {
+    width: 275px;
+}
+
+.bootstrap-timepicker-widget table input {
+    min-width: inherit;
+}
+
+
+/* Multi Select Input */
+
+.form-horizontal .chosen-container {
+    width: 25% !important;
+    margin-bottom: 15px;
+}
+
+.form-horizontal .input-group {
+    position: relative;
+    width: 25%;
+    margin: 0 0 15px;
+    display: inline-block;
+}
+
+.form-horizontal .textarea label,
+.form-horizontal .file label {
+    vertical-align: top;
+}
+
+.form-horizontal textarea {
+    resize: none;
+    height: 100px;
+}
+
+.form-horizontal .input {
+    clear: both;
+    font-size: 0;
+}
+
+
+/* File Input and File Input with Preview */
+
+.form-horizontal .file {
+    width: 100%;
+    clear: both;
+}
+
+.form-horizontal .file label {
+    display: inline-block;
+}
+
+.fileinput.input-group {
+    display: inline-block !important;
+}
+
+.fileinput {
+    position: relative;
+    margin-bottom: 15px !important;
+}
+
+.fileinput .form-control {
+    -webkit-border-radius: 3px !important;
+    border-radius: 3px !important;
+    width: 100%;
+    margin-right: -1px;
+    margin-top: -1px !important;
+    z-index: 0 !important;
+    -webkit-border-top-right-radius: 0px !important;
+    border-top-right-radius: 0px !important;
+    -webkit-border-bottom-right-radius: 0px !important;
+    border-bottom-right-radius: 0px !important;
+}
+
+.fileinput-filename {
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: middle;
+    width: 100%;
+    position: absolute;
+    left: 0;
+    padding: 0 80px 0 25px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+input[type="file"] {
+    cursor: pointer;
+}
+
+.file-input-text {
+    clear: both;
+}
+
+.file-input-text p,
+.file-input-buttons p,
+.input-text p {
+    clear: both;
+    padding: 8px 0 0;
+    font-style: italic;
+    font-size: 11px !important;
+    color: #777;
+}
+
+
+/* Date Time Input */
+
+.form-horizontal .datetime select {
+    width: 60px;
+    margin-right: 10px;
+}
+
+.form-horizontal .input-group-addon {
+    position: absolute;
+    right: 0;
+    line-height: 0;
+    cursor: pointer;
+    font-size: 15px;
+    width: 52px;
+    height: 30px;
+}
+
+.form-horizontal .input-group-addon span {
+    width: 15px;
+}
+
+.datepicker th {
+    text-align: center !important;
+}
+
+.datepicker table tr td.active {
+    background: none !important;
+    background-color: #6B6B6B !important;
+}
+
+.datepicker,
+.bootstrap-timepicker-widget {
+    z-index: 10 !important;
+}
+
+
+/* View with Sections and tables */
+
+.green {
+    color: green;
+    font-size: 10px;
+}
+
+.red {
+    color: red;
+    font-size: 9px;
+}
+
+.grey {
+    color: #888;
+    font-size: 9px;
+}
+
+.section-header .selection-wrapper label {
+    font-weight: 700;
+}
+
+.form-control {
+    padding: 5px 6px 3px;
+    font-size: 12px;
+    background: #FFF;
+    font-weight: normal;
+    height: 30px;
+}
+
+.form-control:focus {
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
+}
+
+select {
+    background: none;
+    position: relative;
+    padding: 5px 25px 5px 10px !important;
+    border: 1px solid #CCC;
+    margin-bottom: 15px;
+    width: 100% !important;
+    height: 30px;
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+}
+
+
+/* This is to remove the arrow of select element in IE */
+
+select::-ms-expand {
+    display: none;
+}
+
+
+/* End of Select for IE */
+
+
+/* -------------------- */
+
+.select {
+    position: relative;
+    display: block;
+    width: 100%;
+}
+
+.input-select-wrapper:after,
+.font-size-select:after {
+    border-left: 5px solid rgba(0, 0, 0, 0);
+    border-right: 5px solid rgba(0, 0, 0, 0);
+    border-top: 5px solid;
+    color: #555;
+    content: "";
+    height: 0;
+    margin-right: 14px;
+    pointer-events: none;
+    position: absolute;
+    width: 0;
+    right: -5px;
+    top: 48%;
+}
+
+.input-select-wrapper {
+    position: relative;
+    display: block;
+    width: 30%;
+    height: 30px;
+    display: inline-block;
+    margin-bottom: 15px;
+}
+
+optgroup {
+    padding: 3px;
+}
+
+option {
+    padding: 3px;
+}
+
+.form-horizontal option {
+    padding: 5px 10px;
+    direction: ltr;
+}
+
+.form-horizontal input[disabled="disabled"] {
+    background-color: #F2F2F2;
+    border: 1px solid #CCC;
+    color: #6B6B6B;
+}
+
+.form-horizontal .input-inline-wrapper {
+    display: inline-block;
+    width: -webkit-calc(80% - 15px);
+    width: -moz-calc(80% - 15px);
+    width: calc(80% - 15px);
+}
+
+.form-horizontal .input-inline.input-prefix {
+    width: 10%;
+    margin-right: 10px;
+}
+
+.form-horizontal .input-inline-prefix {
+    width: -webkit-calc(28% - 12px);
+    width: -moz-calc(28% - 12px);
+    width: calc(28% - 12px);
+    margin-bottom: 15px;
+}
+
+.form-horizontal .input-inline-btn {
+    position: relative;
+    width: 25%;
+    margin-left: 10px;
+    display: inline-block;
+}
+
+.form-horizontal .input-inline-btn .input-inline {
+    width: 100%;
+    padding-right: 110px;
+}
+
+.form-horizontal .input-inline-btn .error-message {
+    position: absolute;
+    left: 0;
+    margin-left: 270px;
+    width: 100%;
+}
+
+.form-horizontal .input-inline-btn .tooltip {
+    width: 80px;
+}
+
+.row-reset {
+    background-color: transparent !important;
+    border: 0 !important;
+}
+
+
+/* RTL v.1.0.2 */
+
+.rtl .form-horizontal .input-inline-btn .input-inline {
+    padding-left: 110px;
+    padding-right: 10px !important;
+}
+
+.rtl .form-horizontal .input-inline {
+    margin-right: 0;
+    margin-left: 10px;
+}
+
+.rtl .form-horizontal .input-inline-btn .error-message {
+    left: auto !important;
+    right: 0;
+    margin-right: 270px;
+    margin-left: 0;
+    width: 102%;
+}
+
+.rtl .input-select-wrapper {
+    display: inline-block;
+}
+
+.rtl .input-select-wrapper:after {
+    left: 8px;
+    right: auto;
+}
+
+.rtl select {
+    padding: 4px 5px 5px 25px !important;
+}
+
+.rtl .section-header .check-input {
+    margin: 0 0 -3px 10px !important;
+}
+
+.rtl .form-horizontal .input-inline.input-prefix {
+    margin-right: 0 !important;
+    margin-left: 10px !important;
+}
+
+
+/*==========  Non-Mobile First Method  ==========*/
+
+
+/* Bigger Screen */
+
+@media only screen and (max-width: 1240px) {
+    .form-horizontal label {
+        width: 20% !important;
+    }
+    .form-horizontal input,
+    .form-horizontal textarea,
+    .form-horizontal .input-select-wrapper,
+    .form-horizontal .chosen-container {
+        width: 30% !important;
+    }
+    .form-horizontal .input-inline-btn {
+        width: 45% !important;
+    }
+    .form-horizontal .chosen-container input,
+    .form-horizontal .chosen-container .search-field,
+    .form-horizontal .input-group input,
+    .input-inline-btn input,
+    .fileinput-preview {
+        width: 100% !important;
+    }
+    .input-form-wrapper,
+    .input .table-wrapper {
+        width: -webkit-calc(80% - 15px) !important;
+        width: -moz-calc(80% - 15px) !important;
+        width: calc(80% - 15px) !important;
+    }
+    .form-horizontal .input-inline.input-prefix {
+        width: 15% !important;
+    }
+    .form-horizontal .input-inline-wrapper .error-message,
+    .rtl .form-horizontal .input-inline-wrapper .error-message {
+        margin: 0 !important;
+        float: none;
+        clear: both;
+        width: 100%;
+    }
+}
+
+
+/* Small Devices, Tablets */
+
+@media only screen and (max-width: 800px) {
+    .form-horizontal .input-inline.input-prefix {
+        width: 20% !important;
+    }
+    .input-form-wrapper,
+    .input .table-wrapper {
+        width: -webkit-calc(70% - 15px) !important;
+        width: -moz-calc(70% - 15px) !important;
+        width: calc(70% - 15px) !important;
+    }
+    .form-horizontal label {
+        padding: 5px 10px;
+    }
+    .form-label:after {
+        display: none;
+    }
+    .form-label,
+    .form-input {
+        padding: 5px 10px !important;
+    }
+    .form-horizontal label,
+    .form-horizontal input,
+    .form-horizontal textarea,
+    .form-horizontal .input-group,
+    .form-horizontal .input-select-wrapper,
+    .form-horizontal .chosen-container,
+    .input-selection-inline,
+    .input-selection,
+    .form-horizontal .chosen-container input,
+    .form-horizontal .chosen-container .search-field,
+    .form-horizontal .input-group input,
+    .input-form-wrapper,
+    .form-horizontal .input-inline-btn .input-inline,
+    .input .table-wrapper,
+    .form-label,
+    .form-input,
+    .form-horizontal .input-inline-wrapper,
+    .fileinput-preview {
+        width: 100% !important;
+    }
+    .form-horizontal .error-message {
+        margin: 0 0 15px 0 !important;
+        padding: 0;
+    }
+    .form-horizontal .input-inline-prefix {
+        width: 75% !important;
+    }
+    .form-horizontal .input-inline-btn {
+        width: 65% !important;
+    }
+    .form-horizontal .input-inline {
+        width: 30% !important;
+    }
+    .form-horizontal .input-inline-wrapper .error-message {
+        margin: 0 !important;
+    }
+}
+
+
+/* Mobile */
+
+@media only screen and (max-width: 480px) {
+    .form-horizontal .input-inline,
+    .form-horizontal .input-inline-btn {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+}
+
+
+/* RTL */
+
+.rtl .form-control {
+    padding: 5px 6px 3px;
+    height: 30px;
+}
+
+.rtl .form-control,
+.rtl .form-horizontal input,
+.rtl .form-horizontal textarea,
+.rtl .form-horizontal .chosen-choices,
+.rtl .form-horizontal label,
+.rtl .form-label,
+.rtl .form-input {
+    font-size: 14px !important;
+}
+
+.rtl .form-label,
+.rtl .form-input,
+.rtl .file .form-control {
+    line-height: 14px !important;
+}
+
+.rtl .fileinput-filename {
+    padding-bottom: 3px;
+}
+
+.rtl .file-input-text p,
+.rtl .file-input-buttons p,
+.rtl .input-text p {
+    font-size: 13px !important;
+}
+
+.rtl .form-input {
+    padding: 5px 0;
+}
+
+.rtl .form-horizontal option {
+    direction: ltr;
+}

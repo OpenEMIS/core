@@ -14,30 +14,35 @@ $this->start('panelBody');
 	$formOptions = $this->ControllerAction->getFormOptions();
 	$formOptions['type'] = 'delete';
 	$this->Form->templates($template);
-	
 	echo $this->Form->create($data, $formOptions);
 	echo $this->Form->hidden('id');
-	echo $this->Form->input('name', ['label' => __('Convert From'), 'readonly']);
-	echo $this->Form->input('transfer_to', ['label' => __('Convert To'), 'options' => $convertOptions, 'required' => 'required']);
-
+	echo $this->Form->input('name', ['label' => __($label['nameLabel']), 'readonly']);
+	if ($deleteStrategy == 'transfer') {
+		echo $this->HtmlField->secureSelect('transfer_to', ['label' => __('Convert To'), 'options' => $convertOptions, 'required' => 'required']);
+	}
+	
 	$tableData = [];
 	foreach ($associations as $row) {
-		$tableData[] = [$row['model'], $row['count']];
+		$tableData[] = [__($row['model']), $row['count']];
 	}
 ?>
 
 <div class="input clearfix">
-	<label class="pull-left"><?= __('Apply To') ?></label>
-	<div class="table-in-view">
-		<table class="table table-striped table-hover table-bordered">
-			<thead><?= $this->Html->tableHeaders([__('Feature'), __('No of records')]) ?></thead>
-			<tbody><?php echo $this->Html->tableCells($tableData) ?></tbody>
-		</table>
+	<label><?= __($label['tableLabel']) ?></label>
+	<div class="table-wrapper">
+		<div class="table-in-view">
+			<table class="table">
+				<thead><?= $this->Html->tableHeaders([__('Feature'), __('No of records')]) ?></thead>
+				<tbody><?php echo $this->Html->tableCells($tableData) ?></tbody>
+			</table>
+		</div>
 	</div>
 </div>
 
 <?php
-	echo $this->ControllerAction->getFormButtons();
+	if ($showFormButton) {
+		echo $this->ControllerAction->getFormButtons();
+	}
 	echo $this->Form->end();
 $this->end();
 ?>

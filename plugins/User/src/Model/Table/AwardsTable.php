@@ -3,6 +3,7 @@ namespace User\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use Cake\Event\Event;
 
 class AwardsTable extends AppTable {
 	public function initialize(array $config) {
@@ -21,14 +22,45 @@ class AwardsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		
+		$validator = parent::validationDefault($validator);
 		return $validator;
+	}
+
+	private function setupTabElements() {
+		switch ($this->controller->name) {
+			case 'Students':
+				$tabElements = $this->controller->getAcademicTabElements();
+				$this->controller->set('tabElements', $tabElements);
+				$this->controller->set('selectedAction', $this->alias());
+				break;
+			case 'Staff':
+				$tabElements = $this->controller->getCareerTabElements();
+				$this->controller->set('tabElements', $tabElements);
+				$this->controller->set('selectedAction', $this->alias());
+				break;
+			case 'Directories':
+				$type = $this->request->query('type');
+				$options['type'] = $type;
+				if ($type == 'student') {
+					$tabElements = $this->controller->getAcademicTabElements($options);
+				} else {
+					$tabElements = $this->controller->getCareerTabElements($options);
+				}
+				
+				$this->controller->set('tabElements', $tabElements);
+				$this->controller->set('selectedAction', $this->alias());
+				break;
+		}
+	}
+
+	public function afterAction(Event $event) {
+		$this->setupTabElements();
 	}
 
 	// public function autocompleteAward() {
 	// 	if ($this->request->is('ajax')) {
 	// 		$this->render = false;
-	// 		$this->getView()->layout(false);
+	// 		$this->viewBuilder()->layout(false);
 	// 		$search = $this->controller->params->query['term'];
 	// 		$data = $this->autocomplete($search, 'award');
 	// 		return json_encode($data);
@@ -38,7 +70,7 @@ class AwardsTable extends AppTable {
 	// public function autocompleteIssuer() {
 	// 	if ($this->request->is('ajax')) {
 	// 		$this->render = false;
-	// 		$this->getView()->layout(false);
+	// 		$this->viewBuilder()->layout(false);
 	// 		$search = $this->controller->params->query['term'];
 	// 		$data = $this->autocomplete($search, 'issuer');
 	// 		return json_encode($data);

@@ -4,6 +4,7 @@ namespace Security\Model\Table;
 use ArrayObject;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
@@ -20,6 +21,8 @@ class UsersTable extends AppTable {
 		$this->entityClass('User.User');
 
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
+		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
+		$this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
 
 		$this->belongsToMany('Roles', [
 			'className' => 'Security.SecurityRoles',
@@ -31,7 +34,7 @@ class UsersTable extends AppTable {
 		]);
 
 		$this->hasMany('Identities', 		['className' => 'User.Identities',		'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$this->hasMany('Nationalities', 	['className' => 'User.Nationalities',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$this->hasMany('Nationalities', 	['className' => 'User.UserNationalities',	'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$this->hasMany('SpecialNeeds', 		['className' => 'User.SpecialNeeds',	'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$this->hasMany('Contacts', 			['className' => 'User.Contacts',		'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$this->hasMany('Attachments', 		['className' => 'User.Attachments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
@@ -80,16 +83,22 @@ class UsersTable extends AppTable {
 		$this->fields['address_area_id']['visible'] = false;
 		$this->fields['birthplace_area_id']['visible'] = false;
 
-		if ($this->action != 'index' && $this->action != 'view') {
+		if (in_array($this->action, ['add'])) {
+			$this->fields['username']['visible'] = true;
 			$this->fields['password']['visible'] = true;
 			$this->fields['password']['type'] = 'password';
 			$this->fields['password']['attr']['value'] = '';
+			$this->fields['password']['attr']['autocomplete'] = 'off';
 		}
+
 		if ($this->action == 'edit') {
 			$this->fields['last_login']['visible'] = false;
 		}
 
 		$this->ControllerAction->field('status', ['visible' => true, 'options' => $this->getSelectOptions('general.active')]);
+		$this->ControllerAction->setFieldOrder([
+			'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'gender_id', 'date_of_birth', 'status', 'username', 'password'
+		]);
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -102,6 +111,8 @@ class UsersTable extends AppTable {
 		$this->fields['date_of_birth']['visible'] = false;
 		$this->fields['identity']['visible'] = false;
 
+		$this->fields['username']['visible'] = true;
+
 		$this->ControllerAction->field('name');
 	}
 
@@ -112,7 +123,7 @@ class UsersTable extends AppTable {
 		$search = $this->ControllerAction->getSearchKey();
 
 		if (!empty($search)) {
-			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
+			$query = $this->addSearchConditions($query, ['searchTerm' => $search, 'searchByUserName' => true]);
 		}
 	}
 
@@ -153,41 +164,35 @@ class UsersTable extends AppTable {
 		$alias = $this->alias();
 		$key = 'roles';
 
-		$Group = TableRegistry::get('Security.SecurityGroups');
-		$Group->hasOne('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'security_group_id']);
-
 		if ($action == 'view') {
-			$associated = $entity->extractOriginal([$key]);
-			if (!empty($associated[$key])) {
-				foreach ($associated[$key] as $i => $obj) {
-					$groupId = $obj['_joinData']->security_group_id;
-					$groupEntity = $Group->find()
-						->where([$Group->aliasField('id') => $groupId])
-						->contain('Institutions')
-						->first()
-						;
-
-					$rowData = [];
-					if ($groupEntity) {
-						$url = [
-							'plugin' => $this->controller->plugin,
-							'controller' => $this->controller->name,
-							'view',
-							$groupEntity->id
-						];
-						if (!empty($groupEntity->institution)) {
-							$url['action'] = 'SystemGroups';
-						} else {
-							$url['action'] = 'UserGroups';
-						}
-						$rowData[] = $event->subject()->Html->link($groupEntity->name, $url);
-					} else {
-						$rowData[] = '';
-					}
-
-					$rowData[] = $obj->name; // role name
-					$tableCells[] = $rowData;
+			$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+			$groupUserRecords = $GroupUsers->find()
+				->matching('SecurityGroups')
+				->matching('SecurityRoles')
+				->where([$GroupUsers->aliasField('security_user_id') => $entity->id])
+				->group([
+					$GroupUsers->aliasField('security_group_id'), 
+					$GroupUsers->aliasField('security_role_id')
+				])
+				->select(['group_name' => 'SecurityGroups.name', 'role_name' => 'SecurityRoles.name', 'group_id' => 'SecurityGroups.id'])
+				->all();
+			foreach ($groupUserRecords as $obj) {
+				$rowData = [];
+				$url = [
+					'plugin' => $this->controller->plugin,
+					'controller' => $this->controller->name,
+					'view',
+					$obj->group_id
+				];
+				if (!empty($groupEntity->institution)) {
+					$url['action'] = 'SystemGroups';
+				} else {
+					$url['action'] = 'UserGroups';
 				}
+				$rowData[] = $event->subject()->Html->link($obj->group_name, $url);
+
+				$rowData[] = $obj->role_name; // role name
+				$tableCells[] = $rowData;
 			}
 		}
 		$attr['tableHeaders'] = $tableHeaders;
@@ -211,7 +216,12 @@ class UsersTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
 		$BaseUsers = TableRegistry::get('User.Users');
-		return $BaseUsers->setUserValidation($validator);
+		return $BaseUsers->setUserValidation($validator, $this);
+	}
+
+	public function isAdmin($userId) {
+		return $this->get($userId)->super_admin;
 	}
 }

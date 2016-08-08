@@ -10,9 +10,9 @@ use App\Model\Table\AppTable;
 class StaffBehavioursTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Staff', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
-		$this->belongsTo('StaffBehaviourCategories', ['className' => 'FieldOption.StaffBehaviourCategories']);
+		$this->belongsTo('StaffBehaviourCategories', ['className' => 'Staff.StaffBehaviourCategories']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 	}
 
@@ -30,8 +30,8 @@ class StaffBehavioursTable extends AppTable {
 
 		if (array_key_exists('view', $buttons)) {
 			$url = [
-				'plugin' => 'Institution', 
-				'controller' => 'Institutions', 
+				'plugin' => 'Institution',
+				'controller' => 'Institutions',
 				'action' => 'StaffBehaviours',
 				'view', $entity->id,
 				'institution_id' => $entity->institution->id,
@@ -39,5 +39,16 @@ class StaffBehavioursTable extends AppTable {
 			$buttons['view']['url'] = $url;
 		}
 		return $buttons;
+	}
+
+	private function setupTabElements() {
+		$options['type'] = 'staff';
+		$tabElements = $this->controller->getCareerTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', 'Behaviours');
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
 	}
 }

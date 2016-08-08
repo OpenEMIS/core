@@ -10,6 +10,8 @@
 
 require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . '_files' . DIRECTORY_SEPARATOR . 'BeforeAndAfterTest.php';
 require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . '_files' . DIRECTORY_SEPARATOR . 'BeforeClassAndAfterClassTest.php';
+require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . '_files' . DIRECTORY_SEPARATOR . 'TestWithTest.php';
+require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . '_files' . DIRECTORY_SEPARATOR . 'BeforeClassWithOnlyDataProviderTest.php';
 require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . '_files' . DIRECTORY_SEPARATOR . 'DataProviderSkippedTest.php';
 require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . '_files' . DIRECTORY_SEPARATOR . 'DataProviderIncompleteTest.php';
 require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . '_files' . DIRECTORY_SEPARATOR . 'InheritedTestCase.php';
@@ -21,10 +23,6 @@ require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . '_files' . DIRECTORY_SEPAR
 require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . '_files' . DIRECTORY_SEPARATOR . 'RequirementsClassBeforeClassHookTest.php';
 
 /**
- * @author     Sebastian Bergmann <sebastian@phpunit.de>
- * @copyright  Sebastian Bergmann <sebastian@phpunit.de>
- * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
- * @link       http://www.phpunit.de/
  * @since      Class available since Release 2.0.0
  * @covers     PHPUnit_Framework_TestSuite
  */
@@ -51,7 +49,9 @@ class Framework_SuiteTest extends PHPUnit_Framework_TestCase
         $suite->addTest(new self('testOneTestCase'));
         $suite->addTest(new self('testShadowedTests'));
         $suite->addTest(new self('testBeforeClassAndAfterClassAnnotations'));
+        $suite->addTest(new self('testBeforeClassWithDataProviders'));
         $suite->addTest(new self('testBeforeAnnotation'));
+        $suite->addTest(new self('testTestWithAnnotation'));
         $suite->addTest(new self('testSkippedTestDataProvider'));
         $suite->addTest(new self('testIncompleteTestDataProvider'));
         $suite->addTest(new self('testRequirementsBeforeClassHook'));
@@ -92,7 +92,8 @@ class Framework_SuiteTest extends PHPUnit_Framework_TestCase
         $suite->run($this->result);
 
         $this->assertTrue(!$this->result->wasSuccessful());
-        $this->assertEquals(1, $this->result->failureCount());
+        $this->assertEquals(0, $this->result->failureCount());
+        $this->assertEquals(1, $this->result->warningCount());
         $this->assertEquals(1, count($this->result));
     }
 
@@ -171,6 +172,19 @@ class Framework_SuiteTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(1, BeforeClassAndAfterClassTest::$afterClassWasRun, '@afterClass method was not run once for the whole suite.');
     }
 
+    public function testBeforeClassWithDataProviders()
+    {
+        $suite = new PHPUnit_Framework_TestSuite(
+            'BeforeClassWithOnlyDataProviderTest'
+        );
+
+        BeforeClassWithOnlyDataProviderTest::resetProperties();
+        $suite->run($this->result);
+
+        $this->assertTrue(BeforeClassWithOnlyDataProviderTest::$setUpBeforeClassWasCalled, 'setUpBeforeClass method was not run.');
+        $this->assertTrue(BeforeClassWithOnlyDataProviderTest::$beforeClassWasCalled, '@beforeClass method was not run.');
+    }
+
     public function testBeforeAnnotation()
     {
         $test = new PHPUnit_Framework_TestSuite(
@@ -182,6 +196,18 @@ class Framework_SuiteTest extends PHPUnit_Framework_TestCase
 
         $this->assertEquals(2, BeforeAndAfterTest::$beforeWasRun);
         $this->assertEquals(2, BeforeAndAfterTest::$afterWasRun);
+    }
+
+    public function testTestWithAnnotation()
+    {
+        $test = new PHPUnit_Framework_TestSuite(
+            'TestWithTest'
+        );
+
+        BeforeAndAfterTest::resetProperties();
+        $result = $test->run();
+
+        $this->assertEquals(4, count($result->passed()));
     }
 
     public function testSkippedTestDataProvider()

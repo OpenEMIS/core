@@ -10,9 +10,9 @@ use App\Model\Table\AppTable;
 class StudentBehavioursTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Students', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
-		$this->belongsTo('StudentBehaviourCategories', ['className' => 'FieldOption.StudentBehaviourCategories']);
+		$this->belongsTo('StudentBehaviourCategories', ['className' => 'Student.StudentBehaviourCategories']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 	}
 
@@ -30,8 +30,8 @@ class StudentBehavioursTable extends AppTable {
 
 		if (array_key_exists('view', $buttons)) {
 			$url = [
-				'plugin' => 'Institution', 
-				'controller' => 'Institutions', 
+				'plugin' => 'Institution',
+				'controller' => 'Institutions',
 				'action' => 'StudentBehaviours',
 				'view', $entity->id,
 				'institution_id' => $entity->institution->id,
@@ -39,5 +39,17 @@ class StudentBehavioursTable extends AppTable {
 			$buttons['view']['url'] = $url;
 		}
 		return $buttons;
+	}
+
+	private function setupTabElements() {
+		$options['type'] = 'student';
+		$tabElements = $this->controller->getAcademicTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		$alias = 'Behaviours';
+		$this->controller->set('selectedAction', $alias);
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		$this->setupTabElements();
 	}
 }

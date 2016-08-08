@@ -15,17 +15,25 @@ class EducationGradesTable extends AppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->belongsTo('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
-		$this->hasMany('Programmes', ['className' => 'Institution.InstitutionGrades']);
-		$this->hasMany('Assessments', ['className' => 'Assessment.Assessments']);
-		$this->hasMany('InstitutionFees', ['className' => 'Institution.InstitutionFees']);
-		$this->hasMany('Rubrics', ['className' => 'Institution.InstitutionRubrics']);
-		$this->hasMany('Visits', ['className' => 'Institution.InstitutionQualityVisits']);
-		$this->hasMany('InstitutionSiteSectionGrades', ['className' => 'Institution.InstitutionSiteSectionGrades']);
-		$this->hasMany('InstitutionSiteSectionStudents', ['className' => 'Institution.InstitutionSiteSectionStudents']);
-		$this->hasMany('InstitutionStudents', ['className' => 'Institution.Students']);
-		$this->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission']);
-		$this->hasMany('StudentDropout', ['className' => 'Institution.StudentDropout']);
+
+		$this->belongsToMany('Institutions', [
+			'className' => 'Institution.Institutions',
+			'joinTable' => 'institution_grades',
+			'foreignKey' => 'education_grade_id',
+			'targetForeignKey' => 'Institution_id',
+			'through' => 'Institution.InstitutionGrades',
+			'dependent' => true,
+			'cascadeCallbacks' => true
+		]);
+		$this->belongsTo('EducationProgrammes',		['className' => 'Education.EducationProgrammes']);
+		$this->hasMany('Assessments',				['className' => 'Assessment.Assessments', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionFees',			['className' => 'Institution.InstitutionFees', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('Rubrics',					['className' => 'Institution.InstitutionRubrics', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionClassGrades',	['className' => 'Institution.InstitutionClassGrades', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionClassStudents',	['className' => 'Institution.InstitutionClassStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionStudents',		['className' => 'Institution.Students', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StudentAdmission',			['className' => 'Institution.StudentAdmission', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StudentDropout',			['className' => 'Institution.StudentDropout', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->belongsToMany('EducationSubjects', [
 			'className' => 'Education.EducationSubjects',
@@ -33,9 +41,16 @@ class EducationGradesTable extends AppTable {
 			'foreignKey' => 'education_grade_id',
 			'targetForeignKey' => 'education_subject_id',
 			'through' => 'Education.EducationGradesSubjects',
-			'dependent' => false,
+			'dependent' => true,
+			'cascadeCallbacks' => true
 			// 'saveStrategy' => 'append'
 		]);
+
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+				'filter' => 'education_programme_id',
+			]);
+		}
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
@@ -81,8 +96,43 @@ class EducationGradesTable extends AppTable {
 		return $educationSystemId;
 	}
 
-	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
-		$query->where([$this->aliasField('education_programme_id') => $entity->education_programme_id]);
+	/**
+	* Method to get the list of available grades by a given education grade
+	*
+	* @param integer $gradeId The grade to find the list of available education grades
+	* @param bool|true $getNextProgrammeGrades If flag is set to false, it will only fetch all the education
+	*											grades of the same programme. If set to true it will get all
+	*											the grades of the next programmes plus the current programme grades
+	*/
+	public function getNextAvailableEducationGrades($gradeId, $getNextProgrammeGrades=true) {
+		if (!empty($gradeId)) {
+			$gradeObj = $this->get($gradeId);
+			$programmeId = $gradeObj->education_programme_id;
+			$order = $gradeObj->order;
+			$gradeOptions = $this->find('list', [
+					'keyField' => 'id',
+					'valueField' => 'programme_grade_name'
+				])
+				->where([
+					$this->aliasField('education_programme_id') => $programmeId,
+					$this->aliasField('order').' > ' => $order
+				])
+				->toArray();
+			// Default is to get the list of grades with the next programme grades
+			if ($getNextProgrammeGrades) {
+				$nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextGradeList($programmeId);
+				$results = $gradeOptions + $nextProgrammesGradesOptions;
+			} else {
+				$results = $gradeOptions;
+			}
+			return $results;
+		} else {
+			return [];
+		}
+	}
+
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
+		$this->association('Institutions')->name('InstitutionProgrammes');
 	}
 
 	public function beforeAction(Event $event) {
@@ -167,11 +217,17 @@ class EducationGradesTable extends AppTable {
 			if (isset($entity->id)) {
 				$form = $event->subject()->Form;
 				// Build Education Subjects options
-				$subjectOptions = $this->EducationSubjects
-					->find('list')
+				$subjectData = $this->EducationSubjects
+					->find()
+					->select([$this->EducationSubjects->aliasField($this->EducationSubjects->primaryKey()), $this->EducationSubjects->aliasField('name'), $this->EducationSubjects->aliasField('code')])
 					->find('visible')
 					->find('order')
 					->toArray();
+
+				$subjectOptions = [];
+				foreach ($subjectData as $key => $value) {
+					$subjectOptions[$value->id] = $value->code . ' - ' . $value->name;
+				}
 				// End
 
 				$tableHeaders = [__('Name'), __('Code'), __('Hours Required'), ''];
@@ -218,7 +274,7 @@ class EducationGradesTable extends AppTable {
 						];
 					}
 				}
-
+				$form->unlockField($attr['model'] . '.education_subjects');
 				foreach ($arraySubjects as $key => $obj) {
 					$fieldPrefix = $attr['model'] . '.education_subjects.' . $cellCount++;
 					$joinDataPrefix = $fieldPrefix . '._joinData';
@@ -282,6 +338,12 @@ class EducationGradesTable extends AppTable {
 			->where([$this->EducationProgrammes->EducationCycles->aliasField('education_level_id') => $selectedLevel])
 			->toArray();
 
+		if (is_array($cycleIds) && !empty($cycleIds)) {
+			$cycleIds = implode(', ', $cycleIds);
+		} else {
+			$cycleIds = 0;
+		}
+
 		$EducationProgrammes = $this->EducationProgrammes;
 		$programmeOptions = $EducationProgrammes
 			->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
@@ -292,7 +354,7 @@ class EducationGradesTable extends AppTable {
 				$EducationProgrammes->aliasField('order')
 			])
 			->where([
-				$EducationProgrammes->aliasField('education_cycle_id IN') => $cycleIds
+				$EducationProgrammes->aliasField('education_cycle_id') . ' IN (' .  $cycleIds . ')'
 			])
 			->toArray();
 		$selectedProgramme = !is_null($this->request->query('programme')) ? $this->request->query('programme') : key($programmeOptions);

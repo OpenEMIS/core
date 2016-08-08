@@ -12,7 +12,7 @@ use Cake\Validation\Validator;
 
 class InstitutionRubricAnswersTable extends AppTable {
 	public function initialize(array $config) {
-		$this->table('institution_site_quality_rubric_answers');
+		$this->table('institution_quality_rubric_answers');
 		parent::initialize($config);
 
 		$this->belongsTo('InstitutionRubrics', ['className' => 'Institution.InstitutionRubrics']);
@@ -22,6 +22,8 @@ class InstitutionRubricAnswersTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 			->requirePresence('rubric_criteria_option_id')
 			->notEmpty('rubric_criteria_option_id', 'Please select a criteria option.');
@@ -148,7 +150,7 @@ class InstitutionRubricAnswersTable extends AppTable {
 							$answers = $this
 								->find()
 								->where([
-									$this->aliasField('institution_site_quality_rubric_id') => $entity->id,
+									$this->aliasField('institution_quality_rubric_id') => $entity->id,
 									$this->aliasField('rubric_criteria_option_id IS NOT') => 0
 								])
 								->count();

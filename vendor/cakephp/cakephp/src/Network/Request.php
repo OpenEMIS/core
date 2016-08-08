@@ -18,7 +18,6 @@ use ArrayAccess;
 use BadMethodCallException;
 use Cake\Core\Configure;
 use Cake\Network\Exception\MethodNotAllowedException;
-use Cake\Network\Session;
 use Cake\Utility\Hash;
 
 /**
@@ -276,6 +275,8 @@ class Request implements ArrayAccess
     protected function _processPost($data)
     {
         $method = $this->env('REQUEST_METHOD');
+        $override = false;
+
         if (in_array($method, ['PUT', 'DELETE', 'PATCH']) &&
             strpos($this->contentType(), 'application/x-www-form-urlencoded') === 0
         ) {
@@ -284,12 +285,19 @@ class Request implements ArrayAccess
         }
         if ($this->env('HTTP_X_HTTP_METHOD_OVERRIDE')) {
             $data['_method'] = $this->env('HTTP_X_HTTP_METHOD_OVERRIDE');
+            $override = true;
         }
         $this->_environment['ORIGINAL_REQUEST_METHOD'] = $method;
         if (isset($data['_method'])) {
             $this->_environment['REQUEST_METHOD'] = $data['_method'];
             unset($data['_method']);
+            $override = true;
         }
+
+        if ($override && !in_array($this->_environment['REQUEST_METHOD'], ['PUT', 'POST', 'DELETE', 'PATCH'])) {
+            $data = [];
+        }
+
         return $data;
     }
 
@@ -324,16 +332,16 @@ class Request implements ArrayAccess
     {
         if (!empty($_SERVER['PATH_INFO'])) {
             return $_SERVER['PATH_INFO'];
-        } elseif (isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '://') === false) {
+        }
+        if (isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '://') === false) {
             $uri = $_SERVER['REQUEST_URI'];
         } elseif (isset($_SERVER['REQUEST_URI'])) {
-            $qPosition = strpos($_SERVER['REQUEST_URI'], '?');
-            if ($qPosition !== false && strpos($_SERVER['REQUEST_URI'], '://') > $qPosition) {
-                $uri = $_SERVER['REQUEST_URI'];
-            } else {
-                $uri = substr($_SERVER['REQUEST_URI'], strlen(Configure::read('App.fullBaseUrl')));
+            $uri = $_SERVER['REQUEST_URI'];
+            $fullBaseUrl = Configure::read('App.fullBaseUrl');
+            if (strpos($uri, $fullBaseUrl) === 0) {
+                $uri = substr($_SERVER['REQUEST_URI'], strlen($fullBaseUrl));
             }
-        } elseif (isset($_SERVER['PHP_SELF']) && isset($_SERVER['SCRIPT_NAME'])) {
+        } elseif (isset($_SERVER['PHP_SELF'], $_SERVER['SCRIPT_NAME'])) {
             $uri = str_replace($_SERVER['SCRIPT_NAME'], '', $_SERVER['PHP_SELF']);
         } elseif (isset($_SERVER['HTTP_X_REWRITE_URL'])) {
             $uri = $_SERVER['HTTP_X_REWRITE_URL'];
@@ -370,7 +378,6 @@ class Request implements ArrayAccess
      * the unnecessary part from $base to prevent issue #3318.
      *
      * @return array Base URL, webroot dir ending in /
-     * @link https://cakephp.lighthouseapp.com/projects/42648-cakephp/tickets/3318
      */
     protected static function _base()
     {
@@ -395,7 +402,7 @@ class Request implements ArrayAccess
                 $base = dirname($base);
             }
 
-            if ($base === DS || $base === '.') {
+            if ($base === DIRECTORY_SEPARATOR || $base === '.') {
                 $base = '';
             }
             $base = implode('/', array_map('rawurlencode', explode('/', $base)));
@@ -405,7 +412,7 @@ class Request implements ArrayAccess
         $file = '/' . basename($baseUrl);
         $base = dirname($baseUrl);
 
-        if ($base === DS || $base === '.') {
+        if ($base === DIRECTORY_SEPARATOR || $base === '.') {
             $base = '';
         }
         $webrootDir = $base . '/';
@@ -515,21 +522,12 @@ class Request implements ArrayAccess
     {
         if ($this->trustProxy && $this->env('HTTP_X_FORWARDED_FOR')) {
             $ipaddr = preg_replace('/(?:,.*)/', '', $this->env('HTTP_X_FORWARDED_FOR'));
+        } elseif ($this->trustProxy && $this->env('HTTP_CLIENT_IP')) {
+            $ipaddr = $this->env('HTTP_CLIENT_IP');
         } else {
-            if ($this->env('HTTP_CLIENT_IP')) {
-                $ipaddr = $this->env('HTTP_CLIENT_IP');
-            } else {
-                $ipaddr = $this->env('REMOTE_ADDR');
-            }
+            $ipaddr = $this->env('REMOTE_ADDR');
         }
 
-        if ($this->env('HTTP_CLIENTADDRESS')) {
-            $tmpipaddr = $this->env('HTTP_CLIENTADDRESS');
-
-            if (!empty($tmpipaddr)) {
-                $ipaddr = preg_replace('/(?:,.*)/', '', $tmpipaddr);
-            }
-        }
         return trim($ipaddr);
     }
 
@@ -548,11 +546,15 @@ class Request implements ArrayAccess
         if (!empty($ref) && !empty($base)) {
             if ($local && strpos($ref, $base) === 0) {
                 $ref = substr($ref, strlen($base));
+                if (!strlen($ref)) {
+                    $ref = '/';
+                }
                 if ($ref[0] !== '/') {
                     $ref = '/' . $ref;
                 }
                 return $ref;
-            } elseif (!$local) {
+            }
+            if (!$local) {
                 return $ref;
             }
         }
@@ -829,7 +831,7 @@ class Request implements ArrayAccess
             static::$_detectors[$name] = $callable;
             return;
         }
-        if (isset(static::$_detectors[$name]) && isset($callable['options'])) {
+        if (isset(static::$_detectors[$name], $callable['options'])) {
             $callable = Hash::merge(static::$_detectors[$name], $callable);
         }
         static::$_detectors[$name] = $callable;
@@ -887,7 +889,7 @@ class Request implements ArrayAccess
      * Read an HTTP header from the Request information.
      *
      * @param string $name Name of the header you want.
-     * @return mixed Either null on no header being set or the value of the header.
+     * @return string|null Either null on no header being set or the value of the header.
      */
     public function header($name)
     {
@@ -1001,7 +1003,7 @@ class Request implements ArrayAccess
      * by the client.
      *
      * @param string|null $type The content type to check for. Leave null to get all types a client accepts.
-     * @return mixed Either an array of all the types the client accepts or a boolean if they accept the
+     * @return array|bool Either an array of all the types the client accepts or a boolean if they accept the
      *   provided type.
      */
     public function accepts($type = null)
@@ -1043,7 +1045,7 @@ class Request implements ArrayAccess
      * ``` \Cake\Network\Request::acceptLanguage('es-es'); ```
      *
      * @param string|null $language The language to test.
-     * @return mixed If a $language is provided, a boolean. Otherwise the array of accepted languages.
+     * @return array|bool If a $language is provided, a boolean. Otherwise the array of accepted languages.
      */
     public function acceptLanguage($language = null)
     {
@@ -1157,7 +1159,7 @@ class Request implements ArrayAccess
      * Safely access the values in $this->params.
      *
      * @param string $name The name of the parameter to get.
-     * @return mixed The value of the provided parameter. Will
+     * @return mixed|$this The value of the provided parameter. Will
      *   return false if the parameter doesn't exist or is falsey.
      */
     public function param($name)
@@ -1228,10 +1230,12 @@ class Request implements ArrayAccess
      *
      * @param string $key The key you want to read/write from/to.
      * @param string|null $value Value to set. Default null.
+     * @param string|null $default Default value when trying to retrieve an environment
+     *   variable's value that does not exist. The value parameter must be null.
      * @return $this|string|null This instance if used as setter,
      *   if used as getter either the environment value, or null if the value doesn't exist.
      */
-    public function env($key, $value = null)
+    public function env($key, $value = null, $default = null)
     {
         if ($value !== null) {
             $this->_environment[$key] = $value;
@@ -1243,7 +1247,7 @@ class Request implements ArrayAccess
         if (!array_key_exists($key, $this->_environment)) {
             $this->_environment[$key] = env($key);
         }
-        return $this->_environment[$key];
+        return $this->_environment[$key] !== null ? $this->_environment[$key] : $default;
     }
 
     /**
@@ -1345,6 +1349,9 @@ class Request implements ArrayAccess
      */
     public function offsetExists($name)
     {
+        if ($name === 'url' || $name === 'data') {
+            return true;
+        }
         return isset($this->params[$name]);
     }
 
