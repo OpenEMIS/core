@@ -886,12 +886,24 @@ class ValidationBehavior extends Behavior {
 			$selectedPeriod = $globalData['data'][$academicFieldName];
 			$institutionId = $globalData['data']['institution_id'];
 
-			// get the shift using periodId and locationInstitutionId, due to changes made on institution_shift table
 			$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
-			$conditions = ([
-				$InstitutionShift->aliasField('academic_period_id') => $selectedPeriod,
-				$InstitutionShift->aliasField('location_institution_id') => $institutionId
-			]);
+
+			// if Class_id is available then it will used the class_id to get the institution_shift_id
+			if (isset($globalData['data']['class'])) {
+				$selectedClass = $globalData['data']['class'];
+				$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+				$InstitutionShiftId = $InstitutionClasses
+					->find()
+					->where([$InstitutionClasses->aliasField('id') => $selectedClass])
+					->first()->institution_shift_id;
+				$conditions = ([$InstitutionShift->aliasField('id') => $InstitutionShiftId]);
+			} else {
+				// get the shift using periodId and locationInstitutionId, due to changes made on institution_shift table
+				$conditions = ([
+					$InstitutionShift->aliasField('academic_period_id') => $selectedPeriod,
+					$InstitutionShift->aliasField('location_institution_id') => $institutionId
+				]);
+			}
 
 			$shiftTime = $InstitutionShift
 					->find()
