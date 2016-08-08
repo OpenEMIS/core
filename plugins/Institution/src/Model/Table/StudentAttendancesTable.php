@@ -998,18 +998,17 @@ class StudentAttendancesTable extends AppTable {
 
 							$lateTime = strtotime($obj['late_time']);
 
-							$selectedPeriod = $obj['academic_period_id'];
-							$institutionId = $obj['institution_id'];
+							$selectedClass = $requestQuery['class_id'];
+							$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+							$InstitutionShiftId = $InstitutionClasses
+									->find()
+									->where([$InstitutionClasses->aliasField('id') => $selectedClass])
+									->first()->institution_shift_id;
 
 							$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
-							$conditions = ([
-								$InstitutionShift->aliasField('academic_period_id') => $selectedPeriod,
-								$InstitutionShift->aliasField('location_institution_id') => $institutionId
-							]);
-
 							$shiftTime = $InstitutionShift
 									->find()
-									->where($conditions)
+									->where([$InstitutionShift->aliasField('id') => $InstitutionShiftId])
 									->toArray();
 
 							$shiftStartTimeArray = [];
