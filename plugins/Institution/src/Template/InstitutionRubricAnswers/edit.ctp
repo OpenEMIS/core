@@ -108,7 +108,7 @@ $this->start('panelBody');
 											$rubricCriteriaId = $criteriaObj->id;
 
 											$fieldPrefix = $alias . '.institution_rubric_answers.' . $rubricCriteriaId;
-											$this->Form->unlockField("$fieldPrefix");
+											$this->Form->unlockField("$fieldPrefix.rubric_criteria_option_id");
 											if(isset($data->institution_rubric_answers[$rubricCriteriaId])) {
 												$rubricAnswerId = $data->institution_rubric_answers[$rubricCriteriaId]->id;
 												$criteriaAnswerId = $data->institution_rubric_answers[$rubricCriteriaId]->rubric_criteria_option_id;
