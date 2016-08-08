@@ -450,7 +450,7 @@ class InstitutionsTable extends AppTable  {
 		$query->join($options['query']['join']);
 
 		$queryParams = $request->query;
-		$options['order'] = [$this->aliasField('name')];
+		$options['order'] = [$this->aliasField('name') => 'asc'];
 	}
 
 	public function indexAfterPaginate(Event $event, ResultSet $resultSet, Query $query) {
