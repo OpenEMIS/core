@@ -1059,7 +1059,6 @@ class StaffTable extends AppTable {
 		$i = 10;
 		$this->fields['staff_id']['order'] = $i++;
 		$this->fields['institution_position_id']['order'] = $i++;
-		$this->fields['position_type']['order'] = $i++;
 		$this->fields['FTE']['order'] = $i++;
 	}
 
