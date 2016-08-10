@@ -207,14 +207,6 @@ class WorkflowStepsTable extends AppTable {
 			if (!array_key_exists('workflow_actions', $data[$this->alias()])) {
 				$data[$this->alias()]['workflow_actions'] = [];
 			}
-
-			// Set all Workflow Actions to visible = 0 (edit)
-			if (array_key_exists('id', $data[$this->alias()])) {
-				$this->WorkflowActions->updateAll(
-					['visible' => 0],
-					['workflow_step_id' => $data[$this->alias()]['id']]
-				);
-			}
 		}
 
 		//Required by patchEntity for associated data
