@@ -3,6 +3,7 @@ namespace App\Shell;
 
 use Cake\Console\Shell;
 use Cake\ORM\TableRegistry;
+use Cake\Datasource\ConnectionManager;
 
 class UpdateUserDefaultIdentityNoShell extends Shell {
 	public function initialize() {
@@ -16,34 +17,26 @@ class UpdateUserDefaultIdentityNoShell extends Shell {
 
 		$this->out('default identity type -> ' . $identityType);
 
-		$userTable = TableRegistry::get('User.Users');
-		$Identities = TableRegistry::get('User.Identities');
+		$conn = ConnectionManager::get('default');
 
-		//query will get the latest identy number per user based on the default identity type
-		$query = $Identities->find()
-					->select([
-						$Identities->aliasField('security_user_id'),
-						$Identities->aliasField('number')
-					])
-					->leftJoin(['IdentitiesClone' => 'user_identities'], [
-							'IdentitiesClone.security_user_id = '. $Identities->aliasField('security_user_id'),
-							'IdentitiesClone.created > '. $Identities->aliasField('created'),
-							'IdentitiesClone.identity_type_id = ' . $identityType
-						])
-					->where([
-							'IdentitiesClone.security_user_id IS NULL',
-							$Identities->aliasField('identity_type_id') => $identityType,
-							$Identities->aliasField('number') . ' <> \'\''
-						]);					
-		//$this->out($query->sql());
-		$query = $query->toArray();
+    	$conn->execute("UPDATE `security_users` SET `identity_number` = NULL"); //set all back to NULL
 
-		$userTable->updateAll(['identity_number' => NULL], []); //will reset all identity number to NULL
-
-		//loop to update all identity number for each user.
-		foreach ($query as $key => $value) {
-			$userTable->updateAll(['identity_number' => $value['number']], ['id' => $value['security_user_id']]);
-		}
+    	//update based on the default indentity type and get the latest record to be put on identity_number field.
+    	$query = "UPDATE `security_users` S 
+					INNER JOIN (
+					    SELECT `security_user_id`, `number`
+					    FROM `user_identities` U1
+					    WHERE `created` = (
+			        		SELECT MAX(U2.`created`)
+			        		FROM `user_identities` U2
+			        		WHERE U1.`security_user_id` = U2.`security_user_id`
+			        		AND U2.`identity_type_id` = $identityType
+			        		GROUP BY U2.`security_user_id`)
+						AND `number` <> '') U
+					ON S.`id` = U.`security_user_id`
+					SET S.`identity_number` = U.`number`;";
+		//pr($query);die;
+    	$conn->execute($query);
 
 		$this->out("ended");
 	}
