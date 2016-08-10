@@ -16,7 +16,7 @@
 								foreach ($attr['data'] as $i=>$obj) {
 									$classGradeArray[$i] = $attr['data'][$i]['education_grade_id'];
 								}
-								if ($classGradeArray == $attr['selected']) {
+								if (isset($attr['selected']) && ($classGradeArray == $attr['selected'])) {
 									echo " checked";
 								};
 							?> />
