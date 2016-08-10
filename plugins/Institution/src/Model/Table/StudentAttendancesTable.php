@@ -214,6 +214,26 @@ class StudentAttendancesTable extends AppTable {
 		return $absenceCheckList;
 	}
 
+	// get the shift time using institutionShiftId
+	// for student able to get the institutionShiftId from the classId
+	public function getShiftTime()
+	{
+		$selectedClass = $this->request->query['class_id'];
+		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+		$InstitutionShiftId = $InstitutionClasses
+			->find()
+			->where([$InstitutionClasses->aliasField('id') => $selectedClass])
+			->first()->institution_shift_id;
+
+		$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+		$shiftTime = $InstitutionShift
+			->find()
+			->where([$InstitutionShift->aliasField('id') => $InstitutionShiftId])
+			->first();
+
+		return $shiftTime;
+	}
+
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
     	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
@@ -389,8 +409,12 @@ class StudentAttendancesTable extends AppTable {
 			];
 			$displayTime = 'display:none;';
 			$HtmlField = $event->subject()->HtmlField;
-			$configItemsTable =  TableRegistry::get('ConfigItems');
-			$attr['value'] = $configItemsTable->value('start_time');
+
+			$shiftTime = $this->getShiftTime();
+			$startTime = $shiftTime->start_time;
+			$startTimestamp = strtotime($startTime);
+
+			$attr['value'] = date('h:i A', $startTimestamp);
 			$attr['default_time'] = false;
 			$attr['null'] = true;
 
@@ -976,7 +1000,8 @@ class StudentAttendancesTable extends AppTable {
 		}
 	}
 
-	public function indexEdit() {
+	public function indexEdit()
+	{
 		if ($this->request->is(['post', 'put'])) {
 			$requestQuery = $this->request->query;
 			$requestData = $this->request->data;
@@ -997,34 +1022,16 @@ class StudentAttendancesTable extends AppTable {
 							$obj['full_day'] = 0;
 
 							$lateTime = strtotime($obj['late_time']);
+							$shiftTime = $this->getShiftTime();
+							$startTime = $shiftTime->start_time;
+							$endTime = $shiftTime->end_time;
 
-							$selectedClass = $requestQuery['class_id'];
-							$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-							$InstitutionShiftId = $InstitutionClasses
-									->find()
-									->where([$InstitutionClasses->aliasField('id') => $selectedClass])
-									->first()->institution_shift_id;
-
-							$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
-							$shiftTime = $InstitutionShift
-									->find()
-									->where([$InstitutionShift->aliasField('id') => $InstitutionShiftId])
-									->toArray();
-
-							$shiftStartTimeArray = [];
-							$shiftEndTimeArray = [];
-							foreach ($shiftTime as $key => $value) {
-								$shiftStartTimeArray[$key] = $value->start_time;
-								$shiftEndTimeArray[$key] = $value->end_time;
-							}
-
-							$startTime = min($shiftStartTimeArray);
 							$obj['start_time'] = $startTime;
-							$endTime = $obj['late_time'];
-							$obj['end_time'] = $endTime;
+							$inputTime = $obj['late_time'];
+							$obj['end_time'] = $inputTime;
 
-							$startTimestamp = intval(min($shiftStartTimeArray)->toUnixString());
-							$endTimestamp = intval(max($shiftEndTimeArray)->toUnixString());
+							$startTimestamp = strtotime($startTime);
+							$endTimestamp = strtotime($endTime);
 
 							if (($lateTime < $startTimestamp) || ($lateTime > $endTimestamp)) {
 								$key = $obj['student_id'];
