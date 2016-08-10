@@ -22,6 +22,15 @@ class RestfulController extends AppController
         parent::initialize();
         $this->loadComponent('RequestHandler');
         $this->loadComponent('Auth');
+        $this->Auth->allow('token');
+    }
+
+    public function token()
+    {
+        $this->autoRender = false;
+        if (!empty($this->request->query)) {
+            pr($this->request->query);
+        }
     }
 
     public function beforeFilter(Event $event)
