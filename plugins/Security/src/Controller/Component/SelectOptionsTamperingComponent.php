@@ -28,7 +28,7 @@ class SelectOptionsTamperingComponent extends Component {
                     $session->delete('FormTampering');
                     $session->write('FormTamperingReload', $requestData);
                 }
-            } else {
+            } else if (!$this->request->is('ajax')) {
                 $session->delete('FormTampering');
                 $session->delete('FormTamperingReload');
             }
