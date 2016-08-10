@@ -238,19 +238,24 @@ class HtmlFieldHelper extends Helper {
 				} else {
 					if (array_key_exists($data->$field, $attr['options'])) {
 						$value = $attr['options'][$data->$field];
+
 						if (is_array($value)) {
-							$value = __($value['text']);
+							$value = $value['text'];
 						} else {
-							$value = __($value);
+							$value = $value;
 						}
 					}
 				}
-
 			}
 
 			if (empty($value)) {
-				$value = __($data->$field);
+				$value = $data->$field;
 			}
+
+			if (!isset($attr['translate']) || (isset($attr['translate']) && $attr['translate'])) {
+				$value = __($value);
+			}
+
 		} else if ($action == 'edit') {
 			if (array_key_exists('empty', $attr)) {
 				if ($attr['empty'] === true) {
@@ -275,18 +280,22 @@ class HtmlFieldHelper extends Helper {
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
 			}
-			$value = $this->secureSelect($fieldName, $options);
+			$value = $this->secureSelect($fieldName, $options, $attr);
 		}
 		return $value;
 	}
 
-	public function secureSelect($fieldName, $options)
+	public function secureSelect($fieldName, $options, $attr=[])
 	{
 		$arrayKeys = [];
 		$list = [];
 		foreach ($options['options'] as $key => $opt) {
 			if (is_array($opt) && isset($opt['text'])) {
-				$opt['text'] = __($opt['text']);
+				if (!isset($attr['translate']) || (isset($attr['translate']) && $attr['translate'])) {
+					$opt['text'] = __($opt['text']);
+				} else {
+					$opt['text'] = $opt['text'];
+				}
 				$list[$key] = $opt;
 				if (!in_array('disabled', $opt, true)) {
 					if (isset($opt['value'])) {
@@ -299,16 +308,34 @@ class HtmlFieldHelper extends Helper {
 				$subList = [];
 				foreach ($opt as $k => $subOption) {
 					if (is_array($subOption) && isset($subOption['text'])) {
-						$subOption['text'] = __($subOption['text']);
+						if (!isset($attr['translate']) || (isset($attr['translate']) && $attr['translate'])) {
+							$subOption['text'] = __($subOption['text']);
+						} else {
+							$subOption['text'] = $subOption['text'];
+						}
 						$subList[$k] = $subOption;
 					} else {
-						$subList[$k] = __($subOption);
+						if (!isset($attr['translate']) || (isset($attr['translate']) && $attr['translate'])) {
+							$subList[$k] = __($subOption);
+						} else {
+							$subList[$k] = $subOption;
+						}
 					}
 				}
-				$list[__($key)] = $subList;
+
+				if (is_array($subOption) && isset($subOption['text'])) {
+					$list[__($key)] = $subList;
+				} else {
+					$list[$key] = $subList;
+				}
+
 				$arrayKeys = array_merge($arrayKeys, array_keys($subList));
 			} else {
-				$list[$key] = __($opt);
+				if (!isset($attr['translate']) || (isset($attr['translate']) && $attr['translate'])) {
+					$list[$key] = __($opt);
+				} else {
+					$list[$key] = $opt;
+				}
 				$arrayKeys[] = $key;
 			}
 		}
