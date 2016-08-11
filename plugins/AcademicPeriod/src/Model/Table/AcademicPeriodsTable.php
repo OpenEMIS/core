@@ -50,17 +50,17 @@ class AcademicPeriodsTable extends AppTable {
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-		$canMigrate = $this->checkIfCanMigrate($entity);
+		$canCopy = $this->checkIfCanCopy($entity);
 
 		$shells = ['Room'];
-		if ($canMigrate) {
-			// only trigger shell to migrate data if is not empty
-			if ($entity->has('migrate_data_from') && !empty($entity->migrate_data_from)) {
-				$migrateFrom = $entity->migrate_data_from;
-				$migrateTo = $entity->id;
+		if ($canCopy) {
+			// only trigger shell to copy data if is not empty
+			if ($entity->has('copy_data_from') && !empty($entity->copy_data_from)) {
+				$copyFrom = $entity->copy_data_from;
+				$copyTo = $entity->id;
 
 				foreach ($shells as $shell) {
-					$this->triggerMigrateShell($shell, $migrateFrom, $migrateTo);
+					$this->triggerCopyShell($shell, $copyFrom, $copyTo);
 				}
 			}			
 		}
@@ -77,7 +77,7 @@ class AcademicPeriodsTable extends AppTable {
 
 	public function afterAction(Event $event) {
 		$this->ControllerAction->field('current');
-		$this->ControllerAction->field('migrate_data_from', [
+		$this->ControllerAction->field('copy_data_from', [
 			'type' => 'hidden',
 			'value' => 0,
 			'after' => 'current'
@@ -229,7 +229,7 @@ class AcademicPeriodsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldMigrateDataFrom(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldCopyDataFrom(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add' || $action == 'edit') {
 			if (array_key_exists($this->alias(), $request->data)) {
 				if (array_key_exists('academic_period_level_id', $request->data[$this->alias()])) {
@@ -249,14 +249,14 @@ class AcademicPeriodsTable extends AppTable {
 							$where[$this->aliasField('order >')] = $currentAcademicPeriodOrder;
 						}
 
-						$migrateDataFromOptions = $this
+						$copyDataFromOptions = $this
 							->find('list')
 							->find('order')
 							->where($where)
 							->toArray();
 
 						$attr['type'] = 'select';
-						$attr['options'] = $migrateDataFromOptions;
+						$attr['options'] = $copyDataFromOptions;
 						$attr['select'] = false;
 					}
 				}
@@ -622,8 +622,8 @@ class AcademicPeriodsTable extends AppTable {
 			->where([$this->aliasField('academic_period_level_id') => $level->id]);
 	}
 
-	private function checkIfCanMigrate(Entity $entity) {
-		$canMigrate = false;
+	private function checkIfCanCopy(Entity $entity) {
+		$canCopy = false;
 
 		$level = $this->Levels
 			->find()
@@ -632,15 +632,15 @@ class AcademicPeriodsTable extends AppTable {
 
 		// if is year level and set to current
 		if ($entity->academic_period_level_id == $level->id && $entity->current == 1) {
-			$canMigrate = true;
+			$canCopy = true;
 		}
 
-		return $canMigrate;
+		return $canCopy;
 	}
 
-    public function triggerMigrateShell($shellName, $migrateFrom, $migrateTo) {
-    	$cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.' '.$migrateFrom.' '.$migrateTo;
-		$logs = ROOT . DS . 'logs' . DS . 'migrate.log & echo $!';
+    public function triggerCopyShell($shellName, $copyFrom, $copyTo) {
+    	$cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.' '.$copyFrom.' '.$copyTo;
+		$logs = ROOT . DS . 'logs' . DS . 'copy.log & echo $!';
 		$shellCmd = $cmd . ' >> ' . $logs;
 		$pid = exec($shellCmd);
 		Log::write('debug', $shellCmd);

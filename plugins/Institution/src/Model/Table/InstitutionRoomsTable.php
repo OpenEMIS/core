@@ -35,7 +35,7 @@ class InstitutionRoomsTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('RoomTypes', ['className' => 'Infrastructure.RoomTypes']);
 		$this->belongsTo('InfrastructureConditions', ['className' => 'FieldOption.InfrastructureConditions']);
-		$this->belongsTo('PreviousRoomUsages', ['className' => 'Institution.InstitutionRooms', 'foreignKey' => 'previous_room_usage_id']);
+		$this->belongsTo('PreviousRooms', ['className' => 'Institution.InstitutionRooms', 'foreignKey' => 'previous_room_id']);
 
 		$this->addBehavior('AcademicPeriod.Period');
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
@@ -123,8 +123,8 @@ class InstitutionRoomsTable extends AppTable {
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-		// logic to migrate custom fields (general only) where new room is created when change in room type
-		$this->processMigrate($entity);
+		// logic to copy custom fields (general only) where new room is created when change in room type
+		$this->processCopy($entity);
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
@@ -199,7 +199,7 @@ class InstitutionRoomsTable extends AppTable {
 		$this->ControllerAction->field('institution_infrastructure_id', ['visible' => false]);
 		$this->ControllerAction->field('academic_period_id', ['visible' => false]);
 		$this->ControllerAction->field('infrastructure_condition_id', ['visible' => false]);
-		$this->ControllerAction->field('previous_room_usage_id', ['visible' => false]);
+		$this->ControllerAction->field('previous_room_id', ['visible' => false]);
 
 		$toolbarElements = [];
 		$toolbarElements = $this->addBreadcrumbElement($toolbarElements);
@@ -469,7 +469,7 @@ class InstitutionRoomsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldPreviousRoomUsageId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldPreviousRoomId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
 			$attr['value'] = 0;
 		}
@@ -556,7 +556,7 @@ class InstitutionRoomsTable extends AppTable {
 
 	private function setupFields(Entity $entity) {
 		$this->ControllerAction->setFieldOrder([
-			'institution_id', 'change_type', 'institution_infrastructure_id', 'academic_period_id', 'code', 'name', 'room_type_id', 'room_status_id', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_condition_id', 'previous_room_usage_id', 'new_room_type', 'new_start_date'
+			'institution_id', 'change_type', 'institution_infrastructure_id', 'academic_period_id', 'code', 'name', 'room_type_id', 'room_status_id', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_condition_id', 'previous_room_id', 'new_room_type', 'new_start_date'
 		]);
 
 		$this->ControllerAction->field('change_type');
@@ -569,7 +569,7 @@ class InstitutionRoomsTable extends AppTable {
 		$this->ControllerAction->field('start_date', ['entity' => $entity]);
 		$this->ControllerAction->field('end_date', ['entity' => $entity]);
 		$this->ControllerAction->field('infrastructure_condition_id', ['type' => 'select']);
-		$this->ControllerAction->field('previous_room_usage_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('previous_room_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('new_room_type', ['type' => 'select', 'visible' => false, 'entity' => $entity]);
 		$this->ControllerAction->field('new_start_date', ['type' => 'date', 'visible' => false, 'entity' => $entity]);
 	}
@@ -664,7 +664,7 @@ class InstitutionRoomsTable extends AppTable {
 		}
 		$newRequestData['start_date'] = $newStartDateObj;
 		$newRequestData['room_type_id'] = $newRoomTypeId;
-		$newRequestData['previous_room_usage_id'] = $oldEntity->id;
+		$newRequestData['previous_room_id'] = $oldEntity->id;
 		$newEntity = $this->newEntity($newRequestData, ['validate' => false]);
 		$newEntity = $this->save($newEntity);
 		// End
@@ -719,19 +719,19 @@ class InstitutionRoomsTable extends AppTable {
 		return compact('statusOptions', 'selectedStatus');
 	}
 
-	public function processMigrate(Entity $entity) {
-		// if is new and room status of previous room usage is change in room type then migrate all general custom fields
+	public function processCopy(Entity $entity) {
+		// if is new and room status of previous room usage is change in room type then copy all general custom fields
 		if ($entity->isNew()) {
-			if ($entity->has('previous_room_usage_id') && $entity->previous_room_usage_id != 0) {
-				$migrateFrom = $entity->previous_room_usage_id;
-				$migrateTo = $entity->id;
+			if ($entity->has('previous_room_id') && $entity->previous_room_id != 0) {
+				$copyFrom = $entity->previous_room_id;
+				$copyTo = $entity->id;
 
-				$previousEntity = $this->get($migrateFrom);
+				$previousEntity = $this->get($copyFrom);
 				$changeInRoomTypeId = $this->RoomStatuses->getIdByCode('CHANGE_IN_ROOM_TYPE');
 
 				if ($previousEntity->room_status_id == $changeInRoomTypeId) {
-					// third parameters set to true means migrate general only
-					$this->migrateCustomFields($migrateFrom, $migrateTo, true);
+					// third parameters set to true means copy general only
+					$this->copyCustomFields($copyFrom, $copyTo, true);
 				}
 			}
 		}
