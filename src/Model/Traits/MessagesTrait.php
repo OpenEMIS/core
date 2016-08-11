@@ -148,6 +148,7 @@ trait MessagesTrait {
 			'replicateShifts' => 'Should the system replicate the existing shifts for the latest academic period?.',
 			'replicateShiftsSuccess' => 'Shifts has been successfully replicated.',
 			'replicateShiftsNotChosen' => 'Replication was not chosen, please setup the shifts manually.',
+			'noAccessToShift' => 'You do not have access to the shift',
 		],
 		'InstitutionClasses' => [
 			'expiredGrade' => 'Expired Grade',

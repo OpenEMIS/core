@@ -43,7 +43,6 @@ ALTER TABLE `shift_options`
 --
 -- institution_shifts
 --
-
 CREATE TABLE `z_2602_institution_shifts` LIKE `institution_shifts`; 
 INSERT INTO `z_2602_institution_shifts` SELECT * FROM `institution_shifts`;
 
@@ -135,108 +134,35 @@ SET  `field` = 'academic_period_id'
 WHERE `module` = 'InstitutionShifts'
 AND `field` = 'Academic_period_id'
 AND `module_name` = 'Institutions -> Shifts';
+
 --
 -- institutions table
 --
-
 CREATE TABLE `z_2602_institutions` LIKE `institutions`; 
 INSERT INTO `z_2602_institutions` SELECT * FROM `institutions`;
 
 ALTER TABLE `institutions` ADD `shift_type` INT NOT NULL COMMENT '1=Single Shift Owner, 2=Single Shift Occupier, 3=Multiple Shift Owner, 4=Multiple Shift Occupier' AFTER `latitude`;
 
+--
 -- patch patchInstitutionShiftType
-DROP PROCEDURE IF EXISTS patchInstitutionShiftTypeOwner;
-DROP PROCEDURE IF EXISTS patchInstitutionShiftTypeOccupier;
+--
+-- owner
+UPDATE `institutions` I
+INNER JOIN (
+      SELECT `institution_id`, COUNT(`id`) AS counter 
+      FROM `institution_shifts` 
+      WHERE `academic_period_id` = (SELECT `id` FROM `academic_periods` WHERE `current` = 1 ) 
+      GROUP BY `institution_id`
+    )S ON S.`institution_id` = I.`id`
+SET `shift_type` = IF(S.`counter` > 1, 3, 1);
 
-DELIMITER $$
-
-CREATE PROCEDURE patchInstitutionShiftTypeOwner(IN academicPeriodID INT(11))
-BEGIN
-  DECLARE done INT DEFAULT FALSE;
-  DECLARE ownerID, shiftCounter, shiftType INT(11);
-
-  -- update owner
-  DECLARE shift_owner_counter CURSOR FOR 
-    SELECT `institution_id`, COUNT(`id`) AS counter 
-    FROM `institution_shifts`
-    WHERE `academic_period_id` = academicPeriodID
-    GROUP BY `institution_id`;
-  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
-  
-  OPEN shift_owner_counter;
-
-  read_loop: LOOP
-    FETCH shift_owner_counter INTO ownerID, shiftCounter;
-    IF done THEN
-      LEAVE read_loop;
-    END IF;
-
-    IF shiftCounter > 1 THEN
-      SET shiftType = 3;
-    ELSE
-      SET shiftType = 1;
-    END IF;
-
-    UPDATE `institutions`
-    SET `shift_type` = shiftType 
-    WHERE `id` = ownerID;
-
-  END LOOP read_loop;
-
-  CLOSE shift_owner_counter;
-
-END
-
-$$
-
-CREATE PROCEDURE patchInstitutionShiftTypeOccupier(IN academicPeriodID INT(11))
-BEGIN
-  DECLARE done INT DEFAULT FALSE;
-  DECLARE occupierID, shiftCounter, shiftType INT(11);
-
-  -- update occupier
-  DECLARE shift_occupier_counter CURSOR FOR 
-    SELECT `location_institution_id`, COUNT(`id`) AS counter
-    FROM `institution_shifts`
-    WHERE `academic_period_id` = academicPeriodID
-    AND `location_institution_id` <> `institution_id`
-    GROUP BY `location_institution_id`;
-  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
-  
-  OPEN shift_occupier_counter;
-
-  read_loop: LOOP
-    FETCH shift_occupier_counter INTO occupierID, shiftCounter;
-    IF done THEN
-      LEAVE read_loop;
-    END IF;
-
-    IF shiftCounter > 1 THEN
-      SET shiftType = 4;
-    ELSE
-      SET shiftType = 2;
-    END IF;
-
-    UPDATE `institutions`
-    SET `shift_type` = shiftType 
-    WHERE `id` = occupierID;
-
-  END LOOP read_loop;
-
-  CLOSE shift_occupier_counter;
-END
-
-$$
-
-DELIMITER ;
-
-SET @academicPeriodID := 0;
-
-SELECT `id` INTO @academicPeriodID FROM `academic_periods` 
-WHERE `current` = 1;
-
-CALL patchInstitutionShiftTypeOwner(@academicPeriodID);
-CALL patchInstitutionShiftTypeOccupier(@academicPeriodID);
-
-DROP PROCEDURE IF EXISTS patchInstitutionShiftTypeOwner;
-DROP PROCEDURE IF EXISTS patchInstitutionShiftTypeOccupier;
+-- occupier
+UPDATE `institutions` I
+INNER JOIN (
+      SELECT `location_institution_id`, COUNT(`id`) AS counter
+        FROM `institution_shifts`
+        WHERE `academic_period_id` = (SELECT `id` FROM `academic_periods` WHERE `current` = 1 ) 
+        AND `location_institution_id` <> `institution_id`
+        GROUP BY `location_institution_id`
+    )S ON S.`location_institution_id` = I.`id`
+SET `shift_type` = IF(S.`counter` > 1, 4, 2);
