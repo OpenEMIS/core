@@ -264,9 +264,9 @@ class InstitutionInfrastructuresTable extends AppTable {
 		if ($action == 'add' || $action == 'edit') {
 			list($levelOptions, $selectedLevel) = array_values($this->getLevelOptions());
 
-			$attr['options'] = $levelOptions;
-			$attr['select'] = false;
-			$attr['onChangeReload'] = 'changeLevel';
+			$attr['type'] = 'readonly';
+			$attr['value'] = $selectedLevel;
+			$attr['attr']['value'] = is_array($levelOptions[$selectedLevel]) ? $levelOptions[$selectedLevel]['text'] : $levelOptions[$selectedLevel];
 		}
 
 		return $attr;
@@ -305,25 +305,6 @@ class InstitutionInfrastructuresTable extends AppTable {
 		}
 
 		return $attr;
-	}
-
-	public function addEditOnChangeLevel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$request = $this->request;
-		unset($request->query['level']);
-		unset($request->query['type']);
-
-		if ($request->is(['post', 'put'])) {
-			if (array_key_exists($this->alias(), $request->data)) {
-				if (array_key_exists('infrastructure_level_id', $request->data[$this->alias()])) {
-					$selectedLevel = $request->data[$this->alias()]['infrastructure_level_id'];
-					$request->query['level'] = $selectedLevel;
-				}
-
-				if (array_key_exists('custom_field_values', $request->data[$this->alias()])) {
-					unset($request->data[$this->alias()]['custom_field_values']);
-				}
-			}
-		}
 	}
 
 	public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
