@@ -18,7 +18,7 @@
 							<th><?= $this->Label->get('InstitutionShifts.shift_option_id'); ?></th>
 							<th><?= $this->Label->get('InstitutionShifts.start_time'); ?></th>
 							<th><?= $this->Label->get('InstitutionShifts.end_time'); ?></th>
-							<th><?= $this->Label->get('InstitutionShifts.location'); ?></th>
+							<th><?= $this->Label->get('InstitutionShifts.institution_id'); ?></th>
 							<th><?= $this->Label->get('InstitutionShifts.location_institution_id'); ?></th>
 						</tr>
 					</thead>
