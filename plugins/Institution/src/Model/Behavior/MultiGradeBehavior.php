@@ -65,11 +65,17 @@ class MultiGradeBehavior extends Behavior {
 		$request = $this->_table->request;
 		$education_grades = $request->data($model->aliasField('education_grades'));
 		$selected = [];
+		$hasSelection = false; //to handle submitted value which is different when converted to form helper.
 		if (isset($education_grades) && count($education_grades)>0) {
 			foreach($education_grades as $key => $row) {
-				$selected[] = $row['id'];
+				if ($row['id']) { //if has value, it means selected.
+					$selected[] = $row['id'];
+					$hasSelection = true;
+				}
 			}
-		} else {
+		} 
+
+		if (!$hasSelection) {
 			/**
 			 * set institution_id to empty to trigger validation error in ControllerActionComponent
 			 */
