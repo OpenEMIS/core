@@ -157,8 +157,15 @@ class InstitutionRoomsTable extends AppTable {
     		unset($buttons['remove']);	// remove delete action from the action button
     	}
 
-
     	return $buttons;
+    }
+
+    public function beforeAction(Event $event) {
+    	// For breadcrumb to build the baseUrl
+		$this->controller->set('breadcrumbPlugin', 'Institution');
+		$this->controller->set('breadcrumbController', 'Institutions');
+		$this->controller->set('breadcrumbAction', 'Infrastructures');
+		// End
     }
 
 	public function indexBeforeAction(Event $event) {
@@ -178,12 +185,6 @@ class InstitutionRoomsTable extends AppTable {
 		$toolbarElements = $this->addBreadcrumbElement($toolbarElements);
 		$toolbarElements = $this->addControlFilterElement($toolbarElements);
 		$this->controller->set('toolbarElements', $toolbarElements);
-
-		// For breadcrumb to build the baseUrl
-		$this->controller->set('breadcrumbPlugin', 'Institution');
-		$this->controller->set('breadcrumbController', 'Institutions');
-		$this->controller->set('breadcrumbAction', 'Infrastructures');
-		// End
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {

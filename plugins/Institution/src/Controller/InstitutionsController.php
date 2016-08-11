@@ -214,7 +214,8 @@ class InstitutionsController extends AppController  {
 			$institutionId = $session->read('Institution.Institutions.id');
 			$action = false;
 			$params = $this->request->params;
-			if (isset($params['pass'][0])) {
+			// do not hyperlink breadcrumb for Infrastructures and Rooms
+			if (isset($params['pass'][0]) && !in_array($model->alias, ['Infrastructures', 'Rooms'])) {
 				$action = $params['pass'][0];
 			}
 			$isDownload = $action == 'downloadFile' ? true : false;

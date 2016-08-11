@@ -101,6 +101,7 @@ class CustomFormsTable extends AppTable {
 		if ($this->action == 'index') {
 			$entity->custom_filters = [];
 
+			$entity->is_deletable = true;
 			if (!is_null($entity->_matchingData['CustomModules']->filter)) {
 				$filter = $entity->_matchingData['CustomModules']->filter;
 
@@ -115,6 +116,7 @@ class CustomFormsTable extends AppTable {
 
 				if (array_key_exists(0, $filterIds)) {
 					$value = __('Yes');
+					$entity->is_deletable = false;
 				} else {
 					$value = __('No');
 
@@ -152,6 +154,16 @@ class CustomFormsTable extends AppTable {
 			return '<i class="fa fa-minus"></i>';
 		}
 	}
+
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+    	$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
+    	if (array_key_exists('remove', $buttons) && !$entity->is_deletable) {
+    		unset($buttons['remove']);	// remove delete action from the action button
+    	}
+
+    	return $buttons;
+    }
 
     /**
      * Gets the list form fields that are associated with the particular form
