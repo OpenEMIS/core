@@ -1,4 +1,121 @@
+<?php
+    $alias = $ControllerAction['table']->alias();
+    $this->Form->unlockField('Assessments.assessment_items');
+?>
+
+<?php if ($ControllerAction['action'] == 'view') : ?>
+    <div class="table-in-view">
+        <table class="table">
+            <thead>
+                <th><?= $this->Label->get('Assessments.education_subject'); ?></th>
+                <th><?= $this->Label->get('Assessments.weight'); ?></th>
+            </thead>
+            <?php if (isset($data['assessment_items'])) : ?>
+                <tbody>
+                    <?php foreach ($data['assessment_items'] as $i => $item) : ?>
+                        <tr>
+                            <td><?= $item->education_subject->name; ?></td>
+                            <td><?= $item->weight; ?></td>
+                        </tr>
+                    <?php endforeach ?>
+                </tbody>
+            <?php endif ?>
+        </table>
+    </div>
+<?php elseif ($ControllerAction['action'] == 'add' || $ControllerAction['action'] == 'edit') : ?>
+    <div class="required">
+        <label><?= isset($attr['label']) ? __($attr['label']) : __($attr['field']) ?></label>
+        <div class="input-form-wrapper">
+            <div class="table-wrapper">
+                <div class="table-in-view">
+                    <table class="table">
+                        <thead>
+                            <th><?= $this->Label->get('Assessments.education_subject'); ?></th>
+                            <th><?= $this->Label->get('Assessments.weight'); ?></th>
+                        </thead>
+                        <?php if (isset($data['assessment_items'])) : ?>
+                            <tbody>
+                                <?php foreach ($data['assessment_items'] as $i => $item) : ?>
+                                    <?php
+                                        $fieldPrefix = "$alias.assessment_items.$i";
+                                    ?>
+                                    <tr>
+                                        <td>
+                                            <?php
+                                                echo $item->education_subject->name;
+                                                echo $this->Form->hidden("$fieldPrefix.education_subject_id", ['value' => $item->education_subject_id]);
+                                                if (isset($item->id)) {
+                                                    echo $this->Form->hidden("$fieldPrefix.id", ['value' => $item->id]);
+                                                }
+                                            ?>
+                                        </td>
+                                        <td>
+                                            <?php
+                                                echo $this->Form->input("$fieldPrefix.weight", [
+                                                    'type' => 'float',
+                                                    'label' => false,
+                                                    'onblur' => "return utility.checkDecimal(this, 2);",
+                                                    'onkeypress' => "return utility.floatCheck(event)",
+                                                ]);
+                                            ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach ?>
+                            </tbody>
+                        <?php endif ?>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php endif ?>
+
+<!--
 <?php use Cake\Utility\Inflector;?>
+
+<div class="required">
+    <label><?= __('Subject'); ?></label>
+    <div class="input-form-wrapper">    
+        <div class="table-wrapper">
+            <div class="table-in-view">
+                <table class="table">
+                    <thead>
+                        <?php foreach ($attr['formFields'] as $formField) { ?>
+                            <?php if ($attr['fields'][$formField]['type']!='hidden') { ?>
+                                <?php
+                                    // pr($data['Assessments']['assessment_items']);
+                                    $associated = explode('.', $formField);
+                                    if (count($associated)>1) {
+                                        $header = Inflector::humanize(str_replace('_id', '', $associated[1]));
+                                    } else {
+                                        $header = Inflector::humanize(str_replace('_id', '', $formField));
+                                    }
+                                    $thClass = (isset($attr['fields'][$formField]['required']) && $attr['fields'][$formField]['required']) ? 'required' : '';
+                                ?>
+                                <th class="<?= $thClass ?>"><?= $header ?></th>
+                            <?php } ?>
+                        <?php } ?>
+                    </thead>
+                    <tbody>
+                        <?php foreach($attr['data'] as $index) { ?>
+                            <tr>
+                                <td>
+                                    <?= $index['education_subject_name'] ?>
+                                </td>
+                                <td>
+                                    <input maxlength="100" value="" type="text" value="<?= $index['weight'] ?>">
+                                </td>
+                            </tr>
+                        <?php } ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>  
+</div>
+-->
+
+<!--
 
 <?php 
     $this->Form->unlockField('Assessments.assessment_items');
@@ -161,3 +278,4 @@
         </div>
 
 <?php endif ?>
+-->
