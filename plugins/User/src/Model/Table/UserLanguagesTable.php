@@ -20,12 +20,16 @@ class UserLanguagesTable extends ControllerActionTable {
 		$gradeOptions = $this->getGradeOptions();
 		$this->fields['listening']['type'] = 'select';
 		$this->fields['listening']['options'] = $gradeOptions;
+		$this->fields['listening']['translate'] = false;
 		$this->fields['speaking']['type'] = 'select';
 		$this->fields['speaking']['options'] = $gradeOptions;
+		$this->fields['speaking']['translate'] = false;
 		$this->fields['reading']['type'] = 'select';
 		$this->fields['reading']['options'] = $gradeOptions;
+		$this->fields['reading']['translate'] = false;
 		$this->fields['writing']['type'] = 'select';
 		$this->fields['writing']['options'] = $gradeOptions;
+		$this->fields['writing']['translate'] = false;
 	}
 
 	public function getGradeOptions() {
