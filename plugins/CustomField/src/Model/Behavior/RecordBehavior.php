@@ -925,7 +925,7 @@ class RecordBehavior extends Behavior {
 		return $fieldValue;
 	}
 
-	public function migrateCustomFields($migrateFrom, $migrateTo, $generalOnly=false) {
+	public function copyCustomFields($copyFrom, $copyTo, $generalOnly=false) {
 		// default is all
 		$model = $this->_table;
 		$registryAlias = $model->registryAlias();
@@ -939,15 +939,15 @@ class RecordBehavior extends Behavior {
 		$recordKey = $this->config('recordKey');
 		$supportTableType = !is_null($this->config('tableCellClass')) ? true: false;
 
-		if ($model->exists([$idKey => $migrateFrom]) && $model->exists([$idKey => $migrateTo])) {
-			$query = $model->find()->contain(['CustomFieldValues'])->where([$idKey => $migrateFrom]);
+		if ($model->exists([$idKey => $copyFrom]) && $model->exists([$idKey => $copyTo])) {
+			$query = $model->find()->contain(['CustomFieldValues'])->where([$idKey => $copyFrom]);
 			if ($supportTableType) {
 				$query->contain(['CustomTableCells']);
 			}
 			$entity = $query->first();
 			$requestData = $entity->toArray();
 
-			$newEntity = $model->find()->where([$idKey => $migrateTo])->first();
+			$newEntity = $model->find()->where([$idKey => $copyTo])->first();
 			$newRequestData = $newEntity->toArray();
 
 			$customFieldQuery = $this->getCustomFieldQuery($entity, ['generalOnly' => $generalOnly]);
