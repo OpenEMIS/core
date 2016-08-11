@@ -18,6 +18,8 @@ trait MessagesTrait {
 			'addAssessmentItem' => 'Add Assessment Item',
 			'assessmentItems' => 'Assessment Items',
 			'assessmentPeriods' => 'Assessment Periods',
+			'education_subject' => 'Education Subject',
+			'weight' => 'Weight'
 		],
 		'CustomGroups' => [
 			'custom_modules' => 'Module'
