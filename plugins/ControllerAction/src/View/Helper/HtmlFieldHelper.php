@@ -323,7 +323,7 @@ class HtmlFieldHelper extends Helper {
 					}
 				}
 
-				if (is_array($subOption) && isset($subOption['text'])) {
+				if (!isset($attr['translate']) || (isset($attr['translate']) && $attr['translate'])) {
 					$list[__($key)] = $subList;
 				} else {
 					$list[$key] = $subList;
