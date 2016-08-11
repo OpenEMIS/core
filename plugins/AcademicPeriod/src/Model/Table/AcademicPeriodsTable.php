@@ -11,6 +11,7 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Exception\NotFoundException;
 use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\Log\Log;
 
 class AcademicPeriodsTable extends AppTable {
 	private $_fieldOrder = ['visible', 'current', 'editable', 'code', 'name', 'start_date', 'end_date', 'academic_period_level_id'];
@@ -47,6 +48,24 @@ class AcademicPeriodsTable extends AppTable {
 			$this->updateAll(['current' => 0], []);
 		}
 	}
+
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		$canMigrate = $this->checkIfCanMigrate($entity);
+
+		$shells = ['Room'];
+		if ($canMigrate) {
+			// only trigger shell to migrate data if is not empty
+			if ($entity->has('migrate_data_from') && !empty($entity->migrate_data_from)) {
+				$migrateFrom = $entity->migrate_data_from;
+				$migrateTo = $entity->id;
+
+				foreach ($shells as $shell) {
+					$this->triggerMigrateShell($shell, $migrateFrom, $migrateTo);
+				}
+			}			
+		}
+	}
+
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('academic_period_level_id');
 		$this->fields['start_year']['visible'] = false;
@@ -58,6 +77,11 @@ class AcademicPeriodsTable extends AppTable {
 
 	public function afterAction(Event $event) {
 		$this->ControllerAction->field('current');
+		$this->ControllerAction->field('migrate_data_from', [
+			'type' => 'hidden',
+			'value' => 0,
+			'after' => 'current'
+		]);
 		$this->ControllerAction->field('editable');
         foreach ($this->_fieldOrder as $key => $value) {
             if (!in_array($value, array_keys($this->fields))) {
@@ -200,7 +224,46 @@ class AcademicPeriodsTable extends AppTable {
 
 	public function onUpdateFieldCurrent(Event $event, array $attr, $action, Request $request) {
 		$attr['options'] = $this->getSelectOptions('general.yesno');
-		$attr['onChangeReload'] = true;
+		$attr['onChangeReload'] = 'changeCurrent';
+
+		return $attr;
+	}
+
+	public function onUpdateFieldMigrateDataFrom(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add' || $action == 'edit') {
+			if (array_key_exists($this->alias(), $request->data)) {
+				if (array_key_exists('academic_period_level_id', $request->data[$this->alias()])) {
+					$academicPeriodLevelId = $request->data[$this->alias()]['academic_period_level_id'];
+					$level = $this->Levels
+						->find()
+						->order([$this->Levels->aliasField('level ASC')])
+						->first();
+					$current = $request->query('current');
+
+					if ($academicPeriodLevelId == $level->id && !is_null($current) && $current == 1) {
+						$where = [$this->aliasField('academic_period_level_id') => $level->id];
+						if (array_key_exists('id', $request->data[$this->alias()])) {
+							$currentAcademicPeriodId = $request->data[$this->alias()]['id'];
+							$currentAcademicPeriodOrder = $this->get($currentAcademicPeriodId)->order;
+							$where[$this->aliasField('id <>')] = $currentAcademicPeriodId;
+							$where[$this->aliasField('order >')] = $currentAcademicPeriodOrder;
+						}
+
+						$migrateDataFromOptions = $this
+							->find('list')
+							->find('visible')
+							->find('order')
+							->where($where)
+							->toArray();
+
+						$attr['type'] = 'select';
+						$attr['options'] = $migrateDataFromOptions;
+						$attr['select'] = false;
+					}
+				}
+			}
+		}
+
 		return $attr;
 	}
 
@@ -222,6 +285,19 @@ class AcademicPeriodsTable extends AppTable {
 		}
 		$attr['options'] = $this->getSelectOptions('general.yesno');
 		return $attr;
+	}
+
+	public function addEditOnChangeCurrent(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$request = $this->request;
+		unset($request->query['current']);
+
+		if ($request->is(['post', 'put'])) {
+			if (array_key_exists($this->alias(), $request->data)) {
+				if (array_key_exists('current', $request->data[$this->alias()])) {
+					$request->query['current'] = $request->data[$this->alias()]['current'];
+				}
+			}
+		}
 	}
 
 	public function getYearList($params = []) {
@@ -546,4 +622,28 @@ class AcademicPeriodsTable extends AppTable {
 			->find('order')
 			->where([$this->aliasField('academic_period_level_id') => $level->id]);
 	}
+
+	private function checkIfCanMigrate(Entity $entity) {
+		$canMigrate = false;
+
+		$level = $this->Levels
+			->find()
+			->order([$this->Levels->aliasField('level ASC')])
+			->first();
+
+		// if is year level and set to current
+		if ($entity->academic_period_level_id == $level->id && $entity->current == 1) {
+			$canMigrate = true;
+		}
+
+		return $canMigrate;
+	}
+
+    public function triggerMigrateShell($shellName, $migrateFrom, $migrateTo) {
+    	$cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.' '.$migrateFrom.' '.$migrateTo;
+		$logs = ROOT . DS . 'logs' . DS . 'migrate.log & echo $!';
+		$shellCmd = $cmd . ' >> ' . $logs;
+		$pid = exec($shellCmd);
+		Log::write('debug', $shellCmd);
+    }
 }
