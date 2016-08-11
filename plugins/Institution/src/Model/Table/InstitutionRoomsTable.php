@@ -85,6 +85,26 @@ class InstitutionRoomsTable extends AppTable {
 			->add('end_date', 'ruleCompareDateReverse', [
 				'rule' => ['compareDateReverse', 'start_date', true]
 			])
+			->requirePresence('new_room_type', function ($context) {
+				if (array_key_exists('change_type', $context['data'])) {
+					$selectedEditType = $context['data']['change_type'];
+					if ($selectedEditType == self::CHANGE_IN_ROOM_TYPE) {
+						return true;
+					}
+				}
+
+				return false;
+			})
+			->requirePresence('new_start_date', function ($context) {
+				if (array_key_exists('change_type', $context['data'])) {
+					$selectedEditType = $context['data']['change_type'];
+					if ($selectedEditType == self::CHANGE_IN_ROOM_TYPE) {
+						return true;
+					}
+				}
+
+				return false;
+			})
 		;
 	}
 
@@ -493,6 +513,7 @@ class InstitutionRoomsTable extends AppTable {
 				$endDate = $this->currentAcademicPeriod->end_date->format('d-m-Y');
 
 				$attr['visible'] = true;
+				$attr['null'] = false;	// for asterisk to appear
 				$attr['date_options']['startDate'] = $startDate;
 				$attr['date_options']['endDate'] = $endDate;
 			}
