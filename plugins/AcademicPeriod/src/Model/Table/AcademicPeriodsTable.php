@@ -242,7 +242,7 @@ class AcademicPeriodsTable extends AppTable {
 
 					if ($academicPeriodLevelId == $level->id && !is_null($current) && $current == 1) {
 						$where = [$this->aliasField('academic_period_level_id') => $level->id];
-						if (array_key_exists('id', $request->data[$this->alias()])) {
+						if (array_key_exists('id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['id'])) {
 							$currentAcademicPeriodId = $request->data[$this->alias()]['id'];
 							$currentAcademicPeriodOrder = $this->get($currentAcademicPeriodId)->order;
 							$where[$this->aliasField('id <>')] = $currentAcademicPeriodId;
@@ -251,7 +251,6 @@ class AcademicPeriodsTable extends AppTable {
 
 						$migrateDataFromOptions = $this
 							->find('list')
-							->find('visible')
 							->find('order')
 							->where($where)
 							->toArray();
