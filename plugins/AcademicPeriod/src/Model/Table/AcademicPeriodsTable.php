@@ -11,6 +11,7 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Exception\NotFoundException;
 use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\Log\Log;
 
 class AcademicPeriodsTable extends AppTable {
 	private $_fieldOrder = ['visible', 'current', 'editable', 'code', 'name', 'start_date', 'end_date', 'academic_period_level_id'];
@@ -143,6 +144,24 @@ class AcademicPeriodsTable extends AppTable {
 			array_unshift($this->_fieldOrder, 'parent');
 		}
 	}
+
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) 
+	{
+		if ($entity->dirty('current')) { //check whether default value has been changed
+ 			if ($entity->current) { 
+				$this->triggerUpdateInstitutionShiftTypeShell($entity->id);
+			}
+ 		}
+	}
+
+	public function triggerUpdateInstitutionShiftTypeShell($params) {
+    	$cmd = ROOT . DS . 'bin' . DS . 'cake UpdateInstitutionShiftType ' . $params;
+		$logs = ROOT . DS . 'logs' . DS . 'UpdateInstitutionShiftType.log & echo $!';
+		$shellCmd = $cmd . ' >> ' . $logs;
+		$pid = exec($shellCmd);
+		Log::write('debug', $shellCmd);
+    }
+
 	
 	public function onGetCurrent(Event $event, Entity $entity) {
 		return $entity->current == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';

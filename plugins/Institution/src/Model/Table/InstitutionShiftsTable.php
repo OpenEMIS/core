@@ -176,10 +176,15 @@ class InstitutionShiftsTable extends ControllerActionTable {
 
 		//logic to remove 'add' button if the institution has received shift from other based on the academic period
 		$toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-		if ($this->isOccupier($institutionId, $extra['selectedAcademicPeriodOptions'])) { //if occupier, then remove the 'add' button
+		if ($this->isOccupier($institutionId, $this->AcademicPeriods->getCurrent())) { //if occupier, then remove the 'add' button
 			unset($toolbarButtonsArray['add']);
 		}
 		$extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+
+		//show error when occupier tried to access add/edit page.
+		if (isset($this->request->query['occupier']) && $this->request->query['occupier']) {
+			$this->Alert->error($this->aliasField('noAccessToShift'));
+		}
 
 		$this->field('institution_id', ['type' => 'integer']); //this is to show owner (set in label table), by default the default is hidden
 
@@ -270,8 +275,9 @@ class InstitutionShiftsTable extends ControllerActionTable {
 	{
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 
-		if ($this->isOccupier($institutionId, $this->getSelectedAcademicPeriod($this->request))) { //if occupier, then redirect from trying to access add/edit page
+		if ($this->isOccupier($institutionId, $this->getSelectedAcademicPeriod($this->AcademicPeriods->getCurrent()))) { //if occupier, then redirect from trying to access add/edit page
 			$url = $this->url('index');
+			$url['occupier'] = 1;
 			$event->stopPropagation();
 			return $this->controller->redirect($url);
 		}
@@ -730,7 +736,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
 		$selectedAcademicPeriod = '';
 
 		if ($this->action == 'index' || $this->action == 'view' || $this->action == 'edit') {
-			if (array_key_exists('period', $request->query)) {
+			if (isset($request->query) && array_key_exists('period', $request->query)) {
 				$selectedAcademicPeriod = $request->query['period'];
 			} else {
 				$selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
