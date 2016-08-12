@@ -330,7 +330,9 @@ class InstitutionClassesTable extends ControllerActionTable {
 		->find('byGrades', ['education_grade_id' => $extra['selectedEducationGradeId']])
 		->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
 		;
-		$extra['options']['order'] = [$this->aliasField('name')];
+		$extra['options']['order'] = [
+			$this->aliasField('name') => 'asc'
+		];
 	}
 
     public function findByGrades(Query $query, array $options) {
