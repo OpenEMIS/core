@@ -214,26 +214,6 @@ class StudentAttendancesTable extends AppTable {
 		return $absenceCheckList;
 	}
 
-	// get the shift time using institutionShiftId
-	// for student able to get the institutionShiftId from the classId
-	public function getShiftTime()
-	{
-		$selectedClass = $this->request->query['class_id'];
-		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-		$InstitutionShiftId = $InstitutionClasses
-			->find()
-			->where([$InstitutionClasses->aliasField('id') => $selectedClass])
-			->first()->institution_shift_id;
-
-		$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
-		$shiftTime = $InstitutionShift
-			->find()
-			->where([$InstitutionShift->aliasField('id') => $InstitutionShiftId])
-			->first();
-
-		return $shiftTime;
-	}
-
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
     	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
@@ -410,7 +390,13 @@ class StudentAttendancesTable extends AppTable {
 			$displayTime = 'display:none;';
 			$HtmlField = $event->subject()->HtmlField;
 
-			$shiftTime = $this->getShiftTime();
+			$classId = $this->request->query['class_id'];
+
+			$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+			$shiftTime = $InstitutionShift
+				->find('shiftTime', ['institution_class_id' => $classId])
+				->first();
+
 			$startTime = $shiftTime->start_time;
 			$startTimestamp = strtotime($startTime);
 
@@ -1022,7 +1008,14 @@ class StudentAttendancesTable extends AppTable {
 							$obj['full_day'] = 0;
 
 							$lateTime = strtotime($obj['late_time']);
-							$shiftTime = $this->getShiftTime();
+
+							$classId = $this->request->query['class_id'];
+
+							$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+							$shiftTime = $InstitutionShift
+								->find('shiftTime', ['institution_class_id' => $classId])
+								->first();
+
 							$startTime = $shiftTime->start_time;
 							$endTime = $shiftTime->end_time;
 
