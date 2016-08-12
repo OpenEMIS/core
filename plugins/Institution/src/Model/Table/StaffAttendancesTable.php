@@ -228,27 +228,6 @@ class StaffAttendancesTable extends AppTable {
 		return $absenceCheckList;
 	}
 
-	// get the shift time using institutionShiftId
-	// for student able to get the institutionShiftId from the classId
-	public function getShiftTime()
-	{
-		$selectedPeriod = $this->request->query['academic_period_id'];
-		$institutionId = $this->Session->read('Institution.Institutions.id');
-
-		$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
-		$conditions = ([
-			$InstitutionShift->aliasField('academic_period_id') => $selectedPeriod,
-			$InstitutionShift->aliasField('location_institution_id') => $institutionId
-		]);
-
-		$shiftTime = $InstitutionShift
-			->find()
-			->where($conditions)
-			->toArray();
-
-		return $shiftTime;
-	}
-
 	public function beforeAction(Event $event) {
 		$this->fields['security_group_user_id']['visible'] = false;
 		$tabElements = [
@@ -416,7 +395,13 @@ class StaffAttendancesTable extends AppTable {
 			$displayTime = 'display:none;';
 			$HtmlField = $event->subject()->HtmlField;
 
-			$shiftTime = $this->getShiftTime();
+			$selectedPeriod = $this->request->query['academic_period_id'];
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+
+			$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+			$shiftTime = $InstitutionShift
+				->find('shiftTime', ['academic_period_id' => $selectedPeriod, 'institution_id' => $institutionId])
+				->toArray();
 
 			$shiftStartTimeArray = [];
 			foreach ($shiftTime as $key => $value) {
@@ -968,7 +953,13 @@ class StaffAttendancesTable extends AppTable {
 							$obj['full_day'] = 0;
 							$lateTime = strtotime($obj['late_time']);
 
-							$shiftTime = $this->getShiftTime();
+							$selectedPeriod = $this->request->query['academic_period_id'];
+							$institutionId = $this->Session->read('Institution.Institutions.id');
+
+							$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+							$shiftTime = $InstitutionShift
+								->find('shiftTime', ['academic_period_id' => $selectedPeriod, 'institution_id' => $institutionId])
+								->toArray();
 
 							$shiftStartTimeArray = [];
 							$shiftEndTimeArray = [];

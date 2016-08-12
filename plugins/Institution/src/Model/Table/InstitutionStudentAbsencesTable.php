@@ -569,9 +569,13 @@ class InstitutionStudentAbsencesTable extends AppTable {
 					$request->query['full_day'] = $request->data[$this->alias()]['full_day'];
 					// full day == 1, not full day == 0
 					if (!$request->data[$this->alias()]['full_day']) {
-						$class = $data[$this->alias()]['class'];
+						$classId = $data[$this->alias()]['class'];
 
-						$shiftTime = $this->getShiftTime($class);
+						$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+						$shiftTime = $InstitutionShift
+							->find('shiftTime', ['institution_class_id' => $classId])
+							->first();
+
 						$startTime = $shiftTime->start_time;
 						$endTime = $shiftTime->end_time;
 
@@ -593,9 +597,13 @@ class InstitutionStudentAbsencesTable extends AppTable {
 					$selectedAbsenceType = $request->data[$this->alias()]['absence_type_id'];
 					$request->query['absence_type_id'] = $selectedAbsenceType;
 					if (array_key_exists($selectedAbsenceType, $this->absenceCodeList) && $this->absenceCodeList[$selectedAbsenceType] == 'LATE') {
-						$class = $data[$this->alias()]['class'];
+						$classId = $data[$this->alias()]['class'];
 
-						$shiftTime = $this->getShiftTime($class);
+						$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+						$shiftTime = $InstitutionShift
+							->find('shiftTime', ['institution_class_id' => $classId])
+							->first();
+
 						$startTime = $shiftTime->start_time;
 						$endTime = $shiftTime->end_time;
 
@@ -605,26 +613,6 @@ class InstitutionStudentAbsencesTable extends AppTable {
 				}
 			}
 		}
-	}
-
-	// get the shift time using institutionShiftId
-	// for student able to get the institutionShiftId from the classId
-	public function getShiftTime($class)
-	{
-		$selectedClass = $class;
-		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-		$InstitutionShiftId = $InstitutionClasses
-			->find()
-			->where([$InstitutionClasses->aliasField('id') => $selectedClass])
-			->first()->institution_shift_id;
-
-		$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
-		$shiftTime = $InstitutionShift
-			->find()
-			->where([$InstitutionShift->aliasField('id') => $InstitutionShiftId])
-			->first();
-
-		return $shiftTime;
 	}
 
 	public function _getSelectOptions() {
