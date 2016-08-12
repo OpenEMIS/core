@@ -50,20 +50,23 @@ class WorkflowStepsTable extends AppTable {
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+
 		$newWorkFlowActions = $entity->workflow_actions;
 		$originalWorkFlowActions = $entity->getOriginal('workflow_actions');
-		$diffWorkflowAction = array_diff($originalWorkFlowActions, $newWorkFlowActions);
+		if (is_array($newWorkFlowActions) && is_array($originalWorkFlowActions)) {
+			$diffWorkflowAction = array_diff($originalWorkFlowActions, $newWorkFlowActions);
+			$workflowActionIds = [];
+			foreach ($diffWorkflowAction as $workflowAction) {
+				$workflowActionIds[] = $workflowAction->id;
+			}
 
-		$workflowActionIds = [];
-		foreach ($diffWorkflowAction as $workflowAction) {
-			$workflowActionIds[] = $workflowAction->id;
+			if (!empty($workflowActionIds)) {
+				$this->WorkflowActions->deleteAll([
+					'id IN ' => $workflowActionIds
+				]);
+			}
 		}
-
-		if (!empty($workflowActionIds)) {
-			$this->WorkflowActions->deleteAll([
-				'id IN ' => $workflowActionIds
-			]);
-		}
+		
 		// Auto insert default workflow_actions when add
 		if ($entity->isNew()) {
 			if ($entity->has('stage') && in_array($entity->stage, [self::OPEN, self::PENDING, self::CLOSED])) {
