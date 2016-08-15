@@ -343,8 +343,19 @@ class InstitutionGradesTable extends AppTable {
 		/**
 		 * PHPOE-2132, Common statements with getGradeOptionsForIndex() were moved to _gradeOptions().
 		 */
+
+		// Get the current time.
+		$currTime = Time::now();
+
 		$query = $this->find('all')
-					->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId]);
+					->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
+					->where([
+						'OR' => [
+							[$this->aliasField('end_date').' IS NULL'],
+							[$this->aliasField('end_date') . " >= '" . $currTime->format('Y-m-d') . "'"]
+						]
+					])
+					;
 		return $this->_gradeOptions($query, $institutionsId, $listOnly);
 	}
 
