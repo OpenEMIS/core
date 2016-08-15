@@ -605,26 +605,73 @@ class StaffAbsencesTable extends AppTable {
 		return $attr;
 	}
 
-	public function addEditOnChangeFullDay(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-
+	public function addEditOnChangeFullDay(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	{
 		$request = $this->request;
 		unset($request->query['full_day']);
 		if ($request->is(['post', 'put'])) {
 			if (array_key_exists($this->alias(), $request->data)) {
 				if (array_key_exists('full_day', $request->data[$this->alias()])) {
 					$request->query['full_day'] = $request->data[$this->alias()]['full_day'];
+					// full day == 1, not full day == 0
+					if (!$request->data[$this->alias()]['full_day']) {
+						$selectedPeriod = $this->request->data[$this->alias()]['academic_period_id'];
+						$institutionId = $this->Session->read('Institution.Institutions.id');
+
+						$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+						$shiftTime = $InstitutionShift
+							->find('shiftTime', ['academic_period_id' => $selectedPeriod, 'institution_id' => $institutionId])
+							->toArray();
+
+						$shiftStartTimeArray = [];
+						$shiftEndTimeArray = [];
+						foreach ($shiftTime as $key => $value) {
+							$shiftStartTimeArray[$key] = $value->start_time;
+							$shiftEndTimeArray[$key] = $value->end_time;
+						}
+
+						$startTime = min($shiftStartTimeArray);
+						$endTime = max($shiftEndTimeArray);
+
+						$entity->start_time = date('h:i A', strtotime($startTime));
+						$entity->end_time = date('h:i A', strtotime($endTime));
+					}
 				}
 			}
 		}
 	}
 
-	public function addEditOnChangeAbsenceType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditOnChangeAbsenceType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	{
 		$request = $this->request;
-		unset($request->query['absence_type']);
+		unset($request->query['absence_type_id']);
 		if ($request->is(['post', 'put'])) {
 			if (array_key_exists($this->alias(), $request->data)) {
-				if (array_key_exists('absence_type', $request->data[$this->alias()])) {
-					$request->query['absence_type'] = $request->data[$this->alias()]['absence_type'];
+				if (array_key_exists('absence_type_id', $request->data[$this->alias()])) {
+					$selectedAbsenceType = $request->data[$this->alias()]['absence_type_id'];
+					$request->query['absence_type_id'] = $selectedAbsenceType;
+					if (array_key_exists($selectedAbsenceType, $this->absenceCodeList) && $this->absenceCodeList[$selectedAbsenceType] == 'LATE') {
+						$selectedPeriod = $this->request->data[$this->alias()]['academic_period_id'];
+						$institutionId = $this->Session->read('Institution.Institutions.id');
+
+						$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+						$shiftTime = $InstitutionShift
+							->find('shiftTime', ['academic_period_id' => $selectedPeriod, 'institution_id' => $institutionId])
+							->toArray();
+
+						$shiftStartTimeArray = [];
+						$shiftEndTimeArray = [];
+						foreach ($shiftTime as $key => $value) {
+							$shiftStartTimeArray[$key] = $value->start_time;
+							$shiftEndTimeArray[$key] = $value->end_time;
+						}
+
+						$startTime = min($shiftStartTimeArray);
+						$endTime = max($shiftEndTimeArray);
+
+						$entity->start_time = date('h:i A', strtotime($startTime));
+						$entity->end_time = date('h:i A', strtotime($endTime));
+					}
 				}
 			}
 		}
