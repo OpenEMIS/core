@@ -389,8 +389,18 @@ class StudentAttendancesTable extends AppTable {
 			];
 			$displayTime = 'display:none;';
 			$HtmlField = $event->subject()->HtmlField;
-			$configItemsTable =  TableRegistry::get('ConfigItems');
-			$attr['value'] = $configItemsTable->value('start_time');
+
+			$classId = $this->request->query['class_id'];
+
+			$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+			$shiftTime = $InstitutionShift
+				->find('shiftTime', ['institution_class_id' => $classId])
+				->first();
+
+			$startTime = $shiftTime->start_time;
+			$startTimestamp = strtotime($startTime);
+
+			$attr['value'] = date('h:i A', $startTimestamp);
 			$attr['default_time'] = false;
 			$attr['null'] = true;
 
@@ -976,7 +986,8 @@ class StudentAttendancesTable extends AppTable {
 		}
 	}
 
-	public function indexEdit() {
+	public function indexEdit()
+	{
 		if ($this->request->is(['post', 'put'])) {
 			$requestQuery = $this->request->query;
 			$requestData = $this->request->data;
@@ -998,34 +1009,22 @@ class StudentAttendancesTable extends AppTable {
 
 							$lateTime = strtotime($obj['late_time']);
 
-							$selectedPeriod = $obj['academic_period_id'];
-							$institutionId = $obj['institution_id'];
+							$classId = $this->request->query['class_id'];
 
 							$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
-							$conditions = ([
-								$InstitutionShift->aliasField('academic_period_id') => $selectedPeriod,
-								$InstitutionShift->aliasField('location_institution_id') => $institutionId
-							]);
-
 							$shiftTime = $InstitutionShift
-									->find()
-									->where($conditions)
-									->toArray();
+								->find('shiftTime', ['institution_class_id' => $classId])
+								->first();
 
-							$shiftStartTimeArray = [];
-							$shiftEndTimeArray = [];
-							foreach ($shiftTime as $key => $value) {
-								$shiftStartTimeArray[$key] = $value->start_time;
-								$shiftEndTimeArray[$key] = $value->end_time;
-							}
+							$startTime = $shiftTime->start_time;
+							$endTime = $shiftTime->end_time;
 
-							$startTime = min($shiftStartTimeArray);
 							$obj['start_time'] = $startTime;
-							$endTime = $obj['late_time'];
-							$obj['end_time'] = $endTime;
+							$inputTime = $obj['late_time'];
+							$obj['end_time'] = $inputTime;
 
-							$startTimestamp = intval(min($shiftStartTimeArray)->toUnixString());
-							$endTimestamp = intval(max($shiftEndTimeArray)->toUnixString());
+							$startTimestamp = strtotime($startTime);
+							$endTimestamp = strtotime($endTime);
 
 							if (($lateTime < $startTimestamp) || ($lateTime > $endTimestamp)) {
 								$key = $obj['student_id'];
