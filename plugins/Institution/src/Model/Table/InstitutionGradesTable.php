@@ -347,7 +347,7 @@ class InstitutionGradesTable extends AppTable {
 					->where([
 						'OR' => [
 							[$this->aliasField('end_date').' IS NULL'],
-							[$this->aliasField('end_date') . ' >= \'' . $currTime->format('Y-m-d') . '\'']
+							[$this->aliasField('end_date') . " >= '" . $currTime->format('Y-m-d') . "'"]
 						]
 					])
 					;
