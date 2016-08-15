@@ -816,7 +816,7 @@ class ValidationBehavior extends Behavior {
 					$periodObj = $Table->find()
 							->where([
 				                $Table->aliasField('staff_id') => $globalData['data'][$academicFieldName],
-				                $Table->aliasField('staff_status_id') => 1
+				                $Table->aliasField('institution_id') => $globalData['data']['institution_id']
 							])
 							->toArray();
 				} else if ($academicFieldName == 'student_id') {
@@ -824,7 +824,8 @@ class ValidationBehavior extends Behavior {
 					$periodObj = $Table->find()
 							->where([
 				                $Table->aliasField('student_id') => $globalData['data'][$academicFieldName],
-				                $Table->aliasField('student_status_id') => 1
+				                $Table->aliasField('institution_id') => $globalData['data']['institution_id'],
+				                $Table->aliasField('academic_period_id') => $globalData['data']['academic_period_id']
 							])
 							->toArray();
 				}
