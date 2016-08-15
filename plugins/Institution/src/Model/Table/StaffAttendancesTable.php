@@ -371,7 +371,8 @@ class StaffAttendancesTable extends AppTable {
 	}
 
 	// Event: ControllerAction.Model.onGetType
-	public function onGetType(Event $event, Entity $entity) {
+	public function onGetType(Event $event, Entity $entity)
+	{
 		$html = '';
 
 		if (!is_null($this->request->query('mode'))) {
@@ -393,8 +394,24 @@ class StaffAttendancesTable extends AppTable {
 			];
 			$displayTime = 'display:none;';
 			$HtmlField = $event->subject()->HtmlField;
-			$configItemsTable =  TableRegistry::get('ConfigItems');
-			$attr['value'] = $configItemsTable->value('start_time');
+
+			$selectedPeriod = $this->request->query['academic_period_id'];
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+
+			$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+			$shiftTime = $InstitutionShift
+				->find('shiftTime', ['academic_period_id' => $selectedPeriod, 'institution_id' => $institutionId])
+				->toArray();
+
+			$shiftStartTimeArray = [];
+			foreach ($shiftTime as $key => $value) {
+				$shiftStartTimeArray[$key] = $value->start_time;
+			}
+
+			$startTime = min($shiftStartTimeArray);
+			$startTimestamp = strtotime($startTime);
+
+			$attr['value'] = date('h:i A', $startTimestamp);
 			$attr['default_time'] = false;
 			$attr['null'] = true;
 			if (empty($entity->StaffAbsences['id'])) {
@@ -914,7 +931,8 @@ class StaffAttendancesTable extends AppTable {
 		}
 	}
 
-	public function indexEdit() {
+	public function indexEdit()
+	{
 		if ($this->request->is(['post', 'put'])) {
 			$requestQuery = $this->request->query;
 			$requestData = $this->request->data;
@@ -935,19 +953,13 @@ class StaffAttendancesTable extends AppTable {
 							$obj['full_day'] = 0;
 							$lateTime = strtotime($obj['late_time']);
 
-							$selectedPeriod = $obj['academic_period_id'];
-							$institutionId = $obj['institution_id'];
+							$selectedPeriod = $this->request->query['academic_period_id'];
+							$institutionId = $this->Session->read('Institution.Institutions.id');
 
 							$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
-							$conditions = ([
-								$InstitutionShift->aliasField('academic_period_id') => $selectedPeriod,
-								$InstitutionShift->aliasField('location_institution_id') => $institutionId
-							]);
-
 							$shiftTime = $InstitutionShift
-									->find()
-									->where($conditions)
-									->toArray();
+								->find('shiftTime', ['academic_period_id' => $selectedPeriod, 'institution_id' => $institutionId])
+								->toArray();
 
 							$shiftStartTimeArray = [];
 							$shiftEndTimeArray = [];

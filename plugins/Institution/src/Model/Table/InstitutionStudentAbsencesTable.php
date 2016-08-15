@@ -54,7 +54,6 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			->select(['openemis_no' => 'Users.openemis_no']);
 	}
 
-
 	// To select another one more field from the containable data
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
 		$newArray = [];
@@ -449,7 +448,8 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldFullDay(Event $event, array $attr, $action, $request) {
+	public function onUpdateFieldFullDay(Event $event, array $attr, $action, $request)
+	{
 		$fullDayOptions = $attr['options'];
 		$selectedFullDay = isset($request->data[$this->alias()]['full_day']) ? $request->data[$this->alias()]['full_day'] : 1;
 		$this->advancedSelectOptions($fullDayOptions, $selectedFullDay);
@@ -559,25 +559,57 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		}
 	}
 
-	public function addEditOnChangeFullDay(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditOnChangeFullDay(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	{
 		$request = $this->request;
 		unset($request->query['full_day']);
 		if ($request->is(['post', 'put'])) {
 			if (array_key_exists($this->alias(), $request->data)) {
 				if (array_key_exists('full_day', $request->data[$this->alias()])) {
 					$request->query['full_day'] = $request->data[$this->alias()]['full_day'];
+					// full day == 1, not full day == 0
+					if (!$request->data[$this->alias()]['full_day']) {
+						$classId = $data[$this->alias()]['class'];
+
+						$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+						$shiftTime = $InstitutionShift
+							->find('shiftTime', ['institution_class_id' => $classId])
+							->first();
+
+						$startTime = $shiftTime->start_time;
+						$endTime = $shiftTime->end_time;
+
+						$entity->start_time = date('h:i A', strtotime($startTime));
+						$entity->end_time = date('h:i A', strtotime($endTime));
+					}
 				}
 			}
 		}
 	}
 
-	public function addEditOnChangeAbsenceType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditOnChangeAbsenceType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	{
 		$request = $this->request;
-		unset($request->query['absence_type']);
+		unset($request->query['absence_type_id']);
 		if ($request->is(['post', 'put'])) {
 			if (array_key_exists($this->alias(), $request->data)) {
-				if (array_key_exists('absence_type', $request->data[$this->alias()])) {
-					$request->query['absence_type'] = $request->data[$this->alias()]['absence_type'];
+				if (array_key_exists('absence_type_id', $request->data[$this->alias()])) {
+					$selectedAbsenceType = $request->data[$this->alias()]['absence_type_id'];
+					$request->query['absence_type_id'] = $selectedAbsenceType;
+					if (array_key_exists($selectedAbsenceType, $this->absenceCodeList) && $this->absenceCodeList[$selectedAbsenceType] == 'LATE') {
+						$classId = $data[$this->alias()]['class'];
+
+						$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+						$shiftTime = $InstitutionShift
+							->find('shiftTime', ['institution_class_id' => $classId])
+							->first();
+
+						$startTime = $shiftTime->start_time;
+						$endTime = $shiftTime->end_time;
+
+						$entity->start_time = date('h:i A', strtotime($startTime));
+						$entity->end_time = date('h:i A', strtotime($endTime));
+					}
 				}
 			}
 		}
