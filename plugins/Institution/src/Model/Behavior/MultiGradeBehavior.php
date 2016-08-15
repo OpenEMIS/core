@@ -63,7 +63,10 @@ class MultiGradeBehavior extends Behavior {
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
 		$model = $this->_table;
 		$request = $this->_table->request;
+
 		$education_grades = $request->data($model->aliasField('education_grades'));
+		$requestData[$model->alias()]['institution_id'] = $extra['institution_id'];
+		
 		$selected = [];
 		$hasSelection = false; //to handle submitted value which is different when converted to form helper.
 		if (isset($education_grades) && count($education_grades)>0) {
@@ -76,7 +79,7 @@ class MultiGradeBehavior extends Behavior {
 		} 
 
 		if (!$hasSelection) {
-			/**
+			/*
 			 * set institution_id to empty to trigger validation error in ControllerActionComponent
 			 */
 			$requestData[$model->alias()]['institution_id'] = '';
