@@ -346,11 +346,11 @@ class InstitutionShiftsTable extends ControllerActionTable {
 		]);
 	}
 
-	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) 
+	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
 	{
 		$academicPeriodOptions = $this->AcademicPeriods->getYearList();
 		$attr['type'] = 'readonly';
-			
+
 		if ($action == 'add') { //set the academic period to thecurrent and readonly
 			$attr['attr']['value'] = $academicPeriodOptions[$this->getSelectedAcademicPeriod($this->request)];
 			$attr['value'] = $this->getSelectedAcademicPeriod($this->request);
@@ -365,7 +365,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
 	public function onUpdateFieldShiftOptionId(Event $event, array $attr, $action, $request)
 	{
 		$institutionId = $this->Session->read('Institution.Institutions.id');
-		
+
 		//this is default condition to get the all shift.
 		$options = $this->ShiftOptions
 			->find('list')
@@ -373,7 +373,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
 			->find('order');
 
 		if ($action == 'add') {
-			$selectedAcademicPeriod = $this->getSelectedAcademicPeriod($this->request);			
+			$selectedAcademicPeriod = $this->getSelectedAcademicPeriod($this->request);
 			if (!empty($selectedAcademicPeriod)) {
 				//during add then need to exclude used shifts based on school and academic period
 				$options = $options
@@ -504,11 +504,11 @@ class InstitutionShiftsTable extends ControllerActionTable {
 		}
 	}
 
-	public function addEditOnChangeLocation(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) 
+	public function addEditOnChangeLocation(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
 	{
 		$data['InstitutionShifts']['location_institution_id'] = ''; //value has to be reset each time location being updated.
 	}
-	
+
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options)
 	{
 		if ($this->AcademicPeriods->getCurrent() == $entity->academic_period_id) { //if the one that being added / edited is the current academic period
@@ -743,7 +743,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
 			}
 		} else if ($this->action == 'add') {
 			$selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
-		} 
+		}
 
 		return $selectedAcademicPeriod;
 	}
@@ -819,5 +819,41 @@ class InstitutionShiftsTable extends ControllerActionTable {
 			'after' => 'institution_id',
 			'entity' => $entity
 		]);
+	}
+
+	public function findShiftTime(Query $query, array $options)
+	{
+		// if its students, it will have classId
+		// it will used the classId to get the institutionId and get the shift time.
+		$classId = array_key_exists('institution_class_id', $options) ? $options['institution_class_id'] : null;
+
+		// for staff, they dont have the classId, so will used the academic periodId and institutionId to get the shift time.
+		$academicPeriodId = array_key_exists('academic_period_id', $options) ? $options['academic_period_id'] : null;
+		$institutionId = array_key_exists('institution_id', $options) ? $options['institution_id'] : null;
+
+		if (!is_null($classId)) {
+			$InstitutionClasses = $this->InstitutionClasses;
+
+			$query->innerJoin(
+				[$InstitutionClasses->alias() => $InstitutionClasses->table()],
+				[
+					$InstitutionClasses->aliasField('institution_shift_id = ') . $this->aliasField('id'),
+					$InstitutionClasses->aliasField('id') => $classId
+				]);
+		}
+
+		$where = [];
+		if (!is_null($academicPeriodId)) {
+			$where[$this->aliasField('academic_period_id')] = $academicPeriodId;
+		}
+		if (!is_null($institutionId)) {
+			$where[$this->aliasField('location_institution_id')] = $institutionId;
+		}
+
+		if (!empty($where)) {
+			$query->where($where);
+		}
+
+		return $query;
 	}
 }
