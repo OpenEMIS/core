@@ -4,6 +4,7 @@ namespace Institution\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
+use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\I18n\Time;
 
@@ -21,6 +22,9 @@ class MultiGradeBehavior extends Behavior {
 		return $events;
 	}
 
+	public function buildValidator(Event $event, Validator $validator, $name) {
+    	$validator->notEmpty('education_grades');
+    }
 
 /******************************************************************************************************************
 **
@@ -60,13 +64,13 @@ class MultiGradeBehavior extends Behavior {
 		]);
 	}
 
-	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) 
+	{
 		$model = $this->_table;
 		$request = $this->_table->request;
 
 		$education_grades = $request->data($model->aliasField('education_grades'));
-		$requestData[$model->alias()]['institution_id'] = $extra['institution_id'];
-		
+
 		$selected = [];
 		$hasSelection = false; //to handle submitted value which is different when converted to form helper.
 		if (isset($education_grades) && count($education_grades)>0) {
@@ -82,7 +86,7 @@ class MultiGradeBehavior extends Behavior {
 			/*
 			 * set institution_id to empty to trigger validation error in ControllerActionComponent
 			 */
-			$requestData[$model->alias()]['institution_id'] = '';
+			$requestData[$model->alias()]['education_grades'] = '';
 			$errorMessage = 'Institution.'.$model->aliasField('noGrade');
 			$requestData['errorMessage'] = $errorMessage;
 		}
