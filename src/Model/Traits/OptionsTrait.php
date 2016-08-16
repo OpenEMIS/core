@@ -53,6 +53,14 @@ trait OptionsTrait {
 					'1' => '100%'
 				],
 			],
+			'Shifts' => [
+				'types' => [
+		        	1 => __('Single Shift Owner'),
+					2 => __('Single Shift Occupier'),
+					3 => __('Multiple Shift Owner'),
+					4 => __('Multiple Shift Occupier')
+        		]
+        	]
 		];
 
 		$index = explode('.', $code);
