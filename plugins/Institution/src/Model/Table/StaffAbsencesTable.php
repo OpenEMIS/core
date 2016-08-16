@@ -687,6 +687,28 @@ class StaffAbsencesTable extends AppTable {
 				if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
 					$selectedPeriod = $request->data[$this->alias()]['academic_period_id'];
 					$request->query['period'] = $selectedPeriod;
+					$institutionId = $this->Session->read('Institution.Institutions.id');
+
+					$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+					$shiftTime = $InstitutionShift
+						->find('shiftTime', ['academic_period_id' => $selectedPeriod, 'institution_id' => $institutionId])
+						->toArray();
+
+					$shiftStartTimeArray = [];
+					$shiftEndTimeArray = [];
+					foreach ($shiftTime as $key => $value) {
+						$shiftStartTimeArray[$key] = $value->start_time;
+						$shiftEndTimeArray[$key] = $value->end_time;
+					}
+
+					$startTime = min($shiftStartTimeArray);
+					$endTime = max($shiftEndTimeArray);
+
+					$entity->start_time = date('h:i A', strtotime($startTime));
+					$entity->end_time = date('h:i A', strtotime($endTime));
+
+					$data[$this->alias()]['start_time'] = $entity->start_time;
+					$data[$this->alias()]['end_time'] = $entity->end_time;
 				}
 				$data[$this->alias()]['staff_id'] = '';
 			}
@@ -738,6 +760,14 @@ class StaffAbsencesTable extends AppTable {
 				'value' => $key,
 				'text' => $value
 			];
+
+			if ($key == $selectedPeriod) {
+				$newPeriodOptions[$key] = [
+					'value' => $key,
+					'text' => $value,
+					'selected'
+				];
+			}
 
 			if ($activeStaff == 0) {
 				$newPeriodOptions[$key] = [
