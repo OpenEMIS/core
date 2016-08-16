@@ -10,6 +10,15 @@ DROP TABLE IF EXISTS `room_types`;
 DROP TABLE IF EXISTS `institution_rooms`;
 
 -- custom field
+DROP TABLE IF EXISTS `infrastructure_custom_forms`;
+RENAME TABLE `z_3017_infrastructure_custom_forms` TO `infrastructure_custom_forms`;
+
+DROP TABLE IF EXISTS `infrastructure_custom_field_values`;
+RENAME TABLE `z_3017_infrastructure_custom_field_values` TO `infrastructure_custom_field_values`;
+
+DROP TABLE IF EXISTS `institution_infrastructures`;
+RENAME TABLE `z_3017_institution_infrastructures` TO `institution_infrastructures`;
+
 RENAME TABLE `z_3017_infrastructure_custom_table_columns` TO `infrastructure_custom_table_columns`;
 RENAME TABLE `z_3017_infrastructure_custom_table_rows` TO `infrastructure_custom_table_rows`;
 RENAME TABLE `z_3017_infrastructure_custom_table_cells` TO `infrastructure_custom_table_cells`;

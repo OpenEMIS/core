@@ -118,6 +118,15 @@ CREATE TABLE IF NOT EXISTS `institution_rooms` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- custom field
+CREATE TABLE `z_3017_infrastructure_custom_forms` LIKE  `infrastructure_custom_forms`;
+INSERT INTO `z_3017_infrastructure_custom_forms` SELECT * FROM `infrastructure_custom_forms` WHERE 1;
+
+RENAME TABLE `institution_infrastructures` TO `z_3017_institution_infrastructures`;
+CREATE TABLE `institution_infrastructures` LIKE  `z_3017_institution_infrastructures`;
+
+RENAME TABLE `infrastructure_custom_field_values` TO `z_3017_infrastructure_custom_field_values`;
+CREATE TABLE `infrastructure_custom_field_values` LIKE  `z_3017_infrastructure_custom_field_values`;
+
 RENAME TABLE `infrastructure_custom_table_columns` TO `z_3017_infrastructure_custom_table_columns`;
 RENAME TABLE `infrastructure_custom_table_rows` TO `z_3017_infrastructure_custom_table_rows`;
 RENAME TABLE `infrastructure_custom_table_cells` TO `z_3017_infrastructure_custom_table_cells`;
