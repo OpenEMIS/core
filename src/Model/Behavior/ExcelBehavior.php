@@ -35,7 +35,7 @@ class ExcelBehavior extends Behavior {
 		'limit' => 300,
 		'pages' => [],
 		'orientation' => 'landscape', // or portrait
-		'sheet_limit' =>  1000000
+		'sheet_limit' =>  1040000 // excel limit is 1,048,576 rows, give 8k row allowance
 	];
 
 	public function initialize(array $config) {
@@ -160,8 +160,8 @@ class ExcelBehavior extends Behavior {
 				} else {
 					$initialLength = strlen($sheetName);
 				}
-				if (strlen($sheetName) > 27) {
-					$sheetName = substr($sheetName,0,27).'('.$counter++.')';
+				if (strlen($sheetName) > 23) {
+					$sheetName = substr($sheetName,0,23).'('.$counter++.')';
 				} else {	
 					$sheetName = $sheetName.'('.$counter++.')';
 				}
@@ -186,6 +186,7 @@ class ExcelBehavior extends Behavior {
 			$count = $query->count();
 			$rowCount = 0;
 			$sheetCount = 1;
+			$sheetRowCount = 0;
 			$percentCount = intval($count / 100);
 			$pages = ceil($count / $this->config('limit'));
 
@@ -233,15 +234,15 @@ class ExcelBehavior extends Behavior {
 					// process each row based on the result set
 					foreach ($resultSet as $entity) {
 
-						if ($rowCount >= $this->config('sheet_limit')) {
-							$sheetCount++;
+						if ($sheetRowCount >= $this->config('sheet_limit')) {
 
+							$sheetCount++;
 							$sheetName = $baseSheetName . '_' . $sheetCount;
 
 							// rewrite header into new sheet
 							$writer->writeSheetRow($sheetName, $headerRow);
 							
-						 	$rowCount = 0;
+						 	$sheetRowCount= 0;
 						}
 						
 						$settings['entity'] = $entity;
@@ -256,6 +257,7 @@ class ExcelBehavior extends Behavior {
 							$row = array_merge($row, array_shift($additionalRows));
 						}
 
+						$sheetRowCount++;
 						$rowCount++;
 						$event = $this->dispatchEvent($table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount]);
 						if (!$event->result) {
