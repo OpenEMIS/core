@@ -56,6 +56,14 @@ trait OptionsTrait {
 			'InstitutionRooms' => [
 				'change_types' => [1 => __('Update Details'), 2 => __('End of Usage'), 3 => __('Change in Room Type')]
 			],
+			'Shifts' => [
+				'types' => [
+		        	1 => __('Single Shift Owner'),
+					2 => __('Single Shift Occupier'),
+					3 => __('Multiple Shift Owner'),
+					4 => __('Multiple Shift Occupier')
+        		]
+        	]
 		];
 
 		$index = explode('.', $code);
