@@ -478,8 +478,7 @@ class StaffAbsencesTable extends AppTable {
 			$activeStaffOptions = $Staff
 				->find()
 				->where([
-					$Staff->aliasField('institution_id') => $institutionId,
-					$Staff->aliasField('staff_status_id') => 1,
+					$Staff->aliasField('institution_id') => $institutionId
 				])
 				->find('InDateRange', ['start_date' => $startDate, 'end_date' => $endDate])
 				->contain(['Users'])
