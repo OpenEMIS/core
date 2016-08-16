@@ -342,6 +342,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			$startDate = $AcademicPeriod->get($selectedPeriod)->start_date;
 			$endDate = $AcademicPeriod->get($selectedPeriod)->end_date;
+			$this->ControllerAction->field('end_date');
 
 			$this->fields['start_date']['date_options']['startDate'] = $startDate->format('d-m-Y');
 			$this->fields['start_date']['date_options']['endDate'] = $endDate->format('d-m-Y');
@@ -350,7 +351,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 
 		} else if ($this->action == 'edit') {
 			$this->ControllerAction->field('start_date', ['value' => date('Y-m-d', strtotime($entity->start_date))]);
-			$this->ControllerAction->field('end_date', ['value' => date('Y-m-d', strtotime($entity->end_date))]);
+			$this->ControllerAction->field('end_date',['value' => date('Y-m-d', strtotime($entity->end_date))]);
 		}
 		// End
 
