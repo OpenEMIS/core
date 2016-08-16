@@ -368,8 +368,8 @@ class StudentAttendancesTable extends AppTable {
 		$studentId = $entity->student_id;
 		$StudentTable = TableRegistry::get('Institution.Students');
 		$institutionId = $this->Session->read('Institution.Institutions.id');
-
-		if (!is_null($this->request->query('mode')) && $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
+		// checkEnrolledInInstitution will list only enrolled student in the school
+		if (!is_null($this->request->query('mode'))) {
 			$Form = $event->subject()->Form;
 
 			$institutionId = $this->Session->read('Institution.Institutions.id');
@@ -624,7 +624,10 @@ class StudentAttendancesTable extends AppTable {
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$periodOptions = $AcademicPeriod->getList();
+		$periodOptionsData = $AcademicPeriod->getList();
+		// only year options will appear
+		$periodOptions = $periodOptionsData[key($periodOptionsData)];
+
 		if (empty($this->request->query['academic_period_id'])) {
 			$this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
 		}
@@ -991,6 +994,7 @@ class StudentAttendancesTable extends AppTable {
 		if ($this->request->is(['post', 'put'])) {
 			$requestQuery = $this->request->query;
 			$requestData = $this->request->data;
+
 			$StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
 			$alias = Inflector::underscore($StudentAbsences->alias());
 			$codeAbsenceType = array_flip($this->absenceCodeList);

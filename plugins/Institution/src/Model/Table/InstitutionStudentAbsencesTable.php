@@ -309,21 +309,6 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		}
 	}
 
-	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
-		$StudentTable = TableRegistry::get('Institution.Students');
-		$studentId = $entity->student_id;
-		$institutionId = $entity->institution_id;
-		if (!is_null($studentId)) {
-			if(! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
-				$process = function ($model, $entity) {
-					return false;
-				};
-				$this->Alert->error('InstitutionStudentAbsences.notEnrolled');
-				return $process;
-			}
-		}
-	}
-
 	public function addEditBeforePatch(Event $event, $entity, $requestData, $patchOptions) {
 		$absenceTypeId = $requestData[$this->alias()]['absence_type_id'];
 		if ($this->absenceCodeList[$absenceTypeId] == 'LATE') {
@@ -538,6 +523,24 @@ class InstitutionStudentAbsencesTable extends AppTable {
 				if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
 					$request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
 				}
+				if (array_key_exists('class', $request->data[$this->alias()])) {
+					$request->query['class'] = $request->data[$this->alias()]['class'];
+					$classId = $data[$this->alias()]['class'];
+
+						$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+						$shiftTime = $InstitutionShift
+							->find('shiftTime', ['institution_class_id' => $classId])
+							->first();
+
+						$startTime = $shiftTime->start_time;
+						$endTime = $shiftTime->end_time;
+
+						$entity->start_time = date('h:i A', strtotime($startTime));
+						$entity->end_time = date('h:i A', strtotime($endTime));
+
+						$data[$this->alias()]['start_time'] = $entity->start_time;
+						$data[$this->alias()]['end_time'] = $entity->end_time;
+				}
 			}
 		}
 	}
@@ -554,6 +557,21 @@ class InstitutionStudentAbsencesTable extends AppTable {
 				}
 				if (array_key_exists('class', $request->data[$this->alias()])) {
 					$request->query['class'] = $request->data[$this->alias()]['class'];
+					$classId = $data[$this->alias()]['class'];
+
+						$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+						$shiftTime = $InstitutionShift
+							->find('shiftTime', ['institution_class_id' => $classId])
+							->first();
+
+						$startTime = $shiftTime->start_time;
+						$endTime = $shiftTime->end_time;
+
+						$entity->start_time = date('h:i A', strtotime($startTime));
+						$entity->end_time = date('h:i A', strtotime($endTime));
+
+						$data[$this->alias()]['start_time'] = $entity->start_time;
+						$data[$this->alias()]['end_time'] = $entity->end_time;
 				}
 			}
 		}
@@ -625,6 +643,9 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		// Academic Period
 		$periodOptionsData = $AcademicPeriod->getList(['isEditable'=>true]);
 		$periodOptions = $periodOptionsData[key($periodOptionsData)];
+		if (is_null($this->request->query('period'))) {
+			$this->request->query['period'] = $AcademicPeriod->getCurrent();
+		}
 		$selectedPeriod = $this->queryString('period', $periodOptions);
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
