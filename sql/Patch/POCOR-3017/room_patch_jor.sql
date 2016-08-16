@@ -35,8 +35,8 @@ SELECT `id` INTO @infrastructureFormId FROM `infrastructure_custom_forms` WHERE 
 SELECT `id` INTO @roomFormId FROM `infrastructure_custom_forms` WHERE `name` = 'Room - Apply To All';
 
 INSERT INTO `infrastructure_custom_forms_filters` (`id`, `infrastructure_custom_form_id`, `infrastructure_custom_filter_id`) VALUES
-(uuid(), @infrastructureFormId, 0),
-(uuid(), @roomFormId, 0);
+('9a09bce6-6391-11e6-8c3d-525400b263eb', @infrastructureFormId, 0),
+('a617cc41-6391-11e6-8c3d-525400b263eb', @roomFormId, 0);
 
 -- institution_infrastructures
 INSERT INTO `institution_infrastructures` (`id`, `code`, `name`, `year_acquired`, `year_disposed`, `comment`, `size`, `parent_id`, `institution_id`, `infrastructure_level_id`, `infrastructure_type_id`, `infrastructure_ownership_id`, `infrastructure_condition_id`, `created_user_id`, `created`)
