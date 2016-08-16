@@ -572,7 +572,7 @@ class UserGroupsTable extends AppTable {
 				]
 			]);
 		}
-		$options['order'] = [$this->aliasField('name')];
+		$options['order'] = [$this->aliasField('name') => 'asc'];
 
 		$search = $this->ControllerAction->getSearchKey();
 

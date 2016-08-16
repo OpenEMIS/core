@@ -477,7 +477,12 @@ class ConfigItemsTable extends AppTable {
   	private $validateTrainingCreditHour = [
 		'num' => [
 			'rule'  => 'numeric',
-			'message' => 'Value should be numeric',
+			'message' => 'Numeric Value should be between 0 to 1000',
+		],
+		'bet' => [
+			'rule'	=> ['range', 1, 1000],
+			'message' => 'Numeric Value should be between 0 to 1000',
+			'last' => true
 		]
 	];
   

@@ -271,19 +271,21 @@ class RecordBehavior extends Behavior {
 
 				// Logic to delete all the answer for rules
 				if (is_null($this->config('moduleKey'))) {
-					$surveyFormId = $data[$this->_table->alias()]['survey_form_id'];
-	        		$SurveyRules = TableRegistry::get('Survey.SurveyRules');
-	        		$rules = $SurveyRules
-	        			->find()
-	        			->where([
-	        				$SurveyRules->aliasField('survey_form_id') => $surveyFormId,
-	        				$SurveyRules->aliasField('enabled') => 1
-	        			])
-	        			->toArray();
-	        		$showRules = [];
-	        		foreach ($rules as $rule) {
-	        			$settings['deleteFieldIds'][] = $rule->survey_question_id;
-	        		}	        		
+					if (isset($data[$this->_table->alias()][$this->config('formKey')])) {
+						$surveyFormId = $data[$this->_table->alias()][$this->config('formKey')];
+		        		$SurveyRules = TableRegistry::get('Survey.SurveyRules');
+		        		$rules = $SurveyRules
+		        			->find()
+		        			->where([
+		        				$SurveyRules->aliasField('survey_form_id') => $surveyFormId,
+		        				$SurveyRules->aliasField('enabled') => 1
+		        			])
+		        			->toArray();
+		        		$showRules = [];
+		        		foreach ($rules as $rule) {
+		        			$settings['deleteFieldIds'][] = $rule->survey_question_id;
+		        		}
+					}       		
 				}
 
 				// when edit always delete all the checkbox values before reinsert,
@@ -626,6 +628,18 @@ class RecordBehavior extends Behavior {
 		}
 		// End
 
+		// For survey only
+		// To get the rules for the survey form
+		if (is_null($this->config('moduleKey')) && $this->_table->action == 'view') {
+			$SurveyRules = TableRegistry::get('Survey.SurveyRules');
+			$surveyFormId = $entity->survey_form_id;
+			$rules = $SurveyRules
+				->find('SurveyRulesList', [
+					'survey_form_id' => $surveyFormId
+				])
+				->toArray();
+		}
+
 		if (!is_null($query)) {
 			$customFields = $query->toArray();
 
@@ -744,8 +758,30 @@ class RecordBehavior extends Behavior {
 					$attr['attr']['seq'] = $count++;
 				}
 
-				$model->ControllerAction->field($fieldName, $attr);
-				$fieldOrder[++$order] = $fieldName;
+				$renderField = true;
+
+				// For survey only
+				// To show the field in the view page base on the rules
+				if (is_null($this->config('moduleKey')) && $this->_table->action == 'view') {
+					$id = $attr['customField']['id'];
+					if (isset($rules[$id])) {
+						$answer = $this->_table->array_column($attr['customFieldValues'], 'number_value');
+						$forRender = false;
+						foreach ($rules[$id] as $ruleKey => $ruleOpt) {
+							if (isset($answer[$ruleKey])) {
+								if (in_array($answer[$ruleKey], json_decode($ruleOpt, true))) {
+									$forRender = true;
+								}
+							}
+						}
+						$renderField = $forRender;
+					}
+				}
+
+				if ($renderField) {
+					$model->ControllerAction->field($fieldName, $attr);
+					$fieldOrder[++$order] = $fieldName;
+				}
 			}
 
 			foreach ($ignoreFields as $key => $field) {
