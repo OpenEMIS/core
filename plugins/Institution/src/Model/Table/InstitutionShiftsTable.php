@@ -271,20 +271,24 @@ class InstitutionShiftsTable extends ControllerActionTable {
 		// unset($this->request->query['replicate']);
 	//}
 
-	public function addEditBeforeAction(Event $event)
+	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
 	{
+
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 
-		if ($this->isOccupier($institutionId, $this->getSelectedAcademicPeriod($this->AcademicPeriods->getCurrent()))) { //if occupier, then redirect from trying to access add/edit page
+		if ($this->action == 'add') {
+			$selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
+		} else if ($this->action == 'edit') {
+			$selectedAcademicPeriod = $entity->academic_period_id;
+		}
+
+		if ($this->isOccupier($institutionId, $selectedAcademicPeriod)) { //if occupier, then redirect from trying to access add/edit page
 			$url = $this->url('index');
 			$url['occupier'] = 1;
 			$event->stopPropagation();
 			return $this->controller->redirect($url);
 		}
-	}
 
-	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-	{
 		$this->setupFields($entity);
 	}
 
@@ -294,14 +298,17 @@ class InstitutionShiftsTable extends ControllerActionTable {
 **
 ******************************************************************************************************************/
 
-	public function viewBeforeAction(Event $event, ArrayObject $extra)
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
 	{
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
 
-		if ($this->isOccupier($institutionId, $this->getSelectedAcademicPeriod($this->request))) { //if occupier, then remove the 'edit / remove' button
+		//hide the remove button on view because it cant cater for "restrict" delete
+		//there is another raised bugs to fix this, once fixed than can re-enabled again.
+		unset($toolbarButtonsArray['remove']); 
+		
+		if ($this->isOccupier($institutionId, $entity->academic_period_id)) { //if occupier, then remove the 'edit' button
 			unset($toolbarButtonsArray['edit']);
-			unset($toolbarButtonsArray['remove']);
 		}
 		$extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
 
