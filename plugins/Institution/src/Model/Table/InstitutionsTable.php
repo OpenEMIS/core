@@ -14,11 +14,13 @@ use Cake\I18n\I18n;
 use Cake\ORM\ResultSet;
 
 use App\Model\Table\AppTable;
+use App\Model\Traits\OptionsTrait;
 
 class InstitutionsTable extends AppTable  {
+	use OptionsTrait;
 	private $dashboardQuery = null;
 
-	private $shiftTypes = [];
+	public $shiftTypes = [];
 
 	CONST SINGLE_OWNER = 1;
 	CONST SINGLE_OCCUPIER = 2;
@@ -116,13 +118,8 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('OpenEmis.Map');
         $this->addBehavior('HighChart', ['institutions' => ['_function' => 'getNumberOfInstitutionsByModel']]);
         $this->addBehavior('Import.ImportLink');
-
-        $this->shiftTypes = [
-        	1 => __('Single Shift Owner'),
-			2 => __('Single Shift Occupier'),
-			3 => __('Multiple Shift Owner'),
-			4 => __('Multiple Shift Occupier')
-        ];
+        
+        $this->shiftTypes = $this->getSelectOptions('Shifts.types'); //get from options trait
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -186,7 +183,7 @@ class InstitutionsTable extends AppTable  {
 		$cloneFields = $fields->getArrayCopy();
 		$newFields = [];
 		foreach ($cloneFields as $key => $value) {
-			$newFields[] = $value;
+			
 			if ($value['field'] == 'area_id') {
 				$newFields[] = [
 					'key' => 'Areas.code',
@@ -194,6 +191,16 @@ class InstitutionsTable extends AppTable  {
 					'type' => 'string',
 					'label' => ''
 				];
+			} else  if ($value['field'] == 'shift_type') {
+				$newFields[] = [
+					'key' => 'Institutions.shift_type',
+					'field' => 'shift_type',
+					'type' => 'integer',
+					'label' => 'Shift Type',
+					'constant' => 'shiftTypes',
+				];
+			} else {
+				$newFields[] = $value;
 			}
 		}
 		$fields->exchangeArray($newFields);
