@@ -612,7 +612,9 @@ class StaffAttendancesTable extends AppTable {
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$periodOptions = $AcademicPeriod->getList();
+		$periodOptionsData = $AcademicPeriod->getList();
+		// only year options will appear
+		$periodOptions = $periodOptionsData[key($periodOptionsData)];
 
 		if (empty($this->request->query['academic_period_id'])) {
 			$this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
