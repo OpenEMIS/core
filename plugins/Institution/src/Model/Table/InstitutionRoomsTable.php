@@ -37,7 +37,7 @@ class InstitutionRoomsTable extends AppTable {
 		$this->belongsTo('InfrastructureConditions', ['className' => 'FieldOption.InfrastructureConditions']);
 		$this->belongsTo('PreviousRooms', ['className' => 'Institution.InstitutionRooms', 'foreignKey' => 'previous_room_id']);
 
-		$this->addBehavior('AcademicPeriod.Period');
+		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 		$this->addBehavior('CustomField.Record', [
 			'fieldKey' => 'infrastructure_custom_field_id',
@@ -677,7 +677,7 @@ class InstitutionRoomsTable extends AppTable {
 	}
 
 	public function getPeriodOptions($params=[]) {
-		$periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
+		$periodOptions = $this->AcademicPeriods->getYearList();
 		if (is_null($this->request->query('period_id'))) {
 			$this->request->query['period_id'] = $this->AcademicPeriods->getCurrent();
 		}

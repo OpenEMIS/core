@@ -121,6 +121,9 @@ CREATE TABLE IF NOT EXISTS `institution_rooms` (
 CREATE TABLE `z_3017_infrastructure_custom_forms` LIKE  `infrastructure_custom_forms`;
 INSERT INTO `z_3017_infrastructure_custom_forms` SELECT * FROM `infrastructure_custom_forms` WHERE 1;
 
+CREATE TABLE `z_3017_infrastructure_custom_forms_filters` LIKE  `infrastructure_custom_forms_filters`;
+INSERT INTO `z_3017_infrastructure_custom_forms_filters` SELECT * FROM `infrastructure_custom_forms_filters` WHERE 1;
+
 RENAME TABLE `institution_infrastructures` TO `z_3017_institution_infrastructures`;
 CREATE TABLE `institution_infrastructures` LIKE  `z_3017_institution_infrastructures`;
 
