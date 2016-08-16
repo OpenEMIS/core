@@ -303,13 +303,11 @@ class InstitutionShiftsTable extends ControllerActionTable {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
 
-		//hide the remove button on view because it cant cater for "restrict" delete
-		//there is another raised bugs to fix this, once fixed than can re-enabled again.
-		unset($toolbarButtonsArray['remove']); 
-		
-		if ($this->isOccupier($institutionId, $entity->academic_period_id)) { //if occupier, then remove the 'edit' button
+		if ($this->isOccupier($institutionId, $entity->academic_period_id)) { //if occupier, then remove the 'delete / edit' button
 			unset($toolbarButtonsArray['edit']);
+			unset($toolbarButtonsArray['remove']); 
 		}
+		
 		$extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
 
 		$this->field('institution_id', ['type' => 'integer']); //this is to show owner (set in label table), by default the default is hidden
