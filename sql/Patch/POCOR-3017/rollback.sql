@@ -13,6 +13,9 @@ DROP TABLE IF EXISTS `institution_rooms`;
 DROP TABLE IF EXISTS `infrastructure_custom_forms`;
 RENAME TABLE `z_3017_infrastructure_custom_forms` TO `infrastructure_custom_forms`;
 
+DROP TABLE IF EXISTS `infrastructure_custom_forms_filters`;
+RENAME TABLE `z_3017_infrastructure_custom_forms_filters` TO `infrastructure_custom_forms_filters`;
+
 DROP TABLE IF EXISTS `infrastructure_custom_field_values`;
 RENAME TABLE `z_3017_infrastructure_custom_field_values` TO `infrastructure_custom_field_values`;
 
