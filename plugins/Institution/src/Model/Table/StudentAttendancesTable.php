@@ -458,7 +458,7 @@ class StudentAttendancesTable extends AppTable {
 		$studentId = $entity->student_id;
 		$StudentTable = TableRegistry::get('Institution.Students');
 		$institutionId = $this->Session->read('Institution.Institutions.id');
-		if (!is_null($this->request->query('mode')) && $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
+		if (!is_null($this->request->query('mode'))) {
 			$Form = $event->subject()->Form;
 
 			$id = $entity->student_id;
