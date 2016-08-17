@@ -2,7 +2,6 @@
 namespace Configuration\Controller;
 
 use ArrayObject;
-use FieldOption\Controller\AppController;
 use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
