@@ -18,7 +18,8 @@
 		<hr>
 		<h3><?= __('Authentication Configurations')?></h3>
 		<div class="clearfix">
-			<?php 
+			<?php
+				$this->Form->unlockField('AuthenticationTypeAttributes.sp_metadata');
 				foreach ($attr as $key => $value) {
 				echo 
 					$this->Form->input('AuthenticationTypeAttributes'.'.'.$key.'.value', $value);
