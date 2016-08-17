@@ -92,7 +92,8 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		$validator
 			->add('start_date', [
 				'ruleCompareJoinDate' => [
-					'rule' => ['compareJoinDate', 'student_id']
+					'rule' => ['compareJoinDate', 'student_id'],
+					'on' => 'create'
 				],
 				'ruleNoOverlappingAbsenceDate' => [
 					'rule' => ['noOverlappingAbsenceDate', $this]
@@ -104,7 +105,8 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			])
 			->add('end_date', [
 				'ruleCompareJoinDate' => [
-					'rule' => ['compareJoinDate', 'student_id']
+					'rule' => ['compareJoinDate', 'student_id'],
+					'on' => 'create'
 				],
 				'ruleCompareDateReverse' => [
 					'rule' => ['compareDateReverse', 'start_date', true]
