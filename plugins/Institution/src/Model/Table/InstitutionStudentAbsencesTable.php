@@ -678,10 +678,12 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		// End
 
 		// Student
+		$selectedClass = $this->queryString('class', $classOptions);
 		$Students = TableRegistry::get('Institution.InstitutionClassStudents');
 		$studentOptions = $Students
 			->find('list', ['keyField' => 'student_id', 'valueField' => 'student_name'])
 			->where([
+				$Students->aliasField('academic_period_id') => $selectedPeriod,
 				$Students->aliasField('institution_class_id') => $selectedClass
 			])
 			->contain(['Users'])
