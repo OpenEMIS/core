@@ -6,10 +6,9 @@ v3.6.1
 - System will only show available positions in Add staff page
 - Student punctuality is based on classes shifts start time
 - Staff punctuality is based on Institution's shifts start time
-- Fixed 404 error on certain pages
-- Fixed 404 on certain pages
 - Added a maximum limit of 1000 to Maximum Credits for Training Courses	
 - Fixed a bug on Survey Rules where checkboxes are not shown properly
+- Fixed 404 error on certain pages
 
 v3.5.12
 - Fixed a bug that caused some Field Options not able to be sorted
