@@ -19,10 +19,10 @@ class FieldOptionsController extends AppController {
     {
         parent::beforeFilter($event);
         $header = 'Field Options';
-
         $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'index']);
         $session = $this->request->session();
         $action = $this->request->params['action'];
+
 
         $this->set('contentHeader', __($header));
     }
@@ -88,6 +88,7 @@ class FieldOptionsController extends AppController {
     public function SalaryDeductionTypes()          { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
     public function Countries()                     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
     public function ContactTypes()                  { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
+    public function ShiftOptions()                  { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
     public function TrainingAchievementTypes()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
     public function TrainingCourseTypes()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
     public function TrainingFieldStudies()          { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
