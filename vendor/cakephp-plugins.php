@@ -11,6 +11,7 @@ return [
         'Assessment' => $baseDir . '/plugins/Assessment/',
         'Bake' => $baseDir . '/vendor/cakephp/bake/',
         'Cache' => $baseDir . '/plugins/Cache/',
+        'Configuration' => $baseDir . '/plugins/Configuration/',
         'ControllerAction' => $baseDir . '/plugins/ControllerAction/',
         'CustomField' => $baseDir . '/plugins/CustomField/',
         'CustomFieldV1' => $baseDir . '/plugins/CustomFieldV1/',
