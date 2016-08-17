@@ -19,7 +19,44 @@ class AcademicPeriodsTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('Parents', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('Levels', ['className' => 'AcademicPeriod.AcademicPeriodLevels', 'foreignKey' => 'academic_period_level_id']);
-		$this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true]);
+
+        // reference to itself
+        $this->hasMany('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'parent_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        // other associated modules
+        $this->hasMany('AssessmentAssessmentItemResults', ['className' => 'Assessment.AssessmentItemResults', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionAssessmentItemResults', ['className' => 'Institution.AssessmentItemResults', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Assessments', ['className' => 'Assessment.Assessments', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentAttendances', ['className' => 'Institution.StudentAttendances', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentClasses', ['className' => 'Student.StudentClasses', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionFees', ['className' => 'Institution.InstitutionFees', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionRubrics', ['className' => 'Institution.InstitutionRubrics', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionQualityVisits', ['className' => 'Institution.InstitutionQualityVisits', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('RepeaterSurveys', ['className' => 'InstitutionRepeater.RepeaterSurveys', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionInstitutionSubjects', ['className' => 'Institution.InstitutionSubjects', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        // not required. left here for reference
+        // $this->hasMany('ReportInstitutionSubjects', ['className' => 'Report.InstitutionSubjects', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('TransferApprovals', ['className' => 'Institution.TransferApprovals', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('TransferRequests', ['className' => 'Institution.TransferRequests', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('DropoutRequests', ['className' => 'Institution.DropoutRequests', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentDropout', ['className' => 'Institution.StudentDropout', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentSurveys', ['className' => 'Student.StudentSurveys', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Students', ['className' => 'Institution.Students', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentFees', ['className' => 'Institution.StudentFees', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentPromotion', ['className' => 'Institution.StudentPromotion', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentTransfer', ['className' => 'Institution.StudentTransfer', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('UndoStudentStatus', ['className' => 'Institution.UndoStudentStatus', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Programmes', ['className' => 'Student.Programmes', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('RubricStatusPeriods', ['className' => 'Rubric.RubricStatusPeriods', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffExtracurriculars', ['className' => 'Staff.Extracurriculars', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentExtracurriculars', ['className' => 'Student.Extracurriculars', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('SurveyStatusPeriods', ['className' => 'Survey.SurveyStatusPeriods', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'dependent' => true, 'cascadeCallbacks' => true]);
+
 		$this->addBehavior('Tree');
 	}
 
@@ -123,7 +160,7 @@ class AcademicPeriodsTable extends AppTable {
 			$this->fields['parent_id']['attr']['value'] = -1;
 		} else {
 			$this->fields['parent_id']['attr']['value'] = $parentId;
-			
+
 			$crumbs = $this
 				->find('path', ['for' => $parentId])
 				->order([$this->aliasField('lft')])
@@ -143,7 +180,7 @@ class AcademicPeriodsTable extends AppTable {
 			array_unshift($this->_fieldOrder, 'parent');
 		}
 	}
-	
+
 	public function onGetCurrent(Event $event, Entity $entity) {
 		return $entity->current == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
 	}
@@ -273,7 +310,7 @@ class AcademicPeriodsTable extends AppTable {
 				->find('order')
 				->where($where)
 				->toArray();
-			
+
 			// get all other periods
 			$where[$this->aliasField('current')] = 0;
 			$data += $this->find('list')
@@ -387,7 +424,7 @@ class AcademicPeriodsTable extends AppTable {
 		$ConfigItems = TableRegistry::get('ConfigItems');
 		$firstDayOfWeek = $ConfigItems->value('first_day_of_week');
 
-		// If First of week is sunday changed the value to 7, because sunday with the '0' value unable to be displayed 
+		// If First of week is sunday changed the value to 7, because sunday with the '0' value unable to be displayed
 		if ($firstDayOfWeek == 0) {
 			$firstDayOfWeek = 7;
 		}
@@ -398,13 +435,13 @@ class AcademicPeriodsTable extends AppTable {
 		$lastDayIndex = ($firstDayOfWeek - 1);// last day index always 1 day before the starting date.
 		if ($lastDayIndex == 0) {
 			$lastDayIndex = 7;
-		} 
+		}
 
 		$startDate = $period->start_date;
 
 		$weekIndex = 1;
 		$weeks = [];
-		
+
 		do {
 			$endDate = $startDate->copy()->next($lastDayIndex);
 			if ($endDate->gt($period->end_date)) {
@@ -414,7 +451,7 @@ class AcademicPeriodsTable extends AppTable {
 			$startDate = $endDate->copy();
 			$startDate->addDay();
 		} while ($endDate->lt($period->end_date));
-		
+
 		return $weeks;
 	}
 
@@ -454,7 +491,7 @@ class AcademicPeriodsTable extends AppTable {
 						$this->aliasField('current') => 1,
 						$this->aliasField('parent_id').' > 0',
 					])
-					->order(['start_date DESC']);		
+					->order(['start_date DESC']);
 		$countQuery = $query->count();
 		if($countQuery > 0) {
 			$result = $query->first();
@@ -483,22 +520,22 @@ class AcademicPeriodsTable extends AppTable {
 		$stampStartDay = strtotime($startDate);
 		$stampEndDay = strtotime($endDate);
 		// $stampToday = strtotime(date('Y-m-d'));
-		
+
 		$stampFirstDayOfMonth = strtotime('01-' . date('m', $stampStartDay) . '-' . date('Y', $stampStartDay));
 		// while($stampFirstDayOfMonth <= $stampEndDay && $stampFirstDayOfMonth <= $stampToday){
 		while($stampFirstDayOfMonth <= $stampEndDay){
 			$monthString = date('F', $stampFirstDayOfMonth);
 			$monthNumber = date('m', $stampFirstDayOfMonth);
 			$year = date('Y', $stampFirstDayOfMonth);
-			
+
 			$result[] = [
 				'month' => ['inNumber' => $monthNumber, 'inString' => $monthString],
 				'year' => $year
 			];
-			
+
 			$stampFirstDayOfMonth = strtotime('+1 month', $stampFirstDayOfMonth);
 		}
-		
+
 		return $result;
 	}
 
@@ -507,28 +544,28 @@ class AcademicPeriodsTable extends AppTable {
 		$stampStartDay = strtotime($startDate);
 		$stampEndDay = strtotime($endDate);
 		// $stampToday = strtotime(date('Y-m-d'));
-		
+
 		$stampFirstDayOfMonth = strtotime($year . '-' . $month . '-01');
-		$stampFirstDayNextMonth = strtotime('+1 month', $stampFirstDayOfMonth);	
-		
+		$stampFirstDayNextMonth = strtotime('+1 month', $stampFirstDayOfMonth);
+
 		if($stampFirstDayOfMonth <= $stampStartDay){
 			$tempStamp = $stampStartDay;
 		}else{
 			$tempStamp = $stampFirstDayOfMonth;
 		}
-		
+
 		// while($tempStamp <= $stampEndDay && $tempStamp < $stampFirstDayNextMonth && $tempStamp < $stampToday){
 		while($tempStamp <= $stampEndDay && $tempStamp < $stampFirstDayNextMonth){
 			$weekDay = date('l', $tempStamp);
 			$date = date('Y-m-d', $tempStamp);
 			$day = date('d', $tempStamp);
-			
+
 			$days[] = [
 				'weekDay' => $weekDay,
 				'date' => $date,
 				'day' => $day
 			];
-			
+
 			$tempStamp = strtotime('+1 day', $tempStamp);
 		}
 
