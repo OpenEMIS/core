@@ -36,6 +36,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 			'fieldValueClass' => ['className' => 'Infrastructure.InfrastructureCustomFieldValues', 'foreignKey' => 'institution_infrastructure_id', 'dependent' => true, 'cascadeCallbacks' => true],
 			'tableCellClass' => null
 		]);
+		$this->addBehavior('Institution.InfrastructureShift');
 	}
 
 	public function validationDefault(Validator $validator) {

@@ -52,6 +52,7 @@ class InstitutionRoomsTable extends AppTable {
 			'fieldValueClass' => ['className' => 'Infrastructure.RoomCustomFieldValues', 'foreignKey' => 'institution_room_id', 'dependent' => true, 'cascadeCallbacks' => true],
 			'tableCellClass' => null
 		]);
+		$this->addBehavior('Institution.InfrastructureShift');
 
 		$this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
 		$this->levelOptions = $this->Levels->getOptions(['keyField' => 'id', 'valueField' => 'name']);
@@ -618,7 +619,7 @@ class InstitutionRoomsTable extends AppTable {
 		return $toolbarElements;
 	}
 
-	private function startsWith($haystack, $needle) {
+	public function startsWith($haystack, $needle) {
         // search backwards starting from haystack length characters from the end
         return $needle === "" || strrpos($haystack, $needle, -strlen($haystack)) !== false;
     }
