@@ -35,7 +35,7 @@ class ExcelBehavior extends Behavior {
 		'limit' => 300,
 		'pages' => [],
 		'orientation' => 'landscape', // or portrait
-		'sheet_limit' =>  1040000 // excel limit is 1,048,576 rows, give 8k row allowance
+		'sheet_limit' =>  1000001 // 1 mil rows and header row
 	];
 
 	public function initialize(array $config) {
