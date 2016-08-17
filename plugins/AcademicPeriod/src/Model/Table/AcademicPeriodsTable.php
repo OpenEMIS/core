@@ -65,6 +65,12 @@ class AcademicPeriodsTable extends AppTable {
 				}
 			}			
 		}
+
+		if ($entity->dirty('current')) { //check whether default value has been changed
+ 			if ($entity->current) { 
+				$this->triggerUpdateInstitutionShiftTypeShell($entity->id);
+			}
+ 		}
 	}
 
 	public function beforeAction(Event $event) {
@@ -167,15 +173,6 @@ class AcademicPeriodsTable extends AppTable {
 
 			array_unshift($this->_fieldOrder, 'parent');
 		}
-	}
-
-	public function afterSave(Event $event, Entity $entity, ArrayObject $options) 
-	{
-		if ($entity->dirty('current')) { //check whether default value has been changed
- 			if ($entity->current) { 
-				$this->triggerUpdateInstitutionShiftTypeShell($entity->id);
-			}
- 		}
 	}
 
 	public function triggerUpdateInstitutionShiftTypeShell($params) {
