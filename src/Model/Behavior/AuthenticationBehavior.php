@@ -10,7 +10,7 @@ use Cake\ORM\Entity;
 use Cake\Routing\Router;
 use Cake\Validation\Validator;
 
-require_once( ROOT . DS . 'vendor' . DS . 'php-saml' . DS . '_toolkit_loader.php');
+require_once( ROOT . DS . 'vendor' . DS . 'onelogin' . DS . 'php-saml' . DS . '_toolkit_loader.php');
 
 class AuthenticationBehavior extends Behavior {
 
@@ -115,7 +115,7 @@ class AuthenticationBehavior extends Behavior {
 	}
 
 	protected function processAuthentication(&$attribute, $authenticationType) {
-		$AuthenticationTypeAttributesTable = TableRegistry::get('AuthenticationTypeAttributes');
+		$AuthenticationTypeAttributesTable = TableRegistry::get('SSO.AuthenticationTypeAttributes');
 		$attributesArray = $AuthenticationTypeAttributesTable->find()->where([$AuthenticationTypeAttributesTable->aliasField('authentication_type') => $authenticationType])->toArray();
 		$attributeFieldsArray = $this->_table->array_column($attributesArray, 'attribute_field');
 		foreach ($attribute as $key => $values) {
@@ -135,7 +135,7 @@ class AuthenticationBehavior extends Behavior {
 	}
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$AuthenticationTypeAttributesTable = TableRegistry::get('AuthenticationTypeAttributes');
+		$AuthenticationTypeAttributesTable = TableRegistry::get('SSO.AuthenticationTypeAttributes');
 		if ($data[$this->alias]['value'] != 'Local' && $data[$this->alias]['type'] == 'Authentication') {
 			$authenticationType = $data[$this->alias]['value'];
 			$AuthenticationTypeAttributesTable->deleteAll(
@@ -175,7 +175,7 @@ class AuthenticationBehavior extends Behavior {
 
        	$message = $this->getSPMetaData($setting);
        	
-       	$AuthenticationTypeAttributesTable = TableRegistry::get('AuthenticationTypeAttributes');
+       	$AuthenticationTypeAttributesTable = TableRegistry::get('SSO.AuthenticationTypeAttributes');
        	$entity = $AuthenticationTypeAttributesTable->find()->where([
        			$AuthenticationTypeAttributesTable->aliasField('authentication_type') => 'Saml2',
        			$AuthenticationTypeAttributesTable->aliasField('attribute_field') => 'sp_metadata'

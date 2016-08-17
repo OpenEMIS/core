@@ -113,16 +113,23 @@ class AppController extends Controller {
 		]);
 
 		$this->loadComponent('Workflow.Workflow');
-		$this->loadComponent('OpenEmis.SSO', [
+		$this->loadComponent('SSO.SSO', [
 			'homePageURL' => ['plugin' => null, 'controller' => 'Dashboard', 'action' => 'index'],
 			'loginPageURL' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'login'],
+			'userModel' => 'User.Users'
 		]); // for single sign on authentication
 		$this->loadComponent('Security.SelectOptionsTampering');
 		$this->loadComponent('Security', [
 			'unlockedFields' => [
 				'area_picker'
+			],
+			'unlockedActions' => [
+				'postLogin'
 			]
 		]);
 		$this->loadComponent('Csrf');
+		if ($this->request->action == 'postLogin') {
+            $this->eventManager()->off($this->Csrf);
+        }
 	}
 }
