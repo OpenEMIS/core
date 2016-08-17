@@ -84,6 +84,18 @@ class AcademicPeriodsTable extends AppTable {
 			$this->updateAll(['current' => 0], []);
 		}
 	}
+
+    public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+        $entity = $this->find()->select(['current'])->where([$this->aliasField($this->primaryKey()) => $id])->first();
+        // do not allow for deleting of current
+        if (!empty($entity) && $entity->current == 1) {
+            $event->stopPropagation();
+            $this->Alert->warning('general.currentNotDeletable');
+            $this->controller->redirect($this->ControllerAction->url('index'));
+        }
+    }
+
+
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('academic_period_level_id');
 		$this->fields['start_year']['visible'] = false;
