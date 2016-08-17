@@ -24,7 +24,8 @@ class InstitutionsController extends AppController  {
 			'History' 			=> ['className' => 'Institution.InstitutionActivities', 'actions' => ['search', 'index']],
 
 			'Programmes' 		=> ['className' => 'Institution.InstitutionGrades', 'actions' => ['!search'], 'options' => ['deleteStrategy' => 'restrict']],
-			'Infrastructures' 	=> ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'transfer']],
+			'Infrastructures' 	=> ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'restrict']],
+			'Rooms' 			=> ['className' => 'Institution.InstitutionRooms'],
 
 			'Staff' 			=> ['className' => 'Institution.Staff'],
 			'StaffUser' 		=> ['className' => 'Institution.StaffUser', 'actions' => ['add', 'view', 'edit']],
@@ -213,7 +214,8 @@ class InstitutionsController extends AppController  {
 			$institutionId = $session->read('Institution.Institutions.id');
 			$action = false;
 			$params = $this->request->params;
-			if (isset($params['pass'][0])) {
+			// do not hyperlink breadcrumb for Infrastructures and Rooms
+			if (isset($params['pass'][0]) && !in_array($model->alias, ['Infrastructures', 'Rooms'])) {
 				$action = $params['pass'][0];
 			}
 			$isDownload = $action == 'downloadFile' ? true : false;
