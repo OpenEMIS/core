@@ -116,7 +116,10 @@ class AppController extends Controller {
 		$this->loadComponent('SSO.SSO', [
 			'homePageURL' => ['plugin' => null, 'controller' => 'Dashboard', 'action' => 'index'],
 			'loginPageURL' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'login'],
-			'userModel' => 'User.Users'
+			'userModel' => 'User.Users',
+			'cookie' => [
+				'domain' => Configure::read('domain')
+			]
 		]); // for single sign on authentication
 		$this->loadComponent('Security.SelectOptionsTampering');
 		$this->loadComponent('Security', [
