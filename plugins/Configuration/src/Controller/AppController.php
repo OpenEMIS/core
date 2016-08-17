@@ -1,6 +1,6 @@
 <?php
 
-namespace Assessment\Controller;
+namespace Configuration\Controller;
 
 use App\Controller\AppController as BaseController;
 
