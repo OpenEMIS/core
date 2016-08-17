@@ -1,4 +1,4 @@
-<?php if (!empty($levelOptions)) : ?>
+<?php if (!empty($typeOptions)) : ?>
 	<div class="toolbar-responsive panel-toolbar">
 		<div class="toolbar-wrapper">
 			<?php
@@ -14,7 +14,7 @@
 				$dataNamedGroup = [];
 				if (!empty($this->request->query)) {
 					foreach ($this->request->query as $key => $value) {
-						if ($key == 'level') continue;
+						if ($key == 'type') continue;
 						echo $this->Form->hidden($key, [
 							'value' => $value,
 							'data-named-key' => $key
@@ -30,16 +30,15 @@
 				$inputOptions = [
 					'class' => 'form-control',
 					'label' => false,
-					'options' => $levelOptions,
-					'default' => $selectedLevel,
+					'options' => $typeOptions,
 					'url' => $baseUrl,
-					'data-named-key' => 'level',
+					'data-named-key' => 'type',
 					'escape' => false
 				];
 				if (!empty($dataNamedGroup)) {
 					$inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
 				}
-				echo $this->Form->input('infrastructure_level', $inputOptions);
+				echo $this->Form->input('infrastructure_type', $inputOptions);
 			?>
 		</div>
 	</div>
