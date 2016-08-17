@@ -17,6 +17,7 @@ namespace App\Controller;
 use Cake\Controller\Controller;
 use Cake\Event\Event;
 use ControllerAction\Model\Traits\ControllerActionTrait;
+use Cake\Core\Configure;
 
 /**
  * Application Controller
