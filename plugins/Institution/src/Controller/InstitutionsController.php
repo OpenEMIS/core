@@ -24,7 +24,8 @@ class InstitutionsController extends AppController  {
 			'History' 			=> ['className' => 'Institution.InstitutionActivities', 'actions' => ['search', 'index']],
 
 			'Programmes' 		=> ['className' => 'Institution.InstitutionGrades', 'actions' => ['!search'], 'options' => ['deleteStrategy' => 'restrict']],
-			'Infrastructures' 	=> ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'transfer']],
+			'Infrastructures' 	=> ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'restrict']],
+			'Rooms' 			=> ['className' => 'Institution.InstitutionRooms'],
 
 			'Staff' 			=> ['className' => 'Institution.Staff'],
 			'StaffUser' 		=> ['className' => 'Institution.StaffUser', 'actions' => ['add', 'view', 'edit']],
@@ -213,7 +214,8 @@ class InstitutionsController extends AppController  {
 			$institutionId = $session->read('Institution.Institutions.id');
 			$action = false;
 			$params = $this->request->params;
-			if (isset($params['pass'][0])) {
+			// do not hyperlink breadcrumb for Infrastructures and Rooms
+			if (isset($params['pass'][0]) && !in_array($model->alias, ['Infrastructures', 'Rooms'])) {
 				$action = $params['pass'][0];
 			}
 			$isDownload = $action == 'downloadFile' ? true : false;
@@ -260,6 +262,14 @@ class InstitutionsController extends AppController  {
 						$exists = $model->exists([
 							$model->aliasField($model->primaryKey()) => $modelId,
 							$model->aliasField('previous_institution_id') => $institutionId
+						]);
+					} else if (in_array($model->alias(), ['InstitutionShifts'])) { //this is to show information for the occupier 
+						$exists = $model->exists([
+							$model->aliasField($model->primaryKey()) => $modelId,
+							'OR' => [ //logic to check institution_id or location_institution_id equal to $institutionId
+								$model->aliasField('institution_id') => $institutionId,
+								$model->aliasField('location_institution_id') => $institutionId
+							]
 						]);
 					} else {
 						$primaryKey = $this->ControllerAction->getPrimaryKey($model);
