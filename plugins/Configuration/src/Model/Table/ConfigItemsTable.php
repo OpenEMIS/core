@@ -21,7 +21,6 @@ class ConfigItemsTable extends AppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->addBehavior('FormNotes');
 		$this->addBehavior('Configuration.ConfigItems');
 		$this->belongsTo('ConfigItemOptions', ['className' => 'Configuration.ConfigItemOptions', 'foreignKey'=>'value']);
 	}
