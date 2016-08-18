@@ -20,49 +20,45 @@ class AcademicPeriodsTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('Parents', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('Levels', ['className' => 'AcademicPeriod.AcademicPeriodLevels', 'foreignKey' => 'academic_period_level_id']);
-<<<<<<< HEAD
 
         // reference to itself
         $this->hasMany('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'parent_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         // other associated modules
-        $this->hasMany('AssessmentAssessmentItemResults', ['className' => 'Assessment.AssessmentItemResults', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionAssessmentItemResults', ['className' => 'Institution.AssessmentItemResults', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('Assessments', ['className' => 'Assessment.Assessments', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentAttendances', ['className' => 'Institution.StudentAttendances', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentClasses', ['className' => 'Student.StudentClasses', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionFees', ['className' => 'Institution.InstitutionFees', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionRubrics', ['className' => 'Institution.InstitutionRubrics', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionQualityVisits', ['className' => 'Institution.InstitutionQualityVisits', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('RepeaterSurveys', ['className' => 'InstitutionRepeater.RepeaterSurveys', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionInstitutionSubjects', ['className' => 'Institution.InstitutionSubjects', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('AssessmentAssessmentItemResults', ['className' => 'Assessment.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionAssessmentItemResults', ['className' => 'Institution.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Assessments', ['className' => 'Assessment.Assessments', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentAttendances', ['className' => 'Institution.StudentAttendances', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentClasses', ['className' => 'Student.StudentClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionFees', ['className' => 'Institution.InstitutionFees', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionRubrics', ['className' => 'Institution.InstitutionRubrics', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionQualityVisits', ['className' => 'Institution.InstitutionQualityVisits', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('RepeaterSurveys', ['className' => 'InstitutionRepeater.RepeaterSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionInstitutionSubjects', ['className' => 'Institution.InstitutionSubjects', 'dependent' => true, 'cascadeCallbacks' => true]);
         // not required. left here for reference
-        // $this->hasMany('ReportInstitutionSubjects', ['className' => 'Report.InstitutionSubjects', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('TransferApprovals', ['className' => 'Institution.TransferApprovals', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('TransferRequests', ['className' => 'Institution.TransferRequests', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('DropoutRequests', ['className' => 'Institution.DropoutRequests', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentDropout', ['className' => 'Institution.StudentDropout', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentSurveys', ['className' => 'Student.StudentSurveys', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('Students', ['className' => 'Institution.Students', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentFees', ['className' => 'Institution.StudentFees', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentPromotion', ['className' => 'Institution.StudentPromotion', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentTransfer', ['className' => 'Institution.StudentTransfer', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('UndoStudentStatus', ['className' => 'Institution.UndoStudentStatus', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('Programmes', ['className' => 'Student.Programmes', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('RubricStatusPeriods', ['className' => 'Rubric.RubricStatusPeriods', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StaffExtracurriculars', ['className' => 'Staff.Extracurriculars', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentExtracurriculars', ['className' => 'Student.Extracurriculars', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('SurveyStatusPeriods', ['className' => 'Survey.SurveyStatusPeriods', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'dependent' => true, 'cascadeCallbacks' => true]);
+        // $this->hasMany('ReportInstitutionSubjects', ['className' => 'Report.InstitutionSubjects', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('TransferApprovals', ['className' => 'Institution.TransferApprovals', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('TransferRequests', ['className' => 'Institution.TransferRequests', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('DropoutRequests', ['className' => 'Institution.DropoutRequests', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentDropout', ['className' => 'Institution.StudentDropout', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentSurveys', ['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Students', ['className' => 'Institution.Students', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentFees', ['className' => 'Institution.StudentFees', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentPromotion', ['className' => 'Institution.StudentPromotion', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentTransfer', ['className' => 'Institution.StudentTransfer', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('UndoStudentStatus', ['className' => 'Institution.UndoStudentStatus', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Programmes', ['className' => 'Student.Programmes', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('RubricStatusPeriods', ['className' => 'Rubric.RubricStatusPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffExtracurriculars', ['className' => 'Staff.Extracurriculars', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentExtracurriculars', ['className' => 'Student.Extracurriculars', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('SurveyStatusPeriods', ['className' => 'Survey.SurveyStatusPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-=======
-		$this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true]);
-		$this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms', 'dependent' => true, 'cascadeCallbacks' => true]);
->>>>>>> bd240f711e37475c6872851b4bad66e8b76f72fe
 		$this->addBehavior('Tree');
 	}
 
@@ -91,7 +87,6 @@ class AcademicPeriodsTable extends AppTable {
 		}
 	}
 
-<<<<<<< HEAD
     public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
         $entity = $this->find()->select(['current'])->where([$this->aliasField($this->primaryKey()) => $id])->first();
         // do not allow for deleting of current
@@ -102,7 +97,6 @@ class AcademicPeriodsTable extends AppTable {
         }
     }
 
-=======
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
 		$canCopy = $this->checkIfCanCopy($entity);
 
@@ -116,16 +110,15 @@ class AcademicPeriodsTable extends AppTable {
 				foreach ($shells as $shell) {
 					$this->triggerCopyShell($shell, $copyFrom, $copyTo);
 				}
-			}			
+			}
 		}
 
 		if ($entity->dirty('current')) { //check whether default value has been changed
- 			if ($entity->current) { 
+ 			if ($entity->current) {
 				$this->triggerUpdateInstitutionShiftTypeShell($entity->id);
 			}
  		}
 	}
->>>>>>> bd240f711e37475c6872851b4bad66e8b76f72fe
 
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('academic_period_level_id');
@@ -229,8 +222,6 @@ class AcademicPeriodsTable extends AppTable {
 		}
 	}
 
-<<<<<<< HEAD
-=======
 	public function triggerUpdateInstitutionShiftTypeShell($params) {
     	$cmd = ROOT . DS . 'bin' . DS . 'cake UpdateInstitutionShiftType ' . $params;
 		$logs = ROOT . DS . 'logs' . DS . 'UpdateInstitutionShiftType.log & echo $!';
@@ -239,8 +230,6 @@ class AcademicPeriodsTable extends AppTable {
 		Log::write('debug', $shellCmd);
     }
 
-	
->>>>>>> bd240f711e37475c6872851b4bad66e8b76f72fe
 	public function onGetCurrent(Event $event, Entity $entity) {
 		return $entity->current == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
 	}
@@ -720,7 +709,7 @@ class AcademicPeriodsTable extends AppTable {
     }
 
 	public function getLatest()
-	{	
+	{
 		$query = $this->find()
 				->select([$this->aliasField('id')])
 				->where([
