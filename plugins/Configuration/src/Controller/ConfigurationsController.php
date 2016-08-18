@@ -14,7 +14,8 @@ class ConfigurationsController extends AppController {
         $this->ControllerAction->model('Configuration.ConfigItems', ['index', 'view', 'edit']);
     }
 
-    public function beforeFilter(Event $event) {
+    public function beforeFilter(Event $event)
+    {
         parent::beforeFilter($event);
         $header = 'System Configurations';
 
@@ -25,5 +26,5 @@ class ConfigurationsController extends AppController {
         $this->set('contentHeader', __($header));
     }
 
-    public function ProductLists()                       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigProductLists']); }
+    public function ProductLists() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigProductLists']); }
 }
