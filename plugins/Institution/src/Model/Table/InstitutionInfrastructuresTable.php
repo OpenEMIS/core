@@ -386,7 +386,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 	}
 
 	public function getYearOptionsByConfig() {
-		$ConfigItems = TableRegistry::get('ConfigItems');
+		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 		$lowestYear = $ConfigItems->value('lowest_year');
 		$currentYear = date("Y");
 

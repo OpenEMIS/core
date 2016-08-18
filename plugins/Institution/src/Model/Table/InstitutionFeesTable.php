@@ -56,7 +56,7 @@ class InstitutionFeesTable extends ControllerActionTable {
     	$this->field('education_grade_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
     	$this->field('education_programme', ['type' => 'select', 'visible' => ['index'=>true]]);
 
-		$ConfigItems = TableRegistry::get('ConfigItems');
+		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
     	$this->currency = $ConfigItems->value('currency');
     	$this->field('fee_types', ['type' => 'element', 'element' => 'Institution.Fees/fee_types', 'currency' => $this->currency, 'visible' => ['view'=>true, 'edit'=>true]]);
 	}
