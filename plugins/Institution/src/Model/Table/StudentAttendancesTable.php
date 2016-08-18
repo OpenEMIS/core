@@ -382,7 +382,7 @@ class StudentAttendancesTable extends AppTable {
 			];
 			$displayTime = 'display:none;';
 			$HtmlField = $event->subject()->HtmlField;
-			$configItemsTable =  TableRegistry::get('ConfigItems');
+			$configItemsTable =  TableRegistry::get('Configuration.ConfigItems');
 			$attr['value'] = $configItemsTable->value('start_time');
 			$attr['default_time'] = false;
 			$attr['null'] = true;
@@ -661,7 +661,7 @@ class StudentAttendancesTable extends AppTable {
 			// end setup weeks
 
 			// Setup day options
-			$ConfigItems = TableRegistry::get('ConfigItems');
+			$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 			$firstDayOfWeek = $ConfigItems->value('first_day_of_week');
 			$daysPerWeek = $ConfigItems->value('days_per_week');
 			$schooldays = [];
@@ -988,7 +988,7 @@ class StudentAttendancesTable extends AppTable {
 						} else if ($obj['absence_type_id'] == $codeAbsenceType['LATE']) {
 							$obj['student_absence_reason_id'] = $obj['late_student_absence_reason_id'];
 							$obj['full_day'] = 0;
-							$configItemsTable =  TableRegistry::get('ConfigItems');
+							$configItemsTable =  TableRegistry::get('Configuration.ConfigItems');
 							if (!isset($obj['start_time'])) {
 								$obj['start_time'] = $configItemsTable->value('start_time');
 								$obj['start_time'] = Time::parseTime($obj['start_time']);

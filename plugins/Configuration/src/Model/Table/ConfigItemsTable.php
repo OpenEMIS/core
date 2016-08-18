@@ -21,10 +21,10 @@ class ConfigItemsTable extends AppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-
 		$this->addBehavior('Authentication');
 		$this->addBehavior('FormNotes');
-		// $this->belongsTo('ConfigItemOptions', ['foreignKey'=>'value']);
+		$this->addBehavior('Configuration.ConfigItems');
+		$this->belongsTo('ConfigItemOptions', ['foreignKey'=>'value']);
 	}
 
 	public function beforeAction(Event $event) {
@@ -36,7 +36,7 @@ class ConfigItemsTable extends AppTable {
 
 		$this->ControllerAction->field('name', ['visible' => ['index'=>true]]);
 		$this->ControllerAction->field('default_value', ['visible' => ['view'=>true]]);
-		
+
 		$this->ControllerAction->field('type', ['visible' => ['view'=>true, 'edit'=>true]]);
 		$this->ControllerAction->field('label', ['visible' => ['view'=>true, 'edit'=>true]]);
 		$this->ControllerAction->field('value', ['visible' => true]);
@@ -48,31 +48,6 @@ class ConfigItemsTable extends AppTable {
 ** index action methods
 **
 ******************************************************************************************************************/
-	public function indexBeforeAction(Event $event) {
-		$this->buildSystemConfigFilters();
-	}
-
-	public function buildSystemConfigFilters() {
-		$toolbarElements = [
-			['name' => 'Configurations/controls', 'data' => [], 'options' => []]
-		];
-		$this->controller->set('toolbarElements', $toolbarElements);
-
-		$typeOptions = array_keys($this->find('list', ['keyField' => 'type', 'valueField' => 'type'])->order('type')->toArray());
-
-		$selectedType = $this->queryString('type', $typeOptions);
-
-		$buffer = $typeOptions;
-		foreach ($buffer as $key => $value) {
-			$result = $this->find()->where([$this->aliasField('type') => $value, $this->aliasField('visible') => 1])->count();
-			if (!$result) {
-				unset($typeOptions[$key]);
-			}
-		}
-		$this->request->query['type_value'] = $typeOptions[$selectedType];
-		$this->advancedSelectOptions($typeOptions, $selectedType);
-		$this->controller->set('typeOptions', $typeOptions);
-	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$type = $request->query['type_value'];
@@ -149,7 +124,7 @@ class ConfigItemsTable extends AppTable {
 						$model = $this->getActualModeLocation($model);
 						$optionTable = TableRegistry::get($model);
 						$attr['options'] = $optionTable->getList();
-						
+
 					/**
 					 * if options list is from ConfigItemOptions table
 					 */
@@ -165,7 +140,7 @@ class ConfigItemsTable extends AppTable {
 					}
 
 					if (isset($this->request->data[$this->alias()]['value'])) {
-						$attr['onChangeReload'] = true;	
+						$attr['onChangeReload'] = true;
 					}
 
 				} else {
@@ -335,47 +310,47 @@ class ConfigItemsTable extends AppTable {
 ** refer to editBeforeAction() on how these validation rules are loaded dynamically
 **
 ******************************************************************************************************************/
-	   
+
 	private $validateSupportEmail = [
 		'email' => [
 			'rule'	=> ['email'],
 		]
 	];
-	   
+
 	private $validateWhereIsMySchoolStartLong = [
 		'checkLongitude' => [
 			'rule'	=> ['checkLongitude'],
 			'provider' => 'table',
 		]
 	];
-	   
+
 	private $validateWhereIsMySchoolStartLat = [
 		'checkLatitude' => [
 			'rule'	=> ['checkLatitude'],
 			'provider' => 'table',
 		]
 	];
-	   
+
 	private $validateWhereIsMySchoolStartRange = [
 		'num' => [
 			'rule'  => ['numeric'],
 		],
 	];
-	   
+
 	private $validateSmsProviderUrl = [
 		'url' => [
 			'rule'	=> ['url', true],
 			'message' => 'Please provide a valid URL with http:// or https://',
 		]
 	];
-	   
+
 	private $validateWhereIsMySchoolUrl = [
 		'url' => [
 			'rule'	=> ['url', true],
 			'message' => 'Please provide a valid URL with http:// or https://',
 		]
 	];
-	   
+
 	private $validateStartTime = [
 		'aPValue' => [
 			'rule'	=> ['amPmValue'],
@@ -383,7 +358,7 @@ class ConfigItemsTable extends AppTable {
 			'last' => true
 		]
 	];
-	   
+
 	private $validateLowestYear = [
 			'num' => [
 				'rule'  => ['numeric'],
@@ -396,7 +371,7 @@ class ConfigItemsTable extends AppTable {
 				'last' => true
 			]
 	];
-	   
+
 	private $validateHoursPerDay = [
 		'num' => [
 			'rule'  => ['numeric'],
@@ -409,7 +384,7 @@ class ConfigItemsTable extends AppTable {
 			'last' => true
 		]
 	];
-	   
+
 	private $validateDaysPerWeek = [
 		'num' => [
 			'rule'  => ['numeric'],
@@ -422,7 +397,7 @@ class ConfigItemsTable extends AppTable {
 			'last' => true
 		]
 	];
-	   
+
 	private $validateReportDiscrepancyVariationpercent = [
 		'num' => [
 			'rule'  => 'numeric',
@@ -481,7 +456,7 @@ class ConfigItemsTable extends AppTable {
 			'message' => 'Value should be numeric',
 		]
 	];
-  
+
 	private $validateSmsRetryTime = [
 		'num' => [
 			'rule'  => 'numeric',

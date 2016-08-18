@@ -20,7 +20,7 @@ class MandatoryBehavior extends Behavior {
 		$this->_roleFields = (array_key_exists('roleFields', $config))? $config['roleFields']: [];
 		if (is_null($this->_userRole)) die('userRole must be set in mandatory behavior');
 
-		$ConfigItems = TableRegistry::get('ConfigItems');
+		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 
 		$this->_info = [];
 		foreach ($this->_roleFields as $key => $value) {
@@ -56,7 +56,7 @@ class MandatoryBehavior extends Behavior {
 	}
 
 	public function getOptionValue($name) {
-		$ConfigItems = TableRegistry::get('ConfigItems');
+		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 		$data = $ConfigItems
 			->find()
 			->where([$ConfigItems->aliasField('code') => $name])
