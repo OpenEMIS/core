@@ -566,11 +566,7 @@ trait MessagesTrait {
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
 					'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
 				],
-<<<<<<< HEAD
-
-=======
 				'timeRangeHint' => 'Time should be between %s and %s'
->>>>>>> bd240f711e37475c6872851b4bad66e8b76f72fe
 			],
 			'StaffAbsences' => [
 				'end_time' => [
