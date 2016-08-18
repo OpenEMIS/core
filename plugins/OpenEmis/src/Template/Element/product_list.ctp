@@ -1,9 +1,9 @@
 <?php
 $displayProducts = [];
-foreach($productTrait as $name => $item) {
-	if(array_key_exists($name, $productTable)) {
+foreach($productLists as $name => $item) {
+	if(array_key_exists($name, $productListOptions)) {
 		$displayProducts[$name]['icon'] = $item['icon'];
-		$displayProducts[$name]['url'] = $productTable[$name];
+		$displayProducts[$name]['url'] = $productListOptions[$name];
 	}
 }
 ?>
@@ -21,13 +21,13 @@ foreach($productTrait as $name => $item) {
 		<div class="product-wrapper">
 		<?php foreach ($displayProducts as $name => $item) : ?>
 			<div class="product-menu col-xs-4">
-				<?php 
+				<?php
 				$link = '<i class="' . $item['icon'] . '"></i>';
 				$link .= '<span>' . $name . '</span>';
 				echo $this->Html->link($link, $item['url'], array('escape' => false));
 				?>
-			</div>		
+			</div>
 		<?php endforeach ?>
 		</div>
-	</div>	
+	</div>
 </div>

@@ -39,7 +39,7 @@ class ConfigProductListsTable extends ControllerActionTable {
     }
 
     public function onUpdateFieldName(Event $event, array $attr, $action, Request $request) {
-        $productKeys = array_keys($this->productTrait);
+        $productKeys = array_keys($this->productLists);
         $productOptions = [];
         foreach ($productKeys as $value) {
             $productOptions[$value] = __($value);
