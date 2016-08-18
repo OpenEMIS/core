@@ -21,10 +21,9 @@ class ConfigItemsTable extends AppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->addBehavior('Authentication');
 		$this->addBehavior('FormNotes');
 		$this->addBehavior('Configuration.ConfigItems');
-		$this->belongsTo('ConfigItemOptions', ['foreignKey'=>'value']);
+		$this->belongsTo('ConfigItemOptions', ['className' => 'Configuration.ConfigItemOptions', 'foreignKey'=>'value']);
 	}
 
 	public function beforeAction(Event $event) {
@@ -228,7 +227,7 @@ class ConfigItemsTable extends AppTable {
 			 * options list is from ConfigItemOptions table
 			 */
 			} else {
-				$optionsModel = TableRegistry::get('ConfigItemOptions');
+				$optionsModel = TableRegistry::get('Configuration.ConfigItemOptions');
 				$value = $optionsModel->find()
 					->where([
 						'ConfigItemOptions.option_type' => $entity->option_type,
@@ -289,7 +288,7 @@ class ConfigItemsTable extends AppTable {
 	private function getActualModeLocation($model) {
 		$dir = dirname(__FILE__);
 		if (!file_exists($dir . '/' . $model . 'Table.php')) {
-			$dir = dirname(dirname(dirname(dirname(__FILE__)))).'/plugins';
+			$dir = dirname(dirname(dirname(dirname(dirname(dirname(__FILE__)))))).'/plugins';
 			$folders = scandir($dir);
 			foreach ($folders as $folder) {
 				if (!in_array($folder, ['.', '..', '.DS_Store'])) {
