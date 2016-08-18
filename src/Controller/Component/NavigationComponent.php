@@ -447,7 +447,7 @@ class NavigationComponent extends Component {
 				'title' => 'Infrastructures',
 				'parent' => 'Institutions.index',
 				'params' => ['plugin' => 'Institution'],
-				'selected' => ['Institutions.Infrastructures']
+				'selected' => ['Institutions.Infrastructures', 'Institutions.Rooms']
 			],
 
 			'Survey' => [
@@ -759,7 +759,7 @@ class NavigationComponent extends Component {
 						'title' => 'Infrastructure',
 						'parent' => 'SystemSetup.CustomField',
 						'params' => ['plugin' => 'Infrastructure'],
-						'selected' => ['Infrastructures.Fields', 'Infrastructures.Pages', 'Infrastructures.Levels', 'Infrastructures.Types']
+						'selected' => ['Infrastructures.Fields', 'Infrastructures.Pages', 'Infrastructures.Types', 'Infrastructures.RoomPages', 'Infrastructures.RoomTypes']
 					],
 				'Labels.index' => [
 					'title' => 'Labels',
