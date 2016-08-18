@@ -66,7 +66,7 @@ class MandatoryBehavior extends Behavior {
 		$optionType = $data->option_type;
 		$value = $data->value;
 
-		$ConfigItemOptions = TableRegistry::get('ConfigItemOptions');
+		$ConfigItemOptions = TableRegistry::get('Configuration.ConfigItemOptions');
 		$result = $ConfigItemOptions
 			->find()
 			->where([$ConfigItemOptions->aliasField('option_type') => $optionType, $ConfigItemOptions->aliasField('value') => $value])
@@ -80,7 +80,7 @@ class MandatoryBehavior extends Behavior {
 			$defaultNationality = $Nationalities->find()
 				->where([$Nationalities->aliasField('default') => 1])
 				->first();
-	            
+
 			$defaultIdentityType = '';
 			if (!empty($defaultNationality)) {
 				// if default nationality can be found
@@ -102,7 +102,7 @@ class MandatoryBehavior extends Behavior {
 				$this->_table->fields['identity_type']['default'] = $defaultIdentityType;
 			}
 		}
-		
+
 		return $entity;
 	}
 
@@ -147,9 +147,9 @@ class MandatoryBehavior extends Behavior {
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		
+
 		if ($this->_table->action == 'add') {
-			
+
 			$newOptions = [];
 
 			$newOptions['associated'] = ['Identities', 'Nationalities', 'SpecialNeeds', 'Contacts'];
@@ -157,7 +157,7 @@ class MandatoryBehavior extends Behavior {
 			foreach ($this->_info as $key => $value) {
 
 				if ($value == 'Non-Mandatory') {
-							
+
 					$newOptions['associated'][$key] = ['validate' => 'NonMandatory'];
 
 				} else {
@@ -181,7 +181,7 @@ class MandatoryBehavior extends Behavior {
 							// done for controller v4 for add saving by association 'security_user_id' is pre-set and replaced by cake later with the correct id
 
 							if ( in_array($key, ['SpecialNeeds', 'Nationalities', 'Contacts']) ) {
-								
+
 								if (array_key_exists($tableName, $data[$this->_table->alias()])) {
 	                                foreach ($data[$this->_table->alias()][$tableName] as $tkey => $tvalue) {
 	                                	// logic to get contact_option_id from contact_type_id as contact_option_id is set as requirePresence, otherwise will have validation error
@@ -209,8 +209,8 @@ class MandatoryBehavior extends Behavior {
 								if ($incompleteField) {
 									unset($data[$this->_table->alias()][$tableName]);
 								}
-							} 
-						}					
+							}
+						}
 					}
 				}
 			}
@@ -233,7 +233,7 @@ class MandatoryBehavior extends Behavior {
 				->first();
 			$defaultIdentityType = (!empty($defaultIdentityType))? $defaultIdentityType->id: null;
 		}
-		
+
 		$this->_table->fields['nationality']['default'] = $data[$this->_table->alias()]['nationalities'][0]['nationality_id'];
 
 		// overriding the  previous input to put in default identities
@@ -265,7 +265,7 @@ class MandatoryBehavior extends Behavior {
 		$attr['type'] = 'select';
 		$attr['fieldName'] = $this->_table->alias().'.contacts.0.contact_type_id';
 		$attr['options'] = $contactOptions;
-		
+
 		return $attr;
 	}
 
@@ -339,7 +339,7 @@ class MandatoryBehavior extends Behavior {
 		$attr['type'] = 'select';
 		$attr['fieldName'] = $this->_table->alias().'.special_needs.0.special_need_type_id';
 		$attr['options'] = $specialNeedOptions->toArray();
-		
+
 		return $attr;
 	}
 
@@ -380,10 +380,10 @@ class MandatoryBehavior extends Behavior {
 		$attr['type'] = 'select';
 		$attr['fieldName'] = $this->_table->alias().'.special_needs.0.special_need_difficulty_id';
 		$attr['options'] = $specialNeedDifficultyOptions->toArray();
-		
+
 		return $attr;
 	}
-	
+
 
     // public function getMandatoryList() {
     //     $list = [0 => __('No'), 1 => __('Yes')];

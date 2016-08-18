@@ -27,5 +27,6 @@ class ConfigurationsController extends AppController {
     }
 
     public function ProductLists() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigProductLists']); }
+    public function Authentication() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigAuthentication']); }
 
 }

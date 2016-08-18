@@ -1,5 +1,5 @@
-<?php 
-namespace App\Model\Behavior;
+<?php
+namespace Configuration\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Behavior;
@@ -24,63 +24,32 @@ class AuthenticationBehavior extends Behavior {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$newEvent = [
-			'ControllerAction.Model.beforeAction' => 'beforeAction',
+			'ControllerAction.Model.beforeAction' => ['callable' => 'beforeAction', 'priority' => 11],
 			'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
 			'ControllerAction.Model.edit.afterSave'	=> 'editAfterSave',
 			'ControllerAction.Model.afterAction'	=> 'afterAction',
 			'ControllerAction.Model.view.beforeAction'	=> 'viewBeforeAction',
-			'ControllerAction.Model.edit.beforePatch'	=> 'editBeforePatch',
-			'ControllerAction.Model.index.beforeAction'	=> ['callable' => 'indexBeforeAction', 'priority' => 100],
+            'ControllerAction.Model.edit.beforeAction'  => 'editBeforeAction',
+			'ControllerAction.Model.edit.beforePatch'	=> 'editBeforePatch'
 		];
 		$events = array_merge($events, $newEvent);
 		return $events;
 	}
 
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($this->_table->action == 'view') {
-			$key = isset($this->_table->request->pass[0]) ? $this->_table->request->pass[0] : null;
-			if (!empty($key)) {
-				$configItem = $this->_table->get($key);
-				if ($configItem->type == 'Authentication' && $configItem->code == 'authentication_type') {
-					if (isset($toolbarButtons['back'])) {
-						unset($toolbarButtons['back']);
-					}
-				}
-			}
-		}
-	}
-
-	public function indexBeforeAction(Event $event) {
-		if ($this->_table->request->query['type_value'] == 'Authentication') {
-			$urlParams = $this->_table->ControllerAction->url('view');
-			$authenticationTypeId = $this->_table->find()
-				->where([
-					$this->_table->aliasField('type') => 'Authentication', 
-					$this->_table->aliasField('code') => 'authentication_type'])
-				->first()
-				->id;
-			$urlParams[0] = $authenticationTypeId;
-			if (isset($this->_table->request->pass[0]) && $this->request->pass[0] == $authenticationTypeId) {
-			} else {
-				$this->_table->controller->redirect($urlParams);
-			}
-		}
-	}
-
 	public function beforeAction(Event $event) {
 		if ($this->_table->action == 'view' || $this->_table->action == 'edit') {
-			$key = isset($this->_table->request->pass[0]) ? $this->_table->request->pass[0] : null;
+			$key = $this->_table->id;
 			if (!empty($key)) {
 				$configItem = $this->_table->get($key);
 				if ($configItem->type == 'Authentication' && $configItem->code == 'authentication_type') {
 					if (isset($this->_table->request->data[$this->alias]['value']) && !empty($this->_table->request->data[$this->alias]['value'])) {
 						$value = $this->_table->request->data[$this->alias]['value'];
 					} else {
-						$value = $configItem->value;
+						$value = $this->_table->authenticationType;
 						$this->_table->request->data[$this->alias]['value'] = $value;
 					}
 					if ($value != 'Local') {
-						$this->_table->ControllerAction->field('custom_authentication', ['type' => 'authentication_type', 'valueClass' => 'table-full-width', 'visible' => [ 'edit' => true, 'view' => true ]]);
+						$this->_table->field('custom_authentication', ['type' => 'authentication_type', 'valueClass' => 'table-full-width', 'visible' => [ 'edit' => true, 'view' => true ]]);
 					}
 				}
 			}
@@ -89,30 +58,28 @@ class AuthenticationBehavior extends Behavior {
 
 	public function afterAction(Event $event) {
 		if ($this->_table->action == 'view' || $this->_table->action == 'edit') {
-			$key = isset($this->_table->request->pass[0]) ? $this->_table->request->pass[0] : null;
+			$key = $this->_table->id;
 			if (!empty($key)) {
 				$configItem = $this->_table->get($key);
 				if ($configItem->type == 'Authentication' && $configItem->code == 'authentication_type') {
-					$this->_table->ControllerAction->field('default_value', ['visible' => false]);
+					$this->_table->field('default_value', ['visible' => false]);
 					$value = $this->_table->request->data[$this->alias]['value'];
-					if ($value != 'Local') {
-						$this->_table->ControllerAction->setFieldOrder(['type', 'label', 'value', 'custom_authentication']);
-					}
-				}
-			} else {
-				if ($this->_table->action == 'view') {
-					$urlParams = $this->_table->ControllerAction->url('index');
-					$this->_table->controller->redirect($urlParams);
 				}
 			}
 		}
 	}
 
-	public function viewBeforeAction(Event $event) {
-		if (isset($this->_table->request->query['type_value']) && $this->_table->request->query['type_value'] == 'Authentication') {
-			$this->_table->buildSystemConfigFilters();
-		}
+	public function viewBeforeAction(Event $event, ArrayObject $extra) {
+        if (isset($extra['toolbarButtons']['back'])) {
+           unset($extra['toolbarButtons']['back']);
+        }
 	}
+
+    public function editBeforeAction(Event $event, ArrayObject $extra) {
+        if (isset($extra['toolbarButtons']['list'])) {
+           unset($extra['toolbarButtons']['list']);
+        }
+    }
 
 	protected function processAuthentication(&$attribute, $authenticationType) {
 		$AuthenticationTypeAttributesTable = TableRegistry::get('SSO.AuthenticationTypeAttributes');
@@ -136,27 +103,27 @@ class AuthenticationBehavior extends Behavior {
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$AuthenticationTypeAttributesTable = TableRegistry::get('SSO.AuthenticationTypeAttributes');
-		if ($data[$this->alias]['value'] != 'Local' && $data[$this->alias]['type'] == 'Authentication') {
-			$authenticationType = $data[$this->alias]['value'];
-			$AuthenticationTypeAttributesTable->deleteAll(
-				['authentication_type' => $authenticationType]
-			);
+		$authenticationType = $data[$this->alias]['value'];
+		$AuthenticationTypeAttributesTable->deleteAll(
+			['authentication_type' => $authenticationType]
+		);
+        if (!isset($data['AuthenticationTypeAttributes'])) {
+            $data['AuthenticationTypeAttributes'] = [];
+        }
+		foreach ($data['AuthenticationTypeAttributes'] as $key => $value) {
+			$entityData = [
+				'authentication_type' => $authenticationType,
+				'attribute_field' => $key,
+				'attribute_name' => $value['name'],
+				'value' => $value['value']
+			];
+			$entity = $AuthenticationTypeAttributesTable->newEntity($entityData);
+			$AuthenticationTypeAttributesTable->save($entity);
+		}
 
-			foreach ($data['AuthenticationTypeAttributes'] as $key => $value) {
-				$entityData = [
-					'authentication_type' => $authenticationType,
-					'attribute_field' => $key,
-					'attribute_name' => $value['name'],
-					'value' => $value['value']
-				];
-				$entity = $AuthenticationTypeAttributesTable->newEntity($entityData);
-				$AuthenticationTypeAttributesTable->save($entity);
-			}
-
-			if (method_exists($this, strtolower($authenticationType).'AfterSave')) {
-				$method = strtolower($authenticationType).'AfterSave';
-				$this->$method($data['AuthenticationTypeAttributes']);
-			}
+		if (method_exists($this, strtolower($authenticationType).'AfterSave')) {
+			$method = strtolower($authenticationType).'AfterSave';
+			$this->$method($data['AuthenticationTypeAttributes']);
 		}
 	}
 
@@ -174,7 +141,7 @@ class AuthenticationBehavior extends Behavior {
         ];
 
        	$message = $this->getSPMetaData($setting);
-       	
+
        	$AuthenticationTypeAttributesTable = TableRegistry::get('SSO.AuthenticationTypeAttributes');
        	$entity = $AuthenticationTypeAttributesTable->find()->where([
        			$AuthenticationTypeAttributesTable->aliasField('authentication_type') => 'Saml2',
@@ -231,7 +198,7 @@ class AuthenticationBehavior extends Behavior {
     	}
     	return true;
     }
-    
+
     public function googleAuthenticationValidation($authenticationAttributes) {
     	$attribute = [];
     	$this->googleAuthentication($attribute);
@@ -298,7 +265,7 @@ class AuthenticationBehavior extends Behavior {
 
 	public function onGetAuthenticationTypeElement(Event $event, $action, $entity, $attr, $options=[]) {
 		switch ($action){
-			case "view":			
+			case "view":
 				$authenticationType = $this->_table->request->data[$this->alias]['value'];
 				$attribute = [];
 				$methodName = strtolower($authenticationType).'Authentication';

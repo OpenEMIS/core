@@ -12,16 +12,15 @@ use Cake\Utility\Inflector;
 
 class ConfigItemsBehavior extends Behavior {
 	private $model;
+    private $selectedType;
 
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-
         $events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction'];
         if ($this->isCAv4()) {
             $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction'];
         }
-        // $events['ControllerAction.Model.addEdit.beforePatch'] = ['callable' => 'addEditBeforePatch'];
         return $events;
     }
 
@@ -42,7 +41,7 @@ class ConfigItemsBehavior extends Behavior {
 		$typeOptions = array_keys($ConfigItem->find('list', ['keyField' => 'type', 'valueField' => 'type'])->order('type')->toArray());
 
 		$selectedType = $this->model->queryString('type', $typeOptions);
-
+        $this->selectedType = $selectedType;
 		$buffer = $typeOptions;
 		foreach ($buffer as $key => $value) {
 			$result = $ConfigItem->find()->where([$ConfigItem->aliasField('type') => $value, $ConfigItem->aliasField('visible') => 1])->count();
@@ -53,26 +52,45 @@ class ConfigItemsBehavior extends Behavior {
 		$this->model->request->query['type_value'] = $typeOptions[$selectedType];
 		$this->model->advancedSelectOptions($typeOptions, $selectedType);
 		$this->model->controller->set('typeOptions', $typeOptions);
+        $controlElement = $toolbarElements[0];
+        $controlElement['data'] = ['typeOptions' => $typeOptions];
+        $controlElement['order'] = 1;
+
+        return $controlElement;
 	}
 
 	public function checkController()
 	{
-        $this->buildSystemConfigFilters();
         $typeValue = $this->model->request->query['type_value'];
         $typeValue = Inflector::camelize($typeValue, ' ');
-        if (method_exists($this->model->controller, $typeValue)) {
-            $this->model->controller->redirect(['plugin' => 'Configuration', 'controller' => 'Configurations', 'action' => $typeValue]);
+        $action = '';
+        if ($this->isCAv4()) {
+            $url = $this->model->url('index');
+            $action = $this->model->request->params['action'];
+        } else {
+            $url = $this->model->controller->ControllerAction->url('index');
+            $action = $this->model->action;
+        }
+        if (method_exists($this->model->controller, $typeValue) && $action != $typeValue) {
+            $url['action'] = $typeValue;
+            $this->model->controller->redirect($url);
+        } else if ($action != $typeValue && $action != 'index') {
+            $this->model->controller->redirect(['plugin' => 'Configuration', 'controller' => 'Configurations', 'action' => 'index', 'type' => $this->selectedType]);
         }
 	}
-
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(Event $event, $extra)
     {
         $extra['config']['selectedLink'] = ['controller' => 'Configurations', 'action' => 'index'];
     }
 
-	public function indexBeforeAction(Event $event)
+	public function indexBeforeAction(Event $event, $extra)
     {
-        $this->checkController();
-
+        if ($this->isCAv4()) {
+            $extra['elements']['controls'] = $this->buildSystemConfigFilters();
+            $this->checkController();
+        } else {
+            $this->buildSystemConfigFilters();
+            $this->checkController();
+        }
 	}
 }
