@@ -1191,6 +1191,16 @@ trait MessagesTrait {
         ],
         'StaffSubjects' => [
             'notActiveTeachingStaff' => 'Not active teaching staff'
+        ],
+        'Configuration' => [
+        	'ConfigProductLists' => [
+        		'name' => [
+        			'ruleUnique' => 'This product already exists in the system',
+        		],
+        		'url' => [
+        			'invalidUrl' => 'You have entered an invalid url.',
+        		]
+        	]
         ]
 	];
 
