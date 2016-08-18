@@ -11,17 +11,24 @@ class ConfigurationsController extends AppController {
     public function initialize()
     {
         parent::initialize();
+        $this->ControllerAction->model('ConfigItems', ['index', 'view', 'edit']);
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
-    {
-        $alias = $model->alias;
-        $header = __('Configuration') . ' - ' . $model->getHeader($alias);
-
-        $this->Navigation->addCrumb($model->getHeader($alias));
-
-        $this->set('contentHeader', $header);
+    public function beforeFilter(Event $event) {
+        parent::beforeFilter($event);
+        $header = 'System Configurations';
+        
+        $this->Navigation->addCrumb($header, ['plugin' => null, 'controller' => $this->name, 'action' => 'index']);
+        $session = $this->request->session();
+        $action = $this->request->params['action'];
+        
+        $this->set('contentHeader', __($header));
     }
 
+<<<<<<< HEAD
     public function ConfigProductLists()                       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigProductLists']); }
+=======
+    public function ProductLists()
+    { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ProductLists']); }
+>>>>>>> origin/POCOR-3258-dev
 }
