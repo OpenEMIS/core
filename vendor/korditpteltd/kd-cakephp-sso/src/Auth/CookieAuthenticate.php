@@ -9,6 +9,7 @@ use Cake\Network\Request;
 use Cake\Network\Response;
 use SSO\ProcessToken;
 use Cake\I18n\Time;
+use Cake\ORM\TableRegistry;
 
 /**
  * An authentication adapter for authenticating using JSON Web Tokens.
@@ -32,7 +33,7 @@ use Cake\I18n\Time;
  */
 class CookieAuthenticate extends BaseAuthenticate
 {
-    
+
     public function implementedEvents()
     {
         $event['Auth.logout'] = 'logout';
@@ -93,8 +94,24 @@ class CookieAuthenticate extends BaseAuthenticate
         } catch (\Exception $e) {
             return false;
         }
-        
+
         $user = $this->_findUser($data->$username);
+
+        if (!$user) {
+            TableRegistry::get($this->_config['userModel']);
+            $userName = $data->$username;
+            $userInfo = json_decode(json_encode($data), true);
+            $userInfo['dateOfBirth'] = $userInfo['date_of_birth'];
+            $userInfo['firstName'] = $userInfo['first_name'];
+            $userInfo['lastName'] = $userInfo['last_name'];
+            $User = TableRegistry::get($this->_config['userModel']);
+            $event = $User->dispatchEvent('Model.Auth.createAuthorisedUser', [$userName, $userInfo], $this);
+            if ($event->result === false) {
+                return false;
+            } else {
+                return $this->_findUser($event->result);
+            }
+        }
         return $user;
     }
 
@@ -108,7 +125,7 @@ class CookieAuthenticate extends BaseAuthenticate
      * @return mixed False on login failure.  An array of User data on success.
      */
     public function authenticate(Request $request, Response $response)
-    {   
+    {
         $user = $this->getUser($request);
         return $user;
     }

@@ -245,7 +245,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
 		if (empty($data)) {			
 			$schoolAcademicPeriod = $this->AcademicPeriods->get($academicPeriodId);
 
-			$ConfigItem = TableRegistry::get('ConfigItems');
+			$ConfigItem = TableRegistry::get('Configuration.ConfigItems');
 			$settingStartTime = $ConfigItem->value('start_time');
 			$hoursPerDay = intval($ConfigItem->value('hours_per_day'));
 			if ($hoursPerDay > 1) {
