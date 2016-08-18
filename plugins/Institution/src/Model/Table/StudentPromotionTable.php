@@ -628,7 +628,7 @@ class StudentPromotionTable extends AppTable {
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		// Removal of some fields that are not in use in the table validation
 		$errors = $entity->errors();
-		$studentStatus = $data['StudentPromotion']['student_status_id'];
+		$studentStatus = $data[$this->alias()]['student_status_id'];
 
 		if (isset($errors['student_id'])) {
 			unset($errors['student_id']);
