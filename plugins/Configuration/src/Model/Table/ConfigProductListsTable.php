@@ -35,7 +35,7 @@ class ConfigProductListsTable extends ControllerActionTable {
     public function beforeAction($event)
     {
         $this->field('name');
-        $this->field('url');
+        $this->field('url', ['type' => 'string']);
     }
 
     public function onUpdateFieldName(Event $event, array $attr, $action, Request $request) {
@@ -48,11 +48,6 @@ class ConfigProductListsTable extends ControllerActionTable {
         $attr['type'] = 'select';
         $attr['options'] = $productOptions;
 
-        return $attr;
-    }
-
-    public function onUpdateFieldUrl(Event $event, array $attr, $action, Request $request) {
-        $attr['type'] = 'string';
         return $attr;
     }
 
