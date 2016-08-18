@@ -23,5 +23,5 @@ class ConfigurationsController extends AppController {
         $this->set('contentHeader', $header);
     }
 
-    public function ProductLists()                       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ProductLists']); }
+    public function ConfigProductLists()                       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigProductLists']); }
 }
