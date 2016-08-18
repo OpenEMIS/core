@@ -1,66 +1,11 @@
 <?php
-$products = [
-	'Community' => [
-		'icon' => 'kd-openemis kd-community',
-		'name' => 'community',
-		'url' => ['?' => ['theme' => 'community']]
-	],
-	'Core' => [
-		'icon' => 'kd-openemis kd-core',
-		'name' => 'core',
-		'url' => ['?' => ['theme' => 'core']]
-	],
-	'DataManager' => [
-		'icon' => 'kd-openemis kd-datamanager',
-		'name' => 'datamanager',
-		'url' => ['?' => ['theme' => 'data_manager']]
-	],
-	'Dashboard' => [
-		'icon' => 'kd-openemis kd-dashboard', 
-		'name' => 'dashboard', 
-		'url' => ['?' => ['theme' => 'dashboard']]
-	],
-	'Identity' => [
-		'icon' => 'kd-openemis kd-identity',
-		'name' => 'identity',
-		'url' => ['?' => ['theme' => 'identity']]
-	],
-	'Insight' => [
-		'icon' => 'kd-openemis kd-insight',
-		'name' => 'insight', 
-		'url' => ['?' => ['theme' => 'insight']]
-	],
-	'Integrator' => [
-		'icon' => 'kd-openemis kd-integrator',
-		'name' => 'integrator',
-		'url' => ['?' => ['theme' => 'integrator']]
-	],
-	'Logistics' => [
-		'icon' => 'kd-openemis kd-logistics',
-		'name' => 'logistics',
-		'url' => ['?' => ['theme' => 'logistics']]
-	],
-	'Modelling' => [
-		'icon' => 'kd-openemis kd-modelling',
-		'name' => 'modelling',
-		'url' => ['?' => ['theme' => 'modelling']]
-	],
-	'Monitoring' => [
-		'icon' => 'kd-openemis kd-monitoring',
-		'name' => 'monitoring',
-		'url' => ['?' => ['theme' => 'monitoring']]
-	],
-	'School' => [
-		'icon' => 'kd-openemis kd-school',
-		'name' => 'school',
-		'url' => ['?' => ['theme' => 'school']]
-	],
-	'Visualizer' => [
-		'icon' => 'kd-openemis kd-visualizer',
-		'name' => 'visualizer',
-		'url' => ['?' => ['theme' => 'visualizer']]
-	]
-];
+$displayProducts = [];
+foreach($productTrait as $name => $item) {
+	if(array_key_exists($name, $productTable)) {
+		$displayProducts[$name]['icon'] = $item['icon'];
+		$displayProducts[$name]['url'] = $productTable[$name];
+	}
+}
 ?>
 
 <div class="btn-group">
@@ -74,7 +19,7 @@ $products = [
 		</div>
 
 		<div class="product-wrapper">
-		<?php foreach ($products as $name => $item) : ?>
+		<?php foreach ($displayProducts as $name => $item) : ?>
 			<div class="product-menu col-xs-4">
 				<?php 
 				$link = '<i class="' . $item['icon'] . '"></i>';
