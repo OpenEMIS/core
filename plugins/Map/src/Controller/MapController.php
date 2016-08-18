@@ -20,7 +20,7 @@ class MapController extends AppController {
     }
 
 	public function index() {
-		$Config = TableRegistry::get('ConfigItems');
+		$Config = TableRegistry::get('Configuration.ConfigItems');
 		$centerLng = $Config->value('google_map_center_longitude');
 		$centerLat = $Config->value('google_map_center_latitude');
 		$defaultZoom = $Config->value('google_map_zoom');
