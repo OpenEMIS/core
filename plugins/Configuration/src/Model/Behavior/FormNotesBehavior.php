@@ -1,5 +1,5 @@
 <?php
-namespace App\Model\Behavior;
+namespace Configuration\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Entity;
@@ -31,7 +31,7 @@ class FormNotesBehavior extends Behavior {
 	private function setupFormNotes(Entity $entity) {
 		if ($entity->type == 'Custom Validation') {
 			$this->_table->fields['value']['attr']['onkeypress'] = 'return Config.inputMaskCheck(event)';
-			$this->_table->ControllerAction->field('form_notes', [
+			$this->_table->field('form_notes', [
 				'type' => 'element',
 	            'element' => 'Configurations/form_notes',
 	            'valueClass' => 'table-full-width',
