@@ -2,7 +2,7 @@
 namespace Configuration\Model\Traits;
 
 trait ProductListsTrait {
-	public $productList = [
+	public $productTrait = [
 		'Core' => [
 			'icon' => 'kd-openemis kd-core',
 			'name' => 'core'

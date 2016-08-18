@@ -5,8 +5,12 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Core\Configure;
+use Cake\ORM\TableRegistry;
+use Configuration\Model\Traits\ProductListsTrait;
 
 class OpenEmisComponent extends Component {
+	use ProductListsTrait; 
+
 	private $controller;
 	protected $_defaultConfig = [
 		'theme' => 'auto',
@@ -39,12 +43,21 @@ class OpenEmisComponent extends Component {
 		$controller = $this->controller;
 		$session = $this->request->session();
 		
+		$productTable = TableRegistry::get('Configuration.ConfigProductLists');
+		$productTableData = $productTable-> find('list', [
+							    'keyField' => 'name',
+							    'valueField' => 'url'
+							])
+							-> toArray();
+
 		$theme = $this->getTheme();
 		$controller->set('theme', $theme);
 		$controller->set('homeUrl', $this->config('homeUrl'));
 		$controller->set('headerMenu', $this->getHeaderMenu());
 		$controller->set('SystemVersion', $this->getCodeVersion());
 		$controller->set('_productName', $controller->_productName);
+		$controller->set('productTable', $productTableData);
+		$controller->set('productTrait', $this->productTrait);
 
 		//Retriving the panel width size from session
 		if ($session->check('System.layout')) {
