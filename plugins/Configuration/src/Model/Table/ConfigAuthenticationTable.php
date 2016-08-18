@@ -16,6 +16,7 @@ class ConfigAuthenticationTable extends ControllerActionTable {
         parent::initialize($config);
         $this->addBehavior('Configuration.ConfigItems');
         $this->addBehavior('Configuration.Authentication');
+        $this->toggle('remove', false);
 
         $authenticationRecord = $this
             ->find()
