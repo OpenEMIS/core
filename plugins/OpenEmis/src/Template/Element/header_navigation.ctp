@@ -25,8 +25,8 @@ if ($session->check('System.User.roles')) {
         </a>
     </div>
 
-    <?php 
-	if (isset($showProductList) && $showProductList) {
+    <?php
+	if (isset($productListOptions) && $productListOptions) {
 		echo $this->element('OpenEmis.product_list');
 	}
 	?>
@@ -54,7 +54,7 @@ if ($session->check('System.User.roles')) {
 					}
 				}
 				?>
-			</div>			
+			</div>
 		</ul>
 	</div>
 </div>

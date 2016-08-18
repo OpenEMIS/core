@@ -9,7 +9,7 @@ use Cake\ORM\TableRegistry;
 use Configuration\Model\Traits\ProductListsTrait;
 
 class OpenEmisComponent extends Component {
-	use ProductListsTrait; 
+	use ProductListsTrait;
 
 	private $controller;
 	protected $_defaultConfig = [
@@ -18,11 +18,11 @@ class OpenEmisComponent extends Component {
 		'logoutUrl' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'logout'],
 		'headerMenu' => [
 			'About' => [
-				'url' => ['plugin' => false, 'controller' => 'About', 'action' => 'index'], 
+				'url' => ['plugin' => false, 'controller' => 'About', 'action' => 'index'],
 				'icon' => 'fa-info-circle'
 			],
 			'Preferences' => [
-				'url' => ['plugin' => false, 'controller' => 'Preferences', 'action' => 'index'], 
+				'url' => ['plugin' => false, 'controller' => 'Preferences', 'action' => 'index'],
 				'icon' => 'fa-cog'
 			],
 			'Help' => [
@@ -42,9 +42,9 @@ class OpenEmisComponent extends Component {
 	public function startup(Event $event) {
 		$controller = $this->controller;
 		$session = $this->request->session();
-		
-		$productTable = TableRegistry::get('Configuration.ConfigProductLists');
-		$productTableData = $productTable-> find('list', [
+
+		$ConfigProductLists = TableRegistry::get('Configuration.ConfigProductLists');
+		$productListOptions = $ConfigProductLists-> find('list', [
 							    'keyField' => 'name',
 							    'valueField' => 'url'
 							])
@@ -56,8 +56,8 @@ class OpenEmisComponent extends Component {
 		$controller->set('headerMenu', $this->getHeaderMenu());
 		$controller->set('SystemVersion', $this->getCodeVersion());
 		$controller->set('_productName', $controller->_productName);
-		$controller->set('productTable', $productTableData);
-		$controller->set('productTrait', $this->productTrait);
+		$controller->set('productListOptions', $productListOptions);
+		$controller->set('productLists', $this->productLists);
 
 		//Retriving the panel width size from session
 		if ($session->check('System.layout')) {
@@ -79,7 +79,7 @@ class OpenEmisComponent extends Component {
 		$css = Configure::read('debug') ? '/layout' : '/layout.min';
 		if ($this->config('theme') == 'auto') {
 			$query = $this->request->query;
-			
+
 			if (isset($query['theme'])) {
 				$product = $query['theme'];
 				$theme .= $product . $css;
@@ -108,7 +108,7 @@ class OpenEmisComponent extends Component {
 			'icon' => 'fa-power-off'
 		];
 
-		return $headerMenu;		
+		return $headerMenu;
 	}
 
 	public function getCodeVersion() {
