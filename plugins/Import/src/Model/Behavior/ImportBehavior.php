@@ -307,7 +307,7 @@ class ImportBehavior extends Behavior {
                 return false;
             }
 
-            $systemDateFormat = TableRegistry::get('ConfigItems')->value('date_format');
+            $systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
 
             $controller = $model->controller;
             $controller->loadComponent('PhpExcel');

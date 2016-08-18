@@ -106,7 +106,7 @@ class UsersController extends AppController
             $labels->storeLabelsInCache();
             
             // Support Url
-            $ConfigItems = TableRegistry::get('ConfigItems');
+            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
             $supportUrl = $ConfigItems->value('support_url');
             $this->request->session()->write('System.help', $supportUrl);
         }
