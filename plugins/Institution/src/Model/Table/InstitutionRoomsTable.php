@@ -66,7 +66,6 @@ class InstitutionRoomsTable extends AppTable {
     public function implementedEvents() {
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-        $events['Model.isRecordExists'] = 'isRecordExists';
         return $events;
     }
 
@@ -108,16 +107,6 @@ class InstitutionRoomsTable extends AppTable {
 				return false;
 			})
 		;
-	}
-
-    public function isRecordExists(Event $event)
-	{
-		$model = $this;
-
-		$callable = function($model, $params) {
-			return false;
-		};
-		return $callable;
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {

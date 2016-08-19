@@ -19,10 +19,19 @@ class InfrastructureShiftBehavior extends Behavior {
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 100];
         $events['Model.custom.onUpdateActionButtons'] = ['callable' => 'onUpdateActionButtons', 'priority' => 100];
+        $events['Model.isRecordExists'] = 'isRecordExists';
         $events['ControllerAction.Model.beforeAction'] = 'beforeAction';
         $events['ControllerAction.Model.index.afterAction'] = 'indexAfterAction';
         $events['ControllerAction.Model.add.beforeAction'] = 'addBeforeAction';
         return $events;
+    }
+
+    public function isRecordExists(Event $event)
+    {
+        $callable = function($model, $params) {
+            return true;
+        };
+        return $callable;
     }
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
@@ -79,17 +88,23 @@ class InfrastructureShiftBehavior extends Behavior {
 
     public function indexAfterAction(Event $event, $data) {
         $model = $this->_table;
-        if ($this->isOccupier) {
+        $session = $model->request->session();
+
+        if ($this->isOccupier && (!is_null($session->read('Institution.Institutions.warning')))) {
             $model->Alert->warning('InstitutionInfrastructures.occupierAddNotAllowed');
-        } else if ($this->isOwner == false && $this->isOccupier == false) {
+            $session->delete('Institution.Institutions.warning');
+        } else if ($this->isOwner == false && $this->isOccupier == false && (!is_null($session->read('Institution.Institutions.warning')))) {
             $model->Alert->warning('InstitutionInfrastructures.ownerAddNotAllowed');
+            $session->delete('Institution.Institutions.warning');
         }
     }
 
     public function addBeforeAction(Event $event) {
         $model = $this->_table;
+        $session = $model->request->session();
 
         if ($this->isOccupier || ($this->isOwner == false && $this->isOccupier == false)) {
+            $session->write('Institution.Institutions.warning', 'warning');
             $url = $model->ControllerAction->url('index');
             $event->stopPropagation();
             $model->controller->redirect($url);
