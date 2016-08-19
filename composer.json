@@ -48,6 +48,10 @@
         {
             "type": "git",
             "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git"
+        },
+        {
+            "type": "git",
+            "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git"
         }
     ]
 }

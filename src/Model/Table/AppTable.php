@@ -206,7 +206,7 @@ class AppTable extends Table {
 	 * @return [type]             [description]
 	 */
 	public function formatDate($dateObject) {
-		$ConfigItem = TableRegistry::get('ConfigItems');
+		$ConfigItem = TableRegistry::get('Configuration.ConfigItems');
 		$format = $ConfigItem->value('date_format');
         $value = '';
         if (is_object($dateObject)) {
@@ -226,7 +226,7 @@ class AppTable extends Table {
 	 * @return [type]             [description]
 	 */
 	public function formatTime($timeObject) {
-		$ConfigItem = TableRegistry::get('ConfigItems');
+		$ConfigItem = TableRegistry::get('Configuration.ConfigItems');
 		$format = $ConfigItem->value('time_format');
 		$value = '';
         if (is_object($timeObject)) {
@@ -246,7 +246,7 @@ class AppTable extends Table {
 	 * @return [type]             [description]
 	 */
 	public function formatDateTime($dateObject) {
-		$ConfigItem = TableRegistry::get('ConfigItems');
+		$ConfigItem = TableRegistry::get('Configuration.ConfigItems');
 		$format = $ConfigItem->value('date_format') . ' - ' . $ConfigItem->value('time_format');
 		$value = '';
         if (is_object($dateObject)) {
