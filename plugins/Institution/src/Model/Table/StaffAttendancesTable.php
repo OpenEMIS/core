@@ -394,10 +394,6 @@ class StaffAttendancesTable extends AppTable {
 			];
 			$displayTime = 'display:none;';
 			$HtmlField = $event->subject()->HtmlField;
-<<<<<<< HEAD
-			$configItemsTable =  TableRegistry::get('Configuration.ConfigItems');
-			$attr['value'] = $configItemsTable->value('start_time');
-=======
 
 			$selectedPeriod = $this->request->query['academic_period_id'];
 			$institutionId = $this->Session->read('Institution.Institutions.id');
@@ -416,7 +412,6 @@ class StaffAttendancesTable extends AppTable {
 			$startTimestamp = strtotime($startTime);
 
 			$attr['value'] = date('h:i A', $startTimestamp);
->>>>>>> origin/master
 			$attr['default_time'] = false;
 			$attr['null'] = true;
 			if (empty($entity->StaffAbsences['id'])) {
@@ -958,14 +953,7 @@ class StaffAttendancesTable extends AppTable {
 						} else if ($obj['absence_type_id'] == $codeAbsenceType['LATE']) {
 							$obj['staff_absence_reason_id'] = $obj['late_staff_absence_reason_id'];
 							$obj['full_day'] = 0;
-<<<<<<< HEAD
-							$configItemsTable =  TableRegistry::get('Configuration.ConfigItems');
-							if (!isset($obj['start_time'])) {
-								$obj['start_time'] = $configItemsTable->value('start_time');
-								$obj['start_time'] = Time::parseTime($obj['start_time']);
-							} else {
-								$obj['start_time'] = new Time ($obj['start_time']);
-=======
+
 							$lateTime = strtotime($obj['late_time']);
 
 							$selectedPeriod = $this->request->query['academic_period_id'];
@@ -981,7 +969,6 @@ class StaffAttendancesTable extends AppTable {
 							foreach ($shiftTime as $key => $value) {
 								$shiftStartTimeArray[$key] = $value->start_time;
 								$shiftEndTimeArray[$key] = $value->end_time;
->>>>>>> origin/master
 							}
 
 							$startTime = min($shiftStartTimeArray);
