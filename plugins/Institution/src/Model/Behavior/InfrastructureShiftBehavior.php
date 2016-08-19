@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace Institution\Model\Behavior;
 
 use ArrayObject;
@@ -93,6 +93,38 @@ class InfrastructureShiftBehavior extends Behavior {
             $url = $model->ControllerAction->url('index');
             $event->stopPropagation();
             $model->controller->redirect($url);
+        }
+    }
+
+    public function getOwnerInstitutionId() {
+        if ($this->isOccupier) {
+           $model = $this->_table;
+
+            $session = $model->request->session();
+            $institutionId = $session->read('Institution.Institutions.id');
+
+            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $academicPeriodId = $AcademicPeriods->getCurrent();
+
+            $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
+
+            $conditions = [
+                [$InstitutionShifts->aliasField('academic_period_id') => $academicPeriodId],
+                [$InstitutionShifts->aliasField('location_institution_id') => $institutionId]
+            ];
+
+            $query = $InstitutionShifts
+                ->find()
+                ->where($conditions)
+                ->toArray()
+            ;
+
+            $ownerInstitutionId = [];
+            foreach ($query as $key => $value) {
+                $ownerInstitutionId[$key] = $value['institution_id'];
+            }
+
+            return($ownerInstitutionId);
         }
     }
 }
