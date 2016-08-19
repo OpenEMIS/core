@@ -19,7 +19,7 @@ if (!isset($products)) {
 			<div class="product-menu col-xs-4">
 				<?php
 				$link = '<i class="' . $item['icon'] . '"></i>';
-				$link .= '<span>' . $name . '</span>';
+				$link .= '<span>' . $item['name'] . '</span>';
 				echo $this->Html->link($link, $item['url'], array('escape' => false));
 				?>
 			</div>
