@@ -49,6 +49,15 @@ class OpenEmisComponent extends Component {
 							    'valueField' => 'url'
 							])
 							-> toArray();
+		$productListsTrait = $this->productLists;
+
+		foreach($productListsTrait as $name => $item) {
+			if(array_key_exists($name, $productListOptions)) {
+				$displayProducts[$name]['name'] = $item['name'];
+				$displayProducts[$name]['icon'] = $item['icon'];
+				$displayProducts[$name]['url'] = $productListOptions[$name];
+			}
+		}
 
 		$theme = $this->getTheme();
 		$controller->set('theme', $theme);
@@ -56,8 +65,8 @@ class OpenEmisComponent extends Component {
 		$controller->set('headerMenu', $this->getHeaderMenu());
 		$controller->set('SystemVersion', $this->getCodeVersion());
 		$controller->set('_productName', $controller->_productName);
-		$controller->set('productListOptions', $productListOptions);
-		$controller->set('productLists', $this->productLists);
+		$controller->set('displayProducts', $displayProducts);
+		$controller->set('showProductList', !empty($displayProducts));
 
 		//Retriving the panel width size from session
 		if ($session->check('System.layout')) {
@@ -92,7 +101,6 @@ class OpenEmisComponent extends Component {
 			if (!empty($theme)) {
 				$controller->_productName .= ' ' . Inflector::camelize($product);
 			}
-			$controller->set('showProductList', true);
 		} else {
 			$theme .= $this->config('theme') . $css;
 		}

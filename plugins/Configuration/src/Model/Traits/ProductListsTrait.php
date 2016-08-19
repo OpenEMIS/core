@@ -3,17 +3,17 @@ namespace Configuration\Model\Traits;
 
 trait ProductListsTrait {
 	public $productLists = [
-		'Core' => [
+		'OpenEMIS Core' => [
 			'icon' => 'kd-openemis kd-core',
-			'name' => 'core'
+			'name' => 'Core'
 		],
-		'Dashboard' => [
+		'OpenEMIS Dashboard' => [
 			'icon' => 'kd-openemis kd-dashboard',
-			'name' => 'dashboard'
+			'name' => 'Dashboard'
 		],
-		'Integrator' => [
+		'OpenEMIS Integrator' => [
 			'icon' => 'kd-openemis kd-integrator',
-			'name' => 'integrator'
+			'name' => 'Integrator'
 		]
 	];
 }
