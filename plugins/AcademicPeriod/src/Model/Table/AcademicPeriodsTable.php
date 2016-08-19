@@ -377,7 +377,7 @@ class AcademicPeriodsTable extends AppTable {
 			5 => 'Friday',
 			6 => 'Saturday',
 		];
-		$ConfigItems = TableRegistry::get('ConfigItems');
+		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 		$firstDayOfWeek = $ConfigItems->value('first_day_of_week');
 		$daysPerWeek = $ConfigItems->value('days_per_week');
 		$lastDayIndex = ($firstDayOfWeek + $daysPerWeek - 1) % 7;
@@ -403,7 +403,7 @@ class AcademicPeriodsTable extends AppTable {
 		// );
 
 		$period = $this->findById($id)->first();
-		$ConfigItems = TableRegistry::get('ConfigItems');
+		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 		$firstDayOfWeek = $ConfigItems->value('first_day_of_week');
 
 		// If First of week is sunday changed the value to 7, because sunday with the '0' value unable to be displayed 

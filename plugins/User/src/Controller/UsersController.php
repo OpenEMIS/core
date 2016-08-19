@@ -4,6 +4,7 @@ use Cake\Event\Event;
 use DateTime;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
+use ArrayObject;
 
 class UsersController extends AppController
 {
@@ -90,7 +91,36 @@ class UsersController extends AppController
     {
         $events = parent::implementedEvents();
         $events['Auth.afterIdentify'] = 'afterIdentify';
+        $events['Controller.Auth.afterAuthenticate'] = 'afterAuthenticate';
         return $events;
+    }
+
+    public function afterAuthenticate(Event $event, ArrayObject $extra)
+    {
+        if ($this->Cookie->check('Restful.Call')) {
+            $event->stopPropagation();
+            return $this->controller->redirect(['plugin' => null, 'controller' => 'Rest', 'action' => 'auth', 'payload' => $this->generateToken(), 'version' => '2.0']);
+        } else {
+            // Labels
+            $labels = TableRegistry::get('Labels');
+            $labels->storeLabelsInCache();
+            
+            // Support Url
+            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $supportUrl = $ConfigItems->value('support_url');
+            $this->request->session()->write('System.help', $supportUrl);
+        }
+    }
+
+    public function generateToken() {
+        $user = $this->controller->Auth->user();
+
+        // Expiry change to 24 hours
+        return JWT::encode([
+                    'sub' => $user['id'],
+                    'exp' =>  time() + 10800
+                ],
+                Security::salt());
     }
 
     public function afterIdentify(Event $event, $user)
