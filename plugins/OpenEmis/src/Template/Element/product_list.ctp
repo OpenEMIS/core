@@ -1,6 +1,6 @@
 <?php
-if (!isset($displayProducts)) {
-	$displayProducts = [];
+if (!isset($products)) {
+	$products = [];
 }
 ?>
 
@@ -15,11 +15,11 @@ if (!isset($displayProducts)) {
 		</div>
 
 		<div class="product-wrapper">
-		<?php foreach ($displayProducts as $name => $item) : ?>
+		<?php foreach ($products as $name => $item) : ?>
 			<div class="product-menu col-xs-4">
 				<?php
 				$link = '<i class="' . $item['icon'] . '"></i>';
-				$link .= '<span>' . $item['name'] . '</span>';
+				$link .= '<span>' . $name . '</span>';
 				echo $this->Html->link($link, $item['url'], array('escape' => false));
 				?>
 			</div>
