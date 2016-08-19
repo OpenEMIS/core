@@ -247,6 +247,7 @@ Plugin::load('Health', ['routes' => true, 'autoload' => true]);
 Plugin::load('Cache', ['routes' => true, 'autoload' => true]);
 Plugin::load('Restful');
 Plugin::load('ADmad/JwtAuth');
+Plugin::load('SSO');
 Plugin::load('InstitutionRepeater', ['routes' => true, 'autoload' => true]);
 Plugin::load('Configuration', ['routes' => true, 'autoload' => true]);
 
