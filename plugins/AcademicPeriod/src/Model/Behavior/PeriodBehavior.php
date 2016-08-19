@@ -62,15 +62,43 @@ class PeriodBehavior extends Behavior {
 				$startDate = date('Y-m-d', strtotime($startDate));
 			}
 
-			if ($endDate instanceof Time || $endDate instanceof Date) {
-				$endDate = $endDate->format('Y-m-d');
-			} else {
-				$endDate = date('Y-m-d', strtotime($endDate));
-			}
-
 			$conditions = [];
-			$conditions['OR'] = [
-				'OR' => [
+
+			if (!empty($endDate)) {
+				if ($endDate instanceof Time || $endDate instanceof Date) {
+					$endDate = $endDate->format('Y-m-d');
+				} else {
+					$endDate = date('Y-m-d', strtotime($endDate));
+				}
+				$conditions['OR'] = [
+					'OR' => [
+						[
+							$table->aliasField('end_date') . ' IS NOT NULL',
+							$table->aliasField('start_date') . ' <=' => $startDate,
+							$table->aliasField('end_date') . ' >=' => $startDate
+						],
+						[
+							$table->aliasField('end_date') . ' IS NOT NULL',
+							$table->aliasField('start_date') . ' <=' => $endDate,
+							$table->aliasField('end_date') . ' >=' => $endDate
+						],
+						[
+							$table->aliasField('end_date') . ' IS NOT NULL',
+							$table->aliasField('start_date') . ' >=' => $startDate,
+							$table->aliasField('end_date') . ' <=' => $endDate
+						]
+					],
+					[
+						$table->aliasField('end_date') . ' IS NULL',
+						$table->aliasField('start_date') . ' <=' => $endDate
+					]
+				];
+			} else {
+				// For records that are still valid after the start date
+				$conditions['OR'] = [
+					[
+						$table->aliasField('end_date') . ' IS NULL'
+					],
 					[
 						$table->aliasField('end_date') . ' IS NOT NULL',
 						$table->aliasField('start_date') . ' <=' => $startDate,
@@ -78,20 +106,10 @@ class PeriodBehavior extends Behavior {
 					],
 					[
 						$table->aliasField('end_date') . ' IS NOT NULL',
-						$table->aliasField('start_date') . ' <=' => $endDate,
-						$table->aliasField('end_date') . ' >=' => $endDate
-					],
-					[
-						$table->aliasField('end_date') . ' IS NOT NULL',
-						$table->aliasField('start_date') . ' >=' => $startDate,
-						$table->aliasField('end_date') . ' <=' => $endDate
+						$table->aliasField('start_date') . ' >=' => $startDate
 					]
-				],
-				[
-					$table->aliasField('end_date') . ' IS NULL',
-					$table->aliasField('start_date') . ' <=' => $endDate
-				]
-			];
+				];
+			}
 
 			return $query->where($conditions);
 		} else {

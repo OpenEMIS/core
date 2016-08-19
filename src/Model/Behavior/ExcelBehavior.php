@@ -254,9 +254,13 @@ class ExcelBehavior extends Behavior {
 				foreach ($fields as $attr) {
 					$row = [$attr['label']];
 					$row[] = $this->getValue($entity, $table, $attr);
+					if (isset($attr['constant'])) { //this logic is for constant that does not have table to look into. (e.g. shiftTypes in Institution.Institutions)
+						$arrayConstant = $this->_table->$attr['constant'];
+						$row[1] = $arrayConstant[$row[1]]; //replace the index with the value from constant
+					}
 					$writer->writeSheetRow($sheetName, $row);
 				}
-
+				
 				// Any additional custom headers that require to be appended on the left column of the sheet
 				$additionalHeader = [];
 				if(isset($sheet['additionalHeader'])) {
