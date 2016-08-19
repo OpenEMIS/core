@@ -43,6 +43,7 @@ class OpenEmisComponent extends Component {
 		$controller = $this->controller;
 		$session = $this->request->session();
 
+		$displayProducts = [];
 		$ConfigProductLists = TableRegistry::get('Configuration.ConfigProductLists');
 		$productListOptions = $ConfigProductLists-> find('list', [
 							    'keyField' => 'name',
