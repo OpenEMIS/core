@@ -1,9 +1,14 @@
 <?php
 namespace Assessment\Model\Table;
 
-use App\Model\Table\ControllerActionTable;
+use ArrayObject;
+use Cake\ORM\Entity;
+use Cake\Event\Event;
+use Cake\Utility\Text;
 
-class AssessmentItemGradingTypesTable extends ControllerActionTable {
+use App\Model\Table\AppTable;
+
+class AssessmentItemsGradingTypesTable extends AppTable {
 
     public function initialize(array $config) {
         parent::initialize($config);
@@ -12,4 +17,11 @@ class AssessmentItemGradingTypesTable extends ControllerActionTable {
         $this->belongsTo('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true]);
         $this->belongsTo('AssessmentPeriods', ['className' => 'Assessment.AssessmentPeriods', 'dependent' => true]);
     }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $data)
+    {
+        if ($entity->isNew()) {
+            $entity->id = Text::uuid();
+        }
+	}
 }
