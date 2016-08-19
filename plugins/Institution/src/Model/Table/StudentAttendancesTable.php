@@ -389,10 +389,6 @@ class StudentAttendancesTable extends AppTable {
 			];
 			$displayTime = 'display:none;';
 			$HtmlField = $event->subject()->HtmlField;
-<<<<<<< HEAD
-			$configItemsTable =  TableRegistry::get('Configuration.ConfigItems');
-			$attr['value'] = $configItemsTable->value('start_time');
-=======
 
 			$classId = $this->request->query['class_id'];
 
@@ -405,7 +401,6 @@ class StudentAttendancesTable extends AppTable {
 			$startTimestamp = strtotime($startTime);
 
 			$attr['value'] = date('h:i A', $startTimestamp);
->>>>>>> origin/master
 			$attr['default_time'] = false;
 			$attr['null'] = true;
 
@@ -1015,19 +1010,6 @@ class StudentAttendancesTable extends AppTable {
 						} else if ($obj['absence_type_id'] == $codeAbsenceType['LATE']) {
 							$obj['student_absence_reason_id'] = $obj['late_student_absence_reason_id'];
 							$obj['full_day'] = 0;
-<<<<<<< HEAD
-							$configItemsTable =  TableRegistry::get('Configuration.ConfigItems');
-							if (!isset($obj['start_time'])) {
-								$obj['start_time'] = $configItemsTable->value('start_time');
-								$obj['start_time'] = Time::parseTime($obj['start_time']);
-							} else {
-								$obj['start_time'] = new Time ($obj['start_time']);
-							}
-							$startTime = $obj['start_time'];
-							$endTime = new Time ($obj['late_time']);
-							$obj['end_time'] = $endTime;
-=======
->>>>>>> origin/master
 
 							$lateTime = strtotime($obj['late_time']);
 
