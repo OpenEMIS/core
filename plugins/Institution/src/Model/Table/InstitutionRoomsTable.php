@@ -66,6 +66,7 @@ class InstitutionRoomsTable extends AppTable {
     public function implementedEvents() {
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+        $events['Model.isRecordExists'] = 'isRecordExists';
         return $events;
     }
 
@@ -107,6 +108,16 @@ class InstitutionRoomsTable extends AppTable {
 				return false;
 			})
 		;
+	}
+
+    public function isRecordExists(Event $event)
+	{
+		$model = $this;
+
+		$callable = function($model, $params) {
+			return false;
+		};
+		return $callable;
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
@@ -208,7 +219,25 @@ class InstitutionRoomsTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+	{
+		// get the list of owner institution id
+        $ownerInstitutionId = $this->getOwnerInstitutionId();
+
+        if (!empty($ownerInstitutionId)) {
+            // Reset the query to original state beforePaginate
+            $query->where($conditions = null, $types = [], $overwrite = true);
+
+            $conditions = [];
+            foreach ($ownerInstitutionId as $key => $value) {
+                $conditions ['OR'][$key] = [
+                    $this->aliasField('institution_id') => $value
+                ];
+            }
+
+            $query->where($conditions);
+        }
+
 		$parentId = $this->request->query('parent');
 		if (!is_null($parentId)) {
 			$query->where([$this->aliasField('institution_infrastructure_id') => $parentId]);
