@@ -13,12 +13,16 @@ trait MessagesTrait {
 			'date_on_file' => 'Date On File',
 		],
 		'Assessments' => [
+			'subjects' => 'Subjects',
+			'templates' => 'Templates',
+			'noTemplates' => 'No Templates',
 			'noGrades' => 'No Available Grades',
 			'noGradingTypes' => 'You need to configure Grading Types first.',
 			'addAssessmentItem' => 'Add Assessment Item',
 			'assessmentItems' => 'Assessment Items',
 			'assessmentPeriods' => 'Assessment Periods',
-			'education_subject' => 'Education Subject',
+			'assessmentGradingType' => 'Assessment Grading Type',
+			'educationSubject' => 'Education Subject',
 			'weight' => 'Weight'
 		],
 		'CustomGroups' => [
@@ -1141,6 +1145,12 @@ trait MessagesTrait {
 			]
 		],
 		'Assessment' => [
+			'Assessments' => [
+				'code' => [
+					'ruleUniqueCode' => 'Code must be unique',
+					'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form',
+				]
+			],
 			'AssessmentPeriods' => [
 				'code' => [
 					'ruleUniqueCode' => 'Code must be unique',
