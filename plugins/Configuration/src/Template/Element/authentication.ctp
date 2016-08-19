@@ -1,5 +1,5 @@
 <?php if ($ControllerAction['action'] == 'index') : ?>
-	
+
 <?php elseif ($ControllerAction['action'] == 'view') : ?>
 	<?php
 		$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
@@ -21,10 +21,10 @@
 			<?php
 				$this->Form->unlockField('AuthenticationTypeAttributes.sp_metadata');
 				foreach ($attr as $key => $value) {
-				echo 
+				echo
 					$this->Form->input('AuthenticationTypeAttributes'.'.'.$key.'.value', $value);
 
-				echo 
+				echo
 					$this->Form->input('AuthenticationTypeAttributes'.'.'.$key.'.name', [
 						'type' => 'hidden',
 						'value' => $value['label']
