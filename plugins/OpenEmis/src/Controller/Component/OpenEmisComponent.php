@@ -66,7 +66,7 @@ class OpenEmisComponent extends Component {
 		$controller->set('headerMenu', $this->getHeaderMenu());
 		$controller->set('SystemVersion', $this->getCodeVersion());
 		$controller->set('_productName', $controller->_productName);
-		$controller->set('displayProducts', $displayProducts);
+		$controller->set('products', $displayProducts);
 		$controller->set('showProductList', !empty($displayProducts));
 
 		//Retriving the panel width size from session
