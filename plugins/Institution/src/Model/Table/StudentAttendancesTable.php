@@ -338,7 +338,11 @@ class StudentAttendancesTable extends AppTable {
 	public function onGetOpenemisNo(Event $event, Entity $entity) {
 		$sessionPath = 'Users.institution_student_absences.';
 		$timeError = $this->Session->read($sessionPath.$entity->student_id.'.timeError');
+		$startTimestamp = $this->Session->read($sessionPath.$entity->student_id.'.startTimestamp');
+		$endTimestamp = $this->Session->read($sessionPath.$entity->student_id.'.endTimestamp');
 		$this->Session->delete($sessionPath.$entity->student_id.'.timeError');
+		$this->Session->delete($sessionPath.$entity->student_id.'.startTimestamp');
+		$this->Session->delete($sessionPath.$entity->student_id.'.endTimestamp');
 		$html = $event->subject()->Html->link($entity->user->openemis_no , [
 			'plugin' => 'Institution',
 			'controller' => 'Institutions',
@@ -348,7 +352,10 @@ class StudentAttendancesTable extends AppTable {
 		]);
 
 		if ($timeError) {
-			$error = $this->getMessage('StudentAttendances.lateTime');
+			$startTime = __('Must be within shift timing, from') . ' ' . date('h:i A', $startTimestamp);
+			$endTime = __('to') . ' ' . date('h:i A', $endTimestamp);
+
+			$error = $startTime . ' ' . $endTime;
 			$html .= '&nbsp;<i class="fa fa-exclamation-circle fa-lg table-tooltip icon-red" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="'.$error.'"></i>';
 		}
 
@@ -361,8 +368,8 @@ class StudentAttendancesTable extends AppTable {
 		$studentId = $entity->student_id;
 		$StudentTable = TableRegistry::get('Institution.Students');
 		$institutionId = $this->Session->read('Institution.Institutions.id');
-
-		if (!is_null($this->request->query('mode')) && $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
+		// checkEnrolledInInstitution will list only enrolled student in the school
+		if (!is_null($this->request->query('mode'))) {
 			$Form = $event->subject()->Form;
 
 			$institutionId = $this->Session->read('Institution.Institutions.id');
@@ -382,8 +389,23 @@ class StudentAttendancesTable extends AppTable {
 			];
 			$displayTime = 'display:none;';
 			$HtmlField = $event->subject()->HtmlField;
+<<<<<<< HEAD
 			$configItemsTable =  TableRegistry::get('Configuration.ConfigItems');
 			$attr['value'] = $configItemsTable->value('start_time');
+=======
+
+			$classId = $this->request->query['class_id'];
+
+			$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+			$shiftTime = $InstitutionShift
+				->find('shiftTime', ['institution_class_id' => $classId])
+				->first();
+
+			$startTime = $shiftTime->start_time;
+			$startTimestamp = strtotime($startTime);
+
+			$attr['value'] = date('h:i A', $startTimestamp);
+>>>>>>> origin/master
 			$attr['default_time'] = false;
 			$attr['null'] = true;
 
@@ -441,7 +463,7 @@ class StudentAttendancesTable extends AppTable {
 		$studentId = $entity->student_id;
 		$StudentTable = TableRegistry::get('Institution.Students');
 		$institutionId = $this->Session->read('Institution.Institutions.id');
-		if (!is_null($this->request->query('mode')) && $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
+		if (!is_null($this->request->query('mode'))) {
 			$Form = $event->subject()->Form;
 
 			$id = $entity->student_id;
@@ -607,7 +629,10 @@ class StudentAttendancesTable extends AppTable {
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$periodOptions = $AcademicPeriod->getList();
+		$periodOptionsData = $AcademicPeriod->getList();
+		// only year options will appear
+		$periodOptions = $periodOptionsData[key($periodOptionsData)];
+
 		if (empty($this->request->query['academic_period_id'])) {
 			$this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
 		}
@@ -969,10 +994,12 @@ class StudentAttendancesTable extends AppTable {
 		}
 	}
 
-	public function indexEdit() {
+	public function indexEdit()
+	{
 		if ($this->request->is(['post', 'put'])) {
 			$requestQuery = $this->request->query;
 			$requestData = $this->request->data;
+
 			$StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
 			$alias = Inflector::underscore($StudentAbsences->alias());
 			$codeAbsenceType = array_flip($this->absenceCodeList);
@@ -988,6 +1015,7 @@ class StudentAttendancesTable extends AppTable {
 						} else if ($obj['absence_type_id'] == $codeAbsenceType['LATE']) {
 							$obj['student_absence_reason_id'] = $obj['late_student_absence_reason_id'];
 							$obj['full_day'] = 0;
+<<<<<<< HEAD
 							$configItemsTable =  TableRegistry::get('Configuration.ConfigItems');
 							if (!isset($obj['start_time'])) {
 								$obj['start_time'] = $configItemsTable->value('start_time');
@@ -998,14 +1026,35 @@ class StudentAttendancesTable extends AppTable {
 							$startTime = $obj['start_time'];
 							$endTime = new Time ($obj['late_time']);
 							$obj['end_time'] = $endTime;
+=======
+>>>>>>> origin/master
 
-							$startTimestamp = intval($startTime->toUnixString());
-							$endTimestamp = intval($endTime->toUnixString());
+							$lateTime = strtotime($obj['late_time']);
 
-							if ($startTimestamp > $endTimestamp) {
+							$classId = $this->request->query['class_id'];
+
+							$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+							$shiftTime = $InstitutionShift
+								->find('shiftTime', ['institution_class_id' => $classId])
+								->first();
+
+							$startTime = $shiftTime->start_time;
+							$endTime = $shiftTime->end_time;
+
+							$obj['start_time'] = $startTime;
+							$inputTime = $obj['late_time'];
+							$obj['end_time'] = $inputTime;
+
+							$startTimestamp = strtotime($startTime);
+							$endTimestamp = strtotime($endTime);
+
+							if (($lateTime < $startTimestamp) || ($lateTime > $endTimestamp)) {
+								$key = $obj['student_id'];
 								$timeError = true;
 								$error = true;
 								$this->Session->write($StudentAbsences->Users->alias().'.'.$alias.'.'.$key.'.timeError', true);
+								$this->Session->write($StudentAbsences->Users->alias().'.'.$alias.'.'.$key.'.startTimestamp', $startTimestamp);
+								$this->Session->write($StudentAbsences->Users->alias().'.'.$alias.'.'.$key.'.endTimestamp', $endTimestamp);
 							}
 						}
 
