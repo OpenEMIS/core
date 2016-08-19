@@ -298,6 +298,6 @@ class AuthenticationBehavior extends Behavior {
 				$attr = $attribute;
 				break;
 		}
-		return $event->subject()->renderElement('Configurations/authentication', ['attr' => $attr]);
+		return $event->subject()->renderElement('Configurations.authentication', ['attr' => $attr]);
 	}
 }
