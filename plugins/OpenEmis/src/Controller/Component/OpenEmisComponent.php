@@ -5,11 +5,8 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Core\Configure;
-use Cake\ORM\TableRegistry;
-use Configuration\Model\Traits\ProductListsTrait;
 
 class OpenEmisComponent extends Component {
-	use ProductListsTrait;
 
 	private $controller;
 	protected $_defaultConfig = [
@@ -38,27 +35,24 @@ class OpenEmisComponent extends Component {
 		$this->controller = $this->_registry->getController();
 	}
 
+	public function getProductList()
+	{
+		$productList = [];
+		$event = $this->controller->dispatchEvent('Controller.onUpdateProductLists', null, $this);
+
+		if ($event->result) {
+			$productList = $event->result;
+		}
+
+		return $productList;
+	}
+
 	// Is called after the controller's beforeFilter method but before the controller executes the current action handler.
 	public function startup(Event $event) {
 		$controller = $this->controller;
 		$session = $this->request->session();
 
-		$displayProducts = [];
-		$ConfigProductLists = TableRegistry::get('Configuration.ConfigProductLists');
-		$productListOptions = $ConfigProductLists-> find('list', [
-							    'keyField' => 'name',
-							    'valueField' => 'url'
-							])
-							-> toArray();
-		$productListsTrait = $this->productLists;
-
-		foreach($productListsTrait as $name => $item) {
-			if(array_key_exists($name, $productListOptions)) {
-				$displayProducts[$name]['name'] = $item['name'];
-				$displayProducts[$name]['icon'] = $item['icon'];
-				$displayProducts[$name]['url'] = $productListOptions[$name];
-			}
-		}
+		$displayProducts = $this->getProductList();
 
 		$theme = $this->getTheme();
 		$controller->set('theme', $theme);
