@@ -2,6 +2,7 @@
 namespace Assessment\Model\Table;
 
 use ArrayObject;
+use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
@@ -18,7 +19,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		
+
 		$this->hasMany('GradingOptions', ['className' => 'Assessment.AssessmentGradingOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->belongsToMany('AssessmentItems', [
@@ -114,6 +115,25 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 		]);
 	}
 
+	public function addEditAfterAction (Event $event, Entity $entity, ArrayObject $extra)
+	{
+		// $gradingOptions will contain the GradeOptionId and the association.(1 for true and 0 for false)
+		$AssessmentGradingOptions = TableRegistry::get('Assessment.AssessmentGradingOptions');
+		$gradingOptions = [];
+		if (!is_null($entity->grading_options)) {
+			foreach ($entity->grading_options as $key => $gradingOption) {
+				$gradingOptionId = $gradingOption->id;
+				$gradingOptions[$gradingOptionId] = 0;
+				if ($this->hasAssociatedRecords($AssessmentGradingOptions, $gradingOption, $extra)) {
+					$gradingOptions[$gradingOptionId] = 1;
+				}
+			}
+		}
+
+		// to passed the array of the association to the view (grading_options.ctp).
+		$this->controller->set('gradingOptions', $gradingOptions);
+	}
+
 	public function addEditOnReload(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
 		$groupOptionData = $this->GradingOptions->getFormFields();
 		if (!empty($entity->id)) {
@@ -135,20 +155,51 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 ** edit action events
 **
 ******************************************************************************************************************/
-	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+	{
+		// get the array of the original gradeOptions
+		$AssessmentGradingOptions = TableRegistry::get('Assessment.AssessmentGradingOptions');
+		$query = $AssessmentGradingOptions
+			->find()
+			->where(['assessment_grading_type_id' => $entity->id])
+			->toArray();
+
+		$gradingOptions = [];
+		foreach ($query as $key => $gradingOption) {
+			$gradingOptionId = $gradingOption->id;
+			$gradingOptions[$gradingOptionId] = 0;
+			if ($this->hasAssociatedRecords($AssessmentGradingOptions, $gradingOption, $extra)) {
+				$gradingOptions[$gradingOptionId] = 1;
+			}
+		}
+
+		// it will check if there are any in-used gradeOption, can't delete all the gradeOptions.
+		$allowedDeleteAll = max($gradingOptions);
 
 		$currentGradingOptionIds = (new Collection($entity->grading_options))->extract($this->GradingOptions->primaryKey())->toArray();
 		$originalGradingOptionIds = (new Collection($entity->getOriginal('grading_options')))->extract($this->GradingOptions->primaryKey())->toArray();
-		$removedGradingOptionIds = array_diff($originalGradingOptionIds, $currentGradingOptionIds);
+		$tempRemovedGradingOptionIds = array_diff($originalGradingOptionIds, $currentGradingOptionIds);
 
+		// get the array of gradeOption that will be deleted, if the gradeOption was in-used it will be excluded from this array.
+		$removedGradingOptionIds = [];
+		foreach ($tempRemovedGradingOptionIds as $key => $value) {
+			if (!$gradingOptions[$value]) {
+				$removedGradingOptionIds[$key] = $value;
+			}
+		}
+
+		// remove the gradeOption inside the removed gradeOptions array.
+		// remove all the gradeOptions if no in-use gradeOption.
 		if (!empty($removedGradingOptionIds)) {
 			$this->GradingOptions->deleteAll([
 				$this->GradingOptions->aliasField($this->GradingOptions->primaryKey()) . ' IN ' => $removedGradingOptionIds
 			]);
+		} else if ((!array_key_exists('grading_options', $requestData['AssessmentGradingTypes'])) && (!$allowedDeleteAll)){
+			$this->GradingOptions->deleteAll([
+				$this->GradingOptions->aliasField('assessment_grading_type_id') => $entity->id
+			]);
 		}
-		
 	}
-
 
 /******************************************************************************************************************
 **
@@ -195,5 +246,4 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
  		$query = $this->find('list', ['keyField' => $keyField, 'valueField' => $valueField]);
 		return $this->getList($query);
 	}
-
 }

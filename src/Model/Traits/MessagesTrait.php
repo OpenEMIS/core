@@ -148,7 +148,13 @@ trait MessagesTrait {
 			'our_shifts' => 'Our Shifts',
 			'external_shifts' => 'External Shifts',
 			'location' => 'Location',
+			'occupier' => 'Occupier',
 			'institution' => 'Institution',
+			'allShiftsUsed' => 'All shifts has been used for the selected academic period.',
+			'replicateShifts' => 'Should the system replicate the existing shifts for the latest academic period?.',
+			'replicateShiftsSuccess' => 'Shifts has been successfully replicated.',
+			'replicateShiftsNotChosen' => 'Replication was not chosen, please setup the shifts manually.',
+			'noAccessToShift' => 'You do not have access to the shift',
 		],
 		'InstitutionClasses' => [
 			'expiredGrade' => 'Expired Grade',
@@ -517,7 +523,7 @@ trait MessagesTrait {
 				],
 				'latitude' => [
 					'ruleLatitude' => 'Please enter a valid Latitude'
-				], 
+				],
 				'area_id' => [
 					'ruleAuthorisedArea' => 'You have not been authorised to add an institution into that area.'
 				],
@@ -525,7 +531,7 @@ trait MessagesTrait {
 					'ruleUnique' => 'Please enter a unique code'
 				],
 			],
-			
+
 			'InstitutionClasses' => [
 				'noGrade' => 'There is no grade selected',
 				'emptyName' => 'Class name should not be empty',
@@ -559,9 +565,10 @@ trait MessagesTrait {
 					'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
 				],
 				'end_date' => [
-					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
+					'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
 				],
-				
+				'timeRangeHint' => 'Time should be between %s and %s'
 			],
 			'StaffAbsences' => [
 				'end_time' => [
@@ -588,6 +595,7 @@ trait MessagesTrait {
 				'institutionPositionId' => 'You need to configure Institution Site Positions first.',
 				'securityRoleId' => 'You need to configure Security Roles first.',
 				'FTE' => 'There are no available FTE for this position.',
+				'noAvailableFTE' => 'No availabe FTE',
 				'noFTE' => 'New staff is not added to the institutition as there are no available FTE for the selected position.',
 				'noInstitutionPosition' => 'There are no position available.',
 				'staffTypeId' => 'You need to configure Staff Types first.',
@@ -603,7 +611,7 @@ trait MessagesTrait {
 				'institution_name' => [
 					'ruleCheckLocationInstitutionId' => 'Please select an institution location.'
 				],
-				'location' => [
+				'start_time' => [
 					'ruleCheckShiftAvailable' => 'Shift timing is not available.'
 				]
 			],
@@ -631,7 +639,7 @@ trait MessagesTrait {
 			'TransferRequests' => [
 				'end_date' => [
 					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
-				], 
+				],
 				'student_id' => [
 					'ruleNoNewDropoutRequestInGradeAndInstitution' => 'There is a pending dropout application for this student at the moment, please reject the dropout application before making another request.',
 					'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
@@ -763,7 +771,7 @@ trait MessagesTrait {
 					'ruleChangePassword' => 'Incorrect password.',
 					'ruleCheckUsernameExists' => 'Please enter a valid password',
 					'ruleMinLength' => 'Password must be at least 6 characters',
-					'ruleNoSpaces' => 'Password should not contain spaces'	
+					'ruleNoSpaces' => 'Password should not contain spaces'
 				],
 				'retype_password' => [
 					'ruleChangePassword' => 'Please confirm your new password',
