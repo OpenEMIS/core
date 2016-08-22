@@ -5,8 +5,10 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Core\Configure;
+use OpenEmis\Model\Traits\ProductListsTrait;
 
 class OpenEmisComponent extends Component {
+	use ProductListsTrait;
 
 	private $controller;
 	protected $_defaultConfig = [
@@ -37,10 +39,10 @@ class OpenEmisComponent extends Component {
 
 	public function getProductList()
 	{
-		$productList = [];
-		$event = $this->controller->dispatchEvent('Controller.onUpdateProductLists', null, $this);
+		$productList = $this->productList;
+		$event = $this->controller->dispatchEvent('Controller.onUpdateProductList', [$productList], $this);
 
-		if ($event->result) {
+		if ($event->result || is_array($event->result)) {
 			$productList = $event->result;
 		}
 
