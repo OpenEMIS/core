@@ -9,13 +9,13 @@
 			$template = $this->ControllerAction->getFormTemplate();
 			$this->Form->templates($template);
 
-			echo $this->Form->input('toggle', array(
+			echo $this->Form->input('period', array(
 				'class' => 'form-control',
 				'label' => false,
-				'options' => $toggleOptions,
+				'options' => $periodOptions,
 				'url' => $baseUrl,
-				'data-named-key' => 'toggle',
-				'default' => $selectedToggleOption,
+				'data-named-key' => 'period',
+				'default' => $selectedPeriodOption,
 			));
 		?>
 		</div>
