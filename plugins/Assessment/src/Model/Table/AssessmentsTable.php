@@ -140,6 +140,14 @@ class AssessmentsTable extends ControllerActionTable {
         // pr($requestData);die;
     }
 
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $extra['excludedModels'] = [
+            $this->AssessmentItems->alias(),
+            $this->GradingTypes->alias()
+        ];
+    }
+
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {

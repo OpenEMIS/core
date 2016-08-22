@@ -54,6 +54,8 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 		// 	'cascadeCallbacks' => true
 		// 	// 'saveStrategy' => 'append'
 		// ]);
+
+		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -225,6 +227,18 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 			$this->GradingOptions->alias()
 		]);
 	}
+
+/******************************************************************************************************************
+**
+** delete action events
+**
+******************************************************************************************************************/
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $extra['excludedModels'] = [
+            $this->AssessmentItems->alias()
+        ];
+    }
 
 
 /******************************************************************************************************************
