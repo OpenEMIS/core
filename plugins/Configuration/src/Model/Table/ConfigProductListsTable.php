@@ -5,7 +5,7 @@ use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
-use Configuration\Model\Traits\ProductListsTrait;
+use OpenEmis\Model\Traits\ProductListsTrait;
 
 class ConfigProductListsTable extends ControllerActionTable {
     use ProductListsTrait;
@@ -14,6 +14,8 @@ class ConfigProductListsTable extends ControllerActionTable {
 		$this->table('config_product_lists');
 		parent::initialize($config);
         $this->addBehavior('Configuration.ConfigItems');
+        $this->toggle('remove', false);
+        $this->toggle('add', false);
 	}
 
     public function validationDefault(Validator $validator)
@@ -28,30 +30,31 @@ class ConfigProductListsTable extends ControllerActionTable {
             ->add('url', 'invalidUrl', [
                 'rule' => ['url', true]
             ])
+            ->allowEmpty('url')
             ;
         return $validator;
     }
 
-    public function beforeAction($event)
+    public function beforeAction(Event $event)
     {
-        $this->field('name');
+        $this->field('name', ['type' => 'readonly']);
         $this->field('url', ['type' => 'string']);
-    }
 
-    public function onUpdateFieldName(Event $event, array $attr, $action, Request $request) {
-        $currentProduct = $this->controller->_productName;
-        $productKeys = array_keys($this->productLists);
-        $productOptions = [];
-        foreach ($productKeys as $value) {
-            if ($value != $currentProduct) {
-                $productOptions[$value] = __($value);
+        if ($this->action == 'index') {
+            $productListData = $this
+                ->find('list')
+                ->toArray();
+            $productListData[] = $this->controller->_productName;
+            $productLists = $this->controller->getProductLists($productListData);
+
+            foreach ($productLists as $product => $value) {
+                $data = [
+                    'name' => $product,
+                    'url' => ''
+                ];
+                $entity = $this->newEntity($data);
+                $this->save($entity);
             }
         }
-
-        $attr['type'] = 'select';
-        $attr['options'] = $productOptions;
-
-        return $attr;
     }
-
 }

@@ -1,8 +1,8 @@
 <?php
-namespace Configuration\Model\Traits;
+namespace OpenEmis\Model\Traits;
 
 trait ProductListsTrait {
-	public $productLists = [
+	private $productLists = [
 		'OpenEMIS Core' => [
 			'icon' => 'kd-openemis kd-core',
 			'name' => 'Core'
@@ -16,4 +16,10 @@ trait ProductListsTrait {
 			'name' => 'Integrator'
 		]
 	];
+
+	public function getProductLists($excludedItem = [])
+	{
+		$productLists = array_diff_key($this->productLists, array_flip($excludedItem));
+		return $productLists;
+	}
 }
