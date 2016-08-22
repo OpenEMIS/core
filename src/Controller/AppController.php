@@ -19,7 +19,7 @@ use Cake\Event\Event;
 use ControllerAction\Model\Traits\ControllerActionTrait;
 use Cake\Core\Configure;
 use Cake\ORM\TableRegistry;
-use Configuration\Model\Traits\ProductListsTrait;
+use OpenEmis\Model\Traits\ProductListsTrait;
 
 /**
  * Application Controller
