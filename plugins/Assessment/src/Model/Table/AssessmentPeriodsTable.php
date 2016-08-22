@@ -18,6 +18,7 @@ class AssessmentPeriodsTable extends ControllerActionTable {
     public function initialize(array $config) {
         parent::initialize($config);
         
+        $this->hasMany('AssessmentItemResults', ['className' => 'Assessment.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
 
         $this->belongsToMany('GradingTypes', [
@@ -200,6 +201,14 @@ class AssessmentPeriodsTable extends ControllerActionTable {
                 }
             }
         }
+    }
+
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $extra['excludedModels'] = [
+            $this->AssessmentItems->alias(),
+            $this->GradingTypes->alias()
+        ];
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
