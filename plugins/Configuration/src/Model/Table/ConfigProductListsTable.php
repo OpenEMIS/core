@@ -5,6 +5,9 @@ use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
+use Cake\Network\Session;
+use Cake\ORM\Entity;
+use ArrayObject;
 
 class ConfigProductListsTable extends ControllerActionTable {
 
@@ -37,22 +40,11 @@ class ConfigProductListsTable extends ControllerActionTable {
     {
         $this->field('name', ['type' => 'readonly']);
         $this->field('url', ['type' => 'string']);
+    }
 
-        if ($this->action == 'index') {
-            $productListData = $this
-                ->find('list')
-                ->toArray();
-            $productListData[] = $this->controller->_productName;
-            $productLists = $this->controller->getProductLists($productListData);
-
-            foreach ($productLists as $product => $value) {
-                $data = [
-                    'name' => $product,
-                    'url' => ''
-                ];
-                $entity = $this->newEntity($data);
-                $this->save($entity);
-            }
-        }
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $session = new Session();
+        $session->delete('ConfigProductLists.list');
     }
 }
