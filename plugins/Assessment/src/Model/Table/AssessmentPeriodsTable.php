@@ -43,17 +43,6 @@ class AssessmentPeriodsTable extends ControllerActionTable {
             //'saveStrategy' => 'append'
         ]);
 
-        // $this->belongsToMany('Assessments', [
-        //     'className' => 'Assessment.Assessments',
-        //     'joinTable' => 'assessment_items_grading_types',
-        //     'foreignKey' => 'assessment_period_id',
-        //     'targetForeignKey' => 'assessment_id',
-        //     'through' => 'Assessment.AssessmentItemsGradingTypes',
-        //     'dependent' => true,
-        //     'cascadeCallbacks' => true
-        //     //'saveStrategy' => 'append'
-        // ]);
-
         $this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
     }
 
@@ -103,25 +92,16 @@ class AssessmentPeriodsTable extends ControllerActionTable {
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) 
     {
-        // pr($extra['selectedTemplate']);
         $query->where([$this->aliasField('assessment_id') => $extra['selectedTemplate']]); //show assessment period based on the selected assessment.
-        // pr($query);die;
-    }
-
-    public function indexAfterAction(Event $event, $data) {
-        // pr($data);die;
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        // $query->contain(['AssessmentItems.EducationSubjects']); //this is to build query for edit / view page then later on can be catched by the element.
-        // $query->contain(['GradingTypes']);
         $query->contain(['AssessmentItems.EducationSubjects']);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        // $this->setupFields($entity);pr($this->fields);
         $this->field('assessment_items', [
             'type' => 'element',
             'element' => 'Assessment.assessment_periods',
@@ -132,8 +112,6 @@ class AssessmentPeriodsTable extends ControllerActionTable {
             // 'formFields' => array_keys($this->AssessmentItems->getFormFields($this->action))
         ]);
 
-        // pr($entity);
-
         $this->controller->set('assessmentGradingTypeOptions', $this->getGradingTypeOptions()); //send to ctp
 
         $this->setFieldOrder([
@@ -143,8 +121,7 @@ class AssessmentPeriodsTable extends ControllerActionTable {
 
 	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        // pr($entity);
-    	$this->setupFields($entity);
+        $this->setupFields($entity);
 
 		$this->controller->set('assessmentGradingTypeOptions', $this->getGradingTypeOptions()); //send to ctp
     }
@@ -172,7 +149,6 @@ class AssessmentPeriodsTable extends ControllerActionTable {
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
         // can't save properly using associated method
         // until we find a better solution, saving of assessment items grade types will be done in afterSave as of now
-        // pr($entity);
         $id = $entity->id;
         $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
         $AssessmentItemsGradingTypes->deleteAll(['assessment_period_id' => $id]);
@@ -292,7 +268,6 @@ class AssessmentPeriodsTable extends ControllerActionTable {
 
 					$assessmentItems = $this->Assessments->AssessmentItems->getAssessmentItemSubjects($request->data[$this->alias()]['assessment_id']);
                     $data[$this->alias()]['assessment_items'] = $assessmentItems;
-                    // pr($data[$this->alias()]['grading_types']);//die;
 				}
 			}
 		}
@@ -396,7 +371,7 @@ class AssessmentPeriodsTable extends ControllerActionTable {
                                 ->order([$this->Assessments->aliasField('created') => 'DESC'])
                                 ->toArray();
 
-        if (empty($templateOptions)){
+        if (empty($templateOptions) && $this->action == 'index'){ //show no template option on index page only.
             $templateOptions['empty'] = $this->getMessage('Assessments.noTemplates');
         }
 

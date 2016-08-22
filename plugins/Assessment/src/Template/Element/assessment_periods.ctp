@@ -44,23 +44,6 @@
                                     <tr>
                                         <td>
                                             <?php
-                                                // if ($ControllerAction['action'] == 'add') {
-                                                //     echo $item['education_subject_name'];
-                                                //     echo $this->Form->hidden("$fieldPrefix.education_subject_name", ['value' => $item['education_subject_name']]);
-                                                // } else {
-                                                //     echo $item->education_subject->name;
-                                                //     echo $this->Form->hidden("$fieldPrefix.education_subject_name", ['value' => $item->education_subject->name]);
-                                                // }
-                                                // // echo $this->Form->hidden("$fieldPrefix.assessment_item_id", ['value' => $item['assessment_item_id']]);
-                                                // echo $this->Form->hidden("$fieldPrefix.id", ['value' => $item['assessment_item_id']]);
-
-                                                // if (isset($item->id)) {
-                                                //     // echo $this->Form->hidden("$fieldPrefix.id", ['value' => $item->id]);
-                                                //     // echo $this->Form->hidden("$fieldPrefix.id", ['value' => $item['_joinData']['id']]);
-                                                //     // echo $this->Form->hidden("$fieldPrefix.assessment_period_id", ['value' => $data['id']]);
-                                                //     // echo $this->Form->hidden("$joinDataPrefix.id", ['value' => $item['_joinData']['id']]);
-                                                // }
-
                                                 echo $this->Form->hidden("$fieldPrefix.id", ['value' => $item['assessment_item_id']]);
 
                                                 if ($ControllerAction['action'] == 'add') {

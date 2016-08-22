@@ -44,17 +44,6 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 			// 'saveStrategy' => 'append'
 		]);
 
-		// $this->belongsToMany('Assessments', [
-		// 	'className' => 'Assessment.Assessments',
-		// 	'joinTable' => 'assessment_items_grading_types',
-		// 	'foreignKey' => 'assessment_grading_type_id',
-		// 	'targetForeignKey' => 'assessment_id',
-		// 	'through' => 'Assessment.AssessmentItemsGradingTypes',
-		// 	'dependent' => true,
-		// 	'cascadeCallbacks' => true
-		// 	// 'saveStrategy' => 'append'
-		// ]);
-
 		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
 	}
 
