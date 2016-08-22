@@ -5,10 +5,8 @@ use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
-use OpenEmis\Model\Traits\ProductListsTrait;
 
 class ConfigProductListsTable extends ControllerActionTable {
-    use ProductListsTrait;
 
 	public function initialize(array $config) {
 		$this->table('config_product_lists');
