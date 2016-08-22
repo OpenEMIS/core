@@ -21,8 +21,6 @@ class AssessmentsTable extends ControllerActionTable {
     use HtmlTrait;
     use OptionsTrait;
 
-    // private $_contain = ['AssessmentItems'];
-
     public function initialize(array $config) 
     {
         parent::initialize($config);
@@ -31,9 +29,7 @@ class AssessmentsTable extends ControllerActionTable {
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         
         $this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true, 'cascadeCallbacks' => true]);
-        //$this->hasMany('AssessmentPeriods', ['className' => 'Assessment.AssessmentPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
-        //$this->hasMany('AssessmentItemsGradingTypes', ['className' => 'Assessment.AssessmentItemsGradingTypes', 'dependent' => true, 'cascadeCallbacks' => true]);
-
+        
         $this->belongsToMany('GradingTypes', [
             'className' => 'Assessment.AssessmentGradingTypes',
             'joinTable' => 'assessment_items_grading_types',
@@ -44,17 +40,6 @@ class AssessmentsTable extends ControllerActionTable {
             'cascadeCallbacks' => true
             //'saveStrategy' => 'append'
         ]);
-
-        // $this->belongsToMany('AssessmentItems', [
-        //     'className' => 'Assessment.AssessmentItems',
-        //     'joinTable' => 'assessment_items_grading_types',
-        //     'foreignKey' => 'assessment_id',
-        //     'targetForeignKey' => 'assessment_item_id',
-        //     'through' => 'Assessment.AssessmentItemsGradingTypes',
-        //     'dependent' => true,
-        //     'cascadeCallbacks' => true
-        //     //'saveStrategy' => 'append'
-        // ]);
 
         $this->belongsToMany('AssessmentPeriods', [
             'className' => 'Assessment.AssessmentPeriods',
@@ -137,12 +122,11 @@ class AssessmentsTable extends ControllerActionTable {
                 }
             }
         }
-        // pr($requestData);die;
     }
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
-        $extra['excludedModels'] = [
+        $extra['excludedModels'] = [ //this will exclude checking during remove restrict
             $this->AssessmentItems->alias(),
             $this->GradingTypes->alias()
         ];
