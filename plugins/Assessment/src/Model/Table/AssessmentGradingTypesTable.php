@@ -236,7 +236,8 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
-            $this->AssessmentItems->alias()
+            $this->AssessmentItems->alias(),
+            $this->GradingOptions->alias()
         ];
     }
 
