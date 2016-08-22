@@ -18,6 +18,8 @@ use Cake\Controller\Controller;
 use Cake\Event\Event;
 use ControllerAction\Model\Traits\ControllerActionTrait;
 use Cake\Core\Configure;
+use Cake\ORM\TableRegistry;
+use Configuration\Model\Traits\ProductListsTrait;
 
 /**
  * Application Controller
@@ -29,6 +31,7 @@ use Cake\Core\Configure;
  */
 class AppController extends Controller {
 	use ControllerActionTrait;
+	use ProductListsTrait;
 
 	public $_productName = 'OpenEMIS Core';
 
@@ -40,6 +43,13 @@ class AppController extends Controller {
 		'OpenEmis.Navigation',
 		'OpenEmis.Resource'
 	];
+
+	public function implementedEvents()
+	{
+		$events = parent::implementedEvents();
+		$events['Controller.onUpdateProductLists'] = 'onUpdateProductLists';
+		return $events;
+	}
 
 	/**
 	 * Initialization hook method.
@@ -55,7 +65,7 @@ class AppController extends Controller {
 		$this->loadComponent('ControllerAction.ControllerAction', [
 			'ignoreFields' => ['modified_user_id', 'created_user_id', 'order']
 		]);
-		
+
 		$this->loadComponent('Auth', [
 			'authenticate' => [
 				'Form' => [
@@ -135,5 +145,27 @@ class AppController extends Controller {
 		if ($this->request->action == 'postLogin') {
             $this->eventManager()->off($this->Csrf);
         }
+	}
+
+	public function onUpdateProductLists(Event $event)
+	{
+		$displayProducts = [];
+		$ConfigProductLists = TableRegistry::get('Configuration.ConfigProductLists');
+		$productListOptions = $ConfigProductLists-> find('list', [
+							    'keyField' => 'name',
+							    'valueField' => 'url'
+							])
+							-> toArray();
+		$productListsTrait = $this->getProductLists();
+
+		foreach($productListsTrait as $name => $item) {
+			if(!empty($productListOptions[$name])) {
+				$displayProducts[$name]['name'] = $item['name'];
+				$displayProducts[$name]['icon'] = $item['icon'];
+				$displayProducts[$name]['url'] = $productListOptions[$name];
+			}
+		}
+
+		return $displayProducts;
 	}
 }
