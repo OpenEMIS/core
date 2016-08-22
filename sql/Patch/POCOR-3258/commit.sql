@@ -5,7 +5,7 @@ INSERT INTO `db_patches` (`issue`, `created`) VALUES('POCOR-3258', NOW());
 CREATE TABLE `config_product_lists` (
 `id` int(11) NOT NULL AUTO_INCREMENT,
 `name` varchar(50) NOT NULL,
-`url` text NOT NULL,
+`url` text NULL,
 `modified_user_id` int(11) NULL,
 `modified` datetime NULL,
 `created_user_id` int(11) NOT NULL,
