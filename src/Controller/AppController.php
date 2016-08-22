@@ -42,13 +42,6 @@ class AppController extends Controller {
 		'OpenEmis.Resource'
 	];
 
-	public function implementedEvents()
-	{
-		$events = parent::implementedEvents();
-		$events['Controller.onUpdateProductList'] = 'onUpdateProductList';
-		return $events;
-	}
-
 	/**
 	 * Initialization hook method.
 	 *
