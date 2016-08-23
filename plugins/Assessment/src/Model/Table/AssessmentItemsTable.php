@@ -46,7 +46,11 @@ class AssessmentItemsTable extends AppTable {
 		$validator
 			->add('weight', 'ruleIsDecimal', [
 				'rule' => ['decimal', null],
-			]);
+			])
+			->add('weight', 'ruleWeightRange', [
+                'rule'  => ['range', 0, 2],
+                'last' => true
+            ]);
 		return $validator;
 	}
 

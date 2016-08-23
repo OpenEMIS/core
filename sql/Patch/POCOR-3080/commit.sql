@@ -59,5 +59,8 @@ SELECT AI.`id`, AI.`id`, AI.`assessment_grading_type_id`, AI.`assessment_id`, AP
 FROM `z_3080_assessment_items`AI
 INNER JOIN `assessment_periods` AP ON AP.`assessment_id` = AI.`assessment_id`;
 
+-- assessment_periods
+ALTER TABLE `assessment_periods` CHANGE `weight` `weight` DECIMAL(6,2) NULL DEFAULT '0.00';
+
 -- for institution_shift POCOR-2602
 ALTER TABLE `institution_shifts` CHANGE `shift_option_id` `shift_option_id` INT(11) NOT NULL COMMENT 'links to shift_options.id';
