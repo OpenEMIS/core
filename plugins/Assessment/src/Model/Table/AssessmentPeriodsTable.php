@@ -29,7 +29,6 @@ class AssessmentPeriodsTable extends ControllerActionTable {
             'through' => 'Assessment.AssessmentItemsGradingTypes',
             'dependent' => true,
             'cascadeCallbacks' => true
-            //'saveStrategy' => 'append'
         ]);
 
         $this->belongsToMany('AssessmentItems', [
@@ -40,7 +39,6 @@ class AssessmentPeriodsTable extends ControllerActionTable {
             'through' => 'Assessment.AssessmentItemsGradingTypes',
             'dependent' => true,
             'cascadeCallbacks' => true
-            //'saveStrategy' => 'append'
         ]);
 
         $this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
@@ -56,10 +54,18 @@ class AssessmentPeriodsTable extends ControllerActionTable {
 			->add('weight', 'ruleIsDecimal', [
 			    'rule' => ['decimal', null],
 			])
+            ->add('weight', 'ruleWeightRange', [
+                'rule'  => ['range', 0, 2],
+                'last' => true
+            ])
             ->add('code', [
-                'ruleUniqueCode' => [
-                    'rule' => 'validateUnique',
-                    'provider' => 'table'
+                'ruleUniqueCodeByForeignKeyAcademicPeriod' => [
+                    'rule' => ['uniqueCodeByForeignKeyAcademicPeriod', 'Assessments', 'assessment_id',  'academic_period_id'], //($foreignKeyModel, $foreignKeyField, $academicFieldName)
+                    'on' => function ($context) {
+                        $oldCode = $this->get($context['data']['id'])->code;
+                        $newCode = $context['data']['code'];
+                        return $oldCode != $newCode; //only trigger validation if there is any changes on the code value.
+                    }
                 ]
             ])
             ->add('start_date', 'ruleCompareDate', [
@@ -88,6 +94,10 @@ class AssessmentPeriodsTable extends ControllerActionTable {
             ],
             'order' => 3
         ];
+
+        $this->field('assessment_id', [
+            'visible' => ['index'=>false]
+        ]);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) 
@@ -108,8 +118,6 @@ class AssessmentPeriodsTable extends ControllerActionTable {
             'attr' => [
                 'label' => $this->getMessage('Assessments.subjects')
             ]
-            // 'fields' => $this->AssessmentItems->fields,
-            // 'formFields' => array_keys($this->AssessmentItems->getFormFields($this->action))
         ]);
 
         $this->controller->set('assessmentGradingTypeOptions', $this->getGradingTypeOptions()); //send to ctp
@@ -142,37 +150,39 @@ class AssessmentPeriodsTable extends ControllerActionTable {
         $arrayOptions = $patchOptions->getArrayCopy();
         $arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
         $patchOptions->exchangeArray($arrayOptions);
-
-        // pr($requestData);die;
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-        // can't save properly using associated method
-        // until we find a better solution, saving of assessment items grade types will be done in afterSave as of now
-        $id = $entity->id;
-        $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
-        $AssessmentItemsGradingTypes->deleteAll(['assessment_period_id' => $id]);
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)  
 
-        if ($entity->has('assessment_items')) {
-            $assessmentItems = $entity->assessment_items;
-            if (!empty($assessmentItems)) {
-                foreach ($assessmentItems as $assessmentItem) {
-                    $query = $AssessmentItemsGradingTypes->find()->where([
-                        $AssessmentItemsGradingTypes->aliasField('assessment_item_id') => $assessmentItem->_joinData->assessment_item_id,
-                        $AssessmentItemsGradingTypes->aliasField('assessment_id') => $assessmentItem->_joinData->assessment_id,
-                        $AssessmentItemsGradingTypes->aliasField('assessment_grading_type_id') => $assessmentItem->_joinData->assessment_grading_type_id,
-                        $AssessmentItemsGradingTypes->aliasField('assessment_period_id') => $id
-                    ]);
+    {
+        if (!$entity->isNew()) { //for edit
+            // can't save properly using associated method
+            // until we find a better solution, saving of assessment items grade types will be done in afterSave as of now
+            $id = $entity->id;
+            $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
+            $AssessmentItemsGradingTypes->deleteAll(['assessment_period_id' => $id]);
 
-                    if ($query->count() == 0) {
-                        $newEntity = $AssessmentItemsGradingTypes->newEntity([
-                            'assessment_id' => $assessmentItem->_joinData->assessment_id,
-                            'assessment_item_id' => $assessmentItem->_joinData->assessment_item_id,
-                            'assessment_grading_type_id' => $assessmentItem->_joinData->assessment_grading_type_id,
-                            'assessment_period_id' => $id
+            if ($entity->has('assessment_items')) {
+                $assessmentItems = $entity->assessment_items;
+                if (!empty($assessmentItems)) {
+                    foreach ($assessmentItems as $assessmentItem) {
+                        $query = $AssessmentItemsGradingTypes->find()->where([
+                            $AssessmentItemsGradingTypes->aliasField('assessment_item_id') => $assessmentItem->_joinData->assessment_item_id,
+                            $AssessmentItemsGradingTypes->aliasField('assessment_id') => $assessmentItem->_joinData->assessment_id,
+                            $AssessmentItemsGradingTypes->aliasField('assessment_grading_type_id') => $assessmentItem->_joinData->assessment_grading_type_id,
+                            $AssessmentItemsGradingTypes->aliasField('assessment_period_id') => $id
                         ]);
 
-                        $AssessmentItemsGradingTypes->save($newEntity);
+                        if ($query->count() == 0) {
+                            $newEntity = $AssessmentItemsGradingTypes->newEntity([
+                                'assessment_id' => $assessmentItem->_joinData->assessment_id,
+                                'assessment_item_id' => $assessmentItem->_joinData->assessment_item_id,
+                                'assessment_grading_type_id' => $assessmentItem->_joinData->assessment_grading_type_id,
+                                'assessment_period_id' => $id
+                            ]);
+
+                            $AssessmentItemsGradingTypes->save($newEntity);
+                        }
                     }
                 }
             }
@@ -342,8 +352,6 @@ class AssessmentPeriodsTable extends ControllerActionTable {
             'attr' => [
                 'label' => $this->getMessage('Assessments.subjects')
             ]
-            // 'fields' => $this->AssessmentItems->fields,
-            // 'formFields' => array_keys($this->AssessmentItems->getFormFields($this->action))
         ]);
 
         $this->field('start_date');
