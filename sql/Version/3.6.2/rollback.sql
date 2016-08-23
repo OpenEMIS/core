@@ -1,3 +1,8 @@
+-- POCOR-3264
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3264';
+
+
 -- POCOR-3017
 -- Restore tables
 DROP TABLE IF EXISTS `infrastructure_levels`;
