@@ -38,7 +38,6 @@ class AssessmentsTable extends ControllerActionTable {
             'through' => 'Assessment.AssessmentItemsGradingTypes',
             'dependent' => true,
             'cascadeCallbacks' => true
-            //'saveStrategy' => 'append'
         ]);
 
         $this->belongsToMany('AssessmentPeriods', [
@@ -49,10 +48,8 @@ class AssessmentsTable extends ControllerActionTable {
             'through' => 'Assessment.AssessmentItemsGradingTypes',
             'dependent' => true,
             'cascadeCallbacks' => true
-            //'saveStrategy' => 'append'
         ]);
 
-        // $this->addBehavior('OpenEmis.Section');
         $this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
     }
 
@@ -62,7 +59,7 @@ class AssessmentsTable extends ControllerActionTable {
         return $validator
             ->add('code', [
                 'ruleUniqueCode' => [
-                    'rule' => 'validateUnique',
+                    'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
                     'provider' => 'table'
                 ]
             ]);
@@ -270,9 +267,7 @@ class AssessmentsTable extends ControllerActionTable {
         ]);
         $this->field('subjects', [
             'type' => 'element',
-            'element' => 'Assessment.assessment_items',
-            // 'fields' => $this->AssessmentItems->fields,
-            // 'formFields' => array_keys($this->AssessmentItems->getFormFields($this->action))
+            'element' => 'Assessment.assessment_items'
         ]);
 
         $this->setFieldOrder([
