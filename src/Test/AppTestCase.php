@@ -13,12 +13,12 @@ class AppTestCase extends IntegrationTestCase
 {
     private $urlPrefix = '';
 
-    public function setup() 
+    public function setup()
     {
         $this->setAuthSession();
     }
 
-    public function setAuthSession() 
+    public function setAuthSession()
     {
         $this->session([
             'Auth' => [
@@ -31,7 +31,18 @@ class AppTestCase extends IntegrationTestCase
         ]);
     }
 
-    public function urlPrefix($param = null) 
+    public function setInstitutionSession($id)
+    {
+        $this->session([
+            'Institution' => [
+                'Institutions' => [
+                    'id' => $id
+                ]
+            ]
+        ]);
+    }
+
+    public function urlPrefix($param = null)
     {
         if (!is_null($param)) {
             $this->urlPrefix = $param;
@@ -39,7 +50,7 @@ class AppTestCase extends IntegrationTestCase
         return $this->urlPrefix;
     }
 
-    public function url($action, $namedParams = []) 
+    public function url($action, $namedParams = [])
     {
         $namedParamsString = '';
         if (!empty($namedParams)) {
@@ -48,7 +59,7 @@ class AppTestCase extends IntegrationTestCase
                 $namedParamsString .= $key . '='. urlencode($value);
             }
         }
-        
+
         return $this->urlPrefix . $action . $namedParamsString;
     }
 
