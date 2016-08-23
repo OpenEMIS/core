@@ -75,9 +75,12 @@ class RenderDropdownBehavior extends RenderBehavior {
                             }
                         }
                     }
+                } else {
+                    if (array_key_exists($fieldId, $this->postedData)) {
+                        $selectedValue = $this->postedData[$fieldId];
+                        $options['ng-init'] = 'RelevancyRulesController.Dropdown["'.$fieldId.'"] = "'.$selectedValue.'";';
+                    }
                 }
-                $selectedValue = $this->postedData[$fieldId];
-                $options['ng-init'] = 'RelevancyRulesController.Dropdown["'.$fieldId.'"] = "'.$selectedValue.'";';
             }
 
             $value .= $form->input($fieldPrefix.".number_value", $options);
