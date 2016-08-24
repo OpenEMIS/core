@@ -54,9 +54,9 @@ class AppTestCase extends IntegrationTestCase
     {
         $namedParamsString = '';
         if (!empty($namedParams)) {
-            $namedParamsString .= '?';
             foreach ($namedParams as $key => $value) {
-                $namedParamsString .= $key . '='. urlencode($value);
+                $namedParamsPrefix = empty($namedParamsString) ? '?' : '&';
+                $namedParamsString .= $namedParamsPrefix . $key . '='. urlencode($value);
             }
         }
 
