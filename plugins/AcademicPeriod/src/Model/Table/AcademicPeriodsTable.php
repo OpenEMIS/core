@@ -89,12 +89,30 @@ class AcademicPeriodsTable extends AppTable {
 
     public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
         $entity = $this->find()->select(['current'])->where([$this->aliasField($this->primaryKey()) => $id])->first();
+
+        // die silently when a non super_admin wants to delete
+        if (!$this->AccessControl->isAdmin()) {
+            $event->stopPropagation();
+            $this->controller->redirect($this->ControllerAction->url('index'));
+        }
+
         // do not allow for deleting of current
         if (!empty($entity) && $entity->current == 1) {
             $event->stopPropagation();
             $this->Alert->warning('general.currentNotDeletable');
             $this->controller->redirect($this->ControllerAction->url('index'));
         }
+    }
+
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        if (!$this->AccessControl->isAdmin()) {
+            if (array_key_exists('remove', $buttons)) {
+                unset($buttons['remove']);
+            }
+        }
+        return $buttons;
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
