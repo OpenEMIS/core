@@ -5,9 +5,12 @@ namespace Assessment\tests\TestCase\Controller;
 use Cake\TestSuite\IntegrationTestCase;
 
 class EducationsControllerTest extends IntegrationTestCase {
+	public $fixtures = [
+        'app.academic_periods',
+    ];
 
 	public function setAuthSession() {
-		
+
 		$this->session([
 			'Auth' => [
 				'User' => [
