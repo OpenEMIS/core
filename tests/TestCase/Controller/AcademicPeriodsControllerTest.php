@@ -10,6 +10,7 @@ class AcademicPeriodsControllerTest extends AppTestCase
         'app.academic_period_levels',
         'app.academic_periods',
         'app.institution_rooms',
+        'app.room_custom_field_values',
         'app.infrastructure_levels',
         ];
 

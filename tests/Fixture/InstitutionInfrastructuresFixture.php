@@ -9,7 +9,6 @@ class InstitutionInfrastructuresFixture extends TestFixture
     // public $connection = 'test';
 
     public $import = ['table' => 'institution_infrastructures'];
-    // public $import = ['model' => 'InstitutionInfrastructures'];
     public $records = [
         [
             'id' => '1',
@@ -285,7 +284,7 @@ class InstitutionInfrastructuresFixture extends TestFixture
             'year_disposed' => null,
             'comment' => '',
             'size' => null,
-            'parent_id' => 'null',
+            'parent_id' => null,
             'institution_id' => '1',
             'infrastructure_level_id' => '1',
             'infrastructure_type_id' => '1',

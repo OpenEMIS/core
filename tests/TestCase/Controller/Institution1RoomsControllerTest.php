@@ -4,11 +4,13 @@ namespace App\Test\TestCases;
 use Cake\ORM\TableRegistry;
 use App\Test\AppTestCase;
 
-class InstitutionRoomsOwnerControllerTest extends AppTestCase
+class Institution1RoomsControllerTest extends AppTestCase
 {
     public $fixtures = [
         'app.academic_period_levels',
         'app.academic_periods',
+        'app.custom_field_values',
+        'app.room_custom_field_values',
         'app.institutions',
         'app.institution_shifts',
         'app.infrastructure_conditions',
@@ -32,6 +34,7 @@ class InstitutionRoomsOwnerControllerTest extends AppTestCase
         $table = TableRegistry::get('Institution.InstitutionRooms');
     }
 
+// Test as an Owner
     public function testIndex()
     {
         $this->setInstitutionSession(1);
@@ -70,7 +73,7 @@ class InstitutionRoomsOwnerControllerTest extends AppTestCase
         $this->assertEquals(true, (count($this->viewVariable('data')) == 0));
     }
 
-    public function testCreateOwner()
+    public function testCreate()
     {
         $this->setInstitutionSession(1);
         $testUrl = $this->url('add', ['parent' => 13, 'parent_level' => 3]);
@@ -157,22 +160,95 @@ class InstitutionRoomsOwnerControllerTest extends AppTestCase
         $this->assertEquals($data['InstitutionRooms']['name'], $entity->name);
     }
 
-    // public function testDelete() {
-    //     $testUrl = $this->url('remove/'.$this->testingId, ['parent' => 13, 'parent_level' => 3]);
-    //     $testUrl = $this->url('remove');
+    public function testDelete() {
+        $testUrl = $this->url('remove/'.$this->testingId, ['parent' => 13, 'parent_level' => 3]);
 
-    //     $table = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $table = TableRegistry::get('Institution.InstitutionRooms');
 
-    //     $exists = $table->exists([$table->primaryKey() => $this->testingId]);
-    //     $this->assertTrue($exists);
+        $exists = $table->exists([$table->primaryKey() => $this->testingId]);
+        $this->assertTrue($exists);
 
-    //     $data = [
-    //         'id' => $this->testingId,
-    //         '_method' => 'DELETE'
-    //     ];
-    //     $this->postData($testUrl, $data);
+        $data = [
+            'id' => $this->testingId,
+            '_method' => 'DELETE'
+        ];
+        $this->postData($testUrl, $data);
 
-    //     $exists = $table->exists([$table->primaryKey() => $this->testingId]);
-    //     $this->assertFalse($exists);
-    // }
+        $exists = $table->exists([$table->primaryKey() => $this->testingId]);
+        $this->assertFalse($exists);
+    }
+
+
+// Test as an Occupier
+    public function testIndexOccupier()
+    {
+        $this->setInstitutionSession(2);
+        $testUrl = $this->url('index', ['parent' => 13, 'parent_level' => 3]);
+
+        $this->get($testUrl);
+        $this->assertResponseCode(200);
+        $this->assertEquals(true, (count($this->viewVariable('data')) >= 1));
+    }
+
+    public function testSearchFoundOccupier()
+    {
+        $this->setInstitutionSession(2);
+        $testUrl = $this->url('index', ['parent' => 13, 'parent_level' => 3]);
+
+        $data = [
+            'Search' => [
+                'searchField' => 'room'
+            ]
+        ];
+        $this->postData($testUrl, $data);
+        $this->assertEquals(true, (count($this->viewVariable('data')) >= 1));
+    }
+
+    public function testSearchNotFoundOccupier()
+    {
+        $testUrl = $this->url('index', ['parent' => 13, 'parent_level' => 3]);
+
+        $data = [
+            'Search' => [
+                'searchField' => '@#!@!cantFindThis!@#!'
+            ]
+        ];
+        $this->postData($testUrl, $data);
+
+        $this->assertEquals(true, (count($this->viewVariable('data')) == 0));
+    }
+
+    public function testCreateOccupier()
+    {
+        $this->setInstitutionSession(2);
+        $testUrl = $this->url('add', ['parent' => 13, 'parent_level' => 3]);
+
+        $this->get($testUrl);
+        $this->assertResponseCode(302);
+    }
+
+    public function testReadOccupier()
+    {
+        $this->setInstitutionSession(2);
+        $testUrl = $this->url('view/'.$this->testingId, ['parent' => 13, 'parent_level' => 3]);
+
+        $table = TableRegistry::get('Institution.InstitutionRooms');
+        $this->get($testUrl);
+
+        $this->assertResponseCode(200);
+        $this->assertEquals(true, ($this->viewVariable('data')->id == $this->testingId));
+    }
+
+    public function testUpdateOccupier() {
+        $testUrl = $this->url('edit/'.$this->testingId, ['parent' => 13, 'parent_level' => 3]);
+
+        $this->get($testUrl);
+        $this->assertResponseCode(302);
+    }
+
+    public function testDeleteOccupier() {
+        $testUrl = $this->url('remove/'.$this->testingId, ['parent' => 13, 'parent_level' => 3]);
+        $this->get($testUrl);
+        $this->assertResponseCode(302);
+    }
 }
