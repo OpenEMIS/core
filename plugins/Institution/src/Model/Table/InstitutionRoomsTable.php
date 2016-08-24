@@ -649,7 +649,7 @@ class InstitutionRoomsTable extends AppTable {
 		// if 1 character prepend '0'
 		$codeSuffix = (strlen($codeSuffix) == 1) ? '0'.$codeSuffix : $codeSuffix;
 		$autoGenerateCode = $codePrefix . $codeSuffix;
-		
+
 		return $autoGenerateCode;
 	}
 
@@ -667,14 +667,6 @@ class InstitutionRoomsTable extends AppTable {
 		return $toolbarElements;
 	}
 
-<<<<<<< HEAD
-=======
-	public function startsWith($haystack, $needle) {
-        // search backwards starting from haystack length characters from the end
-        return $needle === "" || strrpos($haystack, $needle, -strlen($haystack)) !== false;
-    }
-
->>>>>>> origin/POCOR-1966-dev2
     private function updateRoomStatus($code, $conditions) {
     	$roomStatuses = $this->RoomStatuses->findCodeList();
 		$status = $roomStatuses[$code];
