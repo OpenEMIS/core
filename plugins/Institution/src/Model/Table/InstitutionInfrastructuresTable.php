@@ -37,6 +37,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 			'fieldValueClass' => ['className' => 'Infrastructure.InfrastructureCustomFieldValues', 'foreignKey' => 'institution_infrastructure_id', 'dependent' => true, 'cascadeCallbacks' => true],
 			'tableCellClass' => null
 		]);
+		$this->addBehavior('Institution.InfrastructureShift');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -66,6 +67,14 @@ class InstitutionInfrastructuresTable extends AppTable {
 		]);
 	}
 
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+		if ($field == 'institution_id') {
+			return __('Institution Owner Name');
+		} else {
+			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+		}
+	}
+
 	public function indexBeforeAction(Event $event) {
 		$url = $this->getRedirectUrl();
 		if (!empty($url)) {
@@ -73,8 +82,9 @@ class InstitutionInfrastructuresTable extends AppTable {
 			return $this->controller->redirect($url);
 		}
 
-		$this->ControllerAction->setFieldOrder(['code', 'name', 'infrastructure_level_id', 'infrastructure_type_id']);
+		$this->ControllerAction->setFieldOrder(['code', 'name', 'institution_id', 'infrastructure_level_id', 'infrastructure_type_id']);
 
+		$this->ControllerAction->field('institution_id');
 		$this->ControllerAction->field('parent_id', ['visible' => false]);
 		$this->ControllerAction->field('size', ['visible' => false]);
 		$this->ControllerAction->field('infrastructure_ownership_id', ['visible' => false]);
@@ -89,7 +99,25 @@ class InstitutionInfrastructuresTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    {
+        // get the list of owner institution id
+        $ownerInstitutionId = $this->getOwnerInstitutionId();
+
+        if (!empty($ownerInstitutionId)) {
+            // Reset the query to original state beforePaginate
+            $query->where($conditions = null, $types = [], $overwrite = true);
+
+            $conditions = [];
+            foreach ($ownerInstitutionId as $key => $value) {
+                $conditions ['OR'][$key] = [
+                    $this->aliasField('institution_id') => $value
+                ];
+            }
+
+            $query->where($conditions);
+        }
+
 		// Filter by parent
 		$parentId = $this->request->query('parent');
 		if (!is_null($parentId)) {
@@ -253,6 +281,16 @@ class InstitutionInfrastructuresTable extends AppTable {
 		return $attr;
 	}
 
+	public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'index' || $action == 'view') {
+			if (!empty($this->getOwnerInstitutionId())) {
+				$attr['type'] = 'select';
+			}
+		}
+
+		return $attr;
+	}
+
 	public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
 			$session = $request->session();
@@ -334,10 +372,11 @@ class InstitutionInfrastructuresTable extends AppTable {
 
 	private function setupFields(Entity $entity) {
 		$this->ControllerAction->setFieldOrder([
-			'institution_id', 'parent_id', 'code', 'name', 'infrastructure_level_id', 'infrastructure_type_id', 'size', 'infrastructure_ownership_id', 'year_acquired', 'year_disposed', 'infrastructure_condition_id', 'comment'
+			'parent_id', 'institution_id', 'code', 'name', 'infrastructure_level_id', 'infrastructure_type_id', 'size', 'infrastructure_ownership_id', 'year_acquired', 'year_disposed', 'infrastructure_condition_id', 'comment'
 		]);
 
 		$this->ControllerAction->field('parent_id', ['entity' => $entity]);
+		$this->ControllerAction->field('institution_id');
 		$this->ControllerAction->field('code');
 		$this->ControllerAction->field('infrastructure_level_id', ['type' => 'select']);
 		$this->ControllerAction->field('infrastructure_type_id', ['type' => 'select']);
