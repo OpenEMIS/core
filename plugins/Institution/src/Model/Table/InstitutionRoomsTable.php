@@ -248,6 +248,11 @@ class InstitutionRoomsTable extends AppTable {
 		}
 		$this->controller->set(compact('statusOptions', 'selectedStatus'));
 		// End
+
+		$options['order'] = [
+			$this->aliasField('code') => 'asc',
+			$this->aliasField('name') => 'asc'
+		];
 	}
 
 	public function editOnInitialize(Event $event, Entity $entity) {
@@ -275,7 +280,7 @@ class InstitutionRoomsTable extends AppTable {
 		$selectedEditType = $this->request->query('edit_type');
 		if ($selectedEditType == self::END_OF_USAGE || $selectedEditType == self::CHANGE_IN_ROOM_TYPE) {
 			foreach ($this->fields as $field => $attr) {
-				if ($this->startsWith($field, 'custom_')) {
+				if ($this->startsWith($field, 'custom_') || $this->startsWith($field, 'section_')) {
 					$this->fields[$field]['visible'] = false;
 				}
 			}
@@ -575,21 +580,9 @@ class InstitutionRoomsTable extends AppTable {
 	}
 
 	private function getAutoGenerateCode($parentId) {
-		// getting suffix of code by counting
-		$indexData = $this->find()
-			->matching('RoomStatuses', function ($q) {
-				return $q->where([
-					'RoomStatuses.code IN' => ['IN_USE', 'END_OF_USAGE']
-				]);
-			})
-			->where([$this->aliasField('institution_infrastructure_id') => $parentId])
-			->count();
-		$indexData += 1; // starts counting from 1
-		$indexData = strval($indexData);
-
-		// if 1 character prepend '0'
-		$indexData = (strlen($indexData) == 1)? '0'.$indexData: $indexData;
-
+		$codePrefix = '';
+		$lastSuffix = '00';
+		$conditions = [];
 		// has Parent then get the ID of the parent then followed by counter
 		$parentData = $this->Parents->find()
 			->where([
@@ -597,11 +590,28 @@ class InstitutionRoomsTable extends AppTable {
 			])
 			->first();
 
-		if (!empty($parentData)) {
-			return $parentData->code . $indexData;
-		} else {
-			return $indexData;
+		$codePrefix = $parentData->code;
+
+		// $conditions[] = $this->aliasField('code')." LIKE '" . $codePrefix . "%'";
+		$lastRecord = $this->find()
+			->where([
+				$this->aliasField('institution_infrastructure_id') => $parentId,
+				$this->aliasField('code')." LIKE '" . $codePrefix . "%'"
+			])
+			->order($this->aliasField('code DESC'))
+			->first();
+
+		if (!empty($lastRecord)) {
+			$lastSuffix = str_replace($codePrefix, "", $lastRecord->code);
 		}
+
+		$codeSuffix = intval($lastSuffix) + 1;
+
+		// if 1 character prepend '0'
+		$codeSuffix = (strlen($codeSuffix) == 1) ? '0'.$codeSuffix : $codeSuffix;
+		$autoGenerateCode = $codePrefix . $codeSuffix;
+		
+		return $autoGenerateCode;
 	}
 
 	private function addBreadcrumbElement($toolbarElements=[]) {

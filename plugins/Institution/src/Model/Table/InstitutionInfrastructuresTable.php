@@ -22,6 +22,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 		$this->belongsTo('InfrastructureOwnerships', ['className' => 'FieldOption.InfrastructureOwnerships']);
 		$this->belongsTo('InfrastructureConditions', ['className' => 'FieldOption.InfrastructureConditions']);
 		$this->hasMany('ChildInfrastructures', ['className' => 'Institution.InstitutionInfrastructures', 'foreignKey' => 'parent_id']);
+		$this->hasMany('RoomInfrastructures', ['className' => 'Institution.InstitutionRooms', 'foreignKey' => 'institution_infrastructure_id']);
 
 		$this->addBehavior('CustomField.Record', [
 			'fieldKey' => 'infrastructure_custom_field_id',
@@ -107,6 +108,11 @@ class InstitutionInfrastructuresTable extends AppTable {
 		if ($selectedType != '-1') {
 			$query->where([$this->aliasField('infrastructure_type_id') => $selectedType]);
 		}
+
+		$options['order'] = [
+			$this->aliasField('code') => 'asc',
+			$this->aliasField('name') => 'asc'
+		];
 	}
 
 
@@ -134,24 +140,13 @@ class InstitutionInfrastructuresTable extends AppTable {
 	}
 
 	private function getAutoGenerateCode($institutionId, $infrastructureLevelId, $parentId) {
-
-		if (!empty($parentId)) { //if have parent, then count number of child of parent
-			$conditions[] = $this->aliasField('parent_id') . " = " . $parentId;
-		} else { // no parent, means 1st level (parent = null), then count number of infra of the institution.
+		$codePrefix = '';
+		$lastSuffix = '00';
+		$conditions = [];
+		if (empty($parentId)) {	// no parent, means 1st level (parent = null), then count number of infra of the institution.
 			$conditions[] = $this->aliasField('parent_id') . ' IS NULL';
 			$conditions[] = $this->aliasField('institution_id') . " = " . $institutionId;
-		}
 
-		// getting suffix of code by counting
-		$indexData = $this->find()
-			->where($conditions)
-			->count();
-		$indexData += 1; // starts counting from 1
-		$indexData = strval($indexData);
-
-		// if 1 character prepend '0'
-		$indexData = (strlen($indexData) == 1)? '0'.$indexData: $indexData;
-		if (empty($parentId)) {
 			// no Parent then get institutionID followed by counter
 			$institutionData = $this->Institutions->find()
 				->where([
@@ -159,26 +154,38 @@ class InstitutionInfrastructuresTable extends AppTable {
 				])
 				->select([$this->Institutions->aliasField('code')])
 				->first();
-			if (!empty($institutionData)) {
-				return $institutionData->code . $indexData;
-			} else {
-				return $indexData;
-			}
-		} else {
+
+			$codePrefix = $institutionData->code;
+		} else { // if have parent, then count number of child of parent
+			$conditions[] = $this->aliasField('parent_id') . " = " . $parentId;
+
 			// has Parent then get the ID of the parent then followed by counter
 			$parentData = $this->find()
 				->where([
 					$this->aliasField($this->primaryKey()) => $parentId
 				])
-				->first()
-				;
+				->first();
 
-			if (!empty($parentData)) {
-				return $parentData->code . $indexData;
-			} else {
-				return $indexData;
-			}
+			$codePrefix = $parentData->code;
 		}
+
+		$conditions[] = $this->aliasField('code')." LIKE '" . $codePrefix . "%'";
+
+		$lastRecord = $this->find()
+			->where($conditions)
+			->order($this->aliasField('code DESC'))
+			->first();
+
+		if (!empty($lastRecord)) {
+			$lastSuffix = str_replace($codePrefix, "", $lastRecord->code);
+		}
+		$codeSuffix = intval($lastSuffix) + 1;
+
+		// if 1 character prepend '0'
+		$codeSuffix = (strlen($codeSuffix) == 1) ? '0'.$codeSuffix : $codeSuffix;
+		$autoGenerateCode = $codePrefix . $codeSuffix;
+		
+		return $autoGenerateCode;
 	}
 
 	public function onUpdateFieldParentId(Event $event, array $attr, $action, Request $request) {
@@ -435,7 +442,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 		$withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
 
 		$levelId = $this->request->query('level');
-		$typeQuery = $this->Types->find('list', ['keyField' => 'id', 'valueField' => 'name']);
+		$typeQuery = $this->Types->find('list', ['keyField' => 'id', 'valueField' => 'name'])->find('visible');
 		if (!is_null($levelId)) {
 			$typeQuery->where([$this->Types->aliasField('infrastructure_level_id') => $levelId]);
 		}
