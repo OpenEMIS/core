@@ -62,111 +62,106 @@ class InstitutionInfrastructuresOwnerControllerTest extends AppTestCase
         $this->assertEquals(true, (count($this->viewVariable('data')) == 0));
     }
 
-    // public function testCreate()
-    // {
-    //     $this->setInstitutionSession(1);
-    //     $testUrl = $this->url('add', ['level' => 1, 'type' => 1]);
+    public function testCreate()
+    {
+        $this->setInstitutionSession(1);
+        $testUrl = $this->url('add', ['level' => 1, 'type' => 1]);
 
-    //     $this->get($testUrl);
-    //     $this->assertResponseCode(200);
+        $this->get($testUrl);
+        $this->assertResponseCode(200);
 
-    //     $table = TableRegistry::get('Institution.InstitutionInfrastructures');
-    //     $data = [
-    //         'InstitutionInfrastructures' => [
-    //             'code' => 'ABS6653804',
-    //             'name' => 'Parcel AA',
-    //             'year_acquired' => '2000',
-    //             'year_disposed' => null,
-    //             'comment' => '',
-    //             'size' => '10000',
-    //             'parent_id' => null,
-    //             'institution_id' => '1',
-    //             'infrastructure_level_id' => '1',
-    //             'infrastructure_type_id' => '1',
-    //             'infrastructure_ownership_id' => '1',
-    //             'infrastructure_condition_id' => '1'
-    //         ],
-    //         'submit' => 'save'
-    //     ];
-    //     $this->postData($testUrl, $data);
+        $table = TableRegistry::get('Institution.InstitutionInfrastructures');
+        $data = [
+            'InstitutionInfrastructures' => [
+                'code' => 'ABS6653804',
+                'name' => 'Parcel AA',
+                'year_acquired' => '2000',
+                'year_disposed' => null,
+                'comment' => '',
+                'size' => '10000',
+                'parent_id' => null,
+                'institution_id' => '1',
+                'infrastructure_level_id' => '1',
+                'infrastructure_type_id' => '1',
+                'infrastructure_ownership_id' => '1',
+                'infrastructure_condition_id' => '1'
+            ],
+            'submit' => 'save'
+        ];
+        $this->postData($testUrl, $data);
 
-    //     $lastInsertedRecord = $table->find()
-    //         ->where([$table->aliasField('name') => $data['InstitutionInfrastructures']['name']])
-    //         ->first();
-    //     $this->assertEquals(true, (!empty($lastInsertedRecord)));
-    // }
+        $lastInsertedRecord = $table->find()
+            ->where([$table->aliasField('name') => $data['InstitutionInfrastructures']['name']])
+            ->first();
+        $this->assertEquals(true, (!empty($lastInsertedRecord)));
+    }
 
-    // public function testRead()
-    // {
-    //     // view/1?level=1&type=1
-    //     // $testUrl = $this->url('view/'. $this->testingId, ['level' => 1, 'type' => 1]);
-    //     $testUrl = $this->url('view/1?level=1&type=1');
-    //     $this->get($testUrl);
+    public function testRead()
+    {
+        $this->setInstitutionSession(1);
+        $testUrl = $this->url('view/'.$this->testingId, ['level' => 1, 'type' => 1]);
 
-    //     $this->assertResponseCode(200);
-    //     $this->assertEquals(true, ($this->viewVariable('data')->id == 1));
-    // }
+        $table = TableRegistry::get('Institution.InstitutionInfrastructures');
+        $this->get($testUrl);
 
-    // public function testUpdate()
-    // {
-    //     $testUrl = $this->url('edit/'. $this->testingId, ['level' => 1, 'type' => 1]);
+        $this->assertResponseCode(200);
+        $this->assertEquals(true, ($this->viewVariable('data')->id == 1));
+    }
 
-    //     // TODO: DO A GET FIRST
-    //     $this->get($testUrl);
-    //     $this->assertResponseCode(200);
+    public function testUpdate()
+    {
+        $testUrl = $this->url('edit/'. $this->testingId, ['level' => 1, 'type' => 1]);
 
-    //     $table = TableRegistry::get('Institution.InstitutionInfrastructures');
-    //     $data = [
-    //         'InstitutionInfrastructures' => [
-    //             'id' => '1',
-    //             'code' => 'ABS6653801',
-    //             'name' => 'Parcel A1',
-    //             'year_acquired' => '2000',
-    //             'year_disposed' => null,
-    //             'comment' => '',
-    //             'size' => '10000',
-    //             'parent_id' => null,
-    //             'institution_id' => '1',
-    //             'infrastructure_level_id' => '1',
-    //             'infrastructure_type_id' => '1',
-    //             'infrastructure_ownership_id' => '4',
-    //             'infrastructure_condition_id' => '1'
-    //         ],
-    //         'submit' => 'save'
-    //     ];
-    //     $this->postData($testUrl, $data);
+        // TODO: DO A GET FIRST
+        $table = TableRegistry::get('Institution.InstitutionInfrastructures');
+        $this->get($testUrl);
 
-    //     $entity = $table->get($this->testingId);
-    //     $this->assertEquals($data['InstitutionInfrastructures']['name'], $entity->name);
-    // }
+        $this->assertResponseCode(200);
 
-    // public function testDelete()
-    // {
-    //     $this->setInstitutionSession(1);
+        $data = [
+            'InstitutionInfrastructures' => [
+                'id' => '1',
+                'code' => 'ABS6653801',
+                'name' => 'Parcel A1',
+                'year_acquired' => '2000',
+                'year_disposed' => null,
+                'comment' => '',
+                'size' => '10000',
+                'parent_id' => null,
+                'institution_id' => '1',
+                'infrastructure_level_id' => '1',
+                'infrastructure_type_id' => '1',
+                'infrastructure_ownership_id' => '4',
+                'infrastructure_condition_id' => '1'
+            ],
+            'submit' => 'save'
+        ];
+        $this->postData($testUrl, $data);
 
-    //     $testUrl = $this->url('remove/15', ['level' => 1, 'type' => 1]);
+        $entity = $table->get($this->testingId);
+        $this->assertEquals($data['InstitutionInfrastructures']['name'], $entity->name);
+    }
 
-    //     $table = TableRegistry::get('Institution.InstitutionInfrastructures');
+    public function testDelete()
+    {
+        $this->setInstitutionSession(1);
 
-    //     // will check if the data exists, exists will be true
-    //     $exists = $table->exists([$table->primaryKey() => 15]);
-    //     $this->assertTrue($exists);
+        $testUrl = $this->url('remove/15', ['level' => 1, 'type' => 1]);
 
-    //     $data = [
-    //         'id' => 15,
-    //         '_method' => 'DELETE'
-    //     ];
-    //     // $data = [
-    //     //     'InstitutionInfrastructures' => [
-    //     //         'id' => 15,
-    //     //         '_method' => 'DELETE'
-    //     //     ],
-    //     //     'submit' => 'save'
-    //     // ];
-    //     $this->postData($testUrl, $data);
+        $table = TableRegistry::get('Institution.InstitutionInfrastructures');
 
-    //     // will check if the data exists, $exists will be false.
-    //     $exists = $table->exists([$table->primaryKey() => 15]);
-    //     $this->assertFalse($exists);
-    // }
+        // will check if the data exists, exists will be true
+        $exists = $table->exists([$table->primaryKey() => 15]);
+        $this->assertTrue($exists);
+
+        $data = [
+            'id' => 15,
+            '_method' => 'DELETE'
+        ];
+        $this->postData($testUrl, $data);
+
+        // will check if the data exists, $exists will be false.
+        $exists = $table->exists([$table->primaryKey() => 15]);
+        $this->assertFalse($exists);
+    }
 }
