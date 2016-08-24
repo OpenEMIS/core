@@ -5,9 +5,11 @@ namespace FieldOption\tests\TestCase\Controller;
 use Cake\TestSuite\IntegrationTestCase;
 
 class FieldOptionsControllerTest extends IntegrationTestCase {
+	public $fixtures = [
+        'app.institution_genders'
+    ];
 
 	public function setAuthSession() {
-		
 		$this->session([
 			'Auth' => [
 				'User' => [
