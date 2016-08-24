@@ -7,28 +7,10 @@ use App\Test\AppTestCase;
 class InstitutionInfrastructuresOccupierControllerTest extends AppTestCase
 {
     public $fixtures = [
-        'app.area_levels',
-        'app.areas',
-        'app.area_administrative_levels',
-        'app.area_administratives',
-        'app.institution_localities',
-        'app.institution_types',
-        'app.institution_ownerships',
-        'app.institution_statuses',
-        'app.institution_sectors',
-        'app.institution_providers',
-        'app.institution_genders',
-        'app.institution_network_connectivities',
-        'app.security_groups',
-        'app.academic_period_levels',
         'app.academic_periods',
         'app.institutions',
-        'app.shift_options',
         'app.institution_shifts',
-        'app.room_statuses',
-        'app.room_types',
         'app.infrastructure_conditions',
-        'app.institution_rooms',
         'app.infrastructure_levels',
         'app.infrastructure_types',
         'app.infrastructure_ownerships',
@@ -90,65 +72,33 @@ class InstitutionInfrastructuresOccupierControllerTest extends AppTestCase
         $this->assertResponseCode(302);
     }
 
-    // public function testRead()
-    // {
-    //     // view/5?parent=4&parent_level=1&level=2&type=2
-    //     // view/10?level=1&type=1
-    //     $testUrl = $this->url('view/'.$this->testingId, ['level' => 1, 'type' => 1]);
-    //     $this->get($testUrl);
-    //     $this->assertResponseCode(200);
-    //     $this->assertEquals(true, ($this->viewVariable('data')->id == $this->testingId));
-    // }
+    public function testRead()
+    {
+        $this->setInstitutionSession(2);
+        // http://localhost:8888/core/Institutions/Infrastructures/view/1?level=1&type=1
+        // $testUrl = $this->url('view/'.$this->testingId, ['level' => 1, 'type' => 1]);
+        $testUrl = $this->url('view/1?level=1&type=1');
 
-    // public function testUpdate() {
-    //     // http://localhost:8888/core/Institutions/Infrastructures/edit/1?level=1&type=1
-    //     $testUrl = $this->url('edit/'. $this->testingId, ['level' => 1, 'type' => 1]);
+        $table = TableRegistry::get('Institution.InstitutionInfrastructures');
+        $this->get($testUrl);
 
-    //     // TODO: DO A GET FIRST
-    //     $this->get($testUrl);
+        $this->assertResponseCode(200);
+        $this->assertEquals(true, ($this->viewVariable('data')->id == $this->testingId));
+    }
 
-    //     $this->assertResponseCode(200);
+    public function testUpdate() {
+        $testUrl = $this->url('edit/'. $this->testingId, ['level' => 1, 'type' => 1]);
 
-    //     $data = [
-    //         'InstitutionInfrastructures' => [
-    //             'id' => '1',
-    //             'code' => 'ABS6653801',
-    //             'name' => 'Parcel A1',
-    //             'year_acquired' => '2000',
-    //             'year_disposed' => null,
-    //             'comment' => '',
-    //             'size' => '10000',
-    //             'parent_id' => null,
-    //             'institution_id' => '1',
-    //             'infrastructure_level_id' => '1',
-    //             'infrastructure_type_id' => '1',
-    //             'infrastructure_ownership_id' => '4',
-    //             'infrastructure_condition_id' => '1'
-    //         ],
-    //         'submit' => 'save'
-    //     ];
-    //     $this->postData($testUrl, $data);
+        $this->get($testUrl);
+        $this->assertResponseCode(302);
 
-    //     $entity = $this->table->get($this->testingId);
-    //     $this->assertEquals($data['InstitutionInfrastructures']['name'], $entity->name);
-    // }
+    }
 
-    // public function testDelete()
-    // {
-    //     $testUrl = $this->url('remove/'. $this->testingId, ['level' => 1, 'type' => 1]);
+    public function testDelete()
+    {
+        $testUrl = $this->url('remove/'. $this->testingId, ['level' => 1, 'type' => 1]);
 
-    //     // will check if the data exists, exists will be true
-    //     $exists = $this->table->exists([$this->table->primaryKey() => $this->testingId]);
-    //     $this->assertTrue($exists);
-
-    //     $data = [
-    //         'id' => $this->testingId,
-            // '_method' => 'DELETE'
-    //     ];
-    //     $this->postData($testUrl, $data);
-
-    //     // will check if the data exists, $exists will be false.
-    //     $exists = $this->table->exists([$this->table->primaryKey() => $this->testingId]);
-    //     $this->assertFalse($exists);
-    // }
+        $this->get($testUrl);
+        $this->assertResponseCode(302);
+    }
 }

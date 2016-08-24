@@ -27,12 +27,14 @@ class InstitutionRoomsOwnerControllerTest extends AppTestCase
     {
         parent::setUp();
         $this->setInstitutionSession(1);
+
         $this->urlPrefix('/Institutions/Rooms/');
         $table = TableRegistry::get('Institution.InstitutionRooms');
     }
 
     public function testIndex()
     {
+        $this->setInstitutionSession(1);
         $testUrl = $this->url('index', ['parent' => 13, 'parent_level' => 3]);
 
         $this->get($testUrl);
@@ -42,6 +44,7 @@ class InstitutionRoomsOwnerControllerTest extends AppTestCase
 
     public function testSearchFound()
     {
+        $this->setInstitutionSession(1);
         $testUrl = $this->url('index', ['parent' => 13, 'parent_level' => 3]);
 
         $data = [
@@ -70,7 +73,6 @@ class InstitutionRoomsOwnerControllerTest extends AppTestCase
     public function testCreateOwner()
     {
         $this->setInstitutionSession(1);
-
         $testUrl = $this->url('add', ['parent' => 13, 'parent_level' => 3]);
 
         $this->get($testUrl);
@@ -105,6 +107,7 @@ class InstitutionRoomsOwnerControllerTest extends AppTestCase
 
     public function testRead()
     {
+        $this->setInstitutionSession(1);
         $testUrl = $this->url('view/'.$this->testingId, ['parent' => 13, 'parent_level' => 3]);
 
         $table = TableRegistry::get('Institution.InstitutionRooms');
@@ -114,7 +117,9 @@ class InstitutionRoomsOwnerControllerTest extends AppTestCase
         $this->assertEquals(true, ($this->viewVariable('data')->id == $this->testingId));
     }
 
-    public function testUpdate() {
+    public function testUpdate()
+    {
+        $this->setInstitutionSession(1);
         $testUrl = $this->url('edit/'.$this->testingId, ['parent' => 13, 'parent_level' => 3]);
 
         // TODO: DO A GET FIRST
