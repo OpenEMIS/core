@@ -66,6 +66,10 @@ class InstitutionInfrastructuresTable extends AppTable {
 		]);
 	}
 
+	public function onGetInstitutionOwnerName(Event $event, Entity $entity) {
+		return $entity->institution->name;
+	}
+
 	public function indexBeforeAction(Event $event) {
 		$url = $this->getRedirectUrl();
 		if (!empty($url)) {
@@ -73,10 +77,16 @@ class InstitutionInfrastructuresTable extends AppTable {
 			return $this->controller->redirect($url);
 		}
 
-		$this->ControllerAction->setFieldOrder(['code', 'name', 'infrastructure_level_id', 'infrastructure_type_id']);
+		$visibility = false;
+		if(!empty($this->getOwnerInstitutionId())){
+			$visibility = true;
+		}
+
+		$this->ControllerAction->setFieldOrder(['code', 'institution_owner_name', 'name', 'infrastructure_level_id', 'infrastructure_type_id']);
 
 		$this->ControllerAction->field('parent_id', ['visible' => false]);
 		$this->ControllerAction->field('size', ['visible' => false]);
+		$this->ControllerAction->field('institution_owner_name', ['visible' => $visibility]);
 		$this->ControllerAction->field('infrastructure_ownership_id', ['visible' => false]);
 		$this->ControllerAction->field('year_acquired', ['visible' => false]);
 		$this->ControllerAction->field('year_disposed', ['visible' => false]);

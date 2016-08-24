@@ -23,6 +23,8 @@ class InfrastructureShiftBehavior extends Behavior {
         $events['ControllerAction.Model.beforeAction'] = 'beforeAction';
         $events['ControllerAction.Model.index.afterAction'] = 'indexAfterAction';
         $events['ControllerAction.Model.add.beforeAction'] = 'addBeforeAction';
+        $events['ControllerAction.Model.edit.beforeAction'] = 'editBeforeAction';
+        $events['ControllerAction.Model.delete.beforeAction'] = 'deleteBeforeAction';
         return $events;
     }
 
@@ -78,10 +80,12 @@ class InfrastructureShiftBehavior extends Behavior {
         $isOccupierCount = $InstitutionShifts->isOccupier($institutionId, $academicPeriodId);
 
         if ($isOwnerCount) {
+            // pr('owner');
             $this->isOwner = true;
         }
 
         if ($isOccupierCount) {
+            // pr('occupier');
             $this->isOccupier = true;
         }
     }
@@ -90,12 +94,22 @@ class InfrastructureShiftBehavior extends Behavior {
         $model = $this->_table;
         $session = $model->request->session();
 
-        if ($this->isOccupier && (!is_null($session->read('Institution.Institutions.warning')))) {
+        if ($this->isOccupier && (!is_null($session->read('Institution.Institutions.deleteWarning')))) {
+            $model->Alert->warning('InstitutionInfrastructures.occupierDeleteNotAllowed');
+            $session->delete('Institution.Institutions.deleteWarning');
+        }
+
+        if ($this->isOccupier && (!is_null($session->read('Institution.Institutions.editWarning')))) {
+            $model->Alert->warning('InstitutionInfrastructures.occupierEditNotAllowed');
+            $session->delete('Institution.Institutions.editWarning');
+        }
+
+        if ($this->isOccupier && (!is_null($session->read('Institution.Institutions.addWarning')))) {
             $model->Alert->warning('InstitutionInfrastructures.occupierAddNotAllowed');
-            $session->delete('Institution.Institutions.warning');
+            $session->delete('Institution.Institutions.addWarning');
         } else if ($this->isOwner == false && $this->isOccupier == false && (!is_null($session->read('Institution.Institutions.warning')))) {
             $model->Alert->warning('InstitutionInfrastructures.ownerAddNotAllowed');
-            $session->delete('Institution.Institutions.warning');
+            $session->delete('Institution.Institutions.addWarning');
         }
     }
 
@@ -104,7 +118,31 @@ class InfrastructureShiftBehavior extends Behavior {
         $session = $model->request->session();
 
         if ($this->isOccupier || ($this->isOwner == false && $this->isOccupier == false)) {
-            $session->write('Institution.Institutions.warning', 'warning');
+            $session->write('Institution.Institutions.addWarning', 'warning');
+            $url = $model->ControllerAction->url('index');
+            $event->stopPropagation();
+            return $model->controller->redirect($url);
+        }
+    }
+
+    public function editBeforeAction(Event $event) {
+        $model = $this->_table;
+        $session = $model->request->session();
+
+        if ($this->isOccupier || ($this->isOwner == false && $this->isOccupier == false)) {
+            $session->write('Institution.Institutions.editWarning', 'warning');
+            $url = $model->ControllerAction->url('index');
+            $event->stopPropagation();
+            return $model->controller->redirect($url);
+        }
+    }
+
+    public function deleteBeforeAction(Event $event) {
+        $model = $this->_table;
+        $session = $model->request->session();
+
+        if ($this->isOccupier || ($this->isOwner == false && $this->isOccupier == false)) {
+            $session->write('Institution.Institutions.deleteWarning', 'warning');
             $url = $model->ControllerAction->url('index');
             $event->stopPropagation();
             return $model->controller->redirect($url);
