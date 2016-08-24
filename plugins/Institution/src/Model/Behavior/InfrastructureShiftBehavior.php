@@ -107,7 +107,7 @@ class InfrastructureShiftBehavior extends Behavior {
             $session->write('Institution.Institutions.warning', 'warning');
             $url = $model->ControllerAction->url('index');
             $event->stopPropagation();
-            $model->controller->redirect($url);
+            return $model->controller->redirect($url);
         }
     }
 

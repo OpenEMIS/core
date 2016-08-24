@@ -276,6 +276,25 @@ class InstitutionInfrastructuresFixture extends TestFixture
             'modified' => null,
             'created_user_id' => '2',
             'created' => '2016-08-21 07:03:16'
+        ],
+        [
+            'id' => '15',
+            'code' => 'ABS6653803',
+            'name' => 'Land A1',
+            'year_acquired' => null,
+            'year_disposed' => null,
+            'comment' => '',
+            'size' => null,
+            'parent_id' => 'null',
+            'institution_id' => '1',
+            'infrastructure_level_id' => '1',
+            'infrastructure_type_id' => '1',
+            'infrastructure_ownership_id' => '1',
+            'infrastructure_condition_id' => '1',
+            'modified_user_id' => null,
+            'modified' => null,
+            'created_user_id' => '2',
+            'created' => '2016-08-21 07:03:16'
         ]
     ];
 }

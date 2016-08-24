@@ -5,9 +5,13 @@ namespace Directory\tests\TestCase\Controller;
 use Cake\TestSuite\IntegrationTestCase;
 
 class DirectoriesControllerTest extends IntegrationTestCase {
+	public $fixtures = [
+        'app.area_administrative_levels',
+        'app.area_administratives'
+    ];
 
 	public function setAuthSession() {
-		
+
 		$this->session([
 			'Auth' => [
 				'User' => [
