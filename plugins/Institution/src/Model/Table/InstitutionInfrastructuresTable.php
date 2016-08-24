@@ -66,8 +66,12 @@ class InstitutionInfrastructuresTable extends AppTable {
 		]);
 	}
 
-	public function onGetInstitutionOwnerName(Event $event, Entity $entity) {
-		return $entity->institution->name;
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+		if ($field == 'institution_id') {
+			return __('Institution Owner Name');
+		} else {
+			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+		}
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -77,16 +81,11 @@ class InstitutionInfrastructuresTable extends AppTable {
 			return $this->controller->redirect($url);
 		}
 
-		$visibility = false;
-		if(!empty($this->getOwnerInstitutionId())){
-			$visibility = true;
-		}
+		$this->ControllerAction->setFieldOrder(['code', 'name', 'institution_id', 'infrastructure_level_id', 'infrastructure_type_id']);
 
-		$this->ControllerAction->setFieldOrder(['code', 'institution_owner_name', 'name', 'infrastructure_level_id', 'infrastructure_type_id']);
-
+		$this->ControllerAction->field('institution_id');
 		$this->ControllerAction->field('parent_id', ['visible' => false]);
 		$this->ControllerAction->field('size', ['visible' => false]);
-		$this->ControllerAction->field('institution_owner_name', ['visible' => $visibility]);
 		$this->ControllerAction->field('infrastructure_ownership_id', ['visible' => false]);
 		$this->ControllerAction->field('year_acquired', ['visible' => false]);
 		$this->ControllerAction->field('year_disposed', ['visible' => false]);
@@ -275,6 +274,16 @@ class InstitutionInfrastructuresTable extends AppTable {
 		return $attr;
 	}
 
+	public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'index' || $action == 'view') {
+			if (!empty($this->getOwnerInstitutionId())) {
+				$attr['type'] = 'select';
+			}
+		}
+
+		return $attr;
+	}
+
 	public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
 			$session = $request->session();
@@ -356,10 +365,11 @@ class InstitutionInfrastructuresTable extends AppTable {
 
 	private function setupFields(Entity $entity) {
 		$this->ControllerAction->setFieldOrder([
-			'institution_id', 'parent_id', 'code', 'name', 'infrastructure_level_id', 'infrastructure_type_id', 'size', 'infrastructure_ownership_id', 'year_acquired', 'year_disposed', 'infrastructure_condition_id', 'comment'
+			'parent_id', 'institution_id', 'code', 'name', 'infrastructure_level_id', 'infrastructure_type_id', 'size', 'infrastructure_ownership_id', 'year_acquired', 'year_disposed', 'infrastructure_condition_id', 'comment'
 		]);
 
 		$this->ControllerAction->field('parent_id', ['entity' => $entity]);
+		$this->ControllerAction->field('institution_id');
 		$this->ControllerAction->field('code');
 		$this->ControllerAction->field('infrastructure_level_id', ['type' => 'select']);
 		$this->ControllerAction->field('infrastructure_type_id', ['type' => 'select']);
