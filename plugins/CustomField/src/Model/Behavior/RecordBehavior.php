@@ -722,8 +722,10 @@ class RecordBehavior extends Behavior {
 							$sectionName = $obj->section;
 							$fieldName = "section_".$key."_header";
 
-							$model->ControllerAction->field($fieldName, ['type' => 'section', 'title' => $sectionName]);
-							$fieldOrder[++$order] = $fieldName;
+							if (!empty($sectionName)) {
+								$model->ControllerAction->field($fieldName, ['type' => 'section', 'title' => $sectionName]);
+								$fieldOrder[++$order] = $fieldName;
+							}
 						}
 					}
 				}
