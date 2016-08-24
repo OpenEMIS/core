@@ -628,11 +628,6 @@ class InstitutionRoomsTable extends AppTable {
 		return $toolbarElements;
 	}
 
-	public function startsWith($haystack, $needle) {
-        // search backwards starting from haystack length characters from the end
-        return $needle === "" || strrpos($haystack, $needle, -strlen($haystack)) !== false;
-    }
-
     private function updateRoomStatus($code, $conditions) {
     	$roomStatuses = $this->RoomStatuses->findCodeList();
 		$status = $roomStatuses[$code];
