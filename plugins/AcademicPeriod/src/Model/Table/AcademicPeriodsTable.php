@@ -91,7 +91,7 @@ class AcademicPeriodsTable extends AppTable {
         $entity = $this->find()->select(['current'])->where([$this->aliasField($this->primaryKey()) => $id])->first();
 
         // die silently when a non super_admin wants to delete
-        if ($this->Auth->user('super_admin') != 1) {
+        if (!$this->AccessControl->isAdmin()) {
             $event->stopPropagation();
             $this->controller->redirect($this->ControllerAction->url('index'));
         }
@@ -107,7 +107,7 @@ class AcademicPeriodsTable extends AppTable {
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        if ($this->Auth->user('super_admin') != 1) {
+        if (!$this->AccessControl->isAdmin()) {
             if (array_key_exists('remove', $buttons)) {
                 unset($buttons['remove']);
             }
