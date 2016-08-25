@@ -227,11 +227,18 @@ class InstitutionRoomsTable extends AppTable {
 
 	public function editAfterQuery(Event $event, Entity $entity) {
 		list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
-		
+
 		if (!$isEditable) {
+			$inUseId = $this->RoomStatuses->getIdByCode('IN_USE');
+			$endOfUsageId = $this->RoomStatuses->getIdByCode('END_OF_USAGE');
+
 			$session = $this->request->session();
 			$sessionKey = $this->registryAlias() . '.warning';
-			$session->write($sessionKey, $this->aliasField('restrictEdit'));
+			if ($entity->room_status_id == $inUseId) {
+				$session->write($sessionKey, $this->aliasField('in_use.restrictEdit'));
+			} else if ($entity->room_status_id == $endOfUsageId) {
+				$session->write($sessionKey, $this->aliasField('end_of_usage.restrictEdit'));
+			}
 
 			$url = $this->ControllerAction->url('index');
 			$event->stopPropagation();
@@ -243,9 +250,16 @@ class InstitutionRoomsTable extends AppTable {
 		list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 		
 		if (!$isDeletable) {
+			$inUseId = $this->RoomStatuses->getIdByCode('IN_USE');
+			$endOfUsageId = $this->RoomStatuses->getIdByCode('END_OF_USAGE');
+
 			$session = $this->request->session();
 			$sessionKey = $this->registryAlias() . '.warning';
-			$session->write($sessionKey, $this->aliasField('restrictDelete'));
+			if ($entity->room_status_id == $inUseId) {
+				$session->write($sessionKey, $this->aliasField('in_use.restrictDelete'));
+			} else if ($entity->room_status_id == $endOfUsageId) {
+				$session->write($sessionKey, $this->aliasField('end_of_usage.restrictDelete'));
+			}
 
 			$url = $this->ControllerAction->url('index');
 			$event->stopPropagation();
@@ -643,6 +657,17 @@ class InstitutionRoomsTable extends AppTable {
 		$endOfUsageId = $this->RoomStatuses->getIdByCode('END_OF_USAGE');
 
 		if ($entity->room_status_id == $inUseId) {	// If is in use, not allow to delete if the rooms is appear in other academic period
+			$count = $this
+    			->find()
+    			->where([
+    				$this->aliasField('previous_room_id') => $entity->id
+    			])
+    			->count();
+
+			if ($count > 0) {
+    			$isEditable = false;
+    		}
+
     		$count = $this
     			->find()
     			->where([$this->aliasField('code') => $entity->code])
