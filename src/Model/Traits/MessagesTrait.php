@@ -109,8 +109,14 @@ trait MessagesTrait {
         ],
         'InstitutionRooms' => [
             'noRooms' => 'No Room found',
-            'restrictEdit' => 'Edit operation is not allowed as the record already End of Usage.',
-			'restrictDelete' => 'Delete operation is not allowed as the record already End of Usage or there are other information linked to this record.'
+            'in_use' => [
+                'restrictEdit' => 'Edit operation is not allowed as there are other information linked to this record.',
+                'restrictDelete' => 'Delete operation is not allowed as there are other information linked to this record.'
+            ],
+            'end_of_usage' => [
+                'restrictEdit' => 'Edit operation is not allowed as the record already End of Usage.',
+                'restrictDelete' => 'Delete operation is not allowed as the record already End of Usage.'
+            ]
         ],
         'InfrastructureCustomFields' => [
             'infrastructure_level_id' => 'Level Name'
