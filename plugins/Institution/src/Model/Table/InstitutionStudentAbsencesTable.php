@@ -92,7 +92,8 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		$validator
 			->add('start_date', [
 				'ruleCompareJoinDate' => [
-					'rule' => ['compareJoinDate', 'student_id']
+					'rule' => ['compareJoinDate', 'student_id'],
+					'on' => 'create'
 				],
 				'ruleNoOverlappingAbsenceDate' => [
 					'rule' => ['noOverlappingAbsenceDate', $this]
@@ -104,7 +105,8 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			])
 			->add('end_date', [
 				'ruleCompareJoinDate' => [
-					'rule' => ['compareJoinDate', 'student_id']
+					'rule' => ['compareJoinDate', 'student_id'],
+					'on' => 'create'
 				],
 				'ruleCompareDateReverse' => [
 					'rule' => ['compareDateReverse', 'start_date', true]
@@ -342,6 +344,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			$startDate = $AcademicPeriod->get($selectedPeriod)->start_date;
 			$endDate = $AcademicPeriod->get($selectedPeriod)->end_date;
+			$this->ControllerAction->field('end_date');
 
 			$this->fields['start_date']['date_options']['startDate'] = $startDate->format('d-m-Y');
 			$this->fields['start_date']['date_options']['endDate'] = $endDate->format('d-m-Y');
@@ -350,7 +353,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 
 		} else if ($this->action == 'edit') {
 			$this->ControllerAction->field('start_date', ['value' => date('Y-m-d', strtotime($entity->start_date))]);
-			$this->ControllerAction->field('end_date', ['value' => date('Y-m-d', strtotime($entity->end_date))]);
+			$this->ControllerAction->field('end_date',['value' => date('Y-m-d', strtotime($entity->end_date))]);
 		}
 		// End
 
@@ -677,10 +680,12 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		// End
 
 		// Student
+		$selectedClass = $this->queryString('class', $classOptions);
 		$Students = TableRegistry::get('Institution.InstitutionClassStudents');
 		$studentOptions = $Students
 			->find('list', ['keyField' => 'student_id', 'valueField' => 'student_name'])
 			->where([
+				$Students->aliasField('academic_period_id') => $selectedPeriod,
 				$Students->aliasField('institution_class_id') => $selectedClass
 			])
 			->contain(['Users'])
