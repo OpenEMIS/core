@@ -73,8 +73,18 @@ class InstitutionRoomsTable extends AppTable {
 					'rule' => ['inAcademicPeriod', 'academic_period_id']
 				]
 			])
-			->add('end_date', 'ruleCompareDateReverse', [
-				'rule' => ['compareDateReverse', 'start_date', true]
+			->add('end_date', [
+				'ruleInAcademicPeriod' => [
+					'rule' => ['inAcademicPeriod', 'academic_period_id']
+				],
+				'ruleCompareDateReverse' => [
+					'rule' => ['compareDateReverse', 'start_date', true]
+				]
+			])
+			->add('new_start_date', [
+				'ruleCompareDateReverse' => [
+					'rule' => ['compareDateReverse', 'start_date', false]
+				]
 			])
 			->requirePresence('new_room_type', function ($context) {
 				if (array_key_exists('change_type', $context['data'])) {
