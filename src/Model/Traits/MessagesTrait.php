@@ -703,7 +703,11 @@ trait MessagesTrait {
                     'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ],
                 'end_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.',
                     'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+                ],
+                'new_start_date' => [
+                    'ruleCompareDateReverse' => 'New Start Date should not be earlier than or same as Start Date'
                 ]
             ],
         ],
