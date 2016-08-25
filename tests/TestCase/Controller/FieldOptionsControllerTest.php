@@ -6,6 +6,12 @@ use Cake\TestSuite\IntegrationTestCase;
 
 class FieldOptionsControllerTest extends IntegrationTestCase {
 
+	public $fixtures = [
+		'app.config_items',
+        'app.workflow_models',
+        'app.institution_genders'
+    ];
+    
 	public function setAuthSession() {
 		
 		$this->session([

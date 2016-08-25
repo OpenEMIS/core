@@ -21,6 +21,30 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 		parent::initialize($config);
 
 		$this->hasMany('GradingOptions', ['className' => 'Assessment.AssessmentGradingOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
+
+		$this->belongsToMany('AssessmentItems', [
+			'className' => 'Assessment.AssessmentItems',
+			'joinTable' => 'assessment_items_grading_types',
+			'foreignKey' => 'assessment_grading_type_id',
+			'targetForeignKey' => 'assessment_item_id',
+			'through' => 'Assessment.AssessmentItemsGradingTypes',
+			'dependent' => true,
+			'cascadeCallbacks' => true
+			// 'saveStrategy' => 'append'
+		]);
+
+		$this->belongsToMany('AssessmentPeriods', [
+			'className' => 'Assessment.AssessmentPeriods',
+			'joinTable' => 'assessment_items_grading_types',
+			'foreignKey' => 'assessment_grading_type_id',
+			'targetForeignKey' => 'assessment_period_id',
+			'through' => 'Assessment.AssessmentItemsGradingTypes',
+			'dependent' => true,
+			'cascadeCallbacks' => true
+			// 'saveStrategy' => 'append'
+		]);
+
+		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -192,6 +216,19 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 			$this->GradingOptions->alias()
 		]);
 	}
+
+/******************************************************************************************************************
+**
+** delete action events
+**
+******************************************************************************************************************/
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $extra['excludedModels'] = [
+            $this->AssessmentItems->alias(),
+            $this->GradingOptions->alias()
+        ];
+    }
 
 
 /******************************************************************************************************************
