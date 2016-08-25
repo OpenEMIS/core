@@ -60,7 +60,8 @@ class StaffAbsencesTable extends AppTable {
 		$validator
 			->add('start_date', [
 				'ruleCompareJoinDate' => [
-					'rule' => ['compareJoinDate', 'staff_id']
+					'rule' => ['compareJoinDate', 'staff_id'],
+					'on' => 'create'
 				],
 				'ruleInAcademicPeriod' => [
 					'rule' => ['inAcademicPeriod', 'academic_period_id'],
@@ -72,7 +73,8 @@ class StaffAbsencesTable extends AppTable {
 			])
 			->add('end_date', [
 				'ruleCompareJoinDate' => [
-					'rule' => ['compareJoinDate', 'staff_id']
+					'rule' => ['compareJoinDate', 'staff_id'],
+					'on' => 'create'
 				],
 				'ruleCompareDateReverse' => [
 					'rule' => ['compareDateReverse', 'start_date', true]
@@ -502,12 +504,14 @@ class StaffAbsencesTable extends AppTable {
 			}
 
 			$newInactiveStaffOptions = [];
-			foreach ($inactiveStaffOptions as $key => $value) {
-				$newInactiveStaffOptions[$key] = [
-					'value' => $key,
-					'text' => $value,
-					'disabled'
-				];
+			foreach ($inactiveStaffOptions as $inactiveKey => $inactiveValue) {
+				if (!array_key_exists($inactiveKey, $activeStaffOptions)) {
+					$newInactiveStaffOptions[$inactiveKey] = [
+						'value' => $inactiveKey,
+						'text' => $inactiveValue,
+						'disabled'
+					];
+				}
 			}
 
 			$staffOptions = [__('Active Staff') => $newActiveStaffOptions, __('Inactive Staff') => $newInactiveStaffOptions];
