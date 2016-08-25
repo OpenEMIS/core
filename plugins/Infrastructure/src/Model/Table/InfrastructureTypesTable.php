@@ -17,6 +17,7 @@ class InfrastructureTypesTable extends ControllerActionTable {
 		parent::initialize($config);
 
 		$this->belongsTo('Levels', ['className' => 'Infrastructure.InfrastructureLevels', 'foreignKey' => 'infrastructure_level_id']);
+		$this->hasMany('InstitutionInfrastructures', ['className' => 'Institution.InstitutionInfrastructures', 'dependent' => true, 'cascadeCallbacks' => true]);
 		if ($this->behaviors()->has('Reorder')) {
 			$this->behaviors()->get('Reorder')->config([
 				'filter' => 'infrastructure_level_id'
@@ -24,7 +25,7 @@ class InfrastructureTypesTable extends ControllerActionTable {
 		}
 
 		$this->addBehavior('Infrastructure.Types');
-		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
+		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
