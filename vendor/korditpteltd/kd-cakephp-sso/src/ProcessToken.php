@@ -5,13 +5,15 @@ use Firebase\JWT\JWT;
 
 class ProcessToken
 {
-    public static function generateToken($sub, $exp = null)
+    public static function generateToken($sub, $exp = null, $options = [])
     {
         $keyConfig = [
             'private_key_bits' => 2048
         ];
         $privateKey = openssl_pkey_new($keyConfig);
         $publicKey = openssl_pkey_get_details($privateKey)['key'];
+        $payload = [];
+        $payload = array_merge($payload, $options);
         $payload['sub'] = $sub;
         if (!is_null($exp)) {
             $payload['exp'] = $exp;

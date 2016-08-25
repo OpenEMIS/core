@@ -12,11 +12,12 @@ require_once( ROOT . DS . 'vendor' . DS . 'onelogin' . DS . 'php-saml' . DS . '_
 
 class Saml2AuthComponent extends Component {
 
-	public $components = ['Auth'];
+    public $components = ['Auth'];
 
     private $saml;
+    private $clientId;
 
-	public function initialize(array $config) {
+    public function initialize(array $config) {
         $this->session = $this->request->session();
         $settings = [];
         $returnUrl = Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'],true);
@@ -50,6 +51,8 @@ class Saml2AuthComponent extends Component {
 
         $this->addCertFingerPrintInformation('idp', $setting, $samlAttributes);
 
+        $this->clientId = $samlAttributes['idp_entity_id'];
+
         $this->userNameField = $samlAttributes['saml_username_mapping'];
 
         $this->saml = new \OneLogin_Saml2_Auth($setting);
@@ -71,14 +74,14 @@ class Saml2AuthComponent extends Component {
         }
     }
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
         $events['Controller.Auth.authenticate'] = 'authenticate';
         return $events;
     }
 
     public function beforeFilter(Event $event) {
-    	$this->controller->Auth->config('authenticate', [
+        $this->controller->Auth->config('authenticate', [
             'Form' => [
                 'userModel' => $this->_config['userModel'],
                 'passwordHasher' => [
@@ -86,10 +89,30 @@ class Saml2AuthComponent extends Component {
                     'hashers' => ['Default', 'Legacy']
                 ]
             ],
-    		'SSO.Saml2' => [
-				'userModel' => $this->_config['userModel']
-			]
-		]);
+            'SSO.Saml2' => [
+                'userModel' => $this->_config['userModel']
+            ],
+            'SSO.Cookie' => [
+                'userModel' => $this->_config['userModel'],
+                'fields' => [
+                    'username' => 'openemis_no'
+                ],
+                'cookie' => [
+                    'name' => $this->_config['cookie']['name'],
+                    'path' => $this->_config['cookie']['path'],
+                    'expires' => $this->_config['cookie']['expires'],
+                    'domain' => $this->_config['cookie']['domain'],
+                    'encryption' => $this->_config['cookie']['encryption']
+                ],
+                'authType' => 'Saml2',
+                'clientId' => $this->clientId
+            ]
+        ]);
+
+        $user = $this->controller->Auth->identify();
+        if ($user) {
+            $this->controller->Auth->setUser($user);
+        }
     }
 
     public function startup(Event $event) {
@@ -97,19 +120,19 @@ class Saml2AuthComponent extends Component {
             $action = $this->request->params['action'];
             if ($action == 'login' && !$this->session->read('Auth.fallback') && !$this->session->read('Saml2.remoteFail')) {
                 $this->login();
-            }    
+            }
         }
-        
+
     }
 
-	private function idpLogin() {
-		$this->processResponse();
+    private function idpLogin() {
+        $this->processResponse();
         if ($this->isAuthenticated()) {
             return true;
         } else {
             return false;
         }
-	}
+    }
 
     /**
      * Initiates the SSO process.
@@ -118,7 +141,7 @@ class Saml2AuthComponent extends Component {
      * @param array  $parameters Extra parameters to be added to the GET
      * @param bool   $forceAuthn When true the AuthNReuqest will set the ForceAuthn='true'
      * @param bool   $isPassive  When true the AuthNReuqest will set the Ispassive='true'
-     *  
+     *
      */
     public function login($returnTo = null, $parameters = [], $forceAuthn = false, $isPassive = false) {
         $this->saml->login($returnTo, $parameters, $forceAuthn, $isPassive);
@@ -184,12 +207,13 @@ class Saml2AuthComponent extends Component {
     }
 
     public function authenticate(Event $event, ArrayObject $extra) {
-    	if ($this->request->is('post') && !$this->session->read('Saml2.remoteFail')) {
+        if ($this->request->is('post') && !$this->session->read('Saml2.remoteFail')) {
             if ($this->idpLogin()) {
                 $userData = $this->getAttributes();
                 if (isset($userData[$this->userNameField][0])) {
                     $userName = $userData[$this->userNameField][0];
                     $this->session->write('Saml2.userAttribute', $userData);
+                    $extra['client_id'] = $this->clientId;
                     return $this->checkLogin($userName);
                 } else {
                     $this->session->write('Auth.fallback', true);
@@ -199,7 +223,7 @@ class Saml2AuthComponent extends Component {
                 $this->controller->Alert->error('security.login.remoteFail', ['reset' => true]);
                 return false;
             }
-		} else {
+        } else {
             if ($this->request->is('post') && isset($this->request->data['submit'])) {
                 if ($this->request->data['submit'] == 'login') {
                     $username = $this->request->data('username');
@@ -210,28 +234,28 @@ class Saml2AuthComponent extends Component {
                     return $checkLogin;
                 }
             }
-			return false;
-		}
+            return false;
+        }
 
     }
 
     private function checkLogin($username) {
-		$this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'debug');
-		$user = $this->Auth->identify();
-		if ($user) {
-			if ($user['status'] != 1) {
+        $this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'debug');
+        $user = $this->Auth->identify();
+        if ($user) {
+            if ($user['status'] != 1) {
                 $this->session->write('Auth.fallback', true);
                 $this->controller->Alert->error('security.login.inactive', ['reset' => true]);
-				return false;
-			}
-			$this->controller->Auth->setUser($user);
-			return true;
-		} else {
+                return false;
+            }
+            $this->controller->Auth->setUser($user);
+            return true;
+        } else {
             $this->session->write('Saml2.remoteFail', true);
             $this->controller->Alert->error('security.login.remoteFail', ['reset' => true]);
-			return false;
-		}
-	}
+            return false;
+        }
+    }
 
 
 }

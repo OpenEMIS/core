@@ -58,8 +58,28 @@ class GoogleAuthComponent extends Component {
             ],
             'SSO.Google' => [
                 'userModel' => $this->_config['userModel']
+            ],
+            'SSO.Cookie' => [
+                'userModel' => $this->_config['userModel'],
+                'fields' => [
+                    'username' => 'openemis_no'
+                ],
+                'cookie' => [
+                    'name' => $this->_config['cookie']['name'],
+                    'path' => $this->_config['cookie']['path'],
+                    'expires' => $this->_config['cookie']['expires'],
+                    'domain' => $this->_config['cookie']['domain'],
+                    'encryption' => $this->_config['cookie']['encryption']
+                ],
+                'authType' => 'Saml2',
+                'clientId' => $this->clientId
             ]
         ]);
+
+        $user = $this->controller->Auth->identify();
+        if ($user) {
+            $this->controller->Auth->setUser($user);
+        }
     }
 
     public function startup(Event $event) {
@@ -68,7 +88,7 @@ class GoogleAuthComponent extends Component {
             $authUrl = $client->createAuthUrl();
 
             if ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443) {
-                $redirect = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']; 
+                $redirect = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
             } else {
                 $redirect = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
             }
@@ -108,7 +128,7 @@ class GoogleAuthComponent extends Component {
             // Zack: To revisit this part
 
             // if ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443) {
-            //     $redirect = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']; 
+            //     $redirect = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
             // } else {
             //     $redirect = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
             // }
@@ -126,7 +146,7 @@ class GoogleAuthComponent extends Component {
                 $client->revokeToken($this->session->read('Google.accessToken'));
                 $this->session->delete('Google.accessToken');
                 $this->controller->Auth->logout();
-                
+
                 if ($this->session->read('Google.reLogin')) {
                     $authUrl = $client->createAuthUrl();
                     $this->session->write('Google.reLogin', false);
@@ -175,7 +195,7 @@ class GoogleAuthComponent extends Component {
             } else {
                 $this->session->write('Google.tokenData', $tokenData);
                 $this->session->write('Google.client', $client);
-            } 
+            }
         } else {
             $this->session->delete('Google.tokenData');
             $this->session->delete('Google.client', $client);
@@ -191,11 +211,12 @@ class GoogleAuthComponent extends Component {
             }
             $username = 'Not Google Authenticated';
             $this->idpLogin();
-            if ($this->session->check('Google.tokenData')) {    
+            if ($this->session->check('Google.tokenData')) {
                 $tokenData = $this->session->read('Google.tokenData');
                 $email = $tokenData['payload']['email'];
                 $username = explode('@', $tokenData['payload']['email'])[0];
             }
+            $extra['client_id'] = $this->clientId;
             return $this->checkLogin($username);
         } else {
             if ($this->request->is('post') && isset($this->request->data['submit'])) {
@@ -232,7 +253,7 @@ class GoogleAuthComponent extends Component {
             } else {
                 $this->controller->Alert->error('security.login.fail', ['reset' => true]);
             }
-            
+
             return false;
         }
     }
