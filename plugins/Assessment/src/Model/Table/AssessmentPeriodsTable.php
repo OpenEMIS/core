@@ -62,9 +62,11 @@ class AssessmentPeriodsTable extends ControllerActionTable {
                 'ruleUniqueCodeByForeignKeyAcademicPeriod' => [
                     'rule' => ['uniqueCodeByForeignKeyAcademicPeriod', 'Assessments', 'assessment_id',  'academic_period_id'], //($foreignKeyModel, $foreignKeyField, $academicFieldName)
                     'on' => function ($context) {
-                        $oldCode = $this->get($context['data']['id'])->code;
-                        $newCode = $context['data']['code'];
-                        return $oldCode != $newCode; //only trigger validation if there is any changes on the code value.
+                        if ($this->action == 'edit') { //trigger this only during edit
+                            $oldCode = $this->get($context['data']['id'])->code;
+                            $newCode = $context['data']['code'];
+                            return $oldCode != $newCode; //only trigger validation if there is any changes on the code value.
+                        }
                     }
                 ]
             ])
@@ -152,8 +154,7 @@ class AssessmentPeriodsTable extends ControllerActionTable {
         $patchOptions->exchangeArray($arrayOptions);
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)  
-
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $options) //cant use afterSave because it wont be detected by unit test case.
     {
         if (!$entity->isNew()) { //for edit
             // can't save properly using associated method
