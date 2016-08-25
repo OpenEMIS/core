@@ -7,6 +7,9 @@ use App\Test\AppTestCase;
 class AssessmentPeriodsControllerTest extends AppTestCase
 {
 	public $fixtures = [
+        'app.config_items',
+        'app.workflows',
+        'app.workflow_models',
         'app.assessments',
         'app.assessment_items',
         'app.assessment_periods',
@@ -187,15 +190,16 @@ class AssessmentPeriodsControllerTest extends AppTestCase
         $this->assertEquals($data['AssessmentPeriods']['code'], $entity->code);
 
         // test belongsToManyTable data
-        $lastInsertedRecord = $belongsToManyTable->find('list')
+        $entity = $belongsToManyTable->find()
             ->where([
                 $belongsToManyTable->aliasField('assessment_period_id') => $data['AssessmentPeriods']['assessment_items'][0]['_joinData']['assessment_period_id'],
                 $belongsToManyTable->aliasField('assessment_item_id') => $data['AssessmentPeriods']['assessment_items'][0]['_joinData']['assessment_item_id'],
                 $belongsToManyTable->aliasField('assessment_id') => $data['AssessmentPeriods']['assessment_items'][0]['_joinData']['assessment_id'],
-                $belongsToManyTable->aliasField('id') => $data['AssessmentPeriods']['assessment_items'][0]['_joinData']['id'],
-            ]);
-
-        $this->assertEquals($data['AssessmentPeriods']['assessment_items'][0]['assessment_grading_type_id'], $entity->assessment_grading_type_id);
+                // $belongsToManyTable->aliasField('id') => $data['AssessmentPeriods']['assessment_items'][0]['_joinData']['id'], //exclude ID because it is UUID, will keep changing.
+            ])
+            ->toArray();
+        
+        $this->assertEquals($data['AssessmentPeriods']['assessment_items'][0]['_joinData']['assessment_grading_type_id'], $entity[0]->assessment_grading_type_id);
 
     }
 

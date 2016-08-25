@@ -6,6 +6,12 @@ use Cake\TestSuite\IntegrationTestCase;
 
 class InfrastructuresControllerTest extends IntegrationTestCase {
 
+	public $fixtures = [
+        'app.config_items',
+        'app.workflow_models',
+        'app.custom_modules',
+    ];
+
 	public function setAuthSession() {
 		
 		$this->session([
