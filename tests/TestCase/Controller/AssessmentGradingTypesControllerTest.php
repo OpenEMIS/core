@@ -7,6 +7,9 @@ use App\Test\AppTestCase;
 class AssessmentGradingTypesControllerTest extends AppTestCase
 {
 	public $fixtures = [
+        'app.config_items',
+        'app.workflows',
+        'app.workflow_models',
         'app.assessment_items',
         'app.assessment_periods',
         'app.assessment_grading_types',
