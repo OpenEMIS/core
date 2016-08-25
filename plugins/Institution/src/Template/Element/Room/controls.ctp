@@ -14,7 +14,7 @@
 				$dataNamedGroup = [];
 				if (!empty($this->request->query)) {
 					foreach ($this->request->query as $key => $value) {
-						if (in_array($key, ['period_id', 'room_type_id', 'room_status_id'])) continue;
+						if (in_array($key, ['period_id', 'type', 'status'])) continue;
 						echo $this->Form->hidden($key, [
 							'value' => $value,
 							'data-named-key' => $key
@@ -49,12 +49,12 @@
 						'label' => false,
 						'options' => $typeOptions,
 						'url' => $baseUrl,
-						'data-named-key' => 'room_type_id',
+						'data-named-key' => 'type',
 						'escape' => false
 					];
 					if (!empty($dataNamedGroup)) {
 						$inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
-						$dataNamedGroup[] = 'room_type_id';
+						$dataNamedGroup[] = 'type';
 					}
 					echo $this->Form->input('room_type', $inputOptions);
 				}
@@ -65,7 +65,7 @@
 						'label' => false,
 						'options' => $statusOptions,
 						'url' => $baseUrl,
-						'data-named-key' => 'room_status_id',
+						'data-named-key' => 'status',
 						'escape' => false
 					];
 					if (!empty($dataNamedGroup)) {
