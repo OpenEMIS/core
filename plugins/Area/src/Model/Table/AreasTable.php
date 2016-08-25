@@ -5,6 +5,7 @@ use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
@@ -31,6 +32,186 @@ class AreasTable extends AppTable {
 				'filter' => 'parent_id',
 			]);
 		}
+	}
+
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		return $events;
+	}
+
+	public function sync() {
+		$model = $this;
+		$request = $this->request;
+		$entity = $model->newEntity();
+		$extra=[];
+
+		// Temporary hardcoded the source of the json.
+		// will be set on the sys_config later.
+		// $url = 'http://devinfo-cloud.com/reporting/scinfo_data_admin/api/area';
+		$url = 'https://demo.openemis.org/datamanager/api/area';
+		$obj = json_decode(file_get_contents($url), true);
+
+		$objArray = $obj['areas'];
+		$query = $this->find()
+			->where([$this->aliasField('visible') => 1])
+			->toArray()
+			;
+
+		// Array from areas table (target)
+		$areasTableArray = [];
+		foreach ($query as $key => $value) {
+			$areasTableArray[$key] = [
+				'id' => $value->id,
+				'parent_id' => $value->parent_id,
+				'code' => $value->code,
+				'name' => $value->name,
+				'area_level_id' => $value->area_level_id
+			];
+		}
+		// pr($areasTableArray);die;
+
+		// Array from json (source)
+		$jsonArray = [];
+		$orderArray = [];
+		foreach ($objArray as $key => $value) {
+			// Null is the root parent id, as per cake update
+			if ($value['pnid'] === '-1') {
+				$value['pnid'] = null;
+			}
+			$level = $value['lvl'];
+			$orderArray[$level] = array_key_exists($level, $orderArray) ? ++$orderArray[$level] : 1;
+
+			$jsonArray[$key] = [
+				'id' => $value['nid'],
+				'parent_id' => $value['pnid'],
+				'code' => $value['id'],
+				'name' => $value['name'],
+				'area_level_id' => $level,
+				'order' => $orderArray[$level]
+			];
+		}
+
+		foreach ($this->fields as $field => $attr) {
+			$this->fields[$field]['visible'] = false;
+		}
+
+		$this->ControllerAction->field('data_will_be_synced_from', [
+			'type' => 'readonly',
+			'attr' => ['value' => $url]
+		]);
+
+		// Target empty, Source will update the target.
+		if(empty($areasTableArray)){
+			if ($this->request->is(['get'])) {
+				$this->ControllerAction->field('local_server', [
+					'type' => 'element',
+					'element' => 'Area.Areas/local_server'
+				]);
+
+				$this->controller->set('areasTableArray', $areasTableArray);
+
+
+			} else if ($this->request->is(['post', 'put'])) {
+				$submit = isset($this->request->data['submit']) ? $this->request->data['submit'] : 'save';
+				if ($submit == 'save') {
+					$areaTable = TableRegistry::get('areas');
+
+					foreach ($jsonArray as $key => $value) {
+						$areasArray = $areaTable->newEntity([
+							'id' => $value['id'],
+							'parent_id' => $value['parent_id'],
+							'code' => $value['code'],
+							'name' => $value['name'],
+							'area_level_id' => $value['area_level_id'],
+							'order' => $value['order']
+						]);
+						$areaTable->save($areasArray);
+					}
+					$this->rebuildLftRght();
+
+					$url = $this->ControllerAction->url('index');
+					unset($url['section']);
+
+					return $this->controller->redirect($url);
+				} else {
+					pr('reload');
+				}
+			}
+		}
+
+		// Target < source, source will append the target.
+		if(!empty($areasTableArray)){
+		// 	if ($this->request->is(['get'])) {
+		// 		// pr('get');
+		// 		// pr($this->request);
+
+			$this->ControllerAction->field('local_server', [
+				'type' => 'element',
+				'element' => 'Area.Areas/local_server'
+			]);
+
+			$this->ControllerAction->field('remote_server', [
+				'type' => 'element',
+				'element' => 'Area.Areas/remote_server'
+			]);
+
+			$this->controller->set('areasTableArray', $areasTableArray);
+			$this->controller->set('jsonArray', $jsonArray);
+
+		// 		if ($this->hasAssociatedRecords($model, $entity, $extra)) {
+		// 			pr('hasAssociatedRecords');
+		// 		}
+
+			foreach ($jsonArray as $key => $value) {
+				pr($value['code']);
+				$jsonCode = $value['code'];
+				foreach ($areasTableArray as $key => $value) {
+					pr($value['code']);
+					$tableCode = $value['code'];
+
+				}
+
+			}
+
+
+		// 	} else if ($this->request->is(['post', 'put'])) {
+		// 		// pr($this->request);die;
+		// 		$submit = isset($this->request->data['submit']) ? $this->request->data['submit'] : 'save';
+		// 		if ($submit == 'save') {
+		// 			// pr('save');
+		// 			$areaTable = TableRegistry::get('areas');
+
+		// 			foreach ($jsonArray as $key => $value) {
+		// 				$article = $areaTable->newEntity([
+		// 					'id' => $value['id'],
+		// 					'parent_id' => $value['parent_id'],
+		// 					'code' => $value['code'],
+		// 					'name' => $value['name'],
+		// 					'area_level_id' => $value['area_level_id']
+		// 				]);
+		// 				$this->rebuildLftRght();
+
+		// 				$areaTable->save($article);
+		// 			}
+		// 			$this->rebuildLftRght();
+		// 		} else {
+		// 			pr('reload');
+		// 		}
+		// 	}
+		}
+
+		// target > source, some data already deleted, need to show the page of affected area and security group.
+
+
+
+
+		//
+
+
+		$this->controller->set('data', $entity);
+
+		$this->ControllerAction->renderView('/ControllerAction/edit');
 	}
 
 	public function beforeAction(Event $event) {
@@ -63,7 +244,7 @@ class AreasTable extends AppTable {
 		// Require to update the parent id of the children before removing the node from the tree
 		$this->updateAll(
 				[
-					'parent_id' => $transferTo, 
+					'parent_id' => $transferTo,
 					'lft' => null,
 					'rght' => null
 				],
@@ -80,8 +261,8 @@ class AreasTable extends AppTable {
 					'lft' => null,
 					'rght' => null
 				],
-				[ 
-					'lft > ' => $left, 
+				[
+					'lft > ' => $left,
 					'rght < ' => $right
 				]
 			);
@@ -158,7 +339,7 @@ class AreasTable extends AppTable {
 			$this->fields['parent_id']['attr']['value'] = null;
 		} else {
 			$this->fields['parent_id']['attr']['value'] = $parentId;
-			
+
 			$crumbs = $this
 				->find('path', ['for' => $parentId])
 				->order([$this->aliasField('lft')])
@@ -238,7 +419,7 @@ class AreasTable extends AppTable {
 			])
 			->order(['AreaLevels.level', $this->aliasField('order')])
 			->all();
-		
+
 		$data = array();
 		foreach($list as $obj) {
 			$data[] = [
@@ -247,5 +428,18 @@ class AreasTable extends AppTable {
 			];
 		}
 		return $data;
+	}
+
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		// will check the system config, if its set, edit & delete not available and add will be replaced by Sync button
+		if ($action == 'index') {
+			$toolbarButtons['edit'] = $buttons['edit'];
+			$toolbarButtons['edit']['label'] = '<i class="fa fa-refresh"></i>';
+			$toolbarButtons['edit']['type'] = 'button';
+			$toolbarButtons['edit']['attr']['title'] = __('Synchronize');
+			$toolbarButtons['edit']['url'][0] = 'sync';
+			$toolbarButtons['edit']['attr'] = $attr;
+		}
+
 	}
 }
