@@ -33,7 +33,7 @@ use Cake\ORM\TableRegistry;
  */
 class CookieAuthenticate extends BaseAuthenticate
 {
-
+    
     public function implementedEvents()
     {
         $event['Auth.logout'] = 'logout';
@@ -125,7 +125,7 @@ class CookieAuthenticate extends BaseAuthenticate
      * @return mixed False on login failure.  An array of User data on success.
      */
     public function authenticate(Request $request, Response $response)
-    {
+    {   
         $user = $this->getUser($request);
         return $user;
     }
