@@ -10,6 +10,7 @@ use SSO\ProcessToken;
 
 class SSOComponent extends Component {
 	private $controller;
+    private $authType = 'Local';
 
 	protected $_defaultConfig = [
 		'homePageURL' => null,
@@ -37,31 +38,36 @@ class SSOComponent extends Component {
 		$controller = $this->_registry->getController();
 		$this->controller = $controller;
         $this->session = $this->request->session();
-		
+
 		$ConfigItems = TableRegistry::get('ConfigItems');
         $entity = $ConfigItems->findByCode('authentication_type')->first();
         $authType = strlen($entity->value) ? $entity->value : $entity->default_value;
 		if (empty($authType)) {
 			$authType = 'Local';
 		}
+        $this->authType = $authType;
 		$type = 'SSO.' . ucfirst($authType) . 'Auth';
 		$this->controller->loadComponent('Cookie');
-        $this->controller->Auth->config('authenticate', [
-            'SSO.Cookie' => [
-                'userModel' => $this->_config['userModel'],
-                'fields' => [
-                    'username' => 'openemis_no'
-                ],
-                'cookie' => [
-                    'name' => $this->_config['cookie']['name'],
-                    'path' => $this->_config['cookie']['path'],
-                    'expires' => $this->_config['cookie']['expires'],
-                    'domain' => $this->_config['cookie']['domain'],
-                    'encryption' => $this->_config['cookie']['encryption']
+
+        if ($authType != 'Local') {
+           $this->controller->Auth->config('authenticate', [
+                'SSO.Cookie' => [
+                    'userModel' => $this->_config['userModel'],
+                    'fields' => [
+                        'username' => 'openemis_no'
+                    ],
+                    'cookie' => [
+                        'name' => $this->_config['cookie']['name'],
+                        'path' => $this->_config['cookie']['path'],
+                        'expires' => $this->_config['cookie']['expires'],
+                        'domain' => $this->_config['cookie']['domain'],
+                        'encryption' => $this->_config['cookie']['encryption']
+                    ]
                 ]
-            ]
-        ]);
-        
+            ]);
+        }
+
+
 		$this->controller->loadComponent($type, $this->_config);
 	}
 
@@ -80,19 +86,21 @@ class SSOComponent extends Component {
     	if ($event->result) {
             $this->controller->dispatchEvent('Controller.Auth.afterAuthenticate', [$extra], $this);
 
-            // Set of cookie
-            $now = Time::now();
-            $now->modify('+2 weeks');
-            $cookieConfig = $this->_config['cookie'];
-            if (!empty($cookieConfig['domain'])) {
-                $cookieConfig['domain'] = '.' . $cookieConfig['domain'];
+            if ($this->authType != 'Local') {
+               // Set of cookie
+                $now = Time::now();
+                $now->modify('+2 weeks');
+                $cookieConfig = $this->_config['cookie'];
+                if (!empty($cookieConfig['domain'])) {
+                    $cookieConfig['domain'] = '.' . $cookieConfig['domain'];
+                }
+                $cookieName = $cookieConfig['name'];
+                unset($cookieConfig['name']);
+                $this->controller->Cookie->configKey($cookieName, $cookieConfig);
+                $user = $this->controller->Auth->user();
+                $token = ProcessToken::generateToken($user, $now->toUnixString());
+                $this->controller->Cookie->write($cookieName, $token);
             }
-            $cookieName = $cookieConfig['name'];
-            unset($cookieConfig['name']);
-            $this->controller->Cookie->configKey($cookieName, $cookieConfig);
-            $user = $this->controller->Auth->user();
-            $token = ProcessToken::generateToken($user, $now->toUnixString());
-            $this->controller->Cookie->write($cookieName, $token);
 
 			return $this->controller->redirect($this->_config['homePageURL']);
     	} else {

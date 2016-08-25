@@ -21,7 +21,6 @@ return [
         'Error' => $baseDir . '/plugins/Error/',
         'FieldOption' => $baseDir . '/plugins/FieldOption/',
         'Health' => $baseDir . '/plugins/Health/',
-        'Identities' => $baseDir . '/plugins/Identities/',
         'Import' => $baseDir . '/plugins/Import/',
         'Infrastructure' => $baseDir . '/plugins/Infrastructure/',
         'Institution' => $baseDir . '/plugins/Institution/',
