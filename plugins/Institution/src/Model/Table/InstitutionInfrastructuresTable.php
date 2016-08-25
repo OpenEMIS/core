@@ -52,7 +52,56 @@ class InstitutionInfrastructuresTable extends AppTable {
 	}
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
-    	$extra['excludedModels'] = [$this->CustomFieldValues->alias()];
+    	$extra['excludedModels'] = [
+    		$this->CustomFieldValues->alias(),
+    		$this->ChildInfrastructures->alias(),
+    		$this->RoomInfrastructures->alias()
+    	];
+
+    	$landLevelId = $this->Levels->getFieldByCode('LAND', 'id');
+		$buildingLevelId = $this->Levels->getFieldByCode('BUILDING', 'id');
+    	$floorLevelId = $this->Levels->getFieldByCode('FLOOR', 'id');
+
+    	$id = $entity->id;
+		$institutionId = $entity->institution_id;
+    	$currentLevelId = $entity->infrastructure_level_id;
+    	$associatedChildRecordsCount = $this->ChildInfrastructures->find()
+            ->where([
+				$this->ChildInfrastructures->aliasField('institution_id') => $institutionId,
+				$this->ChildInfrastructures->aliasField('parent_id') => $id
+            ])
+            ->count();
+
+    	if ($currentLevelId == $landLevelId) {
+	        $extra['associatedRecords'][] = ['model' => 'BuildingInfrastructures', 'count' => $associatedChildRecordsCount];
+    	} else if ($currentLevelId == $buildingLevelId) {
+	        $extra['associatedRecords'][] = ['model' => 'FloorInfrastructures', 'count' => $associatedChildRecordsCount];
+    	} else if ($currentLevelId == $floorLevelId) {
+    		$roomCodes = $this->RoomInfrastructures->find('list', ['keyField' => 'code', 'valueField' => 'code'])
+    			->where([
+					$this->RoomInfrastructures->aliasField('institution_id') => $institutionId,
+					$this->RoomInfrastructures->aliasField('institution_infrastructure_id') => $id
+	            ])
+	            ->group([
+	            	$this->RoomInfrastructures->aliasField('code')
+	            ])
+	            ->toArray();
+
+	        if (!empty($roomCodes)) {
+				$associatedRoomRecordsCount = $this->RoomInfrastructures->find()
+		    		->matching('RoomStatuses', function ($q) {
+						return $q->where([
+							'RoomStatuses.code IN' => ['IN_USE', 'END_OF_USAGE']
+						]);
+					})
+		            ->where([$this->RoomInfrastructures->aliasField('code IN') => $roomCodes])
+		            ->count();
+	        } else {
+				$associatedRoomRecordsCount = 0;
+	        }
+
+			$extra['associatedRecords'][] = ['model' => 'RoomInfrastructures', 'count' => $associatedRoomRecordsCount];
+    	}
     }
 
 	public function onGetCode(Event $event, Entity $entity) {
@@ -218,35 +267,9 @@ class InstitutionInfrastructuresTable extends AppTable {
 				$attr['type'] = 'hidden';
 				$attr['value'] = null;
 			} else {
-				if ($action == 'add') {
-					$attr['type'] = 'readonly';
-					$attr['value'] = $parentId;
-					$attr['attr']['value'] = $this->getParentPath($parentId);
-				} else if ($action == 'edit') {
-					$session = $request->session();
-					$institutionId = $session->read('Institution.Institutions.id');
-
-					$grandParentId = $this->get($parentId)->parent_id;
-					$where = [$this->Parents->aliasField('institution_id') => $institutionId];
-					if (is_null($grandParentId)) {
-						$where[] = $this->Parents->aliasField('parent_id IS NULL');
-					} else {
-						$where[$this->Parents->aliasField('parent_id')] = $grandParentId;
-						$crumbs = $this->findPath(['for' => $grandParentId]);
-						$this->controller->set('crumbs', $crumbs);
-					}
-					$parents = $this->Parents->find()->where($where)->all();
-
-					$parentOptions = [];
-					foreach ($parents as $key => $parent) {
-						$parentOptions[$parent->id] = $parent->code . " - " . $parent->name;
-					}
-					$this->advancedSelectOptions($parentOptions, $parentId);
-
-					$attr['type'] = 'select';
-					$attr['options'] = $parentOptions;
-					$attr['select'] = false;
-				}
+				$attr['type'] = 'readonly';
+				$attr['value'] = $parentId;
+				$attr['attr']['value'] = $this->getParentPath($parentId);
 			}
 		}
 
@@ -262,6 +285,8 @@ class InstitutionInfrastructuresTable extends AppTable {
 			$autoGenerateCode = $this->getAutoGenerateCode($institutionId, $selectedLevel, $parentId);
 
 			$attr['attr']['default'] = $autoGenerateCode;
+		} else if ($action == 'edit') {
+			$attr['type'] = 'readonly';
 		}
 
 		return $attr;
