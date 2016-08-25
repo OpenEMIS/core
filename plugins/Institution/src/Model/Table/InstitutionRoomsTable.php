@@ -2,6 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+use DateTime;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -57,16 +58,6 @@ class InstitutionRoomsTable extends AppTable {
 		$this->levelOptions = $this->Levels->getOptions(['keyField' => 'id', 'valueField' => 'name']);
 		$this->roomLevel = $this->Levels->getFieldByCode('ROOM', 'id');
 	}
-
-	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
-    	$extra['excludedModels'] = [$this->CustomFieldValues->alias()];
-    }
-
-    public function implementedEvents() {
-        $events = parent::implementedEvents();
-        $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-        return $events;
-    }
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
@@ -127,21 +118,6 @@ class InstitutionRoomsTable extends AppTable {
 		$this->processCopy($entity);
 	}
 
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($action == 'view') {
-			$paramsPass = $this->ControllerAction->paramsPass();
-			$id = current($paramsPass);
-			$entity = $this->get($id);
-
-			$endOfUsageId = $this->RoomStatuses->getIdByCode('END_OF_USAGE');
-    		if ($entity->room_status_id == $endOfUsageId) {
-    			if ($toolbarButtons->offsetExists('edit')) {
-    				unset($toolbarButtons['edit']);
-    			}
-    		}
-		}
-    }
-
 	public function onGetInfrastructureLevel(Event $event, Entity $entity) {
 		return $this->levelOptions[$this->roomLevel];
 	}
@@ -149,32 +125,11 @@ class InstitutionRoomsTable extends AppTable {
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
     	$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-    	$isEditable = true;
-    	$isDeletable = true;
-
-		$inUseId = $this->RoomStatuses->getIdByCode('IN_USE');
-    	$endOfUsageId = $this->RoomStatuses->getIdByCode('END_OF_USAGE');
-    	if ($entity->room_status_id == $inUseId) {	// If is in use, not allow to delete if the rooms is appear in other academic period
-    		$count = $this
-    			->find()
-    			->where([$this->aliasField('code') => $entity->code])
-    			->count();
-
-    		if ($count > 1) {
-    			$isDeletable = false;
+    	// unset edit_type so that will always default to Update Details
+    	foreach ($buttons as $action => $attr) {
+    		if (array_key_exists('url', $attr) && array_key_exists('edit_type', $attr['url'])) {
+    			unset($buttons[$action]['url']['edit_type']);
     		}
-    	} else if ($entity->room_status_id == $endOfUsageId) {	// If already end of usage, not allow to edit or delete
-			$isEditable = false;
-    		$isDeletable = false;
-    	}
-    	// End
-
-		if (array_key_exists('edit', $buttons) && !$isEditable) {
-			unset($buttons['edit']);	//remove edit action from the action button
-		}
-
-		if (array_key_exists('remove', $buttons) && !$isDeletable) {
-    		unset($buttons['remove']);	// remove delete action from the action button
     	}
 
     	return $buttons;
@@ -255,13 +210,50 @@ class InstitutionRoomsTable extends AppTable {
 		];
 	}
 
-	public function editOnInitialize(Event $event, Entity $entity) {
-		unset($this->request->query['edit_type']);
+	public function indexAfterAction(Event $event, $data) {
+		$session = $this->request->session();
+
+		$sessionKey = $this->registryAlias() . '.warning';
+		if ($session->check($sessionKey)) {
+			$warningKey = $session->read($sessionKey);
+			$this->Alert->warning($warningKey);
+			$session->delete($sessionKey);
+		}
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
 		$query->contain(['AcademicPeriods', 'RoomTypes', 'InfrastructureConditions']);
 	}
+
+	public function editAfterQuery(Event $event, Entity $entity) {
+		list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
+		
+		if (!$isEditable) {
+			$session = $this->request->session();
+			$sessionKey = $this->registryAlias() . '.warning';
+			$session->write($sessionKey, $this->aliasField('restrictEdit'));
+
+			$url = $this->ControllerAction->url('index');
+			$event->stopPropagation();
+			return $this->controller->redirect($url);
+		}
+	}
+
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
+		list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
+		
+		if (!$isDeletable) {
+			$session = $this->request->session();
+			$sessionKey = $this->registryAlias() . '.warning';
+			$session->write($sessionKey, $this->aliasField('restrictDelete'));
+
+			$url = $this->ControllerAction->url('index');
+			$event->stopPropagation();
+			return $this->controller->redirect($url);
+		}
+
+    	$extra['excludedModels'] = [$this->CustomFieldValues->alias()];
+    }
 
 	public function addEditBeforeAction(Event $event) {
 		$toolbarElements = $this->addBreadcrumbElement();
@@ -291,15 +283,17 @@ class InstitutionRoomsTable extends AppTable {
 		if ($action == 'view' || $action == 'add') {
 			$attr['visible'] = false;
 		} else if ($action == 'edit') {
-			$selectedEditType = $request->query('edit_type');
+			$editTypeOptions = $this->getSelectOptions($this->aliasField('change_types'));
+			$selectedEditType = $this->queryString('edit_type', $editTypeOptions);
+			$this->advancedSelectOptions($editTypeOptions, $selectedEditType);
+			$this->controller->set(compact('editTypeOptions'));
+
 			if ($selectedEditType == self::END_OF_USAGE || $selectedEditType == self::CHANGE_IN_ROOM_TYPE) {
 				$this->canUpdateDetails = false;
 			}
 
-			$attr['type'] = 'select';
-			$attr['options'] = $this->getSelectOptions($this->aliasField('change_types'));
-			$attr['select'] = false;
-			$attr['onChangeReload'] = 'changeEditType';
+			$attr['type'] = 'element';
+			$attr['element'] = 'Institution.Room/change_type';
 		}
 
 		return $attr;
@@ -449,11 +443,20 @@ class InstitutionRoomsTable extends AppTable {
 
 			$selectedEditType = $request->query('edit_type');
 			if ($selectedEditType == self::END_OF_USAGE) {
+				/* restrict End Date from start date until end of academic period
 				$startDate = $entity->start_date->format('d-m-Y');
 				$endDate = $this->currentAcademicPeriod->end_date->format('d-m-Y');
 
 				$attr['date_options']['startDate'] = $startDate;
 				$attr['date_options']['endDate'] = $endDate;
+				*/
+
+				// temporary restrict to today until have better solution
+				$today = new DateTime();
+
+				$attr['type'] = 'readonly';
+				$attr['value'] = $today->format('Y-m-d');
+				$attr['attr']['value'] = $this->formatDate($today);
 			} else {
 				$attr['type'] = 'hidden';
 				$attr['value'] = $entity->end_date->format('Y-m-d');
@@ -511,6 +514,7 @@ class InstitutionRoomsTable extends AppTable {
 
 			$selectedEditType = $request->query('edit_type');
 			if ($selectedEditType == self::CHANGE_IN_ROOM_TYPE) {
+				/* restrict End Date from start date until end of academic period
 				$startDateObj = $entity->start_date->copy();
 				$startDateObj->addDay();
 
@@ -521,35 +525,31 @@ class InstitutionRoomsTable extends AppTable {
 				$attr['null'] = false;	// for asterisk to appear
 				$attr['date_options']['startDate'] = $startDate;
 				$attr['date_options']['endDate'] = $endDate;
+				*/
+
+				// temporary restrict to today until have better solution
+				$today = new DateTime();
+
+				$attr['visible'] = true;
+				$attr['null'] = false;	// for asterisk to appear
+				$attr['type'] = 'readonly';
+				$attr['value'] = $today->format('Y-m-d');
+				$attr['attr']['value'] = $this->formatDate($today);
 			}
 		}
 
 		return $attr;
 	}
 
-	public function addEditOnChangeEditType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$request = $this->request;
-		unset($request->query['edit_type']);
-
-		if ($request->is(['post', 'put'])) {
-			if (array_key_exists($this->alias(), $request->data)) {
-				if (array_key_exists('change_type', $request->data[$this->alias()])) {
-					$selectedEditType = $request->data[$this->alias()]['change_type'];
-					$request->query['edit_type'] = $selectedEditType;
-				}
-			}
-		}
-	}
-
 	public function addEditOnChangeRoomType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$request = $this->request;
-		unset($request->query['room_type_id']);
+		unset($request->query['type']);
 
 		if ($request->is(['post', 'put'])) {
 			if (array_key_exists($this->alias(), $request->data)) {
 				if (array_key_exists('room_type_id', $request->data[$this->alias()])) {
 					$selectedType = $request->data[$this->alias()]['room_type_id'];
-					$request->query['room_type_id'] = $selectedType;
+					$request->query['type'] = $selectedType;
 				}
 
 				if (array_key_exists('custom_field_values', $request->data[$this->alias()])) {
@@ -628,6 +628,30 @@ class InstitutionRoomsTable extends AppTable {
 		return $toolbarElements;
 	}
 
+	private function checkIfCanEditOrDelete($entity) {
+		$isEditable = true;
+    	$isDeletable = true;
+
+		$inUseId = $this->RoomStatuses->getIdByCode('IN_USE');
+		$endOfUsageId = $this->RoomStatuses->getIdByCode('END_OF_USAGE');
+
+		if ($entity->room_status_id == $inUseId) {	// If is in use, not allow to delete if the rooms is appear in other academic period
+    		$count = $this
+    			->find()
+    			->where([$this->aliasField('code') => $entity->code])
+    			->count();
+
+    		if ($count > 1) {
+    			$isDeletable = false;
+    		}
+    	} else if ($entity->room_status_id == $endOfUsageId) {	// If already end of usage, not allow to edit or delete
+			$isEditable = false;
+    		$isDeletable = false;
+    	}
+
+		return compact('isEditable', 'isDeletable');
+	}
+
     private function updateRoomStatus($code, $conditions) {
     	$roomStatuses = $this->RoomStatuses->findCodeList();
 		$status = $roomStatuses[$code];
@@ -675,7 +699,7 @@ class InstitutionRoomsTable extends AppTable {
 		// End
 
 		$url = $this->ControllerAction->url('edit');
-		unset($url['type_id']);
+		unset($url['type']);
 		unset($url['edit_type']);
 		$url[1] = $newEntity->id;
 		return $this->controller->redirect($url);
@@ -697,11 +721,12 @@ class InstitutionRoomsTable extends AppTable {
 
 		$typeOptions = $this->RoomTypes
 			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+			->find('visible')
 			->toArray();
 		if($withAll && count($typeOptions) > 1) {
 			$typeOptions = ['-1' => __('All Room Types')] + $typeOptions;
 		}
-		$selectedType = $this->queryString('room_type_id', $typeOptions);
+		$selectedType = $this->queryString('type', $typeOptions);
 		$this->advancedSelectOptions($typeOptions, $selectedType);
 
 		return compact('typeOptions', 'selectedType');
@@ -718,7 +743,7 @@ class InstitutionRoomsTable extends AppTable {
 		if($withAll && count($statusOptions) > 1) {
 			$statusOptions = ['-1' => __('All Statuses')] + $statusOptions;
 		}
-		$selectedStatus = $this->queryString('room_status_id', $statusOptions);
+		$selectedStatus = $this->queryString('status', $statusOptions);
 		$this->advancedSelectOptions($statusOptions, $selectedStatus);
 
 		return compact('statusOptions', 'selectedStatus');
