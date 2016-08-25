@@ -13,8 +13,8 @@
 	$dataNamedGroup = [];
 	if (!empty($this->request->query)) {
 		foreach ($this->request->query as $key => $value) {
-			if (in_array("$alias.$key", ['edit_type'])) continue;
-			echo $this->Form->hidden($key, [
+			if (in_array($key, ['edit_type'])) continue;
+			echo $this->Form->hidden("$alias.$key", [
 				'value' => $value,
 				'data-named-key' => $key
 			]);
