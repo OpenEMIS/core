@@ -294,6 +294,8 @@ class InstitutionRoomsTable extends AppTable {
 
 			$attr['type'] = 'element';
 			$attr['element'] = 'Institution.Room/change_type';
+
+			$this->controller->set(compact('editTypeOptions'));
 		}
 
 		return $attr;
@@ -415,7 +417,12 @@ class InstitutionRoomsTable extends AppTable {
 	public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
 			$startDate = $this->currentAcademicPeriod->start_date->format('d-m-Y');
+			/* restrict Start Date from start until end of academic period
 			$endDate = $this->currentAcademicPeriod->end_date->format('d-m-Y');
+			*/
+			// temporary restrict until today until have better solution
+			$today = new DateTime();
+			$endDate = $today->format('d-m-Y');
 
 			$attr['date_options']['startDate'] = $startDate;
 			$attr['date_options']['endDate'] = $endDate;
