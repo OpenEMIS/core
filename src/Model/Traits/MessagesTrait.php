@@ -109,8 +109,17 @@ trait MessagesTrait {
         ],
         'InstitutionRooms' => [
             'noRooms' => 'No Room found',
-            'restrictEdit' => 'Edit operation is not allowed as the record already End of Usage.',
-			'restrictDelete' => 'Delete operation is not allowed as the record already End of Usage or there are other information linked to this record.'
+            'in_use' => [
+                'restrictEdit' => 'Edit operation is not allowed as there are other information linked to this record.',
+                'restrictDelete' => 'Delete operation is not allowed as there are other information linked to this record.'
+            ],
+            'end_of_usage' => [
+                'restrictEdit' => 'Edit operation is not allowed as the record already End of Usage.',
+                'restrictDelete' => 'Delete operation is not allowed as the record already End of Usage.'
+            ],
+            'change_in_room_type' => [
+                'restrictEdit' => 'Not allowed to change room type in the same day.'
+            ]
         ],
         'InfrastructureCustomFields' => [
             'infrastructure_level_id' => 'Level Name'
@@ -697,7 +706,11 @@ trait MessagesTrait {
                     'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ],
                 'end_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.',
                     'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+                ],
+                'new_start_date' => [
+                    'ruleCompareDateReverse' => 'New Start Date should not be earlier than or same as Start Date'
                 ]
             ],
         ],
