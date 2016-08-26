@@ -73,8 +73,18 @@ class InstitutionRoomsTable extends AppTable {
 					'rule' => ['inAcademicPeriod', 'academic_period_id']
 				]
 			])
-			->add('end_date', 'ruleCompareDateReverse', [
-				'rule' => ['compareDateReverse', 'start_date', true]
+			->add('end_date', [
+				'ruleInAcademicPeriod' => [
+					'rule' => ['inAcademicPeriod', 'academic_period_id']
+				],
+				'ruleCompareDateReverse' => [
+					'rule' => ['compareDateReverse', 'start_date', true]
+				]
+			])
+			->add('new_start_date', [
+				'ruleCompareDateReverse' => [
+					'rule' => ['compareDateReverse', 'start_date', false]
+				]
 			])
 			->requirePresence('new_room_type', function ($context) {
 				if (array_key_exists('change_type', $context['data'])) {
@@ -225,17 +235,51 @@ class InstitutionRoomsTable extends AppTable {
 		$query->contain(['AcademicPeriods', 'RoomTypes', 'InfrastructureConditions']);
 	}
 
+	public function editBeforeAction(Event $event) {
+		$session = $this->request->session();
+
+		$sessionKey = $this->registryAlias() . '.warning';
+		if ($session->check($sessionKey)) {
+			$warningKey = $session->read($sessionKey);
+			$this->Alert->warning($warningKey);
+			$session->delete($sessionKey);
+		}
+	}
+
 	public function editAfterQuery(Event $event, Entity $entity) {
 		list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
-		
+
+		$session = $this->request->session();
+		$sessionKey = $this->registryAlias() . '.warning';
 		if (!$isEditable) {
-			$session = $this->request->session();
-			$sessionKey = $this->registryAlias() . '.warning';
-			$session->write($sessionKey, $this->aliasField('restrictEdit'));
+			$inUseId = $this->RoomStatuses->getIdByCode('IN_USE');
+			$endOfUsageId = $this->RoomStatuses->getIdByCode('END_OF_USAGE');
+
+			if ($entity->room_status_id == $inUseId) {
+				$session->write($sessionKey, $this->aliasField('in_use.restrictEdit'));
+			} else if ($entity->room_status_id == $endOfUsageId) {
+				$session->write($sessionKey, $this->aliasField('end_of_usage.restrictEdit'));
+			}
 
 			$url = $this->ControllerAction->url('index');
 			$event->stopPropagation();
 			return $this->controller->redirect($url);
+		} else {
+			$selectedEditType = $this->request->query('edit_type');
+			if ($selectedEditType == self::CHANGE_IN_ROOM_TYPE) {
+				$today = new DateTime();
+				$diff = date_diff($entity->start_date, $today);
+
+				// Not allowed to change room type in the same day
+				if ($diff->days == 0) {
+					$session->write($sessionKey, $this->aliasField('change_in_room_type.restrictEdit'));
+
+					$url = $this->ControllerAction->url('edit');
+					$url['edit_type'] = self::UPDATE_DETAILS;
+					$event->stopPropagation();
+					return $this->controller->redirect($url);
+				}
+			}
 		}
 	}
 
@@ -243,9 +287,16 @@ class InstitutionRoomsTable extends AppTable {
 		list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 		
 		if (!$isDeletable) {
+			$inUseId = $this->RoomStatuses->getIdByCode('IN_USE');
+			$endOfUsageId = $this->RoomStatuses->getIdByCode('END_OF_USAGE');
+
 			$session = $this->request->session();
 			$sessionKey = $this->registryAlias() . '.warning';
-			$session->write($sessionKey, $this->aliasField('restrictDelete'));
+			if ($entity->room_status_id == $inUseId) {
+				$session->write($sessionKey, $this->aliasField('in_use.restrictDelete'));
+			} else if ($entity->room_status_id == $endOfUsageId) {
+				$session->write($sessionKey, $this->aliasField('end_of_usage.restrictDelete'));
+			}
 
 			$url = $this->ControllerAction->url('index');
 			$event->stopPropagation();
@@ -643,6 +694,17 @@ class InstitutionRoomsTable extends AppTable {
 		$endOfUsageId = $this->RoomStatuses->getIdByCode('END_OF_USAGE');
 
 		if ($entity->room_status_id == $inUseId) {	// If is in use, not allow to delete if the rooms is appear in other academic period
+			$count = $this
+    			->find()
+    			->where([
+    				$this->aliasField('previous_room_id') => $entity->id
+    			])
+    			->count();
+
+			if ($count > 0) {
+    			$isEditable = false;
+    		}
+
     		$count = $this
     			->find()
     			->where([$this->aliasField('code') => $entity->code])
