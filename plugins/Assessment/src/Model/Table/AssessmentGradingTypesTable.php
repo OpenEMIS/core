@@ -42,6 +42,16 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 			'cascadeCallbacks' => true
 		]);
 
+		$this->belongsToMany('Assessments', [
+			'className' => 'Assessment.Assessments',
+			'joinTable' => 'assessment_items_grading_types',
+			'foreignKey' => 'assessment_grading_type_id',
+			'targetForeignKey' => 'assessment_id',
+			'through' => 'Assessment.AssessmentItemsGradingTypes',
+			'dependent' => true,
+			'cascadeCallbacks' => true
+		]);
+
 		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
 	}
 
