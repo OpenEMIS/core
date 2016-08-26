@@ -163,30 +163,6 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             return deferred.promise;
         },
 
-        getGradingTypes: function(assessmentId, subjectId) 
-        {
-            var success = function(response, deferred) {
-                var gradingTypes = response.data.data;
-
-                if (angular.isObject(gradingTypes) && gradingTypes.length > 0) {
-                    var indexedGradingTypes = {};
-                    angular.forEach(gradingTypes, function(obj, key) {
-                        indexedGradingTypes[obj.assessment_period_id] = obj;
-                    });
-
-                    deferred.resolve(indexedGradingTypes);
-                } else {
-                    deferred.reject('You need to configure Assessment Items Grading Types first');
-                }   
-            };
-
-            return AssessmentItemsGradingTypesTable
-            .select()
-            .contain(['EducationSubjects', 'AssessmentGradingTypes.GradingOptions'])
-            .where({assessment_id: assessmentId, education_subject_id: subjectId})
-            .ajax({success: success, defer: true});
-        },
-
         getPeriods: function(assessmentId) 
         {
             var success = function(response, deferred) {
@@ -202,6 +178,30 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             return AssessmentPeriodsTable
             .select()
             .where({assessment_id: assessmentId})
+            .ajax({success: success, defer: true});
+        },
+
+        getGradingTypes: function(assessmentId, subjectId)
+        {
+            var success = function(response, deferred) {
+                var gradingTypes = response.data.data;
+
+                if (angular.isObject(gradingTypes) && gradingTypes.length > 0) {
+                    var indexedGradingTypes = {};
+                    angular.forEach(gradingTypes, function(obj, key) {
+                        indexedGradingTypes[obj.assessment_period_id] = obj;
+                    });
+
+                    deferred.resolve(indexedGradingTypes);
+                } else {
+                    deferred.reject('You need to configure Assessment Items Grading Types first');
+                }
+            };
+
+            return AssessmentItemsGradingTypesTable
+            .select()
+            .contain(['EducationSubjects', 'AssessmentGradingTypes.GradingOptions'])
+            .where({assessment_id: assessmentId, education_subject_id: subjectId})
             .ajax({success: success, defer: true});
         },
 
@@ -304,29 +304,27 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                 });
             }, columnDefs);
 
-            // if (isMarksType) {   // to-do
-                columnDefs.push({
-                    headerName: "Total Mark",
-                    field: "total_mark",
-                    filter: "number",
-                    valueGetter: function(params) {
-                        var value = params.data[params.colDef.field];
+            columnDefs.push({
+                headerName: "Total Mark",
+                field: "total_mark",
+                filter: "number",
+                valueGetter: function(params) {
+                    var value = params.data[params.colDef.field];
 
-                        if (!isNaN(parseFloat(value))) {
-                            return $filter('number')(value, 2);
-                        } else {
-                            return '';
-                        }
-                    },
-                    filterParams: filterParams
-                });
+                    if (!isNaN(parseFloat(value))) {
+                        return $filter('number')(value, 2);
+                    } else {
+                        return '';
+                    }
+                },
+                filterParams: filterParams
+            });
 
-                columnDefs.push({
-                    headerName: "is modified",
-                    field: "is_dirty",
-                    hide: true
-                });
-            // }
+            columnDefs.push({
+                headerName: "is modified",
+                field: "is_dirty",
+                hide: true
+            });
 
             return {data: columnDefs};
         },
@@ -496,9 +494,19 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                                     });
                                 }
 
+                                var periodWeight = 0;
                                 angular.forEach(periods, function(period, key) {
+                                    var resultTypeByPeriod = gradingTypes[period.id].assessment_grading_type.result_type;
+
+                                    // if is GRADES type, set weight to 0 so that will not accumulate to total marks.
+                                    if (resultTypeByPeriod == resultTypes.MARKS) {
+                                        periodWeight = periodObj[parseInt(period.id)]['weight'];
+                                    } else if (resultTypeByPeriod == resultTypes.GRADES) {
+                                        periodWeight = 0;
+                                    }
+
                                     studentResults['period_' + parseInt(period.id)] = '';
-                                    studentResults['weight_' + parseInt(period.id)] = parseFloat(periodObj[parseInt(period.id)]['weight']);
+                                    studentResults['weight_' + parseInt(period.id)] = parseFloat(periodWeight);
                                 });
 
                                 studentId = currentStudentId;
