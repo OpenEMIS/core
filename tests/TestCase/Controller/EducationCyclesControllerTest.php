@@ -6,7 +6,14 @@ use App\Test\AppTestCase;
 
 class EducationCyclesControllerTest extends AppTestCase
 {
-    public $fixtures = ['app.education_systems', 'app.education_level_isced', 'app.education_levels', 'app.education_cycles'];
+    public $fixtures = [
+        'app.config_items',
+        'app.workflow_models',
+        'app.education_systems', 
+        'app.education_level_isced', 
+        'app.education_levels', 
+        'app.education_cycles'
+    ];
 
     private $id = 1;
     private $table;
