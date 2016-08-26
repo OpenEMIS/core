@@ -15,28 +15,7 @@ class AssessmentItemsTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
 		$this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
-		
-		$this->belongsToMany('GradingTypes', [
-			'className' => 'Assessment.AssessmentGradingTypes',
-			'joinTable' => 'assessment_items_grading_types',
-			'foreignKey' => 'assessment_item_id',
-			'targetForeignKey' => 'assessment_grading_type_id',
-			'through' => 'Assessment.AssessmentItemsGradingTypes',
-			'dependent' => true,
-			'cascadeCallbacks' => true
-			// 'saveStrategy' => 'append'
-		]);
 
-		$this->belongsToMany('AssessmentPeriods', [
-			'className' => 'Assessment.AssessmentPeriods',
-			'joinTable' => 'assessment_items_grading_types',
-			'foreignKey' => 'assessment_item_id',
-			'targetForeignKey' => 'assessment_period_id',
-			'through' => 'Assessment.AssessmentItemsGradingTypes',
-			'dependent' => true,
-			'cascadeCallbacks' => true
-			// 'saveStrategy' => 'append'
-		]);
 	}
 
 	public function validationDefault(Validator $validator) 
@@ -91,5 +70,10 @@ class AssessmentItemsTable extends AppTable {
 			->hydrate(false)
 			->toArray();
 		return $subjectList;
+	}
+
+	public function afterDelete()
+	{
+		// delete all AssessmentItemsGradingTypes by education_subject_id and assessment_id
 	}
 }
