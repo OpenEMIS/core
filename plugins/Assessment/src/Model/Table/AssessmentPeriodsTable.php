@@ -31,11 +31,11 @@ class AssessmentPeriodsTable extends ControllerActionTable {
             'cascadeCallbacks' => true
         ]);
 
-        $this->belongsToMany('AssessmentItems', [
-            'className' => 'Assessment.AssessmentItems',
+        $this->belongsToMany('EducationSubjects', [
+            'className' => 'Education.EducationSubjects',
             'joinTable' => 'assessment_items_grading_types',
             'foreignKey' => 'assessment_period_id',
-            'targetForeignKey' => 'assessment_item_id',
+            'targetForeignKey' => 'education_subject_id',
             'through' => 'Assessment.AssessmentItemsGradingTypes',
             'dependent' => true,
             'cascadeCallbacks' => true
@@ -109,12 +109,12 @@ class AssessmentPeriodsTable extends ControllerActionTable {
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['AssessmentItems.EducationSubjects']);
+        $query->contain(['EducationSubjects']);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('assessment_items', [
+        $this->field('education_subjects', [
             'type' => 'element',
             'element' => 'Assessment.assessment_periods',
             'attr' => [
@@ -125,7 +125,7 @@ class AssessmentPeriodsTable extends ControllerActionTable {
         $this->controller->set('assessmentGradingTypeOptions', $this->getGradingTypeOptions()); //send to ctp
 
         $this->setFieldOrder([
-             'assessment_id', 'code', 'name', 'start_date', 'end_date', 'date_enabled', 'date_disabled', 'weight', 'assessment_items' 
+             'assessment_id', 'code', 'name', 'start_date', 'end_date', 'date_enabled', 'date_disabled', 'weight', 'education_subjects' 
         ]);
     }
 
@@ -140,14 +140,15 @@ class AssessmentPeriodsTable extends ControllerActionTable {
     {
         //patch data to handle fail save because of validation error. this one to complete necessary field needed.
         if (array_key_exists($this->alias(), $requestData)) {
-            if (array_key_exists('assessment_items', $requestData[$this->alias()])) {
-                foreach ($requestData[$this->alias()]['assessment_items'] as $key => $item) {
-                    $requestData[$this->alias()]['assessment_items'][$key]['_joinData']['assessment_id'] = $requestData[$this->alias()]['assessment_id'];
+            if (array_key_exists('education_subjects', $requestData[$this->alias()])) {
+                foreach ($requestData[$this->alias()]['education_subjects'] as $key => $item) {
+                    $requestData[$this->alias()]['education_subjects'][$key]['_joinData']['assessment_id'] = $requestData[$this->alias()]['assessment_id'];
                 }
             }
+            // pr($requestData);die;
         }
 
-        $newOptions = ['associated' => ['AssessmentItems']];
+        $newOptions = ['associated' => ['EducationSubjects']];
 
         $arrayOptions = $patchOptions->getArrayCopy();
         $arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
@@ -163,22 +164,22 @@ class AssessmentPeriodsTable extends ControllerActionTable {
             $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
             $AssessmentItemsGradingTypes->deleteAll(['assessment_period_id' => $id]);
 
-            if ($entity->has('assessment_items')) {
-                $assessmentItems = $entity->assessment_items;
-                if (!empty($assessmentItems)) {
-                    foreach ($assessmentItems as $assessmentItem) {
+            if ($entity->has('education_subjects')) {
+                $educationSubjects = $entity->education_subjects;
+                if (!empty($educationSubjects)) {
+                    foreach ($educationSubjects as $educationSubject) {
                         $query = $AssessmentItemsGradingTypes->find()->where([
-                            $AssessmentItemsGradingTypes->aliasField('assessment_item_id') => $assessmentItem->_joinData->assessment_item_id,
-                            $AssessmentItemsGradingTypes->aliasField('assessment_id') => $assessmentItem->_joinData->assessment_id,
-                            $AssessmentItemsGradingTypes->aliasField('assessment_grading_type_id') => $assessmentItem->_joinData->assessment_grading_type_id,
+                            $AssessmentItemsGradingTypes->aliasField('education_subject_id') => $educationSubject->_joinData->assessment_item_id,
+                            $AssessmentItemsGradingTypes->aliasField('assessment_id') => $educationSubject->_joinData->assessment_id,
+                            $AssessmentItemsGradingTypes->aliasField('assessment_grading_type_id') => $educationSubject->_joinData->assessment_grading_type_id,
                             $AssessmentItemsGradingTypes->aliasField('assessment_period_id') => $id
                         ]);
 
                         if ($query->count() == 0) {
                             $newEntity = $AssessmentItemsGradingTypes->newEntity([
-                                'assessment_id' => $assessmentItem->_joinData->assessment_id,
-                                'assessment_item_id' => $assessmentItem->_joinData->assessment_item_id,
-                                'assessment_grading_type_id' => $assessmentItem->_joinData->assessment_grading_type_id,
+                                'assessment_id' => $educationSubject->_joinData->assessment_id,
+                                'education_subject_id' => $educationSubject->_joinData->education_subject_id,
+                                'assessment_grading_type_id' => $educationSubject->_joinData->assessment_grading_type_id,
                                 'assessment_period_id' => $id
                             ]);
 
@@ -193,7 +194,7 @@ class AssessmentPeriodsTable extends ControllerActionTable {
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
-            $this->AssessmentItems->alias(),
+            $this->EducationSubjects->alias(),
             $this->GradingTypes->alias()
         ];
     }
@@ -277,8 +278,8 @@ class AssessmentPeriodsTable extends ControllerActionTable {
 				if (array_key_exists('assessment_id', $request->data[$this->alias()])) {
 					$request->query['template'] = $request->data[$this->alias()]['assessment_id'];
 
-					$assessmentItems = $this->Assessments->AssessmentItems->getAssessmentItemSubjects($request->data[$this->alias()]['assessment_id']);
-                    $data[$this->alias()]['assessment_items'] = $assessmentItems;
+					$educationSubjects = $this->Assessments->AssessmentItems->getAssessmentItemSubjects($request->data[$this->alias()]['assessment_id']);
+                    $data[$this->alias()]['education_subjects'] = $educationSubjects;
 				}
 			}
 		}
@@ -347,7 +348,7 @@ class AssessmentPeriodsTable extends ControllerActionTable {
             'entity' => $entity
         ]);
 
-        $this->field('assessment_items', [
+        $this->field('education_subjects', [
             'type' => 'element',
             'element' => 'Assessment.assessment_periods',
             'attr' => [
@@ -366,7 +367,7 @@ class AssessmentPeriodsTable extends ControllerActionTable {
         ]);
 
         $this->setFieldOrder([
-             'academic_period_id', 'assessment_id', 'code', 'name', 'start_date', 'end_date', 'date_enabled', 'date_disabled', 'weight', 'assessment_items' 
+             'academic_period_id', 'assessment_id', 'code', 'name', 'start_date', 'end_date', 'date_enabled', 'date_disabled', 'weight', 'education_subjects' 
         ]);
     }
 

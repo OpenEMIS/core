@@ -60,6 +60,7 @@ class AssessmentItemsTable extends AppTable {
         $gradeSubjects = $EducationGradesSubjects->find()
             ->contain('EducationSubjects')
             ->where([$EducationGradesSubjects->aliasField('education_grade_id') => $gradeId])
+            ->order(['order'])
             ->toArray();
 
         $assessmentItems = [];
@@ -75,21 +76,6 @@ class AssessmentItemsTable extends AppTable {
         return $assessmentItems;
     }
 
-    public function getAssessmentItemSubjects($assessmentId)
-    {
-        $subjectList = $this
-            ->find()
-            ->innerJoinWith('EducationSubjects')
-            ->where([$this->aliasField('assessment_id') => $assessmentId])
-            ->select([
-                'assessment_item_id' => $this->aliasField('id'),
-                'education_subject_name' => 'EducationSubjects.name'
-            ])
-            ->order(['EducationSubjects.order'])
-            ->hydrate(false)
-            ->toArray();
-        return $subjectList;
-    }
 
     public function findStaffSubjects(Query $query, array $options)
     {
@@ -97,7 +83,6 @@ class AssessmentItemsTable extends AppTable {
         {
             $classId = $options['class_id'];
             $staffId = $options['staff_id'];
-
             $query->where([
                     // For subject teachers
                     'EXISTS (
@@ -133,4 +118,21 @@ class AssessmentItemsTable extends AppTable {
             ->toArray();
         return $subjectList;
     }
+
+	public function getAssessmentItemSubjects($assessmentId)
+	{
+		$subjectList = $this
+			->find()
+			->matching('EducationSubjects')
+			->where([$this->aliasField('assessment_id') => $assessmentId])
+			->select([
+				'assessment_item_id' => $this->aliasField('id'),
+				'education_subject_id' => 'EducationSubjects.id',
+				'education_subject_name' => 'EducationSubjects.name'
+			])
+			->order(['EducationSubjects.order'])
+			->hydrate(false)
+			->toArray();
+		return $subjectList;
+	}
 }
