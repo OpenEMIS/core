@@ -23,11 +23,15 @@ class GoogleAuthComponent extends Component {
     public function initialize(array $config) {
         $AuthenticationTypeAttributesTable = TableRegistry::get('SSO.AuthenticationTypeAttributes');
         $googleAttributes = $AuthenticationTypeAttributesTable->getTypeAttributeValues('Google');
-        $this->authType = Security::hash(serialize($googleAttributes), 'sha256');
         $this->clientId = $googleAttributes['client_id'];
         $this->clientSecret = $googleAttributes['client_secret'];
         $this->redirectUri = $googleAttributes['redirect_uri'];
         $this->hostedDomain = $googleAttributes['hd'];
+
+        $hashAttributes = $googleAttributes;
+        unset($hashAttributes['redirect_uri']);
+        $this->authType = Security::hash(serialize($hashAttributes), 'sha256');
+
         $this->session = $this->request->session();
         $this->session->write('Google.hostedDomain', $this->hostedDomain);
 

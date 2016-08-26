@@ -51,7 +51,7 @@ class Saml2AuthComponent extends Component {
             ],
         ];
 
-        $this->authType = Security::hash(serialize($setting), 'sha256');
+        $this->authType = Security::hash(serialize($setting['idp']), 'sha256');
 
         $this->addCertFingerPrintInformation('idp', $setting, $samlAttributes);
 
