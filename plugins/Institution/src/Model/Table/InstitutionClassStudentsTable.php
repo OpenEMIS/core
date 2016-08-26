@@ -172,9 +172,9 @@ class InstitutionClassStudentsTable extends AppTable {
         $assessmentSubjects = TableRegistry::get('Assessment.AssessmentItems')->getSubjects($assessmentId);
         foreach($assessmentSubjects as $subject) {
             foreach ($assessmentPeriods as $period) {
-                $assessmentItemId = $subject['assessment_item_id'];
+                $subjectId = $subject['subject_id'];
                 $assessmentPeriodId = $period->id;
-                $resultType = $assessmentGradeTypes[$assessmentItemId][$assessmentPeriodId];
+                $resultType = $assessmentGradeTypes[$subjectId][$assessmentPeriodId];
 
                 $label = __($subject['education_subject_name']).' - '.$period->name;
                 if ($resultType == 'MARKS') {
@@ -187,7 +187,7 @@ class InstitutionClassStudentsTable extends AppTable {
                     'label' => $label,
                     'institutionId' => $institutionId,
                     'assessmentId' => $assessmentId,
-                    'subjectId' => $subject['subject_id'],
+                    'subjectId' => $subjectId,
                     'assessmentPeriodWeight' => $period->weight,
                     'academicPeriodId' => $academicPeriodId,
                     'assessmentPeriodId' => $assessmentPeriodId,
