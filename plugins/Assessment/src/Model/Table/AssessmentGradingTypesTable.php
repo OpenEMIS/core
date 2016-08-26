@@ -22,16 +22,15 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 
 		$this->hasMany('GradingOptions', ['className' => 'Assessment.AssessmentGradingOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-		$this->belongsToMany('AssessmentItems', [
-			'className' => 'Assessment.AssessmentItems',
-			'joinTable' => 'assessment_items_grading_types',
-			'foreignKey' => 'assessment_grading_type_id',
-			'targetForeignKey' => 'assessment_item_id',
-			'through' => 'Assessment.AssessmentItemsGradingTypes',
-			'dependent' => true,
-			'cascadeCallbacks' => true
-			// 'saveStrategy' => 'append'
-		]);
+		$this->belongsToMany('EducationSubjects', [
+            'className' => 'Education.EducationSubjects',
+            'joinTable' => 'assessment_items_grading_types',
+            'foreignKey' => 'assessment_period_id',
+            'targetForeignKey' => 'education_subject_id',
+            'through' => 'Assessment.AssessmentItemsGradingTypes',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
 
 		$this->belongsToMany('AssessmentPeriods', [
 			'className' => 'Assessment.AssessmentPeriods',
@@ -41,7 +40,16 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 			'through' => 'Assessment.AssessmentItemsGradingTypes',
 			'dependent' => true,
 			'cascadeCallbacks' => true
-			// 'saveStrategy' => 'append'
+		]);
+
+		$this->belongsToMany('Assessments', [
+			'className' => 'Assessment.Assessments',
+			'joinTable' => 'assessment_items_grading_types',
+			'foreignKey' => 'assessment_grading_type_id',
+			'targetForeignKey' => 'assessment_id',
+			'through' => 'Assessment.AssessmentItemsGradingTypes',
+			'dependent' => true,
+			'cascadeCallbacks' => true
 		]);
 
 		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
