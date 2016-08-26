@@ -58,7 +58,7 @@ class InstitutionClassStudentsTable extends AppTable {
     public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $institutionName = $this->Institutions->get($institutionId)->name;
-        $settings['file'] = str_replace($this->alias(), $institutionName.'_Student_Results', $settings['file']);
+        $settings['file'] = str_replace($this->alias(), str_replace(' ', '_', $institutionName).'_Results', $settings['file']);
     }
 
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
@@ -343,7 +343,7 @@ class InstitutionClassStudentsTable extends AppTable {
                     case 'MARKS':
                         // Add logic to add weighted mark to subjectWeightedMark
                         $this->assessmentPeriodWeightedMark += ($result['marks'] * $attr['assessmentPeriodWeight']);
-                        $printedResult = '='.$result['marks'];
+                        $printedResult = ' '.$result['marks'];
                         break;
                     case 'GRADES':
                         $printedResult = $result['grade_code'];
@@ -376,19 +376,19 @@ class InstitutionClassStudentsTable extends AppTable {
         // reset the assessmentPeriodWeightedMark mark
         $this->assessmentPeriodWeightedMark = 0;
 
-        return '='.$assessmentPeriodWeightedMark;
+        return ' '.$assessmentPeriodWeightedMark;
     }
 
     public function onExcelRenderTotalWeightedMark(Event $event, Entity $entity, array $attr) {
         $totalWeightedMark = $this->totalWeightedMark;
         $this->totalWeightedMark = 0;
-        return '='.$totalWeightedMark;
+        return ' '.$totalWeightedMark;
     }
 
     public function onExcelRenderTotalMark(Event $event, Entity $entity, array $attr) {
         $totalMark = $this->totalMark;
         $this->totalMark = 0;
-        return '='.$totalMark;
+        return ' '.$totalMark;
     }
 
     public function getMaleCountByClass($classId) {
