@@ -724,7 +724,7 @@ class NavigationComponent extends Component {
 					'title' => 'Assessments',
 					'parent' => 'SystemSetup',
 					'params' => ['plugin' => 'Assessment'],
-					'selected' => ['Assessments.Assessments', 'Assessments.GradingTypes', 'Assessments.GradingOptions', 'Assessments.Status']
+					'selected' => ['Assessments.Assessments', 'Assessments.AssessmentPeriods', 'Assessments.GradingTypes']
 				],
 				'FieldOptions.index' => [
 					'title' => 'Field Options',
