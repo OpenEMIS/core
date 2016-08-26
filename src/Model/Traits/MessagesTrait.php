@@ -116,6 +116,9 @@ trait MessagesTrait {
             'end_of_usage' => [
                 'restrictEdit' => 'Edit operation is not allowed as the record already End of Usage.',
                 'restrictDelete' => 'Delete operation is not allowed as the record already End of Usage.'
+            ],
+            'change_in_room_type' => [
+                'restrictEdit' => 'Not allowed to change room type in the same day.'
             ]
         ],
         'InfrastructureCustomFields' => [
