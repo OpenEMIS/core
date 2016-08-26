@@ -41,14 +41,16 @@ class AuthenticationTypeAttributesTable extends Table {
         } else {
         	$entity->created_user_id = $userId;
         }
-    } 
+    }
 
 	public function getTypeAttributeValues($typeName = null) {
 		$list = $this->find('list', [
                 'groupField' => 'authentication_type',
                 'keyField' => 'attribute_field',
                 'valueField' => 'value'
-            ])->toArray();
+            ])
+            ->order([$this->aliasField('attribute_field')])
+            ->toArray();
 
 		if (!is_null($typeName)) {
 			if (isset($list[$typeName])) {
