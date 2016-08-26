@@ -63,43 +63,6 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
             }
         }
 
-        if (!$allClassesPermission && !$allSubjectsPermission) {
-            if (!$myClassesPermission && !$mySubjectsPermission) {
-                $query->where(['1 = 0']);
-            } else {
-                $query->innerJoin(['InstitutionClasses' => 'institution_classes'], [
-                        'InstitutionClasses.id = '.$InstitutionClassStudentsTable->aliasField('institution_class_id'),
-                    ]);
-
-                if ($myClassesPermission && !$mySubjectsPermission) {
-                        $query->where(['InstitutionClasses.staff_id' => $userId]);
-                } else {
-                    $query
-                        ->innerJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
-                            'InstitutionClassSubjects.institution_class_id = InstitutionClasses.id',
-                            'InstitutionClassSubjects.status =   1'
-                        ])
-                        ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
-                            'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id'
-                        ]);
-
-                    // If both class and subject permission is available
-                    if ($myClassesPermission && $mySubjectsPermission) {
-                        $query->where([
-                            'OR' => [
-                                ['InstitutionClasses.staff_id' => $userId],
-                                ['InstitutionSubjectStaff.staff_id' => $userId]
-                            ]
-                        ]);
-                    }
-                    // If only subject permission is available
-                    else {
-                        $query->where(['InstitutionSubjectStaff.staff_id' => $userId]);
-                    }
-                }
-            }
-        }
-
         $assessmentId = $this->request->query('assessment_id');
         if($assessmentId) {
             $sheets[] = [
@@ -110,7 +73,9 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                 'staffId' => $userId,
                 'institutionId' => $institutionId,
                 'mySubjectsPermission' => $mySubjectsPermission,
-                'allSubjectsPermission' => $allSubjectsPermission
+                'allSubjectsPermission' => $allSubjectsPermission,
+                'allClassesPermission' => $allClassesPermission,
+                'myClassesPermission' => $myClassesPermission
             ];
         }
     }
