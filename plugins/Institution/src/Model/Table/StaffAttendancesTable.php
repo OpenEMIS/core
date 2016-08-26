@@ -575,11 +575,11 @@ class StaffAttendancesTable extends AppTable {
 
 	public function getAbsenceData(Event $event, Entity $entity, $key) {
 		$value = '<i class="fa fa-check"></i>';
+		$currentDay = $this->allDayOptions[$key]['date'];
 
 		if (isset($entity->StaffAbsences['id'])) {
 			$startDate = $entity->StaffAbsences['start_date'];
 			$endDate = $entity->StaffAbsences['end_date'];
-			$currentDay = $this->allDayOptions[$key]['date'];
 			if ($currentDay >= $startDate && $currentDay <= $endDate) {
 				$StaffAbsences = TableRegistry::get('Institution.StaffAbsences');
 				$absenceQuery = $StaffAbsences
@@ -603,6 +603,16 @@ class StaffAttendancesTable extends AppTable {
 					$entity->StaffAbsences['id']
 				]);
 			}
+		}
+
+		$query = $this->find()
+			->select(['start_date' => $this->aliasField('start_date')])
+			->where([$this->aliasField('staff_id') => $entity->staff_id])
+			->first();
+		$staffStartDate = $query->start_date->format('Y-m-d');
+
+		if ($currentDay < $staffStartDate) {
+			$value = '<i class="fa fa-minus"></i>';
 		}
 
 		return $value;
