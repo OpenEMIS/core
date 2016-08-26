@@ -5,7 +5,7 @@ INSERT INTO `db_patches` (issue, created) VALUES ('POCOR-3080', NOW());
 DROP TABLE IF EXISTS `assessment_items_grading_types`;
 CREATE TABLE IF NOT EXISTS `assessment_items_grading_types` (
   `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `education_subject_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'links to education_subjects.id',
+  `education_subject_id` int(11) NOT NULL COMMENT 'links to education_subjects.id',
   `assessment_grading_type_id` int(11) NOT NULL COMMENT 'links to assessment_grading_types.id',
   `assessment_id` int(11) NOT NULL COMMENT 'links to assessments.id',
   `assessment_period_id` int(11) NOT NULL COMMENT 'links to assessment_periods.id',
