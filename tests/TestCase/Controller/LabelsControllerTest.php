@@ -6,6 +6,11 @@ use Cake\TestSuite\IntegrationTestCase;
 
 class LabelsControllerTest extends IntegrationTestCase {
 
+	public $fixtures = [
+        'app.config_items',
+        'app.workflow_models'
+    ];
+
 	public function setAuthSession() {
 		
 		$this->session([
