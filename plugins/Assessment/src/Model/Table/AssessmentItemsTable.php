@@ -60,6 +60,7 @@ class AssessmentItemsTable extends AppTable {
 		$gradeSubjects = $EducationGradesSubjects->find()
 			->contain('EducationSubjects')
 			->where([$EducationGradesSubjects->aliasField('education_grade_id') => $gradeId])
+			->order(['order'])
 			->toArray();
 
 		$assessmentItems = [];
@@ -82,7 +83,8 @@ class AssessmentItemsTable extends AppTable {
 			->matching('EducationSubjects')
 			->where([$this->aliasField('assessment_id') => $assessmentId])
 			->select([
-				'assessment_item_id' => $this->aliasField('id'), 
+				'assessment_item_id' => $this->aliasField('id'),
+				'education_subject_id' => 'EducationSubjects.id',  
 				'education_subject_name' => 'EducationSubjects.name'
 			])
 			->order(['EducationSubjects.order'])
