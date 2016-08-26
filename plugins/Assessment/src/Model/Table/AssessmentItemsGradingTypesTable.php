@@ -14,7 +14,7 @@ class AssessmentItemsGradingTypesTable extends AppTable {
         parent::initialize($config);
         $this->belongsTo('AssessmentGradingTypes', ['className' => 'Assessment.AssessmentGradingTypes', 'dependent' => true]);
         $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments', 'dependent' => true]);
-        $this->belongsTo('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true]);
+        $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects', 'dependent' => true]);
         $this->belongsTo('AssessmentPeriods', ['className' => 'Assessment.AssessmentPeriods', 'dependent' => true]);
     }
 
