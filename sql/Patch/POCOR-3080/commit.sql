@@ -5,7 +5,7 @@ INSERT INTO `db_patches` (issue, created) VALUES ('POCOR-3080', NOW());
 DROP TABLE IF EXISTS `assessment_items_grading_types`;
 CREATE TABLE IF NOT EXISTS `assessment_items_grading_types` (
   `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `assessment_item_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'links to assessment_items.id',
+  `education_subject_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'links to education_subjects.id',
   `assessment_grading_type_id` int(11) NOT NULL COMMENT 'links to assessment_grading_types.id',
   `assessment_id` int(11) NOT NULL COMMENT 'links to assessments.id',
   `assessment_period_id` int(11) NOT NULL COMMENT 'links to assessment_periods.id',
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS `assessment_items_grading_types` (
 
 -- Indexes for table `assessment_items_grading_types`
 ALTER TABLE `assessment_items_grading_types`
-  ADD PRIMARY KEY (`assessment_grading_type_id`,`assessment_id`,`assessment_item_id`,`assessment_period_id`),
+  ADD PRIMARY KEY (`assessment_grading_type_id`,`assessment_id`,`education_subject_id`,`assessment_period_id`),
   ADD UNIQUE KEY `id` (`id`),
   ADD KEY `modified_user_id` (`modified_user_id`),
   ADD KEY `created_user_id` (`created_user_id`);
@@ -52,9 +52,9 @@ SELECT `id`, `weight`, `assessment_id`, `education_subject_id`,
   `modified_user_id`, `modified`, `created_user_id`, `created`
 FROM `z_3080_assessment_items`;
 
-INSERT INTO `assessment_items_grading_types` (`id`, `assessment_item_id`, `assessment_grading_type_id`, `assessment_id`, `assessment_period_id`, 
+INSERT INTO `assessment_items_grading_types` (`id`, `education_subject_id`, `assessment_grading_type_id`, `assessment_id`, `assessment_period_id`, 
   `modified_user_id`, `modified`, `created_user_id`, `created`)
-SELECT AI.`id`, AI.`id`, AI.`assessment_grading_type_id`, AI.`assessment_id`, AP.`id`, 
+SELECT AI.`id`, AI.`education_subject_id`, AI.`assessment_grading_type_id`, AI.`assessment_id`, AP.`id`, 
   AI.`modified_user_id`, AI.`modified`, AI.`created_user_id`, AI.`created`
 FROM `z_3080_assessment_items`AI
 INNER JOIN `assessment_periods` AP ON AP.`assessment_id` = AI.`assessment_id`;
