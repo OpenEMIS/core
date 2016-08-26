@@ -77,9 +77,21 @@ class InstitutionClassStudentsTable extends AppTable {
             }
         }
 
+        $allClassesPermission = true;
+        $myClassesPermission = true;
+        if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles)) {
+            $allClassesPermission = false;
+            $myClassesPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
+        }
+
         $InstitutionClassesTable = TableRegistry::get('Institution.InstitutionClasses');
+        $name = $InstitutionClassesTable
+            ->find()
+            ->where([$InstitutionClassesTable->aliasField('id') => $classId])
+            ->first();
+
         $sheets[] = [
-            'name' => $InstitutionClassesTable->get($classId)->name,
+            'name' => isset($name['name']) ? $name['name'] : __('Class Not Found'),
             'table' => $this,
             'query' => $this->find(),
             'assessmentId' => $this->request->query('assessment_id'),
@@ -87,7 +99,9 @@ class InstitutionClassStudentsTable extends AppTable {
             'staffId' => $userId,
             'institutionId' => $institutionId,
             'allSubjectsPermission' => $allSubjectsPermission,
-            'mySubjectsPermission' => $mySubjectsPermission
+            'mySubjectsPermission' => $mySubjectsPermission,
+            'allClassesPermission' => $allClassesPermission,
+            'myClassesPermission' => $myClassesPermission
         ];
     }
 
@@ -211,6 +225,12 @@ class InstitutionClassStudentsTable extends AppTable {
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
         $sheet = $settings['sheet'];
         $institutionId = $sheet['institutionId'];
+        $allClassesPermission = $sheet['allClassesPermission'];
+        $allSubjectsPermission = $sheet['allSubjectsPermission'];
+        $myClassesPermission = $sheet['myClassesPermission'];
+        $mySubjectsPermission = $sheet['mySubjectsPermission'];
+        $staffId = $sheet['staffId'];
+
         $query
             ->contain([
                 'InstitutionClasses.Institutions',
@@ -223,6 +243,43 @@ class InstitutionClassStudentsTable extends AppTable {
 
         if (isset($sheet['classId'])) {
             $query->where([$this->aliasField('institution_class_id') => $sheet['classId']]);
+        }
+
+        if (!$allClassesPermission && !$allSubjectsPermission) {
+            if (!$myClassesPermission && !$mySubjectsPermission) {
+                $query->where(['1 = 0']);
+            } else {
+                $query->innerJoin(['InstitutionClasses' => 'institution_classes'], [
+                        'InstitutionClasses.id = '.$this->aliasField('institution_class_id'),
+                    ]);
+
+                if ($myClassesPermission && !$mySubjectsPermission) {
+                        $query->where(['InstitutionClasses.staff_id' => $staffId]);
+                } else {
+                    $query
+                        ->innerJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
+                            'InstitutionClassSubjects.institution_class_id = InstitutionClasses.id',
+                            'InstitutionClassSubjects.status =   1'
+                        ])
+                        ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
+                            'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id'
+                        ]);
+
+                    // If both class and subject permission is available
+                    if ($myClassesPermission && $mySubjectsPermission) {
+                        $query->where([
+                            'OR' => [
+                                ['InstitutionClasses.staff_id' => $staffId],
+                                ['InstitutionSubjectStaff.staff_id' => $staffId]
+                            ]
+                        ]);
+                    }
+                    // If only subject permission is available
+                    else {
+                        $query->where(['InstitutionSubjectStaff.staff_id' => $staffId]);
+                    }
+                }
+            }
         }
     }
 
