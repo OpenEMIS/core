@@ -5,6 +5,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
     var models = {
         AssessmentsTable: 'Assessment.Assessments',
         AssessmentItemsTable: 'Assessment.AssessmentItems',
+        AssessmentItemsGradingTypesTable: 'Assessment.AssessmentItemsGradingTypes',
         AssessmentPeriodsTable: 'Assessment.AssessmentPeriods',
         AssessmentItemResultsTable: 'Assessment.AssessmentItemResults',
         InstitutionSubjectStudentsTable: 'Institution.InstitutionSubjectStudents',
@@ -82,7 +83,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
                 var assessmentSubjects = AssessmentItemsTable
                     .select()
-                    .contain(['EducationSubjects', 'GradingTypes.GradingOptions'])
+                    .contain(['EducationSubjects'])
                     .where({assessment_id: assessmentId});
 
                 // For no subjects
@@ -162,6 +163,30 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             return deferred.promise;
         },
 
+        getGradingTypes: function(assessmentId, subjectId) 
+        {
+            var success = function(response, deferred) {
+                var gradingTypes = response.data.data;
+
+                if (angular.isObject(gradingTypes) && gradingTypes.length > 0) {
+                    var indexedGradingTypes = {};
+                    angular.forEach(gradingTypes, function(obj, key) {
+                        indexedGradingTypes[obj.assessment_period_id] = obj;
+                    });
+
+                    deferred.resolve(indexedGradingTypes);
+                } else {
+                    deferred.reject('You need to configure Assessment Items Grading Types first');
+                }   
+            };
+
+            return AssessmentItemsGradingTypesTable
+            .select()
+            .contain(['EducationSubjects', 'AssessmentGradingTypes.GradingOptions'])
+            .where({assessment_id: assessmentId, education_subject_id: subjectId})
+            .ajax({success: success, defer: true});
+        },
+
         getPeriods: function(assessmentId) 
         {
             var success = function(response, deferred) {
@@ -180,41 +205,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             .ajax({success: success, defer: true});
         },
 
-        getColumnDefs: function(action, subject, periods) {
-            var extra = {};
-            var resultType = subject.grading_type.result_type;
-            var isMarksType = (resultType == resultTypes.MARKS);
-            var isGradesType = (resultType == resultTypes.GRADES);
-
-            if (subject.grading_type.grading_options.length == 0) {
-                // return error if No Grading Options
-                return {error: 'You need to configure Grading Options first'};
-            }
-
-            if (isMarksType) {
-                extra = {
-                    minMark: 0,
-                    passMark: subject.grading_type.pass_mark,
-                    maxMark: subject.grading_type.max
-                };
-            } else if (isGradesType) {
-                var gradingOptions = {
-                    0 : {
-                        id: 0,
-                        code: '',
-                        name: '-- Select --'    
-                    }
-                };
-
-                angular.forEach(subject.grading_type.grading_options, function(obj, key) {
-                    gradingOptions[obj.id] = obj;
-                });
-
-                extra = {
-                    gradingOptions: gradingOptions
-                };
-            }
-
+        getColumnDefs: function(action, subject, periods, gradingTypes) {
             var filterParams = {
                 cellHeight: 30
             };
@@ -240,6 +231,23 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
             var ResultsSvc = this;
             angular.forEach(periods, function(period, key) {
+                var isMarksType = true; // default is MARKS type
+                var isGradesType = false;
+
+                // get grading type by subject and assessment period
+                if (angular.isDefined(gradingTypes[period.id])) {
+                    subject.grading_type = gradingTypes[period.id].assessment_grading_type;
+
+                    if (subject.grading_type.grading_options.length == 0) {
+                        // return error if No Grading Options
+                        return {error: 'You need to configure Grading Options first'};
+                    }
+
+                    var resultType = subject.grading_type.result_type;
+                    var isMarksType = (resultType == resultTypes.MARKS);
+                    var isGradesType = (resultType == resultTypes.GRADES);
+                }
+
                 var allowEdit = (action == 'edit' && period.editable);
                 var headerLabel = period.name + " <span class='divider'></span> " + period.weight;
                 var headerName = allowEdit ? headerLabel + " <i class='fa fa-pencil-square-o fa-lg header-icon'></i>" : headerLabel;
@@ -253,9 +261,36 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                     filterParams: filterParams
                 };
 
+                var extra = {};
                 if (isMarksType) {
+                    if (subject.grading_type != null) {
+                        extra = {
+                            minMark: 0,
+                            passMark: subject.grading_type.pass_mark,
+                            maxMark: subject.grading_type.max
+                        };
+                    }
+
                     columnDef = ResultsSvc.renderMarks(allowEdit, columnDef, extra);
                 } else if (isGradesType) {
+                    if (subject.grading_type != null) {
+                        var gradingOptions = {
+                            0 : {
+                                id: 0,
+                                code: '',
+                                name: '-- Select --'
+                            }
+                        };
+
+                        angular.forEach(subject.grading_type.grading_options, function(obj, key) {
+                            gradingOptions[obj.id] = obj;
+                        });
+
+                        extra = {
+                            gradingOptions: gradingOptions
+                        };
+                    }
+
                     extra['period'] = period;
                     columnDef = ResultsSvc.renderGrades(allowEdit, columnDef, extra);
                 }
@@ -269,7 +304,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                 });
             }, columnDefs);
 
-            if (isMarksType) {
+            // if (isMarksType) {   // to-do
                 columnDefs.push({
                     headerName: "Total Mark",
                     field: "total_mark",
@@ -291,7 +326,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                     field: "is_dirty",
                     hide: true
                 });
-            }
+            // }
 
             return {data: columnDefs};
         },
@@ -410,15 +445,12 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             return cols;
         },
 
-        getRowData: function(resultType, periods, institutionId, classId, assessmentId, academicPeriodId, educationSubjectId) {
+        getRowData: function(gradingTypes, periods, institutionId, classId, assessmentId, academicPeriodId, educationSubjectId) {
             var success = function(response, deferred) {
                 if (angular.isDefined(response.data.error)) {
                     deferred.reject(response.data.error);
                 } else {
                     var subjectStudents = response.data.data;
-
-                    var isMarksType = (resultType == resultTypes.MARKS);
-                    var isGradesType = (resultType == resultTypes.GRADES);
 
                     var periodObj = {};
                     angular.forEach(periods, function(period, key) {
@@ -430,9 +462,21 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         var currentStudentId = null;
                         var studentResults = {};
                         var rowData = [];
+                        var assessmentPeriodId = null;
+
+                        var isMarksType = true; // default to MARKS
+                        var isGradesType = false;
+                        var resultType = null;
 
                         angular.forEach(subjectStudents, function(subjectStudent, key) {
                             currentStudentId = parseInt(subjectStudent.student_id);
+                            assessmentPeriodId = subjectStudent.AssessmentItemResults.assessment_period_id;
+                            if (assessmentPeriodId != null && angular.isDefined(gradingTypes[assessmentPeriodId])) {
+                                resultType = gradingTypes[assessmentPeriodId].assessment_grading_type.result_type;
+                            }
+
+                            isMarksType = (resultType == resultTypes.MARKS);
+                            isGradesType = (resultType == resultTypes.GRADES);
 
                             if (studentId != currentStudentId) {
                                 if (studentId != null) {
@@ -463,11 +507,11 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                             if (isMarksType) {
                                 var marks = parseFloat(subjectStudent.AssessmentItemResults.marks);
                                 if (!isNaN(marks)) {
-                                    studentResults['period_' + parseInt(subjectStudent.AssessmentItemResults.assessment_period_id)] = marks;
+                                    studentResults['period_' + parseInt(assessmentPeriodId)] = marks;
                                 }
                             } else if (isGradesType) {
                                 if (subjectStudent.AssessmentItemResults.assessment_grading_option_id != null) {
-                                    studentResults['period_' + parseInt(subjectStudent.AssessmentItemResults.assessment_period_id)] = subjectStudent.AssessmentItemResults.assessment_grading_option_id;
+                                    studentResults['period_' + parseInt(assessmentPeriodId)] = subjectStudent.AssessmentItemResults.assessment_grading_option_id;
                                 }
                             }
                         }, rowData);
@@ -536,12 +580,14 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             }
         },
 
-        saveRowData: function(subject, results, assessmentId, educationSubjectId, institutionId, academicPeriodId) {
+        saveRowData: function(subject, gradingTypes, results, assessmentId, educationSubjectId, institutionId, academicPeriodId) {
             var promises = [];
-            var resultType = subject.grading_type.result_type;
 
             angular.forEach(results, function(result, studentId) {
                 angular.forEach(result, function(obj, assessmentPeriodId) {
+                    subject.grading_type = gradingTypes[assessmentPeriodId].assessment_grading_type;
+                    var resultType = subject.grading_type.result_type;
+
                     var marks = null;
                     var gradingOptionId = null;
 
