@@ -7,6 +7,13 @@ use Cake\ORM\TableRegistry;
 
 class EducationsControllerTest extends AppTestCase {
 
+	 public $fixtures = [
+	 	'app.config_items',
+        'app.workflow_models',
+        'app.education_systems',
+        'app.education_levels'
+    ];
+
 	public function testEducationSystemIndex() {
 
 		$this->setAuthSession();
