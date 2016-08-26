@@ -484,15 +484,10 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                                 studentResults = {
                                     openemis_id: subjectStudent._matchingData.Users.openemis_no,
                                     name: subjectStudent._matchingData.Users.name,
-                                    student_id: currentStudentId
+                                    student_id: currentStudentId,
+                                    total_mark: subjectStudent.total_mark,
+                                    is_dirty: false
                                 };
-
-                                if (isMarksType) {
-                                    studentResults = angular.merge(studentResults, {
-                                        total_mark: subjectStudent.total_mark,
-                                        is_dirty: false
-                                    });
-                                }
 
                                 var periodWeight = 0;
                                 angular.forEach(periods, function(period, key) {
