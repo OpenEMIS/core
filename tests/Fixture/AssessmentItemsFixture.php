@@ -20,7 +20,7 @@ class AssessmentItemsFixture extends TestFixture
             'id' => 2,
             'weight' => 0.2,
             'assessment_id' => 2,
-            'education_subject_id' => 2,
+            'education_subject_id' => 1,
             'modified_user_id' => NULL,
             'modified' => NULL,
             'created_user_id' => 1,

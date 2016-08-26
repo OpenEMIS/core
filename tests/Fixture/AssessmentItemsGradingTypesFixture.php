@@ -10,7 +10,7 @@ class AssessmentItemsGradingTypesFixture extends TestFixture
         [
             'id' => 123,
             'assessment_id' => 1,
-            'assessment_item_id' => 3,
+            'education_subject_id' => 3,
             'assessment_grading_type_id' => 2,
             'assessment_period_id' => 1,
             'modified_user_id' => NULL,
