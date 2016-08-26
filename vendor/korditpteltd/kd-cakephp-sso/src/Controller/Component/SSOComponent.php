@@ -65,8 +65,7 @@ class SSOComponent extends Component {
                 $this->controller->Cookie->configKey($cookieName, $cookieConfig);
                 $user = $this->controller->Auth->user();
                 $ssoInfo = [
-                    'client_id' => $extra['client_id'],
-                    'auth_type' => $this->authType
+                    'auth_type' => $extra['authType']
                 ];
                 $token = ProcessToken::generateToken($user, $now->toUnixString(), $ssoInfo);
                 $this->controller->Cookie->write($cookieName, $token);

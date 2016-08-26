@@ -7,6 +7,7 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Core\Configure;
 use Cake\Routing\Router;
+use Cake\Utility\Security;
 
 require_once( ROOT . DS . 'vendor' . DS . 'onelogin' . DS . 'php-saml' . DS . '_toolkit_loader.php');
 
@@ -16,6 +17,7 @@ class Saml2AuthComponent extends Component {
 
     private $saml;
     private $clientId;
+    private $authType;
 
     public function initialize(array $config) {
         $this->session = $this->request->session();
@@ -48,6 +50,8 @@ class Saml2AuthComponent extends Component {
                 'binding' => $samlAttributes['idp_slo_binding']
             ],
         ];
+
+        $this->authType = Security::hash(serialize($setting), 'sha256');
 
         $this->addCertFingerPrintInformation('idp', $setting, $samlAttributes);
 
@@ -104,8 +108,7 @@ class Saml2AuthComponent extends Component {
                     'domain' => $this->_config['cookie']['domain'],
                     'encryption' => $this->_config['cookie']['encryption']
                 ],
-                'authType' => 'Saml2',
-                'clientId' => $this->clientId
+                'authType' => $this->authType
             ]
         ]);
 
@@ -213,7 +216,7 @@ class Saml2AuthComponent extends Component {
                 if (isset($userData[$this->userNameField][0])) {
                     $userName = $userData[$this->userNameField][0];
                     $this->session->write('Saml2.userAttribute', $userData);
-                    $extra['client_id'] = $this->clientId;
+                    $extra['authType'] = $this->authType;
                     return $this->checkLogin($userName);
                 } else {
                     $this->session->write('Auth.fallback', true);

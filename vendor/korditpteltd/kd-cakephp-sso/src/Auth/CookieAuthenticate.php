@@ -93,9 +93,8 @@ class CookieAuthenticate extends BaseAuthenticate
                 return false;
             } else {
                 $authType = $processedToken->auth_type;
-                $clientId = $processedToken->client_id;
 
-                if ($authType != $this->_config['authType'] || $clientId != $this->_config['clientId']) {
+                if ($authType != $this->_config['authType']) {
                     return false;
                 }
             }
