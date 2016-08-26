@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "cc5515f70529f9a56c7d802184d78a80",
-    "content-hash": "81f933568a5622ac8feefb816095bcc3",
+    "hash": "f8ba53c4d9c4f7543793d494d64bbf85",
+    "content-hash": "3b656aad886dba1ad32cabe037969bab",
     "packages": [
         {
             "name": "admad/cakephp-jwt-auth",
@@ -440,11 +440,11 @@
         },
         {
             "name": "korditpteltd/kd-cakephp-sso",
-            "version": "dev-master",
+            "version": "1.0.0.x-dev",
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git",
-                "reference": "42d2ac1b6aa971fced34f3b78d331818d9453c66"
+                "reference": "3d6546fc235986d0a29565910ca57c55ba8b735b"
             },
             "require": {
                 "cakephp/cakephp": ">3.0.9",
@@ -477,7 +477,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
             },
-            "time": "2016-08-26 03:17:38"
+            "time": "2016-08-26 03:24:55"
         },
         {
             "name": "mk-j/php_xlsxwriter",
