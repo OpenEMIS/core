@@ -7,6 +7,13 @@ use Cake\ORM\TableRegistry;
 
 class AreasControllerTest extends AppTestCase {
 
+	public $fixtures = [
+		'app.config_items',
+        'app.workflow_models',
+        'app.area_levels',
+        'app.areas',
+    ];
+
 	public function testAreaIndex() {
 
 		$this->setAuthSession();
