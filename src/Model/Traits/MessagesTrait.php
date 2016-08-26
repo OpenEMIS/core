@@ -13,11 +13,17 @@ trait MessagesTrait {
             'date_on_file' => 'Date On File',
         ],
         'Assessments' => [
+            'subjects' => 'Subjects',
+            'templates' => 'Templates',
+            'noTemplates' => 'No Templates',
             'noGrades' => 'No Available Grades',
             'noGradingTypes' => 'You need to configure Grading Types first.',
             'addAssessmentItem' => 'Add Assessment Item',
             'assessmentItems' => 'Assessment Items',
             'assessmentPeriods' => 'Assessment Periods',
+            'assessmentGradingType' => 'Assessment Grading Type',
+            'educationSubject' => 'Education Subject',
+            'weight' => 'Weight'
         ],
         'CustomGroups' => [
             'custom_modules' => 'Module'
@@ -1177,10 +1183,17 @@ trait MessagesTrait {
             ]
         ],
         'Assessment' => [
+            'Assessments' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique for the same academic period',
+                    'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form'
+                ]
+            ],
             'AssessmentPeriods' => [
                 'code' => [
                     'ruleUniqueCode' => 'Code must be unique',
                     'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form',
+                    'ruleUniqueCodeByForeignKeyAcademicPeriod' => 'Code must be unique for the same academic period'
                 ],
                 'start_date' => [
                     'ruleInParentAcademicPeriod' => 'Date must be within selected academic period start and end date',
@@ -1190,11 +1203,13 @@ trait MessagesTrait {
                 ],
                 'weight' => [
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleWeightRange' => 'Value must be positive and less than 2.0'
                 ],
             ],
             'AssessmentItems' => [
                 'weight' => [
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleWeightRange' => 'Value must be positive and less than 2.0'
                 ],
             ],
             'AssessmentGradingTypes' => [
