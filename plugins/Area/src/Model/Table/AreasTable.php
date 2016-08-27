@@ -41,56 +41,29 @@ class AreasTable extends AppTable {
 	}
 
 	public function sync() {
+
+		//  Temporary hardcoded the source of the json.
+		// will be set on the sys_config later.
+		// $url = 'http://devinfo-cloud.com/reporting/scinfo_data_admin/api/area';
+		$url = 'https://demo.openemis.org/datamanager/api/area';
+
+		$securityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
 		$model = $this;
 		$request = $this->request;
 		$entity = $model->newEntity();
 		$extra=[];
 
-		// Temporary hardcoded the source of the json.
-		// will be set on the sys_config later.
-		// $url = 'http://devinfo-cloud.com/reporting/scinfo_data_admin/api/area';
-		$url = 'https://demo.openemis.org/datamanager/api/area';
-		$obj = json_decode(file_get_contents($url), true);
+		$missingAreaArray = [];
+		$updateAreaArray = [];
+		$addAreaArray = [];
+		$associatedRecords = [];
 
-		$objArray = $obj['areas'];
-		$query = $this->find()
-			->where([$this->aliasField('visible') => 1])
-			->toArray()
-			;
-
-		// Array from areas table (target)
-		$areasTableArray = [];
-		foreach ($query as $key => $value) {
-			$areasTableArray[$key] = [
-				'id' => $value->id,
-				'parent_id' => $value->parent_id,
-				'code' => $value->code,
-				'name' => $value->name,
-				'area_level_id' => $value->area_level_id
-			];
-		}
-		// pr($areasTableArray);die;
-
-		// Array from json (source)
-		$jsonArray = [];
-		$orderArray = [];
-		foreach ($objArray as $key => $value) {
-			// Null is the root parent id, as per cake update
-			if ($value['pnid'] === '-1') {
-				$value['pnid'] = null;
-			}
-			$level = $value['lvl'];
-			$orderArray[$level] = array_key_exists($level, $orderArray) ? ++$orderArray[$level] : 1;
-
-			$jsonArray[$key] = [
-				'id' => $value['nid'],
-				'parent_id' => $value['pnid'],
-				'code' => $value['id'],
-				'name' => $value['name'],
-				'area_level_id' => $level,
-				'order' => $orderArray[$level]
-			];
-		}
+		$areasTableArray = $this->onGetAreasTableArrays();
+		$areaCodeLists = $this->onGetAreaCodeLists();
+		$jsonArray = $this->onGetJsonArrays($url);
+		$newAreaLists = $this->onGetNewAreaLists($url);
+		$jsonCodeLists = $this->onGetJsonCodeLists($url);
+		// pr($jsonCodeLists);die;
 
 		foreach ($this->fields as $field => $attr) {
 			$this->fields[$field]['visible'] = false;
@@ -101,113 +74,155 @@ class AreasTable extends AppTable {
 			'attr' => ['value' => $url]
 		]);
 
-		// Target empty, Source will update the target.
-		if(empty($areasTableArray)){
-			if ($this->request->is(['get'])) {
-				$this->ControllerAction->field('local_server', [
-					'type' => 'element',
-					'element' => 'Area.Areas/local_server'
-				]);
+		foreach ($areasTableArray as $key => $obj) {
+			if ((!empty($areasTableArray)) && (!array_key_exists($obj['id'], $jsonArray))) {
+				$missingAreaArray[$key] = $obj;
+			}
+		}
 
-				$this->controller->set('areasTableArray', $areasTableArray);
+		foreach ($missingAreaArray as $key => $obj) {
+			if (array_key_exists($obj['code'], $jsonCodeLists)) {
+				$updateAreaArray[$key] = $obj;
+			}
+		}
+
+		foreach ($jsonArray as $key => $obj) {
+
+		}
+// pr($jsonArray);
+// pr($areasTableArray);
+// pr($missingAreaArray);
+// pr($addAreaArray);
+// pr($updateAreaArray);
+// die;
+
+		if ($this->request->is(['get'])) {
+// Pass data to ctp file to be displayed (sync_server.ctp)
+			$primaryKey = $this->ControllerAction->getPrimaryKey($model);
+        	$idKey = $model->aliasField($primaryKey);
+
+			$extra = new ArrayObject([]);
+			$extra['deleteStrategy'] = 'transfer';
+			$extra['excludedModels'] = [$this->Areas->alias()];
+
+			foreach ($missingAreaArray as $key => $obj) {
+				$id = $obj['id'];
+
+				if ($model->exists([$idKey => $id])) {
+					$entity = $model->find()->where([$idKey => $id])->first();
+					$records = $this->ControllerAction->getAssociatedRecords($model, $entity, $extra);
+					$associatedRecords[$key] = [
+						'id' => $id,
+						'code' => $obj['code'],
+						'name' => $obj['name'],
+						'institution' => $records['Institutions']['count'],
+						'security_group' => $records['SecurityGroups']['count'],
+					];
+				}
+			}
+
+			$this->ControllerAction->field('sync_server', [
+				'type' => 'element',
+				'element' => 'Area.Areas/sync_server'
+			]);
+			$this->controller->set('associatedRecords', $associatedRecords);
+			$this->controller->set('newAreaLists', $newAreaLists);
+// end pass data
+		} else if ($this->request->is(['post', 'put'])) {
+			$submit = isset($this->request->data['submit']) ? $this->request->data['submit'] : 'save';
+			if ($submit == 'save') {
+
+// updating the association records (institution and security group area)
+				$requestData = $this->request->data;
+				// pr($requestData);
+				// die;
+				if (array_key_exists($this->alias(), $requestData)) {
+					if (array_key_exists('transfer_areas', $requestData[$this->alias()])) {
+						foreach ($requestData[$this->alias()]['transfer_areas'] as $key => $obj) {
+							$areaId = $obj['area_id'];
+							$newAreaId = $obj['new_area_id'];
+							$query = $this->Institutions->updateAll(
+								['area_id' => $newAreaId],
+								['area_id' => $areaId]
+							);
+				// 			// pr($query);
+
+							$securityGroupAreas->updateAll(
+								['area_id' => $newAreaId],
+								['area_id' => $areaId]
+							);
+
+				// 			// UPDATE `Institutions` SET `area_id` = $obj['new_area_id'] WHERE `area_id` = $obj['area_id'];
+						}
+					}
+				}
+				// die;
+// End of updating the association records
 
 
-			} else if ($this->request->is(['post', 'put'])) {
-				$submit = isset($this->request->data['submit']) ? $this->request->data['submit'] : 'save';
-				if ($submit == 'save') {
+// Update areas table
+				// pr($areaCodeLists);die;
+				if (!empty($updateAreaArray)) {
 					$areaTable = TableRegistry::get('areas');
+					foreach ($updateArray as $key => $obj) {
+						// pr($key);
+						// pr($obj['new_area_id']);
 
-					foreach ($jsonArray as $key => $value) {
+						// $articlesTable = TableRegistry::get('Articles');
+
+						$article = $areaTable->get($obj['area_id']);
+						// pr($article);
+						// $article->id = $obj['new_area_id'];
+						// $article->name = 'testing';
+						// $areaTable->save($article);
+
+						$areaTable->updateAll(
+							['id' => $obj['new_area_id']],
+							['id' => $obj['area_id']]
+						);
+
+
+					}
+// die;
+				}
+
+				if (!empty($missingAreaArray)) {
+					foreach ($missingAreaArray as $key => $obj) {
+						$this->deleteAll([
+							$this->aliasField('code') => $obj['code']
+						]);
+					}
+				}
+
+
+// copy jsonArray to the AreasTable
+				if (!empty($jsonArray)) {
+					$areaTable = TableRegistry::get('areas');
+					foreach ($jsonArray as $key => $obj) {
 						$areasArray = $areaTable->newEntity([
-							'id' => $value['id'],
-							'parent_id' => $value['parent_id'],
-							'code' => $value['code'],
-							'name' => $value['name'],
-							'area_level_id' => $value['area_level_id'],
-							'order' => $value['order']
+							'id' => $obj['id'],
+							'parent_id' => $obj['parent_id'],
+							'code' => $obj['code'],
+							'name' => $obj['name'],
+							'area_level_id' => $obj['area_level_id'],
+							'order' => $obj['order']
 						]);
 						$areaTable->save($areasArray);
 					}
-					$this->rebuildLftRght();
-
-					$url = $this->ControllerAction->url('index');
-					unset($url['section']);
-
-					return $this->controller->redirect($url);
-				} else {
-					pr('reload');
-				}
-			}
-		}
-
-		// Target < source, source will append the target.
-		if(!empty($areasTableArray)){
-		// 	if ($this->request->is(['get'])) {
-		// 		// pr('get');
-		// 		// pr($this->request);
-
-			$this->ControllerAction->field('local_server', [
-				'type' => 'element',
-				'element' => 'Area.Areas/local_server'
-			]);
-
-			$this->ControllerAction->field('remote_server', [
-				'type' => 'element',
-				'element' => 'Area.Areas/remote_server'
-			]);
-
-			$this->controller->set('areasTableArray', $areasTableArray);
-			$this->controller->set('jsonArray', $jsonArray);
-
-		// 		if ($this->hasAssociatedRecords($model, $entity, $extra)) {
-		// 			pr('hasAssociatedRecords');
-		// 		}
-
-			foreach ($jsonArray as $key => $value) {
-				pr($value['code']);
-				$jsonCode = $value['code'];
-				foreach ($areasTableArray as $key => $value) {
-					pr($value['code']);
-					$tableCode = $value['code'];
-
 				}
 
+				$this->rebuildLftRght();
+
+// redirect to index page
+				$url = $this->ControllerAction->url('index');
+				unset($url['section']);
+
+				return $this->controller->redirect($url);
+// End of redirect to index page
+			} else {
+				pr('reload');
 			}
-
-
-		// 	} else if ($this->request->is(['post', 'put'])) {
-		// 		// pr($this->request);die;
-		// 		$submit = isset($this->request->data['submit']) ? $this->request->data['submit'] : 'save';
-		// 		if ($submit == 'save') {
-		// 			// pr('save');
-		// 			$areaTable = TableRegistry::get('areas');
-
-		// 			foreach ($jsonArray as $key => $value) {
-		// 				$article = $areaTable->newEntity([
-		// 					'id' => $value['id'],
-		// 					'parent_id' => $value['parent_id'],
-		// 					'code' => $value['code'],
-		// 					'name' => $value['name'],
-		// 					'area_level_id' => $value['area_level_id']
-		// 				]);
-		// 				$this->rebuildLftRght();
-
-		// 				$areaTable->save($article);
-		// 			}
-		// 			$this->rebuildLftRght();
-		// 		} else {
-		// 			pr('reload');
-		// 		}
-		// 	}
 		}
-
-		// target > source, some data already deleted, need to show the page of affected area and security group.
-
-
-
-
-		//
-
 
 		$this->controller->set('data', $entity);
 
@@ -282,6 +297,87 @@ class AreasTable extends AppTable {
 			$event->stopPropagation();
 			return $this->controller->redirect($this->ControllerAction->url('index'));
 		}
+	}
+
+	public function onGetAreasTableArrays()
+	{
+		$areasTableArray = [];
+
+		$query = $this->find()
+			->where([$this->aliasField('visible') => 1])
+			->toArray()
+			;
+
+		foreach ($query as $key => $obj) {
+			$areasTableArray[$obj->id] = [
+				'id' => $obj->id,
+				'parent_id' => $obj->parent_id,
+				'code' => $obj->code,
+				'name' => $obj->name,
+				'area_level_id' => $obj->area_level_id,
+				'order' => $obj->order
+			];
+		}
+
+		return $areasTableArray;
+	}
+
+	public function onGetAreaCodeLists()
+	{
+		$areasTableArray = $this->onGetAreasTableArrays();
+		$areaCodeLists = [];
+		foreach ($areasTableArray as $key => $obj) {
+			$areaCodeLists[$obj['code']] = $obj;
+		}
+		return $areaCodeLists;
+	}
+
+	public function onGetJsonArrays($url)
+	{
+		$obj = json_decode(file_get_contents($url), true);
+
+		$objArray = $obj['areas'];
+
+		$jsonArray = [];
+		$orderArray = [];
+		foreach ($objArray as $key => $obj) {
+			// Null is the root parent id, as per cake update
+			if ($obj['pnid'] === '-1') {
+				$obj['pnid'] = null;
+			}
+			$level = $obj['lvl'];
+			$orderArray[$level] = array_key_exists($level, $orderArray) ? ++$orderArray[$level] : 1;
+
+			$jsonArray[$obj['nid']] = [
+				'id' => $obj['nid'],
+				'parent_id' => $obj['pnid'],
+				'code' => $obj['id'],
+				'name' => $obj['name'],
+				'area_level_id' => $level,
+				'order' => $orderArray[$level]
+			];
+		}
+		return $jsonArray;
+	}
+
+	public function onGetJsonCodeLists($url)
+	{
+		$jsonArray = $this->onGetJsonArrays($url);
+		$jsonCodeLists = [];
+		foreach ($jsonArray as $key => $obj) {
+			$jsonCodeLists[$obj['code']] = $obj;
+		}
+		return $jsonCodeLists;
+	}
+
+	public function onGetNewAreaLists($url)
+	{
+		$jsonArray = $this->onGetJsonArrays($url);
+		$newAreaLists = [];
+		foreach ($jsonArray as $key => $obj) {
+			$newAreaLists[$obj['id']] = $obj['name'];
+		}
+		return $newAreaLists;
 	}
 
 	public function indexBeforeAction(Event $event) {
