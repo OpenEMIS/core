@@ -205,7 +205,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             .ajax({success: success, defer: true});
         },
 
-        getColumnDefs: function(action, subject, periods, gradingTypes) {
+        getColumnDefs: function(action, subject, periods, gradingTypes, results) {
             var filterParams = {
                 cellHeight: 30
             };
@@ -271,7 +271,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         };
                     }
 
-                    columnDef = ResultsSvc.renderMarks(allowEdit, columnDef, extra);
+                    columnDef = ResultsSvc.renderMarks(allowEdit, columnDef, extra, results);
                 } else if (isGradesType) {
                     if (subject.grading_type != null) {
                         var gradingOptions = {
@@ -292,7 +292,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                     }
 
                     extra['period'] = period;
-                    columnDef = ResultsSvc.renderGrades(allowEdit, columnDef, extra);
+                    columnDef = ResultsSvc.renderGrades(allowEdit, columnDef, extra, results);
                 }
 
                 this.push(columnDef);
@@ -329,7 +329,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             return {data: columnDefs};
         },
 
-        renderMarks: function(allowEdit, cols, extra) {
+        renderMarks: function(allowEdit, cols, extra, results) {
             var minMark = extra.minMark;
             var passMark = extra.passMark;
             var maxMark = extra.maxMark;
@@ -373,7 +373,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             return cols;
         },
 
-        renderGrades: function(allowEdit, cols, extra) {
+        renderGrades: function(allowEdit, cols, extra, results) {
             var gradingOptions = extra.gradingOptions;
             var period = extra.period;
 
@@ -385,11 +385,12 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                             params.value = 0;
                         }
 
+                        var oldValue = params.value;
+                        var studentId = params.data.student_id;
+                        var periodId = period.id;
+
                         var eCell = document.createElement('div');
                         eCell.setAttribute("class", "oe-cell-editable oe-select-wrapper");
-                        eCell.setAttribute("oe-student", params.data.student_id);
-                        eCell.setAttribute("oe-period", period.id);
-                        eCell.setAttribute("oe-oldValue", params.value);
 
                         var eSelect = document.createElement("select");
 
@@ -409,7 +410,18 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         eSelect.addEventListener('change', function () {
                             var newValue = eSelect.value;
                             params.data[params.colDef.field] = newValue;
-                            eCell.setAttribute("oe-newValue", eSelect.value);
+
+                            if (newValue != oldValue) {
+                                if (angular.isUndefined(results[studentId])) {
+                                    results[studentId] = {};
+                                }
+
+                                if (angular.isUndefined(results[studentId][periodId])) {
+                                    results[studentId][periodId] = {gradingOptionId: ''};
+                                }
+
+                                results[studentId][periodId]['gradingOptionId'] = newValue;
+                            }
                         });
 
                         eCell.appendChild(eSelect);

@@ -107,7 +107,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
     };
 
     $scope.resetColumnDefs = function(action, subject, periods, gradingTypes) {
-        var response = InstitutionsResultsSvc.getColumnDefs(action, subject, periods, gradingTypes);
+        var response = InstitutionsResultsSvc.getColumnDefs(action, subject, periods, gradingTypes, $scope.results);
 
         if (angular.isDefined(response.error)) {
             // No Grading Options
@@ -194,28 +194,6 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
     $scope.onSaveClick = function() {
         if ($scope.gridOptions != null) {
             var resultTypes = InstitutionsResultsSvc.getResultTypes();
-
-            // Logic to build $scope.results for Grades type
-            angular.forEach(angular.element('.oe-cell-editable'), function(obj, key) {
-                if (angular.isDefined(obj.attributes['oe-newValue'])) {
-                    var studentId = obj.attributes['oe-student'].value;
-                    var periodId = obj.attributes['oe-period'].value;
-                    var oldValue = obj.attributes['oe-oldValue'].value;
-                    var newValue = obj.attributes['oe-newValue'].value;
-
-                    if (newValue != oldValue) {
-                        if (angular.isUndefined($scope.results[studentId])) {
-                            $scope.results[studentId] = {};
-                        }
-
-                        if (angular.isUndefined($scope.results[studentId][periodId])) {
-                            $scope.results[studentId][periodId] = {gradingOptionId: ''};
-                        }
-
-                        $scope.results[studentId][periodId]['gradingOptionId'] = newValue;
-                    }
-                }
-            });
 
             var assessmentId = $scope.gridOptions.context.assessment_id;
             var educationSubjectId = $scope.gridOptions.context.education_subject_id;
