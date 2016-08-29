@@ -69,7 +69,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
 		if ($field == 'institution_id') {
-			return __('Institution Owner Name');
+			return __('Owner');
 		} else {
 			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
 		}
@@ -212,7 +212,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 		// if 1 character prepend '0'
 		$codeSuffix = (strlen($codeSuffix) == 1) ? '0'.$codeSuffix : $codeSuffix;
 		$autoGenerateCode = $codePrefix . $codeSuffix;
-		
+
 		return $autoGenerateCode;
 	}
 
