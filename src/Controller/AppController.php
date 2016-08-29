@@ -17,6 +17,8 @@ namespace App\Controller;
 use Cake\Controller\Controller;
 use Cake\Event\Event;
 use ControllerAction\Model\Traits\ControllerActionTrait;
+use Cake\Core\Configure;
+use Cake\ORM\TableRegistry;
 
 /**
  * Application Controller
@@ -54,7 +56,7 @@ class AppController extends Controller {
 		$this->loadComponent('ControllerAction.ControllerAction', [
 			'ignoreFields' => ['modified_user_id', 'created_user_id', 'order']
 		]);
-		
+
 		$this->loadComponent('Auth', [
 			'authenticate' => [
 				'Form' => [
@@ -113,16 +115,68 @@ class AppController extends Controller {
 		]);
 
 		$this->loadComponent('Workflow.Workflow');
-		$this->loadComponent('OpenEmis.SSO', [
+		$this->loadComponent('SSO.SSO', [
 			'homePageURL' => ['plugin' => null, 'controller' => 'Dashboard', 'action' => 'index'],
 			'loginPageURL' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'login'],
+			'userModel' => 'User.Users',
+			'cookie' => [
+				'domain' => Configure::read('domain')
+			]
 		]); // for single sign on authentication
 		$this->loadComponent('Security.SelectOptionsTampering');
 		$this->loadComponent('Security', [
 			'unlockedFields' => [
 				'area_picker'
+			],
+			'unlockedActions' => [
+				'postLogin'
 			]
 		]);
 		$this->loadComponent('Csrf');
+		if ($this->request->action == 'postLogin') {
+            $this->eventManager()->off($this->Csrf);
+        }
+	}
+
+	public function onUpdateProductList(Event $event, array $productList)
+	{
+		$displayProducts = [];
+		$session = $this->request->session();
+		if (!$session->check('ConfigProductLists.list')) {
+			$ConfigProductLists = TableRegistry::get('Configuration.ConfigProductLists');
+			$productListOptions = $ConfigProductLists-> find('list', [
+								    'keyField' => 'name',
+								    'valueField' => 'url'
+								])
+								-> toArray();
+
+	        $productListData = $productListOptions;
+	        $productListData[$this->_productName] = '';
+	        $productLists = array_diff_key($productList, $productListData);
+	        foreach ($productLists as $product => $value) {
+	            $data = [
+	                'name' => $product,
+	                'url' => ''
+	            ];
+	            $entity = $ConfigProductLists->newEntity($data);
+	            $ConfigProductLists->save($entity);
+	        }
+
+			foreach ($productList as $name => $item) {
+				if (!empty($productListOptions[$name])) {
+					$displayProducts[$name] = [
+						'name' => $item['name'],
+						'icon' => $item['icon'],
+						'url' => $productListOptions[$name]
+					];
+				}
+			}
+
+			$session->write('ConfigProductLists.list', $displayProducts);
+		} else {
+			$displayProducts = $session->read('ConfigProductLists.list');
+		}
+
+		return $displayProducts;
 	}
 }

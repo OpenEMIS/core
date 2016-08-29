@@ -23,7 +23,7 @@ class AppTable extends Table {
 	public function initialize(array $config) {
 		Time::$defaultLocale = 'en_US';
 		Date::$defaultLocale = 'en_US';
-		
+
 		$_config = [
 			'Modified' => true,
 			'Created' => true
@@ -206,7 +206,7 @@ class AppTable extends Table {
 	 * @return [type]             [description]
 	 */
 	public function formatDate($dateObject) {
-		$ConfigItem = TableRegistry::get('ConfigItems');
+		$ConfigItem = TableRegistry::get('Configuration.ConfigItems');
 		$format = $ConfigItem->value('date_format');
         $value = '';
         if (is_object($dateObject)) {
@@ -226,7 +226,7 @@ class AppTable extends Table {
 	 * @return [type]             [description]
 	 */
 	public function formatTime($timeObject) {
-		$ConfigItem = TableRegistry::get('ConfigItems');
+		$ConfigItem = TableRegistry::get('Configuration.ConfigItems');
 		$format = $ConfigItem->value('time_format');
 		$value = '';
         if (is_object($timeObject)) {
@@ -246,7 +246,7 @@ class AppTable extends Table {
 	 * @return [type]             [description]
 	 */
 	public function formatDateTime($dateObject) {
-		$ConfigItem = TableRegistry::get('ConfigItems');
+		$ConfigItem = TableRegistry::get('Configuration.ConfigItems');
 		$format = $ConfigItem->value('date_format') . ' - ' . $ConfigItem->value('time_format');
 		$value = '';
         if (is_object($dateObject)) {
@@ -302,7 +302,7 @@ class AppTable extends Table {
 		$roles = [];
 		$event = $controller->dispatchEvent('Controller.Buttons.onUpdateRoles', null, $this);
     	if ($event->result) {
-    		$roles = $event->result;	
+    		$roles = $event->result;
     	}
 		if ($action != 'index') {
 			$toolbarButtons['back'] = $buttons['back'];
@@ -328,7 +328,7 @@ class AppTable extends Table {
 			}
 			if ($buttons->offsetExists('search')) {
 				$toolbarButtons['search'] = [
-					'type' => 'element', 
+					'type' => 'element',
 					'element' => 'OpenEmis.search',
 					'data' => ['url' => $buttons['index']['url']],
 					'options' => []
@@ -499,4 +499,10 @@ class AppTable extends Table {
 		}
 		return $key;
 	}
+
+	public function startsWith($haystack, $needle)
+    {
+        // search backwards starting from haystack length characters from the end
+        return $needle === "" || strrpos($haystack, $needle, -strlen($haystack)) !== false;
+    }
 }

@@ -11,7 +11,8 @@
         "PHPOffice/PHPExcel": "dev-master",
         "mk-j/php_xlsxwriter": "dev-master",
         "korditpteltd/kd-cakephp-restful": "*",
-        "admad/cakephp-jwt-auth": "2.0.1"
+        "admad/cakephp-jwt-auth": "2.0.1",
+        "korditpteltd/kd-cakephp-sso": "~1.0"
     },
     "require-dev": {
         "psy/psysh": "@stable",
@@ -48,6 +49,10 @@
         {
             "type": "git",
             "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git"
+        },
+        {
+            "type": "git",
+            "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git"
         }
     ]
 }

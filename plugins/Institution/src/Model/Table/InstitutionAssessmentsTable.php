@@ -92,11 +92,11 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 			;
 
 		$extra['options']['order'] = [
-			$EducationProgrammes->aliasField('order'),
-			$EducationGrades->aliasField('order'),
-			$Assessments->aliasField('code'),
-			$Assessments->aliasField('name'),
-			$this->aliasField('name')
+			$EducationProgrammes->aliasField('order') => 'asc',
+			$EducationGrades->aliasField('order') => 'asc',
+			$Assessments->aliasField('code') => 'asc',
+			$Assessments->aliasField('name') => 'asc',
+			$this->aliasField('name') => 'asc'
 		];
         
         // For filtering all classes and my classes
