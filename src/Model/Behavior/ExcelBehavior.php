@@ -34,7 +34,8 @@ class ExcelBehavior extends Behavior {
 		'excludes' => [],
 		'limit' => 300,
 		'pages' => [],
-		'orientation' => 'landscape' // or portrait
+		'orientation' => 'landscape', // or portrait
+		'sheet_limit' =>  1000000 // 1 mil rows and header row
 	];
 
 	public function initialize(array $config) {
@@ -104,7 +105,7 @@ class ExcelBehavior extends Behavior {
 		if (is_callable($event->result)) {
 			$generate = $event->result;
 		}
-		
+
 		$generate($_settings);
 
 		$filepath = $_settings['path'] . $_settings['file'];
@@ -159,13 +160,14 @@ class ExcelBehavior extends Behavior {
 				} else {
 					$initialLength = strlen($sheetName);
 				}
-				if (strlen($sheetName) > 27) {
-					$sheetName = substr($sheetName,0,27).'('.$counter++.')';
-				} else {	
+				if (strlen($sheetName) > 23) {
+					$sheetName = substr($sheetName,0,23).'('.$counter++.')';
+				} else {
 					$sheetName = $sheetName.'('.$counter++.')';
 				}
 			}
 			$sheetNameArr[] = $sheetName;
+			$baseSheetName = $sheetName;
 
 			// if the primary key of the record is given, only generate that record
 			if (array_key_exists('id', $settings)) {
@@ -183,6 +185,8 @@ class ExcelBehavior extends Behavior {
 
 			$count = $query->count();
 			$rowCount = 0;
+			$sheetCount = 1;
+			$sheetRowCount = 0;
 			$percentCount = intval($count / 100);
 			$pages = ceil($count / $this->config('limit'));
 
@@ -199,18 +203,18 @@ class ExcelBehavior extends Behavior {
 			$this->dispatchEvent($table, $this->eventKey('onExcelStartSheet'), 'onExcelStartSheet', [$settings, $count], true);
 			$this->onEvent($table, $this->eventKey('onExcelBeforeWrite'), 'onExcelBeforeWrite');
 			if ($this->config('orientation') == 'landscape') {
-				$row = [];
+				$headerRow = [];
 				foreach ($fields as $attr) {
-					$row[] = $attr['label'];
+					$headerRow[] = $attr['label'];
 				}
 
 				// Any additional custom headers that require to be appended on the right side of the sheet
 				// Header column count must be more than the additional data columns
 				if(isset($sheet['additionalHeader'])) {
-					$row = array_merge($row, $sheet['additionalHeader']);
+					$headerRow = array_merge($headerRow, $sheet['additionalHeader']);
 				}
 
-				$writer->writeSheetRow($sheetName, $row);
+				$writer->writeSheetRow($sheetName, $headerRow);
 
 				$this->dispatchEvent($table, $this->eventKey('onExcelAfterHeader'), 'onExcelAfterHeader', [$settings], true);
 
@@ -229,7 +233,18 @@ class ExcelBehavior extends Behavior {
 
 					// process each row based on the result set
 					foreach ($resultSet as $entity) {
-						
+
+						if ($sheetRowCount >= $this->config('sheet_limit')) {
+
+							$sheetCount++;
+							$sheetName = $baseSheetName . '_' . $sheetCount;
+
+							// rewrite header into new sheet
+							$writer->writeSheetRow($sheetName, $headerRow);
+
+						 	$sheetRowCount= 0;
+						}
+
 						$settings['entity'] = $entity;
 
 						$row = [];
@@ -242,6 +257,7 @@ class ExcelBehavior extends Behavior {
 							$row = array_merge($row, array_shift($additionalRows));
 						}
 
+						$sheetRowCount++;
 						$rowCount++;
 						$event = $this->dispatchEvent($table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount]);
 						if (!$event->result) {
@@ -380,7 +396,7 @@ class ExcelBehavior extends Behavior {
 					}
 				}
 			}
-		}	
+		}
 		return __($value);
 	}
 
@@ -431,7 +447,7 @@ class ExcelBehavior extends Behavior {
 
 	private function download($path) {
 		$filename = basename($path);
-		
+
 		header("Pragma: public", true);
 		header("Expires: 0"); // set expiration time
 		header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
