@@ -12,7 +12,8 @@ use Cake\Event\Event;
 class AreasTable extends AppTable {
     private $_fieldOrder = ['visible', 'code', 'name', 'area_level_id'];
 
-    public function initialize(array $config) {
+    public function initialize(array $config)
+    {
         parent::initialize($config);
         $this->belongsTo('AreaParents', ['className' => 'Area.Areas', 'foreignKey' => 'parent_id']);
         $this->belongsTo('AreaLevels', ['className' => 'Area.AreaLevels', 'foreignKey' => 'area_level_id']);
@@ -34,14 +35,15 @@ class AreasTable extends AppTable {
         }
     }
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
         return $events;
     }
 
-    public function sync() {
-
+    public function sync()
+    {
         //  Temporary hardcoded the source of the json.
         // will be set on the sys_config later.
         // $url = 'http://devinfo-cloud.com/reporting/scinfo_data_admin/api/area';
@@ -192,7 +194,8 @@ class AreasTable extends AppTable {
         $this->ControllerAction->renderView('/ControllerAction/edit');
     }
 
-    public function beforeAction(Event $event) {
+    public function beforeAction(Event $event)
+    {
         $this->ControllerAction->field('area_level_id');
         $count = $this->find()->where([
                 'OR' => [
@@ -208,15 +211,18 @@ class AreasTable extends AppTable {
         $this->fields['rght']['visible'] = false;
     }
 
-    public function rebuildLftRght() {
+    public function rebuildLftRght()
+    {
         $this->recover();
     }
 
-    public function afterAction(Event $event) {
+    public function afterAction(Event $event)
+    {
         $this->ControllerAction->setFieldOrder($this->_fieldOrder);
     }
 
-    public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+    public function onBeforeDelete(Event $event, ArrayObject $options, $id)
+    {
         $transferTo = $this->request->data['transfer_to'];
         $transferFrom = $id;
         // Require to update the parent id of the children before removing the node from the tree
@@ -248,7 +254,8 @@ class AreasTable extends AppTable {
         $this->rebuildLftRght();
     }
 
-    public function onGetConvertOptions(Event $event, Entity $entity, Query $query) {
+    public function onGetConvertOptions(Event $event, Entity $entity, Query $query)
+    {
         $level = $entity->area_level_id;
         $query->where([
             $this->aliasField('area_level_id') => $level
@@ -266,12 +273,12 @@ class AreasTable extends AppTable {
     {
         $areasTableArray = [];
 
-        $query = $this->find()
+        $results = $this->find()
             ->where([$this->aliasField('visible') => 1])
             ->toArray()
             ;
 
-        foreach ($query as $key => $obj) {
+        foreach ($results as $key => $obj) {
             $areasTableArray[$obj->id] = [
                 'id' => $obj->id,
                 'parent_id' => $obj->parent_id,
@@ -333,7 +340,8 @@ class AreasTable extends AppTable {
         return $newAreaLists;
     }
 
-    public function indexBeforeAction(Event $event) {
+    public function indexBeforeAction(Event $event)
+    {
         // Add breadcrumb
         $toolbarElements = [
             ['name' => 'Area.breadcrumb', 'data' => [], 'options' => []]
@@ -479,16 +487,24 @@ class AreasTable extends AppTable {
         return $data;
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    {
         // will check the system config, if its set, edit & delete not available and add will be replaced by Sync button
         if ($action == 'index') {
             $toolbarButtons['edit'] = $buttons['edit'];
             $toolbarButtons['edit']['label'] = '<i class="fa fa-refresh"></i>';
             $toolbarButtons['edit']['type'] = 'button';
+            $toolbarButtons['edit']['attr'] = $attr;
             $toolbarButtons['edit']['attr']['title'] = __('Synchronize');
             $toolbarButtons['edit']['url'][0] = 'sync';
-            $toolbarButtons['edit']['attr'] = $attr;
         }
+    }
 
+    public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+        switch ($this->action) {
+            case 'sync':
+                $buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Confirm');
+                break;
+        }
     }
 }
