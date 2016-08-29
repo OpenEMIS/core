@@ -628,6 +628,8 @@ class StudentPromotionTable extends AppTable {
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		// Removal of some fields that are not in use in the table validation
 		$errors = $entity->errors();
+		$studentStatus = $data[$this->alias()]['student_status_id'];
+
 		if (isset($errors['student_id'])) {
 			unset($errors['student_id']);
 		}
@@ -637,8 +639,14 @@ class StudentPromotionTable extends AppTable {
 		if (isset($errors['institution_id'])) {
 			unset($errors['institution_id']);
 		}
-		if (isset($errors['education_grade_id'])) {
-			unset($errors['education_grade_id']);
+
+		$statuses = TableRegistry::get('Student.StudentStatuses');
+		$repeatStatus = $statuses->getIdByCode('REPEATED');
+
+		if ($studentStatus == $repeatStatus) {
+			if (isset($errors['education_grade_id'])) {
+				unset($errors['education_grade_id']);
+			}
 		}
 
 		if (!$errors) {

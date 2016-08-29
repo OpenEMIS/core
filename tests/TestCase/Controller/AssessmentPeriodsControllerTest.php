@@ -88,20 +88,20 @@ class AssessmentPeriodsControllerTest extends AppTestCase
                 'date_disabled' => '2017-01-01',
                 'weight' => 0.4,
                 'assessment_id' => 2,
-                'assessment_items' => [
+                'education_subjects' => [
                     0 => [
                         '_joinData' => [
                             'assessment_id' => 2,
-                            'assessment_item_id' => 2,
-                            'assessment_grading_type_id' => 3
+                            'education_subject_id' => 2,
+                            'assessment_grading_type_id' => 6
                         ],
                         'id' => 2 
                     ],
                     1 => [
                         '_joinData' => [
                             'assessment_id' => 2,
-                            'assessment_item_id' => 1,
-                            'assessment_grading_type_id' => 3
+                            'education_subject_id' => 1,
+                            'assessment_grading_type_id' => 7
                         ],
                         'id' => 1
                     ]
@@ -126,9 +126,9 @@ class AssessmentPeriodsControllerTest extends AppTestCase
                 ]
             )
             ->where([
-                $belongsToManyTable->aliasField('assessment_grading_type_id') => $data['AssessmentPeriods']['assessment_items'][0]['_joinData']['assessment_grading_type_id'],
-                $belongsToManyTable->aliasField('assessment_item_id') => $data['AssessmentPeriods']['assessment_items'][0]['_joinData']['assessment_item_id'],
-                $belongsToManyTable->aliasField('assessment_id') => $data['AssessmentPeriods']['assessment_items'][0]['_joinData']['assessment_id']
+                $belongsToManyTable->aliasField('assessment_grading_type_id') => $data['AssessmentPeriods']['education_subjects'][0]['_joinData']['assessment_grading_type_id'],
+                $belongsToManyTable->aliasField('education_subject_id') => $data['AssessmentPeriods']['education_subjects'][0]['_joinData']['education_subject_id'],
+                $belongsToManyTable->aliasField('assessment_id') => $data['AssessmentPeriods']['education_subjects'][0]['_joinData']['assessment_id']
             ]);
 
         $this->assertEquals(true, (!empty($lastInsertedRecord)));
@@ -167,12 +167,12 @@ class AssessmentPeriodsControllerTest extends AppTestCase
                 'date_disabled' => '2017-01-01',
                 'weight' => 0.11,
                 'assessment_id' => 1,
-                'assessment_items' => [
+                'education_subjects' => [
                     0 => [
                         '_joinData' => [
                             'id' => 123,
                             'assessment_id' => 1,
-                            'assessment_item_id' => 3,
+                            'education_subject_id' => 3,
                             'assessment_grading_type_id' => 6,
                             'assessment_period_id' => $this->id
                         ],
@@ -192,14 +192,14 @@ class AssessmentPeriodsControllerTest extends AppTestCase
         // test belongsToManyTable data
         $entity = $belongsToManyTable->find()
             ->where([
-                $belongsToManyTable->aliasField('assessment_period_id') => $data['AssessmentPeriods']['assessment_items'][0]['_joinData']['assessment_period_id'],
-                $belongsToManyTable->aliasField('assessment_item_id') => $data['AssessmentPeriods']['assessment_items'][0]['_joinData']['assessment_item_id'],
-                $belongsToManyTable->aliasField('assessment_id') => $data['AssessmentPeriods']['assessment_items'][0]['_joinData']['assessment_id'],
-                // $belongsToManyTable->aliasField('id') => $data['AssessmentPeriods']['assessment_items'][0]['_joinData']['id'], //exclude ID because it is UUID, will keep changing.
+                $belongsToManyTable->aliasField('assessment_period_id') => $data['AssessmentPeriods']['education_subjects'][0]['_joinData']['assessment_period_id'],
+                $belongsToManyTable->aliasField('education_subject_id') => $data['AssessmentPeriods']['education_subjects'][0]['_joinData']['education_subject_id'],
+                $belongsToManyTable->aliasField('assessment_id') => $data['AssessmentPeriods']['education_subjects'][0]['_joinData']['assessment_id'],
+                // $belongsToManyTable->aliasField('id') => $data['AssessmentPeriods']['education_subjects'][0]['_joinData']['id'], //exclude ID because it is UUID, will keep changing.
             ])
             ->toArray();
         
-        $this->assertEquals($data['AssessmentPeriods']['assessment_items'][0]['_joinData']['assessment_grading_type_id'], $entity[0]->assessment_grading_type_id);
+        $this->assertEquals($data['AssessmentPeriods']['education_subjects'][0]['_joinData']['assessment_grading_type_id'], $entity[0]->assessment_grading_type_id);
 
     }
 
