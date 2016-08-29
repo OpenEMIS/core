@@ -11,11 +11,13 @@ class InfrastructureShiftBehavior extends Behavior {
     private $isOwner = false;
     private $isOccupier = false;
 
-	public function initialize(array $config) {
+	public function initialize(array $config)
+    {
 		parent::initialize($config);
 	}
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 100];
         $events['Model.custom.onUpdateActionButtons'] = ['callable' => 'onUpdateActionButtons', 'priority' => 100];
@@ -36,7 +38,8 @@ class InfrastructureShiftBehavior extends Behavior {
         return $callable;
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    {
         // Occupier is not allow to edit/delete regardless permission
         if ($this->isOccupier) {
             if ($toolbarButtons->offsetExists('edit')) {
@@ -49,7 +52,8 @@ class InfrastructureShiftBehavior extends Behavior {
         }
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
         $model = $this->_table;
         $buttons = $model->onUpdateActionButtons($event, $entity, $buttons);
         // Occupier is not allow to edit/delete regardless permission
@@ -66,7 +70,8 @@ class InfrastructureShiftBehavior extends Behavior {
         return $buttons;
     }
 
-    public function beforeAction(Event $event) {
+    public function beforeAction(Event $event)
+    {
         $model = $this->_table;
 
         $session = $model->request->session();
@@ -80,78 +85,80 @@ class InfrastructureShiftBehavior extends Behavior {
         $isOccupierCount = $InstitutionShifts->isOccupier($institutionId, $academicPeriodId);
 
         if ($isOwnerCount) {
-            // pr('owner');
             $this->isOwner = true;
         }
 
         if ($isOccupierCount) {
-            // pr('occupier');
             $this->isOccupier = true;
         }
     }
 
-    public function indexAfterAction(Event $event, $data) {
+    public function indexAfterAction(Event $event, $data)
+    {
         $model = $this->_table;
         $session = $model->request->session();
 
-        if ($this->isOccupier && (!is_null($session->read('Institution.Institutions.deleteWarning')))) {
-            $model->Alert->warning('InstitutionInfrastructures.occupierDeleteNotAllowed');
-            $session->delete('Institution.Institutions.deleteWarning');
-        }
-
-        if ($this->isOccupier && (!is_null($session->read('Institution.Institutions.editWarning')))) {
-            $model->Alert->warning('InstitutionInfrastructures.occupierEditNotAllowed');
-            $session->delete('Institution.Institutions.editWarning');
-        }
-
-        if ($this->isOccupier && (!is_null($session->read('Institution.Institutions.addWarning')))) {
-            $model->Alert->warning('InstitutionInfrastructures.occupierAddNotAllowed');
-            $session->delete('Institution.Institutions.addWarning');
-        } else if ($this->isOwner == false && $this->isOccupier == false && (!is_null($session->read('Institution.Institutions.warning')))) {
-            $model->Alert->warning('InstitutionInfrastructures.ownerAddNotAllowed');
-            $session->delete('Institution.Institutions.addWarning');
+        $sessionKey = $model->registryAlias() . '.warning';
+        if ($session->check($sessionKey)) {
+            $messageKey = $session->read($sessionKey);
+            $model->Alert->warning($messageKey);
+            $session->delete($sessionKey);
         }
     }
 
-    public function addBeforeAction(Event $event) {
+    public function addBeforeAction(Event $event)
+    {
         $model = $this->_table;
         $session = $model->request->session();
+        $sessionKey = $model->registryAlias() . '.warning';
 
-        if ($this->isOccupier || ($this->isOwner == false && $this->isOccupier == false)) {
-            $session->write('Institution.Institutions.addWarning', 'warning');
-            $url = $model->ControllerAction->url('index');
-            $event->stopPropagation();
-            return $model->controller->redirect($url);
-        }
-    }
-
-    public function editBeforeAction(Event $event) {
-        $model = $this->_table;
-        $session = $model->request->session();
-
-        if ($this->isOccupier || ($this->isOwner == false && $this->isOccupier == false)) {
-            $session->write('Institution.Institutions.editWarning', 'warning');
-            $url = $model->ControllerAction->url('index');
-            $event->stopPropagation();
-            return $model->controller->redirect($url);
-        }
-    }
-
-    public function deleteBeforeAction(Event $event) {
-        $model = $this->_table;
-        $session = $model->request->session();
-
-        if ($this->isOccupier || ($this->isOwner == false && $this->isOccupier == false)) {
-            $session->write('Institution.Institutions.deleteWarning', 'warning');
-            $url = $model->ControllerAction->url('index');
-            $event->stopPropagation();
-            return $model->controller->redirect($url);
-        }
-    }
-
-    public function getOwnerInstitutionId() {
         if ($this->isOccupier) {
-           $model = $this->_table;
+            $session->write($sessionKey, 'InstitutionInfrastructures.occupierAddNotAllowed');
+            $url = $model->ControllerAction->url('index');
+            $event->stopPropagation();
+            return $model->controller->redirect($url);
+        } else if ($this->isOwner == false && $this->isOccupier == false) {
+            $session->write($sessionKey, 'InstitutionInfrastructures.ownerAddNotAllowed');
+            $url = $model->ControllerAction->url('index');
+            $event->stopPropagation();
+            return $model->controller->redirect($url);
+        }
+    }
+
+    public function editBeforeAction(Event $event)
+    {
+        $model = $this->_table;
+        $session = $model->request->session();
+        $sessionKey = $model->registryAlias() . '.warning';
+
+        if ($this->isOccupier || ($this->isOwner == false && $this->isOccupier == false)) {
+            $session->write($sessionKey, 'InstitutionInfrastructures.occupierEditNotAllowed');
+            $url = $model->ControllerAction->url('index');
+            $event->stopPropagation();
+            return $model->controller->redirect($url);
+        }
+    }
+
+    public function deleteBeforeAction(Event $event)
+    {
+        $model = $this->_table;
+        $session = $model->request->session();
+        $sessionKey = $model->registryAlias() . '.warning';
+
+        if ($this->isOccupier || ($this->isOwner == false && $this->isOccupier == false)) {
+            $session->write($sessionKey, 'InstitutionInfrastructures.occupierDeleteNotAllowed');
+            $url = $model->ControllerAction->url('index');
+            $event->stopPropagation();
+            return $model->controller->redirect($url);
+        }
+    }
+
+    public function getOwnerInstitutionId()
+    {
+        $ownerInstitutionIds = [];
+
+        if ($this->isOccupier) {
+            $model = $this->_table;
 
             $session = $model->request->session();
             $institutionId = $session->read('Institution.Institutions.id');
@@ -166,18 +173,12 @@ class InfrastructureShiftBehavior extends Behavior {
                 [$InstitutionShifts->aliasField('location_institution_id') => $institutionId]
             ];
 
-            $query = $InstitutionShifts
-                ->find()
+            $ownerInstitutionIds = $InstitutionShifts
+                ->find('list', ['keyField' => 'institution_id', 'valueField' => 'institution_id'])
                 ->where($conditions)
-                ->toArray()
-            ;
-
-            $ownerInstitutionId = [];
-            foreach ($query as $key => $value) {
-                $ownerInstitutionId[$key] = $value['institution_id'];
-            }
-
-            return($ownerInstitutionId);
+                ->toArray();
         }
+
+        return($ownerInstitutionIds);
     }
 }

@@ -220,20 +220,12 @@ class InstitutionRoomsTable extends AppTable {
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
 	{
 		// get the list of owner institution id
-        $ownerInstitutionId = $this->getOwnerInstitutionId();
+        $ownerInstitutionIds = $this->getOwnerInstitutionId();
 
-        if (!empty($ownerInstitutionId)) {
-            // Reset the query to original state beforePaginate
-            $query->where($conditions = null, $types = [], $overwrite = true);
-
-            $conditions = [];
-            foreach ($ownerInstitutionId as $key => $value) {
-                $conditions ['OR'][$key] = [
-                    $this->aliasField('institution_id') => $value
-                ];
-            }
-
-            $query->where($conditions);
+        if (!empty($ownerInstitutionIds)) {
+        	$conditions = [];
+            $conditions[$this->aliasField('institution_id IN ')] = $ownerInstitutionIds;
+            $query->where($conditions, [], true);
         }
 
 		$parentId = $this->request->query('parent');
