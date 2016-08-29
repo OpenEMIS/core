@@ -35,7 +35,7 @@ class ExcelBehavior extends Behavior {
 		'limit' => 300,
 		'pages' => [],
 		'orientation' => 'landscape', // or portrait
-		'sheet_limit' =>  1000001 // 1 mil rows and header row
+		'sheet_limit' =>  1000000 // 1 mil rows and header row
 	];
 
 	public function initialize(array $config) {
@@ -105,7 +105,7 @@ class ExcelBehavior extends Behavior {
 		if (is_callable($event->result)) {
 			$generate = $event->result;
 		}
-		
+
 		$generate($_settings);
 
 		$filepath = $_settings['path'] . $_settings['file'];
@@ -162,7 +162,7 @@ class ExcelBehavior extends Behavior {
 				}
 				if (strlen($sheetName) > 23) {
 					$sheetName = substr($sheetName,0,23).'('.$counter++.')';
-				} else {	
+				} else {
 					$sheetName = $sheetName.'('.$counter++.')';
 				}
 			}
@@ -241,10 +241,10 @@ class ExcelBehavior extends Behavior {
 
 							// rewrite header into new sheet
 							$writer->writeSheetRow($sheetName, $headerRow);
-							
+
 						 	$sheetRowCount= 0;
 						}
-						
+
 						$settings['entity'] = $entity;
 
 						$row = [];
@@ -392,7 +392,7 @@ class ExcelBehavior extends Behavior {
 					}
 				}
 			}
-		}	
+		}
 		return __($value);
 	}
 
@@ -443,7 +443,7 @@ class ExcelBehavior extends Behavior {
 
 	private function download($path) {
 		$filename = basename($path);
-		
+
 		header("Pragma: public", true);
 		header("Expires: 0"); // set expiration time
 		header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
