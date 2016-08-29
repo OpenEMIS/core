@@ -25,7 +25,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 		$this->belongsToMany('EducationSubjects', [
             'className' => 'Education.EducationSubjects',
             'joinTable' => 'assessment_items_grading_types',
-            'foreignKey' => 'assessment_period_id',
+            'foreignKey' => 'assessment_grading_type_id',
             'targetForeignKey' => 'education_subject_id',
             'through' => 'Assessment.AssessmentItemsGradingTypes',
             'dependent' => true,
@@ -233,7 +233,6 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
-            $this->AssessmentItems->alias(),
             $this->GradingOptions->alias()
         ];
     }
