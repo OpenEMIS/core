@@ -30,15 +30,6 @@ class WorkflowBehavior extends Behavior {
 		]
 	];
 
-	private $workflowEvents = [
- 		[
- 			'value' => 'Workflow.onDeleteRecord',
-			'text' => 'Delete of Current Record',
-			'description' => 'Performing this action will delete the current record from the system.',
- 			'method' => 'onDeleteRecord'
- 		]
- 	];
-
 	private $controller;
 	private $model = null;
 	private $currentAction;
@@ -87,10 +78,6 @@ class WorkflowBehavior extends Behavior {
 		$events['Model.custom.onUpdateToolbarButtons'] 			= ['callable' => 'onUpdateToolbarButtons', 'priority' => 1000];
 		$events['Model.custom.onUpdateActionButtons'] 			= ['callable' => 'onUpdateActionButtons', 'priority' => 1000];
 		$events['Workflow.afterTransition'] = 'workflowAfterTransition';
-		$events['Workflow.getEvents'] = 'getWorkflowEvents';
-		foreach($this->workflowEvents as $event) {
-			$events[$event['value']] = $event['method'];
-		}
 		return $events;
 	}
 
@@ -108,14 +95,6 @@ class WorkflowBehavior extends Behavior {
 		$session = new Session();
 		$session->write('Workflow.onDeleteRecord', true);
 		return $model->controller->redirect($model->url('index', 'QUERY'));
-	}
-
-	public function getWorkflowEvents(Event $event, ArrayObject $eventsObject) {
-		foreach ($this->workflowEvents as $key => $attr) {
-			$attr['text'] = __($attr['text']);
-			$attr['description'] = __($attr['description']);
-			$eventsObject[] = $attr;
-		}
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
@@ -165,7 +144,6 @@ class WorkflowBehavior extends Behavior {
 				'data-placement' => 'bottom',
 				'escape' => false
 			];
-
 			$this->setToolbarButtons($toolbarButtons, $toolbarAttr, $action);
 			$extra['toolbarButtons'] = $toolbarButtons;
 		}
@@ -528,7 +506,7 @@ class WorkflowBehavior extends Behavior {
 						->where([$this->WorkflowsFilters->aliasField('filter_id') => $filterId]);
 
 					$workflowFilterResults = $filterQuery->all();
-						
+
 					// Use Workflow with filter if found otherwise use Workflow that Apply To All
 					if ($workflowFilterResults->isEmpty()) {
 						$filterQuery
@@ -755,7 +733,7 @@ class WorkflowBehavior extends Behavior {
 			'id' => 'workflowTransition',
 			'title' => __('Add Comment'),
 			'content' => $content,
-			'contentFields' => $contentFields, 
+			'contentFields' => $contentFields,
 			'form' => [
 				'model' => $this->_table,
 				'formOptions' => [
@@ -793,6 +771,7 @@ class WorkflowBehavior extends Behavior {
 		// Unset edit buttons and add action buttons
 		if ($this->attachWorkflow) {
 			$isEditable = false;
+			$isRemovable = false;
 
 			if (is_null($this->workflowRecord)) {
 				// In index page, unset add buttons if Workflows is not configured
@@ -807,8 +786,13 @@ class WorkflowBehavior extends Behavior {
 				$actionButtons = [];
 				if (!empty($workflowStep)) {
 					// Enabled edit button only when login user in approval role for the step and that step is editable
-					if ($workflowStep->is_editable == 1) {
+					if ($workflowStep->is_editable) {
 						$isEditable = true;
+					}
+
+					// Enable delete button only when the user has permission to delete the workflow
+					if ($workflowStep->is_removable) {
+						$isRemovable = true;
 					}
 					// End
 
@@ -888,6 +872,10 @@ class WorkflowBehavior extends Behavior {
 
 				if (!$this->_table->AccessControl->isAdmin() && $toolbarButtons->offsetExists('edit') && !$isEditable) {
 					unset($toolbarButtons['edit']);
+				}
+
+				if (!$this->_table->AccessControl->isAdmin() && $toolbarButtons->offsetExists('remove') && !$isRemovable) {
+					unset($toolbarButtons['remove']);
 				}
 
 				// More Actions
@@ -970,7 +958,7 @@ class WorkflowBehavior extends Behavior {
 
 			// Insert into workflow_transitions.
 			$entity = $this->WorkflowTransitions->newEntity($requestData, ['validate' => false]);
-			
+
 			// $workflowRecord = $this->WorkflowRecords->get($entity->workflow_record_id);
 			// $id = $workflowRecord->model_reference;
 			$id = $requestData['WorkflowTransitions']['model_reference'];
@@ -1005,7 +993,7 @@ class WorkflowBehavior extends Behavior {
 			} else {
 				$url = $this->_table->ControllerAction->url('view');
 			}
-			
+
 			return $this->_table->controller->redirect($url);
 			// End
 		}
