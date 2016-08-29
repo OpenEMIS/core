@@ -149,7 +149,7 @@ class InstitutionRoomsTable extends AppTable {
 
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
 		if ($field == 'institution_id') {
-			return __('Institution Owner Name');
+			return __('Owner');
 		} else {
 			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
 		}
