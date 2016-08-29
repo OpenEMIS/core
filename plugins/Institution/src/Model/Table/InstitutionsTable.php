@@ -14,9 +14,18 @@ use Cake\I18n\I18n;
 use Cake\ORM\ResultSet;
 
 use App\Model\Table\AppTable;
+use App\Model\Traits\OptionsTrait;
 
 class InstitutionsTable extends AppTable  {
+	use OptionsTrait;
 	private $dashboardQuery = null;
+
+	public $shiftTypes = [];
+
+	CONST SINGLE_OWNER = 1;
+	CONST SINGLE_OCCUPIER = 2;
+	CONST MULTIPLE_OWNER = 3;
+	CONST MULTIPLE_OCCUPIER = 4;
 
 	public function initialize(array $config) {
 		$this->table('institutions');
@@ -44,7 +53,7 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('InstitutionAttachments', 			['className' => 'Institution.InstitutionAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->hasMany('InstitutionPositions', 				['className' => 'Institution.InstitutionPositions', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('InstitutionShifts', 				['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionShifts', 				['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);
 		$this->hasMany('InstitutionClasses', 				['className' => 'Institution.InstitutionClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
         // Note: InstitutionClasses already cascade deletes 'InstitutionSubjectStudents' - dependent and cascade not neccessary
         $this->hasMany('InstitutionSubjectStudents',        ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -109,6 +118,8 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('OpenEmis.Map');
         $this->addBehavior('HighChart', ['institutions' => ['_function' => 'getNumberOfInstitutionsByModel']]);
         $this->addBehavior('Import.ImportLink');
+        
+        $this->shiftTypes = $this->getSelectOptions('Shifts.types'); //get from options trait
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -161,11 +172,18 @@ class InstitutionsTable extends AppTable  {
 		return $validator;
 	}
 
+	public function implementedEvents()
+	{
+		$events = parent::implementedEvents();
+		$events['AdvanceSearch.getCustomFilter'] = 'getCustomFilter';
+		return $events;
+	}
+
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
 		$cloneFields = $fields->getArrayCopy();
 		$newFields = [];
 		foreach ($cloneFields as $key => $value) {
-			$newFields[] = $value;
+			
 			if ($value['field'] == 'area_id') {
 				$newFields[] = [
 					'key' => 'Areas.code',
@@ -173,6 +191,16 @@ class InstitutionsTable extends AppTable  {
 					'type' => 'string',
 					'label' => ''
 				];
+			} else  if ($value['field'] == 'shift_type') {
+				$newFields[] = [
+					'key' => 'Institutions.shift_type',
+					'field' => 'shift_type',
+					'type' => 'integer',
+					'label' => 'Shift Type',
+					'constant' => 'shiftTypes',
+				];
+			} else {
+				$newFields[] = $value;
 			}
 		}
 		$fields->exchangeArray($newFields);
@@ -199,6 +227,43 @@ class InstitutionsTable extends AppTable  {
 		return $name;
 	}
 
+	public function onGetShiftType(Event $event, Entity $entity)
+	{
+		$type = '-';
+		if (array_key_exists($entity->shift_type, $this->shiftTypes)) {
+			$type = $this->shiftTypes[$entity->shift_type];
+		}
+		return $type;
+	}
+
+	public function getViewShiftDetail($institutionId, $academicPeriod)
+	{
+		$data = $this->InstitutionShifts->find()
+				->innerJoinWith('Institutions')
+				->innerJoinWith('LocationInstitutions')
+				->innerJoinWith('ShiftOptions')
+				->select([
+					'Owner' => 'Institutions.name',
+					'OwnerId' => 'Institutions.id',
+					'Occupier' => 'LocationInstitutions.name',
+					'OccupierId' => 'LocationInstitutions.id',
+					'Shift' => 'ShiftOptions.name',
+					'ShiftId' => 'ShiftOptions.id',
+					'StartTime' => 'InstitutionShifts.start_time',
+					'EndTime' => 'InstitutionShifts.end_time'
+				])
+				->where([
+					'OR' => [
+						[$this->InstitutionShifts->aliasField('location_institution_id') => $institutionId],
+						[$this->InstitutionShifts->aliasField('institution_id') => $institutionId]
+					],
+					$this->InstitutionShifts->aliasField('academic_period_id') => $academicPeriod
+				])
+				->toArray();
+
+		return $data;
+	}
+
 	public function onUpdateDefaultActions(Event $event) {
 		return ['downloadFile'];
 	}
@@ -222,6 +287,17 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
 
 		$this->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information')]);
+
+		$this->ControllerAction->field('shift_section', ['type' => 'section', 'title' => __('Shifts'), 'visible' => ['view'=>true]]);
+		$this->ControllerAction->field('shift_type', ['visible' => ['view'=>true]]);
+
+		$this->ControllerAction->field('shift_details', [
+			'type' => 'element',
+			'element' => 'Institution.Shifts/details',
+			'visible' => ['view'=>true],
+			'data' => $this->getViewShiftDetail($this->Session->read('Institution.Institutions.id'), $this->InstitutionShifts->AcademicPeriods->getCurrent())
+		]);
+
 		$this->ControllerAction->field('location_section', ['type' => 'section', 'title' => __('Location')]);
 
 		$language = I18n::locale();
@@ -385,7 +461,7 @@ class InstitutionsTable extends AppTable  {
 		if($this->action == 'index'){
 			$areaName = $entity->Areas['name'];
 			// Getting the system value for the area
-			$ConfigItems = TableRegistry::get('ConfigItems');
+			$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 			$areaLevel = $ConfigItems->value('institution_area_level_id');
 
 			// Getting the current area id
@@ -419,7 +495,7 @@ class InstitutionsTable extends AppTable  {
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
 			if ($field == 'area_id' && $this->action == 'index') {
 				// Getting the system value for the area
-				$ConfigItems = TableRegistry::get('ConfigItems');
+				$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 				$areaLevel = $ConfigItems->value('institution_area_level_id');
 
 				$AreaTable = TableRegistry::get('Area.AreaLevels');
@@ -450,7 +526,7 @@ class InstitutionsTable extends AppTable  {
 		$query->join($options['query']['join']);
 
 		$queryParams = $request->query;
-		$options['order'] = [$this->aliasField('name')];
+		$options['order'] = [$this->aliasField('name') => 'asc'];
 	}
 
 	public function indexAfterPaginate(Event $event, ResultSet $resultSet, Query $query) {
@@ -482,6 +558,9 @@ class InstitutionsTable extends AppTable  {
 			'information_section',
 			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id',
 			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
+
+			'shift_section',
+			'shift_type', 'shift_details',
 
 			'location_section',
 			'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
@@ -686,4 +765,13 @@ class InstitutionsTable extends AppTable  {
             $this->CustomFieldValues->alias(), $this->CustomTableCells->alias()
     	];
     }
+
+	public function getCustomFilter(Event $event)
+	{
+		$filters['shift_type'] = [
+			'label' => __('Shift Type'),
+			'options' => $this->shiftTypes
+		];
+		return $filters;
+	}
 }

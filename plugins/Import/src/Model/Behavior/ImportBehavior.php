@@ -307,7 +307,7 @@ class ImportBehavior extends Behavior {
                 return false;
             }
 
-            $systemDateFormat = TableRegistry::get('ConfigItems')->value('date_format');
+            $systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
 
             $controller = $model->controller;
             $controller->loadComponent('PhpExcel');
@@ -896,6 +896,11 @@ class ImportBehavior extends Behavior {
                     $label = $this->getExcelLabel($value->model, $column);
                 }
 
+                //to remove "lookup_model" from included into header (POCOR-3256)
+                if (($value->lookup_model == 'Users') && ($value->lookup_column == 'openemis_no')) {
+                    $label = '';
+                }
+
                 if (!empty($value->description)) {
                     $label .= ' ' . __($value->description);
                 }
@@ -903,7 +908,6 @@ class ImportBehavior extends Behavior {
 
             $header[] = __($label);
         }
-
         return $header;
     }
     
