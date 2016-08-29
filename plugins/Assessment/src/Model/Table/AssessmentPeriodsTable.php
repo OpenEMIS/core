@@ -66,6 +66,8 @@ class AssessmentPeriodsTable extends ControllerActionTable {
                             $oldCode = $this->get($context['data']['id'])->code;
                             $newCode = $context['data']['code'];
                             return $oldCode != $newCode; //only trigger validation if there is any changes on the code value.
+                        } else if ($this->action == 'add') { //during add, then validation always needed.
+                            return true;
                         }
                     }
                 ]
