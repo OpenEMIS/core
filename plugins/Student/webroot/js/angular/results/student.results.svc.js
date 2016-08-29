@@ -284,7 +284,10 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         for (var key in data) {
             if (/period_/.test(key)) {
                 var index = key.replace(/period_(\d+)/, '$1');
-                totalMark += data[key] * (data['weight_'+index]);
+                // add checking to skip adding to Total Mark if is Grades type
+                if (!isNaN(parseFloat(data[key])) && !isNaN(parseFloat(data['weight_'+index]))) {
+                    totalMark += data[key] * (data['weight_'+index]);
+                }
             }
         }
 
