@@ -21,7 +21,6 @@ class StudentCustomFormsTable extends CustomFormsTable {
 			]
 		];
 		parent::initialize($config);
-		$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
 	}
 
 	public function implementedEvents() {
