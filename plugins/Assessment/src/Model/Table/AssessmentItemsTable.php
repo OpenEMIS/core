@@ -10,6 +10,7 @@ use App\Model\Table\AppTable;
 
 class AssessmentItemsTable extends AppTable {
 
+<<<<<<< HEAD
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -26,6 +27,15 @@ class AssessmentItemsTable extends AppTable {
             'cascadeCallbacks' => true
             // 'saveStrategy' => 'append'
         ]);
+=======
+	public function initialize(array $config)
+	{
+		parent::initialize($config);
+		$this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
+		$this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+
+	}
+>>>>>>> origin/POCOR-3080
 
         $this->belongsToMany('AssessmentPeriods', [
             'className' => 'Assessment.AssessmentPeriods',
@@ -134,5 +144,10 @@ class AssessmentItemsTable extends AppTable {
 			->hydrate(false)
 			->toArray();
 		return $subjectList;
+	}
+
+	public function afterDelete()
+	{
+		// delete all AssessmentItemsGradingTypes by education_subject_id and assessment_id
 	}
 }

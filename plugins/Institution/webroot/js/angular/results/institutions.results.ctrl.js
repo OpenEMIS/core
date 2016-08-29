@@ -196,28 +196,26 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
             var resultTypes = InstitutionsResultsSvc.getResultTypes();
 
             // Logic to build $scope.results for Grades type
-            // if ($scope.resultType == resultTypes.GRADES) {   // to-do
-                angular.forEach(angular.element('.oe-cell-editable'), function(obj, key) {
-                    if (angular.isDefined(obj.attributes['oe-newValue'])) {
-                        var studentId = obj.attributes['oe-student'].value;
-                        var periodId = obj.attributes['oe-period'].value;
-                        var oldValue = obj.attributes['oe-oldValue'].value;
-                        var newValue = obj.attributes['oe-newValue'].value;
+            angular.forEach(angular.element('.oe-cell-editable'), function(obj, key) {
+                if (angular.isDefined(obj.attributes['oe-newValue'])) {
+                    var studentId = obj.attributes['oe-student'].value;
+                    var periodId = obj.attributes['oe-period'].value;
+                    var oldValue = obj.attributes['oe-oldValue'].value;
+                    var newValue = obj.attributes['oe-newValue'].value;
 
-                        if (newValue != oldValue) {
-                            if (angular.isUndefined($scope.results[studentId])) {
-                                $scope.results[studentId] = {};
-                            }
-
-                            if (angular.isUndefined($scope.results[studentId][periodId])) {
-                                $scope.results[studentId][periodId] = {gradingOptionId: ''};
-                            }
-
-                            $scope.results[studentId][periodId]['gradingOptionId'] = newValue;
+                    if (newValue != oldValue) {
+                        if (angular.isUndefined($scope.results[studentId])) {
+                            $scope.results[studentId] = {};
                         }
+
+                        if (angular.isUndefined($scope.results[studentId][periodId])) {
+                            $scope.results[studentId][periodId] = {gradingOptionId: ''};
+                        }
+
+                        $scope.results[studentId][periodId]['gradingOptionId'] = newValue;
                     }
-                });
-            // }
+                }
+            });
 
             var assessmentId = $scope.gridOptions.context.assessment_id;
             var educationSubjectId = $scope.gridOptions.context.education_subject_id;
@@ -233,15 +231,13 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
             })
             .finally(function() {
                 // Only Marks type will run this logic to update total_mark
-                // if ($scope.resultType == resultTypes.MARKS) {    // to-do
-                    $scope.gridOptions.api.forEachNode(function(row) {
-                        if (row.data.is_dirty) {
-                            InstitutionsResultsSvc.saveTotal(row.data, row.data.student_id, classId, institutionId, academicPeriodId, educationSubjectId);
-                            // reset dirty flag
-                            row.data.is_dirty = false;
-                        }
-                    });
-                // }
+                $scope.gridOptions.api.forEachNode(function(row) {
+                    if (row.data.is_dirty) {
+                        InstitutionsResultsSvc.saveTotal(row.data, row.data.student_id, classId, institutionId, academicPeriodId, educationSubjectId);
+                        // reset dirty flag
+                        row.data.is_dirty = false;
+                    }
+                });
 
                 $scope.action = 'view';
                 // reset results object
