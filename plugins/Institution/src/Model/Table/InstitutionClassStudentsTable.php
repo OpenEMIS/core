@@ -346,7 +346,7 @@ class InstitutionClassStudentsTable extends AppTable {
                         $printedResult = ' '.$result['marks'];
                         break;
                     case 'GRADES':
-                        $printedResult = $result['grade_code'] . ' ' . $result['grade_name'];
+                        $printedResult = $result['grade_code'] . ' - ' . $result['grade_name'];
                         break;
                 }
             }
