@@ -496,6 +496,7 @@ class ControllerActionComponent extends Component {
 
         $named = $this->request->query;
         $pass = $this->request->params['pass'];
+        $extra = new ArrayObject([]);
         if ($this->triggerFrom == 'Model') {
             unset($pass[0]);
         }
@@ -518,13 +519,14 @@ class ControllerActionComponent extends Component {
                     $primaryKey = $this->getPrimaryKey($model);
                     $idKey = $model->aliasField($primaryKey);
                     $sessionKey = $model->registryAlias() . '.' . $primaryKey;
+                    $extra['primaryKeyValue'] = $this->Session->read($sessionKey);
                     if (empty($pass)) {
                         if ($this->Session->check($sessionKey)) {
-                            $pass = [$this->Session->read($sessionKey)];
+                            $pass = [$extra['primaryKeyValue']];
                         }
                     } elseif (isset($pass[0]) && $pass[0]==$action) {
                         if ($this->Session->check($sessionKey)) {
-                            $pass[1] = $this->Session->read($sessionKey);
+                            $pass[1] = $extra['primaryKeyValue'];
                         }
                     }
                 }
@@ -567,7 +569,7 @@ class ControllerActionComponent extends Component {
             }
         }
 
-        $params = [$buttons, $this->currentAction, $this->triggerFrom == 'Model'];
+        $params = [$buttons, $this->currentAction, $this->triggerFrom == 'Model', $extra];
         $this->debug(__METHOD__, ': Event -> ControllerAction.Model.onInitializeButtons');
         $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onInitializeButtons', null, $params);
         if ($event->isStopped()) { return $event->result; }
