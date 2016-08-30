@@ -1199,7 +1199,14 @@ trait MessagesTrait {
         ],
         'StaffSubjects' => [
             'notActiveTeachingStaff' => 'Not active teaching staff'
-        ]
+        ],
+        'Workflow' => [
+        	'WorkflowActions' => [
+        		'event_key' => [
+        			'ruleUnique' => 'This event has already been assigned.'
+        		]
+        	]
+        ],
 	];
 
 	public function getMessage($code, $options = []) {

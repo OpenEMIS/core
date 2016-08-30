@@ -1452,4 +1452,34 @@ class ValidationBehavior extends Behavior {
 
 		return ($count == 0);
 	}
+
+	public static function uniqueWorkflowActionEvent($field, array $globalData) {
+
+		$data = $globalData['data'];
+		$eventKey = $data['event_key'];
+		$workflowStepId = $data['workflow_step_id'];
+		if (!empty($eventKey)) {
+			$WorkflowActionTable = TableRegistry::get('Workflow.WorkflowActions');
+			$workflowId = $WorkflowActionTable
+				->find()
+				->innerJoinWith('WorkflowSteps')
+				->select(['workflowId' => 'WorkflowSteps.workflow_id'])
+				->where([
+					$WorkflowActionTable->aliasField('workflow_step_id') => $workflowStepId
+				])
+				->distinct('workflowId');
+
+			$eventKeyExist = $WorkflowActionTable
+				->find()
+				->innerJoinWith('WorkflowSteps')
+				->where([
+					'WorkflowSteps.workflow_id' => $workflowId,
+					$WorkflowActionTable->aliasField('event_key') => $eventKey
+				])
+				->count();
+			return $eventKeyExist == 0;
+		} else {
+			return true;
+		}
+	}
 }
