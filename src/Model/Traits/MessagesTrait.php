@@ -682,6 +682,16 @@ trait MessagesTrait {
 				'code' => [
 					'ruleUnique' => 'Please enter a unique code'
 				]
+			],
+			'DropoutRequests' => [
+				'effective_date' => [
+					'ruleDateAfterEnrollment' => 'Effective Date cannot be earlier than the Enrollment Date'
+				]
+			],
+			'StudentDropout' => [
+				'effective_date' => [
+					'ruleDateAfterEnrollment' => 'Effective Date cannot be earlier than the Enrollment Date'
+				]
 			]
 		],
 		'User' => [

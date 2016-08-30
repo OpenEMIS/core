@@ -115,6 +115,15 @@ class DropoutRequestsTable extends AppTable {
 		]);
 	}
 
+	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+		$validator->add('effective_date', 'ruleDateAfterEnrollment', [
+		            'rule' => ['dateAfterEnrollment'],
+		            'provider' => 'table'
+	    			]);
+		return $validator;
+	}
+
 	public function addOnInitialize(Event $event, Entity $entity) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$id = $this->Session->read($this->registryAlias().'.id');
