@@ -24,7 +24,8 @@ class InstitutionsController extends AppController  {
 			'History' 			=> ['className' => 'Institution.InstitutionActivities', 'actions' => ['search', 'index']],
 
 			'Programmes' 		=> ['className' => 'Institution.InstitutionGrades', 'actions' => ['!search'], 'options' => ['deleteStrategy' => 'restrict']],
-			'Infrastructures' 	=> ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'transfer']],
+			'Infrastructures' 	=> ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'restrict']],
+			'Rooms' 			=> ['className' => 'Institution.InstitutionRooms', 'options' => ['deleteStrategy' => 'restrict']],
 
 			'Staff' 			=> ['className' => 'Institution.Staff'],
 			'StaffUser' 		=> ['className' => 'Institution.StaffUser', 'actions' => ['add', 'view', 'edit']],
@@ -213,7 +214,8 @@ class InstitutionsController extends AppController  {
 			$institutionId = $session->read('Institution.Institutions.id');
 			$action = false;
 			$params = $this->request->params;
-			if (isset($params['pass'][0])) {
+			// do not hyperlink breadcrumb for Infrastructures and Rooms
+			if (isset($params['pass'][0]) && !in_array($model->alias, ['Infrastructures', 'Rooms'])) {
 				$action = $params['pass'][0];
 			}
 			$isDownload = $action == 'downloadFile' ? true : false;
@@ -255,13 +257,14 @@ class InstitutionsController extends AppController  {
 
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
+					$exists = false;
 
 					if (in_array($model->alias(), ['TransferRequests', 'StaffTransferApprovals'])) {
 						$exists = $model->exists([
 							$model->aliasField($model->primaryKey()) => $modelId,
 							$model->aliasField('previous_institution_id') => $institutionId
 						]);
-					} else if (in_array($model->alias(), ['InstitutionShifts'])) { //this is to show information for the occupier 
+					} else if (in_array($model->alias(), ['InstitutionShifts'])) { //this is to show information for the occupier
 						$exists = $model->exists([
 							$model->aliasField($model->primaryKey()) => $modelId,
 							'OR' => [ //logic to check institution_id or location_institution_id equal to $institutionId
@@ -271,10 +274,15 @@ class InstitutionsController extends AppController  {
 						]);
 					} else {
 						$primaryKey = $this->ControllerAction->getPrimaryKey($model);
-						$exists = $model->exists([
-							$model->aliasField($primaryKey) => $modelId,
-							$model->aliasField('institution_id') => $institutionId
-						]);
+						$checkExists = function($model, $params) {
+							return $model->exists($params);
+						};
+
+						$event = $model->dispatchEvent('Model.isRecordExists', [], $this);
+						if (is_callable($event->result)) {
+							$checkExists = $event->result;
+						}
+						$exists = $checkExists($model, [$primaryKey => $modelId, 'institution_id' => $institutionId]);
 					}
 
 					/**

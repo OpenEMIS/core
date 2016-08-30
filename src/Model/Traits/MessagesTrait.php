@@ -18,11 +18,19 @@ trait MessagesTrait {
             'date_on_file' => 'Date On File',
         ],
         'Assessments' => [
+            'subjects' => 'Subjects',
+            'noSubjects' => 'There is no subject selected',
+            'templates' => 'Templates',
+            'noTemplates' => 'No Templates',
             'noGrades' => 'No Available Grades',
             'noGradingTypes' => 'You need to configure Grading Types first.',
             'addAssessmentItem' => 'Add Assessment Item',
             'assessmentItems' => 'Assessment Items',
             'assessmentPeriods' => 'Assessment Periods',
+            'assessmentGradingType' => 'Assessment Grading Type',
+            'educationSubject' => 'Education Subject',
+            'subjectWeight' => 'Subject Weight',
+            'periodWeight' => 'Period Weight'
         ],
         'CustomGroups' => [
             'custom_modules' => 'Module'
@@ -95,6 +103,7 @@ trait MessagesTrait {
             'total' => 'Total',
             'notTransferrable' => 'No other alternative options available to convert records.',
             'validationRules' => 'Validation Rules',
+            'currentNotDeletable' => 'This record cannot be deleted because it is set as Current'
         ],
         'fileUpload' => [
             'single' => '*File size should not be larger than 2MB.',
@@ -107,9 +116,29 @@ trait MessagesTrait {
             '7' => 'Failed to write file to disk. Please contact your network administrator for assistance.',
             '8' => 'A PHP extension stopped the file upload. Please contact your network administrator for assistance.'
         ],
+        'InstitutionInfrastructures' => [
+            'ownerAddNotAllowed' => 'You are not allowed to add infrastructure as there are no shifts configured in the current academic period',
+            'occupierAddNotAllowed' => 'You are not allowed to add infrastructure as an occupier',
+            'occupierEditNotAllowed' => 'You are not allowed to edit infrastructure as an occupier',
+            'occupierDeleteNotAllowed' => 'You are not allowed to delete infrastructure as an occupier'
+        ],
         'InfrastructureTypes' => [
             'noLevels' => 'No Available Levels',
             'infrastructure_level_id' => 'Level Name'
+        ],
+        'InstitutionRooms' => [
+            'noRooms' => 'No Room found',
+            'in_use' => [
+                'restrictEdit' => 'Edit operation is not allowed as there are other information linked to this record.',
+                'restrictDelete' => 'Delete operation is not allowed as there are other information linked to this record.'
+            ],
+            'end_of_usage' => [
+                'restrictEdit' => 'Edit operation is not allowed as the record already End of Usage.',
+                'restrictDelete' => 'Delete operation is not allowed as the record already End of Usage.'
+            ],
+            'change_in_room_type' => [
+                'restrictEdit' => 'Not allowed to change room type in the same day.'
+            ]
         ],
         'InfrastructureCustomFields' => [
             'infrastructure_level_id' => 'Level Name'
@@ -148,6 +177,13 @@ trait MessagesTrait {
             'external_shifts' => 'External Shifts',
             'location' => 'Location',
             'institution' => 'Institution',
+            'occupier' => 'Occupier',
+            'institution' => 'Institution',
+            'allShiftsUsed' => 'All shifts has been used for the selected academic period.',
+            'replicateShifts' => 'Should the system replicate the existing shifts for the latest academic period?.',
+            'replicateShiftsSuccess' => 'Shifts has been successfully replicated.',
+            'replicateShiftsNotChosen' => 'Replication was not chosen, please setup the shifts manually.',
+            'noAccessToShift' => 'You do not have access to the shift'
         ],
         'InstitutionClasses' => [
             'expiredGrade' => 'Expired Grade',
@@ -558,9 +594,10 @@ trait MessagesTrait {
                     'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ],
                 'end_date' => [
-                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ],
-
+                'timeRangeHint' => 'Time should be between %s and %s'
             ],
             'StaffAbsences' => [
                 'end_time' => [
@@ -587,6 +624,7 @@ trait MessagesTrait {
                 'institutionPositionId' => 'You need to configure Institution Site Positions first.',
                 'securityRoleId' => 'You need to configure Security Roles first.',
                 'FTE' => 'There are no available FTE for this position.',
+                'noAvailableFTE' => 'No availabe FTE',
                 'noFTE' => 'New staff is not added to the institutition as there are no available FTE for the selected position.',
                 'noInstitutionPosition' => 'There are no position available.',
                 'staffTypeId' => 'You need to configure Staff Types first.',
@@ -602,7 +640,7 @@ trait MessagesTrait {
                 'institution_name' => [
                     'ruleCheckLocationInstitutionId' => 'Please select an institution location.'
                 ],
-                'location' => [
+                'start_time' => [
                     'ruleCheckShiftAvailable' => 'Shift timing is not available.'
                 ]
             ],
@@ -679,7 +717,22 @@ trait MessagesTrait {
                 'code' => [
                     'ruleUnique' => 'Please enter a unique code'
                 ]
-            ]
+            ],
+            'InstitutionRooms' => [
+                'code' => [
+                    'ruleUnique' => 'Please enter a unique code'
+                ],
+                'start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'end_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.',
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+                ],
+                'new_start_date' => [
+                    'ruleCompareDateReverse' => 'New Start Date should not be earlier than or same as Start Date'
+                ]
+            ],
         ],
         'User' => [
             'Users' => [
@@ -1144,10 +1197,21 @@ trait MessagesTrait {
             ]
         ],
         'Assessment' => [
+            'Assessments' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique for the same academic period',
+                    'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form',
+                    'ruleAssessmentExistByGradeAcademicPeriod' => 'Assessment already created for the selected grade.'
+                ],
+                'education_grade_id' => [
+                    'ruleAssessmentExistByGradeAcademicPeriod' => 'Assessment already created for the selected grade.'
+                ]
+            ],
             'AssessmentPeriods' => [
                 'code' => [
                     'ruleUniqueCode' => 'Code must be unique',
                     'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form',
+                    'ruleUniqueCodeByForeignKeyAcademicPeriod' => 'Code must be unique for the same academic period'
                 ],
                 'start_date' => [
                     'ruleInParentAcademicPeriod' => 'Date must be within selected academic period start and end date',
@@ -1157,11 +1221,13 @@ trait MessagesTrait {
                 ],
                 'weight' => [
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleWeightRange' => 'Value must be positive and less than 2.0'
                 ],
             ],
             'AssessmentItems' => [
                 'weight' => [
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleWeightRange' => 'Value must be positive and less than 2.0'
                 ],
             ],
             'AssessmentGradingTypes' => [
