@@ -53,6 +53,7 @@ class InstitutionRoomsTable extends AppTable {
 			'fieldValueClass' => ['className' => 'Infrastructure.RoomCustomFieldValues', 'foreignKey' => 'institution_room_id', 'dependent' => true, 'cascadeCallbacks' => true],
 			'tableCellClass' => null
 		]);
+		$this->addBehavior('Institution.InfrastructureShift');
 
 		$this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
 		$this->levelOptions = $this->Levels->getOptions(['keyField' => 'id', 'valueField' => 'name']);
@@ -132,6 +133,14 @@ class InstitutionRoomsTable extends AppTable {
 		return $this->levelOptions[$this->roomLevel];
 	}
 
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+		if ($field == 'institution_id') {
+			return __('Owner');
+		} else {
+			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+		}
+	}
+
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
     	$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
@@ -154,8 +163,9 @@ class InstitutionRoomsTable extends AppTable {
     }
 
 	public function indexBeforeAction(Event $event) {
-		$this->ControllerAction->setFieldOrder(['code', 'name', 'room_type_id', 'room_status_id']);
+		$this->ControllerAction->setFieldOrder(['code', 'name', 'institution_id', 'infrastructure_level', 'room_type_id', 'room_status_id']);
 
+		$this->ControllerAction->field('institution_id');
 		$this->ControllerAction->field('infrastructure_level', ['after' => 'name']);
 		$this->ControllerAction->field('start_date', ['visible' => false]);
 		$this->ControllerAction->field('start_year', ['visible' => false]);
@@ -172,7 +182,17 @@ class InstitutionRoomsTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+	{
+		// get the list of owner institution id
+        $ownerInstitutionIds = $this->getOwnerInstitutionId();
+
+        if (!empty($ownerInstitutionIds)) {
+        	$conditions = [];
+            $conditions[$this->aliasField('institution_id IN ')] = $ownerInstitutionIds;
+            $query->where($conditions, [], true);
+        }
+
 		$parentId = $this->request->query('parent');
 		if (!is_null($parentId)) {
 			$query->where([$this->aliasField('institution_infrastructure_id') => $parentId]);
@@ -422,6 +442,16 @@ class InstitutionRoomsTable extends AppTable {
 		return $attr;
 	}
 
+	public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'index' || $action == 'view') {
+			if (!empty($this->getOwnerInstitutionId())) {
+				$attr['type'] = 'select';
+			}
+		}
+
+		return $attr;
+	}
+
 	public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
 			$parentId = $request->query('parent');
@@ -619,13 +649,14 @@ class InstitutionRoomsTable extends AppTable {
 
 	private function setupFields(Entity $entity) {
 		$this->ControllerAction->setFieldOrder([
-			'institution_id', 'change_type', 'institution_infrastructure_id', 'academic_period_id', 'code', 'name', 'room_type_id', 'room_status_id', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_condition_id', 'previous_room_id', 'new_room_type', 'new_start_date'
+			'change_type', 'institution_infrastructure_id', 'academic_period_id', 'institution_id', 'code', 'name', 'room_type_id', 'room_status_id', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_condition_id', 'previous_room_id', 'new_room_type', 'new_start_date'
 		]);
 
 		$this->ControllerAction->field('change_type');
 		$this->ControllerAction->field('room_status_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('institution_infrastructure_id', ['entity' => $entity]);
 		$this->ControllerAction->field('academic_period_id', ['entity' => $entity]);
+		$this->ControllerAction->field('institution_id');
 		$this->ControllerAction->field('code');
 		$this->ControllerAction->field('name');
 		$this->ControllerAction->field('room_type_id', ['type' => 'select', 'entity' => $entity]);
@@ -668,7 +699,7 @@ class InstitutionRoomsTable extends AppTable {
 		// if 1 character prepend '0'
 		$codeSuffix = (strlen($codeSuffix) == 1) ? '0'.$codeSuffix : $codeSuffix;
 		$autoGenerateCode = $codePrefix . $codeSuffix;
-		
+
 		return $autoGenerateCode;
 	}
 

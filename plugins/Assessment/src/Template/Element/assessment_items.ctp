@@ -9,13 +9,13 @@
         <table class="table">
             <thead>
                 <th><?= $this->Label->get('Assessments.educationSubject'); ?></th>
-                <th><?= $this->Label->get('Assessments.weight'); ?></th>
+                <th><?= $this->Label->get('Assessments.subjectWeight'); ?></th>
             </thead>
             <?php if (isset($data['assessment_items'])) : ?>
                 <tbody>
                     <?php foreach ($data['assessment_items'] as $i => $item) : ?>
                         <tr>
-                            <td><?= $item->education_subject->name; ?></td>
+                            <td><?= $item->education_subject->code . ' - ' . $item->education_subject->name; ?></td>
                             <td><?= $item->weight; ?></td>
                         </tr>
                     <?php endforeach ?>
@@ -32,7 +32,7 @@
                     <table class="table">
                         <thead>
                             <th><?= $this->Label->get('Assessments.educationSubject'); ?></th>
-                            <th><?= $this->Label->get('Assessments.weight'); ?></th>
+                            <th><?= $this->Label->get('Assessments.subjectWeight'); ?></th>
                         </thead>
                         <?php if (isset($data['assessment_items'])) : ?>
                             <tbody>
@@ -43,7 +43,7 @@
                                     <tr>
                                         <td>
                                             <?php
-                                                echo $item->education_subject->name;
+                                                echo $item->education_subject->code . ' - ' . $item->education_subject->name;
                                                 echo $this->Form->hidden("$fieldPrefix.education_subject_id", ['value' => $item->education_subject_id]);
                                                 if (isset($item->id)) {
                                                     echo $this->Form->hidden("$fieldPrefix.id", ['value' => $item->id]);

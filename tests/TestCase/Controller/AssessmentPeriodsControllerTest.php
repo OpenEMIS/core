@@ -8,36 +8,38 @@ class AssessmentPeriodsControllerTest extends AppTestCase
 {
 	public $fixtures = [
         'app.config_items',
-        'app.workflows',
+        'app.labels',
+        'app.security_users',
         'app.workflow_models',
+        'app.workflow_steps',
+        'app.workflow_statuses',
+        'app.workflow_statuses_steps',
         'app.assessments',
         'app.assessment_items',
+        'app.assessment_item_results',
         'app.assessment_periods',
         'app.assessment_grading_types',
         'app.assessment_items_grading_types',
         'app.academic_periods',
         'app.academic_period_levels',
-        // 'app.education_cycles',
-        'app.education_subjects',
-        // 'app.education_grades'
-        // 'app.education_programmes',
+        'app.education_subjects'
     ];
 
     private $id = 1;
 
-    public function setup() 
+    public function setup()
     {
         parent::setUp();
         $this->urlPrefix('/Assessments/AssessmentPeriods/');
     }
 
-    public function testIndex() 
+    public function testIndex()
     {
         $testUrl = $this->url("index");
 
         $this->get($testUrl);
         $this->assertResponseCode(200);
-        
+
         $this->assertEquals(true, (count($this->viewVariable('data')) >= 1));
     }
 
@@ -51,11 +53,11 @@ class AssessmentPeriodsControllerTest extends AppTestCase
             ]
         ];
         $this->postData($testUrl, $data);
-        
+
         $this->assertEquals(true, (count($this->viewVariable('data')) >= 1));
     }
 
-    public function testSearchNotFound() 
+    public function testSearchNotFound()
     {
         $testUrl = $this->url('index');
         $data = [
@@ -68,7 +70,7 @@ class AssessmentPeriodsControllerTest extends AppTestCase
         $this->assertEquals(true, (count($this->viewVariable('data')) == 0));
     }
 
-    public function testCreate() 
+    public function testCreate()
     {
         $testUrl = $this->url('add');
 
@@ -95,7 +97,7 @@ class AssessmentPeriodsControllerTest extends AppTestCase
                             'education_subject_id' => 2,
                             'assessment_grading_type_id' => 6
                         ],
-                        'id' => 2 
+                        'id' => 2
                     ],
                     1 => [
                         '_joinData' => [
@@ -109,7 +111,7 @@ class AssessmentPeriodsControllerTest extends AppTestCase
             ],
             'submit' => 'save'
         ];
-        
+
         $this->postData($testUrl, $data);
 
         $lastInsertedRecord = $table->find()
@@ -140,11 +142,12 @@ class AssessmentPeriodsControllerTest extends AppTestCase
 
         $this->get($testUrl);
 
-        //$this->assertResponseCode(200);
+        // UNIT_TEST_ERROR
+        // $this->assertResponseCode(200);
         $this->assertEquals(true, ($this->viewVariable('data')->id == $this->id));
     }
 
-    public function testUpdate() 
+    public function testUpdate()
     {
         $testUrl = $this->url('edit/'.$this->id);
 
@@ -176,17 +179,17 @@ class AssessmentPeriodsControllerTest extends AppTestCase
                             'assessment_grading_type_id' => 6,
                             'assessment_period_id' => $this->id
                         ],
-                        'id' => 3 
+                        'id' => 3
                     ]
                 ]
             ],
             'submit' => 'save'
         ];
-        
+
         $this->postData($testUrl, $data);
-        
+
         $entity = $table->get($this->id);
-        
+
         $this->assertEquals($data['AssessmentPeriods']['code'], $entity->code);
 
         // test belongsToManyTable data
@@ -198,12 +201,12 @@ class AssessmentPeriodsControllerTest extends AppTestCase
                 // $belongsToManyTable->aliasField('id') => $data['AssessmentPeriods']['education_subjects'][0]['_joinData']['id'], //exclude ID because it is UUID, will keep changing.
             ])
             ->toArray();
-        
+
         $this->assertEquals($data['AssessmentPeriods']['education_subjects'][0]['_joinData']['assessment_grading_type_id'], $entity[0]->assessment_grading_type_id);
 
     }
 
-    public function testDelete() 
+    public function testDelete()
     {
         $testUrl = $this->url('remove');
 
