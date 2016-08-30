@@ -299,6 +299,11 @@ class StudentDropoutTable extends AppTable {
 		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 		$statuses = $StudentStatuses->findCodeList();
 
+		$entity = $this->patchEntity($entity, $data->getArrayCopy(), []);
+		if (!empty($entity->errors())) {
+			return $entity;
+		}
+
 		$institutionId = $entity->institution_id;
 		$studentId = $entity->student_id;
 		$periodId = $entity->academic_period_id;
@@ -383,5 +388,14 @@ class StudentDropoutTable extends AppTable {
 
 		$event->stopPropagation();
 		return $this->controller->redirect(['plugin' => $plugin, 'controller' => $controller, 'action' => $action]);
+	}
+
+	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+		$validator->add('effective_date', 'ruleDateAfterEnrollment', [
+		            'rule' => ['dateAfterEnrollment'],
+		            'provider' => 'table'
+	    			]);
+		return $validator;
 	}
 }
