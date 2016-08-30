@@ -7,6 +7,7 @@ use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
+use Cake\I18n\Date;
 
 class DropoutRequestsTable extends AppTable {
 	const NEW_REQUEST = 0;
@@ -172,5 +173,15 @@ class DropoutRequestsTable extends AppTable {
 			$toolbarButtons['back']['url'][0] = 'view';
 			$toolbarButtons['back']['url'][1] = $this->Session->read('Student.Students.id');
 		}
+	}
+
+	public function onUpdateFieldEffectiveDate(Event $event, array $attr, $action, $request) {
+
+		$id = $this->Session->read($this->registryAlias().'.id');
+		$studentData = TableRegistry::get('Institution.Students')->get($id);
+		$enrolledDate = $studentData['start_date']->format('d-m-Y');
+		$attr['date_options'] = ['startDate' => $enrolledDate];
+
+		return $attr;
 	}
 }
