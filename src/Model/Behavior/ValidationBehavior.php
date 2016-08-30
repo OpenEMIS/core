@@ -265,6 +265,19 @@ class ValidationBehavior extends Behavior {
 		}
 	}
 
+	public static function dateAfterEnrollment($check, array $globalData) {
+		$id = $globalData['data']['student_id'];
+		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+		$enrolledStatus = $StudentStatuses->find()->where([$StudentStatuses->aliasField('code') => 'CURRENT'])->first()->id;
+		$studentData = TableRegistry::get('Institution.Students')
+						->find()
+						->where(['student_id' => $id, 'student_status_id' => $enrolledStatus])
+						->first();
+		$enrolledDate = $studentData['start_date']->format('Y-m-d');
+
+		return $check > $enrolledDate;
+	}
+
 	public static function compareTime($field, $compareField, $equals, array $globalData) {
 		$type = self::_getFieldType($compareField);
 		$startTime = strtotime($field);
