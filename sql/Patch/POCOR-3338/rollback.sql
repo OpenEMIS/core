@@ -1,18 +1,9 @@
 -- workflow_actions
-CREATE TABLE `z_3338_workflow_actions` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `event_key` varchar(200) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-INSERT INTO `z_3338_workflow_actions`(`id`, `event_key`)
-SELECT `id`, `event_key`
-FROM `workflow_actions`
-WHERE `event_key` = 'Workflow.onDeleteRecord';
-
 UPDATE `workflow_actions`
-SET `event_key` = NULL
-WHERE `event_key` = 'Workflow.onDeleteRecord';
+INNER JOIN `z_3338_workflow_actions` ON `z_3338_workflow_actions`.`id` = `workflow_actions`.`id`
+SET `workflow_actions`.`event_key` = `z_3338_workflow_actions`.`event_key`;
+
+DROP TABLE `z_3338_workflow_actions`;
 
 -- db_patches
-INSERT INTO `db_patches` (`issue`, `created`) VALUES('POCOR-3338', NOW());
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3338';
