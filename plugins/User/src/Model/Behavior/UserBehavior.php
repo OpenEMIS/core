@@ -116,6 +116,7 @@ class UserBehavior extends Behavior {
 				]
 			);
 			$this->_table->fields['date_of_birth']['order'] = $i++;
+			$this->_table->fields['identity_number']['order'] = $i++;
 			
 			$this->_table->fields['address']['order'] = $i++;
 			$this->_table->fields['postal_code']['order'] = $i++;
@@ -340,7 +341,7 @@ class UserBehavior extends Behavior {
 	}
 
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
-		if ($field == 'identity') {
+		if (($field == 'identity') || ($field == 'identity_number'))  {
 			$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
 			$identity = $IdentityType->getDefaultEntity();
 
