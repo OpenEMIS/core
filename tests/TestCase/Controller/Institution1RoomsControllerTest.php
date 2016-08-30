@@ -14,11 +14,11 @@ class Institution1RoomsControllerTest extends AppTestCase
         'app.workflow_steps',
         'app.workflow_statuses',
         'app.workflow_statuses_steps',
+        'app.academic_period_levels',
+        'app.academic_periods',
         'app.custom_modules',
         'app.custom_field_types',
         'app.custom_field_values',
-        'app.academic_period_levels',
-        'app.academic_periods',
         'app.institutions',
         'app.institution_rooms',
         'app.institution_shifts',
@@ -37,7 +37,7 @@ class Institution1RoomsControllerTest extends AppTestCase
         'app.room_statuses',
         'app.room_custom_field_values',
         'app.survey_forms',
-        'app.survey_rules',
+        'app.survey_rules'
     ];
 
     private $testingId = 5;

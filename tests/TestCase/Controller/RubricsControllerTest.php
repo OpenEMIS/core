@@ -8,12 +8,17 @@ class RubricsControllerTest extends AppTestCase
 {
     public $fixtures = [
         'app.config_items',
-        'app.workflow_models'
+        'app.labels',
+        'app.security_users',
+        'app.workflow_models',
+        'app.workflow_steps',
+        'app.workflow_statuses',
+        'app.workflow_statuses_steps',
+        'app.rubric_templates'
     ];
 
     public function testRubricIndex()
     {
-        $this->setAuthSession();
         $this->get('/Rubrics/Templates');
         $this->assertResponseCode(200);
     }

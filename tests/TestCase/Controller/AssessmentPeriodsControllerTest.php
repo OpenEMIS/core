@@ -142,8 +142,7 @@ class AssessmentPeriodsControllerTest extends AppTestCase
 
         $this->get($testUrl);
 
-        // UNIT_TEST_ERROR
-        // $this->assertResponseCode(200);
+        $this->assertResponseCode(200);
         $this->assertEquals(true, ($this->viewVariable('data')->id == $this->id));
     }
 
