@@ -205,7 +205,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             .ajax({success: success, defer: true});
         },
 
-        getColumnDefs: function(action, subject, periods, gradingTypes, results) {
+        getColumnDefs: function(action, subject, periods, gradingTypes, _results) {
             var filterParams = {
                 cellHeight: 30
             };
@@ -271,7 +271,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         };
                     }
 
-                    columnDef = ResultsSvc.renderMarks(allowEdit, columnDef, extra, results);
+                    columnDef = ResultsSvc.renderMarks(allowEdit, columnDef, extra, _results);
                 } else if (isGradesType) {
                     if (subject.grading_type != null) {
                         var gradingOptions = {
@@ -292,7 +292,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                     }
 
                     extra['period'] = period;
-                    columnDef = ResultsSvc.renderGrades(allowEdit, columnDef, extra, results);
+                    columnDef = ResultsSvc.renderGrades(allowEdit, columnDef, extra, _results);
                 }
 
                 this.push(columnDef);
@@ -329,7 +329,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             return {data: columnDefs};
         },
 
-        renderMarks: function(allowEdit, cols, extra, results) {
+        renderMarks: function(allowEdit, cols, extra, _results) {
             var minMark = extra.minMark;
             var passMark = extra.passMark;
             var maxMark = extra.maxMark;
@@ -373,7 +373,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             return cols;
         },
 
-        renderGrades: function(allowEdit, cols, extra, results) {
+        renderGrades: function(allowEdit, cols, extra, _results) {
             var gradingOptions = extra.gradingOptions;
             var period = extra.period;
 
@@ -411,17 +411,15 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                             var newValue = eSelect.value;
                             params.data[params.colDef.field] = newValue;
 
-                            if (newValue != oldValue) {
-                                if (angular.isUndefined(results[studentId])) {
-                                    results[studentId] = {};
-                                }
-
-                                if (angular.isUndefined(results[studentId][periodId])) {
-                                    results[studentId][periodId] = {gradingOptionId: ''};
-                                }
-
-                                results[studentId][periodId]['gradingOptionId'] = newValue;
+                            if (angular.isUndefined(_results[studentId])) {
+                                _results[studentId] = {};
                             }
+
+                            if (angular.isUndefined(_results[studentId][periodId])) {
+                                _results[studentId][periodId] = {gradingOptionId: ''};
+                            }
+
+                            _results[studentId][periodId]['gradingOptionId'] = newValue;
                         });
 
                         eCell.appendChild(eSelect);
@@ -505,15 +503,15 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                                 angular.forEach(periods, function(period, key) {
                                     var resultTypeByPeriod = gradingTypes[period.id].assessment_grading_type.result_type;
 
-                                    // if is GRADES type, set weight to 0 so that will not accumulate to total marks.
+                                    // if is GRADES type, set weight to empty so that will not be included when calculate total marks.
                                     if (resultTypeByPeriod == resultTypes.MARKS) {
-                                        periodWeight = periodObj[parseInt(period.id)]['weight'];
+                                        periodWeight = parseFloat(periodObj[parseInt(period.id)]['weight']);
                                     } else if (resultTypeByPeriod == resultTypes.GRADES) {
-                                        periodWeight = 0;
+                                        periodWeight = '';
                                     }
 
                                     studentResults['period_' + parseInt(period.id)] = '';
-                                    studentResults['weight_' + parseInt(period.id)] = parseFloat(periodWeight);
+                                    studentResults['weight_' + parseInt(period.id)] = periodWeight;
                                 });
 
                                 studentId = currentStudentId;
@@ -579,16 +577,19 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
         },
 
         calculateTotal: function(data) {
-            var totalMark = 0;
-
+            var totalMark = '';
             for (var key in data) {
                 if (/period_/.test(key)) {
                     var index = key.replace(/period_(\d+)/, '$1');
-                    totalMark += data[key] * (data['weight_'+index]);
+                    // add checking to skip adding to Total Mark if is GRADES type
+                    if (!isNaN(parseFloat(data[key])) && !isNaN(parseFloat(data['weight_'+index]))) {
+                        totalMark = isNaN(parseFloat(totalMark)) ? 0 : totalMark;
+                        totalMark += data[key] * (data['weight_'+index]);
+                    }
                 }
             }
 
-            if (totalMark > 0) {
+            if (!isNaN(parseFloat(totalMark))) {
                 return $filter('number')(totalMark, 2);
             } else {
                 return '';
