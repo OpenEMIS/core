@@ -1,39 +1,40 @@
 <?php
+namespace App\Test\TestCases;
 
-namespace User\tests\TestCase\Controller;
+use Cake\ORM\TableRegistry;
+use App\Test\AppTestCase;
 
-use Cake\TestSuite\IntegrationTestCase;
-
-class UsersControllerTest extends IntegrationTestCase {
-
-	public $fixtures = [
+class UsersControllerTest extends AppTestCase
+{
+    public $fixtures = [
         'app.config_items',
         'app.workflow_models'
     ];
 
-	public function testLoginIndex() {
-
+    public function testLoginIndex()
+    {
         $this->get('/Users/login');
-    	$this->assertResponseCode(200);
-	}
+        $this->assertResponseCode(200);
+    }
 
-	public function testLogin() {
+    public function testLogin()
+    {
+        $data = [
+            'username' => 'admin',
+            'password' => 'demo',
+            'submit' => 'login'
+        ];
+        $this->enableCsrfToken();
+        $this->enableSecurityToken();
+        $this->post('/Users/postLogin', $data);
+        $this->assertArrayHasKey('Auth', $_SESSION, 'Error logging in!');
+    }
 
-		$data = [
-			'username' => 'admin',
-			'password' => 'demo',
-			'submit' => 'login'
-		];
-		$this->enableCsrfToken();
-		$this->enableSecurityToken();
-		$this->post('/Users/postLogin', $data);
-		$this->assertArrayHasKey('Auth', $_SESSION, 'Error logging in!');
-	}
-
-	public function testLogout() {
-		$this->enableCsrfToken();
-		$this->enableSecurityToken();
-		$this->post('/Users/logout');
-		$this->assertArrayNotHasKey('Auth', $_SESSION, 'Error logging out!');
-	}
+    public function testLogout()
+    {
+        $this->enableCsrfToken();
+        $this->enableSecurityToken();
+        $this->post('/Users/logout');
+        $this->assertArrayNotHasKey('Auth', $_SESSION, 'Error logging out!');
+    }
 }
