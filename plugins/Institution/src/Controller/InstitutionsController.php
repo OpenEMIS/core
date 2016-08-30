@@ -257,13 +257,14 @@ class InstitutionsController extends AppController  {
 
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
+					$exists = false;
 
 					if (in_array($model->alias(), ['TransferRequests', 'StaffTransferApprovals'])) {
 						$exists = $model->exists([
 							$model->aliasField($model->primaryKey()) => $modelId,
 							$model->aliasField('previous_institution_id') => $institutionId
 						]);
-					} else if (in_array($model->alias(), ['InstitutionShifts'])) { //this is to show information for the occupier 
+					} else if (in_array($model->alias(), ['InstitutionShifts'])) { //this is to show information for the occupier
 						$exists = $model->exists([
 							$model->aliasField($model->primaryKey()) => $modelId,
 							'OR' => [ //logic to check institution_id or location_institution_id equal to $institutionId
@@ -273,10 +274,15 @@ class InstitutionsController extends AppController  {
 						]);
 					} else {
 						$primaryKey = $this->ControllerAction->getPrimaryKey($model);
-						$exists = $model->exists([
-							$model->aliasField($primaryKey) => $modelId,
-							$model->aliasField('institution_id') => $institutionId
-						]);
+						$checkExists = function($model, $params) {
+							return $model->exists($params);
+						};
+
+						$event = $model->dispatchEvent('Model.isRecordExists', [], $this);
+						if (is_callable($event->result)) {
+							$checkExists = $event->result;
+						}
+						$exists = $checkExists($model, [$primaryKey => $modelId, 'institution_id' => $institutionId]);
 					}
 
 					/**

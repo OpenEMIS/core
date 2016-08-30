@@ -15,7 +15,7 @@
                 <tbody>
                     <?php foreach ($data['education_subjects'] as $i => $item) : ?>
                         <tr>
-                            <td><?= $item->name ?></td>
+                            <td><?= $item->code . ' - ' . $item->name ?></td>
                             <td><?= $assessmentGradingTypeOptions[$item->_joinData->assessment_grading_type_id]; ?></td>
                         </tr>
                     <?php endforeach ?>
@@ -50,8 +50,8 @@
                                                     echo $item['education_subject_name'];
                                                     echo $this->Form->hidden("$fieldPrefix.education_subject_name", ['value' => $item['education_subject_name']]);
                                                 } else {
-                                                    echo $item->name;
-                                                    echo $this->Form->hidden("$fieldPrefix.education_subject_name", ['value' => $item->name]);
+                                                    echo $item->code . ' - ' . $item->name;
+                                                    echo $this->Form->hidden("$fieldPrefix.education_subject_name", ['value' => $item->code . ' - ' . $item->name]);
                                                 }
                                                 echo $this->Form->hidden("$joinDataPrefix.education_subject_id", ['value' => $item['education_subject_id']]);
 
