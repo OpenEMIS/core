@@ -109,6 +109,12 @@ trait MessagesTrait {
             '7' => 'Failed to write file to disk. Please contact your network administrator for assistance.',
             '8' => 'A PHP extension stopped the file upload. Please contact your network administrator for assistance.'
         ],
+        'InstitutionInfrastructures' => [
+            'ownerAddNotAllowed' => 'You are not allowed to add infrastructure as there are no shifts configured in the current academic period',
+            'occupierAddNotAllowed' => 'You are not allowed to add infrastructure as an occupier',
+            'occupierEditNotAllowed' => 'You are not allowed to edit infrastructure as an occupier',
+            'occupierDeleteNotAllowed' => 'You are not allowed to delete infrastructure as an occupier'
+        ],
         'InfrastructureTypes' => [
             'noLevels' => 'No Available Levels',
             'infrastructure_level_id' => 'Level Name'

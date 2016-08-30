@@ -6,6 +6,10 @@ use App\Test\AppTestCase;
 use Cake\ORM\TableRegistry;
 
 class AreasControllerTest extends AppTestCase {
+	public $fixtures = [
+        'app.area_levels',
+        'app.areas',
+    ];
 
 	public $fixtures = [
 		'app.config_items',

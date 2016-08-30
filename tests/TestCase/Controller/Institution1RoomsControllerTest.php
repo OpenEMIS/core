@@ -23,7 +23,6 @@ class Institution1RoomsControllerTest extends AppTestCase
         'app.institution_infrastructures'
     ];
 
-
     private $testingId = 5;
     private $table;
 
