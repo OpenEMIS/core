@@ -8,8 +8,12 @@ class AssessmentTemplatesControllerTest extends AppTestCase
 {
 	public $fixtures = [
         'app.config_items',
-        'app.workflows',
+        'app.labels',
+        'app.security_users',
         'app.workflow_models',
+        'app.workflow_steps',
+        'app.workflow_statuses',
+        'app.workflow_statuses_steps',
         'app.assessments',
         'app.assessment_items',
         'app.assessment_periods',
@@ -25,19 +29,19 @@ class AssessmentTemplatesControllerTest extends AppTestCase
 
     private $id = 2;
 
-    public function setup() 
+    public function setup()
     {
         parent::setUp();
         $this->urlPrefix('/Assessments/Assessments/');
     }
 
-    public function testIndex() 
+    public function testIndex()
     {
         $testUrl = $this->url("index");
 
         $this->get($testUrl);
         $this->assertResponseCode(200);
-        
+
         $this->assertEquals(true, (count($this->viewVariable('data')) >= 1));
     }
 
@@ -51,11 +55,11 @@ class AssessmentTemplatesControllerTest extends AppTestCase
             ]
         ];
         $this->postData($testUrl, $data);
-        
+
         $this->assertEquals(true, (count($this->viewVariable('data')) >= 1));
     }
 
-    public function testSearchNotFound() 
+    public function testSearchNotFound()
     {
         $testUrl = $this->url('index');
         $data = [
@@ -68,7 +72,7 @@ class AssessmentTemplatesControllerTest extends AppTestCase
         $this->assertEquals(true, (count($this->viewVariable('data')) == 0));
     }
 
-    public function testCreate() 
+    public function testCreate()
     {
         $testUrl = $this->url('add');
 
@@ -131,7 +135,7 @@ class AssessmentTemplatesControllerTest extends AppTestCase
         $this->assertEquals(true, ($this->viewVariable('data')->id == $this->id));
     }
 
-    public function testUpdate() 
+    public function testUpdate()
     {
         $testUrl = $this->url('edit/'.$this->id);
 
@@ -195,7 +199,7 @@ class AssessmentTemplatesControllerTest extends AppTestCase
 
     }
 
-    public function testDelete() 
+    public function testDelete()
     {
         $testUrl = $this->url('remove');
 

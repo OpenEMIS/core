@@ -63,8 +63,12 @@ class AssessmentItemsTable extends AppTable {
 			->where([$this->aliasField('assessment_id') => $assessmentId])
 			->select([
 				'assessment_item_id' => $this->aliasField('id'),
-				'education_subject_id' => 'EducationSubjects.id',  
-				'education_subject_name' => 'EducationSubjects.name'
+				'education_subject_id' => 'EducationSubjects.id',
+				'education_subject_name' => $this->find()->func()->concat([
+					'EducationSubjects.code' => 'literal',
+					" - ",
+					'EducationSubjects.name' => 'literal'
+				])
 			])
 			->order(['EducationSubjects.order'])
 			->hydrate(false)
