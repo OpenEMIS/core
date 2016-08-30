@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace App\Test\Fixture;
 
 use Cake\TestSuite\Fixture\TestFixture;
@@ -19,8 +19,7 @@ class AssessmentsFixture extends TestFixture
             'modified' => NULL,
             'created_user_id' => 5,
             'created' => '2017-01-07 00:00:00'
-        ],
-        [
+        ], [
             'id' => 2,
             'code' => 'Assessment02',
             'name' => 'Assessment Two',
