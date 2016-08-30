@@ -62,6 +62,15 @@ class AssessmentsTable extends ControllerActionTable {
                     'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
                     'provider' => 'table'
                 ]
+            ])
+            ->requirePresence('assessment_items')
+            ->add('education_grade_id', [
+                'ruleAssessmentExistByGradeAcademicPeriod' => [ //validate so only 1 assessment for each grade per academic period
+                    'rule' => ['assessmentExistByGradeAcademicPeriod'],
+                    'on' => function ($context) {
+                        return $this->action == 'add';
+                    }
+                ]
             ]);
     }
 
@@ -95,15 +104,31 @@ class AssessmentsTable extends ControllerActionTable {
     {
         $query->contain(['AssessmentItems.EducationSubjects']);
     }
-
     
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $assessmentItems = $entity->assessment_items;
+        
+        //this is to sort array based on certain value on subarray, in this case based on education order value
+        usort($assessmentItems, function($a,$b){ return $a['education_subject']['order']-$b['education_subject']['order'];} ); 
+        
+        $entity->assessment_items = $assessmentItems;
+
         $this->setupFields($entity);
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        if ($this->action == 'edit')
+        {
+            $assessmentItems = $entity->assessment_items;
+        
+            //this is to sort array based on certain value on subarray, in this case based on education order value
+            usort($assessmentItems, function($a,$b){ return $a['education_subject']['order']-$b['education_subject']['order'];} ); 
+        
+            $entity->assessment_items = $assessmentItems;
+        }
+        
         $this->setupFields($entity);
     }
 
@@ -117,6 +142,21 @@ class AssessmentsTable extends ControllerActionTable {
                     $subjectId = $item['education_subject_id'];
                     $requestData[$this->alias()]['assessment_items'][$key]['education_subject'] = $EducationSubjects->get($subjectId);
                 }
+            } else { //logic to capture error if no subject inside the grade.
+                $errorMessage = $this->aliasField('noSubjects');
+                $requestData['errorMessage'] = $errorMessage;
+            }
+        }
+
+    }
+
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra) 
+    {
+        // pr($entity);
+        $errors = $entity->errors();
+        if (!empty($errors)) {
+            if (isset($requestData['errorMessage']) && !empty($requestData['errorMessage'])) {
+                $this->Alert->error($requestData['errorMessage'], ['reset'=>true]);
             }
         }
     }
@@ -184,7 +224,7 @@ class AssessmentsTable extends ControllerActionTable {
     {
         $request = $this->request;
         unset($request->query['programme']);
-
+        unset($data['Assessments']['assessment_items']);
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->alias(), $request->data)) {
                 if (array_key_exists('education_programme_id', $request->data[$this->alias()])) {
@@ -220,8 +260,6 @@ class AssessmentsTable extends ControllerActionTable {
                 $attr['type'] = 'readonly';
                 $attr['attr']['value'] = $this->EducationGrades->get($attr['entity']->education_grade_id)->name;
             }
-            
-            
         }
 
         return $attr;
@@ -265,13 +303,13 @@ class AssessmentsTable extends ControllerActionTable {
             'type' => 'select',
             'entity' => $entity
         ]);
-        $this->field('subjects', [
+        $this->field('assessment_items', [
             'type' => 'element',
             'element' => 'Assessment.assessment_items'
         ]);
 
         $this->setFieldOrder([
-            'code', 'name', 'description', 'academic_period_id', 'education_programme_id', 'education_grade_id', 'subjects'
+            'code', 'name', 'description', 'academic_period_id', 'education_programme_id', 'education_grade_id', 'assessment_items'
         ]);
     }
 

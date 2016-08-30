@@ -826,6 +826,20 @@ class ValidationBehavior extends Behavior {
 		}
 	}
 
+	public static function assessmentExistByGradeAcademicPeriod($field, $globalData)
+	{
+		$model = $globalData['providers']['table'];
+		$data = $globalData['data'];
+		// pr($data);die;
+
+		return !($model->find()
+                    ->where([
+                        $model->aliasField('education_grade_id') => $data['education_grade_id'],
+                        $model->aliasField('academic_period_id') => $data['academic_period_id']
+                    ])
+                    ->count());
+	}
+
 	public static function compareJoinDate($field, $academicFieldName, $globalData)
 	{
 		$model = $globalData['providers']['table'];
