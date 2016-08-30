@@ -107,7 +107,15 @@ class AssessmentItemsTable extends AppTable {
 			->select([
 				'assessment_item_id' => $this->aliasField('id'),
 				'education_subject_id' => 'EducationSubjects.id',
+<<<<<<< HEAD
 				'education_subject_name' => 'EducationSubjects.name'
+=======
+				'education_subject_name' => $this->find()->func()->concat([
+					'EducationSubjects.code' => 'literal',
+					" - ",
+					'EducationSubjects.name' => 'literal'
+				])
+>>>>>>> origin/POCOR-3080
 			])
 			->order(['EducationSubjects.order'])
 			->hydrate(false)
