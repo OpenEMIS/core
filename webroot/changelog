@@ -5,6 +5,7 @@ v3.6.2
 - Assessment periods is now configurable in Assessment Periods tab
 - Able to assign different grading type to an Education subject for an Assessment Period
 - Assessment Reports is available on School and Class level
+- Deleting an Academic Period will now delete all related information linked to that academic period
 
 v3.6.1
 - Added Shift type in Institution Overview page and is searchable in Advanced Search
