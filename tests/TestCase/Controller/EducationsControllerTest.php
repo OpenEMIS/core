@@ -6,6 +6,10 @@ use App\Test\AppTestCase;
 use Cake\ORM\TableRegistry;
 
 class EducationsControllerTest extends AppTestCase {
+	 public $fixtures = [
+        'app.education_systems',
+        'app.education_levels'
+    ];
 
 	 public $fixtures = [
 	 	'app.config_items',
@@ -60,12 +64,13 @@ class EducationsControllerTest extends AppTestCase {
 	public function testDeleteEducationSystem() {
 
  		$this->setAuthSession();
- 		$this->get('Educations/Systems/remove/1');
+ 		$this->get('/Educations/Systems/remove/1');
  		$this->assertResponseCode(200);
 
 		$data = [
 			'id' => 1,
-			'_method' => 'DELETE',
+			'transfer_to' => 2,
+			'_method' => 'DELETE'
 		];
 		$this->postData('/Educations/Systems/remove/1', $data);
 		$table = TableRegistry::get('Education.EducationSystems');
