@@ -14,6 +14,7 @@ trait MessagesTrait {
         ],
         'Assessments' => [
             'subjects' => 'Subjects',
+            'noSubjects' => 'There is no subject selected',
             'templates' => 'Templates',
             'noTemplates' => 'No Templates',
             'noGrades' => 'No Available Grades',
@@ -23,7 +24,8 @@ trait MessagesTrait {
             'assessmentPeriods' => 'Assessment Periods',
             'assessmentGradingType' => 'Assessment Grading Type',
             'educationSubject' => 'Education Subject',
-            'weight' => 'Weight'
+            'subjectWeight' => 'Subject Weight',
+            'periodWeight' => 'Period Weight'
         ],
         'CustomGroups' => [
             'custom_modules' => 'Module'
@@ -1186,7 +1188,11 @@ trait MessagesTrait {
             'Assessments' => [
                 'code' => [
                     'ruleUniqueCode' => 'Code must be unique for the same academic period',
-                    'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form'
+                    'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form',
+                    'ruleAssessmentExistByGradeAcademicPeriod' => 'Assessment already created for the selected grade.'
+                ],
+                'education_grade_id' => [
+                    'ruleAssessmentExistByGradeAcademicPeriod' => 'Assessment already created for the selected grade.'
                 ]
             ],
             'AssessmentPeriods' => [
