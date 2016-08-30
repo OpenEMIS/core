@@ -8,9 +8,14 @@ class EducationLevelsControllerTest extends AppTestCase
 {
     public $fixtures = [
         'app.config_items',
+        'app.labels',
+        'app.security_users',
         'app.workflow_models',
-        'app.education_systems', 
-        'app.education_level_isced', 
+        'app.workflow_steps',
+        'app.workflow_statuses',
+        'app.workflow_statuses_steps',
+        'app.education_systems',
+        'app.education_level_isced',
         'app.education_levels'
     ];
 

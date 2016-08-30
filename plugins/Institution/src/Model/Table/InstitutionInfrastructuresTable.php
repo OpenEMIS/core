@@ -37,6 +37,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 			'fieldValueClass' => ['className' => 'Infrastructure.InfrastructureCustomFieldValues', 'foreignKey' => 'institution_infrastructure_id', 'dependent' => true, 'cascadeCallbacks' => true],
 			'tableCellClass' => null
 		]);
+		$this->addBehavior('Institution.InfrastructureShift');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -115,6 +116,14 @@ class InstitutionInfrastructuresTable extends AppTable {
 		]);
 	}
 
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+		if ($field == 'institution_id') {
+			return __('Owner');
+		} else {
+			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+		}
+	}
+
 	public function indexBeforeAction(Event $event) {
 		$url = $this->getRedirectUrl();
 		if (!empty($url)) {
@@ -122,8 +131,9 @@ class InstitutionInfrastructuresTable extends AppTable {
 			return $this->controller->redirect($url);
 		}
 
-		$this->ControllerAction->setFieldOrder(['code', 'name', 'infrastructure_level_id', 'infrastructure_type_id']);
+		$this->ControllerAction->setFieldOrder(['code', 'name', 'institution_id', 'infrastructure_level_id', 'infrastructure_type_id']);
 
+		$this->ControllerAction->field('institution_id');
 		$this->ControllerAction->field('parent_id', ['visible' => false]);
 		$this->ControllerAction->field('size', ['visible' => false]);
 		$this->ControllerAction->field('infrastructure_ownership_id', ['visible' => false]);
@@ -138,7 +148,17 @@ class InstitutionInfrastructuresTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    {
+        // get the list of owner institution id
+        $ownerInstitutionIds = $this->getOwnerInstitutionId();
+
+        if (!empty($ownerInstitutionIds)) {
+            $conditions = [];
+            $conditions[$this->aliasField('institution_id IN ')] = $ownerInstitutionIds;
+            $query->where($conditions, [], true);
+        }
+
 		// Filter by parent
 		$parentId = $this->request->query('parent');
 		if (!is_null($parentId)) {
@@ -233,7 +253,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 		// if 1 character prepend '0'
 		$codeSuffix = (strlen($codeSuffix) == 1) ? '0'.$codeSuffix : $codeSuffix;
 		$autoGenerateCode = $codePrefix . $codeSuffix;
-		
+
 		return $autoGenerateCode;
 	}
 
@@ -270,6 +290,16 @@ class InstitutionInfrastructuresTable extends AppTable {
 				$attr['type'] = 'readonly';
 				$attr['value'] = $parentId;
 				$attr['attr']['value'] = $this->getParentPath($parentId);
+			}
+		}
+
+		return $attr;
+	}
+
+	public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'index' || $action == 'view') {
+			if (!empty($this->getOwnerInstitutionId())) {
+				$attr['type'] = 'select';
 			}
 		}
 
@@ -359,10 +389,11 @@ class InstitutionInfrastructuresTable extends AppTable {
 
 	private function setupFields(Entity $entity) {
 		$this->ControllerAction->setFieldOrder([
-			'institution_id', 'parent_id', 'code', 'name', 'infrastructure_level_id', 'infrastructure_type_id', 'size', 'infrastructure_ownership_id', 'year_acquired', 'year_disposed', 'infrastructure_condition_id', 'comment'
+			'parent_id', 'institution_id', 'code', 'name', 'infrastructure_level_id', 'infrastructure_type_id', 'size', 'infrastructure_ownership_id', 'year_acquired', 'year_disposed', 'infrastructure_condition_id', 'comment'
 		]);
 
 		$this->ControllerAction->field('parent_id', ['entity' => $entity]);
+		$this->ControllerAction->field('institution_id');
 		$this->ControllerAction->field('code');
 		$this->ControllerAction->field('infrastructure_level_id', ['type' => 'select']);
 		$this->ControllerAction->field('infrastructure_type_id', ['type' => 'select']);

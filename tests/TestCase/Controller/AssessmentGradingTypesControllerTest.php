@@ -8,30 +8,37 @@ class AssessmentGradingTypesControllerTest extends AppTestCase
 {
 	public $fixtures = [
         'app.config_items',
-        'app.workflows',
+        'app.labels',
+        'app.security_users',
         'app.workflow_models',
+        'app.workflow_steps',
+        'app.workflow_statuses',
+        'app.workflow_statuses_steps',
+        'app.assessments',
         'app.assessment_items',
         'app.assessment_periods',
         'app.assessment_grading_types',
         'app.assessment_grading_options',
-        'app.assessment_items_grading_types'
+        'app.assessment_items_grading_types',
+        'app.assessment_item_results',
+        'app.education_subjects'
     ];
 
     private $id = 7;
 
-    public function setup() 
+    public function setup()
     {
         parent::setUp();
         $this->urlPrefix('/Assessments/GradingTypes/');
     }
 
-    public function testIndex() 
+    public function testIndex()
     {
         $testUrl = $this->url("index");
 
         $this->get($testUrl);
         $this->assertResponseCode(200);
-        
+
         $this->assertEquals(true, (count($this->viewVariable('data')) >= 1));
     }
 
@@ -44,11 +51,11 @@ class AssessmentGradingTypesControllerTest extends AppTestCase
             ]
         ];
         $this->postData($testUrl, $data);
-        
+
         $this->assertEquals(true, (count($this->viewVariable('data')) >= 1));
     }
 
-    public function testSearchNotFound() 
+    public function testSearchNotFound()
     {
         $testUrl = $this->url('index');
         $data = [
@@ -61,7 +68,7 @@ class AssessmentGradingTypesControllerTest extends AppTestCase
         $this->assertEquals(true, (count($this->viewVariable('data')) == 0));
     }
 
-    public function testCreate() 
+    public function testCreate()
     {
         $testUrl = $this->url('add');
 
@@ -94,13 +101,13 @@ class AssessmentGradingTypesControllerTest extends AppTestCase
             ],
             'submit' => 'save'
         ];
-        
+
         $this->postData($testUrl, $data);
 
         $lastInsertedRecord = $table->find()
             ->where([$table->aliasField('code') => $data['AssessmentGradingTypes']['code']])
             ->first();
-        
+
         $this->assertEquals(true, (!empty($lastInsertedRecord)));
 
         //test hasMany data
@@ -128,7 +135,7 @@ class AssessmentGradingTypesControllerTest extends AppTestCase
         $this->assertEquals(true, ($this->viewVariable('data')->id == $this->id));
     }
 
-    public function testUpdate() 
+    public function testUpdate()
     {
         $testUrl = $this->url('edit/'.$this->id);
 
@@ -155,7 +162,7 @@ class AssessmentGradingTypesControllerTest extends AppTestCase
                         'name' => 'Grading Options Four One Edit',
                         'min' => 40.4,
                         'max' => 41.4
-                        
+
                     ],
                     1 => [
                         'id' => 11,
@@ -193,7 +200,7 @@ class AssessmentGradingTypesControllerTest extends AppTestCase
 
     }
 
-    public function testDelete() 
+    public function testDelete()
     {
         $testUrl = $this->url('remove');
 
