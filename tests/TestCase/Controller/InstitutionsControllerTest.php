@@ -1,12 +1,11 @@
 <?php
+namespace App\Test\TestCases;
 
-namespace Institution\tests\TestCase\Controller;
-
-use Cake\TestSuite\IntegrationTestCase;
+use App\Test\AppTestCase;
 use Cake\ORM\TableRegistry;
 
-class InstitutionsControllerTest extends IntegrationTestCase {
-
+class InstitutionsControllerTest extends AppTestCase
+{
 	public $fixtures = [
         'app.config_items',
         'app.workflow_models',
@@ -29,22 +28,9 @@ class InstitutionsControllerTest extends IntegrationTestCase {
         'app.shift_options',
         'app.institution_shifts'
     ];
-    
-	public function setAuthSession() {
-		
-		$this->session([
-			'Auth' => [
-				'User' => [
-					'id' => 2,
-					'username' => 'admin',
-					'super_admin' => '1'
-				]
-			]
-		]);
-	}
 
-	public function testInstitutionIndex() {
-
+	public function testInstitutionIndex()
+    {
 		$this->setAuthSession();
 		$this->get('/Institutions');
 		$this->assertResponseCode(200);
