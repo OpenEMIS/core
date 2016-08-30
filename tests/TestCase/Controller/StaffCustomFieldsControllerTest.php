@@ -1,33 +1,20 @@
 <?php
+namespace App\Test\TestCases;
 
-namespace StaffCustomField\tests\TestCase\Controller;
+use Cake\ORM\TableRegistry;
+use App\Test\AppTestCase;
 
-use Cake\TestSuite\IntegrationTestCase;
-
-class StaffCustomFIeldsControllerTest extends IntegrationTestCase {
-
-	public $fixtures = [
+class StaffCustomFIeldsControllerTest extends AppTestCase
+{
+    public $fixtures = [
         'app.config_items',
         'app.workflow_models'
     ];
 
-	public function setAuthSession() {
-		
-		$this->session([
-			'Auth' => [
-				'User' => [
-					'id' => 2,
-					'username' => 'admin',
-					'super_admin' => '1'
-				]
-			]
-		]);
-	}
-
-	public function testStaffCustomFieldIndex() {
-
-		$this->setAuthSession();
-		$this->get('/StaffCustomFields/Fields');
-		$this->assertResponseCode(200);
-	}
+    public function testStaffCustomFieldIndex()
+    {
+        $this->setAuthSession();
+        $this->get('/StaffCustomFields/Fields');
+        $this->assertResponseCode(200);
+    }
 }

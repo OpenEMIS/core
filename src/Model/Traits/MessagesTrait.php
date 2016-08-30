@@ -14,6 +14,7 @@ trait MessagesTrait {
         ],
         'Assessments' => [
             'subjects' => 'Subjects',
+            'noSubjects' => 'There is no subject selected',
             'templates' => 'Templates',
             'noTemplates' => 'No Templates',
             'noGrades' => 'No Available Grades',
@@ -23,7 +24,8 @@ trait MessagesTrait {
             'assessmentPeriods' => 'Assessment Periods',
             'assessmentGradingType' => 'Assessment Grading Type',
             'educationSubject' => 'Education Subject',
-            'weight' => 'Weight'
+            'subjectWeight' => 'Subject Weight',
+            'periodWeight' => 'Period Weight'
         ],
         'CustomGroups' => [
             'custom_modules' => 'Module'
@@ -108,6 +110,12 @@ trait MessagesTrait {
             '6' => 'Missing a temporary folder. Please contact your network administrator for assistance.',
             '7' => 'Failed to write file to disk. Please contact your network administrator for assistance.',
             '8' => 'A PHP extension stopped the file upload. Please contact your network administrator for assistance.'
+        ],
+        'InstitutionInfrastructures' => [
+            'ownerAddNotAllowed' => 'You are not allowed to add infrastructure as there are no shifts configured in the current academic period',
+            'occupierAddNotAllowed' => 'You are not allowed to add infrastructure as an occupier',
+            'occupierEditNotAllowed' => 'You are not allowed to edit infrastructure as an occupier',
+            'occupierDeleteNotAllowed' => 'You are not allowed to delete infrastructure as an occupier'
         ],
         'InfrastructureTypes' => [
             'noLevels' => 'No Available Levels',
@@ -1186,7 +1194,11 @@ trait MessagesTrait {
             'Assessments' => [
                 'code' => [
                     'ruleUniqueCode' => 'Code must be unique for the same academic period',
-                    'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form'
+                    'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form',
+                    'ruleAssessmentExistByGradeAcademicPeriod' => 'Assessment already created for the selected grade.'
+                ],
+                'education_grade_id' => [
+                    'ruleAssessmentExistByGradeAcademicPeriod' => 'Assessment already created for the selected grade.'
                 ]
             ],
             'AssessmentPeriods' => [
