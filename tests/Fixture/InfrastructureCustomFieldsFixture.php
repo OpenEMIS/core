@@ -6,6 +6,18 @@ use Cake\TestSuite\Fixture\TestFixture;
 class InfrastructureCustomFieldsFixture extends TestFixture
 {
     public $import = ['table' => 'infrastructure_custom_fields'];
-    public $records = [];
+    public $records = [
+        [
+            'id' => '1',
+            'name' => 'Text field',
+            'field_type' => 'TEXT',
+            'is_mandatory' => 0,
+            'is_unique' => 0,
+            'params' => null,
+            'modified_user_id' => null,
+            'modified' => null,
+            'created_user_id' => '1',
+            'created' => '0000-00-00 00:00:00'
+        ]
+    ];
 }
-
