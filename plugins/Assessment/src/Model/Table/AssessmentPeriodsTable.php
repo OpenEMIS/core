@@ -102,6 +102,10 @@ class AssessmentPeriodsTable extends ControllerActionTable {
         $this->field('assessment_id', [
             'visible' => ['index'=>false]
         ]);
+
+        $this->field('weight', [
+            'visible' => ['index'=>false]
+        ]);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) 
@@ -124,15 +128,33 @@ class AssessmentPeriodsTable extends ControllerActionTable {
             ]
         ]);
 
+        $this->field('weight', [
+            'attr' => [
+                'label' => $this->getMessage('Assessments.periodWeight')
+            ]
+        ]);
+
         $this->controller->set('assessmentGradingTypeOptions', $this->getGradingTypeOptions()); //send to ctp
 
         $this->setFieldOrder([
              'assessment_id', 'code', 'name', 'start_date', 'end_date', 'date_enabled', 'date_disabled', 'weight', 'education_subjects' 
         ]);
+
+        //this is to sort array based on certain value on subarray, in this case based on education order value
+        $educationSubjects = $entity->education_subjects;
+        usort($educationSubjects, function($a,$b){ return $a['order']-$b['order'];} ); 
+        $entity->education_subjects = $educationSubjects;
     }
 
 	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        if ($this->action == 'edit') {
+            //this is to sort array based on certain value on subarray, in this case based on education order value
+            $educationSubjects = $entity->education_subjects;
+            usort($educationSubjects, function($a,$b){ return $a['order']-$b['order'];} ); 
+            $entity->education_subjects = $educationSubjects;
+        }
+
         $this->setupFields($entity);
 
 		$this->controller->set('assessmentGradingTypeOptions', $this->getGradingTypeOptions()); //send to ctp
@@ -297,11 +319,13 @@ class AssessmentPeriodsTable extends ControllerActionTable {
         
         $todayDate = Time::now();
 
-        if ($action == 'add') {
-            if ($periodStartDate <= $todayDate && $periodEndDate >= $todayDate) { //if today's date inside the academic period range, then put today as default value.
-                $attr['value'] = $todayDate->format('d-m-Y');
-            } else {
-                $attr['value'] = $periodStartDate->format('d-m-Y');
+        if (!$request->is(['post', 'put'])) { //only apply before user submit / validation
+            if ($action == 'add') {
+                if ($periodStartDate <= $todayDate && $periodEndDate >= $todayDate) { //if today's date inside the academic period range, then put today as default value.
+                    $attr['value'] = $todayDate->format('d-m-Y');
+                } else {
+                    $attr['value'] = $periodStartDate->format('d-m-Y');
+                }
             }
         }
 
@@ -321,11 +345,13 @@ class AssessmentPeriodsTable extends ControllerActionTable {
         
         $todayDate = Time::now();
 
-        if ($action == 'add') {
-            if ($periodStartDate <= $todayDate && $periodEndDate >= $todayDate) { //if today's date inside the academic period range, then put today as default value.
-                $attr['value'] = $todayDate->format('d-m-Y');
-            } else {
-                $attr['value'] = $periodEndDate->format('d-m-Y');
+        if (!$request->is(['post', 'put'])) { //only apply before user submit / validation
+            if ($action == 'add') {
+                if ($periodStartDate <= $todayDate && $periodEndDate >= $todayDate) { //if today's date inside the academic period range, then put today as default value.
+                    $attr['value'] = $todayDate->format('d-m-Y');
+                } else {
+                    $attr['value'] = $periodEndDate->format('d-m-Y');
+                }
             }
         }
 
@@ -365,7 +391,10 @@ class AssessmentPeriodsTable extends ControllerActionTable {
         $this->field('date_disabled');
 
         $this->field('weight', [
-            'type' => 'decimal'
+            'type' => 'decimal',
+            'attr' => [
+                'label' => $this->getMessage('Assessments.periodWeight')
+            ]
         ]);
 
         $this->setFieldOrder([
