@@ -8,12 +8,17 @@ class TranslationsControllerTest extends AppTestCase
 {
     public $fixtures = [
         'app.config_items',
-        'app.workflow_models'
+        'app.labels',
+        'app.security_users',
+        'app.workflow_models',
+        'app.workflow_steps',
+        'app.workflow_statuses',
+        'app.workflow_statuses_steps',
+        'app.translations'
     ];
 
     public function testTranslationsIndex()
     {
-        $this->setAuthSession();
         $this->get('/Translations');
         $this->assertResponseCode(200);
     }
