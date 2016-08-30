@@ -13,7 +13,7 @@ $this->start('panelBody');
 		{{section.name}}
 	</div>
 	<div ng-repeat-end class="table-wrapper" id="student-result-table_{{section.id}}">
-		<div ng-if="StudentResultsController.gridOptions[section.id]" ag-grid="StudentResultsController.gridOptions[section.id]" class="ag-fresh ag-height-fixed"></div>
+		<div ng-if="StudentResultsController.gridOptions[section.id]" ag-grid="StudentResultsController.gridOptions[section.id]" class="ag-fresh"></div>
 	</div>
 <?php
 $this->end();
