@@ -231,6 +231,17 @@ class StudentDropoutTable extends AppTable {
 			if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST || !($this->AccessControl->check(['Institutions', $this->alias(), 'edit']))) {
 				$attr['type'] = 'readonly';
 			}
+
+			$id = $request->pass[1];
+			$studentId = $this->get($id)['student_id'];
+			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+			$enrolledStatus = $StudentStatuses->find()->where([$StudentStatuses->aliasField('code') => 'CURRENT'])->first()->id;
+			$studentData = TableRegistry::get('Institution.Students')->find()
+						->where(['student_id' => $studentId, 'student_status_id' => $enrolledStatus])
+						->first();
+			$enrolledDate = $studentData['start_date']->format('d-m-Y');
+			$attr['date_options'] = ['startDate' => $enrolledDate];
+
 			return $attr;
 		}
 	}
