@@ -6,26 +6,15 @@ use App\Test\AppTestCase;
 
 class AcademicPeriodsControllerTest extends AppTestCase
 {
-    public $fixtures = [
-        'app.config_items',
-        'app.workflow_models',
-        'app.custom_modules',
-        'app.academic_period_levels',
-        'app.academic_periods',
-        'app.institution_rooms',
-        'app.room_custom_field_values',
-        'app.infrastructure_levels',
-    ];
-
     private $testingId = 2;
 
-    public function setup() 
+    public function setup()
     {
         parent::setUp();
         $this->urlPrefix('/AcademicPeriods/Periods/');
     }
 
-    public function testIndex() 
+    public function testIndex()
     {
         $testUrl = $this->url('index', ['parent' => 1]);
 
@@ -34,7 +23,7 @@ class AcademicPeriodsControllerTest extends AppTestCase
         $this->assertEquals(true, (count($this->viewVariable('data')) >= 1));
     }
 
-    public function testSearchFound() 
+    public function testSearchFound()
     {
         $testUrl = $this->url('index', ['parent' => 1]);
 
@@ -47,7 +36,7 @@ class AcademicPeriodsControllerTest extends AppTestCase
         $this->assertEquals(true, (count($this->viewVariable('data')) >= 1));
     }
 
-    public function testSearchNotFound() 
+    public function testSearchNotFound()
     {
         $testUrl = $this->url('index');
         $data = [
@@ -60,7 +49,7 @@ class AcademicPeriodsControllerTest extends AppTestCase
         $this->assertEquals(true, (count($this->viewVariable('data')) == 0));
     }
 
-    public function testCreate() 
+    public function testCreate()
     {
         $testUrl = $this->url('add');
 
@@ -90,7 +79,7 @@ class AcademicPeriodsControllerTest extends AppTestCase
         $this->assertEquals(true, (!empty($lastInsertedRecord)));
     }
 
-    public function testRead() 
+    public function testRead()
     {
         $testUrl = $this->url('view/'.$this->testingId, ['parent' => 1]);
 

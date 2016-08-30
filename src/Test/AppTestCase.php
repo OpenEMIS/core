@@ -2,6 +2,7 @@
 namespace App\Test;
 use Cake\TestSuite\IntegrationTestCase;
 use Cake\Utility\Hash;
+use App\Test\FixturesTrait;
 
 // attempt to create extending classes and traits fail maybe because of link below
 // https://getcomposer.org/doc/04-schema.md#autoload-dev
@@ -9,16 +10,20 @@ use Cake\Utility\Hash;
 // CoreTestCases
 
 // extends IntegrationTestCase: "A test case class intended to make integration tests of your controllers easier... provides a number of helper methods and features that make dispatching requests and checking their responses simpler."
+
 class AppTestCase extends IntegrationTestCase
 {
-    private $urlPrefix = '';
+    use FixturesTrait; // consists of fixtures for the entire database
 
-    public function setup() 
+    private $urlPrefix = '';
+    // public $dropTables = false;
+
+    public function setup()
     {
         $this->setAuthSession();
     }
 
-    public function setAuthSession() 
+    public function setAuthSession()
     {
         $this->session([
             'Auth' => [
@@ -31,7 +36,7 @@ class AppTestCase extends IntegrationTestCase
         ]);
     }
 
-    public function urlPrefix($param = null) 
+    public function urlPrefix($param = null)
     {
         if (!is_null($param)) {
             $this->urlPrefix = $param;
@@ -39,7 +44,7 @@ class AppTestCase extends IntegrationTestCase
         return $this->urlPrefix;
     }
 
-    public function url($action, $namedParams = []) 
+    public function url($action, $namedParams = [])
     {
         $namedParamsString = '';
         if (!empty($namedParams)) {
@@ -48,7 +53,7 @@ class AppTestCase extends IntegrationTestCase
                 $namedParamsString .= $key . '='. urlencode($value);
             }
         }
-        
+
         return $this->urlPrefix . $action . $namedParamsString;
     }
 
