@@ -36,6 +36,17 @@ class AppTestCase extends IntegrationTestCase
         ]);
     }
 
+    public function setInstitutionSession($id)
+    {
+        $this->session([
+            'Institution' => [
+                'Institutions' => [
+                    'id' => $id
+                ]
+            ]
+        ]);
+    }
+
     public function urlPrefix($param = null)
     {
         if (!is_null($param)) {
@@ -48,9 +59,9 @@ class AppTestCase extends IntegrationTestCase
     {
         $namedParamsString = '';
         if (!empty($namedParams)) {
-            $namedParamsString .= '?';
             foreach ($namedParams as $key => $value) {
-                $namedParamsString .= $key . '='. urlencode($value);
+                $namedParamsPrefix = empty($namedParamsString) ? '?' : '&';
+                $namedParamsString .= $namedParamsPrefix . $key . '='. urlencode($value);
             }
         }
 

@@ -14,19 +14,19 @@ class EducationSystemsControllerTest extends AppTestCase
 
     private $id = 1;
 
-    public function setup() 
+    public function setup()
     {
         parent::setUp();
         $this->urlPrefix('/Educations/Systems/');
     }
 
-    public function testIndex() 
+    public function testIndex()
     {
         $testUrl = $this->url('index');
 
         $this->get($testUrl);
         $this->assertResponseCode(200);
-        $this->assertEquals(true, (count($this->viewVariable('data')) == 1));
+        $this->assertEquals(true, (count($this->viewVariable('data')) >= 1));
     }
 
     public function testSearchFound()
@@ -39,10 +39,10 @@ class EducationSystemsControllerTest extends AppTestCase
         ];
         $this->postData($testUrl, $data);
 
-        $this->assertEquals(true, (count($this->viewVariable('data')) == 1));
+        $this->assertEquals(true, (count($this->viewVariable('data')) >= 1));
     }
 
-    public function testSearchNotFound() 
+    public function testSearchNotFound()
     {
         $testUrl = $this->url('index');
         $data = [
@@ -55,7 +55,7 @@ class EducationSystemsControllerTest extends AppTestCase
         $this->assertEquals(true, (count($this->viewVariable('data')) == 0));
     }
 
-    public function testCreate() 
+    public function testCreate()
     {
         $testUrl = $this->url('add');
 
