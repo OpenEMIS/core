@@ -116,8 +116,8 @@ class FileUploadBehavior extends Behavior {
 	public function afterAction(Event $event) {
 		if (isset($this->_table->fields[$this->config('content')])) {
 			// pr();
-			$comment = '* File size should not be larger than ' . $this->config('size');
-			$comment .= '<br/>* Format Supported: ' . $this->fileTypesForView();
+			$comment = '* ' . __('File size should not be larger than ') . $this->config('size');
+			$comment .= '<br/>* ' . __('Format Supported: ') . $this->fileTypesForView();
 			$this->_table->fields[$this->config('content')]['comment'] = $comment ;
 		}
 	}
@@ -158,7 +158,7 @@ class FileUploadBehavior extends Behavior {
 						$session->write($model->registryAlias().'.parseUpload', $parseUploadData);
 						$data = $this->parseUploadInput($data, $parseUploadData);
 					} else {
-						$entity->errors($fileContentField, ['File size should not be more than ' . $this->config('size')]);
+						$entity->errors($fileContentField, [__('File size should not be larger than ') . $this->config('size')]);
 						unset($data[$model->alias()][$fileContentField]);
 					}
 				} else {
@@ -197,7 +197,7 @@ class FileUploadBehavior extends Behavior {
 							$session->write($model->registryAlias().'.parseUpload', $parseUploadData);
 							$data = $this->parseUploadInput($data, $parseUploadData);
 						} else {
-							$entity->errors($fileContentField, ['File size should not be more than ' . $this->config('size')]);
+							$entity->errors($fileContentField, [__('File size should not be larger than ') . $this->config('size')]);
 							unset($data[$model->alias()][$fileContentField]);
 						}				
 					} else {
