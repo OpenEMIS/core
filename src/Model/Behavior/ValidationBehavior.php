@@ -796,7 +796,7 @@ class ValidationBehavior extends Behavior {
 
 				$rangecheck = ($startDate >= $academicPeriodStartDate && $startDate <= $academicPeriodEndDate) &&
 				(is_null($academicPeriodEndDate) ||
-					(!is_null($academicPeriodEndDate) && ($endDate <= $academicPeriodEndDate))
+					(!is_null($academicPeriodEndDate) && ($endDate >= $academicPeriodEndDate && $endDate <= $academicPeriodEndDate))
 				)
 				;
 				return $rangecheck;
@@ -804,6 +804,40 @@ class ValidationBehavior extends Behavior {
 		}
 
 		return false;
+	}
+
+	//check combination of code and academic period. can be re-use for other models.
+	public static function uniqueCodeByForeignKeyAcademicPeriod($field, $foreignKeyModel, $foreignKeyField, $academicFieldName, $globalData)
+	{
+		if (array_key_exists($academicFieldName, $globalData['data'])) {
+
+			$model = $globalData['providers']['table'];
+
+			//if have record then return false.
+			return !($model->find('list')
+					->contain([$foreignKeyModel], [
+						"$foreignKeyModel.id = " . $model->aliasField($foreignKeyField)
+					])
+					->where([
+						$model->aliasField('code') => $globalData['data']['code'],
+						"$foreignKeyModel.$academicFieldName = " . $globalData['data']['academic_period_id']
+					])
+					->count());
+		}
+	}
+
+	public static function assessmentExistByGradeAcademicPeriod($field, $globalData)
+	{
+		$model = $globalData['providers']['table'];
+		$data = $globalData['data'];
+		// pr($data);die;
+
+		return !($model->find()
+                    ->where([
+                        $model->aliasField('education_grade_id') => $data['education_grade_id'],
+                        $model->aliasField('academic_period_id') => $data['academic_period_id']
+                    ])
+                    ->count());
 	}
 
 	public static function compareJoinDate($field, $academicFieldName, $globalData)
@@ -1333,7 +1367,7 @@ class ValidationBehavior extends Behavior {
 				break;
 			}
 		}
-      	foreach ($parentModel->request->data[$parentModel->alias()][$modelAssociation->property()] as $key => $value) {
+		foreach ($parentModel->request->data[$parentModel->alias()][$modelAssociation->property()] as $key => $value) {
       		if ($value['code']==$code) {
       			$count++;
       		}
