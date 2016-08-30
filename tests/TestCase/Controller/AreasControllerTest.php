@@ -1,34 +1,31 @@
 <?php
+namespace App\Test\TestCases;
 
-namespace Area\tests\TestCase\Controller;
-
-use App\Test\AppTestCase;
 use Cake\ORM\TableRegistry;
+use App\Test\AppTestCase;
 
-class AreasControllerTest extends AppTestCase {
-	public $fixtures = [
-        'app.area_levels',
-        'app.areas',
-    ];
-
+class AreasControllerTest extends AppTestCase
+{
 	public $fixtures = [
 		'app.config_items',
+        'app.labels',
+        'app.security_users',
         'app.workflow_models',
+        'app.workflow_steps',
+        'app.workflow_statuses',
+        'app.workflow_statuses_steps',
         'app.area_levels',
         'app.areas',
     ];
 
-	public function testAreaIndex() {
-
-		$this->setAuthSession();
+	public function testAreaIndex()
+	{
 		$this->get('/Areas/Areas/index?parent=1');
 		$this->assertResponseCode(200);
 	}
 
-	public function testAddArea() {
-
- 		$this->setAuthSession();
-
+	public function testAddArea()
+	{
 		$data = [
 			'id' => '2',
 			'code' => 'SGP',
@@ -45,17 +42,14 @@ class AreasControllerTest extends AppTestCase {
 		$this->assertNotEmpty($table->get(2));
 	}
 
-	public function testViewArea() {
-
- 		$this->setAuthSession();
+	public function testViewArea()
+	{
 		$this->get('/Areas/Areas/index?parent=2');
 		$this->assertResponseCode(200);
 	}
 
-	public function testEditArea() {
-
- 		$this->setAuthSession();
-
+	public function testEditArea()
+	{
 		$data = [
 			'code' => 'JPN',
 			'name' => 'Japan',
@@ -81,7 +75,7 @@ class AreasControllerTest extends AppTestCase {
 	// 		'transfer_to' => 1,
 	// 		'_method' => 'DELETE'
 	// 	];
-		
+
 	// 	$this->post('/Areas/Areas/remove/2?parent=1', $data);
 	// 	$table = TableRegistry::get('Area.Areas');
 	// 	$exists = $table->exists([$table->primaryKey() => 2]);
