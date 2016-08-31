@@ -44,6 +44,12 @@ class StudentTransferTable extends AppTable {
 		$this->addBehavior('Institution.ClassStudents');
 	}
 
+	public function addOnInitialize(Event $event, Entity $entity)
+	{
+		// To clear the query string from the previous page to prevent logic conflict on this page
+		$this->request->query = [];
+	}
+
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
 
@@ -181,7 +187,7 @@ class StudentTransferTable extends AppTable {
 					$event->stopPropagation();
 					return $this->controller->redirect($url);
 				}
-			}			
+			}
 		}
     }
 
@@ -416,7 +422,7 @@ class StudentTransferTable extends AppTable {
     }
 
     public function onUpdateFieldStudentTransferReasonId(Event $event, array $attr, $action, Request $request) {
-    	$StudentTransferReasons = TableRegistry::get('FieldOption.StudentTransferReasons');
+    	$StudentTransferReasons = TableRegistry::get('Student.StudentTransferReasons');
 		$attr['options'] = $StudentTransferReasons->getList()->toArray();
     	return $attr;
     }
@@ -433,10 +439,6 @@ class StudentTransferTable extends AppTable {
 	    	$GradeStudents = $this->GradeStudents;
 	    	$statuses = $this->statuses;
 
-	    	if ($selectedClass == -1) {
-				$selectedClass = '';
-			}
-
 			$studentQuery = $this
 				->find()
 				->matching('Users');
@@ -449,7 +451,7 @@ class StudentTransferTable extends AppTable {
                 ->find('studentClasses', ['institution_class_id' => $selectedClass])
                 ->select(['institution_class_id' => 'InstitutionClassStudents.institution_class_id'])
                 ->autoFields(true)
-                
+
 				->where([
 					$this->aliasField('institution_id') => $institutionId,
 					$this->aliasField('academic_period_id') => $selectedPeriod,
@@ -493,13 +495,13 @@ class StudentTransferTable extends AppTable {
 				'ClassGrades.education_grade_id' => $educationGradeId
 			])
 			->toArray();
-		$options = ['-1' => __('All Classes')] + $classes;
+		$options = ['-1' => __('Students without Class')] + $classes;
 
 		$selectedClass = $request->query('institution_class');
 		if (empty($selectedClass)) {
 			if (!empty($classes)) {
 				$selectedClass = key($classes);
-			}		
+			}
 		}
 
 		$this->advancedSelectOptions($options, $selectedClass);
@@ -641,6 +643,6 @@ class StudentTransferTable extends AppTable {
 		$url = $this->ControllerAction->url('index');
 		$url['action'] = 'Students';
 
-		return $this->controller->redirect($url);		
+		return $this->controller->redirect($url);
 	}
 }

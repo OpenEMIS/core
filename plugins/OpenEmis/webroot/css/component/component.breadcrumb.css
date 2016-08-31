@@ -1,4 +1,4 @@
-/* BREADCRUMB v.1.0.8 */
+/* BREADCRUMB v.1.0.9 */
 
 .breadcrumb {
     clear: both;
@@ -99,6 +99,11 @@
     color: #999;
     font-weight: normal;
     display: inline;
+    float: right;
+}
+
+.rtl .treemap-breadcrumb > li + li::after {
+    float: none !important;
 }
 
 .rtl .panel-breadcrumb {

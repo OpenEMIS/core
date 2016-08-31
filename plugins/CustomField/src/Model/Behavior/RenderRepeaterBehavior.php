@@ -36,7 +36,9 @@ class RenderRepeaterBehavior extends RenderBehavior {
         
         $form = $event->subject()->Form;
         $fieldPrefix = $attr['model'] . '.institution_repeater_surveys.' . $fieldId;
-
+        $form->unlockField($fieldPrefix);
+        $unlockFields = [$attr['model'] . '.repeater_question_id'];
+        $form->unlockField($attr['model'] . '.repeater_question_id');
         $tableHeaders = [];
         $tableCells = [];
         $cellCount = 0;
@@ -239,7 +241,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
             $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
         } else if ($action == 'edit') {
             $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
-            $value = $this->processRelevancyDisabled($entity, $value, $fieldId);
+            $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
         }
 
         $event->stopPropagation();

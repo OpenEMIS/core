@@ -17,20 +17,22 @@ class RestfulController extends AppController
     private $_debug = false;
     private $model = null;
 
-    public $components = [
-        'RequestHandler'
-    ];
-
     public function initialize()
     {
         parent::initialize();
+        $this->loadComponent('RequestHandler');
+        $this->loadComponent('Auth');
+        $this->Auth->allow('token');
     }
 
-/***************************************************************************************************************************************************
- *
- * CakePHP events
- *
- ***************************************************************************************************************************************************/
+    public function token()
+    {
+        $this->autoRender = false;
+        if (!empty($this->request->query)) {
+            pr($this->request->query);
+        }
+    }
+
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
@@ -43,24 +45,14 @@ class RestfulController extends AppController
             $tableAlias = $this->request->model;
             $model = $this->_instantiateModel($tableAlias);
             if ($model != false) {
-            	$this->model = $model;
+                $this->model = $model;
 
                 // Event to get allowed action and allowed table to be accessible via restful
-            	$allowedActions = [];
                 $event = $model->dispatchEvent('Restful.Model.onGetAllowedActions', null, $this);
-                if ($event->result) 
-                {
-                    $allowedActions = $event->result;
+                if (is_array($event->result)) {
+                    $this->Auth->allow($event->result);
                 }
-            	if (!empty($allowedActions)) 
-                {
-            		$this->Auth->allow($allowedActions);
-            	}
             }
-        }
-        if ($this->request->is(['put', 'post', 'delete', 'patch']) || !empty($this->request->data)) {
-            $token = isset($this->request->cookies['csrfToken']) ? $this->request->cookies['csrfToken'] : '';
-            $this->request->env('HTTP_X_CSRF_TOKEN', $token);
         }
     }
 
@@ -76,13 +68,6 @@ class RestfulController extends AppController
             ]);
         }
     }
-
-
-/***************************************************************************************************************************************************
- *
- * Controller action functions
- *
- ***************************************************************************************************************************************************/
 
     public function nothing()
     {
@@ -116,7 +101,7 @@ class RestfulController extends AppController
             $json = str_replace('[', '":{"', $json);
             $json = str_replace(']', '"}}', $json);
             $json = '{"' . str_replace(';', '","', $json);
-            
+
             $noAttributesFound = strripos($json, '"}') === false;
             if ($noAttributesFound) {
                 $json .= '": {}}';
@@ -132,7 +117,7 @@ class RestfulController extends AppController
         if (!empty($value)) {
             $table = $extra['table'];
             $columns = $table->schema()->columns();
-            
+
             $fields = explode(',', $value);
             foreach ($fields as $index => $field) {
                 if (in_array($field, $columns)) {
@@ -150,10 +135,16 @@ class RestfulController extends AppController
         ];
 
         if (!empty($value)) {
+            $table = $extra['table'];
             $finders = $this->decode($value);
             foreach ($finders as $name => $options) {
                 $options = array_merge($options, $components);
-                $query->find($name, $options);
+                $finderFunction = 'find' . ucfirst($name);
+                if (method_exists($table, $finderFunction) || $table->behaviors()->hasMethod($finderFunction)) {
+                    $query->find($name, $options);
+                } else {
+                    Log::write('debug', 'Finder (' . $finderFunction . ') does not exists.');
+                }
             }
             $extra['list'] = array_key_exists('list', $finders);
         }
@@ -174,7 +165,7 @@ class RestfulController extends AppController
             } else {
                 $contain = explode(',', $value);
             }
-            
+
             if (!empty($contain)) {
                 $query->contain($contain);
                 $fields = [];
@@ -199,15 +190,49 @@ class RestfulController extends AppController
             $conditions = [];
             $table = $extra['table'];
             $columns = $table->schema()->columns();
-           
+
             foreach ($value as $field => $val) {
                 if (in_array($field, $columns)) {
                     $conditions[$table->aliasField($field)] = $val;
                 } else {
-                    $conditions[$field] = $val;
+                    $conditions[str_replace("-", ".", $field)] = $val;
                 }
             }
             $query->where($conditions);
+        }
+    }
+
+    private function _orWhere(Query $query, $value, ArrayObject $extra)
+    {
+        $table = $extra['table'];
+        $fields = explode(',', $value);
+        $columns = $table->schema()->columns();
+
+        $orWhere = [];
+        foreach ($fields as $field) {
+            $values = explode(':', $field);
+            $key = $values[0];
+            $value = $values[1];
+
+            if (in_array($key, $columns)) {
+                $key = $table->aliasField($key);
+            }
+
+            $compareLike = false;
+            if ($this->startsWith($value, '_')) {
+                $value = '%' . substr($value, 1);
+                $compareLike = true;
+            }
+
+            if ($this->endsWith($value, '_')) {
+                $value = substr($value, 0, strlen($value)-1) . '%';
+                $compareLike = true;
+            }
+
+            if ($compareLike) {
+                $key .= ' LIKE';
+            }
+            $query->orWhere([$key => $value]);
         }
     }
 
@@ -244,13 +269,34 @@ class RestfulController extends AppController
     private function convertBinaryToBase64(Entity $entity)
     {
         foreach ($entity->visibleProperties() as $property) {
-            if (is_resource($entity->$property)) {
-                $entity->$property = base64_encode("data:image/jpeg;base64,".stream_get_contents($entity->$property));
+            if ($entity->$property instanceof Entity) {
+                $this->convertBinaryToBase64($entity->$property);
+            } else if (is_resource($entity->$property)) {
+                $entity->$property = base64_encode(stream_get_contents($entity->$property));
+            } else if ($property == 'password') { // removing password from entity so that the value will not be exposed
+                $entity->unsetProperty($property);
             }
         }
     }
 
-    private function _formatBinaryValue($data) {
+    private function convertBase64ToBinary(Entity $entity)
+    {
+        $table = $this->model;
+        $schema = $table->schema();
+        $columns = $schema->columns();
+
+        foreach ($columns as $column) {
+            $attr = $schema->column($column);
+            if ($attr['type'] == 'binary' && $entity->has($column)) {
+                $value = urldecode($entity->$column);
+                $entity->$column = base64_decode($value);
+            }
+        }
+        return $entity;
+    }
+
+    private function _formatBinaryValue($data)
+    {
         if ($data instanceof Entity) {
             $this->convertBinaryToBase64($data);
         } else {
@@ -259,6 +305,41 @@ class RestfulController extends AppController
             }
         }
         return $data;
+    }
+
+    // this function will be called if accessed from other domain
+    // Reference: http://www.html5rocks.com/en/tutorials/cors/
+    // The logic in this function is not finalised
+    public function options()
+    {
+        $this->autoRender = false;
+        $supportedMethods = ['GET', 'POST', 'PUT', 'DELETE'];
+        $headers = getallheaders();
+
+        header('Access-Control-Allow-Origin: ' . $headers['Origin']);
+        header('Access-Control-Allow-Methods: ' . implode(', ', $supportedMethods));
+        header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Authorization');
+        header('Content-Type: text/html; charset=utf-8');
+
+        Log::write('debug', getallheaders());
+
+        /*
+        OPTIONS /cors HTTP/1.1
+        Origin: http://api.bob.com
+        Access-Control-Request-Method: PUT
+        Access-Control-Request-Headers: X-Custom-Header
+        Host: api.alice.com
+        Accept-Language: en-US
+        Connection: keep-alive
+        User-Agent: Mozilla/5.0...
+        */
+
+        /*
+        Access-Control-Allow-Origin: http://api.bob.com
+        Access-Control-Allow-Methods: GET, POST, PUT
+        Access-Control-Allow-Headers: X-Custom-Header
+        Content-Type: text/html; charset=utf-8
+        */
     }
 
     public function index()
@@ -272,7 +353,7 @@ class RestfulController extends AppController
         $requestQueries = $this->request->query;
         $extra = new ArrayObject(['table' => $table, 'fields' => []]);
         Log::write('debug', $requestQueries);
-        
+
         $default = ['_limit' => 30, '_page' => 1];
         $queryString = array_merge($default, $this->processQueryString($requestQueries));
 
@@ -309,6 +390,7 @@ class RestfulController extends AppController
         $target = $this->_instantiateModel($model);
         if ($target) {
             $entity = $target->newEntity($this->request->data);
+            $entity = $this->convertBase64ToBinary($entity);
             $target->save($entity);
             $this->set([
                 'data' => $entity,
@@ -322,9 +404,14 @@ class RestfulController extends AppController
     {
         $target = $this->_instantiateModel($model);
         if ($target) {
-            if ($target->exists([$target->aliasField($target->primaryKey()) => $id])) {
+            if (strtolower($id) == 'schema') {
+                $fields = $this->schema($target);
+                $serialize = ['data' => $fields];
+                $serialize['_serialize'] = array_keys($serialize);
+                $this->set($serialize);
+            } else if ($target->exists([$target->aliasField($target->primaryKey()) => $id])) {
                 $requestQueries = $this->request->query;
-    
+
                 $query = $target->find();
                 $containments = $this->_setupContainments($target, $requestQueries, $query);
 
@@ -359,6 +446,7 @@ class RestfulController extends AppController
             if ($target->exists([$target->aliasField($target->primaryKey()) => $id])) {
                 $entity = $target->get($id);
                 $entity = $target->patchEntity($entity, $this->request->data);
+                $entity = $this->convertBase64ToBinary($entity);
                 if (empty($entity->errors())) {
                     $target->save($entity);
                     $this->set([
@@ -395,12 +483,17 @@ class RestfulController extends AppController
         }
     }
 
-
-/***************************************************************************************************************************************************
- *
- * private functions
- *
- ***************************************************************************************************************************************************/
+    public function schema($table)
+    {
+        $fields = [];
+        $schema = $table->schema();
+        $columns = $schema->columns();
+        foreach ($columns as $col) {
+            $attr = $schema->column($col);
+            $fields[$col] = $attr;
+        }
+        return $fields;
+    }
 
     private function _instantiateModel($model)
     {
@@ -490,5 +583,11 @@ class RestfulController extends AppController
     {
         // search backwards starting from haystack length characters from the end
         return $needle === "" || strrpos($haystack, $needle, -strlen($haystack)) !== false;
+    }
+
+    private function endsWith($haystack, $needle)
+    {
+        // search forward starting from end minus needle length characters
+        return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== false);
     }
 }

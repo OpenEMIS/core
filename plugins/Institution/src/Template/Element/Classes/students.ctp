@@ -12,6 +12,7 @@
 			'label' => $this->Label->get('Users.add_student'),
 			'onchange' => "$('#reload').val('add').click();"
 		));
+		$this->Form->unlockField('InstitutionClasses.class_students');
 		?>
 	</div>
 	<?php endif;?>

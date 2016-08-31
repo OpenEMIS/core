@@ -48,6 +48,7 @@ class RenderDropdownBehavior extends RenderBehavior {
             }
         } else if ($action == 'edit') {
             $form = $event->subject()->Form;
+            $unlockFields = [];
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
             $options['type'] = 'select';
@@ -62,26 +63,36 @@ class RenderDropdownBehavior extends RenderBehavior {
                 $options['ng-init'] = 'RelevancyRulesController.Dropdown["'.$fieldId.'"] = "'.$selectedValue.'";';
             } else {
                 if (is_null($this->postedData)) {
-                    $questions = $this->_table->request->data[$this->_table->alias()]['custom_field_values'];
-                    foreach ($questions as $question) {
-                        if (isset($question['number_value'])) {
-                            if (array_key_exists($fieldKey, $question)) {
-                                $this->postedData[$question[$fieldKey]] = $question['number_value'];
+                    if (array_key_exists($this->_table->alias(), $this->_table->request->data)) {
+                        if (array_key_exists('custom_field_values', $this->_table->request->data[$this->_table->alias()])) {
+                            $questions = $this->_table->request->data[$this->_table->alias()]['custom_field_values'];
+                            foreach ($questions as $question) {
+                                if (isset($question['number_value'])) {
+                                    if (array_key_exists($fieldKey, $question)) {
+                                        $this->postedData[$question[$fieldKey]] = $question['number_value'];
+                                    }
+                                }
                             }
                         }
                     }
+                } else {
+                    if (array_key_exists($fieldId, $this->postedData)) {
+                        $selectedValue = $this->postedData[$fieldId];
+                        $options['ng-init'] = 'RelevancyRulesController.Dropdown["'.$fieldId.'"] = "'.$selectedValue.'";';
+                    }
                 }
-                $selectedValue = $this->postedData[$fieldId];
-                $options['ng-init'] = 'RelevancyRulesController.Dropdown["'.$fieldId.'"] = "'.$selectedValue.'";';
             }
 
             $value .= $form->input($fieldPrefix.".number_value", $options);
             $value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
+            $unlockFields[] = $fieldPrefix.".number_value";
+            $unlockFields[] = $fieldPrefix.".".$attr['attr']['fieldKey'];
             if (!is_null($savedId)) {
                 $value .= $form->hidden($fieldPrefix.".id", ['value' => $savedId]);
+                $unlockFields[] = $fieldPrefix.".id";
             }
 
-            $value = $this->processRelevancyDisabled($entity, $value, $fieldId);
+            $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
         }
 
         $event->stopPropagation();
