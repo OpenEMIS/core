@@ -1490,7 +1490,7 @@ class ValidationBehavior extends Behavior {
 	public static function validateJsonAPI($field, array $globalData)
 	{
 		// will pass the url to the areasTable, because the url checking function located in the areasTable.php
-		$url = $globalData['data']['url'];
+		$url = $globalData['data']['value'];
 		$Areas = TableRegistry::get('Area.Areas');
 		return $Areas->isApiValid($url);
 	}

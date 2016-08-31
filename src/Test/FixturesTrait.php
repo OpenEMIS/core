@@ -28,6 +28,7 @@ trait FixturesTrait {
         'app.config_attachments',
         'app.config_item_options',
         'app.config_items',
+        'app.config_product_lists',
         'app.contact_options',
         'app.contact_types',
         'app.countries',

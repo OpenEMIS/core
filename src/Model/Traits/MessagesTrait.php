@@ -1276,7 +1276,7 @@ trait MessagesTrait {
                 'name' => [
                     'ruleUnique' => 'This product already exists in the system',
                 ],
-                'url' => [
+                'value' => [
                     'invalidUrl' => 'You have entered an invalid url.',
                     'ruleValidateJsonAPI' => 'Data in the API link is invalid.'
                 ]

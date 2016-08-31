@@ -2,14 +2,17 @@
 namespace Area\Model\Table;
 
 use ArrayObject;
-use App\Model\Table\AppTable;
+
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
-class AreasTable extends AppTable {
+use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
+
+class AreasTable extends ControllerActionTable {
     private $_fieldOrder = ['visible', 'code', 'name', 'area_level_id'];
 
     public function initialize(array $config)
@@ -33,6 +36,13 @@ class AreasTable extends AppTable {
                 'filter' => 'parent_id',
             ]);
         }
+        if ($this->behaviors()->has('ControllerAction')) {
+            $this->behaviors()->get('ControllerAction')->config([
+                'actions' => [
+                    'remove' => 'restrict'
+                ],
+            ]);
+        }
     }
 
     public function implementedEvents()
@@ -54,7 +64,7 @@ class AreasTable extends AppTable {
             $sessionKey = $this->registryAlias() . '.APIInvalid';
             $session->write($sessionKey, 'Areas.api_invalid');
 
-            $url = $this->ControllerAction->url('index');
+            $url = $this->url('index');
             return $this->controller->redirect($url);
         } else {
             // API valid run the process
@@ -76,7 +86,7 @@ class AreasTable extends AppTable {
                 $this->fields[$field]['visible'] = false;
             }
 
-            $this->ControllerAction->field('data_will_be_synced_from', [
+            $this->field('data_will_be_synced_from', [
                 'type' => 'readonly',
                 'attr' => ['value' => $url]
             ]);
@@ -97,7 +107,7 @@ class AreasTable extends AppTable {
 
             // Pass data to ctp file to be displayed (sync_server.ctp)
             if ($this->request->is(['get'])) {
-                $primaryKey = $this->ControllerAction->getPrimaryKey($model);
+                $primaryKey = $this->getPrimaryKey($model);
                 $idKey = $model->aliasField($primaryKey);
 
                 $extra = new ArrayObject([]);
@@ -109,7 +119,7 @@ class AreasTable extends AppTable {
 
                     if ($model->exists([$idKey => $id])) {
                         $entity = $model->find()->where([$idKey => $id])->first();
-                        $records = $this->ControllerAction->getAssociatedRecords($model, $entity, $extra);
+                        $records = $this->getAssociatedRecords($model, $entity, $extra);
                         $associatedRecords[$key] = [
                             'id' => $id,
                             'code' => $obj['code'],
@@ -120,7 +130,7 @@ class AreasTable extends AppTable {
                     }
                 }
 
-                $this->ControllerAction->field('sync_server', [
+                $this->field('sync_server', [
                     'type' => 'element',
                     'element' => 'Area.Areas/sync_server'
                 ]);
@@ -190,7 +200,7 @@ class AreasTable extends AppTable {
                     $this->rebuildLftRght();
 
                     // redirect to index page
-                    $url = $this->ControllerAction->url('index');
+                    $url = $this->url('index');
                     unset($url['section']);
 
                     return $this->controller->redirect($url);
@@ -202,12 +212,12 @@ class AreasTable extends AppTable {
 
         $this->controller->set('data', $entity);
 
-        $this->ControllerAction->renderView('/ControllerAction/edit');
+        $this->renderView('/ControllerAction/edit');
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->ControllerAction->field('area_level_id');
+        $this->field('area_level_id');
         $count = $this->find()->where([
                 'OR' => [
                     [$this->aliasField('lft').' IS NULL'],
@@ -220,6 +230,14 @@ class AreasTable extends AppTable {
         }
         $this->fields['lft']['visible'] = false;
         $this->fields['rght']['visible'] = false;
+
+        //logic to hide 'add' button and display sync button if the API set
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        if (!empty($this->onGetUrl())) {
+            unset($toolbarButtonsArray['edit']);
+            unset($toolbarButtonsArray['remove']);
+        }
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
 
     public function rebuildLftRght()
@@ -227,43 +245,43 @@ class AreasTable extends AppTable {
         $this->recover();
     }
 
-    public function afterAction(Event $event)
+    public function afterAction(Event $event, ArrayObject $extra)
     {
-        $this->ControllerAction->setFieldOrder($this->_fieldOrder);
+        $this->setFieldOrder($this->_fieldOrder);
     }
 
-    public function onBeforeDelete(Event $event, ArrayObject $options, $id)
-    {
-        $transferTo = $this->request->data['transfer_to'];
-        $transferFrom = $id;
-        // Require to update the parent id of the children before removing the node from the tree
-        $this->updateAll(
-                [
-                    'parent_id' => $transferTo,
-                    'lft' => null,
-                    'rght' => null
-                ],
-                ['parent_id' => $transferFrom]
-            );
+    // public function onBeforeDelete(Event $event, ArrayObject $options, $id)
+    // {
+    //     $transferTo = $this->request->data['transfer_to'];
+    //     $transferFrom = $id;
+    //     // Require to update the parent id of the children before removing the node from the tree
+    //     $this->updateAll(
+    //             [
+    //                 'parent_id' => $transferTo,
+    //                 'lft' => null,
+    //                 'rght' => null
+    //             ],
+    //             ['parent_id' => $transferFrom]
+    //         );
 
-        $entity = $this->get($id);
-        $left = $entity->lft;
-        $right = $entity->rght;
+    //     $entity = $this->get($id);
+    //     $left = $entity->lft;
+    //     $right = $entity->rght;
 
-        // The left and right value of the children will all have to be rebuilt
-        $this->updateAll(
-                [
-                    'lft' => null,
-                    'rght' => null
-                ],
-                [
-                    'lft > ' => $left,
-                    'rght < ' => $right
-                ]
-            );
+    //     // The left and right value of the children will all have to be rebuilt
+    //     $this->updateAll(
+    //             [
+    //                 'lft' => null,
+    //                 'rght' => null
+    //             ],
+    //             [
+    //                 'lft > ' => $left,
+    //                 'rght < ' => $right
+    //             ]
+    //         );
 
-        $this->rebuildLftRght();
-    }
+    //     $this->rebuildLftRght();
+    // }
 
     public function onGetConvertOptions(Event $event, Entity $entity, Query $query)
     {
@@ -276,7 +294,7 @@ class AreasTable extends AppTable {
         if ($query->count() == 0 && $this->childCount($entity, true) > 0) {
             $this->Alert->warning('general.notTransferrable');
             $event->stopPropagation();
-            return $this->controller->redirect($this->ControllerAction->url('index'));
+            return $this->controller->redirect($this->url('index'));
         }
     }
 
@@ -350,7 +368,7 @@ class AreasTable extends AppTable {
         return $newAreaLists;
     }
 
-    public function indexBeforeAction(Event $event)
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         // Add breadcrumb
         $toolbarElements = [
@@ -379,14 +397,27 @@ class AreasTable extends AppTable {
                     ->first()
                     ->id;
 
-                $action = $this->ControllerAction->url('index');
+                $action = $this->url('index');
                 $action['parent'] = $parentId;
                 return $this->controller->redirect($action);
             }
         }
+
+        //logic to hide 'add' button and display sync button if the API set
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        if (!empty($this->onGetUrl())) {
+            $toolbarButtonsArray['sync'] = $toolbarButtonsArray['add'];
+            $toolbarButtonsArray['sync']['label'] = '<i class="fa fa-refresh"></i>';
+            $toolbarButtonsArray['sync']['attr']['title'] = __('Synchronize');
+            $toolbarButtonsArray['sync']['url'][0] = 'sync';
+
+            unset($toolbarButtonsArray['add']);
+        }
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
         $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
         if ($parentId != null) {
             $query->where([$this->aliasField('parent_id') => $parentId]);
@@ -395,7 +426,7 @@ class AreasTable extends AppTable {
         }
     }
 
-    public function indexAfterAction(Event $event, $data)
+    public function indexAfterAction(Event $event, $data, ArrayObject $extra)
     {
         // display the redirected error message when API is invalid
         $session = $this->request->session();
@@ -407,7 +438,7 @@ class AreasTable extends AppTable {
         }
     }
 
-    public function addEditBeforeAction(Event $event) {
+    public function addEditBeforeAction(Event $event, ArrayObject $extra) {
         //Setup fields
         $this->_fieldOrder = ['area_level_id', 'code', 'name'];
 
@@ -430,7 +461,7 @@ class AreasTable extends AppTable {
                 $parentPath .= $crumb === end($crumbs) ? '' : ' > ';
             }
 
-            $this->ControllerAction->field('parent', [
+            $this->field('parent', [
                 'type' => 'readonly',
                 'attr' => ['value' => $parentPath]
             ]);
@@ -509,24 +540,35 @@ class AreasTable extends AppTable {
         return $data;
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
-    {
-        // if the API is set the add button will be replaced by sync button.(toolbar buttons)
-        if ($action == 'index' && !empty($this->onGetUrl())) {
-            $toolbarButtons['add']['type'] = 'hidden';
-            $toolbarButtons['edit'] = $buttons['edit'];
-            $toolbarButtons['edit']['label'] = '<i class="fa fa-refresh"></i>';
-            $toolbarButtons['edit']['type'] = 'button';
-            $toolbarButtons['edit']['attr'] = $attr;
-            $toolbarButtons['edit']['attr']['title'] = __('Synchronize');
-            $toolbarButtons['edit']['url'][0] = 'sync';
-        }
+    // public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    // {
+    //     // if the API is set the add button will be replaced by sync button.(toolbar buttons)
+    //     if ($action == 'index' && !empty($this->onGetUrl())) {
+    //         $toolbarButtons['add']['type'] = 'hidden';
+    //         $toolbarButtons['edit'] = $buttons['edit'];
+    //         $toolbarButtons['edit']['label'] = '<i class="fa fa-refresh"></i>';
+    //         $toolbarButtons['edit']['type'] = 'button';
+    //         $toolbarButtons['edit']['attr'] = $attr;
+    //         $toolbarButtons['edit']['attr']['title'] = __('Synchronize');
+    //         $toolbarButtons['edit']['url'][0] = 'sync';
+    //     }
 
-        // on the view page when the API is set, the edit button will be hidden.
-        if ($action == 'view' && !empty($this->onGetUrl())) {
-            $toolbarButtons['edit']['type'] = 'hidden';
-        }
-    }
+    //     // on the view page when the API is set, the edit button will be hidden.
+    //     if ($action == 'view' && !empty($this->onGetUrl())) {
+    //         $toolbarButtons['edit']['type'] = 'hidden';
+    //     }
+
+    //     // if (!empty($this->onGetUrl())) {
+    //     //     $toolbarButtons['add']['type'] = 'hidden';
+    //     //     // $toolbarButtons['edit']['type'] = 'hidden';
+    //     //     $toolbarButtons['edit'] = $buttons['edit'];
+    //     //     $toolbarButtons['edit']['label'] = '<i class="fa fa-refresh"></i>';
+    //     //     $toolbarButtons['edit']['type'] = 'button';
+    //     //     $toolbarButtons['edit']['attr'] = $attr;
+    //     //     $toolbarButtons['edit']['attr']['title'] = __('Synchronize');
+    //     //     $toolbarButtons['edit']['url'][0] = 'sync';
+    //     // }
+    // }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
@@ -554,12 +596,13 @@ class AreasTable extends AppTable {
     {
         // get the url from the config table
         $resultURL = [];
-        $configAdministrativeBoundaries = TableRegistry::get('Configuration.ConfigAdministrativeBoundaries');
-        $resultURL = $configAdministrativeBoundaries
+        $configItems = TableRegistry::get('Configuration.ConfigItems');
+        $resultURL = $configItems
             ->find('list', [
                 'keyField' => 'id',
-                'valueField' => 'url'
+                'valueField' => 'value'
             ])
+            ->where([$configItems->aliasField('type') => 'Administrative Boundaries'])
             ->first();
         return $resultURL;
     }
