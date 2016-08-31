@@ -173,5 +173,9 @@ UPDATE `security_functions`
 SET `_view` = 'Fields.index|Fields.view|Pages.index|Pages.view|Types.index|Types.view|RoomPages.index|RoomPages.view|RoomTypes.index|RoomTypes.view', `_edit` = 'Fields.edit|Pages.edit|Types.edit|RoomPages.edit|RoomTypes.edit', `_add` = 'Fields.add|Pages.add|Types.add|RoomPages.add|RoomTypes.add', `_delete` = 'Fields.remove|Pages.remove|Types.remove|RoomPages.remove|RoomTypes.remove'
 WHERE id = 5018;
 
+UPDATE `security_functions`
+SET `_view` = 'Infrastructures.index|Infrastructures.view|Rooms.index|Rooms.view', `_edit` = 'Infrastructures.edit|Rooms.edit', `_add` = 'Infrastructures.add|Rooms.add', `_delete` = 'Infrastructures.remove|Rooms.remove'
+WHERE id = 1011;
+
 -- labels
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`)  VALUES (uuid(), 'InstitutionRooms', 'institution_infrastructure_id', 'Institutions -> Rooms', 'Parent', 1, 1, NOW());
