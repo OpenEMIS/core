@@ -50,7 +50,8 @@ class InstitutionClassStudentsTable extends AppTable {
 
         $this->addBehavior('Excel', [
             'excludes' => ['id'],
-            'pages' => ['index']
+            'pages' => ['index'],
+            'orientation' => 'landscape'
         ]);
 
     }
@@ -101,7 +102,8 @@ class InstitutionClassStudentsTable extends AppTable {
             'allSubjectsPermission' => $allSubjectsPermission,
             'mySubjectsPermission' => $mySubjectsPermission,
             'allClassesPermission' => $allClassesPermission,
-            'myClassesPermission' => $myClassesPermission
+            'myClassesPermission' => $myClassesPermission,
+            'orientation' => 'landscape'
         ];
     }
 
@@ -229,6 +231,7 @@ class InstitutionClassStudentsTable extends AppTable {
         $allSubjectsPermission = $sheet['allSubjectsPermission'];
         $myClassesPermission = $sheet['myClassesPermission'];
         $mySubjectsPermission = $sheet['mySubjectsPermission'];
+        $assessmentId = $sheet['assessmentId'];
         $staffId = $sheet['staffId'];
 
         $query
@@ -236,6 +239,13 @@ class InstitutionClassStudentsTable extends AppTable {
                 'InstitutionClasses.Institutions',
                 'Users.BirthplaceAreas',
                 'Users.Nationalities.NationalitiesLookUp'
+            ])
+            ->innerJoin(['InstitutionClassGrades' => 'institution_class_grades'], [
+                'InstitutionClassGrades.institution_class_id = '.$this->aliasField('institution_class_id')
+            ])
+            ->innerJoin(['Assessments' => 'assessments'],[
+                'Assessments.education_grade_id = InstitutionClassGrades.education_grade_id',
+                'Assessments.id' => $assessmentId
             ])
             ->select(['code' => 'Institutions.code', 'institution_id' => 'Institutions.name', 'openemis_number' => 'Users.openemis_no', 'birth_place_area' => 'BirthplaceAreas.name', 'dob' => 'Users.date_of_birth', 'class_name' => 'InstitutionClasses.name'])
             ->where([$this->aliasField('institution_id') => $institutionId])
