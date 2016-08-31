@@ -1,28 +1,28 @@
 <?php
+namespace App\Test\TestCases;
 
-namespace Survey\tests\TestCase\Controller;
+use Cake\ORM\TableRegistry;
+use App\Test\AppTestCase;
 
-use Cake\TestSuite\IntegrationTestCase;
+class SurveysControllerTest extends AppTestCase
+{
+    public $fixtures = [
+        'app.config_items',
+        'app.labels',
+        'app.security_users',
+        'app.workflow_models',
+        'app.workflow_steps',
+        'app.workflow_statuses',
+        'app.workflow_statuses_steps',
+        'app.custom_modules',
+        'app.custom_field_types',
+        'app.survey_questions',
+        'app.survey_forms'
+    ];
 
-class SurveysControllerTest extends IntegrationTestCase {
-
-	public function setAuthSession() {
-		
-		$this->session([
-			'Auth' => [
-				'User' => [
-					'id' => 2,
-					'username' => 'admin',
-					'super_admin' => '1'
-				]
-			]
-		]);
-	}
-
-	public function testSurveyQuestionIndex() {
-
-		$this->setAuthSession();
-		$this->get('/Surveys/Questions');
-		$this->assertResponseCode(200);
-	}
+    public function testSurveyQuestionIndex()
+    {
+        $this->get('/Surveys/Questions');
+        $this->assertResponseCode(200);
+    }
 }
