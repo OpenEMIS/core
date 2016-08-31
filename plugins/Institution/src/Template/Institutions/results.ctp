@@ -33,7 +33,7 @@ $this->start('toolbar');
     <?php endif; ?>
 
     <?php if ($_excel) : ?>
-        <a href="<?=$excelUrl ?>" class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="<?= __('Export') ?>"><i class="fa kd-export"></i></a>
+        <a href="<?=$excelUrl ?>"><button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Export') ?>" ><i class="fa kd-export"></i></button></a>
     <?php endif; ?>
 <?php
 $this->end();
