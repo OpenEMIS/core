@@ -554,7 +554,6 @@ trait MessagesTrait {
                     'ruleUnique' => 'Please enter a unique code'
                 ],
             ],
-
             'InstitutionClasses' => [
                 'noGrade' => 'There is no grade selected',
                 'emptyName' => 'Class name should not be empty',
