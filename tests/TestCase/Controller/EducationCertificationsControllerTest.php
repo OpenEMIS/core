@@ -4,11 +4,18 @@ namespace App\Test\TestCases;
 use Cake\ORM\TableRegistry;
 use App\Test\AppTestCase;
 
-// http://localhost:8888/core/Educations/Certifications/add?setup=1
-
 class EducationCertificationsControllerTest extends AppTestCase
 {
-    public $fixtures = ['app.education_certifications'];
+    public $fixtures = [
+        'app.config_items',
+        'app.labels',
+        'app.security_users',
+        'app.workflow_models',
+        'app.workflow_steps',
+        'app.workflow_statuses',
+        'app.workflow_statuses_steps',
+        'app.education_certifications'
+    ];
 
     private $id = 1;
     private $table;

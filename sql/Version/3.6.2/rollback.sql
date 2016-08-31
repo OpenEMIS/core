@@ -1,3 +1,36 @@
+-- POCOR-3303
+-- security_functions
+UPDATE `security_functions` SET `_execute` = 'Assessments.excel' WHERE `id` = 1015;
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3303';
+
+
+-- POCOR-3080
+DROP TABLE IF EXISTS `assessment_items_grading_types`;
+
+DROP TABLE IF EXISTS `assessment_items`;
+
+RENAME TABLE `z_3080_assessment_items` TO `assessment_items`;
+
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3080';
+
+
+-- POCOR-2760
+UPDATE `security_functions` SET _delete = 'Periods.remove' WHERE id = 5003;
+-- SELECT * FROM `security_functions` WHERE id = 5003;
+
+-- BACKING UP
+UPDATE `security_role_functions`
+    JOIN `z_2760_security_role_functions` ON z_2760_security_role_functions.id = security_role_functions.id
+        SET security_role_functions._delete = z_2760_security_role_functions._delete;
+
+DROP TABLE z_2760_security_role_functions;
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue`='POCOR-2760';
+
+
 -- POCOR-3264
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3264';

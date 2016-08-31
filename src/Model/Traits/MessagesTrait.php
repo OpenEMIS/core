@@ -13,11 +13,19 @@ trait MessagesTrait {
             'date_on_file' => 'Date On File',
         ],
         'Assessments' => [
+            'subjects' => 'Subjects',
+            'noSubjects' => 'There is no subject selected',
+            'templates' => 'Templates',
+            'noTemplates' => 'No Templates',
             'noGrades' => 'No Available Grades',
             'noGradingTypes' => 'You need to configure Grading Types first.',
             'addAssessmentItem' => 'Add Assessment Item',
             'assessmentItems' => 'Assessment Items',
             'assessmentPeriods' => 'Assessment Periods',
+            'assessmentGradingType' => 'Assessment Grading Type',
+            'educationSubject' => 'Education Subject',
+            'subjectWeight' => 'Subject Weight',
+            'periodWeight' => 'Period Weight'
         ],
         'CustomGroups' => [
             'custom_modules' => 'Module'
@@ -102,6 +110,12 @@ trait MessagesTrait {
             '6' => 'Missing a temporary folder. Please contact your network administrator for assistance.',
             '7' => 'Failed to write file to disk. Please contact your network administrator for assistance.',
             '8' => 'A PHP extension stopped the file upload. Please contact your network administrator for assistance.'
+        ],
+        'InstitutionInfrastructures' => [
+            'ownerAddNotAllowed' => 'You are not allowed to add infrastructure as there are no shifts configured in the current academic period',
+            'occupierAddNotAllowed' => 'You are not allowed to add infrastructure as an occupier',
+            'occupierEditNotAllowed' => 'You are not allowed to edit infrastructure as an occupier',
+            'occupierDeleteNotAllowed' => 'You are not allowed to delete infrastructure as an occupier'
         ],
         'InfrastructureTypes' => [
             'noLevels' => 'No Available Levels',
@@ -1177,10 +1191,21 @@ trait MessagesTrait {
             ]
         ],
         'Assessment' => [
+            'Assessments' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique for the same academic period',
+                    'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form',
+                    'ruleAssessmentExistByGradeAcademicPeriod' => 'Assessment already created for the selected grade.'
+                ],
+                'education_grade_id' => [
+                    'ruleAssessmentExistByGradeAcademicPeriod' => 'Assessment already created for the selected grade.'
+                ]
+            ],
             'AssessmentPeriods' => [
                 'code' => [
                     'ruleUniqueCode' => 'Code must be unique',
                     'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form',
+                    'ruleUniqueCodeByForeignKeyAcademicPeriod' => 'Code must be unique for the same academic period'
                 ],
                 'start_date' => [
                     'ruleInParentAcademicPeriod' => 'Date must be within selected academic period start and end date',
@@ -1190,11 +1215,13 @@ trait MessagesTrait {
                 ],
                 'weight' => [
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleWeightRange' => 'Value must be positive and less than 2.0'
                 ],
             ],
             'AssessmentItems' => [
                 'weight' => [
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleWeightRange' => 'Value must be positive and less than 2.0'
                 ],
             ],
             'AssessmentGradingTypes' => [
