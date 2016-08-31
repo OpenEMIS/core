@@ -796,7 +796,7 @@ class ValidationBehavior extends Behavior {
 
 				$rangecheck = ($startDate >= $academicPeriodStartDate && $startDate <= $academicPeriodEndDate) &&
 				(is_null($academicPeriodEndDate) ||
-					(!is_null($academicPeriodEndDate) && ($endDate >= $academicPeriodEndDate && $endDate <= $academicPeriodEndDate))
+					(!is_null($academicPeriodEndDate) && ($endDate >= $academicPeriodStartDate && $endDate <= $academicPeriodEndDate))
 				)
 				;
 				return $rangecheck;
