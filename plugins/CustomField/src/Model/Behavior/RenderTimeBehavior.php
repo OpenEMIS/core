@@ -58,8 +58,10 @@ class RenderTimeBehavior extends RenderBehavior {
 		if ($action == 'index' || $action == 'view') {
 			return (!empty($savedValue))? $this->_table->formatTime(new Time($savedValue)): '';
 		} else if ($action == 'edit') {
+			$unlockFields = [];
 			$fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 			$attr['fieldName'] = $fieldPrefix.".time_value"; 
+			$unlockFields[] = $attr['fieldName'];
 
 			if (!isset($attr['time_options'])) {
 				$attr['time_options'] = [];
@@ -99,11 +101,14 @@ class RenderTimeBehavior extends RenderBehavior {
 			$value = $event->subject()->renderElement('ControllerAction.bootstrap-timepicker/timepicker_input', ['attr' => $attr]);
 
 			$form = $event->subject()->Form;
+			
 			$value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
+			$unlockFields[] = $fieldPrefix.".".$attr['attr']['fieldKey'];
             if (!is_null($savedId)) {
                 $value .= $form->hidden($fieldPrefix.".id", ['value' => $savedId]);
+                $unlockFields[] = $fieldPrefix.".id";
             }
-            $value = $this->processRelevancyDisabled($entity, $value, $fieldId);
+            $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
 		}
 
         $event->stopPropagation();

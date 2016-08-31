@@ -50,13 +50,13 @@ class ReportsController extends AppController {
 				'Report.StaffAbsences' => __('Staff Absence'),
 				'Report.InstitutionStudentTeacherRatio' => __('Student Teacher Ratio'),
 				'Report.InstitutionStudentClassroomRatio' => __('Student Classroom Ratio'),
-				'Report.InstitutionStudentsOutOfSchool' => __('Students Out of School'),
 			];
 		} else if ($module == 'Students') {
 			$options = [
 				'Report.Students' => __('Students'),
 				'Report.StudentIdentities' => __('Identities'),
-				'Report.StudentContacts' => __('Contacts')
+				'Report.StudentContacts' => __('Contacts'),
+				'Report.InstitutionStudentsOutOfSchool' => __('Students Out of School')
 			];
 		} else if ($module == 'Staff') {
 			$options = [
@@ -116,6 +116,12 @@ class ReportsController extends AppController {
 				$data['modified'] = $ReportProgress->formatDateTime($entity->created);
 			} else {
 				$data['modified'] = $ReportProgress->formatDateTime($entity->modified);
+			}
+
+			if (!is_null($entity->expiry_date)) {
+				$data['expiry_date'] = $ReportProgress->formatDateTime($entity->expiry_date);
+			} else {
+				$data['expiry_date'] = null;
 			}
 			$data['status'] = $entity->status;
 		}

@@ -20,6 +20,7 @@ class InstitutionClassesTable extends AppTable  {
 		
 		$this->addBehavior('Excel', ['excludes' => ['class_number']]);
 		$this->addBehavior('Report.ReportList');
+		$this->addBehavior('Report.InstitutionSecurity');
 	}
 
 	public function beforeAction(Event $event) {

@@ -58,7 +58,9 @@ class IdentitiesTable extends AppTable {
 				'rule' => ['compareDate', 'expiry_date', false]
 			])
 			->add('expiry_date',  [
-			])
+            ])
+            ->add('identity_type_id',  [
+            ])
 			->add('number', [
 	    		'ruleUnique' => [
 			        'rule' => ['validateUnique', ['scope' => 'identity_type_id']],
@@ -67,7 +69,7 @@ class IdentitiesTable extends AppTable {
 		    ]);
 		;
 	}
-	
+
 	public function validationNonMandatory(Validator $validator) {
 		$this->validationDefault($validator);
 		return $validator->allowEmpty('number');

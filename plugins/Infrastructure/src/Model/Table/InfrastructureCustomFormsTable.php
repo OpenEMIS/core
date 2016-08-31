@@ -7,16 +7,10 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 
 class InfrastructureCustomFormsTable extends CustomFormsTable {
+	private $modules = ['Infrastructure', 'Room'];
+
 	public function initialize(array $config) {
 		$config['extra'] = [
-			'filterClass' => [
-				'className' => 'Infrastructure.InfrastructureLevels',
-				'joinTable' => 'infrastructure_custom_forms_filters',
-				'foreignKey' => 'infrastructure_custom_form_id',
-				'targetForeignKey' => 'infrastructure_custom_filter_id',
-				'through' => 'Infrastructure.InfrastructureCustomFormsFilters',
-				'dependent' => true
-			],
 			'fieldClass' => [
 				'className' => 'Infrastructure.InfrastructureCustomFields',
 				'joinTable' => 'infrastructure_custom_forms_fields',
@@ -24,19 +18,26 @@ class InfrastructureCustomFormsTable extends CustomFormsTable {
 				'targetForeignKey' => 'infrastructure_custom_field_id',
 				'through' => 'Infrastructure.InfrastructureCustomFormsFields',
 				'dependent' => true
+			],
+			'filterClass' => [
+				'className' => 'Infrastructure.InfrastructureTypes',
+				'joinTable' => 'infrastructure_custom_forms_filters',
+				'foreignKey' => 'infrastructure_custom_form_id',
+				'targetForeignKey' => 'infrastructure_custom_filter_id',
+				'through' => 'Infrastructure.InfrastructureCustomFormsFilters',
+				'dependent' => true
 			]
 		];
 		parent::initialize($config);
-		$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
+		$this->addBehavior('Infrastructure.Pages', ['module' => 'infrastructure']);
 	}
 
 	public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, Request $request) {
+		$selectedModule = !is_null($request->query('module')) ? $request->query('module') : '';
 		$module = $this->CustomModules
 			->find()
-			->where([$this->CustomModules->aliasField('code') => 'Infrastructure'])
+			->where([$this->CustomModules->aliasField('id') => $selectedModule])
 			->first();
-		$selectedModule = $module->id;
-		$request->query['module'] = $selectedModule;
 
 		$attr['type'] = 'readonly';
 		$attr['value'] = $selectedModule;
@@ -47,6 +48,10 @@ class InfrastructureCustomFormsTable extends CustomFormsTable {
 
 	public function getModuleQuery() {
 		$query = parent::getModuleQuery();
-		return $query->where([$this->CustomModules->aliasField('code') => 'Infrastructure']);
+		if (!empty($this->modules)) {
+			$query->where([$this->CustomModules->aliasField('code IN') => $this->modules]);
+		}
+
+		return $query;
 	}
 }

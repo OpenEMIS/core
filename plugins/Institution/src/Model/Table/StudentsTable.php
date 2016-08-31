@@ -1439,7 +1439,6 @@ class StudentsTable extends AppTable {
 
 		$AcademicPeriod = $this->AcademicPeriods;
 		$currentPeriodId = $AcademicPeriod->getCurrent();
-		$currentPeriodObj = $AcademicPeriod->get($currentPeriodId);
 
 		$genderOptions = $this->Users->Genders->getList();
 		$dataSet = new ArrayObject();
@@ -1463,7 +1462,12 @@ class StudentsTable extends AppTable {
 		}
 		$academicPeriodList = array_reverse($academicPeriodList, true);
 
-		$academicPeriodCondition = ['academic_period_id IN ' => array_keys($academicPeriodList)];
+		if (!empty($academicPeriodList)) {
+			$academicPeriodCondition = ['academic_period_id IN ' => array_keys($academicPeriodList)];
+		} else {
+			$academicPeriodCondition = [];
+		}
+		
 		$queryCondition = array_merge($academicPeriodCondition, $_conditions);
 		$studentsByYear = $this
 			->find('list',[
@@ -1510,8 +1514,13 @@ class StudentsTable extends AppTable {
 
 		$AcademicPeriod = $this->AcademicPeriods;
 		$currentYearId = $AcademicPeriod->getCurrent();
-		$currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
 
+		if (!empty($currentYearId)) {
+			$currentYear = $AcademicPeriod->get($currentYearId, ['fields'=>'name'])->name;
+		} else {
+			$currentYear = __('Not Defined');
+		}
+		
 		$studentsByGradeConditions = [
 			'OR' => [['student_status_id' => 1], ['student_status_id' => 2]],
 			$this->aliasField('academic_period_id') => $currentYearId,
@@ -1530,7 +1539,7 @@ class StudentsTable extends AppTable {
 				'total' => $query->func()->count($this->aliasField('id'))
 			])
 			->contain([
-				'EducationGrades',
+				'EducationGrades.EducationProgrammes.EducationCycles.EducationLevels',
 				'Users.Genders'
 			])
 			->where($studentsByGradeConditions)
@@ -1539,8 +1548,7 @@ class StudentsTable extends AppTable {
 				'Genders.name'
 			])
 			->order(
-				'EducationGrades.order',
-				$this->aliasField('institution_id')
+				['EducationLevels.order', 'EducationCycles.order', 'EducationProgrammes.order', 'EducationGrades.order']
 			)
 			->toArray()
 			;

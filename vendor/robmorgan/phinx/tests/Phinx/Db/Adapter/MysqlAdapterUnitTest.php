@@ -1179,22 +1179,42 @@ class MysqlAdapterUnitTest extends \PHPUnit_Framework_TestCase
 
     public function testAddIndex()
     {
+        list($table, $index) = $this->prepareAddIndex(array('getColumns'));
+
+        $this->assertExecuteSql('ALTER TABLE `table_name` ADD  KEY (`column_name`)');
+        $this->adapter->addIndex($table, $index);
+    }
+
+    public function testAddIndexWithLimit()
+    {
+        list($table, $index) = $this->prepareAddIndex(array('getColumns', 'getLimit'));
+        $index->expects($this->any())->method('getLimit')->will($this->returnValue(50));
+
+        $this->assertExecuteSql('ALTER TABLE `table_name` ADD  KEY (`column_name`(50))');
+        $this->adapter->addIndex($table, $index);
+
+    }
+
+    /**
+     * @param array $methods
+     * @return array
+     */
+    private function prepareAddIndex($methods)
+    {
         $table = $this->getMockBuilder('Phinx\Db\Table')
-                      ->disableOriginalConstructor()
-                      ->setMethods(array('getName'))
-                      ->getMock();
+            ->disableOriginalConstructor()
+            ->setMethods(array('getName'))
+            ->getMock();
         $table->expects($this->any())->method('getName')->will($this->returnValue('table_name'));
 
 
         $index = $this->getMockBuilder('Phinx\Db\Table\Index')
-                      ->disableOriginalConstructor()
-                      ->setMethods(array( 'getColumns'))
-                      ->getMock();
+            ->disableOriginalConstructor()
+            ->setMethods($methods)
+            ->getMock();
 
         $index->expects($this->any())->method('getColumns')->will($this->returnValue(array('column_name')));
-
-        $this->assertExecuteSql('ALTER TABLE `table_name` ADD  KEY (`column_name`)');
-        $this->adapter->addIndex($table, $index);
+        return array($table, $index);
     }
 
     public function testDropIndexAsString()

@@ -251,8 +251,8 @@ class InstitutionRubricsTable extends AppTable {
 
 		$query
 			->contain($this->_contain)
-			->where([$this->aliasField('status') => $selectedStatus])
-			->order([$this->AcademicPeriods->aliasField('order')]);
+			->where([$this->aliasField('status') => $selectedStatus]);
+		$options['order'] = [$this->AcademicPeriods->aliasField('order') => 'asc'];
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {

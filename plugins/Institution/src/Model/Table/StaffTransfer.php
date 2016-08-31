@@ -34,7 +34,7 @@ class StaffTransfer extends ControllerActionTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
 		$this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'previous_institution_id']);
-		$this->belongsTo('StaffTypes', ['className' => 'FieldOption.StaffTypes']);
+		$this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes']);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -44,7 +44,7 @@ class StaffTransfer extends ControllerActionTable {
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
 		$fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
-		
+
 		$this->field('status');
 		$this->field('previous_institution_id');
 		$this->field('institution_id', ['after' => 'previous_institution_id', 'visible' => ['index' => true, 'edit' => true, 'view' => true]]);
@@ -70,11 +70,14 @@ class StaffTransfer extends ControllerActionTable {
 		$query->contain(['Users', 'Institutions', 'PreviousInstitutions', 'Positions']);
 	}
 
-	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+	{
+		$institution_name_with_code = $entity->institution->code . " - " . $entity->institution->name;
+
 		$this->field('status', ['type' => 'readonly']);
 		$this->field('staff_id', ['type' => 'readonly', 'attr' => ['value' => $entity->user->name_with_id]]);
 		$this->field('previous_institution_id', ['type' => 'readonly', 'attr' => ['value' => $entity->previous_institution->name]]);
-		$this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $entity->institution->name]]);
+		$this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $institution_name_with_code]]);
 		$this->field('institution_position_id', ['type' => 'readonly', 'after' => 'institution_id', 'attr' => ['value' => $entity->position->name]]);
 	}
 
@@ -130,7 +133,7 @@ class StaffTransfer extends ControllerActionTable {
 		if (array_key_exists($entity->status, $statusOptions)) {
 			$name = $statusOptions[$entity->status];
 		}
-		
+
 		$entity->status_id = $entity->status;
 		return '<span class="status highlight">' . $name . '</span>';
 	}
