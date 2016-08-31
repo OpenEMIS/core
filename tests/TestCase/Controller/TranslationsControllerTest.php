@@ -1,28 +1,25 @@
 <?php
+namespace App\Test\TestCases;
 
-namespace Localization\tests\TestCase\Controller;
+use Cake\ORM\TableRegistry;
+use App\Test\AppTestCase;
 
-use Cake\TestSuite\IntegrationTestCase;
+class TranslationsControllerTest extends AppTestCase
+{
+    public $fixtures = [
+        'app.config_items',
+        'app.labels',
+        'app.security_users',
+        'app.workflow_models',
+        'app.workflow_steps',
+        'app.workflow_statuses',
+        'app.workflow_statuses_steps',
+        'app.translations'
+    ];
 
-class TranslationsControllerTest extends IntegrationTestCase {
-
-	public function setAuthSession() {
-		
-		$this->session([
-			'Auth' => [
-				'User' => [
-					'id' => 2,
-					'username' => 'admin',
-					'super_admin' => '1'
-				]
-			]
-		]);
-	}
-
-	public function testTranslationsIndex() {
-
-		$this->setAuthSession();
-		$this->get('/Translations');
-		$this->assertResponseCode(200);
-	}
+    public function testTranslationsIndex()
+    {
+        $this->get('/Translations');
+        $this->assertResponseCode(200);
+    }
 }
