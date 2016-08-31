@@ -1,28 +1,27 @@
 <?php
+namespace App\Test\TestCases;
 
-namespace StudentCustomField\tests\TestCase\Controller;
+use Cake\ORM\TableRegistry;
+use App\Test\AppTestCase;
 
-use Cake\TestSuite\IntegrationTestCase;
+class StudentCustomFieldsControllerTest extends AppTestCase
+{
+    public $fixtures = [
+        'app.config_items',
+        'app.labels',
+        'app.security_users',
+        'app.workflow_models',
+        'app.workflow_steps',
+        'app.workflow_statuses',
+        'app.workflow_statuses_steps',
+        'app.custom_modules',
+        'app.custom_field_types',
+        'app.student_custom_fields'
+    ];
 
-class StudentCustomFieldsControllerTest extends IntegrationTestCase {
-
-	public function setAuthSession() {
-		
-		$this->session([
-			'Auth' => [
-				'User' => [
-					'id' => 2,
-					'username' => 'admin',
-					'super_admin' => '1'
-				]
-			]
-		]);
-	}
-
-	public function testStudentCustomFieldIndex() {
-
-		$this->setAuthSession();
-		$this->get('/StudentCustomFields/Fields');
-		$this->assertResponseCode(200);
-	}
+    public function testStudentCustomFieldIndex()
+    {
+        $this->get('/StudentCustomFields/Fields');
+        $this->assertResponseCode(200);
+    }
 }
