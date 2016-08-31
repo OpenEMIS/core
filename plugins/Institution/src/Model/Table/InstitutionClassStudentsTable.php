@@ -50,7 +50,8 @@ class InstitutionClassStudentsTable extends AppTable {
 
         $this->addBehavior('Excel', [
             'excludes' => ['id'],
-            'pages' => ['index']
+            'pages' => ['index'],
+            'orientation' => 'landscape'
         ]);
 
     }
