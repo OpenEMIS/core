@@ -25,7 +25,8 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         $this->behaviors()->get('ControllerAction')->config('actions.add', false);
         $this->behaviors()->get('ControllerAction')->config('actions.search', false);
         $this->addBehavior('Excel', [
-            'pages' => ['index']
+            'pages' => ['index'],
+            'orientation' => 'landscape'
         ]);
     }
 
