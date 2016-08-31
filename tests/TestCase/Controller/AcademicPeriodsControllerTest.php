@@ -6,17 +6,27 @@ use App\Test\AppTestCase;
 
 class AcademicPeriodsControllerTest extends AppTestCase
 {
-    public $fixtures = ['app.academic_period_levels', 'app.academic_periods'];
+    public $fixtures = [
+        'app.academic_periods',
+        'app.academic_period_levels',
+        'app.config_items',
+        'app.labels',
+        'app.security_users',
+        'app.workflow_models',
+        'app.workflow_steps',
+        'app.workflow_statuses',
+        'app.workflow_statuses_steps'
+    ];
 
     private $testingId = 2;
 
-    public function setup() 
+    public function setup()
     {
         parent::setUp();
         $this->urlPrefix('/AcademicPeriods/Periods/');
     }
 
-    public function testIndex() 
+    public function testIndex()
     {
         $testUrl = $this->url('index', ['parent' => 1]);
 
@@ -25,7 +35,7 @@ class AcademicPeriodsControllerTest extends AppTestCase
         $this->assertEquals(true, (count($this->viewVariable('data')) >= 1));
     }
 
-    public function testSearchFound() 
+    public function testSearchFound()
     {
         $testUrl = $this->url('index', ['parent' => 1]);
 
@@ -38,7 +48,7 @@ class AcademicPeriodsControllerTest extends AppTestCase
         $this->assertEquals(true, (count($this->viewVariable('data')) >= 1));
     }
 
-    public function testSearchNotFound() 
+    public function testSearchNotFound()
     {
         $testUrl = $this->url('index');
         $data = [
@@ -51,7 +61,7 @@ class AcademicPeriodsControllerTest extends AppTestCase
         $this->assertEquals(true, (count($this->viewVariable('data')) == 0));
     }
 
-    public function testCreate() 
+    public function testCreate()
     {
         $testUrl = $this->url('add');
 
@@ -81,7 +91,7 @@ class AcademicPeriodsControllerTest extends AppTestCase
         $this->assertEquals(true, (!empty($lastInsertedRecord)));
     }
 
-    public function testRead() 
+    public function testRead()
     {
         $testUrl = $this->url('view/'.$this->testingId, ['parent' => 1]);
 
@@ -121,23 +131,5 @@ class AcademicPeriodsControllerTest extends AppTestCase
 
         $entity = $table->get($this->testingId);
         $this->assertEquals($data['AcademicPeriods']['name'], $entity->name);
-    }
-
-    public function testDelete() {
-        $testUrl = $this->url('remove');
-
-        $table = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-
-        $exists = $table->exists([$table->primaryKey() => $this->testingId]);
-        $this->assertTrue($exists);
-
-        $data = [
-            'id' => $this->testingId,
-            '_method' => 'DELETE'
-        ];
-        $this->postData($testUrl, $data);
-
-        $exists = $table->exists([$table->primaryKey() => $this->testingId]);
-        $this->assertFalse($exists);
     }
 }
