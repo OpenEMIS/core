@@ -1,3 +1,13 @@
+-- POCOR-3080
+DROP TABLE IF EXISTS `assessment_items_grading_types`;
+
+DROP TABLE IF EXISTS `assessment_items`;
+
+RENAME TABLE `z_3080_assessment_items` TO `assessment_items`;
+
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3080';
+
+
 -- POCOR-2760
 UPDATE `security_functions` SET _delete = 'Periods.remove' WHERE id = 5003;
 -- SELECT * FROM `security_functions` WHERE id = 5003;
