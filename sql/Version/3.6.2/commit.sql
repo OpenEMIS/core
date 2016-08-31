@@ -63,7 +63,7 @@ FROM `z_3080_assessment_items`;
 
 INSERT INTO `assessment_items_grading_types` (`id`, `education_subject_id`, `assessment_grading_type_id`, `assessment_id`, `assessment_period_id`,
   `modified_user_id`, `modified`, `created_user_id`, `created`)
-SELECT AI.`id`, AI.`education_subject_id`, AI.`assessment_grading_type_id`, AI.`assessment_id`, AP.`id`,
+SELECT uuid(), AI.`education_subject_id`, AI.`assessment_grading_type_id`, AI.`assessment_id`, AP.`id`,
   AI.`modified_user_id`, AI.`modified`, AI.`created_user_id`, AI.`created`
 FROM `z_3080_assessment_items`AI
 INNER JOIN `assessment_periods` AP ON AP.`assessment_id` = AI.`assessment_id`;
