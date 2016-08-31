@@ -23,5 +23,22 @@ class AssessmentItemsGradingTypesTable extends AppTable {
         if ($entity->isNew()) {
             $entity->id = Text::uuid();
         }
-	}
+    }
+
+    public function getAssessmentGradeTypes($assessmentId) {
+        $gradeTypes = $this->find('list', [
+                'keyField' => 'period_id',
+                'groupField' => 'subject_id',
+                'valueField' => 'type'
+            ])
+            ->matching('AssessmentGradingTypes')
+            ->select([
+                'period_id' => $this->aliasField('assessment_period_id'),
+                'subject_id' => $this->aliasField('education_subject_id'),
+                'type' => 'AssessmentGradingTypes.result_type'
+            ])
+            ->where([$this->aliasField('assessment_id') => $assessmentId])
+            ->toArray();
+        return $gradeTypes;
+    }
 }
