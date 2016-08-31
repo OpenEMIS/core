@@ -36,7 +36,6 @@ DELETE FROM `db_patches` WHERE `issue`='POCOR-2760';
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3264';
 
 
--- POCOR-3017
 -- Restore tables
 DROP TABLE IF EXISTS `infrastructure_levels`;
 RENAME TABLE `z_3017_infrastructure_levels` TO `infrastructure_levels`;
@@ -74,6 +73,10 @@ RENAME TABLE `z_3017_custom_modules` TO `custom_modules`;
 UPDATE `security_functions`
 SET `_view` = 'Fields.index|Fields.view|Pages.index|Pages.view|Levels.index|Levels.view|Types.index|Types.view', `_edit` = 'Fields.edit|Pages.edit|Levels.edit|Types.edit', `_add` = 'Fields.add|Pages.add|Levels.add|Types.add', `_delete` = 'Fields.remove|Pages.remove|Levels.remove|Types.remove'
 WHERE id = 5018;
+
+UPDATE `security_functions`
+SET `_view` = 'Infrastructures.index|Infrastructures.view', `_edit` = 'Infrastructures.edit', `_add` = 'Infrastructures.add', `_delete` = 'Infrastructures.remove'
+WHERE id = 1011;
 
 -- labels
 DELETE FROM `labels` WHERE `module` = 'InstitutionRooms' AND `field` = 'institution_infrastructure_id';
