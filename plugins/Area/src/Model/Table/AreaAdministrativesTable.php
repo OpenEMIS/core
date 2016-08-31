@@ -2,17 +2,21 @@
 namespace Area\Model\Table;
 
 use ArrayObject;
-use App\Model\Table\AppTable;
+
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
-class AreaAdministrativesTable extends AppTable {
+use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
+
+class AreaAdministrativesTable extends ControllerActionTable {
 	private $_fieldOrder = ['visible', 'code', 'name', 'area_administrative_level_id'];
 
-	public function initialize(array $config) {
+	public function initialize(array $config)
+	{
 		parent::initialize($config);
 		$this->belongsTo('AreaAdministrativeParents', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'parent_id']);
 		$this->belongsTo('AreaAdministrativeLevels', ['className' => 'Area.AreaAdministrativeLevels', 'foreignKey' => 'area_administrative_level_id']);
@@ -26,12 +30,20 @@ class AreaAdministrativesTable extends AppTable {
 				'filter' => 'parent_id',
 			]);
 		}
+		if ($this->behaviors()->has('ControllerAction')) {
+            $this->behaviors()->get('ControllerAction')->config([
+                'actions' => [
+                    'remove' => 'restrict'
+                ],
+            ]);
+        }
 	}
 
-	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('area_administrative_level_id');
-		$this->ControllerAction->field('is_main_country', ['visible' => false]);
-		$this->ControllerAction->field('name');
+	public function beforeAction(Event $event, arrayObject $extra)
+	{
+		$this->field('area_administrative_level_id');
+		$this->field('is_main_country', ['visible' => false]);
+		$this->field('name');
 		$count = $this->find()->where([
 				'OR' => [
 					[$this->aliasField('lft').' IS NULL'],
@@ -47,54 +59,58 @@ class AreaAdministrativesTable extends AppTable {
 	}
 
 
-	public function rebuildLftRght() {
+	public function rebuildLftRght()
+	{
 		$this->recover();
 	}
 
-	public function afterAction(Event $event) {
-		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	public function afterAction(Event $event, arrayObject $extra)
+	{
+		$this->setFieldOrder($this->_fieldOrder);
 	}
 
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		$transferTo = $this->request->data['transfer_to'];
-		$transferFrom = $id;
-		// Require to update the parent id of the children before removing the node from the tree
-		$this->updateAll(
-				[
-					'parent_id' => $transferTo, 
-					'lft' => null,
-					'rght' => null
-				],
-				['parent_id' => $transferFrom]
-			);
+	// public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+	// 	$transferTo = $this->request->data['transfer_to'];
+	// 	$transferFrom = $id;
+	// 	// Require to update the parent id of the children before removing the node from the tree
+	// 	$this->updateAll(
+	// 			[
+	// 				'parent_id' => $transferTo, 
+	// 				'lft' => null,
+	// 				'rght' => null
+	// 			],
+	// 			['parent_id' => $transferFrom]
+	// 		);
 
-		$entity = $this->get($id);
-		$left = $entity->lft;
-		$right = $entity->rght;
+	// 	$entity = $this->get($id);
+	// 	$left = $entity->lft;
+	// 	$right = $entity->rght;
 
-		// The left and right value of the children will all have to be rebuilt
-		$this->updateAll(
-				[
-					'lft' => null,
-					'rght' => null
-				],
-				[ 
-					'lft > ' => $left, 
-					'rght < ' => $right
-				]
-			);
+	// 	// The left and right value of the children will all have to be rebuilt
+	// 	$this->updateAll(
+	// 			[
+	// 				'lft' => null,
+	// 				'rght' => null
+	// 			],
+	// 			[ 
+	// 				'lft > ' => $left, 
+	// 				'rght < ' => $right
+	// 			]
+	// 		);
 
-		$this->rebuildLftRght();
-	}
+	// 	$this->rebuildLftRght();
+	// }
 
-	public function onGetConvertOptions(Event $event, Entity $entity, Query $query) {
+	public function onGetConvertOptions(Event $event, Entity $entity, Query $query)
+	{
 		$level = $entity->area_administrative_level_id;
 		$query->where([
 				$this->aliasField('area_administrative_level_id') => $level
 			]);
 	}
 
-	public function indexBeforeAction(Event $event) {
+	public function indexBeforeAction(Event $event, arrayObject $extra)
+	{
 		// Add breadcrumb
 		$toolbarElements = [
             ['name' => 'Area.breadcrumb', 'data' => [], 'options' => []]
@@ -125,23 +141,26 @@ class AreaAdministrativesTable extends AppTable {
 					->first()
 					->id;
 
-				$action = $this->ControllerAction->url('index');
+				$action = $this->url('index');
 				$action['parent'] = $parentId;
 				return $this->controller->redirect($action);
 			}
 		}
 	}
 
-	public function editAfterAction(Event $event, Entity $entity) {
+	public function editAfterAction(Event $event, Entity $entity, arrayObject $extra)
+	{
 		$this->request->data[$this->alias()]['area_administrative_level_id'] = $entity->area_administrative_level_id;
-		$this->ControllerAction->field('is_main_country');
+		$this->field('is_main_country');
 	}
 
-	public function addBeforeAction(Event $event) {
-		$this->ControllerAction->field('is_main_country');
+	public function addBeforeAction(Event $event, arrayObject $extra) 
+	{
+		$this->field('is_main_country');
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
 		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
         if ($parentId != null) {
         	$query->where([$this->aliasField('parent_id') => $parentId]);
@@ -150,7 +169,8 @@ class AreaAdministrativesTable extends AppTable {
         }
 	}
 
-	public function addEditBeforeAction(Event $event) {
+	public function addEditBeforeAction(Event $event, ArrayObject $extra)
+	{
 		//Setup fields
 		$this->_fieldOrder = ['area_administrative_level_id', 'code', 'name'];
 
@@ -174,7 +194,7 @@ class AreaAdministrativesTable extends AppTable {
 				$parentPath .= $crumb === end($crumbs) ? '' : ' > ';
 			}
 
-			$this->ControllerAction->field('parent', [
+			$this->field('parent', [
 				'type' => 'readonly',
 				'attr' => ['value' => $parentPath]
 			]);
@@ -183,7 +203,8 @@ class AreaAdministrativesTable extends AppTable {
 		}
 	}
 
-	public function onGetName(Event $event, Entity $entity) {
+	public function onGetName(Event $event, Entity $entity)
+	{
 		return $event->subject()->HtmlField->link($entity->name, [
 			'plugin' => $this->controller->plugin,
 			'controller' => $this->controller->name,
@@ -193,7 +214,8 @@ class AreaAdministrativesTable extends AppTable {
 		]);
 	}
 
-	public function onUpdateFieldIsMainCountry(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldIsMainCountry(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action=='add') {
 			$attr['visible'] = true;
 			$areaAdministrativeLevelId = $request->data[$this->alias()]['area_administrative_level_id'];
@@ -219,7 +241,8 @@ class AreaAdministrativesTable extends AppTable {
 		}
 	}
 
-	public function onUpdateFieldAreaAdministrativeLevelId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldAreaAdministrativeLevelId(Event $event, array $attr, $action, Request $request)
+	{
 		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
 		$results = $this
 			->find()
@@ -283,7 +306,8 @@ class AreaAdministrativesTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldName(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldName(Event $event, array $attr, $action, Request $request)
+	{
 		$parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
 		$results = $this
 			->find()
@@ -312,7 +336,8 @@ class AreaAdministrativesTable extends AppTable {
 		return $attr;
 	}
 
-	public function prepareCrumbs(array $crumbs) {
+	public function prepareCrumbs(array $crumbs)
+	{
 		// Replace the code and name of World with All
 		foreach ($crumbs as $key => $crumb) {
 			if ($crumb->parent_id == null) {
