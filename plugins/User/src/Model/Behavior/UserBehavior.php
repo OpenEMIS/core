@@ -24,7 +24,9 @@ class UserBehavior extends Behavior {
 
 	private $defaultImgIndexClass = "profile-image-thumbnail";
 	private $defaultImgViewClass= "profile-image";
-	private $defaultImgMsg = "<p>* Advisable photo dimension 90 by 115px<br>* Format Supported: .jpg, .jpeg, .png, .gif </p>";
+	private $photoMessage = 'Advisable photo dimension 90 by 115px';
+	private $formatSupport = 'Format Supported: ';
+	private $defaultImgMsg = "<p>* %s <br>* %s.jpg, .jpeg, .png, .gif </p>";
 
 	public function initialize(array $config) {
 		if ($this->_table->table() == 'security_users') {
@@ -305,7 +307,8 @@ class UserBehavior extends Behavior {
 	}
 
 	public function getDefaultImgMsg() {
-		return $this->defaultImgMsg;
+
+		return sprintf($this->defaultImgMsg, __($this->photoMessage), __($this->formatSupport));
 	}
 
 	public function getDefaultImgIndexClass() {

@@ -96,7 +96,7 @@ class SurveyRulesTable extends ControllerActionTable
         $surveyFormOptions = $this->SurveyForms
             ->find('list')
             ->toArray();
-        $surveyFormOptions = ['' => '-- '.__('Select Survey').' --'] + $surveyFormOptions;
+        $surveyFormOptions = ['' => '-- '.__('All Surveys').' --'] + $surveyFormOptions;
         $surveyFormId = $this->request->query('survey_form_id');
         $this->advancedSelectOptions($surveyFormOptions, $surveyFormId);
         $this->controller->set(compact('surveyFormOptions'));
