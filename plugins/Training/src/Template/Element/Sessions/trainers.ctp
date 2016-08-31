@@ -2,6 +2,7 @@
 <?php
 	$model = $ControllerAction['table'];
 	$trainerOptions = isset($attr['options']) ? $attr['options'] : [];
+	$this->Form->unlockField('TrainingSessions.trainers');
 ?>
 <?php if ($ControllerAction['action'] == 'view') : ?>
 	<div class="table-wrapper">

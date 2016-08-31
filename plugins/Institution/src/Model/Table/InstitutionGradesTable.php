@@ -69,7 +69,12 @@ class InstitutionGradesTable extends AppTable {
 ******************************************************************************************************************/
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$query->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels']);
-		$query->order(['EducationLevels.order', 'EducationCycles.order', 'EducationProgrammes.order', 'EducationGrades.order']);
+		$options['order'] = [
+			'EducationLevels.order' => 'asc', 
+			'EducationCycles.order' => 'asc', 
+			'EducationProgrammes.order' => 'asc', 
+			'EducationGrades.order' => 'asc'
+		];
 	}
 
 
@@ -338,8 +343,19 @@ class InstitutionGradesTable extends AppTable {
 		/**
 		 * PHPOE-2132, Common statements with getGradeOptionsForIndex() were moved to _gradeOptions().
 		 */
+
+		// Get the current time.
+		$currTime = Time::now();
+
 		$query = $this->find('all')
-					->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId]);
+					->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
+					->where([
+						'OR' => [
+							[$this->aliasField('end_date').' IS NULL'],
+							[$this->aliasField('end_date') . " >= '" . $currTime->format('Y-m-d') . "'"]
+						]
+					])
+					;
 		return $this->_gradeOptions($query, $institutionsId, $listOnly);
 	}
 
@@ -455,30 +471,20 @@ class InstitutionGradesTable extends AppTable {
 		return (($a->toUnixString() >= $b->toUnixString()) ? $a : $b);
 	}
 
-    public function onBeforeRestrictDelete(Event $event, ArrayObject $options, $id) 
-    {
-        $restrictCheck = function ($model, $id, $deleteOptions) {
-            $primaryKey = $model->primaryKey();
-            $idKey = $model->aliasField($primaryKey);
-            if ($model->exists([$idKey => $id])) {
-                $institutionGradeData = $model->get($id);
-                $educationGradeId = $institutionGradeData->education_grade_id;
-                $institutionId = $institutionGradeData->institution_id;
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+	{
+		$EducationGrades = TableRegistry::get('Education.EducationGrades');
+		$educationGradeId = $entity->education_grade_id;
+		$entity->name = $EducationGrades->get($educationGradeId)->name;
+        $institutionId = $entity->institution_id;
 
-                $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
-                $associatedStudentRecordsCount = $InstitutionStudents->find()
-                    ->where([
-                        $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
-                        $InstitutionStudents->aliasField('institution_id') => $institutionId
-                    ])
-                    ->count();
-                // no records return true
-                return ($associatedStudentRecordsCount == 0);
-            } else {
-                // record doesnt exist, return deletion successful
-                return true;
-            }
-        };
-        return $restrictCheck;
-    }
+        $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+        $associatedStudentRecordsCount = $InstitutionStudents->find()
+            ->where([
+                $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
+                $InstitutionStudents->aliasField('institution_id') => $institutionId
+            ])
+            ->count();
+        $extra['associatedRecords'][] = ['model' => 'InstitutionStudents', 'count' => $associatedStudentRecordsCount];
+	}
 }

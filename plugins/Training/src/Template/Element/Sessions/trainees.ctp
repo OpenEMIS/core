@@ -2,6 +2,7 @@
 	$tableClass = 'table-in-view';
 	$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
 	$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
+	$this->Form->unlockField('trainee_id');
 ?>
 
 <?php if ($ControllerAction['action'] == 'edit' || $ControllerAction['action'] == 'add') : ?>
@@ -22,6 +23,7 @@
 			'label' => __('Add Trainee'),
 			'type' => 'text',
 			'class' => 'autocomplete',
+			'value' => '',
 			'autocomplete-url' => $url,
 			'autocomplete-no-results' => __('No Trainee found.'),
 			'autocomplete-class' => 'error-message',

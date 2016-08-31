@@ -98,7 +98,7 @@ class AppController extends Controller {
 		$this->loadComponent('Angular.Angular', [
 			'app' => 'OE_Core',
 			'modules' => [
-				'bgDirectives', 'ui.bootstrap', 'ui.bootstrap-slider', 'ui.tab.scroll', 'agGrid', 'app.ctrl', 'advanced.search.ctrl'
+				'bgDirectives', 'ui.bootstrap', 'ui.bootstrap-slider', 'ui.tab.scroll', 'agGrid', 'app.ctrl', 'advanced.search.ctrl', 'kd-elem-sizes', 'kd-angular-checkbox-radio'
 			]
 		]);
 
@@ -117,6 +117,7 @@ class AppController extends Controller {
 			'homePageURL' => ['plugin' => null, 'controller' => 'Dashboard', 'action' => 'index'],
 			'loginPageURL' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'login'],
 		]); // for single sign on authentication
+		$this->loadComponent('Security.SelectOptionsTampering');
 		$this->loadComponent('Security', [
 			'unlockedFields' => [
 				'area_picker'

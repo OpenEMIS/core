@@ -1,4 +1,4 @@
-/* ANGULAR SCROLL TABS v.1.0.5 */
+/* ANGULAR SCROLL TABS v.1.0.6 */
 
 .scrolltabs {
     position: relative;
@@ -12,6 +12,10 @@
 .scrolltabs .nav-tabs li {
     vertical-align: top;
     width: auto;
+}
+
+.scrolltabs .nav > li:hover {
+    font-weight: normal;
 }
 
 .scrolltabs .tabs-divider {
@@ -275,7 +279,7 @@
     }
     .scrolltabs .ui-tabs-scrollable > .spacer > div:first-child > .nav-tabs > li > a {
         height: 36px;
-        line-height: 20px !important;
+        line-height: 25px !important;
         -webkit-border-bottom-left-radius: 0 !important;
         border-bottom-left-radius: 0 !important;
         -webkit-border-bottom-right-radius: 0 !important;

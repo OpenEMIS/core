@@ -31,7 +31,7 @@ class StaffAttendancesTable extends AppTable {
 		$config['Created'] = false;
 		parent::initialize($config);
 
-		$this->belongsTo('StaffTypes', ['className' => 'FieldOption.StaffTypes']);
+		$this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes']);
 		$this->belongsTo('StaffStatuses', ['className' => 'Staff.StaffStatuses']);
 		$this->belongsTo('InstitutionPositions', ['className' => 'Institution.InstitutionPositions']);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'staff_id']);
@@ -273,7 +273,7 @@ class StaffAttendancesTable extends AppTable {
 	public function getNumberOfStaffByAttendance($params=[]) {
 		$query = $params['query'];
 		$selectedDay = $params['selectedDay'];
-		
+
 		// Add this condition if the selected day is all day
 		if ($selectedDay == -1) {
 			$dateRange = array_column($this->allDayOptions, 'date');
@@ -287,7 +287,7 @@ class StaffAttendancesTable extends AppTable {
 				$startDate = $dateRange[0];
 				$endDate = $dateRange[count($dateRange) - 1];
 				$dateRangeCondition = [
-					'StaffAbsences.end_date >=' => $startDate, 
+					'StaffAbsences.end_date >=' => $startDate,
 					'StaffAbsences.start_date <=' => $endDate
 				];
 			} else {
@@ -307,8 +307,8 @@ class StaffAttendancesTable extends AppTable {
 			->group(['staff_id', 'absence_type'])
 			->where($dateRangeCondition)
 			->toArray();
-			
-		// Creating the data set		
+
+		// Creating the data set
 		$dataSet = [];
 		$data = [];
 		foreach ($staffAbsenceArray as $userAbsenceType) {
@@ -333,7 +333,7 @@ class StaffAttendancesTable extends AppTable {
 							$data[$typeName] = 1;
 						}
 					}
-					
+
 					if ($typeName == 'Absence') {
 						$absenceForTheWeek = true;
 					}
@@ -348,7 +348,11 @@ class StaffAttendancesTable extends AppTable {
 	public function onGetOpenemisNo(Event $event, Entity $entity) {
 		$sessionPath = 'Users.staff_absences.';
 		$timeError = $this->Session->read($sessionPath.$entity->staff_id.'.timeError');
+		$startTimestamp = $this->Session->read($sessionPath.$entity->staff_id.'.startTimestamp');
+		$endTimestamp = $this->Session->read($sessionPath.$entity->staff_id.'.endTimestamp');
 		$this->Session->delete($sessionPath.$entity->staff_id.'.timeError');
+		$this->Session->delete($sessionPath.$entity->staff_id.'.startTimestamp');
+		$this->Session->delete($sessionPath.$entity->staff_id.'.endTimestamp');
 		$html = $event->subject()->Html->link($entity->user->openemis_no , [
 			'plugin' => 'Institution',
 			'controller' => 'Institutions',
@@ -357,14 +361,18 @@ class StaffAttendancesTable extends AppTable {
 			$entity->user->id
 		]);
 		if ($timeError) {
-			$error = $this->getMessage('StudentAttendances.lateTime');
+			$startTime = __('Must be within shift timing, from') . ' ' . date('h:i A', $startTimestamp);
+			$endTime = __('to') . ' ' . date('h:i A', $endTimestamp);
+
+			$error = $startTime . ' ' . $endTime;
 			$html .= '&nbsp;<i class="fa fa-exclamation-circle fa-lg table-tooltip icon-red" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="'.$error.'"></i>';
 		}
 		return $html;
 	}
 
 	// Event: ControllerAction.Model.onGetType
-	public function onGetType(Event $event, Entity $entity) {
+	public function onGetType(Event $event, Entity $entity)
+	{
 		$html = '';
 
 		if (!is_null($this->request->query('mode'))) {
@@ -386,8 +394,24 @@ class StaffAttendancesTable extends AppTable {
 			];
 			$displayTime = 'display:none;';
 			$HtmlField = $event->subject()->HtmlField;
-			$configItemsTable =  TableRegistry::get('ConfigItems');
-			$attr['value'] = $configItemsTable->value('start_time');
+
+			$selectedPeriod = $this->request->query['academic_period_id'];
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+
+			$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+			$shiftTime = $InstitutionShift
+				->find('shiftTime', ['academic_period_id' => $selectedPeriod, 'institution_id' => $institutionId])
+				->toArray();
+
+			$shiftStartTimeArray = [];
+			foreach ($shiftTime as $key => $value) {
+				$shiftStartTimeArray[$key] = $value->start_time;
+			}
+
+			$startTime = min($shiftStartTimeArray);
+			$startTimestamp = strtotime($startTime);
+
+			$attr['value'] = date('h:i A', $startTimestamp);
 			$attr['default_time'] = false;
 			$attr['null'] = true;
 			if (empty($entity->StaffAbsences['id'])) {
@@ -508,7 +532,7 @@ class StaffAttendancesTable extends AppTable {
 			}
 		} else {
 			$reasonId = $entity->StaffAbsences['staff_absence_reason_id'];
-			$StaffAbsenceReasons = TableRegistry::get('FieldOption.StaffAbsenceReasons');
+			$StaffAbsenceReasons = TableRegistry::get('Institution.StaffAbsenceReasons');
 
 			if (!empty($reasonId)) {
 				$obj = $StaffAbsenceReasons->findById($reasonId)->first();
@@ -588,7 +612,9 @@ class StaffAttendancesTable extends AppTable {
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$periodOptions = $AcademicPeriod->getList();
+		$periodOptionsData = $AcademicPeriod->getList();
+		// only year options will appear
+		$periodOptions = $periodOptionsData[key($periodOptionsData)];
 
 		if (empty($this->request->query['academic_period_id'])) {
 			$this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
@@ -733,13 +759,13 @@ class StaffAttendancesTable extends AppTable {
 
 			$InstitutionArray = [];
 			if ($selectedDay != -1) {
-				
+
 			}
 			$queryClone = clone $query;
 			$totalStaff = $queryClone->distinct([$this->aliasField('staff_id')])->count();
 
 			$indexDashboard = 'attendance';
-			
+
 			$dataSet = $this->getNumberOfStaffByAttendance(['query' => $query, 'selectedDay' => $selectedDay]);
 			$present = 0;
 			$absent = 0;
@@ -764,7 +790,7 @@ class StaffAttendancesTable extends AppTable {
 				$staffAttendanceArray[] = ['label' => 'No. of Staff Absent for the week', 'value' => $absent];
 				$staffAttendanceArray[] = ['label' => 'No. of Staff Late for the week', 'value' => $late];
 			}
-			
+
 			$toolbarElements[] = [
 				'name' => $indexDashboard,
 				'data' => [
@@ -776,8 +802,8 @@ class StaffAttendancesTable extends AppTable {
 			];
 
 			$toolbarElements[] = [
-				'name' => 'Institution.Attendance/controls', 
-				'data' => [], 
+				'name' => 'Institution.Attendance/controls',
+				'data' => [],
 				'options' => []
 			];
 
@@ -796,7 +822,7 @@ class StaffAttendancesTable extends AppTable {
 				$typeOptions = [self::PRESENT => __('Present')];
 				$this->typeOptions = $typeOptions + $this->absenceList;
 
-				$StaffAbsenceReasons = TableRegistry::get('FieldOption.StaffAbsenceReasons');
+				$StaffAbsenceReasons = TableRegistry::get('Institution.StaffAbsenceReasons');
 				$this->reasonOptions = $StaffAbsenceReasons->getList()->toArray();
 			}
 		} else {
@@ -857,7 +883,7 @@ class StaffAttendancesTable extends AppTable {
 		}
     	return $query
     		->select([
-    			$this->aliasField('staff_id'), 
+    			$this->aliasField('staff_id'),
     			'Users.openemis_no', 'Users.first_name', 'Users.middle_name', 'Users.third_name','Users.last_name', 'Users.id',
     			'StaffAbsences.id',
     			'StaffAbsences.start_date',
@@ -907,7 +933,8 @@ class StaffAttendancesTable extends AppTable {
 		}
 	}
 
-	public function indexEdit() {
+	public function indexEdit()
+	{
 		if ($this->request->is(['post', 'put'])) {
 			$requestQuery = $this->request->query;
 			$requestData = $this->request->data;
@@ -926,23 +953,38 @@ class StaffAttendancesTable extends AppTable {
 						} else if ($obj['absence_type_id'] == $codeAbsenceType['LATE']) {
 							$obj['staff_absence_reason_id'] = $obj['late_staff_absence_reason_id'];
 							$obj['full_day'] = 0;
-							$configItemsTable =  TableRegistry::get('ConfigItems');
-							if (!isset($obj['start_time'])) {
-								$obj['start_time'] = $configItemsTable->value('start_time');
-								$obj['start_time'] = Time::parseTime($obj['start_time']);
-							} else {
-								$obj['start_time'] = new Time ($obj['start_time']);
+							$lateTime = strtotime($obj['late_time']);
+
+							$selectedPeriod = $this->request->query['academic_period_id'];
+							$institutionId = $this->Session->read('Institution.Institutions.id');
+
+							$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+							$shiftTime = $InstitutionShift
+								->find('shiftTime', ['academic_period_id' => $selectedPeriod, 'institution_id' => $institutionId])
+								->toArray();
+
+							$shiftStartTimeArray = [];
+							$shiftEndTimeArray = [];
+							foreach ($shiftTime as $key => $value) {
+								$shiftStartTimeArray[$key] = $value->start_time;
+								$shiftEndTimeArray[$key] = $value->end_time;
 							}
-							$startTime = $obj['start_time'];
-							$endTime = new Time ($obj['late_time']);
+
+							$startTime = min($shiftStartTimeArray);
+							$obj['start_time'] = $startTime;
+							$endTime = $obj['late_time'];
 							$obj['end_time'] = $endTime;
 
-							$startTimestamp = intval($startTime->toUnixString());
-							$endTimestamp = intval($endTime->toUnixString());
-							if ($startTimestamp > $endTimestamp) {
+							$startTimestamp = intval(min($shiftStartTimeArray)->toUnixString());
+							$endTimestamp = intval(max($shiftEndTimeArray)->toUnixString());
+
+							if (($lateTime < $startTimestamp) || ($lateTime > $endTimestamp)) {
+								$key = $obj['staff_id'];
 								$timeError = true;
 								$error = true;
 								$this->Session->write($StaffAbsences->Users->alias().'.'.$alias.'.'.$key.'.timeError', true);
+								$this->Session->write($StaffAbsences->Users->alias().'.'.$alias.'.'.$key.'.startTimestamp', $startTimestamp);
+								$this->Session->write($StaffAbsences->Users->alias().'.'.$alias.'.'.$key.'.endTimestamp', $endTimestamp);
 							}
 						}
 

@@ -68,6 +68,7 @@ switch ($fieldName) {
 											$optionsArray['label'] = false;
 											$optionsArray['before'] = false;
 											$optionsArray['between'] = false;
+											$this->Form->unlockField('Salaries.'.$fieldName.'.'.$key.'.'.$optionName.'_type_id', $optionsArray);
 											echo $this->Form->input('Salaries.'.$fieldName.'.'.$key.'.'.$optionName.'_type_id', $optionsArray);
 										?>
 									</td>
@@ -88,6 +89,7 @@ switch ($fieldName) {
 											$optionsArray['between'] = false;
 											$optionsArray['data-compute-variable'] = "true";
 											$optionsArray['data-compute-operand'] = $operand;
+											$this->Form->unlockField('Salaries.'.$fieldName.'.'.$key.'.amount', $optionsArray);
 											echo $this->Form->input('Salaries.'.$fieldName.'.'.$key.'.amount', $optionsArray);
 										 ?>
 									</td>

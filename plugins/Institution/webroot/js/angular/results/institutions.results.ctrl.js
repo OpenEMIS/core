@@ -2,6 +2,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
 .controller('InstitutionsResultsCtrl', function($scope, $filter, UtilsSvc, AlertSvc, InstitutionsResultsSvc) {
     $scope.action = 'view';
     $scope.message = null;
+    $scope.gradingTypes = null;
     $scope.resultType = null;
     $scope.results = {};
     $scope.gridOptions = null;
@@ -51,7 +52,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
     $scope.$watch('action', function(newValue, oldValue) {
         if (angular.isDefined(newValue) && angular.isDefined(oldValue) && newValue != oldValue) {
             $scope.action = newValue;
-            $scope.resetColumnDefs($scope.action, $scope.subject, $scope.periods);
+            $scope.resetColumnDefs($scope.action, $scope.subject, $scope.periods, $scope.gradingTypes);
         }
     });
 
@@ -105,8 +106,8 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
         };
     };
 
-    $scope.resetColumnDefs = function(action, subject, periods) {
-        var response = InstitutionsResultsSvc.getColumnDefs(action, subject, periods);
+    $scope.resetColumnDefs = function(action, subject, periods, gradingTypes) {
+        var response = InstitutionsResultsSvc.getColumnDefs(action, subject, periods, gradingTypes, $scope.results);
 
         if (angular.isDefined(response.error)) {
             // No Grading Options
@@ -130,7 +131,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
         AlertSvc.reset($scope);
         $scope.subject = subject;
         $scope.education_subject_id = subject.id;
-        $scope.resultType = subject.grading_type.result_type;
+
         if ($scope.gridOptions != null) {
             // update value in context
             $scope.gridOptions.context.education_subject_id = subject.id;
@@ -142,17 +143,30 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
         // getPeriods
         InstitutionsResultsSvc.getPeriods($scope.assessment_id)
         .then(function(periods) {
-            $scope.periods = periods;
-            return $scope.resetColumnDefs($scope.action, $scope.subject, $scope.periods);
+            if (periods) {
+                $scope.periods = periods;
+                return InstitutionsResultsSvc.getGradingTypes($scope.assessment_id, $scope.education_subject_id);
+            }
         }, function(error) {
             // No Assessment Periods
+            console.log(error);
+            AlertSvc.warning($scope, error);
+        })
+        // getGradingTypes
+        .then(function(gradingTypes) {
+            if (gradingTypes) {
+                $scope.gradingTypes = gradingTypes;
+                return $scope.resetColumnDefs($scope.action, $scope.subject, $scope.periods, $scope.gradingTypes);
+            }
+        }, function(error) {
+            // No Assessment Items Grading Types
             console.log(error);
             AlertSvc.warning($scope, error);
         })
         // resetColumnDefs
         .then(function(response) {
             if (response) {
-                return InstitutionsResultsSvc.getRowData($scope.resultType, $scope.periods, $scope.institution_id, $scope.class_id, $scope.assessment_id, $scope.academic_period_id, $scope.education_subject_id);
+                return InstitutionsResultsSvc.getRowData($scope.gradingTypes, $scope.periods, $scope.institution_id, $scope.class_id, $scope.assessment_id, $scope.academic_period_id, $scope.education_subject_id);
             }
         })
         // getRowData
@@ -181,30 +195,6 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
         if ($scope.gridOptions != null) {
             var resultTypes = InstitutionsResultsSvc.getResultTypes();
 
-            // Logic to build $scope.results for Grades type
-            if ($scope.resultType == resultTypes.GRADES) {
-                angular.forEach(angular.element('.oe-cell-editable'), function(obj, key) {
-                    if (angular.isDefined(obj.attributes['oe-newValue'])) {
-                        var studentId = obj.attributes['oe-student'].value;
-                        var periodId = obj.attributes['oe-period'].value;
-                        var oldValue = obj.attributes['oe-oldValue'].value;
-                        var newValue = obj.attributes['oe-newValue'].value;
-
-                        if (newValue != oldValue) {
-                            if (angular.isUndefined($scope.results[studentId])) {
-                                $scope.results[studentId] = {};
-                            }
-
-                            if (angular.isUndefined($scope.results[studentId][periodId])) {
-                                $scope.results[studentId][periodId] = {gradingOptionId: ''};
-                            }
-
-                            $scope.results[studentId][periodId]['gradingOptionId'] = newValue;
-                        }
-                    }
-                });
-            }
-
             var assessmentId = $scope.gridOptions.context.assessment_id;
             var educationSubjectId = $scope.gridOptions.context.education_subject_id;
             var institutionId = $scope.gridOptions.context.institution_id;
@@ -212,22 +202,20 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
             var classId = $scope.gridOptions.context.class_id;
 
             UtilsSvc.isAppendSpinner(true, 'institution-result-table');
-            InstitutionsResultsSvc.saveRowData($scope.subject, $scope.results, assessmentId, educationSubjectId, institutionId, academicPeriodId)
+            InstitutionsResultsSvc.saveRowData($scope.subject, $scope.gradingTypes, $scope.results, assessmentId, educationSubjectId, institutionId, academicPeriodId)
             .then(function(response) {
             }, function(error) {
                 console.log(error);
             })
             .finally(function() {
                 // Only Marks type will run this logic to update total_mark
-                if ($scope.resultType == resultTypes.MARKS) {
-                    $scope.gridOptions.api.forEachNode(function(row) {
-                        if (row.data.is_dirty) {
-                            InstitutionsResultsSvc.saveTotal(row.data, row.data.student_id, classId, institutionId, academicPeriodId, educationSubjectId);
-                            // reset dirty flag
-                            row.data.is_dirty = false;
-                        }
-                    });
-                }
+                $scope.gridOptions.api.forEachNode(function(row) {
+                    if (row.data.is_dirty) {
+                        InstitutionsResultsSvc.saveTotal(row.data, row.data.student_id, classId, institutionId, academicPeriodId, educationSubjectId);
+                        // reset dirty flag
+                        row.data.is_dirty = false;
+                    }
+                });
 
                 $scope.action = 'view';
                 // reset results object

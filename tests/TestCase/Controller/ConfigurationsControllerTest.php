@@ -1,28 +1,25 @@
 <?php
+namespace App\Test\TestCases;
 
-namespace App\tests\TestCase\Controller;
+use Cake\ORM\TableRegistry;
+use App\Test\AppTestCase;
 
-use Cake\TestSuite\IntegrationTestCase;
+class ConfigurationsControllerTest extends AppTestCase
+{
+    public $fixtures = [
+        'app.config_items',
+        'app.labels',
+        'app.security_users',
+        'app.workflow_models',
+        'app.workflow_steps',
+        'app.workflow_statuses',
+        'app.workflow_statuses_steps',
+        'app.config_item_options'
+    ];
 
-class ConfigurationsControllerTest extends IntegrationTestCase {
-
-	public function setAuthSession() {
-		
-		$this->session([
-			'Auth' => [
-				'User' => [
-					'id' => 2,
-					'username' => 'admin',
-					'super_admin' => '1'
-				]
-			]
-		]);
-	}
-
-	public function testConfigurationIndex() {
-
-		$this->setAuthSession();
-		$this->get('/Configurations');
-		$this->assertResponseCode(200);
-	}
+    public function testConfigurationIndex()
+    {
+        $this->get('/Configurations');
+        $this->assertResponseCode(200);
+    }
 }

@@ -11,11 +11,12 @@ use Cake\Event\Event;
 use Cake\Log\Log;
 
 class IdentityTypesTable extends ControllerActionTable {
-	public function initialize(array $config) {
-		$this->addBehavior('ControllerAction.FieldOption');
+	public function initialize(array $config)
+    {
+		$this->addBehavior('FieldOption.FieldOption');
 		$this->table('identity_types');
 		parent::initialize($config);
-		
+
 		$this->hasMany('Identities', ['className' => 'User.Identities', 'foreignKey' => 'identity_type_id']);
 
 		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
