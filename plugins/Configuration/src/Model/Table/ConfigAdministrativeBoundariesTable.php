@@ -7,12 +7,13 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Network\Session;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
 use ArrayObject;
 
 class ConfigAdministrativeBoundariesTable extends ControllerActionTable {
     public function initialize(array $config)
     {
-        $this->table('config_administrative_boundaries');
+        $this->table('config_items');
         parent::initialize($config);
         $this->addBehavior('Configuration.ConfigItems');
         $this->toggle('remove', false);
@@ -28,13 +29,13 @@ class ConfigAdministrativeBoundariesTable extends ControllerActionTable {
                 'rule' => 'validateUnique',
                 'provider' => 'table'
             ])
-            ->add('url', 'invalidUrl', [
+            ->add('value', 'invalidUrl', [
                 'rule' => ['url', true]
             ])
-            ->add('url', 'ruleValidateJsonAPI', [
+            ->add('value', 'ruleValidateJsonAPI', [
                 'rule' => 'validateJsonAPI'
             ])
-            ->allowEmpty('url')
+            ->allowEmpty('value')
             ;
         return $validator;
     }
@@ -42,6 +43,29 @@ class ConfigAdministrativeBoundariesTable extends ControllerActionTable {
     public function beforeAction(Event $event)
     {
         $this->field('name', ['type' => 'readonly']);
-        $this->field('url', ['type' => 'string']);
+        // $this->field('url', ['type' => 'string']);
+        $this->field('visible', ['visible' => false]);
+        $this->field('editable', ['visible' => false]);
+        $this->field('field_type', ['visible' => false]);
+        $this->field('option_type', ['visible' => false]);
+        $this->field('code', ['visible' => false]);
+        $this->field('default_value', ['visible' => ['view'=>false]]);
+        $this->field('type', ['visible' => ['view'=>false, 'edit'=>false], 'type' => 'readonly']);
+        $this->field('label', ['visible' => ['view'=>false, 'edit'=>false], 'type' => 'readonly']);
+        $this->field('value', ['sort' => false]);
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->where([$this->aliasField('type') => 'Administrative Boundaries']);
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'value') {
+            return __('Url');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }
