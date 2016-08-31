@@ -269,19 +269,19 @@ class ValidationBehavior extends Behavior {
 		$id = $globalData['data']['student_id'];
 
 		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-		$enrolledStatus = $StudentStatuses
-			->find()
-			->where([$StudentStatuses->aliasField('code') => 'CURRENT'])
-			->first()
-			->id;
+		$enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
 
 		$studentData = TableRegistry::get('Institution.Students')
 			->find()
 			->where(['student_id' => $id, 'student_status_id' => $enrolledStatus])
 			->first();
-		$enrolledDate = $studentData['start_date']->format('Y-m-d');
 
-		return $check > $enrolledDate;
+		if (!empty($studentData)) {
+			$enrolledDate = $studentData['start_date']->format('Y-m-d');
+			return $check > $enrolledDate;
+		} else {
+			return false;
+		}
 	}
 
 	public static function compareTime($field, $compareField, $equals, array $globalData) {
