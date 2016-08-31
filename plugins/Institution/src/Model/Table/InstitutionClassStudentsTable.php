@@ -102,7 +102,8 @@ class InstitutionClassStudentsTable extends AppTable {
             'allSubjectsPermission' => $allSubjectsPermission,
             'mySubjectsPermission' => $mySubjectsPermission,
             'allClassesPermission' => $allClassesPermission,
-            'myClassesPermission' => $myClassesPermission
+            'myClassesPermission' => $myClassesPermission,
+            'orientation' => 'landscape'
         ];
     }
 
