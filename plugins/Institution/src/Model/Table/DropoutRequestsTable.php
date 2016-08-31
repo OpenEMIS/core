@@ -115,15 +115,6 @@ class DropoutRequestsTable extends AppTable {
 		]);
 	}
 
-	public function validationDefault(Validator $validator) {
-		$validator = parent::validationDefault($validator);
-		$validator->add('effective_date', 'ruleDateAfterEnrollment', [
-		            'rule' => ['dateAfterEnrollment'],
-		            'provider' => 'table'
-	    			]);
-		return $validator;
-	}
-
 	public function addOnInitialize(Event $event, Entity $entity) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$id = $this->Session->read($this->registryAlias().'.id');
@@ -141,6 +132,15 @@ class DropoutRequestsTable extends AppTable {
 
 	public function editOnInitialize(Event $event, Entity $entity) {
 		$this->request->data[$this->alias()]['transfer_status'] = $entity->status;
+	}
+
+	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+		$validator->add('effective_date', 'ruleDateAfterEnrollment', [
+		            'rule' => ['dateAfterEnrollment'],
+		            'provider' => 'table'
+	    			]);
+		return $validator;
 	}
 
 	public function onUpdateFieldApplicationStatus(Event $event, array $attr, $action, $request) {

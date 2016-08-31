@@ -55,6 +55,7 @@ class StudentDropoutTable extends AppTable {
     }
 
     public function editAfterAction($event, Entity $entity) {
+    	$this->ControllerAction->field('effective_date', ['attr' => ['entity' => $entity]]);
 		$this->ControllerAction->field('student_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->student_id)->name_with_id]]);
 		$this->ControllerAction->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
 		$this->ControllerAction->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $this->AcademicPeriods->get($entity->academic_period_id)->name]]);
@@ -232,15 +233,24 @@ class StudentDropoutTable extends AppTable {
 				$attr['type'] = 'readonly';
 			}
 
-			$id = $request->pass[1];
-			$studentId = $this->get($id)['student_id'];
+			$entity = $attr['attr']['entity'];
+			$studentId = $entity->student_id;
+
 			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-			$enrolledStatus = $StudentStatuses->find()->where([$StudentStatuses->aliasField('code') => 'CURRENT'])->first()->id;
-			$studentData = TableRegistry::get('Institution.Students')->find()
-						->where(['student_id' => $studentId, 'student_status_id' => $enrolledStatus])
-						->first();
-			$enrolledDate = $studentData['start_date']->format('d-m-Y');
-			$attr['date_options'] = ['startDate' => $enrolledDate];
+			$enrolledStatus = $StudentStatuses
+				->find()
+				->where([$StudentStatuses->aliasField('code') => 'CURRENT'])
+				->first()
+				->id;
+
+			$Students = TableRegistry::get('Institution.Students');
+			$enrolledDate = $Students
+				->find()
+				->where([$Students->aliasField('student_id') => $studentId, $Students->aliasField('student_status_id') => $enrolledStatus])
+				->first()
+				->start_date;
+
+			$attr['date_options'] = ['startDate' => $enrolledDate->format('d-m-Y')];
 
 			return $attr;
 		}
