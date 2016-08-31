@@ -438,7 +438,8 @@ class AreasTable extends ControllerActionTable {
         }
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra) {
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    {
         //Setup fields
         $this->_fieldOrder = ['area_level_id', 'code', 'name'];
 
@@ -470,7 +471,8 @@ class AreasTable extends ControllerActionTable {
         }
     }
 
-    public function onGetName(Event $event, Entity $entity) {
+    public function onGetName(Event $event, Entity $entity)
+    {
         return $event->subject()->HtmlField->link($entity->name, [
             'plugin' => $this->controller->plugin,
             'controller' => $this->controller->name,
@@ -480,7 +482,8 @@ class AreasTable extends ControllerActionTable {
         ]);
     }
 
-    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, Request $request)
+    {
         $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
         $results = $this
             ->find()
@@ -514,7 +517,8 @@ class AreasTable extends ControllerActionTable {
     }
 
     // autocomplete used for UserGroups
-    public function autocomplete($search) {
+    public function autocomplete($search)
+    {
         $search = sprintf('%%%s%%', $search);
 
         $list = $this
