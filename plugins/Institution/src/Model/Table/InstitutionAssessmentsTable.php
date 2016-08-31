@@ -76,7 +76,8 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                 'mySubjectsPermission' => $mySubjectsPermission,
                 'allSubjectsPermission' => $allSubjectsPermission,
                 'allClassesPermission' => $allClassesPermission,
-                'myClassesPermission' => $myClassesPermission
+                'myClassesPermission' => $myClassesPermission,
+                'orientation' => 'landscape'
             ];
         }
     }
