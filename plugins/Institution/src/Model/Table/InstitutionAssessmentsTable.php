@@ -32,8 +32,8 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 
     public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $institutionName = $this->Institutions->get($institutionId)->name;
-        $settings['file'] = str_replace($this->alias(), str_replace(' ', '_', $institutionName).'_Results', $settings['file']);
+        $institutionCode = $this->Institutions->get($institutionId)->code;
+        $settings['file'] = str_replace($this->alias(), str_replace(' ', '_', $institutionCode).'_Results', $settings['file']);
     }
 
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {

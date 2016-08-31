@@ -57,9 +57,11 @@ class InstitutionClassStudentsTable extends AppTable {
     }
 
     public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {
+        $classId = $this->request->query('class_id');
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $institutionName = $this->Institutions->get($institutionId)->name;
-        $settings['file'] = str_replace($this->alias(), str_replace(' ', '_', $institutionName).'_Results', $settings['file']);
+        $institutionCode = $this->Institutions->get($institutionId)->code;
+        $className = $this->InstitutionClasses->get($classId)->name;
+        $settings['file'] = str_replace($this->alias(), str_replace(' ', '_', $institutionCode).'-'.str_replace(' ', '_', $className).'_Results', $settings['file']);
     }
 
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
