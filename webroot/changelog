@@ -1,3 +1,12 @@
+v3.6.2
+- Occupier schools only have view access on Infrastructure of the Owner's School
+- Infrastructure custom fields is now linked to Infrastructure Types instead of Levels
+- You can now track changes done to Infrastructure Rooms at a Year level
+- Assessment periods is now configurable in Assessment Periods tab
+- Able to assign different grading type to an Education subject for an Assessment Period
+- Assessment Reports is available on School and Class level
+- Deleting an Academic Period will now delete all related information linked to that academic period
+
 v3.6.1
 - Added Shift type in Institution Overview page and is searchable in Advanced Search
 - Rename This Institution and External Institution to Owner and Occupier
