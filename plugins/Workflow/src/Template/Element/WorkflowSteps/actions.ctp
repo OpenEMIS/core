@@ -94,6 +94,11 @@
 						<?php foreach ($data->workflow_actions as $key => $obj) : ?>
 							<tr>
 								<?php if ($action == 'edit') : ?>
+									<?php 
+										if (is_null($obj->action)) {
+											$this->Form->unlockField("WorkflowSteps.workflow_actions.$key");
+										}
+									?>
 									<td class="checkbox-column vertical-align-top">
 										<?= $this->Form->checkbox("WorkflowSteps.workflow_actions.$key.visible", ['class' => 'icheck-input', 'checked' => $obj->visible]); ?>
 									</td>
