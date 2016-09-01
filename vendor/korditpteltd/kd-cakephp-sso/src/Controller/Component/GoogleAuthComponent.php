@@ -65,31 +65,36 @@ class GoogleAuthComponent extends Component {
             ],
             'SSO.Google' => [
                 'userModel' => $this->_config['userModel']
-            ],
-            'SSO.Cookie' => [
-                'userModel' => $this->_config['userModel'],
-                'fields' => [
-                    'username' => 'openemis_no'
-                ],
-                'cookie' => [
-                    'name' => $this->_config['cookie']['name'],
-                    'path' => $this->_config['cookie']['path'],
-                    'expires' => $this->_config['cookie']['expires'],
-                    'domain' => $this->_config['cookie']['domain'],
-                    'encryption' => $this->_config['cookie']['encryption']
-                ],
-                'authType' => $this->authType
             ]
         ]);
 
-        $user = $this->controller->Auth->identify();
-        if ($user) {
-            $this->controller->Auth->setUser($user);
+        if ($this->config('cookieAuth.enabled')) {
+            $this->controller->Auth->config('authenticate', [
+                'SSO.Cookie' => [
+                    'userModel' => $this->_config['userModel'],
+                    'fields' => [
+                        'username' => $this->_config['cookieAuth']['username']
+                    ],
+                    'cookie' => [
+                        'name' => $this->_config['cookie']['name'],
+                        'path' => $this->_config['cookie']['path'],
+                        'expires' => $this->_config['cookie']['expires'],
+                        'domain' => $this->_config['cookie']['domain'],
+                        'encryption' => $this->_config['cookie']['encryption']
+                    ],
+                    'authType' => $this->authType
+                ]
+            ]);
+
+            $user = $this->controller->Auth->identify();
+            if ($user) {
+                $this->controller->Auth->setUser($user);
+            }
         }
     }
 
     public function startup(Event $event) {
-        if (!$this->controller->Auth->user()) {
+        if (!$this->controller->Auth->user() && !$this->session->read('Google.remoteFail') && !$this->session->read('Auth.fallback')) {
             $client = $this->client;
             $authUrl = $client->createAuthUrl();
 
@@ -102,16 +107,13 @@ class GoogleAuthComponent extends Component {
                 $cookieCounter = count(get_headers($authUrl, 1)['Set-Cookie']);
                 if ((empty($this->hostedDomain) && $cookieCounter != 3) || $cookieCounter < 2) {
                     $this->session->write('Auth.fallback', true);
-                    $this->session->delete('Auth.remoteLogin');
                 } else {
                     $this->session->delete('Auth.fallback');
                 }
             }
             $action = $this->request->params['action'];
-            if ($action == 'login' && !$this->session->read('Google.remoteFail') && !$this->session->read('Auth.fallback')) {
+            if ($action == $this->config('loginAction') && !$this->session->read('Google.remoteFail') && !$this->session->read('Auth.fallback')) {
                 $this->idpLogin();
-            } else if ($this->session->read('Google.remoteFail')) {
-                $this->controller->Alert->error($this->retryMessage, ['type' => 'string', 'reset' => true]);
             }
         }
     }
@@ -209,15 +211,19 @@ class GoogleAuthComponent extends Component {
     }
 
     public function authenticate(Event $event, ArrayObject $extra) {
+        $extra['authType'] = $this->authType;
         if ($this->request->is('get')) {
-            $extra['authType'] = $this->authType;
             if ($this->request->query('submit') == 'retry') {
                 $this->session->delete('Google.remoteFail');
                 $this->session->write('Google.reLogin', true);
                 return $this->controller->redirect($this->redirectUri);
             }
             $username = 'Not Google Authenticated';
-            $this->idpLogin();
+            if (!$this->controller->Auth->user() && !$this->session->read('Google.remoteFail') && !$this->session->read('Auth.fallback')) {
+               $this->idpLogin();
+            } else {
+                return $this->checkLogin();
+            }
             if ($this->session->check('Google.tokenData')) {
                 $tokenData = $this->session->read('Google.tokenData');
                 $email = $tokenData['payload']['email'];
@@ -227,6 +233,7 @@ class GoogleAuthComponent extends Component {
         } else {
             if ($this->request->is('post') && isset($this->request->data['submit'])) {
                 if ($this->request->data['submit'] == 'login') {
+                    $extra['disableCookie'] = true;
                     $username = $this->request->data('username');
                     $checkLogin = $this->checkLogin($username);
                     if ($checkLogin) {
@@ -234,33 +241,36 @@ class GoogleAuthComponent extends Component {
                     }
                     return $checkLogin;
                 }
+            } else {
+                return $this->checkLogin();
             }
-            $this->controller->Alert->error('security.login.remoteFail', ['reset' => true]);
             return false;
         }
 
     }
 
-    private function checkLogin($username) {
+    private function checkLogin($username = null, $extra = [])
+    {
         $this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'debug');
         $user = $this->Auth->identify();
+        $extra['status'] = true;
+        $extra['loginStatus'] = false;
+        $extra['fallback'] = false;
         if ($user) {
-            if ($user['status'] != 1) {
-                $this->controller->Alert->error('security.login.inactive', ['reset' => true]);
-                return false;
-            }
-            $this->controller->Auth->setUser($user);
-            $this->session->delete('Google.remoteFail');
-            $this->controller->Alert->clear();
-            return true;
-        } else {
-            if (!$this->session->read('Auth.fallback')) {
-                $this->controller->Alert->error($this->retryMessage, ['type' => 'string', 'reset' => true]);
+            if ($user[$this->_config['statusField']] != 1) {
+                $extra['status'] = true;
             } else {
-                $this->controller->Alert->error('security.login.fail', ['reset' => true]);
+                $this->controller->Auth->setUser($user);
+                $this->session->delete('Google.remoteFail');
+                $extra['loginStatus'] = true;
             }
-
-            return false;
+        } else {
+            $extra['loginStatus'] = false;
+            if ($this->session->read('Auth.fallback') || $this->session->read('Google.remoteFail')) {
+                $extra['fallback'] = true;
+            }
         }
+        $this->controller->dispatchEvent('Controller.Auth.afterCheckLogin', [$extra], $this);
+        return $extra['loginStatus'];
     }
 }

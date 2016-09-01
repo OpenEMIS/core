@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "f8ba53c4d9c4f7543793d494d64bbf85",
-    "content-hash": "3b656aad886dba1ad32cabe037969bab",
+    "hash": "28165d3cc742f7a6e33b5d8943c9a275",
+    "content-hash": "575ffa30ea395bbb354626e8c910efab",
     "packages": [
         {
             "name": "admad/cakephp-jwt-auth",
@@ -440,14 +440,14 @@
         },
         {
             "name": "korditpteltd/kd-cakephp-sso",
-            "version": "1.0.0.x-dev",
+            "version": "1.0.1.x-dev",
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git",
-                "reference": "05185c9ce916c84256513a4d30a400eef3b90a26"
+                "reference": "3b191ab9b531ee94ddcf23455beff11528f8ab71"
             },
             "require": {
-                "cakephp/cakephp": ">3.0.9",
+                "cakephp/cakephp": ">3.0.0",
                 "firebase/php-jwt": "~3.0",
                 "google/apiclient": "1.1.7",
                 "onelogin/php-saml": "^2.9"
@@ -477,7 +477,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
             },
-            "time": "2016-08-26 03:54:26"
+            "time": "2016-09-01 09:50:12"
         },
         {
             "name": "mk-j/php_xlsxwriter",
@@ -2854,6 +2854,7 @@
     "stability-flags": {
         "phpoffice/phpexcel": 20,
         "mk-j/php_xlsxwriter": 20,
+        "korditpteltd/kd-cakephp-sso": 20,
         "psy/psysh": 0
     },
     "prefer-stable": true,

@@ -92,7 +92,25 @@ class UsersController extends AppController
         $events = parent::implementedEvents();
         $events['Auth.afterIdentify'] = 'afterIdentify';
         $events['Controller.Auth.afterAuthenticate'] = 'afterAuthenticate';
+        $events['Controller.Auth.afterCheckLogin'] = 'afterCheckLogin';
         return $events;
+    }
+
+    public function afterCheckLogin(Event $event, $extra)
+    {
+        if (!$extra['loginStatus']) {
+            if (!$extra['status']) {
+                $this->Alert->error('security.login.inactive', ['reset' => true]);
+            } else if ($extra['fallback']) {
+                $url = Router::url(['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin', 'submit' => 'retry']);
+                $retryMessage = 'Remote authentication failed. <br>Please try local login or <a href="'.$url.'">Click here</a> to try again';
+                $this->Alert->error($retryMessage, ['type' => 'string', 'reset' => true]);
+            } else {
+                $this->Alert->error('security.login.fail', ['reset' => true]);
+            }
+            $event->stopPropagation();
+            return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+        }
     }
 
     public function afterAuthenticate(Event $event, ArrayObject $extra)
@@ -104,7 +122,7 @@ class UsersController extends AppController
             // Labels
             $labels = TableRegistry::get('Labels');
             $labels->storeLabelsInCache();
-            
+
             // Support Url
             $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
             $supportUrl = $ConfigItems->value('support_url');
