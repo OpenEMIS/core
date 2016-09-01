@@ -181,6 +181,36 @@ class SecurityUsersFixture extends TestFixture
             "super_admin" => "0",
             "third_name" => null,
             "username" => "student"
+        ], [
+            "address" => null,
+            "address_area_id" => "147",
+            "birthplace_area_id" => "147",
+            "created" => "0000-00-00 00:00:00",
+            "created_user_id" => "0",
+            "date_of_birth" => "2003-01-01",
+            "date_of_death" => null,
+            "first_name" => "Student2",
+            "gender_id" => "1",
+            "id" => "7",
+            "is_guardian" => "0",
+            "is_staff" => "0",
+            "is_student" => "1",
+            "last_login" => "0000-00-00 00:00:00",
+            "last_name" => "Demo User",
+            "middle_name" => null,
+            "modified" => "0000-00-00 00:00:05",
+            "modified_user_id" => null,
+            "openemis_no" => "student",
+            "password" => '$2y$10$pDYCdZfAk2kn6k/CLgZvIeO1tYBtvGzUkRKL0NJg69edQKRSLLYeu',
+            "photo_content" => null,
+            "photo_name" => "",
+            "postal_code" => null,
+            "preferred_name" => null,
+            "status" => "1",
+            "super_admin" => "0",
+            "third_name" => null,
+            "username" => "student2"
         ]
+
     ];
 }
