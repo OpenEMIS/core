@@ -441,4 +441,19 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 			}
 		}
 	}
+
+	public function onGetStaffId(Event $event, Entity $entity) {
+		if ($this->action == 'view') {
+			$staffId = $entity->staff_id;
+			return $event->subject()->Html->link($entity->user->name, [
+						'plugin' => 'Institution',
+						'controller' => 'Institutions',
+						'action' => 'StaffUser',
+						'0' => 'view',
+						'1' => $staffId,
+						'institution_id' => $entity->previous_institution_id
+
+					]);
+		}
+	}
 }
