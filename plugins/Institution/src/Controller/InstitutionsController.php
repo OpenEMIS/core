@@ -490,7 +490,7 @@ class InstitutionsController extends AppController  {
                     $params = ['user_id' => $userId];
                     break;
                 default:
-                    $params = [$id];
+                    $params = [];
             }
             $tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
         }
@@ -500,5 +500,4 @@ class InstitutionsController extends AppController  {
 
         return $tabElements;
     }
-
 }
