@@ -1,0 +1,188 @@
+<?php
+namespace App\Test\TestCases;
+
+use Cake\ORM\TableRegistry;
+use App\Test\AppTestCase;
+
+class InstitutionStudentDropoutRequestControllerTest extends AppTestCase
+{
+    public $fixtures = [
+        'app.config_items',
+        'app.labels',
+        'app.security_users',
+        'app.workflow_models',
+        'app.workflow_steps',
+        'app.workflow_statuses',
+        'app.workflow_statuses_steps',
+        'app.custom_modules',
+        'app.custom_field_types',
+        'app.institution_custom_field_values',
+        'app.institution_custom_fields',
+        'app.survey_forms',
+        'app.institution_custom_forms_fields',
+        'app.institution_custom_forms_filters',
+        'app.survey_rules',
+        'app.education_programmes',
+        'app.config_item_options',
+        'app.student_custom_field_values',
+        'app.student_custom_fields',
+        'app.student_custom_forms_fields',
+        'app.student_statuses',
+        'app.institution_student_admission',
+        'app.institution_student_dropout',
+        'app.institution_students',
+        'app.institutions',
+        'app.academic_periods',
+        'app.education_grades',
+        'app.student_dropout_reasons'
+    ];
+
+    private $studentId = 2;
+    private $securityUserId = 6;
+
+    public function setup()
+    {
+        parent::setUp();
+
+        $this->setAuthSession();
+        $this->session([
+            'Institution' => [
+                'Institutions' => [
+                    'id' => 1
+                ],
+                'DropoutRequests' => [
+                    'id' => $this->studentId
+                ]
+            ],
+            'Student' => [
+                'Students' => [
+                    'id' => $this->securityUserId
+                ]
+            ]
+        ]);
+
+        $this->urlPrefix('/Institutions/DropoutRequests/');
+    }
+
+    public function testCreate()
+    {
+        $testUrl = $this->url('add');
+        $this->get($testUrl);
+        $this->assertResponseCode(200);
+
+        $data = [
+            'DropoutRequests' => [
+                'student_id' => $this->securityUserId,
+                'institution_id' => 1,
+                'academic_period_id' => 3,
+                'education_grade_id' => 77,
+                'effective_date' => '2016-06-01', // after enrollment date '2016-01-01'
+                'student_dropout_reason_id' => 661,
+                'comment' => NULL,
+                'status' => 0
+            ],
+            'submit' => 'save'
+        ];
+        $this->postData($testUrl, $data);
+
+        $table = TableRegistry::get('Institutions.institution_student_dropout');
+        $lastInsertedRecord = $table->find()
+            ->where([$table->aliasField('student_id') => $data['DropoutRequests']['student_id'],
+                $table->aliasField('institution_id') => $data['DropoutRequests']['institution_id'],
+                $table->aliasField('academic_period_id') => $data['DropoutRequests']['academic_period_id'],
+                $table->aliasField('education_grade_id') => $data['DropoutRequests']['education_grade_id']])
+            ->first();
+
+        $this->assertEquals(true, (!empty($lastInsertedRecord)));
+    }
+
+    public function testCreateWrongDate()
+    {
+        $testUrl = $this->url('add');
+
+        $data = [
+            'DropoutRequests' => [
+                'student_id' => $this->securityUserId,
+                'institution_id' => 1,
+                'academic_period_id' => 3,
+                'education_grade_id' => 77,
+                'effective_date' => '2015-01-01', // before enrollment date '2016-01-01'
+                'student_dropout_reason_id' => 661,
+                'comment' => NULL,
+                'status' => 0
+            ],
+            'submit' => 'save'
+        ];
+        $this->postData($testUrl, $data);
+
+        $table = TableRegistry::get('Institutions.institution_student_dropout');
+        $lastInsertedRecord = $table->find()
+            ->where([$table->aliasField('student_id') => $data['DropoutRequests']['student_id'],
+                $table->aliasField('institution_id') => $data['DropoutRequests']['institution_id'],
+                $table->aliasField('academic_period_id') => $data['DropoutRequests']['academic_period_id'],
+                $table->aliasField('education_grade_id') => $data['DropoutRequests']['education_grade_id']])
+            ->first();
+
+        $this->assertEquals(true, (empty($lastInsertedRecord)));
+    }
+
+    public function testUpdate() {
+        $testUrl = $this->url('edit/1');
+        $this->get($testUrl);
+        $this->assertResponseCode(200);
+
+        $data = [
+            'DropoutRequests' => [
+                'id' => 1,
+                'student_id' => 7,
+                'institution_id' => 1,
+                'academic_period_id' => 3,
+                'education_grade_id' => 77,
+                'effective_date' => '2016-10-01', // after enrollment date '2016-06-01'
+                'student_dropout_reason_id' => 663,
+                'comment' => 'This student was bullied by his classmates',
+            ],
+            'submit' => 'save'
+        ];
+        $this->postData($testUrl, $data);
+
+        $table = TableRegistry::get('Institutions.institution_student_dropout');
+        $editedRecord = $table->find()
+            ->where([$table->aliasField('id') => $data['DropoutRequests']['id'],
+                $table->aliasField('effective_date') => $data['DropoutRequests']['effective_date'],
+                $table->aliasField('student_dropout_reason_id') => $data['DropoutRequests']['student_dropout_reason_id'],
+                $table->aliasField('comment') => $data['DropoutRequests']['comment']])
+            ->first();
+
+        $this->assertEquals(true, (!empty($editedRecord)));
+    }
+
+    public function testUpdateWrongDate() {
+        $testUrl = $this->url('edit/1');
+
+        $data = [
+            'DropoutRequests' => [
+                'id' => 1,
+                'student_id' => 7,
+                'institution_id' => 1,
+                'academic_period_id' => 3,
+                'education_grade_id' => 77,
+                'effective_date' => '2016-01-01', // before enrollment date '2016-06-01'
+                'student_dropout_reason_id' => 663,
+                'comment' => 'This student was bullied by his classmates',
+            ],
+            'submit' => 'save'
+        ];
+        $this->postData($testUrl, $data);
+
+        $table = TableRegistry::get('Institutions.institution_student_dropout');
+        $editedRecord = $table->find()
+            ->where([$table->aliasField('id') => $data['DropoutRequests']['id'],
+                $table->aliasField('effective_date') => $data['DropoutRequests']['effective_date'],
+                $table->aliasField('student_dropout_reason_id') => $data['DropoutRequests']['student_dropout_reason_id'],
+                $table->aliasField('comment') => $data['DropoutRequests']['comment']])
+            ->first();
+
+        $this->assertEquals(true, (empty($editedRecord)));
+    }
+}
