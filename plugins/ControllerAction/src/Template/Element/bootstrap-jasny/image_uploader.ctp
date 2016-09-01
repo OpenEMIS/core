@@ -37,6 +37,8 @@
   <div class="fileinput fileinput-new fileinput-preview" data-provides="fileinput">
     <div class="fileinput-new thumbnail" style="width: <?= $defaultWidth; ?>px; height: <?= $defaultHeight; ?>px;" id="toggleImage">
       <?= $src ?>
+      <?php $this->Form->unlockField($attr['model'].'.'.$attr['field']);
+      ?>
     </div>
     <div class="fileinput-preview fileinput-exists thumbnail" style="max-width: <?= $defaultWidth; ?>px; max-height: <?= $defaultHeight; ?>px;"></div>
       <div class="file-input-buttons">

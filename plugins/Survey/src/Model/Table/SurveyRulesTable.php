@@ -35,16 +35,19 @@ class SurveyRulesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) 
     {
-        $toolbarButtons = $extra['toolbarButtons'];
-        $toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
-        $toolbarButtons['edit']['url'] = $this->url('edit');
-        $toolbarButtons['edit']['attr'] = [
-            'class' => 'btn btn-xs btn-default',
-            'data-toggle' => 'tooltip',
-            'data-placement' => 'bottom',
-            'escape' => false,
-            'title' => __('Edit')
-        ];
+        if ($this->Auth->user('super_admin') == 1 || $this->AccessControl->check(['Surveys', 'Rules', 'edit'])) {
+            $toolbarButtons = $extra['toolbarButtons'];
+            $toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
+            $toolbarButtons['edit']['url'] = $this->url('edit');
+            $toolbarButtons['edit']['attr'] = [
+                'class' => 'btn btn-xs btn-default',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'title' => __('Edit')
+            ];
+        }
+        
         $extra['elements']['controls'] = ['name' => 'Survey.survey_rules_controls', 'data' => [], 'options' => [], 'order' => 2];
         $this->fields['survey_question_id']['type'] = 'integer';
         if (!$this->request->query('survey_form_id')) {
@@ -93,7 +96,7 @@ class SurveyRulesTable extends ControllerActionTable
         $surveyFormOptions = $this->SurveyForms
             ->find('list')
             ->toArray();
-        $surveyFormOptions = ['' => '-- '.__('Select Survey').' --'] + $surveyFormOptions;
+        $surveyFormOptions = ['' => '-- '.__('All Surveys').' --'] + $surveyFormOptions;
         $surveyFormId = $this->request->query('survey_form_id');
         $this->advancedSelectOptions($surveyFormOptions, $surveyFormId);
         $this->controller->set(compact('surveyFormOptions'));
