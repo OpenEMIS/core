@@ -1,3 +1,23 @@
+-- POCOR-3193
+-- replace deletd records into institution_subjects table
+INSERT INTO `institution_subjects`
+SELECT * FROM `z_3193_institution_subjects`;
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3193';
+
+
+-- POCOR-3272
+-- replace values with original values from backup user contacts table
+UPDATE `user_contacts`
+INNER JOIN `z_3272_user_contacts`
+ON `user_contacts`.`id` = `z_3272_user_contacts`.`id`
+SET `user_contacts`.`value` = `z_3272_user_contacts`.`value`;
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3272';
+
+
 -- POCOR-3340
 -- workflow_actions
 UPDATE `workflow_actions`
