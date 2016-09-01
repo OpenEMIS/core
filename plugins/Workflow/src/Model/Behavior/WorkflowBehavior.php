@@ -27,7 +27,8 @@ class WorkflowBehavior extends Behavior {
 			'WorkflowRecords' => 'Workflow.WorkflowRecords',
 			'WorkflowComments' => 'Workflow.WorkflowComments',
 			'WorkflowTransitions' => 'Workflow.WorkflowTransitions'
-		]
+		],
+		'assigneeClass' => ['className' => 'User.Users']
 	];
 
 	private $workflowEvents = [
@@ -60,6 +61,10 @@ class WorkflowBehavior extends Behavior {
 			} else {
 				$this->{$key} = null;
 			}
+		}
+
+		if ($this->_table->hasField('assignee_id')) {
+			$this->_table->belongsTo('Assignees', $this->config('assigneeClass'));
 		}
 	}
 
@@ -156,6 +161,15 @@ class WorkflowBehavior extends Behavior {
 		if (!is_null($this->model) && in_array($this->currentAction, ['index', 'view', 'remove', 'processWorkflow'])) {
 			$this->attachWorkflow = true;
 			$this->controller->Workflow->attachWorkflow = $this->attachWorkflow;
+		}
+
+		$model = $this->_table;
+		if ($model->hasField('assignee_id')) {
+			if ($this->isCAv4()) {
+				$model->field('assignee_id', ['type' => 'hidden']);
+			} else {
+				$model->ControllerAction->field('assignee_id', ['type' => 'hidden']);
+			}
 		}
 	}
 
@@ -742,6 +756,11 @@ class WorkflowBehavior extends Behavior {
 				'disabled' => 'disabled',
 				'class'=> 'workflowtransition-step-name'
 			],
+			$alias.'.assignee_id' => [
+				'label' => __('Assignee'),
+				'type' => 'select',
+				'class'=> 'workflowtransition-assignee-id'
+			],
 			$alias.'.comment' => [
 				'label' => __('Comment'),
 				'type' => 'textarea',
@@ -751,6 +770,7 @@ class WorkflowBehavior extends Behavior {
 
 		$content = '';
 		$content = '<style type="text/css">.modal-footer { clear: both; } .modal-body textarea { width: 60%; }</style>';
+		$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-assignee-error error-message">' . __('Assignee cannot be left empty') . '</div></div>';
 		$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-comment-error error-message">' . __('This field cannot be left empty') . '</div></div>';
 		$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-event-description error-message"></div></div>';
 		$buttons = [
@@ -937,6 +957,22 @@ class WorkflowBehavior extends Behavior {
 		}
 	}
 
+	public function setAssigneeId(Entity $entity, $requestData) {
+		if($this->_table->hasBehavior('Workflow')) {
+			if (array_key_exists($this->WorkflowTransitions->alias(), $requestData)) {
+				if (array_key_exists('assignee_id', $requestData[$this->WorkflowTransitions->alias()])) {
+					$assigneeId = $requestData[$this->WorkflowTransitions->alias()]['assignee_id'];
+					if ($entity->has('assignee_id')) {
+						$this->_table->updateAll(
+							['assignee_id' => $assigneeId],
+							['id' => $entity->id]
+						);
+					}
+				}
+			}
+		}
+	}
+
 	public function setStatusId(Entity $entity) {
 		if($this->_table->hasBehavior('Workflow')) {
 			$workflowRecord = $this->getRecord($this->_table->registryAlias(), $entity);
@@ -958,8 +994,9 @@ class WorkflowBehavior extends Behavior {
 		}
 	}
 
-	public function workflowAfterTransition(Event $event, $id=null) {
+	public function workflowAfterTransition(Event $event, $id=null, $requestData) {
 		$entity = $this->_table->get($id);
+		$this->setAssigneeId($entity, $requestData);
 		$this->setStatusId($entity);
 	}
 
@@ -985,7 +1022,7 @@ class WorkflowBehavior extends Behavior {
 				$this->_table->controller->Alert->success('general.edit.success', ['reset' => true]);
 
 				// Trigger workflow after save event here
-				$event = $subject->dispatchEvent('Workflow.afterTransition', [$id, $entity], $subject);
+				$event = $subject->dispatchEvent('Workflow.afterTransition', [$id, $requestData], $subject);
 				if ($event->isStopped()) { return $event->result; }
 				// End
 
