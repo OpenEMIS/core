@@ -98,6 +98,10 @@ class ValidationBehavior extends Behavior {
         return $isValid;
     }
 
+	public static function numericPositive($check, array $globalData) {
+		return ctype_digit($check);
+	}
+
     public static function checkAuthorisedArea($check, array $globalData) {
         $isValid = false;
         $session = new Session();
