@@ -95,33 +95,38 @@ class Saml2AuthComponent extends Component {
             ],
             'SSO.Saml2' => [
                 'userModel' => $this->_config['userModel']
-            ],
-            'SSO.Cookie' => [
-                'userModel' => $this->_config['userModel'],
-                'fields' => [
-                    'username' => 'openemis_no'
-                ],
-                'cookie' => [
-                    'name' => $this->_config['cookie']['name'],
-                    'path' => $this->_config['cookie']['path'],
-                    'expires' => $this->_config['cookie']['expires'],
-                    'domain' => $this->_config['cookie']['domain'],
-                    'encryption' => $this->_config['cookie']['encryption']
-                ],
-                'authType' => $this->authType
             ]
         ]);
 
-        $user = $this->controller->Auth->identify();
-        if ($user) {
-            $this->controller->Auth->setUser($user);
+        if ($this->config('cookieAuth.enabled')) {
+            $this->controller->Auth->config('authenticate', [
+                'SSO.Cookie' => [
+                    'userModel' => $this->_config['userModel'],
+                    'fields' => [
+                        'username' => $this->_config['cookieAuth']['username']
+                    ],
+                    'cookie' => [
+                        'name' => $this->_config['cookie']['name'],
+                        'path' => $this->_config['cookie']['path'],
+                        'expires' => $this->_config['cookie']['expires'],
+                        'domain' => $this->_config['cookie']['domain'],
+                        'encryption' => $this->_config['cookie']['encryption']
+                    ],
+                    'authType' => $this->authType
+                ]
+            ]);
+
+            $user = $this->controller->Auth->identify();
+            if ($user) {
+                $this->controller->Auth->setUser($user);
+            }
         }
     }
 
     public function startup(Event $event) {
         if (!$this->controller->Auth->user()) {
             $action = $this->request->params['action'];
-            if ($action == 'login' && !$this->session->read('Auth.fallback') && !$this->session->read('Saml2.remoteFail')) {
+            if ($action == $this->config('loginAction') && !$this->session->read('Auth.fallback') && !$this->session->read('Saml2.remoteFail')) {
                 $this->login();
             }
         }
@@ -210,25 +215,29 @@ class Saml2AuthComponent extends Component {
     }
 
     public function authenticate(Event $event, ArrayObject $extra) {
+        $extra['authType'] = $this->authType;
+        if ($this->controller->Auth->user()) {
+            return true;
+        }
         if ($this->request->is('post') && !$this->session->read('Saml2.remoteFail')) {
             if ($this->idpLogin()) {
                 $userData = $this->getAttributes();
                 if (isset($userData[$this->userNameField][0])) {
                     $userName = $userData[$this->userNameField][0];
                     $this->session->write('Saml2.userAttribute', $userData);
-                    $extra['authType'] = $this->authType;
                     return $this->checkLogin($userName);
                 } else {
                     $this->session->write('Auth.fallback', true);
                     return false;
                 }
             } else {
-                $this->controller->Alert->error('security.login.remoteFail', ['reset' => true]);
+                // $this->controller->Alert->error('security.login.remoteFail', ['reset' => true]);
                 return false;
             }
         } else {
             if ($this->request->is('post') && isset($this->request->data['submit'])) {
                 if ($this->request->data['submit'] == 'login') {
+                    $extra['disableCookie'] = true;
                     $username = $this->request->data('username');
                     $checkLogin = $this->checkLogin($username);
                     if ($checkLogin) {
@@ -242,22 +251,27 @@ class Saml2AuthComponent extends Component {
 
     }
 
-    private function checkLogin($username) {
+    private function checkLogin($username = null, $extra = [])
+    {
         $this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'debug');
         $user = $this->Auth->identify();
+        $extra['status'] = true;
+        $extra['loginStatus'] = false;
+        $extra['fallback'] = false;
         if ($user) {
-            if ($user['status'] != 1) {
+            if ($user[$this->_config['statusField']] != 1) {
                 $this->session->write('Auth.fallback', true);
-                $this->controller->Alert->error('security.login.inactive', ['reset' => true]);
-                return false;
+                $extra['status'] = false;
+                $extra['fallback'] = true;
+            } else {
+                $this->controller->Auth->setUser($user);
+                $extra['loginStatus'] = true;
             }
-            $this->controller->Auth->setUser($user);
-            return true;
         } else {
             $this->session->write('Saml2.remoteFail', true);
-            $this->controller->Alert->error('security.login.remoteFail', ['reset' => true]);
-            return false;
         }
+        $this->controller->dispatchEvent('Controller.Auth.afterCheckLogin', [$extra], $this);
+        return $extra['loginStatus'];
     }
 
 

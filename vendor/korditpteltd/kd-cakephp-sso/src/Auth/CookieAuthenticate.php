@@ -108,7 +108,6 @@ class CookieAuthenticate extends BaseAuthenticate
             TableRegistry::get($this->_config['userModel']);
             $userName = $data->$username;
             $userInfo = json_decode(json_encode($data), true);
-            $userInfo['dateOfBirth'] = $userInfo['date_of_birth'];
             $userInfo['firstName'] = $userInfo['first_name'];
             $userInfo['lastName'] = $userInfo['last_name'];
             $User = TableRegistry::get($this->_config['userModel']);
