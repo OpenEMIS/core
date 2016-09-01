@@ -551,8 +551,6 @@ class InstitutionClassesTable extends ControllerActionTable {
             $existingStudents = $students;
             $students = [];
 
-            // $this->log($existingStudents, 'debug');
-
             /**
              * Populate records in the UI table & unset the record from studentOptions
              */
@@ -949,17 +947,25 @@ class InstitutionClassesTable extends ControllerActionTable {
         return $data;
     }
 
-    public function createVirtualStudentEntity($id, $entity) {
+    public function createVirtualStudentEntity($id, $entity) 
+    {
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $enrolled = $StudentStatuses->getIdByCode('CURRENT');
+
         $InstitutionStudentsTable = $this->Institutions->Students;
         $userData = $InstitutionStudentsTable->find()
             ->contain(['Users' => ['Genders'], 'StudentStatuses', 'EducationGrades'])
             ->where([
                 $InstitutionStudentsTable->aliasField('student_id') => $id,
+                $InstitutionStudentsTable->aliasField('institution_id') => $entity->institution_id,
+                //this is to ensure that student is enrolled and have the correct education grade accordingly.
+                $InstitutionStudentsTable->aliasField('education_grade_id') => $entity->education_grades[0]->id,
+                $InstitutionStudentsTable->aliasField('student_status_id') => $enrolled
                 //cant validate based on academic period id, since there can be overlap date between academic period
-                //$InstitutionStudentsTable->aliasField('academic_period_id') => $entity->academic_period_id,
-                $InstitutionStudentsTable->aliasField('institution_id') => $entity->institution_id
+                //$InstitutionStudentsTable->aliasField('academic_period_id') => $entity->academic_period_id
             ])
             ->first();
+        $this->log($userData, 'debug');
         if ($userData) {
             $data = [
                 'id' => $this->getExistingRecordId($id, $entity),
