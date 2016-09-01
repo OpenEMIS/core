@@ -1,28 +1,27 @@
 <?php
+namespace App\Test\TestCases;
 
-namespace Workflow\tests\TestCase\Controller;
+use Cake\ORM\TableRegistry;
+use App\Test\AppTestCase;
 
-use Cake\TestSuite\IntegrationTestCase;
+class WorkflowsControllerTest extends AppTestCase
+{
+    public $fixtures = [
+        'app.config_items',
+        'app.labels',
+        'app.security_users',
+        'app.workflows',
+        'app.workflows_filters',
+        'app.workflow_models',
+        'app.workflow_steps',
+        'app.workflow_statuses',
+        'app.workflow_statuses_steps',
+        'app.survey_forms'
+    ];
 
-class WorkflowsControllerTest extends IntegrationTestCase {
-
-	public function setAuthSession() {
-		
-		$this->session([
-			'Auth' => [
-				'User' => [
-					'id' => 2,
-					'username' => 'admin',
-					'super_admin' => '1'
-				]
-			]
-		]);
-	}
-
-	public function testWorkflowIndex() {
-
-		$this->setAuthSession();
-		$this->get('/Workflows/Workflows');
-		$this->assertResponseCode(200);
-	}
+    public function testWorkflowIndex()
+    {
+        $this->get('/Workflows/Workflows');
+        $this->assertResponseCode(200);
+    }
 }
