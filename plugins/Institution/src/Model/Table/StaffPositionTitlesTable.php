@@ -22,6 +22,7 @@ class StaffPositionTitlesTable extends ControllerActionTable {
         $this->hasMany('Titles', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'staff_position_title_id']);
         $this->hasMany('TrainingCoursesTargetPopulations', ['className' => 'Training.TrainingCoursesTargetPopulations', 'foreignKey' => 'target_population_id']);
         $this->belongsTo('SecurityRoles', ['className' => 'Security.SecurityRoles']);
+        $this->hasMany('InstitutionPositions', ['className' => 'Institution.InstitutionPositions']);
 
 		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
 	}
