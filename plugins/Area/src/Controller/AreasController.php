@@ -17,8 +17,6 @@ class AreasController extends AppController
 
 	public function initialize() {
 		parent::initialize();
-
-		$this->ControllerAction->models = [];
 		$this->loadComponent('Paginator');
 	}
 
