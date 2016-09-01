@@ -96,6 +96,9 @@ class UsersTable extends AppTable {
         	$dateOfBirth = Time::createFromFormat('Y-m-d', '1970-01-01');
         }
 
+        if (isset($userInfo['openemis_no'])) {
+        	$openemisNo = $userInfo['openemis_no'];
+        }
 
         $date = Time::now();
         $data = [
