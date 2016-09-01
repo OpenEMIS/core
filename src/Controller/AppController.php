@@ -119,6 +119,9 @@ class AppController extends Controller {
 			'homePageURL' => ['plugin' => null, 'controller' => 'Dashboard', 'action' => 'index'],
 			'loginPageURL' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'login'],
 			'userModel' => 'User.Users',
+			'cookieAuth' => [
+				'username' => 'openemis_no'
+			],
 			'cookie' => [
 				'domain' => Configure::read('domain')
 			]

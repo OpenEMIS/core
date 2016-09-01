@@ -3,8 +3,8 @@
     "description": "KORDIT CakePHP SSO Plugin",
     "type": "cakephp-plugin",
     "keywords": [
-        "kordit", 
-        "cakephp", 
+        "kordit",
+        "cakephp",
         "sso"
     ],
     "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-sso",
@@ -19,7 +19,7 @@
         "source": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
     },
     "require": {
-        "cakephp/cakephp": ">3.0.9",
+        "cakephp/cakephp": ">3.0.0",
         "firebase/php-jwt": "~3.0",
         "google/apiclient": "1.1.7",
         "onelogin/php-saml": "^2.9"

@@ -2907,20 +2907,20 @@
     },
     {
         "name": "korditpteltd/kd-cakephp-sso",
-        "version": "1.0.0.x-dev",
-        "version_normalized": "1.0.0.9999999-dev",
+        "version": "1.0.1.x-dev",
+        "version_normalized": "1.0.1.9999999-dev",
         "source": {
             "type": "git",
             "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git",
-            "reference": "05185c9ce916c84256513a4d30a400eef3b90a26"
+            "reference": "3b191ab9b531ee94ddcf23455beff11528f8ab71"
         },
         "require": {
-            "cakephp/cakephp": ">3.0.9",
+            "cakephp/cakephp": ">3.0.0",
             "firebase/php-jwt": "~3.0",
             "google/apiclient": "1.1.7",
             "onelogin/php-saml": "^2.9"
         },
-        "time": "2016-08-26 03:54:26",
+        "time": "2016-09-01 09:50:12",
         "type": "cakephp-plugin",
         "installation-source": "source",
         "autoload": {
