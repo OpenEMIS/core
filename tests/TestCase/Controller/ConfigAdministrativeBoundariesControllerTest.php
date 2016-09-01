@@ -90,7 +90,6 @@ class ConfigAdministrativeBoundariesControllerTest extends AppTestCase
         $this->postData($testUrl, $data);
 
         $entity = $this->table->get($this->id);
-        pr($entity);
         $this->assertEquals($data[$alias]['url'], $entity->value);
     }
 }
