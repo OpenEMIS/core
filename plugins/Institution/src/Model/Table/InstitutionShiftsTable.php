@@ -25,6 +25,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
 		$this->belongsTo('ShiftOptions', 			['className' => 'Institution.ShiftOptions']);
 		$this->belongsTo('Institutions', 			['className' => 'Institution.Institutions']);
 		$this->belongsTo('LocationInstitutions',	['className' => 'Institution.LocationInstitutions']);
+		$this->belongsTo('PreviousShifts', 			['className' => 'Institution.InstitutionShifts', 'foreignKey' => 'previous_shift_id']);
 
 		$this->hasMany('InstitutionClasses', 		['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_shift_id']);
 
@@ -187,6 +188,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
 		}
 
 		$this->field('institution_id', ['type' => 'integer']); //this is to show owner (set in label table), by default the default is hidden
+		$this->field('previous_shift_id', ['visible' => 'false']);
 
 		$this->setFieldOrder([
 			'academic_period_id', 'shift_option_id', 'start_time', 'end_time', 'institution_id', 'location_institution_id'
@@ -311,6 +313,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
 		$extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
 
 		$this->field('institution_id', ['type' => 'integer']); //this is to show owner (set in label table), by default the default is hidden
+		$this->field('previous_shift_id', ['visible' => 'false']);
 
 		$this->setFieldOrder([
 			'academic_period_id', 'shift_option_id', 'start_time', 'end_time', 'institution_id', 'location_institution_id'
@@ -824,6 +827,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
 			'after' => 'institution_id',
 			'entity' => $entity
 		]);
+		$this->field('previous_shift_id', ['visible' => 'false']);
 	}
 
 	public function findShiftTime(Query $query, array $options)
