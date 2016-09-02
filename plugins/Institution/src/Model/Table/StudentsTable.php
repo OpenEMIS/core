@@ -1102,6 +1102,7 @@ class StudentsTable extends AppTable {
 		if ($this->request->is('post')) {
 			$selectedPeriod = $this->request->data['Students']['academic_period_id'];
 		}
+		$periodOptions = ['' => '-- ' . __('Select') . ' --'] + $periodOptions;
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
 			'callable' => function($id) use ($Grades, $institutionId) {
@@ -1115,9 +1116,10 @@ class StudentsTable extends AppTable {
 		// End
 
 		// Grade
-		$gradeOptions = ['' => __('-- Select --')];
-		$classOptions = ['' => __('-- Select --')];
+		$gradeOptions = ['' => '-- ' .  __('Select') . ' --')];
+		$classOptions = ['' => '-- ' .  __('Select') . ' --'];
 		$selectedClass = 0;
+		$selectedGrade = 0;
 
 		if ($selectedPeriod != 0) {
 			$data = $Grades->find()
