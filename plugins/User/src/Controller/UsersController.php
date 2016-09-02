@@ -5,6 +5,7 @@ use DateTime;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 use ArrayObject;
+use Cake\Routing\Router;
 
 class UsersController extends AppController
 {
