@@ -72,12 +72,14 @@ class AreasTable extends ControllerActionTable
             pr('invalidApi');
             // API not valid, redirect to index and output error message
             // when saving the API was valid, then the link become invalid.
-            // $session = $this->request->session();
-            // $sessionKey = $this->registryAlias() . '.APIInvalid';
-            // $session->write($sessionKey, 'Areas.api_invalid');
+            $session = $this->request->session();
+            $sessionKey = $this->registryAlias() . '.APIInvalid';
+            $session->write($sessionKey, 'Areas.api_invalid');
 
-            // $url = $this->url('index');
-            // return $this->controller->redirect($url);
+            // redirect to index page
+            $url = $this->url('index');
+            $mainEvent->stopPropagation();
+            return $this->controller->redirect($url);
         } else {
             // API valid, run the process
             $model = $this;
@@ -128,7 +130,9 @@ class AreasTable extends ControllerActionTable
                 $requestData = $this->request->data;
                 $entity = $this->patchEntity($entity, $requestData);
 
-                $this->doSynchronize($requestData, $missingAreaArray, $updateAreaArray, $jsonArray);
+                // update the related table
+                $this->doUpdateAssociatedRecord($requestData);
+                $this->doUpdateAreaTable($missingAreaArray, $jsonArray);
 
                 // redirect to index page
                 $url = $this->url('index');
@@ -529,9 +533,8 @@ class AreasTable extends ControllerActionTable
         }
     }
 
-    public function doSynchronize($requestData, $missingAreaArray, $updateAreaArray, $jsonArray)
+    public function doUpdateAssociatedRecord($requestData)
     {
-        $requestData = $this->request->data;
         $securityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
 
         if (array_key_exists($this->alias(), $requestData)) {
@@ -552,7 +555,10 @@ class AreasTable extends ControllerActionTable
                 }
             }
         }
+    }
 
+    public function doUpdateAreaTable($missingAreaArray, $jsonArray)
+    {
         // Delete missing areas from areasTable
         if (!empty($missingAreaArray)) {
             foreach ($missingAreaArray as $key => $obj) {
@@ -580,43 +586,3 @@ class AreasTable extends ControllerActionTable
         $this->rebuildLftRght();
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
