@@ -14,7 +14,7 @@ class InstitutionStudentDropoutFixture extends TestFixture
             'status' => 0,
             'institution_id' => 1,
             'academic_period_id' => 3,
-            'education_grade_id' => 77,
+            'education_grade_id' => 76,
             'student_dropout_reason_id' => 661,
             'comment' => NULL,
             'modified_user_id' => NULL,
