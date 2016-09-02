@@ -12,62 +12,26 @@ class AssessmentsController extends AppController
 {
 	public function initialize() {
 		parent::initialize();
-
 		$this->loadComponent('Paginator');
-		$model = $this->request->action;
-		$action = isset($this->request->pass[0]) ? $this->request->pass[0] : '';
-		if ($model=='Assessments') {
-			switch ($action) {
-				case 'add':
-				case 'edit':
-					$this->Angular->addModules([
-						'kd.module',
-						'assessmentAdminModule'
-					]);
-				break;
-			}
-		}
-    }
+	}
 
 	// CAv4
+	public function Assessments() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Assessment.Assessments']); }
+	public function AssessmentPeriods() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Assessment.AssessmentPeriods']); }
 	public function GradingTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Assessment.AssessmentGradingTypes']); }
-	public function Assessments() {
-		$model = $this->request->action;
-		$action = isset($this->request->pass[0]) ? $this->request->pass[0] : '';
-		if ($model=='Assessments') {
-			switch ($action) {
-				case 'add':
-				case 'edit':
-					$this->set('ngController', 'assessmentAdminCtrl');
-				break;
-			}
-		}
-		$this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Assessment.Assessments']);
-	}
 	// End
 
-	public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra) {
-		$session = $this->request->session();
-
-		if (!$this->request->is('ajax')) {
-			if ($model->hasField('institution_id')) {
-				if (!$session->check('Institution.Institutions.id')) {
-					$this->Alert->error('general.notExists');
-					// should redirect
-				} else {
-					$query->where([$model->aliasField('institution_id') => $session->read('Institution.Institutions.id')]);
-				}
-			}
-		}
-	}
-
-    public function beforeFilter(Event $event) {
+	public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
 
 		$tabElements = [
 			'Assessments' => [
 				'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Assessments'],
-				'text' => __('Assessments')
+				'text' => __('Templates')
+			],
+			'AssessmentPeriods' => [
+				'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'AssessmentPeriods'],
+				'text' => __('Assessment Periods')
 			],
 			'GradingTypes' => [
 				'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'GradingTypes'],
@@ -83,18 +47,6 @@ class AssessmentsController extends AppController
 	    }
 
 	}
-
-	public $components = [
-		'RequestHandler'
-	];
-
-    public function addNewAssessmentPeriod() {
-    	$model = TableRegistry::get('Assessment.AssessmentPeriods');
-    	$this->set([
-			'data' => $model->addNewAssessmentPeriod(),
-            '_serialize' => ['data']
-        ]);
-    }
 
 	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		$header = __('Assessment');

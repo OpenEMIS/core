@@ -199,9 +199,10 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                 filter: "number",
                 filterParams: filterParams,
                 valueGetter: function(params) {
+                    var subjectId = params.data['subject_id'];
                     var value = params.data[params.colDef.field];
 
-                    if (!isNaN(parseFloat(value))) {
+                    if (angular.isDefined(properties.subjects[subjectId]) && angular.isDefined(properties.subjects[subjectId][assessmentPeriod.id]) && angular.isDefined(properties.subjects[subjectId][assessmentPeriod.id]['result_type']) && properties.subjects[subjectId][assessmentPeriod.id]['result_type'] == 'MARKS') {
                         return $filter('number')(value, 2);
                     } else {
                         // for GRADES type
@@ -248,26 +249,35 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         angular.forEach(assessmentResults, function(subjectObj, subjectId) {
             var subjectName = properties.subjects[subjectId].name;
             var data = {
+                subject_id: subjectId,
                 subject: subjectName
             };
 
             angular.forEach(assessmentResults[subjectId], function(resultObj, assessmentPeriodId) {
                 var assessmentGradingOption = properties.assessmentGradingOptions[resultObj.assessment_grading_option_id];
+                var resultType = properties.assessmentGradingTypes[assessmentGradingOption.assessment_grading_type_id].result_type;
+
+                if (angular.isUndefined(properties.subjects[subjectId][assessmentPeriodId])) {
+                    properties.subjects[subjectId][assessmentPeriodId] = {result_type: resultType};
+                }
                 
                 var result = '';
-                switch (properties.assessmentGradingTypes[assessmentGradingOption.assessment_grading_type_id].result_type) {
+                var weight = '';
+                switch (resultType) {
                     case 'MARKS':
                         result = resultObj.marks;
+                        weight = parseFloat(properties.assessmentPeriods[assessmentPeriodId]['weight']);
                         break;
                     case 'GRADES':
                         result = assessmentGradingOption.code_name;
+                        weight = '';
                         break;
                     default:
                         break;
                 }
 
                 this['period_'+assessmentPeriodId] = result;
-                this['weight_'+assessmentPeriodId] = parseFloat(properties.assessmentPeriods[assessmentPeriodId]['weight']);
+                this['weight_'+assessmentPeriodId] = weight;
             }, data);
 
             this.push(data);
@@ -279,16 +289,19 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
     };
 
     function calculateTotal(data) {
-        var totalMark = 0;
-
+        var totalMark = '';
         for (var key in data) {
             if (/period_/.test(key)) {
                 var index = key.replace(/period_(\d+)/, '$1');
-                totalMark += data[key] * (data['weight_'+index]);
+                // add checking to skip adding to Total Mark if is GRADES type
+                if (!isNaN(parseFloat(data[key])) && !isNaN(parseFloat(data['weight_'+index]))) {
+                    totalMark = isNaN(parseFloat(totalMark)) ? 0 : totalMark;
+                    totalMark += data[key] * (data['weight_'+index]);
+                }
             }
         }
 
-        if (totalMark > 0) {
+        if (!isNaN(parseFloat(totalMark))) {
             return $filter('number')(totalMark, 2);
         } else {
             return '';

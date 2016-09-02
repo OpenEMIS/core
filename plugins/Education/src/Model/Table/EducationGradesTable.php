@@ -22,17 +22,18 @@ class EducationGradesTable extends AppTable {
 			'foreignKey' => 'education_grade_id',
 			'targetForeignKey' => 'Institution_id',
 			'through' => 'Institution.InstitutionGrades',
-			'dependent' => false
+			'dependent' => true,
+			'cascadeCallbacks' => true
 		]);
-		$this->belongsTo('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
-		$this->hasMany('Assessments', ['className' => 'Assessment.Assessments']);
-		$this->hasMany('InstitutionFees', ['className' => 'Institution.InstitutionFees']);
-		$this->hasMany('Rubrics', ['className' => 'Institution.InstitutionRubrics']);
-		$this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
-		$this->hasMany('InstitutionClassStudents', ['className' => 'Institution.InstitutionClassStudents']);
-		$this->hasMany('InstitutionStudents', ['className' => 'Institution.Students']);
-		$this->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission']);
-		$this->hasMany('StudentDropout', ['className' => 'Institution.StudentDropout']);
+		$this->belongsTo('EducationProgrammes',		['className' => 'Education.EducationProgrammes']);
+		$this->hasMany('Assessments',				['className' => 'Assessment.Assessments', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionFees',			['className' => 'Institution.InstitutionFees', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('Rubrics',					['className' => 'Institution.InstitutionRubrics', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionClassGrades',	['className' => 'Institution.InstitutionClassGrades', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionClassStudents',	['className' => 'Institution.InstitutionClassStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionStudents',		['className' => 'Institution.Students', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StudentAdmission',			['className' => 'Institution.StudentAdmission', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StudentDropout',			['className' => 'Institution.StudentDropout', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->belongsToMany('EducationSubjects', [
 			'className' => 'Education.EducationSubjects',
@@ -40,7 +41,8 @@ class EducationGradesTable extends AppTable {
 			'foreignKey' => 'education_grade_id',
 			'targetForeignKey' => 'education_subject_id',
 			'through' => 'Education.EducationGradesSubjects',
-			'dependent' => false,
+			'dependent' => true,
+			'cascadeCallbacks' => true
 			// 'saveStrategy' => 'append'
 		]);
 
@@ -336,6 +338,12 @@ class EducationGradesTable extends AppTable {
 			->where([$this->EducationProgrammes->EducationCycles->aliasField('education_level_id') => $selectedLevel])
 			->toArray();
 
+		if (is_array($cycleIds) && !empty($cycleIds)) {
+			$cycleIds = implode(', ', $cycleIds);
+		} else {
+			$cycleIds = 0;
+		}
+
 		$EducationProgrammes = $this->EducationProgrammes;
 		$programmeOptions = $EducationProgrammes
 			->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
@@ -346,7 +354,7 @@ class EducationGradesTable extends AppTable {
 				$EducationProgrammes->aliasField('order')
 			])
 			->where([
-				$EducationProgrammes->aliasField('education_cycle_id IN') => $cycleIds
+				$EducationProgrammes->aliasField('education_cycle_id') . ' IN (' .  $cycleIds . ')'
 			])
 			->toArray();
 		$selectedProgramme = !is_null($this->request->query('programme')) ? $this->request->query('programme') : key($programmeOptions);
