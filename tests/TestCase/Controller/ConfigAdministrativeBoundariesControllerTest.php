@@ -80,16 +80,12 @@ class ConfigAdministrativeBoundariesControllerTest extends AppTestCase
         $this->assertResponseCode(200);
 
         $data = [
-            $alias => [
-                'id' => $this->id,
-                'name' => 'API',
-                'url' => 'https://demo.openemis.org/datamanager/api/area'
-            ],
+            'value' => 'https://demo.openemis.org/datamanager/api/area',
             'submit' => 'save'
         ];
         $this->postData($testUrl, $data);
 
         $entity = $this->table->get($this->id);
-        $this->assertEquals($data[$alias]['url'], $entity->value);
+        $this->assertEquals($data['value'], $entity->value);
     }
 }

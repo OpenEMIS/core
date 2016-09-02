@@ -1322,7 +1322,8 @@ class ConfigItemsFixture extends TestFixture
             'code' => 'AreaEducation',
             'type' => 'Administrative Boundaries',
             'label' => 'Area (Education)',
-            'value' => 'https://demo.openemis.org/datamanager/api/area',
+            // 'value' => 'https://demo.openemis.org/datamanager/api/area', // valid url
+            'value' => 'https://demo.openemis.org/datamanager/api/areaaaaa', // invalid url
             'default_value' => '',
             'editable' => '0',
             'visible' => '1',

@@ -165,7 +165,7 @@ class AdministrativeBoundariesControllerTest extends AppTestCase
     // public function testSyncValidUrl()
     // {
     //     $alias = $this->table->alias();
-    //     $testUrl = $this->url('sync', ['parent' => 1]);
+    //     $testUrl = $this->url('synchronize', ['parent' => 1]);
 
     //     $this->get($testUrl);
     //     $this->assertResponseCode(200);
@@ -189,7 +189,7 @@ class AdministrativeBoundariesControllerTest extends AppTestCase
 
     public function testSyncInvalidUrl()
     {
-        $testUrl = $this->url('sync', ['parent' => 1]);
+        $testUrl = $this->url('synchronize', ['parent' => 1]);
 
         $this->get($testUrl);
         $this->assertResponseCode(302);
