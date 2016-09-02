@@ -69,12 +69,9 @@ class AreasTable extends ControllerActionTable
         $isApiValid = $this->isApiValid($url);
 
         if (!$isApiValid) {
-            pr('invalidApi');
-            // API not valid, redirect to index and output error message
-            // when saving the API was valid, then the link become invalid.
-            $session = $this->request->session();
-            $sessionKey = $this->registryAlias() . '.APIInvalid';
-            $session->write($sessionKey, 'Areas.api_invalid');
+            // API not valid. When saving the API was valid, then the link become invalid.
+            // Display error message
+            $this->Alert->error('Areas.api_invalid');
 
             // redirect to index page
             $url = $this->url('index');
@@ -85,40 +82,15 @@ class AreasTable extends ControllerActionTable
             $model = $this;
             $extra = [];
 
-            $missingAreaArray = [];
-            $associatedRecords = [];
-
             $areasTableArray = $this->onGetAreasTableArrays();
             $jsonArray = $this->onGetJsonArrays($url);
             $newAreaLists = $this->onGetNewAreaLists($url);
-            $jsonCodeLists = $this->onGetJsonCodeLists($url);
 
             $missingAreaArray = $this->onGetMissingArea($areasTableArray, $jsonArray);
 
             if ($this->request->is(['get'])) {
-                // get the associated data to be displayed and pass it to Sync page.
-                $model = $this;
-                $primaryKey = $this->getPrimaryKey($model);
-                $idKey = $model->aliasField($primaryKey);
-
-                $extra = new ArrayObject([]);
-                $extra['excludedModels'] = [$this->Areas->alias()];
-
-                foreach ($missingAreaArray as $key => $obj) {
-                    $id = $obj['id'];
-
-                    if ($model->exists([$idKey => $id])) {
-                        $entity = $model->find()->where([$idKey => $id])->first();
-                        $records = $this->getAssociatedRecords($model, $entity, $extra);
-                        $associatedRecords[$key] = [
-                            'id' => $id,
-                            'code' => $obj['code'],
-                            'name' => $obj['name'],
-                            'institution' => $records['Institutions']['count'],
-                            'security_group' => $records['SecurityGroups']['count'],
-                        ];
-                    }
-                }
+                // getAssociatedRecords and passed it to the sync_server.ctp to be displayed
+                $associatedRecords = $this->onGetAssociatedRecords($missingAreaArray);
 
                 $this->field('sync_server', [
                     'type' => 'element',
@@ -127,12 +99,10 @@ class AreasTable extends ControllerActionTable
                 $this->controller->set('associatedRecords', $associatedRecords);
                 $this->controller->set('newAreaLists', $newAreaLists);
             } else if ($this->request->is(['post', 'put'])) {
-                $requestData = $this->request->data;
-                $entity = $this->patchEntity($entity, $requestData);
-
                 // update the related table
+                $requestData = $this->request->data;
                 $this->doUpdateAssociatedRecord($requestData);
-                $this->doUpdateAreaTable($missingAreaArray, $jsonArray);
+                $this->doReplaceAreaTable($missingAreaArray, $jsonArray);
 
                 // redirect to index page
                 $url = $this->url('index');
@@ -157,8 +127,9 @@ class AreasTable extends ControllerActionTable
         if ($count) {
             $this->rebuildLftRght();
         }
-        $this->fields['lft']['visible'] = false;
-        $this->fields['rght']['visible'] = false;
+
+        $this->field('lft', ['visible' => false]);
+        $this->field('rght', ['visible' => false]);
 
         //logic to hide 'add' button and display sync button if the API set
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
@@ -244,16 +215,6 @@ class AreasTable extends ControllerActionTable
         return $jsonArray;
     }
 
-    public function onGetJsonCodeLists($url)
-    {
-        $jsonArray = $this->onGetJsonArrays($url);
-        $jsonCodeLists = [];
-        foreach ($jsonArray as $key => $obj) {
-            $jsonCodeLists[$obj['code']] = $obj;
-        }
-        return $jsonCodeLists;
-    }
-
     public function onGetNewAreaLists($url)
     {
         $jsonArray = $this->onGetJsonArrays($url);
@@ -286,7 +247,7 @@ class AreasTable extends ControllerActionTable
         ];
         $this->controller->set('toolbarElements', $toolbarElements);
 
-        $this->fields['parent_id']['visible'] = false;
+        $this->field('parent_id', ['visible' => false]);
 
         $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
         if ($parentId != null) {
@@ -333,18 +294,6 @@ class AreasTable extends ControllerActionTable
             $query->where([$this->aliasField('parent_id') => $parentId]);
         } else {
             $query->where([$this->aliasField('parent_id') . ' IS NULL']);
-        }
-    }
-
-    public function indexAfterAction(Event $event, $data, ArrayObject $extra)
-    {
-        // display the redirected error message when API is invalid
-        $session = $this->request->session();
-        $sessionKey = $this->registryAlias() . '.APIInvalid';
-        if ($session->check($sessionKey)) {
-            $messageKey = $session->read($sessionKey);
-            $this->Alert->error($messageKey);
-            $session->delete($sessionKey);
         }
     }
 
@@ -491,6 +440,37 @@ class AreasTable extends ControllerActionTable
         return $resultURL;
     }
 
+    public function onGetAssociatedRecords($missingAreaArray)
+    {
+        // get the associated data to be displayed and pass it to Sync page.
+        $model = $this;
+        $primaryKey = $this->getPrimaryKey($model);
+        $idKey = $model->aliasField($primaryKey);
+
+        $extra = new ArrayObject([]);
+        $extra['excludedModels'] = [$this->Areas->alias()];
+
+        $associatedRecords = [];
+
+        foreach ($missingAreaArray as $key => $obj) {
+            $id = $obj['id'];
+
+            if ($model->exists([$idKey => $id])) {
+                $entity = $model->find()->where([$idKey => $id])->first();
+                $records = $this->getAssociatedRecords($model, $entity, $extra);
+                $associatedRecords[$key] = [
+                    'id' => $id,
+                    'code' => $obj['code'],
+                    'name' => $obj['name'],
+                    'institution' => $records['Institutions']['count'],
+                    'security_group' => $records['SecurityGroups']['count'],
+                ];
+            }
+        }
+
+        return $associatedRecords;
+    }
+
     public function isApiValid($url=null)
     {
         // check if API is valid, have value and contain expected keys.
@@ -543,10 +523,20 @@ class AreasTable extends ControllerActionTable
                     // update the association data (institution and securityGroupAreas)
                     $areaId = $obj['area_id'];
                     $newAreaId = $obj['new_area_id'];
-                    $query = $this->Institutions->updateAll(
-                        ['area_id' => $newAreaId],
-                        ['area_id' => $areaId]
-                    );
+
+                    $institutionResult = $this->Institutions->find()
+                    ->where(['area_id' => $key])
+                    ->toArray();
+
+                    if (!empty($institutionResult)) {
+                        foreach ($institutionResult as $key => $institution) {
+                            $institutionEntity =$this->newEntity([
+                                'id' => $institution->id,
+                                'area_id' => $newAreaId
+                            ], ['validate' => false]);
+                            $this->Institutions->save($institutionEntity);
+                        }
+                    }
 
                     $securityGroupAreas->updateAll(
                         ['area_id' => $newAreaId],
@@ -557,21 +547,19 @@ class AreasTable extends ControllerActionTable
         }
     }
 
-    public function doUpdateAreaTable($missingAreaArray, $jsonArray)
+    public function doReplaceAreaTable($missingAreaArray, $jsonArray)
     {
         // Delete missing areas from areasTable
         if (!empty($missingAreaArray)) {
             foreach ($missingAreaArray as $key => $obj) {
-                $this->deleteAll([
-                    $this->aliasField('code') => $obj['code']
-                ]);
+                $this->delete($this->get($key));
             }
         }
 
-        // Adding JsonArray data to the areasTable
+        // Add JsonArray data to the areasTable
         if (!empty($jsonArray)) {
             foreach ($jsonArray as $key => $obj) {
-                $areasArray = $this->newEntity([
+                $areasEntity = $this->newEntity([
                     'id' => $obj['id'],
                     'parent_id' => $obj['parent_id'],
                     'code' => $obj['code'],
@@ -579,7 +567,7 @@ class AreasTable extends ControllerActionTable
                     'area_level_id' => $obj['area_level_id'],
                     'order' => $obj['order']
                 ]);
-                $this->save($areasArray);
+                $this->save($areasEntity);
             }
         }
 
