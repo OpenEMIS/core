@@ -98,7 +98,7 @@ class DropoutRequestsTable extends AppTable {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
-		$this->ControllerAction->field('application_status');
+		$this->ControllerAction->field('application_status', ['status' => $entity->status]);
 		$this->ControllerAction->field('status', ['type' => 'hidden']);
 		$this->ControllerAction->field('student_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->student_id)->name_with_id]]);
 		$this->ControllerAction->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
@@ -130,10 +130,6 @@ class DropoutRequestsTable extends AppTable {
 		$this->request->data[$this->alias()]['education_grade_id'] = $entity->education_grade_id;
 	}
 
-	public function editOnInitialize(Event $event, Entity $entity) {
-		$this->request->data[$this->alias()]['transfer_status'] = $entity->status;
-	}
-
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
 		$validator->add('effective_date', 'ruleDateAfterEnrollment', [
@@ -150,7 +146,7 @@ class DropoutRequestsTable extends AppTable {
 				$attr['attr']['value'] = __('New');
 				break;
 			case 'edit':
-				$transferStatus = $request->data[$this->alias()]['transfer_status'];
+				$transferStatus = $attr['status'];
 				$attr['type'] = 'readonly';
 
 				switch ($transferStatus) {
