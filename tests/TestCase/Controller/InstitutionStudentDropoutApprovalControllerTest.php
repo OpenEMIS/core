@@ -35,6 +35,8 @@ class InstitutionStudentDropoutApprovalControllerTest extends AppTestCase
         'app.student_dropout_reasons'
     ];
 
+    private $editId = 1;
+
     public function setup()
     {
         parent::setUp();
@@ -45,14 +47,14 @@ class InstitutionStudentDropoutApprovalControllerTest extends AppTestCase
 
     public function testApprove()
     {
-        $testUrl = $this->url('edit/1');
+        $testUrl = $this->url('edit/' . $this->editId);
         $this->get($testUrl);
         $this->assertResponseCode(200);
 
         $data = [
             'StudentDropout' => [
-                'id' => 1,
-                'effective_date' => '2016-08-01',
+                'id' => $this->editId,
+                'effective_date' => '2016-08-01', // correct date (after enrollment date '2016-06-01')
                 'student_id' => 7,
                 'status' => 0,
                 'institution_id' => 1,
@@ -69,8 +71,8 @@ class InstitutionStudentDropoutApprovalControllerTest extends AppTestCase
         $approvedRecord = $DropoutTable->find()
             ->where([$DropoutTable->aliasField('id') => $data['StudentDropout']['id'],
                 $DropoutTable->aliasField('effective_date') => $data['StudentDropout']['effective_date'],
-                $DropoutTable->aliasField('status') => 1
-                ])
+                $DropoutTable->aliasField('comment') => $data['StudentDropout']['comment'],
+                $DropoutTable->aliasField('status') => 1])
             ->first();
         $this->assertEquals(true, (!empty($approvedRecord)));
 
@@ -91,12 +93,12 @@ class InstitutionStudentDropoutApprovalControllerTest extends AppTestCase
 
     public function testApproveWrongDate()
     {
-        $testUrl = $this->url('edit/1');
+        $testUrl = $this->url('edit/' . $this->editId);
 
         $data = [
             'StudentDropout' => [
-                'id' => 1,
-                'effective_date' => '2016-01-01',
+                'id' => $this->editId,
+                'effective_date' => '2016-01-01', // wrong date (before enrollment date '2016-06-01')
                 'student_id' => 7,
                 'status' => 0,
                 'institution_id' => 1,
@@ -113,6 +115,7 @@ class InstitutionStudentDropoutApprovalControllerTest extends AppTestCase
         $approvedRecord = $DropoutTable->find()
             ->where([$DropoutTable->aliasField('id') => $data['StudentDropout']['id'],
                 $DropoutTable->aliasField('effective_date') => $data['StudentDropout']['effective_date'],
+                $DropoutTable->aliasField('comment') => $data['StudentDropout']['comment'],
                 $DropoutTable->aliasField('status') => 1])
             ->first();
         $this->assertEquals(true, (empty($approvedRecord)));
@@ -133,11 +136,11 @@ class InstitutionStudentDropoutApprovalControllerTest extends AppTestCase
     }
 
     public function testReject() {
-        $testUrl = $this->url('edit/1');
+        $testUrl = $this->url('edit/' . $this->editId);
 
         $data = [
             'StudentDropout' => [
-                'id' => 1,
+                'id' => $this->editId,
                 'effective_date' => '2016-08-01',
                 'student_id' => 7,
                 'status' => 0,
@@ -145,7 +148,7 @@ class InstitutionStudentDropoutApprovalControllerTest extends AppTestCase
                 'academic_period_id' => 3,
                 'education_grade_id' => 76,
                 'student_dropout_reason_id' => 663,
-                'comment' => 'Approved'
+                'comment' => 'Rejected'
             ],
             'submit' => 'reject'
         ];
