@@ -39,6 +39,7 @@ class InstitutionStudentDropoutRequestControllerTest extends AppTestCase
 
     private $studentId = 2;
     private $securityUserId = 6;
+    private $editId = 1;
 
     public function setup()
     {
@@ -76,7 +77,7 @@ class InstitutionStudentDropoutRequestControllerTest extends AppTestCase
                 'institution_id' => 1,
                 'academic_period_id' => 3,
                 'education_grade_id' => 77,
-                'effective_date' => '2016-06-01', // after enrollment date '2016-01-01'
+                'effective_date' => '2016-06-01', // correct date (after enrollment date '2016-01-01')
                 'student_dropout_reason_id' => 661,
                 'comment' => NULL,
                 'status' => 0
@@ -106,7 +107,7 @@ class InstitutionStudentDropoutRequestControllerTest extends AppTestCase
                 'institution_id' => 1,
                 'academic_period_id' => 3,
                 'education_grade_id' => 77,
-                'effective_date' => '2015-01-01', // before enrollment date '2016-01-01'
+                'effective_date' => '2015-01-01', // wrong date (before enrollment date '2016-01-01')
                 'student_dropout_reason_id' => 661,
                 'comment' => NULL,
                 'status' => 0
@@ -127,18 +128,18 @@ class InstitutionStudentDropoutRequestControllerTest extends AppTestCase
     }
 
     public function testUpdate() {
-        $testUrl = $this->url('edit/1');
+        $testUrl = $this->url('edit/' . $this->editId);
         $this->get($testUrl);
         $this->assertResponseCode(200);
 
         $data = [
             'DropoutRequests' => [
-                'id' => 1,
+                'id' => $this->editId,
                 'student_id' => 7,
                 'institution_id' => 1,
                 'academic_period_id' => 3,
-                'education_grade_id' => 77,
-                'effective_date' => '2016-10-01', // after enrollment date '2016-06-01'
+                'education_grade_id' => 76,
+                'effective_date' => '2016-10-01', // correct date (after enrollment date '2016-06-01')
                 'student_dropout_reason_id' => 663,
                 'comment' => 'This student was bullied by his classmates',
             ],
@@ -158,16 +159,16 @@ class InstitutionStudentDropoutRequestControllerTest extends AppTestCase
     }
 
     public function testUpdateWrongDate() {
-        $testUrl = $this->url('edit/1');
+        $testUrl = $this->url('edit/' . $this->editId);
 
         $data = [
             'DropoutRequests' => [
-                'id' => 1,
+                'id' => $this->editId,
                 'student_id' => 7,
                 'institution_id' => 1,
                 'academic_period_id' => 3,
-                'education_grade_id' => 77,
-                'effective_date' => '2016-01-01', // before enrollment date '2016-06-01'
+                'education_grade_id' => 76,
+                'effective_date' => '2016-01-01', // wrong date (before enrollment date '2016-06-01')
                 'student_dropout_reason_id' => 663,
                 'comment' => 'This student was bullied by his classmates',
             ],
