@@ -47,7 +47,7 @@ class GuardianUserTable extends UserTable {
 	{
 		$this->request->query['user_type'] = UserTable::GUARDIAN;
 		parent::beforeAction($event);
-		parent::hideOtherInformationSection($this->controller->name, $this->action);
+		//parent::hideOtherInformationSection($this->controller->name, $this->action);
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {

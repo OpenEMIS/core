@@ -71,7 +71,7 @@ class UserGroupsTable extends AppTable {
 	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
 		if ($action == 'edit') {
 			$includes['autocomplete'] = [
-				'include' => true, 
+				'include' => true,
 				'css' => ['OpenEmis.../plugins/autocomplete/css/autocomplete'],
 				'js' => ['OpenEmis.../plugins/autocomplete/js/autocomplete']
 			];
@@ -98,7 +98,7 @@ class UserGroupsTable extends AppTable {
 				}
 			}
 		}
-		
+
 		return $buttons;
 	}
 
@@ -151,19 +151,19 @@ class UserGroupsTable extends AppTable {
 		$this->controller->set('selectedAction', $this->alias());
 
 		$this->ControllerAction->field('areas', [
-			'type' => 'area_table', 
+			'type' => 'area_table',
 			'valueClass' => 'table-full-width',
 			'visible' => ['index' => false, 'view' => true, 'edit' => true]
 		]);
 		$this->ControllerAction->field('institutions', [
-			'type' => 'institution_table', 
+			'type' => 'institution_table',
 			'valueClass' => 'table-full-width',
 			'visible' => ['index' => false, 'view' => true, 'edit' => true]
 		]);
 
 		$roleOptions = $this->Roles->find('list')->toArray();
 		$this->ControllerAction->field('users', [
-			'type' => 'user_table', 
+			'type' => 'user_table',
 			'valueClass' => 'table-full-width',
 			'roleOptions' => $roleOptions,
 			'visible' => ['index' => false, 'view' => true, 'edit' => true]
@@ -258,7 +258,7 @@ class UserGroupsTable extends AppTable {
 			$id = $data['area_id'];
 			try {
 				$obj = $this->Areas->get($id, ['contain' => 'AreaLevels']);
-				
+
 				if (!array_key_exists('areas', $data[$alias])) {
 					$data[$alias]['areas'] = [];
 				}
@@ -417,8 +417,8 @@ class UserGroupsTable extends AppTable {
 						$this->request->data[$alias][$key][] = [
 							'id' => $obj->id,
 							'_joinData' => [
-								'openemis_no' => $obj->openemis_no, 
-								'security_user_id' => $obj->id, 
+								'openemis_no' => $obj->openemis_no,
+								'security_user_id' => $obj->id,
 								'name' => $obj->name,
 								'security_role_id' => $obj->_joinData->security_role_id
 							]
@@ -433,52 +433,53 @@ class UserGroupsTable extends AppTable {
 							$this->request->data[$alias][$key][] = [
 								'id' => $userId,
 								'_joinData' => [
-									'openemis_no' => $user->openemis_no, 
-									'security_user_id' => $userId, 
+									'openemis_no' => $user->openemis_no,
+									'security_user_id' => $userId,
 									'name' => $user->name,
 									'security_role_id' => $groupAdmin->id
 								]
 							];
-						}	
-					}
-				}
-			}
-			// refer to addEditOnAddUser for http post
-			if ($this->request->data("$alias.$key")) {
-
-				if (!$this->AccessControl->isAdmin()) {
-					if ($entity->isNew()) {
-						$roleOptions = $this->Roles->getPrivilegedRoleOptionsByGroup($entity->id, $userId, true);
-					}
-				}
-				// For the original user
-				$associated = $entity->extractOriginal([$key]);
-				$found = false;
-				if (!empty($associated[$key]) && !$entity->isNew()) {
-					foreach ($associated[$key] as $i => $obj) {
-						if ($obj->id == $userId) {
-							$rowData = [];
-							$name = $obj->name;
-							$rowData[] = $obj->openemis_no;
-							$rowData[] = $name;
-
-							// To revisit this part again due to a bug when user add itself in
-							if (isset($obj->_joinData->security_role_id)) {
-								$securityRoleName = $this->Roles->get($obj->_joinData->security_role_id)->name;
-								$this->Session->write($this->registryAlias().'.security_role_id', $securityRoleName);
-								$rowData[] = $securityRoleName;
-							} else {
-								$securityRoleName = $this->Session->read($this->registryAlias().'.security_role_id');
-								$rowData[] = $securityRoleName;
-							}
-
-							$rowData[] = '';
-							$tableCells[] = $rowData;
-							$found = true;
-							break;
 						}
 					}
 				}
+			}
+
+			if (!$this->AccessControl->isAdmin()) {
+				if ($entity->isNew()) {
+					$roleOptions = $this->Roles->getPrivilegedRoleOptionsByGroup($entity->id, $userId, true);
+				}
+			}
+			// For the original user
+			$associated = $entity->extractOriginal([$key]);
+			$found = false;
+			if (!empty($associated[$key]) && !$entity->isNew()) {
+				foreach ($associated[$key] as $i => $obj) {
+					if ($obj->id == $userId) {
+						$rowData = [];
+						$name = $obj->name;
+						$rowData[] = $obj->openemis_no;
+						$rowData[] = $name;
+
+						// To revisit this part again due to a bug when user add itself in
+						if (isset($obj->_joinData->security_role_id)) {
+							$securityRoleName = $this->Roles->get($obj->_joinData->security_role_id)->name;
+							$this->Session->write($this->registryAlias().'.security_role_id', $securityRoleName);
+							$rowData[] = $securityRoleName;
+						} else {
+							$securityRoleName = $this->Session->read($this->registryAlias().'.security_role_id');
+							$rowData[] = $securityRoleName;
+						}
+
+						$rowData[] = '';
+						$tableCells[] = $rowData;
+						$found = true;
+						break;
+					}
+				}
+			}
+
+			// refer to addEditOnAddUser for http post
+			if ($this->request->data("$alias.$key")) {
 				$associated = $this->request->data("$alias.$key");
 				foreach ($associated as $i => $obj) {
 					$joinData = $obj['_joinData'];
@@ -571,7 +572,7 @@ class UserGroupsTable extends AppTable {
 				]
 			]);
 		}
-		$options['order'] = [$this->aliasField('name')];
+		$options['order'] = [$this->aliasField('name') => 'asc'];
 
 		$search = $this->ControllerAction->getSearchKey();
 
@@ -682,7 +683,7 @@ class UserGroupsTable extends AppTable {
 		// The association can be added if it is an add action
 		if ($this->action == 'add') {
 			$newOptions['associated'] = ['Areas', 'Institutions', 'Users'];
-		} 
+		}
 		// For edit function, the user role is save from the edit after save logic as users cannot be save properly using associated method
 		else {
 			$newOptions['associated'] = ['Areas', 'Institutions'];
