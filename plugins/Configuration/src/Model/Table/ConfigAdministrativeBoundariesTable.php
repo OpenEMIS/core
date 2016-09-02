@@ -40,10 +40,9 @@ class ConfigAdministrativeBoundariesTable extends ControllerActionTable {
         return $validator;
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('name', ['type' => 'readonly']);
-        // $this->field('url', ['type' => 'string']);
         $this->field('visible', ['visible' => false]);
         $this->field('editable', ['visible' => false]);
         $this->field('field_type', ['visible' => false]);
