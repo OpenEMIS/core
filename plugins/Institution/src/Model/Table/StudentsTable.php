@@ -926,7 +926,6 @@ class StudentsTable extends AppTable {
 			} else {
 				$attr['date_options']['startDate'] = '';
 				$attr['date_options']['endDate'] = '';
-				$attr['value'] = '';
 			}
 			$attr['default_date'] = false;
 		}
