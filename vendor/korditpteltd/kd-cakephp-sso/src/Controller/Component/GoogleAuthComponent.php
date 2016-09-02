@@ -55,40 +55,42 @@ class GoogleAuthComponent extends Component {
     }
 
     public function beforeFilter(Event $event) {
-        $this->controller->Auth->config('authenticate', [
-            'Form' => [
-                'userModel' => $this->_config['userModel'],
-                'passwordHasher' => [
-                    'className' => 'Fallback',
-                    'hashers' => ['Default', 'Legacy']
-                ]
-            ],
-            'SSO.Google' => [
-                'userModel' => $this->_config['userModel']
-            ]
-        ]);
-
-        if ($this->config('cookieAuth.enabled')) {
+        if (!$this->session->read('Google.remoteFail') && !$this->session->read('Auth.fallback')) {
             $this->controller->Auth->config('authenticate', [
-                'SSO.Cookie' => [
+                'Form' => [
                     'userModel' => $this->_config['userModel'],
-                    'fields' => [
-                        'username' => $this->_config['cookieAuth']['username']
-                    ],
-                    'cookie' => [
-                        'name' => $this->_config['cookie']['name'],
-                        'path' => $this->_config['cookie']['path'],
-                        'expires' => $this->_config['cookie']['expires'],
-                        'domain' => $this->_config['cookie']['domain'],
-                        'encryption' => $this->_config['cookie']['encryption']
-                    ],
-                    'authType' => $this->authType
+                    'passwordHasher' => [
+                        'className' => 'Fallback',
+                        'hashers' => ['Default', 'Legacy']
+                    ]
+                ],
+                'SSO.Google' => [
+                    'userModel' => $this->_config['userModel']
                 ]
             ]);
 
-            $user = $this->controller->Auth->identify();
-            if ($user) {
-                $this->controller->Auth->setUser($user);
+            if ($this->config('cookieAuth.enabled')) {
+                $this->controller->Auth->config('authenticate', [
+                    'SSO.Cookie' => [
+                        'userModel' => $this->_config['userModel'],
+                        'fields' => [
+                            'username' => $this->_config['cookieAuth']['username']
+                        ],
+                        'cookie' => [
+                            'name' => $this->_config['cookie']['name'],
+                            'path' => $this->_config['cookie']['path'],
+                            'expires' => $this->_config['cookie']['expires'],
+                            'domain' => $this->_config['cookie']['domain'],
+                            'encryption' => $this->_config['cookie']['encryption']
+                        ],
+                        'authType' => $this->authType
+                    ]
+                ]);
+
+                $user = $this->controller->Auth->identify();
+                if ($user) {
+                    $this->controller->Auth->setUser($user);
+                }
             }
         }
     }
