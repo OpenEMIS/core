@@ -770,8 +770,9 @@ class WorkflowBehavior extends Behavior {
 
 		$content = '';
 		$content = '<style type="text/css">.modal-footer { clear: both; } .modal-body textarea { width: 60%; }</style>';
-		$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-assignee-error error-message">' . __('Assignee cannot be left empty') . '</div></div>';
 		$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-comment-error error-message">' . __('This field cannot be left empty') . '</div></div>';
+		$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-assignee-error error-message">' . __('Assignee cannot be left empty') . '</div></div>';
+		$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-assignee-sql-error error-message"></div></div>';
 		$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-event-description error-message"></div></div>';
 		$buttons = [
 			'<button id="workflow-submit" type="submit" class="btn btn-default" onclick="return Workflow.onSubmit();">' . __('Save') . '</button>'
