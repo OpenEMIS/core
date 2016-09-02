@@ -44,7 +44,7 @@ class InstitutionStudentsFixture extends TestFixture
             'student_status_id' => 1,
             'student_id' => 7,
             'education_grade_id' => 76,
-            'academic_period_id' => 2,
+            'academic_period_id' => 3,
             'start_date' => '2016-06-01',
             'start_year' => '2016',
             'end_date' => '2016-12-31',
