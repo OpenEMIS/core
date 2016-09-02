@@ -1115,7 +1115,7 @@ class StudentsTable extends AppTable {
 		// End
 
 		// Grade
-		$gradeOptions = ['' => '-- ' .  __('Select') . ' --')];
+		$gradeOptions = ['' => '-- ' .  __('Select') . ' --'];
 		$classOptions = ['' => '-- ' .  __('Select') . ' --'];
 		$selectedClass = 0;
 		$selectedGrade = 0;
