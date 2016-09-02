@@ -179,40 +179,28 @@ class ImportStaffTable extends AppTable
     {
         $institutionId = ($this->_institution instanceof Entity) ? $this->_institution->id : false;
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        
+
         $activeStatusId = $this->Workflow->getStepsByModelCode($lookedUpTable->registryAlias(), 'ACTIVE');
-        
+
         //select necessary field for position which total FTE not used of not fully used based on the end_date of the staff
         $modelData = $lookedUpTable->find();
         $modelData = $modelData
                     ->select([
                         $lookedUpTable->aliasField('position_no'),
                         'StaffPositionTitles.name',
+                        'StaffPositionTitles.type',
                         'Statuses.name',
                         $lookedUpTable->aliasField('is_homeroom'),
-                        'total_fte' => $modelData->func()->sum('InstitutionStaff.FTE')
                     ])
                     ->contain(['StaffPositionTitles', 'Statuses'])
-                    ->leftJoin(['InstitutionStaff' => 'institution_staff'], [ 
-                        'InstitutionStaff.institution_position_id = ' . $lookedUpTable->aliasField('id'),
-                        'OR' => [
-                            'DATE(InstitutionStaff.end_date) > DATE(NOW())',
-                            'InstitutionStaff.end_date IS NULL'
-                        ]
-                    ])
                     ->where([
                         $lookedUpTable->aliasField('institution_id') => $institutionId,
                         $lookedUpTable->aliasField('status_id IN ') => $activeStatusId
                     ])
                     ->group($lookedUpTable->aliasField('id'))
-                    ->having([
-                        'OR' => [
-                            'total_fte < 1',
-                            'total_fte IS NULL' //FTE not used at all
-                        ]
-                    ])
                     ->toArray();
-        
+
+        $typeLabel = $this->getExcelLabel($lookedUpTable, 'type');
         $codeLabel = $this->getExcelLabel($lookedUpTable, 'code');
         $nameLabel = $this->getExcelLabel($lookedUpTable, 'name');
         $statusLabel = $this->getExcelLabel($lookedUpTable, 'status');
@@ -221,10 +209,17 @@ class ImportStaffTable extends AppTable
         $yesNoOptions = $this->getSelectOptions('general.yesno');
 
         $data[$columnOrder]['lookupColumn'] = 1;
-        $data[$columnOrder]['data'][] = [$codeLabel, $nameLabel, $statusLabel, $isHomeroomLabel];
+        $data[$columnOrder]['data'][] = [$typeLabel, $codeLabel, $nameLabel, $statusLabel, $isHomeroomLabel];
         if (!empty($modelData)) {
             foreach($modelData as $row) {
+                $positionTitleType = $row->staff_position_title->type;
+                if ($positionTitleType) {
+                    $positionTitleType = __('Teaching');
+                } else {
+                    $positionTitleType = __('Non-Teaching');
+                }
                 $data[$columnOrder]['data'][] = [
+                    $positionTitleType,
                     $row->position_no,
                     $row->staff_position_title->name,
                     $row->status->name,
