@@ -41,8 +41,9 @@ var Workflow = {
 	},
 
 	hideError: function() {
-		$('.workflowtransition-assignee-error').hide();
 		$('.workflowtransition-comment-error').hide();
+		$('.workflowtransition-assignee-error').hide();
+		$('.workflowtransition-assignee-sql-error').hide().html('');
 	},
 	
 	onSubmit: function(obj) {
@@ -54,11 +55,15 @@ var Workflow = {
 		if (assigneeId == '') {
 			$('.workflowtransition-assignee-error').show();
 			error = true;
+		} else {
+			$('.workflowtransition-assignee-error').hide();
 		}
 
 		if (required == 1 && comment.length === 0) {
 			$('.workflowtransition-comment-error').show();
 			error = true;
+		} else {
+			$('.workflowtransition-comment-error').hide();
 		}
 
 		if (error) {
@@ -82,22 +87,33 @@ var Workflow = {
 				$('.workflowtransition-assignee-id').empty();
 				$('.workflowtransition-assignee-id').append($('<option>').text('Loading...').attr('value', ''));
 			},
-            success: function(assignees) {
+            success: function(response) {
+            	console.log('Workflow.getAssigneeOptions() success callback:');
+            	console.log(response);
+
+            	var defaultKey = response.default_key;
+            	var assignees = response.assignees;
+
             	$('.workflowtransition-assignee-id').empty();
             	if (jQuery.isEmptyObject(assignees)) {
             		// show No options if assignees is empty
-            		$('.workflowtransition-assignee-id').append($('<option>').text('No options').attr('value', ''));
+            		$('.workflowtransition-assignee-id').append($('<option>').text(defaultKey).attr('value', ''));
             	} else {
-            		$('.workflowtransition-assignee-id').append($('<option>').text('-- Select --').attr('value', ''));
+            		$('.workflowtransition-assignee-id').append($('<option>').text(defaultKey).attr('value', ''));
 					$.each(assignees, function(i, value) {
 						$('.workflowtransition-assignee-id').append($('<option>').text(value).attr('value', value));
 					});
             	}
             },
             error: function(error) {
+            	console.log('Workflow.getAssigneeOptions() error callback:');
             	console.log(error);
             	$('.workflowtransition-assignee-id').empty();
-            	$('.workflowtransition-assignee-id').append($('<option>').text(error.responseJSON.message).attr('value', ''));
+            	$('.workflowtransition-assignee-id').append($('<option>').text('No options').attr('value', ''));
+
+            	if (typeof error.responseJSON != 'undefined' && typeof error.responseJSON.message != 'undefined') {
+            		$('.workflowtransition-assignee-sql-error').html(error.responseJSON.message).show();
+            	}
             }
         });
 	}
