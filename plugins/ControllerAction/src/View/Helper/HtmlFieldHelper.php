@@ -84,7 +84,7 @@ class HtmlFieldHelper extends Helper {
 		}
 		return $subject->eventManager()->dispatch($event);
 	}
-	
+
 	public function render($type, $action, Entity $data, array $attr, array $options = []) {
 		$html = '';
 
@@ -245,9 +245,9 @@ class HtmlFieldHelper extends Helper {
 						}
 					}
 				}
-				
+
 			}
-			
+
 			if (empty($value)) {
 				$value = __($data->$field);
 			}
@@ -418,15 +418,15 @@ class HtmlFieldHelper extends Helper {
 		if ($action == 'index' || $action == 'view') {
 			$src = $data->photo_content;
 
-			if (array_key_exists('ajaxLoad', $attr) && $attr['ajaxLoad']) {				
+			if (array_key_exists('ajaxLoad', $attr) && $attr['ajaxLoad']) {
 				$imageUrl = '';
 				if (array_key_exists('imageUrl', $attr) && $attr['imageUrl']) {
 					$imageUrl = $this->Url->build($attr['imageUrl'], true);
 				}
 				$imageDefault = (array_key_exists('imageDefault', $attr) && $attr['imageDefault'])? '<i class='.$attr['imageDefault'].'></i>': '';
-				$value= '<div class="table-thumb" 
-					data-load-image=true 
-					data-image-width='.$maxImageWidth.' 
+				$value= '<div class="table-thumb"
+					data-load-image=true
+					data-image-width='.$maxImageWidth.'
 					data-image-url='.$imageUrl.'
 					>
 					<div class="profile-image-thumbnail">
@@ -436,17 +436,17 @@ class HtmlFieldHelper extends Helper {
 			} else {
 				if (!empty($src)) {
 					$value = (base64_decode($src, true)) ? '<div class="table-thumb"><img src="data:image/jpeg;base64,'.$src.'" style="max-width:'.$maxImageWidth.'px;" /></div>' : $src;
-				}	
-			}			
+				}
+			}
 		} else if ($action == 'edit') {
 			$defaultImgViewClass = $this->table->getDefaultImgViewClass();
 			$defaultImgMsg = $this->table->getDefaultImgMsg();
 			$defaultImgView = $this->table->getDefaultImgView();
-			
+
 			$showRemoveButton = false;
 			if (isset($data[$attr['field']]['tmp_name'])) {
 				$tmp_file = ((is_array($data[$attr['field']])) && (file_exists($data[$attr['field']]['tmp_name']))) ? $data[$attr['field']]['tmp_name'] : "";
-				$tmp_file_read = (!empty($tmp_file)) ? file_get_contents($tmp_file) : ""; 
+				$tmp_file_read = (!empty($tmp_file)) ? file_get_contents($tmp_file) : "";
 			} else {
 				$tmp_file = true;
 				$tmp_file_read = $data[$attr['field']];
@@ -454,24 +454,24 @@ class HtmlFieldHelper extends Helper {
 
 			if (!is_resource($tmp_file_read)) {
 				$src = (!empty($tmp_file_read)) ? '<img id="existingImage" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode( $tmp_file_read ).'"/>' : $defaultImgView;
-				$showRemoveButton = (!empty($tmp_file)) ? true : false; 
+				$showRemoveButton = (!empty($tmp_file)) ? true : false;
 			} else {
 				$tmp_file_read = stream_get_contents($tmp_file_read);
 				$src = (!empty($tmp_file_read)) ? '<img id="existingImage" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode( $tmp_file_read ).'"/>' : $defaultImgView;
 				$showRemoveButton = true;
 			}
 
-			header('Content-Type: image/jpeg'); 
+			header('Content-Type: image/jpeg');
 
 			$this->includes['jasny']['include'] = true;
-			$value = $this->_View->element('ControllerAction.bootstrap-jasny/image_uploader', ['attr' => $attr, 'src' => $src, 
+			$value = $this->_View->element('ControllerAction.bootstrap-jasny/image_uploader', ['attr' => $attr, 'src' => $src,
 																							'defaultWidth' => $defaultWidth,
 																							'defaultHeight' => $defaultHeight,
 																							'showRemoveButton' => $showRemoveButton,
 																							'defaultImgMsg' => $defaultImgMsg,
 																							'defaultImgView' => $defaultImgView]);
 			$name = $attr['model'].'.'.$attr['field'];
-		} 
+		}
 
 		return $value;
 	}
@@ -481,7 +481,7 @@ class HtmlFieldHelper extends Helper {
 		if ($action == 'index' || $action == 'view') {
 			$value = $this->Html->link($data->{$attr['field']}, $attr['attr']['url']);
 		} else if ($action == 'edit') {
-			
+
 		}
 		return $value;
 	}
@@ -490,14 +490,10 @@ class HtmlFieldHelper extends Helper {
 		$value = '';
 
 		$element = $attr['element'];
+
 		$attr['id'] = $attr['model'] . '_' . $attr['field'];
 		$attr['label'] = array_key_exists('label', $options) ? $options['label'] : Inflector::humanize($attr['field']);
-		
-		if ($action == 'view' || $action == 'index') {
-			$value = $this->_View->element($element, ['entity' => $data, 'attr' => $attr]);
-		} else if ($action == 'edit') {
-			$value = $this->_View->element($element, ['entity' => $data, 'attr' => $attr]);
-		}
+		$value = $this->_View->element($element, ['entity' => $data, 'attr' => $attr]);
 		return $value;
 	}
 
@@ -558,7 +554,7 @@ class HtmlFieldHelper extends Helper {
 		if (!isset($attr['date_options'])) {
 			$attr['date_options'] = [];
 		}
-		
+
 		if (!isset($attr['default_date'])) {
 			$attr['default_date'] = $defaultDate;
 		}
@@ -571,7 +567,7 @@ class HtmlFieldHelper extends Helper {
 				$value = $data->$field;
 			}
 		}
-		
+
 		if ($action == 'index' || $action == 'view') {
 			if (!is_null($value)) {
 				$event = new Event('ControllerAction.Model.onFormatDate', $this, compact('value'));
@@ -582,7 +578,7 @@ class HtmlFieldHelper extends Helper {
 			}
 		} else if ($action == 'edit') {
 			if (!array_key_exists('id', $attr)) {
-				$attr['id'] = $attr['model'] . '_' . $field; 
+				$attr['id'] = $attr['model'] . '_' . $field;
 				if (array_key_exists('fieldName', $attr)) {
 					$attr['id'] = $this->_domId($attr['fieldName']);
 				}
@@ -590,7 +586,7 @@ class HtmlFieldHelper extends Helper {
 
 			$attr['date_options'] = array_merge($_options, $attr['date_options']);
 			if (!array_key_exists('value', $attr)) {
-				if (!is_null($value)) {
+				if (!empty($value)) {
 					if (is_object($value)) {
 						$attr['value'] = $value->format('d-m-Y');
 					} else {
@@ -661,7 +657,7 @@ class HtmlFieldHelper extends Helper {
 			if (!isset($attr['id'])) {
 				$attr['id'] = $attr['model'] . '_' . $field;
 			}
-			
+
 			if (array_key_exists('fieldName', $attr)) {
 				$attr['id'] = $this->_domId($attr['fieldName']);
 			}
@@ -736,6 +732,18 @@ class HtmlFieldHelper extends Helper {
 			} else {
 				if ($options['multiple']) {
 					$fieldName = $attr['model'] . '.' . $attr['field'] . '._ids';
+
+					//logic when there is no option on multiple chosen select which unselectable
+					if (isset($options['empty'])) {
+						unset($options['empty']);
+
+						$options['options'][] = [
+                            'text' => __('No options'),
+                            'value' => '',
+                            'disabled' => 'disabled'
+                        ];
+					}
+
 				} else {
 					$fieldName = $attr['model'] . '.' . $attr['field'];
 				}
@@ -861,9 +869,9 @@ class HtmlFieldHelper extends Helper {
 	public function test($action, Entity $data, $attr, $options=[]) {
 		$value = '';
 		if ($action == 'index' || $action == 'view') {
-			
+
 		} else if ($action == 'edit') {
-			
+
 		}
 		return $value;
 	}

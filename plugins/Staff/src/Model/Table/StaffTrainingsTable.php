@@ -12,9 +12,9 @@ use App\Model\Table\AppTable;
 class StaffTrainingsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-		$this->belongsTo('StaffTrainingCategories', ['className' => 'FieldOption.StaffTrainingCategories']);
+		$this->belongsTo('StaffTrainingCategories', ['className' => 'Staff.StaffTrainingCategories']);
 	}
 
 	public function beforeAction() {

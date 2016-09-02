@@ -6,8 +6,9 @@ use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
 class SpecialNeedDifficultiesTable extends ControllerActionTable {
-	public function initialize(array $config) {
-		$this->addBehavior('ControllerAction.FieldOption');
+	public function initialize(array $config)
+    {
+		$this->addBehavior('FieldOption.FieldOption');
 		$this->table('special_need_difficulties');
 		parent::initialize($config);
 		$this->hasMany('SpecialNeeds', ['className' => 'User.SpecialNeeds', 'foreignKey' => 'special_need_difficulty_id']);

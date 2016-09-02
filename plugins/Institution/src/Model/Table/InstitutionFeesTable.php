@@ -30,7 +30,7 @@ class InstitutionFeesTable extends ControllerActionTable {
 ******************************************************************************************************************/
 	public function initialize(array $config) {
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
@@ -102,7 +102,7 @@ class InstitutionFeesTable extends ControllerActionTable {
 		$this->controller->set('selectedOption', $selectedOption);
 		$this->controller->set(compact('academicPeriodOptions'));
 		$extra['elements']['custom'] = [
-			'name' => 'Institution.Fees/controls', 
+			'name' => 'Institution.Fees/controls',
 			'order' => 0
         ];
 
@@ -159,7 +159,8 @@ class InstitutionFeesTable extends ControllerActionTable {
 ** edit action methods
 **
 ******************************************************************************************************************/
-    public function editBeforeAction(Event $event, ArrayObject $extra) {
+    public function editBeforeAction(Event $event, ArrayObject $extra)
+    {
 		$this->setFieldOrder([
 			'academic_period_id', 'education_grade_id'
 		]);
@@ -169,11 +170,13 @@ class InstitutionFeesTable extends ControllerActionTable {
 		$this->field('total', ['visible' => false]);
 	}
 
-	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
+	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+	{
 		$this->cleanFeeTypes($data);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
 		$feeTypes = [];
     	foreach ($this->fields['fee_types']['options'] as $key=>$obj) {
     		$feeTypes[] = [
@@ -199,8 +202,9 @@ class InstitutionFeesTable extends ControllerActionTable {
     	}
 		$this->fields['fee_types']['exists'] = $exists;
 		$this->fields['fee_types']['currency'] = $this->currency;
- 		
+
 		// $this->fields['academic_period_id']['attr']['value'] = $this->_academicPeriodOptions[$entity->academic_period_id];
+		$this->fields['academic_period_id']['value'] = $entity->academic_period_id;
 		$this->fields['academic_period_id']['attr']['value'] = $this->AcademicPeriods->get($entity->academic_period_id)->name;
 		$this->fields['education_grade_id']['attr']['value'] = isset($this->_gradeOptions[$entity->education_grade_id]) ? $this->_gradeOptions[$entity->education_grade_id] : $entity->education_grade->name;
 		// $this->fields['education_grade_id']['attr']['value'] = $this->_gradeOptions[$entity->education_grade_id];
@@ -335,5 +339,5 @@ class InstitutionFeesTable extends ControllerActionTable {
 		}
 	}
 
-	
+
 }

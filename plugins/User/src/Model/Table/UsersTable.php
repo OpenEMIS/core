@@ -34,7 +34,9 @@ class UsersTable extends AppTable {
 
 	private $defaultImgIndexClass = "profile-image-thumbnail";
 	private $defaultImgViewClass= "profile-image";
-	private $defaultImgMsg = "<p>* Advisable photo dimension 90 by 115px<br>* Format Supported: .jpg, .jpeg, .png, .gif </p>";
+	private $photoMessage = 'Advisable photo dimension 90 by 115px';
+	private $formatSupport = 'Format Supported: ';
+	private $defaultImgMsg = "<p>* %s <br>* %s.jpg, .jpeg, .png, .gif </p>";
 
 	public $fieldOrder1;
 	public $fieldOrder2;
@@ -448,7 +450,6 @@ class UsersTable extends AppTable {
 			->allowEmpty('username')
 			->allowEmpty('password')
 			// password validation now in behavior
-			->add('address', [])
 			->allowEmpty('photo_content')
 			;
 		return $validator;
@@ -556,7 +557,7 @@ class UsersTable extends AppTable {
 	}
 
 	public function getDefaultImgMsg() {
-		return $this->defaultImgMsg;
+		return sprintf($this->defaultImgMsg, __($this->photoMessage), __($this->formatSupport));
 	}
 
 	public function getDefaultImgIndexClass() {
