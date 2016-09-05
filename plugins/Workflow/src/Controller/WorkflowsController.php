@@ -16,6 +16,7 @@ class WorkflowsController extends AppController
         $this->ControllerAction->models = [
             'Workflows' => ['className' => 'Workflow.Workflows', 'options' => ['deleteStrategy' => 'transfer']],
             'Steps' => ['className' => 'Workflow.WorkflowSteps', 'options' => ['deleteStrategy' => 'restrict']],
+            'Actions' => ['className' => 'Workflow.WorkflowActions'],
             'Statuses' => ['className' => 'Workflow.WorkflowStatuses'],
         ];
 		$this->loadComponent('Paginator');
@@ -36,6 +37,10 @@ class WorkflowsController extends AppController
             $tabElements['Steps'] = [
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Steps'],
                 'text' => __('Steps')
+            ];
+            $tabElements['Actions'] = [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Actions'],
+                'text' => __('Actions')
             ];
         }
 

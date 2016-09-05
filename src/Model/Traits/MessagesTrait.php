@@ -380,10 +380,11 @@ trait MessagesTrait {
             'noWorkflows' => 'You need to configure Workflows for this form.',
             'workflow_model_id' => 'Form'
         ],
+        'WorkflowSteps' => [
+            'restrictDelete' => 'Delete operation is not allowed as this is a system defined record.'
+        ],
         'WorkflowActions' => [
-            'next_step' => 'Next Step',
-            'comment_required' => 'Comment Required',
-            'event' => 'Event'
+            'restrictDelete' => 'Delete operation is not allowed as this is a system defined record.'
         ],
         'WorkflowStatuses' => [
             'noSteps' => 'No Available Workflow Steps'
