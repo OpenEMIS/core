@@ -88,9 +88,6 @@ var Workflow = {
 				$('.workflowtransition-assignee-id').append($('<option>').text('Loading...').attr('value', ''));
 			},
             success: function(response) {
-            	console.log('Workflow.getAssigneeOptions() success callback:');
-            	console.log(response);
-
             	var defaultKey = response.default_key;
             	var assignees = response.assignees;
 
