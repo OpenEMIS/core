@@ -284,7 +284,7 @@ class RemoveBehavior extends Behavior {
 		return $result;
 	}
 
-	private function getAssociatedRecords($model, $entity, $extra)
+	public function getAssociatedRecords($model, $entity, $extra)
 	{
 		$dependent = [true, false];
         if ($extra->offsetExists('deleteStrategy')) {
