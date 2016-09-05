@@ -528,16 +528,31 @@ class AreasTable extends ControllerActionTable
                     ->where(['area_id' => $key])
                     ->toArray();
 
+                    // Update the Institutions table
                     if (!empty($institutionResult)) {
                         foreach ($institutionResult as $key => $institution) {
                             $institutionEntity =$this->newEntity([
                                 'id' => $institution->id,
-                                'area_id' => $newAreaId
-                            ], ['validate' => false]);
+                                'area_id' => $newAreaId],
+                                ['validate' => false]);
                             $this->Institutions->save($institutionEntity);
                         }
                     }
 
+                    $OldGroupAreas = clone $securityGroupAreas;
+
+                    // Query to delete the wrong records
+                    $groupIdQuery = $OldGroupAreas->find()
+                        ->select(['group_id' => $OldGroupAreas->aliasField('security_group_id')])
+                        ->where([$OldGroupAreas->aliasField('area_id') => $areaId]);
+
+                    $deleteQuery = $this->query()
+                        ->select(['group_id' => 'GroupAreas.group_id'])
+                        ->from(['GroupAreas' => $groupIdQuery]);
+
+                    $securityGroupAreas->deleteAll(['area_id' => $newAreaId, 'security_group_id IN' => $deleteQuery]);
+
+                    // Update the security group areas table
                     $securityGroupAreas->updateAll(
                         ['area_id' => $newAreaId],
                         ['area_id' => $areaId]
