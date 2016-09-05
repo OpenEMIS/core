@@ -96,7 +96,7 @@ class AreasControllerTest extends AppTestCase
 	// }
 
 
-// AdminBoundaries unitTest
+// // AdminBoundaries unitTest
     private $id = 2;
     private $table;
 
@@ -107,7 +107,7 @@ class AreasControllerTest extends AppTestCase
         $this->table = TableRegistry::get('Area.Areas');
     }
 
-    public function testIndex()
+    public function testIndexAdministrativeBoundaries()
     {
         $testUrl = $this->url('index', ['parent' => 1]);
         $this->get($testUrl);
@@ -115,7 +115,7 @@ class AreasControllerTest extends AppTestCase
         $this->assertEquals(true, (count($this->viewVariable('data')) >= 1));
     }
 
-    public function testSearchFound()
+    public function testSearchFoundAdministrativeBoundaries()
     {
         $testUrl = $this->url('index', ['parent' => 1]);
         $data = [
@@ -127,7 +127,7 @@ class AreasControllerTest extends AppTestCase
         $this->assertEquals(true, (count($this->viewVariable('data')) >= 1));
     }
 
-    public function testSearchNotFound()
+    public function testSearchNotFoundAdministrativeBoundaries()
     {
         $testUrl = $this->url('index', ['parent' => 1]);
         $data = [
@@ -139,7 +139,7 @@ class AreasControllerTest extends AppTestCase
         $this->assertEquals(true, (count($this->viewVariable('data')) == 0));
     }
 
-    public function testView()
+    public function testViewAdministrativeBoundaries()
     {
         $testUrl = $this->url('view/' . $this->id, ['parent' => 1]);
 
@@ -149,7 +149,7 @@ class AreasControllerTest extends AppTestCase
         $this->assertEquals(true, ($this->viewVariable('data')->id == $this->id));
     }
 
-    public function testUpdate()
+    public function testUpdateAdministrativeBoundaries()
     {
         $alias = $this->table->alias();
         $testUrl = $this->url('edit/' . $this->id, ['parent' => 1]);
@@ -178,7 +178,7 @@ class AreasControllerTest extends AppTestCase
         $this->assertEquals($data[$alias]['name'], $entity->name);
     }
 
-    public function testCreate()
+    public function testCreateAdministrativeBoundaries()
     {
         $alias = $this->table->alias();
         $testUrl = $this->url('add', ['parent' => 1]);
@@ -210,7 +210,7 @@ class AreasControllerTest extends AppTestCase
         $this->assertEquals(true, (!empty($lastInsertedRecord)));
     }
 
-    public function testDelete()
+    public function testDeleteAdministrativeBoundaries()
     {
         $testUrl = $this->url('remove/213', ['parent' => 1]);
 
@@ -228,36 +228,91 @@ class AreasControllerTest extends AppTestCase
         $this->assertFalse($exists);
     }
 
-    // public function testSyncValidUrl()
-    // {
-    //     $alias = $this->table->alias();
-    //     $testUrl = $this->url('synchronize', ['parent' => 1]);
-
-    //     $this->get($testUrl);
-    //     $this->assertResponseCode(200);
-
-    //     $data = [
-    //         'submit' => 'save'
-    //     ];
-
-    //     $this->postData($testUrl, $data);
-    //     $areas = TableRegistry::get('Area.Areas');
-    //     $result = $areas->get($this->id);
-    //     $resultCode = $result['code'];
-    //     $resultName = $result['name'];
-
-    //     $expectedCode = 'LAO014';
-    //     $expectedName = 'Saravan';
-
-    //     $this->assertEquals($expectedCode, $resultCode);
-    //     $this->assertEquals($resultName, $expectedName);
-    // }
-
-    public function testSyncInvalidUrl()
+    public function testSyncInvalidUrlAdministrativeBoundaries()
     {
         $testUrl = $this->url('synchronize', ['parent' => 1]);
 
         $this->get($testUrl);
         $this->assertResponseCode(302);
+    }
+
+    public function testUpdateAssociatedRecordAdministrativeBoundaries()
+    {
+        $id = 13;
+
+        $requestData = ['Areas' => [
+            'data_url' => '',
+            'transfer_areas' => [
+                13 => [
+                    'area_id' => 13,
+                    'new_area_id' => 2
+                ]
+            ]
+        ]];
+
+        $expectedSecurityAreaId = 2;
+        $expectedInstitutionAreaId = 2;
+
+        $securityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+        $institutions = TableRegistry::get('Instution.Institutions');
+
+        // Calling doUpdateAssociatedRecord method from areasTable.php
+        $this->table->doUpdateAssociatedRecord($requestData);
+
+        $resultInstitutionAreaId = $institutions->find()
+            ->where(['id' => $id])
+            ->first()->area_id;
+
+        $resultSecurityAreaId = $securityGroupAreas->find()
+            ->where(['security_group_id' => $id])
+            ->first()->area_id;
+
+        $this->assertEquals($expectedSecurityAreaId, $resultSecurityAreaId);
+        $this->assertEquals($expectedInstitutionAreaId, $resultInstitutionAreaId);
+    }
+
+    public function testDoReplaceAreaTableAdministrativeBoundaries()
+    {
+        $missingAreaId = 13;
+        $jsonAreaId = 1;
+        $expectedJsonName = 'Lao PDR';
+
+        $missingAreaArray = [
+            13 => [
+                'id' => 13,
+                'parent_id' => 2,
+                'code' => 'SG001007',
+                'name' => 'Bishan',
+                'area_level_id' => 3,
+                'order' => 7
+            ]
+        ];
+
+        $jsonArray = [
+            1 => [
+                'id' => 1,
+                'parent_id' => '',
+                'code' => 'LAO',
+                'name' => 'Lao PDR',
+                'area_level_id' => 1,
+                'order' => 1
+            ]
+        ];
+
+        $areas = TableRegistry::get('Area.Areas');
+
+        // Calling doReplaceAreaTable method from areasTable.php
+        $this->table->doReplaceAreaTable($missingAreaArray, $jsonArray);
+
+        $resultMissingArea = $areas->find()
+            ->where(['id' => $missingAreaId])
+            ->first();
+
+        $resultJsonName = $areas->find()
+            ->where(['id' => $jsonAreaId])
+            ->first()->name;
+
+        $this->assertNull($resultMissingArea);
+        $this->assertEquals($expectedJsonName, $resultJsonName);
     }
 }
