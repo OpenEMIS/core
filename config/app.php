@@ -339,4 +339,6 @@ return [
     'Session' => [
         'defaults' => 'php',
     ],
+
+    'domain' => ''
 ];
