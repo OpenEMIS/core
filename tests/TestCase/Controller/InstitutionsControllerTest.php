@@ -7,9 +7,25 @@ use Cake\ORM\TableRegistry;
 class InstitutionsControllerTest extends AppTestCase
 {
 	public $fixtures = [
+        'app.assessment_item_results',
+        'app.institution_quality_rubrics',
+        'app.institution_quality_visits',
+        'app.institution_surveys',
+        'app.institution_survey_answers',
+        'app.institution_student_surveys',
+        'app.institution_student_survey_answers',
+        'app.survey_questions',
+        'app.survey_forms_questions',
         'app.config_items',
         'app.labels',
         'app.security_users',
+        'app.workflows',
+        'app.workflows_filters',
+        'app.workflow_actions',
+        'app.workflow_records',
+        'app.workflow_comments',
+        'app.workflow_transitions',
+        'app.workflow_steps_roles',
         'app.workflow_models',
         'app.workflow_steps',
         'app.workflow_statuses',
@@ -20,6 +36,13 @@ class InstitutionsControllerTest extends AppTestCase
         'app.area_administratives',
         'app.institutions',
         'app.institution_shifts',
+        'app.institution_classes',
+        'app.institution_class_grades',
+        'app.institution_class_students',
+        'app.institution_grades',
+        'app.institution_subjects',
+        'app.institution_subject_students',
+        'app.institution_subject_staff',
         'app.institution_localities',
         'app.institution_types',
         'app.institution_ownerships',
@@ -34,6 +57,28 @@ class InstitutionsControllerTest extends AppTestCase
         'app.institution_custom_field_values',
         'app.institution_custom_forms_fields',
         'app.institution_custom_forms_filters',
+        'app.institution_infrastructures',
+        'app.infrastructure_custom_field_values',
+        'app.infrastructure_custom_fields',
+        'app.infrastructure_custom_forms_fields',
+        'app.infrastructure_custom_forms_filters',
+        'app.institution_staff',
+        'app.staff_statuses',
+        'app.institution_staff_position_profiles',
+        'app.staff_change_types',
+        'app.staff_behaviours',
+        'app.institution_staff_absences',
+        'app.institution_student_absences',
+        'app.institution_bank_accounts',
+        'app.institution_student_admission',
+        'app.institution_student_dropout',
+        'app.institution_fees',
+        'app.absence_types',
+        'app.student_behaviours',
+        'app.institution_students',
+        'app.institution_activities',
+        'app.institution_attachments',
+        'app.institution_positions',
         'app.security_groups',
         'app.security_group_users',
         'app.security_group_institutions',
@@ -44,7 +89,8 @@ class InstitutionsControllerTest extends AppTestCase
         'app.custom_modules',
         'app.custom_field_types',
         'app.survey_forms',
-        'app.survey_rules'
+        'app.survey_rules',
+        'app.security_roles'
     ];
 
     private $nonAcademicInstitutionId = 517;
@@ -208,10 +254,10 @@ class InstitutionsControllerTest extends AppTestCase
         $this->assertEquals($patchedRecord, $record);
 
         // Test security_group_institutions record inserted
-        $this->assertEquals(true, (!empty($this->getSecurityGroupInstitutionRecord($record['security_group_id'], $record['id']))));
+        $this->assertTrue(!empty($this->getSecurityGroupInstitutionRecord($record['security_group_id'], $record['id'])));
 
         // Test security_group_areas record inserted
-        $this->assertEquals(false, (!empty($this->getSecurityGroupAreaRecord($record['security_group_id'], $record['area_id']))));
+        $this->assertFalse(!empty($this->getSecurityGroupAreaRecord($record['security_group_id'], $record['area_id'])));
 
     }
 
@@ -270,11 +316,71 @@ class InstitutionsControllerTest extends AppTestCase
         $this->assertEquals($patchedRecord, $record);
 
         // Test security_group_institutions record inserted
-        $this->assertEquals(true, (!empty($this->getSecurityGroupInstitutionRecord($record['security_group_id'], $record['id']))));
+        $this->assertTrue(!empty($this->getSecurityGroupInstitutionRecord($record['security_group_id'], $record['id'])));
 
         // Test security_group_areas record inserted
-        $this->assertEquals(true, (!empty($this->getSecurityGroupAreaRecord($record['security_group_id'], $record['area_id']))));
+        $this->assertTrue(!empty($this->getSecurityGroupAreaRecord($record['security_group_id'], $record['area_id'])));
 
+    }
+
+    public function testNonAcademicInstitutionDelete()
+    {
+        $testUrl = $this->url('remove/'.$this->nonAcademicInstitutionId);
+
+        $table = TableRegistry::get('Institution.Institutions');
+
+        $record = $table->find()
+            ->where([
+                $table->aliasField('id') => $this->nonAcademicInstitutionId
+            ])
+            ->first();
+
+        $this->assertTrue(!empty($record));
+
+        $data = [
+            'id' => $this->nonAcademicInstitutionId,
+            '_method' => 'DELETE'
+        ];
+        $this->postData($testUrl, $data);
+
+        $exists = $table->exists([$table->primaryKey() => $this->nonAcademicInstitutionId]);
+        $this->assertFalse($exists);
+
+        // Test security_group_institutions record inserted
+        $this->assertFalse(!empty($this->getSecurityGroupInstitutionRecord($record['security_group_id'], $record['id'])));
+
+        // Test security_group_areas record inserted
+        $this->assertFalse(!empty($this->getSecurityGroupAreaRecord($record['security_group_id'], $record['area_id'])));
+    }
+
+    public function testAcademicInstitutionDelete()
+    {
+        $testUrl = $this->url('remove/'.$this->academicInstitutionId);
+
+        $table = TableRegistry::get('Institution.Institutions');
+
+        $record = $table->find()
+            ->where([
+                $table->aliasField('id') => $this->academicInstitutionId
+            ])
+            ->first();
+
+        $this->assertTrue(!empty($record));
+
+        $data = [
+            'id' => $this->academicInstitutionId,
+            '_method' => 'DELETE'
+        ];
+        $this->postData($testUrl, $data);
+
+        $exists = $table->exists([$table->primaryKey() => $this->academicInstitutionId]);
+        $this->assertFalse($exists);
+
+        // Test security_group_institutions record inserted
+        $this->assertFalse(!empty($this->getSecurityGroupInstitutionRecord($record['security_group_id'], $record['id'])));
+
+        // Test security_group_areas record inserted
+        $this->assertFalse(!empty($this->getSecurityGroupAreaRecord($record['security_group_id'], $record['area_id'])));
     }
 
     private function getSecurityGroupAreaRecord($securityGroupId, $areaId) {
