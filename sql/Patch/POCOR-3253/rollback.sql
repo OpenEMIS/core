@@ -1,4 +1,7 @@
 -- Restore tables
+DROP TABLE IF EXISTS `workflow_models`;
+RENAME TABLE `z_3253_workflow_models` TO `workflow_models`;
+
 DROP TABLE IF EXISTS `institution_surveys`;
 RENAME TABLE `z_3253_institution_surveys` TO `institution_surveys`;
 

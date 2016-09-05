@@ -1,6 +1,27 @@
 -- db_patches
 INSERT INTO `db_patches` (`issue`, `created`) VALUES('POCOR-3253', NOW());
 
+-- workflow_models
+RENAME TABLE `workflow_models` TO `z_3253_workflow_models`;
+DROP TABLE IF EXISTS `workflow_models`;
+CREATE TABLE IF NOT EXISTS `workflow_models` (
+  `id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `model` varchar(200) NOT NULL,
+  `filter` varchar(200) DEFAULT NULL,
+  `is_school_based` int(1) NOT NULL DEFAULT '0',
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of features that are workflow-enabled';
+
+INSERT INTO `workflow_models` (`id`, `name`, `model`, `filter`, `is_school_based`, `created_user_id`, `created`)
+SELECT `id`, `name`, `model`, `filter`, 0, `created_user_id`, `created`
+FROM `z_3253_workflow_models`;
+
+UPDATE `workflow_models` SET `is_school_based` = 1
+WHERE `model` IN ('Staff.Leaves', 'Institution.InstitutionSurveys', 'Institution.InstitutionPositions', 'Institution.StaffPositionProfiles');
+
 -- institution_surveys
 RENAME TABLE `institution_surveys` TO `z_3253_institution_surveys`;
 
