@@ -723,7 +723,7 @@ class ValidationBehavior extends Behavior {
 		$birthYear = $dateOfBirth->format('Y');
 		$ageOfStudent = $academicStartYear - $birthYear;
 
-		$ConfigItems = TableRegistry::get('ConfigItems');
+		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 		$enrolmentMinimumAge = $admissionAge - $ConfigItems->value('admission_age_minus');
 		$enrolmentMaximumAge = $admissionAge + $ConfigItems->value('admission_age_plus');
 
@@ -1296,7 +1296,7 @@ class ValidationBehavior extends Behavior {
 	}
 
 	public static function checkDateRange($field, array $globalData) {
-		$systemDateFormat = TableRegistry::get('ConfigItems')->value('date_format');
+		$systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
 		$model = $globalData['providers']['table'];
 		$params = (!empty($globalData['data']['params']))? json_decode($globalData['data']['params'],true): [];
 
@@ -1312,7 +1312,7 @@ class ValidationBehavior extends Behavior {
 	}
 
 	public static function checkTimeRange($field, array $globalData) {
-		$systemTimeFormat = TableRegistry::get('ConfigItems')->value('time_format');
+		$systemTimeFormat = TableRegistry::get('Configuration.ConfigItems')->value('time_format');
 		$model = $globalData['providers']['table'];
 		$params = (!empty($globalData['data']['params']))? json_decode($globalData['data']['params'],true): [];
 
