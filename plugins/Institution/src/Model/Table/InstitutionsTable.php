@@ -22,10 +22,16 @@ class InstitutionsTable extends AppTable  {
 
 	public $shiftTypes = [];
 
+	private $isAcademicOptions = [];
+
 	CONST SINGLE_OWNER = 1;
 	CONST SINGLE_OCCUPIER = 2;
 	CONST MULTIPLE_OWNER = 3;
 	CONST MULTIPLE_OCCUPIER = 4;
+
+	// For Academic / Non-Academic Institution type
+	const ACADEMIC = 1;
+	const NON_ACADEMIC = 2;
 
 	public function initialize(array $config) {
 		$this->table('institutions');
@@ -118,12 +124,20 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('OpenEmis.Map');
         $this->addBehavior('HighChart', ['institutions' => ['_function' => 'getNumberOfInstitutionsByModel']]);
         $this->addBehavior('Import.ImportLink');
-        
+
         $this->shiftTypes = $this->getSelectOptions('Shifts.types'); //get from options trait
+
+        $this->isAcademicOptions = [
+			self::ACADEMIC => 'Academic Institution',
+			self::NON_ACADEMIC => 'Non-Academic Institution'
+		];
 	}
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
+		$session = $this->request->session();
+		$userId = $session->read('Auth.User.id');
+		$superAdmin = $session->read('Auth.User.super_admin');
 
 		$validator
 			->add('date_opened', [
@@ -166,7 +180,7 @@ class InstitutionsTable extends AppTable  {
 					]
 				])
 			->add('area_id', 'ruleAuthorisedArea', [
-					'rule' => 'checkAuthorisedArea'
+					'rule' => ['checkAuthorisedArea', $superAdmin, $userId]
 				])
 	        ;
 		return $validator;
@@ -183,7 +197,7 @@ class InstitutionsTable extends AppTable  {
 		$cloneFields = $fields->getArrayCopy();
 		$newFields = [];
 		foreach ($cloneFields as $key => $value) {
-			
+
 			if ($value['field'] == 'area_id') {
 				$newFields[] = [
 					'key' => 'Areas.code',
@@ -355,6 +369,34 @@ class InstitutionsTable extends AppTable  {
 				}
 			}
 
+        }
+
+        $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+        $hasSecurityAreaRecord = $SecurityGroupAreas
+        	->find()
+        	->where([
+        		$SecurityGroupAreas->aliasField('security_group_id') => $entity->security_group_id
+        	])
+        	->count();
+
+        if ($hasSecurityAreaRecord) {
+        	$SecurityGroupAreas->updateAll(
+        		['area_id' => $entity->area_id],
+        		['security_group_id' => $entity->security_group_id]
+        	);
+        }
+
+        if ($entity->has('is_academic')) {
+        	$isAcademic = $entity->is_academic;
+
+        	if ($isAcademic == self::NON_ACADEMIC) {
+        		$newSecurityGroupAreaRecord = [
+        			'security_group_id' => $entity->security_group_id,
+        			'area_id' => $entity->area_id
+        		];
+        		$newEntity = $SecurityGroupAreas->newEntity($newSecurityGroupAreaRecord);
+        		$SecurityGroupAreas->save($newEntity);
+        	}
         }
         return true;
 	}
@@ -609,6 +651,14 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('institution_type_id', ['type' => 'select']);
 	}
 
+	public function addAfterAction(Event $event, Entity $entity) {
+		$this->ControllerAction->field('is_academic', ['type' => 'select', 'options' => [], 'entity' => $entity, 'after' => 'code']);
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->ControllerAction->field('is_academic', ['type' => 'select', 'options' => [], 'entity' => $entity, 'after' => 'code']);
+	}
+
 /******************************************************************************************************************
 **
 ** essential methods
@@ -698,6 +748,29 @@ class InstitutionsTable extends AppTable  {
 ** Security Functions
 **
 ******************************************************************************************************************/
+
+	public function onUpdateFieldIsAcademic(Event $event, array $attr, $action, Request $request) {
+		$attr['select'] = false;
+		$attr['options'] = $this->isAcademicOptions;
+		return $attr;
+	}
+
+	public function onGetIsAcademic(Event $event, Entity $entity)
+	{
+		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+		$hasArea = $SecurityGroupAreas
+			->find()
+			->where([
+				$SecurityGroupAreas->aliasField('security_group_id') => $entity->security_group_id
+			])
+			->count();
+		$selectedIsAcademic = self::ACADEMIC;
+		if ($hasArea) {
+			$selectedIsAcademic = self::NON_ACADEMIC;
+		}
+
+		return __($this->isAcademicOptions[$selectedIsAcademic]);
+	}
 
 	/**
 	 * To get the list of security group id for the particular institution and user
