@@ -4,6 +4,8 @@ use Cake\Event\Event;
 use DateTime;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
+use ArrayObject;
+use Cake\Routing\Router;
 
 class UsersController extends AppController
 {
@@ -90,7 +92,54 @@ class UsersController extends AppController
     {
         $events = parent::implementedEvents();
         $events['Auth.afterIdentify'] = 'afterIdentify';
+        $events['Controller.Auth.afterAuthenticate'] = 'afterAuthenticate';
+        $events['Controller.Auth.afterCheckLogin'] = 'afterCheckLogin';
         return $events;
+    }
+
+    public function afterCheckLogin(Event $event, $extra)
+    {
+        if (!$extra['loginStatus']) {
+            if (!$extra['status']) {
+                $this->Alert->error('security.login.inactive', ['reset' => true]);
+            } else if ($extra['fallback']) {
+                $url = Router::url(['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin', 'submit' => 'retry']);
+                $retryMessage = 'Remote authentication failed. <br>Please try local login or <a href="'.$url.'">Click here</a> to try again';
+                $this->Alert->error($retryMessage, ['type' => 'string', 'reset' => true]);
+            } else {
+                $this->Alert->error('security.login.fail', ['reset' => true]);
+            }
+            $event->stopPropagation();
+            return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+        }
+    }
+
+    public function afterAuthenticate(Event $event, ArrayObject $extra)
+    {
+        if ($this->Cookie->check('Restful.Call')) {
+            $event->stopPropagation();
+            return $this->controller->redirect(['plugin' => null, 'controller' => 'Rest', 'action' => 'auth', 'payload' => $this->generateToken(), 'version' => '2.0']);
+        } else {
+            // Labels
+            $labels = TableRegistry::get('Labels');
+            $labels->storeLabelsInCache();
+
+            // Support Url
+            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $supportUrl = $ConfigItems->value('support_url');
+            $this->request->session()->write('System.help', $supportUrl);
+        }
+    }
+
+    public function generateToken() {
+        $user = $this->controller->Auth->user();
+
+        // Expiry change to 24 hours
+        return JWT::encode([
+                    'sub' => $user['id'],
+                    'exp' =>  time() + 10800
+                ],
+                Security::salt());
     }
 
     public function afterIdentify(Event $event, $user)
