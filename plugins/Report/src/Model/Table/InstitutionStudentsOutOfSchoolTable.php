@@ -19,6 +19,7 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
 
         $this->belongsTo('Genders', ['className' => 'User.Genders']);
         $this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
+        $this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
         $this->hasMany('Identities',        ['className' => 'User.Identities',      'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Excel', [
@@ -68,7 +69,6 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
                     'EducationGrade.id = InstitutionStudent.education_grade_id'
                 ]
             ]
-
         ]);
 
         $query->select(['EndDate' => 'InstitutionStudent.end_date', 'StudentStatus' => 'StudentStatus.name', 'AcademicPeriod' => 'AcademicPeriod.name', 'EducationGrade' => 'EducationGrade.name']);
@@ -161,8 +161,9 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
             'label' => 'Age',
         ];
 
-        foreach ($fields as $key => $field) { //get the value from the table, but change the label to become default identity type.
-            if ($field['field'] == 'identity_number') {
+        foreach ($fields as $key => $field) { 
+            //get the value from the table, but change the label to become default identity type.
+            if ($field['field'] == 'identity_number') { 
                 $fields[$key] = [
                     'key' => 'InstitutionStudentsOutOfSchool.identity_number',
                     'field' => 'identity_number',
