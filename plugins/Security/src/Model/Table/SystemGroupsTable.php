@@ -30,12 +30,21 @@ class SystemGroupsTable extends AppTable {
 			'through' => 'Security.SecurityGroupUsers',
 			'dependent' => true
 		]);
+
+		$this->belongsToMany('Areas', [
+			'className' => 'Area.Areas',
+			'joinTable' => 'security_group_areas',
+			'foreignKey' => 'security_group_id',
+			'targetForeignKey' => 'area_id',
+			'through' => 'Security.SecurityGroupAreas',
+			'dependent' => true
+		]);
 	}
 
 	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
 		if ($action == 'edit') {
 			$includes['autocomplete'] = [
-				'include' => true, 
+				'include' => true,
 				'css' => ['OpenEmis.../plugins/autocomplete/css/autocomplete'],
 				'js' => ['OpenEmis.../plugins/autocomplete/js/autocomplete']
 			];
@@ -104,7 +113,7 @@ class SystemGroupsTable extends AppTable {
 				}
 			}
 		}
-		
+
 		return $buttons;
 	}
 
@@ -120,13 +129,13 @@ class SystemGroupsTable extends AppTable {
 				'text' => $this->getMessage($this->aliasField('tabTitle'))
 			]
 		];
-		
+
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
 
 		$roleOptions = $this->Roles->find('list')->toArray();
 		$this->ControllerAction->field('users', [
-			'type' => 'user_table', 
+			'type' => 'user_table',
 			'valueClass' => 'table-full-width',
 			'roleOptions' => $roleOptions,
 			'visible' => ['index' => false, 'view' => true, 'edit' => true]
@@ -153,7 +162,7 @@ class SystemGroupsTable extends AppTable {
 		if ($this->Auth->user('super_admin') != 1) {
 
 			$userId = $this->Auth->user('id');
-			
+
 			$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
 			$SecurityGroupUsers = $SecurityGroupUsersTable
 				->find('list')
@@ -167,7 +176,7 @@ class SystemGroupsTable extends AppTable {
 					'OR'=>[
 						'EXISTS ('.$SecurityGroupUsers->sql().')',
 						'Institutions.created_user_id' => $userId
-					]	
+					]
 				]);
 		}
 	}
