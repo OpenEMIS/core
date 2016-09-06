@@ -57,7 +57,7 @@ class AbsenceBehavior extends Behavior {
 			7 => 'sunday'
 		);
 		
-		$ConfigItems = TableRegistry::get('ConfigItems');
+		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 
 		$settingFirstWeekDay = $ConfigItems->value('first_day_of_week');
 		if(empty($settingFirstWeekDay) || !in_array($settingFirstWeekDay, $weekdaysArr)){

@@ -69,7 +69,7 @@ class PreferencesController extends AppController {
 	}
 
 	public function getUserTabElements() {
-		$Config = TableRegistry::get('ConfigItems');
+		$Config = TableRegistry::get('Configuration.ConfigItems');
 		$canChangeAdminPassword = $Config->value('change_password');
 		$isSuperAdmin = $this->Auth->user('super_admin');
 		$userId = $this->Auth->user('id');
