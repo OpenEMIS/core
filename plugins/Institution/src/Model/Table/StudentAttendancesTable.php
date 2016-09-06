@@ -681,7 +681,7 @@ class StudentAttendancesTable extends AppTable {
 			// end setup weeks
 
 			// Setup day options
-			$ConfigItems = TableRegistry::get('ConfigItems');
+			$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 			$firstDayOfWeek = $ConfigItems->value('first_day_of_week');
 			$daysPerWeek = $ConfigItems->value('days_per_week');
 			$schooldays = [];
