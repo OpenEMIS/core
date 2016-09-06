@@ -55,7 +55,7 @@ class AreasTable extends ControllerActionTable
     public function synchronize(Event $mainEvent, ArrayObject $extra)
     {
         $extra['config']['form'] = true;
-        $extra['elements']['edit'] = ['name' => 'OpenEmis.ControllerAction/edit', 'order' => 5];
+        $extra['elements']['edit'] = ['name' => 'OpenEmis.ControllerAction/edit'];
         $this->fields = []; // reset all the fields
 
         $entity = $this->newEntity();
@@ -131,7 +131,7 @@ class AreasTable extends ControllerActionTable
         $this->field('lft', ['visible' => false]);
         $this->field('rght', ['visible' => false]);
 
-        //logic to hide 'add' button and display sync button if the API set
+        // Unset the Edit and remove toolbar buttons when the API is set
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         if (!empty($this->onGetUrl())) {
             unset($toolbarButtonsArray['edit']);
