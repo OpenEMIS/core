@@ -301,7 +301,7 @@ class StudentDropoutTable extends AppTable {
 	}
 
 	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
-		$process = function ($model, $entity) use ($data) {
+		$process = function ($model, $entity) use ($data, $event) {
 			if (!empty($entity->errors())) {
 				 return false;
 			}
@@ -340,44 +340,41 @@ class StudentDropoutTable extends AppTable {
 					])
 					->first();
 
-				if (empty($existingStudentEntity)) {
-					// if no record is found say 'This student is not eligible for this action. Please reject this request.'
-					$this->Alert->warning('DropoutRequests.notEligible');
-					$event->stopPropagation();
-					return $this->controller->redirect($this->ControllerAction->url('edit'));
+				if (!empty($existingStudentEntity)) {
+					// approval should not proceed
+					$existingStudentEntity->student_status_id = $statuses['DROPOUT'];
+					$existingStudentEntity->end_date = $effectiveDate;
+					$result = $Students->save($existingStudentEntity);
+
+					if ($result) {
+						$entity->status = self::APPROVED;
+						$entity->effective_date = date('Y-m-d', $effectiveDate);
+						if ($this->save($entity)) {
+							return true;
+						}
+					}
 				}
-
-				$existingStudentEntity->student_status_id = $statuses['DROPOUT'];
-				$existingStudentEntity->end_date = $effectiveDate;
-				$Students->save($existingStudentEntity);
-				$this->Alert->success('StudentDropout.approve');
-
-				$entity->status = self::APPROVED;
-				$entity->effective_date = date('Y-m-d', $effectiveDate);
-				if (!$this->save($entity)) {
-					$this->log($entity->errors(), 'debug');
-					return false;
-				}
-			} else {
-				$this->Alert->error('StudentDropout.exists');
 			}
-
-			// To redirect back to the student admission if it is not access from the workbench
-			$urlParams = $this->ControllerAction->url('index');
-			$plugin = false;
-			$controller = 'Dashboard';
-			$action = 'index';
-			if ($urlParams['controller'] == 'Institutions') {
-				$plugin = 'Institution';
-				$controller = 'Institutions';
-				$action = 'StudentDropout';
-			}
-
-			// $event->stopPropagation();
-			return $this->controller->redirect(['plugin' => $plugin, 'controller' => $controller, 'action' => $action]);
+			return false;
 		};
+        return $process;
+	}
 
-         return $process;
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	{
+		$this->Alert->success('StudentDropout.approve', ['reset' => true]);
+		// To redirect back to the student dropout if it is not access from the workbench
+		$urlParams = $this->ControllerAction->url('index');
+		$plugin = false;
+		$controller = 'Dashboard';
+		$action = 'index';
+		if ($urlParams['controller'] == 'Institutions') {
+			$plugin = 'Institution';
+			$controller = 'Institutions';
+			$action = 'StudentDropout';
+		}
+		$event->stopPropagation();
+		return $this->controller->redirect(['plugin' => $plugin, 'controller' => $controller, 'action' => $action]);
 	}
 
 	public function editOnReject(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
