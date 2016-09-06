@@ -384,6 +384,7 @@ trait MessagesTrait {
             'restrictDelete' => 'Delete operation is not allowed as this is a system defined record.'
         ],
         'WorkflowActions' => [
+            'add_event' => 'Add Event',
             'restrictDelete' => 'Delete operation is not allowed as this is a system defined record.'
         ],
         'WorkflowStatuses' => [

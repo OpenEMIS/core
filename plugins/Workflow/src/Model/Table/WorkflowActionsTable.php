@@ -234,15 +234,39 @@ class WorkflowActionsTable extends AppTable {
 				$selectedWorkflow = $workflowSteps->workflow_id;
 			}
 
-			$eventOptions = $this->getEvents($selectedWorkflow, false);
+			$eventOptions = $this->getEvents($selectedWorkflow, true);
 			$attr['attr']['eventOptions'] = $eventOptions;
+
+			$eventSelectOptions = $this->getEvents($selectedWorkflow, true);
+
+			$selectedEventKeys = [];
+			if ($request->is(['get'])) {
+				if ($action == 'edit') {
+					$entity = $attr['attr']['entity'];
+					$selectedEventKeys = $this->convertEventKeysToEvents($entity);
+				}
+			} else if ($request->is(['post', 'put'])) {
+				$requestData = $request->data;
+				if (array_key_exists($this->alias(), $requestData)) {
+					if (array_key_exists('events', $requestData[$this->alias()])) {
+						foreach ($requestData[$this->alias()]['events'] as $key => $event) {
+							$selectedEventKeys[] = $event['event_key'];
+						}
+					}
+				}
+			}
+
+			foreach ($selectedEventKeys as $key => $value) {
+				unset($eventSelectOptions[$value]);
+			}
+
+			$attr['attr']['eventSelectOptions'] = $eventSelectOptions;
 		}
 
-		return $attr;	
+		return $attr;
 	}
 
-	public function addEditOnChangeModel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) 
-    {
+	public function addEditOnChangeModel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
         $request = $this->request;
         unset($request->query['model']);
         unset($request->query['workflow']);
@@ -257,8 +281,7 @@ class WorkflowActionsTable extends AppTable {
 		}
 	}
 
-	public function addEditOnChangeWorkflow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) 
-    {
+	public function addEditOnChangeWorkflow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
         $request = $this->request;
         unset($request->query['workflow']);
         unset($request->query['workflow_step']);
@@ -272,8 +295,7 @@ class WorkflowActionsTable extends AppTable {
 		}
 	}
 
-	public function addEditOnChangeWorkflowStep(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) 
-    {
+	public function addEditOnChangeWorkflowStep(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
         $request = $this->request;
         unset($request->query['workflow_step']);
 
@@ -287,10 +309,17 @@ class WorkflowActionsTable extends AppTable {
 	}
 
 	public function addEditOnAddEvent(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$eventOptions = [
-			'event_key' => ''
-		];
-		$data[$this->alias()]['events'][] = $eventOptions;
+		if (array_key_exists($this->alias(), $data)) {
+			if (array_key_exists('event_method_key', $data[$this->alias()])) {
+				$methodKey = $data[$this->alias()]['event_method_key'];
+				if (!empty($methodKey)) {
+					$data[$this->alias()]['events'][] = [
+						'event_key' => $methodKey
+					];
+				}
+				$data[$this->alias()]['event_method_key'] = '';
+			}
+		}
 	}
 
 	private function setupFields(Entity $entity) {
