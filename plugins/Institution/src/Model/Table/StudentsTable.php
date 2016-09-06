@@ -1272,8 +1272,8 @@ class StudentsTable extends AppTable {
 		$newSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($gradeId);
 		$validateEnrolledInAnyInstitutionResult = $this->validateEnrolledInAnyInstitution($studentId, $newSystemId, ['excludeInstitutions' => $institutionId]);
 		if ($checkIfCanTransfer) {
-			if (!empty($validateEnrolledInAnyInstitutionResult) || 
-				$this->completedGrade($gradeId, $student->id)) {
+			if (!empty($validateEnrolledInAnyInstitutionResult) ||
+				$this->completedGrade($gradeId, $studentId)) {
 				$checkIfCanTransfer = false;
 			}
 		}
