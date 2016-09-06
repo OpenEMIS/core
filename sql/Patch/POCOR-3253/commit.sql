@@ -5,7 +5,7 @@ INSERT INTO `db_patches` (`issue`, `created`) VALUES('POCOR-3253', NOW());
 RENAME TABLE `workflow_models` TO `z_3253_workflow_models`;
 DROP TABLE IF EXISTS `workflow_models`;
 CREATE TABLE IF NOT EXISTS `workflow_models` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
   `model` varchar(200) NOT NULL,
   `filter` varchar(200) DEFAULT NULL,
@@ -27,7 +27,7 @@ RENAME TABLE `institution_surveys` TO `z_3253_institution_surveys`;
 
 DROP TABLE IF EXISTS `institution_surveys`;
 CREATE TABLE IF NOT EXISTS `institution_surveys` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `status_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
   `survey_form_id` int(11) NOT NULL COMMENT 'links to survey_forms.id',
@@ -56,7 +56,7 @@ RENAME TABLE `staff_leaves` TO `z_3253_staff_leaves`;
 
 DROP TABLE IF EXISTS `staff_leaves`;
 CREATE TABLE IF NOT EXISTS `staff_leaves` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `date_from` date NOT NULL,
   `date_to` date NOT NULL,
   `comments` text,
@@ -89,7 +89,7 @@ RENAME TABLE `institution_positions` TO `z_3253_institution_positions`;
 
 DROP TABLE IF EXISTS `institution_positions`;
 CREATE TABLE IF NOT EXISTS `institution_positions` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `status_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
   `position_no` varchar(30) NOT NULL,
   `staff_position_title_id` int(11) NOT NULL COMMENT 'links to staff_position_titles.id',
@@ -120,7 +120,7 @@ RENAME TABLE `institution_staff_position_profiles` TO `z_3253_institution_staff_
 
 DROP TABLE IF EXISTS `institution_staff_position_profiles`;
 CREATE TABLE IF NOT EXISTS `institution_staff_position_profiles` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `institution_staff_id` int(11) NOT NULL COMMENT 'links to institution_staff.id',
   `staff_change_type_id` int(11) NOT NULL COMMENT 'links to staff_change_types.id',
   `status_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
@@ -158,7 +158,7 @@ RENAME TABLE `training_courses` TO `z_3253_training_courses`;
 
 DROP TABLE IF EXISTS `training_courses`;
 CREATE TABLE IF NOT EXISTS `training_courses` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `code` varchar(60) NOT NULL,
   `name` varchar(250) NOT NULL,
   `description` text,
@@ -200,7 +200,7 @@ RENAME TABLE `training_sessions` TO `z_3253_training_sessions`;
 
 DROP TABLE IF EXISTS `training_sessions`;
 CREATE TABLE IF NOT EXISTS `training_sessions` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `code` varchar(60) NOT NULL,
   `name` varchar(250) NOT NULL,
   `start_date` date NOT NULL,
@@ -232,7 +232,7 @@ RENAME TABLE `training_session_results` TO `z_3253_training_session_results`;
 
 DROP TABLE IF EXISTS `training_session_results`;
 CREATE TABLE IF NOT EXISTS `training_session_results` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `training_session_id` int(11) NOT NULL COMMENT 'links to training_sessions.id',
   `assignee_id` int(11) NOT NULL DEFAULT '0' COMMENT 'links to security_users.id',
   `status_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
