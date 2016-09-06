@@ -14,46 +14,49 @@
 <?php elseif ($action == 'add' || $action == 'edit') : ?>
 	<?php
 		$model = $ControllerAction['table'];
+		$alias = $model->alias();
 		$eventOptions = isset($attr['attr']['eventOptions']) ? $attr['attr']['eventOptions'] : [];
+		$eventSelectOptions = isset($attr['attr']['eventSelectOptions']) ? $attr['attr']['eventSelectOptions'] : [];
 		$this->Form->unlockField("WorkflowActions.events");
 	?>
-	<div class="input">
-		<label><?= isset($attr['label']) ? $attr['label'] : $attr['field']; ?></label>
-		<div class="input-form-wrapper">
-			<div class="table-toolbar">
-				<a class="btn btn-default" href="#" onclick="$('#reload').val('addEvent').click();return false;">
-					<?= __('Add');?>
-				</a>
-			</div>
-			<div class="table-wrapper">
-				<div class="table-in-view">
-					<table class="table">
-						<thead>
-							<tr>
-								<th><?= $this->Label->get('general.name'); ?></th>
-								<th></th>
+	<h3><?= isset($attr['label']) ? $attr['label'] : $attr['field']; ?></h3>
+	<div class="clearfix">
+		<div class="input select">
+			<?php
+				echo $this->Form->input("$alias.event_method_key", [
+					'label' => $this->Label->get('WorkflowActions.add_event'),
+					'type' => 'select',
+					'options' => $eventSelectOptions,
+					'onchange' => "$('#reload').val('addEvent').click();"
+				]);
+			?>
+		</div>
+		<div class="table-responsive">
+			<table class="table table-curved">
+				<thead>
+					<th><?= $this->Label->get('general.name'); ?></th>
+					<th></th>
+				</thead>
+				<?php if (!empty($data->events)) : ?>
+					<tbody>
+						<?php foreach ($data->events as $key => $obj) : ?>
+							<?php
+								$prefix = $model->alias().'.events.'.$key;
+								$eventKey = $obj['event_key'];
+							?>
+							<tr class="checked">
+								<td>
+									<?= $eventOptions[$eventKey]; ?>
+									<?= $this->Form->hidden("$prefix.event_key", ['value' => $eventKey]); ?>
+								</td>
+								<td>
+									<a class="btn btn-dropdown action-toggle btn-single-action" title="<?= $this->Label->get('general.delete.label'); ?>" href="#" onclick="jsTable.doRemove(this);$('#reload').click();return false;"><i class="fa fa-trash"></i> <span><?= __('Delete')?></span></a>
+								</td>
 							</tr>
-						</thead>
-						<?php if (!empty($data->events)) : ?>
-							<tbody>
-								<?php foreach ($data->events as $key => $obj) : ?>
-									<?php
-										$prefix = $model->alias().'.events.'.$key;
-									?>
-									<tr class="checked">
-										<td>
-											<?= $this->Form->input("$prefix.event_key", ['label' => false, 'options' => $eventOptions]); ?>
-										</td>
-										<td>
-											<a class="btn btn-dropdown action-toggle btn-single-action" title="<?= $this->Label->get('general.delete.label'); ?>" href="#" onclick="jsTable.doRemove(this);"><i class="fa fa-trash"></i><span><?= __('Delete')?></span></a>
-										</td>
-									</tr>
-								<?php endforeach ?>
-							</tbody>
-						<?php endif ?>
-					</table>
-				</div>
-			</div>
+						<?php endforeach ?>
+					</tbody>
+				<?php endif ?>
+			</table>
 		</div>
 	</div>
 <?php endif ?>
