@@ -85,7 +85,11 @@ class SSOComponent extends Component {
                     $this->controller->Cookie->write($cookieName, $token);
                 }
             }
-            $this->controller->redirect($this->_config['homePageURL']);
+            $event = $this->controller->dispatchEvent('Controller.Auth.beforeRedirection', [$extra], $this);
+            if (!$event->result) {
+                $this->controller->redirect($this->_config['homePageURL']);
+            }
+
         } else {
             $this->controller->Auth->logout();
             $this->controller->redirect($this->_config['homePageURL']);
