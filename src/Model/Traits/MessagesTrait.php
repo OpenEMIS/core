@@ -12,7 +12,7 @@ trait MessagesTrait {
             'security_group_affected' => 'Security Group Affected',
             'missing_area' => 'Missing Area',
             'new_area' => 'New Area',
-            'api_invalid' => 'Data in the API link is invalid.'
+            'api_invalid' => 'Data or Url in the API link is invalid.'
         ],
         'Attachments' => [
             'date_on_file' => 'Date On File',
@@ -1278,7 +1278,7 @@ trait MessagesTrait {
                 ],
                 'value' => [
                     'invalidUrl' => 'You have entered an invalid url.',
-                    'ruleValidateJsonAPI' => 'Data in the API link is invalid.'
+                    'ruleValidateJsonAPI' => 'Data or Url in the API link is invalid.'
                 ]
             ]
         ]
