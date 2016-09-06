@@ -14,7 +14,7 @@ class ProvidersTable extends ControllerActionTable {
 		$this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_provider_id']);
         $this->belongsTo('Sectors', ['className' => 'Institution.Sectors', 'foreignKey' => 'institution_sector_id']);
 
-		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
+		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
 	}
 
     public function addEditBeforeAction(Event $event) {
