@@ -54,7 +54,7 @@ class StudentTransferTable extends AppTable {
 		$validator = parent::validationDefault($validator);
 
 		return $validator
-			->requirePresence('current_academic_period_id')
+			->requirePresence('from_academic_period_id')
 			->requirePresence('class')
 			->requirePresence('education_grade_id')
 			->notEmpty('education_grade_id', 'This field is required.')
@@ -105,7 +105,7 @@ class StudentTransferTable extends AppTable {
 		$this->ControllerAction->field('start_date', ['visible' => false]);
 		$this->ControllerAction->field('end_date', ['visible' => false]);
 		$this->ControllerAction->field('academic_period_id', ['visible' => false]);
-		$this->ControllerAction->field('current_academic_period_id');
+		$this->ControllerAction->field('from_academic_period_id');
 		$this->ControllerAction->field('education_grade_id');
 		$this->ControllerAction->field('class');
 		$this->ControllerAction->field('next_academic_period_id');
@@ -115,7 +115,7 @@ class StudentTransferTable extends AppTable {
 		$this->ControllerAction->field('students');
 
 		$this->ControllerAction->setFieldOrder([
-			'current_academic_period_id', 'education_grade_id', 'class',
+			'from_academic_period_id', 'education_grade_id', 'class',
 			'next_academic_period_id', 'next_education_grade_id', 'next_institution_id', 'student_transfer_reason_id'
 		]);
     }
@@ -188,11 +188,11 @@ class StudentTransferTable extends AppTable {
 		}
     }
 
-    public function onUpdateFieldCurrentAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
-    	if (isset($request->data[$this->alias()]['current_academic_period_id'])) {
-    		$currentAcademicPeriodId = $request->data[$this->alias()]['current_academic_period_id'];
-    		if (!empty($currentAcademicPeriodId)) {
-    			$this->currentPeriod = $this->AcademicPeriods->get($currentAcademicPeriodId);
+    public function onUpdateFieldFromAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
+    	if (isset($request->data[$this->alias()]['from_academic_period_id'])) {
+    		$fromAcademicPeriodId = $request->data[$this->alias()]['from_academic_period_id'];
+    		if (!empty($fromAcademicPeriodId)) {
+    			$this->currentPeriod = $this->AcademicPeriods->get($fromAcademicPeriodId);
     		} else {
     			$this->currentPeriod = null;
     		}
@@ -200,7 +200,7 @@ class StudentTransferTable extends AppTable {
     		$this->currentPeriod = null;
     	}
     	$attr['type'] = 'select';
-    	$attr['options'] = $this->AcademicPeriods->getYearList();
+    	$attr['options'] = $this->AcademicPeriods->getYearList(['isEditable' => true]);
     	$attr['onChangeReload'] = true;
 
     	return $attr;
@@ -260,7 +260,6 @@ class StudentTransferTable extends AppTable {
 			]);
 		}
 
-    	$attr['attr']['label'] = __('Current Education Grade');
     	$attr['options'] = $gradeOptions;
     	$attr['onChangeReload'] = 'changeGrade';
 
@@ -286,6 +285,7 @@ class StudentTransferTable extends AppTable {
 			$nextPeriodOptions = $this->AcademicPeriods
 				->find('list')
 				->find('visible')
+				->find('editable', ['isEditable' => true])
 				->find('order')
 				->where($where)
 				->toArray();
@@ -295,6 +295,7 @@ class StudentTransferTable extends AppTable {
 				$nextPeriod = $this->AcademicPeriods
 					->find()
 					->find('visible')
+					->find('editable', ['isEditable' => true])
 					->where($where)
 					->order([$this->AcademicPeriods->aliasField('start_date asc')])
 					->first();
