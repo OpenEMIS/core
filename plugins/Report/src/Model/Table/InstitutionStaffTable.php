@@ -116,7 +116,6 @@ class InstitutionStaffTable extends AppTable  {
 		foreach ($fields as $key => $field) {
 			if ($field['field'] == 'institution_id' || $field['field'] == 'staff_id') {
 				unset($fields[$key]);
-				break;
 			}
 		}
 
