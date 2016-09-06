@@ -37,7 +37,7 @@ var Workflow = {
 		$('.workflowtransition-comment-required').val(jsonObj.comment_required);
 		$('.workflowtransition-event-description').html(jsonObj.event_description);
 
-		Workflow.getAssigneeOptions(jsonObj.next_step_id);
+		Workflow.getAssigneeOptions(jsonObj.is_school_based, jsonObj.next_step_id);
 	},
 
 	hideError: function() {
@@ -73,13 +73,14 @@ var Workflow = {
 		}
 	},
 
-	getAssigneeOptions: function(nextStepId) {
+	getAssigneeOptions: function(isSchoolBased, nextStepId) {
 		var url = '/core/Workflows/ajaxGetAssignees';
 
 		$.ajax({
 			url: url,
             dataType: "json",
             data: {
+            	is_school_based: isSchoolBased,
                 next_step_id: nextStepId
             },
 			beforeSend: function(xhr) {

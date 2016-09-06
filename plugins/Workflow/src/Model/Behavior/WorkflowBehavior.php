@@ -135,6 +135,10 @@ class WorkflowBehavior extends Behavior {
 		}
 	}
 
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+		$this->setAsigneeId($entity);
+	}
+
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
 		$this->setStatusId($entity);
 	}
@@ -638,6 +642,7 @@ class WorkflowBehavior extends Behavior {
 
 			$query = $this->WorkflowSteps
 				->find()
+				->matching('Workflows.WorkflowModels')
 				->contain(['WorkflowActions' => function ($q) {
 						return $q
 							->find('visible')
@@ -839,6 +844,8 @@ class WorkflowBehavior extends Behavior {
 
 				$actionButtons = [];
 				if (!empty($workflowStep)) {
+					$isSchoolBased = $workflowStep->_matchingData['WorkflowModels']->is_school_based;
+
 					// Enabled edit button only when login user in approval role for the step and that step is editable
 					if ($workflowStep->is_editable == 1) {
 						$isEditable = true;
@@ -847,17 +854,21 @@ class WorkflowBehavior extends Behavior {
 
 					foreach ($workflowStep->workflow_actions as $actionKey => $actionObj) {
 
-						$eventKey = $actionObj->event_key;
+						$eventKeys = $actionObj->event_key;
 						$eventsObject = new ArrayObject();
 						$subjectEvent = $this->_table->dispatchEvent('Workflow.getEvents', [$eventsObject], $this->_table);
 						if ($subjectEvent->isStopped()) { return $subjectEvent->result; }
 						$eventArray = $eventsObject->getArrayCopy();
-						$key = array_search($eventKey, array_column($eventArray, 'value'));
+
 						$eventDescription = '';
-						if ($key !== false) {
-							if (isset($eventArray[$key]['description'])) {
-								$eventDescription .= $eventArray[$key]['description'];
-								$eventDescription .= '<br/>';
+						$events = explode(",", $eventKeys);
+						foreach ($events as $eventKey) {
+							$key = array_search($eventKey, array_column($eventArray, 'value'));
+							if ($key !== false) {
+								if (isset($eventArray[$key]['description'])) {
+									$eventDescription .= $eventArray[$key]['description'];
+									$eventDescription .= '<br/>';
+								}
 							}
 						}
 
@@ -869,7 +880,8 @@ class WorkflowBehavior extends Behavior {
 							'next_step_id' => $actionObj->next_workflow_step_id,
 							'next_step_name' => $actionObj->next_workflow_step->name,
 							'comment_required' => $actionObj->comment_required,
-							'event_description' => $eventDescription
+							'event_description' => $eventDescription,
+							'is_school_based' => $isSchoolBased
 						];
 						$json = json_encode($button, JSON_NUMERIC_CHECK);
 
@@ -998,6 +1010,12 @@ class WorkflowBehavior extends Behavior {
 				if ($event->isStopped()) { return $event->result; }
 				// End
 			}
+		}
+	}
+
+	public function setAsigneeId(Entity $entity) {
+		if ($entity->isNew() && $entity->has('created_user_id')) {
+			$entity->assignee_id = $entity->created_user_id;
 		}
 	}
 
