@@ -99,6 +99,8 @@ class SecurityRolesTable extends AppTable {
 				['name' => 'Security.Roles/controls', 'data' => [], 'options' => []]
 			];
 			$this->controller->set('toolbarElements', $toolbarElements);
+		} else if ($action == 'edit' && $selectedAction == 'system') { //POCOR-2570
+			$this->ControllerAction->field('name', ['type' => 'readonly']);
 		} else if ($selectedAction == 'user') {
 			// for all other actions for user group
 			$securityGroupId = $this->request->query('security_group_id');
@@ -273,12 +275,14 @@ class SecurityRolesTable extends AppTable {
 		// -1 = system roles, we are not allowing users to modify system roles
 		// removing all buttons from the menu
 		if ($groupId == -1) {
+			/* POCOR-2570
 			if (array_key_exists('view', $buttons)) {
 				unset($buttons['view']);
 			}
 			if (array_key_exists('edit', $buttons)) {
 				unset($buttons['edit']);
 			}
+			*/
 			if (array_key_exists('remove', $buttons)) {
 				unset($buttons['remove']);
 			}
