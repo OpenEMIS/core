@@ -191,13 +191,27 @@ class ImportStaffTable extends AppTable
                         'StaffPositionTitles.type',
                         'Statuses.name',
                         $lookedUpTable->aliasField('is_homeroom'),
+                        'total_fte' => $modelData->func()->sum('InstitutionStaff.FTE')
                     ])
                     ->contain(['StaffPositionTitles', 'Statuses'])
+                    ->leftJoin(['InstitutionStaff' => 'institution_staff'], [
+                        'InstitutionStaff.institution_position_id = ' . $lookedUpTable->aliasField('id'),
+                        'OR' => [
+                            'DATE(InstitutionStaff.end_date) > DATE(NOW())',
+                            'InstitutionStaff.end_date IS NULL'
+                        ]
+                    ])
                     ->where([
                         $lookedUpTable->aliasField('institution_id') => $institutionId,
                         $lookedUpTable->aliasField('status_id IN ') => $activeStatusId
                     ])
                     ->group($lookedUpTable->aliasField('id'))
+                    ->having([
+                        'OR' => [
+                            'total_fte < 1',
+                            'total_fte IS NULL' //FTE not used at all
+                        ]
+                    ])
                     ->toArray();
 
         $typeLabel = $this->getExcelLabel($lookedUpTable, 'type');
@@ -271,7 +285,7 @@ class ImportStaffTable extends AppTable
         foreach ($staffRecord as $key => $value) {
             $institutionList[] = $staffRecord[$key]['institution_id'];
         }
-        
+
         if ((isset($institutionList)) && (!is_numeric(array_search($this->_institution->id, $institutionList)))) { //if the current session not on the institution list on where the staff assigned to.
             $rowInvalidCodeCols['staff_id'] = __('The staff is already assigned to another school');
             return false;
