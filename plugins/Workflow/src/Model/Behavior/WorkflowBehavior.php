@@ -37,6 +37,12 @@ class WorkflowBehavior extends Behavior {
 			'text' => 'Delete of Current Record',
 			'description' => 'Performing this action will delete the current record from the system.',
  			'method' => 'onDeleteRecord'
+ 		],
+ 		[
+ 			'value' => 'Workflow.onAssignBack',
+			'text' => 'Assign Back to Creator',
+			'description' => 'Performing this action will assign the current record back to creator.',
+ 			'method' => 'onAssignBack'
  		]
  	];
 
