@@ -673,8 +673,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 		$this->fields['institution_shift_id']['options'] = $shiftOptions;
 
 		if (empty($shiftOptions)) {
-			$createShiftURL = Router::url(['controller' => 'Institutions', 'action' => 'Shifts', 'period' => $selectedAcademicPeriodId]);
-			$this->Alert->warning(__("There are no shifts configured for the selected academic period. Create shift <a href= '". $createShiftURL . "' target='_blank'>here</a>."), ['type' => 'text']);
+			$this->Alert->warning($this->aliasField('noShift'));
 		}
 	}
 
