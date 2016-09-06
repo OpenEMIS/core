@@ -1281,8 +1281,14 @@ trait MessagesTrait {
                     'ruleValidateJsonAPI' => 'Data or Url in the API link is invalid.'
                 ]
             ]
+        'Workflow' => [
+        	'WorkflowActions' => [
+        		'event_key' => [
+        			'ruleUnique' => 'This event has already been assigned.'
+        		]
+        	]
         ]
-    ];
+	];
 
     public function getMessage($code, $options = []) {
         $sprintf = (array_key_exists('sprintf', $options))? $options['sprintf']: [];
