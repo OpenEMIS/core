@@ -51,7 +51,7 @@ class ImportStudentsTable extends AppTable {
             $this->institutionId = false;
             $this->gradesInInstitution = [];
         }
-        $this->systemDateFormat = TableRegistry::get('ConfigItems')->value('date_format');
+        $this->systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $this->studentStatusId = $StudentStatuses->find()
                                                 ->select(['id'])

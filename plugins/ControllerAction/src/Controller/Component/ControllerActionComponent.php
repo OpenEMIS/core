@@ -888,7 +888,6 @@ class ControllerActionComponent extends Component {
             $data = $event->result;
         }
         if ($event->isStopped()) { return $event->result; }
-
         $modals = ['delete-modal' => $this->getModalOptions('remove')];
         $this->config['form'] = true;
         $this->config['formButtons'] = false;
