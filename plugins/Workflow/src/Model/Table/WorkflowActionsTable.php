@@ -21,16 +21,6 @@ class WorkflowActionsTable extends AppTable {
 		$this->belongsTo('NextWorkflowSteps', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'next_workflow_step_id']);
 	}
 
-	public function validationDefault(Validator $validator) {
-		$validator = parent::validationDefault($validator);
-
-		$validator
-			->requirePresence('workflow_model_id', 'create')
-			->requirePresence('workflow_id', 'create');
-
-		return $validator;
-	}
-
 	public function onGetCommentRequired(Event $event, Entity $entity) {
 		return $entity->comment_required == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
 	}
@@ -99,6 +89,17 @@ class WorkflowActionsTable extends AppTable {
 		unset($this->request->query['workflow_step']);
 	}
 
+	public function editOnInitialize(Event $event, Entity $entity) {
+		$events = $this->convertEventKeysToEvents($entity);
+		if (!empty($events)) {
+			$eventsData = [];
+			foreach ($events as $key => $event) {
+				$eventsData[] = ['event_key' => $event];
+			}
+			$entity->events = $eventsData;
+		}
+	}
+
 	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
 		$entity = $this->find()->where([$this->aliasField($this->primaryKey()) => $id])->first();
 		list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
@@ -116,6 +117,11 @@ class WorkflowActionsTable extends AppTable {
 
 	public function viewAfterAction(Event $event, Entity $entity) {
 		$this->setupFields($entity);
+	}
+
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$eventKeys = $this->convertEventsToEventKeys($data);
+		$data[$this->alias()]['event_key'] = $eventKeys;
 	}
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
@@ -202,7 +208,24 @@ class WorkflowActionsTable extends AppTable {
 	}
 
 	public function onUpdateFieldEvents(Event $event, array $attr, $action, Request $request) {
-		if ($action == 'add' || $action == 'edit') {
+		if ($action == 'view') {
+			$entity = $attr['attr']['entity'];
+			$workflowSteps = $entity->_matchingData['WorkflowSteps'];
+			$selectedWorkflow = $workflowSteps->workflow_id;
+			$eventOptions = $this->getEvents($selectedWorkflow, true);
+
+			$tableHeaders = [];
+        	$tableHeaders[] = $this->getMessage('general.name');
+
+        	$tableCells = [];
+        	$events = $this->convertEventKeysToEvents($entity);
+        	foreach ($events as $key => $event) {
+        		$tableCells[$key] = [$eventOptions[$event]];
+        	}
+
+        	$attr['attr']['tableHeaders'] = $tableHeaders;
+        	$attr['attr']['tableCells'] = $tableCells;
+		} else if ($action == 'add' || $action == 'edit') {
 			if ($action == 'add') {
 				$selectedWorkflow = $request->query('workflow');
 			} else if ($action == 'edit') {
@@ -411,5 +434,30 @@ class WorkflowActionsTable extends AppTable {
 		}
 
 		return $eventOptions;
+	}
+
+	private function convertEventsToEventKeys($data) {
+		$eventKeys = [];
+		if (array_key_exists($this->alias(), $data)) {
+			if (array_key_exists('events', $data[$this->alias()])) {
+				$eventKeys = [];
+				foreach ($data[$this->alias()]['events'] as $key => $event) {
+					if (!in_array($event['event_key'], $eventKeys)) {
+						$eventKeys[] = $event['event_key'];
+					}
+				}
+			}
+		}
+
+		return implode(",", $eventKeys);
+	}
+
+	private function convertEventKeysToEvents($entity) {
+		$events = [];
+		if ($entity->has('event_key') && !empty($entity->event_key)) {
+			$events = explode(",", $entity->event_key);
+		}
+
+		return $events;
 	}
 }

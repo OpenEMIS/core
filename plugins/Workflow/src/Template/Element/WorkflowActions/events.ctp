@@ -1,10 +1,22 @@
-<?php
-	$model = $ControllerAction['table'];
-	$eventOptions = isset($attr['attr']['eventOptions']) ? $attr['attr']['eventOptions'] : [];
-?>
 <?php if ($action == 'view') : ?>
-
+	<?php
+		$tableHeaders = isset($attr['attr']['tableHeaders']) ? $attr['attr']['tableHeaders'] : [];
+		$tableCells = isset($attr['attr']['tableCells']) ? $attr['attr']['tableCells'] : [];
+	?>
+	<div class="table-wrapper">
+		<div class="table-in-view">
+			<table class="table">
+				<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
+				<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
+			</table>
+		</div>
+	</div>
 <?php elseif ($action == 'add' || $action == 'edit') : ?>
+	<?php
+		$model = $ControllerAction['table'];
+		$eventOptions = isset($attr['attr']['eventOptions']) ? $attr['attr']['eventOptions'] : [];
+		$this->Form->unlockField("WorkflowActions.events");
+	?>
 	<div class="input">
 		<label><?= isset($attr['label']) ? $attr['label'] : $attr['field']; ?></label>
 		<div class="input-form-wrapper">
