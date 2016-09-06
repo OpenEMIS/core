@@ -214,8 +214,8 @@ class ImportStaffTable extends AppTable
                     ])
                     ->toArray();
 
-        $typeLabel = $this->getExcelLabel($lookedUpTable, 'type');
         $codeLabel = $this->getExcelLabel($lookedUpTable, 'code');
+        $typeLabel = $this->getExcelLabel($lookedUpTable, 'type');
         $nameLabel = $this->getExcelLabel($lookedUpTable, 'name');
         $statusLabel = $this->getExcelLabel($lookedUpTable, 'status');
         $isHomeroomLabel = $this->getExcelLabel($lookedUpTable, 'is_homeroom');
@@ -233,8 +233,8 @@ class ImportStaffTable extends AppTable
                     $positionTitleType = __('Non-Teaching');
                 }
                 $data[$columnOrder]['data'][] = [
-                    $positionTitleType,
                     $row->position_no,
+                    $positionTitleType,
                     $row->staff_position_title->name,
                     $row->status->name,
                     $yesNoOptions[$row->is_homeroom]
