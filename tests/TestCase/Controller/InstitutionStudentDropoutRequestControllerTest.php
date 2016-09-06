@@ -116,15 +116,9 @@ class InstitutionStudentDropoutRequestControllerTest extends AppTestCase
         ];
         $this->postData($testUrl, $data);
 
-        $table = TableRegistry::get('Institutions.institution_student_dropout');
-        $lastInsertedRecord = $table->find()
-            ->where([$table->aliasField('student_id') => $data['DropoutRequests']['student_id'],
-                $table->aliasField('institution_id') => $data['DropoutRequests']['institution_id'],
-                $table->aliasField('academic_period_id') => $data['DropoutRequests']['academic_period_id'],
-                $table->aliasField('education_grade_id') => $data['DropoutRequests']['education_grade_id']])
-            ->first();
-
-        $this->assertEquals(true, (empty($lastInsertedRecord)));
+        $postData = $this->viewVariable('data');
+        $errors = $postData->errors();
+        $this->assertEquals(true, (array_key_exists('effective_date', $errors)));
     }
 
     public function testUpdate() {
