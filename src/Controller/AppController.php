@@ -159,7 +159,8 @@ class AppController extends Controller {
 	        foreach ($productLists as $product => $value) {
 	            $data = [
 	                'name' => $product,
-	                'url' => ''
+	                'url' => '',
+	                'created_user_id' => 1
 	            ];
 	            $entity = $ConfigProductLists->newEntity($data);
 	            $ConfigProductLists->save($entity);
