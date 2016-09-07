@@ -76,7 +76,7 @@ class InstitutionProvidersControllerTest extends AppTestCase
 
         $data = [
             $alias => [
-                'name' => 'Test Sector',
+                'name' => 'Test Provider',
                 'institution_sector_id' => 1,
                 'default' => 0,
                 'international_code' => '',
@@ -137,7 +137,7 @@ class InstitutionProvidersControllerTest extends AppTestCase
 
         $data = [
             $alias => [
-                'name' => 'UpdatedProvider',
+                'name' => 'Updated Provider',
                 'institution_sector_id' => 2,
                 'default' => 0,
                 'international_code' => 'intcode',
