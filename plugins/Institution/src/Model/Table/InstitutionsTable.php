@@ -621,7 +621,7 @@ class InstitutionsTable extends AppTable  {
 		if (isset($request->data[$this->alias()]['institution_sector_id'])) {
             $selectedSectorId = $request->data[$this->alias()]['institution_sector_id'];
 
-        } else { //first load or select --select--
+        } else {
         	$SectorTable = TableRegistry::get('Institution.Sectors');
         	$defaultSector = $SectorTable
         		->find()
