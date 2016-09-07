@@ -118,7 +118,7 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('OpenEmis.Map');
         $this->addBehavior('HighChart', ['institutions' => ['_function' => 'getNumberOfInstitutionsByModel']]);
         $this->addBehavior('Import.ImportLink');
-        
+
         $this->shiftTypes = $this->getSelectOptions('Shifts.types'); //get from options trait
 	}
 
@@ -183,7 +183,7 @@ class InstitutionsTable extends AppTable  {
 		$cloneFields = $fields->getArrayCopy();
 		$newFields = [];
 		foreach ($cloneFields as $key => $value) {
-			
+			$newFields[] = $value;
 			if ($value['field'] == 'area_id') {
 				$newFields[] = [
 					'key' => 'Areas.code',
@@ -191,19 +191,17 @@ class InstitutionsTable extends AppTable  {
 					'type' => 'string',
 					'label' => ''
 				];
-			} else  if ($value['field'] == 'shift_type') {
-				$newFields[] = [
-					'key' => 'Institutions.shift_type',
-					'field' => 'shift_type',
-					'type' => 'integer',
-					'label' => 'Shift Type',
-					'constant' => 'shiftTypes',
-				];
-			} else {
-				$newFields[] = $value;
 			}
 		}
 		$fields->exchangeArray($newFields);
+	}
+
+	public function onExcelGetShiftType(Event $event, Entity $entity) {
+		if (isset($this->shiftTypes[$entity->shift_type])) {
+			return __($this->shiftTypes[$entity->shift_type]);
+		} else {
+			return '';
+		}
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
