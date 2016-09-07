@@ -3,6 +3,7 @@ INSERT INTO `db_patches` (`issue`, `created`) VALUES('POCOR-3253', NOW());
 
 -- workflow_models
 RENAME TABLE `workflow_models` TO `z_3253_workflow_models`;
+
 DROP TABLE IF EXISTS `workflow_models`;
 CREATE TABLE IF NOT EXISTS `workflow_models` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -21,6 +22,38 @@ FROM `z_3253_workflow_models`;
 
 UPDATE `workflow_models` SET `is_school_based` = 1
 WHERE `model` IN ('Staff.Leaves', 'Institution.InstitutionSurveys', 'Institution.InstitutionPositions', 'Institution.StaffPositionProfiles');
+
+-- workflow_records
+RENAME TABLE `workflow_records` TO `z_3253_workflow_records`;
+
+-- workflow_transitions
+RENAME TABLE `workflow_transitions` TO `z_3253_workflow_transitions`;
+
+DROP TABLE IF EXISTS `workflow_transitions`;
+CREATE TABLE IF NOT EXISTS `workflow_transitions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `comment` text,
+  `prev_workflow_step_name` varchar(100) NOT NULL,
+  `workflow_step_name` varchar(100) NOT NULL,
+  `workflow_action_name` varchar(100) NOT NULL,
+  `workflow_model_id` int(11) NOT NULL COMMENT 'links to workflow_models.id',
+  `model_reference` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `workflow_model_id` (`workflow_model_id`),
+  KEY `model_reference` (`model_reference`),
+  KEY `modified_user_id` (`modified_user_id`),
+  KEY `created_user_id` (`created_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains specific action executed by users to transit from one step to another';
+
+INSERT INTO `workflow_transitions` (`id`, `comment`, `prev_workflow_step_name`, `workflow_step_name`, `workflow_action_name`, `workflow_model_id`, `model_reference`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT `WorkflowTransitions`.`id`, `WorkflowTransitions`.`comment`, `WorkflowTransitions`.`prev_workflow_step_name`, `WorkflowTransitions`.`workflow_step_name`, `WorkflowTransitions`.`workflow_action_name`, `WorkflowRecords`.`workflow_model_id`, `WorkflowRecords`.`model_reference`, `WorkflowTransitions`.`modified_user_id`, `WorkflowTransitions`.`modified`, `WorkflowTransitions`.`created_user_id`, `WorkflowTransitions`.`created`
+FROM `z_3253_workflow_transitions` `WorkflowTransitions`
+INNER JOIN `z_3253_workflow_records` `WorkflowRecords`
+ON `WorkflowRecords`.`id` = `WorkflowTransitions`.`workflow_record_id`;
 
 -- institution_surveys
 RENAME TABLE `institution_surveys` TO `z_3253_institution_surveys`;
