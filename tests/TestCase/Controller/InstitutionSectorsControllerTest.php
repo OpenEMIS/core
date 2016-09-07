@@ -134,7 +134,7 @@ class InstitutionSectorsControllerTest extends AppTestCase
 
         $data = [
             $alias => [
-                'name' => 'Update',
+                'name' => 'Updated Sector',
                 'default' => 0,
                 'international_code' => 'intcode',
                 'national_code' => 'natcode'
