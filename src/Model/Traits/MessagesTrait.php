@@ -8,6 +8,11 @@ trait MessagesTrait {
     public $messages = [
         'Areas' => [
             'noAccessToAreas' => 'You do not have access to any areas',
+            'institution_affected' => 'Institution Affected',
+            'security_group_affected' => 'Security Group Affected',
+            'missing_area' => 'Missing Area',
+            'new_area' => 'New Area',
+            'api_invalid' => 'Data or Url in the API link is invalid.'
         ],
         'Attachments' => [
             'date_on_file' => 'Date On File',
@@ -171,13 +176,14 @@ trait MessagesTrait {
             'our_shifts' => 'Our Shifts',
             'external_shifts' => 'External Shifts',
             'location' => 'Location',
+            'institution' => 'Institution',
             'occupier' => 'Occupier',
             'institution' => 'Institution',
             'allShiftsUsed' => 'All shifts has been used for the selected academic period.',
             'replicateShifts' => 'Should the system replicate the existing shifts for the latest academic period?.',
             'replicateShiftsSuccess' => 'Shifts has been successfully replicated.',
             'replicateShiftsNotChosen' => 'Replication was not chosen, please setup the shifts manually.',
-            'noAccessToShift' => 'You do not have access to the shift',
+            'noAccessToShift' => 'You do not have access to the shift'
         ],
         'InstitutionClasses' => [
             'expiredGrade' => 'Expired Grade',
@@ -1263,9 +1269,17 @@ trait MessagesTrait {
         		],
         		'url' => [
         			'invalidUrl' => 'You have entered an invalid url.',
+        		]
+        	],
+            'ConfigAdministrativeBoundaries' => [
+                'name' => [
+                    'ruleUnique' => 'This product already exists in the system',
+                ],
+                'value' => [
+                    'invalidUrl' => 'You have entered an invalid url.',
+                    'ruleValidateJsonAPI' => 'Data or Url in the API link is invalid.'
                 ]
             ]
-        ],
         'Workflow' => [
         	'WorkflowActions' => [
         		'event_key' => [
