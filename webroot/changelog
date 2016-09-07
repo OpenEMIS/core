@@ -1,3 +1,6 @@
+v3.6.3
+- Users should be able to see the default identity number on Student/Staff overview page
+
 v3.6.2
 - Occupier schools only have view access on Infrastructure of the Owner's School
 - Infrastructure custom fields is now linked to Infrastructure Types instead of Levels
