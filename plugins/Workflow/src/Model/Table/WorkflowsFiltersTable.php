@@ -8,6 +8,5 @@ class WorkflowsFiltersTable extends AppTable {
 		parent::initialize($config);
 
 		$this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
-		$this->belongsTo('Filters', ['className' => 'FieldOption.FieldOptionValues']);
 	}
 }

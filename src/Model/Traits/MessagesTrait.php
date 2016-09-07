@@ -377,6 +377,7 @@ trait MessagesTrait {
             'tabTitle' => 'User Groups'
         ],
         'Workflows' => [
+            'restrictDelete' => 'Delete operation is not allowed as this record is required by system.',
             'noWorkflows' => 'You need to configure Workflows for this form.',
             'workflow_model_id' => 'Form'
         ],

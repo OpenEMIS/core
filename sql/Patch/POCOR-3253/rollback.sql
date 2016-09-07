@@ -2,6 +2,11 @@
 DROP TABLE IF EXISTS `workflow_models`;
 RENAME TABLE `z_3253_workflow_models` TO `workflow_models`;
 
+RENAME TABLE `z_3253_workflow_records` TO `workflow_records`;
+
+DROP TABLE IF EXISTS `workflow_transitions`;
+RENAME TABLE `z_3253_workflow_transitions` TO `workflow_transitions`;
+
 DROP TABLE IF EXISTS `institution_surveys`;
 RENAME TABLE `z_3253_institution_surveys` TO `institution_surveys`;
 
