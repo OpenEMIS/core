@@ -556,7 +556,7 @@ class InstitutionsTable extends AppTable  {
 	public function viewBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
-			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id',
+			'name', 'alternative_name', 'code', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
 			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
 
 			'shift_section',
@@ -588,7 +588,7 @@ class InstitutionsTable extends AppTable  {
 	public function addEditBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
-			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id',
+			'name', 'alternative_name', 'code', 'institution_sector_id', 'institution_provider_id',  'institution_type_id',
 			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
 
 			'location_section',
@@ -607,7 +607,48 @@ class InstitutionsTable extends AppTable  {
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('institution_type_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_sector_id', ['onChangeReload' => true]);
 	}
+
+	public function onUpdateFieldInstitutionProviderId(Event $event, array $attr, $action, Request $request) {
+		$providerOptions = [];
+		$selectedSectorId = '';
+
+		if (isset($request->data[$this->alias()]['institution_sector_id'])) {
+            $selectedSectorId = $request->data[$this->alias()]['institution_sector_id'];
+
+        } else {
+        	if ($action == 'add') {
+	        	$SectorTable = TableRegistry::get('Institution.Sectors');
+	        	$defaultSector = $SectorTable
+	        		->find()
+	        		->where([$SectorTable->aliasField('default') => 1])
+	        		->first();
+
+	        	if(!empty($defaultSector)) {
+	        		$selectedSectorId = $defaultSector->id;
+	        	}
+
+	        } else if ($action == 'edit') {
+	        	$currentInstitutionId = $this->Session->read('Institution.Institutions.id');
+	        	$selectedSectorId = $this->get($currentInstitutionId)->institution_sector_id;
+	        }
+        }
+
+        if (!empty($selectedSectorId)) {
+	        $ProviderTable = TableRegistry::get('Institution.Providers');
+	   		$providerOptions = $ProviderTable->find('list', [
+					'keyField' => 'id',
+					'valueField' => 'name'
+				])
+				->where([$ProviderTable->aliasField('institution_sector_id') => $selectedSectorId])
+				->toArray();
+		}
+
+        $attr['options'] = $providerOptions;
+        $attr['empty'] = true;
+        return $attr;
+    }
 
 /******************************************************************************************************************
 **
