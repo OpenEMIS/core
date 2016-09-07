@@ -607,12 +607,8 @@ class InstitutionsTable extends AppTable  {
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('institution_type_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_sector_id', ['onChangeReload' => true]);
 	}
-
-	public function onUpdateFieldInstitutionSectorId(Event $event, array $attr, $action, Request $request) {
-        $attr['onChangeReload'] = 'changeInstitutionSectorId';
-        return $attr;
-    }
 
 	public function onUpdateFieldInstitutionProviderId(Event $event, array $attr, $action, Request $request) {
 		$providerOptions = [];
@@ -622,15 +618,21 @@ class InstitutionsTable extends AppTable  {
             $selectedSectorId = $request->data[$this->alias()]['institution_sector_id'];
 
         } else {
-        	$SectorTable = TableRegistry::get('Institution.Sectors');
-        	$defaultSector = $SectorTable
-        		->find()
-        		->where([$SectorTable->aliasField('default') => 1])
-        		->first();
+        	if ($action == 'add') {
+	        	$SectorTable = TableRegistry::get('Institution.Sectors');
+	        	$defaultSector = $SectorTable
+	        		->find()
+	        		->where([$SectorTable->aliasField('default') => 1])
+	        		->first();
 
-        	if(!empty($defaultSector)) {
-        		$selectedSectorId = $defaultSector->id;
-        	}
+	        	if(!empty($defaultSector)) {
+	        		$selectedSectorId = $defaultSector->id;
+	        	}
+
+	        } else if ($action == 'edit') {
+	        	$currentInstitutionId = $this->Session->read('Institution.Institutions.id');
+	        	$selectedSectorId = $this->get($currentInstitutionId)->institution_sector_id;
+	        }
         }
 
         if (!empty($selectedSectorId)) {
