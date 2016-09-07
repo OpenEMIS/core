@@ -301,7 +301,7 @@ class DirectoriesController extends AppController {
 				'text' => __('Overview')
 			],
 			'Accounts' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view'],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
 				'text' => __('Account')
 			],
 			'Identities' => [
