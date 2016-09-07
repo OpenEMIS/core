@@ -816,13 +816,13 @@ class InstitutionClassesTable extends ControllerActionTable {
         $students = $this->Institutions->Students;
 
         //logic to get enrolled students from institution which has not been assigned to class
-        //the institution student also validated based on the academic period compared to institution student start and end date
+        //the institution student also validated based on the academic period
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $enrolled = $StudentStatuses->getIdByCode('CURRENT');
 
         $query = $students
             ->find('all')
-            ->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
+            // ->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
             ->leftJoin(
                 ['ClassStudents' => 'institution_class_students'],
                 ['ClassStudents.student_id = ' . $students->aliasfield('student_id')])
@@ -835,6 +835,7 @@ class InstitutionClassesTable extends ControllerActionTable {
                 $students->aliasField('institution_id') => $classEntity->institution_id,
                 $students->aliasField('student_status_id') => $enrolled,
                 $students->aliasField('education_grade_id') . ' IN' => $classGrades,
+                $students->aliasField('academic_period_id')  => $academicPeriodId,
                 'ClassStudents.id IS NULL' //dont have class assigned
             ])
             ->toArray();
@@ -958,11 +959,10 @@ class InstitutionClassesTable extends ControllerActionTable {
             ->where([
                 $InstitutionStudentsTable->aliasField('student_id') => $id,
                 $InstitutionStudentsTable->aliasField('institution_id') => $entity->institution_id,
+                $InstitutionStudentsTable->aliasField('academic_period_id') => $entity->academic_period_id,
                 //this is to ensure that student is enrolled and have the correct education grade accordingly.
                 $InstitutionStudentsTable->aliasField('education_grade_id') => $entity->education_grades[0]->id,
                 $InstitutionStudentsTable->aliasField('student_status_id') => $enrolled
-                //cant validate based on academic period id, since there can be overlap date between academic period
-                //$InstitutionStudentsTable->aliasField('academic_period_id') => $entity->academic_period_id
             ])
             ->first();
         $this->log($userData, 'debug');
