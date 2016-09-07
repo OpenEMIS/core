@@ -534,14 +534,16 @@ class DirectoriesTable extends AppTable {
 		return $params;
 	}
 
-	private function setSessionAfterAction($event, $entity){
-
+	private function setSessionAfterAction($event, $entity)
+	{
 		$this->Session->write('Directory.Directories.id', $entity->id);
 		$this->Session->write('Directory.Directories.name', $entity->name);
+
 		if (!$this->AccessControl->isAdmin()) {
 			$institutionIds = $this->AccessControl->getInstitutionsByUser();
 			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
 		}
+		
 		$isStudent = $entity->is_student;
 		$isStaff = $entity->is_staff;
 		$isGuardian = $entity->is_guardian;
@@ -583,10 +585,12 @@ class DirectoriesTable extends AppTable {
 		$this->setupTabElements($entity);
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
-
-		$isSet = $this->setSessionAfterAction($event, $entity);
-
+	public function viewAfterAction(Event $event, Entity $entity) 
+	{
+		$isSet = false;
+		if (!$this->request->query('guardianId')) { //to mark that the view came from student, so no need to update the session.
+			$isSet = $this->setSessionAfterAction($event, $entity);
+		}
 		if ($isSet) {
 			$reload = $this->Session->read('Directory.Directories.reload');
 			if (!isset($reload)) {
