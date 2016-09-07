@@ -201,7 +201,7 @@ class StudentTransferTable extends AppTable {
     	}
     	$attr['type'] = 'select';
     	$attr['options'] = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-    	$attr['onChangeReload'] = true;
+    	$attr['onChangeReload'] = 'ChangeFromAcademicPeriod';
 
     	return $attr;
     }
@@ -225,7 +225,6 @@ class StudentTransferTable extends AppTable {
 				->where([$Grades->aliasField('institution_id') => $institutionId])
 				->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
 				->toArray();
-
 			$selectedGrade = $request->query('education_grade_id');
 			$this->advancedSelectOptions($gradeOptions, $selectedGrade, [
 				'selectOption' => false,
@@ -290,23 +289,7 @@ class StudentTransferTable extends AppTable {
 				->where($where)
 				->toArray();
 
-			// Get the next academic period id
-			if (is_null($request->query('next_academic_period_id'))) {
-				$nextPeriod = $this->AcademicPeriods
-					->find()
-					->find('visible')
-					->find('editable', ['isEditable' => true])
-					->where($where)
-					->order([$this->AcademicPeriods->aliasField('start_date asc')])
-					->first();
-
-				if (!empty($nextPeriod)) {
-					$request->query['next_academic_period_id'] = $nextPeriod->id;
-				}
-			}
-			// End
-
-			$nextPeriodId = $this->queryString('next_academic_period_id', $nextPeriodOptions);
+			$nextPeriodId = $request->query('next_academic_period_id');
 			$this->advancedSelectOptions($nextPeriodOptions, $nextPeriodId, [
 				'selectOption' => false,
 				'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
@@ -330,7 +313,8 @@ class StudentTransferTable extends AppTable {
 		$selectedGrade = $request->query('education_grade_id');
 		$nextPeriodId = $request->query('next_academic_period_id');
     	$nextGradeOptions = [];
-    	if (!empty($selectedGrade) && $selectedGrade != -1) {
+    	if (!empty($selectedGrade) && $selectedGrade != -1 && !empty($nextPeriodId)) {
+
 			$nextGradeOptions = $this->EducationGrades->getNextAvailableEducationGrades($selectedGrade);
 
 			$nextGradeId = $this->queryString('next_education_grade_id', $nextGradeOptions);
@@ -598,6 +582,14 @@ class StudentTransferTable extends AppTable {
 		]);
 
 		return $query;
+    }
+    public function addOnChangeFromAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    	if (isset($data[$this->alias()]['education_grade_id'])) {
+    		unset($data[$this->alias()]['education_grade_id']);
+    	}
+    	if (isset($data[$this->alias()]['next_academic_period_id'])) {
+    		unset($data[$this->alias()]['next_academic_period_id']);
+    	}
     }
 
     public function addOnChangeGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
