@@ -1491,8 +1491,16 @@ class ValidationBehavior extends Behavior {
 		return ($count == 0);
 	}
 
-	public static function uniqueWorkflowActionEvent($field, array $globalData) {
+	public static function validateJsonAPI($field, array $globalData)
+	{
+		// will pass the url to the areasTable, because the url checking function located in the areasTable.php
+		$url = $globalData['data']['value'];
+		$Areas = TableRegistry::get('Area.Areas');
+		return $Areas->isApiValid($url);
+	}
 
+	public static function uniqueWorkflowActionEvent($field, array $globalData)
+	{
 		$data = $globalData['data'];
 		$eventKey = $data['event_key'];
 		$workflowStepId = $data['workflow_step_id'];
