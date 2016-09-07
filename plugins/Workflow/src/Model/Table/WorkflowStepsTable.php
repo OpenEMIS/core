@@ -26,7 +26,6 @@ class WorkflowStepsTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
 		$this->hasMany('WorkflowActions', ['className' => 'Workflow.WorkflowActions', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('WorkflowRecords', ['className' => 'Workflow.WorkflowRecords', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('NextWorkflowSteps', ['className' => 'Workflow.WorkflowActions', 'foreignKey' => 'next_workflow_step_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('WorkflowStatuses' , [
 			'className' => 'Workflow.WorkflowStatuses',
