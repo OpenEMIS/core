@@ -4,7 +4,7 @@ namespace App\Test\TestCases;
 use App\Test\AppTestCase;
 use Cake\ORM\TableRegistry;
 
-class InstitutionSectorsControllerTest extends AppTestCase
+class InstitutionProvidersControllerTest extends AppTestCase
 {
     public $fixtures = [
         'app.config_items',
@@ -24,9 +24,9 @@ class InstitutionSectorsControllerTest extends AppTestCase
     public function setup()
     {
         parent::setUp();
-        $this->urlPrefix('/FieldOptions/Sectors/');
+        $this->urlPrefix('/FieldOptions/Providers/');
 
-        $this->table = TableRegistry::get('Institution.Sectors');
+        $this->table = TableRegistry::get('Institution.Providers');
     }
 
     public function testIndex()
@@ -44,7 +44,7 @@ class InstitutionSectorsControllerTest extends AppTestCase
 
         $data = [
             'Search' => [
-                'searchField' => 'Government'
+                'searchField' => 'Private'
             ]
         ];
         $this->postData($testUrl, $data);
@@ -77,6 +77,7 @@ class InstitutionSectorsControllerTest extends AppTestCase
         $data = [
             $alias => [
                 'name' => 'Test Sector',
+                'institution_sector_id' => 1,
                 'default' => 0,
                 'international_code' => '',
                 'national_code' => ''
@@ -93,7 +94,7 @@ class InstitutionSectorsControllerTest extends AppTestCase
         $this->assertResponseCode(302);
     }
 
-    public function testCreateMissingName()
+    public function testCreateMissingFields()
     {
         $alias = $this->table->alias();
         $testUrl = $this->url('add');
@@ -101,6 +102,7 @@ class InstitutionSectorsControllerTest extends AppTestCase
         $data = [
             $alias => [
                 'name' => '',
+                'institution_sector_id' => NULL,
                 'default' => 0,
                 'international_code' => '',
                 'national_code' => ''
@@ -112,6 +114,7 @@ class InstitutionSectorsControllerTest extends AppTestCase
         $postData = $this->viewVariable('data');
         $errors = $postData->errors();
         $this->assertEquals(true, (array_key_exists('name', $errors)));
+        $this->assertEquals(true, (array_key_exists('institution_sector_id', $errors)));
 
     }
 
@@ -134,7 +137,8 @@ class InstitutionSectorsControllerTest extends AppTestCase
 
         $data = [
             $alias => [
-                'name' => 'Update',
+                'name' => 'UpdatedProvider',
+                'institution_sector_id' => 2,
                 'default' => 0,
                 'international_code' => 'intcode',
                 'national_code' => 'natcode'
@@ -145,6 +149,7 @@ class InstitutionSectorsControllerTest extends AppTestCase
 
         $lastInsertedRecord = $this->table->find()
             ->where([$this->table->aliasField('name') => $data[$alias]['name'],
+                $this->table->aliasField('institution_sector_id') => $data[$alias]['institution_sector_id'],
                 $this->table->aliasField('international_code') => $data[$alias]['international_code'],
                 $this->table->aliasField('national_code') => $data[$alias]['national_code']])
             ->first();
@@ -153,7 +158,7 @@ class InstitutionSectorsControllerTest extends AppTestCase
         $this->assertResponseCode(302);
     }
 
-    public function testUpdateMissingName()
+    public function testUpdateMissingFields()
     {
         $alias = $this->table->alias();
         $testUrl = $this->url('edit/'.$this->id);
@@ -161,6 +166,7 @@ class InstitutionSectorsControllerTest extends AppTestCase
         $data = [
             $alias => [
                 'name' => '',
+                'institution_sector_id' => NULL,
                 'default' => 0,
                 'international_code' => 'intcode',
                 'national_code' => 'natcode'
@@ -172,13 +178,14 @@ class InstitutionSectorsControllerTest extends AppTestCase
         $postData = $this->viewVariable('data');
         $errors = $postData->errors();
         $this->assertEquals(true, (array_key_exists('name', $errors)));
+        $this->assertEquals(true, (array_key_exists('institution_sector_id', $errors)));
     }
 
     public function testDelete() {
-        $deleteId = 4;
+        $deleteId = 3;
         $testUrl = $this->url('remove/'.$deleteId);
 
-        $table = TableRegistry::get('Institution.Sectors');
+        $table = TableRegistry::get('Institution.Providers');
 
         $exists = $table->exists([$table->primaryKey() => $deleteId]);
         $this->assertTrue($exists);
