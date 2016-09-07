@@ -219,18 +219,21 @@ class ControllerActionComponent extends Component {
 
                 // for automatic adding of '-- Select --' if there are no '' value fields in dropdown
                 $addSelect = true;
+                if ($attr['type'] == 'chosenSelect') {
+                    $addSelect = false;
+                }
                 if (array_key_exists('select', $attr)) {
                     if ($attr['select'] === false) {
                         $addSelect = false;
+                    } else {
+                        $addSelect = true;
                     }
                 }
                 if ($addSelect) {
                     if (is_array($attr['options'])) {
                         // need to check if options has any ''
                         if (!array_key_exists('', $attr['options'])) {
-                            if ($attr['type'] != 'chosenSelect') {
-                                $this->model->fields[$key]['options'] = ['' => __('-- Select --')] + $attr['options'];
-                            }
+                            $this->model->fields[$key]['options'] = ['' => __('-- Select --')] + $attr['options'];
                         }
                     }
                 }
