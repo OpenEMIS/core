@@ -173,7 +173,7 @@ class AcademicPeriodsTable extends AppTable {
         $toolbarElements = [
             ['name' => 'AcademicPeriod.breadcrumb', 'data' => [], 'options' => []]
         ];
-		$this->controller->set('toolbarElements', $toolbarElements);
+        $this->controller->set('toolbarElements', $toolbarElements);
 
         $this->fields['parent_id']['visible'] = false;
 
