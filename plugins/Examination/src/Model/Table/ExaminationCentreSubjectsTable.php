@@ -5,10 +5,10 @@ use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
 use ArrayObject;
 
-class ExamsTable extends ControllerActionTable {
+class ExaminationCentreSubjectsTable extends ControllerActionTable {
     public function initialize(array $config)
     {
-        $this->table('examinations');
+        $this->table('examination_centre_subjects');
         parent::initialize($config);
     }
 
@@ -18,6 +18,6 @@ class ExamsTable extends ControllerActionTable {
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
-        $this->controller->getExamsTab();
+
     }
 }
