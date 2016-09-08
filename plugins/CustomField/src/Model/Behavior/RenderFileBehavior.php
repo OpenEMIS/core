@@ -214,7 +214,7 @@ class RenderFileBehavior extends RenderBehavior {
     }
 
     private function getFileComment() {
-        $comment = '* File size should not be larger than ' . $this->config('size');
+        $comment = '* ' . __('File size should not be larger than ') . $this->config('size');
 
         return $comment;
     }
