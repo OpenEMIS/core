@@ -3,6 +3,7 @@ namespace Examination\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
+use ArrayObject;
 
 class ExamsTable extends ControllerActionTable {
     public function initialize(array $config)
@@ -13,5 +14,10 @@ class ExamsTable extends ControllerActionTable {
 
     public function addEditBeforeAction(Event $event) {
 
+    }
+
+    public function afterAction(Event $event, ArrayObject $extra)
+    {
+        $this->controller->getExamsTab();
     }
 }
