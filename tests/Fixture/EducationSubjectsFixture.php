@@ -27,6 +27,16 @@ class EducationSubjectsFixture extends TestFixture
             'modified' => NULL,
             'created_user_id' => 1,
             'created' => '2015-01-01 00:00:00'
+        ], [
+            'id' => 3,
+            'name' => 'Lower Division Language Arts Curriculum',
+            'code' => 'LDL',
+            'order' => 3,
+            'visible' => 1,
+            'modified_user_id' => NULL,
+            'modified' => NULL,
+            'created_user_id' => 1,
+            'created' => '2015-01-01 00:00:00'
         ]
     ];
 }
