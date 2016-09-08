@@ -19,8 +19,15 @@ class ExaminationsController extends AppController
 
     public function beforeFilter(Event $event) {
         parent::beforeFilter($event);
+        if ($this->request->action=='addNewAssessmentPeriod') {
+            $this->request->params['_ext'] = 'json';
+        }
 
-        $tabElements = [
+    }
+
+    public function getExamsTab()
+    {
+    	$tabElements = [
             'Exams' => [
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Exams'],
                 'text' => __('Exams')
@@ -33,11 +40,6 @@ class ExaminationsController extends AppController
 
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $this->request->action);
-
-        if ($this->request->action=='addNewAssessmentPeriod') {
-            $this->request->params['_ext'] = 'json';
-        }
-
     }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
