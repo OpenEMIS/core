@@ -94,7 +94,13 @@ class WorkflowBehavior extends Behavior {
 		// Session is required to show alert after the redirection
 		$session = new Session();
 		$session->write('Workflow.onDeleteRecord', true);
-		return $model->controller->redirect($model->url('index', 'QUERY'));
+		$url = '';
+		if ($this->isCAv4()) {
+			$url = $model->url('index', 'QUERY');
+		} else {
+			$url = $model->controller->ControllerAction->url('index', 'QUERY');
+		}
+		return $model->controller->redirect($url);
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
