@@ -891,6 +891,19 @@ class NavigationComponent extends Component {
 				'params' => ['plugin' => 'Workflow'],
 				'selected' => ['Workflows.Workflows', 'Workflows.Steps', 'Workflows.Statuses']
 			],
+
+			'Examinations' => [
+					'title' => 'Examinations',
+					'parent' => 'Administration',
+					'link' => false,
+			],
+
+				'Examinations.Exams' => [
+					'title' => 'Exams',
+					'parent' => 'Examinations',
+					'params' => ['plugin' => 'Examination'],
+					'selected' => ['Examinations.Exams']
+				],
 		];
 		return $navigation;
 	}
