@@ -9,6 +9,7 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function initialize(array $config)
     {
         $this->table('examination_centres');
+        $this->belongsTo('Examination.Examinations');
         parent::initialize($config);
     }
 
