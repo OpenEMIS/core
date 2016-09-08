@@ -71,7 +71,7 @@ CREATE TABLE `examination_grading_options` (
   KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all options linked to a specific grading type';
 
-CREATE TABLE `examination_centre` (
+CREATE TABLE `examination_centres` (
   `id` INT(11) NOT NULL,
   `examination_id` INT(11) NOT NULL COMMENT 'links to examinations.id',
   `academic_period_id` INT(11) NOT NULL COMMENT 'links to academic_periods.id',

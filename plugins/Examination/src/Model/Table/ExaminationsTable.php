@@ -5,7 +5,7 @@ use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
 use ArrayObject;
 
-class ExamsTable extends ControllerActionTable {
+class ExaminationsTable extends ControllerActionTable {
     public function initialize(array $config)
     {
         $this->table('examinations');
