@@ -1279,14 +1279,14 @@ trait MessagesTrait {
                     'invalidUrl' => 'You have entered an invalid URL.',
                     'ruleValidateJsonAPI' => 'URL or data in URL is invalid.'
                 ]
-            ],
-            'Workflow' => [
-            	'WorkflowActions' => [
-            		'event_key' => [
-            			'ruleUnique' => 'This event has already been assigned.'
-            		]
-            	]
             ]
+        ],
+        'Workflow' => [
+        	'WorkflowActions' => [
+        		'event_key' => [
+        			'ruleUnique' => 'This event has already been assigned.'
+        		]
+        	]
         ]
     ];
 
