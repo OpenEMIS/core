@@ -12,7 +12,7 @@ trait MessagesTrait {
             'security_group_affected' => 'Security Group Affected',
             'missing_area' => 'Missing Area',
             'new_area' => 'New Area',
-            'api_invalid' => 'Data or Url in the API link is invalid.'
+            'api_invalid' => 'URL or data in URL is invalid.'
         ],
         'Attachments' => [
             'date_on_file' => 'Date On File',
@@ -87,7 +87,7 @@ trait MessagesTrait {
             ],
             'invalidTime' => 'You have entered an invalid time.',
             'invalidDate' => 'You have entered an invalid date.',
-            'invalidUrl' => 'You have entered an invalid url.',
+            'invalidUrl' => 'You have entered an invalid URL.',
             'notSelected' => 'No Record has been selected / saved.',
             'order' => 'Order',
             'visible' => 'Visible',
@@ -1268,7 +1268,7 @@ trait MessagesTrait {
         			'ruleUnique' => 'This product already exists in the system',
         		],
         		'url' => [
-        			'invalidUrl' => 'You have entered an invalid url.',
+        			'invalidUrl' => 'You have entered an invalid URL.',
         		]
         	],
             'ConfigAdministrativeBoundaries' => [
@@ -1276,8 +1276,8 @@ trait MessagesTrait {
                     'ruleUnique' => 'This product already exists in the system',
                 ],
                 'value' => [
-                    'invalidUrl' => 'You have entered an invalid url.',
-                    'ruleValidateJsonAPI' => 'Data or Url in the API link is invalid.'
+                    'invalidUrl' => 'You have entered an invalid URL.',
+                    'ruleValidateJsonAPI' => 'URL or data in URL is invalid.'
                 ]
             ],
             'Workflow' => [
