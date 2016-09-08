@@ -47,13 +47,26 @@ class AreasTable extends ControllerActionTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
         $events['ControllerAction.Model.synchronize'] = 'synchronize';
         return $events;
     }
 
     public function synchronize(Event $mainEvent, ArrayObject $extra)
     {
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        $toolbarAttr = [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+        $toolbarButtonsArray['back']['type'] = 'button';
+        $toolbarButtonsArray['back']['label'] = '<i class="fa kd-back"></i>';
+        $toolbarButtonsArray['back']['attr'] = $toolbarAttr;
+        $toolbarButtonsArray['back']['attr']['title'] = __('Back');
+        $toolbarButtonsArray['back']['url'] = $this->url('index');
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+
         $extra['config']['form'] = true;
         $extra['elements']['edit'] = ['name' => 'OpenEmis.ControllerAction/edit'];
         $this->fields = []; // reset all the fields
@@ -89,15 +102,18 @@ class AreasTable extends ControllerActionTable
             $missingAreaArray = $this->onGetMissingArea($areasTableArray, $jsonArray);
 
             if ($this->request->is(['get'])) {
-                // getAssociatedRecords and passed it to the sync_server.ctp to be displayed
-                $associatedRecords = $this->onGetAssociatedRecords($missingAreaArray);
+                // if missingAreaArray is empty(no records to be mapped) will not shown the missing area table.
+                if (!empty($missingAreaArray)) {
+                    // getAssociatedRecords and passed it to the sync_server.ctp to be displayed
+                    $associatedRecords = $this->onGetAssociatedRecords($missingAreaArray);
 
-                $this->field('sync_server', [
-                    'type' => 'element',
-                    'element' => 'Area.Areas/sync_server'
-                ]);
-                $this->controller->set('associatedRecords', $associatedRecords);
-                $this->controller->set('newAreaLists', $newAreaLists);
+                    $this->field('sync_server', [
+                        'type' => 'element',
+                        'element' => 'Area.Areas/sync_server'
+                    ]);
+                    $this->controller->set('associatedRecords', $associatedRecords);
+                    $this->controller->set('newAreaLists', $newAreaLists);
+                }
             } else if ($this->request->is(['post', 'put'])) {
                 // update the related table
                 $requestData = $this->request->data;
@@ -277,12 +293,15 @@ class AreasTable extends ControllerActionTable
         //logic to hide 'add' button and display sync button if the API set
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         if (!empty($this->onGetUrl())) {
-            $toolbarButtonsArray['sync'] = $toolbarButtonsArray['add'];
-            $toolbarButtonsArray['sync']['label'] = '<i class="fa fa-refresh"></i>';
-            $toolbarButtonsArray['sync']['attr']['title'] = __('Synchronize');
-            $toolbarButtonsArray['sync']['url'][0] = 'synchronize';
+            // If permission on add is not granted, the Sync button will not shown.
+            if (array_key_exists('add', $toolbarButtonsArray)) {
+                $toolbarButtonsArray['sync'] = $toolbarButtonsArray['add'];
+                $toolbarButtonsArray['sync']['label'] = '<i class="fa fa-refresh"></i>';
+                $toolbarButtonsArray['sync']['attr']['title'] = __('Synchronize');
+                $toolbarButtonsArray['sync']['url'][0] = 'synchronize';
 
-            unset($toolbarButtonsArray['add']);
+                unset($toolbarButtonsArray['add']);
+            }
         }
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
@@ -421,6 +440,7 @@ class AreasTable extends ControllerActionTable
         switch ($this->action) {
             case 'synchronize':
                 $buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Confirm');
+                $buttons[1]['url'] = $this->url('index');
                 break;
         }
     }
