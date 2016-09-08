@@ -30,10 +30,11 @@ class ConfigAdministrativeBoundariesTable extends ControllerActionTable {
                 'provider' => 'table'
             ])
             ->add('value', 'invalidUrl', [
-                'rule' => ['url', true]
+                'rule' => ['url', true],
+                'last' => true // last mean it will not run the next validation, this will be last to run, same as break
             ])
             ->add('value', 'ruleValidateJsonAPI', [
-                'rule' => 'validateJsonAPI'
+                'rule' => 'validateJsonAPI',
             ])
             ->allowEmpty('value')
             ;
@@ -62,7 +63,7 @@ class ConfigAdministrativeBoundariesTable extends ControllerActionTable {
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'value') {
-            return __('Url');
+            return __('URL');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
