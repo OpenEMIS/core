@@ -19,9 +19,6 @@ class ExaminationsController extends AppController
 
     public function beforeFilter(Event $event) {
         parent::beforeFilter($event);
-
-
-
         if ($this->request->action=='addNewAssessmentPeriod') {
             $this->request->params['_ext'] = 'json';
         }

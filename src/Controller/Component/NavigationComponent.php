@@ -902,7 +902,13 @@ class NavigationComponent extends Component {
 					'title' => 'Exams',
 					'parent' => 'Examinations',
 					'params' => ['plugin' => 'Examination'],
-					'selected' => ['Examinations.Exams']
+					'selected' => ['Examinations.Exams', 'Examinations.GradingTypes']
+				],
+				'Examinations.Results' => [
+					'title' => 'Results',
+					'parent' => 'Examinations',
+					'params' => ['plugin' => 'Examination'],
+					'selected' => ['Examinations.Results']
 				],
 		];
 		return $navigation;
