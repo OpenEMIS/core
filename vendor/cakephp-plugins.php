@@ -18,6 +18,7 @@ return [
         'Directory' => $baseDir . '/plugins/Directory/',
         'Education' => $baseDir . '/plugins/Education/',
         'Error' => $baseDir . '/plugins/Error/',
+        'Examination' => $baseDir . '/plugins/Examination/',
         'FieldOption' => $baseDir . '/plugins/FieldOption/',
         'Health' => $baseDir . '/plugins/Health/',
         'Import' => $baseDir . '/plugins/Import/',
