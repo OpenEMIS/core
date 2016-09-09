@@ -389,7 +389,7 @@ trait MessagesTrait {
         'WorkflowActions' => [
             'next_step' => 'Next Step',
             'comment_required' => 'Comment Required',
-            'event' => 'Event'
+            'event' => 'Post Event'
         ],
         'WorkflowStatuses' => [
             'noSteps' => 'No Available Workflow Steps'
