@@ -109,8 +109,6 @@ class UsersTable extends AppTable {
 		$this->fields['last_name']['visible'] = false;
 		$this->fields['gender_id']['visible'] = false;
 		$this->fields['date_of_birth']['visible'] = false;
-		$this->fields['identity']['visible'] = false;
-
 		$this->fields['username']['visible'] = true;
 
 		$this->ControllerAction->field('name');
