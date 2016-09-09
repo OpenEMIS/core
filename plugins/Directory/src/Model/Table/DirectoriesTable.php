@@ -444,6 +444,16 @@ class DirectoriesTable extends AppTable {
 		}
 	}
 
+	//to handle identity_number field that is automatically created by mandatory behaviour.
+	public function onUpdateFieldIdentityNumber(Event $event, array $attr, $action, Request $request)
+	{
+		if ($action == 'add') {
+			$attr['fieldName'] = $this->alias().'.identities.0.number';
+			$attr['attr']['label'] = __('Identity Number');
+		}
+		return $attr;
+	}
+
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
 		$userType = $requestData[$this->alias()]['user_type'];
 		$type = [
@@ -581,6 +591,8 @@ class DirectoriesTable extends AppTable {
 		}
 
 		$this->setupTabElements($entity);
+
+		$this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
