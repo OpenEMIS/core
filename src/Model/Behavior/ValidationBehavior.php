@@ -1521,9 +1521,13 @@ class ValidationBehavior extends Behavior {
 				->where([
 					'WorkflowSteps.workflow_id' => $workflowId,
 					$WorkflowActionTable->aliasField('event_key') => $eventKey
-				])
-				->count();
-			return $eventKeyExist == 0;
+				]);
+
+			if (isset($data['id'])) {
+				$eventKeyExist->where([$WorkflowActionTable->aliasField('id').' <> ' => $data['id']]);
+			}
+
+			return $eventKeyExist->count() == 0;
 		} else {
 			return true;
 		}
