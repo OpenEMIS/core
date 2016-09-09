@@ -46,16 +46,14 @@ class ExaminationsTable extends ControllerActionTable {
 
     public function setupFields(Entity $entity)
     {
+        $this->field('code');
+        $this->field('name');
         $this->field('academic_period_id', ['type' => 'select', 'entity' => $entity]);
         $this->field('education_programme_id', ['type' => 'select', 'entity' => $entity]);
         $this->field('education_grade_id', ['type' => 'select', 'entity' => $entity]);
         $this->field('examination_items', [
             'type' => 'element',
             'element' => 'Examination.examination_items'
-        ]);
-
-        $this->setFieldOrder([
-            'code', 'name', 'description', 'academic_period_id', 'education_programme_id', 'education_grade_id', 'examination_items'
         ]);
     }
 
