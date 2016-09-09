@@ -87,7 +87,7 @@ CREATE TABLE `examination_items_grading_types` (
  UNIQUE KEY `id` (`id`),
  KEY `modified_user_id` (`modified_user_id`),
  KEY `created_user_id` (`created_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all options linked to a specific examination item';
 
 CREATE TABLE `examination_centres` (
   `id` INT(11) NOT NULL,
