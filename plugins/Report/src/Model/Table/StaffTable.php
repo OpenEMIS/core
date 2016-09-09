@@ -4,6 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
@@ -44,5 +45,23 @@ class StaffTable extends AppTable  {
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$query->where([$this->aliasField('is_staff') => 1]);
+	}
+
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+		$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+        $identity = $IdentityType->getDefaultEntity();
+        pr($fields);
+        foreach ($fields as $key => $field) { 
+        	//get the value from the table, but change the label to become default identity type.
+            if ($field['field'] == 'identity_number') { 
+                $fields[$key] = [
+                    'key' => 'Students.identity_number',
+                    'field' => 'identity_number',
+                    'type' => 'string',
+                    'label' => __($identity->name)
+                ];
+                break;
+            }
+        }
 	}
 }
