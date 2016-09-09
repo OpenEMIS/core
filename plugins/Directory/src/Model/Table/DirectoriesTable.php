@@ -387,7 +387,12 @@ class DirectoriesTable extends AppTable {
 			case self::STUDENT:
 				// do nothing
 				break;
+			case self::STAFF:
+				$this->ControllerAction->field('username', ['order' => ++$highestOrder, 'visible' => true]);
+				$this->ControllerAction->field('password', ['order' => ++$highestOrder, 'visible' => true, 'type' => 'password', 'attr' => ['value' => '', 'autocomplete' => 'off']]);
+				break;
 			default:
+				$this->fields['identity_number']['type'] = 'hidden';
 				$this->ControllerAction->field('username', ['order' => ++$highestOrder, 'visible' => true]);
 				$this->ControllerAction->field('password', ['order' => ++$highestOrder, 'visible' => true, 'type' => 'password', 'attr' => ['value' => '', 'autocomplete' => 'off']]);
 				break;
