@@ -1508,6 +1508,7 @@ class ValidationBehavior extends Behavior {
 				->innerJoinWith('WorkflowSteps')
 				->where([
 					'WorkflowSteps.workflow_id' => $workflowId,
+					$WorkflowActionTable->aliasField('id').' <> ' => $data['id'],
 					$WorkflowActionTable->aliasField('event_key') => $eventKey
 				])
 				->count();
