@@ -109,8 +109,6 @@ class UsersTable extends AppTable {
 		$this->fields['last_name']['visible'] = false;
 		$this->fields['gender_id']['visible'] = false;
 		$this->fields['date_of_birth']['visible'] = false;
-		$this->fields['identity']['visible'] = false;
-
 		$this->fields['username']['visible'] = true;
 
 		$this->ControllerAction->field('name');
@@ -209,6 +207,11 @@ class UsersTable extends AppTable {
 
 		//this field value will be generated automatically when identity details changed.
 		$this->ControllerAction->field('identity_number', ['type' => 'hidden']);
+	}
+
+	public function editAfterAction(Event $event, Entity $entity) 
+	{
+		$this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
 	}
 
 	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
