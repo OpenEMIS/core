@@ -23,6 +23,9 @@ CREATE TABLE `examination_items` (
   `weight` decimal(6,2) DEFAULT '0.00',
   `examination_id` int(11) NOT NULL,
   `education_subject_id` int(11) NOT NULL,
+  `date` date NOT NULL,
+  `start_time` time NOT NULL,
+  `end_time` time NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -70,6 +73,21 @@ CREATE TABLE `examination_grading_options` (
   KEY `modified_user_id` (`modified_user_id`),
   KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all options linked to a specific grading type';
+
+CREATE TABLE `examination_items_grading_types` (
+ `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+ `education_subject_id` int(11) NOT NULL COMMENT 'links to education_subjects.id',
+ `examination_grading_type_id` int(11) NOT NULL COMMENT 'links to examination_grading_types.id',
+ `examination_id` int(11) NOT NULL COMMENT 'links to assessments.id',
+ `modified_user_id` int(11) DEFAULT NULL,
+ `modified` datetime DEFAULT NULL,
+ `created_user_id` int(11) NOT NULL,
+ `created` datetime NOT NULL,
+ PRIMARY KEY (`examination_grading_type_id`,`examination_id`,`education_subject_id`),
+ UNIQUE KEY `id` (`id`),
+ KEY `modified_user_id` (`modified_user_id`),
+ KEY `created_user_id` (`created_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 
 CREATE TABLE `examination_centres` (
   `id` INT(11) NOT NULL,
