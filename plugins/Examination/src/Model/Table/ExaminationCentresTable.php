@@ -42,6 +42,6 @@ class ExaminationCentresTable extends ControllerActionTable {
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
-
+        $this->controller->getExamsTab();
     }
 }
