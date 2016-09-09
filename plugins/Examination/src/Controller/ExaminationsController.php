@@ -43,6 +43,10 @@ class ExaminationsController extends AppController
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Exams'],
                 'text' => __('Exams')
             ],
+            'Centres' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Centres'],
+                'text' => __('Exam Centres')
+            ],
             'GradingTypes' => [
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'GradingTypes'],
                 'text' => __('Grading Types')
