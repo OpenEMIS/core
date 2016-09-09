@@ -21,3 +21,8 @@ INNER JOIN (
     AND `number` <> '') U
 ON S.`id` = U.`security_user_id`
 SET S.`identity_number` = U.`number`;
+
+-- translations
+INSERT INTO `translations` (`id`, `code`, `en`, `ar`, `zh`, `es`, `fr`, `ru`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT NULL, NULL, 'Please set other identity type as default before deleting the current one', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, now() FROM dual
+WHERE NOT EXISTS (SELECT * FROM `translations` WHERE `en` = 'Please set other identity type as default before deleting the current one');
