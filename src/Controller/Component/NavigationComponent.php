@@ -735,7 +735,7 @@ class NavigationComponent extends Component {
 						'title' => 'Exams',
 						'parent' => 'Examinations',
 						'params' => ['plugin' => 'Examination'],
-						'selected' => ['Examinations.Exams', 'Examinations.GradingTypes']
+						'selected' => ['Examinations.Exams', 'Examinations.GradingTypes', 'Examinations.Centres']
 					],
 					'Examinations.Results' => [
 						'title' => 'Results',
