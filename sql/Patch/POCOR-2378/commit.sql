@@ -5,6 +5,7 @@ CREATE TABLE `examinations` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci NULL,
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
   `education_grade_id` int(11) NOT NULL COMMENT 'links to education_grades.id',
   `modified_user_id` int(11) DEFAULT NULL,
