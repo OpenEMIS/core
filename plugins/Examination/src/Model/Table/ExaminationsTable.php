@@ -5,6 +5,7 @@ use App\Model\Table\ControllerActionTable;
 use ArrayObject;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 
@@ -18,14 +19,19 @@ class ExaminationsTable extends ControllerActionTable {
         $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->belongsToMany('GradingTypes', [
-        'className' => 'Examination.ExaminationGradingTypes',
-        'joinTable' => 'examination_items_grading_types',
-        'foreignKey' => 'examination_id',
-        'targetForeignKey' => 'examination_grading_type_id',
-        'through' => 'Examination.ExaminationItemsGradingTypes',
-        'dependent' => true,
-        'cascadeCallbacks' => true
+            'className' => 'Examination.ExaminationGradingTypes',
+            'joinTable' => 'examination_items_grading_types',
+            'foreignKey' => 'examination_period_id',
+            'targetForeignKey' => 'examination_grading_type_id',
+            'through' => 'Examination.ExaminationItemsGradingTypes',
+            'dependent' => true,
+            'cascadeCallbacks' => true
         ]);
+    }
+
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['ExaminationItems.EducationSubjects']);
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
@@ -48,6 +54,7 @@ class ExaminationsTable extends ControllerActionTable {
     {
         $this->field('code');
         $this->field('name');
+        $this->field('description');
         $this->field('academic_period_id', ['type' => 'select', 'entity' => $entity]);
         $this->field('education_programme_id', ['type' => 'select', 'entity' => $entity]);
         $this->field('education_grade_id', ['type' => 'select', 'entity' => $entity]);
