@@ -1,6 +1,7 @@
 <?php
     $alias = $ControllerAction['table']->alias();
     $this->Form->unlockField('Examination.examination_items');
+    // pr($data);
 ?>
 
 <?php if ($ControllerAction['action'] == 'view') : ?>
@@ -10,7 +11,7 @@
                 <th><?= __('Code') ?></th>
                 <th><?= __('Name') ?></th>
                 <th><?= __('Weight') ?></th>
-                <th><?= __('Examination Grading Type') ?></th>
+                <th><?= __('Grading Type') ?></th>
                 <th><?= __('Date') ?></th>
                 <th><?= __('Start Time') ?></th>
                 <th><?= __('End Time') ?></th>
@@ -19,10 +20,13 @@
                 <tbody>
                     <?php foreach ($data['examination_items'] as $i => $item) : ?>
                         <tr>
-                            <td><?= $item->code; ?></td>
-                            <td><?= $item->name; ?></td>
+                            <td><?= $item->education_subject->code; ?></td>
+                            <td><?= $item->education_subject->name; ?></td>
                             <td><?= $item->weight; ?></td>
-                            <td><?= $examinationGradingTypeOptions; ?></td>
+                            <td><?= $item->examination_grading_type_id; ?></td>
+                            <td><?= $item->date->format('d-m-Y'); ?></td>
+                            <td><?= $item->start_time->format('H:i A'); ?></td>
+                            <td><?= $item->end_time->format('H:i A'); ?></td>
                         </tr>
                     <?php endforeach ?>
                 </tbody>
@@ -40,7 +44,7 @@
                             <th><?= __('Code') ?></th>
                             <th><?= __('Name') ?></th>
                             <th><?= __('Weight') ?></th>
-                            <th><?= __('Examination Grading Type') ?></th>
+                            <th><?= __('Grading Type') ?></th>
                             <th><?= __('Date') ?></th>
                             <th><?= __('Start Time') ?></th>
                             <th><?= __('End Time') ?></th>
@@ -55,14 +59,22 @@
                                     <tr>
                                         <td>
                                             <?php
-                                                echo $this->Form->hidden("$fieldPrefix.id", ['value' => $item['education_subject_id']]);
-                                                echo $this->Form->hidden("$joinDataPrefix.education_subject_id", ['value' => $item['education_subject_id']]);
-                                                echo $item['education_subject_code'];
+                                                if ($ControllerAction['action'] == 'add') {
+                                                    echo $this->Form->hidden("$fieldPrefix.education_subject_id", ['value' => $item['education_subject_id']]);
+                                                    echo $item->education_subject_code;
+                                                } else {
+                                                    echo $this->Form->hidden("$fieldPrefix.education_subject_id", ['value' => $item['education_subject_id']]);
+                                                    echo $item->education_subject->code;
+                                                }
                                             ?>
                                         </td>
                                         <td>
                                             <?php
-                                                echo $item['education_subject_name'];
+                                                if ($ControllerAction['action'] == 'add') {
+                                                    echo $item->education_subject_name;
+                                                } else {
+                                                    echo $item->education_subject->name;
+                                                }
                                             ?>
                                         </td>
                                         <td>
@@ -77,7 +89,7 @@
                                         </td>
                                         <td>
                                             <?php
-                                                echo $this->Form->input("$joinDataPrefix.examination_grading_type_id", [
+                                                echo $this->Form->input("$fieldPrefix.examination_grading_type_id", [
                                                     'type' => 'select',
                                                     'label' => false,
                                                     'options' => $examinationGradingTypeOptions
