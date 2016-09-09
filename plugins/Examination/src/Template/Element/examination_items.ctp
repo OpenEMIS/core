@@ -95,21 +95,28 @@
                                         </td>
                                         <td>
                                             <?php
-                                                echo $this->Form->input("$fieldPrefix.start_time", [
-                                                    'type' => 'text',
-                                                    'label' => false,
-                                                    //'options' => $examinationGradingTypeOptions
-                                                ]);
-                                                // $this->HtmlField->
+                                                $attr = [];
+                                                $attr['null'] = true;
+                                                $attr['default_time'] = false;
+                                                $attr['class'] = 'no-margin-bottom';
+                                                $attr['field'] = 'start_time';
+                                                $attr['model'] = $fieldPrefix;
+                                                $attr['id'] = 'start_time_'.$i;
+                                                $attr['label'] = false;
+                                                echo $this->HtmlField->time('edit', $item, $attr);
                                             ?>
                                         </td>
                                         <td>
                                             <?php
-                                                echo $this->Form->input("$fieldPrefix.end_date", [
-                                                    'type' => 'text',
-                                                    'label' => false,
-                                                    //'options' => $examinationGradingTypeOptions
-                                                ]);
+                                                $attr = [];
+                                                $attr['null'] = true;
+                                                $attr['default_time'] = false;
+                                                $attr['class'] = 'no-margin-bottom';
+                                                $attr['field'] = 'end_time';
+                                                $attr['model'] = $fieldPrefix;
+                                                $attr['id'] = 'end_time_'.$i;
+                                                $attr['label'] = false;
+                                                echo $this->HtmlField->time('edit', $item, $attr);
                                             ?>
                                         </td>
                                     </tr>
