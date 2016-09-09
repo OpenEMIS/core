@@ -20,51 +20,23 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
         <ul class="steps" style="margin-left: 0">
             <li data-step="1" class="active">
                 <div class="step-wrapper">
-                    Internal Search
+                    Examination Centre
                     <span class="chevron"></span>
                 </div>
             </li>
-            <?php
-                if ($externalDataSource) {
-            ?>
-            <li data-step="2">
-                <div class="step-wrapper">
-                    External Search
-                    <span class="chevron"></span>
-                </div>
-            </li>
-            <li data-step="3" data-name="createUser" ng-show="InstitutionStudentController.createNewStudent">
+            <li data-step="2" data-name="createUser" ng-show="InstitutionStudentController.createNewStudent">
                 <div class="step-wrapper">
                     New Student Details
                     <span class="chevron"></span>
                 </div>
             </li>
-            <li data-step="4" data-name="addStudent">
-                <div class="step-wrapper">
-                    Add Student
-                    <input type="hidden" ng-model="InstitutionStudentController.hasExternalDataSource" ng-init="InstitutionStudentController.hasExternalDataSource = true"/>
-                    <span class="chevron"></span>
-                </div>
-            </li>
-            <?php
-                } else {
-            ?>
-            <li data-step="3" data-name="createUser" ng-show="InstitutionStudentController.createNewStudent">
-                <div class="step-wrapper">
-                    New Student Details
-                    <span class="chevron"></span>
-                </div>
-            </li>
-            <li data-step="4" data-name="addStudent">
+            <li data-step="3" data-name="addStudent">
                 <div class="step-wrapper">
                     Add Students
                     <input type="hidden" ng-model="InstitutionStudentController.hasExternalDataSource" ng-init="InstitutionStudentController.hasExternalDataSource = false"/>
                     <span class="chevron"></span>
                 </div>
             </li>
-            <?php
-                }
-            ?>
         </ul>
     </div>
     <div class="actions top">
