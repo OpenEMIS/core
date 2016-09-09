@@ -726,6 +726,23 @@ class NavigationComponent extends Component {
 					'params' => ['plugin' => 'Assessment'],
 					'selected' => ['Assessments.Assessments', 'Assessments.AssessmentPeriods', 'Assessments.GradingTypes']
 				],
+				'Examinations' => [
+					'title' => 'Examinations',
+					'parent' => 'SystemSetup',
+					'link' => false,
+				],
+					'Examinations.Exams' => [
+						'title' => 'Exams',
+						'parent' => 'Examinations',
+						'params' => ['plugin' => 'Examination'],
+						'selected' => ['Examinations.Exams', 'Examinations.GradingTypes']
+					],
+					'Examinations.Results' => [
+						'title' => 'Results',
+						'parent' => 'Examinations',
+						'params' => ['plugin' => 'Examination'],
+						'selected' => ['Examinations.Results']
+					],
 				'FieldOptions.index' => [
 					'title' => 'Field Options',
 					'parent' => 'SystemSetup',
@@ -890,32 +907,7 @@ class NavigationComponent extends Component {
 				'parent' => 'Administration',
 				'params' => ['plugin' => 'Workflow'],
 				'selected' => ['Workflows.Workflows', 'Workflows.Steps', 'Workflows.Statuses']
-			],
-
-			'Examinations' => [
-					'title' => 'Examinations',
-					'parent' => 'Administration',
-					'link' => false,
-			],
-
-				'Examinations.Exams' => [
-					'title' => 'Exams',
-					'parent' => 'Examinations',
-					'params' => ['plugin' => 'Examination'],
-					'selected' => ['Examinations.Exams', 'Examinations.GradingTypes']
-				],
-				'Examinations.Centres' => [
-					'title' => 'Centres',
-					'parent' => 'Examinations',
-					'params' => ['plugin' => 'Examination'],
-					'selected' => ['Examinations.Centres']
-				],
-				'Examinations.Results' => [
-					'title' => 'Results',
-					'parent' => 'Examinations',
-					'params' => ['plugin' => 'Examination'],
-					'selected' => ['Examinations.Results']
-				],
+			]
 		];
 		return $navigation;
 	}
