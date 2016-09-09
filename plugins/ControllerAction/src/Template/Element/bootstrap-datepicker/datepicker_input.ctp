@@ -4,7 +4,7 @@
 	<label for="<?= $attr['id'] ?>"><?= $label ?></label>
 <?php endif; ?>
 
-	<?php 
+	<?php
 	$errorMsg = '';
 	if (array_key_exists('fieldName', $attr)) {
 		$errorMsg = $this->Form->error($attr['fieldName']);
@@ -15,8 +15,8 @@
 	$inputErrorCSS = (!empty($errorMsg))? 'form-error': '';
 	$inputWrapperStyle = (array_key_exists('inputWrapperStyle', $attr)) ? $attr['inputWrapperStyle'] : '';
 	?>
-	<div class="input-group date <?php echo $divErrorCSS; ?>" id="<?= $attr['id'] ?>" style="<?= $inputWrapperStyle; ?>">
-		<?php 
+	<div class="input-group date <?= isset($attr['class']) ? $attr['class'] : '' ?> <?php echo $divErrorCSS; ?>" id="<?= $attr['id'] ?>" style="<?= $inputWrapperStyle; ?>">
+		<?php
 			$fieldName = (array_key_exists('fieldName', $attr))? $attr['fieldName']: $attr['model'].'['.$attr['field'].']';
 			$inputAttr = [
 				'class' => 'form-control '.$inputErrorCSS,
@@ -37,7 +37,7 @@
 	<?php
 	echo $errorMsg;
 	?>
-	
+
 <?php if ($label): ?>
 </div>
 <?php endif; ?>
