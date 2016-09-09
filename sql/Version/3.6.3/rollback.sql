@@ -1,5 +1,7 @@
 -- POCOR-3257
--- code here
+-- security functions
+UPDATE `security_functions` SET `_view` = 'index|view', `_edit` = 'edit' WHERE `name` = 'Configurations';
+
 DELETE FROM `config_items` WHERE `code` = 'area_api';
 
 -- Auto_increment
@@ -85,6 +87,10 @@ DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3340';
 -- POCOR-3138
 -- security_user
 ALTER TABLE `security_users` DROP `identity_number`;
+
+-- translations
+DELETE FROM `translations`
+WHERE `en` = 'Please set other identity type as default before deleting the current one';
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3138';
