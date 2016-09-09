@@ -2,22 +2,203 @@
 namespace Examination\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
-use Cake\Event\Event;
 use ArrayObject;
+use Cake\Event\Event;
+use Cake\Network\Request;
+use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 
 class ExaminationsTable extends ControllerActionTable {
     public function initialize(array $config)
     {
-        $this->table('examinations');
         parent::initialize($config);
-    }
 
-    public function addEditBeforeAction(Event $event) {
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+        $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
 
+        $this->belongsToMany('GradingTypes', [
+        'className' => 'Examination.ExaminationGradingTypes',
+        'joinTable' => 'examination_items_grading_types',
+        'foreignKey' => 'examination_id',
+        'targetForeignKey' => 'examination_grading_type_id',
+        'through' => 'Examination.ExaminationItemsGradingTypes',
+        'dependent' => true,
+        'cascadeCallbacks' => true
+        ]);
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->controller->getExamsTab();
+        $this->controller->set('examinationGradingTypeOptions', $this->getGradingTypeOptions()); //send to ctp
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($entity);
+    }
+
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($entity);
+    }
+
+    public function setupFields(Entity $entity)
+    {
+        $this->field('academic_period_id', ['type' => 'select', 'entity' => $entity]);
+        $this->field('education_programme_id', ['type' => 'select', 'entity' => $entity]);
+        $this->field('education_grade_id', ['type' => 'select', 'entity' => $entity]);
+        $this->field('examination_items', [
+            'type' => 'element',
+            'element' => 'Examination.examination_items'
+        ]);
+
+        $this->setFieldOrder([
+            'code', 'name', 'description', 'academic_period_id', 'education_programme_id', 'education_grade_id', 'examination_items'
+        ]);
+    }
+
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            if ($action == 'add') {
+
+                list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
+
+                $attr['options'] = $periodOptions;
+                $attr['default'] = $selectedPeriod;
+
+            } else {
+
+                $attr['type'] = 'readonly';
+                $attr['value'] = $attr['entity']->academic_period_id;
+                $attr['attr']['value'] = $this->AcademicPeriods->get($attr['entity']->academic_period_id)->name;
+            }
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'view') {
+            $attr['visible'] = false;
+
+        } else if ($action == 'add' || $action == 'edit') {
+
+            $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+
+            if ($action == 'add') {
+                $programmeOptions = $EducationProgrammes
+                    ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
+                    ->find('visible')
+                    ->contain(['EducationCycles'])
+                    ->order(['EducationCycles.order' => 'ASC', $EducationProgrammes->aliasField('order') => 'ASC'])
+                    ->toArray();
+
+                $attr['options'] = $programmeOptions;
+                $attr['onChangeReload'] = 'changeEducationProgrammeId';
+
+            } else {
+                //since programme_id is not stored, then during edit need to get from grade
+                $programmeId = $this->EducationGrades->get($attr['entity']->education_grade_id)->education_programme_id;
+                $attr['type'] = 'readonly';
+                $attr['value'] = $programmeId;
+                $attr['attr']['value'] = $EducationProgrammes->get($programmeId)->name;
+            }
+        }
+        return $attr;
+    }
+
+    public function addEditOnChangeEducationProgrammeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
+        $request = $this->request;
+        unset($request->query['programme']);
+        unset($data[$this->alias()]['examination_items']);
+
+        if ($request->is(['post', 'put'])) {
+            if (array_key_exists($this->alias(), $request->data)) {
+                if (array_key_exists('education_programme_id', $request->data[$this->alias()])) {
+                    $request->query['programme'] = $request->data[$this->alias()]['education_programme_id'];
+                }
+            }
+        }
+    }
+
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+
+            if ($action == 'add') {
+
+                $selectedProgramme = $request->query('programme');
+                $gradeOptions = [];
+
+                if (!is_null($selectedProgramme)) {
+                    $gradeOptions = $this->EducationGrades
+                        ->find('list')
+                        ->find('visible')
+                        ->contain(['EducationProgrammes'])
+                        ->where([$this->EducationGrades->aliasField('education_programme_id') => $selectedProgramme])
+                        ->order(['EducationProgrammes.order' => 'ASC', $this->EducationGrades->aliasField('order') => 'ASC'])
+                        ->toArray();
+                }
+
+                $attr['options'] = $gradeOptions;
+                $attr['onChangeReload'] = 'changeEducationGrade';
+
+            } else {
+
+                $attr['type'] = 'readonly';
+                $attr['attr']['value'] = $this->EducationGrades->get($attr['entity']->education_grade_id)->name;
+            }
+        }
+
+        return $attr;
+    }
+
+    public function addEditOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
+        $request = $this->request;
+        unset($request->query['grade']);
+        unset($data[$this->alias()]['examination_items']);
+
+        if ($request->is(['post', 'put'])) {
+            if (array_key_exists($this->alias(), $request->data)) {
+                if (array_key_exists('education_grade_id', $request->data[$this->alias()])) {
+                    $selectedGrade = $request->data[$this->alias()]['education_grade_id'];
+                    $request->query['grade'] = $selectedGrade;
+
+                    $examinationItems = $this->ExaminationItems->populateExaminationItemsArray($selectedGrade);
+                    $data[$this->alias()]['examination_items'] = $examinationItems;
+                }
+            }
+        }
+    }
+
+    public function getAcademicPeriodOptions($querystringPeriod)
+    {
+        $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
+
+        if ($querystringPeriod) {
+            $selectedPeriod = $querystringPeriod;
+        } else {
+            $selectedPeriod = $this->AcademicPeriods->getCurrent();
+        }
+
+        return compact('periodOptions', 'selectedPeriod');
+    }
+
+    public function getGradingTypeOptions()
+    {
+        $examinationGradingType = TableRegistry::get('Examination.ExaminationGradingTypes');
+        $examinationGradingTypeOptions = $examinationGradingType->find('list')->toArray();
+        return $examinationGradingTypeOptions;
+    }
+
+    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    {
+        // pr($requestData);die;
+
     }
 }
