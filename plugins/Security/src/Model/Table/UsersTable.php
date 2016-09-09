@@ -206,6 +206,9 @@ class UsersTable extends AppTable {
 		
 		// first value is for the hidden field value, the second value is for the readonly value
 		$this->ControllerAction->field('openemis_no', ['type' => 'readonly', 'value' => $uniqueOpenemisId, 'attr' => ['value' => $uniqueOpenemisId]]);
+
+		//this field value will be generated automatically when identity details changed.
+		$this->ControllerAction->field('identity_number', ['type' => 'hidden']);
 	}
 
 	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
