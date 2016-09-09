@@ -1,5 +1,7 @@
 -- POCOR-3257
--- code here
+-- security functions
+UPDATE `security_functions` SET `_view` = 'index|view', `_edit` = 'edit' WHERE `name` = 'Configurations';
+
 DELETE FROM `config_items` WHERE `code` = 'area_api';
 
 -- Auto_increment
