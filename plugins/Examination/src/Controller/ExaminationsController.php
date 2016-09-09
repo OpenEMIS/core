@@ -16,7 +16,10 @@ class ExaminationsController extends AppController
     // CAv4
     public function Exams() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.Examinations']); }
     public function GradingTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationGradingTypes']); }
-    public function Centres() {  $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentres']); }
+    public function Centres()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentres']);
+    }
     // public function Results() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationGradingTypes']); }
     // End
 
@@ -53,10 +56,23 @@ class ExaminationsController extends AppController
         $this->set('selectedAction', $this->request->action);
     }
 
+    private function checkExamCentresPermission() {
+        return $this->Auth->user('super_admin') == 1 || $this->AccessControl->check(['Examinations', 'Centres', 'add']);
+    }
+
     private function attachAngularModules() {
         $action = $this->request->action;
 
         switch ($action) {
+            case 'Centres':
+                if ($pass == 'add' && $this->checkExamCentresPermission()) {
+                    $this->Angular->addModules([
+                        'alert.svc',
+                        'examination.centres.ctrl',
+                        'examination.centres.svc'
+                    ]);
+                }
+                break;
             case 'Results':
                 // $this->Angular->addModules([
                 //     'alert.svc',
