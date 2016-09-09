@@ -16,10 +16,16 @@ class ExaminationsController extends AppController
     // CAv4
     public function Exams() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.Examinations']); }
     public function GradingTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationGradingTypes']); }
-    public function Centres()
+    public function Centres($pass = 'index')
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentres']);
+        if ($pass == 'add') {
+            $this->set('ngController', 'ExaminationCentresCtrl as ExamCentreController');
+            $this->render('examinationCentres');
+        } else {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentres']);
+        }
     }
+
     // public function Results() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationGradingTypes']); }
     // End
 
@@ -66,7 +72,7 @@ class ExaminationsController extends AppController
 
     private function attachAngularModules() {
         $action = $this->request->action;
-
+        $pass = isset($this->request->pass[0]) ? $this->request->pass[0] : 'index';
         switch ($action) {
             case 'Centres':
                 if ($pass == 'add' && $this->checkExamCentresPermission()) {

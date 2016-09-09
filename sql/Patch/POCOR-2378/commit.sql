@@ -86,6 +86,7 @@ CREATE TABLE `examination_centres` (
   `fax` VARCHAR(20) NULL,
   `email` VARCHAR(100) NULL,
   `website` VARCHAR(100) NULL,
+  `capacity` INT(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -103,8 +104,6 @@ CREATE TABLE `examination_centre_subjects` (
   `examination_centre_id` INT(11) NOT NULL COMMENT 'links to examination_centres.id',
   `academic_period_id` INT(11) NOT NULL COMMENT 'links to academic_periods.id',
   `education_subject_id` INT(11) NOT NULL COMMENT 'links to education_subjects.id',
-  `subject_capacity` INT(11) NOT NULL,
-  `special_need_capacity` INT(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -117,25 +116,21 @@ CREATE TABLE `examination_centre_subjects` (
   KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the examination centres for a particular examination subject';
 
-CREATE TABLE `examination_centre_subjects_special_needs` (
+CREATE TABLE `examination_centre_special_needs` (
   `id` INT(11) NOT NULL,
-  `examination_centre_subject_id` INT(11) NOT NULL COMMENT 'links to examination_centre_subjects.id',
   `examination_centre_id` INT(11) NOT NULL COMMENT 'links to examination_centres.id',
   `academic_period_id` INT(11) NOT NULL COMMENT 'links to academic_periods.id',
-  `education_subject_id` INT(11) NOT NULL COMMENT 'links to education_subjects.id',
   `special_need_type_id` INT(11) NOT NULL COMMENT 'links to special_need_types.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `examination_centre_subjects` (`examination_centre_subject_id`),
   KEY `examination_centre_id` (`examination_centre_id`),
   KEY `academic_period_id` (`academic_period_id`),
-  KEY `education_subject_id` (`education_subject_id`),
   KEY `modified_user_id` (`modified_user_id`),
   KEY `created_user_id` (`created_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the special needs for a particular examination centre subject';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the special needs for a particular examination centre';
 
 CREATE TABLE `examination_item_results` (
   `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
