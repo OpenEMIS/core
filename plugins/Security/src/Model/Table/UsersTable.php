@@ -211,6 +211,11 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('identity_number', ['type' => 'hidden']);
 	}
 
+	public function editAfterAction(Event $event, Entity $entity) 
+	{
+		$this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
+	}
+
 	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		// not saving empty passwords
 		if (empty($data[$this->alias()]['password'])) {
