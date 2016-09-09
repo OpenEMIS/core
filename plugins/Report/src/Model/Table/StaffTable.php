@@ -50,12 +50,12 @@ class StaffTable extends AppTable  {
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
 		$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
-        pr($fields);
+        
         foreach ($fields as $key => $field) { 
         	//get the value from the table, but change the label to become default identity type.
             if ($field['field'] == 'identity_number') { 
                 $fields[$key] = [
-                    'key' => 'Students.identity_number',
+                    'key' => 'Staff.identity_number',
                     'field' => 'identity_number',
                     'type' => 'string',
                     'label' => __($identity->name)
