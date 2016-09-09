@@ -86,11 +86,15 @@
                                         </td>
                                         <td>
                                             <?php
-                                                echo $this->Form->input("$fieldPrefix.date", [
-                                                    'type' => 'text',
-                                                    'label' => false,
-                                                    //'options' => $examinationGradingTypeOptions
-                                                ]);
+                                                $attr = [];
+                                                $attr['null'] = true;
+                                                $attr['default_date'] = false;
+                                                $attr['class'] = 'margin-top-10 no-margin-bottom';
+                                                $attr['field'] = 'date';
+                                                $attr['model'] = $fieldPrefix;
+                                                $attr['id'] = 'date_'.$i;
+                                                $attr['label'] = false;
+                                                echo $this->HtmlField->date('edit', $item, $attr);
                                             ?>
                                         </td>
                                         <td>
