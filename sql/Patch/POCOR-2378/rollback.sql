@@ -6,8 +6,6 @@ DROP TABLE `examination_grading_types`;
 
 DROP TABLE `examination_grading_options`;
 
-DROP TABLE `examination_items_grading_types`;
-
 DROP TABLE `examination_centres`;
 
 DROP TABLE `examination_centre_subjects`;
