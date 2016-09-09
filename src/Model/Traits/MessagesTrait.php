@@ -304,6 +304,9 @@ trait MessagesTrait {
         'RubricTemplateOptions' => [
             'weighting' => 'Weighting'
         ],
+        'IdentityTypes' => [
+            'deleteDefault' => 'Please set other identity type as default before deleting the current one'
+        ],
         'security' => [
             'login' => [
                 'fail' => 'You have entered an invalid username or password.',
