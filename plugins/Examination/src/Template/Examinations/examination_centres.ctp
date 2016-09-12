@@ -54,43 +54,33 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
     </div>
     <div class="step-content">
         <div class="step-pane sample-pane active" data-step="1">
-            <div class="dropdown-filter">
-                <div class="filter-label">
-                    <i class="fa fa-filter"></i>
-                    <label>Filter</label>
-                </div>
-                <div class="text">
-                    <label>Openemis No.</label>
-                    <input ng-model="InstitutionStudentController.internalFilterOpenemisNo" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
-                </div>
-                <div class="text">
-                    <label>First Name</label>
-                    <input ng-model="InstitutionStudentController.internalFilterFirstName" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
-                </div>
-                <div class="text">
-                    <label>Last Name</label>
-                    <input ng-model="InstitutionStudentController.internalFilterLastName" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
-                </div>
-                <div class="text">
-                    <label>{{ InstitutionStudentController.defaultIdentityTypeName }}</label>
-                    <input ng-model="InstitutionStudentController.internalFilterIdentityNumber" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
-                </div>
-
-                <div class="search-action-btn margin-top-10 margin-bottom-10">
-                    <button class="btn btn-default btn-xs" ng-click="reloadInternalDatasource(true)">Filter</button>
-                    <button class="btn btn-outline btn-xs" ng-click="clearInternalSearchFilters()" type="reset" value="Clear">Clear</button>
-                </div>
-            </div>
-
-            <div class="table-wrapper">
-                <div ng-init="institution_id=<?= $institutionId; ?>">
-                    <div class="scrolltabs sticky-content">
-                        <div id="institution-student-table" class="table-wrapper">
-                            <div ng-if="InstitutionStudentController.internalGridOptions" ag-grid="InstitutionStudentController.internalGridOptions" class="sg-theme"></div>
-                        </div>
+            <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
+                <div class="input string required">
+                    <label>Academic Period</label>
+                    <div class="input-select-wrapper">
+                        <select name="ExaminationCentres[academic_period_id]" id="examinationcentres-academic_period_id"
+                            ng-options="option.id as option.name for option in ExamCentreController.academicPeriods"
+                            ng-model="ExamCentreController.academicPeriodId"
+                            ng-change="ExamCentreController.changePeriod()"
+                            ng-init="ExamCentreController.academicPeriodId='';"
+                            >
+                            <option value="" >-- Select --</option>
+                        </select>
                     </div>
                 </div>
-            </div>
+                <div class="input string required">
+                    <label>Examination</label>
+                    <div class="input-select-wrapper">
+                        <select name="ExaminationCentres[examination]" id="examinationcentres-examination"
+                            ng-options="option.id as option.name for option in ExamCentreController.examinations"
+                            ng-model="ExamCentreController.examinationId"
+                            ng-init="ExamCentreController.examinationId='';"
+                            >
+                            <option value="" >-- Select --</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
         </div>
         <div class="step-pane sample-pane active" data-step="2">
             <div class="dropdown-filter">
