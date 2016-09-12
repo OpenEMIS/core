@@ -9,6 +9,15 @@ function ExaminationCentresController($scope, $window, $filter, UtilsSvc, AlertS
 
     var pageSize = 10;
 
+    // Setup Page variable
+    vm.academicPeriodId = null;
+    vm.academicPeriods = [];
+    vm.examinationId = null;
+    vm.examinations = [];
+
+    // Controller functions
+    vm.changePeriod = changePeriod;
+
     // // Variables
     // StudentController.externalSearch = false;
     // StudentController.hasExternalDataSource;
@@ -63,13 +72,25 @@ function ExaminationCentresController($scope, $window, $filter, UtilsSvc, AlertS
 
 
     angular.element(document).ready(function () {
-        ExaminationCentresController.init(angular.baseUrl);
-
+        ExaminationCentresSvc.init(angular.baseUrl);
+        ExaminationCentresSvc.getAcademicPeriods()
+        .then(function(response) {
+            console.log(response.data);
+            vm.academicPeriods = response.data;
+        }, function(error){});
+        // console.log(vm.academicPeriods);
         // UtilsSvc.isAppendLoader(true);
-
-
-
     });
+
+    function changePeriod() {
+        ExaminationCentresSvc.getExamination(vm.academicPeriodId)
+        .then(function(response) {
+            vm.examinations = response.data;
+            console.log(response.data);
+        }, function(error) {
+
+        })
+    }
 
     // $scope.initGrid = function() {
 
