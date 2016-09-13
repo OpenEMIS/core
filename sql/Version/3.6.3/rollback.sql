@@ -48,14 +48,20 @@ INNER JOIN `z_3319_institutions`
 ON `institutions`.`id` = `z_3319_institutions`.`id`
 SET `institutions`.`date_closed` = `z_3319_institutions`.`date_closed`, `institutions`.`year_closed` = `z_3319_institutions`.`year_closed`;
 
+-- remove back up table
+DROP TABLE`z_3319_institutions`;
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3319';
 
 
 -- POCOR-3193
--- replace deletd records into institution_subjects table
+-- replace deleted records into institution_subjects table
 INSERT INTO `institution_subjects`
 SELECT * FROM `z_3193_institution_subjects`;
+
+-- remove backup table
+DROP TABLE `z_3193_institution_subjects`;
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3193';
@@ -67,6 +73,9 @@ UPDATE `user_contacts`
 INNER JOIN `z_3272_user_contacts`
 ON `user_contacts`.`id` = `z_3272_user_contacts`.`id`
 SET `user_contacts`.`value` = `z_3272_user_contacts`.`value`;
+
+-- remove backup table
+DROP TABLE `z_3272_user_contacts`;
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3272';
