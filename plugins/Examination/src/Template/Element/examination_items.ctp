@@ -1,7 +1,8 @@
 <?php
     $alias = $ControllerAction['table']->alias();
-    $this->Form->unlockField('Examination.examination_items');
-    // pr($data);
+    if ($ControllerAction['action'] == 'add') {
+        $this->Form->unlockField('Examinations.examination_items');
+    }
 ?>
 
 <?php if ($ControllerAction['action'] == 'view') : ?>
@@ -48,6 +49,7 @@
                             <th><?= __('Date') ?></th>
                             <th><?= __('Start Time') ?></th>
                             <th><?= __('End Time') ?></th>
+                            <th></th>
                         </thead>
                         <?php if (isset($data['examination_items'])) : ?>
                             <tbody>
@@ -59,22 +61,17 @@
                                     <tr>
                                         <td>
                                             <?php
-                                                if ($ControllerAction['action'] == 'add') {
-                                                    echo $this->Form->hidden("$fieldPrefix.education_subject_id", ['value' => $item['education_subject_id']]);
-                                                    echo $item->education_subject_code;
-                                                } else {
-                                                    echo $this->Form->hidden("$fieldPrefix.education_subject_id", ['value' => $item['education_subject_id']]);
-                                                    echo $item->education_subject->code;
+                                                if ($ControllerAction['action'] == 'edit') {
+                                                    echo $this->Form->hidden("$fieldPrefix.id");
                                                 }
+
+                                                echo $this->Form->hidden("$fieldPrefix.education_subject_id", ['value' => $item['education_subject_id']]);
+                                                echo $item->education_subject->code;
                                             ?>
                                         </td>
                                         <td>
                                             <?php
-                                                if ($ControllerAction['action'] == 'add') {
-                                                    echo $item->education_subject_name;
-                                                } else {
-                                                    echo $item->education_subject->name;
-                                                }
+                                                echo $item->education_subject->name;
                                             ?>
                                         </td>
                                         <td>
@@ -89,9 +86,11 @@
                                         </td>
                                         <td>
                                             <?php
+                                                $emptySelect = '-- ' . __('Select') . ' --';
                                                 echo $this->Form->input("$fieldPrefix.examination_grading_type_id", [
                                                     'type' => 'select',
                                                     'label' => false,
+                                                    'empty' => $emptySelect,
                                                     'options' => $examinationGradingTypeOptions
                                                 ]);
                                             ?>
@@ -135,6 +134,14 @@
                                                 echo $this->HtmlField->time('edit', $item, $attr);
                                             ?>
                                         </td>
+                                        <td>
+                                            <?php
+                                                if ($ControllerAction['action'] == 'add') {
+                                                    echo "<button onclick='jsTable.doRemove(this); SurveyForm.updateSection();' aria-expanded='true' type='button' class='btn btn-dropdown action-toggle btn-single-action'><i class='fa fa-trash'></i>&nbsp;<span>Delete</span></button>";
+                                                }
+                                            ?>
+                                        </td>
+
                                     </tr>
                                 <?php endforeach ?>
                             </tbody>
