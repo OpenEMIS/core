@@ -84,6 +84,8 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('StudentSurveys', 					['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionSurveys', 				['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
 
+		$this->hasMany('ExaminationCentres',				['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
+
 		$this->belongsToMany('SecurityGroups', [
 			'className' => 'Security.SystemGroups',
 			'joinTable' => 'security_group_institutions',
@@ -773,5 +775,21 @@ class InstitutionsTable extends AppTable  {
 			'options' => $this->shiftTypes
 		];
 		return $filters;
+	}
+
+	public function findNotExamCentres(Query $query, array $options)
+	{
+		if (isset($options['examination_id'])) {
+			$query
+				->leftJoinWith('ExaminationCentres', function($q) use ($options) {
+					return $q
+						->where(['ExaminationCentres.examination_id' => $options['examination_id']]);
+				})
+				->where([
+					'ExaminationCentres.institution_id IS NULL'
+				])
+				;
+			return $query;
+		}
 	}
 }
