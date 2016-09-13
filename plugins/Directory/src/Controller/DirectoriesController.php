@@ -305,35 +305,35 @@ class DirectoriesController extends AppController {
 				'text' => __('Account')
 			],
 			'Identities' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Identities', $id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Identities'],
 				'text' => __('Identities')
 			],
 			'UserNationalities' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Nationalities', $id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Nationalities'],
 				'text' => __('Nationalities')
 			],
 			'Contacts' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Contacts', $id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Contacts'],
 				'text' => __('Contacts')
 			],
 			'Languages' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Languages', $id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Languages'],
 				'text' => __('Languages')
 			],
 			'Comments' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Comments', $id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Comments'],
 				'text' => __('Comments')
 			],
 			'Attachments' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Attachments', $id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Attachments'],
 				'text' => __('Attachments')
 			],
 			'SpecialNeeds' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'SpecialNeeds', $id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'SpecialNeeds'],
 				'text' => __('Special Needs')
 			],
 			'History' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'History', $id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'History'],
 				'text' => __('History')
 			]
 		];
