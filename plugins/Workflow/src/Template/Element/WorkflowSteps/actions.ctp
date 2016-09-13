@@ -118,6 +118,7 @@
 									</td>
 									<td class="vertical-align-top">
 										<?= $this->Form->input("WorkflowSteps.workflow_actions.$key.next_workflow_step_id", ['label' => false, 'options' => $nextStepOptions]); ?>
+										<?= $this->Form->hidden("WorkflowSteps.workflow_actions.$key.workflow_step_id", ['value' => $data->id]); ?>
 									</td>
 									<td class="center vertical-align-top">
 										<?= $this->Form->checkbox("WorkflowSteps.workflow_actions.$key.comment_required", ['class' => 'icheck-input', 'checked' => $obj->comment_required]); ?>
