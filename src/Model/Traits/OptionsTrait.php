@@ -24,6 +24,9 @@ trait OptionsTrait {
 			'AssessmentGradingTypes' => [
 				'result_type' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades')]
 			],
+			'ExaminationGradingTypes' => [
+				'result_type' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades')]
+			],
 			'Surveys' => [
 				'status' => [0 => __('New'), 1 => __('Draft'), 2 => __('Completed')]
 			],

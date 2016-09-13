@@ -15,6 +15,7 @@ class ExaminationItemsTable extends AppTable {
         parent::initialize($config);
         $this->belongsTo('Examination', ['className' => 'Examination.Examinations']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+        $this->belongsTo('ExaminationGradingTypes', ['className' => 'Examination.ExaminationGradingTypes']);
 
     }
 
