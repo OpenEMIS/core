@@ -118,7 +118,7 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('OpenEmis.Map');
         $this->addBehavior('HighChart', ['institutions' => ['_function' => 'getNumberOfInstitutionsByModel']]);
         $this->addBehavior('Import.ImportLink');
-        
+
         $this->shiftTypes = $this->getSelectOptions('Shifts.types'); //get from options trait
 	}
 
@@ -183,7 +183,7 @@ class InstitutionsTable extends AppTable  {
 		$cloneFields = $fields->getArrayCopy();
 		$newFields = [];
 		foreach ($cloneFields as $key => $value) {
-			
+			$newFields[] = $value;
 			if ($value['field'] == 'area_id') {
 				$newFields[] = [
 					'key' => 'Areas.code',
@@ -191,19 +191,17 @@ class InstitutionsTable extends AppTable  {
 					'type' => 'string',
 					'label' => ''
 				];
-			} else  if ($value['field'] == 'shift_type') {
-				$newFields[] = [
-					'key' => 'Institutions.shift_type',
-					'field' => 'shift_type',
-					'type' => 'integer',
-					'label' => 'Shift Type',
-					'constant' => 'shiftTypes',
-				];
-			} else {
-				$newFields[] = $value;
 			}
 		}
 		$fields->exchangeArray($newFields);
+	}
+
+	public function onExcelGetShiftType(Event $event, Entity $entity) {
+		if (isset($this->shiftTypes[$entity->shift_type])) {
+			return __($this->shiftTypes[$entity->shift_type]);
+		} else {
+			return '';
+		}
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
@@ -268,9 +266,17 @@ class InstitutionsTable extends AppTable  {
 		return ['downloadFile'];
 	}
 
+	public function onUpdateFieldDateClosed(Event $event, array $attr, $action, Request $request)
+	{
+		$attr['default_date'] = false;
+		return $attr;
+
+	}
+
 	public function beforeAction($event) {
 		$this->ControllerAction->field('security_group_id', ['visible' => false]);
 		// $this->ControllerAction->field('institution_site_area_id', ['visible' => false]);
+		$this->ControllerAction->field('date_closed');
 		$this->ControllerAction->field('modified', ['visible' => false]);
 		$this->ControllerAction->field('modified_user_id', ['visible' => false]);
 		$this->ControllerAction->field('created', ['visible' => false]);
@@ -461,7 +467,7 @@ class InstitutionsTable extends AppTable  {
 		if($this->action == 'index'){
 			$areaName = $entity->Areas['name'];
 			// Getting the system value for the area
-			$ConfigItems = TableRegistry::get('ConfigItems');
+			$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 			$areaLevel = $ConfigItems->value('institution_area_level_id');
 
 			// Getting the current area id
@@ -495,7 +501,7 @@ class InstitutionsTable extends AppTable  {
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
 			if ($field == 'area_id' && $this->action == 'index') {
 				// Getting the system value for the area
-				$ConfigItems = TableRegistry::get('ConfigItems');
+				$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 				$areaLevel = $ConfigItems->value('institution_area_level_id');
 
 				$AreaTable = TableRegistry::get('Area.AreaLevels');

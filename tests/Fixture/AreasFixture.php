@@ -2975,6 +2975,20 @@ class AreasFixture extends TestFixture
             'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
+        ], [
+            'id' => '213',
+            'code' => 'TD',
+            'name' => 'Test Delete',
+            'parent_id' => '6',
+            'lft' => '421',
+            'rght' => '422',
+            'area_level_id' => '3',
+            'order' => '54',
+            'visible' => '1',
+            'modified_user_id' => null,
+            'modified' => null,
+            'created_user_id' => '1',
+            'created' => '2015-01-01 00:00:00'
         ]
     ];
 }
