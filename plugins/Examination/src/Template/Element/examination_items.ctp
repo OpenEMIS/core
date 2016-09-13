@@ -49,7 +49,7 @@
                             <th><?= __('Date') ?></th>
                             <th><?= __('Start Time') ?></th>
                             <th><?= __('End Time') ?></th>
-                            <th></th>
+                            <th class="cell-delete"></th>
                         </thead>
                         <?php if (isset($data['examination_items'])) : ?>
                             <tbody>
