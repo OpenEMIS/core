@@ -205,7 +205,8 @@ trait MessagesTrait {
             'noTeacherAssigned' => 'No Teacher Assigned',
             'selectTeacherOrLeaveBlank' => 'Select Teacher or Leave Blank',
             'singleGrade' => 'Single Grade',
-            'multiGrade' => 'Multi Grade'
+            'multiGrade' => 'Multi Grade',
+            'noShift' => 'There are no shifts configured for the selected academic period'
         ],
         'InstitutionSubjects' => [
             'noGrades' => 'No Grades Assigned',
