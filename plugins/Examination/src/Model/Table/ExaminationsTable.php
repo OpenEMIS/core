@@ -17,16 +17,6 @@ class ExaminationsTable extends ControllerActionTable {
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
-
-        $this->belongsToMany('GradingTypes', [
-            'className' => 'Examination.ExaminationGradingTypes',
-            'joinTable' => 'examination_items_grading_types',
-            'foreignKey' => 'examination_period_id',
-            'targetForeignKey' => 'examination_grading_type_id',
-            'through' => 'Examination.ExaminationItemsGradingTypes',
-            'dependent' => true,
-            'cascadeCallbacks' => true
-        ]);
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
