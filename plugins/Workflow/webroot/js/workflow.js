@@ -99,7 +99,7 @@ var Workflow = {
             	} else {
             		$('.workflowtransition-assignee-id').append($('<option>').text(defaultKey).attr('value', ''));
 					$.each(assignees, function(i, value) {
-						$('.workflowtransition-assignee-id').append($('<option>').text(value).attr('value', value));
+						$('.workflowtransition-assignee-id').append($('<option>').text(value).attr('value', i));
 					});
             	}
             },

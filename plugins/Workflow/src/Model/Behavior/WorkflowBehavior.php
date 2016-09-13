@@ -24,7 +24,6 @@ class WorkflowBehavior extends Behavior {
 			'WorkflowSteps' => 'Workflow.WorkflowSteps',
 			'WorkflowStepsRoles' => 'Workflow.WorkflowStepsRoles',
 			'WorkflowActions' => 'Workflow.WorkflowActions',
-			'WorkflowRecords' => 'Workflow.WorkflowRecords',
 			'WorkflowComments' => 'Workflow.WorkflowComments',
 			'WorkflowTransitions' => 'Workflow.WorkflowTransitions'
 		],
@@ -55,7 +54,6 @@ class WorkflowBehavior extends Behavior {
 	private $workflowIds = null;
 
 	private $workflowSetup = null;
-	private $workflowRecord = null;
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -88,13 +86,13 @@ class WorkflowBehavior extends Behavior {
 		$events['ControllerAction.Model.index.beforeAction'] 	= ['callable' => 'indexBeforeAction', 'priority' => 1];
 		if ($this->isCAv4()) {
 			$events['ControllerAction.Model.index.beforeQuery'] 	= ['callable' => 'indexBeforeQuery', 'priority' => 1];
-			$events['ControllerAction.Model.processWorkflow'] 	= ['callable' => 'processWorkflow', 'priority' => 5];
+			$events['ControllerAction.Model.processWorkflow'] 		= ['callable' => 'processWorkflow', 'priority' => 5];
 		} else {
 			$events['ControllerAction.Model.index.beforePaginate'] 	= ['callable' => 'indexBeforePaginate', 'priority' => 1];
 		}
 		$events['ControllerAction.Model.index.afterAction'] 	= ['callable' => 'indexAfterAction', 'priority' => 1000];
 		$events['ControllerAction.Model.view.afterAction'] 		= ['callable' => 'viewAfterAction', 'priority' => 1000];
-		$events['ControllerAction.Model.addEdit.beforeAction'] 		= ['callable' => 'addEditBeforeAction', 'priority' => 1];
+		$events['ControllerAction.Model.addEdit.beforeAction'] 	= ['callable' => 'addEditBeforeAction', 'priority' => 1];
 		$events['Model.custom.onUpdateToolbarButtons'] 			= ['callable' => 'onUpdateToolbarButtons', 'priority' => 1000];
 		$events['Model.custom.onUpdateActionButtons'] 			= ['callable' => 'onUpdateActionButtons', 'priority' => 1000];
 		$events['Workflow.afterTransition'] = 'workflowAfterTransition';
@@ -127,6 +125,18 @@ class WorkflowBehavior extends Behavior {
 		return $model->controller->redirect($url);
 	}
 
+	public function onAssignBack(Event $event, $id, Entity $workflowTransitionEntity) {
+		$model = $this->_table;
+
+		try {
+			$entity = $model->get($id);
+			$this->setAssigneeAsCreator($entity);
+			$model->save($entity);
+		} catch (RecordNotFoundException $e) {
+			// Do nothing
+		}
+	}
+
 	public function getWorkflowEvents(Event $event, ArrayObject $eventsObject) {
 		foreach ($this->workflowEvents as $key => $attr) {
 			$attr['text'] = __($attr['text']);
@@ -136,11 +146,10 @@ class WorkflowBehavior extends Behavior {
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		$this->setAsigneeId($entity);
-	}
-
-	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-		$this->setStatusId($entity);
+		if ($entity->isNew()) {
+			$this->setAssigneeAsCreator($entity);
+			$this->setStatusAsOpen($entity);
+		}
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
@@ -348,18 +357,20 @@ class WorkflowBehavior extends Behavior {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
-		$model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+		$ControllerAction = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+		$model = $this->_table;
 
 		// setup workflow
 		if ($this->attachWorkflow) {
-			$this->workflowRecord = $this->getRecord($this->config('model'), $entity);
-			if (!empty($this->workflowRecord)) {
-				$model->field('status_id', ['visible' => false]);
+			$workflow = $this->getWorkflow($model->registryAlias(), $entity);
+
+			if (!empty($workflow)) {
+				$ControllerAction->field('status_id', ['visible' => false]);
 
 				// Workflow Status - extra field
-				$status = isset($this->workflowRecord->workflow_step->name) ? $this->workflowRecord->workflow_step->name : __('Open');
+				$status = $entity->has('status') ? __($entity->status->name) : __('Open');
 				$entity->workflow_status = $status;
-				$model->field('workflow_status', ['attr' => ['label' => __('Status')]]);
+				$ControllerAction->field('workflow_status', ['attr' => ['label' => __('Status')]]);
 				// End
 
 				// Workflow Transitions - extra field
@@ -374,7 +385,8 @@ class WorkflowBehavior extends Behavior {
 					->find()
 					->contain(['ModifiedUser', 'CreatedUser'])
 					->where([
-						$this->WorkflowTransitions->aliasField('workflow_record_id') => $this->workflowRecord->id
+						$this->WorkflowTransitions->aliasField('workflow_model_id') => $workflow->workflow_model_id,
+						$this->WorkflowTransitions->aliasField('model_reference') => $entity->id
 					])
 					->order([
 						$this->WorkflowTransitions->aliasField('created ASC')
@@ -402,7 +414,7 @@ class WorkflowBehavior extends Behavior {
 					}
 				}
 
-				$model->field('workflow_transitions', [
+				$ControllerAction->field('workflow_transitions', [
 					'type' => 'element',
 					'element' => 'Workflow.transitions',
 					'override' => true,
@@ -414,7 +426,7 @@ class WorkflowBehavior extends Behavior {
 
 				// Reorder fields
 				$fieldOrder = [];
-				$fields = $this->_table->fields;
+				$fields = $model->fields;
 				foreach ($fields as $fieldKey => $fieldAttr) {
 					if (!in_array($fieldKey, ['workflow_status', 'workflow_transitions'])) {
 						$fieldOrder[$fieldAttr['order']] = $fieldKey;
@@ -423,7 +435,7 @@ class WorkflowBehavior extends Behavior {
 				ksort($fieldOrder);
 				array_unshift($fieldOrder, 'workflow_status');	// Set workflow_status to first
 				$fieldOrder[] = 'workflow_transitions';	// Set workflow_transitions to last
-				$model->setFieldOrder($fieldOrder);
+				$ControllerAction->setFieldOrder($fieldOrder);
 				// End
 			} else {
 				// Workflow is not configured
@@ -475,9 +487,11 @@ class WorkflowBehavior extends Behavior {
 	public function onUpdateFieldStatusId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'index') {
 			$attr['type'] = 'select';
-		} else if ($action == 'add' || $action == 'edit') {
+		} else if ($action == 'add') {
 			$attr['type'] = 'hidden';
 			$attr['value'] = 0;
+		} else if ($action == 'edit') {
+			$attr['type'] = 'hidden';
 		}
 
 		return $attr;
@@ -586,60 +600,25 @@ class WorkflowBehavior extends Behavior {
 		}
 	}
 
-	public function getRecord($registryAlias, $entity=null) {
-		$workflow = $this->getWorkflow($registryAlias, $entity);
-		if (!empty($workflow)) {
-			$workflowId = $workflow->id;
-			$workflowModelId = $workflow->workflow_model_id;
-			$where = [
-				$this->WorkflowRecords->aliasField('model_reference') => $entity->id,
-				$this->WorkflowRecords->aliasField('workflow_model_id') => $workflowModelId
-			];
+	public function getRecord() {
+		$ControllerAction = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+		$model = $this->_table;
+		$id = current($ControllerAction->paramsPass());
 
-			$recordResults = $this->WorkflowRecords
-				->find()
-				->where($where)
-				->all();
+		$primaryKey = $ControllerAction->getPrimaryKey($model);
+		$idKey = $model->aliasField($primaryKey);
 
-			// Insert a new record if doesn't exists
-			if ($recordResults->isEmpty()) {
-				$workflowStep = $this->WorkflowSteps
-					->find()
-					->where([
-						$this->WorkflowSteps->aliasField('workflow_id') => $workflowId,
-						$this->WorkflowSteps->aliasField('stage') => 0  // Open
-					])
-					->first();
+		if ($model->exists([$idKey => $id])) {
+			$entity = $model->find()->contain(['Statuses'])->where([$idKey => $id])->first();
 
-				$data = [
-					'model_reference' => $entity->id,
-					'workflow_model_id' => $workflowModelId,
-					'workflow_step_id' => $workflowStep->id,
-					'created_user_id' => 1,
-					'created' => new Time('NOW')
-				];
-				$entity = $this->WorkflowRecords->newEntity($data, ['validate' => false]);
-				if ($this->WorkflowRecords->save($entity)) {
-				} else {
-					$this->log($entity->errors(), 'debug');
-				}
-			}
-
-			return $this->WorkflowRecords
-				->find()
-				->contain(['WorkflowModels', 'WorkflowSteps'])
-				->where($where)
-				->first();
+			return $entity;
 		} else {
 			return null;
 		}
 	}
 
-	public function getWorkflowStep($workflowRecord) {
-		if (!empty($workflowRecord)) {
-			$workflowRecordId = $workflowRecord->id;  // Current Workflow Record
-			$workflowStepId = $workflowRecord->workflow_step_id; // Latest Workflow Step
-
+	public function getWorkflowStep($workflowStepId=null) {
+		if (!is_null($workflowStepId)) {
 			$query = $this->WorkflowSteps
 				->find()
 				->matching('Workflows.WorkflowModels')
@@ -651,7 +630,7 @@ class WorkflowBehavior extends Behavior {
 				])
 				->contain('WorkflowActions.NextWorkflowSteps')
 				->where([
-					$this->WorkflowSteps->aliasField('id') => $workflowStepId
+					$this->WorkflowSteps->aliasField('id') => $workflowStepId // Latest Workflow Step
 				]);
 
 			if (!$this->_table->AccessControl->isAdmin()) {
@@ -683,9 +662,13 @@ class WorkflowBehavior extends Behavior {
 		}
 	}
 
-	public function getModalOptions() {
-		$record = $this->workflowRecord;  // Current Workflow Record
-		$step = $this->workflowRecord->workflow_step; // Latest Workflow Step
+	public function getModalOptions(Entity $entity) {
+		// $record = $this->workflowRecord;  // Current Workflow Record
+		// $step = $this->workflowRecord->workflow_step; // Latest Workflow Step
+		$step = $this->getWorkflowStep($entity->status_id);
+		$workflow = $step->_matchingData['Workflows'];
+
+		$step = $entity->status;
 
 		$alias = $this->WorkflowTransitions->alias();
 		// workflow_step_id is needed for afterSave logic in WorkflowTransitions
@@ -728,13 +711,13 @@ class WorkflowBehavior extends Behavior {
 				'class' => 'workflowtransition-action-description',
 				'unlockField' => true
 			],
-			$alias.'.workflow_record_id' => [
+			$alias.'.workflow_model_id' => [
 				'type' => 'hidden',
-				'value' => $record->id
+				'value' => $workflow->workflow_model_id
 			],
 			$alias.'.model_reference' => [
 				'type' => 'hidden',
-				'value' => $record->model_reference
+				'value' => $entity->id
 			],
 			$alias.'.comment_required' => [
 				'type' => 'hidden',
@@ -830,159 +813,193 @@ class WorkflowBehavior extends Behavior {
 	public function setToolbarButtons(ArrayObject $toolbarButtons, array $attr, $action) {
 		// Unset edit buttons and add action buttons
 		if ($this->attachWorkflow) {
-			$isEditable = false;
-
-			if (is_null($this->workflowRecord)) {
-				// In index page, unset add buttons if Workflows is not configured
-				if ($action == 'index') {
-					if ($this->hasWorkflow == false && $toolbarButtons->offsetExists('add')) {
-						unset($toolbarButtons['add']);
-					}
+			if ($action == 'index') {
+				if ($this->hasWorkflow == false && $toolbarButtons->offsetExists('add')) {
+					unset($toolbarButtons['add']);
 				}
 			} else {
-				$workflowStep = $this->getWorkflowStep($this->workflowRecord);
+				$isEditable = false;
+				$entity = $this->getRecord();
 
-				$actionButtons = [];
-				if (!empty($workflowStep)) {
-					$isSchoolBased = $workflowStep->_matchingData['WorkflowModels']->is_school_based;
+				if ($entity->has('status_id')) {
+					$workflowStep = $this->getWorkflowStep($entity->status_id);
 
-					// Enabled edit button only when login user in approval role for the step and that step is editable
-					if ($workflowStep->is_editable == 1) {
-						$isEditable = true;
-					}
-					// End
+					$actionButtons = [];
+					if (!empty($workflowStep)) {
+						$isSchoolBased = $workflowStep->_matchingData['WorkflowModels']->is_school_based;
 
-					foreach ($workflowStep->workflow_actions as $actionKey => $actionObj) {
+						// Enabled edit button only when login user in approval role for the step and that step is editable
+						if ($workflowStep->is_editable == 1) {
+							$isEditable = true;
+						}
+						// End
 
-						$eventKeys = $actionObj->event_key;
-						$eventsObject = new ArrayObject();
-						$subjectEvent = $this->_table->dispatchEvent('Workflow.getEvents', [$eventsObject], $this->_table);
-						if ($subjectEvent->isStopped()) { return $subjectEvent->result; }
-						$eventArray = $eventsObject->getArrayCopy();
+						foreach ($workflowStep->workflow_actions as $actionKey => $actionObj) {
 
-						$eventDescription = '';
-						$events = explode(",", $eventKeys);
-						foreach ($events as $eventKey) {
-							$key = array_search($eventKey, array_column($eventArray, 'value'));
-							if ($key !== false) {
-								if (isset($eventArray[$key]['description'])) {
-									$eventDescription .= $eventArray[$key]['description'];
-									$eventDescription .= '<br/>';
+							$eventKeys = $actionObj->event_key;
+							$eventsObject = new ArrayObject();
+							$subjectEvent = $this->_table->dispatchEvent('Workflow.getEvents', [$eventsObject], $this->_table);
+							if ($subjectEvent->isStopped()) { return $subjectEvent->result; }
+							$eventArray = $eventsObject->getArrayCopy();
+
+							$eventDescription = '';
+							$events = explode(",", $eventKeys);
+							foreach ($events as $eventKey) {
+								$key = array_search($eventKey, array_column($eventArray, 'value'));
+								if ($key !== false) {
+									if (isset($eventArray[$key]['description'])) {
+										$eventDescription .= $eventArray[$key]['description'];
+										$eventDescription .= '<br/>';
+									}
+								}
+							}
+
+							$actionType = $actionObj->action;
+							$button = [
+								'id' => $actionObj->id,
+								'name' => $actionObj->name,
+								'description' => $actionObj->description,
+								'next_step_id' => $actionObj->next_workflow_step_id,
+								'next_step_name' => $actionObj->next_workflow_step->name,
+								'comment_required' => $actionObj->comment_required,
+								'event_description' => $eventDescription,
+								'is_school_based' => $isSchoolBased
+							];
+							$json = json_encode($button, JSON_NUMERIC_CHECK);
+
+							$buttonAttr = [
+								'escapeTitle' => false,
+								'escape' => true,
+								'onclick' => 'Workflow.init();Workflow.copy('.$json.');return false;',
+								'data-toggle' => 'modal',
+								'data-target' => '#workflowTransition'
+							];
+							$buttonAttr = array_merge($attr, $buttonAttr);
+
+							if (is_null($actionType)) {
+								if (array_key_exists('class', $buttonAttr)) {
+									unset($buttonAttr['class']);
+								}
+
+								$actionButton = [];
+								$actionButton['label'] = __($actionObj->name);
+								$actionButton['url'] = '#';
+								$actionButton['attr'] = $buttonAttr;
+								$actionButton['attr']['title'] = __($actionObj->name);
+								$actionButton['attr']['role'] = 'menuitem';
+
+								$actionButtons[] = $actionButton;
+							} else {
+								if ($actionType == 0) { // Approve
+									$approveButton = [];
+									$approveButton['type'] = 'button';
+									$approveButton['label'] = '<i class="fa kd-approve"></i>';
+									$approveButton['url'] = '#';
+									$approveButton['attr'] = $buttonAttr;
+									$approveButton['attr']['title'] = __($actionObj->name);
+
+									$toolbarButtons['approve'] = $approveButton;
+								} else if ($actionType == 1) { // Reject
+									$rejectButton = [];
+									$rejectButton['type'] = 'button';
+									$rejectButton['label'] = '<i class="fa kd-reject"></i>';
+									$rejectButton['url'] = '#';
+									$rejectButton['attr'] = $buttonAttr;
+									$rejectButton['attr']['title'] = __($actionObj->name);
+
+									$toolbarButtons['reject'] = $rejectButton;
 								}
 							}
 						}
-
-						$actionType = $actionObj->action;
-						$button = [
-							'id' => $actionObj->id,
-							'name' => $actionObj->name,
-							'description' => $actionObj->description,
-							'next_step_id' => $actionObj->next_workflow_step_id,
-							'next_step_name' => $actionObj->next_workflow_step->name,
-							'comment_required' => $actionObj->comment_required,
-							'event_description' => $eventDescription,
-							'is_school_based' => $isSchoolBased
-						];
-						$json = json_encode($button, JSON_NUMERIC_CHECK);
-
-						$buttonAttr = [
-							'escapeTitle' => false,
-							'escape' => true,
-							'onclick' => 'Workflow.init();Workflow.copy('.$json.');return false;',
-							'data-toggle' => 'modal',
-							'data-target' => '#workflowTransition'
-						];
-						$buttonAttr = array_merge($attr, $buttonAttr);
-
-						if (is_null($actionType)) {
-							if (array_key_exists('class', $buttonAttr)) {
-								unset($buttonAttr['class']);
-							}
-
-							$actionButton = [];
-							$actionButton['label'] = __($actionObj->name);
-							$actionButton['url'] = '#';
-							$actionButton['attr'] = $buttonAttr;
-							$actionButton['attr']['title'] = __($actionObj->name);
-							$actionButton['attr']['role'] = 'menuitem';
-
-							$actionButtons[] = $actionButton;
-						} else {
-							if ($actionType == 0) { // Approve
-								$approveButton = [];
-								$approveButton['type'] = 'button';
-								$approveButton['label'] = '<i class="fa kd-approve"></i>';
-								$approveButton['url'] = '#';
-								$approveButton['attr'] = $buttonAttr;
-								$approveButton['attr']['title'] = __($actionObj->name);
-
-								$toolbarButtons['approve'] = $approveButton;
-							} else if ($actionType == 1) { // Reject
-								$rejectButton = [];
-								$rejectButton['type'] = 'button';
-								$rejectButton['label'] = '<i class="fa kd-reject"></i>';
-								$rejectButton['url'] = '#';
-								$rejectButton['attr'] = $buttonAttr;
-								$rejectButton['attr']['title'] = __($actionObj->name);
-
-								$toolbarButtons['reject'] = $rejectButton;
-							}
-						}
 					}
+
+					if (!$this->_table->AccessControl->isAdmin() && $toolbarButtons->offsetExists('edit') && !$isEditable) {
+						unset($toolbarButtons['edit']);
+					}
+
+					// More Actions
+					$moreButtonLink = [];
+					if (!empty($actionButtons)) {
+						$moreButtonLink = [
+							'title' => __('More Actions') . '<span class="caret-down"></span>',
+							'url' => '#',
+							'options' => [
+								'escapeTitle' => false, // Disabled coversion of HTML special characters in $title to HTML entities
+								'id' => 'action-menu',
+								'class' => 'btn btn-default action-toggle outline-btn',
+								'data-toggle' => 'dropdown',
+								'aria-expanded' => true
+							]
+						];
+
+						$moreButton = [];
+						$moreButton['type'] = 'element';
+						$moreButton['element'] = 'Workflow.buttons';
+						$moreButton['data'] = [
+							'buttons' => $actionButtons
+						];
+						$moreButton['options'] = [];
+
+						$toolbarButtons['more'] = $moreButton;
+					}
+					$this->_table->controller->set(compact('moreButtonLink', 'actionButtons'));
+					// End
+
+					// Modal
+					$modal = $this->getModalOptions($entity);
+					if (!isset($this->_table->controller->viewVars['modals'])) {
+						$this->_table->controller->set('modals', ['workflowTransition' => $modal]);
+					} else {
+						$modals = array_merge($this->_table->controller->viewVars['modals'], ['workflowTransition' => $modal]);
+						$this->_table->controller->set('modals', $modals);
+					}
+					// End
 				}
+			}
+		}
+	}
 
-				if (!$this->_table->AccessControl->isAdmin() && $toolbarButtons->offsetExists('edit') && !$isEditable) {
-					unset($toolbarButtons['edit']);
-				}
+	public function setAssigneeAsCreator(Entity $entity) {
+		if ($entity->has('assignee_id')) {
+			$entity->assignee_id = $entity->created_user_id;
+		}
+	}
 
-				// More Actions
-				$moreButtonLink = [];
-				if (!empty($actionButtons)) {
-					$moreButtonLink = [
-						'title' => __('More Actions') . '<span class="caret-down"></span>',
-						'url' => '#',
-						'options' => [
-							'escapeTitle' => false, // Disabled coversion of HTML special characters in $title to HTML entities
-							'id' => 'action-menu',
-							'class' => 'btn btn-default action-toggle outline-btn',
-							'data-toggle' => 'dropdown',
-							'aria-expanded' => true
-						]
-					];
+	public function setStatusAsOpen(Entity $entity) {
+		$model = $this->_table;
 
-					$moreButton = [];
-					$moreButton['type'] = 'element';
-					$moreButton['element'] = 'Workflow.buttons';
-					$moreButton['data'] = [
-						'buttons' => $actionButtons
-					];
-					$moreButton['options'] = [];
+		if($model->hasBehavior('Workflow') && $entity->has('status_id')) {
+			$workflow = $this->getWorkflow($model->registryAlias(), $entity);
+			if (!empty($workflow)) {
+				$workflowId = $workflow->id;
+				$workflowStep = $this->WorkflowSteps
+					->find()
+					->where([
+						$this->WorkflowSteps->aliasField('workflow_id') => $workflowId,
+						$this->WorkflowSteps->aliasField('stage') => 0  // Open
+					])
+					->first();
+				$statusId = $workflowStep->id;
 
-					$toolbarButtons['more'] = $moreButton;
-				}
-				$this->_table->controller->set(compact('moreButtonLink', 'actionButtons'));
-				// End
+				$entity->status_id = $statusId;
 
-				// Modal
-				$modal = $this->getModalOptions();
-				if (!isset($this->_table->controller->viewVars['modals'])) {
-					$this->_table->controller->set('modals', ['workflowTransition' => $modal]);
-				} else {
-					$modals = array_merge($this->_table->controller->viewVars['modals'], ['workflowTransition' => $modal]);
-					$this->_table->controller->set('modals', $modals);
-				}
+				$subject = $model;
+				// Trigger workflow update status event here
+				$event = $subject->dispatchEvent('Workflow.updateWorkflowStatus', [$entity, $statusId], $subject);
+				if ($event->isStopped()) { return $event->result; }
 				// End
 			}
 		}
 	}
 
 	public function setAssigneeId(Entity $entity, $requestData) {
-		if($this->_table->hasBehavior('Workflow')) {
+		$model = $this->_table;
+		if ($model->hasBehavior('Workflow')) {
 			if (array_key_exists($this->WorkflowTransitions->alias(), $requestData)) {
 				if (array_key_exists('assignee_id', $requestData[$this->WorkflowTransitions->alias()])) {
 					$assigneeId = $requestData[$this->WorkflowTransitions->alias()]['assignee_id'];
 					if ($entity->has('assignee_id')) {
-						$this->_table->updateAll(
+						$model->updateAll(
 							['assignee_id' => $assigneeId],
 							['id' => $entity->id]
 						);
@@ -992,37 +1009,27 @@ class WorkflowBehavior extends Behavior {
 		}
 	}
 
-	public function setStatusId(Entity $entity) {
-		if($this->_table->hasBehavior('Workflow')) {
-			$workflowRecord = $this->getRecord($this->_table->registryAlias(), $entity);
-			if (!empty($workflowRecord)) {
-				$statusId = $workflowRecord->workflow_step_id;
-				if ($entity->has('status_id')) {
-					$this->_table->updateAll(
-						['status_id' => $statusId],
-						['id' => $entity->id]
-					);
+	public function setStatusId(Entity $entity, $requestData) {
+		$model = $this->_table;
+		if ($model->hasBehavior('Workflow')) {
+			if (array_key_exists($this->WorkflowTransitions->alias(), $requestData)) {
+				if (array_key_exists('workflow_step_id', $requestData[$this->WorkflowTransitions->alias()])) {
+					$statusId = $requestData[$this->WorkflowTransitions->alias()]['workflow_step_id'];
+					if ($entity->has('status_id')) {
+						$model->updateAll(
+							['status_id' => $statusId],
+							['id' => $entity->id]
+						);
+					}
 				}
-
-				$subject = $this->_table;
-				// Trigger workflow update status event here
-				$event = $subject->dispatchEvent('Workflow.updateWorkflowStatus', [$entity, $statusId], $subject);
-				if ($event->isStopped()) { return $event->result; }
-				// End
 			}
-		}
-	}
-
-	public function setAsigneeId(Entity $entity) {
-		if ($entity->isNew() && $entity->has('created_user_id')) {
-			$entity->assignee_id = $entity->created_user_id;
 		}
 	}
 
 	public function workflowAfterTransition(Event $event, $id=null, $requestData) {
 		$entity = $this->_table->get($id);
 		$this->setAssigneeId($entity, $requestData);
-		$this->setStatusId($entity);
+		$this->setStatusId($entity, $requestData);
 	}
 
 	public function processWorkflow() {
@@ -1038,10 +1045,7 @@ class WorkflowBehavior extends Behavior {
 
 			// Insert into workflow_transitions.
 			$entity = $this->WorkflowTransitions->newEntity($requestData, ['validate' => false]);
-			
-			// $workflowRecord = $this->WorkflowRecords->get($entity->workflow_record_id);
-			// $id = $workflowRecord->model_reference;
-			$id = $requestData['WorkflowTransitions']['model_reference'];
+			$id = $entity->model_reference;
 
 			if ($this->WorkflowTransitions->save($entity)) {
 				$this->_table->controller->Alert->success('general.edit.success', ['reset' => true]);
@@ -1055,10 +1059,12 @@ class WorkflowBehavior extends Behavior {
 				$workflowAction = $this->WorkflowActions->get($entity->workflow_action_id);
 
 				if (!empty($workflowAction->event_key)) {
-					$eventKey = $workflowAction->event_key;
+					$eventKeys = explode(",", $workflowAction->event_key);
 
-					$event = $subject->dispatchEvent($eventKey, [$id, $entity], $subject);
-					if ($event->isStopped()) { return $event->result; }
+					foreach ($eventKeys as $eventKey) {
+						$event = $subject->dispatchEvent($eventKey, [$id, $entity], $subject);
+						if ($event->isStopped()) { return $event->result; }
+					}
 				}
 				// End
 			} else {
