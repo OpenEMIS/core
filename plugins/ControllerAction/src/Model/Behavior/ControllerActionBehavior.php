@@ -14,13 +14,13 @@ use ControllerAction\Model\Traits\EventTrait;
 
 class ControllerActionBehavior extends Behavior {
     use EventTrait;
-    
+
     protected $_defaultConfig = [
         'actions' => [
-            'index' => true, 
-            'add' => true, 
-            'view' => true, 
-            'edit' => true, 
+            'index' => true,
+            'add' => true,
+            'view' => true,
+            'edit' => true,
             'remove' => 'cascade',
             'search' => ['orderField' => 'order'],
             'reorder' => ['orderField' => 'order'],
@@ -148,7 +148,7 @@ class ControllerActionBehavior extends Behavior {
                 $fields[$field]['labelKey'] = 'general';
             }
         }
-        
+
         $this->_table->fields = $fields;
     }
 
@@ -239,7 +239,7 @@ class ControllerActionBehavior extends Behavior {
         } else if ($params === 'QUERY') {
             $url = array_merge($url, $this->paramsQuery());
         }
-        
+
         return $url;
     }
 
@@ -261,7 +261,7 @@ class ControllerActionBehavior extends Behavior {
         if ($order == false) {
             $order = $model->fieldOrder - 1;
         }
-        
+
         $_attr = [
             'type' => 'string',
             'null' => true,
@@ -307,7 +307,9 @@ class ControllerActionBehavior extends Behavior {
 
         if (is_array($field)) {
             foreach ($field as $key) {
-                $fields[$key]['order'] = $order++;
+                if (array_key_exists($key, $fields)) {
+                    $fields[$key]['order'] = $order++;
+                }
             }
         } else {
             $found = false;
@@ -317,7 +319,7 @@ class ControllerActionBehavior extends Behavior {
                 if (!isset($fields[$key]['order'])) {
                     $fields[$key]['order'] = $count;
                 }
-                
+
                 if ($found && $key !== $field) {
                     $fields[$key]['order'] = $fields[$key]['order'] + 1;
                 } else {
