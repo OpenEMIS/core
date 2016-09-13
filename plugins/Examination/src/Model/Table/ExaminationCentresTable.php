@@ -10,9 +10,10 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function initialize(array $config)
     {
         $this->table('examination_centres');
+        parent::initialize($config);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        parent::initialize($config);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
     }
 
     public function addEditBeforeAction(Event $event) {

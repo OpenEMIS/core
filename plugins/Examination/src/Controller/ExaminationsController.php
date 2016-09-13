@@ -5,6 +5,7 @@ use App\Controller\AppController;
 use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Table;
+use Cake\Utility\Inflector;
 
 class ExaminationsController extends AppController
 {
@@ -31,18 +32,19 @@ class ExaminationsController extends AppController
 
     public function beforeFilter(Event $event) {
         parent::beforeFilter($event);
-        if ($this->request->action=='addNewAssessmentPeriod') {
-            $this->request->params['_ext'] = 'json';
-        }
+        $header = __('Examination');
+        $this->Navigation->addCrumb('Examinations');
+        $action = $this->request->params['action'];
+        $header = $header .' - '.__(Inflector::humanize($action));
+        $this->Navigation->addCrumb(__(Inflector::humanize($action)), ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => $action]);
+        $this->set('contentHeader', $header);
     }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
-        $header = __('Examination');
-        $header .= ' - ' . $model->getHeader($model->alias);
-        $this->Navigation->addCrumb('Examinations', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
-        $this->Navigation->addCrumb($model->getHeader($model->alias));
-
-        $this->set('contentHeader', $header);
+        $action = $model->action;
+        if ($action != 'index') {
+            $this->Navigation->addCrumb(__(Inflector::humanize($action)));
+        }
     }
 
     public function getExamsTab()
