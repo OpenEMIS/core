@@ -9,21 +9,26 @@ function ExaminationCentresController($scope, $window, $filter, UtilsSvc, AlertS
 
     var pageSize = 10;
 
+    // Shared variable
+    vm.currentStep = 1;
+    vm.showNextButton = false;
+
     // Setup Page variable
     vm.academicPeriodId = null;
     vm.academicPeriods = [];
     vm.examinationId = null;
     vm.examinations = [];
+    vm.centreType = null;
 
     // Controller functions
     vm.changePeriod = changePeriod;
-
-    // // Variables
+    vm.translatedAgGridHeader;
+    // Variables
     // StudentController.externalSearch = false;
     // StudentController.hasExternalDataSource;
-    // StudentController.internalGridOptions = null;
+    vm.gridOptions = null;
     // StudentController.externalGridOptions = null;
-    // StudentController.rowsThisPage = 0;
+    vm.rowsThisPage = 0;
     // StudentController.createNewStudent = false;
     // StudentController.genderOptions = {};
     // StudentController.academicPeriodOptions = {};
@@ -31,11 +36,10 @@ function ExaminationCentresController($scope, $window, $filter, UtilsSvc, AlertS
     // StudentController.classOptions = {};
     // StudentController.step = 'internal_search';
 
-    // // filter variables
-    // StudentController.internalFilterOpenemisNo;
-    // StudentController.internalFilterFirstName;
-    // StudentController.internalFilterLastName;
-    // StudentController.internalFilterIdentityNumber;
+    // filter variables
+    vm.institutionCode;
+    vm.institutionName;
+    vm.institutionType;
     // StudentController.externalFilterOpenemisNo;
     // StudentController.externalFilterFirstName;
     // StudentController.externalFilterLastName;
@@ -43,7 +47,9 @@ function ExaminationCentresController($scope, $window, $filter, UtilsSvc, AlertS
 
     // // Controller functions
     // StudentController.processStudentRecord = processStudentRecord;
-    // StudentController.createNewInternalDatasource = createNewInternalDatasource;
+    vm.createNewDatasource = createNewDatasource;
+    vm.reloadDatasource = reloadDatasource;
+    vm.processInstitutionRecord = processInstitutionRecord;
     // StudentController.createNewExternalDatasource = createNewExternalDatasource;
     // StudentController.insertStudentData = insertStudentData;
     // StudentController.onChangeAcademicPeriod = onChangeAcademicPeriod;
@@ -75,8 +81,10 @@ function ExaminationCentresController($scope, $window, $filter, UtilsSvc, AlertS
         ExaminationCentresSvc.init(angular.baseUrl);
         ExaminationCentresSvc.getAcademicPeriods()
         .then(function(response) {
-            console.log(response.data);
+            // console.log(response.data);
+            console.log(vm.translatedAgGridHeader);
             vm.academicPeriods = response.data;
+            $scope.initGrid();
         }, function(error){});
         // console.log(vm.academicPeriods);
         // UtilsSvc.isAppendLoader(true);
@@ -86,85 +94,50 @@ function ExaminationCentresController($scope, $window, $filter, UtilsSvc, AlertS
         ExaminationCentresSvc.getExamination(vm.academicPeriodId)
         .then(function(response) {
             vm.examinations = response.data;
-            console.log(response.data);
+            vm.examinationId = null;
         }, function(error) {
 
         })
     }
 
-    // $scope.initGrid = function() {
+    $scope.initGrid = function() {
+        vm.gridOptions = {
+            columnDefs: [
+                {
+                    field:'id',
+                    headerName:'',
+                    suppressMenu: true,
+                    suppressSorting: true,
+                    width: 40,
+                    maxWidth: 40,
+                    cellRenderer: function(params) {
+                        return '<div><input  name="ngSelectionCell" ng-click="ExamCentreController.selectInstitution('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="checkbox" selectInstitution="'+params.value+'"/></div>';
+                    }
+                },
+                {headerName: "Code", field: "code", suppressMenu: true, suppressSorting: true},
+                {headerName: "Name", field: "name", suppressMenu: true, suppressSorting: true},
+                // {headerName: (angular.isDefined(StudentController.defaultIdentityTypeName))? StudentController.defaultIdentityTypeName: "[default identity type not set]", field: "identity_number", suppressMenu: true, suppressSorting: true},
+            ],
+            enableColResize: false,
+            enableFilter: true,
+            enableServerSideFilter: true,
+            enableServerSideSorting: true,
+            enableSorting: true,
+            headerHeight: 38,
+            rowData: [],
+            rowHeight: 38,
+            rowModelType: 'pagination',
+            onGridReady: function() {
+                UtilsSvc.isAppendLoader(false);
+            },
+            angularCompileRows: true
+        };
+    };
 
-    //     StudentController.internalGridOptions = {
-    //         columnDefs: [
-    //             {
-    //                 field:'id',
-    //                 headerName:'',
-    //                 suppressMenu: true,
-    //                 suppressSorting: true,
-    //                 width: 40,
-    //                 maxWidth: 40,
-    //                 cellRenderer: function(params) {
-    //                     var data = JSON.stringify(params.data);
-    //                     return '<div><input  name="ngSelectionCell" ng-click="InstitutionStudentController.selectStudent('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStudent="'+params.value+'"/></div>';
-    //                 }
-    //             },
-    //             {headerName: "Openemis No", field: "openemis_no", suppressMenu: true, suppressSorting: true},
-    //             {headerName: "First Name", field: "first_name", suppressMenu: true, suppressSorting: true},
-    //             {headerName: "Last Name", field: "last_name", suppressMenu: true, suppressSorting: true},
-    //             {headerName: (angular.isDefined(StudentController.defaultIdentityTypeName))? StudentController.defaultIdentityTypeName: "[default identity type not set]", field: "identity_number", suppressMenu: true, suppressSorting: true},
-    //         ],
-    //         enableColResize: false,
-    //         enableFilter: true,
-    //         enableServerSideFilter: true,
-    //         enableServerSideSorting: true,
-    //         enableSorting: true,
-    //         headerHeight: 38,
-    //         rowData: [],
-    //         rowHeight: 38,
-    //         rowModelType: 'pagination',
-    //         onGridReady: function() {
-    //             $scope.reloadInternalDatasource(false);
-    //             UtilsSvc.isAppendLoader(false);
-    //         },
-    //         angularCompileRows: true
-    //     };
-
-    //     StudentController.externalGridOptions = {
-    //         columnDefs: [
-    //             {
-    //                 field:'id',
-    //                 headerName:'',
-    //                 suppressMenu: true,
-    //                 suppressSorting: true,
-    //                 width: 40,
-    //                 maxWidth: 40,
-    //                 cellRenderer: function(params) {
-    //                     var data = JSON.stringify(params.data);
-    //                     return '<div><input  name="ngSelectionCell" ng-click="InstitutionStudentController.selectStudent('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStudent="'+params.value+'"/></div>';
-    //                 }
-    //             },
-    //             {headerName: "Openemis No", field: "openemis_no", suppressMenu: true, suppressSorting: true},
-    //             {headerName: "First Name", field: "first_name", suppressMenu: true, suppressSorting: true},
-    //             {headerName: "Last Name", field: "last_name", suppressMenu: true, suppressSorting: true},
-    //             {headerName: (angular.isDefined(StudentController.defaultIdentityTypeName))? StudentController.defaultIdentityTypeName: "[default identity type not set]", field: "identity_number", suppressMenu: true, suppressSorting: true},
-    //         ],
-    //         enableColResize: false,
-    //         enableFilter: true,
-    //         enableServerSideFilter: true,
-    //         enableServerSideSorting: true,
-    //         enableSorting: true,
-    //         headerHeight: 38,
-    //         rowData: [],
-    //         rowHeight: 38,
-    //         rowModelType: 'pagination',
-    //         angularCompileRows: true
-    //     };
-    // };
-
-    // $scope.reloadInternalDatasource = function (withData) {
+    function reloadDatasource(withData) {
     //     InstitutionsStudentsSvc.resetExternalVariable();
-    //     StudentController.createNewInternalDatasource(StudentController.internalGridOptions, withData);
-    // };
+        vm.createNewDatasource(vm.gridOptions, withData);
+    };
 
     // $scope.reloadExternalDatasource = function (withData) {
     //     InstitutionsStudentsSvc.resetExternalVariable();
@@ -191,43 +164,42 @@ function ExaminationCentresController($scope, $window, $filter, UtilsSvc, AlertS
     //     StudentController.endDateFormatted = $filter('date')(newValue, 'dd-MM-yyyy');
     // });
 
-    // function createNewInternalDatasource(gridObj, withData) {
-    //     var dataSource = {
-    //         pageSize: pageSize,
-    //         getRows: function (params) {
-    //             AlertSvc.reset($scope);
-    //             delete StudentController.selectedStudent;
-    //             if (withData) {
-    //                InstitutionsStudentsSvc.getStudentRecords(
-    //                 {
-    //                     startRow: params.startRow,
-    //                     endRow: params.endRow,
-    //                     conditions: {
-    //                         openemis_no: StudentController.internalFilterOpenemisNo,
-    //                         first_name: StudentController.internalFilterFirstName,
-    //                         last_name: StudentController.internalFilterLastName,
-    //                         identity_number: StudentController.internalFilterIdentityNumber,
-    //                     }
-    //                 }
-    //                 )
-    //                 .then(function(response) {
-    //                     var studentRecords = response.data;
-    //                     var totalRowCount = response.total;
-    //                     return StudentController.processStudentRecord(studentRecords, params, totalRowCount);
-    //                 }, function(error) {
-    //                     console.log(error);
-    //                     AlertSvc.warning($scope, error);
-    //                 });
-    //             } else {
-    //                 StudentController.rowsThisPage = [];
-    //                 params.successCallback(StudentController.rowsThisPage, 0);
-    //                 return [];
-    //             }
-    //         }
-    //     };
-    //     gridObj.api.setDatasource(dataSource);
-    //     gridObj.api.sizeColumnsToFit();
-    // }
+    function createNewDatasource(gridObj, withData) {
+        var dataSource = {
+            pageSize: pageSize,
+            getRows: function (params) {
+                AlertSvc.reset($scope);
+                if (withData) {
+                   ExaminationCentresSvc.getInstitutions(
+                    {
+                        startRow: params.startRow,
+                        endRow: params.endRow,
+                        conditions: {
+                            code: vm.institutionCode,
+                            name: vm.institutionName,
+                            institution_type_id: vm.institutionType,
+                            examination_id: vm.examinationId
+                        }
+                    }
+                    )
+                    .then(function(response) {
+                        var institutionRecord = response.data;
+                        var totalRowCount = response.total;
+                        return vm.processInstitutionRecord(institutionRecord, params, totalRowCount);
+                    }, function(error) {
+                        console.log(error);
+                        AlertSvc.warning($scope, error);
+                    });
+                } else {
+                    vm.rowsThisPage = [];
+                    params.successCallback(vm.rowsThisPage, 0);
+                    return [];
+                }
+            }
+        };
+        gridObj.api.setDatasource(dataSource);
+        gridObj.api.sizeColumnsToFit();
+    }
 
     // function createNewExternalDatasource(gridObj, withData) {
     //     var dataSource = {
@@ -275,26 +247,24 @@ function ExaminationCentresController($scope, $window, $filter, UtilsSvc, AlertS
     //     gridObj.api.sizeColumnsToFit();
     // }
 
-    // function processStudentRecord(studentRecords, params, totalRowCount) {
-    //     for(var key in studentRecords) {
-    //         studentRecords[key]['institution_name'] = '-';
-    //         studentRecords[key]['academic_period_name'] = '-';
-    //         studentRecords[key]['education_grade_name'] = '-';
-    //         if ((studentRecords[key].hasOwnProperty('institution_students') && studentRecords[key]['institution_students'].length > 0)) {
-    //             studentRecords[key]['institution_name'] = ((studentRecords[key].institution_students['0'].hasOwnProperty('institution')))? studentRecords[key].institution_students['0'].institution.name: '-';
-    //             studentRecords[key]['academic_period_name'] = ((studentRecords[key].institution_students['0'].hasOwnProperty('academic_period')))? studentRecords[key].institution_students['0'].academic_period.name: '-';
-    //             studentRecords[key]['education_grade_name'] = ((studentRecords[key].institution_students['0'].hasOwnProperty('education_grade')))? studentRecords[key].institution_students['0'].education_grade.name: '-';
-    //         }
-    //     }
+    function processInstitutionRecord(institutionRecords, params, totalRowCount) {
+        // for(var key in institutionRecords) {
+        //     studentRecords[key]['institution_name'] = '-';
+        //     if ((studentRecords[key].hasOwnProperty('institution_students') && studentRecords[key]['institution_students'].length > 0)) {
+        //         studentRecords[key]['institution_name'] = ((studentRecords[key].institution_students['0'].hasOwnProperty('institution')))? studentRecords[key].institution_students['0'].institution.name: '-';
+        //         studentRecords[key]['academic_period_name'] = ((studentRecords[key].institution_students['0'].hasOwnProperty('academic_period')))? studentRecords[key].institution_students['0'].academic_period.name: '-';
+        //         studentRecords[key]['education_grade_name'] = ((studentRecords[key].institution_students['0'].hasOwnProperty('education_grade')))? studentRecords[key].institution_students['0'].education_grade.name: '-';
+        //     }
+        // }
 
-    //     var lastRow = totalRowCount;
-    //     StudentController.rowsThisPage = studentRecords;
+        var lastRow = totalRowCount;
+        vm.rowsThisPage = institutionRecords;
 
-    //     params.successCallback(StudentController.rowsThisPage, lastRow);
-    //     UtilsSvc.isAppendLoader(false);
-    //     StudentController.initialLoad = false;
-    //     return studentRecords;
-    // }
+        params.successCallback(vm.rowsThisPage, lastRow);
+        UtilsSvc.isAppendLoader(false);
+        // StudentController.initialLoad = false;
+        return institutionRecords;
+    }
 
     // function insertStudentData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate) {
     //     UtilsSvc.isAppendLoader(true);
