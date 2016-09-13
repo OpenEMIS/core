@@ -57,11 +57,29 @@ class ExaminationsTable extends ControllerActionTable {
         $this->field('description');
         $this->field('academic_period_id', ['type' => 'select', 'entity' => $entity]);
         $this->field('education_programme_id', ['type' => 'select', 'entity' => $entity]);
-        $this->field('education_grade_id', ['type' => 'select', 'entity' => $entity]);
+        $this->field('education_grade_id', ['type' => 'select', 'entity' => $entity, 'empty' => true]);
         $this->field('examination_items', [
             'type' => 'element',
             'element' => 'Examination.examination_items'
         ]);
+    }
+
+    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    {
+        //patch data to handle fail save because of validation error.
+        if (array_key_exists($this->alias(), $requestData)) {
+            if (array_key_exists('examination_items', $requestData[$this->alias()])) {
+                $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+                foreach ($requestData[$this->alias()]['examination_items'] as $key => $item) {
+                    $subjectId = $item['education_subject_id'];
+                    $requestData[$this->alias()]['examination_items'][$key]['education_subject'] = $EducationSubjects->get($subjectId);
+                }
+            } else { //logic to capture error if no subject inside the grade.
+                $errorMessage = $this->aliasField('noSubjects');
+                $requestData['errorMessage'] = $errorMessage;
+            }
+        }
+
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
@@ -199,11 +217,5 @@ class ExaminationsTable extends ControllerActionTable {
         $examinationGradingType = TableRegistry::get('Examination.ExaminationGradingTypes');
         $examinationGradingTypeOptions = $examinationGradingType->find('list')->toArray();
         return $examinationGradingTypeOptions;
-    }
-
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
-    {
-        // pr($requestData);die;
-
     }
 }

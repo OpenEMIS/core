@@ -18,20 +18,25 @@ class ExaminationItemsTable extends AppTable {
 
     }
 
-    // public function validationDefault(Validator $validator)
-    // {
-    //     $validator = parent::validationDefault($validator);
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
 
-    //     $validator
-    //         ->add('weight', 'ruleIsDecimal', [
-    //             'rule' => ['decimal', null],
-    //         ])
-    //         ->add('weight', 'ruleWeightRange', [
-    //             'rule'  => ['range', 0, 2],
-    //             'last' => true
-    //         ]);
-    //     return $validator;
-    // }
+        $validator
+            ->add('weight', 'ruleIsDecimal', [
+                'rule' => ['decimal', null],
+            ])
+            ->add('weight', 'ruleWeightRange', [
+                'rule'  => ['range', 0, 2],
+                'last' => true
+            ])
+            ->notEmpty('examination_grading_type_id')
+            ->add('start_time', 'ruleCompareTime', [
+                'rule' => ['compareTime', 'end_time', true],
+                'provider' => 'table',
+            ]);
+        return $validator;
+    }
 
     public function populateExaminationItemsArray($gradeId)
     {
@@ -47,8 +52,7 @@ class ExaminationItemsTable extends AppTable {
             if (!empty($gradeSubject->education_subject)) {
                 $examinationItems[] = [
                     'education_subject_id' => $gradeSubject->education_subject->id,
-                    'education_subject_code' => $gradeSubject->education_subject->code,
-                    'education_subject_name' => $gradeSubject->education_subject->name,
+                    'education_subject' => $gradeSubject->education_subject,
                     'weight' => '0.00',
                 ];
             }
