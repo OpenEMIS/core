@@ -189,7 +189,9 @@ class NavigationComponent extends Component {
 
 		$institutionStudentActions = ['Students', 'StudentUser', 'StudentAccount', 'StudentSurveys', 'Students'];
 		$institutionStaffActions = ['Staff', 'StaffUser', 'StaffAccount'];
-		$institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
+		$institutionExaminationActions = ['Examinations'];
+		$institutionActions = array_merge($institutionStudentActions, $institutionStaffActions, $institutionExaminationActions);
+
 
 		if ($controller->name == 'Institutions' && $action != 'index' && (!in_array($action, $institutionActions))) {
 			$navigations = $this->appendNavigation('Institutions.index', $navigations, $this->getInstitutionNavigation());
@@ -215,6 +217,9 @@ class NavigationComponent extends Component {
 				$navigations = $this->appendNavigation('Directories.view', $navigations, $this->getDirectoryStudentNavigation());
 				$session->write('Directory.Directories.reload', true);
 			}
+		} elseif ($controller->name == 'Institutions' && in_array($action, $institutionExaminationActions)) {
+			$navigations = $this->appendNavigation('Institutions.index', $navigations, $this->getInstitutionNavigation());
+			$navigations = $this->appendNavigation('Institutions.Examinations.index', $navigations, $this->getInstitutionExaminationNavigation());
 		}
 
 		$navigations = $this->appendNavigation('Reports', $navigations, $this->getReportNavigation());
@@ -409,6 +414,12 @@ class NavigationComponent extends Component {
 				'params' => ['plugin' => 'Institution'],
 			],
 
+			'Institutions.Examinations.index' => [
+				'title' => 'Examinations',
+				'parent' => 'Institutions.index',
+				'params' => ['plugin' => 'Institution']
+			],
+
 			'Institutions.Positions' => [
 				'title' => 'Positions',
 				'parent' => 'Institutions.index',
@@ -554,6 +565,19 @@ class NavigationComponent extends Component {
 				'params' => ['plugin' => 'Staff'],
 				'selected' => ['Staff.Healths', 'Staff.HealthAllergies', 'Staff.HealthConsultations', 'Staff.HealthFamilies', 'Staff.HealthHistories', 'Staff.HealthImmunizations', 'Staff.HealthMedications', 'Staff.HealthTests']
 			],
+		];
+		return $navigation;
+	}
+
+	public function getInstitutionExaminationNavigation() {
+		$session = $this->request->session();
+		$examinationId = $session->read('Examination.Examinations.id');
+		$navigation = [
+			'Institutions.Examinations.view' => [
+				'title' => 'Overview',
+				'parent' => 'Institutions.Examinations.index',
+				'params' => ['plugin' => 'Institution', '1' => $examinationId]
+			]
 		];
 		return $navigation;
 	}
