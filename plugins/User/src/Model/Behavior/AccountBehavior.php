@@ -57,18 +57,15 @@ class AccountBehavior extends Behavior {
 			'userId' => $entity->id
 		];
 
-		$tabElements = $this->_table->controller->getUserTabElements($options);
-
 		if ($this->_table->action != 'add') {
 			if ($this->isInstitution) {
 				// url of tabElements is build in Institution->getUserTabElements()
 			} else {
-				foreach ($tabElements as $key => $value) {
-					end($tabElements[$key]['url']);
-					$tabElements[$key]['url'][key($tabElements[$key]['url'])] = $entity->id;
-				}
+				$options['id'] = $entity->id;
 			}
 		}
+
+		$tabElements = $this->_table->controller->getUserTabElements($options);
 
 		$this->_table->controller->set('tabElements', $tabElements);
 		$this->_table->controller->set('selectedAction', $this->_table->alias());
