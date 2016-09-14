@@ -35,7 +35,8 @@ class ExaminationItemsTable extends AppTable {
             ->add('start_time', 'ruleCompareTime', [
                 'rule' => ['compareTime', 'end_time', true],
                 'provider' => 'table',
-            ]);
+            ])
+            ->notEmpty('end_time');
         return $validator;
     }
 

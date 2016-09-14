@@ -7,6 +7,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
 
 class ExaminationsTable extends ControllerActionTable {
@@ -17,6 +18,19 @@ class ExaminationsTable extends ControllerActionTable {
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
+    }
+
+    public function validationDefault(Validator $validator) {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->add('code', [
+                'ruleUniqueCode' => [
+                    'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
+                    'provider' => 'table'
+                ]
+            ])
+            ->requirePresence('examination_items');
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
