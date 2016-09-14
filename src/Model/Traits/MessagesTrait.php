@@ -8,6 +8,11 @@ trait MessagesTrait {
     public $messages = [
         'Areas' => [
             'noAccessToAreas' => 'You do not have access to any areas',
+            'institution_affected' => 'Institution Affected',
+            'security_group_affected' => 'Security Group Affected',
+            'missing_area' => 'Missing Area',
+            'new_area' => 'New Area',
+            'api_invalid' => 'URL or data in URL is invalid.'
         ],
         'Attachments' => [
             'date_on_file' => 'Date On File',
@@ -82,7 +87,7 @@ trait MessagesTrait {
             ],
             'invalidTime' => 'You have entered an invalid time.',
             'invalidDate' => 'You have entered an invalid date.',
-            'invalidUrl' => 'You have entered an invalid url.',
+            'invalidUrl' => 'You have entered an invalid URL.',
             'notSelected' => 'No Record has been selected / saved.',
             'order' => 'Order',
             'visible' => 'Visible',
@@ -171,13 +176,14 @@ trait MessagesTrait {
             'our_shifts' => 'Our Shifts',
             'external_shifts' => 'External Shifts',
             'location' => 'Location',
+            'institution' => 'Institution',
             'occupier' => 'Occupier',
             'institution' => 'Institution',
             'allShiftsUsed' => 'All shifts has been used for the selected academic period.',
             'replicateShifts' => 'Should the system replicate the existing shifts for the latest academic period?.',
             'replicateShiftsSuccess' => 'Shifts has been successfully replicated.',
             'replicateShiftsNotChosen' => 'Replication was not chosen, please setup the shifts manually.',
-            'noAccessToShift' => 'You do not have access to the shift',
+            'noAccessToShift' => 'You do not have access to the shift'
         ],
         'InstitutionClasses' => [
             'expiredGrade' => 'Expired Grade',
@@ -298,6 +304,9 @@ trait MessagesTrait {
         'RubricTemplateOptions' => [
             'weighting' => 'Weighting'
         ],
+        'IdentityTypes' => [
+            'deleteDefault' => 'Please set other identity type as default before deleting the current one'
+        ],
         'security' => [
             'login' => [
                 'fail' => 'You have entered an invalid username or password.',
@@ -383,7 +392,7 @@ trait MessagesTrait {
         'WorkflowActions' => [
             'next_step' => 'Next Step',
             'comment_required' => 'Comment Required',
-            'event' => 'Event'
+            'event' => 'Post Event'
         ],
         'WorkflowStatuses' => [
             'noSteps' => 'No Available Workflow Steps'
@@ -554,7 +563,6 @@ trait MessagesTrait {
                     'ruleUnique' => 'Please enter a unique code'
                 ],
             ],
-
             'InstitutionClasses' => [
                 'noGrade' => 'There is no grade selected',
                 'emptyName' => 'Class name should not be empty',
@@ -1295,8 +1303,35 @@ trait MessagesTrait {
                     'ruleIsDecimal' => 'Value is not a valid decimal',
                 ]
             ]
+        ],
+        'Configuration' => [
+        	'ConfigProductLists' => [
+        		'name' => [
+        			'ruleUnique' => 'This product already exists in the system',
+        		],
+        		'url' => [
+        			'invalidUrl' => 'You have entered an invalid URL.',
+        		]
+        	],
+            'ConfigAdministrativeBoundaries' => [
+                'name' => [
+                    'ruleUnique' => 'This product already exists in the system',
+                ],
+                'value' => [
+                    'invalidUrl' => 'You have entered an invalid URL.',
+                    'ruleValidateJsonAPI' => 'URL or data in URL is invalid.'
+                ]
+            ]
+        ],
+        'Workflow' => [
+        	'WorkflowActions' => [
+        		'event_key' => [
+        			'ruleUnique' => 'This event has already been assigned.'
+        		]
+        	]
         ]
     ];
+
 
     public function getMessage($code, $options = []) {
         $sprintf = (array_key_exists('sprintf', $options))? $options['sprintf']: [];

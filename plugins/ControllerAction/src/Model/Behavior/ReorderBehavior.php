@@ -31,7 +31,7 @@ class ReorderBehavior extends Behavior {
 		if ($request->is('ajax')) {
 			$primaryKey = $model->primaryKey();
 			$orderField = $this->config('orderField');
-			
+
 			$ids = json_decode($request->data("ids"));
 
 			if (!empty($ids)) {
@@ -72,9 +72,17 @@ class ReorderBehavior extends Behavior {
 					$filterValue = $entity->$filter;
 				}
 				$table = $this->_table;
+
+				if (!is_null($filterValue)) {
+					$condition = [$table->aliasField($filter).' IN ' => $filterValue];
+				} else {
+					// this logic will handle tree behavior, which parent_id is null.
+					$condition = [$table->aliasField($filter . ' IS NULL')];
+				}
+
 				$order = $table
 					->find()
-					->where([$table->aliasField($filter).' IN ' => $filterValue])
+					->where($condition)
 					->count();
 			}
 			$entity->$orderField = $order + 1;
@@ -96,9 +104,16 @@ class ReorderBehavior extends Behavior {
 			} else {
 				$filterValue = $entity->$filter;
 			}
+
+			if (!is_null($filterValue)) {
+				$condition = [$table->aliasField($filter).' IN ' => $filterValue];
+			} else {
+				// this logic will handle tree behavior, which parent_id is null.
+				$condition = [$table->aliasField($filter . ' IS NULL')];
+			}
 			$reorderItems = $table
 				->find('list')
-				->where([$table->aliasField($filter).' IN ' => $filterValue])
+				->where($condition)
 				->order([$table->aliasField($orderField)])
 				->toArray();
 		}
