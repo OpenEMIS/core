@@ -22,7 +22,8 @@
 				'class' => 'form-control '.$inputErrorCSS,
 				'value' => isset($attr['value']) ? $attr['value'] : '',
 				'type' => 'text',
-				'label' => false
+				'label' => false,
+				'error' => false
 			];
 
 			if (array_key_exists('attr', $attr)) {
