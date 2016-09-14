@@ -10,13 +10,15 @@ function ExaminationCentresSvc($http, $q, $filter, KdOrmSvc) {
         init: init,
         getAcademicPeriods: getAcademicPeriods,
         getExamination: getExamination,
-        getInstitutions: getInstitutions
+        getInstitutions: getInstitutions,
+        getSubjects: getSubjects
     };
 
     var models = {
         ExaminationsTable: 'Examination.Examinations',
         AcademicPeriodsTable: 'AcademicPeriod.AcademicPeriods',
-        InstitutionsTable: 'Institution.Institutions'
+        InstitutionsTable: 'Institution.Institutions',
+        ExaminationItemsTable: 'Examination.ExaminationItems'
     };
 
     return service;
@@ -52,6 +54,13 @@ function ExaminationCentresSvc($http, $q, $filter, KdOrmSvc) {
         return InstitutionsTable
             .select()
             .find('NotExamCentres', {examination_id: examinationId.toString()})
+            .ajax({defer: true});
+    }
+
+    function getSubjects(examinationId) {
+         return ExaminationItemsTable
+            .select()
+            .find('subjects', {examination_id: examinationId.toString()})
             .ajax({defer: true});
     }
 };

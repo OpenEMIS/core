@@ -18,6 +18,7 @@ function ExaminationCentresController($scope, $window, $filter, UtilsSvc, AlertS
     vm.academicPeriods = [];
     vm.examinationId = null;
     vm.examinations = [];
+    vm.subjects = [];
     vm.centreType = null;
 
     // Controller functions
@@ -29,17 +30,14 @@ function ExaminationCentresController($scope, $window, $filter, UtilsSvc, AlertS
     vm.gridOptions = null;
     // StudentController.externalGridOptions = null;
     vm.rowsThisPage = 0;
-    // StudentController.createNewStudent = false;
-    // StudentController.genderOptions = {};
-    // StudentController.academicPeriodOptions = {};
-    // StudentController.educationGradeOptions = {};
-    // StudentController.classOptions = {};
-    // StudentController.step = 'internal_search';
+    vm.institutionList = [];
 
     // filter variables
     vm.institutionCode;
     vm.institutionName;
     vm.institutionType;
+
+    vm.reloadDatasource = reloadDatasource;
     // StudentController.externalFilterOpenemisNo;
     // StudentController.externalFilterFirstName;
     // StudentController.externalFilterLastName;
@@ -47,9 +45,6 @@ function ExaminationCentresController($scope, $window, $filter, UtilsSvc, AlertS
 
     // // Controller functions
     // StudentController.processStudentRecord = processStudentRecord;
-    vm.createNewDatasource = createNewDatasource;
-    vm.reloadDatasource = reloadDatasource;
-    vm.processInstitutionRecord = processInstitutionRecord;
     // StudentController.createNewExternalDatasource = createNewExternalDatasource;
     // StudentController.insertStudentData = insertStudentData;
     // StudentController.onChangeAcademicPeriod = onChangeAcademicPeriod;
@@ -84,7 +79,6 @@ function ExaminationCentresController($scope, $window, $filter, UtilsSvc, AlertS
             // console.log(response.data);
             console.log(vm.translatedAgGridHeader);
             vm.academicPeriods = response.data;
-            $scope.initGrid();
         }, function(error){});
         // console.log(vm.academicPeriods);
         // UtilsSvc.isAppendLoader(true);
@@ -100,43 +94,35 @@ function ExaminationCentresController($scope, $window, $filter, UtilsSvc, AlertS
         })
     }
 
-    $scope.initGrid = function() {
-        vm.gridOptions = {
-            columnDefs: [
-                {
-                    field:'id',
-                    headerName:'',
-                    suppressMenu: true,
-                    suppressSorting: true,
-                    width: 40,
-                    maxWidth: 40,
-                    cellRenderer: function(params) {
-                        return '<div><input  name="ngSelectionCell" ng-click="ExamCentreController.selectInstitution('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="checkbox" selectInstitution="'+params.value+'"/></div>';
-                    }
-                },
-                {headerName: "Code", field: "code", suppressMenu: true, suppressSorting: true},
-                {headerName: "Name", field: "name", suppressMenu: true, suppressSorting: true},
-                // {headerName: (angular.isDefined(StudentController.defaultIdentityTypeName))? StudentController.defaultIdentityTypeName: "[default identity type not set]", field: "identity_number", suppressMenu: true, suppressSorting: true},
-            ],
-            enableColResize: false,
-            enableFilter: true,
-            enableServerSideFilter: true,
-            enableServerSideSorting: true,
-            enableSorting: true,
-            headerHeight: 38,
-            rowData: [],
-            rowHeight: 38,
-            rowModelType: 'pagination',
-            onGridReady: function() {
-                UtilsSvc.isAppendLoader(false);
-            },
-            angularCompileRows: true
-        };
-    };
 
     function reloadDatasource(withData) {
-    //     InstitutionsStudentsSvc.resetExternalVariable();
-        vm.createNewDatasource(vm.gridOptions, withData);
+        ExaminationCentresSvc.getSubjects(vm.examinationId)
+        .then(function(res) {
+            vm.subjects = res.data;
+            ExaminationCentresSvc.getInstitutions(
+            {
+                // startRow: params.startRow,
+                // endRow: params.endRow,
+                conditions: {
+                    code: vm.institutionCode,
+                    name: vm.institutionName,
+                    institution_type_id: vm.institutionType,
+                    examination_id: vm.examinationId
+                }
+            }
+            )
+            .then(function(response) {
+                var institutionRecord = response.data;
+                var totalRowCount = response.total;
+                vm.institutionList = institutionRecord;
+            }, function(error) {
+                console.log(error);
+                AlertSvc.warning($scope, error);
+            });
+        }, function(error) {
+
+        });
+
     };
 
     // $scope.reloadExternalDatasource = function (withData) {
@@ -165,40 +151,7 @@ function ExaminationCentresController($scope, $window, $filter, UtilsSvc, AlertS
     // });
 
     function createNewDatasource(gridObj, withData) {
-        var dataSource = {
-            pageSize: pageSize,
-            getRows: function (params) {
-                AlertSvc.reset($scope);
-                if (withData) {
-                   ExaminationCentresSvc.getInstitutions(
-                    {
-                        startRow: params.startRow,
-                        endRow: params.endRow,
-                        conditions: {
-                            code: vm.institutionCode,
-                            name: vm.institutionName,
-                            institution_type_id: vm.institutionType,
-                            examination_id: vm.examinationId
-                        }
-                    }
-                    )
-                    .then(function(response) {
-                        var institutionRecord = response.data;
-                        var totalRowCount = response.total;
-                        return vm.processInstitutionRecord(institutionRecord, params, totalRowCount);
-                    }, function(error) {
-                        console.log(error);
-                        AlertSvc.warning($scope, error);
-                    });
-                } else {
-                    vm.rowsThisPage = [];
-                    params.successCallback(vm.rowsThisPage, 0);
-                    return [];
-                }
-            }
-        };
-        gridObj.api.setDatasource(dataSource);
-        gridObj.api.sizeColumnsToFit();
+
     }
 
     // function createNewExternalDatasource(gridObj, withData) {
