@@ -102,6 +102,7 @@
                                                 $attr['default_date'] = false;
                                                 $attr['class'] = 'margin-top-10 no-margin-bottom';
                                                 $attr['field'] = 'date';
+                                                $attr['fieldName'] = "$fieldPrefix.date";
                                                 $attr['model'] = $fieldPrefix;
                                                 $attr['id'] = 'date_'.$i;
                                                 $attr['label'] = false;
@@ -115,6 +116,7 @@
                                                 $attr['default_time'] = false;
                                                 $attr['class'] = 'no-margin-bottom';
                                                 $attr['field'] = 'start_time';
+                                                $attr['fieldName'] = "$fieldPrefix.start_time";
                                                 $attr['model'] = $fieldPrefix;
                                                 $attr['id'] = 'start_time_'.$i;
                                                 $attr['label'] = false;
@@ -128,6 +130,7 @@
                                                 $attr['default_time'] = false;
                                                 $attr['class'] = 'no-margin-bottom';
                                                 $attr['field'] = 'end_time';
+                                                $attr['fieldName'] = "$fieldPrefix.end_time";
                                                 $attr['model'] = $fieldPrefix;
                                                 $attr['id'] = 'end_time_'.$i;
                                                 $attr['label'] = false;
