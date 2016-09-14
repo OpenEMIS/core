@@ -34,6 +34,7 @@ var Workflow = {
 		$('.workflowtransition-action-description').val(jsonObj.description);
 		$('.workflowtransition-step-id').val(jsonObj.next_step_id);
 		$('.workflowtransition-step-name').val(jsonObj.next_step_name);
+		$('.workflowtransition-assignee-required').val(jsonObj.assignee_required);
 		$('.workflowtransition-comment-required').val(jsonObj.comment_required);
 		$('.workflowtransition-event-description').html(jsonObj.event_description);
 
@@ -47,19 +48,20 @@ var Workflow = {
 	},
 	
 	onSubmit: function(obj) {
+		var assigneeRequired = $('.workflowtransition-assignee-required').val();
 		var assigneeId = $('.workflowtransition-assignee-id').val();
-		var required = $('.workflowtransition-comment-required').val();
+		var commentRequired = $('.workflowtransition-comment-required').val();
 		var comment = $.trim($('.workflowtransition-comment').val());
 
 		var error = false;
-		if (assigneeId == '') {
+		if (assigneeRequired == 1 && assigneeId == '') {
 			$('.workflowtransition-assignee-error').show();
 			error = true;
 		} else {
 			$('.workflowtransition-assignee-error').hide();
 		}
 
-		if (required == 1 && comment.length === 0) {
+		if (commentRequired == 1 && comment.length === 0) {
 			$('.workflowtransition-comment-error').show();
 			error = true;
 		} else {

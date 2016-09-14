@@ -155,11 +155,7 @@ class WorkflowBehavior extends Behavior {
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
 		// To delete from records and transitions table
 		if ($this->attachWorkflow) {
-			$workflowRecord = $this->getRecord($this->_table->registryAlias(), $entity);
-			if (!empty($workflowRecord)) {
-				$workflowRecord = $this->WorkflowRecords->get($workflowRecord->id);
-				$this->WorkflowRecords->delete($workflowRecord);
-			}
+			$this->deleteWorkflowTransitions($entity);
 		}
 	}
 
@@ -459,24 +455,21 @@ class WorkflowBehavior extends Behavior {
 			if (!$model->AccessControl->isAdmin()) {
 				$buttons = $model->onUpdateActionButtons($event, $entity, $buttons);
 
-				$workflowRecord = $this->getRecord($this->config('model'), $entity);
-				if (!empty($workflowRecord)) {
-					$isEditable = false;
-					$isRemovable = false;
-					$workflowStep = $this->getWorkflowStep($workflowRecord);
-					if (!empty($workflowStep)) {
-						$isEditable = $workflowStep->is_editable == 1 ? true : false;
-						$isRemovable = $workflowStep->is_removable == 1 ? true : false;
-					}
+				$workflowStep = $this->getWorkflowStep($entity);
 
-					if (array_key_exists('edit', $buttons) && !$isEditable) {
-						unset($buttons['edit']);
-					}
-					if (array_key_exists('remove', $buttons) && !$isRemovable) {
-						unset($buttons['remove']);
-					}
-				} else {
-					// Workflow is not configured
+				$isEditable = false;
+				$isDeletable = false;
+				if (!empty($workflowStep)) {
+					$isEditable = $workflowStep->is_editable == 1 ? true : false;
+					$isDeletable = $workflowStep->is_removable == 1 ? true : false;
+				}
+
+				if (array_key_exists('edit', $buttons) && !$isEditable) {
+					unset($buttons['edit']);
+				}
+
+				if (array_key_exists('remove', $buttons) && !$isDeletable) {
+					unset($buttons['remove']);
 				}
 
 				return $buttons;
@@ -488,6 +481,17 @@ class WorkflowBehavior extends Behavior {
 		if ($action == 'index') {
 			$attr['type'] = 'select';
 		} else if ($action == 'add') {
+			$attr['type'] = 'hidden';
+			$attr['value'] = 0;
+		} else if ($action == 'edit') {
+			$attr['type'] = 'hidden';
+		}
+
+		return $attr;
+	}
+
+	public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
 			$attr['type'] = 'hidden';
 			$attr['value'] = 0;
 		} else if ($action == 'edit') {
@@ -617,8 +621,10 @@ class WorkflowBehavior extends Behavior {
 		}
 	}
 
-	public function getWorkflowStep($workflowStepId=null) {
-		if (!is_null($workflowStepId)) {
+	public function getWorkflowStep($entity=null) {
+		if (!is_null($entity)) {
+			$workflowStepId = $entity->has('status') ? $entity->status->id : $entity->status_id;
+
 			$query = $this->WorkflowSteps
 				->find()
 				->matching('Workflows.WorkflowModels')
@@ -633,8 +639,9 @@ class WorkflowBehavior extends Behavior {
 					$this->WorkflowSteps->aliasField('id') => $workflowStepId // Latest Workflow Step
 				]);
 
-			if (!$this->_table->AccessControl->isAdmin()) {
-				$model = $this->_table;
+			$model = $this->_table;
+			$userId = $model->Auth->user('id');
+			if (!$model->AccessControl->isAdmin() && $userId != $entity->assignee_id) {
 				$roleIds = [];
 				$event = $model->dispatchEvent('Workflow.onUpdateRoles', null, $this);
 				if ($event->result) {
@@ -663,134 +670,143 @@ class WorkflowBehavior extends Behavior {
 	}
 
 	public function getModalOptions(Entity $entity) {
-		// $record = $this->workflowRecord;  // Current Workflow Record
-		// $step = $this->workflowRecord->workflow_step; // Latest Workflow Step
-		$step = $this->getWorkflowStep($entity->status_id);
-		$workflow = $step->_matchingData['Workflows'];
+		$step = $this->getWorkflowStep($entity);
 
-		$step = $entity->status;
+		if (!is_null($step)) {
+			$workflow = $step->_matchingData['Workflows'];
 
-		$alias = $this->WorkflowTransitions->alias();
-		// workflow_step_id is needed for afterSave logic in WorkflowTransitions
-		$fields = [
-			$alias.'.prev_workflow_step_id' => [
-				'type' => 'hidden',
-				'value' => $step->id
-			],
-			$alias.'.prev_workflow_step_name' => [
-				'type' => 'hidden',
-				'value' => $step->name
-			],
-			$alias.'.workflow_step_id' => [
-				'type' => 'hidden',
-				'value' => 0,
-				'class' => 'workflowtransition-step-id',
-				'unlockField' => true
-			],
-			$alias.'.workflow_step_name' => [
-				'type' => 'hidden',
-				'value' => '',
-				'class' => 'workflowtransition-step-name',
-				'unlockField' => true
-			],
-			$alias.'.workflow_action_id' => [
-				'type' => 'hidden',
-				'value' => 0,
-				'class' => 'workflowtransition-action-id',
-				'unlockField' => true
-			],
-			$alias.'.workflow_action_name' => [
-				'type' => 'hidden',
-				'value' => '',
-				'class' => 'workflowtransition-action-name',
-				'unlockField' => true
-			],
-			$alias.'.workflow_action_description' => [
-				'type' => 'hidden',
-				'value' => '',
-				'class' => 'workflowtransition-action-description',
-				'unlockField' => true
-			],
-			$alias.'.workflow_model_id' => [
-				'type' => 'hidden',
-				'value' => $workflow->workflow_model_id
-			],
-			$alias.'.model_reference' => [
-				'type' => 'hidden',
-				'value' => $entity->id
-			],
-			$alias.'.comment_required' => [
-				'type' => 'hidden',
-				'value' => 0,
-				'class' => 'workflowtransition-comment-required',
-				'unlockField' => true
-			]
-		];
+			$step = $entity->status;
 
-		$contentFields = [];
-		$contentFields = [
-			$alias.'.action_name' => [
-				'label' => __('Action'),
-				'type' => 'string',
-				'readonly' => 'readonly',
-				'disabled' => 'disabled',
-				'class'=> 'workflowtransition-action-name'
-			],
-			$alias.'.action_description' => [
-				'label' => __('Description'),
-				'type' => 'textarea',
-				'readonly' => 'readonly',
-				'disabled' => 'disabled',
-				'class'=> 'workflowtransition-action-description'
-			],
-			$alias.'.step_name' => [
-				'label' => __('Next Step'),
-				'type' => 'string',
-				'readonly' => 'readonly',
-				'disabled' => 'disabled',
-				'class'=> 'workflowtransition-step-name'
-			],
-			$alias.'.assignee_id' => [
-				'label' => __('Assignee'),
-				'type' => 'select',
-				'class'=> 'workflowtransition-assignee-id'
-			],
-			$alias.'.comment' => [
-				'label' => __('Comment'),
-				'type' => 'textarea',
-				'class'=> 'workflowtransition-comment'
-			]
-		];
-
-		$content = '';
-		$content = '<style type="text/css">.modal-footer { clear: both; } .modal-body textarea { width: 60%; }</style>';
-		$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-comment-error error-message">' . __('This field cannot be left empty') . '</div></div>';
-		$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-assignee-error error-message">' . __('Assignee cannot be left empty') . '</div></div>';
-		$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-assignee-sql-error error-message"></div></div>';
-		$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-event-description error-message"></div></div>';
-		$buttons = [
-			'<button id="workflow-submit" type="submit" class="btn btn-default" onclick="return Workflow.onSubmit();">' . __('Save') . '</button>'
-		];
-
-		$modal = [
-			'id' => 'workflowTransition',
-			'title' => __('Add Comment'),
-			'content' => $content,
-			'contentFields' => $contentFields, 
-			'form' => [
-				'model' => $this->_table,
-				'formOptions' => [
-					'class' => 'form-horizontal',
-					'url' => $this->isCAv4() ? $this->_table->url('processWorkflow') : $this->_table->ControllerAction->url('processWorkflow'),
-					'onSubmit' => 'document.getElementById("workflow-submit").disabled=true;'
+			$alias = $this->WorkflowTransitions->alias();
+			// workflow_step_id is needed for afterSave logic in WorkflowTransitions
+			$fields = [
+				$alias.'.prev_workflow_step_id' => [
+					'type' => 'hidden',
+					'value' => $step->id
 				],
-				'fields' => $fields
-			],
-			'buttons' => $buttons,
-			'cancelButton' => true
-		];
+				$alias.'.prev_workflow_step_name' => [
+					'type' => 'hidden',
+					'value' => $step->name
+				],
+				$alias.'.workflow_step_id' => [
+					'type' => 'hidden',
+					'value' => 0,
+					'class' => 'workflowtransition-step-id',
+					'unlockField' => true
+				],
+				$alias.'.workflow_step_name' => [
+					'type' => 'hidden',
+					'value' => '',
+					'class' => 'workflowtransition-step-name',
+					'unlockField' => true
+				],
+				$alias.'.workflow_action_id' => [
+					'type' => 'hidden',
+					'value' => 0,
+					'class' => 'workflowtransition-action-id',
+					'unlockField' => true
+				],
+				$alias.'.workflow_action_name' => [
+					'type' => 'hidden',
+					'value' => '',
+					'class' => 'workflowtransition-action-name',
+					'unlockField' => true
+				],
+				$alias.'.workflow_action_description' => [
+					'type' => 'hidden',
+					'value' => '',
+					'class' => 'workflowtransition-action-description',
+					'unlockField' => true
+				],
+				$alias.'.workflow_model_id' => [
+					'type' => 'hidden',
+					'value' => $workflow->workflow_model_id
+				],
+				$alias.'.model_reference' => [
+					'type' => 'hidden',
+					'value' => $entity->id
+				],
+				$alias.'.assignee_required' => [
+					'type' => 'hidden',
+					'value' => 1,
+					'class' => 'workflowtransition-assignee-required',
+					'unlockField' => true
+				],
+				$alias.'.comment_required' => [
+					'type' => 'hidden',
+					'value' => 0,
+					'class' => 'workflowtransition-comment-required',
+					'unlockField' => true
+				]
+			];
 
-		return $modal;
+			$contentFields = [];
+			$contentFields = [
+				$alias.'.action_name' => [
+					'label' => __('Action'),
+					'type' => 'string',
+					'readonly' => 'readonly',
+					'disabled' => 'disabled',
+					'class'=> 'workflowtransition-action-name'
+				],
+				$alias.'.action_description' => [
+					'label' => __('Description'),
+					'type' => 'textarea',
+					'readonly' => 'readonly',
+					'disabled' => 'disabled',
+					'class'=> 'workflowtransition-action-description'
+				],
+				$alias.'.step_name' => [
+					'label' => __('Next Step'),
+					'type' => 'string',
+					'readonly' => 'readonly',
+					'disabled' => 'disabled',
+					'class'=> 'workflowtransition-step-name'
+				],
+				$alias.'.assignee_id' => [
+					'label' => __('Assignee'),
+					'type' => 'select',
+					'class'=> 'workflowtransition-assignee-id'
+				],
+				$alias.'.comment' => [
+					'label' => __('Comment'),
+					'type' => 'textarea',
+					'class'=> 'workflowtransition-comment'
+				]
+			];
+
+			$content = '';
+			$content = '<style type="text/css">.modal-footer { clear: both; } .modal-body textarea { width: 60%; }</style>';
+			$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-comment-error error-message">' . __('This field cannot be left empty') . '</div></div>';
+			$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-assignee-error error-message">' . __('Assignee cannot be left empty') . '</div></div>';
+			$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-assignee-sql-error error-message"></div></div>';
+			$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-event-description error-message"></div></div>';
+			$buttons = [
+				'<button id="workflow-submit" type="submit" class="btn btn-default" onclick="return Workflow.onSubmit();">' . __('Save') . '</button>'
+			];
+
+			$modal = [
+				'id' => 'workflowTransition',
+				'title' => __('Add Comment'),
+				'content' => $content,
+				'contentFields' => $contentFields, 
+				'form' => [
+					'model' => $this->_table,
+					'formOptions' => [
+						'class' => 'form-horizontal',
+						'url' => $this->isCAv4() ? $this->_table->url('processWorkflow') : $this->_table->ControllerAction->url('processWorkflow'),
+						'onSubmit' => 'document.getElementById("workflow-submit").disabled=true;'
+					],
+					'fields' => $fields
+				],
+				'buttons' => $buttons,
+				'cancelButton' => true
+			];
+
+			return $modal;
+		} else {
+			return [];
+		}
 	}
 
 	public function getWorkflowStepList() {
@@ -819,142 +835,153 @@ class WorkflowBehavior extends Behavior {
 				}
 			} else {
 				$isEditable = false;
+				$isDeletable = false;
+
 				$entity = $this->getRecord();
+				$workflowStep = $this->getWorkflowStep($entity);
 
-				if ($entity->has('status_id')) {
-					$workflowStep = $this->getWorkflowStep($entity->status_id);
+				$actionButtons = [];
+				if (!empty($workflowStep)) {
+					$isSchoolBased = $workflowStep->_matchingData['WorkflowModels']->is_school_based;
 
-					$actionButtons = [];
-					if (!empty($workflowStep)) {
-						$isSchoolBased = $workflowStep->_matchingData['WorkflowModels']->is_school_based;
-
-						// Enabled edit button only when login user in approval role for the step and that step is editable
-						if ($workflowStep->is_editable == 1) {
-							$isEditable = true;
-						}
-						// End
-
-						foreach ($workflowStep->workflow_actions as $actionKey => $actionObj) {
-
-							$eventKeys = $actionObj->event_key;
-							$eventsObject = new ArrayObject();
-							$subjectEvent = $this->_table->dispatchEvent('Workflow.getEvents', [$eventsObject], $this->_table);
-							if ($subjectEvent->isStopped()) { return $subjectEvent->result; }
-							$eventArray = $eventsObject->getArrayCopy();
-
-							$eventDescription = '';
-							$events = explode(",", $eventKeys);
-							foreach ($events as $eventKey) {
-								$key = array_search($eventKey, array_column($eventArray, 'value'));
-								if ($key !== false) {
-									if (isset($eventArray[$key]['description'])) {
-										$eventDescription .= $eventArray[$key]['description'];
-										$eventDescription .= '<br/>';
-									}
-								}
-							}
-
-							$actionType = $actionObj->action;
-							$button = [
-								'id' => $actionObj->id,
-								'name' => $actionObj->name,
-								'description' => $actionObj->description,
-								'next_step_id' => $actionObj->next_workflow_step_id,
-								'next_step_name' => $actionObj->next_workflow_step->name,
-								'comment_required' => $actionObj->comment_required,
-								'event_description' => $eventDescription,
-								'is_school_based' => $isSchoolBased
-							];
-							$json = json_encode($button, JSON_NUMERIC_CHECK);
-
-							$buttonAttr = [
-								'escapeTitle' => false,
-								'escape' => true,
-								'onclick' => 'Workflow.init();Workflow.copy('.$json.');return false;',
-								'data-toggle' => 'modal',
-								'data-target' => '#workflowTransition'
-							];
-							$buttonAttr = array_merge($attr, $buttonAttr);
-
-							if (is_null($actionType)) {
-								if (array_key_exists('class', $buttonAttr)) {
-									unset($buttonAttr['class']);
-								}
-
-								$actionButton = [];
-								$actionButton['label'] = __($actionObj->name);
-								$actionButton['url'] = '#';
-								$actionButton['attr'] = $buttonAttr;
-								$actionButton['attr']['title'] = __($actionObj->name);
-								$actionButton['attr']['role'] = 'menuitem';
-
-								$actionButtons[] = $actionButton;
-							} else {
-								if ($actionType == 0) { // Approve
-									$approveButton = [];
-									$approveButton['type'] = 'button';
-									$approveButton['label'] = '<i class="fa kd-approve"></i>';
-									$approveButton['url'] = '#';
-									$approveButton['attr'] = $buttonAttr;
-									$approveButton['attr']['title'] = __($actionObj->name);
-
-									$toolbarButtons['approve'] = $approveButton;
-								} else if ($actionType == 1) { // Reject
-									$rejectButton = [];
-									$rejectButton['type'] = 'button';
-									$rejectButton['label'] = '<i class="fa kd-reject"></i>';
-									$rejectButton['url'] = '#';
-									$rejectButton['attr'] = $buttonAttr;
-									$rejectButton['attr']['title'] = __($actionObj->name);
-
-									$toolbarButtons['reject'] = $rejectButton;
-								}
-							}
-						}
+					// Enabled edit button only when login user in approval role for the step and that step is editable
+					if ($workflowStep->is_editable == 1) {
+						$isEditable = true;
 					}
 
-					if (!$this->_table->AccessControl->isAdmin() && $toolbarButtons->offsetExists('edit') && !$isEditable) {
-						unset($toolbarButtons['edit']);
+					if ($workflowStep->is_removable == 1) {
+						$isDeletable = true;
 					}
-
-					// More Actions
-					$moreButtonLink = [];
-					if (!empty($actionButtons)) {
-						$moreButtonLink = [
-							'title' => __('More Actions') . '<span class="caret-down"></span>',
-							'url' => '#',
-							'options' => [
-								'escapeTitle' => false, // Disabled coversion of HTML special characters in $title to HTML entities
-								'id' => 'action-menu',
-								'class' => 'btn btn-default action-toggle outline-btn',
-								'data-toggle' => 'dropdown',
-								'aria-expanded' => true
-							]
-						];
-
-						$moreButton = [];
-						$moreButton['type'] = 'element';
-						$moreButton['element'] = 'Workflow.buttons';
-						$moreButton['data'] = [
-							'buttons' => $actionButtons
-						];
-						$moreButton['options'] = [];
-
-						$toolbarButtons['more'] = $moreButton;
-					}
-					$this->_table->controller->set(compact('moreButtonLink', 'actionButtons'));
 					// End
 
-					// Modal
-					$modal = $this->getModalOptions($entity);
+					foreach ($workflowStep->workflow_actions as $actionKey => $actionObj) {
+
+						$eventKeys = $actionObj->event_key;
+						$eventsObject = new ArrayObject();
+						$subjectEvent = $this->_table->dispatchEvent('Workflow.getEvents', [$eventsObject], $this->_table);
+						if ($subjectEvent->isStopped()) { return $subjectEvent->result; }
+						$eventArray = $eventsObject->getArrayCopy();
+
+						$eventDescription = '';
+						$events = explode(",", $eventKeys);
+						foreach ($events as $eventKey) {
+							$actionObj->assignee_required = $eventKey == 'Workflow.onAssignBack' ? 0 : 1;	// assignee is required by default unless onAssignBack event is added
+							$key = array_search($eventKey, array_column($eventArray, 'value'));
+							if ($key !== false) {
+								if (isset($eventArray[$key]['description'])) {
+									$eventDescription .= $eventArray[$key]['description'];
+									$eventDescription .= '<br/>';
+								}
+							}
+						}
+
+						$actionType = $actionObj->action;
+						$button = [
+							'id' => $actionObj->id,
+							'name' => $actionObj->name,
+							'description' => $actionObj->description,
+							'next_step_id' => $actionObj->next_workflow_step_id,
+							'next_step_name' => $actionObj->next_workflow_step->name,
+							'assignee_required' => $actionObj->assignee_required,
+							'comment_required' => $actionObj->comment_required,
+							'event_description' => $eventDescription,
+							'is_school_based' => $isSchoolBased
+						];
+						$json = json_encode($button, JSON_NUMERIC_CHECK);
+
+						$buttonAttr = [
+							'escapeTitle' => false,
+							'escape' => true,
+							'onclick' => 'Workflow.init();Workflow.copy('.$json.');return false;',
+							'data-toggle' => 'modal',
+							'data-target' => '#workflowTransition'
+						];
+						$buttonAttr = array_merge($attr, $buttonAttr);
+
+						if (is_null($actionType)) {
+							if (array_key_exists('class', $buttonAttr)) {
+								unset($buttonAttr['class']);
+							}
+
+							$actionButton = [];
+							$actionButton['label'] = __($actionObj->name);
+							$actionButton['url'] = '#';
+							$actionButton['attr'] = $buttonAttr;
+							$actionButton['attr']['title'] = __($actionObj->name);
+							$actionButton['attr']['role'] = 'menuitem';
+
+							$actionButtons[] = $actionButton;
+						} else {
+							if ($actionType == 0) { // Approve
+								$approveButton = [];
+								$approveButton['type'] = 'button';
+								$approveButton['label'] = '<i class="fa kd-approve"></i>';
+								$approveButton['url'] = '#';
+								$approveButton['attr'] = $buttonAttr;
+								$approveButton['attr']['title'] = __($actionObj->name);
+
+								$toolbarButtons['approve'] = $approveButton;
+							} else if ($actionType == 1) { // Reject
+								$rejectButton = [];
+								$rejectButton['type'] = 'button';
+								$rejectButton['label'] = '<i class="fa kd-reject"></i>';
+								$rejectButton['url'] = '#';
+								$rejectButton['attr'] = $buttonAttr;
+								$rejectButton['attr']['title'] = __($actionObj->name);
+
+								$toolbarButtons['reject'] = $rejectButton;
+							}
+						}
+					}
+				}
+
+				if (!$this->_table->AccessControl->isAdmin() && $toolbarButtons->offsetExists('edit') && !$isEditable) {
+					unset($toolbarButtons['edit']);
+				}
+
+				if (!$this->_table->AccessControl->isAdmin() && $toolbarButtons->offsetExists('remove') && !$isDeletable) {
+					unset($toolbarButtons['remove']);
+				}
+
+				// More Actions
+				$moreButtonLink = [];
+				if (!empty($actionButtons)) {
+					$moreButtonLink = [
+						'title' => __('More Actions') . '<span class="caret-down"></span>',
+						'url' => '#',
+						'options' => [
+							'escapeTitle' => false, // Disabled coversion of HTML special characters in $title to HTML entities
+							'id' => 'action-menu',
+							'class' => 'btn btn-default action-toggle outline-btn',
+							'data-toggle' => 'dropdown',
+							'aria-expanded' => true
+						]
+					];
+
+					$moreButton = [];
+					$moreButton['type'] = 'element';
+					$moreButton['element'] = 'Workflow.buttons';
+					$moreButton['data'] = [
+						'buttons' => $actionButtons
+					];
+					$moreButton['options'] = [];
+
+					$toolbarButtons['more'] = $moreButton;
+				}
+				$this->_table->controller->set(compact('moreButtonLink', 'actionButtons'));
+				// End
+
+				// Modal
+				$modal = $this->getModalOptions($entity);
+				if (!empty($modal)) {
 					if (!isset($this->_table->controller->viewVars['modals'])) {
 						$this->_table->controller->set('modals', ['workflowTransition' => $modal]);
 					} else {
 						$modals = array_merge($this->_table->controller->viewVars['modals'], ['workflowTransition' => $modal]);
 						$this->_table->controller->set('modals', $modals);
 					}
-					// End
 				}
+				// End
 			}
 		}
 	}
@@ -1024,6 +1051,16 @@ class WorkflowBehavior extends Behavior {
 				}
 			}
 		}
+	}
+
+	public function deleteWorkflowTransitions(Entity $entity) {
+		$model = $this->_table;
+		$workflowModel = $this->WorkflowModels->find()->where([$this->WorkflowModels->aliasField('model') => $model->registryAlias()])->first();
+
+		$this->WorkflowTransitions->deleteAll([
+			$this->WorkflowTransitions->aliasField('workflow_model_id') => $workflowModel->id,
+			$this->WorkflowTransitions->aliasField('model_reference') => $entity->id
+		]);
 	}
 
 	public function workflowAfterTransition(Event $event, $id=null, $requestData) {
