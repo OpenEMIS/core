@@ -1,6 +1,9 @@
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
 <?= $this->Html->script('Examination.angular/centres/examination.centres.svc', ['block' => true]); ?>
 <?= $this->Html->script('Examination.angular/centres/examination.centres.ctrl', ['block' => true]); ?>
+<?= $this->Html->css('ControllerAction.../plugins/chosen/css/chosen.min', ['block' => true]); ?>
+<?= $this->Html->script('ControllerAction.../plugins/chosen/js/chosen.jquery.min', ['block' => true]); ?>
+<?= $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', ['block' => true]); ?>
 <?php
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('toolbar');
@@ -116,15 +119,74 @@ $this->start('panelBody');
                 </div>
             </div>
 
-            <div class="table-wrapper">
-                <div>
-                    <div class="scrolltabs sticky-content">
-                        <div id="institution-student-table" class="table-wrapper">
-                            <div ng-if="ExamCentreController.gridOptions" ag-grid="ExamCentreController.gridOptions" class="sg-theme"></div>
+            <form method="post" accept-charset="utf-8" id="content-main-form" novalidate="novalidate" action="/openemis-phpoe/Surveys/Forms?module=1" class="ng-pristine ng-valid"><div style="display:none;"><input type="hidden" name="_method" value="POST"></div>
+                    <div class="table-wrapper">
+                        <div class="table-responsive">
+
+                            <table class="table table-curved table-sortable table-checkable" >
+                                <thead>
+                                    <tr>
+                                        <th class="checkbox-column" width="50"></th>
+                                        <th><?= __('Institution')?></th>
+                                        <th><?= __('Subjects')?></th>
+                                        <th><?= __('Capacity')?></th>
+                                        <th><?= __('Special Needs')?></th>
+                                    </tr>
+                                </thead>
+                                    <tr ng-repeat="institution in ExamCentreController.institutionList">
+                                        <td class="checkbox-column">
+                                        <input
+                                            type="hidden"
+                                            ng-init="ExamCentreController.institutionId[institution.id] = institution.id"
+                                            ng-model="ExamCentreController.institutionId[institution.id]" />
+                                            <input
+                                                class="no-selection-label"
+                                                kd-checkbox-radio
+                                                type="checkbox"
+                                                ng-true-value="1"
+                                                ng-false-value="0"
+                                                ng-model="ExamCentreController.enabled[institution.id]"
+                                                ng-init="ExamCentreController.enabled[institution.id] = 0;">
+                                        </td>
+                                        <td>
+                                            {{institution.code_name}}
+                                        </td>
+                                        <td>
+                                            <div class="input select">
+                                                <select chosen
+                                                    multiple="multiple"
+                                                    data-placeholder="<?=__('Select Some Options') ?>"
+                                                    class="chosen-select"
+                                                    options="ExamCentreController.subjects"
+                                                    ng-model="ExamCentreController.examCentre[institution.id]"
+                                                    ng-options="item.subject_id as item.subject_name for item in ExamCentreController.subjects"
+                                                    >
+                                                </select>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="input select">
+
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="input select">
+                                                <select chosen
+                                                    multiple="multiple"
+                                                    data-placeholder="<?=__('Select Some Options') ?>"
+                                                    class="chosen-select"
+                                                    options="SurveyRulesController.questionOptions"
+                                                    ng-model="SurveyRulesController.dependentOptions[question.no]"
+                                                    ng-options="item.survey_question_choice_id as item.survey_question_choice_name for item in SurveyRulesController.questionOptions | filter:SurveyRulesController.filterChoiceBySurveyQuestionId(SurveyRulesController.dependentQuestion[question.no])"
+                                                    ng-init="SurveyRulesController.dependentOptions[question.no] = question.rule.show_options">
+                                                </select>
+                                            </div>
+                                        </td>
+                                    </tr>
+                            </table>
                         </div>
                     </div>
-                </div>
-            </div>
+                </form>
         </div>
         <div class="step-pane sample-pane" data-step="3" data-name="createUser">
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
