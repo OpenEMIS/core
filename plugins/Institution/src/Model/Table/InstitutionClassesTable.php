@@ -24,7 +24,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		
+
 		$this->belongsTo('AcademicPeriods', 		['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('Staff', 					['className' => 'User.Users', 						'foreignKey' => 'staff_id']);
 		$this->belongsTo('InstitutionShifts',		['className' => 'Institution.InstitutionShifts', 	'foreignKey' => 'institution_shift_id']);
@@ -52,7 +52,8 @@ class InstitutionClassesTable extends ControllerActionTable {
 			'className' => 'Institution.InstitutionSubjects',
 			'through' => 'Institution.InstitutionClassSubjects',
 			'foreignKey' => 'institution_class_id',
-			'targetForeignKey' => 'institution_subject_id'
+			'targetForeignKey' => 'institution_subject_id',
+			'cascadeCallbacks' => true
 		]);
 
 		/**
@@ -169,7 +170,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 			'override' => true,
 			'type' => 'element',
 			'element' => 'Institution.Classes/students',
-			'data' => [	
+			'data' => [
 				'students'=>[],
 				'studentOptions'=>[]
 			],
@@ -178,7 +179,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 		$this->field('education_grades', [
 			'type' => 'element',
 			'element' => 'Institution.Classes/multi_grade',
-			'data' => [	
+			'data' => [
 				'grades'=>[]
 			],
 			'visible' => ['view'=>true]
@@ -255,7 +256,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 		$Classes = $this;
 		//$academicPeriodOptions = $this->AcademicPeriods->getList();
 		$academicPeriodOptions = $this->AcademicPeriods->getYearList();
-		
+
 		$institutionId = $extra['institution_id'];
 		$selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
 		$this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriodId, [
@@ -274,7 +275,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 		if (!empty($gradeOptions)) {
 			/**
 			 * Added on PHPOE-1762 for PHPOE-1766
-			 * "All Grades" option is inserted here instead of inside InstitutionGrades->getInstitutionGradeOptions() 
+			 * "All Grades" option is inserted here instead of inside InstitutionGrades->getInstitutionGradeOptions()
 			 * so as to avoid unadherence of User's Requirements.
 			 */
 			$gradeOptions[-1] = 'All Grades';
@@ -282,7 +283,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 			ksort($gradeOptions);
 			/**/
 		}
-		
+
 		$selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);
 		$this->advancedSelectOptions($gradeOptions, $selectedEducationGradeId, [
 			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
@@ -291,7 +292,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 				 * If statement added on PHPOE-1762 for PHPOE-1766
 				 * If $id is -1, get all classes under the selected academic period
 				 */
-				
+
 				$join = [
 					'table' => 'institution_class_grades',
 					'alias' => 'InstitutionClassGrades',
@@ -316,12 +317,12 @@ class InstitutionClassesTable extends ControllerActionTable {
 		$extra['selectedEducationGradeId'] = $selectedEducationGradeId;
 
 		$extra['elements']['control'] = [
-			'name' => 'Institution.Classes/controls', 
+			'name' => 'Institution.Classes/controls',
 			'data' => [
-            	'academicPeriodOptions'=>$academicPeriodOptions, 
-            	'selectedAcademicPeriod'=>$selectedAcademicPeriodId, 
-            	'gradeOptions'=>$gradeOptions, 
-            	'selectedGrade'=>$selectedEducationGradeId, 
+            	'academicPeriodOptions'=>$academicPeriodOptions,
+            	'selectedAcademicPeriod'=>$selectedAcademicPeriodId,
+            	'gradeOptions'=>$gradeOptions,
+            	'selectedGrade'=>$selectedEducationGradeId,
 			],
 			'options' => [],
 			'order' => 3
@@ -363,8 +364,8 @@ class InstitutionClassesTable extends ControllerActionTable {
     public function viewBeforeAction(Event $event, ArrayObject $extra) {
 		if ($extra['selectedAcademicPeriodId'] == -1) {
 			return $this->controller->redirect([
-				'plugin' => $this->controller->plugin, 
-				'controller' => $this->controller->name, 
+				'plugin' => $this->controller->plugin,
+				'controller' => $this->controller->name,
 				'action' => 'Classes'
 			]);
 		}
@@ -435,8 +436,8 @@ class InstitutionClassesTable extends ControllerActionTable {
 		}
 		if ($selectedAcademicPeriodId == -1) {
 			return $this->controller->redirect([
-				'plugin' => $this->controller->plugin, 
-				'controller' => $this->controller->name, 
+				'plugin' => $this->controller->plugin,
+				'controller' => $this->controller->name,
 				'action' => 'Classes'
 			]);
 		}
@@ -480,8 +481,8 @@ class InstitutionClassesTable extends ControllerActionTable {
 	public function editBeforeAction(Event $event, ArrayObject $extra) {
 		if ($extra['selectedAcademicPeriodId'] == -1) {
 			return $this->controller->redirect([
-				'plugin' => $this->controller->plugin, 
-				'controller' => $this->controller->name, 
+				'plugin' => $this->controller->plugin,
+				'controller' => $this->controller->name,
 				'action' => 'Classes'
 			]);
 		}
@@ -502,7 +503,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 	 *
 	 * In InstitutionClasses editBeforePatch, subject_students array is being built using class_students and institution_classes data.
 	 * The built subject_students array will be added to request data so that students will be added to subjects through associative save.
-	 * 
+	 *
 	 * @param  Event       $event        Event object
 	 * @param  Entity      $entity       Entity object
 	 * @param  ArrayObject $requestData  HTTP request data as an ArrayObject
@@ -637,7 +638,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 		$currentStudentIds = (new Collection($entity->class_students))->extract('student_id')->toArray();
 		$originalStudentIds = (new Collection($entity->getOriginal('class_students')))->extract('student_id')->toArray();
 		$removedStudentIds = array_diff($originalStudentIds, $currentStudentIds);
-		
+
 		if (!empty($removedStudentIds)) {
 			// 'deleteAll will not trigger beforeDelete/afterDelete events. If you need those first load a collection of records and delete them.'
 			$classStudentsToBeDeleted = $this->ClassStudents->find()
@@ -684,7 +685,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 ** field specific methods
 **
 ******************************************************************************************************************/
-	public function onGetInstitutionShiftId(Event $event, Entity $entity) 
+	public function onGetInstitutionShiftId(Event $event, Entity $entity)
 	{
 		if ($entity->institution_shift->institution_id != $entity->institution_id) { //if the current institution is not the owner of the shift.
 			$ownerInfo = $this->Institutions->get($entity->institution_shift->institution_id)->toArray(); //show more information of the shift owner
@@ -711,8 +712,8 @@ class InstitutionClassesTable extends ControllerActionTable {
 				return $entity->staff->name_with_id;
 			} else {
 				return $this->getMessage($this->aliasField('noTeacherAssigned'));
-			}			
-		}		
+			}
+		}
 	}
 
 	public function onGetMaleStudents(Event $event, Entity $entity) {
@@ -756,7 +757,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 	                    ->find()
 	                    ->where([$table->aliasField('institution_class_id') => $entity->id])
 	                    ->count();
-	        return $count;	
+	        return $count;
 		}
 	}
 
@@ -767,7 +768,7 @@ class InstitutionClassesTable extends ControllerActionTable {
                     ->find()
                     ->where([$table->aliasField('institution_class_id') => $entity->id])
                     ->count();
-	        return $count;	
+	        return $count;
 		}
 	}
 
@@ -904,7 +905,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 
 		return $options;
 	}
-	
+
 	public function getExistedClasses($institutionId, $academicPeriodId, $educationGradeId) {
 		$data = $this->find('list', [
 				'keyField' => 'id',
@@ -982,7 +983,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 		$conditions = [$InstitutionGrades->aliasField('institution_id') => $institutionId];
 		return $InstitutionGrades->getAcademicPeriodOptions($this->Alert, $conditions);
 	}
-	
+
 	/**
 	 * Used by Institution/UserBehavior && Institution/InstitutionStudentsTable
 	 * @param  [integer]  $academicPeriodId [description]
