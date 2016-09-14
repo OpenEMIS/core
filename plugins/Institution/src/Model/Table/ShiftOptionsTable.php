@@ -3,6 +3,7 @@ namespace Institution\Model\Table;
 
 use Cake\Event\Event;
 use Cake\ORM\Query;
+use Cake\ORM\Entity;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -35,6 +36,11 @@ class ShiftOptionsTable extends ControllerActionTable
         $this->field('editable', ['visible' => false]);
         $this->field('international_code', ['visible' => false]);
         $this->field('national_code', ['visible' => false]);
+    }
+
+    public function onGetName(Event $event, Entity $entity) 
+    {
+        return __($entity->name);
     }
 
     public function getStartEndTime($shiftOptionId, $select)
