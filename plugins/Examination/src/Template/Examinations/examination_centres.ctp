@@ -48,7 +48,9 @@ $this->start('panelBody');
     <div class="actions top">
         <button type="button" class="btn btn-default btn-next"
             ng-disabled=""
-            data-last="Complete">
+            data-last="Complete"
+            ng-click="ExamCentreController.getSubjects()"
+            >
             Next
         </button>
     </div>
@@ -145,8 +147,8 @@ $this->start('panelBody');
                                                 type="checkbox"
                                                 ng-true-value="1"
                                                 ng-false-value="0"
-                                                ng-model="ExamCentreController.enabled[institution.id]"
-                                                ng-init="ExamCentreController.enabled[institution.id] = 0;">
+                                                ng-model="ExamCentreController.examCentreEnabled[institution.id]"
+                                                >
                                         </td>
                                         <td>
                                             {{institution.code_name}}
@@ -158,7 +160,7 @@ $this->start('panelBody');
                                                     data-placeholder="<?=__('Select Some Options') ?>"
                                                     class="chosen-select"
                                                     options="ExamCentreController.subjects"
-                                                    ng-model="ExamCentreController.examCentre[institution.id]"
+                                                    ng-model="ExamCentreController.examCentreSubjects[institution.id]"
                                                     ng-options="item.subject_id as item.subject_name for item in ExamCentreController.subjects"
                                                     >
                                                 </select>
@@ -175,10 +177,10 @@ $this->start('panelBody');
                                                     multiple="multiple"
                                                     data-placeholder="<?=__('Select Some Options') ?>"
                                                     class="chosen-select"
-                                                    options="SurveyRulesController.questionOptions"
-                                                    ng-model="SurveyRulesController.dependentOptions[question.no]"
-                                                    ng-options="item.survey_question_choice_id as item.survey_question_choice_name for item in SurveyRulesController.questionOptions | filter:SurveyRulesController.filterChoiceBySurveyQuestionId(SurveyRulesController.dependentQuestion[question.no])"
-                                                    ng-init="SurveyRulesController.dependentOptions[question.no] = question.rule.show_options">
+                                                    options="ExamCentreController.specialNeeds"
+                                                    ng-model="ExamCentreController.examCentreSpecialNeeds[institution.id]"
+                                                    ng-options="item.special_need_id as item.special_need_name for item in ExamCentreController.specialNeeds"
+                                                    >
                                                 </select>
                                             </div>
                                         </td>

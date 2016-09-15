@@ -1,5 +1,5 @@
 angular
-    .module('examination.centres.ctrl', ['utils.svc', 'alert.svc', 'examination.centres.svc'])
+    .module('examination.centres.ctrl', ['utils.svc', 'alert.svc', 'examination.centres.svc', 'angular.chosen'])
     .controller('ExaminationCentresCtrl', ExaminationCentresController);
 
 ExaminationCentresController.$inject = ['$scope', '$window', '$filter', 'UtilsSvc', 'AlertSvc', 'ExaminationCentresSvc'];
@@ -19,7 +19,12 @@ function ExaminationCentresController($scope, $window, $filter, UtilsSvc, AlertS
     vm.examinationId = null;
     vm.examinations = [];
     vm.subjects = [];
+    vm.specialNeeds = [];
+    vm.allSubjectIds = [];
     vm.centreType = null;
+    vm.examCentreSubjects = [];
+    vm.examCentreEnabled = [];
+    vm.examCentreSpecialNeeds = [];
 
     // Controller functions
     vm.changePeriod = changePeriod;
@@ -38,6 +43,7 @@ function ExaminationCentresController($scope, $window, $filter, UtilsSvc, AlertS
     vm.institutionType;
 
     vm.reloadDatasource = reloadDatasource;
+    vm.getSubjects = getSubjects;
     // StudentController.externalFilterOpenemisNo;
     // StudentController.externalFilterFirstName;
     // StudentController.externalFilterLastName;
@@ -76,12 +82,16 @@ function ExaminationCentresController($scope, $window, $filter, UtilsSvc, AlertS
         ExaminationCentresSvc.init(angular.baseUrl);
         ExaminationCentresSvc.getAcademicPeriods()
         .then(function(response) {
-            // console.log(response.data);
-            console.log(vm.translatedAgGridHeader);
             vm.academicPeriods = response.data;
-        }, function(error){});
-        // console.log(vm.academicPeriods);
-        // UtilsSvc.isAppendLoader(true);
+            ExaminationCentresSvc.getSpecialNeedTypes()
+            .then(function(res) {
+                vm.specialNeeds = res.data;
+            }, function(error) {
+                console.log(error);
+            });
+        }, function(error) {
+            console.log(error);
+        });
     });
 
     function changePeriod() {
@@ -92,37 +102,57 @@ function ExaminationCentresController($scope, $window, $filter, UtilsSvc, AlertS
         }, function(error) {
 
         })
+    };
+
+    function getSubjects() {
+        UtilsSvc.isAppendLoader(true);
+        ExaminationCentresSvc.getSubjects(vm.examinationId)
+        .then(function(res) {
+            vm.subjects = res.data;
+            angular.forEach(res.data, function(value) {
+              this.push(value.subject_id);
+            }, vm.allSubjectIds);
+            UtilsSvc.isAppendLoader(false);
+        }, function(error) {
+            UtilsSvc.isAppendLoader(false);
+        });
+    };
+
+    function checkSubject(id) {
+        console.log(vm.examCentreSubjects);
     }
 
 
     function reloadDatasource(withData) {
-        ExaminationCentresSvc.getSubjects(vm.examinationId)
-        .then(function(res) {
-            vm.subjects = res.data;
-            ExaminationCentresSvc.getInstitutions(
-            {
-                // startRow: params.startRow,
-                // endRow: params.endRow,
-                conditions: {
-                    code: vm.institutionCode,
-                    name: vm.institutionName,
-                    institution_type_id: vm.institutionType,
-                    examination_id: vm.examinationId
-                }
+        UtilsSvc.isAppendLoader(true);
+        ExaminationCentresSvc.getInstitutions(
+        {
+            // startRow: params.startRow,
+            // endRow: params.endRow,
+            conditions: {
+                code: vm.institutionCode,
+                name: vm.institutionName,
+                institution_type_id: vm.institutionType,
+                examination_id: vm.examinationId
             }
-            )
-            .then(function(response) {
-                var institutionRecord = response.data;
-                var totalRowCount = response.total;
-                vm.institutionList = institutionRecord;
-            }, function(error) {
-                console.log(error);
-                AlertSvc.warning($scope, error);
-            });
+        }
+        )
+        .then(function(response) {
+            var institutionRecord = response.data;
+            var totalRowCount = response.total;
+            vm.institutionList = institutionRecord;
+            var log = [];
+            angular.forEach(institutionRecord, function(value) {
+                if (vm.examCentreSubjects[value.id] == null) {
+                    vm.examCentreSubjects[value.id] = vm.allSubjectIds;
+                }
+            }, log);
+            UtilsSvc.isAppendLoader(false);
         }, function(error) {
-
+            console.log(error);
+            AlertSvc.warning($scope, error);
+            UtilsSvc.isAppendLoader(false);
         });
-
     };
 
     // $scope.reloadExternalDatasource = function (withData) {
@@ -200,24 +230,24 @@ function ExaminationCentresController($scope, $window, $filter, UtilsSvc, AlertS
     //     gridObj.api.sizeColumnsToFit();
     // }
 
-    function processInstitutionRecord(institutionRecords, params, totalRowCount) {
-        // for(var key in institutionRecords) {
-        //     studentRecords[key]['institution_name'] = '-';
-        //     if ((studentRecords[key].hasOwnProperty('institution_students') && studentRecords[key]['institution_students'].length > 0)) {
-        //         studentRecords[key]['institution_name'] = ((studentRecords[key].institution_students['0'].hasOwnProperty('institution')))? studentRecords[key].institution_students['0'].institution.name: '-';
-        //         studentRecords[key]['academic_period_name'] = ((studentRecords[key].institution_students['0'].hasOwnProperty('academic_period')))? studentRecords[key].institution_students['0'].academic_period.name: '-';
-        //         studentRecords[key]['education_grade_name'] = ((studentRecords[key].institution_students['0'].hasOwnProperty('education_grade')))? studentRecords[key].institution_students['0'].education_grade.name: '-';
-        //     }
-        // }
+    // function processInstitutionRecord(institutionRecords, params, totalRowCount) {
+    //     // for(var key in institutionRecords) {
+    //     //     studentRecords[key]['institution_name'] = '-';
+    //     //     if ((studentRecords[key].hasOwnProperty('institution_students') && studentRecords[key]['institution_students'].length > 0)) {
+    //     //         studentRecords[key]['institution_name'] = ((studentRecords[key].institution_students['0'].hasOwnProperty('institution')))? studentRecords[key].institution_students['0'].institution.name: '-';
+    //     //         studentRecords[key]['academic_period_name'] = ((studentRecords[key].institution_students['0'].hasOwnProperty('academic_period')))? studentRecords[key].institution_students['0'].academic_period.name: '-';
+    //     //         studentRecords[key]['education_grade_name'] = ((studentRecords[key].institution_students['0'].hasOwnProperty('education_grade')))? studentRecords[key].institution_students['0'].education_grade.name: '-';
+    //     //     }
+    //     // }
 
-        var lastRow = totalRowCount;
-        vm.rowsThisPage = institutionRecords;
+    //     var lastRow = totalRowCount;
+    //     vm.rowsThisPage = institutionRecords;
 
-        params.successCallback(vm.rowsThisPage, lastRow);
-        UtilsSvc.isAppendLoader(false);
-        // StudentController.initialLoad = false;
-        return institutionRecords;
-    }
+    //     params.successCallback(vm.rowsThisPage, lastRow);
+    //     UtilsSvc.isAppendLoader(false);
+    //     // StudentController.initialLoad = false;
+    //     return institutionRecords;
+    // }
 
     // function insertStudentData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate) {
     //     UtilsSvc.isAppendLoader(true);
