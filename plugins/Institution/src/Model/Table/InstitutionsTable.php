@@ -653,7 +653,6 @@ class InstitutionsTable extends AppTable  {
 
 	public function addAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('is_academic', ['type' => 'select', 'options' => [], 'entity' => $entity, 'after' => 'code']);
-		$this->ControllerAction->field('shift_type', ['type' => 'hidden', 'value' => 0]);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
