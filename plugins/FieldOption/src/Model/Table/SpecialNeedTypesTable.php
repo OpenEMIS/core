@@ -4,6 +4,7 @@ namespace FieldOption\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
+use Cake\ORM\Query;
 
 class SpecialNeedTypesTable extends ControllerActionTable {
 	public function initialize(array $config)
@@ -15,4 +16,13 @@ class SpecialNeedTypesTable extends ControllerActionTable {
 
 		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
 	}
+
+    public function findVisibleNeedTypes(Query $query, array $options)
+    {
+        $query
+            ->find('visible')
+            ->find('order')
+            ->select(['special_need_id' => $this->aliasField('id'), 'special_need_name' => $this->aliasField('name')]);
+        return $query;
+    }
 }
