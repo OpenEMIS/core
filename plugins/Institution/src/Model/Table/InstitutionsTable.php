@@ -295,7 +295,7 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information')]);
 
 		$this->ControllerAction->field('shift_section', ['type' => 'section', 'title' => __('Shifts'), 'visible' => ['view'=>true]]);
-		$this->ControllerAction->field('shift_type', ['visible' => ['view'=>true]]);
+		$this->ControllerAction->field('shift_type', ['visible' => ['view' => true]]);
 
 		$this->ControllerAction->field('shift_details', [
 			'type' => 'element',
@@ -588,9 +588,14 @@ class InstitutionsTable extends AppTable  {
 
 /******************************************************************************************************************
 **
-** addEdit action methods
+** add / addEdit action methods
 **
 ******************************************************************************************************************/
+	public function addBeforeAction(Event $event)
+	{
+		$this->ControllerAction->field('shift_type', ['visible' => true, 'type' => 'hidden', 'value' => 0]);
+	}
+
 	public function addEditBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
