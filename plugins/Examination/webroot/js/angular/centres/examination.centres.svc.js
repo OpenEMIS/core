@@ -11,14 +11,16 @@ function ExaminationCentresSvc($http, $q, $filter, KdOrmSvc) {
         getAcademicPeriods: getAcademicPeriods,
         getExamination: getExamination,
         getInstitutions: getInstitutions,
-        getSubjects: getSubjects
+        getSubjects: getSubjects,
+        getSpecialNeedTypes: getSpecialNeedTypes
     };
 
     var models = {
         ExaminationsTable: 'Examination.Examinations',
         AcademicPeriodsTable: 'AcademicPeriod.AcademicPeriods',
         InstitutionsTable: 'Institution.Institutions',
-        ExaminationItemsTable: 'Examination.ExaminationItems'
+        ExaminationItemsTable: 'Examination.ExaminationItems',
+        SpecialNeedTypesTable: 'FieldOption.SpecialNeedTypes'
     };
 
     return service;
@@ -49,11 +51,10 @@ function ExaminationCentresSvc($http, $q, $filter, KdOrmSvc) {
 
     function getInstitutions(params) {
         var examinationId = params.conditions.examination_id;
-        console.log(examinationId);
-        console.log('exam id');
         return InstitutionsTable
             .select()
             .find('NotExamCentres', {examination_id: examinationId.toString()})
+            .limit(10)
             .ajax({defer: true});
     }
 
@@ -61,6 +62,13 @@ function ExaminationCentresSvc($http, $q, $filter, KdOrmSvc) {
          return ExaminationItemsTable
             .select()
             .find('subjects', {examination_id: examinationId.toString()})
+            .ajax({defer: true});
+    }
+
+    function getSpecialNeedTypes() {
+         return SpecialNeedTypesTable
+            .select()
+            .find('visibleNeedTypes')
             .ajax({defer: true});
     }
 };
