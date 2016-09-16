@@ -467,7 +467,7 @@ class InstitutionsTable extends AppTable  {
 		if($this->action == 'index'){
 			$areaName = $entity->Areas['name'];
 			// Getting the system value for the area
-			$ConfigItems = TableRegistry::get('ConfigItems');
+			$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 			$areaLevel = $ConfigItems->value('institution_area_level_id');
 
 			// Getting the current area id
@@ -501,7 +501,7 @@ class InstitutionsTable extends AppTable  {
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
 			if ($field == 'area_id' && $this->action == 'index') {
 				// Getting the system value for the area
-				$ConfigItems = TableRegistry::get('ConfigItems');
+				$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 				$areaLevel = $ConfigItems->value('institution_area_level_id');
 
 				$AreaTable = TableRegistry::get('Area.AreaLevels');
