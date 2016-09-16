@@ -24,6 +24,7 @@ class InstitutionStudentDropoutRequestControllerTest extends AppTestCase
         'app.survey_rules',
         'app.education_programmes',
         'app.config_item_options',
+        'app.config_product_lists',
         'app.student_custom_field_values',
         'app.student_custom_fields',
         'app.student_custom_forms_fields',
@@ -34,7 +35,7 @@ class InstitutionStudentDropoutRequestControllerTest extends AppTestCase
         'app.institutions',
         'app.academic_periods',
         'app.education_grades',
-        'app.student_dropout_reasons'
+        'app.student_dropout_reasons',
     ];
 
     private $studentId = 2;
@@ -134,8 +135,8 @@ class InstitutionStudentDropoutRequestControllerTest extends AppTestCase
                 'academic_period_id' => 3,
                 'education_grade_id' => 76,
                 'effective_date' => '2016-10-01', // correct date (after enrollment date '2016-06-01')
-                'student_dropout_reason_id' => 663,
-                'comment' => 'This student was bullied by his classmates',
+                'student_dropout_reason_id' => 661,
+                'comment' => 'Test comment',
             ],
             'submit' => 'save'
         ];
@@ -163,21 +164,15 @@ class InstitutionStudentDropoutRequestControllerTest extends AppTestCase
                 'academic_period_id' => 3,
                 'education_grade_id' => 76,
                 'effective_date' => '2016-01-01', // wrong date (before enrollment date '2016-06-01')
-                'student_dropout_reason_id' => 663,
-                'comment' => 'This student was bullied by his classmates',
+                'student_dropout_reason_id' => 661,
+                'comment' => 'Test comment',
             ],
             'submit' => 'save'
         ];
         $this->postData($testUrl, $data);
 
-        $table = TableRegistry::get('Institutions.institution_student_dropout');
-        $editedRecord = $table->find()
-            ->where([$table->aliasField('id') => $data['DropoutRequests']['id'],
-                $table->aliasField('effective_date') => $data['DropoutRequests']['effective_date'],
-                $table->aliasField('student_dropout_reason_id') => $data['DropoutRequests']['student_dropout_reason_id'],
-                $table->aliasField('comment') => $data['DropoutRequests']['comment']])
-            ->first();
-
-        $this->assertEquals(true, (empty($editedRecord)));
+        $postData = $this->viewVariable('data');
+        $errors = $postData->errors();
+        $this->assertEquals(true, (array_key_exists('effective_date', $errors)));
     }
 }

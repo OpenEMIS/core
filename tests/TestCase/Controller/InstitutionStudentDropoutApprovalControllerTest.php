@@ -16,6 +16,7 @@ class InstitutionStudentDropoutApprovalControllerTest extends AppTestCase
         'app.workflow_statuses_steps',
         'app.custom_modules',
         'app.custom_field_types',
+        'app.config_product_lists',
         'app.institution_custom_field_values',
         'app.institution_custom_fields',
         'app.survey_forms',
@@ -36,6 +37,8 @@ class InstitutionStudentDropoutApprovalControllerTest extends AppTestCase
     ];
 
     private $editId = 1;
+    private $approvedStatus = 1;
+    private $rejectedStatus = 2;
 
     public function setup()
     {
@@ -60,7 +63,7 @@ class InstitutionStudentDropoutApprovalControllerTest extends AppTestCase
                 'institution_id' => 1,
                 'academic_period_id' => 3,
                 'education_grade_id' => 76,
-                'student_dropout_reason_id' => 663,
+                'student_dropout_reason_id' => 661,
                 'comment' => 'Approved'
             ],
             'submit' => 'save'
@@ -72,14 +75,14 @@ class InstitutionStudentDropoutApprovalControllerTest extends AppTestCase
             ->where([$DropoutTable->aliasField('id') => $data['StudentDropout']['id'],
                 $DropoutTable->aliasField('effective_date') => $data['StudentDropout']['effective_date'],
                 $DropoutTable->aliasField('comment') => $data['StudentDropout']['comment'],
-                $DropoutTable->aliasField('status') => 1])
+                $DropoutTable->aliasField('status') => $this->approvedStatus])
             ->first();
         $this->assertEquals(true, (!empty($approvedRecord)));
-
 
         $StudentStatusesTable = TableRegistry::get('Student.StudentStatuses');
         $dropoutStatus = $StudentStatusesTable->getIdByCode('DROPOUT');
 
+        // check that student status is changed to dropout
         $StudentsTable = TableRegistry::get('Institutions.institution_students');
         $dropoutStudentRecord = $StudentsTable->find()
             ->where([$StudentsTable->aliasField('student_id') => $data['StudentDropout']['student_id'],
@@ -104,35 +107,30 @@ class InstitutionStudentDropoutApprovalControllerTest extends AppTestCase
                 'institution_id' => 1,
                 'academic_period_id' => 3,
                 'education_grade_id' => 76,
-                'student_dropout_reason_id' => 663,
+                'student_dropout_reason_id' => 661,
                 'comment' => 'Approved'
             ],
             'submit' => 'save'
         ];
         $this->postData($testUrl, $data);
 
-        $DropoutTable = TableRegistry::get('Institutions.institution_student_dropout');
-        $approvedRecord = $DropoutTable->find()
-            ->where([$DropoutTable->aliasField('id') => $data['StudentDropout']['id'],
-                $DropoutTable->aliasField('effective_date') => $data['StudentDropout']['effective_date'],
-                $DropoutTable->aliasField('comment') => $data['StudentDropout']['comment'],
-                $DropoutTable->aliasField('status') => 1])
-            ->first();
-        $this->assertEquals(true, (empty($approvedRecord)));
-
+        $postData = $this->viewVariable('data');
+        $errors = $postData->errors();
+        $this->assertEquals(true, (array_key_exists('effective_date', $errors)));
 
         $StudentStatusesTable = TableRegistry::get('Student.StudentStatuses');
-        $dropoutStatus = $StudentStatusesTable->getIdByCode('DROPOUT');
+        $currentStatus = $StudentStatusesTable->getIdByCode('CURRENT');
 
+        // check that student status is not changed to dropout
         $StudentsTable = TableRegistry::get('Institutions.institution_students');
         $dropoutStudentRecord = $StudentsTable->find()
             ->where([$StudentsTable->aliasField('student_id') => $data['StudentDropout']['student_id'],
                 $StudentsTable->aliasField('institution_id') => $data['StudentDropout']['institution_id'],
                 $StudentsTable->aliasField('academic_period_id') => $data['StudentDropout']['academic_period_id'],
                 $StudentsTable->aliasField('education_grade_id') => $data['StudentDropout']['education_grade_id'],
-                $StudentsTable->aliasField('student_status_id') => $dropoutStatus])
+                $StudentsTable->aliasField('student_status_id') => $currentStatus])
             ->first();
-        $this->assertEquals(true, (empty($dropoutStudentRecord)));
+        $this->assertEquals(true, (!empty($dropoutStudentRecord)));
     }
 
     public function testReject() {
@@ -147,7 +145,7 @@ class InstitutionStudentDropoutApprovalControllerTest extends AppTestCase
                 'institution_id' => 1,
                 'academic_period_id' => 3,
                 'education_grade_id' => 76,
-                'student_dropout_reason_id' => 663,
+                'student_dropout_reason_id' => 661,
                 'comment' => 'Rejected'
             ],
             'submit' => 'reject'
@@ -155,23 +153,24 @@ class InstitutionStudentDropoutApprovalControllerTest extends AppTestCase
         $this->postData($testUrl, $data);
 
         $DropoutTable = TableRegistry::get('Institutions.institution_student_dropout');
-        $approvedRecord = $DropoutTable->find()
+        $rejectedRecord = $DropoutTable->find()
             ->where([$DropoutTable->aliasField('id') => $data['StudentDropout']['id'],
-                $DropoutTable->aliasField('status') => 2])
+                $DropoutTable->aliasField('status') => $this->rejectedStatus])
             ->first();
-        $this->assertEquals(true, (!empty($approvedRecord)));
+        $this->assertEquals(true, (!empty($rejectedRecord)));
 
         $StudentStatusesTable = TableRegistry::get('Student.StudentStatuses');
         $currentStatus = $StudentStatusesTable->getIdByCode('CURRENT');
 
+        // check that student status is not changed to dropout
         $StudentsTable = TableRegistry::get('Institutions.institution_students');
-        $dropoutStudentRecord = $StudentsTable->find()
+        $currentStudentRecord = $StudentsTable->find()
             ->where([$StudentsTable->aliasField('student_id') => $data['StudentDropout']['student_id'],
                 $StudentsTable->aliasField('institution_id') => $data['StudentDropout']['institution_id'],
                 $StudentsTable->aliasField('academic_period_id') => $data['StudentDropout']['academic_period_id'],
                 $StudentsTable->aliasField('education_grade_id') => $data['StudentDropout']['education_grade_id'],
                 $StudentsTable->aliasField('student_status_id') => $currentStatus])
             ->first();
-        $this->assertEquals(true, (!empty($dropoutStudentRecord)));
+        $this->assertEquals(true, (!empty($currentStudentRecord)));
     }
 }
