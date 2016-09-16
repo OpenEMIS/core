@@ -464,7 +464,7 @@ class InstitutionClassesTable extends ControllerActionTable {
 
 	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		//$academicPeriodOptions = $this->AcademicPeriods->getlist(['isEditable'=>true]);
-		$academicPeriodOptions = $this->AcademicPeriods->getYearList();
+		$academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable'=>true]);
 		$this->fields['academic_period_id']['options'] = $academicPeriodOptions;
 		$this->fields['academic_period_id']['onChangeReload'] = true;
 		$this->fields['academic_period_id']['default'] = $this->AcademicPeriods->getCurrent();
