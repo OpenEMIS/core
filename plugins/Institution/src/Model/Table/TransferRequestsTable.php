@@ -375,8 +375,10 @@ class TransferRequestsTable extends AppTable {
 	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$transferEntity = $this->newEntity($data[$this->alias()]);
 		if ($this->save($transferEntity)) {
+			$this->Alert->success('general.edit.success');
 		} else {
 			$this->log($transferEntity->errors(), 'debug');
+			$this->Alert->error('general.edit.failed');
 		}
 
 		if ($this->Session->read($this->registryAlias().'.id')) {
@@ -484,6 +486,7 @@ class TransferRequestsTable extends AppTable {
 
 			$attr['type'] = 'chosenSelect';
 			$attr['attr']['multiple'] = false;
+			$attr['select'] = true;
 			if ($this->selectedGrade == $request->data[$this->alias()]['education_grade_id']) {
 				$institutionOptions->where([$this->Institutions->aliasField('id').' <> ' => $institutionId]);
 			}
@@ -541,11 +544,12 @@ class TransferRequestsTable extends AppTable {
 						$educationProgrammeId = $studentInfo->education_grade->education_programme_id;
 						$nextEducationGradeList = $EducationProgrammesNextProgrammesTable->getNextGradeList($educationProgrammeId);
 						$moreAdvancedEducationGrades = $currentProgrammeGrades + $nextEducationGradeList;
-
-						$this->selectedGrade = $request->data[$this->alias()]['new_education_grade_id'];
-						if (!array_key_exists($this->selectedGrade, $moreAdvancedEducationGrades)) {
-							reset($moreAdvancedEducationGrades);
-							$this->selectedGrade = key($moreAdvancedEducationGrades);
+						if (isset($request->data[$this->alias()]['new_education_grade_id'])) {
+							$this->selectedGrade = $request->data[$this->alias()]['new_education_grade_id'];
+							if (!array_key_exists($this->selectedGrade, $moreAdvancedEducationGrades)) {
+								reset($moreAdvancedEducationGrades);
+								$this->selectedGrade = key($moreAdvancedEducationGrades);
+							}
 						}
 
 						$attr['options'] = $moreAdvancedEducationGrades;
@@ -639,7 +643,6 @@ class TransferRequestsTable extends AppTable {
 					}
 
 					$attr['options'] = $academicPeriodsAfter;
-					$attr['onChangeReload'] = true;
 
 					break;
 
