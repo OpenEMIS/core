@@ -242,6 +242,7 @@ class ControllerActionComponent extends Component {
             // make field sortable by default if it is a string data-type
             if (!array_key_exists('type', $attr)) {
                 $this->log($key, 'debug');
+                continue;
             }
 
             $sortableTypes = ['string', 'date', 'time', 'datetime'];

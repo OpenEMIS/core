@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace OpenEmis\Model\Behavior;
 
 use Cake\ORM\Entity;
@@ -15,34 +15,34 @@ use Cake\Utility\Inflector;
  *
  * Usage:
  * Firstly, add this behavior in model's initialize function.
- * 
+ *
  * public function initialize(array $config) {
  * 		.............
- * 		
+ *
  *   	$this->addBehavior('OpenEmis.Section');
- * 		
+ *
  * 		.............
  * }
  *
- * 
+ *
  * Secondly, defines the field in model's beforeAction()
  *
  *	public function beforeAction($event) {
  * 		.............
- * 		
+ *
  * 		$this->ControllerAction->field('information_section', ['type' => 'section']);
- * 		
+ *
  * 		.............
  * 	}
  *
- * 
+ *
  * Field declaration with custom title on the element.
- * 
+ *
  * 		$this->ControllerAction->field('information_section', ['type' => 'section', 'title' => $title_val]);
  *
- * If the 'title' parameter is not defined in the field declaration, 
+ * If the 'title' parameter is not defined in the field declaration,
  * the humanized version of the field name will be used.
- * 
+ *
  */
 class SectionBehavior extends Behavior {
 	public function implementedEvents() {
@@ -70,7 +70,7 @@ class SectionBehavior extends Behavior {
 
 	private function _fieldSetup() {
 		foreach ($this->_table->fields as $key=>$value) {
-			if ($value['type'] == 'section') {
+			if (array_key_exists('type', $value) && $value['type'] == 'section') {
 				$this->_table->fields[$key]['override'] = true;
 				$this->_table->fields[$key]['label'] = false;
 				$this->_table->fields[$key]['rowClass'] = 'section-header';
