@@ -32,7 +32,7 @@ class ImportStaffAttendancesTable extends AppTable {
         if ($session->check('Institution.Institutions.id')) {
             $this->institutionId = $session->read('Institution.Institutions.id');
         }
-        $this->systemDateFormat = TableRegistry::get('ConfigItems')->value('date_format');
+        $this->systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
     }
 
     public function implementedEvents() {
