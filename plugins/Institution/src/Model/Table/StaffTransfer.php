@@ -145,22 +145,4 @@ class StaffTransfer extends ControllerActionTable {
 		}
 		return $value;
 	}
-
-	public function onGetStaffId(Event $event, Entity $entity) {
-		$urlParams = $this->url('index');
-		$action = $urlParams['action'];
-		$page = 'view';
-		if (in_array($entity->status_id, [self::PENDING, self::APPROVED])) {
-			if ($this->AccessControl->check(['Institutions', 'StaffTransferRequests', 'edit'])) {
-				$page = 'edit';
-			}
-		}
-		return $event->subject()->Html->link($entity->user->name, [
-					'plugin' => $urlParams['plugin'],
-					'controller' => $urlParams['controller'],
-					'action' => $action,
-					'0' => $page,
-					'1' => $entity->id
-				]);
-	}
 }
