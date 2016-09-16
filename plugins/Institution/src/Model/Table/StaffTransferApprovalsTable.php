@@ -83,6 +83,8 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 		$staffId = $entity->staff_id;
 
 		$institutionId = $entity->previous_institution_id;
+		$prevInstitutionCodeName = $entity->previous_institution->code_name;
+
 		$InstitutionStaff = TableRegistry::get('Institution.Staff');
 		$staffRecord = $InstitutionStaff->find()
 			->contain(['Positions', 'StaffTypes'])
@@ -99,6 +101,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 
 		if (!is_null($staffRecord)) {
 			$this->field('transfer_type');
+			$this->field('previous_institution_id', ['type' => 'disabled', 'after' => 'staff_id', 'attr' => ['value' => $prevInstitutionCodeName]]);
 			$this->field('current_institution_position_id', ['after' => 'previous_institution_id', 'type' => 'disabled', 'attr' => ['value' => $staffRecord->position->name]]);
 			$this->field('current_FTE', ['after' => 'current_institution_position_id', 'type' => 'disabled', 'attr' => ['value' => $staffRecord->FTE]]);
 			$this->field('current_staff_type', ['after' => 'current_FTE', 'type' => 'disabled', 'attr' => ['value' => $staffRecord->staff_type->name]]);
@@ -439,6 +442,21 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 			if (isset($toolbarButtons['remove'])) {
 				unset($toolbarButtons['remove']);
 			}
+		}
+	}
+
+	public function onGetStaffId(Event $event, Entity $entity) {
+		if ($this->action == 'view') {
+			$staffId = $entity->staff_id;
+			return $event->subject()->Html->link($entity->user->name, [
+						'plugin' => 'Institution',
+						'controller' => 'Institutions',
+						'action' => 'StaffUser',
+						'0' => 'view',
+						'1' => $staffId,
+						'institution_id' => $entity->previous_institution_id
+
+					]);
 		}
 	}
 }
