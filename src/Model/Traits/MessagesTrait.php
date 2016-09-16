@@ -563,6 +563,9 @@ trait MessagesTrait {
                 'code' => [
                     'ruleUnique' => 'Please enter a unique code'
                 ],
+                'institution_provider_id' => [
+                    'ruleLinkedSector' => 'Please select a provider linked to the chosen Sector'
+                ]
             ],
             'InstitutionClasses' => [
                 'noGrade' => 'There is no grade selected',
