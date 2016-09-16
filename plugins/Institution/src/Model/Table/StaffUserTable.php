@@ -109,4 +109,23 @@ class StaffUserTable extends UserTable {
 		}
 		return $attr;
 	}
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
+    {
+        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+        $identity = $IdentityType->getDefaultEntity();
+        
+        foreach ($fields as $key => $field) { 
+            //get the value from the table, but change the label to become default identity type.
+            if ($field['field'] == 'identity_number') { 
+                $fields[$key] = [
+                    'key' => 'StudentUser.identity_number',
+                    'field' => 'identity_number',
+                    'type' => 'string',
+                    'label' => __($identity->name)
+                ];
+                break;
+            }
+        }
+    }
 }
