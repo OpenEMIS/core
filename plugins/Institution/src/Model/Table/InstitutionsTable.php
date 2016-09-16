@@ -168,6 +168,10 @@ class InstitutionsTable extends AppTable  {
 			->add('area_id', 'ruleAuthorisedArea', [
 					'rule' => 'checkAuthorisedArea'
 				])
+			->add('institution_provider_id', 'ruleLinkedSector', [
+						'rule' => 'checkLinkedSector',
+						'provider' => 'table'
+				])
 	        ;
 		return $validator;
 	}
