@@ -219,18 +219,21 @@ class ControllerActionComponent extends Component {
 
                 // for automatic adding of '-- Select --' if there are no '' value fields in dropdown
                 $addSelect = true;
+                if ($attr['type'] == 'chosenSelect') {
+                    $addSelect = false;
+                }
                 if (array_key_exists('select', $attr)) {
                     if ($attr['select'] === false) {
                         $addSelect = false;
+                    } else {
+                        $addSelect = true;
                     }
                 }
                 if ($addSelect) {
                     if (is_array($attr['options'])) {
                         // need to check if options has any ''
                         if (!array_key_exists('', $attr['options'])) {
-                            if ($attr['type'] != 'chosenSelect') {
-                                $this->model->fields[$key]['options'] = ['' => __('-- Select --')] + $attr['options'];
-                            }
+                            $this->model->fields[$key]['options'] = ['' => __('-- Select --')] + $attr['options'];
                         }
                     }
                 }
@@ -496,6 +499,7 @@ class ControllerActionComponent extends Component {
 
         $named = $this->request->query;
         $pass = $this->request->params['pass'];
+        $extra = new ArrayObject([]);
         if ($this->triggerFrom == 'Model') {
             unset($pass[0]);
         }
@@ -518,13 +522,14 @@ class ControllerActionComponent extends Component {
                     $primaryKey = $this->getPrimaryKey($model);
                     $idKey = $model->aliasField($primaryKey);
                     $sessionKey = $model->registryAlias() . '.' . $primaryKey;
+                    $extra['primaryKeyValue'] = $this->Session->read($sessionKey);
                     if (empty($pass)) {
                         if ($this->Session->check($sessionKey)) {
-                            $pass = [$this->Session->read($sessionKey)];
+                            $pass = [$extra['primaryKeyValue']];
                         }
                     } elseif (isset($pass[0]) && $pass[0]==$action) {
                         if ($this->Session->check($sessionKey)) {
-                            $pass[1] = $this->Session->read($sessionKey);
+                            $pass[1] = $extra['primaryKeyValue'];
                         }
                     }
                 }
@@ -567,7 +572,7 @@ class ControllerActionComponent extends Component {
             }
         }
 
-        $params = [$buttons, $this->currentAction, $this->triggerFrom == 'Model'];
+        $params = [$buttons, $this->currentAction, $this->triggerFrom == 'Model', $extra];
         $this->debug(__METHOD__, ': Event -> ControllerAction.Model.onInitializeButtons');
         $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onInitializeButtons', null, $params);
         if ($event->isStopped()) { return $event->result; }
@@ -886,7 +891,6 @@ class ControllerActionComponent extends Component {
             $data = $event->result;
         }
         if ($event->isStopped()) { return $event->result; }
-
         $modals = ['delete-modal' => $this->getModalOptions('remove')];
         $this->config['form'] = true;
         $this->config['formButtons'] = false;
