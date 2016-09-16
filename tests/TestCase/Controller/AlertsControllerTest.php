@@ -9,6 +9,7 @@ class AlertsControllerTest extends AppTestCase
     public $fixtures = [
         'app.alert_logs',
         'app.config_items',
+        'app.config_product_lists',
         'app.labels',
         'app.security_users',
         'app.sms_messages',
