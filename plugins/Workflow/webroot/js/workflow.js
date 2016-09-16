@@ -15,10 +15,6 @@ have received a copy of the GNU General Public License along with this program. 
 
 $(document).ready(function() {
 	Workflow.init();
-
-	$(".workflowtransition-comment").keyup(function() {
-		Workflow.hideError();
-	});
 });
 
 var Workflow = {
@@ -39,12 +35,30 @@ var Workflow = {
 		$('.workflowtransition-event-description').html(jsonObj.event_description);
 
 		Workflow.getAssigneeOptions(jsonObj.is_school_based, jsonObj.next_step_id);
+		Workflow.resetError();
+		Workflow.toggleAssignee(jsonObj.assignee_required);
 	},
 
 	hideError: function() {
-		$('.workflowtransition-comment-error').hide();
+		$('.workflowtransition-assignee-loading').hide();
+		$('.workflowtransition-assignee-no_options').hide();
 		$('.workflowtransition-assignee-error').hide();
-		$('.workflowtransition-assignee-sql-error').hide().html('');
+		$('.workflowtransition-assignee-sql-error').hide();
+		$('.workflowtransition-comment-error').hide();
+	},
+
+	resetError: function() {
+		$('div').remove('.assignee-error');
+		$('.workflowtransition-assignee-id').removeClass('form-error');
+		$('.workflowtransition-comment').removeClass('form-error');
+	},
+
+	toggleAssignee: function(required) {
+		if (required == 0) {
+			$('.workflowtransition-assignee-id').closest('.input').hide();
+		} else {
+			$('.workflowtransition-assignee-id').closest('.input').show();
+		}
 	},
 	
 	onSubmit: function(obj) {
@@ -52,19 +66,21 @@ var Workflow = {
 		var assigneeId = $('.workflowtransition-assignee-id').val();
 		var commentRequired = $('.workflowtransition-comment-required').val();
 		var comment = $.trim($('.workflowtransition-comment').val());
+		Workflow.resetError();
 
 		var error = false;
 		if (assigneeRequired == 1 && assigneeId == '') {
-			$('.workflowtransition-assignee-error').show();
+			$('.workflowtransition-assignee-id').addClass('form-error');
+			$('.workflowtransition-assignee-id').closest('.input-select-wrapper').after('<div class="assignee-error error-message">' + $('.workflowtransition-assignee-error').html() + '</div>');
 			error = true;
-		} else {
-			$('.workflowtransition-assignee-error').hide();
 		}
 
 		if (commentRequired == 1 && comment.length === 0) {
+			$('.workflowtransition-comment').addClass('form-error');
 			$('.workflowtransition-comment-error').show();
 			error = true;
 		} else {
+			$('.workflowtransition-comment').removeClass('form-error');
 			$('.workflowtransition-comment-error').hide();
 		}
 
@@ -88,7 +104,7 @@ var Workflow = {
 			beforeSend: function(xhr) {
 				// always show loading when user click on submit button
 				$('.workflowtransition-assignee-id').empty();
-				$('.workflowtransition-assignee-id').append($('<option>').text('Loading...').attr('value', ''));
+				$('.workflowtransition-assignee-id').append($('<option>').text($('.workflowtransition-assignee-loading').html() + '...').attr('value', ''));
 			},
             success: function(response) {
             	var defaultKey = response.default_key;
@@ -109,10 +125,10 @@ var Workflow = {
             	console.log('Workflow.getAssigneeOptions() error callback:');
             	console.log(error);
             	$('.workflowtransition-assignee-id').empty();
-            	$('.workflowtransition-assignee-id').append($('<option>').text('No options').attr('value', ''));
+            	$('.workflowtransition-assignee-id').append($('<option>').text($('.workflowtransition-assignee-no_options').html()).attr('value', ''));
 
             	if (typeof error.responseJSON != 'undefined' && typeof error.responseJSON.message != 'undefined') {
-            		$('.workflowtransition-assignee-sql-error').html(error.responseJSON.message).show();
+            		$('.workflowtransition-assignee-sql-error').show();
             	}
             }
         });

@@ -675,8 +675,6 @@ class WorkflowBehavior extends Behavior {
 		if (!is_null($step)) {
 			$workflow = $step->_matchingData['Workflows'];
 
-			$step = $entity->status;
-
 			$alias = $this->WorkflowTransitions->alias();
 			// workflow_step_id is needed for afterSave logic in WorkflowTransitions
 			$fields = [
@@ -777,9 +775,13 @@ class WorkflowBehavior extends Behavior {
 
 			$content = '';
 			$content = '<style type="text/css">.modal-footer { clear: both; } .modal-body textarea { width: 60%; }</style>';
+			$content .= '<div class="input string"><span class="button-label"></span>';
+				$content .= '<div class="workflowtransition-assignee-loading">' . __('Loading') . '</div>';
+				$content .= '<div class="workflowtransition-assignee-no_options">' . __('No options') . '</div>';
+				$content .= '<div class="workflowtransition-assignee-error">' . __('This field cannot be left empty') . '</div>';
+			$content .= '</div>';
 			$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-comment-error error-message">' . __('This field cannot be left empty') . '</div></div>';
-			$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-assignee-error error-message">' . __('Assignee cannot be left empty') . '</div></div>';
-			$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-assignee-sql-error error-message"></div></div>';
+			$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-assignee-sql-error error-message">' . __('An unexpected error has been encounted. Please contact the administrator for assistance.'). '</div></div>';
 			$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-event-description error-message"></div></div>';
 			$buttons = [
 				'<button id="workflow-submit" type="submit" class="btn btn-default" onclick="return Workflow.onSubmit();">' . __('Save') . '</button>'
@@ -865,10 +867,10 @@ class WorkflowBehavior extends Behavior {
 						$eventDescription = '';
 						$events = explode(",", $eventKeys);
 						foreach ($events as $eventKey) {
-							$actionObj->assignee_required = $eventKey == 'Workflow.onAssignBack' ? 0 : 1;	// assignee is required by default unless onAssignBack event is added
+							$actionObj->assignee_required = ($eventKey == 'Workflow.onAssignBack') ? 0 : 1;	// assignee is required by default unless onAssignBack event is added
 							$key = array_search($eventKey, array_column($eventArray, 'value'));
 							if ($key !== false) {
-								if (isset($eventArray[$key]['description'])) {
+								if (isset($eventArray[$key]['description']) && $eventKey != 'Workflow.onAssignBack') {
 									$eventDescription .= $eventArray[$key]['description'];
 									$eventDescription .= '<br/>';
 								}
