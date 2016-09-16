@@ -182,7 +182,7 @@ class StudentPromotionTable extends AppTable {
 
 			default:
 				$condition = [$this->AcademicPeriods->aliasField('order').' >= ' => $this->currentPeriod->order];
-				$academicPeriodList = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
+				$academicPeriodList = $this->AcademicPeriods->getYearList(['conditions' => $condition, 'isEditable' => true]);
 				$attr['type'] = 'select';
 				$attr['options'] = $academicPeriodList;
 				$attr['onChangeReload'] = 'changeFromPeriod';
@@ -217,24 +217,8 @@ class StudentPromotionTable extends AppTable {
 				if (!empty($selectedPeriodId) && $selectedPeriodId != -1) {
 					$selectedPeriod = $this->AcademicPeriods->get($selectedPeriodId);
 					$condition = [$this->AcademicPeriods->aliasField('order').' < ' => $selectedPeriod->order, $this->AcademicPeriods->aliasField('id').' <> ' => $selectedPeriodId];
-					$periodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
+					$periodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition, 'isEditable' => true]);
 					$attr['type'] = 'select';
-					if (empty($periodOptions)) {
-						$periodOptions = [0 => $this->getMessage($this->aliasField('noAvailableAcademicPeriod'))];
-					}
-					$selectedNextPeriodId = null;
-					$AcademicPeriodsTable = $this->AcademicPeriods;
-					$this->advancedSelectOptions($periodOptions, $selectedNextPeriodId, [
-						'selectOption' => false,
-						'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noAvailableAcademicPeriod')),
-						'callable' => function($id) use ($AcademicPeriodsTable) {
-							return $AcademicPeriodsTable
-								->find()
-								->find('editable', ['isEditable' => true])
-								->where([$AcademicPeriodsTable->aliasField('id') => $id])
-								->count();
-						}
-					]);
 				}
 
 				$attr['options'] = $periodOptions;
