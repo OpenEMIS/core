@@ -723,7 +723,7 @@ class ValidationBehavior extends Behavior {
 		$birthYear = $dateOfBirth->format('Y');
 		$ageOfStudent = $academicStartYear - $birthYear;
 
-		$ConfigItems = TableRegistry::get('ConfigItems');
+		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 		$enrolmentMinimumAge = $admissionAge - $ConfigItems->value('admission_age_minus');
 		$enrolmentMaximumAge = $admissionAge + $ConfigItems->value('admission_age_plus');
 
@@ -1296,7 +1296,7 @@ class ValidationBehavior extends Behavior {
 	}
 
 	public static function checkDateRange($field, array $globalData) {
-		$systemDateFormat = TableRegistry::get('ConfigItems')->value('date_format');
+		$systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
 		$model = $globalData['providers']['table'];
 		$params = (!empty($globalData['data']['params']))? json_decode($globalData['data']['params'],true): [];
 
@@ -1312,7 +1312,7 @@ class ValidationBehavior extends Behavior {
 	}
 
 	public static function checkTimeRange($field, array $globalData) {
-		$systemTimeFormat = TableRegistry::get('ConfigItems')->value('time_format');
+		$systemTimeFormat = TableRegistry::get('Configuration.ConfigItems')->value('time_format');
 		$model = $globalData['providers']['table'];
 		$params = (!empty($globalData['data']['params']))? json_decode($globalData['data']['params'],true): [];
 
@@ -1493,5 +1493,43 @@ class ValidationBehavior extends Behavior {
 		$LinkedSector = $Providers->get($field)->institution_sector_id;
 
 		return $selectedSector == $LinkedSector;
+	}
+
+	public static function validateJsonAPI($field, array $globalData)
+	{
+		// will pass the url to the areasTable, because the url checking function located in the areasTable.php
+		$url = $globalData['data']['value'];
+		$Areas = TableRegistry::get('Area.Areas');
+		return $Areas->isApiValid($url);
+	}
+
+	public static function uniqueWorkflowActionEvent($field, array $globalData)
+	{
+		$data = $globalData['data'];
+		$eventKey = $data['event_key'];
+		$workflowStepId = $data['workflow_step_id'];
+		if (!empty($eventKey)) {
+			$WorkflowActionTable = TableRegistry::get('Workflow.WorkflowActions');
+			$workflowId = $WorkflowActionTable
+				->find()
+				->innerJoinWith('WorkflowSteps')
+				->select(['workflowId' => 'WorkflowSteps.workflow_id'])
+				->where([
+					$WorkflowActionTable->aliasField('workflow_step_id') => $workflowStepId
+				])
+				->distinct('workflowId');
+
+			$eventKeyExist = $WorkflowActionTable
+				->find()
+				->innerJoinWith('WorkflowSteps')
+				->where([
+					'WorkflowSteps.workflow_id' => $workflowId,
+					$WorkflowActionTable->aliasField('event_key') => $eventKey
+				])
+				->count();
+			return $eventKeyExist == 0;
+		} else {
+			return true;
+		}
 	}
 }
