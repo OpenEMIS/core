@@ -151,6 +151,8 @@ class StudentUserTable extends UserTable {
 			return $this->controller->redirect($url);
 		}
 		// End POCOR-3010
+
+		$this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
 	}
 
 	private function setupTabElements($entity) {
@@ -347,6 +349,16 @@ class StudentUserTable extends UserTable {
 				unset($toolbarButtons['export']);
 			}
 		}
+	}
+
+	//to handle identity_number field that is automatically created by mandatory behaviour.
+	public function onUpdateFieldIdentityNumber(Event $event, array $attr, $action, Request $request)
+	{
+		if ($action == 'add') {
+			$attr['fieldName'] = $this->alias().'.identities.0.number';
+			$attr['attr']['label'] = __('Identity Number');
+		}
+		return $attr;
 	}
 
 	private function checkClassPermission($studentId, $userId)

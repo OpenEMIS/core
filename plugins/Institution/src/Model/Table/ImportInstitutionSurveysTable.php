@@ -217,8 +217,8 @@ class ImportInstitutionSurveysTable extends AppTable {
                 return false;
             }
 
-            $systemDateFormat = TableRegistry::get('ConfigItems')->value('date_format');
-            $systemTimeFormat = TableRegistry::get('ConfigItems')->value('time_format');
+            $systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
+            $systemTimeFormat = TableRegistry::get('Configuration.ConfigItems')->value('time_format');
 
             $controller = $model->controller;
             $controller->loadComponent('PhpExcel');
