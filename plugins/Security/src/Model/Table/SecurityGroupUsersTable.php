@@ -92,7 +92,7 @@ class SecurityGroupUsersTable extends AppTable {
 	}
 
 	public function findRoleByInstitution(Query $query, array $options)
-	{	
+	{
 		$userId = $options['security_user_id'];
 		$institutionId = $options['institution_id'];
 		$query
@@ -102,6 +102,94 @@ class SecurityGroupUsersTable extends AppTable {
 			])
 			->where([$this->aliasField('security_user_id') => $userId])
 			->distinct([$this->aliasField('security_role_id')]);
+		return $query;
+	}
+
+	public function findUserList(Query $query, array $options)
+	{
+		$where = array_key_exists('where', $options) ? $options['where'] : [];
+		$area = array_key_exists('area', $options) ? $options['area'] : null;
+
+		$query->find('list', ['keyField' => $this->Users->aliasField('id'), 'valueField' => $this->Users->aliasField('name_with_id')])
+			->select([
+				$this->Users->aliasField('id'),
+	            $this->Users->aliasField('openemis_no'),
+	            $this->Users->aliasField('first_name'),
+	            $this->Users->aliasField('middle_name'),
+	            $this->Users->aliasField('third_name'),
+	            $this->Users->aliasField('last_name'),
+	            $this->Users->aliasField('preferred_name')
+			])
+			->contain([$this->Users->alias()])
+			->group([$this->Users->aliasField('id')]);
+
+		if (!empty($where)) {
+			$query->where($where);
+		}
+
+		if (!is_null($area)) {
+			$query
+				->matching('SecurityGroups.Areas', function ($q) use ($area) {
+		            return $q->where([
+		                'Areas.lft <= ' => $area->lft,
+		                'Areas.rght >= ' => $area->lft
+		            ]);
+		        });
+		}
+
+		return $query;
+	}
+
+	public function findAssignedStaff(Query $query, array $options)
+	{
+		$institutionId = array_key_exists('institution_id', $options) ? $options['institution_id'] : null;
+		$securityRoles = array_key_exists('security_roles', $options) ? $options['security_roles'] : [];
+
+		if (!is_null($institutionId) && !empty($securityRoles)) {
+			$StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+			$Staff = TableRegistry::get('Institution.Staff');
+            $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
+            $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+
+			$assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
+			$today = date('Y-m-d');
+
+			$query
+				->innerJoin(
+	                [$Staff->alias() => $Staff->table()],
+	                [
+	                    $Staff->aliasField('staff_id = ') . $this->aliasField('security_user_id'),
+	                    $Staff->aliasField('institution_id') => $institutionId,
+	                    $Staff->aliasField('staff_status_id') => $assignedStatus,
+	                    'OR' => [
+	                        [
+	                            $Staff->aliasField('end_date IS NULL'),
+	                            $Staff->aliasField('start_date <= ') => $today
+	                        ],
+	                        [
+	                            $Staff->aliasField('end_date IS NOT NULL'),
+	                            $Staff->aliasField('start_date <= ') => $today,
+	                            $Staff->aliasField('end_date >= ') => $today
+	                        ]
+	                    ]
+	                ]
+	            )
+	            ->innerJoin(
+	                [$InstitutionPositions->alias() => $InstitutionPositions->table()],
+	                [
+	                    $InstitutionPositions->aliasField('id = ') . $Staff->aliasField('institution_position_id'),
+	                    $InstitutionPositions->aliasField('institution_id') => $institutionId
+	                ]
+	            )
+	            ->innerJoin(
+	                [$StaffPositionTitles->alias() => $StaffPositionTitles->table()],
+	                [
+	                    $StaffPositionTitles->aliasField('id = ') . $InstitutionPositions->aliasField('staff_position_title_id'),
+	                    $StaffPositionTitles->aliasField('security_role_id IN ') => $securityRoles
+	                ]
+	            );
+		}
+
 		return $query;
 	}
 }
