@@ -81,7 +81,7 @@ class ActivityBehavior extends Behavior {
 **
 ******************************************************************************************************************/
 	public function formatToSystemConfig($value, $type) {
-		$ConfigItem = TableRegistry::get('ConfigItems');
+		$ConfigItem = TableRegistry::get('Configuration.ConfigItems');
 		if ($type=='datetime') {
 			$format = $ConfigItem->value('date_format') . ' - ' . $ConfigItem->value('time_format');
 		} else {
