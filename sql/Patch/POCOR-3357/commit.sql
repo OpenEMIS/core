@@ -35,7 +35,7 @@ SET `institution_sector_id` = IFNULL((
     FROM `institutions`
     WHERE `institutions`.`institution_provider_id` = `institution_providers`.`id`
     GROUP BY `institutions`.`institution_provider_id`
-), IFNULL((SELECT `id` FROM `institution_sectors` WHERE `default` = 1), 1));
+), IFNULL((SELECT `id` FROM `institution_sectors` WHERE `default` = 1), (SELECT `id` FROM `institution_sectors` LIMIT 1)));
 
 -- replace `institution_sector_id` in `institutions` with the sectors that are linked to the providers in `institution_providers`
 UPDATE `institutions`
@@ -48,4 +48,4 @@ SET `institution_sector_id` = (
 
 -- create label for sector
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`)
-VALUES (uuid(), 'Providers', 'institution_sector_id', 'FieldOptions -> Providers', 'Sector', 1, 1, NOW());
+VALUES ('56e0a017-7bdc-11e6-92c7-525400b263eb', 'Providers', 'institution_sector_id', 'FieldOptions -> Providers', 'Sector', 1, 1, NOW());

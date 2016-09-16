@@ -4,8 +4,7 @@ RENAME TABLE `z_3357_institution_providers` TO `institution_providers`;
 
 -- Delete label
 DELETE FROM `labels`
-WHERE `module` = 'Providers'
-AND `field` = 'institution_sector_id';
+WHERE `id` = '56e0a017-7bdc-11e6-92c7-525400b263eb';
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3357';
