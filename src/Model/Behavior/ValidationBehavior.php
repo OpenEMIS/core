@@ -1486,4 +1486,12 @@ class ValidationBehavior extends Behavior {
 
 		return ($count == 0);
 	}
+
+	public static function checkLinkedSector($field, array $globalData) {
+		$selectedSector = $globalData['data']['institution_sector_id'];
+		$Providers = TableRegistry::get('Institution.Providers');
+		$LinkedSector = $Providers->get($field)->institution_sector_id;
+
+		return $selectedSector == $LinkedSector;
+	}
 }
