@@ -301,7 +301,7 @@ class StudentDropoutTable extends AppTable {
 	}
 
 	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
-		$process = function ($model, $entity) use ($data, $event) {
+		$process = function ($model, $entity) use ($data) {
 			if (!empty($entity->errors())) {
 				 return false;
 			}
