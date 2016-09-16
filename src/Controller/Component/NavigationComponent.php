@@ -577,6 +577,11 @@ class NavigationComponent extends Component {
 				'title' => 'Overview',
 				'parent' => 'Institutions.Examinations.index',
 				'params' => ['plugin' => 'Institution', '1' => $examinationId]
+			],
+			'Institutions.ExaminationStudents.view' => [
+				'title' => 'Students',
+				'parent' => 'Institutions.Examinations.index',
+				'params' => ['plugin' => 'Institution']
 			]
 		];
 		return $navigation;
