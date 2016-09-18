@@ -66,6 +66,12 @@ trait OptionsTrait {
 					3 => __('Multiple Shift Owner'),
 					4 => __('Multiple Shift Occupier')
         		]
+        	], 
+        	'ExaminationCentres' => [
+        		'create_as' => [
+        			'existing' => __('Existing Institution'),
+        			'new' => __('New Examination Centre')
+        		]
         	]
 		];
 
