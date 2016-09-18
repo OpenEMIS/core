@@ -24,7 +24,6 @@ class StudentsController extends AppController {
 			'Attachments' 		=> ['className' => 'User.Attachments'],
 			'Guardians' 		=> ['className' => 'Student.Guardians'],
 			'GuardianUser' 		=> ['className' => 'Student.GuardianUser', 'actions' => ['add', 'view', 'edit']],
-			'Programmes' 		=> ['className' => 'Student.Programmes', 'actions' => ['index', 'view']],
 			'Absences' 			=> ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
 			'Behaviours' 		=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
 			'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],
@@ -59,6 +58,7 @@ class StudentsController extends AppController {
     public function Contacts() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Contacts']); }
     public function BankAccounts() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.BankAccounts']); }
     public function Comments() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
+    public function Programmes() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Programmes']); }
 	// End
 
 	// AngularJS
