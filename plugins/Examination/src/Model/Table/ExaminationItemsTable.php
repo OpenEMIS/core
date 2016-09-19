@@ -63,11 +63,20 @@ class ExaminationItemsTable extends AppTable {
         return $examinationItems;
     }
 
-    public function findSubjects(Query $query, array $options)
+    public function getExaminationItemSubjects($examinationId)
     {
-        $query
+        $subjectList = $this
+            ->find('list', [
+                    'keyField' => 'subject_id',
+                    'valueField' => 'subject_name'
+            ])
             ->matching('EducationSubjects')
-            ->where([$this->aliasField('examination_id') => $options['examination_id']])
-            ->select(['subject_id' => 'EducationSubjects.id', 'subject_name' => 'EducationSubjects.name']);
+            ->select([
+                'subject_name' => 'EducationSubjects.name',
+                'subject_id' => $this->aliasField('education_subject_id')
+            ])
+            ->where([$this->aliasField('examination_id') => $examinationId])
+            ->toArray();
+        return $subjectList;
     }
 }
