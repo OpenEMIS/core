@@ -12,6 +12,8 @@ DROP TABLE `examination_centre_subjects`;
 
 DROP TABLE `examination_centre_special_needs`;
 
+DROP TABLE `examination_students`;
+
 DROP TABLE `examination_item_results`;
 
 -- db_patches
