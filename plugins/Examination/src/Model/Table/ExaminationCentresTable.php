@@ -8,6 +8,7 @@ use App\Model\Traits\OptionsTrait;
 use ArrayObject;
 use Cake\Validation\Validator;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
 
 class ExaminationCentresTable extends ControllerActionTable {
     use OptionsTrait;
@@ -21,6 +22,7 @@ class ExaminationCentresTable extends ControllerActionTable {
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
+        $this->hasMany('ExaminationCentreSubjects', ['className' => 'Examination.ExaminationCentreSubjects']);
     }
 
     public function validationDefault(Validator $validator)
@@ -38,7 +40,6 @@ class ExaminationCentresTable extends ControllerActionTable {
     {
         $this->field('academic_period_id', ['type' => 'select']);
         $this->field('examination_id', ['type' => 'select']);
-        $this->field('special_need_types');
         $this->field('institution_id', ['visible' => false]);
         $this->field('name', ['visible' => false]);
         $this->field('area_id', ['visible' => false]);
@@ -53,11 +54,18 @@ class ExaminationCentresTable extends ControllerActionTable {
 
     }
 
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+
+    }
+
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->controller->getExamsTab();
         if ($this->action == 'edit' || $this->action == 'add') {
             $entity = $extra['entity'];
+            $this->field('special_need_types', ['type' => 'chosenSelect', 'entity' => $entity]);
+            $this->field('subjects', ['type' => 'chosenSelect', 'entity' => $entity]);
             $this->field('create_as', ['type' => 'select', 'options' => $this->getSelectOptions($this->aliasField('create_as')), 'entity' => $entity]);
             // to add logic for edit
             if ($entity->create_as == 'new') {
@@ -76,10 +84,6 @@ class ExaminationCentresTable extends ControllerActionTable {
 
             }
         }
-    }
-
-    public function addEditBeforeAction(Event $event) {
-        $this->field('subjects', ['type' => 'chosenSelect']);
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
@@ -154,9 +158,15 @@ class ExaminationCentresTable extends ControllerActionTable {
         // $entity->area_id = 1;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        pr($entity);die;
+        if ($entity->isNew()) {
+            $subjects = $entity->subjects['_ids'];
+            foreach($subjects as $subject) {
 
+            }
+        }
     }
 
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
