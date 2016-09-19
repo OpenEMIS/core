@@ -8,6 +8,8 @@ CREATE TABLE `examinations` (
   `description` text COLLATE utf8mb4_unicode_ci NULL,
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
   `education_grade_id` int(11) NOT NULL COMMENT 'links to education_grades.id',
+  `registration_start_date` date NOT NULL,
+  `registration_end_date` date NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -80,9 +82,9 @@ CREATE TABLE `examination_centres` (
   `id` INT(11) NOT NULL,
   `examination_id` INT(11) NOT NULL COMMENT 'links to examinations.id',
   `academic_period_id` INT(11) NOT NULL COMMENT 'links to academic_periods.id',
-  `institution_id` INT(11) NULL COMMENT 'links to institutions.id',
+  `institution_id` INT(11) NOT NULL COMMENT 'links to institutions.id',
   `name` VARCHAR(150) NULL,
-  `area_id` INT(11) NULL,
+  `area_id` INT(11) NOT NULL,
   `code` VARCHAR(50) NULL,
   `address` TEXT NULL,
   `postal_code` VARCHAR(20) NULL,
@@ -100,6 +102,7 @@ CREATE TABLE `examination_centres` (
   KEY `examination_id` (`examination_id`),
   KEY `academic_period_id` (`academic_period_id`),
   KEY `institution_id` (`institution_id`),
+  KEY `area_id` (`area_id`),
   KEY `modified_user_id` (`modified_user_id`),
   KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the examination centres for a particular examination';
