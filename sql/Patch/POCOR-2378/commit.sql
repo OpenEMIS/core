@@ -82,7 +82,7 @@ CREATE TABLE `examination_centres` (
   `academic_period_id` INT(11) NOT NULL COMMENT 'links to academic_periods.id',
   `institution_id` INT(11) NULL COMMENT 'links to institutions.id',
   `name` VARCHAR(150) NULL,
-  `alternative_name` VARCHAR(150) NULL,
+  `area_id` INT(11) NULL,
   `code` VARCHAR(50) NULL,
   `address` TEXT NULL,
   `postal_code` VARCHAR(20) NULL,
