@@ -5,5 +5,12 @@ SET `institution_infrastructures`.`code` = `z_3332_institution_infrastructures`.
 
 DROP TABLE `z_3332_institution_infrastructures`;
 
+-- institution_rooms
+UPDATE `institution_rooms`
+INNER JOIN `z_3332_institution_rooms` ON `z_3332_institution_rooms`.`id` = `institution_rooms`.`id`
+SET `institution_rooms`.`code` = `z_3332_institution_rooms`.`code`;
+
+DROP TABLE `z_3332_institution_infrastructures`;
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3332';

@@ -225,26 +225,48 @@ CALL patchJordanInfraLevel3;
 
 DROP PROCEDURE IF EXISTS patchJordanInfraLevel3;
 
--- patch `institution_infrastructures` level 4 & 5
+-- institution_rooms
+CREATE TABLE IF NOT EXISTS `z_3332_institution_rooms` (
+  `id` int(11) NOT NULL,
+  `code` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Indexes for table `institution_rooms`
+ALTER TABLE `z_3332_institution_rooms`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `code` (`code`);
+
+INSERT INTO `z_3332_institution_rooms` 
+SELECT `id`, `code` FROM `institution_rooms`;
+
+-- cleanup institution_infrastructures 0 institution_rooms
+/*
+SELECT * FROM `institution_rooms`
+WHERE `institution_infrastructure_id` IN (
+    SELECT `id` FROM `institution_rooms`
+    WHERE `institution_infrastructure_id` = 0
+);
+*/
+DELETE FROM `institution_rooms`
+WHERE `institution_infrastructure_id` = 0;
+
+-- patch `institutions_rooms` (level 4 & 5)
 DROP PROCEDURE IF EXISTS patchJordanInfraLevel45;
 DELIMITER $$
 
-CREATE PROCEDURE patchJordanInfraLevel45()
+CREATE PROCEDURE patchJordanInfraLevel45(IN academicPeriodID INT(11))
 BEGIN
   DECLARE done INT DEFAULT FALSE;
   DECLARE infraParentID, parentCounter, recCounter INT(11);
   DECLARE infraParentCode, tempCounter, newCode VARCHAR(100);
-  DECLARE infrastructures_cursor CURSOR FOR 
-    SELECT I2.`parent_id`, I1.`code`, I2.`counter`
-    FROM `institution_infrastructures` I1
-    INNER JOIN (
-        SELECT `parent_id`, COUNT(`id`) AS `counter`
-        FROM `institution_infrastructures`
-        WHERE `infrastructure_level_id` IN (4, 5)
-        AND `parent_id` <> 0
-        GROUP BY `parent_id`
-    )I2 ON I2.`parent_id` = I1.`id`;
 
+  DECLARE infrastructures_cursor CURSOR FOR 
+    SELECT R.`institution_infrastructure_id`, I.`code`, COUNT(R.`id`) AS counter
+    FROM `institution_rooms` R
+    INNER JOIN `institution_infrastructures` I ON I.`id` = R.`institution_infrastructure_id`
+    WHERE R.`academic_period_id` = academicPeriodID
+    #AND I.`institution_id` IN (1362)
+    GROUP BY R.`institution_infrastructure_id`;
   DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
 
   OPEN infrastructures_cursor;
@@ -265,18 +287,18 @@ BEGIN
 
       SET newCode = CONCAT(infraParentCode, tempCounter);
 
-      UPDATE `institution_infrastructures`
+      UPDATE `institution_rooms`
       SET `name` = IF(`name` = `code`, newCode, `name`),
           `code` = newCode          
       WHERE `id` IN (
         SELECT `id` FROM (
             SELECT `id`
-            FROM `institution_infrastructures` 
-            WHERE `parent_id` = infraParentID
-            AND `infrastructure_level_id` IN (4, 5)
-            ORDER BY `infrastructure_level_id`, `id`
+            FROM `institution_rooms` 
+            WHERE `institution_infrastructure_id` = infraParentID
+            AND `academic_period_id` = academicPeriodID
+            ORDER BY `room_type_id`, `id`
             LIMIT recCounter, 1) tempTable)
-      AND `infrastructure_level_id` IN (4, 5);
+      AND `academic_period_id` = academicPeriodID;
       SET recCounter = recCounter + 1;
     END WHILE;
 
@@ -289,6 +311,11 @@ $$
 
 DELIMITER ;
 
-CALL patchJordanInfraLevel45;
+SET @academicPeriodID := 0;
+
+SELECT `id` INTO @academicPeriodID FROM `academic_periods` 
+WHERE `current` = 1;
+
+CALL patchJordanInfraLevel45(@academicPeriodID);
 
 DROP PROCEDURE IF EXISTS patchJordanInfraLevel45;
