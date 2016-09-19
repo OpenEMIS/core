@@ -137,6 +137,21 @@ CREATE TABLE `examination_centre_special_needs` (
   KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the special needs for a particular examination centre';
 
+CREATE TABLE `examination_students` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
+  `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
+  `academic_period_id` int(11) NOT NULL,
+  `examination_id` int(11) NOT NULL,
+  `examination_centre_id` INT(11) NOT NULL COMMENT 'links to examination_centres.id',
+  `education_subject_id` INT(11) NOT NULL COMMENT 'links to education_subjects.id',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the students registered to an examination center for a particular examination';
+
 CREATE TABLE `examination_item_results` (
   `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
   `marks` decimal(6,2) DEFAULT NULL,
@@ -159,18 +174,3 @@ CREATE TABLE `examination_item_results` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all the examination results for an individual student in an institution and examination centre'
 /*!50100 PARTITION BY HASH (`academic_period_id`)
 PARTITIONS 8 */
-
-CREATE TABLE `examination_students` (
-    `id` int(11) NOT NULL AUTO_INCREMENT,
-    `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
-    `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
-    `academic_period_id` int(11) NOT NULL,
-    `examination_id` int(11) NOT NULL,
-    `examination_centre_id` INT(11) NOT NULL COMMENT 'links to examination_centres.id',
-    `education_subject_id` INT(11) NOT NULL COMMENT 'links to education_subjects.id',
-    `modified_user_id` int(11) DEFAULT NULL,
-    `modified` datetime DEFAULT NULL,
-    `created_user_id` int(11) NOT NULL,
-    `created` datetime NOT NULL,
-    PRIMARY KEY (`id`),
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the students registered to an examination center for a particular examination';
