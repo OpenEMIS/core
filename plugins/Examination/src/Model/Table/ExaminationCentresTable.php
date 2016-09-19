@@ -7,6 +7,8 @@ use Cake\Network\Request;
 use App\Model\Traits\OptionsTrait;
 use ArrayObject;
 use Cake\Validation\Validator;
+use Cake\ORM\Entity;
+use Cake\ORM\Query;
 
 class ExaminationCentresTable extends ControllerActionTable {
     use OptionsTrait;
@@ -15,11 +17,13 @@ class ExaminationCentresTable extends ControllerActionTable {
     {
         $this->table('examination_centres');
         parent::initialize($config);
+        $this->addBehavior('Area.Areapicker');
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         $this->hasMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds']);
+        $this->hasMany('ExaminationCentreSubjects', ['className' => 'Examination.ExaminationCentreSubjects']);
     }
 
     public function validationDefault(Validator $validator)
@@ -47,8 +51,13 @@ class ExaminationCentresTable extends ControllerActionTable {
         $this->field('telephone', ['visible' => false]);
         $this->field('fax', ['visible' => false]);
         $this->field('email', ['visible' => false]);
-        $this->field('website', ['visible' => false]); 
-        
+        $this->field('website', ['visible' => false]);
+
+    }
+
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
@@ -56,11 +65,13 @@ class ExaminationCentresTable extends ControllerActionTable {
         $this->controller->getExamsTab();
         if ($this->action == 'edit' || $this->action == 'add') {
             $entity = $extra['entity'];
+            $this->field('special_need_types', ['type' => 'chosenSelect', 'entity' => $entity]);
+            $this->field('subjects', ['type' => 'chosenSelect', 'entity' => $entity]);
             $this->field('create_as', ['type' => 'select', 'options' => $this->getSelectOptions($this->aliasField('create_as')), 'entity' => $entity]);
             // to add logic for edit
             if ($entity->create_as == 'new') {
                 $this->field('name', ['visible' => true]);
-                $this->field('area_id', ['visible' => true]);
+                $this->field('area_id', ['visible' => true, 'type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
                 $this->field('code', ['visible' => true]);
                 $this->field('address', ['visible' => true]);
                 $this->field('postal_code', ['visible' => true]);
@@ -68,15 +79,12 @@ class ExaminationCentresTable extends ControllerActionTable {
                 $this->field('telephone', ['visible' => true]);
                 $this->field('fax', ['visible' => true]);
                 $this->field('email', ['visible' => true]);
-                $this->field('website', ['visible' => true]); 
+                $this->field('website', ['visible' => true]);
             } else if ($entity->create_as == 'existing') {
-                $this->field('institutions', ['visible' => true]);
+                $this->field('institutions');
+
             }
         }
-    }
-
-    public function addEditBeforeAction(Event $event) {
-        $this->field('subjects', ['type' => 'chosenSelect']);
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
@@ -115,7 +123,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                 ])
                 ->matching('EducationSubjects')
                 ->select([
-                    'subject_name' => 'EducationSubjects.name', 
+                    'subject_name' => 'EducationSubjects.name',
                     'subject_id' => $ExaminationItemsTable->aliasField('education_subject_id')
                 ])
                 ->where([
@@ -143,5 +151,50 @@ class ExaminationCentresTable extends ControllerActionTable {
             $attr['type'] = 'readonly';
         }
         return $attr;
+    }
+
+    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    {
+        // $entity->institution_id = 1;
+        // $entity->area_id = 1;
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        pr($entity);die;
+        if ($entity->isNew()) {
+            $subjects = $entity->subjects['_ids'];
+            foreach($subjects as $subject) {
+
+            }
+        }
+    }
+
+    public function addBeforeSave(Event $event, $entity, $requestData, $extra)
+    {
+        $process = function ($model, $entity) use ($requestData) {
+            if ($entity->has('institutions')) {
+                $institutions = $entity->institutions['_ids'];
+                $newEntities = [];
+                foreach ($institutions as $institution) {
+                    $institutionRecord = $model->Institutions->get($institution);
+                    $requestData['institution_id'] = $institution;
+                    $requestData['area_id'] = $institutionRecord->area_id;
+                    $requestData['name'] = $institutionRecord->name;
+                    $requestData['code'] = $institutionRecord->code;
+                    $requestData['address'] = $institutionRecord->address;
+                    $requestData['postal_code'] = $institutionRecord->postal_code;
+                    $requestData['contact_person'] = $institutionRecord->contact_person;
+                    $requestData['telephone'] = $institutionRecord->telephone;
+                    $requestData['fax'] = $institutionRecord->fax;
+                    $requestData['email'] = $institutionRecord->email;
+                    $requestData['website'] = $institutionRecord->website;
+                    $newEntities[] = $model->newEntity($requestData->getArrayCopy());
+                }
+                return $model->saveMany($newEntities);
+            }
+        };
+
+        return $process;
     }
 }
