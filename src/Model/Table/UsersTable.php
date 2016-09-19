@@ -86,6 +86,10 @@ class UsersTable extends AppTable {
 			]
 		);
 		$this->ControllerAction->field('last_login', ['visible' => false]);
+
+		if ($this->action == 'edit') {
+			$this->ControllerAction->field('identity_number', ['visible' => false]);
+		}
 	}
 
 	public function password() {
@@ -199,6 +203,20 @@ class UsersTable extends AppTable {
 					$toolbarButtons->exchangeArray([]);
 				}
 				break;
+		}
+	}
+
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) 
+	{
+		if ($field == 'identity_number') {
+			$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+			$defaultIdentity = $IdentityType->getDefaultEntity();
+			if ($defaultIdentity) {
+				$value = $defaultIdentity->name;
+			}
+			return (!empty($value)) ? $value : parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+		} else {
+			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
 		}
 	}
 }
