@@ -19,12 +19,12 @@ class ExaminationsController extends AppController
     public function GradingTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationGradingTypes']); }
     public function Centres($pass = 'index')
     {
-        if ($pass == 'add') {
-            $this->set('ngController', 'ExaminationCentresCtrl as ExamCentreController');
-            $this->render('examinationCentres');
-        } else {
+        // if ($pass == 'add') {
+        //     $this->set('ngController', 'ExaminationCentresCtrl as ExamCentreController');
+        //     $this->render('examinationCentres');
+        // } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentres']);
-        }
+        // }
     }
 
     // public function Results() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationGradingTypes']); }
@@ -73,25 +73,25 @@ class ExaminationsController extends AppController
     }
 
     private function attachAngularModules() {
-        $action = $this->request->action;
-        $pass = isset($this->request->pass[0]) ? $this->request->pass[0] : 'index';
-        switch ($action) {
-            case 'Centres':
-                if ($pass == 'add' && $this->checkExamCentresPermission()) {
-                    $this->Angular->addModules([
-                        'alert.svc',
-                        'examination.centres.ctrl',
-                        'examination.centres.svc'
-                    ]);
-                }
-                break;
-            case 'Results':
-                // $this->Angular->addModules([
-                //     'alert.svc',
-                //     'institutions.results.ctrl',
-                //     'institutions.results.svc'
-                // ]);
-                break;
-        }
+    //     $action = $this->request->action;
+    //     $pass = isset($this->request->pass[0]) ? $this->request->pass[0] : 'index';
+    //     switch ($action) {
+    //         case 'Centres':
+    //             if ($pass == 'add' && $this->checkExamCentresPermission()) {
+    //                 $this->Angular->addModules([
+    //                     'alert.svc',
+    //                     'examination.centres.ctrl',
+    //                     'examination.centres.svc'
+    //                 ]);
+    //             }
+    //             break;
+    //         case 'Results':
+    //             // $this->Angular->addModules([
+    //             //     'alert.svc',
+    //             //     'institutions.results.ctrl',
+    //             //     'institutions.results.svc'
+    //             // ]);
+    //             break;
+    //     }
     }
 }
