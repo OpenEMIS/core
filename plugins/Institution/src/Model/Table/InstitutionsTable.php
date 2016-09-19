@@ -272,7 +272,12 @@ class InstitutionsTable extends AppTable  {
 	{
 		$attr['default_date'] = false;
 		return $attr;
+	}
 
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+		if ($entity->isNew()) {
+			$entity->shift_type = 0;
+		}
 	}
 
 	public function beforeAction($event) {
@@ -297,7 +302,7 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information')]);
 
 		$this->ControllerAction->field('shift_section', ['type' => 'section', 'title' => __('Shifts'), 'visible' => ['view'=>true]]);
-		$this->ControllerAction->field('shift_type', ['visible' => ['view'=>true]]);
+		$this->ControllerAction->field('shift_type', ['visible' => ['view' => true]]);
 
 		$this->ControllerAction->field('shift_details', [
 			'type' => 'element',
@@ -590,9 +595,10 @@ class InstitutionsTable extends AppTable  {
 
 /******************************************************************************************************************
 **
-** addEdit action methods
+** add / addEdit action methods
 **
 ******************************************************************************************************************/
+
 	public function addEditBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
