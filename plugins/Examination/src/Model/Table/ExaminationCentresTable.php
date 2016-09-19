@@ -36,6 +36,7 @@ class ExaminationCentresTable extends ControllerActionTable {
     {
         $this->field('academic_period_id', ['type' => 'select']);
         $this->field('examination_id', ['type' => 'select']);
+        $this->field('special_need_types');
         $this->field('institution_id', ['visible' => false]);
         $this->field('name', ['visible' => false]);
         $this->field('area_id', ['visible' => false]);
@@ -46,8 +47,8 @@ class ExaminationCentresTable extends ControllerActionTable {
         $this->field('telephone', ['visible' => false]);
         $this->field('fax', ['visible' => false]);
         $this->field('email', ['visible' => false]);
-        $this->field('website', ['visible' => false]); 
-        
+        $this->field('website', ['visible' => false]);
+
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
@@ -67,7 +68,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                 $this->field('telephone', ['visible' => true]);
                 $this->field('fax', ['visible' => true]);
                 $this->field('email', ['visible' => true]);
-                $this->field('website', ['visible' => true]); 
+                $this->field('website', ['visible' => true]);
             } else if ($entity->create_as == 'existing') {
                 $this->field('institutions', ['visible' => true]);
             }
@@ -114,7 +115,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                 ])
                 ->matching('EducationSubjects')
                 ->select([
-                    'subject_name' => 'EducationSubjects.name', 
+                    'subject_name' => 'EducationSubjects.name',
                     'subject_id' => $ExaminationItemsTable->aliasField('education_subject_id')
                 ])
                 ->where([
@@ -142,5 +143,16 @@ class ExaminationCentresTable extends ControllerActionTable {
             $attr['type'] = 'readonly';
         }
         return $attr;
+    }
+
+    public function addBeforePatch(Event $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    {
+        $entity->institution_id = 0;
+        $entity->area_id = 0;
+    }
+
+    public function addBeforeSave(Event $event, $entity, $requestData, $extra)
+    {
+
     }
 }
