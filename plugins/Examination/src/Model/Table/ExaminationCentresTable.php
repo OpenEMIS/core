@@ -7,6 +7,7 @@ use Cake\Network\Request;
 use App\Model\Traits\OptionsTrait;
 use ArrayObject;
 use Cake\Validation\Validator;
+use Cake\ORM\Entity;
 
 class ExaminationCentresTable extends ControllerActionTable {
     use OptionsTrait;
@@ -15,6 +16,7 @@ class ExaminationCentresTable extends ControllerActionTable {
     {
         $this->table('examination_centres');
         parent::initialize($config);
+        $this->addBehavior('Area.Areapicker');
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -60,7 +62,7 @@ class ExaminationCentresTable extends ControllerActionTable {
             // to add logic for edit
             if ($entity->create_as == 'new') {
                 $this->field('name', ['visible' => true]);
-                $this->field('area_id', ['visible' => true]);
+                $this->field('area_id', ['visible' => true, 'type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
                 $this->field('code', ['visible' => true]);
                 $this->field('address', ['visible' => true]);
                 $this->field('postal_code', ['visible' => true]);
@@ -70,7 +72,8 @@ class ExaminationCentresTable extends ControllerActionTable {
                 $this->field('email', ['visible' => true]);
                 $this->field('website', ['visible' => true]);
             } else if ($entity->create_as == 'existing') {
-                $this->field('institutions', ['visible' => true]);
+                $this->field('institutions');
+
             }
         }
     }
@@ -145,14 +148,42 @@ class ExaminationCentresTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function addBeforePatch(Event $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
-        $entity->institution_id = 0;
-        $entity->area_id = 0;
+        // $entity->institution_id = 1;
+        // $entity->area_id = 1;
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+
     }
 
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
     {
+        $process = function ($model, $entity) use ($requestData) {
+            if ($entity->has('institutions')) {
+                $institutions = $entity->institutions['_ids'];
+                $newEntities = [];
+                foreach ($institutions as $institution) {
+                    $institutionRecord = $model->Institutions->get($institution);
+                    $requestData['institution_id'] = $institution;
+                    $requestData['area_id'] = $institutionRecord->area_id;
+                    $requestData['name'] = $institutionRecord->name;
+                    $requestData['code'] = $institutionRecord->code;
+                    $requestData['address'] = $institutionRecord->address;
+                    $requestData['postal_code'] = $institutionRecord->postal_code;
+                    $requestData['contact_person'] = $institutionRecord->contact_person;
+                    $requestData['telephone'] = $institutionRecord->telephone;
+                    $requestData['fax'] = $institutionRecord->fax;
+                    $requestData['email'] = $institutionRecord->email;
+                    $requestData['website'] = $institutionRecord->website;
+                    $newEntities[] = $model->newEntity($requestData->getArrayCopy());
+                }
+                return $model->saveMany($newEntities);
+            }
+        };
 
+        return $process;
     }
 }
