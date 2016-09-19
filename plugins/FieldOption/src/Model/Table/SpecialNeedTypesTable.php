@@ -13,16 +13,18 @@ class SpecialNeedTypesTable extends ControllerActionTable {
 		$this->table('special_need_types');
 		parent::initialize($config);
 		$this->hasMany('SpecialNeeds', ['className' => 'User.SpecialNeeds', 'foreignKey' => 'special_need_type_id']);
+        $this->hasMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds', 'foreignKey' => 'special_need_type_id']);
 
 		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
 	}
 
-    public function findVisibleNeedTypes(Query $query, array $options)
+    public function findVisibleNeedTypes(array $options = [])
     {
-        $query
+        $query = $this
             ->find('visible')
             ->find('order')
-            ->select(['special_need_id' => $this->aliasField('id'), 'special_need_name' => $this->aliasField('name')]);
+            ->find('list')
+            ->toArray();
         return $query;
     }
 }
