@@ -25,7 +25,7 @@ class ProgrammesTable extends ControllerActionTable
 	}
 
 	public function onGetEducationGradeId(Event $event, Entity $entity)
-	{		
+	{
 		return $entity->education_grade->programme_grade_name;
 	}
 
@@ -54,8 +54,8 @@ class ProgrammesTable extends ControllerActionTable
 
 		if (array_key_exists('view', $buttons)) {
 			$url = [
-				'plugin' => 'Institution', 
-				'controller' => 'Institutions', 
+				'plugin' => 'Institution',
+				'controller' => 'Institutions',
 				'action' => 'Students',
 				'view', $entity->id,
 				'institution_id' => $entity->institution->id,
@@ -65,8 +65,8 @@ class ProgrammesTable extends ControllerActionTable
 
 		if (array_key_exists('edit', $buttons)) {
 			$url = [
-				'plugin' => 'Institution', 
-				'controller' => 'Institutions', 
+				'plugin' => 'Institution',
+				'controller' => 'Institutions',
 				'action' => 'Students',
 				'edit', $entity->id,
 				'institution_id' => $entity->institution->id,
