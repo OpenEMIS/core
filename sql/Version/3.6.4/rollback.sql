@@ -18,6 +18,11 @@ DELETE FROM `db_patches` WHERE `issue`='POCOR-3347';
 DELETE FROM `translations`
 WHERE `en` = 'There are no shifts configured for the selected academic period';
 
+-- import_mapping
+UPDATE `import_mapping` SET `description` = 'Code' WHERE `import_mapping`.`id` = 15;
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue`='POCOR-3215';
 
 -- 3.6.3
 UPDATE config_items SET value = '3.6.3' WHERE code = 'db_version';
