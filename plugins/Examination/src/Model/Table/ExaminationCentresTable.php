@@ -9,6 +9,7 @@ use ArrayObject;
 use Cake\Validation\Validator;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\Utility\Text;
 
 class ExaminationCentresTable extends ControllerActionTable {
     use OptionsTrait;
@@ -24,65 +25,110 @@ class ExaminationCentresTable extends ControllerActionTable {
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         $this->hasMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds']);
         $this->hasMany('ExaminationCentreSubjects', ['className' => 'Examination.ExaminationCentreSubjects']);
+        $this->hasMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds']);
+    }
+
+    public function implementedEvents()
+    {
+        $event = parent::implementedEvents();
+        $event['ControllerAction.Model.viewEdit.afterQuery'] = 'viewEditAfterQuery';
+        return $event;
     }
 
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
         $validator
-            ->requirePresence('create_as', [
-                'provider' => 'table',
-                'on' => 'create'
-            ]);
+            ->requirePresence('create_as', 'create');
         return $validator;
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('academic_period_id', ['type' => 'select']);
-        $this->field('examination_id', ['type' => 'select']);
         $this->field('institution_id', ['visible' => false]);
-        $this->field('name', ['visible' => false]);
-        $this->field('area_id', ['visible' => false]);
-        $this->field('code', ['visible' => false]);
-        $this->field('address', ['visible' => false]);
-        $this->field('postal_code', ['visible' => false]);
-        $this->field('contact_person', ['visible' => false]);
-        $this->field('telephone', ['visible' => false]);
-        $this->field('fax', ['visible' => false]);
-        $this->field('email', ['visible' => false]);
-        $this->field('website', ['visible' => false]);
+        $this->field('name');
+        $this->fields['area_id']['visible'] = false;
+        $this->fields['code']['visible'] = false;
+        $this->fields['address']['visible'] = false;
+        $this->fields['postal_code']['visible'] = false;
+        $this->fields['contact_person']['visible'] = false;
+        $this->fields['telephone']['visible'] = false;
+        $this->fields['fax']['visible'] = false;
+        $this->fields['email']['visible'] = false;
+        $this->fields['website']['visible'] = false;
 
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $query->contain(['ExaminationCentreSubjects'])
+            ->matching('Examinations')
+            ->matching('Areas')
+            ->matching('AcademicPeriods');
+    }
 
+
+    public function viewEditAfterQuery(Event $event, $entity, $extra)
+    {
+        $subjects = [];
+        foreach ($entity->examination_centre_subjects as $subject) {
+            $subjects[] = $subject->education_subject_id;
+        }
+        $this->request->data[$this->alias()]['subjects']['_ids'] = $subjects;
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->controller->getExamsTab();
+        $entity = $extra['entity'];
         if ($this->action == 'edit' || $this->action == 'add') {
-            $entity = $extra['entity'];
-            $this->field('special_need_types', ['type' => 'chosenSelect', 'entity' => $entity]);
-            $this->field('subjects', ['type' => 'chosenSelect', 'entity' => $entity]);
+            $this->field('academic_period_id', ['entity' => $entity]);
+            $this->field('examination_id', ['entity' => $entity]);
+            $this->field('special_need_types', ['type' => 'chosenSelect', 'entity' => $entity, 'after' => 'examination_id']);
+            $this->field('subjects', ['type' => 'chosenSelect', 'entity' => $entity, 'after' => 'special_need_types']);
             $this->field('create_as', ['type' => 'select', 'options' => $this->getSelectOptions($this->aliasField('create_as')), 'entity' => $entity]);
+            $this->field('name', ['visible' => false]);
+
             // to add logic for edit
+        }
+        if ($this->action == 'add') {
             if ($entity->create_as == 'new') {
-                $this->field('name', ['visible' => true]);
                 $this->field('area_id', ['visible' => true, 'type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
-                $this->field('code', ['visible' => true]);
-                $this->field('address', ['visible' => true]);
-                $this->field('postal_code', ['visible' => true]);
-                $this->field('contact_person', ['visible' => true]);
-                $this->field('telephone', ['visible' => true]);
-                $this->field('fax', ['visible' => true]);
-                $this->field('email', ['visible' => true]);
-                $this->field('website', ['visible' => true]);
+                $this->fields['code']['visible'] = true;
+                $this->fields['address']['visible'] = true;
+                $this->fields['postal_code']['visible'] = true;
+                $this->fields['contact_person']['visible'] = true;
+                $this->fields['telephone']['visible'] = true;
+                $this->fields['fax']['visible'] = true;
+                $this->fields['email']['visible'] = true;
+                $this->fields['website']['visible'] = true;
             } else if ($entity->create_as == 'existing') {
                 $this->field('institutions');
+                $this->fields['name']['visible'] = false;
 
+            }
+        } else if ($this->action == 'edit') {
+            $this->field('area_id', ['entity' => $entity, 'visible' => true, 'type' => 'readonly']);
+            $this->fields['name']['visible'] = true;
+            $this->fields['code']['visible'] = true;
+            $this->fields['address']['visible'] = true;
+            $this->fields['postal_code']['visible'] = true;
+            $this->fields['contact_person']['visible'] = true;
+            $this->fields['telephone']['visible'] = true;
+            $this->fields['fax']['visible'] = true;
+            $this->fields['email']['visible'] = true;
+            $this->fields['website']['visible'] = true;
+
+            if ($entity->institution_id != 0) {
+                $this->fields['name']['type'] = 'readonly';
+                $this->fields['code']['type'] = 'readonly';
+                $this->fields['address']['type'] = 'readonly';
+                $this->fields['postal_code']['type'] = 'readonly';
+                $this->fields['contact_person']['type'] = 'readonly';
+                $this->fields['telephone']['type'] = 'readonly';
+                $this->fields['fax']['type'] = 'readonly';
+                $this->fields['email']['type'] = 'readonly';
+                $this->fields['website']['type'] = 'readonly';
             }
         }
     }
@@ -92,6 +138,11 @@ class ExaminationCentresTable extends ControllerActionTable {
         if ($action == 'add') {
             $attr['options'] = $this->AcademicPeriods->getYearList(['isEditable' => true]);
             $attr['onChangeReload'] = true;
+        } else if ($action == 'edit') {
+            if (isset($attr['entity'])) {
+                $attr['attr']['value'] = $attr['entity']->_matchingData['AcademicPeriods']->name;
+            }
+            $attr['type'] = 'readonly';
         }
         return $attr;
     }
@@ -106,16 +157,41 @@ class ExaminationCentresTable extends ControllerActionTable {
                 $attr['onChangeReload'] = true;
             }
         } else if ($action == 'edit') {
+            if (isset($attr['entity'])) {
+                $attr['attr']['value'] = $attr['entity']->_matchingData['Examinations']->name;
+            }
             $attr['type'] = 'readonly';
         }
         return $attr;
     }
 
+    public function onUpdateFieldAreaId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'edit') {
+            if (isset($attr['entity'])) {
+                $attr['attr']['value'] = $attr['entity']->_matchingData['Areas']->name;
+            }
+            $attr['type'] = 'readonly';
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldSpecialNeedTypes(Event $event, array $attr, $action, Request $request)
+    {
+        $SpecialNeedTypesTable = $this->ExaminationCentreSpecialNeeds->SpecialNeedTypes;
+        $attr['options'] = $SpecialNeedTypesTable->find('list')->toArray();
+        return $attr;
+    }
+
     public function onUpdateFieldSubjects(Event $event, array $attr, $action, Request $request)
     {
+        $examinationId = 0;
         if (isset($request->data[$this->alias()]['examination_id'])) {
             $examinationId = $request->data[$this->alias()]['examination_id'];
-            $ExaminationItemsTable = $this->Examinations->ExaminationItems;
+        } else if ($attr['entity']->has('examination_id')) {
+            $examinationId = $attr['entity']->examination_id;
+        }
+        $ExaminationItemsTable = $this->Examinations->ExaminationItems;
             $attr['options'] = $ExaminationItemsTable
                 ->find('list', [
                     'keyField' => 'subject_id',
@@ -130,7 +206,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                     $ExaminationItemsTable->aliasField('examination_id') => $examinationId
                 ])
                 ->toArray();
-        }
+        $attr['empty'] = false;
         return $attr;
     }
 
@@ -148,26 +224,40 @@ class ExaminationCentresTable extends ControllerActionTable {
         if ($action == 'add') {
             $attr['onChangeReload'] = true;
         } else if ($action == 'edit') {
+            if ($attr['entity']->institution_id != 0) {
+                $attr['attr']['value'] = $attr['options']['existing'];
+            } else {
+                $attr['attr']['value'] = $attr['options']['new'];
+            }
             $attr['type'] = 'readonly';
         }
         return $attr;
     }
 
-    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
-        // $entity->institution_id = 1;
-        // $entity->area_id = 1;
-    }
-
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        pr($entity);die;
-        if ($entity->isNew()) {
-            $subjects = $entity->subjects['_ids'];
-            foreach($subjects as $subject) {
-
-            }
+        $requestData[$this->alias()]['institution_id'] = 0;
+        if (!isset($requestData[$this->alias()]['area_id'])) {
+            $requestData[$this->alias()]['area_id'] = 0;
         }
+
+        $academicPeriodId = $requestData[$this->alias()]['academic_period_id'];
+
+        // Subjects logic
+        $subjects = $requestData[$this->alias()]['subjects']['_ids'];
+        $examinationCentreSubjects = [];
+        foreach($subjects as $subject) {
+            $examinationCentreSubjects[] = [
+                'id' => Text::uuid(),
+                'academic_period_id' => $academicPeriodId,
+                'education_subject_id' => $subject,
+            ];
+        }
+        $requestData[$this->alias()]['examination_centre_subjects'] = $examinationCentreSubjects;
+        unset($requestData[$this->alias()]['subjects']);
+
+        // Special needs logic
+
     }
 
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
@@ -192,6 +282,8 @@ class ExaminationCentresTable extends ControllerActionTable {
                     $newEntities[] = $model->newEntity($requestData->getArrayCopy());
                 }
                 return $model->saveMany($newEntities);
+            } else {
+                return $model->save($entity);
             }
         };
 
