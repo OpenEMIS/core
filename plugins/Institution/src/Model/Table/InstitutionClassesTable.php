@@ -661,25 +661,22 @@ class InstitutionClassesTable extends ControllerActionTable {
 ** addEdit action methods
 **
 ******************************************************************************************************************/
-    public function addEditAfterAction (Event $event, Entity $entity, ArrayObject $extra) {
-        $institutionId = $extra['institution_id'];
-        $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
+	public function addEditAfterAction (Event $event, Entity $entity, ArrayObject $extra) {
+		$institutionId = $extra['institution_id'];
+		$selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
 
-        if ($selectedAcademicPeriodId > -1) {
-            //$this->InstitutionShifts->createInstitutionDefaultShift($institutionId, $selectedAcademicPeriodId);
-            $shiftOptions = $this->InstitutionShifts->getShiftOptions($institutionId, $selectedAcademicPeriodId);
-        } else {
-            $shiftOptions = [];
-        }
+		if ($selectedAcademicPeriodId > -1) {
+			$shiftOptions = $this->InstitutionShifts->getShiftOptions($institutionId, $selectedAcademicPeriodId);
+		} else {
+			$shiftOptions = [];
+		}
 
-        $this->fields['institution_shift_id']['options'] = $shiftOptions;
+		$this->fields['institution_shift_id']['options'] = $shiftOptions;
 
-        if (empty($shiftOptions)) {
-            $createShiftURL = Router::url(['controller' => 'Institutions', 'action' => 'Shifts', 'period' => $selectedAcademicPeriodId]);
-            $this->Alert->warning(__("There are no shifts configured for the selected academic period. Create shift <a href= '". $createShiftURL . "' target='_blank'>here</a>."), ['type' => 'text']);
-        }
-    }
-
+		if (empty($shiftOptions)) {
+			$this->Alert->warning($this->aliasField('noShift'));
+		}
+	}
 
 /******************************************************************************************************************
 **
