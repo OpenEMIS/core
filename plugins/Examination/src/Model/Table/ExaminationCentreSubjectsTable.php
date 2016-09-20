@@ -10,6 +10,7 @@ class ExaminationCentreSubjectsTable extends ControllerActionTable {
     {
         $this->table('examination_centre_subjects');
         parent::initialize($config);
+        $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
     }
 
     public function addEditBeforeAction(Event $event) {
