@@ -108,22 +108,7 @@ class AdvanceSearchBehavior extends Behavior {
 				}
 			}
 
-            $noAssociationFilter  = $this->_table->dispatchEvent('AdvanceSearch.getNoAssociationFilter');
-
-            if ($noAssociationFilter->result) {
-                $result = $noAssociationFilter->result;
-                $noAssociationFilterKey = key($result);
-
-                $selected = (isset($advanceSearchModelData['belongsTo']) && isset($advanceSearchModelData['belongsTo'][$noAssociationFilterKey])) ? $advanceSearchModelData['belongsTo'][$noAssociationFilterKey] : '' ;
-
-                $filters[$noAssociationFilterKey] = [
-                    'label' => $result[$noAssociationFilterKey]['label'],
-                    'options' => $result[$noAssociationFilterKey]['options'],
-                    'selected' => $selected
-                ];
-            }
-
-			if (array_key_exists('belongsTo', $advanceSearchModelData)) {
+            if (array_key_exists('belongsTo', $advanceSearchModelData)) {
 				foreach ($advanceSearchModelData['belongsTo'] as $field => $value) {
 					if (!empty($value) && $advancedSearch == false) {
 						$advancedSearch = true;
@@ -221,8 +206,7 @@ class AdvanceSearchBehavior extends Behavior {
 		$areaKeys[] = 'area_administrative_id';
 		$areaKeys[] = 'birthplace_area_id';
 		$areaKeys[] = 'address_area_id';
-        $areaKeys[] = 'programmes';
-
+        
 		foreach ($advancedSearchBelongsTo as $key=>$value) {
 			if (!empty($value) && $value>0) {
 				if(in_array($key, $areaKeys)){
@@ -241,32 +225,6 @@ class AdvanceSearchBehavior extends Behavior {
 							$AreaAdministrativeTable = TableRegistry::get('Area.AreaAdministratives');
 							$query->find('Areas', ['id' => $id, 'columnName' => $key, 'table' => $tableName]);
 							break;
-                        case 'programmes':
-                            $id = $advancedSearchBelongsTo[$key];
-                            $query->find('all')
-                                ->join([
-                                    'InstitutionGrades' => [
-                                        'table' => 'institution_grades',
-                                        'conditions' => [
-                                            'InstitutionGrades.institution_id = '.$this->_table->aliasField('id')
-                                        ]
-                                    ],
-                                    'EducationGrades' => [
-                                        'table' => 'education_grades',
-                                        'conditions' => [
-                                            'EducationGrades.id = InstitutionGrades.education_grade_id'
-                                        ]
-                                    ]
-                                ])
-                                ->where([
-                                    'EducationGrades.education_programme_id = ' . $id
-                                ])
-                                ->group([
-                                    $this->_table->aliasField('id'),
-                                    'EducationGrades.education_programme_id'
-                                ]);
-                            //pr($query);die;
-                            break;
 					}
 				} else {
 					$conditions[$model->aliasField($key)] = $value;

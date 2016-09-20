@@ -119,6 +119,8 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('HighChart', ['institutions' => ['_function' => 'getNumberOfInstitutionsByModel']]);
         $this->addBehavior('Import.ImportLink');
 
+        $this->addBehavior('Institution.AdvancedProgrammeSearch');
+
         $this->shiftTypes = $this->getSelectOptions('Shifts.types'); //get from options trait
 	}
 
@@ -176,7 +178,6 @@ class InstitutionsTable extends AppTable  {
 	{
 		$events = parent::implementedEvents();
 		$events['AdvanceSearch.getCustomFilter'] = 'getCustomFilter';
-		$events['AdvanceSearch.getNoAssociationFilter'] = 'getNoAssociationFilter';
 		return $events;
 	}
 
@@ -768,38 +769,6 @@ class InstitutionsTable extends AppTable  {
 		return $SecurityGroupUsers->getRolesByUserAndGroup($groupIds, $userId);
 	}
 
-	public function getAdvanceSearchProgrammes() 
-    {
-		$query = $this->InstitutionGrades
-                ->find('all')
-                ->select([
-                    'id' => 'EducationProgrammes.id', 
-                    'name' => 'EducationProgrammes.name'
-                ])
-                ->join([
-                    'EducationGrades' => [
-                        'table' => 'education_grades',
-                        'conditions' => [
-                            'EducationGrades.id = '.$this->InstitutionGrades->aliasField('education_grade_id')
-                        ]
-                    ],
-                    'EducationProgrammes' => [
-                        'table' => 'education_programmes',
-                        'conditions' => [
-                        'EducationProgrammes.id = EducationGrades.education_programme_id'
-                        ]
-                    ]
-                ])
-                ->group('EducationProgrammes.id')
-                ->toArray();
-        
-        foreach ($query as $key => $value) {
-            $programmeOptions[$value->id] = $value->name;
-        }
-
-        return $programmeOptions;
-    }
-
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
     	$extra['excludedModels'] = [
@@ -815,15 +784,6 @@ class InstitutionsTable extends AppTable  {
 		$filters['shift_type'] = [
 			'label' => __('Shift Type'),
 			'options' => $this->shiftTypes
-		];
-		return $filters;
-	}
-
-	public function getNoAssociationFilter(Event $event)
-	{
-		$filters['programmes'] = [
-			'label' => __('Programmes'),
-			'options' => $this->getAdvanceSearchProgrammes()
 		];
 		return $filters;
 	}
