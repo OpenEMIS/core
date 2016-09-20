@@ -355,6 +355,21 @@ class InstitutionsTable extends AppTable  {
 			}
 
         } else {
+        	$this->ExaminationCentres->updateAll([
+        		'code' => $entity->code,
+        		'name' => $entity->name,
+        		'area_id' => $entity->area_id,
+        		'address' => $entity->address,
+        		'postal_code' => $entity->postal_code,
+        		'contact_person' => $entity->contact_person,
+        		'telephone' => $entity->telephone,
+        		'fax' => $entity->fax,
+        		'email' => $entity->email
+        	],
+        	[
+        		'institution_id' => $entity->id
+        	]);
+
 			$securityGroupId = $entity->security_group_id;
 			if (!empty($securityGroupId)) {
 				$obj = $SecurityGroup->get($securityGroupId);

@@ -26,8 +26,13 @@ class ExaminationsController extends AppController
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentres']);
         // }
     }
+    // End
 
-    // public function Results() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationGradingTypes']); }
+    // AngularJS
+    public function Results() {
+        $this->set('_edit', true);
+        $this->set('ngController', 'ExaminationsResultsCtrl as ExaminationsResultsController');
+    }
     // End
 
     public function beforeFilter(Event $event) {
@@ -73,9 +78,9 @@ class ExaminationsController extends AppController
     }
 
     private function attachAngularModules() {
-    //     $action = $this->request->action;
+        $action = $this->request->action;
     //     $pass = isset($this->request->pass[0]) ? $this->request->pass[0] : 'index';
-    //     switch ($action) {
+        switch ($action) {
     //         case 'Centres':
     //             if ($pass == 'add' && $this->checkExamCentresPermission()) {
     //                 $this->Angular->addModules([
@@ -85,13 +90,13 @@ class ExaminationsController extends AppController
     //                 ]);
     //             }
     //             break;
-    //         case 'Results':
-    //             // $this->Angular->addModules([
-    //             //     'alert.svc',
-    //             //     'institutions.results.ctrl',
-    //             //     'institutions.results.svc'
-    //             // ]);
-    //             break;
-    //     }
+            case 'Results':
+                $this->Angular->addModules([
+                    'alert.svc',
+                    'examinations.results.ctrl',
+                    'examinations.results.svc'
+                ]);
+                break;
+        }
     }
 }
