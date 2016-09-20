@@ -39,13 +39,21 @@ class ProgrammesTable extends ControllerActionTable
 		$this->setFieldOrder([
 			'institution_id', 'education_grade_id', 'start_date', 'end_date', 'student_status_id'
 		]);
+
+		if (isset($extra['toolbarButtons']['add'])) {
+			unset($extra['toolbarButtons']['add']);
+		}
+
+		if (isset($extra['toolbarButtons']['search'])) {
+			unset($extra['toolbarButtons']['search']);
+		}
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
-		$options['auto_contain'] = false;
-		$query->contain(['StudentStatuses', 'EducationGrades', 'Institutions']);
-		$options['order'] = [$this->aliasField('start_date') => 'DESC'];
+		$session = $this->request->session();
+		$studentId = $session->read('Student.Students.id');
+        $query->where([$this->aliasField('student_id') => $studentId]);
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
@@ -63,7 +71,11 @@ class ProgrammesTable extends ControllerActionTable
 			$buttons['view']['url'] = $url;
 		}
 
-		if (array_key_exists('edit', $buttons)) {
+		$id = $entity->id;
+		$statuses = $this->StudentStatuses->findCodeList();
+		$studentStatusId = $this->get($id)->student_status_id;
+
+		if (array_key_exists('edit', $buttons) && $studentStatusId == $statuses['CURRENT']) {
 			$url = [
 				'plugin' => 'Institution',
 				'controller' => 'Institutions',
@@ -72,6 +84,14 @@ class ProgrammesTable extends ControllerActionTable
 				'institution_id' => $entity->institution->id,
 			];
 			$buttons['edit']['url'] = $url;
+		} else {
+			if (array_key_exists('edit', $buttons)) {
+				unset($buttons['edit']);
+			}
+		}
+
+		if (array_key_exists('remove', $buttons)) {
+			unset($buttons['remove']);
 		}
 
 		return $buttons;

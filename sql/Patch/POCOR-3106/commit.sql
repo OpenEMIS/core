@@ -7,8 +7,9 @@ ALTER TABLE `security_functions` ADD `description` VARCHAR( 255 ) AFTER `visible
 
 -- Programmes permission
 UPDATE `security_functions`
-    SET `_edit` = 'Programmes.edit',
-        `description` = 'Programme edit will only take effect when student edit permission is granted.'
+    SET `controller` = 'Institutions',
+        `_view` = 'StudentProgrammes.index|StudentProgrammes.view',
+        `_edit` = 'Students.edit|StudentProgrammes.edit'
     WHERE `id` = 2011;
 
 -- Overview permission
@@ -23,10 +24,16 @@ UPDATE `security_functions`
         `description` = 'Overview edit will only take effect when classes permission is granted.'
     WHERE `id` = 2000;
 
+-- Studentlist permission
+UPDATE `security_functions`
+    SET `_view` = 'Students.index|Students.view|StudentSurveys.index|StudentSurveys.view',
+        `_edit` = 'StudentSurveys.edit',
+        `_execute` = 'Students.excel'
+    WHERE `id` = 1012;
+
 -- Translation table
 INSERT INTO `translations` (`id`, `code`, `en`, `ar`, `zh`, `es`, `fr`, `ru`, `editable`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-VALUES  (NULL, NULL, 'Programme edit will only take effect when student edit permission is granted', NULL, NULL, NULL, NULL, NULL, '1', NULL, NULL, '2', NOW()),
-        (NULL, NULL, 'Overview edit will only take effect when student edit and classes permission is granted', NULL, NULL, NULL, NULL, NULL, '1', NULL, NULL, '2', NOW());
+VALUES (NULL, NULL, 'Overview edit will only take effect when classes permission is granted', NULL, NULL, NULL, NULL, NULL, '1', NULL, NULL, '2', NOW());
 
 -- Security Role functions
 -- copy the value on the student edit permission into the programme edit permission
