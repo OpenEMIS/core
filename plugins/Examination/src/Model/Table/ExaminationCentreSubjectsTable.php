@@ -10,6 +10,8 @@ class ExaminationCentreSubjectsTable extends ControllerActionTable {
     {
         $this->table('examination_centre_subjects');
         parent::initialize($config);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
     }
 
