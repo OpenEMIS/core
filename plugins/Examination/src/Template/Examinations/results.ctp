@@ -27,8 +27,8 @@ $this->end();
 
 $this->start('panelBody');
 ?>
-    <div class="alert {{class}}" ng-hide="message == null">
-        <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
+    <div class="alert {{ExaminationsResultsController.class}}" ng-hide="ExaminationsResultsController.message == null">
+        <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{ExaminationsResultsController.message}}
     </div>
 
     <?= $this->element('Examination.Examinations/controls'); ?>
