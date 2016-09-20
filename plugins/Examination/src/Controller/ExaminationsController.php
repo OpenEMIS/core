@@ -26,6 +26,8 @@ class ExaminationsController extends AppController
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentres']);
         // }
     }
+    public function Students() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationStudents']); }
+    public function NotRegisteredStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationNotRegisteredStudents']); }
     // End
 
     // AngularJS
@@ -67,6 +69,23 @@ class ExaminationsController extends AppController
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'GradingTypes'],
                 'text' => __('Grading Types')
             ],
+        ];
+
+        $this->set('tabElements', $tabElements);
+        $this->set('selectedAction', $this->request->action);
+    }
+
+    public function getStudentsTab()
+    {
+        $tabElements = [
+            'Students' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Students'],
+                'text' => __('Registered')
+            ],
+            'NotRegisteredStudents' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'NotRegisteredStudents'],
+                'text' => __('Not Registered')
+            ]
         ];
 
         $this->set('tabElements', $tabElements);

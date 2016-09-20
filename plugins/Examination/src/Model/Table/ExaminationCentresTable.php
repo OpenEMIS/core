@@ -23,7 +23,6 @@ class ExaminationCentresTable extends ControllerActionTable {
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
-        $this->hasMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds']);
         $this->hasMany('ExaminationCentreSubjects', ['className' => 'Examination.ExaminationCentreSubjects']);
         $this->hasMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds']);
         $this->hasMany('ExaminationStudents', ['className' => 'Examination.ExaminationStudents']);
@@ -33,6 +32,13 @@ class ExaminationCentresTable extends ControllerActionTable {
                 'remove' => 'restrict'
             ],
         ]);
+    }
+
+    public function implementedEvents()
+    {
+        $event = parent::implementedEvents();
+        $event['ControllerAction.Model.viewEdit.afterQuery'] = 'viewEditAfterQuery';
+        return $event;
     }
 
     public function validationDefault(Validator $validator)
