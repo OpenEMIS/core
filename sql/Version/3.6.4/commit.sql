@@ -60,6 +60,11 @@ INSERT INTO `translations` (`id`, `code`, `en`, `ar`, `zh`, `es`, `fr`, `ru`, `m
 SELECT NULL, NULL, 'There are no shifts configured for the selected academic period', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, now() FROM dual
 WHERE NOT EXISTS (SELECT * FROM `translations` WHERE `en` = 'There are no shifts configured for the selected academic period');
 
+-- db_patches
+INSERT INTO `db_patches` (`issue`, `created`) VALUES ('POCOR-3215', NOW());
+
+-- import_mapping
+UPDATE `import_mapping` SET `description` = 'Education Code' WHERE `import_mapping`.`id` = 15;
 
 -- 3.6.4
 UPDATE config_items SET value = '3.6.4' WHERE code = 'db_version';
