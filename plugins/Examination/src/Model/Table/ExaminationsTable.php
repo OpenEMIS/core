@@ -18,6 +18,14 @@ class ExaminationsTable extends ControllerActionTable {
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ExaminationStudents', ['className' => 'Examination.ExaminationStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
+
+        $this->behaviors()->get('ControllerAction')->config([
+            'actions' => [
+                'remove' => 'restrict'
+            ]
+        ]);
     }
 
     public function validationDefault(Validator $validator) {
@@ -29,6 +37,9 @@ class ExaminationsTable extends ControllerActionTable {
                     'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
                     'provider' => 'table'
                 ]
+            ])
+            ->add('registration_start_date', 'ruleCompareDate', [
+                'rule' => ['compareDate', 'registration_end_date', false]
             ])
             ->requirePresence('examination_items');
     }
@@ -62,6 +73,8 @@ class ExaminationsTable extends ControllerActionTable {
         $this->field('academic_period_id', ['type' => 'select', 'entity' => $entity]);
         $this->field('education_programme_id', ['type' => 'select', 'entity' => $entity]);
         $this->field('education_grade_id', ['type' => 'select', 'entity' => $entity, 'empty' => true]);
+        $this->field('registration_start_date');
+        $this->field('registration_end_date');
         $this->field('examination_items', [
             'type' => 'element',
             'element' => 'Examination.examination_items'
@@ -221,5 +234,12 @@ class ExaminationsTable extends ControllerActionTable {
         $examinationGradingType = TableRegistry::get('Examination.ExaminationGradingTypes');
         $examinationGradingTypeOptions = $examinationGradingType->find('list')->toArray();
         return $examinationGradingTypeOptions;
+    }
+
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $extra['excludedModels'] = [
+            $this->ExaminationItems->alias()
+        ];
     }
 }
