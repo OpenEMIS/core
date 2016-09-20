@@ -83,8 +83,8 @@ CREATE TABLE `examination_centres` (
   `examination_id` INT(11) NOT NULL COMMENT 'links to examinations.id',
   `academic_period_id` INT(11) NOT NULL COMMENT 'links to academic_periods.id',
   `institution_id` INT(11) NOT NULL COMMENT 'links to institutions.id',
+  `area_id` INT(11) NOT NULL COMMENT 'links to areas.id',
   `name` VARCHAR(150) NULL,
-  `area_id` INT(11) NOT NULL,
   `code` VARCHAR(50) NULL,
   `address` TEXT NULL,
   `postal_code` VARCHAR(20) NULL,
@@ -109,6 +109,7 @@ CREATE TABLE `examination_centres` (
 
 CREATE TABLE `examination_centre_subjects` (
   `id` char(36) NOT NULL,
+  `examination_id` INT(11) NOT NULL COMMENT 'links to examinations.id',
   `examination_centre_id` INT(11) NOT NULL COMMENT 'links to examination_centres.id',
   `academic_period_id` INT(11) NOT NULL COMMENT 'links to academic_periods.id',
   `education_subject_id` INT(11) NOT NULL COMMENT 'links to education_subjects.id',
@@ -117,6 +118,7 @@ CREATE TABLE `examination_centre_subjects` (
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
   PRIMARY KEY (`examination_centre_id`, `education_subject_id`),
+  KEY `examination_id` (`examination_id`),
   KEY `examination_centre_id` (`examination_centre_id`),
   KEY `academic_period_id` (`academic_period_id`),
   KEY `education_subject_id` (`education_subject_id`),
@@ -126,6 +128,7 @@ CREATE TABLE `examination_centre_subjects` (
 
 CREATE TABLE `examination_centre_special_needs` (
   `id` char(36) NOT NULL,
+  `examination_id` INT(11) NOT NULL COMMENT 'links to examinations.id',
   `examination_centre_id` INT(11) NOT NULL COMMENT 'links to examination_centres.id',
   `academic_period_id` INT(11) NOT NULL COMMENT 'links to academic_periods.id',
   `special_need_type_id` INT(11) NOT NULL COMMENT 'links to special_need_types.id',
@@ -134,6 +137,7 @@ CREATE TABLE `examination_centre_special_needs` (
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
   PRIMARY KEY (`examination_centre_id`, `special_need_type_id`),
+  KEY `examination_id` (`examination_id`),
   KEY `examination_centre_id` (`examination_centre_id`),
   KEY `academic_period_id` (`academic_period_id`),
   KEY `modified_user_id` (`modified_user_id`),
@@ -147,7 +151,7 @@ CREATE TABLE `examination_students` (
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_period.id',
   `examination_id` int(11) NOT NULL COMMENT 'links to examination.id',
   `examination_centre_id` INT(11) NOT NULL COMMENT 'links to examination_centres.id',
-  `examination_centre_subject_id` INT(11) NOT NULL COMMENT 'links to `examination_centre_subjects.id',
+  `education_subject_id` INT(11) NOT NULL COMMENT 'links to `education_subjects.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -158,7 +162,7 @@ CREATE TABLE `examination_students` (
   KEY `academic_period_id` (`academic_period_id`),
   KEY `examination_id` (`examination_id`),
   KEY `examination_centre_id` (`examination_centre_id`),
-  KEY `examination_centre_subject_id` (`examination_centre_subject_id`),
+  KEY `education_subject_id` (`education_subject_id`),
   KEY `modified_user_id` (`modified_user_id`),
   KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the students registered to an examination center for a particular examination';
