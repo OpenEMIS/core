@@ -8,6 +8,7 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
     var vm = this;
     $scope.action = 'view';
     vm.noOptions = [{text: 'No options', value: 0}];
+    vm.education_subject = {};
 
     // Functions
     vm.onChangeAcademicPeriod = onChangeAcademicPeriod;
@@ -15,6 +16,7 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
     vm.onChangeExaminationCentre = onChangeExaminationCentre;
     vm.initGrid = initGrid;
     vm.onChangeSubject = onChangeSubject;
+    vm.onChangeColumnDefs = onChangeColumnDefs;
     vm.onEditClick = onEditClick;
     vm.onBackClick = onBackClick;
     vm.onSaveClick = onSaveClick;
@@ -65,7 +67,7 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
     $scope.$watch('action', function(newValue, oldValue) {
         if (angular.isDefined(newValue) && angular.isDefined(oldValue) && newValue != oldValue) {
             $scope.action = newValue;
-            // $scope.resetColumnDefs($scope.action, $scope.subject, $scope.periods, $scope.gradingTypes);
+            vm.onChangeColumnDefs($scope.action, vm.education_subject);
         }
     });
 
@@ -151,6 +153,10 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
         });
     }
 
+    function onChangeExaminationCentre(academicPeriodId, examinationId, examinationCentreId) {
+
+    }
+
     function initGrid(subject) {
         vm.gridOptions = {
             context: {
@@ -182,15 +188,34 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
     }
 
     function onChangeSubject(subject) {
+        AlertSvc.reset(vm);
+        vm.education_subject = subject;
+
         if (vm.gridOptions != null) {
             // update value in context
             vm.gridOptions.context.education_subject_id = subject.id;
             // Always reset
             vm.gridOptions.api.setRowData([]);
         }
+
+        vm.onChangeColumnDefs($scope.action, subject);
     }
 
-    function onChangeExaminationCentre(academicPeriodId, examinationId, examinationCentreId) {
+    function onChangeColumnDefs(action, subject) {
+        ExaminationsResultsSvc.getColumnDefs(action, subject)
+        .then(function(cols)
+        {
+            if (vm.gridOptions != null) {
+                vm.gridOptions.api.setColumnDefs(cols);
+                if (Object.keys(cols).length < 15) {
+                    vm.gridOptions.api.sizeColumnsToFit();
+                }
+            }
+        }, function(error) {
+            // No Grading Options
+            console.log(error);
+            AlertSvc.warning(vm, error);
+        });
     }
 
     function onEditClick() {
