@@ -47,7 +47,8 @@ class AdvanceSearchBehavior extends Behavior {
 **
 ******************************************************************************************************************/
 
-	public function afterAction(Event $event) {
+	public function afterAction(Event $event) 
+	{
 		if ($this->_table->action == 'index') {
 		    $labels = TableRegistry::get('Labels');
 			$filters = [];
@@ -107,7 +108,7 @@ class AdvanceSearchBehavior extends Behavior {
 				}
 			}
 
-			if (array_key_exists('belongsTo', $advanceSearchModelData)) {
+            if (array_key_exists('belongsTo', $advanceSearchModelData)) {
 				foreach ($advanceSearchModelData['belongsTo'] as $field => $value) {
 					if (!empty($value) && $advancedSearch == false) {
 						$advancedSearch = true;
@@ -205,7 +206,7 @@ class AdvanceSearchBehavior extends Behavior {
 		$areaKeys[] = 'area_administrative_id';
 		$areaKeys[] = 'birthplace_area_id';
 		$areaKeys[] = 'address_area_id';
-
+        
 		foreach ($advancedSearchBelongsTo as $key=>$value) {
 			if (!empty($value) && $value>0) {
 				if(in_array($key, $areaKeys)){
