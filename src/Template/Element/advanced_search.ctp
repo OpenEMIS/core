@@ -30,15 +30,34 @@ use Cake\Utility\Inflector;
 
 	<?php
 		foreach ($searchables as $key=>$searchable) :
-	?>
+            if (array_key_exists('type', $searchable)) {
+                if ($searchable['type'] == 'select') {
+    ?>
+                    <div class="select">
+                        <label><?= $searchable['label'] ?>:</label>
+                        <div class="input-select-wrapper">	 
+                            <select name="AdvanceSearch[<?= $model ?>][hasMany][<?= $key ?>]">
+                                <option value=""><?= __('-- Select --'); ?></option>
+                                <?php foreach ($searchable['options'] as $optKey=>$optVal): ?>
+                                    <?php $selected = ($optKey==$searchable['selected']) ? 'selected' : ''; ?>
+                                <option value="<?= $optKey ?>" <?= $selected ?>><?= $optVal ?></option>
+                             <?php endforeach; ?>
+                            </select>
+                        </div>	  
+                    </div>
 
-		<div class="text" style="margin-bottom:10px;">
-			<label for="advancesearch-directories-identity-number"><?= $searchable['label'] ?>:</label>
+	<?php      }
+            } else { 
+    ?>
+                <div class="text" style="margin-bottom:10px;">
+                    <label for="advancesearch-directories-identity-number"><?= $searchable['label'] ?>:</label>
 
-			<input type="text" name="AdvanceSearch[<?= $model ?>][hasMany][<?= $key ?>]" class="form-control focus" id="advancesearch-<?= strtolower($model) ?>-<?= Inflector::dasherize($key) ?>" value="<?= $searchable['value'] ?>" />
-		</div>
-
-	<?php endforeach ?>
+                    <input type="text" name="AdvanceSearch[<?= $model ?>][hasMany][<?= $key ?>]" class="form-control focus" id="advancesearch-<?= strtolower($model) ?>-<?= Inflector::dasherize($key) ?>" value="<?= $searchable['value'] ?>" />
+                </div>
+    <?php 
+            }
+        endforeach 
+    ?>
 
 	<div class="search-action-btn">
 		<input type="hidden" name="AdvanceSearch[<?= $model ?>][isSearch]" value="" id="isSearch" />
