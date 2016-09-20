@@ -15,22 +15,10 @@ INSERT INTO `z_3332_institution_infrastructures`
 SELECT `id`, `code` FROM `institution_infrastructures`;
 
 -- cleanup parent_id 0 institution_infrastructures
-/*
-SELECT * FROM `institution_infrastructures`
-WHERE `parent_id` IN (
-    SELECT `id` FROM `institution_infrastructures`
-    WHERE `parent_id` = 0
-);
-*/
 DELETE FROM `institution_infrastructures`
 WHERE `parent_id` = 0;
 
 -- patch institution_infrastructures
-UPDATE `institution_infrastructures` I1
-INNER JOIN `institutions` I2 ON I2.`id` = I1.`institution_id`
-SET I1.`code` = IF(LOCATE(I2.`code`, I1.`code`) > 0, 
-                REPLACE(I1.`code`, I2.`code`, CONCAT(I2.`code`, '-')), I1.`code`)
-WHERE I1.`code` LIKE CONCAT(I2.`code`, '%');
 
 -- patch `institution_infrastructures` level 1
 DROP PROCEDURE IF EXISTS patchJordanInfraLevel1;
@@ -240,13 +228,6 @@ INSERT INTO `z_3332_institution_rooms`
 SELECT `id`, `code` FROM `institution_rooms`;
 
 -- cleanup institution_infrastructures 0 institution_rooms
-/*
-SELECT * FROM `institution_rooms`
-WHERE `institution_infrastructure_id` IN (
-    SELECT `id` FROM `institution_rooms`
-    WHERE `institution_infrastructure_id` = 0
-);
-*/
 DELETE FROM `institution_rooms`
 WHERE `institution_infrastructure_id` = 0;
 
@@ -319,3 +300,11 @@ WHERE `current` = 1;
 CALL patchJordanInfraLevel45(@academicPeriodID);
 
 DROP PROCEDURE IF EXISTS patchJordanInfraLevel45;
+
+-- update record which is not current academic period.
+UPDATE `institution_rooms` R1
+INNER JOIN `institution_rooms` R2 
+    ON R2.`previous_room_id` = R1.`id`
+    AND R2.`academic_period_id` = @academicPeriodID
+SET R1.`code` = R2.`code`
+WHERE R1.`academic_period_id` <> @academicPeriodID;
