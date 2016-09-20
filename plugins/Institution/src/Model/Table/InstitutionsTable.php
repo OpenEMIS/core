@@ -119,6 +119,8 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('HighChart', ['institutions' => ['_function' => 'getNumberOfInstitutionsByModel']]);
         $this->addBehavior('Import.ImportLink');
 
+        $this->addBehavior('Institution.AdvancedProgrammeSearch');
+
         $this->shiftTypes = $this->getSelectOptions('Shifts.types'); //get from options trait
 	}
 
