@@ -21,6 +21,7 @@ class UsersTable extends AppTable {
 		parent::initialize($config);
 
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
+		$this->belongsTo('SpecialNeeds', ['className' => 'User.SpecialNeeds']);
 
 		$this->belongsToMany('Roles', [
 			'className' => 'Security.SecurityRoles',
