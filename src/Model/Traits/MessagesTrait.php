@@ -533,6 +533,9 @@ trait MessagesTrait {
         'CustomForms' => [
             'notSupport' => 'Not supported in this form.'
         ],
+        'ExaminationStudents' => [
+            'restrictAdd' => 'Add operation is not allowed.'
+        ],
 
         // Validation Messages
         'Institution' => [
