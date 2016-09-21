@@ -1274,6 +1274,11 @@ trait MessagesTrait {
                     'ruleUniqueCode' => 'Code must be unique for the same academic period',
                 ]
             ],
+            'ExaminationCentres' => [
+                'capacity' => [
+                    'ruleValidateNumeric' => 'Please enter a valid Numeric value'
+                ]
+            ],
             'ExaminationItems' => [
                 'weight' => [
                     'ruleIsDecimal' => 'Value is not a valid decimal',

@@ -46,7 +46,9 @@ class ExaminationCentresTable extends ControllerActionTable {
         $validator = parent::validationDefault($validator);
         $validator
             ->requirePresence('create_as', 'create')
-            // ->requirePresence('subjects', 'create')
+            ->add('capacity', 'ruleValidateNumeric', [
+                'rule' => ['numericPositive']
+            ])
             ->requirePresence('institutions', 'create');
 
         return $validator;
@@ -129,7 +131,8 @@ class ExaminationCentresTable extends ControllerActionTable {
                 } else if ($entity->create_as == 'existing') {
                     $this->field('institutions');
                     $this->fields['name']['visible'] = false;
-
+                } else {
+                    $this->fields['name']['visible'] = false;
                 }
             } else if ($this->action == 'edit') {
                 $this->field('area_id', ['entity' => $entity, 'visible' => true, 'type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
