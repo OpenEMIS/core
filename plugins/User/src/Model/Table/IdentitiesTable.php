@@ -1,16 +1,21 @@
 <?php
 namespace User\Model\Table;
 
+use Exception;
+use DateTime;
+use ArrayObject;
+
 use Cake\ORM\TableRegistry;
-use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
-use Exception;
-use DateTime;
 
-class IdentitiesTable extends AppTable {
-	public function initialize(array $config) {
+use App\Model\Table\ControllerActionTable;
+
+class IdentitiesTable extends ControllerActionTable
+{
+	public function initialize(array $config)
+	{
 		$this->table('user_identities');
 		parent::initialize($config);
 
@@ -18,15 +23,18 @@ class IdentitiesTable extends AppTable {
 		$this->belongsTo('IdentityTypes', ['className' => 'FieldOption.IdentityTypes']);
 	}
 
-	public function beforeAction($event) {
+	public function beforeAction($event, arrayObject $extra)
+	{
 		$this->fields['identity_type_id']['type'] = 'select';
 	}
 
-	public function indexBeforeAction(Event $event) {
+	public function indexBeforeAction(Event $event, arrayObject $extra)
+	{
 		$this->fields['comments']['visible'] = 'false';
 	}
 
-	private function setupTabElements() {
+	private function setupTabElements()
+	{
 		$options = [
 			'userRole' => '',
 		];
@@ -45,15 +53,15 @@ class IdentitiesTable extends AppTable {
 		$this->controller->set('selectedAction', $this->alias());
 	}
 
-	public function afterAction(Event $event) {
+	public function afterAction(Event $event, arrayObject $extra)
+	{
 		$this->setupTabElements();
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator)
+	{
 		$validator = parent::validationDefault($validator);
 		return $validator
-			->add('issue_location',  [
-			])
 			->add('issue_date', 'ruleCompareDate', [
 				'rule' => ['compareDate', 'expiry_date', false]
 			])
@@ -70,25 +78,26 @@ class IdentitiesTable extends AppTable {
 		;
 	}
 
-	public function validationNonMandatory(Validator $validator) {
+	public function validationNonMandatory(Validator $validator)
+	{
 		$this->validationDefault($validator);
 		return $validator->allowEmpty('number');
 	}
 
-	public function afterSave(Event $event, Entity $entity) 
+	public function afterSave(Event $event, Entity $entity, arrayObject $extra)
 	{
 		$this->Users->updateIdentityNumber($entity->security_user_id, $this->getLatestDefaultIdentityNo($entity->security_user_id)); //update identity_number field on security_user table on add/edit action
 	}
 
-	public function afterDelete(Event $event, Entity $entity)
-	{	
+	public function afterDelete(Event $event, Entity $entity, arrayObject $extra)
+	{
 		if ($entity->identity_type_id == $this->IdentityTypes->getDefaultValue()) { //if the delete is done to the default identity type
 			$this->Users->updateIdentityNumber($entity->security_user_id, $this->getLatestDefaultIdentityNo($entity->security_user_id)); //update identity_number field on security_user table on delete action
 		}
 	}
 
 	public function getLatestDefaultIdentityNo($userId)
-	{	
+	{
 		$defaultIdentityType = $this->IdentityTypes->getDefaultValue();
 
 		$latestDefaultIdentityNo = NULL;
