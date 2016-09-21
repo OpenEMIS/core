@@ -4,15 +4,20 @@ namespace Examination\Model\Table;
 use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
 use ArrayObject;
+use Cake\Validation\Validator;
 
 class ExaminationCentreSubjectsTable extends ControllerActionTable {
     public function initialize(array $config)
     {
-        $this->table('examination_centre_subjects');
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+    }
+
+    public function validationRemoveCentreId(Validator $validator){
+        $validator = $this->validationDefault($validator);
+        return $validator->requirePresence('examination_centre_id', false);
     }
 
     public function addEditBeforeAction(Event $event) {
