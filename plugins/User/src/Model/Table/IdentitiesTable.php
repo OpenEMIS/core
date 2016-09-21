@@ -28,6 +28,12 @@ class IdentitiesTable extends ControllerActionTable
 		$this->fields['identity_type_id']['type'] = 'select';
 	}
 
+	public function addBeforeAction($event, arrayObject $extra)
+	{
+		$defaultIdentityType = $this->IdentityTypes->getDefaultValue();
+		$this->fields['identity_type_id']['default'] = $defaultIdentityType;
+	}
+
 	public function indexBeforeAction(Event $event, arrayObject $extra)
 	{
 		$this->fields['comments']['visible'] = 'false';
