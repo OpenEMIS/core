@@ -9,6 +9,8 @@ use Cake\ORM\ResultSet;
 use Cake\ORM\Behavior;
 use Cake\Network\Request;
 use Cake\Event\Event;
+use Cake\Datasource\ConnectionManager;
+use Cake\Log\Log;
 
 class RegisteredStudentsBehavior extends Behavior {
 	public function initialize(array $config) {
@@ -23,20 +25,31 @@ class RegisteredStudentsBehavior extends Behavior {
         $events['ControllerAction.Model.viewEdit.beforeQuery'] = 'viewEditBeforeQuery';
         $events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
         $events['ControllerAction.Model.add.beforeAction'] = 'addBeforeAction';
+        $events['ControllerAction.Model.edit.beforeAction'] = 'editBeforeAction';
         $events['ControllerAction.Model.edit.beforeSave'] = 'editBeforeSave';
         $events['ControllerAction.Model.edit.afterSave'] = 'editAfterSave';
         $events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
+        $events['ControllerAction.Model.delete.beforeAction'] = 'deleteBeforeAction';
         return $events;
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
-        // hide add button
+        // not allow to add
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         if (array_key_exists('add', $toolbarButtonsArray)) {
-            unset($toolbarButtonsArray['add']);   
+            unset($toolbarButtonsArray['add']);
         }
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         // End
+
+        $indexButtonsArray = $extra['indexButtons']->getArrayCopy();
+        if (array_key_exists('edit', $indexButtonsArray)) {
+            unset($indexButtonsArray['edit']);
+        }
+        if (array_key_exists('remove', $indexButtonsArray)) {
+            unset($indexButtonsArray['remove']);
+        }
+        $extra['indexButtons']->exchangeArray($indexButtonsArray);
 
         $model = $this->_table;
         $model->field('openemis_no', ['sort' => true]);
@@ -44,11 +57,9 @@ class RegisteredStudentsBehavior extends Behavior {
             'type' => 'select',
             'sort' => ['field' => 'Users.first_name']
         ]);
-        $model->field('institution_id', ['type' => 'select']);
+        $model->field('education_grade_id', ['visible' => false]);
         $model->field('academic_period_id', ['visible' => false]);
         $model->field('examination_id', ['visible' => false]);
-        $model->field('examination_centre_id', ['type' => 'select']);
-        $model->field('education_subject_id', ['visible' => false]);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
@@ -70,35 +81,33 @@ class RegisteredStudentsBehavior extends Behavior {
         $where[$model->aliasField('examination_id')] = $selectedExamination;
         // End
 
-        // Education Subject
-        $subjectOptions = $this->getExaminationItemOptions($selectedExamination);
-        $subjectOptions = ['-1' => '-- '.__('Select Subject').' --'] + $subjectOptions;
-        $selectedSubject = !is_null($model->request->query('education_subject_id')) ? $model->request->query('education_subject_id') : -1;
-        $model->controller->set(compact('subjectOptions', 'selectedSubject'));
-        $where[$model->aliasField('education_subject_id')] = $selectedSubject;
-        // End
-
         $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
 
         $query
             ->where($where)
-            ->order([
-                $model->Institutions->aliasField('name') => 'asc',
-                $model->Examinations->aliasField('name') => 'asc',
-                $model->ExaminationCentres->aliasField('name') => 'asc',
-                $model->EducationSubjects->aliasField('name') => 'asc'
-            ]);
+            ->group([
+                $model->aliasField('student_id'),
+                $model->aliasField('academic_period_id'),
+                $model->aliasField('examination_id')
+            ])
+            ->order([$model->Institutions->aliasField('name') => 'asc']);
     }
 
     public function indexAfterAction(Event $event, ResultSet $resultSet, ArrayObject $extra) {
         $model = $this->_table;
         $session = $model->request->session();
 
-        $sessionKey = $model->registryAlias() . '.warning';
-        if ($session->check($sessionKey)) {
-            $warningKey = $session->read($sessionKey);
+        $successSessionKey = $model->registryAlias() . '.success';
+        $warningSessionKey = $model->registryAlias() . '.warning';
+
+        if ($session->check($successSessionKey)) {
+            $successKey = $session->read($successSessionKey);
+            $model->Alert->success($successKey);
+            $session->delete($successSessionKey);
+        } else if ($session->check($warningSessionKey)) {
+            $warningKey = $session->read($warningSessionKey);
             $model->Alert->warning($warningKey);
-            $session->delete($sessionKey);
+            $session->delete($warningSessionKey);
         }
     }
 
@@ -111,6 +120,17 @@ class RegisteredStudentsBehavior extends Behavior {
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+        // not allow to edit and delete
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        if (array_key_exists('edit', $toolbarButtonsArray)) {
+            unset($toolbarButtonsArray['edit']);
+        }
+        if (array_key_exists('remove', $toolbarButtonsArray)) {
+            unset($toolbarButtonsArray['remove']);
+        }
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+        // End
+
         $this->setupFields($entity, $extra);
     }
 
@@ -126,16 +146,32 @@ class RegisteredStudentsBehavior extends Behavior {
         return $model->controller->redirect($url);
     }
 
+    public function editBeforeAction(Event $event, ArrayObject $extra) {
+        $model = $this->_table;
+
+        $session = $model->request->session();
+        $sessionKey = $model->registryAlias() . '.warning';
+        $session->write($sessionKey, 'general.notEditable');
+
+        $url = $model->url('index');
+        $event->stopPropagation();
+        return $model->controller->redirect($url);
+    }
+
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra) {
         $process = function ($model, $entity) use ($requestData) {
+            $conn = ConnectionManager::get('default');
+            $conn->begin();
+
             $studentId = $entity->student_id;
             $institutionId = $entity->institution_id;
+            $educationGradeId = $entity->education_grade_id;
             $academicPeriodId = $entity->academic_period_id;
             $examinationId = $entity->examination_id;
 
             $model->deleteAll([
                 'student_id' => $studentId,
-                'institution_id' => $institutionId,
+                'education_grade_id' => $educationGradeId,
                 'academic_period_id' => $academicPeriodId,
                 'examination_id' => $examinationId
             ]);
@@ -148,6 +184,7 @@ class RegisteredStudentsBehavior extends Behavior {
                     $data = [
                         'student_id' => $studentId,
                         'institution_id' => $institutionId,
+                        'education_grade_id' => $educationGradeId,
                         'academic_period_id' => $academicPeriodId,
                         'examination_id' => $examinationId,
                         'education_subject_id' => $subjectId
@@ -159,7 +196,15 @@ class RegisteredStudentsBehavior extends Behavior {
                     }
                 }
 
-                return $model->saveMany($newEntities);
+                $result = $model->saveMany($newEntities);
+                if ($result) {
+                    $conn->commit();
+                } else {
+                    $conn->rollback();
+                    Log::write('debug', $newEntities->errors());
+                }
+
+                return $result;
             }
         };
 
@@ -168,6 +213,11 @@ class RegisteredStudentsBehavior extends Behavior {
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
         $model = $this->_table;
+
+        $session = $model->request->session();
+        $sessionKey = $model->registryAlias() . '.success';
+        $session->write($sessionKey, 'general.edit.success');
+
         $url = $model->url('index', false);
         $url['academic_period_id'] = $entity->academic_period_id;
         $url['examination_id'] = $entity->examination_id;
@@ -178,6 +228,18 @@ class RegisteredStudentsBehavior extends Behavior {
 
     public function editAfterAction(Event $event, Entity $entity, arrayObject $extra) {
         $this->setupFields($entity, $extra);
+    }
+
+    public function deleteBeforeAction(Event $event, ArrayObject $extra) {
+        $model = $this->_table;
+
+        $session = $model->request->session();
+        $sessionKey = $model->registryAlias() . '.warning';
+        $session->write($sessionKey, 'general.delete.restrictDelete');
+
+        $url = $model->url('index');
+        $event->stopPropagation();
+        return $model->controller->redirect($url);
     }
 
     public function onGetOpenemisNo(Event $event, Entity $entity) {
@@ -206,6 +268,7 @@ class RegisteredStudentsBehavior extends Behavior {
                     $model->aliasField('examination_id') => $entity->examination_id,
                     $model->aliasField('student_id') => $entity->student_id
                 ])
+                ->order(['EducationSubjects.order'])
                 ->toArray();
 
             foreach ($examinationStudents as $key => $obj) {
@@ -226,8 +289,8 @@ class RegisteredStudentsBehavior extends Behavior {
             $cellCount = 0;
 
             $form->unlockField($attr['model'] . '.education_subjects');
-            $subjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-            $arraySubjects = $subjectStudents->find()
+            $ExaminationItems = TableRegistry::get('Examination.ExaminationItems');
+            $arraySubjects = $ExaminationItems->find()
                 ->select([
                     'education_subject_id' => 'EducationSubjects.id',
                     'code' => 'EducationSubjects.code',
@@ -237,19 +300,13 @@ class RegisteredStudentsBehavior extends Behavior {
                 ->leftJoin(
                     [$model->alias() => $model->table()],
                     [
-                        $model->aliasField('student_id = ') . $subjectStudents->aliasField('student_id'),
-                        $model->aliasField('institution_id = ') . $subjectStudents->aliasField('institution_id'),
-                        $model->aliasField('academic_period_id = ') . $subjectStudents->aliasField('academic_period_id'),
-                        $model->aliasField('education_subject_id = ') . $subjectStudents->aliasField('education_subject_id')
+                        $model->aliasField('education_subject_id = ') . $ExaminationItems->aliasField('education_subject_id'),
+                        $model->aliasField('examination_id') => $entity->examination_id
                     ]
                 )
                 ->matching('EducationSubjects')
-                ->where([
-                    $subjectStudents->aliasField('student_id') => $entity->student_id,
-                    $subjectStudents->aliasField('institution_id') => $entity->institution_id,
-                    $subjectStudents->aliasField('academic_period_id') => $entity->academic_period_id
-                ])
-                ->group([$subjectStudents->aliasField('education_subject_id')])
+                ->where([$ExaminationItems->aliasField('examination_id') => $entity->examination_id])
+                ->group([$ExaminationItems->aliasField('education_subject_id')])
                 ->order(['EducationSubjects.order'])
                 ->toArray();
 
@@ -368,21 +425,10 @@ class RegisteredStudentsBehavior extends Behavior {
         return $examinationOptions;
     }
 
-    public function getExaminationItemOptions($selectedExamination) {
-        $ExaminationItems = TableRegistry::get('Examination.ExaminationItems');
-        $subjectOptions = $ExaminationItems
-            ->find('list', ['keyField' => 'education_subject.id', 'valueField' => 'education_subject.name'])
-            ->contain(['EducationSubjects'])
-            ->where([$ExaminationItems->aliasField('examination_id') => $selectedExamination])
-            ->toArray();
-
-        return $subjectOptions;
-    }
-
     public function setupFields(Entity $entity, ArrayObject $extra) {
         $model = $this->_table;
         $model->field('examination_centre_id', ['visible' => false]);
-        $model->field('education_subject_id', ['visible' => false]);
+        $model->field('education_grade_id', ['visible' => false]);
         $model->field('academic_period_id', ['type' => 'select', 'entity' => $entity]);
         $model->field('examination_id', ['type' => 'select', 'entity' => $entity]);
         $model->field('openemis_no', ['entity' => $entity]);
