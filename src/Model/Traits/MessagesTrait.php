@@ -536,6 +536,9 @@ trait MessagesTrait {
         'ExaminationStudents' => [
             'restrictAdd' => 'Add operation is not allowed.'
         ],
+        'ExaminationNotRegisteredStudents' => [
+            'restrictAdd' => 'Add operation is not allowed.'
+        ],
 
         // Validation Messages
         'Institution' => [

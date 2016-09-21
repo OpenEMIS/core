@@ -1,4 +1,4 @@
-<?php if (!empty($academicPeriodOptions) || !empty($examinationOptions) || !empty($subjectOptions)) : ?>
+<?php if (!empty($academicPeriodOptions) || !empty($examinationOptions)) : ?>
     <div class="toolbar-responsive panel-toolbar">
         <div class="toolbar-wrapper">
             <?php
@@ -30,18 +30,6 @@
                         'url' => $baseUrl,
                         'data-named-key' => 'examination_id',
                         'data-named-group' => 'academic_period_id'
-                    ));
-                }
-
-                if (!empty($subjectOptions)) {
-                    echo $this->Form->input('education_subject', array(
-                        'class' => 'form-control',
-                        'label' => false,
-                        'options' => $subjectOptions,
-                        'default' => $selectedSubject,
-                        'url' => $baseUrl,
-                        'data-named-key' => 'education_subject_id',
-                        'data-named-group' => 'academic_period_id,examination_id'
                     ));
                 }
             ?>
