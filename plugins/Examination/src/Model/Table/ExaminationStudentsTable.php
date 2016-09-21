@@ -2,7 +2,9 @@
 namespace Examination\Model\Table;
 
 use ArrayObject;
+use Cake\ORM\Entity;
 use Cake\Event\Event;
+use Cake\Utility\Text;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 
@@ -20,6 +22,10 @@ class ExaminationStudentsTable extends ControllerActionTable {
         $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsToMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds']);
         $this->addBehavior('Examination.RegisteredStudents');
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+        $entity->id = Text::uuid();
     }
 
     public function beforeAction(Event $event, ArrayObject $extra) {
