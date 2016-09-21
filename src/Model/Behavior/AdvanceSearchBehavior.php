@@ -18,6 +18,7 @@ class AdvanceSearchBehavior extends Behavior {
 	protected $_defaultConfig = [
 		'display_country' => true,
 		'exclude' => ['id', 'modified_user_id', 'modified', 'created_user_id', 'created'],
+        'order' => []
 	];
 
 	public function initialize(array $config) {
@@ -47,7 +48,9 @@ class AdvanceSearchBehavior extends Behavior {
 **
 ******************************************************************************************************************/
 
-	public function afterAction(Event $event) {
+	public function afterAction(Event $event) 
+	{
+        $order = $this->config('order');
 		if ($this->_table->action == 'index') {
 		    $labels = TableRegistry::get('Labels');
 			$filters = [];
@@ -106,7 +109,7 @@ class AdvanceSearchBehavior extends Behavior {
 					}
 				}
 			}
-
+            
 			if (array_key_exists('belongsTo', $advanceSearchModelData)) {
 				foreach ($advanceSearchModelData['belongsTo'] as $field => $value) {
 					if (!empty($value) && $advancedSearch == false) {
@@ -131,9 +134,18 @@ class AdvanceSearchBehavior extends Behavior {
 	        // trigger events for additional searchable fields
 	        $this->_table->dispatchEvent('AdvanceSearch.onSetupFormField', [$searchables, $advanceSearchModelData], $this);
 
-			$this->_table->controller->viewVars['indexElements']['advanced_search'] = [
+            if (empty($order)) { //if no order declared, then build the default order.
+                foreach ($filters as $key=>$filter) {
+                    $order[] = $key;
+                }
+                foreach ($searchables as $key=>$searchable) {
+                    $order[] = $key;
+                }
+            }
+
+            $this->_table->controller->viewVars['indexElements']['advanced_search'] = [
 	            'name' => 'advanced_search',
-	            'data' => compact('filters', 'searchables', 'advancedSearch'),
+	            'data' => compact('filters', 'searchables', 'order', 'advancedSearch'),
 	            'options' => [],
 	            'order' => 0
 	        ];

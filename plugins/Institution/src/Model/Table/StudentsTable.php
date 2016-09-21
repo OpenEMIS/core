@@ -31,10 +31,7 @@ class StudentsTable extends AppTable {
 		$this->belongsTo('EducationGrades',	['className' => 'Education.EducationGrades']);
 		$this->belongsTo('Institutions',	['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('AcademicPeriods',	['className' => 'AcademicPeriod.AcademicPeriods']);
-
-
-
-
+        
 		// Behaviors
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 		$this->addBehavior('AcademicPeriod.Period');
@@ -81,6 +78,11 @@ class StudentsTable extends AppTable {
 		 * AdvanceSearchBehavior must be included first before adding other types of advance search.
 		 * If no "belongsTo" relation from the main model is needed, include its foreign key name in AdvanceSearch->exclude options.
 		 */
+        $advancedSearchFieldOrder = [
+            'first_name', 'middle_name', 'third_name', 'last_name', 
+            'contact_number', 'identity_type', 'identity_number'
+        ];
+        
 		$this->addBehavior('AdvanceSearch', [
 			'exclude' => [
 				'student_id',
@@ -88,8 +90,10 @@ class StudentsTable extends AppTable {
 				'education_grade_id',
 				'academic_period_id',
 				'student_status_id',
-			]
+			],
+			'order' => $advancedSearchFieldOrder
 		]);
+
 		$this->addBehavior('User.AdvancedIdentitySearch', [
 			'associatedKey' => $this->aliasField('student_id')
 		]);
@@ -612,17 +616,33 @@ class StudentsTable extends AppTable {
 			$indexElements = $this->controller->viewVars['indexElements'];
 			
 			$indexElements[] = ['name' => 'Institution.Students/controls', 'data' => [], 'options' => [], 'order' => 0];
-			
-			$indexElements[] = [
-				'name' => $indexDashboard,
-				'data' => [
-					'model' => 'students',
-					'modelCount' => $studentCount,
-					'modelArray' => $InstitutionArray,
-				],
-				'options' => [],
-				'order' => 2
-			];
+
+            //logic to hide dashboard if there advanced search value.
+            $showDashboard = true;
+            foreach ($this->request->data['AdvanceSearch'][$this->alias()] as $key => $value) {
+                if (!empty($value)) {
+                    foreach ($value as $key => $searchValue) {
+                        if (!empty($searchValue)){
+                            $showDashboard = false;
+                            break;
+                        }
+                    }
+                }                
+            }
+
+            if ($showDashboard) {
+    			$indexElements[] = [
+    				'name' => $indexDashboard,
+    				'data' => [
+    					'model' => 'students',
+    					'modelCount' => $studentCount,
+    					'modelArray' => $InstitutionArray,
+    				],
+    				'options' => [],
+    				'order' => 2
+    			];
+            }
+
 			foreach ($indexElements as $key => $value) {
 				if ($value['name']=='advanced_search') {
 					$indexElements[$key]['order'] = 1;
