@@ -29,7 +29,6 @@ use Cake\Utility\Inflector;
                         </select>
                     </div>	  
                 </div>
-
     <?php 
             } else if (array_key_exists($field, $searchables)) {
                 if (array_key_exists('type', $searchables[$field])) {
@@ -48,17 +47,17 @@ use Cake\Utility\Inflector;
                             </div>    
                         </div>
 
-        <?php      }
+    <?php      
+                    }
                 } else { 
-        ?>
+    ?>
                     <div class="text" style="margin-bottom:10px;">
                         <label for="advancesearch-directories-identity-number"><?= $searchables[$field]['label'] ?>:</label>
 
                         <input type="text" name="AdvanceSearch[<?= $model ?>][hasMany][<?= $field ?>]" class="form-control focus" id="advancesearch-<?= strtolower($model) ?>-<?= Inflector::dasherize($field) ?>" value="<?= $searchables[$field]['value'] ?>" />
                     </div>
-        <?php 
+    <?php 
                 }
-
             }
         } 
     ?>
