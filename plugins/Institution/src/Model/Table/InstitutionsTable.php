@@ -399,16 +399,32 @@ class InstitutionsTable extends AppTable  {
 			$indexDashboard = 'dashboard';
 			$count = $institutionCount->count();
 			unset($institutionCount);
-			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
-	            'name' => $indexDashboard,
-	            'data' => [
-	            	'model' => 'institutions',
-	            	'modelCount' => $count,
-	            	'modelArray' => $institutionArray,
-	            ],
-	            'options' => [],
-	            'order' => 1
-	        ];
+
+			//logic to hide dashboard if there advanced search value.
+            $showDashboard = true;
+            foreach ($this->request->data['AdvanceSearch'][$this->alias()] as $key => $value) {
+                if (!empty($value)) {
+                    foreach ($value as $key => $searchValue) {
+                        if (!empty($searchValue)){
+                            $showDashboard = false;
+                            break;
+                        }
+                    }
+                }                
+            }
+
+            if ($showDashboard) {
+				$this->controller->viewVars['indexElements']['mini_dashboard'] = [
+		            'name' => $indexDashboard,
+		            'data' => [
+		            	'model' => 'institutions',
+		            	'modelCount' => $count,
+		            	'modelArray' => $institutionArray,
+		            ],
+		            'options' => [],
+		            'order' => 1
+		        ];
+            }
 	    }
 	    $config['formButtons'] = false;
 	}
