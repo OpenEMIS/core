@@ -35,7 +35,19 @@
                                     <td><?= $obj->user->openemis_no ?></td>
                                     <td><?= $obj->user->name ?></td>
                                     <td><?= $obj->_matchingData['EducationGrades']->programme_grade_name ?></td>
-                                    <td><?= isset($obj->_matchingData['SpecialNeedTypes']) ? $obj->_matchingData['SpecialNeedTypes']->name : '' ?></td>
+                                    <td>
+                                        <?php
+                                            $specialNeeds = '';
+                                            if (isset($obj->user->special_needs)) {
+                                                foreach ($obj->user->special_needs as $key => $item) {
+                                                    $specialNeeds .= $item->special_need_type->name . ', ';
+                                                }
+
+                                                $specialNeeds = rtrim($specialNeeds, ', ');
+                                            }
+                                            echo $specialNeeds;
+                                        ?>
+                                    </td>
                                 </tr>
                             <?php
                                 $studentCount++;
