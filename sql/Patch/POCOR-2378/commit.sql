@@ -144,25 +144,25 @@ CREATE TABLE `examination_centre_special_needs` (
   KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the special needs for a particular examination centre';
 
-CREATE TABLE `examination_students` (
+CREATE TABLE `examination_centre_students` (
   `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
   `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
   `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
+  `education_grade_id` int(11) NOT NULL COMMENT 'links to education_grades.id',
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_period.id',
   `examination_id` int(11) NOT NULL COMMENT 'links to examination.id',
-  `examination_centre_id` INT(11) NOT NULL COMMENT 'links to examination_centres.id',
-  `education_subject_id` INT(11) NOT NULL COMMENT 'links to `education_subjects.id',
+  `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
+  `education_subject_id` int(11) NOT NULL COMMENT 'links to `education_subjects.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `student_id` (`student_id`),
+  PRIMARY KEY (`student_id`,`examination_centre_id`,`education_subject_id`),
+  UNIQUE KEY `id` (`id`),
   KEY `institution_id` (`institution_id`),
+  KEY `education_grade_id` (`education_grade_id`),
   KEY `academic_period_id` (`academic_period_id`),
   KEY `examination_id` (`examination_id`),
-  KEY `examination_centre_id` (`examination_centre_id`),
-  KEY `education_subject_id` (`education_subject_id`),
   KEY `modified_user_id` (`modified_user_id`),
   KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the students registered to an examination center for a particular examination';
