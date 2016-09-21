@@ -46,7 +46,7 @@ class ExaminationCentresTable extends ControllerActionTable {
         $validator = parent::validationDefault($validator);
         $validator
             ->requirePresence('create_as', 'create')
-            ->requirePresence('subjects', 'create')
+            // ->requirePresence('subjects', 'create')
             ->requirePresence('institutions', 'create');
 
         return $validator;
@@ -243,22 +243,31 @@ class ExaminationCentresTable extends ControllerActionTable {
                 $examinationId = $attr['entity']->examination_id;
             }
             $ExaminationItemsTable = $this->Examinations->ExaminationItems;
-                $attr['options'] = $ExaminationItemsTable
-                    ->find('list', [
-                        'keyField' => 'subject_id',
-                        'valueField' => 'subject_name'
-                    ])
-                    ->matching('EducationSubjects')
-                    ->select([
-                        'subject_name' => 'EducationSubjects.name',
-                        'subject_id' => $ExaminationItemsTable->aliasField('education_subject_id')
-                    ])
-                    ->where([
-                        $ExaminationItemsTable->aliasField('examination_id') => $examinationId
-                    ])
-                    ->toArray();
-            $attr['empty'] = false;
-            $attr['fieldName'] = $this->alias().'.subjects';
+
+            $options = $ExaminationItemsTable
+                ->find('list', [
+                    'keyField' => 'subject_id',
+                    'valueField' => 'subject_name'
+                ])
+                ->matching('EducationSubjects')
+                ->select([
+                    'subject_name' => 'EducationSubjects.name',
+                    'subject_id' => $ExaminationItemsTable->aliasField('education_subject_id')
+                ])
+                ->where([
+                    $ExaminationItemsTable->aliasField('examination_id') => $examinationId
+                ])
+                ->toArray();
+
+            foreach ($options as $key => $name) {
+                $options[$key] = __($name);
+            }
+
+            $attr['type'] = 'text';
+            $attr['attr']['value'] = implode(', ', $options);
+            $attr['attr']['disabled'] = 'disabled';
+            // $attr['empty'] = false;
+            // $attr['fieldName'] = $this->alias().'.subjects';
         } else if ($action == 'edit') {
             $entity = $attr['entity'];
             $subjects = [];
@@ -344,7 +353,22 @@ class ExaminationCentresTable extends ControllerActionTable {
         $examinationId = $requestData[$this->alias()]['examination_id'];
 
         // Subjects logic
-        $subjects = $requestData[$this->alias()]['subjects'];
+        // $subjects = $requestData[$this->alias()]['subjects'];
+        $ExaminationItemsTable = $this->Examinations->ExaminationItems;
+        $subjects = $ExaminationItemsTable
+                ->find('list', [
+                    'keyField' => 'subject_id',
+                    'valueField' => 'subject_id'
+                ])
+                ->matching('EducationSubjects')
+                ->select([
+                    'subject_id' => $ExaminationItemsTable->aliasField('education_subject_id')
+                ])
+                ->where([
+                    $ExaminationItemsTable->aliasField('examination_id') => $examinationId
+                ])
+                ->toArray();
+
         $examinationCentreSubjects = [];
         if (is_array($subjects)) {
             foreach($subjects as $subject) {
@@ -374,6 +398,14 @@ class ExaminationCentresTable extends ControllerActionTable {
         }
 
         $requestData[$this->alias()]['examination_centre_special_needs'] = $examinationCentreSpecialNeeds;
+        $patchOptions['associated'] = [
+            'ExaminationCentreSubjects' => [
+                'validate' => false
+            ],
+            'ExaminationCentreSpecialNeeds' => [
+                'validate' => false
+            ],
+        ];
     }
 
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
@@ -382,6 +414,16 @@ class ExaminationCentresTable extends ControllerActionTable {
             if ($entity->has('institutions')) {
                 $institutions = $entity->institutions;
                 $newEntities = [];
+                $patchOptions = [
+                    'associated' => [
+                        'ExaminationCentreSubjects' => [
+                            'validate' => false
+                        ],
+                        'ExaminationCentreSpecialNeeds' => [
+                            'validate' => false
+                        ],
+                    ]
+                ];
                 if (is_array($institutions)) {
                     foreach ($institutions as $institution) {
                         $institutionRecord = $model->Institutions->get($institution);
@@ -396,7 +438,8 @@ class ExaminationCentresTable extends ControllerActionTable {
                         $requestData['fax'] = $institutionRecord->fax;
                         $requestData['email'] = $institutionRecord->email;
                         $requestData['website'] = $institutionRecord->website;
-                        $newEntities[] = $model->newEntity($requestData->getArrayCopy());
+
+                        $newEntities[] = $model->newEntity($requestData->getArrayCopy(), $patchOptions);
                     }
                 }
                 return $model->saveMany($newEntities);
