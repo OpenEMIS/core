@@ -345,6 +345,7 @@ class HtmlFieldHelper extends Helper {
 		}
 		$session = $this->request->session();
 		$session->write('FormTampering.'.$fieldName, $arrayKeys);
+		$options['type'] = 'select';
 		$value = $this->Form->input($fieldName, $options);
 		return $value;
 	}
