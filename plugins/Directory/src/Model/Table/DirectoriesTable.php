@@ -37,12 +37,19 @@ class DirectoriesTable extends AppTable {
 
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
-		$this->addBehavior('AdvanceSearch');
 		$this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
 		$this->addBehavior('User.AdvancedIdentitySearch');
 		$this->addBehavior('User.AdvancedContactNumberSearch');
 		$this->addBehavior('User.AdvancedPositionSearch');
 		$this->addBehavior('User.AdvancedSpecificNameTypeSearch');
+
+        //specify order of advanced search fields
+        $advancedSearchFieldOrder = [
+            'first_name', 'middle_name', 'third_name', 'last_name', 
+            'gender_id', 'contact_number', 'birthplace_area_id', 'address_area_id', 'position', 
+            'identity_type', 'identity_number'
+        ];
+        $this->addBehavior('AdvanceSearch', ['order' => $advancedSearchFieldOrder]);
 
 		$this->addBehavior('HighChart', [
 			'user_gender' => [
@@ -277,18 +284,34 @@ class DirectoriesTable extends AppTable {
 			$indexElements = $this->controller->viewVars['indexElements'];
 			
 			$indexElements[] = ['name' => 'Directory.Users/controls', 'data' => [], 'options' => [], 'order' => 0];
+
+            //logic to hide dashboard if there advanced search value.
+            $showDashboard = true;
+            foreach ($this->request->data['AdvanceSearch'][$this->alias()] as $key => $value) {
+                if (!empty($value)) {
+                    foreach ($value as $key => $searchValue) {
+                        if (!empty($searchValue)){
+                            $showDashboard = false;
+                            break;
+                        }
+                    }
+                }                
+            }
+
+            if ($showDashboard) {
+                $indexElements[] = [
+                    'name' => $indexDashboard,
+                    'data' => [
+                        'model' => $dashboardModel,
+                        'modelCount' => $userCount->count(),
+                        'modelArray' => $userArray,
+                        'iconClass' => $iconClass
+                    ],
+                    'options' => [],
+                    'order' => 2
+                ];
+            }
 			
-			$indexElements[] = [
-				'name' => $indexDashboard,
-				'data' => [
-					'model' => $dashboardModel,
-					'modelCount' => $userCount->count(),
-					'modelArray' => $userArray,
-					'iconClass' => $iconClass
-				],
-				'options' => [],
-				'order' => 2
-			];
 			foreach ($indexElements as $key => $value) {
 				if ($value['name']=='advanced_search') {
 					$indexElements[$key]['order'] = 1;
