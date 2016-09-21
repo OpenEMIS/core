@@ -14,4 +14,8 @@ class ExaminationCentreSpecialNeedsTable extends ControllerActionTable {
         parent::initialize($config);
         $this->belongsTo('SpecialNeedTypes', ['className' => 'FieldOption.SpecialNeedTypes']);
     }
+
+    public function validationRemoveCentreId(Validator $validation){
+        return $validation->requirePresence('examination_centre_id', false);
+    }
 }
