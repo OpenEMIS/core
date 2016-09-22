@@ -166,3 +166,8 @@ CREATE TABLE `examination_centre_students` (
   KEY `modified_user_id` (`modified_user_id`),
   KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the students registered to an examination center for a particular examination';
+
+-- security_functions
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `order`, `visible`, `created_user_id`, `created`) VALUES (1045, 'Exams', 'Institutions', 'Institutions', 'Examinations', '1000', 'Exams.index|Exams.view', 1045, 1, 1, NOW());
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES (1046, 'Students', 'Institutions', 'Institutions', 'Examinations', '1000', 'ExaminationStudents.index|ExaminationStudents.view', null, 'ExaminationStudents.add', null, 'UndoExaminationRegistration.add|UndoExaminationRegistration.reconfirm|ExaminationStudents.unregister', 1046, 1, 1, NOW());
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES (5044, 'Exams', 'Administrations', 'Examinations', 'Examinations', '5000', 'Exams.index|Exams.view', 'Exams.edit', 'Exams.add', 'Exams.remove', null, 1046, 1, 1, NOW());
