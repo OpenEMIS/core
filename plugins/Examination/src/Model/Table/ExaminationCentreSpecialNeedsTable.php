@@ -1,21 +1,18 @@
 <?php
 namespace Examination\Model\Table;
 
-use App\Model\Table\ControllerActionTable;
+use App\Model\Table\AppTable;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use ArrayObject;
 use Cake\Validation\Validator;
 
-class ExaminationCentreSpecialNeedsTable extends ControllerActionTable {
+class ExaminationCentreSpecialNeedsTable extends AppTable {
 
     public function initialize(array $config)
     {
         parent::initialize($config);
+        $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('SpecialNeedTypes', ['className' => 'FieldOption.SpecialNeedTypes']);
-    }
-
-    public function validationRemoveCentreId(Validator $validation){
-        return $validation->requirePresence('examination_centre_id', false);
     }
 }
