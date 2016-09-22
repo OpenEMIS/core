@@ -533,7 +533,7 @@ class RegisteredStudentsBehavior extends Behavior {
         // temporary hide subjects
         // $model->field('subjects', ['type' => 'custom_subjects']);
 
-        $model->setFieldOrder(['academic_period_id', 'examination_id', 'openemis_no', 'student_id', 'institution_id', 'subjects']);
+        $model->setFieldOrder(['academic_period_id', 'examination_id', 'openemis_no', 'student_id', 'institution_id', 'special_needs']);
     }
 
     public function extractSpecialNeeds(Entity $entity) {

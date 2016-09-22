@@ -27,7 +27,9 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 
+        $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Examination.RegisteredStudents');
+
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
@@ -51,7 +53,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $extra['patchEntity'] = false;
+        // $extra['patchEntity'] = false;
     }
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -306,6 +308,12 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         }
 
         return $attr;
+    }
+
+    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    {
+        $requestData[$this->alias()]['student_id'] = 0;
+        $requestData[$this->alias()]['education_subject_id'] = 0;
     }
 
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
