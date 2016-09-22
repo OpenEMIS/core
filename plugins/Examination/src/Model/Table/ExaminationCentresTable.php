@@ -74,6 +74,21 @@ class ExaminationCentresTable extends ControllerActionTable {
         return $validator;
     }
 
+    public function findBySpecialNeeds(Query $query, array $options)
+    {
+        $selectedSpecialNeeds = $options['selectedSpecialNeeds'];
+        $query
+            ->select(['count' => $this->find()->func()->count('*')])
+            ->matching('ExaminationCentreSpecialNeeds')
+            ->where([
+                $this->ExaminationCentreSpecialNeeds->aliasField('special_need_type_id IN') => $selectedSpecialNeeds
+            ])
+            ->group($this->aliasField('id'))
+            ->having(['count =' => count($selectedSpecialNeeds)])
+            ->autoFields(true);
+        return $query;
+    }
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('institution_id', ['visible' => false]);

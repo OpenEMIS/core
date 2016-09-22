@@ -534,6 +534,19 @@ trait MessagesTrait {
         'CustomForms' => [
             'notSupport' => 'Not supported in this form.'
         ],
+        'ExaminationStudents' => [
+            'restrictAdd' => 'Add operation is not allowed.'
+        ],
+        'ExaminationNotRegisteredStudents' => [
+            'restrictAdd' => 'Add operation is not allowed.'
+        ],
+        'UndoExaminationRegistration' => [
+            'success' => 'Undo of student examination registration is successful.',
+            'fail' => 'Undo of student examination registration is successful.'
+        ],
+        'InstitutionExaminationStudents' => [
+            'notAvailableForRegistration' => 'Not available for registration'
+        ],
 
         // Validation Messages
         'Institution' => [
