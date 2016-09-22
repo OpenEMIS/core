@@ -15,6 +15,10 @@ use Cake\Log\Log;
 class RegisteredStudentsBehavior extends Behavior {
 	public function initialize(array $config) {
 		parent::initialize($config);
+
+        $model = $this->_table;
+        $model->toggle('edit', false); // temporary not allow edit
+        $model->toggle('remove', false);
 	}
 
     public function implementedEvents() {
@@ -24,35 +28,106 @@ class RegisteredStudentsBehavior extends Behavior {
         $events['ControllerAction.Model.index.afterAction'] = 'indexAfterAction';
         $events['ControllerAction.Model.viewEdit.beforeQuery'] = 'viewEditBeforeQuery';
         $events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
-        $events['ControllerAction.Model.add.beforeAction'] = 'addBeforeAction';
-        $events['ControllerAction.Model.edit.beforeAction'] = 'editBeforeAction';
         $events['ControllerAction.Model.edit.beforeSave'] = 'editBeforeSave';
         $events['ControllerAction.Model.edit.afterSave'] = 'editAfterSave';
         $events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
-        $events['ControllerAction.Model.delete.beforeAction'] = 'deleteBeforeAction';
+        $events['ControllerAction.Model.unregister'] = 'unregister';
+        $events['ControllerAction.Model.onGetFormButtons'] = 'onGetFormButtons';
         return $events;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra) {
-        // toolbar buttons: not allow to add
+    public function unregister(Event $event, ArrayObject $extra) {
+        $model = $this->_table;
+        $request = $model->request;
+        $extra['config']['form'] = true;
+        $extra['elements']['edit'] = ['name' => 'OpenEmis.ControllerAction/edit'];
+
+        // back button
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        if (array_key_exists('add', $toolbarButtonsArray)) {
-            unset($toolbarButtonsArray['add']);
-        }
+        $toolbarAttr = [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+        $toolbarButtonsArray['back']['type'] = 'button';
+        $toolbarButtonsArray['back']['label'] = '<i class="fa kd-back"></i>';
+        $toolbarButtonsArray['back']['attr'] = $toolbarAttr;
+        $toolbarButtonsArray['back']['attr']['title'] = __('Back');
+        $toolbarButtonsArray['back']['url'] = $model->url('view');
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         // End
 
-        // index buttons: not allow to edit and delete
-        $indexButtonsArray = $extra['indexButtons']->getArrayCopy();
-        if (array_key_exists('edit', $indexButtonsArray)) {
-            unset($indexButtonsArray['edit']);
-        }
-        if (array_key_exists('remove', $indexButtonsArray)) {
-            unset($indexButtonsArray['remove']);
-        }
-        $extra['indexButtons']->exchangeArray($indexButtonsArray);
-        // End
+        $primaryKey = $model->getPrimaryKey();
+        $idKey = $model->aliasField($primaryKey);
+        $id = $model->paramsPass(0);
+        $entity = false;
 
+        if ($model->exists([$idKey => $id])) {
+            $query = $model->find()->where([$idKey => $id]);
+
+            $query
+                ->contain(['Users.SpecialNeeds.SpecialNeedTypes'])
+                ->matching('AcademicPeriods')
+                ->matching('Examinations')
+                ->matching('Institutions');
+
+            $entity = $query->first();
+        }
+
+        if ($entity) {
+            if ($request->is(['get'])) {
+                // get
+                $model->Alert->info('general.reconfirm', ['reset' => true]);
+            } else if ($request->is(['post', 'put'])) {
+                $requestData = $request->data;
+
+                $studentId = $entity->student_id;
+                $educationGradeId = $entity->education_grade_id;
+                $academicPeriodId = $entity->academic_period_id;
+                $examinationId = $entity->examination_id;
+
+                $result = $model->deleteAll([
+                    'student_id' => $studentId,
+                    'education_grade_id' => $educationGradeId,
+                    'academic_period_id' => $academicPeriodId,
+                    'examination_id' => $examinationId
+                ]);
+
+                if ($result) {
+                    $model->Alert->success('general.delete.success', ['reset' => 'override']);
+                } else {
+                    $model->Alert->error('general.delete.failed', ['reset' => 'override']);
+                }
+
+                $event->stopPropagation();
+                return $model->controller->redirect($model->url('index', 'QUERY'));
+            }
+
+            $model->controller->set('data', $entity);
+        }
+
+        $this->setupFields($entity, $extra);
+
+        if (!$entity) {
+            $event->stopPropagation();
+            return $model->controller->redirect($model->url('index', 'QUERY'));
+        }
+
+        return $entity;
+    }
+
+    public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+        $model = $this->_table;
+        switch ($model->action) {
+            case 'unregister':
+                $buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Unregister');
+                $buttons[1]['url'] = $model->url('view');
+                break;
+        }
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra) {
         $model = $this->_table;
         $model->field('openemis_no', ['sort' => true]);
         $model->field('student_id', [
@@ -100,64 +175,54 @@ class RegisteredStudentsBehavior extends Behavior {
         $session = $model->request->session();
 
         $successSessionKey = $model->registryAlias() . '.success';
+        $errorSessionKey = $model->registryAlias() . '.error';
         $warningSessionKey = $model->registryAlias() . '.warning';
 
         if ($session->check($successSessionKey)) {
             $successKey = $session->read($successSessionKey);
             $model->Alert->success($successKey);
-            $session->delete($successSessionKey);
+        } else if ($session->check($errorSessionKey)) {
+            $errorKey = $session->read($errorSessionKey);
+            $model->Alert->error($errorKey);
         } else if ($session->check($warningSessionKey)) {
             $warningKey = $session->read($warningSessionKey);
             $model->Alert->warning($warningKey);
-            $session->delete($warningSessionKey);
         }
+
+        $session->delete($successSessionKey);
+        $session->delete($errorSessionKey);
+        $session->delete($warningSessionKey);
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
         $query
+            ->contain(['Users.SpecialNeeds.SpecialNeedTypes'])
             ->matching('AcademicPeriods')
             ->matching('Examinations')
-            ->matching('Users')
             ->matching('Institutions');
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
-        // not allow to edit and delete
+        $model = $this->_table;
+
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        if (array_key_exists('edit', $toolbarButtonsArray)) {
-            unset($toolbarButtonsArray['edit']);
-        }
-        if (array_key_exists('remove', $toolbarButtonsArray)) {
-            unset($toolbarButtonsArray['remove']);
-        }
-        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+
+        // unregister button
+        $url = $model->url('view');
+        $url[0] = 'unregister';
+
+        $unregisterButton = $toolbarButtonsArray['back'];
+        $unregisterButton['label'] = '<i class="fa fa-undo"></i>';
+        $unregisterButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+        $unregisterButton['attr']['title'] = __('Unregister');
+        $unregisterButton['url'] = $url;
+
+        $toolbarButtonsArray['unregister'] = $unregisterButton;
         // End
 
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+
         $this->setupFields($entity, $extra);
-    }
-
-    public function addBeforeAction(Event $event, ArrayObject $extra) {
-        $model = $this->_table;
-
-        $session = $model->request->session();
-        $sessionKey = $model->registryAlias() . '.warning';
-        $session->write($sessionKey, $model->aliasField('restrictAdd'));
-
-        $url = $model->url('index');
-        $event->stopPropagation();
-        return $model->controller->redirect($url);
-    }
-
-    public function editBeforeAction(Event $event, ArrayObject $extra) {
-        $model = $this->_table;
-
-        $session = $model->request->session();
-        $sessionKey = $model->registryAlias() . '.warning';
-        $session->write($sessionKey, 'general.notEditable');
-
-        $url = $model->url('index');
-        $event->stopPropagation();
-        return $model->controller->redirect($url);
     }
 
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra) {
@@ -220,7 +285,7 @@ class RegisteredStudentsBehavior extends Behavior {
         $sessionKey = $model->registryAlias() . '.success';
         $session->write($sessionKey, 'general.edit.success');
 
-        $url = $model->url('index', false);
+        $url = $model->url('index', 'QUERY');
         $url['academic_period_id'] = $entity->academic_period_id;
         $url['examination_id'] = $entity->examination_id;
 
@@ -232,32 +297,27 @@ class RegisteredStudentsBehavior extends Behavior {
         $this->setupFields($entity, $extra);
     }
 
-    public function deleteBeforeAction(Event $event, ArrayObject $extra) {
-        $model = $this->_table;
-
-        $session = $model->request->session();
-        $sessionKey = $model->registryAlias() . '.warning';
-        $session->write($sessionKey, 'general.delete.restrictDelete');
-
-        $url = $model->url('index');
-        $event->stopPropagation();
-        return $model->controller->redirect($url);
-    }
-
     public function onGetOpenemisNo(Event $event, Entity $entity) {
         $value = '';
-        if ($entity->has('_matchingData')) {
-            $value = $entity->_matchingData['Users']->openemis_no;
-        } else if ($entity->has('user')) {
+        if ($entity->has('user')) {
             $value = $entity->user->openemis_no;
+        } else if ($entity->has('_matchingData')) {
+            $value = $entity->_matchingData['Users']->openemis_no;
         }
 
         return $value;
     }
 
+    public function onGetSpecialNeeds(Event $event, Entity $entity) {
+        $specialNeeds = $this->extractSpecialNeeds($entity);
+
+        return implode(", ", $specialNeeds);
+    }
+
     public function onGetCustomSubjectsElement(Event $event, $action, $entity, $attr, $options=[]) {
         $model = $this->_table;
 
+        $action = $model->action == 'unregister' ? 'view' : $action;
         if ($action == 'view') {
             $tableHeaders = [__('Name'), __('Code'), __('Examination Centre')];
             $tableCells = [];
@@ -357,7 +417,7 @@ class RegisteredStudentsBehavior extends Behavior {
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
-        if ($action == 'edit') {
+        if ($action == 'edit' || $action == 'unregister') {
             $entity = $attr['entity'];
 
             $attr['type'] = 'readonly';
@@ -369,7 +429,7 @@ class RegisteredStudentsBehavior extends Behavior {
     }
 
     public function onUpdateFieldExaminationId(Event $event, array $attr, $action, Request $request) {
-        if ($action == 'edit') {
+        if ($action == 'edit' || $action == 'unregister') {
             $entity = $attr['entity'];
 
             $attr['type'] = 'readonly';
@@ -381,10 +441,10 @@ class RegisteredStudentsBehavior extends Behavior {
     }
 
     public function onUpdateFieldOpenemisNo(Event $event, array $attr, $action, Request $request) {
-        if ($action == 'edit') {
+        if ($action == 'edit' || $action == 'unregister') {
             $entity = $attr['entity'];
 
-            $openemisNo = $entity->_matchingData['Users']->openemis_no;
+            $openemisNo = $entity->user->openemis_no;
             $attr['type'] = 'readonly';
             $attr['value'] = $openemisNo;
             $attr['attr']['value'] = $openemisNo;
@@ -394,24 +454,39 @@ class RegisteredStudentsBehavior extends Behavior {
     }
 
     public function onUpdateFieldStudentId(Event $event, array $attr, $action, Request $request) {
-        if ($action == 'edit') {
+        if ($action == 'edit' || $action == 'unregister') {
             $entity = $attr['entity'];
 
             $attr['type'] = 'readonly';
             $attr['value'] = $entity->student_id;
-            $attr['attr']['value'] = $entity->_matchingData['Users']->name;
+            $attr['attr']['value'] = $entity->user->name;
         }
 
         return $attr;
     }
 
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request) {
-        if ($action == 'edit') {
+        if ($action == 'edit' || $action == 'unregister') {
             $entity = $attr['entity'];
 
             $attr['type'] = 'readonly';
             $attr['value'] = $entity->institution_id;
             $attr['attr']['value'] = $entity->_matchingData['Institutions']->name;
+        }
+
+        return $attr;
+    }
+
+    public function onUpdateFieldSpecialNeeds(Event $event, array $attr, $action, Request $request) {
+        if ($action == 'edit' || $action == 'unregister') {
+            $entity = $attr['entity'];
+
+            $specialNeeds = $this->extractSpecialNeeds($entity);
+            $value = implode(", ", $specialNeeds);
+
+            $attr['type'] = 'readonly';
+            $attr['value'] = $value;
+            $attr['attr']['value'] = $value;
         }
 
         return $attr;
@@ -436,8 +511,21 @@ class RegisteredStudentsBehavior extends Behavior {
         $model->field('openemis_no', ['entity' => $entity]);
         $model->field('student_id', ['type' => 'select', 'entity' => $entity]);
         $model->field('institution_id', ['type' => 'select', 'entity' => $entity]);
-        $model->field('subjects', ['type' => 'custom_subjects']);
+        $model->field('special_needs', ['type' => 'string', 'entity' => $entity]);
+        // temporary hide subjects
+        // $model->field('subjects', ['type' => 'custom_subjects']);
 
         $model->setFieldOrder(['academic_period_id', 'examination_id', 'openemis_no', 'student_id', 'institution_id', 'subjects']);
+    }
+
+    public function extractSpecialNeeds(Entity $entity) {
+        $specialNeeds = [];
+        if ($entity->has('user')) {
+            foreach ($entity->user->special_needs as $key => $obj) {
+                $specialNeeds[] = $obj->special_need_type->name;
+            }
+        }
+
+        return $specialNeeds;
     }
 }
