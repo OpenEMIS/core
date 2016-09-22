@@ -51,7 +51,8 @@ class ExaminationCentresTable extends ControllerActionTable {
                 'rule' => ['numericPositive']
             ])
             ->add('code', 'ruleUnique', [
-                'rule' => ['uniqueCodeByFilter', 'examination_id']
+                'rule' => ['validateUnique', ['scope' => 'examination_id']],
+                'provider' => 'table'
             ])
             ->requirePresence('institutions', 'create');
 
@@ -195,7 +196,10 @@ class ExaminationCentresTable extends ControllerActionTable {
         } else if ($this->action == 'view') {
             $this->fields['area_id'] = array_merge($this->fields['area_id'], ['visible' => true, 'type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
             $this->field('special_need_types');
-            $this->field('subjects');
+            $this->field('subjects', [
+                'type' => 'element',
+                'element' => 'Examination.exam_centre_subjects'
+            ]);
             $this->fields['code']['visible'] = true;
             $this->fields['address']['visible'] = true;
             $this->fields['postal_code']['visible'] = true;
@@ -316,15 +320,6 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function onGetName(Event $event, Entity $entity)
     {
         return $entity->code_name;
-    }
-
-    public function onGetSubjects(Event $event, Entity $entity)
-    {
-        $subjects = [];
-        foreach ($entity->examination_centre_subjects as $subject) {
-            $subjects[] = __($subject->education_subject->name);
-        }
-        return implode('<br/>', $subjects);
     }
 
     public function onGetSpecialNeedTypes(Event $event, Entity $entity)
