@@ -18,6 +18,8 @@ class ExaminationCentreNotRegisteredStudentsTable extends ControllerActionTable 
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('Institutions',    ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+
+        $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Examination.NotRegisteredStudents');
     }
 
