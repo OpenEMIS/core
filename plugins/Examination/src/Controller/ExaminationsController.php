@@ -26,7 +26,7 @@ class ExaminationsController extends AppController
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentres']);
         // }
     }
-    public function Students() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationStudents']); }
+    public function Students() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreStudents']); }
     public function NotRegisteredStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationNotRegisteredStudents']); }
     // End
 

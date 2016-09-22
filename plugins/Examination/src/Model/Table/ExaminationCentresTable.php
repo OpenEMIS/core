@@ -16,16 +16,15 @@ class ExaminationCentresTable extends ControllerActionTable {
 
     public function initialize(array $config)
     {
-        $this->table('examination_centres');
         parent::initialize($config);
         $this->addBehavior('Area.Areapicker');
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
-        $this->hasMany('ExaminationCentreSubjects', ['className' => 'Examination.ExaminationCentreSubjects']);
-        $this->hasMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds']);
-        $this->hasMany('ExaminationStudents', ['className' => 'Examination.ExaminationStudents']);
+        $this->hasMany('ExaminationCentreSubjects', ['className' => 'Examination.ExaminationCentreSubjects', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ExaminationCentreStudents', ['className' => 'Examination.ExaminationCentreStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->behaviors()->get('ControllerAction')->config([
             'actions' => [
@@ -46,6 +45,8 @@ class ExaminationCentresTable extends ControllerActionTable {
         $validator = parent::validationDefault($validator);
         $validator
             ->requirePresence('create_as', 'create')
+            ->requirePresence('code')
+            ->requirePresence('name')
             ->add('capacity', 'ruleValidateNumeric', [
                 'rule' => ['numericPositive']
             ])
@@ -56,7 +57,16 @@ class ExaminationCentresTable extends ControllerActionTable {
 
     public function validationNoInstitutions(Validator $validator) {
         $validator = $this->validationDefault($validator);
-        $validator = $validator->requirePresence('institutions', false);
+        $validator = $validator
+            ->requirePresence('institutions', false)
+        return $validator;
+    }
+
+    public function validateInstitutions(Validator $validator) {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->requirePresence('code', false)
+            ->requirePresence('name', false);
         return $validator;
     }
 
@@ -284,6 +294,11 @@ class ExaminationCentresTable extends ControllerActionTable {
         return $attr;
     }
 
+    public function onGetName(Event $event, Entity $entity)
+    {
+        return $entity->code_name;
+    }
+
     public function onGetSubjects(Event $event, Entity $entity)
     {
         $subjects = [];
@@ -348,8 +363,19 @@ class ExaminationCentresTable extends ControllerActionTable {
             $requestData[$this->alias()]['area_id'] = 0;
         }
 
+        $patchOptions['associated'] = [
+            'ExaminationCentreSubjects' => [
+                'validate' => false
+            ],
+            'ExaminationCentreSpecialNeeds' => [
+                'validate' => false
+            ],
+        ];
+
         if ($requestData[$this->alias()]['create_as'] == 'new') {
             $patchOptions['validate'] = 'noInstitutions';
+        } else {
+            $patchOptions['validate'] = 'institutions';
         }
 
         $academicPeriodId = $requestData[$this->alias()]['academic_period_id'];
@@ -401,14 +427,7 @@ class ExaminationCentresTable extends ControllerActionTable {
         }
 
         $requestData[$this->alias()]['examination_centre_special_needs'] = $examinationCentreSpecialNeeds;
-        $patchOptions['associated'] = [
-            'ExaminationCentreSubjects' => [
-                'validate' => false
-            ],
-            'ExaminationCentreSpecialNeeds' => [
-                'validate' => false
-            ],
-        ];
+
     }
 
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
