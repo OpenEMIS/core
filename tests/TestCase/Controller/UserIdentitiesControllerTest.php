@@ -26,7 +26,20 @@ class UserIdentitiesControllerTest extends AppTestCase
         'app.custom_modules',
         'app.custom_forms',
         'app.custom_forms_fields',
-        'app.security_users'
+        // TestDelete needed
+        'app.security_users',
+        'app.student_custom_field_values',
+        'app.student_custom_fields',
+        'app.student_custom_forms_fields',
+        'app.survey_rules',
+        'app.survey_forms',
+        'app.institution_students',
+        'app.institution_custom_field_values',
+        'app.institution_custom_fields',
+        'app.institution_custom_forms_fields',
+        'app.institution_custom_forms_filters',
+        'app.institutions',
+        'app.labels'
     ];
 
     private $studentId = 1005;
@@ -140,25 +153,23 @@ class UserIdentitiesControllerTest extends AppTestCase
         $this->assertEquals(true, (!empty($lastInsertedRecord)));
     }
 
-    // public function testDeleteIdentities()
-    // {
-    //     $testUrl = $this->url('remove/' . $this->id);
+    public function testDeleteIdentities() {
+        $testUrl = $this->url('remove'); // Delete records with confirmation modal (delete modal)
 
-    //     $this->get($testUrl);
-    //     // $this->assertResponseCode(200);
+        $table = TableRegistry::get('User.Identities');
 
-    //     $table = TableRegistry::get('User.Identities');
+        $exists = $table->exists([$table->primaryKey() => $this->id]);
+        $this->assertTrue($exists);
 
-    //     $data = [
-    //         'id' => $this->id,
-    //         'number' => 312,
-    //         '_method' => 'DELETE'
-    //     ];
-    //     $this->postData($testUrl, $data);
+        $data = [
+            'id' => $this->id,
+            '_method' => 'DELETE'
+        ];
+        $this->postData($testUrl, $data);
 
-    //     // $table = TableRegistry::get('User.Identities');
-    //     $exists = $table->exists([$table->primaryKey() => $this->id]);
-    //     $this->assertFalse($exists);
-    // }
+        $exists = $table->exists([$table->primaryKey() => $this->id]);
+        $this->assertFalse($exists);
+    }
+
 
 }
