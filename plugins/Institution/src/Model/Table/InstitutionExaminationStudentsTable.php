@@ -345,7 +345,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                 }
                 return $model->saveMany($newEntities);
             } else {
-                return $model->save($entity);
+                $this->Alert->error('general.add.failed', ['reset' => 'override']);
+                return false;
             }
         };
 
