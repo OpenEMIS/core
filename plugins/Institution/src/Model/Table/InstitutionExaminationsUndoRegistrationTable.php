@@ -262,6 +262,23 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         $requestData[$this->alias()]['examination_centre_id'] = 0;
     }
 
+    public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+        switch ($this->action) {
+            case 'add':
+                $cancelUrl = $this->url('index');
+                $cancelUrl['action'] = 'ExaminationStudents';
+                $cancelUrl = array_diff_key($cancelUrl, $this->request->query);
+                $buttons[1]['url'] = $cancelUrl;
+                break;
+
+            case 'reconfirm':
+                $cancelUrl = $this->url('add');
+                $cancelUrl = array_diff_key($cancelUrl, $this->request->query);
+                $buttons[1]['url'] = $cancelUrl;
+                break;
+        }
+    }
+
     public function reconfirm(Event $event, ArrayObject $extra)
     {
         $extra['redirect'] = [
@@ -299,15 +316,12 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
 
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
     {
-        $extra['redirect'] = [
-            'plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'action' => 'UndoExaminationRegistration',
-            'reconfirm'
-        ];
+        $process = function ($model, $entity) {
+            return false;
+        };
 
         if (!empty($entity->errors())) {
-            return false;
+            return $process;
         }
 
         if ($entity->has('examination_students')) {
@@ -324,16 +338,23 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
             }
 
             if (!empty($selectedStudents)) {
+                $extra['redirect'] = [
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'UndoExaminationRegistration',
+                    'reconfirm'
+                ];
                 $session = $this->Session;
                 $session->write($this->registryAlias().'.confirm', $entity);
                 $session->write($this->registryAlias().'.confirmStudent', $selectedStudents);
                 $event->stopPropagation();
                 return $this->controller->redirect($extra['redirect']);
             }
-
-            return false;
+            $this->Alert->error('general.add.failed', ['reset' => 'override']);
+            return $process;
         } else {
-            return false;
+            $this->Alert->error('general.add.failed', ['reset' => 'override']);
+            return $process;
         }
     }
 }

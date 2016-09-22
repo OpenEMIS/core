@@ -7,6 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use Cake\ORM\Behavior;
+use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Log\Log;
 
@@ -24,27 +25,12 @@ class NotRegisteredStudentsBehavior extends Behavior {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
         $events['ControllerAction.Model.index.beforeQuery'] = 'indexBeforeQuery';
+        $events['ControllerAction.Model.view.beforeQuery'] = 'viewBeforeQuery';
+        $events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
         return $events;
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
-        // hide add button
-        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        if (array_key_exists('add', $toolbarButtonsArray)) {
-            unset($toolbarButtonsArray['add']);
-        }
-        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
-        // End
-
-        $indexButtonsArray = $extra['indexButtons']->getArrayCopy();
-        if (array_key_exists('edit', $indexButtonsArray)) {
-            unset($indexButtonsArray['edit']);
-        }
-        if (array_key_exists('remove', $indexButtonsArray)) {
-            unset($indexButtonsArray['remove']);
-        }
-        $extra['indexButtons']->exchangeArray($indexButtonsArray);
-
         $model = $this->_table;
         $model->field('openemis_no', ['sort' => true]);
         $model->field('student_id', [
@@ -119,6 +105,18 @@ class NotRegisteredStudentsBehavior extends Behavior {
             ->order([$model->Institutions->aliasField('name') => 'asc']);
     }
 
+    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+        $query
+            ->contain(['Users.SpecialNeeds.SpecialNeedTypes'])
+            ->matching('AcademicPeriods')
+            ->matching('EducationGrades')
+            ->matching('Institutions');
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+        $this->setupFields($entity, $extra);
+    }
+
     public function onGetOpenemisNo(Event $event, Entity $entity) {
         $value = '';
         if ($entity->has('user')) {
@@ -130,6 +128,42 @@ class NotRegisteredStudentsBehavior extends Behavior {
         return $value;
     }
 
+    public function onGetExaminationId(Event $event, Entity $entity) {
+        $value = '';
+        $model = $this->_table;
+        $examinationId = $model->request->query('examination_id');
+
+        if (!is_null($examinationId)) {
+            $Examinations = TableRegistry::get('Examination.Examinations');
+            $examination = $Examinations->find()->where([$Examinations->aliasField('id') => $examinationId])->first();
+            $value = $examination->name;
+        }
+
+        return $value;
+    }
+
+    public function onGetContactPerson(Event $event, Entity $entity) {
+        return $entity->institution->contact_person;
+    }
+
+    public function onGetTelephone(Event $event, Entity $entity) {
+        return $entity->institution->telephone;
+    }
+
+    public function onGetFax(Event $event, Entity $entity) {
+        return $entity->institution->fax;
+    }
+
+    public function onGetEmail(Event $event, Entity $entity) {
+        return $entity->institution->email;
+    }
+
+    public function onGetSpecialNeeds(Event $event, Entity $entity) {
+        $specialNeeds = $this->extractSpecialNeeds($entity);
+
+        return implode(", ", $specialNeeds);
+    }
+
     public function getExaminationOptions($selectedAcademicPeriod) {
         $Examinations = TableRegistry::get('Examination.Examinations');
         $examinationOptions = $Examinations
@@ -138,5 +172,36 @@ class NotRegisteredStudentsBehavior extends Behavior {
             ->toArray();
 
         return $examinationOptions;
+    }
+
+    public function setupFields(Entity $entity, ArrayObject $extra) {
+        $model = $this->_table;
+        $model->field('student_status_id', ['visible' => false]);
+        $model->field('education_grade_id', ['visible' => false]);
+        $model->field('start_date', ['visible' => false]);
+        $model->field('start_year', ['visible' => false]);
+        $model->field('end_date', ['visible' => false]);
+        $model->field('end_year', ['visible' => false]);
+        $model->field('end_year', ['visible' => false]);
+        $model->field('examination_id');
+        $model->field('openemis_no', ['entity' => $entity]);
+        $model->field('contact_person');
+        $model->field('telephone');
+        $model->field('fax');
+        $model->field('email');
+        $model->field('special_needs', ['type' => 'string', 'entity' => $entity]);
+
+        $model->setFieldOrder(['academic_period_id', 'examination_id', 'openemis_no', 'student_id', 'institution_id', 'contact_person', 'telephone', 'fax', 'email', 'special_needs']);
+    }
+
+    public function extractSpecialNeeds(Entity $entity) {
+        $specialNeeds = [];
+        if ($entity->has('user')) {
+            foreach ($entity->user->special_needs as $key => $obj) {
+                $specialNeeds[] = $obj->special_need_type->name;
+            }
+        }
+
+        return $specialNeeds;
     }
 }
