@@ -166,6 +166,12 @@ class RegisteredStudentsBehavior extends Behavior {
 
         $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
 
+        $search = $model->getSearchKey();
+        if (!empty($search)) {
+            // function from AdvancedNameSearchBehavior
+            $query = $model->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
+        }
+
         $query
             ->where($where)
             ->group([
