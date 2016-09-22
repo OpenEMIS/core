@@ -533,10 +533,11 @@ trait MessagesTrait {
         'CustomForms' => [
             'notSupport' => 'Not supported in this form.'
         ],
-        'ExaminationStudents' => [
-            'restrictAdd' => 'Add operation is not allowed.'
+        'ExaminationCentreStudents' => [
+            'restrictAdd' => 'Add operation is not allowed.',
+            'reconfirm' => 'Please review the information before proceeding with the operation'
         ],
-        'ExaminationNotRegisteredStudents' => [
+        'ExaminationCentreNotRegisteredStudents' => [
             'restrictAdd' => 'Add operation is not allowed.'
         ],
 
