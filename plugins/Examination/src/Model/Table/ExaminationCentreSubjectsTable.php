@@ -1,32 +1,18 @@
 <?php
 namespace Examination\Model\Table;
 
-use App\Model\Table\ControllerActionTable;
+use App\Model\Table\AppTable;
 use Cake\Event\Event;
 use ArrayObject;
 use Cake\Validation\Validator;
 
-class ExaminationCentreSubjectsTable extends ControllerActionTable {
+class ExaminationCentreSubjectsTable extends AppTable {
     public function initialize(array $config)
     {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
-    }
-
-    public function validationRemoveCentreId(Validator $validator){
-        $validator = $this->validationDefault($validator);
-        return $validator->requirePresence('examination_centre_id', false);
-    }
-
-    public function addEditBeforeAction(Event $event) {
-
-    }
-
-    public function afterAction(Event $event, ArrayObject $extra)
-    {
-
     }
 
     public function getExaminationCentreSubjects($examinationCentreId)
