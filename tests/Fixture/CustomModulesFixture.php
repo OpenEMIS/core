@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace App\Test\Fixture;
 
 use Cake\TestSuite\Fixture\TestFixture;
@@ -20,7 +20,7 @@ class CustomModulesFixture extends TestFixture
         'modified_user_id' => null,
         'modified' => null,
         'created_user_id' => '1',
-        'created' => '0000-00-00 00:00:00'
+        'created' => '1970-01-01 00:00:00'
       ],
       [
         'id' => '2',
@@ -32,7 +32,7 @@ class CustomModulesFixture extends TestFixture
         'modified_user_id' => null,
         'modified' => null,
         'created_user_id' => '1',
-        'created' => '0000-00-00 00:00:00'
+        'created' => '1970-01-01 00:00:00'
       ],
       [
         'id' => '3',
@@ -44,7 +44,7 @@ class CustomModulesFixture extends TestFixture
         'modified_user_id' => null,
         'modified' => null,
         'created_user_id' => '1',
-        'created' => '0000-00-00 00:00:00'
+        'created' => '1970-01-01 00:00:00'
       ],
       [
         'id' => '4',
@@ -56,7 +56,7 @@ class CustomModulesFixture extends TestFixture
         'modified_user_id' => null,
         'modified' => null,
         'created_user_id' => '1',
-        'created' => '0000-00-00 00:00:00'
+        'created' => '1970-01-01 00:00:00'
       ],
       [
         'id' => '5',
@@ -68,7 +68,7 @@ class CustomModulesFixture extends TestFixture
         'modified_user_id' => null,
         'modified' => null,
         'created_user_id' => '1',
-        'created' => '0000-00-00 00:00:00'
+        'created' => '1970-01-01 00:00:00'
       ],
       [
         'id' => '6',
@@ -80,7 +80,7 @@ class CustomModulesFixture extends TestFixture
         'modified_user_id' => null,
         'modified' => null,
         'created_user_id' => '1',
-        'created' => '0000-00-00 00:00:00'
+        'created' => '1970-01-01 00:00:00'
       ],
       [
         'id' => '7',
@@ -92,7 +92,7 @@ class CustomModulesFixture extends TestFixture
         'modified_user_id' => null,
         'modified' => null,
         'created_user_id' => '1',
-        'created' => '0000-00-00 00:00:00'
+        'created' => '1970-01-01 00:00:00'
       ]
     ];
 }
