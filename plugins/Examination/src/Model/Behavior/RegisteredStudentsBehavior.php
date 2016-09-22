@@ -15,6 +15,10 @@ use Cake\Log\Log;
 class RegisteredStudentsBehavior extends Behavior {
 	public function initialize(array $config) {
 		parent::initialize($config);
+
+        $model = $this->_table;
+        $model->toggle('edit', false); // temporary not allow edit
+        $model->toggle('remove', false);
 	}
 
     public function implementedEvents() {
@@ -24,12 +28,9 @@ class RegisteredStudentsBehavior extends Behavior {
         $events['ControllerAction.Model.index.afterAction'] = 'indexAfterAction';
         $events['ControllerAction.Model.viewEdit.beforeQuery'] = 'viewEditBeforeQuery';
         $events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
-        $events['ControllerAction.Model.add.beforeAction'] = 'addBeforeAction';
-        $events['ControllerAction.Model.edit.beforeAction'] = 'editBeforeAction';
         $events['ControllerAction.Model.edit.beforeSave'] = 'editBeforeSave';
         $events['ControllerAction.Model.edit.afterSave'] = 'editAfterSave';
         $events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
-        $events['ControllerAction.Model.delete.beforeAction'] = 'deleteBeforeAction';
         $events['ControllerAction.Model.unregister'] = 'unregister';
         $events['ControllerAction.Model.onGetFormButtons'] = 'onGetFormButtons';
         return $events;
@@ -66,9 +67,9 @@ class RegisteredStudentsBehavior extends Behavior {
             $query = $model->find()->where([$idKey => $id]);
 
             $query
+                ->contain(['Users.SpecialNeeds.SpecialNeedTypes'])
                 ->matching('AcademicPeriods')
                 ->matching('Examinations')
-                ->matching('Users')
                 ->matching('Institutions');
 
             $entity = $query->first();
@@ -77,7 +78,7 @@ class RegisteredStudentsBehavior extends Behavior {
         if ($entity) {
             if ($request->is(['get'])) {
                 // get
-                $model->Alert->info($model->aliasField('reconfirm', ['reset' => true]));
+                $model->Alert->info('general.reconfirm', ['reset' => true]);
             } else if ($request->is(['post', 'put'])) {
                 $requestData = $request->data;
 
@@ -94,13 +95,9 @@ class RegisteredStudentsBehavior extends Behavior {
                 ]);
 
                 if ($result) {
-                    $session = $model->request->session();
-                    $sessionKey = $model->registryAlias() . '.success';
-                    $session->write($sessionKey, 'general.delete.success');
+                    $model->Alert->success('general.delete.success', ['reset' => 'override']);
                 } else {
-                    $session = $model->request->session();
-                    $sessionKey = $model->registryAlias() . '.error';
-                    $session->write($sessionKey, 'general.delete.failed');
+                    $model->Alert->error('general.delete.failed', ['reset' => 'override']);
                 }
 
                 $event->stopPropagation();
@@ -131,25 +128,6 @@ class RegisteredStudentsBehavior extends Behavior {
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
-        // toolbar buttons: not allow to add
-        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        if (array_key_exists('add', $toolbarButtonsArray)) {
-            unset($toolbarButtonsArray['add']);
-        }
-        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
-        // End
-
-        // index buttons: not allow to edit and delete
-        $indexButtonsArray = $extra['indexButtons']->getArrayCopy();
-        if (array_key_exists('edit', $indexButtonsArray)) {
-            unset($indexButtonsArray['edit']);
-        }
-        if (array_key_exists('remove', $indexButtonsArray)) {
-            unset($indexButtonsArray['remove']);
-        }
-        $extra['indexButtons']->exchangeArray($indexButtonsArray);
-        // End
-
         $model = $this->_table;
         $model->field('openemis_no', ['sort' => true]);
         $model->field('student_id', [
@@ -218,9 +196,9 @@ class RegisteredStudentsBehavior extends Behavior {
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
         $query
+            ->contain(['Users.SpecialNeeds.SpecialNeedTypes'])
             ->matching('AcademicPeriods')
             ->matching('Examinations')
-            ->matching('Users')
             ->matching('Institutions');
     }
 
@@ -228,14 +206,6 @@ class RegisteredStudentsBehavior extends Behavior {
         $model = $this->_table;
 
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        // not allow to edit and delete
-        if (array_key_exists('edit', $toolbarButtonsArray)) {
-            unset($toolbarButtonsArray['edit']);
-        }
-        if (array_key_exists('remove', $toolbarButtonsArray)) {
-            unset($toolbarButtonsArray['remove']);
-        }
-        // End
 
         // unregister button
         $url = $model->url('view');
@@ -253,30 +223,6 @@ class RegisteredStudentsBehavior extends Behavior {
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
 
         $this->setupFields($entity, $extra);
-    }
-
-    public function addBeforeAction(Event $event, ArrayObject $extra) {
-        $model = $this->_table;
-
-        $session = $model->request->session();
-        $sessionKey = $model->registryAlias() . '.warning';
-        $session->write($sessionKey, $model->aliasField('restrictAdd'));
-
-        $url = $model->url('index', 'QUERY');
-        $event->stopPropagation();
-        return $model->controller->redirect($url);
-    }
-
-    public function editBeforeAction(Event $event, ArrayObject $extra) {
-        $model = $this->_table;
-
-        $session = $model->request->session();
-        $sessionKey = $model->registryAlias() . '.warning';
-        $session->write($sessionKey, 'general.notEditable');
-
-        $url = $model->url('index', 'QUERY');
-        $event->stopPropagation();
-        return $model->controller->redirect($url);
     }
 
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra) {
@@ -351,27 +297,21 @@ class RegisteredStudentsBehavior extends Behavior {
         $this->setupFields($entity, $extra);
     }
 
-    public function deleteBeforeAction(Event $event, ArrayObject $extra) {
-        $model = $this->_table;
-
-        $session = $model->request->session();
-        $sessionKey = $model->registryAlias() . '.warning';
-        $session->write($sessionKey, 'general.delete.restrictDelete');
-
-        $url = $model->url('index', 'QUERY');
-        $event->stopPropagation();
-        return $model->controller->redirect($url);
-    }
-
     public function onGetOpenemisNo(Event $event, Entity $entity) {
         $value = '';
-        if ($entity->has('_matchingData')) {
-            $value = $entity->_matchingData['Users']->openemis_no;
-        } else if ($entity->has('user')) {
+        if ($entity->has('user')) {
             $value = $entity->user->openemis_no;
+        } else if ($entity->has('_matchingData')) {
+            $value = $entity->_matchingData['Users']->openemis_no;
         }
 
         return $value;
+    }
+
+    public function onGetSpecialNeeds(Event $event, Entity $entity) {
+        $specialNeeds = $this->extractSpecialNeeds($entity);
+
+        return implode(", ", $specialNeeds);
     }
 
     public function onGetCustomSubjectsElement(Event $event, $action, $entity, $attr, $options=[]) {
@@ -504,7 +444,7 @@ class RegisteredStudentsBehavior extends Behavior {
         if ($action == 'edit' || $action == 'unregister') {
             $entity = $attr['entity'];
 
-            $openemisNo = $entity->_matchingData['Users']->openemis_no;
+            $openemisNo = $entity->user->openemis_no;
             $attr['type'] = 'readonly';
             $attr['value'] = $openemisNo;
             $attr['attr']['value'] = $openemisNo;
@@ -519,7 +459,7 @@ class RegisteredStudentsBehavior extends Behavior {
 
             $attr['type'] = 'readonly';
             $attr['value'] = $entity->student_id;
-            $attr['attr']['value'] = $entity->_matchingData['Users']->name;
+            $attr['attr']['value'] = $entity->user->name;
         }
 
         return $attr;
@@ -532,6 +472,21 @@ class RegisteredStudentsBehavior extends Behavior {
             $attr['type'] = 'readonly';
             $attr['value'] = $entity->institution_id;
             $attr['attr']['value'] = $entity->_matchingData['Institutions']->name;
+        }
+
+        return $attr;
+    }
+
+    public function onUpdateFieldSpecialNeeds(Event $event, array $attr, $action, Request $request) {
+        if ($action == 'edit' || $action == 'unregister') {
+            $entity = $attr['entity'];
+
+            $specialNeeds = $this->extractSpecialNeeds($entity);
+            $value = implode(", ", $specialNeeds);
+
+            $attr['type'] = 'readonly';
+            $attr['value'] = $value;
+            $attr['attr']['value'] = $value;
         }
 
         return $attr;
@@ -556,8 +511,21 @@ class RegisteredStudentsBehavior extends Behavior {
         $model->field('openemis_no', ['entity' => $entity]);
         $model->field('student_id', ['type' => 'select', 'entity' => $entity]);
         $model->field('institution_id', ['type' => 'select', 'entity' => $entity]);
-        $model->field('subjects', ['type' => 'custom_subjects']);
+        $model->field('special_needs', ['type' => 'string', 'entity' => $entity]);
+        // temporary hide subjects
+        // $model->field('subjects', ['type' => 'custom_subjects']);
 
         $model->setFieldOrder(['academic_period_id', 'examination_id', 'openemis_no', 'student_id', 'institution_id', 'subjects']);
+    }
+
+    public function extractSpecialNeeds(Entity $entity) {
+        $specialNeeds = [];
+        if ($entity->has('user')) {
+            foreach ($entity->user->special_needs as $key => $obj) {
+                $specialNeeds[] = $obj->special_need_type->name;
+            }
+        }
+
+        return $specialNeeds;
     }
 }
