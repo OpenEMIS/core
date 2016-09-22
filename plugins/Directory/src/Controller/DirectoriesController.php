@@ -17,7 +17,6 @@ class DirectoriesController extends AppController {
 		$this->ControllerAction->model('Directory.Directories');
 		$this->ControllerAction->models = [
 			// Users
-			'Identities' 			=> ['className' => 'User.Identities'],
 			'Attachments' 			=> ['className' => 'User.Attachments'],
 			'Accounts'				=> ['className' => 'Directory.Accounts', 'actions' => ['view', 'edit']],
 			'History' 				=> ['className' => 'User.UserActivities', 'actions' => ['index']],
@@ -41,7 +40,6 @@ class DirectoriesController extends AppController {
 			'StudentAbsences' 		=> ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
 			'StudentBehaviours' 	=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
 			'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],
-			'StudentAwards' 		=> ['className' => 'User.Awards'],
 
 
 			// Staff
@@ -58,7 +56,6 @@ class DirectoriesController extends AppController {
 			'StaffTrainings'		=> ['className' => 'Staff.StaffTrainings'],
 			'TrainingResults'		=> ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
 			'TrainingNeeds'			=> ['className' => 'Staff.TrainingNeeds'],
-			'StaffAwards' 			=> ['className' => 'User.Awards'],
 
 			'ImportUsers' 			=> ['className' => 'Directory.ImportUsers', 'actions' => ['add']],
 		];
@@ -87,6 +84,9 @@ class DirectoriesController extends AppController {
 	public function StudentBankAccounts() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.BankAccounts']); }
 	public function StaffBankAccounts() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.BankAccounts']); }
 	public function Comments() 				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
+    public function Identities() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']); }
+    public function StudentAwards() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
+    public function StaffAwards() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
 	// End
 
 	// AngularJS

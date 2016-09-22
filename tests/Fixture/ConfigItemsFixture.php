@@ -22,7 +22,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2013-12-12 13:56:00',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '2',
@@ -39,7 +39,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2014-07-04 17:52:44',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '3',
@@ -56,7 +56,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2013-12-12 13:56:00',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '4',
@@ -73,7 +73,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2013-12-12 13:56:00',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '5',
@@ -90,7 +90,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '108',
             'modified' => '2014-04-02 16:48:23',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '7',
@@ -107,7 +107,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2013-12-12 13:56:00',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '8',
@@ -124,7 +124,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2013-12-12 13:56:00',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '9',
@@ -141,7 +141,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2013-12-12 13:56:00',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '10',
@@ -158,7 +158,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2013-12-12 13:56:00',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '11',
@@ -175,7 +175,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2013-12-12 13:56:00',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '12',
@@ -192,7 +192,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2013-12-12 13:56:00',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '13',
@@ -209,7 +209,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2013-12-12 13:56:00',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '14',
@@ -277,7 +277,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2014-04-24 13:32:48',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '18',
@@ -294,7 +294,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2014-04-24 13:43:09',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '19',
@@ -311,7 +311,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '108',
             'modified' => '2014-04-02 16:48:23',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '20',
@@ -328,7 +328,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '108',
             'modified' => '2014-04-02 16:48:23',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '21',
@@ -345,7 +345,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '108',
             'modified' => '2014-04-02 16:48:24',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '28',
@@ -362,7 +362,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2015-09-17 05:38:25',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '30',
@@ -379,7 +379,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2015-09-17 05:38:08',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '35',
@@ -396,7 +396,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '108',
             'modified' => '2014-04-02 16:48:24',
             'created_user_id' => '0',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '36',
@@ -413,7 +413,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '108',
             'modified' => '2014-04-02 16:48:24',
             'created_user_id' => '0',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '37',
@@ -430,7 +430,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '108',
             'modified' => '2014-04-02 16:48:24',
             'created_user_id' => '0',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '38',
@@ -447,7 +447,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '108',
             'modified' => '2014-04-02 16:48:24',
             'created_user_id' => '0',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '39',
@@ -464,7 +464,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '108',
             'modified' => '2014-04-02 16:48:24',
             'created_user_id' => '0',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '41',
@@ -481,7 +481,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '108',
             'modified' => '2014-04-02 16:48:24',
             'created_user_id' => '0',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '45',
@@ -498,7 +498,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '108',
             'modified' => '2014-04-02 16:48:25',
             'created_user_id' => '0',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '47',
@@ -515,7 +515,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '108',
             'modified' => '2014-04-02 16:48:25',
             'created_user_id' => '0',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '48',
@@ -532,7 +532,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => null,
             'modified' => null,
             'created_user_id' => '0',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '49',
@@ -634,7 +634,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2014-10-20 17:41:38',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '56',
@@ -651,7 +651,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2014-10-20 17:41:57',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '57',
@@ -668,7 +668,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2014-10-20 17:40:28',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '58',
@@ -685,7 +685,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2014-10-20 17:40:16',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '59',
@@ -702,7 +702,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '108',
             'modified' => '2014-04-02 16:48:25',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '60',
@@ -719,7 +719,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2014-04-24 11:47:38',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '61',
@@ -838,7 +838,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '108',
             'modified' => '2014-04-02 16:48:25',
             'created_user_id' => '0',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '70',
@@ -855,7 +855,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '108',
             'modified' => '2014-04-02 16:48:25',
             'created_user_id' => '0',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '71',
@@ -872,7 +872,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '108',
             'modified' => '2014-04-02 16:48:25',
             'created_user_id' => '0',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '75',
@@ -889,7 +889,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2015-07-10 06:26:28',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '93',
@@ -906,7 +906,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '108',
             'modified' => '2014-04-02 16:48:26',
             'created_user_id' => '0',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '94',
@@ -923,7 +923,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '108',
             'modified' => '2014-04-02 16:48:26',
             'created_user_id' => '0',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '95',
@@ -940,7 +940,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '108',
             'modified' => '2014-04-02 16:48:26',
             'created_user_id' => '0',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '99',
@@ -957,7 +957,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '108',
             'modified' => '2014-04-02 16:48:26',
             'created_user_id' => '0',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '104',
@@ -991,7 +991,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2014-04-24 13:46:52',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '106',
@@ -1042,7 +1042,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => null,
             'modified' => null,
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '109',
@@ -1059,7 +1059,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => null,
             'modified' => null,
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '110',
@@ -1076,7 +1076,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2014-06-12 10:42:48',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '111',
@@ -1093,7 +1093,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2014-06-12 10:34:07',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '112',
@@ -1110,7 +1110,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => null,
             'modified' => null,
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '113',
@@ -1127,7 +1127,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => null,
             'modified' => null,
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '114',
@@ -1144,7 +1144,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => null,
             'modified' => null,
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '115',
@@ -1161,7 +1161,7 @@ class ConfigItemsFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2015-09-17 05:38:51',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '116',

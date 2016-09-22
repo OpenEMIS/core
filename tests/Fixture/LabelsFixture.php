@@ -334,7 +334,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "institution_network_connectivity_id",
             "field_name" => "Network Connectivity",
@@ -568,7 +568,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "absence_type",
             "field_name" => "Type",
@@ -581,7 +581,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "academic_period_id",
             "field_name" => "Academic Period",
@@ -594,7 +594,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "institution_subject_id",
             "field_name" => "Subject",
@@ -607,7 +607,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "institution_class_id",
             "field_name" => "Class",
@@ -620,7 +620,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "select_class",
             "field_name" => "Select Class",
@@ -633,7 +633,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "student_absence_reason_id",
             "field_name" => "Reason",
@@ -646,7 +646,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "student_id",
             "field_name" => "Student",
@@ -659,7 +659,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "award",
             "field_name" => "Name",
@@ -672,7 +672,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "comment",
             "field_name" => "Comment",
@@ -685,7 +685,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "issuer",
             "field_name" => "Issuer",
@@ -698,7 +698,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "issue_date",
             "field_name" => "Issue Date",
@@ -711,7 +711,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "date_of_behaviour",
             "field_name" => "Date",
@@ -724,7 +724,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "name",
             "field_name" => "Title",
@@ -737,7 +737,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "staff_behaviour_category_id",
             "field_name" => "Category",
@@ -750,7 +750,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "student_behaviour_category_id",
             "field_name" => "Category",
@@ -763,7 +763,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "time_of_behaviour",
             "field_name" => "Time",
@@ -776,7 +776,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "comment",
             "field_name" => "Comment",
@@ -789,7 +789,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "comment_date",
             "field_name" => "Date",
@@ -802,7 +802,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "contact_option_id",
             "field_name" => "Type",
@@ -815,7 +815,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "contact_type_id",
             "field_name" => "Description",
@@ -854,7 +854,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "expiry_date",
             "field_name" => "Expiry Date",
@@ -867,7 +867,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "identity_type_id",
             "field_name" => "Identity Type",
@@ -880,7 +880,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "issue_date",
             "field_name" => "Issue Date",
@@ -893,7 +893,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "issue_location",
             "field_name" => "Issuer",
@@ -906,7 +906,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "number",
             "field_name" => "Number",
@@ -919,7 +919,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "area_id",
             "field_name" => "Area Education",
@@ -932,7 +932,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "institution_gender_id",
             "field_name" => "Gender",
@@ -945,7 +945,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "institution_locality_id",
             "field_name" => "Locality",
@@ -958,7 +958,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "institution_ownership_id",
             "field_name" => "Ownership",
@@ -971,7 +971,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "institution_provider_id",
             "field_name" => "Provider",
@@ -984,7 +984,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "institution_sector_id",
             "field_name" => "Sector",
@@ -997,7 +997,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "institution_status_id",
             "field_name" => "Status",
@@ -1010,7 +1010,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "institution_type_id",
             "field_name" => "Type",
@@ -1023,7 +1023,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "created",
             "field_name" => "Modified On",
@@ -1036,7 +1036,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "created_user_id",
             "field_name" => "Modified By",
@@ -1049,7 +1049,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "model",
             "field_name" => "Module",
@@ -1062,7 +1062,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "created",
             "field_name" => "Uploaded On",
@@ -1075,7 +1075,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "created_user_id",
             "field_name" => "Uploaded By",
@@ -1088,7 +1088,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "modified",
             "field_name" => "Modified On",
@@ -1101,7 +1101,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "modified_user_id",
             "field_name" => "Modified By",
@@ -1114,7 +1114,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "education_subject_code",
             "field_name" => "Subject Code",
@@ -1127,7 +1127,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "education_subject_id",
             "field_name" => "Subject Name",
@@ -1140,7 +1140,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "name",
             "field_name" => "Name",
@@ -1153,7 +1153,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "created",
             "field_name" => "Created On",
@@ -1166,7 +1166,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "created_user_id",
             "field_name" => "Created By",
@@ -1179,7 +1179,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "modified",
             "field_name" => "Modified On",
@@ -1192,7 +1192,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "modified_user_id",
             "field_name" => "Modified By",
@@ -1205,7 +1205,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "position_no",
             "field_name" => "Number",
@@ -1218,7 +1218,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "staff_position_grade_id",
             "field_name" => "Grade",
@@ -1231,7 +1231,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "staff_position_title_id",
             "field_name" => "Title",
@@ -1257,7 +1257,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "institution_shift_id",
             "field_name" => "Shift",
@@ -1270,7 +1270,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "name",
             "field_name" => "Class Name",
@@ -1296,7 +1296,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "staff_id",
             "field_name" => "Home Room Teacher",
@@ -1309,7 +1309,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "created",
             "field_name" => "Created On",
@@ -1322,7 +1322,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "created_user_id",
             "field_name" => "Created By",
@@ -1335,7 +1335,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "location_institution_id",
             "field_name" => "Occupier",
@@ -1348,7 +1348,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "modified",
             "field_name" => "Modified On",
@@ -1361,7 +1361,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "modified_user_id",
             "field_name" => "Modified By",
@@ -1374,7 +1374,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "shift_option_id",
             "field_name" => "Shift",
@@ -1387,7 +1387,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "end_date",
             "field_name" => "End Date",
@@ -1400,7 +1400,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "photo_content",
             "field_name" => "Photo",
@@ -1413,7 +1413,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "staff_institution_name",
             "field_name" => "Institution",
@@ -1426,7 +1426,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "start_date",
             "field_name" => "Start Date",
@@ -1465,7 +1465,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "evaluation_date",
             "field_name" => "Evaluation Date",
@@ -1478,7 +1478,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "language_id",
             "field_name" => "Language",
@@ -1491,7 +1491,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "listening",
             "field_name" => "Listening",
@@ -1504,7 +1504,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "reading",
             "field_name" => "Reading",
@@ -1517,7 +1517,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "speaking",
             "field_name" => "Speaking",
@@ -1530,7 +1530,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "writing",
             "field_name" => "Writing",
@@ -1543,7 +1543,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "institution_position_id",
             "field_name" => "Position",
@@ -1556,7 +1556,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "name",
             "field_name" => "Position",
@@ -1569,7 +1569,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "number",
             "field_name" => "Number",
@@ -1582,7 +1582,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "teaching",
             "field_name" => "Teaching",
@@ -1595,7 +1595,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "title",
             "field_name" => "Positions",
@@ -1608,7 +1608,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "file_name",
             "field_name" => "Attachment",
@@ -1621,7 +1621,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "gpa",
             "field_name" => "Grade/Score",
@@ -1634,7 +1634,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "qualification_institution_country",
             "field_name" => "Institution Country",
@@ -1647,7 +1647,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "comment",
             "field_name" => "Comment",
@@ -1660,7 +1660,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "special_need_date",
             "field_name" => "Date",
@@ -1673,7 +1673,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "special_need_type_id",
             "field_name" => "Type",
@@ -1699,7 +1699,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "openemis_no",
             "field_name" => "OpenEMIS ID",
@@ -1712,7 +1712,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "photo_content",
             "field_name" => "Photo",
@@ -1751,7 +1751,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "created",
             "field_name" => "Modified On",
@@ -1764,7 +1764,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "created_user_id",
             "field_name" => "Modified By",
@@ -1777,7 +1777,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "model",
             "field_name" => "Module",
@@ -1803,7 +1803,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "date_of_behaviour",
             "field_name" => "Date",
@@ -1816,7 +1816,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "institution_id",
             "field_name" => "Institution",
@@ -1842,7 +1842,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "security_user_id",
             "field_name" => "Staff",
@@ -1855,7 +1855,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "staff_behaviour_category_id",
             "field_name" => "Category",
@@ -1894,7 +1894,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "created",
             "field_name" => "Modified On",
@@ -1907,7 +1907,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "created_user_id",
             "field_name" => "Modified By",
@@ -1920,7 +1920,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "model",
             "field_name" => "Module",
@@ -1998,7 +1998,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "created",
             "field_name" => "Create",
@@ -2011,7 +2011,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "fees",
             "field_name" => "Fees",
@@ -2024,7 +2024,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "grade",
             "field_name" => "Grade",
@@ -2037,7 +2037,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "no_fees",
             "field_name" => "No Fee Records.",
@@ -2050,7 +2050,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "no_payment",
             "field_name" => "No Payment Records.",
@@ -2063,7 +2063,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "no_student",
             "field_name" => "No Student associated in the selected Education Grade and Academic Period.",
@@ -2076,7 +2076,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "outstanding_fee",
             "field_name" => "Outstanding Fee",
@@ -2089,7 +2089,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "amount_paid",
             "field_name" => "Amount Paid",
@@ -2102,7 +2102,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "programme",
             "field_name" => "Programme",
@@ -2115,7 +2115,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "title",
             "field_name" => "Fees",
@@ -2167,7 +2167,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "openemis_no",
             "field_name" => "OpenEMIS ID",
@@ -2180,7 +2180,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "photo_content",
             "field_name" => "Photo",
@@ -2297,7 +2297,7 @@ class LabelsFixture extends TestFixture
             "visible" => "0"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "address",
             "field_name" => "Address",
@@ -2310,7 +2310,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "address_area_id",
             "field_name" => "Address Area",
@@ -2323,7 +2323,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "birthplace_area_id",
             "field_name" => "Birthplace Area",
@@ -2336,7 +2336,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "date_of_birth",
             "field_name" => "Date Of Birth",
@@ -2349,7 +2349,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "date_of_death",
             "field_name" => "Date Of Death",
@@ -2362,7 +2362,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "first_name",
             "field_name" => "First Name",
@@ -2375,7 +2375,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "gender_id",
             "field_name" => "Gender",
@@ -2388,7 +2388,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "last_name",
             "field_name" => "Last Name",
@@ -2401,7 +2401,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "middle_name",
             "field_name" => "Middle Name",
@@ -2414,7 +2414,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "name",
             "field_name" => "Name",
@@ -2427,7 +2427,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "openemis_no",
             "field_name" => "OpenEMIS ID",
@@ -2440,7 +2440,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "photo_content",
             "field_name" => "Photo",
@@ -2453,7 +2453,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "postal_code",
             "field_name" => "Postal",
@@ -2466,7 +2466,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "preferred_name",
             "field_name" => "Preferred Name",
@@ -2479,7 +2479,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "status",
             "field_name" => "Status",
@@ -2492,7 +2492,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "third_name",
             "field_name" => "Third Name",
@@ -2505,7 +2505,7 @@ class LabelsFixture extends TestFixture
             "visible" => "1"
         ], [
             "code" => null,
-            "created" => "0000-00-00 00:00:00",
+            "created" => "1970-01-01 00:00:00",
             "created_user_id" => "0",
             "field" => "username",
             "field_name" => "User Name",
