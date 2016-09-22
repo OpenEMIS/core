@@ -104,7 +104,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $examinationOptions = [];
 
         if ($action == 'add') {
-            $todayDate = Time::now()->format('Y-m-d');
+            $todayDate = Time::now();
 
             if(!empty($request->data[$this->alias()]['academic_period_id'])) {
                 $selectedAcademicPeriod = $request->data[$this->alias()]['academic_period_id'];
@@ -114,10 +114,23 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
 
             $Examinations = $this->Examinations;
             $examinationOptions = $Examinations->find('list')
-                ->where([$Examinations->aliasField('academic_period_id') => $selectedAcademicPeriod,
-                    $Examinations->aliasField('registration_start_date <=') => $todayDate,
-                    $Examinations->aliasField('registration_end_date >=') => $todayDate])
+                ->where([$Examinations->aliasField('academic_period_id') => $selectedAcademicPeriod])
                 ->toArray();
+            $examinationId = isset($request->data[$this->alias()]['examination_id']) ? $request->data[$this->alias()]['examination_id'] : null;
+            $this->advancedSelectOptions($examinationOptions, $examinationId, [
+                'message' => '{{label}} - ' . $this->getMessage('InstitutionExaminationStudents.notAvailableForRegistration'),
+                'selectOption' => false,
+                'callable' => function($id) use ($Examinations, $todayDate) {
+                    return $Examinations
+                        ->find()
+                        ->where([
+                            $Examinations->aliasField('id') => $id,
+                            $Examinations->aliasField('registration_start_date <=') => $todayDate,
+                            $Examinations->aliasField('registration_end_date >=') => $todayDate
+                        ])
+                        ->count();
+                }
+            ]);
 
             $attr['options'] = $examinationOptions;
             $attr['onChangeReload'] = 'changeExaminationId';

@@ -10,6 +10,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Utility\Text;
+use Cake\I18n\Time;
 
 class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable {
 
@@ -44,6 +45,11 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $toolbarButtons = $extra['toolbarButtons'];
+        if (isset($toolbarButtons['back'])) {
+            $toolbarButtons['back']['url']['action'] = 'ExaminationStudents';
+        }
+
         if ($this->action == 'reconfirm') {
            $entity = $this->Session->read($this->registryAlias().'.confirm');
         }
@@ -95,6 +101,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         $examinationOptions = [];
 
         if ($action == 'add') {
+            $todayDate = Time::now();
             if(!empty($request->data[$this->alias()]['academic_period_id'])) {
                 $selectedAcademicPeriod = $request->data[$this->alias()]['academic_period_id'];
             } else {
@@ -105,6 +112,21 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
             $examinationOptions = $Examinations->find('list')
                 ->where([$Examinations->aliasField('academic_period_id') => $selectedAcademicPeriod])
                 ->toArray();
+            $examinationId = isset($request->data[$this->alias()]['examination_id']) ? $request->data[$this->alias()]['examination_id'] : null;
+            $this->advancedSelectOptions($examinationOptions, $examinationId, [
+                'message' => '{{label}} - ' . $this->getMessage('InstitutionExaminationStudents.notAvailableForRegistration'),
+                'selectOption' => false,
+                'callable' => function($id) use ($Examinations, $todayDate) {
+                    return $Examinations
+                        ->find()
+                        ->where([
+                            $Examinations->aliasField('id') => $id,
+                            $Examinations->aliasField('registration_start_date <=') => $todayDate,
+                            $Examinations->aliasField('registration_end_date >=') => $todayDate
+                        ])
+                        ->count();
+                }
+            ]);
             $attr['options'] = $examinationOptions;
             $attr['onChangeReload'] = 'changeExaminationId';
         } else if ($action == 'reconfirm') {

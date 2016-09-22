@@ -544,6 +544,9 @@ trait MessagesTrait {
             'success' => 'Undo of student examination registration is successful.',
             'fail' => 'Undo of student examination registration is successful.'
         ],
+        'InstitutionExaminationStudents' => [
+            'notAvailableForRegistration' => 'Not available for registration'
+        ],
 
         // Validation Messages
         'Institution' => [
