@@ -82,6 +82,7 @@ trait MessagesTrait {
                 'success' => 'The record has been duplicated successfully.',
                 'failed' => 'The record is not duplicated due to errors encountered.',
             ],
+            'reconfirm' => 'Please review the information before proceeding with the operation',
             'academicPeriod' => [
                 'notEditable' => 'The chosen academic period is not editable',
             ],
@@ -532,13 +533,6 @@ trait MessagesTrait {
         ],
         'CustomForms' => [
             'notSupport' => 'Not supported in this form.'
-        ],
-        'ExaminationCentreStudents' => [
-            'restrictAdd' => 'Add operation is not allowed.',
-            'reconfirm' => 'Please review the information before proceeding with the operation'
-        ],
-        'ExaminationCentreNotRegisteredStudents' => [
-            'restrictAdd' => 'Add operation is not allowed.'
         ],
 
         // Validation Messages
