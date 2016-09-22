@@ -33,6 +33,12 @@ class RegisteredStudentsBehavior extends Behavior {
         $events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
         $events['ControllerAction.Model.unregister'] = 'unregister';
         $events['ControllerAction.Model.onGetFormButtons'] = 'onGetFormButtons';
+        $events['ControllerAction.Model.onUpdateFieldAcademicPeriodId'] = 'onUpdateFieldAcademicPeriodId';
+        $events['ControllerAction.Model.onUpdateFieldExaminationId'] = 'onUpdateFieldExaminationId';
+        $events['ControllerAction.Model.onUpdateFieldOpenemisNo'] = 'onUpdateFieldOpenemisNo';
+        $events['ControllerAction.Model.onUpdateFieldStudentId'] = 'onUpdateFieldStudentId';
+        $events['ControllerAction.Model.onUpdateFieldInstitutionId'] = 'onUpdateFieldInstitutionId';
+        $events['ControllerAction.Model.onUpdateFieldSpecialNeeds'] = 'onUpdateFieldSpecialNeeds';
         return $events;
     }
 
@@ -423,6 +429,7 @@ class RegisteredStudentsBehavior extends Behavior {
             $attr['type'] = 'readonly';
             $attr['value'] = $entity->academic_period_id;
             $attr['attr']['value'] = $entity->_matchingData['AcademicPeriods']->name;
+            $event->stopPropagation();
         }
 
         return $attr;
@@ -435,6 +442,7 @@ class RegisteredStudentsBehavior extends Behavior {
             $attr['type'] = 'readonly';
             $attr['value'] = $entity->examination_id;
             $attr['attr']['value'] = $entity->_matchingData['Examinations']->name;
+            $event->stopPropagation();
         }
 
         return $attr;
@@ -448,6 +456,7 @@ class RegisteredStudentsBehavior extends Behavior {
             $attr['type'] = 'readonly';
             $attr['value'] = $openemisNo;
             $attr['attr']['value'] = $openemisNo;
+            $event->stopPropagation();
         }
 
         return $attr;
@@ -460,6 +469,7 @@ class RegisteredStudentsBehavior extends Behavior {
             $attr['type'] = 'readonly';
             $attr['value'] = $entity->student_id;
             $attr['attr']['value'] = $entity->user->name;
+            $event->stopPropagation();
         }
 
         return $attr;
@@ -472,6 +482,7 @@ class RegisteredStudentsBehavior extends Behavior {
             $attr['type'] = 'readonly';
             $attr['value'] = $entity->institution_id;
             $attr['attr']['value'] = $entity->_matchingData['Institutions']->name;
+            $event->stopPropagation();
         }
 
         return $attr;
@@ -487,6 +498,7 @@ class RegisteredStudentsBehavior extends Behavior {
             $attr['type'] = 'readonly';
             $attr['value'] = $value;
             $attr['attr']['value'] = $value;
+            $event->stopPropagation();
         }
 
         return $attr;
