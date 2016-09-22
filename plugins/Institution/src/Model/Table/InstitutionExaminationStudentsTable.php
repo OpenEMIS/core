@@ -27,7 +27,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 
-        // $this->addBehavior('Examination.RegisteredStudents');
+        $this->addBehavior('Examination.RegisteredStudents');
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
