@@ -51,7 +51,8 @@ class ExaminationCentresTable extends ControllerActionTable {
                 'rule' => ['numericPositive']
             ])
             ->add('code', 'ruleUnique', [
-                'rule' => ['uniqueCodeByFilter', 'examination_id']
+                'rule' => ['validateUnique', ['scope' => 'examination_id']],
+                'provider' => 'table'
             ])
             ->requirePresence('institutions', 'create');
 

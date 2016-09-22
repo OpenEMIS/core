@@ -14,7 +14,10 @@ DROP TABLE `examination_centre_special_needs`;
 
 DROP TABLE `examination_centre_students`;
 
-DROP TABLE `examination_item_results`;
+-- security_functions
+DELETE FROM `security_functions` WHERE `id` = 1045;
+DELETE FROM `security_functions` WHERE `id` = 1046;
+DELETE FROM `security_functions` WHERE `id` = 5044;
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2378';
