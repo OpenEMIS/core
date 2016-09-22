@@ -22,7 +22,9 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsToMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds']);
+
         $this->addBehavior('Examination.RegisteredStudents');
+        $this->toggle('add', false);
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
