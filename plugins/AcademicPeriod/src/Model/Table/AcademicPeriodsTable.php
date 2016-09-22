@@ -58,6 +58,7 @@ class AcademicPeriodsTable extends AppTable {
         $this->hasMany('SurveyStatusPeriods', ['className' => 'Survey.SurveyStatusPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Examinations', ['className' => 'Examination.Examinations', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('Tree');
     }
