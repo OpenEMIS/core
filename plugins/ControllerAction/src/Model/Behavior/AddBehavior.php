@@ -23,6 +23,7 @@ class AddBehavior extends Behavior {
 		$model = $this->_table;
 		$request = $this->_table->request;
 		$extra['config']['form'] = true;
+		$extra['patchEntity'] = true;
         $extra['redirect'] = $model->url('index', 'QUERY');
 
 		$event = $model->dispatchEvent('ControllerAction.Model.addEdit.beforeAction', [$extra], $this);
@@ -58,12 +59,12 @@ class AddBehavior extends Behavior {
 
 				$patchOptionsArray = $patchOptions->getArrayCopy();
 				$request->data = $requestData->getArrayCopy();
-				$entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
-
-				$event = $model->dispatchEvent('ControllerAction.Model.add.afterPatch', $params, $this);
-				if ($event->isStopped()) { return $event->result; }
-
-				$request->data = $requestData->getArrayCopy();
+				if ($extra['patchEntity']) {
+					pr('here');die;
+					$entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
+					$event = $model->dispatchEvent('ControllerAction.Model.add.afterPatch', $params, $this);
+					if ($event->isStopped()) { return $event->result; }
+				}
 
 				$process = function ($model, $entity) {
 					return $model->save($entity);
