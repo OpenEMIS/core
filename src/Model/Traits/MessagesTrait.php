@@ -539,6 +539,10 @@ trait MessagesTrait {
         'ExaminationNotRegisteredStudents' => [
             'restrictAdd' => 'Add operation is not allowed.'
         ],
+        'UndoExaminationRegistration' => [
+            'success' => 'Undo of student examination registration is successful.',
+            'fail' => 'Undo of student examination registration is successful.'
+        ],
 
         // Validation Messages
         'Institution' => [
