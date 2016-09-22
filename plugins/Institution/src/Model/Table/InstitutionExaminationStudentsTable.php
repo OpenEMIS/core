@@ -1,19 +1,21 @@
 <?php
 namespace Institution\Model\Table;
 
-use App\Model\Table\ControllerActionTable;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
+use Cake\Network\Request;
 use Cake\Event\Event;
-use Cake\Validation\Validator;
 use Cake\Utility\Text;
+use Cake\I18n\Time;
+use Cake\Validation\Validator;
+use App\Model\Table\ControllerActionTable;
 
-class InstitutionExaminationStudentsTable extends ControllerActionTable {
-
-    public function initialize(array $config) {
+class InstitutionExaminationStudentsTable extends ControllerActionTable
+{
+    public function initialize(array $config)
+    {
         $this->table('examination_centre_students');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -24,6 +26,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable {
         $this->hasMany('ExaminationCentreSubjects', ['className' => 'Examination.ExaminationCentreSubjects']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+
+        // $this->addBehavior('Examination.RegisteredStudents');
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
@@ -43,8 +47,11 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable {
         $undoButton['attr']['title'] = __('Undo');
 
         $toolbarButtons['undo'] = $undoButton;
-        $this->field('education_subject_id', ['type' => 'select']);
-        $this->field('student_id', ['type' => 'select']);
+    }
+
+    public function addBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $extra['patchEntity'] = false;
     }
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -66,7 +73,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable {
         ]);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request)
+    {
         if ($action == 'add') {
             $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
 
@@ -77,19 +85,17 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function addOnChangeAcademicPeriodId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-
-        if ($this->request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $data)) {
-                if (array_key_exists('examination_id', $data[$this->alias()])) {
-                    unset($data[$this->alias()]['examination_id']);
-                }
-                if (array_key_exists('examination_centre_id', $data[$this->alias()])) {
-                    unset($data[$this->alias()]['examination_centre_id']);
-                }
-                if (array_key_exists('institution_class_id', $data[$this->alias()])) {
-                    unset($data[$this->alias()]['institution_class_id']);
-                }
+    public function addOnChangeAcademicPeriodId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        if (array_key_exists($this->alias(), $data)) {
+            if (array_key_exists('examination_id', $data[$this->alias()])) {
+                unset($data[$this->alias()]['examination_id']);
+            }
+            if (array_key_exists('examination_centre_id', $data[$this->alias()])) {
+                unset($data[$this->alias()]['examination_centre_id']);
+            }
+            if (array_key_exists('institution_class_id', $data[$this->alias()])) {
+                unset($data[$this->alias()]['institution_class_id']);
             }
         }
     }
@@ -98,6 +104,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable {
         $examinationOptions = [];
 
         if ($action == 'add') {
+            $todayDate = Time::now()->format('Y-m-d');
+
             if(!empty($request->data[$this->alias()]['academic_period_id'])) {
                 $selectedAcademicPeriod = $request->data[$this->alias()]['academic_period_id'];
             } else {
@@ -106,25 +114,26 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable {
 
             $Examinations = $this->Examinations;
             $examinationOptions = $Examinations->find('list')
-                ->where([$Examinations->aliasField('academic_period_id') => $selectedAcademicPeriod])
+                ->where([$Examinations->aliasField('academic_period_id') => $selectedAcademicPeriod,
+                    $Examinations->aliasField('registration_start_date <=') => $todayDate,
+                    $Examinations->aliasField('registration_end_date >=') => $todayDate])
                 ->toArray();
+
+            $attr['options'] = $examinationOptions;
+            $attr['onChangeReload'] = 'changeExaminationId';
         }
 
-        $attr['options'] = $examinationOptions;
-        $attr['onChangeReload'] = 'changeExaminationId';
         return $attr;
     }
 
-    public function addOnChangeExaminationId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-
-        if ($this->request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $data)) {
-                if (array_key_exists('examination_centre_id', $data[$this->alias()])) {
-                    unset($data[$this->alias()]['examination_centre_id']);
-                }
-                if (array_key_exists('institution_class_id', $data[$this->alias()])) {
-                    unset($data[$this->alias()]['institution_class_id']);
-                }
+    public function addOnChangeExaminationId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        if (array_key_exists($this->alias(), $data)) {
+            if (array_key_exists('examination_centre_id', $data[$this->alias()])) {
+                unset($data[$this->alias()]['examination_centre_id']);
+            }
+            if (array_key_exists('institution_class_id', $data[$this->alias()])) {
+                unset($data[$this->alias()]['institution_class_id']);
             }
         }
     }
@@ -141,10 +150,10 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable {
                 ->toArray();
 
             $educationGrade = $Examinations['education_grade']['name'];
-            $this->request->data[$this->alias()]['education_grade_id'] = $Examinations['education_grade']['id'];
+            $request->data[$this->alias()]['education_grade_id'] = $Examinations['education_grade']['id'];
+            $attr['attr']['value'] = $educationGrade;
         }
 
-        $attr['attr']['value'] = $educationGrade;
         return $attr;
     }
 
@@ -161,41 +170,22 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable {
     }
 
     public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, $request) {
-        $examinationCentreOptions = [];
-
         if ($action == 'add') {
-            if(!empty($request->data[$this->alias()]['academic_period_id']) && !empty($request->data[$this->alias()]['examination_id'])) {
-                $selectedAcademicPeriod = $request->data[$this->alias()]['academic_period_id'];
+            if (!empty($request->data[$this->alias()]['examination_id'])) {
                 $selectedExamination = $request->data[$this->alias()]['examination_id'];
                 $selectedSpecialNeeds = $request->data[$this->alias()]['special_needs_required']['_ids'];
-                $ExaminationCentres = $this->ExaminationCentres;
 
-                if(!empty($selectedSpecialNeeds)) {
-                    $examinationCentreOptions = $ExaminationCentres
-                        ->find('list')
-                        ->select([
-                            'count' => $this->find()->func()->count('*')
-                        ])
-                        ->matching('ExaminationCentreSpecialNeeds')
-                        ->where([
-                            $ExaminationCentres->aliasField('academic_period_id') => $selectedAcademicPeriod,
-                            $ExaminationCentres->aliasField('examination_id') => $selectedExamination,
-                            $this->ExaminationCentres->ExaminationCentreSpecialNeeds->aliasField('special_need_type_id IN') => $selectedSpecialNeeds
-                        ])
-                        ->group($ExaminationCentres->aliasField('id'))
-                        ->having(['count =' => count($selectedSpecialNeeds)])
-                        ->toArray();
+                $query = $this->ExaminationCentres
+                    ->find('list' ,['keyField' => 'id', 'valueField' => 'code_name'])
+                    ->where([$this->ExaminationCentres->aliasField('examination_id') => $selectedExamination]);
 
-                } else {
-                    $examinationCentreOptions = $ExaminationCentres
-                        ->find('list')
-                        ->where([$ExaminationCentres->aliasField('academic_period_id') => $selectedAcademicPeriod, $ExaminationCentres->aliasField('examination_id') => $selectedExamination])
-                        ->toArray();
+                if (!empty($selectedSpecialNeeds)) {
+                    $query->find('bySpecialNeeds', ['selectedSpecialNeeds' => $selectedSpecialNeeds]);
                 }
+
+                $attr['options'] = $query->toArray();
             }
         }
-
-        $attr['options'] = $examinationCentreOptions;
         return $attr;
     }
 
@@ -209,9 +199,9 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable {
                 ->toArray();
 
             $capacity = $examinationCentres['capacity'];
+            $attr['attr']['value'] = $capacity;
         }
 
-        $attr['attr']['value'] = $capacity;
         return $attr;
     }
 
@@ -233,9 +223,10 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable {
             if (!empty($query)) {
                 $specialNeeds = implode(', ', $query);
             }
+
+            $attr['attr']['value'] = $specialNeeds;
         }
 
-        $attr['attr']['value'] = $specialNeeds;
         return $attr;
     }
 
@@ -259,8 +250,10 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable {
                     ->order($InstitutionClass->aliasField('name'))
                     ->toArray();
             }
+
+            $attr['options'] = $classes;
         }
-        $attr['options'] = $classes;
+
         return $attr;
     }
 
@@ -302,35 +295,30 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
-    {
-        $requestData[$this->alias()]['student_id'] = 0;
-        $requestData[$this->alias()]['education_subject_id'] = 0;
-    }
-
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
     {
         $process = function ($model, $entity) use ($requestData) {
-            if ($entity->has('examination_students')) {
-                $students = $entity->examination_students;
+            if (!empty($requestData[$this->alias()]['examination_students'])) {
+                $students = $requestData[$this->alias()]['examination_students'];
                 $newEntities = [];
 
                 $selectedExaminationCentre = $requestData[$this->alias()]['examination_centre_id'];
                 $ExaminationCentreSubjects = $this->ExaminationCentreSubjects->getExaminationCentreSubjects($selectedExaminationCentre);
 
                 foreach ($students as $key => $student) {
+                    $obj = [];
                     if ($student['selected'] == 1) {
-                        $requestData['student_id'] = $student['student_id'];
-                        $requestData['institution_id'] = $entity->institution_id;
-                        $requestData['education_grade_id'] = $entity->education_grade_id;
-                        $requestData['academic_period_id'] = $entity->academic_period_id;
-                        $requestData['examination_id'] = $entity->examination_id;
-                        $requestData['examination_centre_id'] = $entity->examination_centre_id;
+                        $obj['student_id'] = $student['student_id'];
+                        $obj['institution_id'] = $requestData[$this->alias()]['institution_id'];
+                        $obj['education_grade_id'] = $requestData[$this->alias()]['education_grade_id'];
+                        $obj['academic_period_id'] = $requestData[$this->alias()]['academic_period_id'];
+                        $obj['examination_id'] = $requestData[$this->alias()]['examination_id'];
+                        $obj['examination_centre_id'] = $requestData[$this->alias()]['examination_centre_id'];
 
                         foreach($ExaminationCentreSubjects as $subject => $name) {
-                            $requestData['id'] = Text::uuid();
-                            $requestData['education_subject_id'] = $subject;
-                            $newEntities[] = $model->newEntity($requestData->getArrayCopy());
+                            $obj['id'] = Text::uuid();
+                            $obj['education_subject_id'] = $subject;
+                            $newEntities[] = $model->newEntity($obj);
                         }
                     }
                 }
