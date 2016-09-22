@@ -50,6 +50,9 @@ class ExaminationCentresTable extends ControllerActionTable {
             ->add('capacity', 'ruleValidateNumeric', [
                 'rule' => ['numericPositive']
             ])
+            ->add('code', 'ruleUnique', [
+                'rule' => ['uniqueCodeByFilter', 'examination_id']
+            ])
             ->requirePresence('institutions', 'create');
 
         return $validator;
@@ -62,10 +65,11 @@ class ExaminationCentresTable extends ControllerActionTable {
         return $validator;
     }
 
-    public function validateInstitutions(Validator $validator) {
+    public function validationInstitutions(Validator $validator) {
         $validator = $this->validationDefault($validator);
         $validator = $validator
             ->requirePresence('code', false)
+            ->remove('code')
             ->requirePresence('name', false);
         return $validator;
     }
@@ -363,15 +367,6 @@ class ExaminationCentresTable extends ControllerActionTable {
             $requestData[$this->alias()]['area_id'] = 0;
         }
 
-        $patchOptions['associated'] = [
-            'ExaminationCentreSubjects' => [
-                'validate' => false
-            ],
-            'ExaminationCentreSpecialNeeds' => [
-                'validate' => false
-            ],
-        ];
-
         if ($requestData[$this->alias()]['create_as'] == 'new') {
             $patchOptions['validate'] = 'noInstitutions';
         } else {
@@ -436,16 +431,6 @@ class ExaminationCentresTable extends ControllerActionTable {
             if ($entity->has('institutions')) {
                 $institutions = $entity->institutions;
                 $newEntities = [];
-                $patchOptions = [
-                    'associated' => [
-                        'ExaminationCentreSubjects' => [
-                            'validate' => false
-                        ],
-                        'ExaminationCentreSpecialNeeds' => [
-                            'validate' => false
-                        ],
-                    ]
-                ];
                 if (is_array($institutions)) {
                     foreach ($institutions as $institution) {
                         $institutionRecord = $model->Institutions->get($institution);
@@ -461,7 +446,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                         $requestData['email'] = $institutionRecord->email;
                         $requestData['website'] = $institutionRecord->website;
 
-                        $newEntities[] = $model->newEntity($requestData->getArrayCopy(), $patchOptions);
+                        $newEntities[] = $model->newEntity($requestData->getArrayCopy());
                     }
                 }
                 return $model->saveMany($newEntities);
