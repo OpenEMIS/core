@@ -27,7 +27,7 @@ CREATE TABLE `examination_items` (
   `examination_id` int(11) NOT NULL COMMENT 'links to examinations.id',
   `education_subject_id` int(11) NOT NULL COMMENT 'links to education_subjects.id',
   `examination_grading_type_id` int(11) NOT NULL COMMENT 'links to examination_grading_types.id',
-  `date` date NOT NULL,
+  `examination_date` date NOT NULL,
   `start_time` time NOT NULL,
   `end_time` time NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
@@ -166,31 +166,3 @@ CREATE TABLE `examination_centre_students` (
   KEY `modified_user_id` (`modified_user_id`),
   KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the students registered to an examination center for a particular examination';
-
-CREATE TABLE `examination_item_results` (
-  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `marks` decimal(6,2) DEFAULT NULL,
-  `examination_grading_option_id` int(11) DEFAULT NULL COMMENT 'links to examination_grading_options.id',
-  `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
-  `examination_id` int(11) NOT NULL COMMENT 'links to examinations.id',
-  `education_subject_id` int(11) NOT NULL COMMENT 'links to education_subjects.id',
-  `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
-  `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
-  `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`student_id`,`examination_id`,`education_subject_id`,`institution_id`,`academic_period_id`),
-  KEY `examination_grading_option_id` (`examination_grading_option_id`),
-  KEY `student_id` (`student_id`),
-  KEY `examination_id` (`examination_id`),
-  KEY `education_subject_id` (`education_subject_id`),
-  KEY `institution_id` (`institution_id`),
-  KEY `examination_centre_id` (`examination_centre_id`),
-  KEY `academic_period_id` (`academic_period_id`),
-  KEY `modified_user_id` (`modified_user_id`),
-  KEY `created_user_id` (`created_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all the examination results for an individual student in an institution and examination centre'
-/*!50100 PARTITION BY HASH (`academic_period_id`)
-PARTITIONS 8 */
