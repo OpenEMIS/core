@@ -48,6 +48,10 @@ class ExaminationsTable extends ControllerActionTable {
         $query->contain(['ExaminationItems.EducationSubjects']);
     }
 
+    public function indexBeforeAction(Event $event, ArrayObject $extra) {
+        $this->field('description', ['visible' => false]);
+    }
+
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->controller->getExamsTab();
