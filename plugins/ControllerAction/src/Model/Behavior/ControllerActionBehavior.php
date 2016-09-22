@@ -284,7 +284,7 @@ class ControllerActionBehavior extends Behavior {
         $eventKey = 'ControllerAction.Model.' . $method;
 
         $params = [$attr, $model->action, $model->request];
-        $event = $this->dispatchEvent($model, $eventKey, $method, $params);
+        $event = $this->dispatchEvent($model, $eventKey, $method, $params, true);
         if (is_array($event->result)) {
             $model->fields[$name] = $event->result;
         }
