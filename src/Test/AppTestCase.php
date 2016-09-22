@@ -47,6 +47,17 @@ class AppTestCase extends IntegrationTestCase
         ]);
     }
 
+    public function setStudentSession($id)
+    {
+        $this->session([
+            'Student' => [
+                'Students' => [
+                    'id' => $id
+                ]
+            ]
+        ]);
+    }
+
     public function urlPrefix($param = null)
     {
         if (!is_null($param)) {
