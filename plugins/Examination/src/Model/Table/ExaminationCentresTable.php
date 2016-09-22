@@ -58,7 +58,7 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function validationNoInstitutions(Validator $validator) {
         $validator = $this->validationDefault($validator);
         $validator = $validator
-            ->requirePresence('institutions', false)
+            ->requirePresence('institutions', false);
         return $validator;
     }
 
