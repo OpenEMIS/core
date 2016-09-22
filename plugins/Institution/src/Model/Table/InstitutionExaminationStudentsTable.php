@@ -10,6 +10,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Utility\Text;
+use Cake\I18n\Time;
 
 class InstitutionExaminationStudentsTable extends ControllerActionTable {
 
@@ -83,6 +84,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable {
         $examinationOptions = [];
 
         if ($action == 'add') {
+            $todayDate = Time::now()->format('Y-m-d');
+
             if(!empty($request->data[$this->alias()]['academic_period_id'])) {
                 $selectedAcademicPeriod = $request->data[$this->alias()]['academic_period_id'];
             } else {
@@ -91,7 +94,9 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable {
 
             $Examinations = $this->Examinations;
             $examinationOptions = $Examinations->find('list')
-                ->where([$Examinations->aliasField('academic_period_id') => $selectedAcademicPeriod])
+                ->where([$Examinations->aliasField('academic_period_id') => $selectedAcademicPeriod,
+                    $Examinations->aliasField('registration_start_date <=') => $todayDate,
+                    $Examinations->aliasField('registration_end_date >=') => $todayDate])
                 ->toArray();
         }
 
@@ -157,7 +162,10 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable {
 
                 if(!empty($selectedSpecialNeeds)) {
                     $examinationCentreOptions = $ExaminationCentres
-                        ->find('list')
+                        ->find('list' ,[
+                                'keyField' => 'id',
+                                'valueField' => 'code_name'
+                            ])
                         ->select([
                             'count' => $this->find()->func()->count('*')
                         ])
@@ -167,13 +175,17 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable {
                             $ExaminationCentres->aliasField('examination_id') => $selectedExamination,
                             $this->ExaminationCentres->ExaminationCentreSpecialNeeds->aliasField('special_need_type_id IN') => $selectedSpecialNeeds
                         ])
+                        ->autoFields(true)
                         ->group($ExaminationCentres->aliasField('id'))
                         ->having(['count =' => count($selectedSpecialNeeds)])
                         ->toArray();
 
                 } else {
                     $examinationCentreOptions = $ExaminationCentres
-                        ->find('list')
+                        ->find('list' ,[
+                                'keyField' => 'id',
+                                'valueField' => 'code_name'
+                        ])
                         ->where([$ExaminationCentres->aliasField('academic_period_id') => $selectedAcademicPeriod, $ExaminationCentres->aliasField('examination_id') => $selectedExamination])
                         ->toArray();
                 }
