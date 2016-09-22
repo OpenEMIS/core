@@ -1281,7 +1281,10 @@ trait MessagesTrait {
             'ExaminationCentres' => [
                 'capacity' => [
                     'ruleValidateNumeric' => 'Please enter a valid Numeric value'
-                ]
+                ],
+                'code' => [
+                    'ruleUnique' => 'Please enter a unique code for this examination centre in this examination'
+                ],
             ],
             'ExaminationItems' => [
                 'weight' => [
