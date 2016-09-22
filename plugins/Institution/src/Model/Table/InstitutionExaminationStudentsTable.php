@@ -22,12 +22,27 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable {
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->hasMany('ExaminationCentreSubjects', ['className' => 'Examination.ExaminationCentreSubjects']);
-        $this->hasOne('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => false]);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
     }
 
-    public function indexBeforeAction(Event $event) {
+    public function indexBeforeAction(Event $event, ArrayObject $extra) {
+        $toolbarButtons = $extra['toolbarButtons'];
+        $undoButton['url'] = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'UndoExaminationRegistration',
+            'add'
+        ];
+        $undoButton['type'] = 'button';
+        $undoButton['label'] = '<i class="fa fa-undo"></i>';
+        $undoButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+        $undoButton['attr']['data-toggle'] = 'tooltip';
+        $undoButton['attr']['data-placement'] = 'bottom';
+        $undoButton['attr']['escape'] = false;
+        $undoButton['attr']['title'] = __('Undo');
+
+        $toolbarButtons['undo'] = $undoButton;
         $this->field('education_subject_id', ['type' => 'select']);
         $this->field('student_id', ['type' => 'select']);
     }
@@ -260,23 +275,22 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable {
                 $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
                 $examinationCentreId = $request->data[$this->alias()]['examination_centre_id'];
 
-                $SubjectStudents = $this->InstitutionSubjectStudents;
-                $students = $SubjectStudents->find()
-                    ->matching('ClassStudents.EducationGrades')
+                $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+                $students = $ClassStudents->find()
+                    ->matching('EducationGrades')
                     ->leftJoin(['InstitutionExaminationStudents' => 'examination_centre_students'], [
                         'InstitutionExaminationStudents.examination_centre_id' => $examinationCentreId,
-                        'InstitutionExaminationStudents.student_id = '.$SubjectStudents->aliasField('student_id')
+                        'InstitutionExaminationStudents.student_id = '.$ClassStudents->aliasField('student_id')
                     ])
                     ->contain('Users.SpecialNeeds.SpecialNeedTypes')
                     ->where([
-                        $SubjectStudents->aliasField('institution_id') => $institutionId,
-                        $SubjectStudents->aliasField('academic_period_id') => $academicPeriodId,
-                        $SubjectStudents->aliasField('institution_class_id') => $institutionClassId,
-                        $SubjectStudents->aliasField('status') => 1,
-                        'ClassStudents.student_status_id' => $enrolledStatus,
+                        $ClassStudents->aliasField('institution_id') => $institutionId,
+                        $ClassStudents->aliasField('academic_period_id') => $academicPeriodId,
+                        $ClassStudents->aliasField('institution_class_id') => $institutionClassId,
+                        $ClassStudents->aliasField('student_status_id') => $enrolledStatus,
                         'InstitutionExaminationStudents.student_id IS NULL'
                     ])
-                    ->group($SubjectStudents->aliasField('student_id'))
+                    ->group($ClassStudents->aliasField('student_id'))
                     ->toArray();
             }
 
