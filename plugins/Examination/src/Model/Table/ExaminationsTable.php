@@ -14,12 +14,11 @@ class ExaminationsTable extends ControllerActionTable {
     public function initialize(array $config)
     {
         parent::initialize($config);
-
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('ExaminationStudents', ['className' => 'Examination.ExaminationStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ExaminationCentreStudents', ['className' => 'Examination.ExaminationCentreStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->behaviors()->get('ControllerAction')->config([
             'actions' => [
