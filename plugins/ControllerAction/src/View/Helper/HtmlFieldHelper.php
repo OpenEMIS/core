@@ -345,6 +345,7 @@ class HtmlFieldHelper extends Helper {
 		}
 		$session = $this->request->session();
 		$session->write('FormTampering.'.$fieldName, $arrayKeys);
+		$options['type'] = 'select';
 		$value = $this->Form->input($fieldName, $options);
 		return $value;
 	}
@@ -569,13 +570,15 @@ class HtmlFieldHelper extends Helper {
 		];
 
 		$field = $attr['field'];
-		$table = TableRegistry::get($attr['className']);
-		$schema = $table->schema();
-
-		$columnAttr = $schema->column($field);
 		$defaultDate = true;
-		if ($columnAttr['null'] == true) {
-			$defaultDate = date('d-m-Y');
+
+		if (isset($attr['className'])) {
+			$table = TableRegistry::get($attr['className']);
+			$schema = $table->schema();
+			$columnAttr = $schema->column($field);
+			if ($columnAttr['null'] == true) {
+				$defaultDate = date('d-m-Y');
+			}
 		}
 
 		if (!isset($attr['date_options'])) {

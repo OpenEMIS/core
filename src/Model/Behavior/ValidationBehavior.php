@@ -830,6 +830,26 @@ class ValidationBehavior extends Behavior {
 		}
 	}
 
+	// check combination of unique field by filter
+	public static function uniqueCodeByFilter($field, $filterField, $globalData)
+	{
+		if (array_key_exists($filterField, $globalData['data'])) {
+			$model = $globalData['providers']['table'];
+			$fieldName = $globalData['field'];
+			$filter = isset($globalData['data'][$filterField]) ? $globalData['data'][$filterField] : 0;
+
+			//if have record then return false.
+			return !($model->find()
+					->where([
+						$model->aliasField($fieldName) => $field,
+						$model->aliasField($filterField) => $filter
+					])
+					->count());
+		} else {
+			return false;
+		}
+	}
+
 	public static function assessmentExistByGradeAcademicPeriod($field, $globalData)
 	{
 		$model = $globalData['providers']['table'];
