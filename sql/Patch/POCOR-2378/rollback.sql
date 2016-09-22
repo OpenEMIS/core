@@ -20,6 +20,8 @@ DELETE FROM `security_functions` WHERE `id` = 1046;
 DELETE FROM `security_functions` WHERE `id` = 5044;
 DELETE FROM `security_functions` WHERE `id` = 5045;
 DELETE FROM `security_functions` WHERE `id` = 5046;
+DELETE FROM `security_functions` WHERE `id` = 5047;
+DELETE FROM `security_functions` WHERE `id` = 5048;
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2378';
