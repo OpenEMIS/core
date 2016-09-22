@@ -819,10 +819,14 @@ class InstitutionClassesTable extends ControllerActionTable {
 
         $query = $students
             ->find('all')
-            // ->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
-            ->leftJoin(
-                ['ClassStudents' => 'institution_class_students'],
-                ['ClassStudents.student_id = ' . $students->aliasfield('student_id')])
+            ->leftJoin([
+                'ClassStudents' => 'institution_class_students'], [
+                    'ClassStudents.student_id = ' . $students->aliasfield('student_id'),
+                    'AND' => [
+                        'ClassStudents.student_status_id = ' . $enrolled,
+                        'ClassStudents.academic_period_id = ' . $academicPeriodId
+                    ]
+            ])
             ->contain([
                 'Users' => function ($q) {
                         return $q->select(['id', 'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name']);
@@ -858,7 +862,11 @@ class InstitutionClassesTable extends ControllerActionTable {
         return $studentOptions;
     }
 
-    private function attachClassInfo($classEntity, $studentOptions) {
+    private function attachClassInfo($classEntity, $studentOptions) 
+    {
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $enrolled = $StudentStatuses->getIdByCode('CURRENT');
+
         if (!empty($studentOptions)) {
             $query = $this->ClassStudents->find()
                         ->contain(['InstitutionClasses'])
@@ -867,7 +875,9 @@ class InstitutionClassesTable extends ControllerActionTable {
                             $this->aliasField('academic_period_id') => $classEntity->academic_period_id,
                         ])
                         ->where([
-                                $this->ClassStudents->aliasField('student_id').' IN' => array_keys($studentOptions)
+                                $this->ClassStudents->aliasField('student_id').' IN' => array_keys($studentOptions),
+                                $this->ClassStudents->aliasField('academic_period_id') => $classEntity->academic_period_id,
+                                $this->ClassStudents->aliasField('student_status_id') => $enrolled
                             ]);
             $classesWithStudents = $query->toArray();
 
