@@ -762,12 +762,12 @@ class NavigationComponent extends Component {
 						'params' => ['plugin' => 'Examination'],
 						'selected' => ['Examinations.Registered', 'Examinations.NotRegistered']
 					],
-					'Examinations.Results' => [
-						'title' => 'Results',
-						'parent' => 'Examinations',
-						'params' => ['plugin' => 'Examination'],
-						'selected' => ['Examinations.Results']
-					],
+					// 'Examinations.Results' => [
+					// 	'title' => 'Results',
+					// 	'parent' => 'Examinations',
+					// 	'params' => ['plugin' => 'Examination'],
+					// 	'selected' => ['Examinations.Results']
+					// ],
 				'FieldOptions.index' => [
 					'title' => 'Field Options',
 					'parent' => 'SystemSetup',
