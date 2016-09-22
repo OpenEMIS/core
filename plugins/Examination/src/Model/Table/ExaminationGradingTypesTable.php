@@ -169,4 +169,11 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
             $this->GradingOptions->alias()
         ]);
     }
+
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $extra['excludedModels'] = [
+            $this->GradingOptions->alias()
+        ];
+    }
 }
