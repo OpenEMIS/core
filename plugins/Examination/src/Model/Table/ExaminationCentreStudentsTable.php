@@ -8,11 +8,10 @@ use Cake\Utility\Text;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 
-class ExaminationStudentsTable extends ControllerActionTable {
+class ExaminationCentreStudentsTable extends ControllerActionTable {
     use OptionsTrait;
 
     public function initialize(array $config) {
-        $this->table('examination_centre_students');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
