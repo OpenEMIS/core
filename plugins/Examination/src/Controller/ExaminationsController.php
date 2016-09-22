@@ -26,8 +26,8 @@ class ExaminationsController extends AppController
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentres']);
         // }
     }
-    public function Students() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreStudents']); }
-    public function NotRegisteredStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationNotRegisteredStudents']); }
+    public function RegisteredStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreStudents']); }
+    public function NotRegisteredStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreNotRegisteredStudents']); }
     // End
 
     // AngularJS
@@ -39,19 +39,27 @@ class ExaminationsController extends AppController
 
     public function beforeFilter(Event $event) {
         parent::beforeFilter($event);
-        $header = __('Examination');
-        $this->Navigation->addCrumb('Examinations');
         $action = $this->request->params['action'];
-        $header = $header .' - '.__(Inflector::humanize($action));
-        $this->Navigation->addCrumb(__(Inflector::humanize($action)), ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => $action]);
-        $this->set('contentHeader', $header);
+
+        if ($action == 'Results') {
+            $header = __('Examination');
+            $header .= ' - '.__(Inflector::humanize($action));
+
+            $this->Navigation->addCrumb('Examination', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $action]);
+            $this->Navigation->addCrumb(Inflector::humanize($action));
+
+            $this->set('contentHeader', $header);
+        }
     }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
-        $action = $model->action;
-        if ($action != 'index') {
-            $this->Navigation->addCrumb(__(Inflector::humanize($action)));
-        }
+        $header = __('Examination');
+
+        $header .= ' - ' . $model->getHeader($model->alias);
+        $this->Navigation->addCrumb('Examination', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
+        $this->Navigation->addCrumb($model->getHeader($model->alias));
+
+        $this->set('contentHeader', $header);
     }
 
     public function getExamsTab()
@@ -78,8 +86,8 @@ class ExaminationsController extends AppController
     public function getStudentsTab()
     {
         $tabElements = [
-            'Students' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Students'],
+            'RegisteredStudents' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'RegisteredStudents'],
                 'text' => __('Registered')
             ],
             'NotRegisteredStudents' => [

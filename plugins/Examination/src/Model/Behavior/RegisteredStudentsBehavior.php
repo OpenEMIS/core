@@ -34,7 +34,7 @@ class RegisteredStudentsBehavior extends Behavior {
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
-        // not allow to add
+        // toolbar buttons: not allow to add
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         if (array_key_exists('add', $toolbarButtonsArray)) {
             unset($toolbarButtonsArray['add']);
@@ -42,6 +42,7 @@ class RegisteredStudentsBehavior extends Behavior {
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         // End
 
+        // index buttons: not allow to edit and delete
         $indexButtonsArray = $extra['indexButtons']->getArrayCopy();
         if (array_key_exists('edit', $indexButtonsArray)) {
             unset($indexButtonsArray['edit']);
@@ -50,6 +51,7 @@ class RegisteredStudentsBehavior extends Behavior {
             unset($indexButtonsArray['remove']);
         }
         $extra['indexButtons']->exchangeArray($indexButtonsArray);
+        // End
 
         $model = $this->_table;
         $model->field('openemis_no', ['sort' => true]);

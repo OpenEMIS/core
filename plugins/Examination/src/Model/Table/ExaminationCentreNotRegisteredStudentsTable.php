@@ -6,7 +6,7 @@ use Cake\Event\Event;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 
-class ExaminationNotRegisteredStudentsTable extends ControllerActionTable {
+class ExaminationCentreNotRegisteredStudentsTable extends ControllerActionTable {
     use OptionsTrait;
 
     public function initialize(array $config)
