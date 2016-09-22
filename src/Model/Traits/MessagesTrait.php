@@ -82,6 +82,7 @@ trait MessagesTrait {
                 'success' => 'The record has been duplicated successfully.',
                 'failed' => 'The record is not duplicated due to errors encountered.',
             ],
+            'reconfirm' => 'Please review the information before proceeding with the operation',
             'academicPeriod' => [
                 'notEditable' => 'The chosen academic period is not editable',
             ],
@@ -532,6 +533,19 @@ trait MessagesTrait {
         ],
         'CustomForms' => [
             'notSupport' => 'Not supported in this form.'
+        ],
+        'ExaminationStudents' => [
+            'restrictAdd' => 'Add operation is not allowed.'
+        ],
+        'ExaminationNotRegisteredStudents' => [
+            'restrictAdd' => 'Add operation is not allowed.'
+        ],
+        'UndoExaminationRegistration' => [
+            'success' => 'Undo of student examination registration is successful.',
+            'fail' => 'Undo of student examination registration is successful.'
+        ],
+        'InstitutionExaminationStudents' => [
+            'notAvailableForRegistration' => 'Not available for registration'
         ],
 
         // Validation Messages
@@ -1264,6 +1278,53 @@ trait MessagesTrait {
         ],
         'StaffSubjects' => [
             'notActiveTeachingStaff' => 'Not active teaching staff'
+        ],
+        'Examination' => [
+            'Examinations' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique for the same academic period',
+                ]
+            ],
+            'ExaminationCentres' => [
+                'capacity' => [
+                    'ruleValidateNumeric' => 'Please enter a valid Numeric value'
+                ],
+                'code' => [
+                    'ruleUnique' => 'Please enter a unique code for this examination centre in this examination'
+                ],
+            ],
+            'ExaminationItems' => [
+                'weight' => [
+                    'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleWeightRange' => 'Value must be positive and less than 2.0'
+                ]
+            ],
+            'ExaminationGradingTypes' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique',
+                ],
+                'pass_mark' => [
+                    'ruleNotMoreThanMax' => 'Pass mark cannot be more than Max mark',
+                    'ruleIsDecimal' => 'Value is not a valid decimal',
+                ],
+                'max' => [
+                    'ruleIsDecimal' => 'Value is not a valid decimal',
+                ]
+            ],
+            'GradingOptions' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique',
+                    'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form',
+                ],
+                'min' => [
+                    'ruleNotMoreThanMax' => 'Min value cannot be more than max value',
+                    'ruleIsDecimal' => 'Value is not a valid decimal',
+                ],
+                'max' => [
+                    'ruleNotMoreThanGradingTypeMax' => 'Grading Option max value cannot be more than Grading Type max value',
+                    'ruleIsDecimal' => 'Value is not a valid decimal',
+                ]
+            ]
         ],
         'Configuration' => [
         	'ConfigProductLists' => [
