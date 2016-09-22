@@ -101,7 +101,7 @@
                                                 $attr['null'] = true;
                                                 $attr['default_date'] = false;
                                                 $attr['class'] = 'margin-top-10 no-margin-bottom';
-                                                $attr['field'] = 'date';
+                                                $attr['field'] = 'examination_date';
                                                 $attr['fieldName'] = "$fieldPrefix.examination_date";
                                                 $attr['model'] = $fieldPrefix;
                                                 $attr['id'] = 'date_'.$i;
