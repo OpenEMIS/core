@@ -25,7 +25,7 @@
                             <td><?= $item->education_subject->name; ?></td>
                             <td><?= $item->weight; ?></td>
                             <td><?= $item->examination_grading_type_id; ?></td>
-                            <td><?= $item->date->format('d-m-Y'); ?></td>
+                            <td><?= $item->examination_date->format('d-m-Y'); ?></td>
                             <td><?= $item->start_time->format('H:i A'); ?></td>
                             <td><?= $item->end_time->format('H:i A'); ?></td>
                         </tr>
@@ -102,7 +102,7 @@
                                                 $attr['default_date'] = false;
                                                 $attr['class'] = 'margin-top-10 no-margin-bottom';
                                                 $attr['field'] = 'date';
-                                                $attr['fieldName'] = "$fieldPrefix.date";
+                                                $attr['fieldName'] = "$fieldPrefix.examination_date";
                                                 $attr['model'] = $fieldPrefix;
                                                 $attr['id'] = 'date_'.$i;
                                                 $attr['label'] = false;
