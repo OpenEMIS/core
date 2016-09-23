@@ -394,6 +394,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
             if (!empty($request->data[$this->alias()]['examination_id']) && !empty($request->data[$this->alias()]['institution_class_id'])) {
                 $institutionId = $attr['entity']->institution_id;
                 $academicPeriodId = $request->data[$this->alias()]['academic_period_id'];
+                $examinationId = $request->data[$this->alias()]['examination_id'];
                 $institutionClassId = $request->data[$this->alias()]['institution_class_id'];
                 $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
                 $examinationCentreId = $request->data[$this->alias()]['examination_centre_id'];
@@ -402,7 +403,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                 $students = $ClassStudents->find()
                     ->matching('EducationGrades')
                     ->leftJoin(['InstitutionExaminationStudents' => 'examination_centre_students'], [
-                        'InstitutionExaminationStudents.examination_centre_id' => $examinationCentreId,
+                        'InstitutionExaminationStudents.examination_id' => $examinationId,
                         'InstitutionExaminationStudents.student_id = '.$ClassStudents->aliasField('student_id')
                     ])
                     ->contain('Users.SpecialNeeds.SpecialNeedTypes')
