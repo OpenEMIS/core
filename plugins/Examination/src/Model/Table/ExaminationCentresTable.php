@@ -68,6 +68,34 @@ class ExaminationCentresTable extends ControllerActionTable {
         return $validator;
     }
 
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
+        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
+        $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+        $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
+        // Examination
+        $examinationOptions = $this->getExaminationOptions($selectedAcademicPeriod);
+        $examinationOptions = ['-1' => '-- '.__('Select Examination').' --'] + $examinationOptions;
+        $selectedExamination = !is_null($this->request->query('examination_id')) ? $this->request->query('examination_id') : -1;
+        $this->controller->set(compact('examinationOptions', 'selectedExamination'));
+        if ($selectedExamination != -1) {
+           $where[$this->aliasField('examination_id')] = $selectedExamination;
+        }
+
+        $query->where($where);
+    }
+
+    private function getExaminationOptions($selectedAcademicPeriod) {
+        $examinationOptions = $this->Examinations
+            ->find('list')
+            ->where([$this->Examinations->aliasField('academic_period_id') => $selectedAcademicPeriod])
+            ->toArray();
+
+        return $examinationOptions;
+    }
+
     public function findBySpecialNeeds(Query $query, array $options)
     {
         $selectedSpecialNeeds = $options['selectedSpecialNeeds'];
