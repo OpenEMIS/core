@@ -32,11 +32,16 @@ class NotRegisteredStudentsBehavior extends Behavior {
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
         $model = $this->_table;
-        $model->field('openemis_no', ['sort' => true]);
+        // sort attr is required by sortWhitelist
+        $model->field('openemis_no', [
+            'sort' => ['field' => 'Users.openemis_no']
+        ]);
         $model->field('student_id', [
             'type' => 'select',
             'sort' => ['field' => 'Users.first_name']
         ]);
+        $model->field('date_of_birth', ['type' => 'date']);
+        $model->field('gender_id');
         $model->field('student_status_id', ['visible' => false]);
         $model->field('education_grade_id', ['visible' => false]);
         $model->field('academic_period_id', ['visible' => false]);
@@ -44,10 +49,6 @@ class NotRegisteredStudentsBehavior extends Behavior {
         $model->field('start_year', ['visible' => false]);
         $model->field('end_date', ['visible' => false]);
         $model->field('end_year', ['visible' => false]);
-
-        // required by sortWhitelist
-        $model->fields['openemis_no']['sort'] = ['field' => 'Users.openemis_no'];
-        $model->fields['student_id']['sort'] = ['field' => 'Users.first_name'];
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
@@ -63,6 +64,8 @@ class NotRegisteredStudentsBehavior extends Behavior {
             $model->Users->aliasField('third_name'),
             $model->Users->aliasField('last_name'),
             $model->Users->aliasField('preferred_name'),
+            $model->Users->aliasField('date_of_birth'),
+            $model->Users->Genders->aliasField('name'),
             $model->Institutions->aliasField('code'),
             $model->Institutions->aliasField('name')
         ];
@@ -122,7 +125,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
 
         $query
             ->select($select)
-            ->contain(['AcademicPeriods', 'Institutions', 'Users'], true)
+            ->contain(['AcademicPeriods', 'Institutions', 'Users.Genders'], true)
             ->where($where)
             ->group([
                 $model->aliasField('student_id'),
@@ -134,7 +137,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
         $query
-            ->contain(['Users.SpecialNeeds.SpecialNeedTypes'])
+            ->contain(['Users.SpecialNeeds.SpecialNeedTypes', 'Users.Genders'])
             ->matching('AcademicPeriods')
             ->matching('EducationGrades')
             ->matching('Institutions');
@@ -150,6 +153,24 @@ class NotRegisteredStudentsBehavior extends Behavior {
             $value = $entity->user->openemis_no;
         } else if ($entity->has('_matchingData')) {
             $value = $entity->_matchingData['Users']->openemis_no;
+        }
+
+        return $value;
+    }
+
+    public function onGetDateOfBirth(Event $event, Entity $entity) {
+        $value = '';
+        if ($entity->has('user')) {
+            $value = $entity->user->date_of_birth;
+        }
+
+        return $value;
+    }
+
+    public function onGetGenderId(Event $event, Entity $entity) {
+        $value = '';
+        if ($entity->has('user')) {
+            $value = $entity->user->gender->name;
         }
 
         return $value;
@@ -216,13 +237,15 @@ class NotRegisteredStudentsBehavior extends Behavior {
         $model->field('end_year', ['visible' => false]);
         $model->field('examination_id');
         $model->field('openemis_no', ['entity' => $entity]);
+        $model->field('date_of_birth', ['type' => 'date', 'entity' => $entity]);
+        $model->field('gender_id', ['entity' => $entity]);
         $model->field('contact_person');
         $model->field('telephone');
         $model->field('fax');
         $model->field('email');
         $model->field('special_needs', ['type' => 'string', 'entity' => $entity]);
 
-        $model->setFieldOrder(['academic_period_id', 'examination_id', 'openemis_no', 'student_id', 'institution_id', 'contact_person', 'telephone', 'fax', 'email', 'special_needs']);
+        $model->setFieldOrder(['academic_period_id', 'examination_id', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'institution_id', 'contact_person', 'telephone', 'fax', 'email', 'special_needs']);
     }
 
     public function extractSpecialNeeds(Entity $entity) {
