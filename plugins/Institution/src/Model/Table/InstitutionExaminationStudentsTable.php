@@ -29,12 +29,120 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
 
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Examination.RegisteredStudents');
-
+        $this->addBehavior('Excel', [
+            'excludes' => ['id', 'education_subject_id'],
+            'pages' => ['index'],
+            'filename' => 'RegisteredStudents',
+            'orientation' => 'landscape'
+        ]);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function validationDefault(Validator $validator)
     {
-        $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
+        $validator = parent::validationDefault($validator);
+        return $validator->add('available_capacity', 'ruleAvailable', [
+                        'rule' => ['checkAvailableCapacity']
+                    ])
+                    ->allowEmpty('available_capacity');
+    }
+
+    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
+        $sheets[] = [
+            'name' => $this->alias(),
+            'table' => $this,
+            'query' => $this->find(),
+            'orientation' => 'landscape'
+        ];
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $examinationId = $this->request->query('examination_id');
+
+        $query
+            ->contain(['Users.Genders', 'Institutions'])
+            ->select(['openemis_no' => 'Users.openemis_no', 'gender_name' => 'Genders.name', 'dob' => 'Users.date_of_birth', 'code' => 'Institutions.code'])
+            ->where([$this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('examination_id') => $examinationId])
+            ->group([$this->aliasField('student_id')]);
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $newFields = [];
+
+        $newFields[] = [
+            'key' => 'Institutions.code',
+            'field' => 'code',
+            'type' => 'string',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionExaminationStudents.institution_id',
+            'field' => 'institution_id',
+            'type' => 'integer',
+            'label' => 'Institution',
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionExaminationStudents.education_grade_id',
+            'field' => 'education_grade_id',
+            'type' => 'integer',
+            'label' => 'Education Grade',
+        ];
+
+        $newFields[] = [
+            'key' => 'Users.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionExaminationStudents.student_id',
+            'field' => 'student_id',
+            'type' => 'integer',
+            'label' => 'Student',
+        ];
+
+        $newFields[] = [
+            'key' => 'Users.gender_id',
+            'field' => 'gender_name',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Users.date_of_birth',
+            'field' => 'dob',
+            'type' => 'date',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionExaminationStudents.academic_period_id',
+            'field' => 'academic_period_id',
+            'type' => 'integer',
+            'label' => 'Academic Period',
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionExaminationStudents.examination_id',
+            'field' => 'examination_id',
+            'type' => 'integer',
+            'label' => 'Examination',
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionExaminationStudents.examination_centre_id',
+            'field' => 'examination_centre_id',
+            'type' => 'integer',
+            'label' => 'Examination Centre',
+        ];
+
+        $fields->exchangeArray($newFields);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
@@ -60,11 +168,21 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $toolbarButtonsArray['undo'] = $undoButton;
 
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+
+        $examinationId = $this->request->query('examination_id');
+
+        if ($examinationId == -1 || !$examinationId || !$this->AccessControl->check(['Institutions', 'ExaminationStudents', 'excel']))
+        {
+            if (isset($extra['toolbarButtons']['export']))
+            {
+                unset($extra['toolbarButtons']['export']);
+            }
+        }
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        // $extra['patchEntity'] = false;
+        $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
     }
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -75,14 +193,14 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $this->field('special_needs_required', ['type' => 'chosenSelect', 'onChangeReload' => true]);
 
         $this->field('examination_centre_id', ['type' => 'select', 'onChangeReload' => true]);
-        $this->field('capacity', ['type' => 'readonly']);
+        $this->field('available_capacity', ['type' => 'readonly']);
         $this->field('special_needs', ['type' => 'readonly']);
         $this->field('institution_class_id', ['type' => 'select', 'onChangeReload' => true, 'entity' => $entity]);
         $this->field('student_id', ['entity' => $entity]);
         $this->field('education_grade_id', ['type' => 'hidden']);
 
         $this->setFieldOrder([
-            'academic_period_id', 'examination_id', 'examination_education_grade', 'special_needs_required', 'examination_centre_id', 'capacity', 'special_needs', 'institution_class_id', 'student_id'
+            'academic_period_id', 'examination_id', 'examination_education_grade', 'special_needs_required', 'examination_centre_id', 'available_capacity', 'special_needs', 'institution_class_id', 'student_id'
         ]);
     }
 
@@ -215,7 +333,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCapacity(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldAvailableCapacity(Event $event, array $attr, $action, $request) {
         $capacity = '';
 
         if (!empty($request->data[$this->alias()]['examination_centre_id'])) {
@@ -224,8 +342,9 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                 ->get($examinationCentreId)
                 ->toArray();
 
-            $capacity = $examinationCentres['capacity'];
+            $capacity = $examinationCentres['total_capacity'] - $examinationCentres['total_registered'];
             $attr['attr']['value'] = $capacity;
+            $attr['value'] = $capacity;
         }
 
         return $attr;
@@ -290,6 +409,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
             if (!empty($request->data[$this->alias()]['examination_id']) && !empty($request->data[$this->alias()]['institution_class_id'])) {
                 $institutionId = $attr['entity']->institution_id;
                 $academicPeriodId = $request->data[$this->alias()]['academic_period_id'];
+                $examinationId = $request->data[$this->alias()]['examination_id'];
                 $institutionClassId = $request->data[$this->alias()]['institution_class_id'];
                 $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
                 $examinationCentreId = $request->data[$this->alias()]['examination_centre_id'];
@@ -298,7 +418,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                 $students = $ClassStudents->find()
                     ->matching('EducationGrades')
                     ->leftJoin(['InstitutionExaminationStudents' => 'examination_centre_students'], [
-                        'InstitutionExaminationStudents.examination_centre_id' => $examinationCentreId,
+                        'InstitutionExaminationStudents.examination_id' => $examinationId,
                         'InstitutionExaminationStudents.student_id = '.$ClassStudents->aliasField('student_id')
                     ])
                     ->contain('Users.SpecialNeeds.SpecialNeedTypes')
@@ -332,11 +452,13 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $process = function ($model, $entity) use ($requestData) {
             if (!empty($requestData[$this->alias()]['examination_students'])) {
                 $students = $requestData[$this->alias()]['examination_students'];
+                $examinationCentre = $this->ExaminationCentres->get($requestData[$this->alias()]['examination_centre_id']);
+                $remainingCapacity = $examinationCentre->total_capacity - $examinationCentre->total_registered;
                 $newEntities = [];
 
                 $selectedExaminationCentre = $requestData[$this->alias()]['examination_centre_id'];
                 $ExaminationCentreSubjects = $this->ExaminationCentreSubjects->getExaminationCentreSubjects($selectedExaminationCentre);
-
+                $studentCount = 0;
                 foreach ($students as $key => $student) {
                     $obj = [];
                     if ($student['selected'] == 1) {
@@ -346,7 +468,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                         $obj['academic_period_id'] = $requestData[$this->alias()]['academic_period_id'];
                         $obj['examination_id'] = $requestData[$this->alias()]['examination_id'];
                         $obj['examination_centre_id'] = $requestData[$this->alias()]['examination_centre_id'];
-
+                        $studentCount++;
                         foreach($ExaminationCentreSubjects as $subject => $name) {
                             $obj['id'] = Text::uuid();
                             $obj['education_subject_id'] = $subject;
@@ -357,8 +479,20 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                 if (empty($newEntities)) {
                     $model->Alert->warning($this->aliasField('noStudentSelected'));
                     $entity->errors('student_id', __('There are no students selected'));
+                } else if ($remainingCapacity < $studentCount) {
+                    $entity->errors('available_capacity', __('Total students exceeded examination centre capacity'));
                 }
-                return $model->saveMany($newEntities);
+
+                if ($model->saveMany($newEntities)) {
+                    $studentCount = $this->find()
+                        ->where([$this->aliasField('examination_centre_id') => $entity->examination_centre_id])
+                        ->group([$this->aliasField('student_id')])
+                        ->count();
+                    $this->ExaminationCentres->updateAll(['total_registered' => $studentCount],['id' => $entity->examination_centre_id]);
+                    return true;
+                } else {
+                    return false;
+                }
             } else {
                 $model->Alert->warning($this->aliasField('noStudentSelected'));
                 $entity->errors('student_id', __('There are no students selected'));
