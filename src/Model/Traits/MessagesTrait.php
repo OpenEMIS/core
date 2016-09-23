@@ -1293,7 +1293,7 @@ trait MessagesTrait {
                 ]
             ],
             'ExaminationCentres' => [
-                'capacity' => [
+                'total_capacity' => [
                     'ruleValidateNumeric' => 'Please enter a valid Numeric value'
                 ],
                 'code' => [
