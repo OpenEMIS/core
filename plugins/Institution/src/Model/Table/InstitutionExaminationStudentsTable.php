@@ -29,7 +29,111 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
 
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Examination.RegisteredStudents');
+        $this->addBehavior('Excel', [
+            'excludes' => ['id', 'education_subject_id'],
+            'pages' => ['index'],
+            'filename' => 'RegisteredStudents',
+            'orientation' => 'landscape'
+        ]);
+    }
 
+    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
+        $sheets[] = [
+            'name' => $this->alias(),
+            'table' => $this,
+            'query' => $this->find(),
+            'orientation' => 'landscape'
+        ];
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $examinationId = $this->request->query('examination_id');
+
+        $query
+            ->contain(['Users.Genders', 'Institutions'])
+            ->select(['openemis_no' => 'Users.openemis_no', 'gender_name' => 'Genders.name', 'dob' => 'Users.date_of_birth', 'code' => 'Institutions.code'])
+            ->where([$this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('examination_id') => $examinationId])
+            ->group([$this->aliasField('student_id')]);
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $newFields = [];
+
+        $newFields[] = [
+            'key' => 'Institutions.code',
+            'field' => 'code',
+            'type' => 'string',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionExaminationStudents.institution_id',
+            'field' => 'institution_id',
+            'type' => 'integer',
+            'label' => 'Institution',
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionExaminationStudents.education_grade_id',
+            'field' => 'education_grade_id',
+            'type' => 'integer',
+            'label' => 'Education Grade',
+        ];
+
+        $newFields[] = [
+            'key' => 'Users.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionExaminationStudents.student_id',
+            'field' => 'student_id',
+            'type' => 'integer',
+            'label' => 'Student',
+        ];
+
+        $newFields[] = [
+            'key' => 'Users.gender_id',
+            'field' => 'gender_name',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Users.date_of_birth',
+            'field' => 'dob',
+            'type' => 'date',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionExaminationStudents.academic_period_id',
+            'field' => 'academic_period_id',
+            'type' => 'integer',
+            'label' => 'Academic Period',
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionExaminationStudents.examination_id',
+            'field' => 'examination_id',
+            'type' => 'integer',
+            'label' => 'Examination',
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionExaminationStudents.examination_centre_id',
+            'field' => 'examination_centre_id',
+            'type' => 'integer',
+            'label' => 'Examination Centre',
+        ];
+
+        $fields->exchangeArray($newFields);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -37,7 +141,17 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra) {
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator->add('available_capacity', 'ruleAvailable', [
+                        'rule' => ['checkAvailableCapacity']
+                    ])
+                    ->allowEmpty('available_capacity');
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
         $toolbarButtons = $extra['toolbarButtons'];
         $undoButton['url'] = [
             'plugin' => 'Institution',
@@ -54,15 +168,16 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $undoButton['attr']['title'] = __('Undo');
 
         $toolbarButtons['undo'] = $undoButton;
-    }
 
-    public function validationDefault(Validator $validator)
-    {
-        $validator = parent::validationDefault($validator);
-        return $validator->add('available_capacity', 'ruleAvailable', [
-                        'rule' => ['checkAvailableCapacity']
-                    ])
-                    ->allowEmpty('available_capacity');
+        $examinationId = $this->request->query('examination_id');
+
+        if ($examinationId == -1 || !$examinationId || !$this->AccessControl->check(['Institutions', 'ExaminationStudents', 'excel']))
+        {
+            if (isset($extra['toolbarButtons']['export']))
+            {
+                unset($extra['toolbarButtons']['export']);
+            }
+        }
     }
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
