@@ -37,6 +37,15 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         ]);
     }
 
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator->add('available_capacity', 'ruleAvailable', [
+                        'rule' => ['checkAvailableCapacity']
+                    ])
+                    ->allowEmpty('available_capacity');
+    }
+
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
         $sheets[] = [
             'name' => $this->alias(),
@@ -136,23 +145,13 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $fields->exchangeArray($newFields);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
-        $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
-    }
+    public function indexBeforeAction(Event $event, ArrayObject $extra) {
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
 
-    public function validationDefault(Validator $validator)
-    {
-        $validator = parent::validationDefault($validator);
-        return $validator->add('available_capacity', 'ruleAvailable', [
-                        'rule' => ['checkAvailableCapacity']
-                    ])
-                    ->allowEmpty('available_capacity');
-    }
+        if (array_key_exists('add', $toolbarButtonsArray)) {
+            $toolbarButtonsArray['add']['attr']['title'] = __('Register');
+        }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
-    {
-        $toolbarButtons = $extra['toolbarButtons'];
         $undoButton['url'] = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
@@ -165,9 +164,10 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $undoButton['attr']['data-toggle'] = 'tooltip';
         $undoButton['attr']['data-placement'] = 'bottom';
         $undoButton['attr']['escape'] = false;
-        $undoButton['attr']['title'] = __('Undo');
+        $undoButton['attr']['title'] = __('Unregister');
+        $toolbarButtonsArray['undo'] = $undoButton;
 
-        $toolbarButtons['undo'] = $undoButton;
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
 
         $examinationId = $this->request->query('examination_id');
 
@@ -178,6 +178,11 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                 unset($extra['toolbarButtons']['export']);
             }
         }
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
     }
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
