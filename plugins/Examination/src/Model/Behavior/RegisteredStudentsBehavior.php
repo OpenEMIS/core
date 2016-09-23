@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace Examination\Model\Behavior;
 
 use ArrayObject;
@@ -11,6 +11,7 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Datasource\ConnectionManager;
 use Cake\Log\Log;
+use Cake\I18n\Time;
 
 class RegisteredStudentsBehavior extends Behavior {
 	public function initialize(array $config) {
@@ -216,23 +217,25 @@ class RegisteredStudentsBehavior extends Behavior {
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
         $model = $this->_table;
+        $todayDate = Time::now();
+        if ($todayDate >= $entity->examination->registration_start_date && $todayDate <= $entity->examination->registration_end_date) {
+            $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
 
-        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+            // unregister button
+            $url = $model->url('view');
+            $url[0] = 'unregister';
 
-        // unregister button
-        $url = $model->url('view');
-        $url[0] = 'unregister';
+            $unregisterButton = $toolbarButtonsArray['back'];
+            $unregisterButton['label'] = '<i class="fa fa-undo"></i>';
+            $unregisterButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+            $unregisterButton['attr']['title'] = __('Unregister');
+            $unregisterButton['url'] = $url;
 
-        $unregisterButton = $toolbarButtonsArray['back'];
-        $unregisterButton['label'] = '<i class="fa fa-undo"></i>';
-        $unregisterButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
-        $unregisterButton['attr']['title'] = __('Unregister');
-        $unregisterButton['url'] = $url;
+            $toolbarButtonsArray['unregister'] = $unregisterButton;
+            // End
+            $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+        }
 
-        $toolbarButtonsArray['unregister'] = $unregisterButton;
-        // End
-
-        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
 
         $this->setupFields($entity, $extra);
     }
