@@ -585,12 +585,9 @@ class DirectoriesTable extends AppTable {
 		$this->setupTabElements($entity);
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) 
+	public function viewAfterAction(Event $event, Entity $entity)
 	{
-		$isSet = false;
-		if (!$this->request->query('guardianId')) { //to mark that the view came from student, so no need to update the session.
-			$isSet = $this->setSessionAfterAction($event, $entity);
-		}
+		$isSet = $this->setSessionAfterAction($event, $entity);
 		if ($isSet) {
 			$reload = $this->Session->read('Directory.Directories.reload');
 			if (!isset($reload)) {
