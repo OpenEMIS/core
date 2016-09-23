@@ -211,7 +211,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                     $this->fields['website']['type'] = 'readonly';
                 }
             }
-            $this->fields['total_capacity']['type'] = 'string';
+            $this->field('total_capacity', ['type' => 'string']);
 
             // field order
             $this->setFieldOrder(['create_as', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'total_capacity', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website']);
@@ -234,6 +234,12 @@ class ExaminationCentresTable extends ControllerActionTable {
 
             $this->setFieldOrder(['code', 'name', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'total_registered', 'total_capacity', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website']);
         }
+    }
+
+    public function onUpdateFieldTotalCapacity(Event $event, array $attr, $action, Request $request)
+    {
+        $attr['length'] = 5;
+        return $attr;
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
