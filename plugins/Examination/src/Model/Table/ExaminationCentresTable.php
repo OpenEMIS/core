@@ -33,13 +33,6 @@ class ExaminationCentresTable extends ControllerActionTable {
         ]);
     }
 
-    public function implementedEvents()
-    {
-        $event = parent::implementedEvents();
-        $event['ControllerAction.Model.viewEdit.afterQuery'] = 'viewEditAfterQuery';
-        return $event;
-    }
-
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
