@@ -74,7 +74,7 @@ class InstitutionExaminationsTable extends ControllerActionTable {
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
-        $query->contain(['ExaminationItems.EducationSubjects']);
+        $query->contain(['ExaminationItems.EducationSubjects', 'ExaminationItems.ExaminationGradingTypes']);
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra) {
@@ -85,14 +85,5 @@ class InstitutionExaminationsTable extends ControllerActionTable {
         ]);
 
         $this->setFieldOrder(['academic_period_id', 'code', 'name', 'description', 'education_grade_id', 'examination_items']);
-
-        $this->controller->set('examinationGradingTypeOptions', $this->getGradingTypeOptions()); //send to ctp
-    }
-
-    public function getGradingTypeOptions()
-    {
-        $examinationGradingType = TableRegistry::get('Examination.ExaminationGradingTypes');
-        $examinationGradingTypeOptions = $examinationGradingType->find('list')->toArray();
-        return $examinationGradingTypeOptions;
     }
 }
