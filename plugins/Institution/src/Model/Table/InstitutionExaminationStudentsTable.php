@@ -27,7 +27,14 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 
+        $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Examination.RegisteredStudents');
+
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
@@ -51,7 +58,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $extra['patchEntity'] = false;
+        // $extra['patchEntity'] = false;
     }
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -308,6 +315,12 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         return $attr;
     }
 
+    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    {
+        $requestData[$this->alias()]['student_id'] = 0;
+        $requestData[$this->alias()]['education_subject_id'] = 0;
+    }
+
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
     {
         $process = function ($model, $entity) use ($requestData) {
@@ -335,9 +348,15 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                         }
                     }
                 }
+                if (empty($newEntities)) {
+                    $model->Alert->warning($this->aliasField('noStudentSelected'));
+                    $entity->errors('student_id', __('There are no students selected'));
+                }
                 return $model->saveMany($newEntities);
             } else {
-                return $model->save($entity);
+                $model->Alert->warning($this->aliasField('noStudentSelected'));
+                $entity->errors('student_id', __('There are no students selected'));
+                return false;
             }
         };
 
