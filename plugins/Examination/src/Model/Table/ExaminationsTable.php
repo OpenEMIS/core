@@ -52,6 +52,16 @@ class ExaminationsTable extends ControllerActionTable {
         $this->field('description', ['visible' => false]);
     }
 
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
+        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
+        $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+        $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
+        $query->where($where);
+    }
+
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->controller->getExamsTab();
