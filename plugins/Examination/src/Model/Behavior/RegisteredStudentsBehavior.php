@@ -639,7 +639,7 @@ class RegisteredStudentsBehavior extends Behavior {
         $model->field('academic_period_id', ['type' => 'select', 'entity' => $entity]);
         $model->field('examination_id', ['type' => 'select', 'entity' => $entity]);
         $model->field('openemis_no', ['entity' => $entity]);
-        $model->field('student_id', ['type' => 'select', 'entity' => $entity]);
+        $model->field('student_id', ['type' => 'integer', 'entity' => $entity]);
         $model->field('date_of_birth', ['type' => 'date', 'entity' => $entity]);
         $model->field('gender_id', ['entity' => $entity]);
         $model->field('institution_id', ['type' => 'select', 'entity' => $entity]);

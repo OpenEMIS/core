@@ -21,13 +21,13 @@
                 <tbody>
                     <?php foreach ($data['examination_items'] as $i => $item) : ?>
                         <tr>
-                            <td><?= $item->education_subject->code; ?></td>
-                            <td><?= $item->education_subject->name; ?></td>
-                            <td><?= $item->weight; ?></td>
-                            <td><?= $item->examination_grading_type->name; ?></td>
-                            <td><?= $item->examination_date->format('d-m-Y'); ?></td>
-                            <td><?= $item->start_time->format('H:i A'); ?></td>
-                            <td><?= $item->end_time->format('H:i A'); ?></td>
+                            <td><?= $item->education_subject->code ?></td>
+                            <td><?= $item->education_subject->name ?></td>
+                            <td><?= $item->weight ?></td>
+                            <td><?= $item->examination_grading_type->name ?></td>
+                            <td><?= !is_null($item->examination_date) ? $item->examination_date->format('d-m-Y') : '' ?></td>
+                            <td><?= !is_null($item->start_time) ? $item->start_time->format('H:i A') : '' ?></td>
+                            <td><?= !is_null($item->end_time) ? $item->end_time->format('H:i A') : '' ?></td>
                         </tr>
                     <?php endforeach ?>
                 </tbody>
