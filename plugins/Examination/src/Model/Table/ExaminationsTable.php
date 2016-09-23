@@ -45,7 +45,7 @@ class ExaminationsTable extends ControllerActionTable {
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['ExaminationItems.EducationSubjects']);
+        $query->contain(['ExaminationItems.EducationSubjects', 'ExaminationItems.ExaminationGradingTypes']);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
@@ -55,7 +55,7 @@ class ExaminationsTable extends ControllerActionTable {
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->controller->getExamsTab();
-        $this->controller->set('examinationGradingTypeOptions', $this->getGradingTypeOptions()); //send to ctp
+
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -65,6 +65,7 @@ class ExaminationsTable extends ControllerActionTable {
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->controller->set('examinationGradingTypeOptions', $this->getGradingTypeOptions()); //send to ctp
         $this->setupFields($entity);
     }
 
