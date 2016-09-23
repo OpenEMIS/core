@@ -24,6 +24,7 @@ class ExaminationCentreNotRegisteredStudentsTable extends ControllerActionTable 
     }
 
     public function beforeAction(Event $event, ArrayObject $extra) {
+        $extra['config']['selectedLink'] = ['controller' => 'Examinations', 'action' => 'RegisteredStudents'];
         $this->controller->getStudentsTab();
     }
 }
