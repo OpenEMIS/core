@@ -37,7 +37,7 @@ $this->start('panelBody');
         <div class="scrolltabs sticky-content">
             <scrollable-tabset show-tooltips="false" show-drop-down="false">
                 <uib-tabset justified="true">
-                    <uib-tab heading="{{subject.name}}" ng-repeat="subject in ExaminationsResultsController.subjects" ng-click="ExaminationsResultsController.onChangeSubject(subject)">
+                    <uib-tab heading="{{subject.name}}" ng-repeat="subject in ExaminationsResultsController.subjects" ng-click="ExaminationsResultsController.onChangeSubject(ExaminationsResultsController.academicPeriodId,ExaminationsResultsController.examinationId,subject)">
                     </uib-tab>
                 </uib-tabset>
                 <div class="tabs-divider"></div>
