@@ -17,7 +17,7 @@ class ExaminationsController extends AppController
     // CAv4
     public function Exams() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.Examinations']); }
     public function GradingTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationGradingTypes']); }
-    public function Centres($pass = 'index')
+    public function ExamCentres($pass = 'index')
     {
         // if ($pass == 'add') {
         //     $this->set('ngController', 'ExaminationCentresCtrl as ExamCentreController');
@@ -69,8 +69,8 @@ class ExaminationsController extends AppController
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Exams'],
                 'text' => __('Exams')
             ],
-            'Centres' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Centres'],
+            'ExamCentres' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExamCentres'],
                 'text' => __('Exam Centres')
             ],
             'GradingTypes' => [
