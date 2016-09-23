@@ -230,6 +230,8 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
                         $ClassStudents->aliasField('student_status_id') => $enrolledStatus,
                         'InstitutionExaminationStudents.student_id IS NOT NULL'
                     ])
+                    ->select(['examination_centre_id' => 'InstitutionExaminationStudents.examination_centre_id'])
+                    ->autoFields(true)
                     ->group(['InstitutionExaminationStudents.student_id'])
                     ->toArray();
             }
@@ -242,9 +244,15 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
                 $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
                 $students = $ClassStudents->find()
                     ->matching('EducationGrades')
+                    ->innerJoin(['InstitutionExaminationStudents' => 'examination_centre_students'], [
+                        'InstitutionExaminationStudents.examination_id' => $attr['entity']->examination_id,
+                        'InstitutionExaminationStudents.student_id = '.$ClassStudents->aliasField('student_id')
+                    ])
                     ->contain('Users.SpecialNeeds.SpecialNeedTypes')
                     ->where([$ClassStudents->aliasField('student_id').' IN ' => $studentIds])
                     ->group([$ClassStudents->aliasField('student_id')])
+                    ->select(['examination_centre_id' => 'InstitutionExaminationStudents.examination_centre_id'])
+                    ->autoFields(true)
                     ->toArray();
             }
             $attr['type'] = 'element';
@@ -296,13 +304,21 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
             $requestData = new ArrayObject($this->request->data);
             $submit = isset($requestData['submit']) ? $requestData['submit'] : 'save';
             if ($submit == 'save') {
-                $studentIds = $requestData[$this->alias()]['examination_students'];
+                $examStudents = $requestData[$this->alias()]['examination_students'];
                 $examinationId = $requestData[$this->alias()]['examination_id'];
                 $students = [];
                 $entity->errors('student_id', 'No selected students');
-                if (!empty($studentIds)) {
-                    $students = array_column($studentIds, 'student_id');
+                if (!empty($examStudents)) {
+                    $students = array_column($examStudents, 'student_id');
+                    $examinationCentreId = array_unique(array_column($examStudents, 'examination_centre_id'));
                     $this->deleteAll(['student_id IN ' => $students, 'examination_id' => $examinationId]);
+                    foreach ($examinationCentreId as $centreId) {
+                        $studentCount = $this->find()
+                            ->where([$this->aliasField('examination_centre_id') => $centreId])
+                            ->group([$this->aliasField('student_id')])
+                            ->count();
+                        $this->ExaminationCentres->updateAll(['total_registered' => $studentCount],['id' => $centreId]);
+                    }
                     $this->Alert->success($this->aliasField('success'));
                     $session = $this->Session;
                     $session->delete($this->registryAlias());
