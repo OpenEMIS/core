@@ -24,7 +24,6 @@ class InstitutionExaminationsTable extends ControllerActionTable {
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
-        // $extra['config']['selectedLink'] = ['controller' => 'Institutions', 'action' => 'Examinations', 'index'];
         $extra['elements']['controls'] = ['name' => 'Institution.Examinations/controls', 'data' => [], 'options' => [], 'order' => 1];
 
         $this->field('description', ['visible' => 'hidden']);
@@ -86,5 +85,14 @@ class InstitutionExaminationsTable extends ControllerActionTable {
         ]);
 
         $this->setFieldOrder(['academic_period_id', 'code', 'name', 'description', 'education_grade_id', 'examination_items']);
+
+        $this->controller->set('examinationGradingTypeOptions', $this->getGradingTypeOptions()); //send to ctp
+    }
+
+    public function getGradingTypeOptions()
+    {
+        $examinationGradingType = TableRegistry::get('Examination.ExaminationGradingTypes');
+        $examinationGradingTypeOptions = $examinationGradingType->find('list')->toArray();
+        return $examinationGradingTypeOptions;
     }
 }
