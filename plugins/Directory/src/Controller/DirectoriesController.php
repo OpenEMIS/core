@@ -37,7 +37,6 @@ class DirectoriesController extends AppController {
 			// Student
 			'StudentGuardians'		=> ['className' => 'Student.Guardians'],
 			'StudentGuardianUser'	=> ['className' => 'Student.GuardianUser'],
-			'StudentProgrammes'		=> ['className' => 'Student.Programmes', 'actions' => ['index', 'view']],
 			'StudentAbsences' 		=> ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
 			'StudentBehaviours' 	=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
 			'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],
@@ -87,6 +86,7 @@ class DirectoriesController extends AppController {
 	public function StudentBankAccounts() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.BankAccounts']); }
 	public function StaffBankAccounts() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.BankAccounts']); }
 	public function Comments() 				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
+	public function StudentProgrammes() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Programmes']); }
 	// End
 
 	// AngularJS
