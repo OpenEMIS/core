@@ -24,7 +24,6 @@ class StudentsController extends AppController {
 			'Attachments' 		=> ['className' => 'User.Attachments'],
 			'Guardians' 		=> ['className' => 'Student.Guardians'],
 			'GuardianUser' 		=> ['className' => 'Student.GuardianUser', 'actions' => ['add', 'view', 'edit']],
-			'Programmes' 		=> ['className' => 'Student.Programmes', 'actions' => ['index', 'view']],
 			'Absences' 			=> ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
 			'Behaviours' 		=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
 			'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],

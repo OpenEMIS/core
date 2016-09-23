@@ -24,7 +24,7 @@ class SecurityFunctionsTable extends AppTable {
 			'SecurityFunctions.id', 'SecurityFunctions.name', 'SecurityFunctions.controller', 
 			'SecurityFunctions.module', 'SecurityFunctions.category', 
 			'SecurityFunctions._view', 'SecurityFunctions._add', 'SecurityFunctions._edit',
-			'SecurityFunctions._delete', 'SecurityFunctions._execute',
+			'SecurityFunctions._delete', 'SecurityFunctions._execute', 'SecurityFunctions.description',
 			'Permissions.id', 'Permissions._view', 'Permissions._add', 'Permissions._edit',
 			'Permissions._delete', 'Permissions._execute'
 		])
