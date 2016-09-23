@@ -33,6 +33,18 @@ class IdentitiesTable extends ControllerActionTable
 		$this->fields['comments']['visible'] = 'false';
 	}
 
+	public function editOnInitialize(Event $event, Entity $entity)
+	{
+		// set the defaultDate to false on initialize, for the empty date.
+		if (empty($entity->issue_date)) {
+			$this->fields['issue_date']['default_date'] = false;
+		}
+
+		if (empty($entity->expiry_date)) {
+			$this->fields['expiry_date']['default_date'] = false;
+		}
+	}
+
 	private function setupTabElements()
 	{
 		$options = [
