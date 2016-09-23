@@ -145,6 +145,17 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $fields->exchangeArray($newFields);
     }
 
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        //work around for export button showing in pages not specified
+        if ($this->action != 'index') {
+            if (isset($extra['toolbarButtons']['export']))
+            {
+                unset($extra['toolbarButtons']['export']);
+            }
+        }
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
 
