@@ -40,7 +40,7 @@ class ExaminationCentresTable extends ControllerActionTable {
             ->requirePresence('create_as', 'create')
             ->requirePresence('code')
             ->requirePresence('name')
-            ->add('capacity', 'ruleValidateNumeric', [
+            ->add('total_capacity', 'ruleValidateNumeric', [
                 'rule' => ['numericPositive']
             ])
             ->add('code', 'ruleUnique', [
@@ -66,6 +66,34 @@ class ExaminationCentresTable extends ControllerActionTable {
             ->remove('code')
             ->requirePresence('name', false);
         return $validator;
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
+        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
+        $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+        $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
+        // Examination
+        $examinationOptions = $this->getExaminationOptions($selectedAcademicPeriod);
+        $examinationOptions = ['-1' => '-- '.__('Select Examination').' --'] + $examinationOptions;
+        $selectedExamination = !is_null($this->request->query('examination_id')) ? $this->request->query('examination_id') : -1;
+        $this->controller->set(compact('examinationOptions', 'selectedExamination'));
+        if ($selectedExamination != -1) {
+           $where[$this->aliasField('examination_id')] = $selectedExamination;
+        }
+
+        $query->where($where);
+    }
+
+    private function getExaminationOptions($selectedAcademicPeriod) {
+        $examinationOptions = $this->Examinations
+            ->find('list')
+            ->where([$this->Examinations->aliasField('academic_period_id') => $selectedAcademicPeriod])
+            ->toArray();
+
+        return $examinationOptions;
     }
 
     public function findBySpecialNeeds(Query $query, array $options)
@@ -127,6 +155,7 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->controller->getExamsTab();
+        $this->fields['total_registered']['visible'] = false;
         $entity = $extra['entity'];
         if ($this->action == 'edit' || $this->action == 'add') {
             $this->field('academic_period_id', ['entity' => $entity]);
@@ -182,10 +211,10 @@ class ExaminationCentresTable extends ControllerActionTable {
                     $this->fields['website']['type'] = 'readonly';
                 }
             }
-            $this->fields['capacity']['type'] = 'string';
+            $this->fields['total_capacity']['type'] = 'string';
 
             // field order
-            $this->setFieldOrder(['create_as', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'capacity', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website']);
+            $this->setFieldOrder(['create_as', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'total_capacity', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website']);
         } else if ($this->action == 'view') {
             $this->fields['area_id'] = array_merge($this->fields['area_id'], ['visible' => true, 'type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
             $this->field('special_need_types');
@@ -201,11 +230,10 @@ class ExaminationCentresTable extends ControllerActionTable {
             $this->fields['fax']['visible'] = true;
             $this->fields['email']['visible'] = true;
             $this->fields['website']['visible'] = true;
+            $this->fields['total_registered']['visible'] = true;
 
-            $this->setFieldOrder(['code', 'name', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'capacity', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website']);
+            $this->setFieldOrder(['code', 'name', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'total_registered', 'total_capacity', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website']);
         }
-
-
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
@@ -274,38 +302,30 @@ class ExaminationCentresTable extends ControllerActionTable {
             $ExaminationItemsTable = $this->Examinations->ExaminationItems;
 
             $options = $ExaminationItemsTable
-                ->find('list', [
-                    'keyField' => 'subject_id',
-                    'valueField' => 'subject_name'
-                ])
+                ->find()
                 ->matching('EducationSubjects')
-                ->select([
-                    'subject_name' => 'EducationSubjects.name',
-                    'subject_id' => $ExaminationItemsTable->aliasField('education_subject_id')
-                ])
+                ->select(['subject_code' => 'EducationSubjects.code', 'subject_name' => 'EducationSubjects.name'])
                 ->where([
                     $ExaminationItemsTable->aliasField('examination_id') => $examinationId
                 ])
+                ->hydrate(false)
                 ->toArray();
 
-            foreach ($options as $key => $name) {
-                $options[$key] = __($name);
-            }
-
-            $attr['type'] = 'text';
-            $attr['attr']['value'] = implode(', ', $options);
-            $attr['attr']['disabled'] = 'disabled';
-            // $attr['empty'] = false;
-            // $attr['fieldName'] = $this->alias().'.subjects';
+            $attr['type'] = 'element';
+            $attr['element'] = 'Examination.exam_centre_subjects';
+            $attr['data'] = $options;
         } else if ($action == 'edit') {
             $entity = $attr['entity'];
             $subjects = [];
             foreach ($entity->examination_centre_subjects as $subject) {
-                $subjects[] = __($subject->education_subject->name);
+                $subjects[] = [
+                    'subject_code' => $subject->education_subject->code,
+                    'subject_name' => $subject->education_subject->name
+                ];
             }
-            $attr['attr']['value'] = implode(', ', $subjects);
-            $attr['attr']['disabled'] = 'disabled';
-            $attr['type'] = 'text';
+            $attr['type'] = 'element';
+            $attr['element'] = 'Examination.exam_centre_subjects';
+            $attr['data'] = $subjects;
         }
         return $attr;
     }

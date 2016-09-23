@@ -2,16 +2,18 @@ angular
     .module('examinations.results.svc', ['kd.orm.svc'])
     .service('ExaminationsResultsSvc', ExaminationsResultsSvc);
 
-ExaminationsResultsSvc.$inject = ['$q', 'KdOrmSvc'];
+ExaminationsResultsSvc.$inject = ['$filter', '$q', 'KdOrmSvc'];
 
-function ExaminationsResultsSvc($q, KdOrmSvc) {
+function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
     const resultTypes = {MARKS: 'MARKS', GRADES: 'GRADES'};
 
     var models = {
         AcademicPeriodsTable: 'AcademicPeriod.AcademicPeriods',
         ExaminationsTable: 'Examination.Examinations',
         ExaminationItemsTable: 'Examination.ExaminationItems',
-        ExaminationCentresTable: 'Examination.ExaminationCentres'
+        ExaminationCentresTable: 'Examination.ExaminationCentres',
+        ExaminationCentreStudentsTable: 'Examination.ExaminationCentreStudents',
+        ExaminationItemResultsTable: 'Examination.ExaminationItemResults',
     };    
 
     var service = {
@@ -22,7 +24,12 @@ function ExaminationsResultsSvc($q, KdOrmSvc) {
         getSubjects: getSubjects,
         getColumnDefs: getColumnDefs,
         renderMarks: renderMarks,
-        renderGrades: renderGrades
+        renderGrades: renderGrades,
+        getRowData: getRowData,
+        getGrading: getGrading,
+        calculateTotal: calculateTotal,
+        saveRowData: saveRowData,
+        saveTotal: saveTotal
     };
 
     return service;
@@ -76,7 +83,7 @@ function ExaminationsResultsSvc($q, KdOrmSvc) {
                 deferred.resolve(subjects);
             } else {
                 deferred.reject('You need to configure Examination Items first');
-            }   
+            }
         };
 
         return ExaminationItemsTable
@@ -86,12 +93,11 @@ function ExaminationsResultsSvc($q, KdOrmSvc) {
             .ajax({success: success, defer: true});
     };
 
-function getColumnDefs(action, subject) {
+function getColumnDefs(action, subject, _results) {
         var deferred = $q.defer();
 
         if (subject.examination_grading_type.grading_options.length == 0) {
             // No Grading Options
-            // return {error: 'You need to configure Examination Grading Options first'};
             var errorMsg = 'You need to configure Examination Grading Options first';
             deferred.reject(errorMsg);
         } else {
@@ -115,6 +121,12 @@ function getColumnDefs(action, subject) {
             columnDefs.push({
                 headerName: "student id",
                 field: "student_id",
+                hide: true,
+                filterParams: filterParams
+            });
+            columnDefs.push({
+                headerName: "institution id",
+                field: "institution_id",
                 hide: true,
                 filterParams: filterParams
             });
@@ -143,7 +155,7 @@ function getColumnDefs(action, subject) {
                     };
                 }
 
-                columnDef = this.renderMarks(allowEdit, columnDef, extra);
+                columnDef = this.renderMarks(allowEdit, columnDef, extra, _results);
             } else {
                 if (subject.examination_grading_type != null) {
                     var gradingOptions = {
@@ -163,7 +175,7 @@ function getColumnDefs(action, subject) {
                     };
                 }
 
-                columnDef = this.renderGrades(allowEdit, columnDef, extra);
+                columnDef = this.renderGrades(allowEdit, columnDef, extra, _results);
             }
 
             columnDefs.push(columnDef);
@@ -174,10 +186,12 @@ function getColumnDefs(action, subject) {
                 hide: true
             });
 
+            var visibility = isMarksType ? false : true;
             columnDefs.push({
                 headerName: "Total Mark",
                 field: "total_mark",
                 filter: "number",
+                hide: visibility,
                 valueGetter: function(params) {
                     var value = params.data[params.colDef.field];
 
@@ -196,7 +210,7 @@ function getColumnDefs(action, subject) {
         return deferred.promise;
     };
 
-    function renderMarks(allowEdit, cols, extra) {
+    function renderMarks(allowEdit, cols, extra, _results) {
         var minMark = extra.minMark;
         var passMark = extra.passMark;
         var maxMark = extra.maxMark;
@@ -240,9 +254,8 @@ function getColumnDefs(action, subject) {
         return cols;
     };
 
-    function renderGrades(allowEdit, cols, extra) {
+    function renderGrades(allowEdit, cols, extra, _results) {
         var gradingOptions = extra.gradingOptions;
-        // var period = extra.period;
 
         if (allowEdit) {
             cols = angular.merge(cols, {
@@ -254,7 +267,7 @@ function getColumnDefs(action, subject) {
 
                     var oldValue = params.value;
                     var studentId = params.data.student_id;
-                    // var periodId = period.id;
+                    var institutionId = params.data.institution_id;
 
                     var eCell = document.createElement('div');
                     eCell.setAttribute("class", "oe-cell-editable oe-select-wrapper");
@@ -277,6 +290,16 @@ function getColumnDefs(action, subject) {
                     eSelect.addEventListener('change', function () {
                         var newValue = eSelect.value;
                         params.data[params.colDef.field] = newValue;
+
+                        if (angular.isUndefined(_results[studentId])) {
+                            _results[studentId] = {};
+                        }
+
+                        if (angular.isUndefined(_results[studentId][institutionId])) {
+                            _results[studentId][institutionId] = {gradingOptionId: ''};
+                        }
+
+                        _results[studentId][institutionId]['gradingOptionId'] = newValue;
                     });
 
                     eCell.appendChild(eSelect);
@@ -308,5 +331,170 @@ function getColumnDefs(action, subject) {
         }
 
         return cols;
+    };
+
+    function getRowData(academicPeriodId, examinationId, examinationCentreId, subject) {
+        var success = function(response, deferred) {
+            if (angular.isDefined(response.data.error)) {
+                deferred.reject(response.data.error);
+            } else {
+                var subjectStudents = response.data.data;
+
+                var resultType = subject.examination_grading_type.result_type;
+                var itemWeight = subject.weight;
+                var isMarksType = (resultType == resultTypes.MARKS) ? true : false;
+
+                if (angular.isObject(subjectStudents) && subjectStudents.length > 0) {
+                    var studentId = null;
+                    var currentStudentId = null;
+                    var institutionId = null;
+                    var studentResults = {};
+                    var rowData = [];
+
+                    angular.forEach(subjectStudents, function(subjectStudent, key) {
+                        currentStudentId = parseInt(subjectStudent.student_id);
+                        institutionId = parseInt(subjectStudent.institution_id);
+
+                        if (studentId != currentStudentId) {
+                            if (studentId != null) {
+                                this.push(studentResults);
+                            }
+
+                            studentResults = {
+                                openemis_id: subjectStudent._matchingData.Users.openemis_no,
+                                name: subjectStudent._matchingData.Users.name,
+                                student_id: currentStudentId,
+                                institution_id: institutionId,
+                                mark: '',
+                                weight: itemWeight,
+                                total_mark: 0
+                            };
+
+                            studentId = currentStudentId;
+                        }
+
+                        if (isMarksType) {
+                            var marks = parseFloat(subjectStudent.ExaminationItemResults.marks);
+                            if (!isNaN(marks)) {
+                                studentResults['mark'] = marks;
+                            }
+                        } else {
+                            if (subjectStudent.ExaminationItemResults.examination_grading_option_id != null) {
+                                studentResults['mark'] = subjectStudent.ExaminationItemResults.examination_grading_option_id;
+                            }
+                        }
+                    }, rowData);
+
+                    if (studentResults.hasOwnProperty('student_id')) {
+                        rowData.push(studentResults);
+                    }
+
+                    deferred.resolve(rowData);
+                } else {
+                    deferred.reject('No Students');
+                }
+            }
+        };
+
+        return ExaminationCentreStudentsTable
+            .select()
+            .find('Results', {
+                academic_period_id: academicPeriodId,
+                examination_id: examinationId,
+                examination_centre_id: examinationCentreId,
+                education_subject_id: subject.id
+            })
+            .ajax({success: success, defer: true});
+    };
+
+    function getGrading(subject, marks) {
+        var gradingOptions = subject.examination_grading_type.grading_options;
+        var gradingResults = {
+            id: null,
+            code: '',
+            name: ''
+        };
+
+        angular.forEach(gradingOptions, function(gradingOption, key) {
+            if (marks >= gradingOption.min && marks <= gradingOption.max) {
+                this.id = gradingOption.id;
+                this.code = gradingOption.code;
+                this.name = gradingOption.name;
+            }
+        }, gradingResults);
+
+        return gradingResults;
+    };
+
+    function calculateTotal(data) {
+        var totalMark = '';
+        if (!isNaN(parseFloat(data['mark'])) && !isNaN(parseFloat(data['weight']))) {
+            totalMark = isNaN(parseFloat(totalMark)) ? 0 : totalMark;
+            totalMark += data['mark'] * (data['weight']);
+        }
+
+        if (!isNaN(parseFloat(totalMark))) {
+            return $filter('number')(totalMark, 2);
+        } else {
+            return '';
+        }
+    };
+
+    function saveRowData(results, subject, academicPeriodId, examinationId, examinationCentreId, educationSubjectId) {
+        var promises = [];
+
+        angular.forEach(results, function(result, studentId) {
+            angular.forEach(result, function(obj, institutionId) {
+                var resultType = subject.examination_grading_type.result_type;
+                var isMarksType = (resultType == resultTypes.MARKS) ? true : false;
+
+                var marks = null;
+                var gradingOptionId = null;
+
+                if (resultType == resultTypes.MARKS) {
+                    if (!isNaN(parseFloat(obj.marks))) {
+                        marks = $filter('number')(obj.marks, 2);
+                        var gradingObj = this.getGrading(subject, marks);
+                        gradingOptionId = gradingObj.id;
+                    }
+                } else {
+                    if (obj.gradingOptionId != 0) {
+                        gradingOptionId = obj.gradingOptionId;
+                    }
+                }
+
+                var data = {
+                    "marks" : marks,
+                    "examination_grading_option_id" : gradingOptionId,
+                    "academic_period_id" : academicPeriodId,
+                    "examination_id" : examinationId,
+                    "education_subject_id" : educationSubjectId,
+                    "examination_centre_id" : examinationCentreId,
+                    "institution_id" : institutionId,
+                    "student_id" : parseInt(studentId)
+                };
+
+                promises.push(ExaminationItemResultsTable.save(data));
+            }, this);
+        }, this);
+
+        return $q.all(promises);
+    };
+
+    function saveTotal(row, studentId, institutionId, academicPeriodId, examinationId, examinationCentreId, educationSubjectId) {
+        var totalMark = this.calculateTotal(row);
+        totalMark = !isNaN(parseFloat(totalMark)) ? $filter('number')(totalMark, 2) : null;
+
+        var data = {
+            "total_mark" : totalMark,
+            "student_id" : studentId,
+            "institution_id" : institutionId,
+            "academic_period_id" : academicPeriodId,
+            "examination_id" : examinationId,
+            "examination_centre_id" : examinationCentreId,
+            "education_subject_id" : educationSubjectId
+        };
+
+        ExaminationCentreStudentsTable.save(data);
     };
 }
