@@ -272,6 +272,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
                 break;
 
             case 'reconfirm':
+                $buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Confirm');
                 $cancelUrl = $this->url('add');
                 $cancelUrl = array_diff_key($cancelUrl, $this->request->query);
                 $buttons[1]['url'] = $cancelUrl;
