@@ -133,8 +133,12 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
             'label' => 'Examination Centre',
         ];
 
-
         $fields->exchangeArray($newFields);
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
