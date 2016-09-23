@@ -20,6 +20,11 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
 
         $this->hasMany('GradingOptions', ['className' => 'Examination.ExaminationGradingOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->behaviors()->get('ControllerAction')->config([
+            'actions' => [
+                'remove' => 'restrict'
+            ]
+        ]);
     }
 
     public function validationDefault(Validator $validator) {
@@ -163,5 +168,12 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
         $query->contain([
             $this->GradingOptions->alias()
         ]);
+    }
+
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $extra['excludedModels'] = [
+            $this->GradingOptions->alias()
+        ];
     }
 }
