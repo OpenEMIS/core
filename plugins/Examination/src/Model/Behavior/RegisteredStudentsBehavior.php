@@ -144,6 +144,10 @@ class RegisteredStudentsBehavior extends Behavior {
         $model->field('education_grade_id', ['visible' => false]);
         $model->field('academic_period_id', ['visible' => false]);
         $model->field('examination_id', ['visible' => false]);
+
+        // required by sortWhitelist
+        $model->fields['openemis_no']['sort'] = ['field' => 'Users.openemis_no'];
+        $model->fields['student_id']['sort'] = ['field' => 'Users.first_name'];
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
@@ -165,7 +169,14 @@ class RegisteredStudentsBehavior extends Behavior {
         $where[$model->aliasField('examination_id')] = $selectedExamination;
         // End
 
+        $extra['auto_order'] = false;
         $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
+
+        $sortList = ['Users.openemis_no', 'Users.first_name'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
 
         $search = $model->getSearchKey();
         if (!empty($search)) {
@@ -174,13 +185,27 @@ class RegisteredStudentsBehavior extends Behavior {
         }
 
         $query
+            ->select([
+                $model->aliasField('id'),
+                $model->aliasField('student_id'),
+                $model->aliasField('academic_period_id'),
+                $model->aliasField('examination_id'),
+                $model->Users->aliasField('openemis_no'),
+                $model->Users->aliasField('first_name'),
+                $model->Users->aliasField('middle_name'),
+                $model->Users->aliasField('third_name'),
+                $model->Users->aliasField('last_name'),
+                $model->Users->aliasField('preferred_name'),
+                $model->Institutions->aliasField('code'),
+                $model->Institutions->aliasField('name')
+            ])
+            ->contain(['AcademicPeriods', 'Examinations', 'Institutions', 'Users'], true)
             ->where($where)
             ->group([
                 $model->aliasField('student_id'),
                 $model->aliasField('academic_period_id'),
                 $model->aliasField('examination_id')
-            ])
-            ->order([$model->Institutions->aliasField('name') => 'asc']);
+            ]);
     }
 
     public function indexAfterAction(Event $event, ResultSet $resultSet, ArrayObject $extra) {
@@ -321,6 +346,10 @@ class RegisteredStudentsBehavior extends Behavior {
         }
 
         return $value;
+    }
+
+    public function onGetInstitutionId(Event $event, Entity $entity) {
+        return $entity->institution->code_name;
     }
 
     public function onGetSpecialNeeds(Event $event, Entity $entity) {
@@ -490,7 +519,7 @@ class RegisteredStudentsBehavior extends Behavior {
 
             $attr['type'] = 'readonly';
             $attr['value'] = $entity->institution_id;
-            $attr['attr']['value'] = $entity->_matchingData['Institutions']->name;
+            $attr['attr']['value'] = $entity->_matchingData['Institutions']->code_name;
             $event->stopPropagation();
         }
 
