@@ -760,7 +760,7 @@ class NavigationComponent extends Component {
 						'title' => 'Students',
 						'parent' => 'Examinations',
 						'params' => ['plugin' => 'Examination'],
-						'selected' => ['Examinations.Registered', 'Examinations.NotRegistered']
+						'selected' => ['Examinations.RegisteredStudents', 'Examinations.NotRegisteredStudents']
 					],
 					// 'Examinations.Results' => [
 					// 	'title' => 'Results',

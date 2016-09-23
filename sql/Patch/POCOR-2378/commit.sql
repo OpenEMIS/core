@@ -175,3 +175,13 @@ INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `categor
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES (5046, 'Grading Types', 'Administrations', 'Examinations', 'Examinations', '5000', 'GradingTypes.index|GradingTypes.view', 'GradingTypes.edit', 'GradingTypes.add', 'GradingTypes.remove', null, 5046, 1, 1, NOW());
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES (5047, 'Registered Students', 'Administrations', 'Examinations', 'Examinations', '5000', 'RegisteredStudents.index|RegisteredStudents.view', null, null, null, 'RegisteredStudents.unregister', 5047, 1, 1, NOW());
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES (5048, 'Not Registered Students', 'Administrations', 'Examinations', 'Examinations', '5000', 'NotRegisteredStudents.index|NotRegisteredStudents.view', null, null, null, null, 5048, 1, 1, NOW());
+
+-- labels
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`)
+VALUES ('266f4853-80b3-11e6-a577-525400b263eb', 'ExaminationCentreNotRegisteredStudents', 'openemis_no', 'Examinations -> NotRegisteredStudents', 'OpenEMIS ID', 1, 1, NOW());
+
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`)
+VALUES ('1d17a9f0-80b3-11e6-a577-525400b263eb', 'InstitutionExaminationStudents', 'openemis_no', 'Institution -> Examination -> Students', 'OpenEMIS ID', 1, 1, NOW());
+
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`)
+VALUES ('0f930675-80b3-11e6-a577-525400b263eb', 'ExaminationCentreStudents', 'openemis_no', 'Examinations -> RegisteredStudents', 'OpenEMIS ID', 1, 1, NOW());
