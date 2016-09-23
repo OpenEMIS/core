@@ -21,7 +21,7 @@ class UsersTable extends AppTable {
 		parent::initialize($config);
 
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
-		$this->belongsTo('SpecialNeeds', ['className' => 'User.SpecialNeeds']);
+		$this->hasMany('SpecialNeeds', ['className' => 'User.SpecialNeeds', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->belongsToMany('Roles', [
 			'className' => 'Security.SecurityRoles',
@@ -65,7 +65,7 @@ class UsersTable extends AppTable {
 
 	public function viewBeforeAction(Event $event) {
 		$this->ControllerAction->field('roles', [
-			'type' => 'role_table', 
+			'type' => 'role_table',
 			'valueClass' => 'table-full-width',
 			'visible' => ['index' => false, 'view' => true, 'edit' => false],
 			'order' => 100
@@ -121,7 +121,7 @@ class UsersTable extends AppTable {
 				->matching('SecurityRoles')
 				->where([$GroupUsers->aliasField('security_user_id') => $entity->id])
 				->group([
-					$GroupUsers->aliasField('security_group_id'), 
+					$GroupUsers->aliasField('security_group_id'),
 					$GroupUsers->aliasField('security_role_id')
 				])
 				->select(['group_name' => 'SecurityGroups.name', 'role_name' => 'SecurityRoles.name'])
@@ -142,7 +142,7 @@ class UsersTable extends AppTable {
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
 		$BaseUsers = TableRegistry::get('User.Users');
-		return $BaseUsers->setUserValidation($validator, $this);		
+		return $BaseUsers->setUserValidation($validator, $this);
 	}
 
 	public function validationPassword(Validator $validator) {
@@ -182,7 +182,7 @@ class UsersTable extends AppTable {
 		return $events;
 	}
 
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {  
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		switch ($action) {
 			case 'view':
 				if ($toolbarButtons->offsetExists('edit')) {
@@ -190,9 +190,9 @@ class UsersTable extends AppTable {
 				} else {
 					$toolbarButtons->exchangeArray([]);
 				}
-				
+
 				break;
-			
+
 			case 'edit':
 				if ($toolbarButtons->offsetExists('back')) {
 					$toolbarButtons->exchangeArray(['back' => $toolbarButtons['back']]);
