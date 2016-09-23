@@ -22,6 +22,8 @@ class ProgrammesTable extends ControllerActionTable
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+
+		$this->toggle('remove', false);
 	}
 
 	public function onGetEducationGradeId(Event $event, Entity $entity)
@@ -71,9 +73,8 @@ class ProgrammesTable extends ControllerActionTable
 			$buttons['view']['url'] = $url;
 		}
 
-		$id = $entity->id;
 		$statuses = $this->StudentStatuses->findCodeList();
-		$studentStatusId = $this->get($id)->student_status_id;
+		$studentStatusId = $entity->student_status_id;
 
 		if (array_key_exists('edit', $buttons) && $studentStatusId == $statuses['CURRENT']) {
 			$url = [
@@ -88,10 +89,6 @@ class ProgrammesTable extends ControllerActionTable
 			if (array_key_exists('edit', $buttons)) {
 				unset($buttons['edit']);
 			}
-		}
-
-		if (array_key_exists('remove', $buttons)) {
-			unset($buttons['remove']);
 		}
 
 		return $buttons;
