@@ -39,12 +39,12 @@ SET `institution_sector_id` = IFNULL((
 
 -- replace `institution_sector_id` in `institutions` with the sectors that are linked to the providers in `institution_providers`
 UPDATE `institutions`
-SET `institution_sector_id` = (
+SET `institution_sector_id` = IFNULL((
     SELECT `institution_providers`.`institution_sector_id`
     FROM `institution_providers`
     WHERE `institutions`.`institution_provider_id` = `institution_providers`.`id`
     GROUP BY `institution_providers`.`id`
-);
+), IFNULL((SELECT `id` FROM `institution_sectors` WHERE `default` = 1), (SELECT `id` FROM `institution_sectors` LIMIT 1)));
 
 -- create label for sector
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`)
