@@ -265,6 +265,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
     public function onGetFormButtons(Event $event, ArrayObject $buttons) {
         switch ($this->action) {
             case 'add':
+                $buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Next');
                 $cancelUrl = $this->url('index');
                 $cancelUrl['action'] = 'ExaminationStudents';
                 $cancelUrl = array_diff_key($cancelUrl, $this->request->query);
