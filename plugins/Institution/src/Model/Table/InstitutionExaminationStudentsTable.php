@@ -56,9 +56,13 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $toolbarButtons['undo'] = $undoButton;
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function validationDefault(Validator $validator)
     {
-        // $extra['patchEntity'] = false;
+        $validator = parent::validationDefault($validator);
+        return $validator->add('available_capacity', 'ruleAvailable', [
+                        'rule' => ['checkAvailableCapacity']
+                    ])
+                    ->allowEmpty('available_capacity');
     }
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -69,14 +73,14 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $this->field('special_needs_required', ['type' => 'chosenSelect', 'onChangeReload' => true]);
 
         $this->field('examination_centre_id', ['type' => 'select', 'onChangeReload' => true]);
-        $this->field('capacity', ['type' => 'readonly']);
+        $this->field('available_capacity', ['type' => 'readonly']);
         $this->field('special_needs', ['type' => 'readonly']);
         $this->field('institution_class_id', ['type' => 'select', 'onChangeReload' => true, 'entity' => $entity]);
         $this->field('student_id', ['entity' => $entity]);
         $this->field('education_grade_id', ['type' => 'hidden']);
 
         $this->setFieldOrder([
-            'academic_period_id', 'examination_id', 'examination_education_grade', 'special_needs_required', 'examination_centre_id', 'capacity', 'special_needs', 'institution_class_id', 'student_id'
+            'academic_period_id', 'examination_id', 'examination_education_grade', 'special_needs_required', 'examination_centre_id', 'available_capacity', 'special_needs', 'institution_class_id', 'student_id'
         ]);
     }
 
@@ -209,7 +213,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCapacity(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldAvailableCapacity(Event $event, array $attr, $action, $request) {
         $capacity = '';
 
         if (!empty($request->data[$this->alias()]['examination_centre_id'])) {
@@ -218,8 +222,9 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                 ->get($examinationCentreId)
                 ->toArray();
 
-            $capacity = $examinationCentres['capacity'];
+            $capacity = $examinationCentres['total_capacity'] - $examinationCentres['total_registered'];
             $attr['attr']['value'] = $capacity;
+            $attr['value'] = $capacity;
         }
 
         return $attr;
@@ -326,11 +331,13 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $process = function ($model, $entity) use ($requestData) {
             if (!empty($requestData[$this->alias()]['examination_students'])) {
                 $students = $requestData[$this->alias()]['examination_students'];
+                $examinationCentre = $this->ExaminationCentres->get($requestData[$this->alias()]['examination_centre_id']);
+                $remainingCapacity = $examinationCentre->total_capacity - $examinationCentre->total_registered;
                 $newEntities = [];
 
                 $selectedExaminationCentre = $requestData[$this->alias()]['examination_centre_id'];
                 $ExaminationCentreSubjects = $this->ExaminationCentreSubjects->getExaminationCentreSubjects($selectedExaminationCentre);
-
+                $studentCount = 0;
                 foreach ($students as $key => $student) {
                     $obj = [];
                     if ($student['selected'] == 1) {
@@ -340,7 +347,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                         $obj['academic_period_id'] = $requestData[$this->alias()]['academic_period_id'];
                         $obj['examination_id'] = $requestData[$this->alias()]['examination_id'];
                         $obj['examination_centre_id'] = $requestData[$this->alias()]['examination_centre_id'];
-
+                        $studentCount++;
                         foreach($ExaminationCentreSubjects as $subject => $name) {
                             $obj['id'] = Text::uuid();
                             $obj['education_subject_id'] = $subject;
@@ -351,8 +358,20 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                 if (empty($newEntities)) {
                     $model->Alert->warning($this->aliasField('noStudentSelected'));
                     $entity->errors('student_id', __('There are no students selected'));
+                } else if ($remainingCapacity < $studentCount) {
+                    $entity->errors('available_capacity', __('Total students exceeded examination centre capacity'));
                 }
-                return $model->saveMany($newEntities);
+
+                if ($model->saveMany($newEntities)) {
+                    $studentCount = $this->find()
+                        ->where([$this->aliasField('examination_centre_id') => $entity->examination_centre_id])
+                        ->group([$this->aliasField('student_id')])
+                        ->count();
+                    $this->ExaminationCentres->updateAll(['total_registered' => $studentCount],['id' => $entity->examination_centre_id]);
+                    return true;
+                } else {
+                    return false;
+                }
             } else {
                 $model->Alert->warning($this->aliasField('noStudentSelected'));
                 $entity->errors('student_id', __('There are no students selected'));

@@ -751,6 +751,11 @@ trait MessagesTrait {
                     'ruleCompareDateReverse' => 'New Start Date should not be earlier than or same as Start Date'
                 ]
             ],
+            'InstitutionExaminationStudents' => [
+                'available_capacity' => [
+                    'ruleAvailable' => 'Total students exceeded examination centre capacity'
+                ]
+            ]
         ],
         'User' => [
             'Users' => [
