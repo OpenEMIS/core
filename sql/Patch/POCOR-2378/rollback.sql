@@ -24,6 +24,7 @@ DELETE FROM `security_functions` WHERE `id` = 5047;
 DELETE FROM `security_functions` WHERE `id` = 5048;
 
 -- labels
+DELETE FROM `labels` WHERE `module` = 'InstitutionExaminationStudents' AND `field` = 'examination_centre_id';
 DELETE FROM `labels` WHERE `module` = 'InstitutionExaminationStudents' AND `field` = 'openemis_no';
 DELETE FROM `labels` WHERE `module` = 'ExaminationCentreStudents' AND `field` = 'openemis_no';
 DELETE FROM `labels` WHERE `module` = 'ExaminationCentreNotRegisteredStudents' AND `field` = 'openemis_no';

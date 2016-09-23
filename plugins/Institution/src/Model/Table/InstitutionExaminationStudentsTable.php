@@ -38,7 +38,12 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
-        $toolbarButtons = $extra['toolbarButtons'];
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+
+        if (array_key_exists('add', $toolbarButtonsArray)) {
+            $toolbarButtonsArray['add']['attr']['title'] = __('Register');
+        }
+
         $undoButton['url'] = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
@@ -51,9 +56,10 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $undoButton['attr']['data-toggle'] = 'tooltip';
         $undoButton['attr']['data-placement'] = 'bottom';
         $undoButton['attr']['escape'] = false;
-        $undoButton['attr']['title'] = __('Undo');
+        $undoButton['attr']['title'] = __('Unregister');
+        $toolbarButtonsArray['undo'] = $undoButton;
 
-        $toolbarButtons['undo'] = $undoButton;
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
