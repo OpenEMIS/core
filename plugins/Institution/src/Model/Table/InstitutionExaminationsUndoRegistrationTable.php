@@ -289,6 +289,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         $extra['config']['form'] = true;
         $extra['elements']['edit'] = ['name' => 'OpenEmis.ControllerAction/edit'];
         $entity = $this->newEntity();
+        $this->Alert->info('general.reconfirm');
         if ($this->request->is(['post', 'put'])) {
             $requestData = new ArrayObject($this->request->data);
             $submit = isset($requestData['submit']) ? $requestData['submit'] : 'save';
