@@ -24,6 +24,8 @@ class ProgrammesTable extends ControllerActionTable
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 
 		$this->toggle('remove', false);
+		$this->toggle('add', false);
+		$this->toggle('search', false);
 	}
 
 	public function onGetEducationGradeId(Event $event, Entity $entity)
@@ -41,14 +43,6 @@ class ProgrammesTable extends ControllerActionTable
 		$this->setFieldOrder([
 			'institution_id', 'education_grade_id', 'start_date', 'end_date', 'student_status_id'
 		]);
-
-		if (isset($extra['toolbarButtons']['add'])) {
-			unset($extra['toolbarButtons']['add']);
-		}
-
-		if (isset($extra['toolbarButtons']['search'])) {
-			unset($extra['toolbarButtons']['search']);
-		}
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
