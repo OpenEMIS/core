@@ -343,9 +343,14 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                         }
                     }
                 }
+                if (empty($newEntities)) {
+                    $model->Alert->warning($this->aliasField('noStudentSelected'));
+                    $entity->errors('student_id', __('There are no students selected'));
+                }
                 return $model->saveMany($newEntities);
             } else {
-                $this->Alert->error('general.add.failed', ['reset' => 'override']);
+                $model->Alert->warning($this->aliasField('noStudentSelected'));
+                $entity->errors('student_id', __('There are no students selected'));
                 return false;
             }
         };

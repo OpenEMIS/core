@@ -289,6 +289,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         $extra['config']['form'] = true;
         $extra['elements']['edit'] = ['name' => 'OpenEmis.ControllerAction/edit'];
         $entity = $this->newEntity();
+        $this->Alert->info('general.reconfirm');
         if ($this->request->is(['post', 'put'])) {
             $requestData = new ArrayObject($this->request->data);
             $submit = isset($requestData['submit']) ? $requestData['submit'] : 'save';
@@ -300,13 +301,13 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
                 if (!empty($studentIds)) {
                     $students = array_column($studentIds, 'student_id');
                     $this->deleteAll(['student_id IN ' => $students, 'examination_id' => $examinationId]);
-                    $this->Alert->success('UndoExaminationRegistration.success');
+                    $this->Alert->success($this->aliasField('success'));
                     $session = $this->Session;
                     $session->delete($this->registryAlias());
                     $event->stopPropagation();
                     return $this->controller->redirect($extra['redirect']);
                 }
-                $this->Alert->success('UndoExaminationRegistration.fail');
+                $this->Alert->success($this->aliasField('fail'));
             }
         }
         $event = $this->dispatchEvent('ControllerAction.Model.add.afterAction', [$entity, $extra], $this);
@@ -350,10 +351,12 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
                 $event->stopPropagation();
                 return $this->controller->redirect($extra['redirect']);
             }
-            $this->Alert->error('general.add.failed', ['reset' => 'override']);
+            $this->Alert->warning($this->aliasField('noStudentSelected'));
+            $entity->errors('student_id', __('There are no students selected'));
             return $process;
         } else {
-            $this->Alert->error('general.add.failed', ['reset' => 'override']);
+            $this->Alert->warning($this->aliasField('noStudentSelected'));
+            $entity->errors('student_id', __('There are no students selected'));
             return $process;
         }
     }
