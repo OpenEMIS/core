@@ -25,9 +25,9 @@ DELETE FROM `security_functions` WHERE `id` = 5047;
 DELETE FROM `security_functions` WHERE `id` = 5048;
 
 -- labels
-DELETE FROM `labels` WHERE `id` = '266f4853-80b3-11e6-a577-525400b263eb';
-DELETE FROM `labels` WHERE `id` = '1d17a9f0-80b3-11e6-a577-525400b263eb';
-DELETE FROM `labels` WHERE `id` = '0f930675-80b3-11e6-a577-525400b263eb';
+DELETE FROM `labels` WHERE `module` = 'InstitutionExaminationStudents' AND `field` = 'openemis_no';
+DELETE FROM `labels` WHERE `module` = 'ExaminationCentreStudents' AND `field` = 'openemis_no';
+DELETE FROM `labels` WHERE `module` = 'ExaminationCentreNotRegisteredStudents' AND `field` = 'openemis_no';
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-2378';
