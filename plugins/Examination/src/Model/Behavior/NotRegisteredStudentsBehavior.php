@@ -44,10 +44,28 @@ class NotRegisteredStudentsBehavior extends Behavior {
         $model->field('start_year', ['visible' => false]);
         $model->field('end_date', ['visible' => false]);
         $model->field('end_year', ['visible' => false]);
+
+        // required by sortWhitelist
+        $model->fields['openemis_no']['sort'] = ['field' => 'Users.openemis_no'];
+        $model->fields['student_id']['sort'] = ['field' => 'Users.first_name'];
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
         $model = $this->_table;
+        $select = [
+            $model->aliasField('id'),
+            $model->aliasField('student_id'),
+            $model->aliasField('academic_period_id'),
+            $model->aliasField('education_grade_id'),
+            $model->Users->aliasField('openemis_no'),
+            $model->Users->aliasField('first_name'),
+            $model->Users->aliasField('middle_name'),
+            $model->Users->aliasField('third_name'),
+            $model->Users->aliasField('last_name'),
+            $model->Users->aliasField('preferred_name'),
+            $model->Institutions->aliasField('code'),
+            $model->Institutions->aliasField('name')
+        ];
         $where = [];
 
         // Academic Period
@@ -84,7 +102,14 @@ class NotRegisteredStudentsBehavior extends Behavior {
         }
         // End
 
+        $extra['auto_order'] = false;
         $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
+
+        $sortList = ['Users.openemis_no', 'Users.first_name'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
 
         $search = $model->getSearchKey();
         if (!empty($search)) {
@@ -96,6 +121,8 @@ class NotRegisteredStudentsBehavior extends Behavior {
         $where[$model->aliasField('student_status_id')] = $currentStatus;
 
         $query
+            ->select($select)
+            ->contain(['AcademicPeriods', 'Institutions', 'Users'], true)
             ->where($where)
             ->group([
                 $model->aliasField('student_id'),
@@ -140,6 +167,10 @@ class NotRegisteredStudentsBehavior extends Behavior {
         }
 
         return $value;
+    }
+
+    public function onGetInstitutionId(Event $event, Entity $entity) {
+        return $entity->institution->code_name;
     }
 
     public function onGetContactPerson(Event $event, Entity $entity) {
