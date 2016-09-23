@@ -9,6 +9,7 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
     $scope.action = 'view';
     vm.noOptions = [{text: 'No options', value: 0}];
     vm.education_subject = {};
+    vm.results = {};
 
     // Functions
     vm.onChangeAcademicPeriod = onChangeAcademicPeriod;
@@ -80,6 +81,7 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
             if (angular.isObject(examinations) && examinations.length > 0) 
             {
                 var options = [];
+                options.push({text: '-- Select Examination --', value: '-1'});
                 angular.forEach(examinations, function(academicPeriod, i)
                 {
                     options.push({text: examinations[i].name.toString(), value: examinations[i].id});
@@ -87,7 +89,6 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
 
                 vm.examinationOptions = options;
                 vm.examinationId = options[0].value;
-                vm.onChangeExamination(academicPeriodId, vm.examinationId);
             } else {
                 vm.examinationOptions = vm.noOptions;
                 vm.examinationId = 0;
@@ -113,6 +114,7 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
             if (angular.isObject(examinationCentres) && examinationCentres.length > 0) 
             {
                 var options = [];
+                options.push({text: '-- Select Examination Centre --', value: '-1'});
                 for(i = 0; i < examinationCentres.length; i++) 
                 {   
                     options.push({text: examinationCentres[i].name.toString(), value: examinationCentres[i].id});
@@ -120,7 +122,6 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
 
                 vm.examinationCentreOptions = options;
                 vm.examinationCentreId = options[0].value;
-                vm.onChangeExaminationCentre(academicPeriodId, examinationId, vm.examinationCentreId);
 
                 return ExaminationsResultsSvc.getSubjects(examinationId);
             } else {
@@ -140,7 +141,7 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
             if (angular.isObject(subjects) && subjects.length > 0) {
                 var subject = subjects[0];
 
-                vm.initGrid(subject);
+                vm.initGrid(academicPeriodId, examinationId, subject);
             }
         }, function(error)
         {
@@ -154,12 +155,15 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
     }
 
     function onChangeExaminationCentre(academicPeriodId, examinationId, examinationCentreId) {
-
+        vm.onChangeSubject(academicPeriodId, examinationId, vm.education_subject);
     }
 
-    function initGrid(subject) {
+    function initGrid(academicPeriodId, examinationId, subject) {
         vm.gridOptions = {
             context: {
+                academic_period_id: academicPeriodId,
+                examination_id: examinationId,
+                examination_centre_id: 0,
                 education_subject_id: 0
             },
             columnDefs: [],
@@ -177,32 +181,66 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
             singleClickEdit: true,
             onCellValueChanged: function(params) {
                 if (params.newValue != params.oldValue) {
+                    var institutionId = params.data.institution_id;
+
+                    if (angular.isUndefined(vm.results[params.data.student_id])) {
+                        vm.results[params.data.student_id] = {};
+                    }
+
+                    if (angular.isUndefined(vm.results[params.data.student_id][institutionId])) {
+                        vm.results[params.data.student_id][institutionId] = {marks: ''};
+                    }
+
+                    vm.results[params.data.student_id][institutionId]['marks'] = params.newValue;
+
+                    params.data.total_mark = ExaminationsResultsSvc.calculateTotal(params.data);
                     // Important: to refresh the grid after data is modified
                     vm.gridOptions.api.refreshView();
                 }
             },
             onGridReady: function() {
-                vm.onChangeSubject(subject);
+                vm.onChangeSubject(academicPeriodId, examinationId, subject);
             }
         };
     }
 
-    function onChangeSubject(subject) {
+    function onChangeSubject(academicPeriodId, examinationId, subject) {
         AlertSvc.reset(vm);
         vm.education_subject = subject;
 
         if (vm.gridOptions != null) {
             // update value in context
+            vm.gridOptions.context.examination_centre_id = vm.examinationCentreId;
             vm.gridOptions.context.education_subject_id = subject.id;
             // Always reset
             vm.gridOptions.api.setRowData([]);
         }
 
-        vm.onChangeColumnDefs($scope.action, subject);
+        UtilsSvc.isAppendSpinner(true, 'examination-result-table');
+        vm.onChangeColumnDefs($scope.action, subject)
+        .then(function(response)
+        {
+            if (response) {
+                return ExaminationsResultsSvc.getRowData(academicPeriodId, examinationId, vm.examinationCentreId, subject);
+            }
+        })
+        // getRowData
+        .then(function(rows) {
+            vm.gridOptions.api.setRowData(rows);
+        }, function(error) {
+            // No Students
+            console.log(error);
+            AlertSvc.warning(vm, error);
+        })
+        .finally(function() {
+            UtilsSvc.isAppendSpinner(false, 'examination-result-table');
+        });
     }
 
     function onChangeColumnDefs(action, subject) {
-        ExaminationsResultsSvc.getColumnDefs(action, subject)
+        var deferred = $q.defer();
+
+        ExaminationsResultsSvc.getColumnDefs(action, subject, vm.results)
         .then(function(cols)
         {
             if (vm.gridOptions != null) {
@@ -211,11 +249,17 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
                     vm.gridOptions.api.sizeColumnsToFit();
                 }
             }
+
+            deferred.resolve(cols);
         }, function(error) {
-            // No Grading Options
+            // No Columns
             console.log(error);
             AlertSvc.warning(vm, error);
+
+            deferred.reject(error);
         });
+
+        return deferred.promise;
     }
 
     function onEditClick() {
@@ -227,5 +271,30 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
     }
 
     function onSaveClick() {
+        if (vm.gridOptions != null) {
+            var academicPeriodId = vm.gridOptions.context.academic_period_id;
+            var examinationId = vm.gridOptions.context.examination_id;
+            var examinationCentreId = vm.gridOptions.context.examination_centre_id;
+            var educationSubjectId = vm.gridOptions.context.education_subject_id;
+
+            UtilsSvc.isAppendSpinner(true, 'examination-result-table');
+            ExaminationsResultsSvc.saveRowData(vm.results, vm.education_subject, academicPeriodId, examinationId, examinationCentreId, educationSubjectId)
+            .then(function(response) {
+            }, function(error) {
+                console.log(error);
+            })
+            .finally(function() {
+                vm.gridOptions.api.forEachNode(function(row) {
+                    ExaminationsResultsSvc.saveTotal(row.data, row.data.student_id, row.data.institution_id, academicPeriodId, examinationId, examinationCentreId, educationSubjectId);
+                });
+
+                $scope.action = 'view';
+                // reset results object
+                vm.results = {};
+                UtilsSvc.isAppendSpinner(false, 'examination-result-table');
+            });
+        } else {
+            $scope.action = 'view';
+        }
     }
 }
