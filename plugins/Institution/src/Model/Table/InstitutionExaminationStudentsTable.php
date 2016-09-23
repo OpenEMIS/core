@@ -32,6 +32,11 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
 
     }
 
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
         $toolbarButtons = $extra['toolbarButtons'];
         $undoButton['url'] = [
