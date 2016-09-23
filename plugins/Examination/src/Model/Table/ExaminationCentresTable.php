@@ -40,7 +40,7 @@ class ExaminationCentresTable extends ControllerActionTable {
             ->requirePresence('create_as', 'create')
             ->requirePresence('code')
             ->requirePresence('name')
-            ->add('capacity', 'ruleValidateNumeric', [
+            ->add('total_capacity', 'ruleValidateNumeric', [
                 'rule' => ['numericPositive']
             ])
             ->add('code', 'ruleUnique', [
@@ -155,6 +155,7 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->controller->getExamsTab();
+        $this->fields['total_registered']['visible'] = false;
         $entity = $extra['entity'];
         if ($this->action == 'edit' || $this->action == 'add') {
             $this->field('academic_period_id', ['entity' => $entity]);
@@ -210,10 +211,10 @@ class ExaminationCentresTable extends ControllerActionTable {
                     $this->fields['website']['type'] = 'readonly';
                 }
             }
-            $this->fields['capacity']['type'] = 'string';
+            $this->fields['total_capacity']['type'] = 'string';
 
             // field order
-            $this->setFieldOrder(['create_as', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'capacity', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website']);
+            $this->setFieldOrder(['create_as', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'total_capacity', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website']);
         } else if ($this->action == 'view') {
             $this->fields['area_id'] = array_merge($this->fields['area_id'], ['visible' => true, 'type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
             $this->field('special_need_types');
@@ -229,11 +230,10 @@ class ExaminationCentresTable extends ControllerActionTable {
             $this->fields['fax']['visible'] = true;
             $this->fields['email']['visible'] = true;
             $this->fields['website']['visible'] = true;
+            $this->fields['total_registered']['visible'] = true;
 
-            $this->setFieldOrder(['code', 'name', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'capacity', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website']);
+            $this->setFieldOrder(['code', 'name', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'total_registered', 'total_capacity', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website']);
         }
-
-
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
