@@ -24,7 +24,6 @@ class InstitutionExaminationsTable extends ControllerActionTable {
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
-        // $extra['config']['selectedLink'] = ['controller' => 'Institutions', 'action' => 'Examinations', 'index'];
         $extra['elements']['controls'] = ['name' => 'Institution.Examinations/controls', 'data' => [], 'options' => [], 'order' => 1];
 
         $this->field('description', ['visible' => 'hidden']);
@@ -75,7 +74,7 @@ class InstitutionExaminationsTable extends ControllerActionTable {
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
-        $query->contain(['ExaminationItems.EducationSubjects']);
+        $query->contain(['ExaminationItems.EducationSubjects', 'ExaminationItems.ExaminationGradingTypes']);
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra) {

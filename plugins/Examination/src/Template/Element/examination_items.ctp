@@ -24,7 +24,7 @@
                             <td><?= $item->education_subject->code; ?></td>
                             <td><?= $item->education_subject->name; ?></td>
                             <td><?= $item->weight; ?></td>
-                            <td><?= $item->examination_grading_type_id; ?></td>
+                            <td><?= $item->examination_grading_type->name; ?></td>
                             <td><?= $item->examination_date->format('d-m-Y'); ?></td>
                             <td><?= $item->start_time->format('H:i A'); ?></td>
                             <td><?= $item->end_time->format('H:i A'); ?></td>

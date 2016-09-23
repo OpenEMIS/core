@@ -32,6 +32,11 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
 
     }
 
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
         $toolbarButtons = $extra['toolbarButtons'];
         $undoButton['url'] = [
@@ -343,9 +348,14 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                         }
                     }
                 }
+                if (empty($newEntities)) {
+                    $model->Alert->warning($this->aliasField('noStudentSelected'));
+                    $entity->errors('student_id', __('There are no students selected'));
+                }
                 return $model->saveMany($newEntities);
             } else {
-                $this->Alert->error('general.add.failed', ['reset' => 'override']);
+                $model->Alert->warning($this->aliasField('noStudentSelected'));
+                $entity->errors('student_id', __('There are no students selected'));
                 return false;
             }
         };
