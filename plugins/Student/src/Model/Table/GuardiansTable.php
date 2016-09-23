@@ -64,7 +64,7 @@ class GuardiansTable extends AppTable {
                 $actionUser = 'StudentGuardianUser';
             }
             $tabElements['Guardians']['url'] = array_merge($url, ['action' => $action, 'view', $entity->id]);
-            $tabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', 'guardianId' => $entity->guardian_id, 'id' => $entity->id]);
+            $tabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $entity->guardian_id, 'id' => $entity->id]);
 
             $this->controller->set('tabElements', $tabElements);
             $this->controller->set('selectedAction', $this->alias());
