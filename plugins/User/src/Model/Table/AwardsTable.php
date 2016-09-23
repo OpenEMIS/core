@@ -51,7 +51,7 @@ class AwardsTable extends ControllerActionTable
 		}
 	}
 
-	public function afterAction(Event $event, arrayObject $extra)
+	public function afterAction(Event $event, ArrayObject $extra)
 	{
 		$this->setupTabElements();
 	}
