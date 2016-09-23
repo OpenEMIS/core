@@ -45,17 +45,27 @@ class ExaminationsTable extends ControllerActionTable {
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['ExaminationItems.EducationSubjects']);
+        $query->contain(['ExaminationItems.EducationSubjects', 'ExaminationItems.ExaminationGradingTypes']);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
         $this->field('description', ['visible' => false]);
     }
 
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
+        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
+        $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+        $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
+        $query->where($where);
+    }
+
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->controller->getExamsTab();
-        $this->controller->set('examinationGradingTypeOptions', $this->getGradingTypeOptions()); //send to ctp
+
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -65,6 +75,7 @@ class ExaminationsTable extends ControllerActionTable {
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->controller->set('examinationGradingTypeOptions', $this->getGradingTypeOptions()); //send to ctp
         $this->setupFields($entity);
     }
 
