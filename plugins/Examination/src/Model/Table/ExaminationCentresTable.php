@@ -302,38 +302,30 @@ class ExaminationCentresTable extends ControllerActionTable {
             $ExaminationItemsTable = $this->Examinations->ExaminationItems;
 
             $options = $ExaminationItemsTable
-                ->find('list', [
-                    'keyField' => 'subject_id',
-                    'valueField' => 'subject_name'
-                ])
+                ->find()
                 ->matching('EducationSubjects')
-                ->select([
-                    'subject_name' => 'EducationSubjects.name',
-                    'subject_id' => $ExaminationItemsTable->aliasField('education_subject_id')
-                ])
+                ->select(['subject_code' => 'EducationSubjects.code', 'subject_name' => 'EducationSubjects.name'])
                 ->where([
                     $ExaminationItemsTable->aliasField('examination_id') => $examinationId
                 ])
+                ->hydrate(false)
                 ->toArray();
 
-            foreach ($options as $key => $name) {
-                $options[$key] = __($name);
-            }
-
-            $attr['type'] = 'text';
-            $attr['attr']['value'] = implode(', ', $options);
-            $attr['attr']['disabled'] = 'disabled';
-            // $attr['empty'] = false;
-            // $attr['fieldName'] = $this->alias().'.subjects';
+            $attr['type'] = 'element';
+            $attr['element'] = 'Examination.exam_centre_subjects';
+            $attr['data'] = $options;
         } else if ($action == 'edit') {
             $entity = $attr['entity'];
             $subjects = [];
             foreach ($entity->examination_centre_subjects as $subject) {
-                $subjects[] = __($subject->education_subject->name);
+                $subjects[] = [
+                    'subject_code' => $subject->education_subject->code,
+                    'subject_name' => $subject->education_subject->name
+                ];
             }
-            $attr['attr']['value'] = implode(', ', $subjects);
-            $attr['attr']['disabled'] = 'disabled';
-            $attr['type'] = 'text';
+            $attr['type'] = 'element';
+            $attr['element'] = 'Examination.exam_centre_subjects';
+            $attr['data'] = $subjects;
         }
         return $attr;
     }
