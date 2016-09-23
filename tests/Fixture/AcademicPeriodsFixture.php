@@ -14,10 +14,10 @@ class AcademicPeriodsFixture extends TestFixture
             'id' => 1,
             'code' => 'All',
             'name' => 'All Data Test',
-            'start_date' => '0000-00-00',
-            'start_year' => '0',
-            'end_date' => '0000-00-00',
-            'end_year' => '0',
+            'start_date' => '1900-01-01',
+            'start_year' => '1900',
+            'end_date' => '1900-12-31',
+            'end_year' => '1900',
             'school_days' => '0',
             'current' => '0',
             'editable' => '0',
@@ -54,8 +54,7 @@ class AcademicPeriodsFixture extends TestFixture
             'modified' => NULL,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
-        ],
-        [
+        ], [
             'id' => 3,
             'code' => '2016',
             'name' => '2016',
@@ -76,8 +75,7 @@ class AcademicPeriodsFixture extends TestFixture
             'modified' => NULL,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
-        ],
-        [
+        ], [
             'id' => '4',
             'code' => 'YR2010',
             'name' => '2010',
@@ -88,7 +86,7 @@ class AcademicPeriodsFixture extends TestFixture
             'school_days' => '365',
             'current' => '0',
             'editable' => '1',
-            'parent_id' => '9',
+            'parent_id' => '1',
             'lft' => '6',
             'rght' => '7',
             'academic_period_level_id' => '1',
@@ -98,8 +96,7 @@ class AcademicPeriodsFixture extends TestFixture
             'modified' => '2015-08-31 14:50:46',
             'created_user_id' => '2',
             'created' => '2018-10-12 00:00:00'
-        ],
-        [
+        ], [
             'id' => '5',
             'code' => 'YR2011',
             'name' => '2011',
@@ -110,7 +107,7 @@ class AcademicPeriodsFixture extends TestFixture
             'school_days' => '365',
             'current' => '0',
             'editable' => '1',
-            'parent_id' => '9',
+            'parent_id' => '1',
             'lft' => '8',
             'rght' => '9',
             'academic_period_level_id' => '1',
@@ -120,8 +117,7 @@ class AcademicPeriodsFixture extends TestFixture
             'modified' => '2015-08-31 14:51:12',
             'created_user_id' => '2',
             'created' => '2018-10-12 00:00:00'
-        ],
-        [
+        ], [
             'id' => '6',
             'code' => 'YR2012',
             'name' => '2012',
@@ -132,7 +128,7 @@ class AcademicPeriodsFixture extends TestFixture
             'school_days' => '365',
             'current' => '0',
             'editable' => '1',
-            'parent_id' => '9',
+            'parent_id' => '1',
             'lft' => '10',
             'rght' => '11',
             'academic_period_level_id' => '1',
@@ -142,8 +138,7 @@ class AcademicPeriodsFixture extends TestFixture
             'modified' => '2015-08-31 14:52:24',
             'created_user_id' => '2',
             'created' => '2018-10-12 00:00:00'
-        ],
-        [
+        ], [
             'id' => '7',
             'code' => 'YR2014',
             'name' => '2014',
@@ -154,7 +149,7 @@ class AcademicPeriodsFixture extends TestFixture
             'school_days' => '299',
             'current' => '0',
             'editable' => '0',
-            'parent_id' => '9',
+            'parent_id' => '1',
             'lft' => '12',
             'rght' => '13',
             'academic_period_level_id' => '1',
@@ -164,8 +159,7 @@ class AcademicPeriodsFixture extends TestFixture
             'modified' => '2016-05-26 02:41:14',
             'created_user_id' => '2',
             'created' => '2014-09-29 22:55:59'
-        ],
-        [
+        ], [
             'id' => '8',
             'code' => 'YR2013',
             'name' => '2013',
@@ -176,7 +170,7 @@ class AcademicPeriodsFixture extends TestFixture
             'school_days' => '365',
             'current' => '0',
             'editable' => '0',
-            'parent_id' => '9',
+            'parent_id' => '1',
             'lft' => '14',
             'rght' => '15',
             'academic_period_level_id' => '1',
@@ -186,30 +180,7 @@ class AcademicPeriodsFixture extends TestFixture
             'modified' => '2016-05-26 02:40:59',
             'created_user_id' => '1',
             'created' => '2014-10-01 05:24:47'
-        ],
-        [
-            'id' => '9',
-            'code' => 'All',
-            'name' => 'All Data',
-            'start_date' => '0000-00-00',
-            'start_year' => '0',
-            'end_date' => '0000-00-00',
-            'end_year' => '0',
-            'school_days' => '0',
-            'current' => '0',
-            'editable' => '1',
-            'parent_id' => '0',
-            'lft' => '1',
-            'rght' => '22',
-            'academic_period_level_id' => '-1',
-            'order' => '1',
-            'visible' => '1',
-            'modified_user_id' => null,
-            'modified' => '2015-05-21 11:22:05',
-            'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
-        ],
-        [
+        ], [
             'id' => '10',
             'code' => 'YR2015',
             'name' => '2015',
@@ -220,7 +191,7 @@ class AcademicPeriodsFixture extends TestFixture
             'school_days' => '304',
             'current' => '0',
             'editable' => '1',
-            'parent_id' => '9',
+            'parent_id' => '1',
             'lft' => '16',
             'rght' => '17',
             'academic_period_level_id' => '1',
@@ -230,8 +201,7 @@ class AcademicPeriodsFixture extends TestFixture
             'modified' => '2016-05-06 08:59:56',
             'created_user_id' => '1',
             'created' => '2015-05-21 11:33:57'
-        ],
-        [
+        ], [
             'id' => '25',
             'code' => 'YR2016',
             'name' => '2016',
@@ -242,7 +212,7 @@ class AcademicPeriodsFixture extends TestFixture
             'school_days' => '0',
             'current' => '1',
             'editable' => '1',
-            'parent_id' => '9',
+            'parent_id' => '1',
             'lft' => '18',
             'rght' => '19',
             'academic_period_level_id' => '1',
@@ -252,8 +222,7 @@ class AcademicPeriodsFixture extends TestFixture
             'modified' => '2016-08-18 01:35:17',
             'created_user_id' => '2',
             'created' => '2015-08-31 15:58:16'
-        ],
-        [
+        ], [
             'id' => '26',
             'code' => 'YR2017',
             'name' => '2017',
@@ -264,7 +233,7 @@ class AcademicPeriodsFixture extends TestFixture
             'school_days' => '0',
             'current' => '0',
             'editable' => '1',
-            'parent_id' => '9',
+            'parent_id' => '1',
             'lft' => '20',
             'rght' => '21',
             'academic_period_level_id' => '1',
