@@ -24,12 +24,12 @@ CREATE TABLE `examinations` (
 CREATE TABLE `examination_items` (
   `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
   `weight` decimal(6,2) DEFAULT '0.00',
+  `examination_date` date DEFAULT NULL,
+  `start_time` time DEFAULT NULL,
+  `end_time` time DEFAULT NULL,
   `examination_id` int(11) NOT NULL COMMENT 'links to examinations.id',
   `education_subject_id` int(11) NOT NULL COMMENT 'links to education_subjects.id',
   `examination_grading_type_id` int(11) NOT NULL COMMENT 'links to examination_grading_types.id',
-  `examination_date` date NOT NULL,
-  `start_time` time NOT NULL,
-  `end_time` time NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -39,7 +39,7 @@ CREATE TABLE `examination_items` (
   KEY `education_subject_id` (`education_subject_id`),
   KEY `modified_user_id` (`modified_user_id`),
   KEY `created_user_id` (`created_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the examination subjects for a particular examination';
 
 CREATE TABLE `examination_grading_types` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -93,7 +93,8 @@ CREATE TABLE `examination_centres` (
   `fax` VARCHAR(20) NULL,
   `email` VARCHAR(100) NULL,
   `website` VARCHAR(100) NULL,
-  `capacity` INT(11) NOT NULL,
+  `total_registered` INT(11) NOT NULL DEFAULT 0,
+  `total_capacity` INT(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -177,11 +178,6 @@ INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `categor
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES (5048, 'Not Registered Students', 'Examinations', 'Administration', 'Examinations', '5000', 'NotRegisteredStudents.index|NotRegisteredStudents.view', null, null, null, null, 5048, 1, 1, NOW());
 
 -- labels
-INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`)
-VALUES ('266f4853-80b3-11e6-a577-525400b263eb', 'ExaminationCentreNotRegisteredStudents', 'openemis_no', 'Examinations -> NotRegisteredStudents', 'OpenEMIS ID', 1, 1, NOW());
-
-INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`)
-VALUES ('1d17a9f0-80b3-11e6-a577-525400b263eb', 'InstitutionExaminationStudents', 'openemis_no', 'Institution -> Examination -> Students', 'OpenEMIS ID', 1, 1, NOW());
-
-INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`)
-VALUES ('0f930675-80b3-11e6-a577-525400b263eb', 'ExaminationCentreStudents', 'openemis_no', 'Examinations -> RegisteredStudents', 'OpenEMIS ID', 1, 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'InstitutionExaminationStudents', 'openemis_no', 'Institutions -> Examinations -> Students', 'OpenEMIS ID', 1, 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'ExaminationCentreStudents', 'openemis_no', 'Administration -> Examinations -> Registered Students', 'OpenEMIS ID', 1, 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'ExaminationCentreNotRegisteredStudents', 'openemis_no', 'Administration -> Examinations -> Not Registered Students', 'OpenEMIS ID', 1, 1, NOW());
