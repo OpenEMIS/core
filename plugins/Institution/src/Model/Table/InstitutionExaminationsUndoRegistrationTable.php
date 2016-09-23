@@ -262,6 +262,25 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         $requestData[$this->alias()]['examination_centre_id'] = 0;
     }
 
+    public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+        switch ($this->action) {
+            case 'add':
+                $buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Next');
+                $cancelUrl = $this->url('index');
+                $cancelUrl['action'] = 'ExaminationStudents';
+                $cancelUrl = array_diff_key($cancelUrl, $this->request->query);
+                $buttons[1]['url'] = $cancelUrl;
+                break;
+
+            case 'reconfirm':
+                $buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Confirm');
+                $cancelUrl = $this->url('add');
+                $cancelUrl = array_diff_key($cancelUrl, $this->request->query);
+                $buttons[1]['url'] = $cancelUrl;
+                break;
+        }
+    }
+
     public function reconfirm(Event $event, ArrayObject $extra)
     {
         $extra['redirect'] = [
@@ -272,6 +291,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         $extra['config']['form'] = true;
         $extra['elements']['edit'] = ['name' => 'OpenEmis.ControllerAction/edit'];
         $entity = $this->newEntity();
+        $this->Alert->info('general.reconfirm');
         if ($this->request->is(['post', 'put'])) {
             $requestData = new ArrayObject($this->request->data);
             $submit = isset($requestData['submit']) ? $requestData['submit'] : 'save';
@@ -283,13 +303,13 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
                 if (!empty($studentIds)) {
                     $students = array_column($studentIds, 'student_id');
                     $this->deleteAll(['student_id IN ' => $students, 'examination_id' => $examinationId]);
-                    $this->Alert->success('UndoExaminationRegistration.success');
+                    $this->Alert->success($this->aliasField('success'));
                     $session = $this->Session;
                     $session->delete($this->registryAlias());
                     $event->stopPropagation();
                     return $this->controller->redirect($extra['redirect']);
                 }
-                $this->Alert->success('UndoExaminationRegistration.fail');
+                $this->Alert->success($this->aliasField('fail'));
             }
         }
         $event = $this->dispatchEvent('ControllerAction.Model.add.afterAction', [$entity, $extra], $this);
@@ -299,15 +319,12 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
 
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
     {
-        $extra['redirect'] = [
-            'plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'action' => 'UndoExaminationRegistration',
-            'reconfirm'
-        ];
+        $process = function ($model, $entity) {
+            return false;
+        };
 
         if (!empty($entity->errors())) {
-            return false;
+            return $process;
         }
 
         if ($entity->has('examination_students')) {
@@ -324,16 +341,25 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
             }
 
             if (!empty($selectedStudents)) {
+                $extra['redirect'] = [
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'UndoExaminationRegistration',
+                    'reconfirm'
+                ];
                 $session = $this->Session;
                 $session->write($this->registryAlias().'.confirm', $entity);
                 $session->write($this->registryAlias().'.confirmStudent', $selectedStudents);
                 $event->stopPropagation();
                 return $this->controller->redirect($extra['redirect']);
             }
-
-            return false;
+            $this->Alert->warning($this->aliasField('noStudentSelected'));
+            $entity->errors('student_id', __('There are no students selected'));
+            return $process;
         } else {
-            return false;
+            $this->Alert->warning($this->aliasField('noStudentSelected'));
+            $entity->errors('student_id', __('There are no students selected'));
+            return $process;
         }
     }
 }

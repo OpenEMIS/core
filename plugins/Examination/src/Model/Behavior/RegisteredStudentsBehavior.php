@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace Examination\Model\Behavior;
 
 use ArrayObject;
@@ -11,6 +11,7 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Datasource\ConnectionManager;
 use Cake\Log\Log;
+use Cake\I18n\Time;
 
 class RegisteredStudentsBehavior extends Behavior {
 	public function initialize(array $config) {
@@ -37,6 +38,8 @@ class RegisteredStudentsBehavior extends Behavior {
         $events['ControllerAction.Model.onUpdateFieldExaminationId'] = 'onUpdateFieldExaminationId';
         $events['ControllerAction.Model.onUpdateFieldOpenemisNo'] = 'onUpdateFieldOpenemisNo';
         $events['ControllerAction.Model.onUpdateFieldStudentId'] = 'onUpdateFieldStudentId';
+        $events['ControllerAction.Model.onUpdateFieldDateOfBirth'] = 'onUpdateFieldDateOfBirth';
+        $events['ControllerAction.Model.onUpdateFieldGenderId'] = 'onUpdateFieldGenderId';
         $events['ControllerAction.Model.onUpdateFieldInstitutionId'] = 'onUpdateFieldInstitutionId';
         $events['ControllerAction.Model.onUpdateFieldSpecialNeeds'] = 'onUpdateFieldSpecialNeeds';
         return $events;
@@ -73,7 +76,7 @@ class RegisteredStudentsBehavior extends Behavior {
             $query = $model->find()->where([$idKey => $id]);
 
             $query
-                ->contain(['Users.SpecialNeeds.SpecialNeedTypes'])
+                ->contain(['Users.SpecialNeeds.SpecialNeedTypes', 'Users.Genders'], true)
                 ->matching('AcademicPeriods')
                 ->matching('Examinations')
                 ->matching('Institutions');
@@ -135,11 +138,16 @@ class RegisteredStudentsBehavior extends Behavior {
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
         $model = $this->_table;
-        $model->field('openemis_no', ['sort' => true]);
+        // sort attr is required by sortWhitelist
+        $model->field('openemis_no', [
+            'sort' => ['field' => 'Users.openemis_no']
+        ]);
         $model->field('student_id', [
             'type' => 'select',
             'sort' => ['field' => 'Users.first_name']
         ]);
+        $model->field('date_of_birth', ['type' => 'date']);
+        $model->field('gender_id');
         $model->field('education_grade_id', ['visible' => false]);
         $model->field('academic_period_id', ['visible' => false]);
         $model->field('examination_id', ['visible' => false]);
@@ -164,7 +172,14 @@ class RegisteredStudentsBehavior extends Behavior {
         $where[$model->aliasField('examination_id')] = $selectedExamination;
         // End
 
+        $extra['auto_order'] = false;
         $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
+
+        $sortList = ['Users.openemis_no', 'Users.first_name'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
 
         $search = $model->getSearchKey();
         if (!empty($search)) {
@@ -173,13 +188,29 @@ class RegisteredStudentsBehavior extends Behavior {
         }
 
         $query
+            ->select([
+                $model->aliasField('id'),
+                $model->aliasField('student_id'),
+                $model->aliasField('academic_period_id'),
+                $model->aliasField('examination_id'),
+                $model->Users->aliasField('openemis_no'),
+                $model->Users->aliasField('first_name'),
+                $model->Users->aliasField('middle_name'),
+                $model->Users->aliasField('third_name'),
+                $model->Users->aliasField('last_name'),
+                $model->Users->aliasField('preferred_name'),
+                $model->Users->aliasField('date_of_birth'),
+                $model->Users->Genders->aliasField('name'),
+                $model->Institutions->aliasField('code'),
+                $model->Institutions->aliasField('name')
+            ])
+            ->contain(['AcademicPeriods', 'Examinations', 'Institutions', 'Users.Genders'], true)
             ->where($where)
             ->group([
                 $model->aliasField('student_id'),
                 $model->aliasField('academic_period_id'),
                 $model->aliasField('examination_id')
-            ])
-            ->order([$model->Institutions->aliasField('name') => 'asc']);
+            ]);
     }
 
     public function indexAfterAction(Event $event, ResultSet $resultSet, ArrayObject $extra) {
@@ -207,8 +238,10 @@ class RegisteredStudentsBehavior extends Behavior {
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+        $model = $this->_table;
+
         $query
-            ->contain(['Users.SpecialNeeds.SpecialNeedTypes'])
+            ->contain(['Users.SpecialNeeds.SpecialNeedTypes', 'Users.Genders'])
             ->matching('AcademicPeriods')
             ->matching('Examinations')
             ->matching('Institutions');
@@ -216,23 +249,34 @@ class RegisteredStudentsBehavior extends Behavior {
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
         $model = $this->_table;
+        $todayDate = Time::now();
 
-        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        if ($entity->has('examination')) {
+            $registrationStartDate = $entity->examination->registration_start_date;
+            $registrationEndDate = $entity->examination->registration_end_date;
+        } else if ($entity->has('_matchingData')) {
+            $registrationStartDate = $entity->_matchingData['Examinations']->registration_start_date;
+            $registrationEndDate = $entity->_matchingData['Examinations']->registration_end_date;
+        }
 
-        // unregister button
-        $url = $model->url('view');
-        $url[0] = 'unregister';
+        if ($todayDate >= $registrationStartDate && $todayDate <= $registrationEndDate) {
+            $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
 
-        $unregisterButton = $toolbarButtonsArray['back'];
-        $unregisterButton['label'] = '<i class="fa fa-undo"></i>';
-        $unregisterButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
-        $unregisterButton['attr']['title'] = __('Unregister');
-        $unregisterButton['url'] = $url;
+            // unregister button
+            $url = $model->url('view');
+            $url[0] = 'unregister';
 
-        $toolbarButtonsArray['unregister'] = $unregisterButton;
-        // End
+            $unregisterButton = $toolbarButtonsArray['back'];
+            $unregisterButton['label'] = '<i class="fa fa-undo"></i>';
+            $unregisterButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+            $unregisterButton['attr']['title'] = __('Unregister');
+            $unregisterButton['url'] = $url;
 
-        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+            $toolbarButtonsArray['unregister'] = $unregisterButton;
+            // End
+            $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+        }
+
 
         $this->setupFields($entity, $extra);
     }
@@ -315,6 +359,35 @@ class RegisteredStudentsBehavior extends Behavior {
             $value = $entity->user->openemis_no;
         } else if ($entity->has('_matchingData')) {
             $value = $entity->_matchingData['Users']->openemis_no;
+        }
+
+        return $value;
+    }
+
+    public function onGetDateOfBirth(Event $event, Entity $entity) {
+        $value = '';
+        if ($entity->has('user')) {
+            $value = $entity->user->date_of_birth;
+        }
+
+        return $value;
+    }
+
+    public function onGetGenderId(Event $event, Entity $entity) {
+        $value = '';
+        if ($entity->has('user')) {
+            $value = $entity->user->gender->name;
+        }
+
+        return $value;
+    }
+
+    public function onGetInstitutionId(Event $event, Entity $entity) {
+        $value = '';
+        if ($entity->has('institution')) {
+            $value = $entity->institution->code_name;
+        } else if ($entity->has('_matchingData')) {
+            $value = $entity->_matchingData['Institutions']->code_name;
         }
 
         return $value;
@@ -481,13 +554,40 @@ class RegisteredStudentsBehavior extends Behavior {
         return $attr;
     }
 
+    public function onUpdateFieldDateOfBirth(Event $event, array $attr, $action, Request $request) {
+        if ($action == 'edit' || $action == 'unregister') {
+            $entity = $attr['entity'];
+            $dateOfBirth = $entity->user->date_of_birth;
+
+            $attr['type'] = 'readonly';
+            $attr['value'] =  date('d-m-Y', strtotime($dateOfBirth));
+            $attr['attr']['value'] = $dateOfBirth->format('d-m-Y');
+            $event->stopPropagation();
+        }
+
+        return $attr;
+    }
+
+    public function onUpdateFieldGenderId(Event $event, array $attr, $action, Request $request) {
+        if ($action == 'edit' || $action == 'unregister') {
+            $entity = $attr['entity'];
+
+            $attr['type'] = 'readonly';
+            $attr['value'] = $entity->user->gender_id;
+            $attr['attr']['value'] = $entity->user->gender->name;
+            $event->stopPropagation();
+        }
+
+        return $attr;
+    }
+
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request) {
         if ($action == 'edit' || $action == 'unregister') {
             $entity = $attr['entity'];
 
             $attr['type'] = 'readonly';
             $attr['value'] = $entity->institution_id;
-            $attr['attr']['value'] = $entity->_matchingData['Institutions']->name;
+            $attr['attr']['value'] = $entity->_matchingData['Institutions']->code_name;
             $event->stopPropagation();
         }
 
@@ -528,12 +628,14 @@ class RegisteredStudentsBehavior extends Behavior {
         $model->field('examination_id', ['type' => 'select', 'entity' => $entity]);
         $model->field('openemis_no', ['entity' => $entity]);
         $model->field('student_id', ['type' => 'select', 'entity' => $entity]);
+        $model->field('date_of_birth', ['type' => 'date', 'entity' => $entity]);
+        $model->field('gender_id', ['entity' => $entity]);
         $model->field('institution_id', ['type' => 'select', 'entity' => $entity]);
         $model->field('special_needs', ['type' => 'string', 'entity' => $entity]);
         // temporary hide subjects
         // $model->field('subjects', ['type' => 'custom_subjects']);
 
-        $model->setFieldOrder(['academic_period_id', 'examination_id', 'openemis_no', 'student_id', 'institution_id', 'subjects']);
+        $model->setFieldOrder(['academic_period_id', 'examination_id', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'institution_id', 'special_needs']);
     }
 
     public function extractSpecialNeeds(Entity $entity) {
