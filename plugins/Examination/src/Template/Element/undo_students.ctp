@@ -92,6 +92,7 @@
 
                                             $checkboxOptions = ['type' => 'checkbox', 'class' => 'icheck-input', 'label' => false, 'div' => false];
                                             echo $this->Form->hidden("$fieldPrefix.student_id", ['value' => $obj->student_id]);
+                                            echo $this->Form->hidden("$fieldPrefix.examination_centre_id", ['value' => $obj->examination_centre_id]);
                                         ?>
                                     <?= $obj->user->openemis_no ?></td>
                                     <td><?= $obj->user->name ?></td>
