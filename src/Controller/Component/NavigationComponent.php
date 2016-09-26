@@ -299,6 +299,13 @@ class NavigationComponent extends Component {
 					'params' => ['plugin' => 'Institution']
 				],
 
+				'Institutions.Contacts.view' => [
+					'title' => 'Contacts',
+					'parent' => 'Institution.General',
+					'selected' => ['Institutions.Contacts.view', 'Institutions.Contacts.edit'],
+					'params' => ['plugin' => 'Institution', 0 => $id]
+				],
+
 				'Institutions.Attachments.index' => [
 					'title' => 'Attachments',
 					'parent' => 'Institution.General',
