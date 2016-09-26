@@ -143,7 +143,7 @@ class RegisteredStudentsBehavior extends Behavior {
             'sort' => ['field' => 'Users.openemis_no']
         ]);
         $model->field('student_id', [
-            'type' => 'select',
+            'type' => 'integer',
             'sort' => ['field' => 'Users.first_name']
         ]);
         $model->field('date_of_birth', ['type' => 'date']);
@@ -349,11 +349,12 @@ class RegisteredStudentsBehavior extends Behavior {
         return $model->controller->redirect($url);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, arrayObject $extra) {
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
         $this->setupFields($entity, $extra);
     }
 
-    public function onGetOpenemisNo(Event $event, Entity $entity) {
+    public function onGetOpenemisNo(Event $event, Entity $entity)
+    {
         $value = '';
         if ($entity->has('user')) {
             $value = $entity->user->openemis_no;
@@ -361,6 +362,17 @@ class RegisteredStudentsBehavior extends Behavior {
             $value = $entity->_matchingData['Users']->openemis_no;
         }
 
+        return $value;
+    }
+
+    public function onGetStudentId(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('user')) {
+            $value = $entity->user->name;
+        } else {
+            $value = $entity->_matchingData['Users']->name;
+        }
         return $value;
     }
 
@@ -627,7 +639,7 @@ class RegisteredStudentsBehavior extends Behavior {
         $model->field('academic_period_id', ['type' => 'select', 'entity' => $entity]);
         $model->field('examination_id', ['type' => 'select', 'entity' => $entity]);
         $model->field('openemis_no', ['entity' => $entity]);
-        $model->field('student_id', ['type' => 'select', 'entity' => $entity]);
+        $model->field('student_id', ['type' => 'integer', 'entity' => $entity]);
         $model->field('date_of_birth', ['type' => 'date', 'entity' => $entity]);
         $model->field('gender_id', ['entity' => $entity]);
         $model->field('institution_id', ['type' => 'select', 'entity' => $entity]);
