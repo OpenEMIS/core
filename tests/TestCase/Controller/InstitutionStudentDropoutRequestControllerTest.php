@@ -135,7 +135,7 @@ class InstitutionStudentDropoutRequestControllerTest extends AppTestCase
                 'academic_period_id' => 3,
                 'education_grade_id' => 76,
                 'effective_date' => '2016-10-01', // correct date (after enrollment date '2016-06-01')
-                'student_dropout_reason_id' => 661,
+                'student_dropout_reason_id' => 649,
                 'comment' => 'Test comment',
             ],
             'submit' => 'save'
@@ -164,7 +164,7 @@ class InstitutionStudentDropoutRequestControllerTest extends AppTestCase
                 'academic_period_id' => 3,
                 'education_grade_id' => 76,
                 'effective_date' => '2016-01-01', // wrong date (before enrollment date '2016-06-01')
-                'student_dropout_reason_id' => 661,
+                'student_dropout_reason_id' => 649,
                 'comment' => 'Test comment',
             ],
             'submit' => 'save'

@@ -121,16 +121,16 @@ class InstitutionStudentDropoutApprovalControllerTest extends AppTestCase
         $StudentStatusesTable = TableRegistry::get('Student.StudentStatuses');
         $currentStatus = $StudentStatusesTable->getIdByCode('CURRENT');
 
-        // check that student status is not changed to dropout
+        // check that student status is not changed to dropout / still current
         $StudentsTable = TableRegistry::get('Institutions.institution_students');
-        $dropoutStudentRecord = $StudentsTable->find()
+        $currentStudentRecord = $StudentsTable->find()
             ->where([$StudentsTable->aliasField('student_id') => $data['StudentDropout']['student_id'],
                 $StudentsTable->aliasField('institution_id') => $data['StudentDropout']['institution_id'],
                 $StudentsTable->aliasField('academic_period_id') => $data['StudentDropout']['academic_period_id'],
                 $StudentsTable->aliasField('education_grade_id') => $data['StudentDropout']['education_grade_id'],
                 $StudentsTable->aliasField('student_status_id') => $currentStatus])
             ->first();
-        $this->assertEquals(true, (!empty($dropoutStudentRecord)));
+        $this->assertEquals(true, (!empty($currentStudentRecord)));
     }
 
     public function testReject() {
@@ -162,7 +162,7 @@ class InstitutionStudentDropoutApprovalControllerTest extends AppTestCase
         $StudentStatusesTable = TableRegistry::get('Student.StudentStatuses');
         $currentStatus = $StudentStatusesTable->getIdByCode('CURRENT');
 
-        // check that student status is not changed to dropout
+        // check that student status is not changed to dropout / still current
         $StudentsTable = TableRegistry::get('Institutions.institution_students');
         $currentStudentRecord = $StudentsTable->find()
             ->where([$StudentsTable->aliasField('student_id') => $data['StudentDropout']['student_id'],
