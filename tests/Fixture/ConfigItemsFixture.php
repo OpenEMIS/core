@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace App\Test\Fixture;
 
 use Cake\TestSuite\Fixture\TestFixture;
@@ -616,23 +616,6 @@ class ConfigItemsFixture extends TestFixture
             'option_type' => '',
             'modified_user_id' => '108',
             'modified' => '2014-04-02 16:48:25',
-            'created_user_id' => '1',
-            'created' => '2013-08-20 14:46:02'
-        ],
-        [
-            'id' => '54',
-            'name' => 'Type',
-            'code' => 'authentication_type',
-            'type' => 'Authentication',
-            'label' => 'Type',
-            'value' => 'Local',
-            'default_value' => 'Local',
-            'editable' => '1',
-            'visible' => '1',
-            'field_type' => 'Dropdown',
-            'option_type' => 'authentication_type',
-            'modified_user_id' => '1',
-            'modified' => '2014-04-24 12:58:00',
             'created_user_id' => '1',
             'created' => '2013-08-20 14:46:02'
         ],
@@ -1332,6 +1315,58 @@ class ConfigItemsFixture extends TestFixture
             'modified' => null,
             'created_user_id' => '1',
             'created' => '2016-03-10 10:30:42'
+        ],
+        [
+            'id' => '100',
+            'name' => 'Area (Education)',
+            'code' => 'AreaEducation',
+            'type' => 'Administrative Boundaries',
+            'label' => 'Area (Education)',
+            // 'value' => 'https://demo.openemis.org/datamanager/api/area', // valid url
+            'value' => 'https://demo.openemis.org/datamanager/api/areaaaaa', // invalid url
+            'default_value' => '',
+            'editable' => '0',
+            'visible' => '1',
+            'field_type' => '',
+            'option_type' => '',
+            'modified_user_id' => null,
+            'modified' => null,
+            'created_user_id' => '1',
+            'created' => '2016-03-10 10:30:42'
+        ],
+        [
+            'id' => '1000',
+            'name' => 'Product Lists',
+            'code' => 'product_lists',
+            'type' => 'Product Lists',
+            'label' => 'Product Lists',
+            'value' => '0',
+            'default_value' => '0',
+            'editable' => '0',
+            'visible' => '1',
+            'field_type' => '',
+            'option_type' => '',
+            'modified_user_id' => null,
+            'modified' => null,
+            'created_user_id' => '1',
+            'created' => '2016-03-10 10:30:42'
+        ],
+        [
+            'id' => '1001',
+            'name' => 'Type',
+            'code' => 'authentication_type',
+            'type' => 'Authentication',
+            'label' => 'Type',
+            'value' => 'Local',
+            'default_value' => 'Local',
+            'editable' => '1',
+            'visible' => '1',
+            'field_type' => 'Dropdown',
+            'option_type' => 'authentication_type',
+            'modified_user_id' => '1',
+            'modified' => '2014-04-24 12:58:00',
+            'created_user_id' => '1',
+            'created' => '2013-08-20 14:46:02'
         ]
     ];
 }

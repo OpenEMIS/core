@@ -48,6 +48,7 @@ class InstitutionGradesTable extends AppTable {
 	public function afterAction(Event $event) {
 		$this->ControllerAction->field('level');
 		$this->ControllerAction->field('programme');
+		$this->ControllerAction->field('end_date', ['default_date' => false]);
 		$this->ControllerAction->field('education_grade_id');
 
 		if ($this->action == 'add') {

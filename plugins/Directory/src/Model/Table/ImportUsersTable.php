@@ -18,7 +18,7 @@ class ImportUsersTable extends AppTable {
 
 	    // register table once 
 		$this->Users = TableRegistry::get('User.Users');
-	    $this->ConfigItems = TableRegistry::get('ConfigItems');
+	    $this->ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 
 	    $this->accountTypes = [
 	    	'is_student' => [
@@ -280,7 +280,7 @@ class ImportUsersTable extends AppTable {
 	{
 		$result = true;
 
-		$ConfigItems = TableRegistry::get('ConfigItems');
+		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 	    $isStudentIdentityMandatory = $ConfigItems->value('StudentIdentities');
 	    $isStaffIdentityMandatory = $ConfigItems->value('StaffIdentities');
 

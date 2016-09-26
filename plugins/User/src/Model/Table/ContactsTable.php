@@ -48,7 +48,7 @@ class ContactsTable extends ControllerActionTable {
 		} else {
 			$this->controller->set('selectedAction', 'Contacts');
 		}
-		
+
 		$this->controller->set('tabElements', $tabElements);
 	}
 
@@ -90,7 +90,8 @@ class ContactsTable extends ControllerActionTable {
 		$validator
 			->requirePresence('contact_option_id')
 			->add('value', 'ruleValidateNumeric',  [
-				'rule' => ['numeric', 'notBlank'],
+				'rule' => ['numericPositive'],
+				'provider' => 'table',
 				'on' => function ($context) {
 					$contactOptionId = (array_key_exists('contact_option_id', $context['data']))? $context['data']['contact_option_id']: null;
 					if (is_null($contactOptionId)) {
@@ -181,7 +182,7 @@ class ContactsTable extends ControllerActionTable {
 			$attr['options'] = $contactOptions;
 			$attr['onChangeReload'] = 'changeContactOption';
 			$attr['attr']['required'] = true;
-		}	
+		}
 		return $attr;
 	}
 
