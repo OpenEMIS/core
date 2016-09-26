@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace Examination\Model\Behavior;
 
 use ArrayObject;
@@ -37,7 +37,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
             'sort' => ['field' => 'Users.openemis_no']
         ]);
         $model->field('student_id', [
-            'type' => 'select',
+            'type' => 'integer',
             'sort' => ['field' => 'Users.first_name']
         ]);
         $model->field('date_of_birth', ['type' => 'date']);
@@ -155,6 +155,17 @@ class NotRegisteredStudentsBehavior extends Behavior {
             $value = $entity->_matchingData['Users']->openemis_no;
         }
 
+        return $value;
+    }
+
+    public function onGetStudentId(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('user')) {
+            $value = $entity->user->name;
+        } else {
+            $value = $entity->_matchingData['Users']->name;
+        }
         return $value;
     }
 
