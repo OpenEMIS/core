@@ -351,88 +351,16 @@ class InstitutionsTable extends AppTable  {
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
 		$SecurityGroup = TableRegistry::get('Security.SystemGroups');
-		$SecurityInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
 
-        if ($entity->isNew()) {
-			$obj = $SecurityGroup->newEntity(['name' => $entity->code . ' - ' . $entity->name]);
-			$securityGroup = $SecurityGroup->save($obj);
-			if ($securityGroup) {
-				// add the relationship of security group and institutions
-				$securityInstitution = $SecurityInstitutions->newEntity([
-					'security_group_id' => $securityGroup->id,
-					'institution_id' => $entity->id
-				]);
-				$SecurityInstitutions->save($securityInstitution);
+		$dispatchTable = [];
+		$dispatchTable[] = $SecurityGroup;
+		$dispatchTable[] = $this->ExaminationCentres;
+		$dispatchTable[] = $SecurityGroupAreas;
 
-				$this->trackActivity = false;
-				$entity->security_group_id = $securityGroup->id;
-				if (!$this->save($entity)) {
-					return false;
-				}
-
-			} else {
-				return false;
-			}
-
-        } else {
-        	$this->ExaminationCentres->updateAll([
-        		'code' => $entity->code,
-        		'name' => $entity->name,
-        		'area_id' => $entity->area_id,
-        		'address' => $entity->address,
-        		'postal_code' => $entity->postal_code,
-        		'contact_person' => $entity->contact_person,
-        		'telephone' => $entity->telephone,
-        		'fax' => $entity->fax,
-        		'email' => $entity->email
-        	],
-        	[
-        		'institution_id' => $entity->id
-        	]);
-
-			$securityGroupId = $entity->security_group_id;
-			if (!empty($securityGroupId)) {
-				$obj = $SecurityGroup->get($securityGroupId);
-				if (is_object($obj)) {
-					$data = ['name' => $entity->code . ' - ' . $entity->name];
-					$obj = $SecurityGroup->patchEntity($obj, $data);
-					$securityGroup = $SecurityGroup->save($obj);
-					if (!$securityGroup) {
-						return false;
-					}
-				}
-			}
-
-        }
-
-        $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
-        $hasSecurityAreaRecord = $SecurityGroupAreas
-        	->find()
-        	->where([
-        		$SecurityGroupAreas->aliasField('security_group_id') => $entity->security_group_id
-        	])
-        	->count();
-
-        if ($hasSecurityAreaRecord) {
-        	$SecurityGroupAreas->updateAll(
-        		['area_id' => $entity->area_id],
-        		['security_group_id' => $entity->security_group_id]
-        	);
-        }
-
-        if ($entity->has('is_academic')) {
-        	$isAcademic = $entity->is_academic;
-
-        	if ($isAcademic == self::NON_ACADEMIC) {
-        		$newSecurityGroupAreaRecord = [
-        			'security_group_id' => $entity->security_group_id,
-        			'area_id' => $entity->area_id
-        		];
-        		$newEntity = $SecurityGroupAreas->newEntity($newSecurityGroupAreaRecord);
-        		$SecurityGroupAreas->save($newEntity);
-        	}
-        }
-        return true;
+		foreach ($dispatchTable as $model) {
+			$model->dispatchEvent('Model.Institutions.afterSave', [$entity], $this);
+		}
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
@@ -685,13 +613,11 @@ class InstitutionsTable extends AppTable  {
 	public function addEditAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('institution_type_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_provider_id', ['type' => 'select', 'sectorId' => $entity->institution_sector_id]);
-	}
-
-	public function addAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('is_academic', ['type' => 'select', 'options' => [], 'entity' => $entity, 'after' => 'code']);
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
+	public function viewAfterAction(Event $event, Entity $entity)
+	{
 		$this->ControllerAction->field('is_academic', ['type' => 'select', 'options' => [], 'entity' => $entity, 'after' => 'code']);
 	}
 
@@ -820,25 +746,20 @@ class InstitutionsTable extends AppTable  {
 ******************************************************************************************************************/
 
 	public function onUpdateFieldIsAcademic(Event $event, array $attr, $action, Request $request) {
-		$attr['select'] = false;
-		$attr['options'] = $this->isAcademicOptions;
+
+		if ($action == 'add') {
+			$attr['select'] = false;
+			$attr['options'] = $this->isAcademicOptions;
+		} else if ($action == 'edit') {
+			$attr['type'] = 'disabled';
+			$attr['attr']['value'] = __($this->isAcademicOptions[$attr['entity']->is_academic]);
+		}
 		return $attr;
 	}
 
 	public function onGetIsAcademic(Event $event, Entity $entity)
 	{
-		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
-		$hasArea = $SecurityGroupAreas
-			->find()
-			->where([
-				$SecurityGroupAreas->aliasField('security_group_id') => $entity->security_group_id
-			])
-			->count();
-		$selectedIsAcademic = self::ACADEMIC;
-		if ($hasArea) {
-			$selectedIsAcademic = self::NON_ACADEMIC;
-		}
-
+		$selectedIsAcademic = $entity->is_academic;
 		return __($this->isAcademicOptions[$selectedIsAcademic]);
 	}
 

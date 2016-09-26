@@ -33,6 +33,36 @@ class ExaminationCentresTable extends ControllerActionTable {
         ]);
     }
 
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $newEvent = [
+            'Model.Institutions.afterSave' => 'institutionAfterSave',
+        ];
+        $events = array_merge($events, $newEvent);
+        return $events;
+    }
+
+    public function institutionAfterSave(Event $event, Entity $entity)
+    {
+        if (!$entity->isNew()) {
+            $this->updateAll([
+                'code' => $entity->code,
+                'name' => $entity->name,
+                'area_id' => $entity->area_id,
+                'address' => $entity->address,
+                'postal_code' => $entity->postal_code,
+                'contact_person' => $entity->contact_person,
+                'telephone' => $entity->telephone,
+                'fax' => $entity->fax,
+                'email' => $entity->email
+            ],
+            [
+                'institution_id' => $entity->id
+            ]);
+        }
+
+    }
+
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);

@@ -41,6 +41,43 @@ class SystemGroupsTable extends AppTable {
 		]);
 	}
 
+	public function institutionAfterSave(Event $event, Entity $entity)
+	{
+		if ($entity->isNew()) {
+			$obj = $this->newEntity(['name' => $entity->code . ' - ' . $entity->name]);
+			$securityGroup = $this->save($obj);
+			if ($securityGroup) {
+				$SecurityInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+				// add the relationship of security group and institutions
+				$securityInstitution = $SecurityInstitutions->newEntity([
+					'security_group_id' => $securityGroup->id,
+					'institution_id' => $entity->id
+				]);
+				$SecurityInstitutions->save($securityInstitution);
+				$entity->security_group_id = $securityGroup->id;
+				$InstitutionsTable = $event->subject();
+				if (!$InstitutionsTable->save($entity)) {
+					return false;
+				}
+			} else {
+				return false;
+			}
+		} else {
+			$securityGroupId = $entity->security_group_id;
+			if (!empty($securityGroupId)) {
+				$obj = $this->get($securityGroupId);
+				if (is_object($obj)) {
+					$data = ['name' => $entity->code . ' - ' . $entity->name];
+					$obj = $this->patchEntity($obj, $data);
+					$securityGroup = $this->save($obj);
+					if (!$securityGroup) {
+						return false;
+					}
+				}
+			}
+		}
+	}
+
 	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
 		if ($action == 'edit') {
 			$includes['autocomplete'] = [
@@ -55,6 +92,7 @@ class SystemGroupsTable extends AppTable {
 		$events = parent::implementedEvents();
 		$newEvent = [
 			'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
+			'Model.Institutions.afterSave' => 'institutionAfterSave',
 		];
 		$events = array_merge($events, $newEvent);
 		return $events;
