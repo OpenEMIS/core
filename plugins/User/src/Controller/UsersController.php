@@ -6,6 +6,8 @@ use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 use ArrayObject;
 use Cake\Routing\Router;
+use Firebase\JWT\JWT;
+use Cake\Utility\Security;
 
 class UsersController extends AppController
 {
@@ -118,7 +120,7 @@ class UsersController extends AppController
     {
         if ($this->Cookie->check('Restful.Call')) {
             $event->stopPropagation();
-            return $this->controller->redirect(['plugin' => null, 'controller' => 'Rest', 'action' => 'auth', 'payload' => $this->generateToken(), 'version' => '2.0']);
+            return $this->redirect(['plugin' => null, 'controller' => 'Rest', 'action' => 'auth', 'payload' => $this->generateToken(), 'version' => '2.0']);
         } else {
             // Labels
             $labels = TableRegistry::get('Labels');
@@ -132,7 +134,7 @@ class UsersController extends AppController
     }
 
     public function generateToken() {
-        $user = $this->controller->Auth->user();
+        $user = $this->Auth->user();
 
         // Expiry change to 24 hours
         return JWT::encode([
