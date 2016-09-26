@@ -285,7 +285,7 @@ class RecordBehavior extends Behavior {
 		        		foreach ($rules as $rule) {
 		        			$settings['deleteFieldIds'][] = $rule->survey_question_id;
 		        		}
-					}       		
+					}
 				}
 
 				// when edit always delete all the checkbox values before reinsert,
@@ -821,7 +821,12 @@ class RecordBehavior extends Behavior {
     	$entity = $this->_table->get($recordId);
 
     	$tableCustomFieldIds = [];
-		$customFields = $this->getCustomFieldQuery($entity)->toArray();
+    	$customFieldQuery = $this->getCustomFieldQuery($entity);
+    	$customFields = [];
+    	if (!is_null($customFieldQuery)) {
+    		$customFields = $customFieldQuery->toArray();
+    	}
+
 		foreach ($customFields as $customField) {
 			$_customField = $customField->custom_field;
 			$_field_type = $_customField->field_type;
@@ -875,8 +880,8 @@ class RecordBehavior extends Behavior {
 
 		// Set the fetched field values to avoid multiple call to the database
 		$fieldValues = $this->getFieldValue($entity->id) + $tableCellValues;
-		ksort($fieldValues);	
-		$this->_fieldValues = $fieldValues;	
+		ksort($fieldValues);
+		$this->_fieldValues = $fieldValues;
 	}
 
 	private function getTableCellValues($tableCustomFieldIds, $recordId) {
@@ -938,7 +943,7 @@ class RecordBehavior extends Behavior {
 				.' WHEN '.$customFieldValueTable->aliasField('time_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('time_value')
 				.' END) SEPARATOR \',\'))'
 		];
-		
+
 		// Getting the custom field table
 		$customFieldsTable = $customFieldValueTable->CustomFields;
 
@@ -1039,7 +1044,7 @@ class RecordBehavior extends Behavior {
 			return '';
 		}
 	}
-	
+
 	private function textarea($data, $fieldInfo, $options=[]) {
 		if (isset($data[$fieldInfo['id']])) {
 			return $data[$fieldInfo['id']];
@@ -1059,7 +1064,7 @@ class RecordBehavior extends Behavior {
 			return '';
 		}
 	}
-	
+
 	private function checkbox($data, $fieldInfo, $options=[]) {
 		if (isset($data[$fieldInfo['id']])) {
 			$values = explode(",", $data[$fieldInfo['id']]);
@@ -1069,7 +1074,7 @@ class RecordBehavior extends Behavior {
 					if (empty($returnValue)) {
 						$returnValue = $options[$value];
 					} else {
-						$returnValue = $returnValue.', '.$options[$value];						
+						$returnValue = $returnValue.', '.$options[$value];
 					}
 				}
 			}

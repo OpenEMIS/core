@@ -33,7 +33,7 @@ class PasswordBehavior extends Behavior {
 	}
 
 	public function buildValidator(Event $event, Validator $validator, $name) {
-		$ConfigItems = TableRegistry::get('ConfigItems');
+		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 
 		$passwordMinLength = $ConfigItems->value('password_min_length');
 		$passwordHasUppercase = $ConfigItems->value('password_has_uppercase');

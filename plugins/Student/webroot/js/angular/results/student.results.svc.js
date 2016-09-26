@@ -198,11 +198,33 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                 field: assessmentPeriodField,
                 filter: "number",
                 filterParams: filterParams,
+                cellStyle: function(params) {
+                    var subjectId = params.data['subject_id'];
+
+                    var passMark = 0;
+                    if (angular.isDefined(properties.subjects[subjectId]) && angular.isDefined(properties.subjects[subjectId][assessmentPeriod.id]) && angular.isDefined(properties.subjects[subjectId][assessmentPeriod.id]['assessment_grading_type'])) {
+                        gradingType = properties.subjects[subjectId][assessmentPeriod.id]['assessment_grading_type'];
+                        passMark = gradingType.pass_mark;
+                    }
+
+                    if (!isNaN(parseFloat(params.value)) && parseFloat(params.value) < passMark) {
+                        return {color: '#CC5C5C'};
+                    } else {
+                        return {color: '#333'};
+                    }
+                },
                 valueGetter: function(params) {
                     var subjectId = params.data['subject_id'];
+
+                    var resultType = "MARKS";
+                    if (angular.isDefined(properties.subjects[subjectId]) && angular.isDefined(properties.subjects[subjectId][assessmentPeriod.id]) && angular.isDefined(properties.subjects[subjectId][assessmentPeriod.id]['assessment_grading_type'])) {
+                        gradingType = properties.subjects[subjectId][assessmentPeriod.id]['assessment_grading_type'];
+                        resultType = gradingType.result_type;
+                    }
+
                     var value = params.data[params.colDef.field];
 
-                    if (angular.isDefined(properties.subjects[subjectId]) && angular.isDefined(properties.subjects[subjectId][assessmentPeriod.id]) && angular.isDefined(properties.subjects[subjectId][assessmentPeriod.id]['result_type']) && properties.subjects[subjectId][assessmentPeriod.id]['result_type'] == 'MARKS') {
+                    if (resultType == 'MARKS') {
                         return $filter('number')(value, 2);
                     } else {
                         // for GRADES type
@@ -255,10 +277,11 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
 
             angular.forEach(assessmentResults[subjectId], function(resultObj, assessmentPeriodId) {
                 var assessmentGradingOption = properties.assessmentGradingOptions[resultObj.assessment_grading_option_id];
-                var resultType = properties.assessmentGradingTypes[assessmentGradingOption.assessment_grading_type_id].result_type;
+                var gradingType = properties.assessmentGradingTypes[assessmentGradingOption.assessment_grading_type_id];
+                var resultType = gradingType.result_type;
 
                 if (angular.isUndefined(properties.subjects[subjectId][assessmentPeriodId])) {
-                    properties.subjects[subjectId][assessmentPeriodId] = {result_type: resultType};
+                    properties.subjects[subjectId][assessmentPeriodId] = {assessment_grading_type: gradingType};
                 }
                 
                 var result = '';
