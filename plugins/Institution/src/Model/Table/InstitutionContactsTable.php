@@ -39,12 +39,6 @@ class InstitutionContactsTable extends ControllerActionTable {
         $this->toggle('remove', false);
     }
 
-    public function implementedEvents() {
-        $events = parent::implementedEvents();
-        $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-        return $events;
-    }
-
     public function validationDefault(Validator $validator) {
         $validator = parent::validationDefault($validator);
 
@@ -54,8 +48,7 @@ class InstitutionContactsTable extends ControllerActionTable {
                     'ruleValidEmail' => [
                         'rule' => 'email'
                     ]
-            ])
-            ;
+            ]);
         return $validator;
     }
 
