@@ -10,18 +10,20 @@ use Cake\Event\Event;
 
 use App\Model\Table\ControllerActionTable;
 
-class RoomTypesTable extends ControllerActionTable {
+class RoomTypesTable extends ControllerActionTable
+{
 	private $levelOptions = [];
 	private $roomLevel = null;
 
-	public function initialize(array $config) {
-		$this->addBehavior('FieldOption.FieldOption');
+	public function initialize(array $config)
+	{
 		$this->table('room_types');
 		parent::initialize($config);
 
 		$this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms', 'dependent' => true, 'cascadeCallbacks' => true]);
+
 		$this->addBehavior('Infrastructure.Types', ['code' => 'ROOM']);
-		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
+		$this->addBehavior('FieldOption.FieldOption');
 
 		$InfrastructureLevels = TableRegistry::get('Infrastructure.InfrastructureLevels');
 		$this->levelOptions = $InfrastructureLevels->getOptions(['keyField' => 'id', 'valueField' => 'name']);

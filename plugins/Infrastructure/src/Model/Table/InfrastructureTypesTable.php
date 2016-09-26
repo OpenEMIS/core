@@ -10,9 +10,10 @@ use Cake\Event\Event;
 
 use App\Model\Table\ControllerActionTable;
 
-class InfrastructureTypesTable extends ControllerActionTable {
-	public function initialize(array $config) {
-		$this->addBehavior('FieldOption.FieldOption');
+class InfrastructureTypesTable extends ControllerActionTable
+{
+	public function initialize(array $config)
+	{
 		$this->table('infrastructure_types');
 		parent::initialize($config);
 
@@ -25,7 +26,7 @@ class InfrastructureTypesTable extends ControllerActionTable {
 		}
 
 		$this->addBehavior('Infrastructure.Types');
-		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
+		$this->addBehavior('FieldOption.FieldOption');
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
