@@ -387,7 +387,12 @@ class DirectoriesTable extends AppTable {
 			case self::STUDENT:
 				// do nothing
 				break;
+			case self::STAFF:
+				$this->ControllerAction->field('username', ['order' => ++$highestOrder, 'visible' => true]);
+				$this->ControllerAction->field('password', ['order' => ++$highestOrder, 'visible' => true, 'type' => 'password', 'attr' => ['value' => '', 'autocomplete' => 'off']]);
+				break;
 			default:
+				$this->fields['identity_number']['type'] = 'hidden';
 				$this->ControllerAction->field('username', ['order' => ++$highestOrder, 'visible' => true]);
 				$this->ControllerAction->field('password', ['order' => ++$highestOrder, 'visible' => true, 'type' => 'password', 'attr' => ['value' => '', 'autocomplete' => 'off']]);
 				break;
@@ -442,6 +447,16 @@ class DirectoriesTable extends AppTable {
 			$attr['value'] = $value;
 			return $attr;
 		}
+	}
+
+	//to handle identity_number field that is automatically created by mandatory behaviour.
+	public function onUpdateFieldIdentityNumber(Event $event, array $attr, $action, Request $request)
+	{
+		if ($action == 'add') {
+			$attr['fieldName'] = $this->alias().'.identities.0.number';
+			$attr['attr']['label'] = __('Identity Number');
+		}
+		return $attr;
 	}
 
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
@@ -534,14 +549,16 @@ class DirectoriesTable extends AppTable {
 		return $params;
 	}
 
-	private function setSessionAfterAction($event, $entity){
-
+	private function setSessionAfterAction($event, $entity)
+	{
 		$this->Session->write('Directory.Directories.id', $entity->id);
 		$this->Session->write('Directory.Directories.name', $entity->name);
+
 		if (!$this->AccessControl->isAdmin()) {
 			$institutionIds = $this->AccessControl->getInstitutionsByUser();
 			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
 		}
+		
 		$isStudent = $entity->is_student;
 		$isStaff = $entity->is_staff;
 		$isGuardian = $entity->is_guardian;
@@ -581,12 +598,13 @@ class DirectoriesTable extends AppTable {
 		}
 
 		$this->setupTabElements($entity);
+
+		$this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
-
+	public function viewAfterAction(Event $event, Entity $entity)
+	{
 		$isSet = $this->setSessionAfterAction($event, $entity);
-
 		if ($isSet) {
 			$reload = $this->Session->read('Directory.Directories.reload');
 			if (!isset($reload)) {

@@ -57,6 +57,8 @@ class StaffUserTable extends UserTable {
 		$this->Session->write('Staff.Staff.id', $entity->id);
 		$this->Session->write('Staff.Staff.name', $entity->name);
 		$this->setupTabElements($entity);
+
+		$this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
 	}
 
 	private function setupTabElements($entity) {
@@ -97,4 +99,33 @@ class StaffUserTable extends UserTable {
 			}
 		}
 	}
+
+	//to handle identity_number field that is automatically created by mandatory behaviour.
+	public function onUpdateFieldIdentityNumber(Event $event, array $attr, $action, Request $request)
+	{
+		if ($action == 'add') {
+			$attr['fieldName'] = $this->alias().'.identities.0.number';
+			$attr['attr']['label'] = __('Identity Number');
+		}
+		return $attr;
+	}
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
+    {
+        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+        $identity = $IdentityType->getDefaultEntity();
+        
+        foreach ($fields as $key => $field) { 
+            //get the value from the table, but change the label to become default identity type.
+            if ($field['field'] == 'identity_number') { 
+                $fields[$key] = [
+                    'key' => 'StudentUser.identity_number',
+                    'field' => 'identity_number',
+                    'type' => 'string',
+                    'label' => __($identity->name)
+                ];
+                break;
+            }
+        }
+    }
 }
