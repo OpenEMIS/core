@@ -14,7 +14,7 @@ class AreaLevelsTable extends ControllerActionTable {
 		parent::initialize($config);
 		$this->hasMany('Areas', ['className' => 'Area.Areas', 'foreign_key' => 'area_level_id']);
 		$this->addBehavior('RestrictAssociatedDelete');
-		// $this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
+		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
