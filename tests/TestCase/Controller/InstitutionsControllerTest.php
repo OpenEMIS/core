@@ -120,7 +120,7 @@ class InstitutionsControllerTest extends AppTestCase
             'Institutions' => [
                 'name' => 'Central Region Office',
                 'code' => 'MOECENTRALREGION',
-                'is_academic' => 2,
+                'is_academic' => 0,
                 'address' => '2 Infinite Loop',
                 'date_opened' => '1978-05-07',
                 'date_closed' => null,
