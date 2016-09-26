@@ -9,10 +9,10 @@ use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Cake\ORM\Query;
 
-class ContactTypesTable extends ControllerActionTable {
+class ContactTypesTable extends ControllerActionTable
+{
 	public function initialize(array $config)
 	{
-		$this->addBehavior('FieldOption.FieldOption');
 		$this->table('contact_types');
 		parent::initialize($config);
 
@@ -24,6 +24,8 @@ class ContactTypesTable extends ControllerActionTable {
 				'filter' => 'contact_option_id',
 			]);
 		}
+
+		$this->addBehavior('FieldOption.FieldOption');
 	}
 
 	public function findWithContactOptions(Query $query, array $options)
