@@ -1,3 +1,7 @@
+v3.6.4
+- Introduced Examinations feature
+- Institution Sector is now linked to Institution Provider
+
 v3.6.3
 - Users can now switch in between different OpenEMIS products while still logged in
 - Users should be able to see the default identity number on Student/Staff overview page

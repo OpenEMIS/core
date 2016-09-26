@@ -1510,6 +1510,14 @@ class ValidationBehavior extends Behavior {
 		return ($count == 0);
 	}
 
+	public static function checkLinkedSector($field, array $globalData) {
+		$selectedSector = $globalData['data']['institution_sector_id'];
+		$Providers = TableRegistry::get('Institution.Providers');
+		$LinkedSector = $Providers->get($field)->institution_sector_id;
+
+		return $selectedSector == $LinkedSector;
+	}
+
 	public static function validateJsonAPI($field, array $globalData)
 	{
 		// will pass the url to the areasTable, because the url checking function located in the areasTable.php
@@ -1550,5 +1558,22 @@ class ValidationBehavior extends Behavior {
 		} else {
 			return true;
 		}
+	}
+
+	public static function checkAvailableCapacity($field, array $globalData)
+	{
+		$data = $globalData['data'];
+		if (isset($data['available_capacity'])) {
+			if (isset($data['examination_students']) && is_array($data['examination_students'])) {
+				$students = [];
+				foreach($data['examination_students'] as $student) {
+					if ($student['selected']) {
+						$students[] = $student['student_id'];
+					}
+				}
+				return count($students) <= $data['available_capacity'];
+			}
+		}
+		return false;
 	}
 }
