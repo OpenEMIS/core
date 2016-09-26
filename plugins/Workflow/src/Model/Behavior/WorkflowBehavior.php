@@ -200,7 +200,6 @@ class WorkflowBehavior extends Behavior {
 				'data-placement' => 'bottom',
 				'escape' => false
 			];
-
 			$this->setToolbarButtons($toolbarButtons, $toolbarAttr, $action);
 			$extra['toolbarButtons'] = $toolbarButtons;
 		}
@@ -576,7 +575,7 @@ class WorkflowBehavior extends Behavior {
 						->where([$this->WorkflowsFilters->aliasField('filter_id') => $filterId]);
 
 					$workflowFilterResults = $filterQuery->all();
-						
+
 					// Use Workflow with filter if found otherwise use Workflow that Apply To All
 					if ($workflowFilterResults->isEmpty()) {
 						$filterQuery
@@ -847,7 +846,7 @@ class WorkflowBehavior extends Behavior {
 					$isSchoolBased = $workflowStep->_matchingData['WorkflowModels']->is_school_based;
 
 					// Enabled edit button only when login user in approval role for the step and that step is editable
-					if ($workflowStep->is_editable == 1) {
+					if ($workflowStep->is_editable) {
 						$isEditable = true;
 					}
 
@@ -1118,7 +1117,7 @@ class WorkflowBehavior extends Behavior {
 			} else {
 				$url = $this->_table->ControllerAction->url('view');
 			}
-			
+
 			return $this->_table->controller->redirect($url);
 			// End
 		}

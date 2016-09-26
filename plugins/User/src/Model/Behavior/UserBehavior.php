@@ -118,6 +118,7 @@ class UserBehavior extends Behavior {
 				]
 			);
 			$this->_table->fields['date_of_birth']['order'] = $i++;
+			$this->_table->fields['identity_number']['order'] = $i++;
 			
 			$this->_table->fields['address']['order'] = $i++;
 			$this->_table->fields['postal_code']['order'] = $i++;
@@ -203,7 +204,6 @@ class UserBehavior extends Behavior {
 			'order' => 1,
 			'sort' => true
 		]);
-		$this->_table->ControllerAction->field('identity', ['order' => 2]);
 
 		if ($this->_table->table() == 'security_users') {
 			$this->_table->ControllerAction->field('name', [
@@ -343,7 +343,7 @@ class UserBehavior extends Behavior {
 	}
 
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
-		if ($field == 'identity') {
+		if ($field == 'identity_number') {
 			$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
 			$identity = $IdentityType->getDefaultEntity();
 
@@ -363,7 +363,7 @@ class UserBehavior extends Behavior {
 		if (array_key_exists('model', $options)) {
 			switch ($options['model']) {
 				case 'Student': case 'Staff': case 'Guardian':
-					$prefix = TableRegistry::get('ConfigItems')->value(strtolower($options['model']).'_prefix');
+					$prefix = TableRegistry::get('Configuration.ConfigItems')->value(strtolower($options['model']).'_prefix');
 					$prefix = explode(",", $prefix);
 					$prefix = ($prefix[1] > 0)? $prefix[0]: '';
 					break;

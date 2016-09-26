@@ -27,7 +27,7 @@ class AreaLevelsTable extends ControllerActionTable {
 
 	// To fix institution_area_level_id in configitem
 	// public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
-	// 	$ConfigItemsTable = TableRegistry::get('ConfigItems');
+	// 	$ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
 	// 	$transferedValue = $this->request->data[$this->alias()]['convert_to'];
 	// 	$ConfigItemsTable->updateAll(['default_value' => $transferedValue], ['type' => 'Institution', 'code' => 'Institution_area_level_id', 'default_value' => $entity->id]);
 	// 	$ConfigItemsTable->updateAll(['value' => $transferedValue], ['type' => 'Institution', 'code' => 'Institution_area_level_id', 'value' => $entity->id]);
