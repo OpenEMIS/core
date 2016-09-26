@@ -8,6 +8,11 @@ trait MessagesTrait {
     public $messages = [
         'Areas' => [
             'noAccessToAreas' => 'You do not have access to any areas',
+            'institution_affected' => 'Institution Affected',
+            'security_group_affected' => 'Security Group Affected',
+            'missing_area' => 'Missing Area',
+            'new_area' => 'New Area',
+            'api_invalid' => 'URL or data in URL is invalid.'
         ],
         'Attachments' => [
             'date_on_file' => 'Date On File',
@@ -77,12 +82,13 @@ trait MessagesTrait {
                 'success' => 'The record has been duplicated successfully.',
                 'failed' => 'The record is not duplicated due to errors encountered.',
             ],
+            'reconfirm' => 'Please review the information before proceeding with the operation',
             'academicPeriod' => [
                 'notEditable' => 'The chosen academic period is not editable',
             ],
             'invalidTime' => 'You have entered an invalid time.',
             'invalidDate' => 'You have entered an invalid date.',
-            'invalidUrl' => 'You have entered an invalid url.',
+            'invalidUrl' => 'You have entered an invalid URL.',
             'notSelected' => 'No Record has been selected / saved.',
             'order' => 'Order',
             'visible' => 'Visible',
@@ -171,13 +177,14 @@ trait MessagesTrait {
             'our_shifts' => 'Our Shifts',
             'external_shifts' => 'External Shifts',
             'location' => 'Location',
+            'institution' => 'Institution',
             'occupier' => 'Occupier',
             'institution' => 'Institution',
             'allShiftsUsed' => 'All shifts has been used for the selected academic period.',
             'replicateShifts' => 'Should the system replicate the existing shifts for the latest academic period?.',
             'replicateShiftsSuccess' => 'Shifts has been successfully replicated.',
             'replicateShiftsNotChosen' => 'Replication was not chosen, please setup the shifts manually.',
-            'noAccessToShift' => 'You do not have access to the shift',
+            'noAccessToShift' => 'You do not have access to the shift'
         ],
         'InstitutionClasses' => [
             'expiredGrade' => 'Expired Grade',
@@ -199,7 +206,8 @@ trait MessagesTrait {
             'noTeacherAssigned' => 'No Teacher Assigned',
             'selectTeacherOrLeaveBlank' => 'Select Teacher or Leave Blank',
             'singleGrade' => 'Single Grade',
-            'multiGrade' => 'Multi Grade'
+            'multiGrade' => 'Multi Grade',
+            'noShift' => 'There are no shifts configured for the selected academic period'
         ],
         'InstitutionSubjects' => [
             'noGrades' => 'No Grades Assigned',
@@ -298,6 +306,9 @@ trait MessagesTrait {
         'RubricTemplateOptions' => [
             'weighting' => 'Weighting'
         ],
+        'IdentityTypes' => [
+            'deleteDefault' => 'Please set other identity type as default before deleting the current one'
+        ],
         'security' => [
             'login' => [
                 'fail' => 'You have entered an invalid username or password.',
@@ -383,7 +394,7 @@ trait MessagesTrait {
         'WorkflowActions' => [
             'next_step' => 'Next Step',
             'comment_required' => 'Comment Required',
-            'event' => 'Event'
+            'event' => 'Post Event'
         ],
         'WorkflowStatuses' => [
             'noSteps' => 'No Available Workflow Steps'
@@ -524,6 +535,21 @@ trait MessagesTrait {
         'CustomForms' => [
             'notSupport' => 'Not supported in this form.'
         ],
+        'ExaminationStudents' => [
+            'restrictAdd' => 'Add operation is not allowed.'
+        ],
+        'ExaminationNotRegisteredStudents' => [
+            'restrictAdd' => 'Add operation is not allowed.'
+        ],
+        'InstitutionExaminationsUndoRegistration' => [
+            'success' => 'Undo of student examination registration is successful.',
+            'fail' => 'Undo of student examination registration is successful.',
+            'noStudentSelected' => 'There are no students selected',
+        ],
+        'InstitutionExaminationStudents' => [
+            'notAvailableForRegistration' => 'Not available for registration',
+            'noStudentSelected' => 'There are no students selected',
+        ],
 
         // Validation Messages
         'Institution' => [
@@ -553,8 +579,10 @@ trait MessagesTrait {
                 'code' => [
                     'ruleUnique' => 'Please enter a unique code'
                 ],
+                'institution_provider_id' => [
+                    'ruleLinkedSector' => 'Please select a provider linked to the chosen Sector'
+                ]
             ],
-
             'InstitutionClasses' => [
                 'noGrade' => 'There is no grade selected',
                 'emptyName' => 'Class name should not be empty',
@@ -727,6 +755,11 @@ trait MessagesTrait {
                     'ruleCompareDateReverse' => 'New Start Date should not be earlier than or same as Start Date'
                 ]
             ],
+            'InstitutionExaminationStudents' => [
+                'available_capacity' => [
+                    'ruleAvailable' => 'Total students exceeded examination centre capacity'
+                ]
+            ]
         ],
         'User' => [
             'Users' => [
@@ -1256,8 +1289,82 @@ trait MessagesTrait {
         ],
         'StaffSubjects' => [
             'notActiveTeachingStaff' => 'Not active teaching staff'
+        ],
+        'Examination' => [
+            'Examinations' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique for the same academic period',
+                ]
+            ],
+            'ExaminationCentres' => [
+                'total_capacity' => [
+                    'ruleValidateNumeric' => 'Please enter a valid Numeric value'
+                ],
+                'code' => [
+                    'ruleUnique' => 'Please enter a unique code for this examination centre in this examination'
+                ],
+            ],
+            'ExaminationItems' => [
+                'weight' => [
+                    'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleWeightRange' => 'Value must be positive and less than 2.0'
+                ]
+            ],
+            'ExaminationGradingTypes' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique',
+                ],
+                'pass_mark' => [
+                    'ruleNotMoreThanMax' => 'Pass mark cannot be more than Max mark',
+                    'ruleIsDecimal' => 'Value is not a valid decimal',
+                ],
+                'max' => [
+                    'ruleIsDecimal' => 'Value is not a valid decimal',
+                ]
+            ],
+            'GradingOptions' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique',
+                    'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form',
+                ],
+                'min' => [
+                    'ruleNotMoreThanMax' => 'Min value cannot be more than max value',
+                    'ruleIsDecimal' => 'Value is not a valid decimal',
+                ],
+                'max' => [
+                    'ruleNotMoreThanGradingTypeMax' => 'Grading Option max value cannot be more than Grading Type max value',
+                    'ruleIsDecimal' => 'Value is not a valid decimal',
+                ]
+            ]
+        ],
+        'Configuration' => [
+        	'ConfigProductLists' => [
+        		'name' => [
+        			'ruleUnique' => 'This product already exists in the system',
+        		],
+        		'url' => [
+        			'invalidUrl' => 'You have entered an invalid URL.',
+        		]
+        	],
+            'ConfigAdministrativeBoundaries' => [
+                'name' => [
+                    'ruleUnique' => 'This product already exists in the system',
+                ],
+                'value' => [
+                    'invalidUrl' => 'You have entered an invalid URL.',
+                    'ruleValidateJsonAPI' => 'URL or data in URL is invalid.'
+                ]
+            ]
+        ],
+        'Workflow' => [
+        	'WorkflowActions' => [
+        		'event_key' => [
+        			'ruleUnique' => 'This event has already been assigned.'
+        		]
+        	]
         ]
     ];
+
 
     public function getMessage($code, $options = []) {
         $sprintf = (array_key_exists('sprintf', $options))? $options['sprintf']: [];

@@ -575,11 +575,11 @@ class StaffAttendancesTable extends AppTable {
 
 	public function getAbsenceData(Event $event, Entity $entity, $key) {
 		$value = '<i class="fa fa-check"></i>';
+		$currentDay = $this->allDayOptions[$key]['date'];
 
 		if (isset($entity->StaffAbsences['id'])) {
 			$startDate = $entity->StaffAbsences['start_date'];
 			$endDate = $entity->StaffAbsences['end_date'];
-			$currentDay = $this->allDayOptions[$key]['date'];
 			if ($currentDay >= $startDate && $currentDay <= $endDate) {
 				$StaffAbsences = TableRegistry::get('Institution.StaffAbsences');
 				$absenceQuery = $StaffAbsences
@@ -603,6 +603,16 @@ class StaffAttendancesTable extends AppTable {
 					$entity->StaffAbsences['id']
 				]);
 			}
+		}
+
+		$query = $this->find()
+			->select(['start_date' => $this->aliasField('start_date')])
+			->where([$this->aliasField('staff_id') => $entity->staff_id])
+			->first();
+		$staffStartDate = $query->start_date->format('Y-m-d');
+
+		if ($currentDay < $staffStartDate) {
+			$value = '<i class="fa fa-minus"></i>';
 		}
 
 		return $value;
@@ -672,7 +682,7 @@ class StaffAttendancesTable extends AppTable {
 			// end setup weeks
 
 			// Setup day options
-			$ConfigItems = TableRegistry::get('ConfigItems');
+			$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 			$firstDayOfWeek = $ConfigItems->value('first_day_of_week');
 			$daysPerWeek = $ConfigItems->value('days_per_week');
 			$schooldays = [];
@@ -953,6 +963,7 @@ class StaffAttendancesTable extends AppTable {
 						} else if ($obj['absence_type_id'] == $codeAbsenceType['LATE']) {
 							$obj['staff_absence_reason_id'] = $obj['late_staff_absence_reason_id'];
 							$obj['full_day'] = 0;
+
 							$lateTime = strtotime($obj['late_time']);
 
 							$selectedPeriod = $this->request->query['academic_period_id'];
