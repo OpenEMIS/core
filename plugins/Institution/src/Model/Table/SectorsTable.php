@@ -11,7 +11,8 @@ class SectorsTable extends ControllerActionTable {
         parent::initialize($config);
 
 		$this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_sector_id']);
+        $this->hasMany('Providers', ['className' => 'Institution.Providers', 'foreignKey' => 'institution_sector_id']);
 
-		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
+		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
 	}
 }
