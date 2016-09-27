@@ -458,6 +458,7 @@ class InstitutionRoomsTable extends AppTable {
 			$autoGenerateCode = $this->getAutoGenerateCode($parentId);
 
 			$attr['attr']['default'] = $autoGenerateCode;
+			$attr['type'] = 'readonly';
 		} else if ($action == 'edit') {
 			$attr['type'] = 'readonly';
 		}
