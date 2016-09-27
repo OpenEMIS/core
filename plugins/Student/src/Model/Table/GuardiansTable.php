@@ -188,7 +188,7 @@ class GuardiansTable extends AppTable {
         if ($this->request->is(['ajax'])) {
             $term = $this->request->query['term'];
             // only search for guardian
-            $query = $this->Users->find()->where([$this->Users->aliasField('is_guardian') => 1]);
+            $query = $this->Users->find()->where([$this->Users->aliasField('is_guardian') => 1])->limit(100);
 
             $term = trim($term);
             if (!empty($term)) {
