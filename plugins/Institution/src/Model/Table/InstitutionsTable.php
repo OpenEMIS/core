@@ -192,6 +192,14 @@ class InstitutionsTable extends AppTable  {
 		return $validator;
 	}
 
+	public function getNonAcademicConstant() {
+		return self::NON_ACADEMIC;
+	}
+
+	public function getAcademicConstant() {
+		return self::ACADEMIC;
+	}
+
 	public function implementedEvents()
 	{
 		$events = parent::implementedEvents();
