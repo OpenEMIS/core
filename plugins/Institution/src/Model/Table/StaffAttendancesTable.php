@@ -348,7 +348,11 @@ class StaffAttendancesTable extends AppTable {
 	public function onGetOpenemisNo(Event $event, Entity $entity) {
 		$sessionPath = 'Users.staff_absences.';
 		$timeError = $this->Session->read($sessionPath.$entity->staff_id.'.timeError');
+		$startTimestamp = $this->Session->read($sessionPath.$entity->staff_id.'.startTimestamp');
+		$endTimestamp = $this->Session->read($sessionPath.$entity->staff_id.'.endTimestamp');
 		$this->Session->delete($sessionPath.$entity->staff_id.'.timeError');
+		$this->Session->delete($sessionPath.$entity->staff_id.'.startTimestamp');
+		$this->Session->delete($sessionPath.$entity->staff_id.'.endTimestamp');
 		$html = $event->subject()->Html->link($entity->user->openemis_no , [
 			'plugin' => 'Institution',
 			'controller' => 'Institutions',
@@ -357,14 +361,18 @@ class StaffAttendancesTable extends AppTable {
 			$entity->user->id
 		]);
 		if ($timeError) {
-			$error = $this->getMessage('StudentAttendances.lateTime');
+			$startTime = __('Must be within shift timing, from') . ' ' . date('h:i A', $startTimestamp);
+			$endTime = __('to') . ' ' . date('h:i A', $endTimestamp);
+
+			$error = $startTime . ' ' . $endTime;
 			$html .= '&nbsp;<i class="fa fa-exclamation-circle fa-lg table-tooltip icon-red" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="'.$error.'"></i>';
 		}
 		return $html;
 	}
 
 	// Event: ControllerAction.Model.onGetType
-	public function onGetType(Event $event, Entity $entity) {
+	public function onGetType(Event $event, Entity $entity)
+	{
 		$html = '';
 
 		if (!is_null($this->request->query('mode'))) {
@@ -386,8 +394,24 @@ class StaffAttendancesTable extends AppTable {
 			];
 			$displayTime = 'display:none;';
 			$HtmlField = $event->subject()->HtmlField;
-			$configItemsTable =  TableRegistry::get('ConfigItems');
-			$attr['value'] = $configItemsTable->value('start_time');
+
+			$selectedPeriod = $this->request->query['academic_period_id'];
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+
+			$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+			$shiftTime = $InstitutionShift
+				->find('shiftTime', ['academic_period_id' => $selectedPeriod, 'institution_id' => $institutionId])
+				->toArray();
+
+			$shiftStartTimeArray = [];
+			foreach ($shiftTime as $key => $value) {
+				$shiftStartTimeArray[$key] = $value->start_time;
+			}
+
+			$startTime = min($shiftStartTimeArray);
+			$startTimestamp = strtotime($startTime);
+
+			$attr['value'] = date('h:i A', $startTimestamp);
 			$attr['default_time'] = false;
 			$attr['null'] = true;
 			if (empty($entity->StaffAbsences['id'])) {
@@ -508,7 +532,7 @@ class StaffAttendancesTable extends AppTable {
 			}
 		} else {
 			$reasonId = $entity->StaffAbsences['staff_absence_reason_id'];
-			$StaffAbsenceReasons = TableRegistry::get('FieldOption.StaffAbsenceReasons');
+			$StaffAbsenceReasons = TableRegistry::get('Institution.StaffAbsenceReasons');
 
 			if (!empty($reasonId)) {
 				$obj = $StaffAbsenceReasons->findById($reasonId)->first();
@@ -551,11 +575,11 @@ class StaffAttendancesTable extends AppTable {
 
 	public function getAbsenceData(Event $event, Entity $entity, $key) {
 		$value = '<i class="fa fa-check"></i>';
+		$currentDay = $this->allDayOptions[$key]['date'];
 
 		if (isset($entity->StaffAbsences['id'])) {
 			$startDate = $entity->StaffAbsences['start_date'];
 			$endDate = $entity->StaffAbsences['end_date'];
-			$currentDay = $this->allDayOptions[$key]['date'];
 			if ($currentDay >= $startDate && $currentDay <= $endDate) {
 				$StaffAbsences = TableRegistry::get('Institution.StaffAbsences');
 				$absenceQuery = $StaffAbsences
@@ -581,6 +605,16 @@ class StaffAttendancesTable extends AppTable {
 			}
 		}
 
+		$query = $this->find()
+			->select(['start_date' => $this->aliasField('start_date')])
+			->where([$this->aliasField('staff_id') => $entity->staff_id])
+			->first();
+		$staffStartDate = $query->start_date->format('Y-m-d');
+
+		if ($currentDay < $staffStartDate) {
+			$value = '<i class="fa fa-minus"></i>';
+		}
+
 		return $value;
 	}
 
@@ -589,7 +623,9 @@ class StaffAttendancesTable extends AppTable {
         $query = $settings['query'];
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$periodOptions = $AcademicPeriod->getList();
+		$periodOptionsData = $AcademicPeriod->getList();
+		// only year options will appear
+		$periodOptions = $periodOptionsData[key($periodOptionsData)];
 
 		if (empty($this->request->query['academic_period_id'])) {
 			$this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
@@ -647,7 +683,7 @@ class StaffAttendancesTable extends AppTable {
 			// end setup weeks
 
 			// Setup day options
-			$ConfigItems = TableRegistry::get('ConfigItems');
+			$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 			$firstDayOfWeek = $ConfigItems->value('first_day_of_week');
 			$daysPerWeek = $ConfigItems->value('days_per_week');
 			$schooldays = [];
@@ -795,7 +831,7 @@ class StaffAttendancesTable extends AppTable {
 				$typeOptions = [self::PRESENT => __('Present')];
 				$this->typeOptions = $typeOptions + $this->absenceList;
 
-				$StaffAbsenceReasons = TableRegistry::get('FieldOption.StaffAbsenceReasons');
+				$StaffAbsenceReasons = TableRegistry::get('Institution.StaffAbsenceReasons');
 				$this->reasonOptions = $StaffAbsenceReasons->getList()->toArray();
 			}
 		} else {
@@ -906,7 +942,8 @@ class StaffAttendancesTable extends AppTable {
 		}
 	}
 
-	public function indexEdit() {
+	public function indexEdit()
+	{
 		if ($this->request->is(['post', 'put'])) {
 			$requestQuery = $this->request->query;
 			$requestData = $this->request->data;
@@ -925,23 +962,39 @@ class StaffAttendancesTable extends AppTable {
 						} else if ($obj['absence_type_id'] == $codeAbsenceType['LATE']) {
 							$obj['staff_absence_reason_id'] = $obj['late_staff_absence_reason_id'];
 							$obj['full_day'] = 0;
-							$configItemsTable =  TableRegistry::get('ConfigItems');
-							if (!isset($obj['start_time'])) {
-								$obj['start_time'] = $configItemsTable->value('start_time');
-								$obj['start_time'] = Time::parseTime($obj['start_time']);
-							} else {
-								$obj['start_time'] = new Time ($obj['start_time']);
+
+							$lateTime = strtotime($obj['late_time']);
+
+							$selectedPeriod = $this->request->query['academic_period_id'];
+							$institutionId = $this->Session->read('Institution.Institutions.id');
+
+							$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+							$shiftTime = $InstitutionShift
+								->find('shiftTime', ['academic_period_id' => $selectedPeriod, 'institution_id' => $institutionId])
+								->toArray();
+
+							$shiftStartTimeArray = [];
+							$shiftEndTimeArray = [];
+							foreach ($shiftTime as $key => $value) {
+								$shiftStartTimeArray[$key] = $value->start_time;
+								$shiftEndTimeArray[$key] = $value->end_time;
 							}
-							$startTime = $obj['start_time'];
-							$endTime = new Time ($obj['late_time']);
+
+							$startTime = min($shiftStartTimeArray);
+							$obj['start_time'] = $startTime;
+							$endTime = $obj['late_time'];
 							$obj['end_time'] = $endTime;
 
-							$startTimestamp = intval($startTime->toUnixString());
-							$endTimestamp = intval($endTime->toUnixString());
-							if ($startTimestamp > $endTimestamp) {
+							$startTimestamp = intval(min($shiftStartTimeArray)->toUnixString());
+							$endTimestamp = intval(max($shiftEndTimeArray)->toUnixString());
+
+							if (($lateTime < $startTimestamp) || ($lateTime > $endTimestamp)) {
+								$key = $obj['staff_id'];
 								$timeError = true;
 								$error = true;
 								$this->Session->write($StaffAbsences->Users->alias().'.'.$alias.'.'.$key.'.timeError', true);
+								$this->Session->write($StaffAbsences->Users->alias().'.'.$alias.'.'.$key.'.startTimestamp', $startTimestamp);
+								$this->Session->write($StaffAbsences->Users->alias().'.'.$alias.'.'.$key.'.endTimestamp', $endTimestamp);
 							}
 						}
 

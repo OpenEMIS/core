@@ -99,6 +99,8 @@ class SecurityRolesTable extends AppTable {
 				['name' => 'Security.Roles/controls', 'data' => [], 'options' => []]
 			];
 			$this->controller->set('toolbarElements', $toolbarElements);
+		} else if ($action == 'edit' && $selectedAction == 'system') { //POCOR-2570
+			$this->ControllerAction->field('name', ['type' => 'readonly']);
 		} else if ($selectedAction == 'user') {
 			// for all other actions for user group
 			$securityGroupId = $this->request->query('security_group_id');
@@ -122,16 +124,16 @@ class SecurityRolesTable extends AppTable {
 				$this->behaviors()->get('Reorder')->config([
 					'filterValues' => [$data[$this->alias()]['security_group_id']]
 				]);
-			}	
+			}
 		}
 	}
 
-	public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel) {
+	public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel, ArrayObject $extra) {
 		// to handle buttons visibility on a different set of permissions
 		$selectedAction = $this->request->query('type');
 		if (!empty($selectedAction)) {
 			$actions = ['user' => 'UserRoles', 'system' => 'SystemRoles'];
-			
+
 			$permissions = ['add', 'edit', 'remove'];
 			foreach ($permissions as $permission) {
 				if (!$this->AccessControl->check(['Securities', $actions[$selectedAction], $permission])) {
@@ -139,7 +141,7 @@ class SecurityRolesTable extends AppTable {
 				}
 			}
 		}
-		parent::onInitializeButtons($event, $buttons, $action, $isFromModel);
+		parent::onInitializeButtons($event, $buttons, $action, $isFromModel, $extra);
 	}
 
 	public function onUpdateFieldSecurityGroupId(Event $event, array $attr, $action, Request $request) {
@@ -154,7 +156,7 @@ class SecurityRolesTable extends AppTable {
 			$institutionSecurityGroup = $InstitutionsTable->find('list');
 
 			$whereClause = [];
-			
+
 			$SecurityGroupsTable = $this->SecurityGroups;
 
 			if ($this->Auth->user('super_admin') != 1) { //if not admin, then list out SecurityGroups which member created
@@ -218,7 +220,7 @@ class SecurityRolesTable extends AppTable {
 				])
 				->first();
 				$query->andWhere([$this->aliasField('order').' > ' => $userRole['security_role']['order']]);
-			}		
+			}
 		} else {
 			$conditions = [$this->aliasField('security_group_id') => $selectedGroup];
 
@@ -228,7 +230,7 @@ class SecurityRolesTable extends AppTable {
 				->contain('SecurityRoles')
 				->order(['SecurityRoles.order'])
 				->where([
-					$GroupRoles->aliasField('security_user_id') => $userId, 
+					$GroupRoles->aliasField('security_user_id') => $userId,
 					'SecurityRoles.security_group_id' => $selectedGroup
 				])
 				->first();
@@ -254,7 +256,7 @@ class SecurityRolesTable extends AppTable {
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-		
+
 		$attr = ['plugin', 'controller', 'action', 'security_group_id', 0, 1];
 		$permissionBtn = ['permissions' => $buttons['view']];
 		$permissionBtn['permissions']['url']['action'] = 'Permissions';
@@ -273,12 +275,14 @@ class SecurityRolesTable extends AppTable {
 		// -1 = system roles, we are not allowing users to modify system roles
 		// removing all buttons from the menu
 		if ($groupId == -1) {
+			/* POCOR-2570
 			if (array_key_exists('view', $buttons)) {
 				unset($buttons['view']);
 			}
 			if (array_key_exists('edit', $buttons)) {
 				unset($buttons['edit']);
 			}
+			*/
 			if (array_key_exists('remove', $buttons)) {
 				unset($buttons['remove']);
 			}
@@ -300,7 +304,7 @@ class SecurityRolesTable extends AppTable {
 					$ids[] = $institutionQuery->security_group_id;
 				}
 			}
-		} 
+		}
 
 		return $query->where([$this->aliasField('security_group_id').' IN' => $ids]);
 	}
@@ -382,7 +386,7 @@ class SecurityRolesTable extends AppTable {
 				// If the user is a restricted user and is creating a user group
 				$highestSystemRole = $this->find()->where([$this->aliasField('name') => 'Group Administrator'])->first();
 			}
-			
+
 
 			// If the user has a system role, then populate the system role options
 			// find the list of roles with lower privilege than the current highest privilege role assigned to this user

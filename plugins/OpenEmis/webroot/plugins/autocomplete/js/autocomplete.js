@@ -41,6 +41,11 @@ var Autocomplete = {
 		if (text.length > 0) {
 			text.remove();
 		}
+		if ($(obj).next().size() > 0) {
+			if($(obj).next().hasClass('error-message')) {
+				$(obj).next().empty();
+			}
+		}
 		obj.after(Autocomplete.loader);
 
 		var beforeSearch = obj.attr('autocomplete-before-search');

@@ -87,20 +87,6 @@ class OpenEmisBehavior extends Behavior {
         $model->controller->set('indexElements', []);
         // end deprecated
 
-        if (array_key_exists('toolbarButtons', $extra)) {
-			$toolbarButtons = $extra['toolbarButtons'];
-			if ($model->action == 'view' && $model->actions('remove') != 'transfer' && $model->actions('remove')) {
-				// not checking existence of entity in $extra so that errors will be shown if entity is removed unexpectedly
-                if (isset($toolbarButtons['remove'])) {
-                    $toolbarButtons['remove']['attr']['field-value'] = $extra['entity']->{$model->primaryKey()};
-                }
-			}
-			$model->controller->set('toolbarButtons', $toolbarButtons);
-		}
-		if (array_key_exists('indexButtons', $extra)) {
-			$model->controller->set('indexButtons', $extra['indexButtons']);
-		}
-
         $this->attachEntityInfoToToolBar($extra);
         if ($extra->offsetExists('indexButtons')) {
             $model->controller->set('indexButtons', $extra['indexButtons']);
@@ -118,8 +104,10 @@ class OpenEmisBehavior extends Behavior {
             if ($isViewPage) {
                 $isDeleteButtonEnabled = $toolbarButtons->offsetExists('remove');
                 $isNotTransferOperation = $model->actions('remove') != 'transfer';
-                $primaryKey = $entity->{$model->primaryKey()};
-                if ($isDeleteButtonEnabled && $isNotTransferOperation) {
+                $isNotRestrictOperation = $model->actions('remove') != 'restrict';
+                $idKey = $model->getPrimaryKey();
+                $primaryKey = $entity->$idKey;
+                if ($isDeleteButtonEnabled && $isNotTransferOperation && $isNotRestrictOperation) {
                     // not checking existence of entity in $extra so that errors will be shown if entity is removed unexpectedly
                     // to attach primary key to the button attributes for delete operation
                     if (array_key_exists('remove', $toolbarButtons)) {
@@ -301,10 +289,12 @@ class OpenEmisBehavior extends Behavior {
                 $toolbarButtons['remove']['label'] = '<i class="fa fa-trash"></i>';
                 $toolbarButtons['remove']['attr'] = $toolbarAttr;
                 $toolbarButtons['remove']['attr']['title'] = __('Delete');
-                $toolbarButtons['remove']['attr']['data-toggle'] = 'modal';
-                $toolbarButtons['remove']['attr']['data-target'] = '#delete-modal';
-                $toolbarButtons['remove']['attr']['field-target'] = '#recordId';
-                $toolbarButtons['remove']['attr']['onclick'] = 'ControllerAction.fieldMapping(this)';
+                if ($model->actions('remove') != 'restrict') {
+                    $toolbarButtons['remove']['attr']['data-toggle'] = 'modal';
+                    $toolbarButtons['remove']['attr']['data-target'] = '#delete-modal';
+                    $toolbarButtons['remove']['attr']['field-target'] = '#recordId';
+                    $toolbarButtons['remove']['attr']['onclick'] = 'ControllerAction.fieldMapping(this)';
+                }
             }
 
             if ($download = $model->actions('download')) {

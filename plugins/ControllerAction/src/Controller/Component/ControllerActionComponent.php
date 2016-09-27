@@ -220,18 +220,21 @@ class ControllerActionComponent extends Component {
 
                 // for automatic adding of '-- Select --' if there are no '' value fields in dropdown
                 $addSelect = true;
+                if ($attr['type'] == 'chosenSelect') {
+                    $addSelect = false;
+                }
                 if (array_key_exists('select', $attr)) {
                     if ($attr['select'] === false) {
                         $addSelect = false;
+                    } else {
+                        $addSelect = true;
                     }
                 }
                 if ($addSelect) {
                     if (is_array($attr['options'])) {
                         // need to check if options has any ''
                         if (!array_key_exists('', $attr['options'])) {
-                            if ($attr['type'] != 'chosenSelect') {
-                                $this->model->fields[$key]['options'] = ['' => __('-- Select --')] + $attr['options'];
-                            }
+                            $this->model->fields[$key]['options'] = ['' => __('-- Select --')] + $attr['options'];
                         }
                     }
                 }
@@ -240,6 +243,7 @@ class ControllerActionComponent extends Component {
             // make field sortable by default if it is a string data-type
             if (!array_key_exists('type', $attr)) {
                 $this->log($key, 'debug');
+                continue;
             }
 
             $sortableTypes = ['string', 'date', 'time', 'datetime'];
@@ -483,11 +487,21 @@ class ControllerActionComponent extends Component {
         return $associatedEntityArrayKey;
     }
 
+    public function getPrimaryKey(Table $model)
+    {
+        $primaryKey = $model->primaryKey();
+        if (is_array($primaryKey)) {
+            $primaryKey = 'id';
+        }
+        return $primaryKey;
+    }
+
     private function initButtons() {
         $controller = $this->controller;
 
         $named = $this->request->query;
         $pass = $this->request->params['pass'];
+        $extra = new ArrayObject([]);
         if ($this->triggerFrom == 'Model') {
             unset($pass[0]);
         }
@@ -507,16 +521,17 @@ class ControllerActionComponent extends Component {
             if ($action != 'index') {
                 if ($this->currentAction != 'index') {
                     $model = $this->model;
-                    $primaryKey = $model->primaryKey();
+                    $primaryKey = $this->getPrimaryKey($model);
                     $idKey = $model->aliasField($primaryKey);
                     $sessionKey = $model->registryAlias() . '.' . $primaryKey;
+                    $extra['primaryKeyValue'] = $this->Session->read($sessionKey);
                     if (empty($pass)) {
                         if ($this->Session->check($sessionKey)) {
-                            $pass = [$this->Session->read($sessionKey)];
+                            $pass = [$extra['primaryKeyValue']];
                         }
                     } elseif (isset($pass[0]) && $pass[0]==$action) {
                         if ($this->Session->check($sessionKey)) {
-                            $pass[1] = $this->Session->read($sessionKey);
+                            $pass[1] = $extra['primaryKeyValue'];
                         }
                     }
                 }
@@ -559,7 +574,7 @@ class ControllerActionComponent extends Component {
             }
         }
 
-        $params = [$buttons, $this->currentAction, $this->triggerFrom == 'Model'];
+        $params = [$buttons, $this->currentAction, $this->triggerFrom == 'Model', $extra];
         $this->debug(__METHOD__, ': Event -> ControllerAction.Model.onInitializeButtons');
         $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onInitializeButtons', null, $params);
         if ($event->isStopped()) { return $event->result; }
@@ -879,7 +894,6 @@ class ControllerActionComponent extends Component {
             $data = $event->result;
         }
         if ($event->isStopped()) { return $event->result; }
-
         $modals = ['delete-modal' => $this->getModalOptions('remove')];
         $this->config['form'] = true;
         $this->config['formButtons'] = false;
@@ -898,7 +912,8 @@ class ControllerActionComponent extends Component {
         }
         // End Event
 
-        $primaryKey = $model->primaryKey();
+        $primaryKey = $this->getPrimaryKey($model);
+
         $idKey = $model->aliasField($primaryKey);
         $sessionKey = $model->registryAlias() . '.' . $primaryKey;
         $contain = [];
@@ -1104,7 +1119,8 @@ class ControllerActionComponent extends Component {
         }
         // End Event
 
-        $primaryKey = $model->primaryKey();
+        $primaryKey = $this->getPrimaryKey($model);
+
         $idKey = $model->aliasField($primaryKey);
 
         if ($model->exists([$idKey => $id])) {
@@ -1261,12 +1277,18 @@ class ControllerActionComponent extends Component {
         }
         // End Event
 
-        $primaryKey = $model->primaryKey();
+        $primaryKey = $this->getPrimaryKey($model);
+
         $idKey = $model->aliasField($primaryKey);
 
         if ($request->is('get')) {
             if ($model->exists([$idKey => $id])) {
-                $entity = $model->get($id);
+                if (is_array($model->primaryKey())) {
+                    // For table with composite primary key
+                    $entity = $model->find()->where([$idKey => $id])->first();
+                } else {
+                    $entity = $model->get($id);
+                }
 
                 $query = $model->find();
                 $extra = new ArrayObject([]);
@@ -1365,10 +1387,16 @@ class ControllerActionComponent extends Component {
             $extra = new ArrayObject(['excludedModels' => []]);
 
             $process = function ($model, $id, $deleteOptions) {
-                $primaryKey = $model->primaryKey();
+                $primaryKey = $this->getPrimaryKey($model);
+
                 $idKey = $model->aliasField($primaryKey);
                 if ($model->exists([$idKey => $id])) {
-                    $entity = $model->get($id);
+                    if (is_array($model->primaryKey())) {
+                        // For table with composite primary key
+                        $entity = $model->find()->where([$idKey => $id])->first();
+                    } else {
+                        $entity = $model->get($id);
+                    }
                     return $model->delete($entity, $deleteOptions->getArrayCopy());
                 } else {
                     // If id(to be deleted) cannot be found, return a successful deletion message

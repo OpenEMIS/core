@@ -6,8 +6,9 @@ use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
 class EmploymentTypesTable extends ControllerActionTable {
-	public function initialize(array $config) {
-		$this->addBehavior('ControllerAction.FieldOption');
+	public function initialize(array $config)
+    {
+		$this->addBehavior('FieldOption.FieldOption');
 		$this->table('employment_types');
 		parent::initialize($config);
 		$this->hasMany('Employments', ['className' => 'Staff.Employments', 'foreignKey' => 'employment_type_id']);
