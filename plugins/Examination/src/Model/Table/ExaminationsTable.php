@@ -20,11 +20,7 @@ class ExaminationsTable extends ControllerActionTable {
         $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentreStudents', ['className' => 'Examination.ExaminationCentreStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-        $this->behaviors()->get('ControllerAction')->config([
-            'actions' => [
-                'remove' => 'restrict'
-            ]
-        ]);
+        $this->setDeleteStrategy('restrict');
     }
 
     public function validationDefault(Validator $validator) {
