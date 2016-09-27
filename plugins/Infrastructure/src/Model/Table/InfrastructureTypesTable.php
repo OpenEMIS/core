@@ -25,8 +25,8 @@ class InfrastructureTypesTable extends ControllerActionTable
 			]);
 		}
 
-		$this->addBehavior('Infrastructure.Types');
 		$this->addBehavior('FieldOption.FieldOption');
+		$this->addBehavior('Infrastructure.Types');
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {

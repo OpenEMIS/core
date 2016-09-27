@@ -22,8 +22,8 @@ class RoomTypesTable extends ControllerActionTable
 
 		$this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-		$this->addBehavior('Infrastructure.Types', ['code' => 'ROOM']);
 		$this->addBehavior('FieldOption.FieldOption');
+		$this->addBehavior('Infrastructure.Types', ['code' => 'ROOM']);
 
 		$InfrastructureLevels = TableRegistry::get('Infrastructure.InfrastructureLevels');
 		$this->levelOptions = $InfrastructureLevels->getOptions(['keyField' => 'id', 'valueField' => 'name']);
