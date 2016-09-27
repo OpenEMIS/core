@@ -583,6 +583,11 @@ trait MessagesTrait {
                     'ruleLinkedSector' => 'Please select a provider linked to the chosen Sector'
                 ]
             ],
+            'InstitutionContacts' => [
+                'email' => [
+                    'ruleValidEmail' => 'Please enter a valid Email'
+                ]
+            ],
             'InstitutionClasses' => [
                 'noGrade' => 'There is no grade selected',
                 'emptyName' => 'Class name should not be empty',
