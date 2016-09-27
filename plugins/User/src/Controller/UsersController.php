@@ -147,6 +147,12 @@ class UsersController extends AppController
         $user = $this->Users->get($user['id']);
         $user->last_login = new DateTime();
         $this->Users->save($user);
+
+        $listeners = [
+            TableRegistry::get('Security.SecurityUserLogins')
+        ];
+        $this->Users->dispatchEventToModels('Model.Users.afterLogin', [$user], $this, $listeners);
+
         $this->log('[' . $user->username . '] Login successfully.', 'debug');
 
         // To remove inactive staff security group users records

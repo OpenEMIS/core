@@ -507,4 +507,11 @@ class AppTable extends Table {
         // search backwards starting from haystack length characters from the end
         return $needle === "" || strrpos($haystack, $needle, -strlen($haystack)) !== false;
     }
+
+    public function dispatchEventToModels($eventKey, $params, $subject, $listeners)
+    {
+    	foreach ($listeners as $listener) {
+    		$listener->dispatchEvent($eventKey, $params, $subject);
+    	}
+    }
 }
