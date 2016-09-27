@@ -17,10 +17,7 @@ class StudentsController extends AppController {
 		$this->ControllerAction->model('Student.Students');
 		$this->ControllerAction->models = [
 			'Accounts' 			=> ['className' => 'Student.Accounts', 'actions' => ['view', 'edit']],
-			'Identities' 		=> ['className' => 'User.Identities'],
-			'Languages' 		=> ['className' => 'User.UserLanguages'],
 			'Nationalities' 	=> ['className' => 'User.Nationalities'],
-			'Awards' 			=> ['className' => 'User.Awards'],
 			'Attachments' 		=> ['className' => 'User.Attachments'],
 			'Guardians' 		=> ['className' => 'Student.Guardians'],
 			'GuardianUser' 		=> ['className' => 'Student.GuardianUser', 'actions' => ['add', 'view', 'edit']],
@@ -58,6 +55,8 @@ class StudentsController extends AppController {
     public function Contacts() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Contacts']); }
     public function BankAccounts() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.BankAccounts']); }
     public function Comments() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
+    public function Identities() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']); }
+    public function Awards() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
 	// End
 
 	// AngularJS
