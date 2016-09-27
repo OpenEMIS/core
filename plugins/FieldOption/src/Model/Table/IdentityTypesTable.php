@@ -19,13 +19,13 @@ class IdentityTypesTable extends ControllerActionTable {
 
 		$this->hasMany('Identities', ['className' => 'User.Identities', 'foreignKey' => 'identity_type_id']);
 
-		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
+		$this->setDeleteStrategy('restrict');
     }
 
-	public function afterSave(Event $event, Entity $entity) 
+	public function afterSave(Event $event, Entity $entity)
 	{
 		if ($entity->dirty('default')) { //check whether default value has been changed
-			if ($entity->default) { 
+			if ($entity->default) {
 				$this->triggerUpdateUserDefaultIdentityNoShell($entity->id);
 			} else {
 				$this->triggerUpdateUserDefaultIdentityNoShell($this->getDefaultValue());
@@ -33,10 +33,10 @@ class IdentityTypesTable extends ControllerActionTable {
 		}
 	}
 
-	public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra) 
+	public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
 	{
 		if ($entity->default) { //if the one that is going to be deleted is default identity type
-			$event->stopPropagation(); 
+			$event->stopPropagation();
 			$extra['Alert']['message'] = $this->aliasField('deleteDefault');
 			return false;
 		}
