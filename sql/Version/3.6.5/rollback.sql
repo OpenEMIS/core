@@ -1,3 +1,10 @@
+-- POCOR-3396
+DROP TABLE `security_user_logins`;
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3396';
+
+
 -- POCOR-3106
 -- security functions
 ALTER TABLE `security_functions` DROP `description`;

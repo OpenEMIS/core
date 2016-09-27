@@ -37,11 +37,7 @@ class AreasTable extends ControllerActionTable
                 'filter' => 'parent_id',
             ]);
         }
-        $this->behaviors()->get('ControllerAction')->config([
-            'actions' => [
-                'remove' => 'restrict'
-            ],
-        ]);
+        $this->setDeleteStrategy('restrict');
     }
 
     public function implementedEvents()
