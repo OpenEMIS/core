@@ -63,6 +63,12 @@ class InstitutionContactsTable extends ControllerActionTable {
             unset($extra['toolbarButtons']['list']);
         }
 
+        if ($this->action == 'view') {
+            if (isset($extra['toolbarButtons']['back'])) {
+                unset($extra['toolbarButtons']['back']);
+            }
+        }
+
         // prevent users from manually accessing other insitution's pages
         if (isset($this->request->pass[1])) {
             $id = $this->Session->read('Institution.Institutions.id');
