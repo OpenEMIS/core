@@ -33,6 +33,7 @@ angular.module('kd.orm.svc', [])
             this._contain = [];
             this._finder = [];
             this._where = {};
+            this._orWhere = [];
             this._limit = 0;
             this._group = [];
             this._order = [];
@@ -180,6 +181,12 @@ angular.module('kd.orm.svc', [])
             if (settings.headers == undefined) {
                 settings.headers = {'Content-Type': 'application/x-www-form-urlencoded'};
             }
+
+            if (settings.authorizationHeader != undefined) {
+                settings.headers.authorization = settings.authorizationHeader;
+                delete settings.authorizationHeader;
+            }
+
             var url = this.toURL();
             settings.url = url.replace('@type', type);
 
