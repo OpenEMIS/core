@@ -17,6 +17,6 @@ class EducationSubjectsTable extends ControllerActionTable {
 			'through' => 'Education.EducationGradesSubjects',
 			'dependent' => true
 		]);
-        $this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
+        $this->setDeleteStrategy('restrict');
 	}
 }
