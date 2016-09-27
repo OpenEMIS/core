@@ -8,18 +8,22 @@ use Cake\ORM\Table;
 
 class EducationsController extends AppController
 {
-	public function initialize() {
+	public function initialize()
+	{
 		parent::initialize();
 
 		$this->ControllerAction->models = [
-			'Systems' => ['className' => 'Education.EducationSystems', 'options' => ['deleteStrategy' => 'transfer']],
-			'Levels' => ['className' => 'Education.EducationLevels', 'options' => ['deleteStrategy' => 'transfer']],
-			'Cycles' => ['className' => 'Education.EducationCycles', 'options' => ['deleteStrategy' => 'transfer']],
-			'Programmes' => ['className' => 'Education.EducationProgrammes', 'options' => ['deleteStrategy' => 'transfer']],
-			'Grades' => ['className' => 'Education.EducationGrades', 'options' => ['deleteStrategy' => 'restrict']],
+			// 'Systems' 		=> ['className' => 'Education.EducationSystems', 'options' => ['deleteStrategy' => 'restrict']],
+			'Levels' 		=> ['className' => 'Education.EducationLevels', 'options' => ['deleteStrategy' => 'restrict']],
+			'Cycles' 		=> ['className' => 'Education.EducationCycles', 'options' => ['deleteStrategy' => 'restrict']],
+			'Programmes' 	=> ['className' => 'Education.EducationProgrammes', 'options' => ['deleteStrategy' => 'restrict']],
+			'Grades' 		=> ['className' => 'Education.EducationGrades', 'options' => ['deleteStrategy' => 'restrict']],
 		];
 		$this->loadComponent('Paginator');
     }
+
+    public function Systems() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationSystems']); }
+
 
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);

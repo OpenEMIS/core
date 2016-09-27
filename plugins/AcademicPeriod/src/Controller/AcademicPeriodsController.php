@@ -13,7 +13,7 @@ class AcademicPeriodsController extends AppController
 
 		$this->ControllerAction->models = [
 			'Levels' => ['className' => 'AcademicPeriod.AcademicPeriodLevels'],
-			'Periods' => ['className' => 'AcademicPeriod.AcademicPeriods', 'options' => ['deleteStrategy' => 'restrict']]
+			'Periods' => ['className' => 'AcademicPeriod.AcademicPeriods']
 		];
 		$this->loadComponent('Paginator');
     }
