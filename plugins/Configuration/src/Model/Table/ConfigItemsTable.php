@@ -21,16 +21,8 @@ class ConfigItemsTable extends AppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-<<<<<<< HEAD:src/Model/Table/ConfigItemsTable.php
-
-		$this->addBehavior('Authentication');
-		$this->addBehavior('ExternalDataSource');
-		$this->addBehavior('FormNotes');
-		// $this->belongsTo('ConfigItemOptions', ['foreignKey'=>'value']);
-=======
 		$this->addBehavior('Configuration.ConfigItems');
 		$this->belongsTo('ConfigItemOptions', ['className' => 'Configuration.ConfigItemOptions', 'foreignKey'=>'value']);
->>>>>>> ecb4dd1104c008354410165e66ae1667f2c15f17:plugins/Configuration/src/Model/Table/ConfigItemsTable.php
 	}
 
 	public function beforeAction(Event $event) {
