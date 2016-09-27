@@ -623,6 +623,7 @@ class UsersTable extends AppTable {
 				]
 			])
 			->order([$this->aliasField('first_name')])
+			->limit(100)
 			->all();
 
 		$data = array();
@@ -662,6 +663,6 @@ class UsersTable extends AppTable {
 
 	public function updateIdentityNumber($userId, $identityNo)
 	{
-		$this->updateAll(['identity_number' => $identityNo], ['id' => $userId]);	
-	} 
+		$this->updateAll(['identity_number' => $identityNo], ['id' => $userId]);
+	}
 }
