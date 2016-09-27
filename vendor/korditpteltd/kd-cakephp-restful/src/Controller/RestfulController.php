@@ -490,9 +490,26 @@ class RestfulController extends AppController
         $columns = $schema->columns();
         foreach ($columns as $col) {
             $attr = $schema->column($col);
+            $foreignKey = $this->isForeignKey($table, $col);
+            if ($foreignKey !== false) {
+                $attr['foreign_key'] = true;
+                $attr['reference'] = $foreignKey['className'];
+            }
             $fields[$col] = $attr;
         }
         return $fields;
+    }
+
+    private function isForeignKey($table, $field)
+    {
+        foreach ($table->associations() as $assoc) {
+            if ($assoc->type() == 'manyToOne') { // belongsTo associations
+                if ($field === $assoc->foreignKey()) {
+                    return ['className' => $assoc->className()];
+                }
+            }
+        }
+        return false;
     }
 
     private function _instantiateModel($model)
