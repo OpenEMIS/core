@@ -17,7 +17,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 	private $workflowEvents = [
  		[
  			'value' => 'Workflow.onApprove',
-			'text' => 'Approval of Changes to Staff Position Profiles',
+			'text' => 'Approval of Change in Assignment',
 			'description' => 'Performing this action will apply the proposed changes to the staff record.',
  			'method' => 'OnApprove'
  		]
