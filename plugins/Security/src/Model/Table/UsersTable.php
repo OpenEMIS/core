@@ -54,6 +54,15 @@ class UsersTable extends AppTable {
 
 		$list = $this
 			->find()
+			->select([
+				$this->aliasField('openemis_no'),
+				$this->aliasField('first_name'),
+				$this->aliasField('middle_name'),
+				$this->aliasField('third_name'),
+				$this->aliasField('last_name'),
+				$this->aliasField('preferred_name'),
+				$this->aliasField('id')
+			])
 			->where([
 				'OR' => [
 					$this->aliasField('openemis_no') . ' LIKE' => $search,
@@ -64,8 +73,9 @@ class UsersTable extends AppTable {
 				]
 			])
 			->order([$this->aliasField('first_name')])
+			->limit(100)
 			->all();
-		
+
 		$data = array();
 		foreach($list as $obj) {
 			$data[] = [
@@ -131,7 +141,7 @@ class UsersTable extends AppTable {
 
 	public function viewBeforeAction(Event $event) {
 		$this->ControllerAction->field('roles', [
-			'type' => 'role_table', 
+			'type' => 'role_table',
 			'order' => 69,
 			'valueClass' => 'table-full-width',
 			'visible' => ['index' => false, 'view' => true, 'edit' => false]
@@ -169,7 +179,7 @@ class UsersTable extends AppTable {
 				->matching('SecurityRoles')
 				->where([$GroupUsers->aliasField('security_user_id') => $entity->id])
 				->group([
-					$GroupUsers->aliasField('security_group_id'), 
+					$GroupUsers->aliasField('security_group_id'),
 					$GroupUsers->aliasField('security_role_id')
 				])
 				->select(['group_name' => 'SecurityGroups.name', 'role_name' => 'SecurityRoles.name', 'group_id' => 'SecurityGroups.id'])
@@ -201,7 +211,7 @@ class UsersTable extends AppTable {
 
 	public function addBeforeAction(Event $event) {
 		$uniqueOpenemisId = $this->getUniqueOpenemisId(['model'=>Inflector::singularize('User')]);
-		
+
 		// first value is for the hidden field value, the second value is for the readonly value
 		$this->ControllerAction->field('openemis_no', ['type' => 'readonly', 'value' => $uniqueOpenemisId, 'attr' => ['value' => $uniqueOpenemisId]]);
 
@@ -209,7 +219,7 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('identity_number', ['type' => 'hidden']);
 	}
 
-	public function editAfterAction(Event $event, Entity $entity) 
+	public function editAfterAction(Event $event, Entity $entity)
 	{
 		$this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
 	}

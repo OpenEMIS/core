@@ -1076,7 +1076,17 @@ class StudentsTable extends AppTable {
 		if ($this->request->is(['ajax'])) {
 			$term = $this->request->query['term'];
 			// only search for students
-			$query = $this->Users->find()->where([$this->Users->aliasField('is_student') => 1])->limit(100);
+			$query = $this->Users->find()
+				->select([
+					$this->Users->aliasField('openemis_no'),
+					$this->Users->aliasField('first_name'),
+					$this->Users->aliasField('middle_name'),
+					$this->Users->aliasField('third_name'),
+					$this->Users->aliasField('last_name'),
+					$this->Users->aliasField('preferred_name'),
+					$this->Users->aliasField('id')
+				])
+				->where([$this->Users->aliasField('is_student') => 1])->limit(100);
 
 			$term = trim($term);
 			if (!empty($term)) {
