@@ -11,19 +11,8 @@ class EducationsController extends AppController
 	public function initialize()
 	{
 		parent::initialize();
-
-		$this->ControllerAction->models = [
-			// 'Systems' 		=> ['className' => 'Education.EducationSystems', 'options' => ['deleteStrategy' => 'restrict']],
-			'Levels' 		=> ['className' => 'Education.EducationLevels', 'options' => ['deleteStrategy' => 'restrict']],
-			'Cycles' 		=> ['className' => 'Education.EducationCycles', 'options' => ['deleteStrategy' => 'restrict']],
-			'Programmes' 	=> ['className' => 'Education.EducationProgrammes', 'options' => ['deleteStrategy' => 'restrict']],
-			'Grades' 		=> ['className' => 'Education.EducationGrades', 'options' => ['deleteStrategy' => 'restrict']],
-		];
 		$this->loadComponent('Paginator');
     }
-
-    public function Systems() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationSystems']); }
-
 
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
@@ -75,8 +64,13 @@ class EducationsController extends AppController
 		$this->set('contentHeader', $header);
     }
 
-    public function Subjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationSubjects']); }
-    public function Certifications() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationCertifications']); }
-    public function FieldOfStudies() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationFieldOfStudies']); }
+    public function Subjects() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationSubjects']); }
+    public function Certifications() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationCertifications']); }
+    public function FieldOfStudies() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationFieldOfStudies']); }
     public function ProgrammeOrientations() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationProgrammeOrientations']); }
+    public function Systems() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationSystems']); }
+    public function Levels() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationLevels']); }
+    public function Cycles() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationCycles']); }
+    public function Programmes()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationProgrammes']); }
+    public function Grades() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationGrades']); }
 }
