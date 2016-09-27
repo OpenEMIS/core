@@ -149,7 +149,7 @@ class TrainingCoursesTable extends AppTable {
 
 	public function onUpdateFieldCreditHours(Event $event, array $attr, $action, Request $request) {
 		
-		$creditHours = TableRegistry::get('ConfigItems')->value('training_credit_hour');
+		$creditHours = TableRegistry::get('Configuration.ConfigItems')->value('training_credit_hour');
 
 		for ($i=1; $i <= $creditHours; $i++){
   			$attr['options'][$i] = $i;

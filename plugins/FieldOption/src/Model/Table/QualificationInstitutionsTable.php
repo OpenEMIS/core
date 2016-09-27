@@ -1,12 +1,12 @@
 <?php
 namespace FieldOption\Model\Table;
 
-use App\Model\Table\AppTable;
-use Cake\Validation\Validator;
+use App\Model\Table\ControllerActionTable;
 
-class QualificationInstitutionsTable extends AppTable {
-	public function initialize(array $config) {
-		$this->addBehavior('ControllerAction.FieldOption');
+class QualificationInstitutionsTable extends ControllerActionTable {
+	public function initialize(array $config)
+    {
+		$this->addBehavior('FieldOption.FieldOption');
 		$this->hasMany('Qualifications', ['className' => 'Staff.Qualifications', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 }

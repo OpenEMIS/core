@@ -48,6 +48,7 @@ class InstitutionGradesTable extends AppTable {
 	public function afterAction(Event $event) {
 		$this->ControllerAction->field('level');
 		$this->ControllerAction->field('programme');
+		$this->ControllerAction->field('end_date', ['default_date' => false]);
 		$this->ControllerAction->field('education_grade_id');
 
 		if ($this->action == 'add') {
@@ -69,7 +70,12 @@ class InstitutionGradesTable extends AppTable {
 ******************************************************************************************************************/
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$query->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels']);
-		$options['order'] = ['EducationLevels.order', 'EducationCycles.order', 'EducationProgrammes.order', 'EducationGrades.order'];
+		$options['order'] = [
+			'EducationLevels.order' => 'asc', 
+			'EducationCycles.order' => 'asc', 
+			'EducationProgrammes.order' => 'asc', 
+			'EducationGrades.order' => 'asc'
+		];
 	}
 
 
@@ -338,8 +344,19 @@ class InstitutionGradesTable extends AppTable {
 		/**
 		 * PHPOE-2132, Common statements with getGradeOptionsForIndex() were moved to _gradeOptions().
 		 */
+
+		// Get the current time.
+		$currTime = Time::now();
+
 		$query = $this->find('all')
-					->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId]);
+					->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
+					->where([
+						'OR' => [
+							[$this->aliasField('end_date').' IS NULL'],
+							[$this->aliasField('end_date') . " >= '" . $currTime->format('Y-m-d') . "'"]
+						]
+					])
+					;
 		return $this->_gradeOptions($query, $institutionsId, $listOnly);
 	}
 

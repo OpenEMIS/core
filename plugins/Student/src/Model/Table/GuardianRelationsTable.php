@@ -6,7 +6,7 @@ use App\Model\Table\ControllerActionTable;
 class GuardianRelationsTable extends ControllerActionTable {
     public function initialize(array $config)
     {
-        $this->addBehavior('ControllerAction.FieldOption');
+        $this->addBehavior('FieldOption.FieldOption');
         $this->table('guardian_relations');
         parent::initialize($config);
 

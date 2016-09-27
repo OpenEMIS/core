@@ -28,7 +28,6 @@ class SurveyFormsTable extends CustomFormsTable {
 			]
 		];
 		parent::initialize($config);
-		$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
 		$this->hasMany('SurveyStatuses', ['className' => 'Survey.SurveyStatuses', 'dependent' => true, 'cascadeCallbacks' => true]);
 		// The hasMany association for InstitutionSurveys and StudentSurveys is done in onBeforeDelete() and is added based on module to avoid conflict.
 	}
@@ -62,7 +61,7 @@ class SurveyFormsTable extends CustomFormsTable {
     }
 
 	public function afterAction(Event $event){
-		$this->ControllerAction->setFieldOrder(['custom_module_id', 'code', 'name', 'description', 'custom_fields']);
+		$this->ControllerAction->setFieldOrder(['custom_module_id', 'code', 'name', 'description']);
 	}
 
 	public function addBeforeAction(Event $event) {
@@ -71,12 +70,6 @@ class SurveyFormsTable extends CustomFormsTable {
 
 	public function onGetCustomModuleId(Event $event, Entity $entity) {
 		return $entity->custom_module->code;
-	}
-
-	public function indexAfterAction(Event $event, $data) {
-		parent::indexAfterAction($event, $data);
-		unset($this->fields['apply_to_all']);
-		unset($this->fields['custom_filters']);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {

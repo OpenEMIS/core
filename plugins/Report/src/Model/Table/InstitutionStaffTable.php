@@ -59,20 +59,12 @@ class InstitutionStaffTable extends AppTable  {
 			]);
 		}
 
-		$query->leftJoin(
-			['Identities' => 'user_identities'],
-			[
-				'Identities.security_user_id = '.$this->aliasField('staff_id'),
-				'Identities.identity_type_id' => $settings['identity']->id
-			]
-		);
-
 		$query->contain(['Users.Genders', 'Institutions.Areas', 'Positions.StaffPositionTitles', 'Institutions.Types'])->select([
 			'openemis_no' => 'Users.openemis_no',
 			'first_name' => 'Users.first_name',
 			'middle_name' => 'Users.middle_name',
 			'last_name' => 'Users.last_name',
-			'number' => 'Identities.number',
+			'number' => 'Users.identity_number',
 			'code' => 'Institutions.code',
 			'gender' => 'Genders.name',
 			'area_name' => 'Areas.name',
@@ -116,7 +108,6 @@ class InstitutionStaffTable extends AppTable  {
 		foreach ($fields as $key => $field) {
 			if ($field['field'] == 'institution_id' || $field['field'] == 'staff_id') {
 				unset($fields[$key]);
-				break;
 			}
 		}
 
@@ -170,7 +161,7 @@ class InstitutionStaffTable extends AppTable  {
 		];
 
 		$extraField[] = [
-			'key' => 'Identities.number',
+			'key' => 'Users.identity_number',
 			'field' => 'number',
 			'type' => 'string',
 			'label' => __($identity->name)

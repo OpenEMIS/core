@@ -1,27 +1,26 @@
 <?php
+namespace App\Test\TestCases;
 
-namespace Directory\tests\TestCase\Controller;
+use App\Test\AppTestCase;
 
-use Cake\TestSuite\IntegrationTestCase;
+class DirectoriesControllerTest extends AppTestCase
+{
+	public $fixtures = [
+		'app.config_items',
+        'app.labels',
+        'app.security_users',
+        'app.workflow_models',
+        'app.workflow_steps',
+        'app.workflow_statuses',
+        'app.workflow_statuses_steps',
+        'app.genders',
+        'app.identity_types',
+        'app.user_identities',
+        'app.area_administratives'
+    ];
 
-class DirectoriesControllerTest extends IntegrationTestCase {
-
-	public function setAuthSession() {
-		
-		$this->session([
-			'Auth' => [
-				'User' => [
-					'id' => 2,
-					'username' => 'admin',
-					'super_admin' => '1'
-				]
-			]
-		]);
-	}
-
-	public function testDirectoryIndex() {
-
-		$this->setAuthSession();
+	public function testDirectoryIndex()
+    {
 		$this->get('/Directories');
 		$this->assertResponseCode(200);
 	}

@@ -416,7 +416,7 @@ class ControllerActionHelper extends Helper {
 	}
 
 	private function escapeHtmlSpecialCharacters(Entity $entity)
-	{	
+	{
 		$model = TableRegistry::get($entity->source());
 		// For XSS
 		$schema = $model->schema();
@@ -525,7 +525,7 @@ class ControllerActionHelper extends Helper {
 						$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($_field);
 					}
 
-					if ($data->has($associatedObject)) {
+					if (!empty($associatedObject) && $data->has($associatedObject)) {
 						$value = __($data->$associatedObject->name);
 						$associatedFound = true;
 					}

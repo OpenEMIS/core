@@ -1,3 +1,7 @@
+<?php 
+	echo $this->Html->script('ControllerAction.../plugins/jasny/js/jasny-bootstrap.min', ['block' => true]);
+?>
+
 <div class="clearfix"></div>
 
 <hr>

@@ -1,28 +1,32 @@
 <?php
+namespace App\Test\TestCases;
 
-namespace FieldOption\tests\TestCase\Controller;
+use App\Test\AppTestCase;
+use Cake\ORM\TableRegistry;
 
-use Cake\TestSuite\IntegrationTestCase;
+class FieldOptionsControllerTest extends AppTestCase
+{
+	public $fixtures = [
+		'app.config_items',
+        'app.labels',
+        'app.security_users',
+        'app.workflow_models',
+        'app.workflow_steps',
+        'app.workflow_statuses',
+        'app.workflow_statuses_steps',
+        'app.institution_genders',
+        'app.institution_providers'
+    ];
 
-class FieldOptionsControllerTest extends IntegrationTestCase {
-
-	public function setAuthSession() {
-		
-		$this->session([
-			'Auth' => [
-				'User' => [
-					'id' => 2,
-					'username' => 'admin',
-					'super_admin' => '1'
-				]
-			]
-		]);
-	}
-
-	public function testFieldOptionIndex() {
-
-		$this->setAuthSession();
-		$this->get('/FieldOptions/Genders?field_option_id=1');
+	public function testInstitutionGenderIndex()
+    {
+		$this->get('/FieldOptions/Genders');
 		$this->assertResponseCode(200);
 	}
+
+    public function testInstitutionProviderIndex()
+    {
+        $this->get('/FieldOptions/Providers');
+        $this->assertResponseCode(200);
+    }
 }

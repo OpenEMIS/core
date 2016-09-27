@@ -30,7 +30,6 @@ class StaffController extends AppController {
 			'Behaviours'		=> ['className' => 'Staff.StaffBehaviours', 'actions' => ['index', 'view']],
 			'Extracurriculars'	=> ['className' => 'Staff.Extracurriculars'],
 			'Trainings'			=> ['className' => 'Staff.StaffTrainings'],
-			'Employments'		=> ['className' => 'Staff.Employments'],
 			'Salaries'			=> ['className' => 'Staff.Salaries'],
 			'History'			=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 			'ImportStaff' 		=> ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
@@ -61,6 +60,7 @@ class StaffController extends AppController {
 	public function Positions()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Positions']); }
 	public function Classes()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffClasses']); }
 	public function Subjects() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSubjects']); }
+	public function Employments() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Employments']); }
     public function Nationalities()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
     public function Languages()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
     public function SpecialNeeds()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
@@ -118,6 +118,8 @@ class StaffController extends AppController {
 				$header = $session->read('Staff.Staff.name');
 			}
 
+			$idKey = $this->ControllerAction->getPrimaryKey($model);
+
 			$alias = $model->alias;
 			$this->Navigation->addCrumb($model->getHeader($alias));
 			$header = $header . ' - ' . $model->getHeader($alias);
@@ -133,7 +135,7 @@ class StaffController extends AppController {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
 					$exists = $model->exists([
-						$model->aliasField($model->primaryKey()) => $modelId,
+						$model->aliasField($idKey) => $modelId,
 						$model->aliasField('security_user_id') => $userId
 					]);
 
@@ -153,7 +155,7 @@ class StaffController extends AppController {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
 					$exists = $model->exists([
-						$model->aliasField($model->primaryKey()) => $modelId,
+						$model->aliasField($idKey) => $modelId,
 						$model->aliasField('staff_id') => $userId
 					]);
 

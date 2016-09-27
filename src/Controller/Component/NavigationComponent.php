@@ -191,6 +191,7 @@ class NavigationComponent extends Component {
 		$institutionStaffActions = ['Staff', 'StaffUser', 'StaffAccount'];
 		$institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
 
+
 		if ($controller->name == 'Institutions' && $action != 'index' && (!in_array($action, $institutionActions))) {
 			$navigations = $this->appendNavigation('Institutions.index', $navigations, $this->getInstitutionNavigation());
 		} elseif (($controller->name == 'Students' && $action != 'index') || ($controller->name == 'Institutions' && in_array($action, $institutionStudentActions))) {
@@ -409,6 +410,24 @@ class NavigationComponent extends Component {
 				'params' => ['plugin' => 'Institution'],
 			],
 
+				'Institutions.Examinations' => [
+					'title' => 'Examinations',
+					'parent' => 'Institutions.index',
+					'link' => false,
+				],
+
+					'Institutions.Exams' => [
+						'title' => 'Exams',
+						'parent' => 'Institutions.Examinations',
+						'params' => ['plugin' => 'Institution']
+					],
+
+					'Institutions.ExaminationStudents' => [
+						'title' => 'Students',
+						'parent' => 'Institutions.Examinations',
+						'params' => ['plugin' => 'Institution']
+					],
+
 			'Institutions.Positions' => [
 				'title' => 'Positions',
 				'parent' => 'Institutions.index',
@@ -447,7 +466,7 @@ class NavigationComponent extends Component {
 				'title' => 'Infrastructures',
 				'parent' => 'Institutions.index',
 				'params' => ['plugin' => 'Institution'],
-				'selected' => ['Institutions.Infrastructures']
+				'selected' => ['Institutions.Infrastructures', 'Institutions.Rooms']
 			],
 
 			'Survey' => [
@@ -724,8 +743,31 @@ class NavigationComponent extends Component {
 					'title' => 'Assessments',
 					'parent' => 'SystemSetup',
 					'params' => ['plugin' => 'Assessment'],
-					'selected' => ['Assessments.Assessments', 'Assessments.GradingTypes', 'Assessments.GradingOptions', 'Assessments.Status']
+					'selected' => ['Assessments.Assessments', 'Assessments.AssessmentPeriods', 'Assessments.GradingTypes']
 				],
+				'Examinations' => [
+					'title' => 'Examinations',
+					'parent' => 'SystemSetup',
+					'link' => false,
+				],
+					'Examinations.Exams' => [
+						'title' => 'Exams',
+						'parent' => 'Examinations',
+						'params' => ['plugin' => 'Examination'],
+						'selected' => ['Examinations.Exams', 'Examinations.ExamCentres', 'Examinations.GradingTypes']
+					],
+					'Examinations.RegisteredStudents' => [
+						'title' => 'Students',
+						'parent' => 'Examinations',
+						'params' => ['plugin' => 'Examination'],
+						'selected' => ['Examinations.RegisteredStudents', 'Examinations.NotRegisteredStudents']
+					],
+					// 'Examinations.Results' => [
+					// 	'title' => 'Results',
+					// 	'parent' => 'Examinations',
+					// 	'params' => ['plugin' => 'Examination'],
+					// 	'selected' => ['Examinations.Results']
+					// ],
 				'FieldOptions.index' => [
 					'title' => 'Field Options',
 					'parent' => 'SystemSetup',
@@ -759,7 +801,7 @@ class NavigationComponent extends Component {
 						'title' => 'Infrastructure',
 						'parent' => 'SystemSetup.CustomField',
 						'params' => ['plugin' => 'Infrastructure'],
-						'selected' => ['Infrastructures.Fields', 'Infrastructures.Pages', 'Infrastructures.Levels', 'Infrastructures.Types']
+						'selected' => ['Infrastructures.Fields', 'Infrastructures.Pages', 'Infrastructures.Types', 'Infrastructures.RoomPages', 'Infrastructures.RoomTypes']
 					],
 				'Labels.index' => [
 					'title' => 'Labels',
@@ -890,7 +932,7 @@ class NavigationComponent extends Component {
 				'parent' => 'Administration',
 				'params' => ['plugin' => 'Workflow'],
 				'selected' => ['Workflows.Workflows', 'Workflows.Steps', 'Workflows.Statuses']
-			],
+			]
 		];
 		return $navigation;
 	}

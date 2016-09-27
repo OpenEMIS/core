@@ -205,7 +205,6 @@ class InstitutionsTable extends AppTable  {
 			if (in_array($feature, ['Report.InstitutionStudents', 'Report.InstitutionStudentEnrollments', 'Report.InstitutionStaff'])) {
 				// need to find all status
 				$statusOptions = [];
-				$statusOptions[0] = __('All Statuses');
 
 				switch ($feature) {
 					case 'Report.InstitutionStudents': case 'Report.InstitutionStudentEnrollments':
@@ -244,9 +243,6 @@ class InstitutionsTable extends AppTable  {
 			if (in_array($feature, ['Report.InstitutionStudents', 'Report.InstitutionStudentTeacherRatio', 'Report.InstitutionStudentClassroomRatio'])) {
 				$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
 				$academicPeriodOptions = [];
-				if (in_array($feature, ['Report.InstitutionStudents'])) {
-					$academicPeriodOptions[0] = __('All Academic Periods');
-				}
 				$academicPeriodData = $InstitutionStudentsTable->find()
 					->matching('AcademicPeriods')
 					->select(['id' => $InstitutionStudentsTable->aliasField('academic_period_id'), 'name' => 'AcademicPeriods.name'])
@@ -261,6 +257,7 @@ class InstitutionsTable extends AppTable  {
 				// $attr['onChangeReload'] = true;
 				$attr['options'] = $academicPeriodOptions;
 				$attr['type'] = 'select';
+				$attr['select'] = false;
 
 				if (empty($request->data[$this->alias()]['academic_period_id'])) {
 					reset($academicPeriodOptions);
@@ -269,7 +266,6 @@ class InstitutionsTable extends AppTable  {
 				return $attr;
 			} else if ((in_array($feature, ['Report.StaffAbsences'])) || (in_array($feature, ['Report.StudentAbsences']))) {
 				$academicPeriodOptions = [];
-				$academicPeriodOptions[0] = __('All Academic Periods');
 				$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 				$periodOptions = $AcademicPeriodTable->getList();
 
@@ -278,6 +274,7 @@ class InstitutionsTable extends AppTable  {
 				// $attr['onChangeReload'] = true;
 				$attr['options'] = $academicPeriodOptions;
 				$attr['type'] = 'select';
+				$attr['select'] = false;
 
 				if (empty($request->data[$this->alias()]['academic_period_id'])) {
 					reset($academicPeriodOptions);

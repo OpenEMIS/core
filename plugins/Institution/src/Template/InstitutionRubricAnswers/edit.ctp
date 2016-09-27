@@ -32,6 +32,7 @@ $this->start('panelBody');
 			<div class="form-input">
 				<?= $data->rubric_template_name; ?>
 				<?php
+					$this->Form->unlockField("$alias.status");
 					echo $this->Form->hidden("$alias.rubric_template_name");
 					echo $this->Form->hidden("$alias.count");
 					echo $this->Form->hidden("$alias.rubric_section_name");
@@ -107,6 +108,7 @@ $this->start('panelBody');
 											$rubricCriteriaId = $criteriaObj->id;
 
 											$fieldPrefix = $alias . '.institution_rubric_answers.' . $rubricCriteriaId;
+											$this->Form->unlockField("$fieldPrefix.rubric_criteria_option_id");
 											if(isset($data->institution_rubric_answers[$rubricCriteriaId])) {
 												$rubricAnswerId = $data->institution_rubric_answers[$rubricCriteriaId]->id;
 												$criteriaAnswerId = $data->institution_rubric_answers[$rubricCriteriaId]->rubric_criteria_option_id;

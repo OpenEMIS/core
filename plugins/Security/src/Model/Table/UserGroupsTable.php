@@ -572,7 +572,7 @@ class UserGroupsTable extends AppTable {
 				]
 			]);
 		}
-		$options['order'] = [$this->aliasField('name')];
+		$options['order'] = [$this->aliasField('name') => 'asc'];
 
 		$search = $this->ControllerAction->getSearchKey();
 
@@ -682,11 +682,18 @@ class UserGroupsTable extends AppTable {
 
 		// The association can be added if it is an add action
 		if ($this->action == 'add') {
-			$newOptions['associated'] = ['Areas', 'Institutions', 'Users'];
+			$newOptions['associated'] = [
+				'Areas' => ['validate' => false],
+				'Institutions',
+				'Users'
+			];
 		}
 		// For edit function, the user role is save from the edit after save logic as users cannot be save properly using associated method
 		else {
-			$newOptions['associated'] = ['Areas', 'Institutions'];
+			$newOptions['associated'] = [
+				'Areas' => ['validate' => false],
+				'Institutions'
+			];
 		}
 
 		$arrayOptions = $options->getArrayCopy();

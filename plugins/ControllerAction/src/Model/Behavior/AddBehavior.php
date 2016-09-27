@@ -23,6 +23,7 @@ class AddBehavior extends Behavior {
 		$model = $this->_table;
 		$request = $this->_table->request;
 		$extra['config']['form'] = true;
+		$extra['patchEntity'] = true;
         $extra['redirect'] = $model->url('index', 'QUERY');
 
 		$event = $model->dispatchEvent('ControllerAction.Model.addEdit.beforeAction', [$extra], $this);
@@ -60,10 +61,14 @@ class AddBehavior extends Behavior {
 
 			if ($submit == 'save') {
 				$event = $model->dispatchEvent('ControllerAction.Model.addEdit.beforePatch', $params, $this);
+<<<<<<< HEAD
 				if ($event->isStopped()) {
                     $mainEvent->stopPropagation();
                     return $event->result;
                 }
+=======
+				if ($event->isStopped()) { return $event->result; }
+>>>>>>> ecb4dd1104c008354410165e66ae1667f2c15f17
 
 				$event = $model->dispatchEvent('ControllerAction.Model.add.beforePatch', $params, $this);
 				if ($event->isStopped()) {
@@ -73,6 +78,7 @@ class AddBehavior extends Behavior {
 
 				$patchOptionsArray = $patchOptions->getArrayCopy();
 				$request->data = $requestData->getArrayCopy();
+<<<<<<< HEAD
 				$entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
 
 				$event = $model->dispatchEvent('ControllerAction.Model.add.afterPatch', $params, $this);
@@ -82,6 +88,13 @@ class AddBehavior extends Behavior {
                 }
 
 				$request->data = $requestData->getArrayCopy();
+=======
+				if ($extra['patchEntity']) {
+					$entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
+					$event = $model->dispatchEvent('ControllerAction.Model.add.afterPatch', $params, $this);
+					if ($event->isStopped()) { return $event->result; }
+				}
+>>>>>>> ecb4dd1104c008354410165e66ae1667f2c15f17
 
 				$process = function ($model, $entity) {
 					return $model->save($entity);
@@ -119,18 +132,26 @@ class AddBehavior extends Behavior {
 				$eventKey = 'ControllerAction.Model.addEdit.' . $methodKey;
 				$method = 'addEdit' . ucfirst($methodKey);
 				$event = $this->dispatchEvent($model, $eventKey, $method, $params);
+<<<<<<< HEAD
 				if ($event->isStopped()) {
                     $mainEvent->stopPropagation();
                     return $event->result;
                 }
+=======
+				if ($event->isStopped()) { return $event->result; }
+>>>>>>> ecb4dd1104c008354410165e66ae1667f2c15f17
 
 				$eventKey = 'ControllerAction.Model.add.' . $methodKey;
 				$method = 'add' . ucfirst($methodKey);
 				$event = $this->dispatchEvent($model, $eventKey, $method, $params);
+<<<<<<< HEAD
 				if ($event->isStopped()) {
                     $mainEvent->stopPropagation();
                     return $event->result;
                 }
+=======
+				if ($event->isStopped()) { return $event->result; }
+>>>>>>> ecb4dd1104c008354410165e66ae1667f2c15f17
 
 				$patchOptionsArray = $patchOptions->getArrayCopy();
 				$request->data = $requestData->getArrayCopy();
@@ -139,6 +160,7 @@ class AddBehavior extends Behavior {
 		}
 
 		$event = $model->dispatchEvent('ControllerAction.Model.addEdit.afterAction', [$entity, $extra], $this);
+<<<<<<< HEAD
 		if ($event->isStopped()) {
             $mainEvent->stopPropagation();
             return $event->result;
@@ -149,6 +171,12 @@ class AddBehavior extends Behavior {
             $mainEvent->stopPropagation();
             return $event->result;
         }
+=======
+		if ($event->isStopped()) { return $event->result; }
+
+		$event = $model->dispatchEvent('ControllerAction.Model.add.afterAction', [$entity, $extra], $this);
+		if ($event->isStopped()) { return $event->result; }
+>>>>>>> ecb4dd1104c008354410165e66ae1667f2c15f17
 
 		$model->controller->set('data', $entity);
 		return $entity;

@@ -34,7 +34,9 @@ class UsersTable extends AppTable {
 
 	private $defaultImgIndexClass = "profile-image-thumbnail";
 	private $defaultImgViewClass= "profile-image";
-	private $defaultImgMsg = "<p>* Advisable photo dimension 90 by 115px<br>* Format Supported: .jpg, .jpeg, .png, .gif </p>";
+	private $photoMessage = 'Advisable photo dimension 90 by 115px';
+	private $formatSupport = 'Format Supported: ';
+	private $defaultImgMsg = "<p>* %s <br>* %s.jpg, .jpeg, .png, .gif </p>";
 
 	public $fieldOrder1;
 	public $fieldOrder2;
@@ -78,6 +80,9 @@ class UsersTable extends AppTable {
         $genderList = $GenderTable->find('list')->toArray();
 
         // Just in case the gender is others
+        if (!isset($userInfo['gender'])) {
+        	$userInfo['gender'] = null;
+        }
         $gender = array_search($userInfo['gender'], $genderList);
         if ($gender === false) {
             $gender = key($genderList);
@@ -93,6 +98,9 @@ class UsersTable extends AppTable {
         	$dateOfBirth = Time::createFromFormat('Y-m-d', '1970-01-01');
         }
 
+        if (isset($userInfo['openemis_no'])) {
+        	$openemisNo = $userInfo['openemis_no'];
+        }
 
         $date = Time::now();
         $data = [
@@ -374,7 +382,7 @@ class UsersTable extends AppTable {
 		if (array_key_exists('model', $options)) {
 			switch ($options['model']) {
 				case 'Student': case 'Staff': case 'Guardian':
-					$prefix = TableRegistry::get('ConfigItems')->value(strtolower($options['model']).'_prefix');
+					$prefix = TableRegistry::get('Configuration.ConfigItems')->value(strtolower($options['model']).'_prefix');
 					$prefix = explode(",", $prefix);
 					$prefix = ($prefix[1] > 0)? $prefix[0]: '';
 					break;
@@ -555,7 +563,7 @@ class UsersTable extends AppTable {
 	}
 
 	public function getDefaultImgMsg() {
-		return $this->defaultImgMsg;
+		return sprintf($this->defaultImgMsg, __($this->photoMessage), __($this->formatSupport));
 	}
 
 	public function getDefaultImgIndexClass() {
@@ -654,6 +662,6 @@ class UsersTable extends AppTable {
 
 	public function updateIdentityNumber($userId, $identityNo)
 	{
-		$this->updateAll(['identity_number' => $identityNo], ['id' => $userId]);	
-	} 
+		$this->updateAll(['identity_number' => $identityNo], ['id' => $userId]);
+	}
 }

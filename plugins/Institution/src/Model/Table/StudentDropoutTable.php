@@ -22,7 +22,7 @@ class StudentDropoutTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-		$this->belongsTo('StudentDropoutReasons', ['className' => 'FieldOption.StudentDropoutReasons', 'foreignKey' => 'student_dropout_reason_id']);
+		$this->belongsTo('StudentDropoutReasons', ['className' => 'Student.StudentDropoutReasons', 'foreignKey' => 'student_dropout_reason_id']);
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -64,7 +64,7 @@ class StudentDropoutTable extends AppTable {
   		$this->ControllerAction->setFieldOrder([
 			'created', 'status', 'student_id',
 			'institution_id', 'academic_period_id', 'education_grade_id',
-			'effective_date', 'student_dropout_reason_id', 'comment', 
+			'effective_date', 'student_dropout_reason_id', 'comment',
 		]);
 
 		$urlParams = $this->ControllerAction->url('edit');
@@ -101,10 +101,10 @@ class StudentDropoutTable extends AppTable {
 		}
 		return __($statusName);
 	}
-	
+
 	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
 		if ($this->action == 'edit') {
-			// If the status is new application then display the approve and reject button, 
+			// If the status is new application then display the approve and reject button,
 			// if not remove the button just in case the user gets to access the edit page
 			if ($this->request->data[$this->alias()]['status'] == self::NEW_REQUEST && ($this->AccessControl->check(['Institutions', $this->alias(), 'edit']))) {
 				$buttons[0] = [
@@ -293,48 +293,33 @@ class StudentDropoutTable extends AppTable {
 		$periodId = $entity->academic_period_id;
 		$gradeId = $entity->education_grade_id;
 
-		$conditions = [
-			'institution_id' => $institutionId,
-			'student_id' => $studentId,
-			'academic_period_id' => $periodId,
-			'education_grade_id' => $gradeId,
-			'student_status_id' => $statuses['DROPOUT']
-		];
+		// Change the status of the student in the school
+		// Update only enrolled statuses student
+		$existingStudentEntity = $Students->find()->where([
+				$Students->aliasField('institution_id') => $institutionId,
+				$Students->aliasField('student_id') => $studentId,
+				$Students->aliasField('academic_period_id') => $periodId,
+				$Students->aliasField('education_grade_id') => $gradeId,
+				$Students->aliasField('student_status_id') => $statuses['CURRENT']
+			])
+			->first();
 
-		$newData = $conditions;
+		if (empty($existingStudentEntity)) {
+			// if no record is found say 'This student is not eligible for this action. Please reject this request.'
+			$this->Alert->warning('DropoutRequests.notEligible');
+			$event->stopPropagation();
+			return $this->controller->redirect($this->ControllerAction->url('edit'));
+		}
 
-		// If the student is not already drop out
-		if (!$Students->exists($conditions)) {
-			// Change the status of the student in the school
-			// Update only enrolled statuses student
-			$existingStudentEntity = $Students->find()->where([
-					$Students->aliasField('institution_id') => $institutionId,
-					$Students->aliasField('student_id') => $studentId,
-					$Students->aliasField('academic_period_id') => $periodId,
-					$Students->aliasField('education_grade_id') => $gradeId,
-					$Students->aliasField('student_status_id') => $statuses['CURRENT']
-				])
-				->first();
+		$existingStudentEntity->student_status_id = $statuses['DROPOUT'];
+		$existingStudentEntity->end_date = $effectiveDate;
+		$Students->save($existingStudentEntity);
+		$this->Alert->success('StudentDropout.approve');
 
-			if (empty($existingStudentEntity)) {
-				// if no record is found say 'This student is not eligible for this action. Please reject this request.'
-				$this->Alert->warning('DropoutRequests.notEligible');
-				$event->stopPropagation();
-				return $this->controller->redirect($this->ControllerAction->url('edit'));
-			}
-
-			$existingStudentEntity->student_status_id = $statuses['DROPOUT'];
-			$existingStudentEntity->end_date = $effectiveDate;
-			$Students->save($existingStudentEntity);
-			$this->Alert->success('StudentDropout.approve');
-
-			$entity->status = self::APPROVED;
-			$entity->effective_date = date('Y-m-d', $effectiveDate);
-			if (!$this->save($entity)) {
-				$this->log($entity->errors(), 'debug');
-			}
-		} else {
-			$this->Alert->error('StudentDropout.exists');
+		$entity->status = self::APPROVED;
+		$entity->effective_date = date('Y-m-d', $effectiveDate);
+		if (!$this->save($entity)) {
+			$this->log($entity->errors(), 'debug');
 		}
 
 		// To redirect back to the student admission if it is not access from the workbench
@@ -354,7 +339,7 @@ class StudentDropoutTable extends AppTable {
 
 	public function editOnReject(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$this->updateAll(
-			['status' => self::REJECTED, 'comment' => $data[$this->alias()]['comment'], 'effective_date' => strtotime($data[$this->alias()]['effective_date'])], 
+			['status' => self::REJECTED, 'comment' => $data[$this->alias()]['comment'], 'effective_date' => strtotime($data[$this->alias()]['effective_date'])],
 			['id' => $entity->id]);
 
 		$this->Alert->success('StudentDropout.reject');

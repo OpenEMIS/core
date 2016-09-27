@@ -20,7 +20,7 @@ class DropoutRequestsTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-		$this->belongsTo('StudentDropoutReasons', ['className' => 'FieldOption.StudentDropoutReasons', 'foreignKey' => 'student_dropout_reason_id']);
+		$this->belongsTo('StudentDropoutReasons', ['className' => 'Student.StudentDropoutReasons', 'foreignKey' => 'student_dropout_reason_id']);
 	}
 
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
@@ -39,7 +39,7 @@ class DropoutRequestsTable extends AppTable {
 		$StudentAdmissionTable = TableRegistry::get('Institution.StudentAdmission');
 
 		$conditions = [
-			'student_id' => $entity->student_id, 
+			'student_id' => $entity->student_id,
 			'status' => self::NEW_REQUEST,
 			'type' => 2,
 			'education_grade_id' => $entity->education_grade_id,
@@ -156,7 +156,7 @@ class DropoutRequestsTable extends AppTable {
 				}
 				break;
 		}
-		return $attr;		
+		return $attr;
 	}
 
 	public function implementedEvents() {
