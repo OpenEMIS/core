@@ -52,7 +52,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 			'cascadeCallbacks' => true
 		]);
 
-		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
+		$this->setDeleteStrategy('restrict');
 	}
 
 	public function validationDefault(Validator $validator) {
