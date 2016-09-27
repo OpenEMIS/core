@@ -155,9 +155,10 @@ class InstitutionsController extends AppController  {
 
             if (!array_key_exists($id, $institutionIds)) {
                 $this->Alert->error('security.noAccess');
-                $refererUrl = $this->request->referer();
+                $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'index'];
                 $event->stopPropagation();
-                return $this->redirect($refererUrl);
+
+                return $this->redirect($url);
             }
         }
     }
@@ -175,11 +176,14 @@ class InstitutionsController extends AppController  {
         if (array_key_exists('institution_id', $query)) {
             //check for permission
             $this->checkInstitutionAccess($query['institution_id'], $event);
+            if ($event->isStopped()) {
+                return false;
+            }
             $session->write('Institution.Institutions.id', $query['institution_id']);
         }
 
         if ($action == 'index') {
-            $session->delete('Institution.Institutions.id');
+            $session->delete('Institution.Institutions');
         }
 
         if ($session->check('Institution.Institutions.id') || in_array($action, ['view', 'edit', 'dashboard'])) {
@@ -187,6 +191,9 @@ class InstitutionsController extends AppController  {
             if (isset($this->request->pass[0]) && (in_array($action, ['view', 'edit', 'dashboard']))) {
                 $id = $this->request->pass[0];
                 $this->checkInstitutionAccess($id, $event);
+                if ($event->isStopped()) {
+                    return false;
+                }
                 $session->write('Institution.Institutions.id', $id);
 
             } else if ($session->check('Institution.Institutions.id')) {
