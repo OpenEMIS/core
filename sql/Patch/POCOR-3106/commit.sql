@@ -1,4 +1,3 @@
--- POCOR-3106
 -- db_patches
 INSERT INTO `db_patches` (issue, created) VALUES ('POCOR-3106', NOW());
 
@@ -42,16 +41,3 @@ UPDATE `security_role_functions` t1, (SELECT `_edit`, `security_role_id` FROM `s
     SET t1.`_edit` = t2.`_edit`
     WHERE t1.`security_role_id` = t2.`security_role_id`
     AND `security_function_id` = 2011;
-
-
--- POCOR-3371
--- db_patches
-INSERT INTO `db_patches` (`issue`, `created`) VALUES('POCOR-3371', NOW());
-
--- staff_qualifications
-ALTER TABLE `staff_qualifications` CHANGE `graduate_year` `graduate_year` INT(4) NULL;
-
-
--- 3.6.5
-UPDATE config_items SET value = '3.6.5' WHERE code = 'db_version';
-UPDATE db_patches SET version = (SELECT value FROM config_items WHERE code = 'db_version') WHERE version IS NULL;

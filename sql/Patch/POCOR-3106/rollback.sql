@@ -1,4 +1,3 @@
--- POCOR-3106
 -- security functions
 ALTER TABLE `security_functions` DROP `description`;
 
@@ -33,17 +32,6 @@ DELETE FROM `translations` WHERE `en` = 'Overview edit will only take effect whe
 -- security role functions
 UPDATE `security_role_functions` SET `_edit` = 0 WHERE `security_function_id` = 2011;
 
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3106';
-
-
--- POCOR-3371
--- staff_qualifications
-ALTER TABLE `staff_qualifications` CHANGE `graduate_year` `graduate_year` INT(4) NOT NULL;
-
--- db_patches
-DELETE FROM `db_patches` WHERE `issue`='POCOR-3371';
-
-
--- 3.6.4
-UPDATE config_items SET value = '3.6.4' WHERE code = 'db_version';
