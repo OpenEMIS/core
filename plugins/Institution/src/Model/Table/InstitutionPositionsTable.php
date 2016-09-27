@@ -35,9 +35,9 @@ class InstitutionPositionsTable extends AppTable {
 
 		$this->addBehavior('OpenEmis.OpenEmis');
 		$this->addBehavior('ControllerAction.ControllerAction', [
-			'actions' => ['remove' => 'restrict'],
 			'fields' => ['excludes' => ['modified_user_id', 'created_user_id']]
 		]);
+		$this->setDeleteStrategy('restrict');
 		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
 	}
 
