@@ -12,11 +12,12 @@ use Cake\Routing\Router;
 
 use Institution\Controller\AppController;
 
-class InstitutionsController extends AppController  {
-
+class InstitutionsController extends AppController
+{
     public $activeObj = null;
 
-    public function initialize() {
+    public function initialize()
+    {
         parent::initialize();
 
         $this->ControllerAction->model('Institution.Institutions', [], ['deleteStrategy' => 'restrict']);
@@ -64,12 +65,12 @@ class InstitutionsController extends AppController  {
             'RubricAnswers'     => ['className' => 'Institution.InstitutionRubricAnswers', 'actions' => ['view', 'edit']],
             'Visits'            => ['className' => 'Institution.InstitutionQualityVisits'],
 
-            'ImportInstitutions' => ['className' => 'Institution.ImportInstitutions', 'actions' => ['add']],
-            'ImportStaffAttendances' => ['className' => 'Institution.ImportStaffAttendances', 'actions' => ['add']],
-            'ImportStudentAttendances' => ['className' => 'Institution.ImportStudentAttendances', 'actions' => ['add']],
-            'ImportInstitutionSurveys' => ['className' => 'Institution.ImportInstitutionSurveys', 'actions' => ['add']],
-            'ImportStudents' => ['className' => 'Institution.ImportStudents', 'actions' => ['add']],
-            'ImportStaff' => ['className' => 'Institution.ImportStaff', 'actions' => ['add']],
+            'ImportInstitutions'        => ['className' => 'Institution.ImportInstitutions', 'actions' => ['add']],
+            'ImportStaffAttendances'    => ['className' => 'Institution.ImportStaffAttendances', 'actions' => ['add']],
+            'ImportStudentAttendances'  => ['className' => 'Institution.ImportStudentAttendances', 'actions' => ['add']],
+            'ImportInstitutionSurveys'  => ['className' => 'Institution.ImportInstitutionSurveys', 'actions' => ['add']],
+            'ImportStudents'            => ['className' => 'Institution.ImportStudents', 'actions' => ['add']],
+            'ImportStaff'               => ['className' => 'Institution.ImportStaff', 'actions' => ['add']]
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
@@ -77,24 +78,26 @@ class InstitutionsController extends AppController  {
     }
 
     // CAv4
-    public function Positions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionPositions']); }
-    public function Shifts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionShifts']); }
-    public function Fees() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionFees']); }
-    public function StudentFees() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentFees']); }
+    public function Positions()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionPositions']); }
+    public function Shifts()                { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionShifts']); }
+    public function Fees()                  { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionFees']); }
+    public function StudentFees()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentFees']); }
     public function StaffTransferRequests() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferRequests']); }
-    public function StaffTransferApprovals() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferApprovals']); }
+    public function StaffTransferApprovals(){ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferApprovals']); }
     public function StaffPositionProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffPositionProfiles']); }
-    public function Classes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionClasses']); }
-    public function Subjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionSubjects']); }
-    public function Assessments() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionAssessments']); }
-    public function Exams() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminations']); }
+    public function Classes()               { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionClasses']); }
+    public function Subjects()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionSubjects']); }
+    public function Assessments()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionAssessments']); }
+    public function StudentProgrammes()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Programmes']); }
+    public function Exams()                 { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminations']); }
     public function UndoExaminationRegistration() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminationsUndoRegistration']); }
-    public function ExaminationStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminationStudents']); }
+    public function ExaminationStudents()   { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminationStudents']); }
     // public function StaffAbsences() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
     // End
 
     // AngularJS
-    public function Results() {
+    public function Results()
+    {
         $session = $this->request->session();
         $roles = [];
 
@@ -116,13 +119,15 @@ class InstitutionsController extends AppController  {
     }
     // End
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
         $events['Controller.AccessControl.checkIgnoreActions'] = 'checkIgnoreActions';
         return $events;
     }
 
-    public function checkIgnoreActions(Event $event, $controller, $action) {
+    public function checkIgnoreActions(Event $event, $controller, $action)
+    {
         $ignore = false;
         if ($controller == 'Institutions') {
             $ignoredList = ['downloadFile'];
@@ -161,7 +166,8 @@ class InstitutionsController extends AppController  {
         }
     }
 
-    public function beforeFilter(Event $event) {
+    public function beforeFilter(Event $event)
+    {
         parent::beforeFilter($event);
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
         $session = $this->request->session();
@@ -209,7 +215,8 @@ class InstitutionsController extends AppController  {
         $this->set('contentHeader', $header);
     }
 
-    private function attachAngularModules() {
+    private function attachAngularModules()
+    {
         $action = $this->request->action;
 
         switch ($action) {
@@ -229,7 +236,8 @@ class InstitutionsController extends AppController  {
         }
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
+    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    {
         if (!is_null($this->activeObj)) {
             $session = $this->request->session();
             $institutionId = $session->read('Institution.Institutions.id');
@@ -247,7 +255,28 @@ class InstitutionsController extends AppController  {
             if ($action) {
                 $crumbOptions = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias];
             }
-            $this->Navigation->addCrumb($crumbTitle, $crumbOptions);
+
+            $studentModels = [
+                'StudentProgrammes' => __('Programmes')
+            ];
+            if (array_key_exists($alias, $studentModels)) {
+                // add Students and student name
+                if ($session->check('Student.Students.name')) {
+                    $studentName = $session->read('Student.Students.name');
+                    $studentId = $session->read('Student.Students.id');
+
+                    // Breadcrumb
+                    $this->Navigation->addCrumb('Students', ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'Students']);
+                    $this->Navigation->addCrumb($studentName, ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $studentId]);
+                    $this->Navigation->addCrumb($studentModels[$alias]);
+
+                    // header name
+                    $header = $studentName;
+                }
+            } else {
+                $this->Navigation->addCrumb($crumbTitle, $crumbOptions);
+                $header = $this->activeObj->name;
+            }
 
             $persona = false;
             $requestQuery = $this->request->query;
@@ -259,7 +288,6 @@ class InstitutionsController extends AppController  {
                 $persona = $model->Users->get($requestQuery['user_id']);
             }
 
-            $header = $this->activeObj->name;
             if (is_object($persona) && get_class($persona)=='User\Model\Entity\User') {
                 $header = $persona->name . ' - ' . $model->getHeader($alias);
                 $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
@@ -332,7 +360,8 @@ class InstitutionsController extends AppController  {
         }
     }
 
-    public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {
+    public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
+    {
         $session = $this->request->session();
 
         if (!$this->request->is('ajax')) {
@@ -347,16 +376,19 @@ class InstitutionsController extends AppController  {
         }
     }
 
-    public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra) {
+    public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra)
+    {
         $this->beforePaginate($event, $model, $query, $extra);
     }
 
-    public function excel($id=0) {
+    public function excel($id=0)
+    {
         $this->Institutions->excel($id);
         $this->autoRender = false;
     }
 
-    public function dashboard($id) {
+    public function dashboard($id)
+    {
         $this->ControllerAction->model->action = $this->request->action;
 
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -393,7 +425,8 @@ class InstitutionsController extends AppController  {
     }
 
     //autocomplete used for InstitutionSiteShift
-    public function ajaxInstitutionAutocomplete() {
+    public function ajaxInstitutionAutocomplete()
+    {
         $this->ControllerAction->autoRender = false;
         $data = [];
         $Institutions = TableRegistry::get('Institution.Institutions');
@@ -410,7 +443,8 @@ class InstitutionsController extends AppController  {
         }
     }
 
-    public function getUserTabElements($options = []) {
+    public function getUserTabElements($options = [])
+    {
         $userRole = (array_key_exists('userRole', $options))? $options['userRole']: null;
         $action = (array_key_exists('action', $options))? $options['action']: 'add';
         $id = (array_key_exists('id', $options))? $options['id']: 0;
@@ -501,6 +535,38 @@ class InstitutionsController extends AppController  {
         $session = $this->request->session();
         $session->write('Institution.'.$type.'.tabElements', $tabElements);
 
+        return $tabElements;
+    }
+
+    public function getAcademicTabElements($options = [])
+    {
+        $id = (array_key_exists('id', $options))? $options['id']: 0;
+        $type = (array_key_exists('type', $options))? $options['type']: null;
+
+        $tabElements = [];
+        $studentTabElements = [
+            'Programmes' => ['text' => __('Programmes')],
+            'Classes' => ['text' => __('Classes')],
+            'Subjects' => ['text' => __('Subjects')],
+            'Absences' => ['text' => __('Absences')],
+            'Behaviours' => ['text' => __('Behaviours')],
+            'Results' => ['text' => __('Results')],
+            'Awards' => ['text' => __('Awards')],
+            'Extracurriculars' => ['text' => __('Extracurriculars')],
+        ];
+
+        $tabElements = array_merge($tabElements, $studentTabElements);
+
+        // Programme will use institution controller, other will be still using student controller
+        foreach ($studentTabElements as $key => $tab) {
+            if ($key == 'Programmes') {
+                $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
+            } else {
+                $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
+            }
+        }
         return $tabElements;
     }
 }
