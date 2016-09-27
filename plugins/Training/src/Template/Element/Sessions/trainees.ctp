@@ -23,6 +23,7 @@
 			'label' => __('Add Trainee'),
 			'type' => 'text',
 			'class' => 'autocomplete',
+			'value' => '',
 			'autocomplete-url' => $url,
 			'autocomplete-no-results' => __('No Trainee found.'),
 			'autocomplete-class' => 'error-message',

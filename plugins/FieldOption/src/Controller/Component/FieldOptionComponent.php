@@ -25,53 +25,90 @@ class FieldOptionComponent extends Component
 {
     private $controller;
     private $fieldOptions = [
-        'Genders' => 'Institution.Genders',
-        'Localities' => 'Institution.Localities',
-        'Ownerships' => 'Institution.Ownerships',
-        'Providers' => 'Institution.Providers',
-        'Sectors' => 'Institution.Sectors',
-        'Statuses' => 'Institution.Statuses',
-        'Types' => 'Institution.Types',
-        'NetworkConnectivities' => 'Institution.NetworkConnectivities',
-        'StaffPositionGrades' => 'Institution.StaffPositionGrades',
-        'StaffPositionTitles' => 'Institution.StaffPositionTitles',
-        'AllergyTypes' => 'Health.AllergyTypes',
-        'ConsultationTypes' => 'Health.ConsultationTypes',
-        'Relationships' => 'Health.Relationships',
-        'Conditions' => 'Health.Conditions',
-        'ImmunizationTypes' => 'Health.ImmunizationTypes',
-        'TestTypes' => 'Health.TestTypes',
-        'QualityVisitTypes' => 'FieldOption.QualityVisitTypes',
-        'InfrastructureOwnerships' => 'FieldOption.InfrastructureOwnerships',
-        'InfrastructureConditions' => 'FieldOption.InfrastructureConditions',
-        'QualificationSpecialisations' => 'FieldOption.QualificationSpecialisations',
-        'QualificationLevels' => 'FieldOption.QualificationLevels',
-        'FeeTypes' => 'FieldOption.FeeTypes',
-        'EmploymentTypes' => 'FieldOption.EmploymentTypes',
-        'ExtracurricularTypes' => 'FieldOption.ExtracurricularTypes',
-        'IdentityTypes' => 'FieldOption.IdentityTypes',
-        'Languages' => 'Languages',
-        'LicenseTypes' => 'FieldOption.LicenseTypes',
-        'SpecialNeedTypes' => 'FieldOption.SpecialNeedTypes',
-        'SpecialNeedDifficulties' => 'FieldOption.SpecialNeedDifficulties',
-        'StaffAbsenceReasons' => 'FieldOption.StaffAbsenceReasons',
-        'StudentAbsenceReasons' => 'FieldOption.StudentAbsenceReasons',
-        'Nationalities' => 'FieldOption.Nationalities',
-        'GuardianRelations' => 'Student.GuardianRelations',
-        'StaffTypes' => 'Staff.StaffTypes',
-        'StaffLeaveTypes' => 'Staff.StaffLeaveTypes',
-        'TrainingAchievementTypes' => 'Training.TrainingAchievementTypes',
-        'TrainingCourseTypes' => 'Training.TrainingCourseTypes',
-        'TrainingFieldStudies' => 'Training.TrainingFieldStudies',
-        'TrainingLevels' => 'Training.TrainingLevels',
-        'TrainingModeDeliveries' => 'Training.TrainingModeDeliveries',
-        'TrainingNeedCategories' => 'Training.TrainingNeedCategories',
-        'TrainingPriorities' => 'Training.TrainingPriorities',
-        'TrainingProviders' => 'Training.TrainingProviders',
-        'TrainingRequirements' => 'Training.TrainingRequirements',
-        'TrainingResultTypes' => 'Training.TrainingResultTypes',
-        'TrainingSpecialisations' => 'Training.TrainingSpecialisations',
-        'CommentTypes' => 'User.CommentTypes'
+    // Institution
+        'Genders' => ['className' => 'Institution.Genders', 'parent' => 'Institution'],
+        'NetworkConnectivities' => ['className' => 'Institution.NetworkConnectivities', 'parent' => 'Institution'],
+        'Localities' => ['className' => 'Institution.Localities', 'parent' => 'Institution'],
+        'Ownerships' => ['className' => 'Institution.Ownerships', 'parent' => 'Institution'],
+        'Providers' => ['className' => 'Institution.Providers', 'parent' => 'Institution'],
+        'Sectors' => ['className' => 'Institution.Sectors', 'parent' => 'Institution'],
+        'Statuses' => ['className' => 'Institution.Statuses', 'parent' => 'Institution'],
+        'Types' => ['className' => 'Institution.Types', 'parent' => 'Institution'],
+        'ShiftOptions' => ['className' => 'Institution.ShiftOptions', 'parent' => 'Institution'],
+
+    // Student
+        'StudentAbsenceReasons' => ['className' => 'Institution.StudentAbsenceReasons', 'parent' => 'Student'],
+        'StudentBehaviourCategories' => ['className' => 'Student.StudentBehaviourCategories', 'parent' => 'Student'],
+        'StudentTransferReasons' => ['className' => 'Student.StudentTransferReasons', 'parent' => 'Student'],
+        'StudentDropoutReasons' => ['className' => 'Student.StudentDropoutReasons', 'parent' => 'Student'],
+
+    // Staff
+        'StaffAbsenceReasons' => ['className' => 'Institution.StaffAbsenceReasons', 'parent' => 'Staff'],
+        'StaffBehaviourCategories' => ['className' => 'Staff.StaffBehaviourCategories', 'parent' => 'Staff'],
+        'StaffLeaveTypes' => ['className' => 'Staff.StaffLeaveTypes', 'parent' => 'Staff'],
+        'StaffTypes' => ['className' => 'Staff.StaffTypes', 'parent' => 'Staff'],
+        'StaffTrainingCategories' => ['className' => 'Staff.StaffTrainingCategories', 'parent' => 'Staff'],
+
+    // Finance
+        'Banks' => ['className' => 'FieldOption.Banks', 'parent' => 'Finance'],
+        'BankBranches' => ['className' => 'FieldOption.BankBranches', 'parent' => 'Finance'],
+        'FeeTypes' => ['className' => 'FieldOption.FeeTypes', 'parent' => 'Finance'],
+
+    // Guardian
+        'GuardianRelations' => ['className' => 'Student.GuardianRelations', 'parent' => 'Guardian'],
+
+    // Position
+        'StaffPositionGrades' => ['className' => 'Institution.StaffPositionGrades', 'parent' => 'Position'],
+        'StaffPositionTitles' => ['className' => 'Institution.StaffPositionTitles', 'parent' => 'Position'],
+
+    // Qualification
+        'QualificationLevels' => ['className' => 'FieldOption.QualificationLevels', 'parent' => 'Qualification'],
+        'QualificationSpecialisations' => ['className' => 'FieldOption.QualificationSpecialisations', 'parent' => 'Qualification'],
+
+    // Quality
+        'QualityVisitTypes' => ['className' => 'FieldOption.QualityVisitTypes', 'parent' => 'Quality'],
+
+    // Salary
+        'SalaryAdditionTypes' => ['className' => 'Staff.SalaryAdditionTypes', 'parent' => 'Salary'],
+        'SalaryDeductionTypes' => ['className' => 'Staff.SalaryDeductionTypes', 'parent' => 'Salary'],
+
+    // Training
+        'TrainingAchievementTypes' => ['className' => 'Training.TrainingAchievementTypes', 'parent' => 'Training'],
+        'TrainingCourseTypes' => ['className' => 'Training.TrainingCourseTypes', 'parent' => 'Training'],
+        'TrainingFieldStudies' => ['className' => 'Training.TrainingFieldStudies', 'parent' => 'Training'],
+        'TrainingLevels' => ['className' => 'Training.TrainingLevels', 'parent' => 'Training'],
+        'TrainingModeDeliveries' => ['className' => 'Training.TrainingModeDeliveries', 'parent' => 'Training'],
+        'TrainingNeedCategories' => ['className' => 'Training.TrainingNeedCategories', 'parent' => 'Training'],
+        'TrainingPriorities' => ['className' => 'Training.TrainingPriorities', 'parent' => 'Training'],
+        'TrainingProviders' => ['className' => 'Training.TrainingProviders', 'parent' => 'Training'],
+        'TrainingRequirements' => ['className' => 'Training.TrainingRequirements', 'parent' => 'Training'],
+        'TrainingResultTypes' => ['className' => 'Training.TrainingResultTypes', 'parent' => 'Training'],
+        'TrainingSpecialisations' => ['className' => 'Training.TrainingSpecialisations', 'parent' => 'Training'],
+
+    // Others
+        'ContactTypes' => ['className' => 'User.ContactTypes', 'parent' => 'Others'],
+        'EmploymentTypes' => ['className' => 'FieldOption.EmploymentTypes', 'parent' => 'Others'],
+        'ExtracurricularTypes' => ['className' => 'FieldOption.ExtracurricularTypes', 'parent' => 'Others'],
+        'IdentityTypes' => ['className' => 'FieldOption.IdentityTypes', 'parent' => 'Others'],
+        'Languages' => ['className' => 'Languages', 'parent' => 'Others'],
+        'LicenseTypes' => ['className' => 'FieldOption.LicenseTypes', 'parent' => 'Others'],
+        'SpecialNeedTypes' => ['className' => 'FieldOption.SpecialNeedTypes', 'parent' => 'Others'],
+        'SpecialNeedDifficulties' => ['className' => 'FieldOption.SpecialNeedDifficulties', 'parent' => 'Others'],
+        'Countries' => ['className' => 'FieldOption.Countries', 'parent' => 'Others'],
+        'Nationalities' => ['className' => 'FieldOption.Nationalities', 'parent' => 'Others'],
+        'CommentTypes' => ['className' => 'User.CommentTypes', 'parent' => 'Others'],
+
+    // Infrastructure
+        'InfrastructureOwnerships' => ['className' => 'FieldOption.InfrastructureOwnerships', 'parent' => 'Infrastructure'],
+        'InfrastructureConditions' => ['className' => 'FieldOption.InfrastructureConditions', 'parent' => 'Infrastructure'],
+
+    // Health
+        'AllergyTypes' => ['className' => 'Health.AllergyTypes', 'parent' => 'Health'],
+        'Conditions' => ['className' => 'Health.Conditions', 'parent' => 'Health'],
+        'ConsultationTypes' => ['className' => 'Health.ConsultationTypes', 'parent' => 'Health'],
+        'ImmunizationTypes' => ['className' => 'Health.ImmunizationTypes', 'parent' => 'Health'],
+        'Relationships' => ['className' => 'Health.Relationships', 'parent' => 'Health'],
+        'TestTypes' => ['className' => 'Health.TestTypes', 'parent' => 'Health'],
     ];
 
     // Is called before the controller's beforeFilter method.
@@ -93,7 +130,7 @@ class FieldOptionComponent extends Component
 
     public function getClassName($key)
     {
-        return $this->fieldOptions[$key];
+        return $this->fieldOptions[$key]['className'];
     }
 }
 

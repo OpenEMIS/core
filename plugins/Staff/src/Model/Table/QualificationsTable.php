@@ -38,7 +38,7 @@ class QualificationsTable extends ControllerActionTable {
 			->add('graduate_year', 'ruleNumeric', 
 				['rule' => 'numeric']
 			)
-			->notEmpty('institution_name', 'Please enter the institution')
+			->notEmpty('institution_name', __('Please enter the institution'))
 			->allowEmpty('file_content')
 			;
 		;

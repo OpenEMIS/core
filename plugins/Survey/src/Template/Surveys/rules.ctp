@@ -48,7 +48,7 @@ $institutionId = $session->read('Institution.Institutions.id');
 							<table class="table table-curved table-sortable table-checkable" >
 								<thead>
 									<tr>
-										<th><?= __('Enable')?></th>
+										<th class="checkbox-column" width="50"><?= __('Enable')?></th>
 										<th><?= __('Dependent On')?></th>
 										<th><?= __('Dropdown Question Options')?></th>
 									</tr>
@@ -57,20 +57,19 @@ $institutionId = $session->read('Institution.Institutions.id');
 										<td colspan="3"><div class="section-header">{{question.no}}. {{question.name}}</div></td>
 									</tr>
 									<tr ng-repeat-end>
-										<td>
+										<td class="checkbox-column">
 										<input 
 											type="hidden" 
 											ng-init="SurveyRulesController.questionId[question.no] = question.survey_question_id"
 											ng-model="SurveyRulesController.questionId[question.no]" />
-											<div class="input">
-												<input 
-													class="icheck-input" 
-													type="checkbox"
-													ng-true-value="1" 
-													ng-false-value="0" 
-													ng-model="SurveyRulesController.enabled[question.no]" 
-													ng-init="SurveyRulesController.enabled[question.no] = 0; SurveyRulesController.initEnabled(question);">
-											</div>
+											<input 
+												class="no-selection-label" 
+												kd-checkbox-radio 
+												type="checkbox"
+												ng-true-value="1" 
+												ng-false-value="0" 
+												ng-model="SurveyRulesController.enabled[question.no]" 
+												ng-init="SurveyRulesController.enabled[question.no] = 0; SurveyRulesController.initEnabled(question);">
 										</td>
 										<td>
 											<div class="input-select-wrapper">

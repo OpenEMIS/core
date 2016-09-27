@@ -24,7 +24,9 @@ class UserBehavior extends Behavior {
 
 	private $defaultImgIndexClass = "profile-image-thumbnail";
 	private $defaultImgViewClass= "profile-image";
-	private $defaultImgMsg = "<p>* Advisable photo dimension 90 by 115px<br>* Format Supported: .jpg, .jpeg, .png, .gif </p>";
+	private $photoMessage = 'Advisable photo dimension 90 by 115px';
+	private $formatSupport = 'Format Supported: ';
+	private $defaultImgMsg = "<p>* %s <br>* %s.jpg, .jpeg, .png, .gif </p>";
 
 	public function initialize(array $config) {
 		if ($this->_table->table() == 'security_users') {
@@ -218,7 +220,10 @@ class UserBehavior extends Behavior {
 			'order' => 1,
 			'sort' => true
 		]);
+<<<<<<< HEAD
 		$ControllerAction->field('identity', ['order' => 2]);
+=======
+>>>>>>> ecb4dd1104c008354410165e66ae1667f2c15f17
 
 		if ($this->_table->table() == 'security_users') {
 			$ControllerAction->field('name', [
@@ -321,7 +326,8 @@ class UserBehavior extends Behavior {
 	}
 
 	public function getDefaultImgMsg() {
-		return $this->defaultImgMsg;
+
+		return sprintf($this->defaultImgMsg, __($this->photoMessage), __($this->formatSupport));
 	}
 
 	public function getDefaultImgIndexClass() {
@@ -357,7 +363,7 @@ class UserBehavior extends Behavior {
 	}
 
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
-		if (($field == 'identity') || ($field == 'identity_number'))  {
+		if ($field == 'identity_number') {
 			$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
 			$identity = $IdentityType->getDefaultEntity();
 
@@ -377,7 +383,7 @@ class UserBehavior extends Behavior {
 		if (array_key_exists('model', $options)) {
 			switch ($options['model']) {
 				case 'Student': case 'Staff': case 'Guardian':
-					$prefix = TableRegistry::get('ConfigItems')->value(strtolower($options['model']).'_prefix');
+					$prefix = TableRegistry::get('Configuration.ConfigItems')->value(strtolower($options['model']).'_prefix');
 					$prefix = explode(",", $prefix);
 					$prefix = ($prefix[1] > 0)? $prefix[0]: '';
 					break;
