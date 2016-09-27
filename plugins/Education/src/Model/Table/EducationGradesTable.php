@@ -2,18 +2,22 @@
 namespace Education\Model\Table;
 
 use ArrayObject;
-use App\Model\Table\AppTable;
+
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
-class EducationGradesTable extends AppTable {
+use App\Model\Table\ControllerActionTable;
+
+class EducationGradesTable extends ControllerActionTable
+{
 	private $_contain = ['EducationSubjects._joinData'];
 	private $_fieldOrder = ['name', 'code', 'education_programme_id', 'visible'];
 
-	public function initialize(array $config) {
+	public function initialize(array $config)
+	{
 		parent::initialize($config);
 
 		$this->belongsToMany('Institutions', [
@@ -51,6 +55,8 @@ class EducationGradesTable extends AppTable {
 				'filter' => 'education_programme_id',
 			]);
 		}
+
+		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
@@ -135,16 +141,16 @@ class EducationGradesTable extends AppTable {
 		$this->association('Institutions')->name('InstitutionProgrammes');
 	}
 
-	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('subjects', ['type' => 'custom_subject', 'valueClass' => 'table-full-width']);
+	public function beforeAction(Event $event, ArrayObject $extra) {
+		$this->field('subjects', ['type' => 'custom_subject', 'valueClass' => 'table-full-width']);
 		$this->_fieldOrder[] = 'subjects';
 	}
 
-	public function afterAction(Event $event) {
-		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	public function afterAction(Event $event, ArrayObject $extra) {
+		$this->setFieldOrder($this->_fieldOrder);
 	}
 
-	public function indexBeforeAction(Event $event) {
+	public function indexBeforeAction(Event $event, ArrayObject $extra) {
 		//Add controls filter to index page
 		$toolbarElements = [
             ['name' => 'Education.controls', 'data' => [], 'options' => []]
@@ -155,22 +161,26 @@ class EducationGradesTable extends AppTable {
 		$this->_fieldOrder = ['visible', 'name', 'code', 'education_programme_id', 'subjects'];
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	{
 		list($levelOptions, $selectedLevel, $programmeOptions, $selectedProgramme) = array_values($this->_getSelectOptions());
+		$extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
         $this->controller->set(compact('levelOptions', 'selectedLevel', 'programmeOptions', 'selectedProgramme'));
-
 		$query->where([$this->aliasField('education_programme_id') => $selectedProgramme]);
 	}
 
-	public function viewEditBeforeQuery(Event $event, Query $query) {
+	public function viewEditBeforeQuery(Event $event, Query $query)
+	{
 		$query->contain(['EducationSubjects']);
 	}
 
-	public function addEditBeforeAction(Event $event) {
-		$this->ControllerAction->field('education_programme_id');
+	public function addEditBeforeAction(Event $event, ArrayObject $extra)
+	{
+		$this->field('education_programme_id');
 	}
 
-	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+	{
 		// to be revisit
 		// $data[$this->alias()]['setVisible'] = true;
 
@@ -188,7 +198,8 @@ class EducationGradesTable extends AppTable {
 		$options->exchangeArray($arrayOptions);
 	}
 
-	public function onGetCustomSubjectElement(Event $event, $action, $entity, $attr, $options=[]) {
+	public function onGetCustomSubjectElement(Event $event, $action, $entity, $attr, $options=[])
+	{
 		if ($action == 'index') {
 			$EducationGradesSubjects = TableRegistry::get('EducationGradesSubjects');
 			$value = $EducationGradesSubjects
@@ -317,7 +328,8 @@ class EducationGradesTable extends AppTable {
 		return $event->subject()->renderElement('Education.subjects', ['attr' => $attr]);
 	}
 
-	public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
+	{
 		list(, , $programmeOptions, $selectedProgramme) = array_values($this->_getSelectOptions());
 		$attr['options'] = $programmeOptions;
 		if ($action == 'add') {
@@ -327,7 +339,8 @@ class EducationGradesTable extends AppTable {
 		return $attr;
 	}
 
-	public function _getSelectOptions() {
+	public function _getSelectOptions()
+	{
 		//Return all required options and their key
 		$levelOptions = $this->EducationProgrammes->EducationCycles->EducationLevels->getLevelOptions();
 		$selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
