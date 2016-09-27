@@ -58,14 +58,25 @@ class InstitutionContactsTable extends ControllerActionTable {
             'contact_person', 'telephone', 'fax', 'email', 'website'
         ]);
 
-        if (isset($extra['toolbarButtons']['list']))
-        {
+        // no index page
+        if (isset($extra['toolbarButtons']['list'])) {
             unset($extra['toolbarButtons']['list']);
+        }
+
+        // prevent users from manually accessing other insitution's pages
+        if (isset($this->request->pass[1])) {
+            $id = $this->Session->read('Institution.Institutions.id');
+            if ($this->request->pass[1] != $id) {
+                $url = $this->url('view');
+                $url[1] = $id;
+                $this->controller->redirect($url);
+            }
         }
 
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
+        // no index page
         $url = $this->url('view');
         return $this->controller->redirect($url);
     }
