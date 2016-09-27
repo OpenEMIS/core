@@ -20,11 +20,7 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
 
         $this->hasMany('GradingOptions', ['className' => 'Examination.ExaminationGradingOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->behaviors()->get('ControllerAction')->config([
-            'actions' => [
-                'remove' => 'restrict'
-            ]
-        ]);
+        $this->setDeleteStrategy('restrict');
     }
 
     public function validationDefault(Validator $validator) {
