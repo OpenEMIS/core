@@ -17,7 +17,7 @@ class AssessmentPeriodsTable extends ControllerActionTable {
 
     public function initialize(array $config) {
         parent::initialize($config);
-        
+
         $this->hasMany('AssessmentItemResults', ['className' => 'Assessment.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
 
@@ -41,10 +41,10 @@ class AssessmentPeriodsTable extends ControllerActionTable {
             'cascadeCallbacks' => true
         ]);
 
-        $this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
+        $this->setDeleteStrategy('restrict');
     }
 
-	public function validationDefault(Validator $validator) 
+	public function validationDefault(Validator $validator)
     {
 		$validator = parent::validationDefault($validator);
 
@@ -80,7 +80,7 @@ class AssessmentPeriodsTable extends ControllerActionTable {
             ]);
 	}
 
-	public function indexBeforeAction(Event $event, ArrayObject $extra) 
+	public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         list($periodOptions, $selectedPeriod) = array_values($this->Assessments->getAcademicPeriodOptions($this->request->query('period')));
         $extra['selectedPeriod'] = $selectedPeriod;
@@ -89,7 +89,7 @@ class AssessmentPeriodsTable extends ControllerActionTable {
         $extra['selectedTemplate'] = $selectedTemplate;
 
         $extra['elements']['control'] = [
-            'name' => 'Assessment.controls', 
+            'name' => 'Assessment.controls',
             'data' => [
                 'periodOptions'=> $periodOptions,
                 'selectedPeriod'=> $selectedPeriod,
@@ -108,7 +108,7 @@ class AssessmentPeriodsTable extends ControllerActionTable {
         ]);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) 
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->where([$this->aliasField('assessment_id') => $extra['selectedTemplate']]); //show assessment period based on the selected assessment.
     }
@@ -137,12 +137,12 @@ class AssessmentPeriodsTable extends ControllerActionTable {
         $this->controller->set('assessmentGradingTypeOptions', $this->getGradingTypeOptions()); //send to ctp
 
         $this->setFieldOrder([
-             'assessment_id', 'code', 'name', 'start_date', 'end_date', 'date_enabled', 'date_disabled', 'weight', 'education_subjects' 
+             'assessment_id', 'code', 'name', 'start_date', 'end_date', 'date_enabled', 'date_disabled', 'weight', 'education_subjects'
         ]);
 
         //this is to sort array based on certain value on subarray, in this case based on education order value
         $educationSubjects = $entity->education_subjects;
-        usort($educationSubjects, function($a,$b){ return $a['order']-$b['order'];} ); 
+        usort($educationSubjects, function($a,$b){ return $a['order']-$b['order'];} );
         $entity->education_subjects = $educationSubjects;
     }
 
@@ -151,7 +151,7 @@ class AssessmentPeriodsTable extends ControllerActionTable {
         if ($this->action == 'edit') {
             //this is to sort array based on certain value on subarray, in this case based on education order value
             $educationSubjects = $entity->education_subjects;
-            usort($educationSubjects, function($a,$b){ return $a['order']-$b['order'];} ); 
+            usort($educationSubjects, function($a,$b){ return $a['order']-$b['order'];} );
             $entity->education_subjects = $educationSubjects;
         }
 
@@ -237,7 +237,7 @@ class AssessmentPeriodsTable extends ControllerActionTable {
             } else {
 
                 $assessment = $this->Assessments->get($attr['entity']->assessment_id);
-                
+
                 $attr['type'] = 'readonly';
                 $attr['value'] = $assessment->academic_period_id;
                 $attr['attr']['value'] = $this->Assessments->AcademicPeriods->get($assessment->academic_period_id)->name;
@@ -248,7 +248,7 @@ class AssessmentPeriodsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function addEditOnChangeAcademicPeriodId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) 
+    public function addEditOnChangeAcademicPeriodId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
         unset($request->query['period']);
@@ -287,7 +287,7 @@ class AssessmentPeriodsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function addEditOnChangeAssessmentId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) 
+    public function addEditOnChangeAssessmentId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
     	//remove default validation because of foreign key
     	$options['associated'] = [
@@ -309,14 +309,14 @@ class AssessmentPeriodsTable extends ControllerActionTable {
 		}
 	}
 
-    public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request) 
+    public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request)
     {
         list($periodOptions, $selectedPeriod) = array_values($this->Assessments->getAcademicPeriodOptions($this->request->query('period')));
-        
+
         $academicPeriod = $this->Assessments->AcademicPeriods->get($selectedPeriod);
         $periodStartDate = $academicPeriod->start_date;
         $periodEndDate = $academicPeriod->end_date;
-        
+
         $todayDate = Time::now();
 
         if (!$request->is(['post', 'put'])) { //only apply before user submit / validation
@@ -335,14 +335,14 @@ class AssessmentPeriodsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, $request) 
+    public function onUpdateFieldEndDate(Event $event, array $attr, $action, $request)
     {
         list($periodOptions, $selectedPeriod) = array_values($this->Assessments->getAcademicPeriodOptions($this->request->query('period')));
-        
+
         $academicPeriod = $this->Assessments->AcademicPeriods->get($selectedPeriod);
         $periodStartDate = $academicPeriod->start_date;
         $periodEndDate = $academicPeriod->end_date;
-        
+
         $todayDate = Time::now();
 
         if (!$request->is(['post', 'put'])) { //only apply before user submit / validation
@@ -361,7 +361,7 @@ class AssessmentPeriodsTable extends ControllerActionTable {
         return $attr;
     }
 
-	public function setupFields(Entity $entity) 
+	public function setupFields(Entity $entity)
     {
         $this->field('academic_period_id', [
             'type' => 'select',
@@ -398,7 +398,7 @@ class AssessmentPeriodsTable extends ControllerActionTable {
         ]);
 
         $this->setFieldOrder([
-             'academic_period_id', 'assessment_id', 'code', 'name', 'start_date', 'end_date', 'date_enabled', 'date_disabled', 'weight', 'education_subjects' 
+             'academic_period_id', 'assessment_id', 'code', 'name', 'start_date', 'end_date', 'date_enabled', 'date_disabled', 'weight', 'education_subjects'
         ]);
     }
 
@@ -421,7 +421,7 @@ class AssessmentPeriodsTable extends ControllerActionTable {
         } else {
             $selectedTemplate = key($templateOptions);
         }
-        
+
         return compact('templateOptions', 'selectedTemplate');
     }
 
