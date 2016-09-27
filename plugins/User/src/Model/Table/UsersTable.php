@@ -13,7 +13,6 @@ use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\UserTrait;
 use Cake\I18n\Time;
-use Cake\Log\Log;
 
 class UsersTable extends AppTable {
 	use OptionsTrait;
@@ -611,7 +610,6 @@ class UsersTable extends AppTable {
 
 	public function autocomplete($search) {
 		$search = sprintf('%%%s%%', $search);
-		Log::write('debug', 'here');
 		$list = $this
 			->find()
 			->select([
