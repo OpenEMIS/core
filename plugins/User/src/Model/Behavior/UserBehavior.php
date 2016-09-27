@@ -153,7 +153,7 @@ class UserBehavior extends Behavior {
         $this->_table->fields['is_guardian']['value'] = 0;
     }
 
-    public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+    public function indexBeforeAction(Event $event) {
         $plugin = $this->_table->controller->plugin;
         $name = $this->_table->controller->name;
 
