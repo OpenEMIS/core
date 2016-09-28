@@ -12,7 +12,7 @@ use Cake\Validation\Validator;
 use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 use Cake\I18n\I18n;
 use Cake\ORM\ResultSet;
-
+use Cake\Network\Session;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
@@ -137,7 +137,7 @@ class InstitutionsTable extends AppTable  {
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
-		$session = $this->request->session();
+		$session = new Session();
 		$userId = $session->read('Auth.User.id');
 		$superAdmin = $session->read('Auth.User.super_admin');
 
