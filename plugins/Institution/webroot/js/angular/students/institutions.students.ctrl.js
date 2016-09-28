@@ -6,7 +6,7 @@ InstitutionStudentController.$inject = ['$scope', '$window', '$filter', 'UtilsSv
 
 function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertSvc, InstitutionsStudentsSvc) {
     // ag-grid vars
-    
+
 
     var StudentController = this;
 
@@ -17,23 +17,26 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
     StudentController.hasExternalDataSource;
     StudentController.internalGridOptions = null;
     StudentController.externalGridOptions = null;
-    StudentController.rowsThisPage = 0;
+    StudentController.rowsThisPage = [];
     StudentController.createNewStudent = false;
     StudentController.genderOptions = {};
     StudentController.academicPeriodOptions = {};
     StudentController.educationGradeOptions = {};
     StudentController.classOptions = {};
     StudentController.step = 'internal_search';
+    StudentController.showExternalSearchButton = false;
 
     // filter variables
     StudentController.internalFilterOpenemisNo;
     StudentController.internalFilterFirstName;
     StudentController.internalFilterLastName;
     StudentController.internalFilterIdentityNumber;
+    StudentController.internalFilterDateOfBirth;
     StudentController.externalFilterOpenemisNo;
     StudentController.externalFilterFirstName;
     StudentController.externalFilterLastName;
     StudentController.externalFilterIdentityNumber;
+    StudentController.externalFilterDateOfBirth;
 
     // Controller functions
     StudentController.processStudentRecord = processStudentRecord;
@@ -50,6 +53,9 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
     StudentController.appendName = appendName;
     StudentController.changeGender = changeGender;
     StudentController.validateNewUser = validateNewUser;
+    StudentController.onExternalSearchClick = onExternalSearchClick;
+    StudentController.onAddNewStudentClick = onAddNewStudentClick;
+    StudentController.onAddStudentClick = onAddStudentClick;
 
     StudentController.selectedStudent;
     StudentController.selectedStudentData = null;
@@ -122,9 +128,10 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                         return '<div><input  name="ngSelectionCell" ng-click="InstitutionStudentController.selectStudent('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStudent="'+params.value+'"/></div>';
                     }
                 },
-                {headerName: "Openemis No", field: "openemis_no", suppressMenu: true, suppressSorting: true},
+                {headerName: "OpenEMIS ID", field: "openemis_no", suppressMenu: true, suppressSorting: true},
                 {headerName: "First Name", field: "first_name", suppressMenu: true, suppressSorting: true},
                 {headerName: "Last Name", field: "last_name", suppressMenu: true, suppressSorting: true},
+                {headerName: "Date of Birth", field: "date_of_birth", suppressMenu: true, suppressSorting: true},
                 {headerName: (angular.isDefined(StudentController.defaultIdentityTypeName))? StudentController.defaultIdentityTypeName: "[default identity type not set]", field: "identity_number", suppressMenu: true, suppressSorting: true},
             ],
             enableColResize: false,
@@ -142,7 +149,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
             },
             angularCompileRows: true
         };
-        
+
         StudentController.externalGridOptions = {
             columnDefs: [
                 {
@@ -157,9 +164,10 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                         return '<div><input  name="ngSelectionCell" ng-click="InstitutionStudentController.selectStudent('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStudent="'+params.value+'"/></div>';
                     }
                 },
-                {headerName: "Openemis No", field: "openemis_no", suppressMenu: true, suppressSorting: true},
+                {headerName: "OpenEMIS ID", field: "openemis_no", suppressMenu: true, suppressSorting: true},
                 {headerName: "First Name", field: "first_name", suppressMenu: true, suppressSorting: true},
                 {headerName: "Last Name", field: "last_name", suppressMenu: true, suppressSorting: true},
+                {headerName: "Date of Birth", field: "date_of_birth", suppressMenu: true, suppressSorting: true},
                 {headerName: (angular.isDefined(StudentController.defaultIdentityTypeName))? StudentController.defaultIdentityTypeName: "[default identity type not set]", field: "identity_number", suppressMenu: true, suppressSorting: true},
             ],
             enableColResize: false,
@@ -176,6 +184,9 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
     };
 
     $scope.reloadInternalDatasource = function (withData) {
+        if (withData !== false) {
+           StudentController.showExternalSearchButton = true;
+        }
         InstitutionsStudentsSvc.resetExternalVariable();
         StudentController.createNewInternalDatasource(StudentController.internalGridOptions, withData);
     };
@@ -221,6 +232,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                             first_name: StudentController.internalFilterFirstName,
                             last_name: StudentController.internalFilterLastName,
                             identity_number: StudentController.internalFilterIdentityNumber,
+                            date_of_birth: StudentController.internalFilterDateOfBirth
                         }
                     }
                     )
@@ -231,7 +243,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                     }, function(error) {
                         console.log(error);
                         AlertSvc.warning($scope, error);
-                    }); 
+                    });
                 } else {
                     StudentController.rowsThisPage = [];
                     params.successCallback(StudentController.rowsThisPage, 0);
@@ -259,6 +271,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                                 first_name: StudentController.externalFilterFirstName,
                                 last_name: StudentController.externalFilterLastName,
                                 identity_number: StudentController.externalFilterIdentityNumber,
+                                date_of_birth: StudentController.internalFilterDateOfBirth
                             }
                         }
                     )
@@ -277,6 +290,9 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                         }
                         var studentRecords = [];
                         return StudentController.processStudentRecord(studentRecords, params, 0);
+                    })
+                    .finally(function(res) {
+                        InstitutionsStudentsSvc.init(angular.baseUrl);
                     });
                 } else {
                     StudentController.rowsThisPage = [];
@@ -301,9 +317,10 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
             }
         }
 
+
         var lastRow = totalRowCount;
         StudentController.rowsThisPage = studentRecords;
-        
+
         params.successCallback(StudentController.rowsThisPage, lastRow);
         UtilsSvc.isAppendLoader(false);
         StudentController.initialLoad = false;
@@ -316,7 +333,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
         var data = {
             student_id: studentId,
             student_name: studentId,
-            academic_period_id: academicPeriodId, 
+            academic_period_id: academicPeriodId,
             education_grade_id: educationGradeId,
             start_date: startDate,
             end_date: endDate
@@ -342,19 +359,25 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
         });
     }
 
-    $scope.onAddNewStudentClick = function() {
+    function onAddNewStudentClick() {
         StudentController.createNewStudent = true;
+        angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
+            step: "createUser"
+        });
+    }
 
-        if (StudentController.hasExternalDataSource) {
-            angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
-                step: "createUser"
-            });
-        } else {
-            angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
-                step: 2
-            });
-        }
-    };
+    function onAddStudentClick() {
+        console.log('addStudent');
+        angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
+            step: "addStudent"
+        });
+    }
+
+    function onExternalSearchClick() {
+        angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
+            step: "externalSearch"
+        });
+    }
 
     function selectStudent(id) {
         StudentController.selectedStudent = id;
@@ -518,9 +541,9 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                     var dateOfBirth = studentData.date_of_birth;
                     var dateOfBirthArr = dateOfBirth.split("-");
                     dateOfBirth = dateOfBirthArr[2] + '-' + dateOfBirthArr[1] + '-' + dateOfBirthArr[0];
-                    studentData.date_of_birth = dateOfBirth; 
+                    studentData.date_of_birth = dateOfBirth;
                 }
-                
+
                 InstitutionsStudentsSvc.getOpenEmisId()
                 .then(function(openemisNo){
                     studentData.openemis_no = openemisNo.data[0].openemis;
@@ -528,7 +551,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                 }, function(error){
 
                 });
-                
+
             }
         }
     }
@@ -577,13 +600,13 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
                     angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
                         step: 3
                     });
-                    evt.preventDefault(); 
+                    evt.preventDefault();
                 } else {
                     StudentController.validateNewUser();
                 }
-                
+
             }
-            
+
         } else if (
             (
                 (data.step == 3 && StudentController.hasExternalDataSource)
@@ -621,7 +644,7 @@ function InstitutionStudentController($scope, $window, $filter, UtilsSvc, AlertS
             if (StudentController.hasExternalDataSource) {
                 angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
                     step: 'createUser'
-                });  
+                });
             } else {
                 angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
                     step: 2
