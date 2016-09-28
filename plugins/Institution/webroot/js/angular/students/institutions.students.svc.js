@@ -11,6 +11,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
 
     var service = {
         init: init,
+        initExternal: initExternal,
         getStudentRecords: getStudentRecords,
         getExternalStudentRecords: getExternalStudentRecords,
         getInstitutionId: getInstitutionId,
@@ -32,7 +33,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
         setExternalSourceUrl: setExternalSourceUrl,
         getAccessToken: getAccessToken,
         resetExternalVariable: resetExternalVariable,
-        getGenders: getGenders, 
+        getGenders: getGenders,
         getOpenEmisId: getOpenEmisId
     };
 
@@ -49,7 +50,11 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
         IdentityTypes: 'FieldOption.IdentityTypes',
         ExternalDataSourceAttributes: 'ExternalDataSourceAttributes',
         Identities: 'User.Identities',
-        
+
+    };
+
+    var externalModels = {
+        Users: 'Users',
     };
 
     return service;
@@ -58,6 +63,13 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
         KdOrmSvc.base(baseUrl);
         KdSessionSvc.base(baseUrl);
         KdOrmSvc.init(models);
+    };
+
+    function initExternal(baseUrl) {
+        console.log(baseUrl);
+        KdOrmSvc.base(baseUrl);
+        KdSessionSvc.base(baseUrl);
+        KdOrmSvc.init(externalModels);
     };
 
     function resetExternalVariable()
@@ -143,14 +155,15 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
                     externalSource = sourceUrl;
                     externalToken = token;
                 }
+                vm.initExternal(sourceUrl);
                 var pageParams = {
                     limit: options['endRow'] - options['startRow'],
                     page: options['endRow'] / (options['endRow'] - options['startRow']),
                 };
 
                 var params = {};
-                Students.reset();
-                Students
+                Users.reset();
+                Users
                     .page(pageParams.page)
                     .limit(pageParams.limit);
 
@@ -159,17 +172,20 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
                         if (typeof options['conditions'][key] == 'string') {
                             options['conditions'][key] = options['conditions'][key].trim();
                             if (options['conditions'][key] !== '') {
-                                params[key] = '_' + options['conditions'][key] + '_';
+                                if (key != 'date_of_birth') {
+                                    params[key] = '_' + options['conditions'][key] + '_';
+                                } else {
+                                    params[key] = vm.formatDate(options['conditions'][key]);
+                                }
                             }
                         }
                     }
                     if (Object.getOwnPropertyNames(params).length !== 0) {
-                        Students.orWhere(params);
+                        Users.orWhere(params);
                     }
                 }
                 var authorizationHeader = 'Bearer ' + token;
-
-                return Students.ajax({defer: true, url: sourceUrl, authorizationHeader: authorizationHeader});
+                return Users.ajax({defer: true, authorizationHeader: authorizationHeader});
             }, function(error){
                 deferred.reject(error);
             })
@@ -186,6 +202,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
     };
 
     function getStudentRecords(options) {
+        var vm = this;
         var deferred = $q.defer();
 
         this.getInstitutionId()
@@ -202,6 +219,9 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
                         options['conditions'][key] = options['conditions'][key].trim();
 
                         if (options['conditions'][key] !== '') {
+                            if (key == 'date_of_birth') {
+                                options['conditions'][key] = vm.formatDate(options['conditions'][key]);
+                            }
                             params[key] = options['conditions'][key];
                         }
                     }
@@ -338,7 +358,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
                 .ajax({defer: true});
     }
 
-    function addUser(userRecord) 
+    function addUser(userRecord)
     {
         var deferred = $q.defer();
         var vm = this;
@@ -407,19 +427,19 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
                                 console.log(error);
                             });
                         }
-                        
+
                     }, function(error) {
                         deferred.reject(error);
                         console.log(error);
                     });
-                    
+
                 }
             }, function(error) {
                 deferred.reject(error);
                 console.log(error);
             });
         }
-        
+
 
         return deferred.promise;
     };
