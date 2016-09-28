@@ -18,16 +18,14 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
 <div class="wizard" data-initialize="wizard" id="wizard">
     <div class="steps-container">
         <ul class="steps" style="margin-left: 0">
-            <li data-step="1" class="active">
+            <li data-step="1" class="active" data-name="internalSearch">
                 <div class="step-wrapper">
                     Internal Search
                     <span class="chevron"></span>
                 </div>
             </li>
-            <?php 
-                if ($externalDataSource) {
-            ?>
-            <li data-step="2">
+
+            <li data-step="2" data-name="externalSearch" ng-show="<?= $externalDataSource ?>">
                 <div class="step-wrapper">
                     External Search
                     <span class="chevron"></span>
@@ -42,53 +40,44 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             <li data-step="4" data-name="addStudent">
                 <div class="step-wrapper">
                     Add Student
-                    <input type="hidden" ng-model="InstitutionStudentController.hasExternalDataSource" ng-init="InstitutionStudentController.hasExternalDataSource = true"/>
+                    <input type="hidden" ng-model="InstitutionStudentController.hasExternalDataSource" ng-init="InstitutionStudentController.hasExternalDataSource = <?= $externalDataSource ?>"/>
                     <span class="chevron"></span>
                 </div>
             </li>
-            <?php 
-                } else {
-            ?>
-            <li data-step="3" data-name="createUser" ng-show="InstitutionStudentController.createNewStudent">
-                <div class="step-wrapper">
-                    New Student Details
-                    <span class="chevron"></span>
-                </div>
-            </li>
-            <li data-step="4" data-name="addStudent">
-                <div class="step-wrapper">
-                    Add Students
-                    <input type="hidden" ng-model="InstitutionStudentController.hasExternalDataSource" ng-init="InstitutionStudentController.hasExternalDataSource = false"/>
-                    <span class="chevron"></span>
-                </div>
-            </li>
-            <?php 
-                }
-            ?>
         </ul>
     </div>
     <div class="actions top">
         <button
             ng-if="(InstitutionStudentController.rowsThisPage.length===0 && !InstitutionStudentController.initialLoad) && InstitutionStudentController.step!='create_user'"
-            ng-click="onAddNewStudentClick()"
-            type="button" class="btn btn-default">Add New Student
+            ng-click="InstitutionStudentController.onAddNewStudentClick()"
+            type="button" class="btn btn-default">Create New Student
+        </button>
+        <button
+            type="button" class="btn btn-default" ng-click="InstitutionStudentController.onExternalSearchClick()" ng-if="(InstitutionStudentController.showExternalSearchButton && InstitutionStudentController.step=='internal_search')" ng-disabled="InstitutionStudentController.selectedStudent"><?= __('External Search') ?>
+        </button>
+        <button
+            ng-if="InstitutionStudentController.rowsThisPage.length > 0 && (InstitutionStudentController.step=='internal_search' || InstitutionStudentController.step=='external_search')"
+            ng-model="InstitutionStudentController.selectedStudent"
+            ng-click="InstitutionStudentController.onAddStudentClick()"
+            ng-disabled="!InstitutionStudentController.selectedStudent"
+            type="button" class="btn btn-default">Add Student
         </button>
         <button type="button" class="btn btn-default btn-next"
             ng-model="InstitutionStudentController.selectedStudent"
-            ng-disabled="!InstitutionStudentController.selectedStudent && (InstitutionStudentController.externalSearch || !InstitutionStudentController.hasExternalDataSource)"
+            ng-show="InstitutionStudentController.step=='add_student'"
             data-last="Complete">
             Next
         </button>
     </div>
     <div class="step-content">
-        <div class="step-pane sample-pane active" data-step="1">
+        <div class="step-pane sample-pane active" data-step="1" data-name="internalSearch">
             <div class="dropdown-filter">
                 <div class="filter-label">
                     <i class="fa fa-filter"></i>
                     <label>Filter</label>
                 </div>
                 <div class="text">
-                    <label>Openemis No.</label>
+                    <label><?= __('OpenEMIS ID')?></label>
                     <input ng-model="InstitutionStudentController.internalFilterOpenemisNo" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
@@ -102,6 +91,13 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 <div class="text">
                     <label>{{ InstitutionStudentController.defaultIdentityTypeName }}</label>
                     <input ng-model="InstitutionStudentController.internalFilterIdentityNumber" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
+                </div>
+                <div class="text">
+                    <label for="Students_date_of_birth">Date of Birth</label>
+                    <div class="input-group date " id="Students_date_of_birth" style="">
+                        <input type="text" class="form-control " name="Students[date_of_birth]" ng-model="InstitutionStudentController.internalFilterDateOfBirth" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource(true) : null">
+                        <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                    </div>
                 </div>
 
                 <div class="search-action-btn margin-top-10 margin-bottom-10">
@@ -120,14 +116,14 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 </div>
             </div>
         </div>
-        <div class="step-pane sample-pane active" data-step="2">
+        <div class="step-pane sample-pane active" data-step="2" data-name="externalSearch">
             <div class="dropdown-filter">
                 <div class="filter-label">
                     <i class="fa fa-filter"></i>
                     <label>Filter</label>
                 </div>
                 <div class="text">
-                    <label>Openemis No.</label>
+                    <label><?= __('OpenEMIS ID')?></label>
                     <input ng-model="InstitutionStudentController.externalFilterOpenemisNo" ng-keyup="$event.keyCode == 13 ? reloadExternalDatasource(true) : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
@@ -141,6 +137,13 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 <div class="text">
                     <label>{{ InstitutionStudentController.defaultIdentityTypeName }}</label>
                     <input ng-model="InstitutionStudentController.externalFilterIdentityNumber" ng-keyup="$event.keyCode == 13 ? reloadExternalDatasource(true) : null" type="text" id="" maxlength="150">
+                </div>
+                <div class="text">
+                    <label for="Students_date_of_birth">Date of Birth</label>
+                    <div class="input-group date " id="Students_date_of_birth" style="">
+                        <input type="text" class="form-control " name="Students[date_of_birth]" ng-model="InstitutionStudentController.externalFilterDateOfBirth" ng-keyup="$event.keyCode == 13 ? reloadExternalDatasource(true) : null">
+                        <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                    </div>
                 </div>
 
                 <div class="search-action-btn margin-top-10 margin-bottom-10">
@@ -310,15 +313,6 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 </div>
             </form>
         </div>
-    </div>
-    <div class="actions bottom">
-        <button type="button"
-            ng-model="InstitutionStudentController.selectedStudent"
-            class="btn btn-default btn-next"
-            ng-disabled="!InstitutionStudentController.selectedStudent && (InstitutionStudentController.externalSearch || !InstitutionStudentController.hasExternalDataSource)"
-            >
-            Next
-        </button>
     </div>
 </div>
 

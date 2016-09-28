@@ -424,11 +424,13 @@ class StudentsTable extends AppTable {
         $lastName = (array_key_exists('last_name', $options))? $options['last_name']: null;
         $openemisNo = (array_key_exists('openemis_no', $options))? $options['openemis_no']: null;
         $identityNumber = (array_key_exists('identity_number', $options))? $options['identity_number']: null;
+        $dateOfBirth = (array_key_exists('date_of_birth', $options))? $options['date_of_birth']: null;
 
         $conditions = [];
         if (!empty($firstName)) $conditions['first_name LIKE'] = '%' . $firstName . '%';
         if (!empty($lastName)) $conditions['last_name LIKE'] = '%' . $lastName . '%';
         if (!empty($openemisNo)) $conditions['openemis_no LIKE'] = '%' . $openemisNo . '%';
+        if (!empty($dateOfBirth)) $conditions['date_of_birth'] = $dateOfBirth;
 
         $identityConditions = [];
         if (!empty($identityNumber)) $identityConditions['Identities.number LIKE'] = '%' . $identityNumber . '%';
