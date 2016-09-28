@@ -449,7 +449,7 @@ trait MessagesTrait {
             'success' => 'Students have been transferred.'
         ],
         'StaffPositionProfiles' => [
-            'request' => 'Request for change in Staff Position Profile has been submitted successfully.',
+            'request' => 'Request for Change in Assignment has been submitted successfully.',
             'notExists' => 'Staff record no longer exists in the system.',
             'errorApproval' => 'Record cannot be approved due to errors encountered.',
         ],
@@ -669,7 +669,6 @@ trait MessagesTrait {
             'StudentGuardians' => [
                 'guardianRelationId' => 'You need to configure Guardian Relations first.',
                 'guardianEducationLevel' => 'You need to configure Guardian Education Level first.'
-
             ],
             'StaffPositions' => [
                 'end_date' => [
@@ -753,6 +752,16 @@ trait MessagesTrait {
                 ],
                 'new_start_date' => [
                     'ruleCompareDateReverse' => 'New Start Date should not be earlier than or same as Start Date'
+                ]
+            ],
+            'DropoutRequests' => [
+                'effective_date' => [
+                    'ruleDateAfterEnrollment' => 'Effective Date cannot be earlier than the Enrollment Date'
+                ]
+            ],
+            'StudentDropout' => [
+                'effective_date' => [
+                    'ruleDateAfterEnrollment' => 'Effective Date cannot be earlier than the Enrollment Date'
                 ]
             ],
             'InstitutionExaminationStudents' => [
