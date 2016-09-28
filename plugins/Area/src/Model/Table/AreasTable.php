@@ -547,10 +547,8 @@ class AreasTable extends ControllerActionTable
                     // Update the Institutions table
                     if (!empty($institutionResult)) {
                         foreach ($institutionResult as $key => $institution) {
-                            $institutionEntity =$this->newEntity([
-                                'id' => $institution->id,
-                                'area_id' => $newAreaId],
-                                ['validate' => false]);
+                            $institutionEntity = $this->patchEntity($institution, ['area_id' => $newAreaId], ['validate' =>false]);
+
                             $this->Institutions->save($institutionEntity);
                         }
                     }

@@ -13,9 +13,9 @@ class AreaAdministrativeLevelsFixture extends TestFixture
             'level' => '0',
             'area_administrative_id' => '8',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '0',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ], [
             'id' => '2',
             'name' => 'Region',
@@ -51,7 +51,7 @@ class AreaAdministrativeLevelsFixture extends TestFixture
             'modified_user_id' => '2',
             'modified' => '2016-05-05 07:08:54',
             'created_user_id' => '0',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ], [
             'id' => '6',
             'name' => 'World',
@@ -60,7 +60,7 @@ class AreaAdministrativeLevelsFixture extends TestFixture
             'modified_user_id' => null,
             'modified' => null,
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ]
     ];
 }
