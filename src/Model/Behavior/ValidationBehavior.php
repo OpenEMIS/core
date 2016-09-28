@@ -102,10 +102,9 @@ class ValidationBehavior extends Behavior {
 		return ctype_digit($check);
 	}
 
-    public static function checkAuthorisedArea($check, array $globalData) {
+    public static function checkAuthorisedArea($check, $superAdmin, $userId, array $globalData) {
         $isValid = false;
-        $session = new Session();
-        if ($session->read('Auth.User.super_admin') == 1) {
+        if ($superAdmin == 1) {
         	$isValid = true;
         } else {
         	$data = $globalData['data'];
@@ -123,7 +122,7 @@ class ValidationBehavior extends Behavior {
         		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
 	        	$Areas = TableRegistry::get('Area.Areas');
 	        	// get areas from security group areas
-	        	$areasByUser = $SecurityGroupAreas->getAreasByUser($session->read('Auth.User.id'));
+	        	$areasByUser = $SecurityGroupAreas->getAreasByUser($userId);
 
 	        	if (count($areasByUser) > 0) {
 					foreach($areasByUser as $area) {
