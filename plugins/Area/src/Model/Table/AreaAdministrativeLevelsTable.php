@@ -8,25 +8,30 @@ use Cake\Event\Event;
 use Cake\ORM\Query;
 use App\Model\Table\ControllerActionTable;
 
-class AreaAdministrativeLevelsTable extends ControllerActionTable {
-	public function initialize(array $config) {
+class AreaAdministrativeLevelsTable extends ControllerActionTable
+{
+	public function initialize(array $config)
+	{
 		parent::initialize($config);
 		$this->belongsTo('Countries', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'area_administrative_id']);
 		$this->hasMany('Areas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'area_administrative_level_id']);
 		$this->addBehavior('RestrictAssociatedDelete');
-		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
+		$this->setDeleteStrategy('restrict');
 	}
 
-	public function beforeAction(Event $event, ArrayObject $extra) {
+	public function beforeAction(Event $event, ArrayObject $extra)
+	{
 		$this->field('level', ['before' => 'name']);
 		$this->field('area_administrative_id', ['type' => 'hidden', 'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true]]);
 	}
 
-	public function indexBeforeAction(Event $event, ArrayObject $extra) {
-		
+	public function indexBeforeAction(Event $event, ArrayObject $extra)
+	{
+
 	}
 
-	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	{
 		//Add controls filter to index page
 		list($countryOptions, $selectedCountry) = array_values($this->getSelectOptions());
 		$extra['elements']['controls'] = ['name' => 'Area.controls', 'data' => [], 'options' => [], 'order' => 1];
@@ -34,11 +39,13 @@ class AreaAdministrativeLevelsTable extends ControllerActionTable {
 		$query->where([$this->aliasField('area_administrative_id') => $selectedCountry]);
 	}
 
-	public function addEditBeforeAction(Event $event, ArrayObject $extra) {
+	public function addEditBeforeAction(Event $event, ArrayObject $extra)
+	{
 		$this->fields['level']['type'] = 'hidden';
 	}
 
-	public function onUpdateFieldLevel(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldLevel(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'add') {
 			list(, $selectedCountry) = array_values($this->getSelectOptions());
 
@@ -60,7 +67,8 @@ class AreaAdministrativeLevelsTable extends ControllerActionTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldAreaAdministrativeId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldAreaAdministrativeId(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'add') {
 			list(, $selectedCountry) = array_values($this->getSelectOptions());
 			$attr['attr']['value'] = $selectedCountry;
@@ -69,7 +77,8 @@ class AreaAdministrativeLevelsTable extends ControllerActionTable {
 		return $attr;
 	}
 
-	public function getSelectOptions() {
+	public function getSelectOptions()
+	{
 		//Return all required options and their key
 		$levelId = $this
 			->find('all')

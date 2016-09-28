@@ -15,6 +15,6 @@ class EducationSystemsTable extends ControllerActionTable
     {
         parent::initialize($config);
         $this->hasMany('EducationLevels', ['className' => 'Education.EducationLevels']);
-        $this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
+        $this->setDeleteStrategy('restrict');
     }
 }

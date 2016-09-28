@@ -11,6 +11,6 @@ class EducationCertificationsTable extends ControllerActionTable
         $this->addBehavior('Education.Setup');
         $this->hasMany('EducationProgrammes', ['className' => 'Education.EducationProgrammes', 'cascadeCallbacks' => true]);
 
-        $this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
+        $this->setDeleteStrategy('restrict');
     }
 }
