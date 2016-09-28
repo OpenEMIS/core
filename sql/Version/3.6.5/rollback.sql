@@ -1,3 +1,12 @@
+-- POCOR-3302
+-- institutions
+ALTER TABLE `institutions`
+DROP COLUMN `is_academic`;
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3302';
+
+
 -- POCOR-3106
 -- security functions
 ALTER TABLE `security_functions` DROP `description`;
