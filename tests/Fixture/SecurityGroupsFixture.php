@@ -3619,6 +3619,37 @@ class SecurityGroupsFixture extends TestFixture
             'modified' => null,
             'created_user_id' => '2',
             'created' => '2016-06-03 04:01:55'
-        ]
+        ], [
+            'id' => '517',
+            'name' => 'MOEEASTREGION - East Region Office',
+            'modified_user_id' => null,
+            'modified' => null,
+            'created_user_id' => '2',
+            'created' => '2016-06-03 04:01:55'
+        ],
+        [
+            'id' => '518',
+            'name' => 'User Group 2',
+            'modified_user_id' => null,
+            'modified' => null,
+            'created_user_id' => '2',
+            'created' => '2016-06-03 04:01:55'
+        ],
+        [
+            'id' => '519',
+            'name' => 'User Group 3',
+            'modified_user_id' => null,
+            'modified' => null,
+            'created_user_id' => '2',
+            'created' => '2016-06-03 04:01:55'
+        ],
+        [
+            'id' => '520',
+            'name' => 'User Group 4',
+            'modified_user_id' => null,
+            'modified' => null,
+            'created_user_id' => '2',
+            'created' => '2016-06-03 04:01:55'
+        ],
     ];
 }
