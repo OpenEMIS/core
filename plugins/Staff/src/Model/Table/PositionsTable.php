@@ -50,7 +50,7 @@ class PositionsTable extends ControllerActionTable {
 			'Institutions',
 			'InstitutionPositions',
 			'StaffStatuses'
-		]);
+		], true);
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
@@ -74,6 +74,10 @@ class PositionsTable extends ControllerActionTable {
 		$tabElements = $this->controller->getCareerTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function onGetInstitutionId(Event $event, Entity $entity) {
+		return $entity->institution->code_name;
 	}
 
 }
