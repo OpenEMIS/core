@@ -56,7 +56,7 @@ class EducationGradesTable extends ControllerActionTable
 			]);
 		}
 
-		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
+		$this->setDeleteStrategy('restrict');
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {

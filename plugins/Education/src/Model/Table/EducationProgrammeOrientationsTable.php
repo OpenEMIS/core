@@ -10,6 +10,6 @@ class EducationProgrammeOrientationsTable extends ControllerActionTable
         parent::initialize($config);
         $this->addBehavior('Education.Setup');
         $this->hasMany('EducationFieldOfStudies', ['className' => 'Education.EducationFieldOfStudies', 'cascadeCallbacks' => true]);
-        $this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
+        $this->setDeleteStrategy('restrict');
     }
 }

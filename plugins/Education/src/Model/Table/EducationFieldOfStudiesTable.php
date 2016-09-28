@@ -18,7 +18,7 @@ class EducationFieldOfStudiesTable extends ControllerActionTable
             ]);
         }
 
-        $this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
+        $this->setDeleteStrategy('restrict');
     }
 
     public function addEditBeforeAction(Event $event) {
