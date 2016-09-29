@@ -21,6 +21,8 @@ class IdentitiesTable extends ControllerActionTable
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('IdentityTypes', ['className' => 'FieldOption.IdentityTypes']);
+
+		$this->excludeDefaultValidations(['security_user_id']);
 	}
 
 	public function beforeAction($event, ArrayObject $extra)
