@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "cd0b850685b588c6a2e03dcfa46ea5a1",
-    "content-hash": "b12f3f2475372509118bbe9a5a4d2ae0",
+    "hash": "9a49964a16fa6bd7b279f959b2f5462a",
+    "content-hash": "21808af438e96f8a62d1abd57cf85a25",
     "packages": [
         {
             "name": "admad/cakephp-jwt-auth",
@@ -386,11 +386,11 @@
         },
         {
             "name": "korditpteltd/kd-cakephp-restful",
-            "version": "v1.0.2",
+            "version": "1.0.3.x-dev",
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git",
-                "reference": "c11d42192d506d95cff6319322cbf770298854a7"
+                "reference": "bdc4c0090bf9001d574a96317097df4645b7647e"
             },
             "require": {
                 "cakephp/cakephp": ">3.0.9"
@@ -436,7 +436,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
             },
-            "time": "2016-09-27 09:26:41"
+            "time": "2016-09-29 02:33:40"
         },
         {
             "name": "korditpteltd/kd-cakephp-sso",
@@ -2854,6 +2854,7 @@
     "stability-flags": {
         "phpoffice/phpexcel": 20,
         "mk-j/php_xlsxwriter": 20,
+        "korditpteltd/kd-cakephp-restful": 20,
         "korditpteltd/kd-cakephp-sso": 20,
         "psy/psysh": 0
     },

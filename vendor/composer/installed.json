@@ -2894,12 +2894,12 @@
     },
     {
         "name": "korditpteltd/kd-cakephp-restful",
-        "version": "v1.0.2",
-        "version_normalized": "1.0.2.0",
+        "version": "1.0.3.x-dev",
+        "version_normalized": "1.0.3.9999999-dev",
         "source": {
             "type": "git",
             "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git",
-            "reference": "c11d42192d506d95cff6319322cbf770298854a7"
+            "reference": "bdc4c0090bf9001d574a96317097df4645b7647e"
         },
         "require": {
             "cakephp/cakephp": ">3.0.9"
@@ -2908,7 +2908,7 @@
             "cakephp/cakephp-codesniffer": "dev-master",
             "phpunit/phpunit": "4.1.*"
         },
-        "time": "2016-09-27 09:26:41",
+        "time": "2016-09-29 02:33:40",
         "type": "cakephp-plugin",
         "extra": {
             "branch-alias": {
