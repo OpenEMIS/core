@@ -84,6 +84,13 @@ class ControllerActionBehavior extends Behavior
         }
     }
 
+    public function excludeDefaultValidations($fields)
+    {
+        if (!empty($fields)) {
+            $this->config('fields.excludes', $fields);
+        }
+    }
+
     private function attachActions()
     {
         $actions = $this->config('actions');
