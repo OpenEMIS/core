@@ -49,7 +49,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
         AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
         InstitutionClasses: 'Institution.InstitutionClasses',
         IdentityTypes: 'FieldOption.IdentityTypes',
-        ExternalDataSourceAttributes: 'ExternalDataSourceAttributes',
+        ExternalDataSourceAttributes: 'Configuration.ExternalDataSourceAttributes',
         Identities: 'User.Identities',
 
     };

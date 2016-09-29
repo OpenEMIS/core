@@ -1,12 +1,12 @@
 <?php
-namespace App\Model\Table;
+namespace Configuration\Model\Table;
 
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 
-class ExternalDataSourceAttributesTable extends AppTable {
+class ExternalDataSourceAttributesTable extends ControllerActionTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 	}
@@ -29,7 +29,7 @@ class ExternalDataSourceAttributesTable extends AppTable {
 		}
 	}
 
-	public function findUri(Query $query, array $options = []) 
+	public function findUri(Query $query, array $options = [])
 	{
 		$ConfigItemTable = TableRegistry::get('ConfigItems');
 		$externalSourceType = $ConfigItemTable
@@ -43,7 +43,7 @@ class ExternalDataSourceAttributesTable extends AppTable {
 		return $query
 			->select([$this->aliasField('value')])
 			->where([
-				$this->aliasField('attribute_field') => $attributeField, 
+				$this->aliasField('attribute_field') => $attributeField,
 				$this->aliasField('external_data_source_type') => $externalSourceType
 			])
 			->first();

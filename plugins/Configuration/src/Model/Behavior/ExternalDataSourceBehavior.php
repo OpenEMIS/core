@@ -1,5 +1,5 @@
-<?php 
-namespace App\Model\Behavior;
+<?php
+namespace Configuration\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Behavior;
@@ -27,6 +27,7 @@ class ExternalDataSourceBehavior extends Behavior {
 			'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
 			'ControllerAction.Model.edit.afterSave'	=> 'editAfterSave',
 			'ControllerAction.Model.afterAction'	=> 'afterAction',
+			'ControllerAction.Model.edit.beforeAction'  => 'editBeforeAction',
 			'ControllerAction.Model.view.beforeAction'	=> 'viewBeforeAction',
 			'ControllerAction.Model.index.beforeAction'	=> ['callable' => 'indexBeforeAction', 'priority' => 100],
 		];
@@ -36,7 +37,7 @@ class ExternalDataSourceBehavior extends Behavior {
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($this->_table->action == 'view') {
-			$key = isset($this->_table->request->pass[0]) ? $this->_table->request->pass[0] : null;
+			$key = $this->_table->id;
 			if (!empty($key)) {
 				$configItem = $this->_table->get($key);
 				if ($configItem->type == 'External Data Source' && $configItem->code == 'external_data_source_type') {
@@ -48,12 +49,18 @@ class ExternalDataSourceBehavior extends Behavior {
 		}
 	}
 
+    public function editBeforeAction(Event $event, ArrayObject $extra) {
+        if (isset($extra['toolbarButtons']['list'])) {
+           unset($extra['toolbarButtons']['list']);
+        }
+    }
+
 	public function indexBeforeAction(Event $event) {
 		if ($this->_table->request->query['type_value'] == 'External Data Source') {
-			$urlParams = $this->_table->ControllerAction->url('view');
+			$urlParams = $this->_table->url('view');
 			$externalDataSourceId = $this->_table->find()
 				->where([
-					$this->_table->aliasField('type') => 'External Data Source', 
+					$this->_table->aliasField('type') => 'External Data Source',
 					$this->_table->aliasField('code') => 'external_data_source_type'])
 				->first()
 				->id;
@@ -67,7 +74,7 @@ class ExternalDataSourceBehavior extends Behavior {
 
 	public function beforeAction(Event $event) {
 		if ($this->_table->action == 'view' || $this->_table->action == 'edit') {
-			$key = isset($this->_table->request->pass[0]) ? $this->_table->request->pass[0] : null;
+			$key = $this->_table->id;
 			if (!empty($key)) {
 				$configItem = $this->_table->get($key);
 				if ($configItem->type == 'External Data Source' && $configItem->code == 'external_data_source_type') {
@@ -78,7 +85,7 @@ class ExternalDataSourceBehavior extends Behavior {
 						$this->_table->request->data[$this->alias]['value'] = $value;
 					}
 					if ($value != 'None') {
-						$this->_table->ControllerAction->field('custom_data_source', ['type' => 'external_data_source_type', 'valueClass' => 'table-full-width', 'visible' => [ 'edit' => true, 'view' => true ]]);
+						$this->_table->field('custom_data_source', ['type' => 'external_data_source_type', 'valueClass' => 'table-full-width', 'visible' => [ 'edit' => true, 'view' => true ]]);
 					}
 				}
 			}
@@ -87,26 +94,29 @@ class ExternalDataSourceBehavior extends Behavior {
 
 	public function afterAction(Event $event) {
 		if ($this->_table->action == 'view' || $this->_table->action == 'edit') {
-			$key = isset($this->_table->request->pass[0]) ? $this->_table->request->pass[0] : null;
+			$key = $this->_table->id;
 			if (!empty($key)) {
 				$configItem = $this->_table->get($key);
 				if ($configItem->type == 'External Data Source' && $configItem->code == 'external_data_source_type') {
-					$this->_table->ControllerAction->field('default_value', ['visible' => false]);
+					$this->_table->field('default_value', ['visible' => false]);
 					$value = $this->_table->request->data[$this->alias]['value'];
 					if ($value != 'None') {
-						$this->_table->ControllerAction->setFieldOrder(['type', 'label', 'value', 'custom_data_source']);
+						$this->_table->setFieldOrder(['type', 'label', 'value', 'custom_data_source']);
 					}
 				}
 			} else {
 				if ($this->_table->action == 'view') {
-					$urlParams = $this->_table->ControllerAction->url('index');
+					$urlParams = $this->_table->url('index');
 					$this->_table->controller->redirect($urlParams);
 				}
 			}
 		}
 	}
 
-	public function viewBeforeAction(Event $event) {
+	public function viewBeforeAction(Event $event, ArrayObject $extra) {
+		if (isset($extra['toolbarButtons']['back'])) {
+           unset($extra['toolbarButtons']['back']);
+        }
 		if (isset($this->_table->request->query['type_value']) && $this->_table->request->query['type_value'] == 'External Data Source') {
 			$this->_table->buildSystemConfigFilters();
 		}
@@ -133,7 +143,7 @@ class ExternalDataSourceBehavior extends Behavior {
 	}
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$ExternalDataSourceAttributesTable = TableRegistry::get('ExternalDataSourceAttributes');
+		$ExternalDataSourceAttributesTable = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
 		if ($data[$this->alias]['value'] != 'None' && $data[$this->alias]['type'] == 'External Data Source') {
 			$externalDataSourceType = $data[$this->alias]['value'];
 			$ExternalDataSourceAttributesTable->deleteAll(
@@ -161,7 +171,7 @@ class ExternalDataSourceBehavior extends Behavior {
 	public function openemisIdentitiesExternalSource(&$attribute)
 	{
 		$attribute['authentication_uri'] = ['label' => 'Authentication URI', 'type' => 'text'];
-		$attribute['refresh_token'] = ['label' => 'Refresh Token', 'type' => 'text'];
+		$attribute['refresh_token'] = ['label' => 'Refresh Token', 'type' => 'textarea'];
 		$attribute['client_id'] = ['label' => 'Client ID', 'type' => 'text'];
 		$attribute['client_secret'] = ['label' => 'Client Secret', 'type' => 'text'];
 		// $attribute['redirect_uri'] = ['label' => 'Redirect URI', 'type' => 'text', 'readonly' => true];
@@ -169,16 +179,9 @@ class ExternalDataSourceBehavior extends Behavior {
 		$attribute['user_record_uri'] = ['label' => 'User Record URI', 'type' => 'text'];
 	}
 
-	// public function openemisIdentitiesModifyValue($key, $attributeValue) {
-	// 	if ($key == 'redirect_uri') {
-	// 		return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'],true);
-	// 	}
-	// 	return false;
-	// }
-
 	public function onGetExternalDataSourceTypeElement(Event $event, $action, $entity, $attr, $options=[]) {
 		switch ($action){
-			case "view":			
+			case "view":
 				$externalDataSourceType = $this->_table->request->data[$this->alias]['value'];
 				$attribute = [];
 				$methodName = lcfirst(Inflector::camelize($externalDataSourceType, ' ')).'ExternalSource';
