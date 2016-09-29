@@ -15,15 +15,8 @@ class SearchBehavior extends Behavior {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction', 'priority' => 5];
 		$events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 11];
-		$events['ControllerAction.Model.onGetFormButtons'] = ['callable' => 'onGetFormButtons', 'priority' => 5];
 		$events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
 		return $events;
-	}
-
-	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
-		if ($this->_table->action == 'index') {
-			$buttons->exchangeArray([]);
-		}
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra) {
