@@ -46,11 +46,7 @@ class PositionsTable extends ControllerActionTable {
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
-		$query->contain([
-			'Institutions',
-			'InstitutionPositions',
-			'StaffStatuses'
-		], true);
+		$extra['auto_contain_fields'] = ['Institutions' => ['code']];
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
