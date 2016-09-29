@@ -355,6 +355,16 @@ class InstitutionsTable extends AppTable  {
 		if (strtolower($this->action) != 'index') {
 			$this->Navigation->addCrumb($this->getHeader($this->action));
 		}
+
+		if ($this->action == 'view' || $this->action == 'edit') {
+			// Moved to InstitutionContacts
+			$this->ControllerAction->field('contact_section', ['visible' => false]);
+			$this->ControllerAction->field('contact_person', ['visible' => false]);
+	        $this->ControllerAction->field('telephone', ['visible' => false]);
+	        $this->ControllerAction->field('fax', ['visible' => false]);
+	        $this->ControllerAction->field('email', ['visible' => false]);
+	        $this->ControllerAction->field('website', ['visible' => false]);
+		}
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
@@ -583,12 +593,8 @@ class InstitutionsTable extends AppTable  {
 			'area_administrative_section',
 			'area_administrative_id',
 
-			'contact_section',
-			'contact_person', 'telephone', 'fax', 'email', 'website',
-
 			'map_section',
 			'map',
-
 		]);
 	}
 
@@ -598,7 +604,7 @@ class InstitutionsTable extends AppTable  {
 **
 ******************************************************************************************************************/
 
-	public function addEditBeforeAction(Event $event) {
+	public function addBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
 			'name', 'alternative_name', 'code', 'is_academic', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
@@ -615,6 +621,23 @@ class InstitutionsTable extends AppTable  {
 
 			'contact_section',
 			'contact_person', 'telephone', 'fax', 'email', 'website',
+		]);
+	}
+
+		public function editBeforeAction(Event $event) {
+		$this->ControllerAction->setFieldOrder([
+			'information_section',
+			'name', 'alternative_name', 'code', 'institution_sector_id', 'institution_provider_id',  'institution_type_id',
+			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
+
+			'location_section',
+			'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
+
+			'area_section',
+			'area_id',
+
+			'area_administrative_section',
+			'area_administrative_id',
 		]);
 	}
 
