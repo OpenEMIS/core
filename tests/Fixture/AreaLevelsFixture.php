@@ -12,9 +12,9 @@ class AreaLevelsFixture extends TestFixture
             'name' => 'Country',
             'level' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '0',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '2',
@@ -23,7 +23,7 @@ class AreaLevelsFixture extends TestFixture
             'modified_user_id' => '2',
             'modified' => '2016-04-27 08:35:34',
             'created_user_id' => '0',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ],
         [
             'id' => '3',
