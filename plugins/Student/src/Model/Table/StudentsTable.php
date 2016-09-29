@@ -63,6 +63,9 @@ class StudentsTable extends AppTable {
 				'_function' => 'getNumberOfStudentsByGender'
 			]
 		]);
+
+		$this->hasMany('InstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'student_id']);
+
         $this->addBehavior('Import.ImportLink');
 
 		$this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
@@ -425,6 +428,7 @@ class StudentsTable extends AppTable {
         $openemisNo = (array_key_exists('openemis_no', $options))? $options['openemis_no']: null;
         $identityNumber = (array_key_exists('identity_number', $options))? $options['identity_number']: null;
         $dateOfBirth = (array_key_exists('date_of_birth', $options))? $options['date_of_birth']: null;
+        $institutionId = (array_key_exists('institution_id', $options))? $options['institution_id']: null;
 
         $conditions = [];
         if (!empty($firstName)) $conditions['first_name LIKE'] = '%' . $firstName . '%';
@@ -449,22 +453,30 @@ class StudentsTable extends AppTable {
             ]
         ]);
 
-        // getting only enrolled student
-        $allInstitutionStudents = $this->InstitutionStudents->find()
-            ->select([
-                $this->InstitutionStudents->aliasField('student_id')
-            ])
-            ->where([
-                $this->InstitutionStudents->aliasField('student_status_id').' = 1',
-                $this->InstitutionStudents->aliasField('student_id').' = '.$this->aliasField('id')
-            ])
-            ->bufferResults(false);
-        $query->where(['NOT EXISTS ('.$allInstitutionStudents->sql().')']);
+        // Filter to exclude students from that existing institution from the list
+        $query->leftJoinWith('InstitutionStudents', function($q) use ($institutionId) {
+        	return $q->where([
+        		'InstitutionStudents.institution_id' => $institutionId,
+        		'InstitutionStudents.student_status_id' => 1
+        	]);
+        })
+        ->where(['InstitutionStudents.id IS NULL'])
+        ->group([$this->aliasField('id')]);
 
         if (!empty($conditions)) $query->where($conditions);
         if (!is_null($limit)) $query->limit($limit);
         if (!is_null($page)) $query->page($page);
 
         return $query;
+    }
+
+    public function findEnrolledInstitutionStudents(Query $query, array $options = []) {
+    	$query->contain([
+    		'InstitutionStudents' => function($q) {
+    			return $q->where(['InstitutionStudents.student_status_id' => 1]);
+    		},
+    		'InstitutionStudents.Institutions'
+    	]);
+    	return $query;
     }
 }

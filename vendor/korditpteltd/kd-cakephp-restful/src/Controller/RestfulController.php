@@ -192,6 +192,22 @@ class RestfulController extends AppController
             $columns = $table->schema()->columns();
 
             foreach ($value as $field => $val) {
+
+                $compareLike = false;
+                if ($this->startsWith($val, '_')) {
+                    $val = '%' . substr($val, 1);
+                    $compareLike = true;
+                }
+
+                if ($this->endsWith($val, '_')) {
+                    $val = substr($val, 0, strlen($val)-1) . '%';
+                    $compareLike = true;
+                }
+
+                if ($compareLike) {
+                    $field .= ' LIKE';
+                }
+
                 if (in_array($field, $columns)) {
                     $conditions[$table->aliasField($field)] = $val;
                 } else {
