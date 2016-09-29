@@ -24,6 +24,10 @@ class ProgrammesTable extends AppTable {
 		return $entity->education_grade->programme_grade_name;
 	}
 
+	public function onGetInstitutionId(Event $event, Entity $entity) {
+		return $entity->institution->code_name;
+	}
+
 	public function indexBeforeAction(Event $event) {
 		$this->fields['student_id']['visible'] = 'false';
 		$this->fields['academic_period_id']['visible'] = 'false';
