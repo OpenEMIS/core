@@ -36,14 +36,6 @@ class StudentUserTable extends UserTable {
 		return $validator;
 	}
 
-	public function findGetOpenEmisId(Query $query, array $options = []){
-		if (!isset($options['model'])) {
-			$options['model'] = 'Student';
-		}
-		$openemisId = $this->getUniqueOpenemisId($options);
-		$query->select(['openemis' => "CONCAT('', '".$openemisId."')"])->limit(1)->first();
-	}
-
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$sessionKey = 'Institution.Students.new';
 		if ($this->Session->check($sessionKey)) {
@@ -129,9 +121,9 @@ class StudentUserTable extends UserTable {
 					$AdmissionTable->log($admissionEntity->errors(), 'debug');
 					$this->Alert->error('general.add.failed');
 				}
-			} 
+			}
 
-			
+
 			$this->Session->delete($sessionKey);
 		}
 		$event->stopPropagation();
@@ -231,7 +223,7 @@ class StudentUserTable extends UserTable {
 					$transferRequest->id
 				];
 				$toolbarButtons['transfer'] = $transferButton;
-			} 
+			}
 			else if ($checkIfCanTransfer) {
 				$transferButton['url'] = [
 					'plugin' => $buttons['back']['url']['plugin'],
@@ -240,7 +232,7 @@ class StudentUserTable extends UserTable {
 					'add'
 				];
 				$toolbarButtons['transfer'] = $transferButton;
-			} 
+			}
 		}
     }
 
@@ -258,10 +250,10 @@ class StudentUserTable extends UserTable {
 				$DropoutRequests = TableRegistry::get('Institution.DropoutRequests');
 				$session->write($DropoutRequests->registryAlias().'.id', $id);
 				$NEW = 0;
-				
+
 				$selectedStudent = $DropoutRequests->find()
 					->select(['institution_student_dropout_id' => 'id'])
-					->where([$DropoutRequests->aliasField('student_id') => $studentData->student_id, 
+					->where([$DropoutRequests->aliasField('student_id') => $studentData->student_id,
 							$DropoutRequests->aliasField('institution_id') => $studentData->institution_id,
 							$DropoutRequests->aliasField('education_grade_id') => $studentData->education_grade_id,
 							$DropoutRequests->aliasField('status') => $NEW
@@ -284,7 +276,7 @@ class StudentUserTable extends UserTable {
 							'action' => 'DropoutRequests',
 							'add'
 						];
-				} 
+				}
 				// If the application is not new
 				else {
 					$dropoutButton['url'] = [
@@ -327,7 +319,7 @@ class StudentUserTable extends UserTable {
 
 			if (!empty($id)) {
 				$this->Session->write('Institution.Students.id', $id);
-			} 
+			}
 
 			$id = $this->Session->read('Institution.Students.id');
 			$StudentTable = TableRegistry::get('Institution.Students');
@@ -349,7 +341,7 @@ class StudentUserTable extends UserTable {
 				}
 			}
 			// End POCOR-3010
-			
+
 			$session = $this->request->session();
 			$this->addTransferButton($buttons, $toolbarButtons, $attr, $session);
 			$this->addDropoutButton($buttons, $toolbarButtons, $attr, $session);
@@ -380,7 +372,7 @@ class StudentUserTable extends UserTable {
 			$event = $this->controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
 			$roles = [];
             if (is_array($event->result)) {
-                $roles = $event->result;    
+                $roles = $event->result;
             }
 			if (!$this->AccessControl->check(['Institutions', 'AllClasses', $permission], $roles)) {
 				$Class = TableRegistry::get('Institution.InstitutionClasses');
@@ -400,21 +392,21 @@ class StudentUserTable extends UserTable {
 			} else {
 				$permission = true;
 			}
-			
+
 		} else {
 			$permission = true;
 		}
 		return $permission;
 	}
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
         $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
-        
-        foreach ($fields as $key => $field) { 
+
+        foreach ($fields as $key => $field) {
             //get the value from the table, but change the label to become default identity type.
-            if ($field['field'] == 'identity_number') { 
+            if ($field['field'] == 'identity_number') {
                 $fields[$key] = [
                     'key' => 'StudentUser.identity_number',
                     'field' => 'identity_number',
