@@ -33,11 +33,6 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
     StudentController.internalFilterLastName;
     StudentController.internalFilterIdentityNumber;
     StudentController.internalFilterDateOfBirth;
-    StudentController.externalFilterOpenemisNo;
-    StudentController.externalFilterFirstName;
-    StudentController.externalFilterLastName;
-    StudentController.externalFilterIdentityNumber;
-    StudentController.externalFilterDateOfBirth;
 
     // Controller functions
     StudentController.processStudentRecord = processStudentRecord;
@@ -58,20 +53,22 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
     StudentController.onAddNewStudentClick = onAddNewStudentClick;
     StudentController.onAddStudentClick = onAddStudentClick;
     StudentController.getUniqueOpenEmisId = getUniqueOpenEmisId;
+    StudentController.reloadInternalDatasource = reloadInternalDatasource;
+    StudentController.reloadExternalDatasource = reloadExternalDatasource;
+    StudentController.clearInternalSearchFilters = clearInternalSearchFilters;
+    StudentController.initialLoad = true;
+    $scope.endDate;
 
     StudentController.selectedStudent;
     StudentController.addStudentButton = false;
     StudentController.selectedStudentData = null;
     StudentController.startDate = '';
-    $scope.endDate;
     StudentController.endDateFormatted;
-
     StudentController.defaultIdentityTypeName;
-
     StudentController.postResponse;
 
-    // UI control vars
-    StudentController.initialLoad = true;
+
+
 
 
     angular.element(document).ready(function () {
@@ -147,7 +144,7 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
             rowHeight: 38,
             rowModelType: 'pagination',
             onGridReady: function() {
-                $scope.reloadInternalDatasource(false);
+                StudentController.reloadInternalDatasource(false);
                 UtilsSvc.isAppendLoader(false);
             },
             angularCompileRows: true
@@ -186,7 +183,7 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
         };
     };
 
-    $scope.reloadInternalDatasource = function (withData) {
+    function reloadInternalDatasource(withData) {
         if (withData !== false) {
            StudentController.showExternalSearchButton = true;
         }
@@ -194,28 +191,19 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
         StudentController.createNewInternalDatasource(StudentController.internalGridOptions, withData);
     };
 
-    $scope.reloadExternalDatasource = function (withData) {
+    function reloadExternalDatasource(withData) {
         InstitutionsStudentsSvc.resetExternalVariable();
         StudentController.createNewExternalDatasource(StudentController.externalGridOptions, withData);
     };
 
-    $scope.clearInternalSearchFilters = function () {
+    function clearInternalSearchFilters() {
         StudentController.internalFilterOpenemisNo = '';
         StudentController.internalFilterFirstName = '';
         StudentController.internalFilterLastName = '';
         StudentController.internalFilterIdentityNumber = '';
         StudentController.internalFilterDateOfBirth = '';
         StudentController.createNewInternalDatasource(StudentController.internalGridOptions);
-    };
-
-    $scope.clearExternalSearchFilters = function () {
-        StudentController.externalFilterOpenemisNo = '';
-        StudentController.externalFilterFirstName = '';
-        StudentController.externalFilterLastName = '';
-        StudentController.externalFilterIdentityNumber = '';
-        StudentController.externalFilterDateOfBirth = '';
-        StudentController.createNewExternalDatasource(StudentController.externalGridOptions);
-    };
+    }
 
     $scope.$watch('endDate', function (newValue) {
         StudentController.endDateFormatted = $filter('date')(newValue, 'dd-MM-yyyy');
@@ -398,6 +386,10 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
     }
 
     function onAddStudentClick() {
+        if (StudentController.selectedStudentData.hasOwnProperty('date_of_birth')) {
+            var dob = StudentController.selectedStudentData.date_of_birth.split('-');
+            StudentController.selectedStudentData.date_of_birth = dob[2] + '-' + dob[1] + '-' + dob[0];
+        }
         angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
             step: "addStudent"
         });
@@ -537,7 +529,6 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
             InstitutionsStudentsSvc.getStudentData(StudentController.selectedStudent)
             .then(function(studentData){
                 if (StudentController.externalSearch) {
-                    console.log('here add');
                     StudentController.addStudentUser(studentData, academicPeriodId, educationGradeId, classId, startDate, endDate);
                 } else {
                     var studentId = StudentController.selectedStudent;
@@ -595,7 +586,6 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
                 StudentController.insertStudentData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate, user[1]);
             } else {
                 StudentController.postResponse = user[0];
-                console.log(user[0]);
                 AlertSvc.error($scope, 'The record is not added due to errors encountered.');
             }
         }, function(error){
@@ -615,7 +605,6 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
         }
         // To go to add student page if there is a student selected from the internal search
         // or external search
-        console.log(data);
         if (data.step == 3 && data.direction == 'next') {
             if (StudentController.validateNewUser()) {
                 evt.preventDefault();
@@ -673,32 +662,31 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
     });
 
     angular.element(document.querySelector('#wizard')).on('changed.fu.wizard', function(evt, data) {
-
-        // Step 1 - Internal search
-
-        // Step 2 - External search
-
-        // Step 3 - Create user
-
-        // Step 4 - Add Student
         StudentController.addStudentButton = false;
+        // Step 1 - Internal search
         if (data.step == 1) {
-            $scope.reloadInternalDatasource(false);
+            StudentController.reloadInternalDatasource(false);
             StudentController.createNewStudent = false;
             StudentController.externalSearch = false;
             StudentController.step = 'internal_search';
-        } else if (data.step == 2) {
-            $scope.reloadExternalDatasource(true);
+        }
+        // Step 2 - External search
+        else if (data.step == 2) {
+            StudentController.reloadExternalDatasource(true);
             StudentController.createNewStudent = false;
             StudentController.externalSearch = true;
             StudentController.step = 'external_search';
-        } else if (data.step == 3) {
+        }
+        // Step 3 - Create user
+        else if (data.step == 3) {
             StudentController.externalSearch = false;
             StudentController.createNewStudent = true;
             StudentController.step = 'create_user';
             StudentController.getUniqueOpenEmisId();
             InstitutionsStudentsSvc.resetExternalVariable();
-        } else {
+        }
+        // Step 4 - Add Student
+        else {
             studentData = StudentController.selectedStudentData;
             StudentController.completeDisabled = false;
             if (studentData.hasOwnProperty('institution_students')) {
@@ -710,20 +698,6 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
             }
             StudentController.step = 'add_student';
         }
-
-        // if (data.step == 2) {
-        // } else if (data.step == 1) {
-
-        // } else if (data.step == 3 && StudentController.hasExternalDataSource) {
-
-        // } else if (data.step == 2 && !StudentController.hasExternalDataSource) {
-        //     StudentController.externalSearch = false;
-        //     InstitutionsStudentsSvc.resetExternalVariable();
-        //     StudentController.selectedStudent = true;
-        //     StudentController.step = 'create_user';
-        // } else {
-
-        // }
     });
 
 
