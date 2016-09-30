@@ -730,6 +730,23 @@ trait MessagesTrait {
                     'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
                 ],
             ],
+            'StudentAdmission' => [
+                'student_name' => [
+                    'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
+                        'inTargetSchool' => 'Student is already enrolled in this school.',
+                        'inAnotherSchool' => 'Student is already enrolled in another school.',
+                    ],
+                    'ruleStudentNotCompletedGrade' => 'Student has already completed the selected grade.',
+                    'ruleCheckAdmissionAgeWithEducationCycleGrade' => 'This student does not fall within the allowed age range for this grade',
+                    'ageHint' => 'The student should be %s years old',
+                    'ageRangeHint' => 'The student should be between %s to %s years old',
+                    'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.',
+                    'ruleCheckPendingAdmissionExist' => 'Student has already been added to admission list'
+                ],
+                'class' => [
+                    'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
+                ],
+            ],
             'InstitutionFeeTypes' => [
                 'amount' => [
                     'ruleMaxLength' => 'Amount entered exceeds system limit'

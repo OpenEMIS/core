@@ -277,7 +277,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                             ng-model="InstitutionStudentController.educationGradeOptions.selectedOption"
                             ng-change="InstitutionStudentController.onChangeEducationGrade()"
                             >
-                            <option value="" >-- Select --</option>
+                            <option value="" >-- <?= __('Select') ?> --</option>
                         </select>
                     </div>
                     <div ng-if="InstitutionStudentController.postResponse.error.education_grade_id" class="error-message">
@@ -292,18 +292,18 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                             ng-model="InstitutionStudentController.classOptions.selectedOption"
                             ng-change="InstitutionStudentController.onChangeClass()"
                             >
-                            <option value="" >-- No Class Assignment --</option>
+                            <option value="" >-- <?= __('No Class Assignment') ?> --</option>
                         </select>
                     </div>
                 </div>
                 <div class="input string" ng-show="!InstitutionStudentController.completeDisabled">
                     <label>Student Status</label>
-                    <input type="string" value="Enrolled" disabled="disabled">
+                    <input type="string" value="<?= __('Pending Admission') ?>" disabled="disabled">
                 </div>
 
 
                 <div class="input date required" ng-show="!InstitutionStudentController.completeDisabled">
-                    <label for="Students_start_date">Start Date</label>
+                    <label for="Students_start_date"><?= __('Start Date') ?></label>
                     <div class="input-group date " id="Students_start_date" style="">
                         <input type="text" class="form-control " name="Students[start_date]" ng-model="InstitutionStudentController.startDate">
                         <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
@@ -315,7 +315,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
 
 
                 <div class="input text required" ng-show="!InstitutionStudentController.completeDisabled">
-                    <label for="students-end-date">End Date</label>
+                    <label for="students-end-date"><?= __('End Date') ?></label>
                     <input ng-model="InstitutionStudentController.endDateFormatted" type="text" disabled="disabled">
                 </div>
                 <div class="input string" ng-show="InstitutionStudentController.completeDisabled">
