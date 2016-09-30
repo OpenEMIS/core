@@ -5,6 +5,7 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\Controller\Component;
 use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
@@ -17,7 +18,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 	private $workflowEvents = [
  		[
  			'value' => 'Workflow.onApprove',
-			'text' => 'Approval of Changes to Staff Position Profiles',
+			'text' => 'Approval of Change in Assignment',
 			'description' => 'Performing this action will apply the proposed changes to the staff record.',
  			'method' => 'OnApprove'
  		]
@@ -58,6 +59,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		$events['Workflow.getEvents'] = 'getWorkflowEvents';
 		$events['Workflow.beforeTransition'] = 'workflowBeforeTransition';
 		$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
+		$events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
 		foreach($this->workflowEvents as $event) {
 			$events[$event['value']] = $event['method'];
 		}
@@ -153,6 +155,16 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 
 	private function getStyling($oldValue, $newValue) {
 		return '<span class="status past">'.$oldValue.'</span> <span class="transition-arrow"></span> <span class="status highlight">'.$newValue.'</span>';
+	}
+
+	public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona) {
+			$url = [];
+
+			if ($this->action != 'index') {
+				$url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $this->alias];
+			}
+
+			$Navigation->substituteCrumb('Staff Position Profiles', 'Change in Assignment', $url);
 	}
 
 	public function onGetFTE(Event $event, Entity $entity) {
