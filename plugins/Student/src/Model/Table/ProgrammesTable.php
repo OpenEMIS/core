@@ -55,7 +55,7 @@ class ProgrammesTable extends ControllerActionTable
 	{
 		$session = $this->request->session();
 		$studentId = $session->read('Student.Students.id');
-        $query->where([$this->aliasField('student_id') => $studentId], [], true);
+        $query->where([$this->aliasField('student_id') => $studentId]);
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
 	}
 
