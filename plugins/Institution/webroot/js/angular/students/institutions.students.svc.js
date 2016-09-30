@@ -34,7 +34,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
         getAccessToken: getAccessToken,
         resetExternalVariable: resetExternalVariable,
         getGenders: getGenders,
-        getOpenEmisId: getOpenEmisId,
         getUniqueOpenEmisId: getUniqueOpenEmisId,
         formatDateToYMD: formatDateToYMD
     };
@@ -364,14 +363,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
     {
         return IdentityTypes.select().ajax({defer:true});
     };
-
-    function getOpenEmisId()
-    {
-        return StudentUser
-                .select()
-                .find('GetOpenEmisId')
-                .ajax({defer: true});
-    }
 
     function addUser(userRecord)
     {
