@@ -15,6 +15,7 @@ return array(
     'Symfony\\Component\\Filesystem\\' => array($vendorDir . '/symfony/filesystem'),
     'Symfony\\Component\\Console\\' => array($vendorDir . '/symfony/console'),
     'Symfony\\Component\\Config\\' => array($vendorDir . '/symfony/config'),
+    'SSO\\' => array($vendorDir . '/korditpteltd/kd-cakephp-sso/src'),
     'Restful\\Test\\Fixture\\' => array($vendorDir . '/korditpteltd/kd-cakephp-restful/tests/Fixture'),
     'Restful\\' => array($vendorDir . '/korditpteltd/kd-cakephp-restful/src'),
     'Psy\\' => array($vendorDir . '/psy/psysh/src/Psy'),
