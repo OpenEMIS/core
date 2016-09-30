@@ -79,31 +79,31 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 </div>
                 <div class="text">
                     <label><?= __('OpenEMIS ID')?></label>
-                    <input ng-model="InstitutionStudentController.internalFilterOpenemisNo" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
+                    <input ng-model="InstitutionStudentController.internalFilterOpenemisNo" ng-keyup="$event.keyCode == 13 ? InstitutionStudentController.reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
                     <label><?= __('First Name') ?></label>
-                    <input ng-model="InstitutionStudentController.internalFilterFirstName" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
+                    <input ng-model="InstitutionStudentController.internalFilterFirstName" ng-keyup="$event.keyCode == 13 ? InstitutionStudentController.reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
                     <label><?= __('Last Name') ?></label>
-                    <input ng-model="InstitutionStudentController.internalFilterLastName" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
+                    <input ng-model="InstitutionStudentController.internalFilterLastName" ng-keyup="$event.keyCode == 13 ? InstitutionStudentController.reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
                     <label><?= __('{{ InstitutionStudentController.defaultIdentityTypeName }}') ?></label>
-                    <input ng-model="InstitutionStudentController.internalFilterIdentityNumber" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
+                    <input ng-model="InstitutionStudentController.internalFilterIdentityNumber" ng-keyup="$event.keyCode == 13 ? InstitutionStudentController.reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
                     <label for="Students_date_of_birth"><?= __('Date of Birth') ?></label>
                     <div class="input-group date " id="Students_date_of_birth" style="">
-                        <input type="text" class="form-control " name="Students[date_of_birth]" ng-model="InstitutionStudentController.internalFilterDateOfBirth" ng-keyup="$event.keyCode == 13 ? reloadInternalDatasource(true) : null">
+                        <input type="text" class="form-control " name="Students[date_of_birth]" ng-model="InstitutionStudentController.internalFilterDateOfBirth" ng-keyup="$event.keyCode == 13 ? InstitutionStudentController.reloadInternalDatasource(true) : null">
                         <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
                     </div>
                 </div>
 
                 <div class="search-action-btn margin-top-10 margin-bottom-10">
-                    <button class="btn btn-default btn-xs" ng-click="reloadInternalDatasource(true)">Filter</button>
-                    <button class="btn btn-outline btn-xs" ng-click="clearInternalSearchFilters()" type="reset" value="Clear">Clear</button>
+                    <button class="btn btn-default btn-xs" ng-click="InstitutionStudentController.reloadInternalDatasource(true)">Filter</button>
+                    <button class="btn btn-outline btn-xs" ng-click="InstitutionStudentController.clearInternalSearchFilters()" type="reset" value="Clear">Clear</button>
                 </div>
             </div>
 
