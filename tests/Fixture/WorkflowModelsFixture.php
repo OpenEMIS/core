@@ -13,14 +13,14 @@ class WorkflowModelsFixture extends TestFixture
             'model' => 'Staff.Leaves',
             'filter' => 'Staff.StaffLeaveTypes',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ], [
             'id' => '2',
             'name' => 'Institutions > Survey > Forms',
             'model' => 'Institution.InstitutionSurveys',
             'filter' => 'Survey.SurveyForms',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ], [
             'id' => '3',
             'name' => 'Administration > Training > Courses',
