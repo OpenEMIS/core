@@ -40,7 +40,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
 
     var models = {
         Genders: 'User.Genders',
-        StudentRecords: 'Institution.Students',
+        StudentRecords: 'Institution.StudentAdmission',
         Students: 'Student.Students',
         StudentUser: 'Institution.StudentUser',
         StudentStatuses: 'Student.StudentStatuses',
