@@ -58,13 +58,6 @@ class SearchBehavior extends Behavior {
 		$model = $this->_table;
 		$search = $extra['config']['search'];
 
-		if ($extra['auto_contain']) {
-			$contain = $model->getContains('belongsTo', $extra);
-			if (!empty($contain)) {
-				$query->contain($contain);
-			}
-		}
-
 		$schema = $model->schema();
 		$columns = $schema->columns();
 		if ($extra['auto_search']) {
