@@ -206,7 +206,7 @@ class AppTable extends Table {
 	 * @return [type]             [description]
 	 */
 	public function formatDate($dateObject) {
-		$ConfigItem = TableRegistry::get('ConfigItems');
+		$ConfigItem = TableRegistry::get('Configuration.ConfigItems');
 		$format = $ConfigItem->value('date_format');
         $value = '';
         if (is_object($dateObject)) {
@@ -226,7 +226,7 @@ class AppTable extends Table {
 	 * @return [type]             [description]
 	 */
 	public function formatTime($timeObject) {
-		$ConfigItem = TableRegistry::get('ConfigItems');
+		$ConfigItem = TableRegistry::get('Configuration.ConfigItems');
 		$format = $ConfigItem->value('time_format');
 		$value = '';
         if (is_object($timeObject)) {
@@ -246,7 +246,7 @@ class AppTable extends Table {
 	 * @return [type]             [description]
 	 */
 	public function formatDateTime($dateObject) {
-		$ConfigItem = TableRegistry::get('ConfigItems');
+		$ConfigItem = TableRegistry::get('Configuration.ConfigItems');
 		$format = $ConfigItem->value('date_format') . ' - ' . $ConfigItem->value('time_format');
 		$value = '';
         if (is_object($dateObject)) {
@@ -282,7 +282,7 @@ class AppTable extends Table {
 	}
 
 	// Event: 'ControllerAction.Model.onInitializeButtons'
-	public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel) {
+	public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel, ArrayObject $extra) {
 		// needs clean up
 		$controller = $event->subject()->_registry->getController();
 		$access = $controller->AccessControl;
@@ -354,21 +354,23 @@ class AppTable extends Table {
 
 			// delete button
 			// disabled for now until better solution
-			// if ($buttons->offsetExists('remove')) {
-			// 	$toolbarButtons['remove'] = $buttons['remove'];
-			// 	$toolbarButtons['remove']['type'] = 'button';
-			// 	$toolbarButtons['remove']['label'] = '<i class="fa fa-trash"></i>';
-			// 	$toolbarButtons['remove']['attr'] = $toolbarAttr;
-			// 	$toolbarButtons['remove']['attr']['title'] = __('Delete');
+			if ($buttons->offsetExists('remove') && $buttons['remove']['strategy'] != 'transfer' && $access->check($buttons['remove']['url'], $roles)) {
+				$toolbarButtons['remove'] = $buttons['remove'];
+				$toolbarButtons['remove']['type'] = 'button';
+				$toolbarButtons['remove']['label'] = '<i class="fa fa-trash"></i>';
+				$toolbarButtons['remove']['attr'] = $toolbarAttr;
+				$toolbarButtons['remove']['attr']['title'] = __('Delete');
 
-			// 	if (array_key_exists('removeStraightAway', $buttons['remove']) && $buttons['remove']['removeStraightAway']) {
-			// 		$toolbarButtons['remove']['attr']['data-toggle'] = 'modal';
-			// 		$toolbarButtons['remove']['attr']['data-target'] = '#delete-modal';
-			// 		$toolbarButtons['remove']['attr']['field-target'] = '#recordId';
-			// 		// $toolbarButtons['remove']['attr']['field-value'] = $id;
-			// 		$toolbarButtons['remove']['attr']['onclick'] = 'ControllerAction.fieldMapping(this)';
-			// 	}
-			// }
+				if ($buttons['remove']['strategy'] != 'restrict') {
+                    $toolbarButtons['remove']['attr']['data-toggle'] = 'modal';
+                    $toolbarButtons['remove']['attr']['data-target'] = '#delete-modal';
+                    $toolbarButtons['remove']['attr']['field-target'] = '#recordId';
+                    $toolbarButtons['remove']['attr']['onclick'] = 'ControllerAction.fieldMapping(this)';
+                    if ($extra->offsetExists('primaryKeyValue')) {
+                    	$toolbarButtons['remove']['attr']['field-value'] = $extra['primaryKeyValue'];
+                    }
+                }
+			}
 		}
 
 		if ($buttons->offsetExists('view') && $access->check($buttons['view']['url'], $roles)) {
@@ -504,5 +506,12 @@ class AppTable extends Table {
     {
         // search backwards starting from haystack length characters from the end
         return $needle === "" || strrpos($haystack, $needle, -strlen($haystack)) !== false;
+    }
+
+    public function dispatchEventToModels($eventKey, $params, $subject, $listeners)
+    {
+    	foreach ($listeners as $listener) {
+    		$listener->dispatchEvent($eventKey, $params, $subject);
+    	}
     }
 }
