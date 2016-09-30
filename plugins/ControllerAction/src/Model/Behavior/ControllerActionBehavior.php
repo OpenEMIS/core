@@ -84,6 +84,13 @@ class ControllerActionBehavior extends Behavior
         }
     }
 
+    public function excludeDefaultValidations($fields)
+    {
+        if (!empty($fields)) {
+            $this->config('fields.excludes', $fields);
+        }
+    }
+
     private function attachActions()
     {
         $actions = $this->config('actions');
@@ -414,15 +421,25 @@ class ControllerActionBehavior extends Behavior
         return $session->read($this->_table->registryAlias().'.search.key');
     }
 
-    public function getContains($type = 'belongsTo')
+    public function getContains($type = 'belongsTo', ArrayObject $extra)
     { // type is not being used atm
         $model = $this->_table;
         $contain = [];
+        $containFields = [];
+
+        if (array_key_exists('auto_contain_fields', $extra)) {
+            $containFields = $extra['auto_contain_fields'];
+        }
+
         foreach ($model->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // only contain belongsTo associations
+                $fields = [];
+                if (array_key_exists($assoc->name(), $containFields)) {
+                    $fields = $containFields[$assoc->name()];
+                }
                 $columns = $assoc->schema()->columns();
                 if (in_array('name', $columns)) {
-                    $fields = ['id', 'name'];
+                    $fields = array_merge($fields, ['id', 'name']);
                     foreach ($columns as $col) {
                         if ($this->endsWith($col, '_id')) {
                             $fields[] = $col;

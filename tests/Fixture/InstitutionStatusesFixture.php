@@ -19,7 +19,7 @@ class InstitutionStatusesFixture extends TestFixture
             'modified_user_id' => '2',
             'modified' => '2016-04-26 09:05:07',
             'created_user_id' => '0',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ], [
             'id' => '118',
             'name' => 'Under Construction',
@@ -45,7 +45,7 @@ class InstitutionStatusesFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2015-07-03 05:37:46',
             'created_user_id' => '0',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ], [
             'id' => '120',
             'name' => 'Closed',
@@ -58,7 +58,7 @@ class InstitutionStatusesFixture extends TestFixture
             'modified_user_id' => '1',
             'modified' => '2015-07-03 05:37:47',
             'created_user_id' => '0',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ]
     ];
 }
