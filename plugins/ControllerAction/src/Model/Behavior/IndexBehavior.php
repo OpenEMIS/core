@@ -49,7 +49,7 @@ class IndexBehavior extends Behavior {
 		$event = $model->dispatchEvent('ControllerAction.Model.index.beforeQuery', [$query, $extra], $this);
 
 		if ($extra['auto_contain']) {
-			$contain = $model->getContains();
+			$contain = $model->getContains('belongsTo', $extra);
 			if (!empty($contain)) {
 				$query->contain($contain);
 			}

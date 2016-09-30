@@ -33,7 +33,8 @@ class ProgrammesTable extends ControllerActionTable
 		return $entity->education_grade->programme_grade_name;
 	}
 
-	public function onGetInstitutionId(Event $event, Entity $entity) {
+	public function onGetInstitutionId(Event $event, Entity $entity)
+	{
 		return $entity->institution->code_name;
 	}
 
@@ -43,6 +44,7 @@ class ProgrammesTable extends ControllerActionTable
 		$this->fields['academic_period_id']['visible'] = 'false';
 		$this->fields['start_year']['visible'] = 'false';
 		$this->fields['end_year']['visible'] = 'false';
+		$this->fields['institution_id']['type'] = 'integer';
 
 		$this->setFieldOrder([
 			'institution_id', 'education_grade_id', 'start_date', 'end_date', 'student_status_id'
@@ -54,6 +56,7 @@ class ProgrammesTable extends ControllerActionTable
 		$session = $this->request->session();
 		$studentId = $session->read('Student.Students.id');
         $query->where([$this->aliasField('student_id') => $studentId]);
+        $extra['auto_contain_fields'] = ['Institutions' => ['code']];
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
