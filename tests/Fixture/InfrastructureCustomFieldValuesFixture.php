@@ -20,7 +20,7 @@ class InfrastructureCustomFieldValuesFixture extends TestFixture
             'modified_user_id' => null,
             'modified' => null,
             'created_user_id' => '0',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ]
     ];
 }
