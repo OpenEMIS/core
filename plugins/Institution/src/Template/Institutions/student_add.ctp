@@ -158,6 +158,13 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
         <div class="step-pane sample-pane" data-step="3" data-name="createUser">
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
                 <div class="input string required">
+                    <label><?= __('OpenEMIS ID') ?></label>
+                    <input ng-model="InstitutionStudentController.selectedStudentData.openemis_no" type="string" ng-disabled="true">
+                    <div ng-if="InstitutionStudentController.postResponse.error.openemis_no" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.openemis_no">{{ error }}</p>
+                    </div>
+                </div>
+                <div class="input string required">
                     <label>First Name</label>
                     <input ng-model="InstitutionStudentController.selectedStudentData.first_name" ng-change="InstitutionStudentController.setStudentName()" type="string" ng-init="InstitutionStudentController.selectedStudentData.first_name='';">
                     <div ng-if="InstitutionStudentController.postResponse.error.first_name" class="error-message">
@@ -213,6 +220,13 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
         </div>
         <div class="step-pane sample-pane" data-step="4" data-name="addStudent">
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post" >
+                <div class="input string required">
+                    <label><?= __('OpenEMIS ID') ?></label>
+                    <input ng-model="InstitutionStudentController.selectedStudentData.openemis_no" type="string" ng-disabled="true">
+                    <div ng-if="InstitutionStudentController.postResponse.error.openemis_no" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.openemis_no">{{ error }}</p>
+                    </div>
+                </div>
                 <div class="input string" ng-model="InstitutionStudentController.postResponse">
                     <label>Student</label>
                     <input ng-model="InstitutionStudentController.selectedStudentData.name" type="string" disabled="disabled">

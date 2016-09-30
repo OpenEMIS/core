@@ -57,6 +57,7 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
     StudentController.onExternalSearchClick = onExternalSearchClick;
     StudentController.onAddNewStudentClick = onAddNewStudentClick;
     StudentController.onAddStudentClick = onAddStudentClick;
+    StudentController.getUniqueOpenEmisId = getUniqueOpenEmisId;
 
     StudentController.selectedStudent;
     StudentController.addStudentButton = false;
@@ -536,6 +537,7 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
             InstitutionsStudentsSvc.getStudentData(StudentController.selectedStudent)
             .then(function(studentData){
                 if (StudentController.externalSearch) {
+                    console.log('here add');
                     StudentController.addStudentUser(studentData, academicPeriodId, educationGradeId, classId, startDate, endDate);
                 } else {
                     var studentId = StudentController.selectedStudent;
@@ -557,15 +559,26 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
                     dateOfBirth = dateOfBirthArr[2] + '-' + dateOfBirthArr[1] + '-' + dateOfBirthArr[0];
                     studentData.date_of_birth = dateOfBirth;
                 }
-
-                InstitutionsStudentsSvc.getOpenEmisId()
-                .then(function(openemisNo){
-                    studentData.openemis_no = openemisNo.data[0].openemis;
-                    StudentController.addStudentUser(studentData, academicPeriodId, educationGradeId, classId, startDate, endDate);
-                }, function(error){
-
-                });
-
+                delete studentData['id'];
+                delete studentData['institution_students'];
+                delete studentData['is_staff'];
+                delete studentData['is_guardian'];
+                delete studentData['address'];
+                delete studentData['postal_code'];
+                delete studentData['address_area_id'];
+                delete studentData['birthplace_area_id'];
+                delete studentData['date_of_death'];
+                delete studentData['password'];
+                studentData['super_admin'] = 0;
+                studentData['status'] = 1;
+                delete studentData['last_login'];
+                delete studentData['photo_name'];
+                delete studentData['photo_content'];
+                delete studentData['modified'];
+                delete studentData['modified_user_id'];
+                delete studentData['created'];
+                delete studentData['created_user_id'];
+                StudentController.addStudentUser(studentData, academicPeriodId, educationGradeId, classId, startDate, endDate);
             }
         }
     }
@@ -582,6 +595,7 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
                 StudentController.insertStudentData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate, user[1]);
             } else {
                 StudentController.postResponse = user[0];
+                console.log(user[0]);
                 AlertSvc.error($scope, 'The record is not added due to errors encountered.');
             }
         }, function(error){
@@ -642,6 +656,18 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
         return remain;
     }
 
+    function getUniqueOpenEmisId() {
+        UtilsSvc.isAppendLoader(true);
+        InstitutionsStudentsSvc.getUniqueOpenEmisId()
+        .then(function(response) {
+            StudentController.selectedStudentData.openemis_no = response;
+            UtilsSvc.isAppendLoader(false);
+        }, function(error) {
+            console.log(error);
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
+
     angular.element(document.querySelector('#wizard')).on('finished.fu.wizard', function(evt, data) {
         StudentController.postForm();
     });
@@ -670,11 +696,11 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
             StudentController.externalSearch = false;
             StudentController.createNewStudent = true;
             StudentController.step = 'create_user';
+            StudentController.getUniqueOpenEmisId();
             InstitutionsStudentsSvc.resetExternalVariable();
         } else {
             studentData = StudentController.selectedStudentData;
             StudentController.completeDisabled = false;
-            console.log(studentData);
             if (studentData.hasOwnProperty('institution_students')) {
                 if (studentData.institution_students.length > 0) {
                     var schoolName = studentData['institution_students'][0]['institution']['name'];
