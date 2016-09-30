@@ -35,6 +35,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
         resetExternalVariable: resetExternalVariable,
         getGenders: getGenders,
         getOpenEmisId: getOpenEmisId,
+        getUniqueOpenEmisId: getUniqueOpenEmisId,
         formatDateToYMD: formatDateToYMD
     };
 
@@ -67,7 +68,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
     };
 
     function initExternal(baseUrl) {
-        console.log(baseUrl);
         KdOrmSvc.base(baseUrl);
         KdSessionSvc.base(baseUrl);
         KdOrmSvc.init(externalModels);
@@ -378,6 +378,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
         var deferred = $q.defer();
         var vm = this;
         if (externalSource == null) {
+            userRecord['username'] = userRecord['openemis_no'];
             delete userRecord['gender'];
             userRecord['is_student'] = 1;
             StudentUser.reset();
@@ -392,7 +393,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
             vm.getUserRecord(userRecord['openemis_no'])
             .then(function(response) {
                 if (response.data.length > 0) {
-                    console.log('if');
                     userData = response.data[0];
                     modifiedUser = {id: userData.id, is_student: 1};
                     Students.save(modifiedUser)
@@ -624,4 +624,24 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
             filterParams: filterParams
         });
     };
+
+    function getUniqueOpenEmisId() {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Users/getUniqueOpenemisId/Student';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response.data.openemis_no);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+        // $http({
+        //     method: 'GET',
+        //     url: 'http://localhost:8080/openemis-phpoe/Users/getUniqueOpenemisId/Student',
+        // }).then(function(res) {
+        //     deferred.resolve(res.data.openemis_no);
+        // }, function(error) {
+        //     deferred.reject(error);
+        // });
+    }
 };
