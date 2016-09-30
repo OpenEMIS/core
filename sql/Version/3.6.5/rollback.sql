@@ -1,3 +1,11 @@
+-- POCOR-3352
+-- institution_shifts
+ALTER TABLE `institution_shifts` DROP `previous_shift_id`;
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue`='POCOR-3352';
+
+
 -- POCOR-3379
 -- security_functions
 DELETE FROM `security_functions` WHERE `id` = 1047;
