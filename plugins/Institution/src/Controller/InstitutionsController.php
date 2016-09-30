@@ -378,7 +378,9 @@ class InstitutionsController extends AppController
                     $this->Alert->error('general.notExists');
                     // should redirect
                 } else {
-                    $query->where([$model->aliasField('institution_id') => $session->read('Institution.Institutions.id')]);
+                    if ($model->alias() != 'Programmes') {
+                        $query->where([$model->aliasField('institution_id') => $session->read('Institution.Institutions.id')]);
+                    }
                 }
             }
         }
