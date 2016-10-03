@@ -1,19 +1,21 @@
 angular
-    .module('institutions.students.svc', ['kd.orm.svc', 'kd.session.svc'])
+    .module('institutions.students.svc', ['kd.orm.svc'])
     .service('InstitutionsStudentsSvc', InstitutionsStudentsSvc);
 
-InstitutionsStudentsSvc.$inject = ['$http', '$q', '$filter', 'KdOrmSvc', 'KdSessionSvc'];
+InstitutionsStudentsSvc.$inject = ['$http', '$q', '$filter', 'KdOrmSvc'];
 
-function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
+function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
     var externalSource = null;
     var externalToken = null;
+    var institutionId = null;
 
     var service = {
         init: init,
         initExternal: initExternal,
         getStudentRecords: getStudentRecords,
         getExternalStudentRecords: getExternalStudentRecords,
+        setInstitutionId: setInstitutionId,
         getInstitutionId: getInstitutionId,
         getDefaultIdentityType: getDefaultIdentityType,
         getAcademicPeriods: getAcademicPeriods,
@@ -62,13 +64,11 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
 
     function init(baseUrl) {
         KdOrmSvc.base(baseUrl);
-        KdSessionSvc.base(baseUrl);
         KdOrmSvc.init(models);
     };
 
     function initExternal(baseUrl) {
         KdOrmSvc.base(baseUrl);
-        KdSessionSvc.base(baseUrl);
         KdOrmSvc.init(externalModels);
     };
 
@@ -204,50 +204,33 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
 
     function getStudentRecords(options) {
         var vm = this;
-        var deferred = $q.defer();
+        var institutionId = vm.getInstitutionId();
+        var params = {
+            limit: options['endRow'] - options['startRow'],
+            page: options['endRow'] / (options['endRow'] - options['startRow']),
+        }
 
-        this.getInstitutionId()
-        .then(function(response) {
-            var institutionId = response[0];
-            var params = {
-                limit: options['endRow'] - options['startRow'],
-                page: options['endRow'] / (options['endRow'] - options['startRow']),
-            }
+        if (options.hasOwnProperty('conditions')) {
+            for (var key in options['conditions']) {
+                if (typeof options['conditions'][key] == 'string') {
+                    options['conditions'][key] = options['conditions'][key].trim();
 
-            if (options.hasOwnProperty('conditions')) {
-                for (var key in options['conditions']) {
-                    if (typeof options['conditions'][key] == 'string') {
-                        options['conditions'][key] = options['conditions'][key].trim();
-
-                        if (options['conditions'][key] !== '') {
-                            if (key == 'date_of_birth') {
-                                options['conditions'][key] = vm.formatDateToYMD(options['conditions'][key]);
-                            }
-                            params[key] = options['conditions'][key];
+                    if (options['conditions'][key] !== '') {
+                        if (key == 'date_of_birth') {
+                            options['conditions'][key] = vm.formatDateToYMD(options['conditions'][key]);
                         }
+                        params[key] = options['conditions'][key];
                     }
                 }
             }
-            params['institution_id'] = institutionId;
-            console.log(params);
+        }
+        params['institution_id'] = institutionId;
+        Students.reset();
+        Students.find('Students', params);
+        Students.find('enrolledInstitutionStudents');
+        Students.contain(['Genders']);
 
-            Students.reset();
-            Students.find('Students', params);
-            Students.find('enrolledInstitutionStudents');
-            Students.contain(['Genders']);
-
-            return Students.ajax({defer: true});
-        }, function(error) {
-            console.log(error);
-            deferred.reject(error);
-        }).then(function(response) {
-            deferred.resolve(response);
-        }, function(error) {
-            console.log(error);
-            deferred.reject(error);
-        });
-
-        return deferred.promise;
+        return Students.ajax({defer: true});
     };
 
     function getStudentData(id) {
@@ -485,35 +468,23 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc, KdSessionSvc) {
     };
 
     function postEnrolledStudent(data) {
-        var deferred = $q.defer();
-
-        this.getInstitutionId()
-        .then(function(response) {
-            var institutionId = response[0];
-            data['institution_id'] = institutionId;
-            data['student_status_id'] = 1;
-
-            // console.log('posting...');
-            // console.log(data);
-            return StudentRecords.save(data)
-        }, function(error) {
-            deferred.reject(error);
-            console.log(error);
-        })
-        .then(function(response) {
-            deferred.resolve(response);
-        }, function(error) {
-            deferred.reject(error);
-            console.log(error);
-        });
-
-        return deferred.promise;
+        var institutionId = this.getInstitutionId();
+        data['institution_id'] = institutionId;
+        data['student_status_id'] = 1;
+        data['previous_institution_id'] = 0;
+        data['student_transfer_reason_id'] = 0;
+        data['type'] = 1;
+        data['status'] = 0;
+        data['institution_class_id'] = data['class'];
+        return StudentRecords.save(data)
     };
 
+    function setInstitutionId(id) {
+        this.institutionId = id;
+    }
+
     function getInstitutionId() {
-        var promises = [];
-        promises.push(KdSessionSvc.read('Institution.Institutions.id'));
-        return $q.all(promises);
+        return this.institutionId;
     };
 
     function getDefaultIdentityType() {
