@@ -11,9 +11,9 @@ class InfrastructuresController extends AppController
 	public function initialize() {
 		parent::initialize();
 		$this->ControllerAction->models = [
-			'Fields' => ['className' => 'Infrastructure.InfrastructureCustomFields'],
-			'Pages' => ['className' => 'Infrastructure.InfrastructureCustomForms'],
-			'RoomPages' => ['className' => 'Infrastructure.RoomCustomForms']
+			'Fields' => ['className' => 'Infrastructure.InfrastructureCustomFields', 'options' => ['deleteStrategy' => 'restrict']],
+			'Pages' => ['className' => 'Infrastructure.InfrastructureCustomForms', 'options' => ['deleteStrategy' => 'restrict']],
+			'RoomPages' => ['className' => 'Infrastructure.RoomCustomForms', 'options' => ['deleteStrategy' => 'restrict']]
 		];
 		$this->loadComponent('Paginator');
 		$this->loadComponent('FieldOption.FieldOption');
