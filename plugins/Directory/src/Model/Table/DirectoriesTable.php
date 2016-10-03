@@ -285,20 +285,7 @@ class DirectoriesTable extends AppTable {
 			
 			$indexElements[] = ['name' => 'Directory.Users/controls', 'data' => [], 'options' => [], 'order' => 0];
 
-            //logic to hide dashboard if there advanced search value.
-            $showDashboard = true;
-            foreach ($this->request->data['AdvanceSearch'][$this->alias()] as $key => $value) {
-                if (!empty($value)) {
-                    foreach ($value as $key => $searchValue) {
-                        if (!empty($searchValue)){
-                            $showDashboard = false;
-                            break;
-                        }
-                    }
-                }                
-            }
-
-            if ($showDashboard) {
+            if ($this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
                 $indexElements[] = [
                     'name' => $indexDashboard,
                     'data' => [
