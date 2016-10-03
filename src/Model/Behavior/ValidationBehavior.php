@@ -1576,5 +1576,7 @@ class ValidationBehavior extends Behavior {
 					$AdmissionTable->aliasField('type') => 1
 				])
 			->count();
+
+		return $studentExist == 0;
 	}
 }

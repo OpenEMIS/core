@@ -26,6 +26,7 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
     StudentController.step = 'internal_search';
     StudentController.showExternalSearchButton = false;
     StudentController.completeDisabled = false;
+    StudentController.institutionId = null;
 
     // filter variables
     StudentController.internalFilterOpenemisNo;
@@ -73,6 +74,7 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
 
     angular.element(document).ready(function () {
         InstitutionsStudentsSvc.init(angular.baseUrl);
+        InstitutionsStudentsSvc.setInstitutionId(StudentController.institutionId);
 
         UtilsSvc.isAppendLoader(true);
 

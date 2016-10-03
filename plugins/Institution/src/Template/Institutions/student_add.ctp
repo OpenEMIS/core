@@ -40,7 +40,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             <li data-step="4" data-name="addStudent">
                 <div class="step-wrapper">
                     Add Student
-                    <input type="hidden" ng-model="InstitutionStudentController.hasExternalDataSource" ng-init="InstitutionStudentController.hasExternalDataSource = <?php if ($externalDataSource) echo 'true'; else echo 'false'; ?>"/>
+                    <input type="hidden" ng-model="InstitutionStudentController.hasExternalDataSource" ng-init="InstitutionStudentController.hasExternalDataSource = <?php if ($externalDataSource) echo 'true'; else echo 'false'; ?>; InstitutionStudentController.institutionId=<?= $institutionId; ?>;"/>
                     <span class="chevron"></span>
                 </div>
             </li>
@@ -108,7 +108,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             </div>
 
             <div class="table-wrapper">
-                <div ng-init="institution_id=<?= $institutionId; ?>">
+                <div>
                     <div class="scrolltabs sticky-content">
                         <div id="institution-student-table" class="table-wrapper">
                             <div ng-if="InstitutionStudentController.internalGridOptions" ag-grid="InstitutionStudentController.internalGridOptions" class="sg-theme"></div>
@@ -146,7 +146,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             </div>
 
             <div class="table-wrapper">
-                <div ng-init="institution_id=<?= $institutionId; ?>">
+                <div>
                     <div class="scrolltabs sticky-content">
                         <div id="institution-student-table" class="table-wrapper">
                             <div ng-if="InstitutionStudentController.externalGridOptions" ag-grid="InstitutionStudentController.externalGridOptions" class="sg-theme"></div>
