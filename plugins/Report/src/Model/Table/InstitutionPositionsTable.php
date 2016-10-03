@@ -54,4 +54,8 @@ class InstitutionPositionsTable extends AppTable  {
    			$this->log($entity->name . ' has no staff_position_title...', 'debug');
    		}
 	}
+
+	public function onExcelGetInstitutionId(Event $event, Entity $entity) {
+		return $entity->institution->code_name;
+	}
 }
