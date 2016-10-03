@@ -296,4 +296,22 @@ class AdvanceSearchBehavior extends Behavior {
 		return $associatedEntityArrayKey;
 	}
 
+    public function isAdvancedSearchEnabled()
+    {
+        $requestData = $this->_table->request->data;
+        $advanceSearchData = isset($requestData['AdvanceSearch']) ? $requestData['AdvanceSearch'] : [];
+
+        if ($advanceSearchData) {
+            foreach ($advanceSearchData[$this->_table->alias()] as $key => $value) {
+                if (!empty($value)) {
+                    foreach ($value as $key => $searchValue) {
+                        if (!empty($searchValue)){
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
 }
