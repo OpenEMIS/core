@@ -10,16 +10,16 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Log\Log;
 
-class IdentityTypesTable extends ControllerActionTable {
+class IdentityTypesTable extends ControllerActionTable
+{
 	public function initialize(array $config)
     {
-		$this->addBehavior('FieldOption.FieldOption');
 		$this->table('identity_types');
 		parent::initialize($config);
 
 		$this->hasMany('Identities', ['className' => 'User.Identities', 'foreignKey' => 'identity_type_id']);
 
-		$this->setDeleteStrategy('restrict');
+		$this->addBehavior('FieldOption.FieldOption');
     }
 
 	public function afterSave(Event $event, Entity $entity)
