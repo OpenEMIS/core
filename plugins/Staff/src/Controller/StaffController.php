@@ -16,10 +16,7 @@ class StaffController extends AppController {
 
 		$this->ControllerAction->models = [
 			'Accounts'			=> ['className' => 'Staff.Accounts', 'actions' => ['view', 'edit']],
-			'Identities'		=> ['className' => 'User.Identities'],
-			'Languages'			=> ['className' => 'User.UserLanguages'],
 			'Nationalities' 	=> ['className' => 'User.Nationalities'],
-			'Awards'			=> ['className' => 'User.Awards'],
 			'Attachments'		=> ['className' => 'User.Attachments'],
 			'Positions'			=> ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
 			'Sections'			=> ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
@@ -30,7 +27,6 @@ class StaffController extends AppController {
 			'Behaviours'		=> ['className' => 'Staff.StaffBehaviours', 'actions' => ['index', 'view']],
 			'Extracurriculars'	=> ['className' => 'Staff.Extracurriculars'],
 			'Trainings'			=> ['className' => 'Staff.StaffTrainings'],
-			'Employments'		=> ['className' => 'Staff.Employments'],
 			'Salaries'			=> ['className' => 'Staff.Salaries'],
 			'History'			=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 			'ImportStaff' 		=> ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
@@ -61,6 +57,7 @@ class StaffController extends AppController {
 	public function Positions()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Positions']); }
 	public function Classes()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffClasses']); }
 	public function Subjects() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSubjects']); }
+	public function Employments() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Employments']); }
     public function Nationalities()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
     public function Languages()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
     public function SpecialNeeds()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
@@ -69,6 +66,8 @@ class StaffController extends AppController {
 	public function Contacts()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Contacts']); }
 	public function BankAccounts()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.BankAccounts']); }
     public function Comments()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
+    public function Identities() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']); }
+    public function Awards() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
 	// End
 
 	public function beforeFilter(Event $event) {

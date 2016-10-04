@@ -13,7 +13,8 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Current Version 3.1.21
+ControllerActionComponent - Current Version 3.1.22
+3.1.22 (Jeff) - Fixed a bug that caused out of memory when performing a delete on Restrict Delete strategy
 3.1.21 (Zack) - Amended restrict delete page and remove (event - ControllerAction.Model.onBeforeRestrictDelete). To use (event - deleteOnInitialize) instead.
 3.1.20 (Malcolm) - Added (deleteStrategy type - 'restrict') and (event - ControllerAction.Model.onBeforeRestrictDelete)
 3.1.19 (Malcolm) - Fixed an error issue when using getFields() on tables with joint primary keys
@@ -242,6 +243,7 @@ class ControllerActionComponent extends Component {
             // make field sortable by default if it is a string data-type
             if (!array_key_exists('type', $attr)) {
                 $this->log($key, 'debug');
+                continue;
             }
 
             $sortableTypes = ['string', 'date', 'time', 'datetime'];
@@ -1280,6 +1282,7 @@ class ControllerActionComponent extends Component {
 
         if ($request->is('get')) {
             if ($model->exists([$idKey => $id])) {
+
                 if (is_array($model->primaryKey())) {
                     // For table with composite primary key
                     $entity = $model->find()->where([$idKey => $id])->first();
@@ -1311,17 +1314,21 @@ class ControllerActionComponent extends Component {
                 if ($event->isStopped()) { return $event->result; }
                 // End Event
 
-                $query->find('list', $extra->getArrayCopy())->where([$idKey . ' <> ' => $id]);
+                if ($this->deleteStrategy != 'restrict') {
+                    $query->find('list', $extra->getArrayCopy())->where([$idKey . ' <> ' => $id]);
 
-                // Event: deleteUpdateCovertOptions
-                $this->debug(__METHOD__, ': Event -> ControllerAction.Model.onGetConvertOptions');
-                $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onGetConvertOptions', null, [$entity, $query]);
-                if ($event->isStopped()) { return $event->result; }
+                    // Event: deleteUpdateCovertOptions
+                    $this->debug(__METHOD__, ': Event -> ControllerAction.Model.onGetConvertOptions');
+                    $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onGetConvertOptions', null, [$entity, $query]);
+                    if ($event->isStopped()) { return $event->result; }
 
-                $convertOptions = $query->toArray();
-                if (empty($convertOptions)) {
-                    $convertOptions[''] = __('No Available Options');
+                    $convertOptions = $query->toArray();
+                    if (empty($convertOptions)) {
+                        $convertOptions[''] = __('No Available Options');
+                    }
+                    $this->controller->set('convertOptions', $convertOptions);
                 }
+
                 $totalCount = 0;
                 $associations = [];
                 foreach ($model->associations() as $assoc) {
@@ -1371,7 +1378,6 @@ class ControllerActionComponent extends Component {
                 $this->controller->set(compact('showFormButton'));
                 $this->controller->set('deleteStrategy', $this->deleteStrategy);
                 $this->controller->set('data', $entity);
-                $this->controller->set('convertOptions', $convertOptions);
                 $this->controller->set('associations', $associations);
             } else {
                 $this->Alert->warning('general.notExists');
