@@ -1575,4 +1575,19 @@ class ValidationBehavior extends Behavior {
 		}
 		return false;
 	}
+
+	public static function validateCustomIdentityNumber($field, array $globalData) {
+		$IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+
+		$model = $globalData['providers']['table'];
+
+		$subject = $field;
+		$pattern = '/^[a-z]{6,}+$/';
+
+		if (!preg_match($pattern, $subject)) {
+			return $model->getMessage('User.Identities.number.custom_validation');
+		}
+
+		return true;
+	}
 }
