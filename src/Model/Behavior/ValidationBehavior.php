@@ -102,10 +102,9 @@ class ValidationBehavior extends Behavior {
 		return ctype_digit($check);
 	}
 
-    public static function checkAuthorisedArea($check, array $globalData) {
+    public static function checkAuthorisedArea($check, $superAdmin, $userId, array $globalData) {
         $isValid = false;
-        $session = new Session();
-        if ($session->read('Auth.User.super_admin') == 1) {
+        if ($superAdmin == 1) {
         	$isValid = true;
         } else {
         	$data = $globalData['data'];
@@ -123,7 +122,7 @@ class ValidationBehavior extends Behavior {
         		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
 	        	$Areas = TableRegistry::get('Area.Areas');
 	        	// get areas from security group areas
-	        	$areasByUser = $SecurityGroupAreas->getAreasByUser($session->read('Auth.User.id'));
+	        	$areasByUser = $SecurityGroupAreas->getAreasByUser($userId);
 
 	        	if (count($areasByUser) > 0) {
 					foreach($areasByUser as $area) {
@@ -266,6 +265,25 @@ class ValidationBehavior extends Behavior {
 			} else {
 				return $dateTwo > $dateOne;
 			}
+		}
+	}
+
+	public static function dateAfterEnrollment($check, array $globalData) {
+		$id = $globalData['data']['student_id'];
+
+		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+		$enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
+
+		$studentData = TableRegistry::get('Institution.Students')
+			->find()
+			->where(['student_id' => $id, 'student_status_id' => $enrolledStatus])
+			->first();
+
+		if (!empty($studentData)) {
+			$enrolledDate = $studentData['start_date']->format('Y-m-d');
+			return $check > $enrolledDate;
+		} else {
+			return false;
 		}
 	}
 
