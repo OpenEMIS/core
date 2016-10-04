@@ -58,6 +58,8 @@ class AcademicPeriodsTable extends AppTable {
         $this->hasMany('SurveyStatusPeriods', ['className' => 'Survey.SurveyStatusPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Examinations', ['className' => 'Examination.Examinations', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ExaminationCentreStudents', ['className' => 'Examination.ExaminationCentreStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('Tree');
     }
@@ -118,7 +120,7 @@ class AcademicPeriodsTable extends AppTable {
     public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
         $canCopy = $this->checkIfCanCopy($entity);
 
-        $shells = ['Room'];
+        $shells = ['Room', 'Shift'];
         if ($canCopy) {
             // only trigger shell to copy data if is not empty
             if ($entity->has('copy_data_from') && !empty($entity->copy_data_from)) {

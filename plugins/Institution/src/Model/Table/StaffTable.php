@@ -310,7 +310,7 @@ class StaffTable extends AppTable {
 		$StaffPositionProfilesTable = TableRegistry::get('Institution.StaffPositionProfiles');
 		$staffPositionProfilesRecordCount = $StaffPositionProfilesTable->find()
 			->where([
-				$StaffPositionProfilesTable->aliasField('institution_id') => $institutionId, 
+				$StaffPositionProfilesTable->aliasField('institution_id') => $institutionId,
 				$StaffPositionProfilesTable->aliasField('status_id'). ' NOT IN ' => $staffPositionProfileStatuses
 			])
 			->count();
@@ -798,7 +798,7 @@ class StaffTable extends AppTable {
 		}
 	}
 
-	public function addOnChangeStartDate(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) 
+	public function addOnChangeStartDate(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
 	{
 		if (isset($data[$this->alias()]['institution_position_id'])) {
 			unset($data[$this->alias()]['institution_position_id']);
@@ -806,12 +806,12 @@ class StaffTable extends AppTable {
 		$this->Session->delete($this->registryAlias().'.end_date_changed');
 	}
 
-	public function addOnChangeEndDate(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) 
+	public function addOnChangeEndDate(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
 	{
 		$this->Session->write($this->registryAlias().'.end_date_changed', true);
 	}
 
-	public function addOnChangePositionId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) 
+	public function addOnChangePositionId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
 	{
 		$data[$this->alias()]['position_id_changed'] = true;
 	}
@@ -876,7 +876,7 @@ class StaffTable extends AppTable {
 		} else {
 			$data[$this->alias()]['FTE'] = 0;
 		}
-		
+
 	}
 
 	public function onUpdateFieldPositionType(Event $event, array $attr, $action, Request $request) {
@@ -906,7 +906,7 @@ class StaffTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldFTE(Event $event, array $attr, $action, Request $request) 
+	public function onUpdateFieldFTE(Event $event, array $attr, $action, Request $request)
 	{
 		if ($action == 'add') {
 			if (!isset($request->data[$this->alias()]['FTE'])) {
@@ -1234,7 +1234,17 @@ class StaffTable extends AppTable {
 		if ($this->request->is(['ajax'])) {
 			$term = $this->request->query['term'];
 			// only search for staff
-			$query = $this->Users->find()->where([$this->Users->aliasField('is_staff') => 1]);
+			$query = $this->Users->find()
+				->select([
+					$this->Users->aliasField('openemis_no'),
+					$this->Users->aliasField('first_name'),
+					$this->Users->aliasField('middle_name'),
+					$this->Users->aliasField('third_name'),
+					$this->Users->aliasField('last_name'),
+					$this->Users->aliasField('preferred_name'),
+					$this->Users->aliasField('id')
+				])
+				->where([$this->Users->aliasField('is_staff') => 1])->limit(100);
 
 			$term = trim($term);
 			if (!empty($term)) {

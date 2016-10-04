@@ -16,7 +16,17 @@ class AreasControllerTest extends AppTestCase
         'app.security_users',
         'app.labels',
         'app.areas',
+        'app.area_administratives',
         'app.area_levels',
+        'app.institution_localities',
+        'app.institution_types',
+        'app.institution_ownerships',
+        'app.institution_statuses',
+        'app.institution_sectors',
+        'app.institution_providers',
+        'app.institution_genders',
+        'app.institution_network_connectivities',
+
         // needed by testDelete()
         'app.institutions',
         'app.custom_modules',
@@ -28,7 +38,8 @@ class AreasControllerTest extends AppTestCase
         'app.institution_custom_forms_fields',
         'app.institution_custom_forms_filters',
         'app.security_groups',
-        'app.security_group_areas'
+        'app.security_group_areas',
+        'app.security_group_institutions',
     ];
 
 	public function testAreaIndex()
@@ -96,7 +107,7 @@ class AreasControllerTest extends AppTestCase
 	// }
 
 
-// // AdminBoundaries unitTest
+    // AdminBoundaries unitTest
     private $id = 2;
     private $table;
 

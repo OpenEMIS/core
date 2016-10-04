@@ -224,7 +224,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 				->select([$this->Institutions->aliasField('code')])
 				->first();
 
-			$codePrefix = $institutionData->code;
+			$codePrefix = $institutionData->code . "-";
 		} else { // if have parent, then count number of child of parent
 			$conditions[] = $this->aliasField('parent_id') . " = " . $parentId;
 
@@ -315,6 +315,7 @@ class InstitutionInfrastructuresTable extends AppTable {
 			$autoGenerateCode = $this->getAutoGenerateCode($institutionId, $selectedLevel, $parentId);
 
 			$attr['attr']['default'] = $autoGenerateCode;
+			$attr['type'] = 'readonly';
 		} else if ($action == 'edit') {
 			$attr['type'] = 'readonly';
 		}
