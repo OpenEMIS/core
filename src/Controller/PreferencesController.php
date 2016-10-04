@@ -19,8 +19,6 @@ class PreferencesController extends AppController {
 		$this->ControllerAction->models = [
 			'Users' 				=> ['className' => 'Users'],
 			'Account' 				=> ['className' => 'UserAccounts'],
-			'Identities' 			=> ['className' => 'User.Identities'],
-			'Languages' 			=> ['className' => 'User.UserLanguages'],
 			'Nationalities' 		=> ['className' => 'User.Nationalities'],
 			'Attachments' 			=> ['className' => 'User.Attachments'],
 			'History' 				=> ['className' => 'User.UserActivities', 'actions' => ['index']],
@@ -33,6 +31,7 @@ class PreferencesController extends AppController {
     public function SpecialNeeds()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
     public function Comments()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
     public function Contacts()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'UserContacts']); }
+    public function Identities() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']); }
     // End
 
 	public function beforeFilter(Event $event) {
