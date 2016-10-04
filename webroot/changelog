@@ -1,3 +1,7 @@
+v3.6.5
+- Institution contacts section is now moved from Overview page to Contacts page
+- System now allows users to create Non-Academic Institutions
+
 v3.6.4
 - Introduced Examinations feature
 - Institution Sector is now linked to Institution Provider
