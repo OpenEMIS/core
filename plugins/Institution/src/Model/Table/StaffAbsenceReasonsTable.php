@@ -3,13 +3,15 @@ namespace Institution\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 
-class StaffAbsenceReasonsTable extends ControllerActionTable {
-	public function initialize(array $config)
+class StaffAbsenceReasonsTable extends ControllerActionTable
+{
+    public function initialize(array $config)
     {
-		$this->addBehavior('FieldOption.FieldOption');
-		$this->table('staff_absence_reasons');
-		parent::initialize($config);
-		$this->hasMany('InstitutionStaffAbsences', ['className' => 'Institution.InstitutionStaffAbsences', 'foreignKey' => 'staff_absence_reason_id']);
-		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
-	}
+        $this->table('staff_absence_reasons');
+        parent::initialize($config);
+
+        $this->hasMany('InstitutionStaffAbsences', ['className' => 'Institution.InstitutionStaffAbsences', 'foreignKey' => 'staff_absence_reason_id']);
+
+        $this->addBehavior('FieldOption.FieldOption');
+    }
 }
