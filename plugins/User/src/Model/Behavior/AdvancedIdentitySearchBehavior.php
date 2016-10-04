@@ -20,32 +20,42 @@ class AdvancedIdentitySearchBehavior extends Behavior {
 		}
 	}
 	
-	public function onBuildQuery(Event $event, Query $query, $advancedSearchHasMany) {
-		if (isset($advancedSearchHasMany['identity_number'])) {
-			$search = $advancedSearchHasMany['identity_number'];
+	public function onBuildQuery(Event $event, Query $query, $advancedSearchHasMany) 
+	{
+		if (isset($advancedSearchHasMany['identity_type'])) {
+			$identityType = $advancedSearchHasMany['identity_type'];
 		} else {
-			$search = '';
+			$identityType = '';
 		}
 
-		if (!empty($search)) {
-			$IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
-			$default_identity_type = $IdentityTypes->getDefaultValue();
-			$searchString = '%' . $search . '%';
-			$query->join([
-					[
-						'type' => 'LEFT',
-						'table' => 'user_identities',
-						'alias' => 'Identities',
-						'conditions' => [
-							'Identities.security_user_id = '. $this->config('associatedKey'),
-							'Identities.identity_type_id = '. $default_identity_type
-						]
-					]
-				]);
-			$query->andWhere(['Identities.number LIKE' =>  $searchString]);
+		if (isset($advancedSearchHasMany['identity_number'])) {
+			$identityNumber = $advancedSearchHasMany['identity_number'];
+		} else {
+			$identityNumber = '';
 		}
 
-		return $query;
+		if (!empty($identityNumber)) {
+            $query->join([
+                        'UserIdentities' => [
+                            'table' => 'user_identities',
+                            'conditions' => [
+                                'UserIdentities.security_user_id = '.$this->config('associatedKey')
+                            ]
+                        ]
+                    ])
+                    ->where([
+                        'UserIdentities.number LIKE ' => '%' . $identityNumber . '%'
+                    ]);
+
+            if ($identityType) {
+                $query->andWhere([
+                            'UserIdentities.identity_type_id' => $identityType
+                        ]);
+            }
+
+            $query->group('UserIdentities.security_user_id');
+        }
+        return $query;
 	}	
 
 	public function implementedEvents() {
@@ -59,10 +69,27 @@ class AdvancedIdentitySearchBehavior extends Behavior {
 	}
 
 	public function onSetupFormField(Event $event, ArrayObject $searchables, $advanceSearchModelData) {
+		$searchables['identity_type'] = [
+			'label' => __('Identity Type'),
+			'type' => 'select',
+			'options' => $this->getIdentityTypeOptions(),
+			'selected' => (isset($advanceSearchModelData['hasMany']) && isset($advanceSearchModelData['hasMany']['identity_type'])) ? $advanceSearchModelData['hasMany']['identity_type'] : '',
+		];
+
 		$searchables['identity_number'] = [
 			'label' => __('Identity Number'),
 			'value' => (isset($advanceSearchModelData['hasMany']) && isset($advanceSearchModelData['hasMany']['identity_number'])) ? $advanceSearchModelData['hasMany']['identity_number'] : '',
 		];
 	}
+
+	public function getIdentityTypeOptions() 
+    {
+        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+
+        return 	$IdentityTypes
+                ->find('list')
+                ->find('visible')
+                ->toArray();
+    }
 
 }

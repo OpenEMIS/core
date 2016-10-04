@@ -127,6 +127,8 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('HighChart', ['institutions' => ['_function' => 'getNumberOfInstitutionsByModel']]);
         $this->addBehavior('Import.ImportLink');
 
+        $this->addBehavior('Institution.AdvancedProgrammeSearch');
+
         $this->shiftTypes = $this->getSelectOptions('Shifts.types'); //get from options trait
 
         $this->isAcademicOptions = [
@@ -410,16 +412,19 @@ class InstitutionsTable extends AppTable  {
 			$indexDashboard = 'dashboard';
 			$count = $institutionCount->count();
 			unset($institutionCount);
-			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
-	            'name' => $indexDashboard,
-	            'data' => [
-	            	'model' => 'institutions',
-	            	'modelCount' => $count,
-	            	'modelArray' => $institutionArray,
-	            ],
-	            'options' => [],
-	            'order' => 1
-	        ];
+
+			if ($this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
+				$this->controller->viewVars['indexElements']['mini_dashboard'] = [
+		            'name' => $indexDashboard,
+		            'data' => [
+		            	'model' => 'institutions',
+		            	'modelCount' => $count,
+		            	'modelArray' => $institutionArray,
+		            ],
+		            'options' => [],
+		            'order' => 1
+		        ];
+            }
 	    }
 	    $config['formButtons'] = false;
 	}

@@ -80,6 +80,11 @@ class StudentsTable extends AppTable
 		 * AdvanceSearchBehavior must be included first before adding other types of advance search.
 		 * If no "belongsTo" relation from the main model is needed, include its foreign key name in AdvanceSearch->exclude options.
 		 */
+        $advancedSearchFieldOrder = [
+            'first_name', 'middle_name', 'third_name', 'last_name', 
+            'contact_number', 'identity_type', 'identity_number'
+        ];
+        
 		$this->addBehavior('AdvanceSearch', [
 			'exclude' => [
 				'student_id',
@@ -87,8 +92,10 @@ class StudentsTable extends AppTable
 				'education_grade_id',
 				'academic_period_id',
 				'student_status_id',
-			]
+			],
+			'order' => $advancedSearchFieldOrder
 		]);
+
 		$this->addBehavior('User.AdvancedIdentitySearch', [
 			'associatedKey' => $this->aliasField('student_id')
 		]);
@@ -643,16 +650,19 @@ class StudentsTable extends AppTable
 
 			$indexElements[] = ['name' => 'Institution.Students/controls', 'data' => [], 'options' => [], 'order' => 0];
 
-			$indexElements[] = [
-				'name' => $indexDashboard,
-				'data' => [
-					'model' => 'students',
-					'modelCount' => $studentCount,
-					'modelArray' => $InstitutionArray,
-				],
-				'options' => [],
-				'order' => 2
-			];
+            if ($this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
+    			$indexElements[] = [
+    				'name' => $indexDashboard,
+    				'data' => [
+    					'model' => 'students',
+    					'modelCount' => $studentCount,
+    					'modelArray' => $InstitutionArray,
+    				],
+    				'options' => [],
+    				'order' => 2
+    			];
+            }
+
 			foreach ($indexElements as $key => $value) {
 				if ($value['name']=='advanced_search') {
 					$indexElements[$key]['order'] = 1;
