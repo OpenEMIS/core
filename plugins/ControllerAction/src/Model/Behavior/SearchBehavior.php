@@ -14,16 +14,9 @@ class SearchBehavior extends Behavior {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction', 'priority' => 5];
-		$events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 5];
-		$events['ControllerAction.Model.onGetFormButtons'] = ['callable' => 'onGetFormButtons', 'priority' => 5];
+		$events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 11];
 		$events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
 		return $events;
-	}
-
-	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
-		if ($this->_table->action == 'index') {
-			$buttons->exchangeArray([]);
-		}
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra) {
@@ -64,13 +57,6 @@ class SearchBehavior extends Behavior {
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		$model = $this->_table;
 		$search = $extra['config']['search'];
-
-		if ($extra['auto_contain']) {
-			$contain = $model->getContains();
-			if (!empty($contain)) {
-				$query->contain($contain);
-			}
-		}
 
 		$schema = $model->schema();
 		$columns = $schema->columns();

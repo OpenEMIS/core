@@ -20,8 +20,8 @@ class InstitutionsFixture extends TestFixture
             'email' => '',
             'website' => 'www.abacusbasicschool.com',
             'date_opened' => '1987-06-08',
-            'year_opened' => '1987',
-            'date_closed' => '0000-00-00',
+            'year_opened' => 1987,
+            'date_closed' => null,
             'year_closed' => '0',
             'longitude' => '103.8134033',
             'latitude' => '1.42182547',
@@ -40,7 +40,7 @@ class InstitutionsFixture extends TestFixture
             'modified_user_id' => '2',
             'modified' => '2016-06-23 02:41:19',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ], [
             'id' => '2',
             'name' => 'Aben Park Primary',
@@ -54,8 +54,8 @@ class InstitutionsFixture extends TestFixture
             'email' => '',
             'website' => 'www.abenparkinternationaluniversity.com',
             'date_opened' => '1992-11-15',
-            'year_opened' => '1992',
-            'date_closed' => '0000-00-00',
+            'year_opened' => 1992,
+            'date_closed' => null,
             'year_closed' => '0',
             'longitude' => '103.8374022',
             'latitude' => '1.28553388',
@@ -74,7 +74,7 @@ class InstitutionsFixture extends TestFixture
             'modified_user_id' => '2',
             'modified' => '2016-05-25 09:02:37',
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ], [
             'id' => '3',
             'name' => 'Acan Secondary School',
@@ -88,8 +88,8 @@ class InstitutionsFixture extends TestFixture
             'email' => '',
             'website' => 'www.acansecondaryschool.com',
             'date_opened' => '1955-05-12',
-            'year_opened' => '1993',
-            'date_closed' => '0000-00-00',
+            'year_opened' => 1993,
+            'date_closed' => null,
             'year_closed' => '0',
             'longitude' => '103.6741035',
             'latitude' => '1.38265185',
@@ -108,7 +108,7 @@ class InstitutionsFixture extends TestFixture
             'modified_user_id' => null,
             'modified' => null,
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ], [
             'id' => '4',
             'name' => 'Acorn School',
@@ -122,8 +122,8 @@ class InstitutionsFixture extends TestFixture
             'email' => '',
             'website' => 'www.acornschool.com',
             'date_opened' => '1983-02-10',
-            'year_opened' => '1973',
-            'date_closed' => '0000-00-00',
+            'year_opened' => 1973,
+            'date_closed' => null,
             'year_closed' => '0',
             'longitude' => '103.9376209',
             'latitude' => '1.23738734',
@@ -142,7 +142,7 @@ class InstitutionsFixture extends TestFixture
             'modified_user_id' => null,
             'modified' => null,
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ], [
             'id' => '5',
             'name' => 'Ambai School',
@@ -156,8 +156,8 @@ class InstitutionsFixture extends TestFixture
             'email' => '',
             'website' => 'www.ambaischool.com',
             'date_opened' => '1987-02-07',
-            'year_opened' => '1990',
-            'date_closed' => '0000-00-00',
+            'year_opened' => 1990,
+            'date_closed' => null,
             'year_closed' => '0',
             'longitude' => '103.6688132',
             'latitude' => '1.38079318',
@@ -176,7 +176,7 @@ class InstitutionsFixture extends TestFixture
             'modified_user_id' => null,
             'modified' => null,
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ], [
             'id' => '6',
             'name' => 'Andover High School',
@@ -190,8 +190,8 @@ class InstitutionsFixture extends TestFixture
             'email' => '',
             'website' => 'www.andoverhighschool.com',
             'date_opened' => '1999-05-16',
-            'year_opened' => '2009',
-            'date_closed' => '0000-00-00',
+            'year_opened' => 2009,
+            'date_closed' => null,
             'year_closed' => '0',
             'longitude' => '103.6423005',
             'latitude' => '1.32414935',
@@ -210,7 +210,7 @@ class InstitutionsFixture extends TestFixture
             'modified_user_id' => null,
             'modified' => null,
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ], [
             'id' => '7',
             'name' => 'Androgogy Junior College',
@@ -224,8 +224,8 @@ class InstitutionsFixture extends TestFixture
             'email' => '',
             'website' => 'www.androgogyjuniorcollege.com',
             'date_opened' => '1975-02-04',
-            'year_opened' => '1951',
-            'date_closed' => '0000-00-00',
+            'year_opened' => 1951,
+            'date_closed' => null,
             'year_closed' => '0',
             'longitude' => '103.7973782',
             'latitude' => '1.22503517',
@@ -244,7 +244,7 @@ class InstitutionsFixture extends TestFixture
             'modified_user_id' => null,
             'modified' => null,
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ], [
             'id' => '8',
             'name' => 'Anglo-High School',
@@ -258,8 +258,8 @@ class InstitutionsFixture extends TestFixture
             'email' => '',
             'website' => 'www.anglo-highschool.com',
             'date_opened' => '1974-10-17',
-            'year_opened' => '1967',
-            'date_closed' => '0000-00-00',
+            'year_opened' => 1967,
+            'date_closed' => null,
             'year_closed' => '0',
             'longitude' => '103.7268841',
             'latitude' => '1.26459352',
@@ -278,7 +278,7 @@ class InstitutionsFixture extends TestFixture
             'modified_user_id' => null,
             'modified' => null,
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ], [
             'id' => '9',
             'name' => 'Arabic Open School',
@@ -292,8 +292,8 @@ class InstitutionsFixture extends TestFixture
             'email' => '',
             'website' => 'www.arabicopenschool.com',
             'date_opened' => '1997-07-07',
-            'year_opened' => '1976',
-            'date_closed' => '0000-00-00',
+            'year_opened' => 1976,
+            'date_closed' => null,
             'year_closed' => '0',
             'longitude' => '103.7962893',
             'latitude' => '1.40298797',
@@ -312,7 +312,7 @@ class InstitutionsFixture extends TestFixture
             'modified_user_id' => null,
             'modified' => null,
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ], [
             'id' => '10',
             'name' => 'Ashford School',
@@ -326,8 +326,8 @@ class InstitutionsFixture extends TestFixture
             'email' => '',
             'website' => 'www.ashfordschool.com',
             'date_opened' => '1978-05-07',
-            'year_opened' => '2013',
-            'date_closed' => '0000-00-00',
+            'year_opened' => 2013,
+            'date_closed' => null,
             'year_closed' => '0',
             'longitude' => '103.88464',
             'latitude' => '1.49158863',
@@ -346,9 +346,9 @@ class InstitutionsFixture extends TestFixture
             'modified_user_id' => null,
             'modified' => null,
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
+            'created' => '1970-01-01 00:00:00'
         ], [
-            'id' => '13',
+            'id' => 13,
             'name' => 'Test School',
             'alternative_name' => '',
             'code' => 'TS',
@@ -360,9 +360,9 @@ class InstitutionsFixture extends TestFixture
             'email' => '',
             'website' => 'www.Test.com',
             'date_opened' => '1978-05-07',
-            'year_opened' => '2013',
-            'date_closed' => '0000-00-00',
-            'year_closed' => '0',
+            'year_opened' => '1978',
+            'date_closed' => null,
+            'year_closed' => null,
             'longitude' => '103.88464',
             'latitude' => '1.49158863',
             'shift_type' => '0',
@@ -380,7 +380,41 @@ class InstitutionsFixture extends TestFixture
             'modified_user_id' => null,
             'modified' => null,
             'created_user_id' => '1',
-            'created' => '0000-00-00 00:00:00'
-        ],
+            'created' => '1970-01-01 00:00:00'
+        ], [
+            'id' => '517',
+            'name' => 'East Region Office',
+            'alternative_name' => '',
+            'code' => 'MOEEASTREGION',
+            'address' => '1 Infinite Loop',
+            'postal_code' => '',
+            'contact_person' => '',
+            'telephone' => '14086065775',
+            'fax' => '',
+            'email' => '',
+            'website' => 'www.apple.com',
+            'date_opened' => '1978-05-07',
+            'year_opened' => '1978',
+            'date_closed' => null,
+            'year_closed' => null,
+            'longitude' => '103.88464',
+            'latitude' => '1.49158863',
+            'shift_type' => '0',
+            'area_id' => '3',
+            'area_administrative_id' => '4',
+            'institution_locality_id' => '1',
+            'institution_type_id' => '2',
+            'institution_ownership_id' => '4',
+            'institution_status_id' => '117',
+            'institution_sector_id' => '1',
+            'institution_provider_id' => '2',
+            'institution_gender_id' => '1',
+            'institution_network_connectivity_id' => '2',
+            'security_group_id' => '517',
+            'modified_user_id' => null,
+            'modified' => null,
+            'created_user_id' => '1',
+            'created' => '1970-01-01 00:00:00'
+        ]
     ];
 }
