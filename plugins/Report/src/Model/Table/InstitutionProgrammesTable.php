@@ -44,4 +44,8 @@ class InstitutionProgrammesTable extends AppTable  {
 			return $this->formatDate($entity->end_date);
 		}
 	}
+
+	public function onExcelGetInstitutionId(Event $event, Entity $entity) {
+		return $entity->institution->code_name;
+	}
 }
