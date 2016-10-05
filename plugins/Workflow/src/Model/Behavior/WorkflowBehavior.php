@@ -669,6 +669,7 @@ class WorkflowBehavior extends Behavior {
 	}
 
 	public function getModalOptions(Entity $entity) {
+		$model = $this->_table;
 		$step = $this->getWorkflowStep($entity);
 
 		if (!is_null($step)) {
@@ -780,7 +781,7 @@ class WorkflowBehavior extends Behavior {
 				$content .= '<div class="workflowtransition-assignee-error">' . __('This field cannot be left empty') . '</div>';
 			$content .= '</div>';
 			$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-comment-error error-message">' . __('This field cannot be left empty') . '</div></div>';
-			$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-assignee-sql-error error-message">' . __('An unexpected error has been encounted. Please contact the administrator for assistance.'). '</div></div>';
+			$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-assignee-sql-error error-message">' .$model->getMessage('general.error'). '</div></div>';
 			$content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-event-description error-message"></div></div>';
 			$buttons = [
 				'<button id="workflow-submit" type="submit" class="btn btn-default" onclick="return Workflow.onSubmit();">' . __('Save') . '</button>'
@@ -792,10 +793,10 @@ class WorkflowBehavior extends Behavior {
 				'content' => $content,
 				'contentFields' => $contentFields, 
 				'form' => [
-					'model' => $this->_table,
+					'model' => $model,
 					'formOptions' => [
 						'class' => 'form-horizontal',
-						'url' => $this->isCAv4() ? $this->_table->url('processWorkflow') : $this->_table->ControllerAction->url('processWorkflow'),
+						'url' => $this->isCAv4() ? $model->url('processWorkflow') : $model->ControllerAction->url('processWorkflow'),
 						'onSubmit' => 'document.getElementById("workflow-submit").disabled=true;'
 					],
 					'fields' => $fields
@@ -988,7 +989,7 @@ class WorkflowBehavior extends Behavior {
 	}
 
 	public function setAssigneeAsCreator(Entity $entity) {
-		if ($entity->has('assignee_id')) {
+		if ($entity->has('created_user_id')) {
 			$entity->assignee_id = $entity->created_user_id;
 		}
 	}
@@ -1004,7 +1005,7 @@ class WorkflowBehavior extends Behavior {
 					->find()
 					->where([
 						$this->WorkflowSteps->aliasField('workflow_id') => $workflowId,
-						$this->WorkflowSteps->aliasField('stage') => 0  // Open
+						$this->WorkflowSteps->aliasField('category') => 1  // Open
 					])
 					->first();
 				$statusId = $workflowStep->id;

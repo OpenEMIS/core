@@ -390,7 +390,7 @@ class TrainingSessionResultsTable extends AppTable {
 		$workflow = $this->getWorkflow($this->registryAlias());
 		if (!empty($workflow)) {
 			foreach ($workflow->workflow_steps as $workflowStep) {
-				if ($workflowStep->stage == 0) {
+				if ($workflowStep->category == 1) {
 					$openStatusId = $workflowStep->id;
 					break;
 				}

@@ -23,6 +23,68 @@ FROM `z_3253_workflow_models`;
 UPDATE `workflow_models` SET `is_school_based` = 1
 WHERE `model` IN ('Staff.Leaves', 'Institution.InstitutionSurveys', 'Institution.InstitutionPositions', 'Institution.StaffPositionProfiles');
 
+-- workflow_steps
+RENAME TABLE `workflow_steps` TO `z_3253_workflow_steps`;
+
+DROP TABLE IF EXISTS `workflow_steps`;
+CREATE TABLE IF NOT EXISTS `workflow_steps` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `category` int(1) DEFAULT NULL COMMENT '1 -> TO-DO, 2 -> IN PROGRESS, 3 -> DONE',
+  `is_editable` int(1) NOT NULL DEFAULT '0',
+  `is_removable` int(1) NOT NULL DEFAULT '0',
+  `workflow_id` int(11) NOT NULL COMMENT 'links to workflows.id',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `workflow_id` (`workflow_id`),
+  KEY `modified_user_id` (`modified_user_id`),
+  KEY `created_user_id` (`created_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of steps used by all workflows';
+
+INSERT INTO `workflow_steps` (`id`, `name`, `category`, `is_editable`, `is_removable`, `workflow_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT `id`, `name`, `stage`, `is_editable`, `is_removable`, `workflow_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+FROM `z_3253_workflow_steps`;
+
+UPDATE `workflow_steps` SET `category` = 3 WHERE `category` = 2;
+UPDATE `workflow_steps` SET `category` = 2 WHERE `category` = 1;
+UPDATE `workflow_steps` SET `category` = 1 WHERE `category` = 0;
+UPDATE `workflow_steps` SET `category` = 0 WHERE `category` IS NULL;
+
+-- workflow_actions
+RENAME TABLE `workflow_actions` TO `z_3253_workflow_actions`;
+
+DROP TABLE IF EXISTS `workflow_actions`;
+CREATE TABLE IF NOT EXISTS `workflow_actions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `description` text,
+  `action` int(1) DEFAULT NULL COMMENT '0 -> Approve, 1 -> Reject',
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `next_workflow_step_id` int(11) NOT NULL,
+  `event_key` varchar(200) DEFAULT NULL,
+  `comment_required` int(1) NOT NULL DEFAULT '0',
+  `allow_by_assignee` int(1) NOT NULL DEFAULT '0',
+  `workflow_step_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `next_workflow_step_id` (`next_workflow_step_id`),
+  KEY `workflow_step_id` (`workflow_step_id`),
+  KEY `modified_user_id` (`modified_user_id`),
+  KEY `created_user_id` (`created_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all actions used by different steps of any workflow';
+
+INSERT INTO `workflow_actions` (`id`, `name`, `description`, `action`, `visible`, `next_workflow_step_id`, `event_key`, `comment_required`, `allow_by_assignee`, `workflow_step_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT `id`, `name`, `description`, `action`, `visible`, `next_workflow_step_id`, `event_key`, `comment_required`, 0, `workflow_step_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+FROM `z_3253_workflow_actions`;
+
+UPDATE `workflow_actions` SET `allow_by_assignee` = 1 WHERE `action` = 1;
+
 -- workflow_records
 RENAME TABLE `workflow_records` TO `z_3253_workflow_records`;
 
@@ -65,7 +127,7 @@ CREATE TABLE IF NOT EXISTS `institution_surveys` (
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
   `survey_form_id` int(11) NOT NULL COMMENT 'links to survey_forms.id',
   `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
-  `assignee_id` int(11) DEFAULT '0' COMMENT 'links to security_users.id',
+  `assignee_id` int(11) NOT NULL DEFAULT '0' COMMENT 'links to security_users.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -96,7 +158,7 @@ CREATE TABLE IF NOT EXISTS `staff_leaves` (
   `staff_id` int(11) NOT NULL COMMENT 'links to security_users.id',
   `staff_leave_type_id` int(11) NOT NULL COMMENT 'links to field_option_values.id',
   `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
-  `assignee_id` int(11) DEFAULT '0' COMMENT 'links to security_users.id',
+  `assignee_id` int(11) NOT NULL DEFAULT '0' COMMENT 'links to security_users.id',
   `status_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
   `number_of_days` int(3) NOT NULL,
   `file_name` varchar(250) DEFAULT NULL,
@@ -130,7 +192,7 @@ CREATE TABLE IF NOT EXISTS `institution_positions` (
   `staff_position_title_id` int(11) NOT NULL COMMENT 'links to staff_position_titles.id',
   `staff_position_grade_id` int(11) NOT NULL COMMENT 'links to staff_position_grades.id',
   `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
-  `assignee_id` int(11) DEFAULT '0' COMMENT 'links to security_users.id',
+  `assignee_id` int(11) NOT NULL DEFAULT '0' COMMENT 'links to security_users.id',
   `is_homeroom` int(1) NOT NULL DEFAULT '1',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
@@ -165,7 +227,7 @@ CREATE TABLE IF NOT EXISTS `institution_staff_position_profiles` (
   `staff_id` int(11) NOT NULL COMMENT 'links to security_users.id',
   `staff_type_id` int(5) NOT NULL COMMENT 'links to staff_types.id',
   `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
-  `assignee_id` int(11) DEFAULT '0' COMMENT 'links to security_users.id',
+  `assignee_id` int(11) NOT NULL DEFAULT '0' COMMENT 'links to security_users.id',
   `institution_position_id` int(11) NOT NULL COMMENT 'links to institution_positions.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
@@ -208,7 +270,7 @@ CREATE TABLE IF NOT EXISTS `training_courses` (
   `training_mode_of_delivery_id` int(11) NOT NULL COMMENT 'links to field_option_values.id',
   `training_requirement_id` int(11) NOT NULL COMMENT 'links to field_option_values.id',
   `training_level_id` int(11) NOT NULL COMMENT 'links to field_option_values.id',
-  `assignee_id` int(11) DEFAULT '0' COMMENT 'links to security_users.id',
+  `assignee_id` int(11) NOT NULL DEFAULT '0' COMMENT 'links to security_users.id',
   `status_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
@@ -243,7 +305,7 @@ CREATE TABLE IF NOT EXISTS `training_sessions` (
   `comment` text,
   `training_course_id` int(11) NOT NULL COMMENT 'links to training_courses.id',
   `training_provider_id` int(11) NOT NULL COMMENT 'links to field_option_values.id',
-  `assignee_id` int(11) DEFAULT '0' COMMENT 'links to security_users.id',
+  `assignee_id` int(11) NOT NULL DEFAULT '0' COMMENT 'links to security_users.id',
   `status_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
@@ -269,7 +331,7 @@ DROP TABLE IF EXISTS `training_session_results`;
 CREATE TABLE IF NOT EXISTS `training_session_results` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `training_session_id` int(11) NOT NULL COMMENT 'links to training_sessions.id',
-  `assignee_id` int(11) DEFAULT '0' COMMENT 'links to security_users.id',
+  `assignee_id` int(11) NOT NULL DEFAULT '0' COMMENT 'links to security_users.id',
   `status_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
@@ -281,11 +343,48 @@ CREATE TABLE IF NOT EXISTS `training_session_results` (
   KEY `status_id` (`status_id`),
   KEY `modified_user_id` (`modified_user_id`),
   KEY `created_user_id` (`created_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `training_session_results` (`id`, `training_session_id`, `assignee_id`, `status_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT `id`, `training_session_id`, 0, `status_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
 FROM `z_3253_training_session_results`;
+
+-- staff_training_needs
+RENAME TABLE `staff_training_needs` TO `z_3253_staff_training_needs`;
+
+DROP TABLE IF EXISTS `staff_training_needs`;
+CREATE TABLE IF NOT EXISTS `staff_training_needs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `comments` text,
+  `course_code` varchar(60) DEFAULT NULL,
+  `course_name` varchar(250) DEFAULT NULL,
+  `course_description` text,
+  `course_id` int(11) NOT NULL COMMENT 'links to training_courses.id',
+  `training_need_category_id` int(11) NOT NULL COMMENT 'links to field_option_values.id',
+  `training_requirement_id` int(11) NOT NULL COMMENT 'links to field_option_values.id',
+  `training_priority_id` int(11) NOT NULL COMMENT 'links to field_option_values.id',
+  `staff_id` int(11) NOT NULL COMMENT 'links to security_users.id',
+  `assignee_id` int(11) NOT NULL DEFAULT '0' COMMENT 'links to security_users.id',
+  `status_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `course_id` (`course_id`),
+  KEY `training_need_category_id` (`training_need_category_id`),
+  KEY `training_requirement_id` (`training_requirement_id`),
+  KEY `training_priority_id` (`training_priority_id`),
+  KEY `staff_id` (`staff_id`),
+  KEY `assignee_id` (`assignee_id`),
+  KEY `status_id` (`status_id`),
+  KEY `modified_user_id` (`modified_user_id`),
+  KEY `created_user_id` (`created_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `staff_training_needs` (`id`, `comments`, `course_code`, `course_name`, `course_description`, `course_id`, `training_need_category_id`, `training_requirement_id`, `training_priority_id`, `staff_id`, `assignee_id`, `status_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT `id`, `comments`, `course_code`, `course_name`, `course_description`, `course_id`, `training_need_category_id`, `training_requirement_id`, `training_priority_id`, `staff_id`, 0, `status_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+FROM `z_3253_staff_training_needs`;
 
 -- security_functions
 DELETE FROM `security_functions` WHERE `id` = 5049;
