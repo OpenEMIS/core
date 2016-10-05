@@ -25,13 +25,28 @@ class WorkflowActionsTable extends AppTable {
 		return $entity->comment_required == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
 	}
 
+	public function onGetEvents(Event $event, Entity $entity) {
+		$workflowSteps = $entity->workflow_step;
+		$selectedWorkflow = $workflowSteps->workflow_id;
+		$eventOptions = $this->getEvents($selectedWorkflow);
+
+    	$events = $this->convertEventKeysToEvents($entity);
+    	$eventArray = [];
+    	foreach ($events as $key => $event) {
+    		$eventArray[$event] = $eventOptions[$event];
+    	}
+
+    	return implode(', ', $eventArray);
+	}
+
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('action', ['visible' => false]);
 		$this->ControllerAction->field('event_key', ['visible' => false]);
 	}
 
 	public function indexBeforeAction(Event $event) {
-		$this->ControllerAction->setFieldOrder(['visible', 'name', 'description', 'workflow_step_id', 'next_workflow_step_id', 'comment_required']);
+		$this->ControllerAction->field('events');
+		$this->ControllerAction->setFieldOrder(['visible', 'name', 'description', 'workflow_step_id', 'next_workflow_step_id', 'comment_required', 'events']);
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
