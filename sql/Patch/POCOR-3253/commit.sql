@@ -83,7 +83,11 @@ INSERT INTO `workflow_actions` (`id`, `name`, `description`, `action`, `visible`
 SELECT `id`, `name`, `description`, `action`, `visible`, `next_workflow_step_id`, `event_key`, `comment_required`, 0, `workflow_step_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
 FROM `z_3253_workflow_actions`;
 
-UPDATE `workflow_actions` SET `allow_by_assignee` = 1 WHERE `action` = 1;
+UPDATE `workflow_actions` AS `WorkflowActions`
+INNER JOIN `workflow_steps` AS `WorkflowSteps`
+ON `WorkflowSteps`.`id` = `WorkflowActions`.`workflow_step_id`
+SET `WorkflowActions`.`allow_by_assignee` = 1
+WHERE `WorkflowSteps`.`category` = 1;
 
 -- workflow_records
 RENAME TABLE `workflow_records` TO `z_3253_workflow_records`;
