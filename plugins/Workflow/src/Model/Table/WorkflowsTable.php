@@ -16,10 +16,10 @@ use App\Model\Traits\OptionsTrait;
 class WorkflowsTable extends AppTable {
 	use OptionsTrait;
 
-	// Workflow Steps - stage
-	const OPEN = 0;
-	const PENDING = 1;
-	const CLOSED = 2;
+	// Workflow Steps - category
+	const OPEN = 1;
+	const PENDING = 2;
+	const CLOSED = 3;
 
 	// Workflow Actions - action
 	const APPROVE = 0;
@@ -65,9 +65,9 @@ class WorkflowsTable extends AppTable {
 		if ($entity->isNew()) {
 			$data = [
 				'workflow_steps' => [
-					['name' => __('Open'), 'stage' => self::OPEN, 'is_editable' => 1, 'is_removable' => 1],
-					['name' => __('Pending For Approval'), 'stage' => self::PENDING],
-					['name' => __('Closed'), 'stage' => self::CLOSED]
+					['name' => __('Open'), 'category' => self::OPEN, 'is_editable' => 1, 'is_removable' => 1],
+					['name' => __('Pending For Approval'), 'category' => self::PENDING],
+					['name' => __('Closed'), 'category' => self::CLOSED]
 				]
 			];
 
@@ -634,7 +634,7 @@ class WorkflowsTable extends AppTable {
 		$stepClosed = null;
 
 		foreach ($entity->workflow_steps as $key => $step) {
-			switch ($step->stage) {
+			switch ($step->category) {
 				case self::OPEN:
 					$stepOpen = $step;
 					break;
@@ -658,14 +658,16 @@ class WorkflowsTable extends AppTable {
 					'action' => self::APPROVE,
 					'visible' => 1,
 					'next_workflow_step_id' => $stepPending->id,
-					'comment_required' => 0
+					'comment_required' => 0,
+					'allow_by_assignee' => 1
 				],
 				[
 					'name' => __('Cancel'),
 					'action' => self::REJECT,
 					'visible' => 1,
 					'next_workflow_step_id' => $stepClosed->id,
-					'comment_required' => 0
+					'comment_required' => 0,
+					'allow_by_assignee' => 1
 				]
 			]
 		];
@@ -685,14 +687,16 @@ class WorkflowsTable extends AppTable {
 					'action' => self::APPROVE,
 					'visible' => 1,
 					'next_workflow_step_id' => $stepClosed->id,
-					'comment_required' => 0
+					'comment_required' => 0,
+					'allow_by_assignee' => 0
 				],
 				[
 					'name' => __('Reject'),
 					'action' => self::REJECT,
 					'visible' => 1,
 					'next_workflow_step_id' => $stepOpen->id,
-					'comment_required' => 0
+					'comment_required' => 0,
+					'allow_by_assignee' => 0
 				]
 			]
 		];
@@ -712,21 +716,24 @@ class WorkflowsTable extends AppTable {
 					'action' => self::APPROVE,
 					'visible' => 0,
 					'next_workflow_step_id' => 0,
-					'comment_required' => 0
+					'comment_required' => 0,
+					'allow_by_assignee' => 0
 				],
 				[
 					'name' => __('Reject'),
 					'action' => self::REJECT,
 					'visible' => 0,
 					'next_workflow_step_id' => 0,
-					'comment_required' => 0
+					'comment_required' => 0,
+					'allow_by_assignee' => 0
 				],
 				[
 					'name' => __('Reopen'),
 					'action' => null,
 					'visible' => 1,
 					'next_workflow_step_id' => $stepOpen->id,
-					'comment_required' => 0
+					'comment_required' => 0,
+					'allow_by_assignee' => 0
 				]
 			]
 		];
@@ -801,13 +808,12 @@ class WorkflowsTable extends AppTable {
 
 			foreach ($steps as $key => $step) {
 				$stepIds[$step->id] = $step->id;
-				if ($step->stage == self::OPEN) {
+				if ($step->category == self::OPEN) {
 					$openStepId = $step->id;
 				}
 			}
 
 			$subject = TableRegistry::get($model);
-			$WorkflowRecords = TableRegistry::get('Workflow.WorkflowRecords');
 
 			if ($entity->has('filters')) {
 				// When edit: If filterIds is clear, fall back to the first step of Default Workflows (Apply To All)
@@ -845,7 +851,7 @@ class WorkflowsTable extends AppTable {
 							->find()
 							->where([
 								$this->WorkflowSteps->aliasField('workflow_id IN ') => $defaultWorkflowId,
-								$this->WorkflowSteps->aliasField('stage') => self::OPEN
+								$this->WorkflowSteps->aliasField('category') => self::OPEN
 							])
 							->first()
 							->id;
@@ -871,14 +877,6 @@ class WorkflowsTable extends AppTable {
 				$subject->updateAll(
 					[$statusKey => $openStepId],
 					['id IN ' => $recordIds]
-				);
-
-				$WorkflowRecords->updateAll(
-					['workflow_step_id' => $openStepId],
-					[
-						'workflow_model_id' => $selectedModel,
-						'model_reference IN ' => $recordIds
-					]
 				);
 			}
 		}
