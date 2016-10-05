@@ -136,7 +136,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <input ng-model="InstitutionStudentController.internalFilterLastName" ng-disabled="true" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
-                    <label><?= __('{{ InstitutionStudentController.defaultIdentityTypeName }}') ?></label>
+                    <label><?= __('{{ InstitutionStudentController.defaultExternalIdentityTypeName }}') ?></label>
                     <input ng-model="InstitutionStudentController.internalFilterIdentityNumber" ng-disabled="true" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">

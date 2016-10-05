@@ -176,7 +176,7 @@ class ExternalDataSourceBehavior extends Behavior {
 		$attribute['client_secret'] = ['label' => 'Client Secret', 'type' => 'text'];
 		// $attribute['redirect_uri'] = ['label' => 'Redirect URI', 'type' => 'text', 'readonly' => true];
 		// $attribute['hd'] = ['label' => 'Hosted Domain', 'type' => 'text', 'required' => false];
-		$attribute['user_record_uri'] = ['label' => 'User Record URI', 'type' => 'text'];
+		$attribute['record_uri'] = ['label' => 'Record URI', 'type' => 'text'];
 	}
 
 	public function onGetExternalDataSourceTypeElement(Event $event, $action, $entity, $attr, $options=[]) {

@@ -99,7 +99,6 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
             if (defaultIdentityType.length > 0) {
                 StudentController.defaultIdentityTypeName = defaultIdentityType[0].name;
             }
-            $scope.initGrid();
             return InstitutionsStudentsSvc.getGenders();
         }, function(error){
             console.log(error);
@@ -107,6 +106,17 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
         })
         .then(function(genders) {
             StudentController.genderOptions = genders;
+            InstitutionsStudentsSvc.getExternalDefaultIdentityType()
+            .then(function(externalIdentityType) {
+                if (externalIdentityType.length > 0) {
+                    StudentController.defaultExternalIdentityTypeName = externalIdentityType[0].name;
+                }
+                InstitutionsStudentsSvc.init(angular.baseUrl);
+                $scope.initGrid();
+            }, function(error) {
+                console.log(error);
+                AlertSvc.warning($scope, error);
+            });
         }, function(error) {
             console.log(error);
             AlertSvc.warning($scope, error);
@@ -170,7 +180,7 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
                 {headerName: "Name", field: "name", suppressMenu: true, suppressSorting: true},
                 {headerName: "Gender", field: "gender_name", suppressMenu: true, suppressSorting: true},
                 {headerName: "Date of Birth", field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                {headerName: (angular.isDefined(StudentController.defaultIdentityTypeName))? StudentController.defaultIdentityTypeName: "[default identity type not set]", field: "identity_number", suppressMenu: true, suppressSorting: true},
+                {headerName: (angular.isDefined(StudentController.defaultExternalIdentityTypeName))? StudentController.defaultExternalIdentityTypeName: "[default identity type not set]", field: "identity_number", suppressMenu: true, suppressSorting: true},
             ],
             enableColResize: false,
             enableFilter: true,
