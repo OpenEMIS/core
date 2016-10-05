@@ -18,6 +18,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         setInstitutionId: setInstitutionId,
         getInstitutionId: getInstitutionId,
         getDefaultIdentityType: getDefaultIdentityType,
+        getExternalDefaultIdentityType: getExternalDefaultIdentityType,
         getAcademicPeriods: getAcademicPeriods,
         getEducationGrades: getEducationGrades,
         getClasses: getClasses,
@@ -58,6 +59,8 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
     var externalModels = {
         Users: 'Users',
+        IdentityTypes: 'IdentityTypes'
+
     };
 
     return service;
@@ -99,7 +102,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
                     if (authenticationUri != '') {
                         delete externalDataSourceObject.authentication_uri;
-                        delete externalDataSourceObject.user_record_uri;
+                        delete externalDataSourceObject.record_uri;
                         delete externalDataSourceObject.redirect_uri;
                         var postData = 'grant_type=refresh_token';
                         var log = [];
@@ -131,7 +134,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
     function getExternalSourceUrl()
     {
         return ExternalDataSourceAttributes
-            .find('Uri', {record_type: 'user_record_uri'})
+            .find('Uri', {record_type: 'record_uri'})
             .ajax({defer: true});
     };
 
@@ -500,6 +503,48 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         return IdentityTypes
             .find('DefaultIdentityType')
             .ajax({success: success, defer: true});
+    };
+
+    function getExternalDefaultIdentityType() {
+        var vm = this;
+        var defer = $q.defer();
+
+
+        this.getExternalSourceUrl()
+        .then(function(sourceUrl) {
+            var source = sourceUrl.data;
+            if (source.length > 0) {
+                sourceUrl = source[0].value;
+            }
+            vm.initExternal(sourceUrl);
+            vm.getAccessToken()
+            .then(function(token){
+                var authorizationHeader = 'Bearer ' + token;
+                var success = function(response, deferred) {
+                    var defaultIdentityType = response.data.data;
+                    if (angular.isObject(defaultIdentityType) && defaultIdentityType.length > 0) {
+                        deferred.resolve(defaultIdentityType);
+                    } else {
+                        deferred.resolve(defaultIdentityType);
+                    }
+                };
+                return IdentityTypes
+                    .find('DefaultIdentityType')
+                    .ajax({defer: true, success: success, authorizationHeader: authorizationHeader});
+            }, function (error) {
+                defer.reject(error);
+            })
+            .then(function(identityType) {
+                defer.resolve(identityType);
+            }, function(error) {
+                console.log(error);
+                defer.reject(error);
+            });
+        }, function(error) {
+            defer.reject(error);
+        });
+
+        return defer.promise;
     };
 
     function formatDateToYMD(datetime) {
