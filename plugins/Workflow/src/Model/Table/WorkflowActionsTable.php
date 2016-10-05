@@ -25,6 +25,10 @@ class WorkflowActionsTable extends AppTable {
 		return $entity->comment_required == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
 	}
 
+	public function onGetAllowByAssignee(Event $event, Entity $entity) {
+		return $entity->allow_by_assignee == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
+	}
+
 	public function onGetEvents(Event $event, Entity $entity) {
 		$workflowSteps = $entity->workflow_step;
 		$selectedWorkflow = $workflowSteps->workflow_id;
@@ -46,7 +50,7 @@ class WorkflowActionsTable extends AppTable {
 
 	public function indexBeforeAction(Event $event) {
 		$this->ControllerAction->field('events');
-		$this->ControllerAction->setFieldOrder(['visible', 'name', 'description', 'workflow_step_id', 'next_workflow_step_id', 'comment_required', 'events']);
+		$this->ControllerAction->setFieldOrder(['visible', 'name', 'description', 'workflow_step_id', 'next_workflow_step_id', 'comment_required', 'allow_by_assignee', 'events']);
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -222,6 +226,16 @@ class WorkflowActionsTable extends AppTable {
 		return $attr;
 	}
 
+	public function onUpdateFieldAllowByAssignee(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add' || $action == 'edit') {
+			$attr['type'] = 'select';
+			$attr['select'] = false;
+			$attr['options'] = $this->getSelectOptions('general.yesno');
+		}
+
+		return $attr;
+	}
+
 	public function onUpdateFieldEvents(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'view') {
 			$entity = $attr['attr']['entity'];
@@ -347,6 +361,7 @@ class WorkflowActionsTable extends AppTable {
 			'attr' => ['entity' => $entity]
 		]);
 		$this->ControllerAction->field('comment_required');
+		$this->ControllerAction->field('allow_by_assignee');
 		$this->ControllerAction->field('visible');
 		$this->ControllerAction->field('events', [
 			'type' => 'element',
@@ -355,7 +370,7 @@ class WorkflowActionsTable extends AppTable {
 			'attr' => ['entity' => $entity]
 		]);
 
-		$this->ControllerAction->setFieldOrder(['workflow_model_id', 'workflow_id', 'workflow_step_id', 'name', 'description', 'next_workflow_step_id', 'comment_required', 'visible']);
+		$this->ControllerAction->setFieldOrder(['workflow_model_id', 'workflow_id', 'workflow_step_id', 'name', 'description', 'next_workflow_step_id', 'comment_required', 'allow_by_assignee', 'visible', 'events']);
 	}
 
 	private function checkIfCanEditOrDelete($entity) {
