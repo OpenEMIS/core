@@ -19,7 +19,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '1',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -34,7 +34,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '1',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -49,7 +49,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '1',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -64,7 +64,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '2',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -79,7 +79,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '3',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -94,7 +94,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '4',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -109,7 +109,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '5',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -124,7 +124,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '1',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -139,7 +139,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '2',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -154,7 +154,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '3',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -169,7 +169,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '4',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -184,7 +184,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '5',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -199,7 +199,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '6',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -214,7 +214,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '7',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -229,7 +229,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '8',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -244,7 +244,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '9',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -259,7 +259,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '10',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -274,7 +274,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '11',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -289,7 +289,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '12',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -304,7 +304,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '13',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -319,7 +319,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '14',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -334,7 +334,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '15',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -349,7 +349,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '16',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -364,7 +364,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '17',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -379,7 +379,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '18',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -394,7 +394,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '19',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -409,7 +409,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '20',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -424,7 +424,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '21',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -439,7 +439,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '22',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -454,7 +454,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '23',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -469,7 +469,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '24',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -484,7 +484,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '25',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -499,7 +499,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '26',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -514,7 +514,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '27',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -529,7 +529,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '28',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -544,7 +544,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '29',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -559,7 +559,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '30',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -574,7 +574,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '31',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -589,7 +589,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '32',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -604,7 +604,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '33',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -619,7 +619,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '34',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -634,7 +634,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '35',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -649,7 +649,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '36',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -664,7 +664,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '37',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -679,7 +679,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '38',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -694,7 +694,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '39',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -709,7 +709,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '40',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -724,7 +724,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '41',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -739,7 +739,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '42',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -754,7 +754,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '43',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -769,7 +769,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '44',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -784,7 +784,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '45',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -799,7 +799,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '46',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -814,7 +814,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '47',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -829,7 +829,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '48',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -844,7 +844,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '49',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -859,7 +859,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '50',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -874,7 +874,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '51',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -889,7 +889,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '52',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -904,7 +904,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '53',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -919,7 +919,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '54',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -934,7 +934,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '55',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -949,7 +949,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '56',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -964,7 +964,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '57',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -979,7 +979,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '58',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -994,7 +994,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '59',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1009,7 +1009,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '60',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1024,7 +1024,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '61',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1039,7 +1039,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '62',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1054,7 +1054,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '63',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1069,7 +1069,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '64',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1084,7 +1084,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '65',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1099,7 +1099,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '66',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1114,7 +1114,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '67',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1129,7 +1129,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '68',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1144,7 +1144,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '69',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1159,7 +1159,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '70',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1174,7 +1174,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '71',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1189,7 +1189,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '72',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1204,7 +1204,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '73',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1219,7 +1219,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '74',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1234,7 +1234,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '75',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1249,7 +1249,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '76',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1264,7 +1264,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '77',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1279,7 +1279,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '78',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1294,7 +1294,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '79',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1309,7 +1309,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '80',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1324,7 +1324,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '81',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1339,7 +1339,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '82',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1354,7 +1354,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '83',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1369,7 +1369,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '84',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1384,7 +1384,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '85',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1399,7 +1399,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '1',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1414,7 +1414,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '2',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1429,7 +1429,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '3',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1444,7 +1444,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '4',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1459,7 +1459,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '5',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1474,7 +1474,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '6',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1489,7 +1489,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '7',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1504,7 +1504,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '8',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1519,7 +1519,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '9',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1534,7 +1534,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '10',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1549,7 +1549,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '11',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1564,7 +1564,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '12',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1579,7 +1579,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '13',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1594,7 +1594,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '14',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1609,7 +1609,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '15',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1624,7 +1624,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '16',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1639,7 +1639,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '17',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1654,7 +1654,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '18',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1669,7 +1669,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '19',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1684,7 +1684,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '20',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1699,7 +1699,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '21',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1714,7 +1714,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '22',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1729,7 +1729,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '1',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1744,7 +1744,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '2',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1759,7 +1759,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '3',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1774,7 +1774,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '4',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1789,7 +1789,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '5',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1804,7 +1804,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '6',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1819,7 +1819,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '7',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1834,7 +1834,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '8',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1849,7 +1849,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '9',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1864,7 +1864,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '10',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1879,7 +1879,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '11',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1894,7 +1894,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '12',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1909,7 +1909,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '13',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1924,7 +1924,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '14',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1939,7 +1939,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '15',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1954,7 +1954,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '16',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1969,7 +1969,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '17',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1984,7 +1984,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '18',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -1999,7 +1999,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '19',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2014,7 +2014,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '1',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2029,7 +2029,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '2',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2044,7 +2044,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '3',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2059,7 +2059,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '4',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2074,7 +2074,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '5',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2089,7 +2089,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '6',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2104,7 +2104,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '7',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2119,7 +2119,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '8',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2134,7 +2134,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '9',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2149,7 +2149,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '10',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2164,7 +2164,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '11',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2179,7 +2179,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '12',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2194,7 +2194,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '13',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2209,7 +2209,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '14',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2224,7 +2224,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '15',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2239,7 +2239,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '16',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2254,7 +2254,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '17',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2269,7 +2269,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '18',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2284,7 +2284,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '19',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2299,7 +2299,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '20',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2314,7 +2314,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '21',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2329,7 +2329,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '22',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2344,7 +2344,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '23',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2359,7 +2359,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '24',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2374,7 +2374,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '25',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2389,7 +2389,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '26',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2404,7 +2404,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '1',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2419,7 +2419,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '2',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2434,7 +2434,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '3',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2449,7 +2449,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '4',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2464,7 +2464,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '5',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2479,7 +2479,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '6',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2494,7 +2494,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '7',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2509,7 +2509,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '8',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2524,7 +2524,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '9',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2539,7 +2539,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '10',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2554,7 +2554,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '11',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2569,7 +2569,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '12',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2584,7 +2584,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '13',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2599,7 +2599,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '14',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2614,7 +2614,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '15',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2629,7 +2629,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '16',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2644,7 +2644,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '17',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2659,7 +2659,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '18',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2674,7 +2674,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '19',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2689,7 +2689,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '20',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2704,7 +2704,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '21',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2719,7 +2719,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '22',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2734,7 +2734,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '23',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2749,7 +2749,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '24',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2764,7 +2764,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '25',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2779,7 +2779,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '26',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2794,7 +2794,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '27',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2809,7 +2809,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '28',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2824,7 +2824,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '29',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2839,7 +2839,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '30',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2854,7 +2854,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '31',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2869,7 +2869,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '32',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2884,7 +2884,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '33',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2899,7 +2899,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '34',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2914,7 +2914,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '35',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2929,7 +2929,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '36',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2944,7 +2944,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '37',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2959,7 +2959,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '38',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2974,7 +2974,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '39',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -2989,7 +2989,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '40',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -3004,7 +3004,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '41',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -3019,7 +3019,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '42',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -3034,7 +3034,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '43',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -3049,7 +3049,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '44',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -3064,7 +3064,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '45',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -3079,7 +3079,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '46',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -3094,7 +3094,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '47',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -3109,7 +3109,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '48',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -3124,7 +3124,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '49',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -3139,7 +3139,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '50',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -3154,7 +3154,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '51',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -3169,7 +3169,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '52',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -3184,7 +3184,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '53',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [
@@ -3199,7 +3199,7 @@ class AreaAdministrativesFixture extends TestFixture
             'order' => '54',
             'visible' => '1',
             'modified_user_id' => '0',
-            'modified' => '0000-00-00 00:00:00',
+            'modified' => null,
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ], [

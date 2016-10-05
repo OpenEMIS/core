@@ -25,7 +25,7 @@ class InfrastructureTypesTable extends ControllerActionTable {
 		}
 
 		$this->addBehavior('Infrastructure.Types');
-		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
+		$this->setDeleteStrategy('restrict');
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
