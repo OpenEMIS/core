@@ -13,10 +13,10 @@ use App\Model\Traits\OptionsTrait;
 class WorkflowStepsTable extends AppTable {
 	use OptionsTrait;
 
-	// Workflow Steps - stage
-	const OPEN = 0;
-	const PENDING = 1;
-	const CLOSED = 2;
+	// Workflow Steps - category
+	const OPEN = 1;
+	const PENDING = 2;
+	const CLOSED = 3;
 
 	// Workflow Actions - action
 	const APPROVE = 0;
@@ -48,7 +48,7 @@ class WorkflowStepsTable extends AppTable {
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {		
 		// Auto insert default workflow_actions when add
 		if ($entity->isNew()) {
-			if ($entity->has('stage') && in_array($entity->stage, [self::OPEN, self::PENDING, self::CLOSED])) {
+			if ($entity->has('category') && in_array($entity->category, [self::OPEN, self::PENDING, self::CLOSED])) {
 				$data = [
 					'workflow_actions' => []
 				];
@@ -60,14 +60,16 @@ class WorkflowStepsTable extends AppTable {
 							'action' => self::APPROVE,
 							'visible' => 1,
 							'next_workflow_step_id' => 0,
-							'comment_required' => 0
+							'comment_required' => 0,
+							'allow_by_assignee' => 0
 						],
 						[
 							'name' => __('Reject'),
 							'action' => self::REJECT,
 							'visible' => 1,
 							'next_workflow_step_id' => 0,
-							'comment_required' => 0
+							'comment_required' => 0,
+							'allow_by_assignee' => 0
 						]
 					]
 				];
@@ -85,7 +87,7 @@ class WorkflowStepsTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('stage', ['visible' => false]);
+		$this->ControllerAction->field('category', ['visible' => false]);
 		$this->ControllerAction->field('security_roles', [
 			'type' => 'chosenSelect',
 			'placeholder' => __('Select Security Roles')
@@ -267,7 +269,7 @@ class WorkflowStepsTable extends AppTable {
     	$isDeletable = true;
 
     	// not allow to edit name for Open, Pending For Approval and Closed
-		if (!is_null($entity->stage) && in_array($entity->stage, [self::OPEN, self::PENDING, self::CLOSED])) {
+		if (!is_null($entity->category) && in_array($entity->category, [self::OPEN, self::PENDING, self::CLOSED])) {
 			$isEditable = false;
     		$isDeletable = false;
 		}
