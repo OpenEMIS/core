@@ -55,6 +55,7 @@ class StudentDropoutTable extends AppTable {
     }
 
     public function editAfterAction($event, Entity $entity) {
+    	$this->ControllerAction->field('effective_date', ['attr' => ['entity' => $entity]]);
 		$this->ControllerAction->field('student_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->student_id)->name_with_id]]);
 		$this->ControllerAction->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
 		$this->ControllerAction->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $this->AcademicPeriods->get($entity->academic_period_id)->name]]);
@@ -109,7 +110,7 @@ class StudentDropoutTable extends AppTable {
 			if ($this->request->data[$this->alias()]['status'] == self::NEW_REQUEST && ($this->AccessControl->check(['Institutions', $this->alias(), 'edit']))) {
 				$buttons[0] = [
 					'name' => '<i class="fa fa-check"></i> ' . __('Approve'),
-					'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'approve']
+					'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'save']
 				];
 
 				$buttons[1] = [
@@ -231,6 +232,24 @@ class StudentDropoutTable extends AppTable {
 			if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST || !($this->AccessControl->check(['Institutions', $this->alias(), 'edit']))) {
 				$attr['type'] = 'readonly';
 			}
+
+			$entity = $attr['attr']['entity'];
+			$studentId = $entity->student_id;
+
+			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+			$enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
+
+			$Students = TableRegistry::get('Institution.Students');
+			$StudentsData = $Students
+				->find()
+				->where([$Students->aliasField('student_id') => $studentId, $Students->aliasField('student_status_id') => $enrolledStatus])
+				->first();
+
+			if (!empty($StudentsData)) {
+				$enrolledDate = $StudentsData->start_date->format('d-m-Y');
+				$attr['date_options'] = ['startDate' => $enrolledDate];
+			}
+
 			return $attr;
 		}
 	}
@@ -281,48 +300,70 @@ class StudentDropoutTable extends AppTable {
 		return $buttons;
 	}
 
-	public function editOnApprove(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$entity->comment = $data[$this->alias()]['comment'];
-		$effectiveDate = strtotime($data[$this->alias()]['effective_date']);
-		$Students = TableRegistry::get('Institution.Students');
-		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-		$statuses = $StudentStatuses->findCodeList();
+	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+		$process = function ($model, $entity) use ($data) {
+			if (!empty($entity->errors())) {
+				 return false;
+			}
 
-		$institutionId = $entity->institution_id;
-		$studentId = $entity->student_id;
-		$periodId = $entity->academic_period_id;
-		$gradeId = $entity->education_grade_id;
+			$entity->comment = $data[$this->alias()]['comment'];
+			$effectiveDate = strtotime($data[$this->alias()]['effective_date']);
+			$Students = TableRegistry::get('Institution.Students');
+			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+			$statuses = $StudentStatuses->findCodeList();
 
-		// Change the status of the student in the school
-		// Update only enrolled statuses student
-		$existingStudentEntity = $Students->find()->where([
-				$Students->aliasField('institution_id') => $institutionId,
-				$Students->aliasField('student_id') => $studentId,
-				$Students->aliasField('academic_period_id') => $periodId,
-				$Students->aliasField('education_grade_id') => $gradeId,
-				$Students->aliasField('student_status_id') => $statuses['CURRENT']
-			])
-			->first();
+			$institutionId = $entity->institution_id;
+			$studentId = $entity->student_id;
+			$periodId = $entity->academic_period_id;
+			$gradeId = $entity->education_grade_id;
 
-		if (empty($existingStudentEntity)) {
-			// if no record is found say 'This student is not eligible for this action. Please reject this request.'
-			$this->Alert->warning('DropoutRequests.notEligible');
-			$event->stopPropagation();
-			return $this->controller->redirect($this->ControllerAction->url('edit'));
-		}
+			$conditions = [
+				'institution_id' => $institutionId,
+				'student_id' => $studentId,
+				'academic_period_id' => $periodId,
+				'education_grade_id' => $gradeId,
+				'student_status_id' => $statuses['DROPOUT']
+			];
 
-		$existingStudentEntity->student_status_id = $statuses['DROPOUT'];
-		$existingStudentEntity->end_date = $effectiveDate;
-		$Students->save($existingStudentEntity);
-		$this->Alert->success('StudentDropout.approve');
+			$newData = $conditions;
 
-		$entity->status = self::APPROVED;
-		$entity->effective_date = date('Y-m-d', $effectiveDate);
-		if (!$this->save($entity)) {
-			$this->log($entity->errors(), 'debug');
-		}
+			// If the student is not already drop out
+			if (!$Students->exists($conditions)) {
+				// Change the status of the student in the school
+				// Update only enrolled statuses student
+				$existingStudentEntity = $Students->find()->where([
+						$Students->aliasField('institution_id') => $institutionId,
+						$Students->aliasField('student_id') => $studentId,
+						$Students->aliasField('academic_period_id') => $periodId,
+						$Students->aliasField('education_grade_id') => $gradeId,
+						$Students->aliasField('student_status_id') => $statuses['CURRENT']
+					])
+					->first();
 
-		// To redirect back to the student admission if it is not access from the workbench
+				if (!empty($existingStudentEntity)) {
+					// approval should not proceed
+					$existingStudentEntity->student_status_id = $statuses['DROPOUT'];
+					$existingStudentEntity->end_date = $effectiveDate;
+					$result = $Students->save($existingStudentEntity);
+
+					if ($result) {
+						$entity->status = self::APPROVED;
+						$entity->effective_date = date('Y-m-d', $effectiveDate);
+						if ($this->save($entity)) {
+							return true;
+						}
+					}
+				}
+			}
+			return false;
+		};
+        return $process;
+	}
+
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	{
+		$this->Alert->success('StudentDropout.approve', ['reset' => true]);
+		// To redirect back to the student dropout if it is not access from the workbench
 		$urlParams = $this->ControllerAction->url('index');
 		$plugin = false;
 		$controller = 'Dashboard';
@@ -332,7 +373,6 @@ class StudentDropoutTable extends AppTable {
 			$controller = 'Institutions';
 			$action = 'StudentDropout';
 		}
-
 		$event->stopPropagation();
 		return $this->controller->redirect(['plugin' => $plugin, 'controller' => $controller, 'action' => $action]);
 	}
@@ -357,5 +397,14 @@ class StudentDropoutTable extends AppTable {
 
 		$event->stopPropagation();
 		return $this->controller->redirect(['plugin' => $plugin, 'controller' => $controller, 'action' => $action]);
+	}
+
+	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+		$validator->add('effective_date', 'ruleDateAfterEnrollment', [
+		            'rule' => ['dateAfterEnrollment'],
+		            'provider' => 'table'
+	    			]);
+		return $validator;
 	}
 }

@@ -71,10 +71,10 @@ class AccessControlComponent extends Component {
 
 		$selectedColumns = [
 			'modified' => '(
-				CASE 
-					WHEN '.$SecurityRoleFunctions->aliasField('modified').' > '.$SecurityRoleFunctions->aliasField('created').' 
-					THEN '.$SecurityRoleFunctions->aliasField('modified').' 
-					ELSE '.$SecurityRoleFunctions->aliasField('created').' 
+				CASE
+					WHEN '.$SecurityRoleFunctions->aliasField('modified').' > '.$SecurityRoleFunctions->aliasField('created').'
+					THEN '.$SecurityRoleFunctions->aliasField('modified').'
+					ELSE '.$SecurityRoleFunctions->aliasField('created').'
 					END
 				)'
 		];
@@ -118,25 +118,31 @@ class AccessControlComponent extends Component {
 
 		$selectedColumns = [
 			'modified' => '(
-				CASE 
-					WHEN '.$SecurityRoleFunctions->aliasField('modified').' > '.$SecurityRoleFunctions->aliasField('created').' 
-					THEN '.$SecurityRoleFunctions->aliasField('modified').' 
-					ELSE '.$SecurityRoleFunctions->aliasField('created').' 
+				CASE
+					WHEN '.$SecurityRoleFunctions->aliasField('modified').' > '.$SecurityRoleFunctions->aliasField('created').'
+					THEN '.$SecurityRoleFunctions->aliasField('modified').'
+					ELSE '.$SecurityRoleFunctions->aliasField('created').'
 					END
 				)'
 		];
-		
+
 		if ($roles->all()->count() > 0) {
+			// Newly created system role or user role will have no security functions prepopulated in the table, thus the following may return empty
 			$lastModified = $SecurityRoleFunctions->find()
 				->select($selectedColumns)
 				->where([$SecurityRoleFunctions->aliasField('security_role_id') . ' IN' => $roles])
 				->order(['modified' => 'DESC'])
-				->first()
-				->modified;
+				->first();
+
+			if (!empty($lastModified)) {
+				$lastModified = $lastModified->modified;
+			} else {
+				$lastModified = '';
+			}
 
 			foreach ($roles->all() as $role) { // for each role in user
 				$roleId = $role->security_role_id;
-				
+
 				$functions = $SecurityRoleFunctions->find()
 					->contain(['SecurityFunctions'])
 					->where([$SecurityRoleFunctions->aliasField('security_role_id') => $roleId])
@@ -166,7 +172,7 @@ class AccessControlComponent extends Component {
 					}
 				}
 			}
-			
+
 			$userRole = $this->getUserGroupRole();
 			$this->Session->write('System.User.roles', $userRole);
 			$this->Session->write('Permissions.lastModified', $lastModified);
@@ -188,7 +194,7 @@ class AccessControlComponent extends Component {
 			$this->Session->write($permissionKey, $roles);
 		}
 	}
-	
+
 	public function check($url=[], $roleIds=[]) {
 		$superAdmin = $this->Auth->user('super_admin');
 
@@ -219,7 +225,7 @@ class AccessControlComponent extends Component {
 		$url = array_merge(['Permissions'], $url);
 		$permissionKey = implode('.', $url);
 		// pr($permissionKey);
-		
+
 		if ($this->Session->check($permissionKey)) {
 			if (!empty($roleIds)) {
 				$roles = $this->Session->read($permissionKey);
