@@ -12,10 +12,12 @@ use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 use Cake\Datasource\Exception\RecordNotFoundException;
 
-class PermissionsTable extends AppTable {
+class PermissionsTable extends AppTable
+{
 	private $operations = ['_view', '_edit', '_add', '_delete', '_execute'];
 
-	public function initialize(array $config) {
+	public function initialize(array $config)
+	{
 		$this->table('security_role_functions');
 		parent::initialize($config);
 
@@ -23,7 +25,8 @@ class PermissionsTable extends AppTable {
 		$this->belongsTo('SecurityFunctions',	['className' => 'Security.SecurityFunctions']);
 	}
 
-	private function check($entity, $operation) {
+	private function check($entity, $operation)
+	{
 		$flag = 0;
 		if (empty($entity->$operation)) {
 			$flag = -1;
@@ -35,7 +38,8 @@ class PermissionsTable extends AppTable {
 		return $flag;
 	}
 
-	public function afterAction(Event $event, ArrayObject $entity) {
+	public function afterAction(Event $event, ArrayObject $entity)
+	{
 		$plugin = __($this->controller->plugin);
 		$id = $this->request->pass[1];
 		try {
@@ -46,7 +50,8 @@ class PermissionsTable extends AppTable {
 		}
 	}
 
-	public function beforeAction(Event $event) {
+	public function beforeAction(Event $event)
+	{
 		$controller = $this->controller;
 
 		$this->ControllerAction->field('function');
@@ -74,7 +79,8 @@ class PermissionsTable extends AppTable {
 	}
 
 	// Event: ControllerAction.Model.index.beforeAction
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings)
+	{
 		$controller = $this->controller;
 
 		if (count($this->request->pass) != 2) {
@@ -89,16 +95,17 @@ class PermissionsTable extends AppTable {
 		}
 		$module = $this->request->query('module');
 		$settings['pagination'] = false;
-		
+
 		$query = $this->SecurityFunctions->find()->find('permissions', ['roleId' => $roleId, 'module' => $module]);
 		return $query;
 	}
 
-	public function indexAfterAction(Event $event, $data) {
+	public function indexAfterAction(Event $event, $data)
+	{
 		$list = [];
 		$icons = [
-			-1 => '<i class="fa fa-minus grey"></i>', 
-			0 => '<i class="fa kd-cross red"></i>', 
+			-1 => '<i class="fa fa-minus grey"></i>',
+			0 => '<i class="fa kd-cross red"></i>',
 			1 => '<i class="fa kd-check green"></i>'
 		];
 
@@ -110,12 +117,21 @@ class PermissionsTable extends AppTable {
 				$flag = $this->check($obj, $op);
 				$obj->Permissions[$op] = $icons[$flag];
 			}
+
+			// if the permission have description, it will display the description tooltip next to the permission name.
+			if (!empty($obj['description'])) {
+				$message = $obj['description'];
+				$obj->name = $obj->name . $this->tooltipMessage($message);
+			}
+
 			$list[$obj->category][] = $obj;
 		}
+
 		return $list;
 	}
 
-	public function checkRolesHierarchy($roleId) {
+	public function checkRolesHierarchy($roleId)
+	{
 		$user = $this->Auth->user();
 		$userId = $user['id'];
 		if ($user['super_admin'] == 1) { // super admin will show all roles
@@ -137,14 +153,14 @@ class PermissionsTable extends AppTable {
 
 		$roleOrder = $roleEntity->order;
 
-		//this is to check if user have role higher that the one user try to edit.  e.g. teacher(4) and principal(2) 
+		//this is to check if user have role higher that the one user try to edit.  e.g. teacher(4) and principal(2)
 		//also for super admin where redirect not necessary
 		//OR user is creator of the user role.
 		return (($roleOrder > $userRole['security_role']['order']) ||  ($roleEntity->created_user_id == $userId));
-		
 	}
 
-	public function edit($roleId=0) {
+	public function edit($roleId=0)
+	{
 		$request = $this->request;
 		$params = $this->ControllerAction->paramsQuery();
 
@@ -152,7 +168,7 @@ class PermissionsTable extends AppTable {
 			$action = array_merge(['plugin' => 'Security', 'controller' => 'Securities', 'action' => $this->alias(), '0' => 'index']);
 			return $this->controller->redirect($action);
 		}
-		
+
 		if ($request->is(['post', 'put'])) {
 			$permissions = $request->data($this->alias());
 			if (!empty($permissions)) {
@@ -180,19 +196,26 @@ class PermissionsTable extends AppTable {
 					$flag = $this->check($obj, $op);
 					$obj->Permissions[$op] = $flag;
 				}
+				// if the permission have description, it will display the description tooltip next to the permission name.
+				if (!empty($obj['description'])) {
+					$message = $obj['description'];
+					$obj->name = $obj->name . $this->tooltipMessage($message);
+				}
 				$list[$obj->category][] = $obj;
 			}
 			$this->controller->set('data', $list);
 		}
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents()
+	{
     	$events = parent::implementedEvents();
     	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
     	return $events;
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    {
     	$id = $this->request->pass[1];
 
 		if ($action == 'index') {
@@ -217,7 +240,8 @@ class PermissionsTable extends AppTable {
 		}
     }
 
-	private function setupTabElements($modules) {
+	private function setupTabElements($modules)
+	{
 		$controller = $this->controller;
 		$tabElements = [];
 		$url = ['plugin' => $controller->plugin, 'controller' => $controller->name, 'action' => $this->alias()];
@@ -227,7 +251,7 @@ class PermissionsTable extends AppTable {
 		if (!empty($this->request->query)) {
 			$url = array_merge($url, $this->request->query);
 		}
-		
+
 		foreach ($modules as $module) {
 			$tabElements[$module] = [
 				'url' => array_merge($url, ['module' => $module]),
@@ -235,5 +259,12 @@ class PermissionsTable extends AppTable {
 			];
 		}
 		$controller->set('tabElements', $tabElements);
+	}
+
+	private function tooltipMessage($message)
+	{
+		$tooltipMessage = '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $message . '"></i>';
+
+		return $tooltipMessage;
 	}
 }

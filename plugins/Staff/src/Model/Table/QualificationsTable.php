@@ -35,9 +35,13 @@ class QualificationsTable extends ControllerActionTable {
 		$validator = parent::validationDefault($validator);
 
 		return $validator
-			->add('graduate_year', 'ruleNumeric', 
-				['rule' => 'numeric']
-			)
+			->allowEmpty('graduate_year')
+			->add('graduate_year', 'ruleNumeric', [
+                    'rule' => ['numeric'],
+                    'on' => function ($context) { //validate when only graduate_year is not empty
+                        return !empty($context['data']['graduate_year']);
+                    }
+			])
 			->notEmpty('institution_name', __('Please enter the institution'))
 			->allowEmpty('file_content')
 			;

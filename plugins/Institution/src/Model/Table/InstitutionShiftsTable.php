@@ -15,33 +15,34 @@ use App\Model\Traits\MessagesTrait;
 
 use Institution\Model\Table\Institutions;
 
-class InstitutionShiftsTable extends ControllerActionTable {
+class InstitutionShiftsTable extends ControllerActionTable
+{
     use MessagesTrait;
 
-    public function initialize(array $config) {
+    public function initialize(array $config)
+    {
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods',         ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('ShiftOptions',            ['className' => 'Institution.ShiftOptions']);
         $this->belongsTo('Institutions',            ['className' => 'Institution.Institutions']);
         $this->belongsTo('LocationInstitutions',    ['className' => 'Institution.LocationInstitutions']);
+        $this->belongsTo('PreviousShifts', 			['className' => 'Institution.InstitutionShifts', 'foreignKey' => 'previous_shift_id']);
 
         $this->hasMany('InstitutionClasses',        ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_shift_id']);
 
         $this->addBehavior('OpenEmis.Autocomplete');
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
 
-        if ($this->behaviors()->has('ControllerAction')) {
-            $this->behaviors()->get('ControllerAction')->config([
-                'actions' => [
-                    'remove' => 'restrict',
-                    'search' => false
-                ],
-            ]);
-        }
+
+        $this->behaviors()->get('ControllerAction')->config([
+            'actions' => ['search' => false],
+        ]);
+        $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator)
+    {
         $validator = parent::validationDefault($validator);
 
         $validator
@@ -61,31 +62,11 @@ class InstitutionShiftsTable extends ControllerActionTable {
         return $validator;
     }
 
-    //this is to remove virtual field validation during duplicating institution shift
-    // public function validationRemoveLocation(Validator $validator)
-    // {
-    //  $validator->requirePresence('location', false);
-    //  return $validator;
-    // }
-
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.ajaxInstitutionsAutocomplete'] = 'ajaxInstitutionsAutocomplete';
-        // $events['ControllerAction.Model.replicate'] = 'replicate';
         return $events;
-    }
-
-    public function beforeAction(Event $event, ArrayObject $extra) {
-        // //logic to cater for replicate action
-        // $action = $this->action;
-      //    switch ($action) {
-      //       case 'replicate':
-      //           $extra['config']['form'] = true;
-      //           $extra['elements']['edit'] = ['name' => 'OpenEmis.ControllerAction/edit', 'order' => 5];
-      //           break;
-      //       default:
-      //           break;
-      //   }
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
@@ -95,68 +76,6 @@ class InstitutionShiftsTable extends ControllerActionTable {
             $extra['entity']->name = __($shiftName->name);
         }
     }
-
-    // To disable the replicate logic for now, because we need to finalise the trigger point for the replication to happen
-    // Proposed implementation is to trigger from new Academic Period
-   //  public function replicate() //logic to handle replicate action.
-   //  {
-   //   $request = $this->request;
-   //   $previousAcademicPeriod = $request->query['prevPeriod'];
-      //   $latestAcademicPeriod = $this->AcademicPeriods->getLatest();
-
-      //   $shiftDetails = $this->Institutions->getViewShiftDetail($this->Session->read('Institution.Institutions.id'), $previousAcademicPeriod);
-
-      //   if (($request->is(['post', 'put'])) && ($request->data['submit'] == 'save')) { //when replicate form is submitted
-
-   //       foreach ($shiftDetails as $row) {
-            //  $newShift = [
-            //      'start_time' => $row->StartTime,
-            //      'end_time' => $row->EndTime,
-            //      'academic_period_id' => $latestAcademicPeriod,
-            //      'institution_id' => $row->OwnerId,
-            //      'location_institution_id' => $row->OccupierId,
-            //      'shift_option_id' => $row->ShiftId
-            //  ];
-            //  $data = $this->newEntity($newShift, ['validate' => 'RemoveLocation']); //remove validation of location during replication.
-            //  $this->save($data);
-            // }
-
-            // $url = $this->url('index');
-            // unset($url['prevPeriod']);
-            // $url['replicate'] = 1;
-            // return $this->controller->redirect($url);
-
-   //   } else {
-
-   //       $this->Alert->warning('InstitutionShifts.replicateShifts');
-
-      //    $this->fields = []; //remove all the fields
-
-      //    $this->field('previous_academic_period_id', [
-      //        'type'  => 'readonly',
-      //        'attr' => [
-            //      'value' => [$this->AcademicPeriods->get($previousAcademicPeriod)->name]
-            //  ]]);
-
-      //    $this->field('shift_details', [
-            //      'type' => 'element',
-      //           'element' => 'Institution.Shifts/details',
-      //           'data' => $shiftDetails,
-      //           'visible' => true
-      //        ]);
-
-      //    $this->field('latest_academic_period_id', [
-      //        'type'  => 'readonly',
-      //        'attr' => [
-            //      'value' => [$this->AcademicPeriods->get($latestAcademicPeriod)->name]
-            //  ]]);
-
-   //   }
-
-   //   $this->controller->set('data', $this->newEntity());//to remove warning that data is not exist.
-
-   //   return true;
-   //  }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -187,53 +106,11 @@ class InstitutionShiftsTable extends ControllerActionTable {
         }
 
         $this->field('institution_id', ['type' => 'integer']); //this is to show owner (set in label table), by default the default is hidden
+        $this->field('previous_shift_id', ['visible' => 'false']);
 
         $this->setFieldOrder([
             'academic_period_id', 'shift_option_id', 'start_time', 'end_time', 'institution_id', 'location_institution_id'
         ]);
-
-        //this logic is to check whether need to offer user to replicate shift for the latest academic period
-        // $latestAcademicPeriod = $this->AcademicPeriods->getLatest();
-
-        // if ($extra['selectedAcademicPeriodOptions'] == $latestAcademicPeriod) { //if latest acad period selected
-        //  $isOwner = false;
-        //  $isOwner = $this->isOwner($institutionId, $latestAcademicPeriod);
-
-        //  if (!$isOwner) { // if not, perhaps the latest acad = current acad. then need to check the previous period.
-        //      $prevPeriodWithShift = $this->getPreviousPeriodWithShift($institutionId, $latestAcademicPeriod); //if not this period, we should check the prev period. //ensure that it has shift previously
-        //      if ($prevPeriodWithShift) { //if owner of previous academic period
-        //          $isOwner = true;
-        //      }
-        //  }
-
-        //  if ($isOwner) { //all the offer shift replication is for owner only
-        //      $request = $this->request;
-
-        //      if (isset($request->query['replicate'])) { //if has replicate variable, it means replication has been offered before.
-
-        //          if ($request->query['replicate']) { //if replication accepted / success
-        //              $this->Alert->success('InstitutionShifts.replicateShiftsSuccess');
-        //          } else { //if user did not choose to replicate
-        //              $this->Alert->warning('InstitutionShifts.replicateShiftsNotChosen');
-        //          }
-
-        //      } else { //no offer of replication yet. then redirect to replicate page
-
-        //          if (!($this->checkShiftExist($institutionId, $latestAcademicPeriod))) { //if there is no shift exist for the latest academic period
-
-        //              if (!empty($prevPeriodWithShift)) { //if has, then get the acad period
-
-        //                  $prevPeriodWithShift = $prevPeriodWithShift->academicPeriodId;
-        //                  $url = $this->url('replicate');
-        //                  $url['prevPeriod'] = $prevPeriodWithShift;
-        //                  $event->stopPropagation();
-        //                  return $this->controller->redirect($url); //redirect to page that offer shift application based on the previous academic period
-
-        //              }
-        //          }
-        //      }
-        //  }
-        // }
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -251,7 +128,8 @@ class InstitutionShiftsTable extends ControllerActionTable {
         }
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
         $currentInstitutionId = $this->Session->read('Institution.Institutions.id');
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
@@ -265,11 +143,6 @@ class InstitutionShiftsTable extends ControllerActionTable {
 
         return $buttons;
     }
-
-    //public function addBeforeAction(Event $event)
-    //{
-        // unset($this->request->query['replicate']);
-    //}
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
@@ -311,6 +184,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
 
         $this->field('institution_id', ['type' => 'integer']); //this is to show owner (set in label table), by default the default is hidden
+        $this->field('previous_shift_id', ['visible' => 'false']);
 
         $this->setFieldOrder([
             'academic_period_id', 'shift_option_id', 'start_time', 'end_time', 'institution_id', 'location_institution_id'
@@ -333,7 +207,8 @@ class InstitutionShiftsTable extends ControllerActionTable {
         }
     }
 
-    public function onGetInstitutionId(Event $event, Entity $entity) {
+    public function onGetInstitutionId(Event $event, Entity $entity)
+    {
         return $event->subject()->Html->link($entity->institution->name , [
             'plugin' => $this->controller->plugin,
             'controller' => $this->controller->name,
@@ -342,7 +217,8 @@ class InstitutionShiftsTable extends ControllerActionTable {
         ]);
     }
 
-    public function onGetLocationInstitutionId(Event $event, Entity $entity) {
+    public function onGetLocationInstitutionId(Event $event, Entity $entity)
+    {
         return $event->subject()->Html->link($entity->location_institution->name , [
             'plugin' => $this->controller->plugin,
             'controller' => $this->controller->name,
@@ -402,7 +278,8 @@ class InstitutionShiftsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldStartTime(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldStartTime(Event $event, array $attr, $action, Request $request)
+    {
         if ($request->data) {
             $submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
             if ($submit == 'changeShiftOption') {
@@ -415,7 +292,8 @@ class InstitutionShiftsTable extends ControllerActionTable {
         }
     }
 
-    public function onUpdateFieldEndTime(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldEndTime(Event $event, array $attr, $action, Request $request)
+    {
         if ($request->data) {
             $submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
             if ($submit == 'changeShiftOption') {
@@ -483,7 +361,8 @@ class InstitutionShiftsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
+    public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
         $request = $this->request;
         unset($request->query['period']);
 
@@ -496,7 +375,8 @@ class InstitutionShiftsTable extends ControllerActionTable {
         }
     }
 
-    public function addEditOnChangeShiftOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
+    public function addEditOnChangeShiftOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
         $request = $this->request;
         unset($request->query['shiftoption']);
 
@@ -623,21 +503,6 @@ class InstitutionShiftsTable extends ControllerActionTable {
             return false;
         }
     }
-
-    //public function onGetFormButtons(Event $event, ArrayObject $buttons) {
-
-        // if ($this->action == 'replicate') {
-        //  $url = $this->url('index');
-        //  $url['replicate'] = 0; //when member cancel, then redirect them back to latest academic period but no need to redirect back to replicate page anymore.
-        //  unset($url['prevPeriod']);
-
-        //  $buttons[1] = [ //for cancel button, create URL to redirect back to index page
-        //      'name' => $buttons[1]['name'],
-        //      'attr' => ['class' => 'btn btn-outline btn-cancel', 'escape' => false], //follow the original attribut of the cancel button
-        //      'url' => $url
-        //  ];
-        // }
-    //}
 
     public function getPreviousPeriodWithShift($institutionId, $latestAcademicPeriod)
     {
@@ -807,7 +672,8 @@ class InstitutionShiftsTable extends ControllerActionTable {
         }
     }
 
-    private function setupFields(Entity $entity) {
+    private function setupFields(Entity $entity)
+    {
         $this->field('academic_period_id', ['type' => 'select', 'entity' => $entity]);
         $this->field('shift_option_id', ['type' => 'select', 'entity' => $entity]);
         $this->field('start_time', ['type' => 'time']);
@@ -824,6 +690,7 @@ class InstitutionShiftsTable extends ControllerActionTable {
             'after' => 'institution_id',
             'entity' => $entity
         ]);
+        $this->field('previous_shift_id', ['visible' => 'false']);
     }
 
     public function findShiftTime(Query $query, array $options)
