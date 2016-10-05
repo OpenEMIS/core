@@ -148,6 +148,16 @@ class SurveyRulesTable extends ControllerActionTable
                 $query->where([$this->aliasField('survey_question_id').' IN ' => $questionIds]);
             }
         }
+
+        // for searching survey forms, questions, dependent questions
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            $query->contain(['SurveyForms', 'SurveyQuestions', 'DependentQuestions']);
+
+            $extra['OR'] = [[$this->SurveyForms->aliasField('name').' LIKE' => '%' . $search . '%'],
+                [$this->SurveyQuestions->aliasField('name').' LIKE' => '%' . $search . '%'],
+                [$this->DependentQuestions->aliasField('name').' LIKE' => '%' . $search . '%']];
+        }
     }
 
     public function findSurveyRulesList(Query $query, array $options) 
