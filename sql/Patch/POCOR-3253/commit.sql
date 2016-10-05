@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS `institution_surveys` (
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
   `survey_form_id` int(11) NOT NULL COMMENT 'links to survey_forms.id',
   `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
-  `assignee_id` int(11) NOT NULL DEFAULT '0' COMMENT 'links to security_users.id',
+  `assignee_id` int(11) DEFAULT '0' COMMENT 'links to security_users.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS `staff_leaves` (
   `staff_id` int(11) NOT NULL COMMENT 'links to security_users.id',
   `staff_leave_type_id` int(11) NOT NULL COMMENT 'links to field_option_values.id',
   `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
-  `assignee_id` int(11) NOT NULL DEFAULT '0' COMMENT 'links to security_users.id',
+  `assignee_id` int(11) DEFAULT '0' COMMENT 'links to security_users.id',
   `status_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
   `number_of_days` int(3) NOT NULL,
   `file_name` varchar(250) DEFAULT NULL,
@@ -108,6 +108,8 @@ CREATE TABLE IF NOT EXISTS `staff_leaves` (
   PRIMARY KEY (`id`),
   KEY `staff_id` (`staff_id`),
   KEY `staff_leave_type_id` (`staff_leave_type_id`),
+  KEY `institution_id` (`institution_id`),
+  KEY `assignee_id` (`assignee_id`),
   KEY `status_id` (`status_id`),
   KEY `modified_user_id` (`modified_user_id`),
   KEY `created_user_id` (`created_user_id`)
@@ -128,7 +130,7 @@ CREATE TABLE IF NOT EXISTS `institution_positions` (
   `staff_position_title_id` int(11) NOT NULL COMMENT 'links to staff_position_titles.id',
   `staff_position_grade_id` int(11) NOT NULL COMMENT 'links to staff_position_grades.id',
   `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
-  `assignee_id` int(11) NOT NULL DEFAULT '0' COMMENT 'links to security_users.id',
+  `assignee_id` int(11) DEFAULT '0' COMMENT 'links to security_users.id',
   `is_homeroom` int(1) NOT NULL DEFAULT '1',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
@@ -163,7 +165,7 @@ CREATE TABLE IF NOT EXISTS `institution_staff_position_profiles` (
   `staff_id` int(11) NOT NULL COMMENT 'links to security_users.id',
   `staff_type_id` int(5) NOT NULL COMMENT 'links to staff_types.id',
   `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
-  `assignee_id` int(11) NOT NULL DEFAULT '0' COMMENT 'links to security_users.id',
+  `assignee_id` int(11) DEFAULT '0' COMMENT 'links to security_users.id',
   `institution_position_id` int(11) NOT NULL COMMENT 'links to institution_positions.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
@@ -206,7 +208,7 @@ CREATE TABLE IF NOT EXISTS `training_courses` (
   `training_mode_of_delivery_id` int(11) NOT NULL COMMENT 'links to field_option_values.id',
   `training_requirement_id` int(11) NOT NULL COMMENT 'links to field_option_values.id',
   `training_level_id` int(11) NOT NULL COMMENT 'links to field_option_values.id',
-  `assignee_id` int(11) NOT NULL DEFAULT '0' COMMENT 'links to security_users.id',
+  `assignee_id` int(11) DEFAULT '0' COMMENT 'links to security_users.id',
   `status_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
@@ -241,7 +243,7 @@ CREATE TABLE IF NOT EXISTS `training_sessions` (
   `comment` text,
   `training_course_id` int(11) NOT NULL COMMENT 'links to training_courses.id',
   `training_provider_id` int(11) NOT NULL COMMENT 'links to field_option_values.id',
-  `assignee_id` int(11) NOT NULL DEFAULT '0' COMMENT 'links to security_users.id',
+  `assignee_id` int(11) DEFAULT '0' COMMENT 'links to security_users.id',
   `status_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
@@ -267,7 +269,7 @@ DROP TABLE IF EXISTS `training_session_results`;
 CREATE TABLE IF NOT EXISTS `training_session_results` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `training_session_id` int(11) NOT NULL COMMENT 'links to training_sessions.id',
-  `assignee_id` int(11) NOT NULL DEFAULT '0' COMMENT 'links to security_users.id',
+  `assignee_id` int(11) DEFAULT '0' COMMENT 'links to security_users.id',
   `status_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
@@ -284,3 +286,10 @@ CREATE TABLE IF NOT EXISTS `training_session_results` (
 INSERT INTO `training_session_results` (`id`, `training_session_id`, `assignee_id`, `status_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT `id`, `training_session_id`, 0, `status_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
 FROM `z_3253_training_session_results`;
+
+-- security_functions
+DELETE FROM `security_functions` WHERE `id` = 5049;
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`)
+VALUES (5049, 'Actions', 'Workflows', 'Administration', 'Workflows', 5000, 'Actions.index|Actions.view', 'Actions.edit', 'Actions.add', 'Actions.remove', NULL, 5039, 1, 1, NOW());
+
+UPDATE `security_functions` SET `order` = 5049 WHERE `id` = 5038;

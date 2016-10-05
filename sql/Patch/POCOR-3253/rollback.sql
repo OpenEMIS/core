@@ -28,5 +28,8 @@ RENAME TABLE `z_3253_training_sessions` TO `training_sessions`;
 DROP TABLE IF EXISTS `training_session_results`;
 RENAME TABLE `z_3253_training_session_results` TO `training_session_results`;
 
+-- security_functions
+DELETE FROM `security_functions` WHERE `id` = 5049;
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue`='POCOR-3253';
