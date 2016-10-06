@@ -393,7 +393,7 @@ class AreasTable extends ControllerActionTable
     // autocomplete used for UserGroups
     public function autocomplete($search)
     {
-        $search = sprintf('%%%s%%', $search);
+        $search = sprintf('%s%%', $search);
 
         $list = $this
             ->find()
