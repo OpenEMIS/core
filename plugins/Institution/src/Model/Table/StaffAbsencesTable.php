@@ -65,6 +65,7 @@ class StaffAbsencesTable extends AppTable {
 				],
 				'ruleInAcademicPeriod' => [
 					'rule' => ['inAcademicPeriod', 'academic_period_id'],
+					'last' => true,
 					'on' => 'create'
 				],
 				'ruleNoOverlappingAbsenceDate' => [
@@ -81,6 +82,7 @@ class StaffAbsencesTable extends AppTable {
 				],
 				'ruleInAcademicPeriod' => [
 					'rule' => ['inAcademicPeriod', 'academic_period_id'],
+					'last' => true,
 					'on' => 'create'
 				]
 			])
@@ -315,7 +317,8 @@ class StaffAbsencesTable extends AppTable {
 		}
 	}
 
-	public function addEditAfterAction(Event $event, Entity $entity) {
+	public function addEditAfterAction(Event $event, Entity $entity)
+	{
 		list($periodOptions, $selectedPeriod, $newPeriodOptions) = array_values($this->_getSelectOptions());
 		$this->ControllerAction->field('academic_period_id', [
 			'options' => $newPeriodOptions
@@ -331,6 +334,17 @@ class StaffAbsencesTable extends AppTable {
 		]);
 		// Start Date and End Date
 		if ($this->action == 'add') {
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+
+			$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+			$shiftTime = $InstitutionShift
+				->find('shiftTime', ['academic_period_id' => $selectedPeriod, 'institution_id' => $institutionId])
+				->toArray();
+
+			if (empty($shiftTime)) {
+				$this->Alert->warning($this->aliasField('noShift'));
+			}
+
 			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			$startDate = $AcademicPeriod->get($selectedPeriod)->start_date;
 			$endDate = $AcademicPeriod->get($selectedPeriod)->end_date;
@@ -626,15 +640,22 @@ class StaffAbsencesTable extends AppTable {
 							->find('shiftTime', ['academic_period_id' => $selectedPeriod, 'institution_id' => $institutionId])
 							->toArray();
 
-						$shiftStartTimeArray = [];
-						$shiftEndTimeArray = [];
-						foreach ($shiftTime as $key => $value) {
-							$shiftStartTimeArray[$key] = $value->start_time;
-							$shiftEndTimeArray[$key] = $value->end_time;
-						}
+						if (!empty($shiftTime)) {
+							$shiftStartTimeArray = [];
+							$shiftEndTimeArray = [];
+							foreach ($shiftTime as $key => $value) {
+								$shiftStartTimeArray[$key] = $value->start_time;
+								$shiftEndTimeArray[$key] = $value->end_time;
+							}
 
-						$startTime = min($shiftStartTimeArray);
-						$endTime = max($shiftEndTimeArray);
+							$startTime = min($shiftStartTimeArray);
+							$endTime = max($shiftEndTimeArray);
+						} else {
+							$configTiming = $this->getConfigTiming();
+
+							$startTime = $configTiming['startTime'];
+							$endTime = $configTiming['endTime'];
+						}
 
 						$entity->start_time = date('h:i A', strtotime($startTime));
 						$entity->end_time = date('h:i A', strtotime($endTime));
@@ -662,15 +683,22 @@ class StaffAbsencesTable extends AppTable {
 							->find('shiftTime', ['academic_period_id' => $selectedPeriod, 'institution_id' => $institutionId])
 							->toArray();
 
-						$shiftStartTimeArray = [];
-						$shiftEndTimeArray = [];
-						foreach ($shiftTime as $key => $value) {
-							$shiftStartTimeArray[$key] = $value->start_time;
-							$shiftEndTimeArray[$key] = $value->end_time;
-						}
+						if (!empty($shiftTime)) {
+							$shiftStartTimeArray = [];
+							$shiftEndTimeArray = [];
+							foreach ($shiftTime as $key => $value) {
+								$shiftStartTimeArray[$key] = $value->start_time;
+								$shiftEndTimeArray[$key] = $value->end_time;
+							}
 
-						$startTime = min($shiftStartTimeArray);
-						$endTime = max($shiftEndTimeArray);
+							$startTime = min($shiftStartTimeArray);
+							$endTime = max($shiftEndTimeArray);
+						} else {
+							$configTiming = $this->getConfigTiming();
+
+							$startTime = $configTiming['startTime'];
+							$endTime = $configTiming['endTime'];
+						}
 
 						$entity->start_time = date('h:i A', strtotime($startTime));
 						$entity->end_time = date('h:i A', strtotime($endTime));
@@ -680,7 +708,8 @@ class StaffAbsencesTable extends AppTable {
 		}
 	}
 
-	public function addEditOnChangePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditOnChangePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	{
 		$request = $this->request;
 		unset($request->query['period']);
 		unset($request->query['staff']);
@@ -697,15 +726,22 @@ class StaffAbsencesTable extends AppTable {
 						->find('shiftTime', ['academic_period_id' => $selectedPeriod, 'institution_id' => $institutionId])
 						->toArray();
 
-					$shiftStartTimeArray = [];
-					$shiftEndTimeArray = [];
-					foreach ($shiftTime as $key => $value) {
-						$shiftStartTimeArray[$key] = $value->start_time;
-						$shiftEndTimeArray[$key] = $value->end_time;
-					}
+					if (!empty($shiftTime)) {
+						$shiftStartTimeArray = [];
+						$shiftEndTimeArray = [];
+						foreach ($shiftTime as $key => $value) {
+							$shiftStartTimeArray[$key] = $value->start_time;
+							$shiftEndTimeArray[$key] = $value->end_time;
+						}
 
-					$startTime = min($shiftStartTimeArray);
-					$endTime = max($shiftEndTimeArray);
+						$startTime = min($shiftStartTimeArray);
+						$endTime = max($shiftEndTimeArray);
+					} else {
+						$configTiming = $this->getConfigTiming();
+
+						$startTime = $configTiming['startTime'];
+						$endTime = $configTiming['endTime'];
+					}
 
 					$entity->start_time = date('h:i A', strtotime($startTime));
 					$entity->end_time = date('h:i A', strtotime($endTime));
@@ -713,6 +749,7 @@ class StaffAbsencesTable extends AppTable {
 					$data[$this->alias()]['start_time'] = $entity->start_time;
 					$data[$this->alias()]['end_time'] = $entity->end_time;
 				}
+
 				$data[$this->alias()]['staff_id'] = '';
 			}
 		}
@@ -730,6 +767,28 @@ class StaffAbsencesTable extends AppTable {
 				}
 			}
 		}
+	}
+
+	// to get the default timing from the system config.
+	public function getConfigTiming()
+	{
+		$configItems = TableRegistry::get('Configuration.configItems');
+
+		$shiftTime = $configItems->find()
+			->where([$configItems->aliasField('type') => 'Attendance'])
+			->toArray();
+
+		$configStartTime = $shiftTime[2]['value'] ? $shiftTime[2]['value'] : $shiftTime[2]['default_value'];
+		$hourPerDay = $shiftTime[1]['value'] ? $shiftTime[1]['value'] : $shiftTime[1]['default_value'];
+
+		$endTime = new time($configStartTime);
+		$endTime->addHour($hourPerDay);
+
+		$configTiming = [];
+		$configTiming['startTime'] = new time($configStartTime);
+		$configTiming['endTime'] = $endTime;
+
+		return $configTiming;
 	}
 
 	public function _getSelectOptions() {

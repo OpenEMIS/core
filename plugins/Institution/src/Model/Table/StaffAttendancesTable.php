@@ -403,12 +403,19 @@ class StaffAttendancesTable extends AppTable {
 				->find('shiftTime', ['academic_period_id' => $selectedPeriod, 'institution_id' => $institutionId])
 				->toArray();
 
-			$shiftStartTimeArray = [];
-			foreach ($shiftTime as $key => $value) {
-				$shiftStartTimeArray[$key] = $value->start_time;
+			if (!empty($shiftTime)) {
+				$shiftStartTimeArray = [];
+				foreach ($shiftTime as $key => $value) {
+					$shiftStartTimeArray[$key] = $value->start_time;
+				}
+
+				$startTime = min($shiftStartTimeArray);
+			} else {
+				$configTiming = $StaffAbsences->getConfigTiming();
+
+				$startTime = $configTiming['startTime'];
 			}
 
-			$startTime = min($shiftStartTimeArray);
 			$startTimestamp = strtotime($startTime);
 
 			$attr['value'] = date('h:i A', $startTimestamp);
@@ -974,20 +981,30 @@ class StaffAttendancesTable extends AppTable {
 								->find('shiftTime', ['academic_period_id' => $selectedPeriod, 'institution_id' => $institutionId])
 								->toArray();
 
-							$shiftStartTimeArray = [];
-							$shiftEndTimeArray = [];
-							foreach ($shiftTime as $key => $value) {
-								$shiftStartTimeArray[$key] = $value->start_time;
-								$shiftEndTimeArray[$key] = $value->end_time;
+							if (!empty($shiftTime)) {
+								$shiftStartTimeArray = [];
+								$shiftEndTimeArray = [];
+								foreach ($shiftTime as $key => $value) {
+									$shiftStartTimeArray[$key] = $value->start_time;
+									$shiftEndTimeArray[$key] = $value->end_time;
+								}
+
+								$startTime = min($shiftStartTimeArray);
+
+								$startTimestamp = intval(min($shiftStartTimeArray)->toUnixString());
+								$endTimestamp = intval(max($shiftEndTimeArray)->toUnixString());
+							} else {
+								$configTiming = $StaffAbsences->getConfigTiming();
+
+								$startTime = $configTiming['startTime'];
+
+								$startTimestamp = intval($configTiming['startTime']->toUnixString());
+								$endTimestamp = intval($configTiming['endTime']->toUnixString());
 							}
 
-							$startTime = min($shiftStartTimeArray);
 							$obj['start_time'] = $startTime;
 							$endTime = $obj['late_time'];
 							$obj['end_time'] = $endTime;
-
-							$startTimestamp = intval(min($shiftStartTimeArray)->toUnixString());
-							$endTimestamp = intval(max($shiftEndTimeArray)->toUnixString());
 
 							if (($lateTime < $startTimestamp) || ($lateTime > $endTimestamp)) {
 								$key = $obj['staff_id'];
