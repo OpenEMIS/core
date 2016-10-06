@@ -37,10 +37,18 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
                 ],
                 'ruleIsDecimal' => [
                     'rule' => ['decimal', null],
+                ],
+                'ruleRange' => [
+                    'rule' => ['range', 0, 9999.99]
                 ]
             ])
-            ->add('max', 'ruleIsDecimal', [
-                'rule' => ['decimal', null],
+            ->add('max', [
+                'ruleIsDecimal' => [
+                    'rule' => ['decimal', null],
+                ],
+                'ruleRange' => [
+                    'rule' => ['range', 0, 9999.99]
+                ]
             ])
             ;
         return $validator;
