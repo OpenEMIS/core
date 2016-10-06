@@ -94,8 +94,8 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 ******************************************************************************************************************/
 	public function beforeAction(Event $event, ArrayObject $extra) {
 		$this->field('result_type', ['type' => 'select', 'options' => $this->getSelectOptions($this->aliasField('result_type'))]);
-		$this->field('max', ['attr' => ['min' => 0]]);
-		$this->field('pass_mark', ['attr' => ['min' => 0]]);
+		$this->field('max', ['length' => 7, 'attr' => ['min' => 0]]);
+		$this->field('pass_mark', ['length' => 7, 'attr' => ['min' => 0]]);
 		$this->field('grading_options', [
 			'type' => 'element',
 			'element' => 'Assessment.Gradings/grading_options',

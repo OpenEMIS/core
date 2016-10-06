@@ -58,8 +58,8 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
         $this->controller->getExamsTab();
 
         $this->field('result_type', ['type' => 'select', 'options' => $this->getSelectOptions($this->aliasField('result_type'))]);
-        $this->field('max', ['attr' => ['min' => 0]]);
-        $this->field('pass_mark', ['attr' => ['min' => 0]]);
+        $this->field('max', ['length' => 7, 'attr' => ['min' => 0]]);
+        $this->field('pass_mark', ['length' => 7, 'attr' => ['min' => 0]]);
         $this->field('grading_options', [
             'type' => 'element',
             'element' => 'Examination.grading_options',
