@@ -634,12 +634,16 @@ trait MessagesTrait {
                     'ruleCompareAbsenceTimeReverse' => 'End Time should not be earlier than Start Time'
                 ]
             ],
+            'StaffLeave' => [
+                'date_to' => [
+                    'ruleCompareDateReverse' => 'Date To should not be earlier than Date From'
+                ]
+            ],
             'InstitutionStudentAbsences' => [
                 'end_time' => [
                     'ruleCompareAbsenceTimeReverse' => 'End Time should not be earlier than Start Time'
                 ]
             ],
-
             'InstitutionStudents' => [
                 'academicPeriod' => 'You need to configure Academic Periods first.',
                 'educationProgrammeId' => 'You need to configure Education Programmes first.',
@@ -1059,11 +1063,6 @@ trait MessagesTrait {
                     'ruleCompare' => 'Date of Birth cannot be future date',
                     'ruleValidDate' => 'You have entered an invalid date.'
                 ],
-            ],
-            'Leaves' => [
-                'date_to' => [
-                    'ruleCompareDateReverse' => 'Date To should not be earlier than Date From'
-                ]
             ],
             'Extracurriculars' => [
                 'name' => [

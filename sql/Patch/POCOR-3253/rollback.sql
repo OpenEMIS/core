@@ -40,5 +40,7 @@ RENAME TABLE `z_3253_staff_training_needs` TO `staff_training_needs`;
 -- security_functions
 DELETE FROM `security_functions` WHERE `id` = 5049;
 
+UPDATE `security_functions` SET `controller` = 'Staff', `_view` = 'Leave.index|Leave.view', `_edit` = 'Leave.edit', `_add` = 'Leave.add', `_delete` = 'Leave.remove', `_execute` = 'Leave.download' WHERE `id` = 3016;
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue`='POCOR-3253';
