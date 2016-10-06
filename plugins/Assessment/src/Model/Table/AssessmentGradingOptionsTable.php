@@ -48,7 +48,10 @@ class AssessmentGradingOptionsTable extends AssessmentsAppTable {
 				],
 				'ruleIsDecimal' => [
 				    'rule' => ['decimal', null],
-				]
+				],
+                'ruleRange' => [
+                    'rule' => ['range', 0, 9999.99]
+                ]
 			])
 			->add('max', [
 				'ruleNotMoreThanGradingTypeMax' => [
@@ -57,7 +60,10 @@ class AssessmentGradingOptionsTable extends AssessmentsAppTable {
 				],
 				'ruleIsDecimal' => [
 				    'rule' => ['decimal', null],
-				]
+				],
+                'ruleRange' => [
+                    'rule' => ['range', 0, 9999.99]
+                ]
 			])
 			;
 		return $validator;
