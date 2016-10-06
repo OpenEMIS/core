@@ -20,14 +20,11 @@ class AdvancedContactNumberSearchBehavior extends Behavior {
 		}
 	}
 	
-	public function onBuildQuery(Event $event, Query $query, $advancedSearchHasMany) {
-		if (isset($advancedSearchHasMany['contact_number'])) {
-			$search = $advancedSearchHasMany['contact_number'];
-		} else {
-			$search = '';
-		}
-
-		if (!empty($search)) {
+	public function onBuildQuery(Event $event, Query $query, $advancedSearchHasMany) 
+	{
+		$search = $advancedSearchHasMany['contact_number'];
+		
+		if (strlen($search) > 0) {
 			$searchString = '%' . $search . '%';
 			$query->join([
 					[
