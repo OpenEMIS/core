@@ -709,6 +709,10 @@ class StudentsTable extends AppTable
 		$this->Session->write('Student.Students.id', $entity->student_id);
 		$this->Session->write('Student.Students.name', $entity->user->name);
 		$this->setupTabElements($entity);
+
+		if ($code != 'CURRENT') {
+			$this->ControllerAction->removeDefaultActions(['remove']);
+		}
 	}
 
 	private function setupTabElements($entity)
@@ -1318,10 +1322,6 @@ class StudentsTable extends AppTable
 			if ($studentStatusId != $statuses['CURRENT']) {
 				if (isset($toolbarButtons['edit'])) {
 					unset($toolbarButtons['edit']);
-				}
-
-				if (isset($toolbarButtons['remove'])) {
-					unset($toolbarButtons['remove']);
 				}
 			}
 			// End PHPOE-1897
