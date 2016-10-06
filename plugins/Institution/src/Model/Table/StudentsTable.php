@@ -711,7 +711,7 @@ class StudentsTable extends AppTable
 		$this->setupTabElements($entity);
 
 		if ($code != 'CURRENT') {
-			$this->ControllerAction->removeDefaultActions(['remove']);
+			$this->ControllerAction->removeDefaultActions(['remove', 'edit']);
 		}
 	}
 
@@ -1315,17 +1315,6 @@ class StudentsTable extends AppTable
 				$toolbarButtons['back']['type'] = null;
 			}
 		} else if ($action == 'view') { // for transfer button in view page
-			$statuses = $this->StudentStatuses->findCodeList();
-			$id = $this->request->params['pass'][1];
-			$studentStatusId = $this->get($id)->student_status_id;
-			// Start PHPOE-1897
-			if ($studentStatusId != $statuses['CURRENT']) {
-				if (isset($toolbarButtons['edit'])) {
-					unset($toolbarButtons['edit']);
-				}
-			}
-			// End PHPOE-1897
-
 			if (isset($toolbarButtons['back'])) {
 				$refererUrl = $this->request->referer();
 				$toolbarButtons['back']['url'] = $refererUrl;
