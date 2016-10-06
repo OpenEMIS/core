@@ -22,10 +22,11 @@ class InstitutionPositionsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 
-		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
+		$this->belongsTo('Statuses',			['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('StaffPositionTitles', ['className' => 'Institution.StaffPositionTitles']);
 		$this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
 		$this->belongsTo('Institutions', 		['className' => 'Institution.Institutions']);
+		$this->belongsTo('Assignees',			['className' => 'User.Users']);
 
 		$this->hasMany('InstitutionStaff',		['className' => 'Institution.Staff', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StaffPositions',		['className' => 'Staff.Positions', 'dependent' => true, 'cascadeCallbacks' => true]);

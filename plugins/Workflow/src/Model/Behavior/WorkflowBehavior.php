@@ -26,8 +26,7 @@ class WorkflowBehavior extends Behavior {
 			'WorkflowActions' => 'Workflow.WorkflowActions',
 			'WorkflowComments' => 'Workflow.WorkflowComments',
 			'WorkflowTransitions' => 'Workflow.WorkflowTransitions'
-		],
-		'assigneeClass' => ['className' => 'User.Users']
+		]
 	];
 
 	private $workflowEvents = [
@@ -65,10 +64,6 @@ class WorkflowBehavior extends Behavior {
 			} else {
 				$this->{$key} = null;
 			}
-		}
-
-		if ($this->_table->hasField('assignee_id')) {
-			$this->_table->belongsTo('Assignees', $this->config('assigneeClass'));
 		}
 	}
 
@@ -678,7 +673,7 @@ class WorkflowBehavior extends Behavior {
 											->find('visible')
 											->where([
 												'next_workflow_step_id !=' => 0,
-												'allow_by_assignee' =>1
+												'allow_by_assignee' => 1
 											]);
 									}
 								])

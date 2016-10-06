@@ -35,6 +35,7 @@ class InstitutionSurveysTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+		$this->belongsTo('Assignees', ['className' => 'User.Users']);
 		$this->addBehavior('Survey.Survey', [
 			'module' => $this->module
 		]);
