@@ -1575,4 +1575,33 @@ class ValidationBehavior extends Behavior {
 		}
 		return false;
 	}
+
+	public static function validateCustomIdentityNumber($field, array $globalData)
+	{
+		$subject = $field;
+		$pattern = '';
+		$model = $globalData['providers']['table'];
+
+		if (array_key_exists('identity_type_id', $globalData['data']) && !empty($globalData['data']['identity_type_id'])) {
+			$identityTypeId = $globalData['data']['identity_type_id'];
+
+			$IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+			$IdentityTypesData = $IdentityTypes
+				->find()
+				->where([$IdentityTypes->aliasField('id') => $identityTypeId])
+				->first()
+			;
+
+			if (!empty($IdentityTypesData->validation_pattern)) {
+				$pattern = '/' . $IdentityTypesData->validation_pattern . '/';
+			}
+		}
+
+		// custom validation is nullable, have to cater for the null pattern.
+		if (!empty($pattern) && !preg_match($pattern, $subject)) {
+			return $model->getMessage('User.Identities.number.custom_validation');
+		}
+
+		return true;
+	}
 }

@@ -83,8 +83,13 @@ class IdentitiesTable extends ControllerActionTable
             ])
             ->add('identity_type_id',  [
             ])
+            ->add('number', 'ruleCustomIdentityNumber', [
+				'rule' => ['validateCustomIdentityNumber'],
+				'provider' => 'table',
+				'last' => true
+			])
 			->add('number', [
-	    		'ruleUnique' => [
+				'ruleUnique' => [
 			        'rule' => ['validateUnique', ['scope' => 'identity_type_id']],
 			        'provider' => 'table'
 			    ]
