@@ -38,6 +38,10 @@ class StudentSubjectsTable extends ControllerActionTable {
         $this->field('total_mark', ['after' => 'institution_subject_id']);
     }
 
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+        $query->where([$this->aliasField('status').' > 0']);
+    }
+
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
