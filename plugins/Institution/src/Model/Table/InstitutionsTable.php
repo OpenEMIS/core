@@ -700,7 +700,7 @@ class InstitutionsTable extends AppTable  {
 	// autocomplete used for UserGroups
 	public function autocomplete($search, $params = []) {
 		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
-		$search = sprintf('%%%s%%', $search);
+		$search = sprintf('%s%%', $search);
 
 		$list = $this
 			->find()
