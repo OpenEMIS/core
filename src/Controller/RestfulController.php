@@ -10,6 +10,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
+use Cake\Network\Request;
 use Restful\Controller\RestfulController as BaseController;
 
 class RestfulController extends BaseController
@@ -36,6 +37,16 @@ class RestfulController extends BaseController
             'controller' => 'Users',
             'action' => 'login'
         ]);
+
+        $this->Auth->config('authorize', 'Controller');
+        $this->Auth->config('unauthorizedRedirect', false);
+    }
+
+    public function isAuthorized($user = null, Request $request = null)
+    {
+        return true;
+        // Default deny all
+        // return false;
     }
 
     public function beforeFilter(Event $event)
