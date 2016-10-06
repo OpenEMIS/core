@@ -162,7 +162,7 @@ class StudentsTable extends AppTable
 		$query->select([
                     'openemis_no' => 'Users.openemis_no',
                     'identity_number' => 'Users.identity_number',
-                    'gender_id' => 'Genders.name',
+                    'gender_name' => 'Genders.name',
                     'date_of_birth' => 'Users.date_of_birth',
                     'code' => 'Institutions.code'
                 ]);
@@ -226,7 +226,7 @@ class StudentsTable extends AppTable
 
 		$extraField[] = [
 			'key' => 'Users.gender_id',
-			'field' => 'gender_id',
+			'field' => 'gender_name',
 			'type' => 'string',
 			'label' => ''
 		];
