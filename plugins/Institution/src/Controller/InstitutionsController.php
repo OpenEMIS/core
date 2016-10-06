@@ -368,18 +368,19 @@ class InstitutionsController extends AppController  {
         // $highChartDatas = ['{"chart":{"type":"column","borderWidth":1},"xAxis":{"title":{"text":"Position Type"},"categories":["Non-Teaching","Teaching"]},"yAxis":{"title":{"text":"Total"}},"title":{"text":"Number Of Staff"},"subtitle":{"text":"For Year 2015-2016"},"series":[{"name":"Male","data":[0,2]},{"name":"Female","data":[0,1]}]}'];
         $highChartDatas = [];
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-        $enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
+        $statuses = $StudentStatuses->findCodeList();
 
         //Students By Year
         $params = array(
-            'conditions' => array('institution_id' => $id, 'student_status_id' => $enrolledStatus)
+            'conditions' => array('institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['DROPOUT']])
         );
+
         $InstitutionStudents = TableRegistry::get('Institution.Students');
         $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_year', $params);
 
         //Students By Grade for current year
         $params = array(
-            'conditions' => array('institution_id' => $id, 'student_status_id' => $enrolledStatus)
+            'conditions' => array('institution_id' => $id, 'student_status_id' => $statuses['CURRENT'])
         );
 
         $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_grade', $params);
