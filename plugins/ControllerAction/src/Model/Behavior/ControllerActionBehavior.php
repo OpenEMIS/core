@@ -107,7 +107,7 @@ class ControllerActionBehavior extends Behavior
                     if (is_array($value)) {
                         if ($model->hasBehavior($behavior)) {
                             $model->removeBehavior($behavior);
-                            Log::write('debug', 'Conflicts in behavior: ' . $behavior);
+                            // Log::write('debug', 'Conflicts in behavior: ' . $behavior);
                         }
                         $model->addBehavior('ControllerAction.' . $behavior, $value);
                     } else {
