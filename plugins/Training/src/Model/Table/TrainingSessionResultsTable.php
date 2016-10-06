@@ -17,6 +17,7 @@ class TrainingSessionResultsTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('Sessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_session_id']);
+		$this->belongsTo('Assignees', ['className' => 'User.Users']);
 	}
 
 	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
