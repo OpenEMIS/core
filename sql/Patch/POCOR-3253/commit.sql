@@ -23,6 +23,8 @@ FROM `z_3253_workflow_models`;
 UPDATE `workflow_models` SET `is_school_based` = 1
 WHERE `model` IN ('Staff.Leaves', 'Institution.InstitutionSurveys', 'Institution.InstitutionPositions', 'Institution.StaffPositionProfiles');
 
+UPDATE `workflow_models` SET `model` = 'Institution.StaffLeave' WHERE `model` = 'Staff.Leaves';
+
 -- workflow_steps
 RENAME TABLE `workflow_steps` TO `z_3253_workflow_steps`;
 
@@ -396,3 +398,5 @@ INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `categor
 VALUES (5049, 'Actions', 'Workflows', 'Administration', 'Workflows', 5000, 'Actions.index|Actions.view', 'Actions.edit', 'Actions.add', 'Actions.remove', NULL, 5039, 1, 1, NOW());
 
 UPDATE `security_functions` SET `order` = 5049 WHERE `id` = 5038;
+
+UPDATE `security_functions` SET `controller` = 'Institutions', `_view` = 'StaffLeave.index|StaffLeave.view', `_edit` = 'StaffLeave.edit', `_add` = 'StaffLeave.add', `_delete` = 'StaffLeave.remove', `_execute` = 'StaffLeave.download' WHERE `id` = 3016;
