@@ -153,7 +153,7 @@ class UndoStudentStatusTable extends AppTable {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$Grades = $this->Grades;
 
-			$periodOptions = $this->AcademicPeriods->getYearList();
+			$periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
 			$selectedPeriod = null;
 			$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 				'selectOption' => false,
