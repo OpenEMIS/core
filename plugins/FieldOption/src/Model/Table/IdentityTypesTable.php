@@ -22,6 +22,16 @@ class IdentityTypesTable extends ControllerActionTable {
 		$this->setDeleteStrategy('restrict');
     }
 
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+	{
+		$this->field('validation_pattern', ['after' => 'name']);
+	}
+
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+	{
+		$entity->validation_pattern = trim($entity->validation_pattern);
+	}
+
 	public function afterSave(Event $event, Entity $entity)
 	{
 		if ($entity->dirty('default')) { //check whether default value has been changed
