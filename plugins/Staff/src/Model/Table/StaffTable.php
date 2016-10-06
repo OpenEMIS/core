@@ -288,7 +288,7 @@ class StaffTable extends AppTable {
 			'Classes' => ['text' => __('Classes')],
 			'Subjects' => ['text' => __('Subjects')],
 			'Absences' => ['text' => __('Absences')],
-			'Leave' => ['text' => __('Leave')],
+			'StaffLeave' => ['text' => __('Leave')],
 			'Behaviours' => ['text' => __('Behaviours')],
 			'Awards' => ['text' => __('Awards')],
 		];
@@ -296,7 +296,15 @@ class StaffTable extends AppTable {
 		$tabElements = array_merge($tabElements, $studentTabElements);
 
 		foreach ($studentTabElements as $key => $tab) {
-			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+			if ($key == 'StaffLeave') {
+				$studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+				$userId = array_key_exists('user_id', $options) ? $options['user_id'] : 0;
+
+				$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index', 'user_id' => $userId]);
+			} else {
+				$studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+				$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+			}
 		}
 		return $tabElements;
 	}
