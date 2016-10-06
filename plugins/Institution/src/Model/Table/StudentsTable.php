@@ -1319,6 +1319,10 @@ class StudentsTable extends AppTable
 				if (isset($toolbarButtons['edit'])) {
 					unset($toolbarButtons['edit']);
 				}
+
+				if (isset($toolbarButtons['remove'])) {
+					unset($toolbarButtons['remove']);
+				}
 			}
 			// End PHPOE-1897
 
