@@ -889,10 +889,6 @@ trait MessagesTrait {
                 'identity_type_id' => [
                     'ruleNotBlank' => 'Please select a Type'
                 ],
-                'number' => [
-                    'ruleUniqueUserIdentity' => 'Please enter a unique identity number.',
-                    'ruleNotBlank' => 'Please enter a valid Number'
-                ],
                 'issue_location' => [
                     'ruleNotBlank' => 'Please enter a valid Issue Location'
                 ],
@@ -903,7 +899,8 @@ trait MessagesTrait {
                     'ruleNotBlank' => 'Expiry Date Is Required'
                 ],
                 'number' => [
-                    'ruleUnique' => 'This identity has already existed in the system.'
+                    'ruleUnique' => 'This identity has already existed in the system.',
+                    'custom_validation' => 'Please enter a valid Identity Number'
                 ],
             ],
             'Languages' => [
