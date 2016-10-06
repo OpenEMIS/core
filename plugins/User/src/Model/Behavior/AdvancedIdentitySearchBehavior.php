@@ -25,7 +25,7 @@ class AdvancedIdentitySearchBehavior extends Behavior {
         $identityType = $advancedSearchHasMany['identity_type'];
 		$identityNumber = $advancedSearchHasMany['identity_number'];
 
-        if (!empty($identityNumber) || strlen($identityNumber)) {
+        if (strlen($identityNumber) > 0) {
             $query->join([
                         'UserIdentities' => [
                             'table' => 'user_identities',
