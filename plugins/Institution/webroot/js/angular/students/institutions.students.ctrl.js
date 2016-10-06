@@ -106,17 +106,22 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
         })
         .then(function(genders) {
             StudentController.genderOptions = genders;
-            InstitutionsStudentsSvc.getExternalDefaultIdentityType()
-            .then(function(externalIdentityType) {
-                if (externalIdentityType.length > 0) {
-                    StudentController.defaultExternalIdentityTypeName = externalIdentityType[0].name;
-                }
-                InstitutionsStudentsSvc.init(angular.baseUrl);
+            if (StudentController.hasExternalDataSource) {
+                InstitutionsStudentsSvc.getExternalDefaultIdentityType()
+                .then(function(externalIdentityType) {
+                    if (externalIdentityType.length > 0) {
+                        StudentController.defaultExternalIdentityTypeName = externalIdentityType[0].name;
+                    }
+                    InstitutionsStudentsSvc.init(angular.baseUrl);
+                    $scope.initGrid();
+                }, function(error) {
+                    console.log(error);
+                    AlertSvc.warning($scope, error);
+                });
+            } else {
                 $scope.initGrid();
-            }, function(error) {
-                console.log(error);
-                AlertSvc.warning($scope, error);
-            });
+            }
+
         }, function(error) {
             console.log(error);
             AlertSvc.warning($scope, error);
