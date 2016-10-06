@@ -609,7 +609,7 @@ class UsersTable extends AppTable {
 	}
 
 	public function autocomplete($search) {
-		$search = sprintf('%%%s%%', $search);
+		$search = sprintf('%s%%', $search);
 		$list = $this
 			->find()
 			->select([
