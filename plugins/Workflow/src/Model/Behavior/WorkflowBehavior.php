@@ -624,43 +624,96 @@ class WorkflowBehavior extends Behavior {
 		if (!is_null($entity)) {
 			$workflowStepId = $entity->has('status') ? $entity->status->id : $entity->status_id;
 
-			$query = $this->WorkflowSteps
-				->find()
-				->matching('Workflows.WorkflowModels')
-				->contain(['WorkflowActions' => function ($q) {
-						return $q
-							->find('visible')
-							->where(['next_workflow_step_id !=' => 0]);
-					}
-				])
-				->contain('WorkflowActions.NextWorkflowSteps')
-				->where([
-					$this->WorkflowSteps->aliasField('id') => $workflowStepId // Latest Workflow Step
-				]);
-
 			$model = $this->_table;
 			$userId = $model->Auth->user('id');
-			if (!$model->AccessControl->isAdmin() && $userId != $entity->assignee_id) {
-				$roleIds = [];
-				$event = $model->dispatchEvent('Workflow.onUpdateRoles', null, $this);
-				if ($event->result) {
-		    		$roleIds = $event->result;
-		    	} else {
-					$roles = $this->_table->AccessControl->getRolesByUser()->toArray();
-					foreach ($roles as $key => $role) {
-						$roleIds[$role->security_role_id] = $role->security_role_id;
-					}
-		    	}
+			$assigneeId = $entity->assignee_id;
 
-				$query
-					->innerJoin(
-						[$this->WorkflowStepsRoles->alias() => $this->WorkflowStepsRoles->table()],
-						[
-							$this->WorkflowStepsRoles->aliasField('workflow_step_id = ') . $this->WorkflowSteps->aliasField('id'),
+			// user roles
+			$roleIds = [];
+			$event = $model->dispatchEvent('Workflow.onUpdateRoles', null, $this);
+			if ($event->result) {
+	    		$roleIds = $event->result;
+	    	} else {
+				$roles = $model->AccessControl->getRolesByUser()->toArray();
+				foreach ($roles as $key => $role) {
+					$roleIds[$role->security_role_id] = $role->security_role_id;
+				}
+	    	}
+	    	// End
+
+	    	if ($model->AccessControl->isAdmin()) {
+	    		// super admin allow to see the full list of action buttons
+	    		$query = $this->WorkflowSteps
+					->find()
+					->matching('Workflows.WorkflowModels')
+					->contain(['WorkflowActions' => function ($q) {
+							return $q
+								->find('visible')
+								->where(['next_workflow_step_id !=' => 0]);
+						}
+					])
+					->contain('WorkflowActions.NextWorkflowSteps')
+					->where([
+						$this->WorkflowSteps->aliasField('id') => $workflowStepId // Latest Workflow Step
+					]);
+	    	} else {
+	    		// if is not super admin
+	    		if (!empty($roleIds)) {
+	    			$workflowStepsRoles = $this->WorkflowStepsRoles
+		    			->find()
+		    			->where([
+							$this->WorkflowStepsRoles->aliasField('workflow_step_id') => $workflowStepId,
 							$this->WorkflowStepsRoles->aliasField('security_role_id IN') => $roleIds
-						]
-					);
-			}
+		    			])
+		    			->all();
+
+		    		if ($workflowStepsRoles->isEmpty()) {
+						// if login user roles is not allow to access current step
+		    			if ($userId == $assigneeId) {
+		    				$query = $this->WorkflowSteps
+								->find()
+								->matching('Workflows.WorkflowModels')
+								->contain(['WorkflowActions' => function ($q) {
+										return $q
+											->find('visible')
+											->where([
+												'next_workflow_step_id !=' => 0,
+												'allow_by_assignee' =>1
+											]);
+									}
+								])
+								->contain('WorkflowActions.NextWorkflowSteps')
+								->where([
+									$this->WorkflowSteps->aliasField('id') => $workflowStepId // Latest Workflow Step
+								]);
+		    			} else {
+		    				return null;
+		    			}
+		    		} else {
+		    			// if login user roles is allow to access current step
+		    			$query = $this->WorkflowSteps
+							->find()
+							->matching('Workflows.WorkflowModels')
+							->contain(['WorkflowActions' => function ($q) {
+									return $q
+										->find('visible')
+										->where(['next_workflow_step_id !=' => 0]);
+								}
+							])
+							->contain('WorkflowActions.NextWorkflowSteps')
+							->where([
+								$this->WorkflowSteps->aliasField('id') => $workflowStepId // Latest Workflow Step
+							])
+							->innerJoin(
+								[$this->WorkflowStepsRoles->alias() => $this->WorkflowStepsRoles->table()],
+								[
+									$this->WorkflowStepsRoles->aliasField('workflow_step_id = ') . $this->WorkflowSteps->aliasField('id'),
+									$this->WorkflowStepsRoles->aliasField('security_role_id IN') => $roleIds
+								]
+							);
+		    		}
+	    		}
+	    	}
 
 			return $query->first();
 		} else {
