@@ -22,19 +22,10 @@ class AdvancedIdentitySearchBehavior extends Behavior {
 	
 	public function onBuildQuery(Event $event, Query $query, $advancedSearchHasMany) 
 	{
-		if (isset($advancedSearchHasMany['identity_type'])) {
-			$identityType = $advancedSearchHasMany['identity_type'];
-		} else {
-			$identityType = '';
-		}
+        $identityType = $advancedSearchHasMany['identity_type'];
+		$identityNumber = $advancedSearchHasMany['identity_number'];
 
-		if (isset($advancedSearchHasMany['identity_number'])) {
-			$identityNumber = $advancedSearchHasMany['identity_number'];
-		} else {
-			$identityNumber = '';
-		}
-
-		if (!empty($identityNumber)) {
+        if (!empty($identityNumber) || strlen($identityNumber)) {
             $query->join([
                         'UserIdentities' => [
                             'table' => 'user_identities',
@@ -47,7 +38,7 @@ class AdvancedIdentitySearchBehavior extends Behavior {
                         'UserIdentities.number LIKE ' => '%' . $identityNumber . '%'
                     ]);
 
-            if ($identityType) {
+            if (!empty($identityType)) {
                 $query->andWhere([
                             'UserIdentities.identity_type_id' => $identityType
                         ]);
