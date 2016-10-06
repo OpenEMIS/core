@@ -1592,7 +1592,9 @@ class ValidationBehavior extends Behavior {
 				->first()
 			;
 
-			$pattern = '/' . $IdentityTypesData->validation_pattern . '/';
+			if (!empty($IdentityTypesData->validation_pattern)) {
+				$pattern = '/' . $IdentityTypesData->validation_pattern . '/';
+			}
 		}
 
 		// custom validation is nullable, have to cater for the null pattern.
