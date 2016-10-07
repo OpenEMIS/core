@@ -37,16 +37,6 @@ class RestfulController extends BaseController
             'controller' => 'Users',
             'action' => 'login'
         ]);
-
-        $this->Auth->config('authorize', 'Controller');
-        $this->Auth->config('unauthorizedRedirect', false);
-    }
-
-    public function isAuthorized($user = null, Request $request = null)
-    {
-        return true;
-        // Default deny all
-        // return false;
     }
 
     public function beforeFilter(Event $event)

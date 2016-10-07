@@ -122,6 +122,9 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('Import.ImportLink');
 
         $this->shiftTypes = $this->getSelectOptions('Shifts.types'); //get from options trait
+        $this->addBehavior('Restful.RestfulAccessControl', [
+        	'Students' => ['index']
+        ]);
 	}
 
 	public function validationDefault(Validator $validator) {

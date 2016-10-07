@@ -34,6 +34,9 @@ class StudentAdmissionTable extends AppTable {
 		$this->belongsTo('NewEducationGrades', ['className' => 'Education.EducationGrades']);
 
 		$this->addBehavior('User.AdvancedNameSearch');
+        $this->addBehavior('Restful.RestfulAccessControl', [
+        	'Students' => ['index', 'add']
+        ]);
 	}
 
 	public function validationDefault(Validator $validator) {

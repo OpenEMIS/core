@@ -16,6 +16,7 @@ angular.module('kd.orm.svc', [])
         _order: [],
         _limit: 0,
         _page: 0,
+        _controllerAction: null,
 
         className: function(className) {
             this._className = className;
@@ -187,6 +188,10 @@ angular.module('kd.orm.svc', [])
                 delete settings.authorizationHeader;
             }
 
+            if (query._controllerAction != null) {
+                settings.headers.ControllerAction = query._controllerAction;
+            }
+
             var url = this.toURL();
             settings.url = url.replace('@type', type);
 
@@ -254,8 +259,13 @@ angular.module('kd.orm.svc', [])
 
     return {
         base: base,
+        controllerAction: controllerAction,
         init: init,
         wildcard: wildcard
+    };
+
+    function controllerAction(action) {
+        query._controllerAction = action;
     };
 
     function base(base) {
