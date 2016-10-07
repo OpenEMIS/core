@@ -11,7 +11,7 @@
 			<table class="table table-checkable">
 				<thead>
 					<tr>
-						<th class="checkbox-column"><input type="checkbox" class="icheck-input" 
+						<th class="checkbox-column"><input type="checkbox" class="icheck-input"
 							<?php //logic to tick checkbox on the header if all checkboxes selected, this is used after validation process.
 								foreach ($attr['data'] as $i=>$obj) {
 									$classGradeArray[$i] = $attr['data'][$i]['education_grade_id'];
@@ -28,12 +28,15 @@
 
 				<?php if (isset($attr['data'])) : ?>
 				<tbody>
-					<?php 
+					<?php
 						foreach ($attr['data'] as $i=>$obj) : ?>
 					<?php 	$selected = (isset($attr['selected']) && in_array($obj->education_grade_id, $attr['selected'])) ? true : false; ?>
 					<tr>
 						<td class="checkbox-column">
-						<?= $this->Form->input(sprintf($attr['model'].'[education_grades][%d][id]', $i), [
+						<?php
+							$alias = $attr['model'] . ".education_grades._ids.%d";
+						?>
+						<?= $this->Form->input(sprintf($alias, $i), [
 								'type' => 'checkbox',
 								'class' => 'icheck-input',
 								'value' => $obj->education_grade_id,
@@ -55,7 +58,7 @@
 
 <?php else : ?>
 
-<?php 
+<?php
 	$grades = [];
 	foreach ($attr['data']['grades'] as $grade) {
 		$grades[] = $grade->name;

@@ -9,9 +9,11 @@ use Cake\Validation\Validator;
 class BanksTable extends ControllerActionTable {
 	public function initialize(array $config)
 	{
-		$this->addBehavior('FieldOption.FieldOption');
 		parent::initialize($config);
+
 		$this->hasMany('BankBranches', ['className' => 'FieldOption.BankBranches', 'foreignKey' => 'bank_id']);
+
+        $this->addBehavior('FieldOption.FieldOption');
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra)

@@ -3,10 +3,10 @@ namespace Staff\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 
-class StaffTypesTable extends ControllerActionTable {
+class StaffTypesTable extends ControllerActionTable
+{
     public function initialize(array $config)
     {
-        $this->addBehavior('FieldOption.FieldOption');
         $this->table('staff_types');
         parent::initialize($config);
 
@@ -19,6 +19,6 @@ class StaffTypesTable extends ControllerActionTable {
         $this->hasMany('InstitutionStaff', ['className' => 'Report.InstitutionStaff']);
         $this->hasMany('Positions', ['className' => 'Staff.Positions']);
 
-        $this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
+        $this->addBehavior('FieldOption.FieldOption');
     }
 }

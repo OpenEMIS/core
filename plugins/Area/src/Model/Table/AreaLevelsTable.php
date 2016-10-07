@@ -9,19 +9,23 @@ use Cake\ORM\Entity;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
 
-class AreaLevelsTable extends ControllerActionTable {
-	public function initialize(array $config) {
+class AreaLevelsTable extends ControllerActionTable
+{
+	public function initialize(array $config)
+	{
 		parent::initialize($config);
 		$this->hasMany('Areas', ['className' => 'Area.Areas', 'foreign_key' => 'area_level_id']);
 		$this->addBehavior('RestrictAssociatedDelete');
-		// $this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
+		$this->setDeleteStrategy('restrict');
 	}
 
-	public function beforeAction(Event $event, ArrayObject $extra) {
+	public function beforeAction(Event $event, ArrayObject $extra)
+	{
 		$this->field('level', ['before' => 'name']);
 	}
 
-	public function addEditBeforeAction(Event $event, ArrayObject $extra) {
+	public function addEditBeforeAction(Event $event, ArrayObject $extra)
+	{
 		$this->fields['level']['type'] = 'hidden';
 	}
 
@@ -33,7 +37,8 @@ class AreaLevelsTable extends ControllerActionTable {
 	// 	$ConfigItemsTable->updateAll(['value' => $transferedValue], ['type' => 'Institution', 'code' => 'Institution_area_level_id', 'value' => $entity->id]);
 	// }
 
-	public function onUpdateFieldLevel(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldLevel(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'add') {
 			$query = $this->find();
 			$results = $query
