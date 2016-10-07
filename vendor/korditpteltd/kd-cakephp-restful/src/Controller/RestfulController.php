@@ -10,18 +10,23 @@ use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
+use Cake\Utility\Inflector;
 use Restful\Controller\AppController;
 
 class RestfulController extends AppController
 {
     private $_debug = false;
     private $model = null;
+    private $controllerAction = null;
 
     public function initialize()
     {
         parent::initialize();
         $this->loadComponent('RequestHandler');
-        $this->loadComponent('Auth');
+        $this->loadComponent('Auth', [
+            'authorize' => 'Controller',
+            'unauthorizedRedirect' => false
+        ]);
         $this->Auth->allow('token');
     }
 
@@ -40,7 +45,7 @@ class RestfulController extends AppController
         if (empty($this->request->params['_ext'])) {
             $this->request->params['_ext'] = 'json';
         }
-
+        $this->controllerAction = $this->request->header('controlleraction');
         if (isset($this->request->model)) {
             $tableAlias = $this->request->model;
             $model = $this->_instantiateModel($tableAlias);
@@ -54,6 +59,20 @@ class RestfulController extends AppController
                 }
             }
         }
+    }
+
+    public function isAuthorized($user = null)
+    {
+        $model = $this->model;
+        $controllerAction = $this->controllerAction;
+        $action = $this->request->params['action'];
+        $request = $this->request;
+        $extra = new ArrayObject(['request' => $request]);
+        $event = $model->dispatchEvent('Restful.Model.isAuthorized', [$controllerAction, $action, $extra], $this);
+        if ($event->result) {
+            return $event->result;
+        }
+        return false;
     }
 
     public function beforeRender(Event $event)
@@ -282,15 +301,31 @@ class RestfulController extends AppController
         }
     }
 
-    private function convertBinaryToBase64(Entity $entity)
+    private function convertBinaryToBase64(Table $table, Entity $entity)
     {
+        $table = $this->model;
+        $schema = $table->schema();
+
         foreach ($entity->visibleProperties() as $property) {
+            if (in_array($schema->columnType($property), ['datetime', 'date'])) {
+                if (!empty($entity->$property)) {
+                    $entity->$property = $entity->$property->format('Y-m-d');
+                } else {
+                    $entity->$property = '1970-01-01';
+                }
+            }
             if ($entity->$property instanceof Entity) {
-                $this->convertBinaryToBase64($entity->$property);
+                $this->convertBinaryToBase64($table, $entity->$property);
             } else if (is_resource($entity->$property)) {
                 $entity->$property = base64_encode(stream_get_contents($entity->$property));
             } else if ($property == 'password') { // removing password from entity so that the value will not be exposed
                 $entity->unsetProperty($property);
+            } else {
+                $eventKey = 'Restful.Model.onRender' . Inflector::camelize($property);
+                $event = $table->dispatchEvent($eventKey, [$entity], $this);
+                if ($event->result) {
+                    $entity->$property = $event->result;
+                }
             }
         }
     }
@@ -311,13 +346,14 @@ class RestfulController extends AppController
         return $entity;
     }
 
-    private function _formatBinaryValue($data)
+    private function formatResultSet(Table $table, $data)
     {
         if ($data instanceof Entity) {
-            $this->convertBinaryToBase64($data);
+            $this->convertBinaryToBase64($table, $data);
+
         } else {
             foreach ($data as $key => $value) {
-                $this->convertBinaryToBase64($value);
+                $this->convertBinaryToBase64($table, $value);
             }
         }
         return $data;
@@ -391,7 +427,7 @@ class RestfulController extends AppController
                 if ($extra->offsetExists('limit') && $extra->offsetExists('page')) {
                     $query->limit($extra['limit'])->page($extra['page']);
                 }
-                $data = $this->_formatBinaryValue($query->all());
+                $data = $this->formatResultSet($table, $query->all());
                 $serialize = ['data' => $data, 'total' => $total];
             }
             $serialize['_serialize'] = array_keys($serialize);
@@ -421,8 +457,13 @@ class RestfulController extends AppController
         $target = $this->_instantiateModel($model);
         if ($target) {
             if (strtolower($id) == 'schema') {
-                $fields = $this->schema($target);
-                $serialize = ['data' => $fields];
+                $extra = new ArrayObject([]);
+                $schema = [];
+                $event = $target->dispatchEvent('Restful.Model.onSetupFields', [$extra], $this);
+                if (is_array($event->result)) {
+                    $schema = $event->result;
+                }
+                $serialize = ['data' => $schema];
                 $serialize['_serialize'] = array_keys($serialize);
                 $this->set($serialize);
             } else if ($target->exists([$target->aliasField($target->primaryKey()) => $id])) {
@@ -443,7 +484,7 @@ class RestfulController extends AppController
                     }
                     try {
                         $data = $query->where([$target->aliasField($target->primaryKey()) => $id])->first();
-                        $data = $this->_formatBinaryValue($data);
+                        $data = $this->formatResultSet($target, $data);
                         $this->_outputData($data);
                     } catch (Exception $e) {
                         $this->_outputError($e->getMessage());
@@ -499,35 +540,6 @@ class RestfulController extends AppController
         }
     }
 
-    public function schema($table)
-    {
-        $fields = [];
-        $schema = $table->schema();
-        $columns = $schema->columns();
-        foreach ($columns as $col) {
-            $attr = $schema->column($col);
-            $foreignKey = $this->isForeignKey($table, $col);
-            if ($foreignKey !== false) {
-                $attr['foreign_key'] = true;
-                $attr['reference'] = $foreignKey['className'];
-            }
-            $fields[$col] = $attr;
-        }
-        return $fields;
-    }
-
-    private function isForeignKey($table, $field)
-    {
-        foreach ($table->associations() as $assoc) {
-            if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
-                    return ['className' => $assoc->className()];
-                }
-            }
-        }
-        return false;
-    }
-
     private function _instantiateModel($model)
     {
         $model = str_replace('-', '.', $model);
@@ -573,6 +585,7 @@ class RestfulController extends AppController
                     }
                 }
                 if ($trueExists) {
+                    $contains = [];
                     foreach ($target->associations() as $assoc) {
                         $contains[] = $assoc->name();
                     }

@@ -46,7 +46,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         StudentRecords: 'Institution.StudentAdmission',
         Students: 'Student.Students',
         StudentUser: 'Institution.StudentUser',
-        StudentStatuses: 'Student.StudentStatuses',
         InstitutionGrades: 'Institution.InstitutionGrades',
         Institutions: 'Institution.Institutions',
         AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
@@ -54,7 +53,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         IdentityTypes: 'FieldOption.IdentityTypes',
         ExternalDataSourceAttributes: 'Configuration.ExternalDataSourceAttributes',
         Identities: 'User.Identities',
-
     };
 
     var externalModels = {
@@ -67,6 +65,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
     function init(baseUrl) {
         KdOrmSvc.base(baseUrl);
+        KdOrmSvc.controllerAction('Students');
         KdOrmSvc.init(models);
     };
 
@@ -573,13 +572,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         };
         return AcademicPeriods
             .select(['id', 'name', 'current', 'start_date', 'end_date'])
-            .where(
-                {
-                    editable: 1,
-                    academic_period_level_id: '1'
-                }
-            )
-            .order(['order'])
+            .find('SchoolAcademicPeriod')
             .ajax({success: success, defer: true});
     };
 

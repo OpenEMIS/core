@@ -80,9 +80,19 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
 
         InstitutionsStudentsSvc.getAcademicPeriods()
         .then(function(periods) {
+            var selectedPeriod = [];
+            angular.forEach(periods, function(value) {
+                if (value.current == 1) {
+                   this.push(value);
+                }
+            }, selectedPeriod);
+            if (selectedPeriod.length == 0) {
+                selectedPeriod = periods;
+            }
+
             StudentController.academicPeriodOptions = {
                 availableOptions: periods,
-                selectedOption: periods[0]
+                selectedOption: selectedPeriod[0]
             };
 
             if (StudentController.academicPeriodOptions.hasOwnProperty('selectedOption')) {

@@ -63,6 +63,9 @@ class InstitutionClassesTable extends ControllerActionTable {
         // this behavior restricts current user to see All Classes or My Classes
         $this->addBehavior('Security.InstitutionClass');
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Students' => ['index', 'add']
+        ]);
     }
 
     public function validationDefault(Validator $validator) {
