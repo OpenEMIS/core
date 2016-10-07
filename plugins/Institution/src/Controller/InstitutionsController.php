@@ -580,4 +580,9 @@ class InstitutionsController extends AppController
         }
         return $tabElements;
     }
+
+    public function getCareerTabElements($options = []) {
+        $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+        return TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
+    }
 }

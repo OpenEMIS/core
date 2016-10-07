@@ -13,8 +13,10 @@ use Cake\Validation\Validator;
 
 use App\Model\Table\ControllerActionTable;
 
-class StaffLeaveTable extends ControllerActionTable {
-	public function initialize(array $config) {
+class StaffLeaveTable extends ControllerActionTable
+{
+	public function initialize(array $config)
+	{
 		$this->table('staff_leaves');
 		parent::initialize($config);
 
@@ -35,7 +37,8 @@ class StaffLeaveTable extends ControllerActionTable {
 		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator)
+	{
 		$validator = parent::validationDefault($validator);
 
 		return $validator
@@ -46,7 +49,8 @@ class StaffLeaveTable extends ControllerActionTable {
 		;
 	}
 
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+	{
 		$dateFrom = date_create($entity->date_from);
 		$dateTo = date_create($entity->date_to);
 		$diff = date_diff($dateFrom, $dateTo, true);
@@ -54,7 +58,8 @@ class StaffLeaveTable extends ControllerActionTable {
 		$entity->number_of_days = ++$numberOfDays;
 	}
 
-	public function beforeAction(Event $event, ArrayObject $extra) {
+	public function beforeAction(Event $event, ArrayObject $extra)
+	{
 		$this->field('staff_leave_type_id', ['type' => 'select']);
 		$this->field('number_of_days', [
 			'visible' => ['index' => true, 'view' => true, 'edit' => false, 'add' => false]
@@ -66,23 +71,31 @@ class StaffLeaveTable extends ControllerActionTable {
 			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
 		]);
 		$this->field('staff_leave_type_id', ['type' => 'select']);
-		$this->field('staff_id', ['type' => 'hidden']);
+
+		if ($this->controller->name == 'Institutions') {
+			$this->field('staff_id', ['type' => 'hidden']);
+		} else if ($this->controller->name == 'Directories') {
+			$this->field('institution_id', ['type' => 'hidden']);
+		}
 
 		$this->setFieldOrder(['staff_leave_type_id', 'date_from', 'date_to', 'number_of_days', 'comments', 'file_name', 'file_content']);
 	}
 
-	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	{
 		$userId = $this->getUserId();
 		$query->where([
 			$this->aliasField('staff_id') => $userId
 		]);
 	}
 
-	public function indexAfterAction(Event $event, ResultSet $data, ArrayObject $extra) {
+	public function indexAfterAction(Event $event, ResultSet $data, ArrayObject $extra)
+	{
 		$this->setupTabElements();
 	}
 
-	public function onUpdateFieldFileName(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldFileName(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'view') {
 			$attr['type'] = 'hidden';
 		} else if ($action == 'add' || $action == 'edit') {
@@ -92,7 +105,8 @@ class StaffLeaveTable extends ControllerActionTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'add') {
 			$userId = $this->getUserId();
 
@@ -102,20 +116,21 @@ class StaffLeaveTable extends ControllerActionTable {
 		return $attr;
 	}
 
-	private function setupTabElements() {
+	private function setupTabElements()
+	{
 		$options['type'] = 'staff';
-
 		$userId = $this->getUserId();
 		if (!is_null($userId)) {
 			$options['user_id'] = $userId;
 		}
 
-		$tabElements = TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
+		$tabElements = $this->controller->getCareerTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', 'StaffLeave');
+		$this->controller->set('selectedAction', $this->alias());
 	}
 
-	public function getUserId() {
+	public function getUserId()
+	{
 		$session = $this->request->session();
 		if ($session->check('Staff.Staff.id')) {
 			$userId = $session->read('Staff.Staff.id');
