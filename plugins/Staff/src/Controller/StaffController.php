@@ -215,6 +215,11 @@ class StaffController extends AppController {
 
 	public function getCareerTabElements($options = []) {
 		$options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+		$session = $this->request->session();
+		if ($session->check('Staff.Staff.id')) {
+			$userId = $session->read('Staff.Staff.id');
+			$options['user_id'] = $userId;
+		}
 		return TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
 	}
 
