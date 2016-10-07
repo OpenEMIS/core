@@ -14,14 +14,16 @@ use Cake\Utility\Inflector;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
 
-class StudentsTable extends AppTable {
+class StudentsTable extends AppTable
+{
 	const PENDING_TRANSFER = -2;
 	const PENDING_ADMISSION = -3;
 	const PENDING_DROPOUT = -4;
 
 	private $dashboardQuery = null;
 
-	public function initialize(array $config) {
+	public function initialize(array $config)
+	{
 		$this->table('institution_students');
 		parent::initialize($config);
 
@@ -31,9 +33,6 @@ class StudentsTable extends AppTable {
 		$this->belongsTo('EducationGrades',	['className' => 'Education.EducationGrades']);
 		$this->belongsTo('Institutions',	['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('AcademicPeriods',	['className' => 'AcademicPeriod.AcademicPeriods']);
-
-
-
 
 		// Behaviors
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
@@ -105,7 +104,8 @@ class StudentsTable extends AppTable {
 
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator)
+	{
 		$validator = parent::validationDefault($validator);
 
 		$validator
@@ -144,13 +144,15 @@ class StudentsTable extends AppTable {
 		return $validator;
 	}
 
-	public function validationNewStudent(Validator $validator) {
+	public function validationNewStudent(Validator $validator)
+	{
         $validator = $this->validationDefault($validator);
         $validator = $validator->remove('student_name');
         return $validator;
     }
 
-	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+	{
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$query->where([$this->aliasField('institution_id') => $institutionId]);
 		$query->contain([
@@ -270,7 +272,8 @@ class StudentsTable extends AppTable {
 	// 	return $str;
 	// }
 
-	public function onExcelRenderNationalities(Event $event, Entity $entity, array $attr) {
+	public function onExcelRenderNationalities(Event $event, Entity $entity, array $attr)
+	{
 		$str = '';
 		if(!empty($entity['user']['nationalities'])) {
 			$nationalities = $entity['user']['nationalities'];
@@ -286,19 +289,22 @@ class StudentsTable extends AppTable {
 		return $str;
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents()
+	{
 		$events = parent::implementedEvents();
 		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
 		return $events;
 	}
 
-	public function beforeAction(Event $event) {
+	public function beforeAction(Event $event)
+	{
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$this->ControllerAction->field('institution_id', ['type' => 'hidden', 'value' => $institutionId]);
 		$this->ControllerAction->field('student_status_id', ['type' => 'select']);
 	}
 
-    public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+    public function onBeforeDelete(Event $event, ArrayObject $options, $id)
+    {
         // PHPOE-2123 moved.. 'Another check to check before deletion. In case of concurrency issue.'
         $status = $this->get($id)->student_status_id;
         $studentStatuses = $this->StudentStatuses->findCodeList();
@@ -324,7 +330,8 @@ class StudentsTable extends AppTable {
         return $process;
     }
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings)
+	{
 		$this->ControllerAction->field('academic_period_id', ['visible' => false]);
 		$this->ControllerAction->field('class', ['order' => 90]);
 		$this->ControllerAction->field('student_status_id', ['order' => 100]);
@@ -353,7 +360,8 @@ class StudentsTable extends AppTable {
 	}
 
 	// returns error message if validation false
-	public function validateEnrolledInAnyInstitution($studentId, $systemId, $options = []) {
+	public function validateEnrolledInAnyInstitution($studentId, $systemId, $options = [])
+	{
 		$newOptions['getInstitutions'] = true;
 		$options = array_merge($options, $newOptions);
 
@@ -375,7 +383,8 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	private function enrolledInAnyInstitution($studentId, $systemId, $options = []) {
+	private function enrolledInAnyInstitution($studentId, $systemId, $options = [])
+	{
 		$newOptions['select'] = ['institution_id', 'education_grade_id'];
 		$options = array_merge($options, $newOptions);
 		$getInstitutions = (array_key_exists('getInstitutions', $options))? $options['getInstitutions']: false;
@@ -404,7 +413,8 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	private function getEnrolledRecords($studentId, $options = []) {
+	private function getEnrolledRecords($studentId, $options = [])
+	{
 		$selectParams = (array_key_exists('select', $options))? $options['select']: null;
 		$excludeInstitutions = (array_key_exists('excludeInstitutions', $options))? $options['excludeInstitutions']: null;
 
@@ -421,7 +431,8 @@ class StudentsTable extends AppTable {
 		return $result;
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+	{
 		$query->contain(['EducationGrades']);
 
 		// Student Statuses
@@ -520,7 +531,8 @@ class StudentsTable extends AppTable {
 		$this->controller->set(compact('statusOptions', 'academicPeriodOptions', 'educationGradesOptions'));
 	}
 
-	public function findWithClass(Query $query, array $options) {
+	public function findWithClass(Query $query, array $options)
+	{
 		$institutionId = $options['institution_id'];
 		$periodId = $options['period_id'];
 
@@ -548,11 +560,13 @@ class StudentsTable extends AppTable {
 			->autoFields(true);
 	}
 
-	public function indexAfterPaginate(Event $event, ResultSet $resultSet, Query $query) {
+	public function indexAfterPaginate(Event $event, ResultSet $resultSet, Query $query)
+	{
 		$this->dashboardQuery = clone $query;
 	}
 
-	public function onGetStudentId(Event $event, Entity $entity) {
+	public function onGetStudentId(Event $event, Entity $entity)
+	{
 		$value = '';
 		if ($entity->has('user')) {
 			$value = $entity->user->name;
@@ -562,7 +576,8 @@ class StudentsTable extends AppTable {
 		return $value;
 	}
 
-	public function onGetEducationGradeId(Event $event, Entity $entity) {
+	public function onGetEducationGradeId(Event $event, Entity $entity)
+	{
 		$value = '';
 		if ($entity->has('education_grade')) {
 			$value = $entity->education_grade->programme_grade_name;
@@ -570,7 +585,8 @@ class StudentsTable extends AppTable {
 		return $value;
 	}
 
-	public function onGetClass(Event $event, Entity $entity) {
+	public function onGetClass(Event $event, Entity $entity)
+	{
 		$value = '';
 		$academicPeriodId = $entity->academic_period_id;
 		$studentId = $entity->_matchingData['Users']->id;
@@ -600,7 +616,8 @@ class StudentsTable extends AppTable {
 		return $value;
 	}
 
-	public function afterAction(Event $event) {
+	public function afterAction(Event $event)
+	{
 		$this->ControllerAction->field('student_id');
 
 		if ($this->action == 'index') {
@@ -649,7 +666,8 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	public function addAfterAction(Event $event, Entity $entity) {
+	public function addAfterAction(Event $event, Entity $entity)
+	{
 		$this->ControllerAction->field('student_name');
 
 		list($periodOptions, $selectedPeriod, $gradeOptions, $selectedGrade, $classOptions, $selectedClass) = array_values($this->_getSelectOptions());
@@ -675,7 +693,8 @@ class StudentsTable extends AppTable {
 		]);
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
+	public function viewAfterAction(Event $event, Entity $entity)
+	{
 		$studentStatusId = $entity->student_status_id;
 		$statuses = $this->StudentStatuses->findCodeList();
 		$code = array_search($studentStatusId, $statuses);
@@ -692,14 +711,16 @@ class StudentsTable extends AppTable {
 		$this->setupTabElements($entity);
 	}
 
-	private function setupTabElements($entity) {
+	private function setupTabElements($entity)
+	{
 		$options['type'] = 'student';
 		$tabElements = TableRegistry::get('Student.Students')->getAcademicTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', 'Programmes');
 	}
 
-	public function onGetCustomStatusReasonElement(Event $event, $action, $entity, $attr, $options=[]) {
+	public function onGetCustomStatusReasonElement(Event $event, $action, $entity, $attr, $options=[])
+	{
 		if ($this->action == 'view') {
 			$studentStatusId = $entity->student_status_id;
 			$statuses = $this->StudentStatuses->findCodeList();
@@ -750,20 +771,23 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	public function onGetComment(Event $event, Entity $entity) {
+	public function onGetComment(Event $event, Entity $entity)
+	{
 		if ($this->action == 'view') {
 			return nl2br($entity->comment);
 		}
 	}
 
-	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+	public function onGetFormButtons(Event $event, ArrayObject $buttons)
+	{
 		if ($this->action == 'add') {
 			$buttons[0]['name'] = '<i class="fa kd-add"></i> ' . __('Create New');
 			$buttons[0]['attr']['value'] = 'new';
 		}
 	}
 
-	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data)
+	{
 		$AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
 		$studentData = $data['Students'];
 		$studentExist = 0;
@@ -832,7 +856,8 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+	{
 		if ($entity->isNew()) {
 			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 			if ($StudentStatuses->get($entity->student_status_id)->code == 'CURRENT') {
@@ -869,18 +894,20 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	public function viewBeforeAction(Event $event) {
+	public function viewBeforeAction(Event $event)
+	{
 		$this->ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
 		$this->ControllerAction->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
 		$this->fields['student_id']['order'] = 10;
 	}
 
-	public function editBeforeQuery(Event $event, Query $query) {
+	public function editBeforeQuery(Event $event, Query $query)
+	{
 		$query->contain(['Users', 'EducationGrades', 'AcademicPeriods', 'StudentStatuses']);
 	}
 
-	public function editAfterAction(Event $event, Entity $entity) {
-
+	public function editAfterAction(Event $event, Entity $entity)
+	{
 		// Start PHPOE-1897
 		$statuses = $this->StudentStatuses->findCodeList();
 		if ($entity->student_status_id != $statuses['CURRENT']) {
@@ -917,19 +944,22 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'add') {
 			$attr['onChangeReload'] = 'changePeriod';
 		}
 		return $attr;
 	}
 
-	public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+	{
 		$attr['onChangeReload'] = 'changeEducationGrade';
 		return $attr;
 	}
 
-	public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'add') {
 			$period = $attr['period'];
 			if ($period instanceOf Entity) {
@@ -945,7 +975,8 @@ class StudentsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'add') {
 			$period = $attr['period'];
 			$attr['type'] = 'readonly';
@@ -960,7 +991,8 @@ class StudentsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldStudentId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldStudentId(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'add') {
 			$attr['visible'] = false;
 		} elseif ($action == 'index') {
@@ -969,7 +1001,8 @@ class StudentsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldStudentName(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldStudentName(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'add') {
 			$attr['type'] = 'autocomplete';
 			$attr['target'] = ['key' => 'student_id', 'name' => $this->aliasField('student_id')];
@@ -989,7 +1022,8 @@ class StudentsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldStudentStatusId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldStudentStatusId(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'add') {
 			$StudentStatusesTable = $this->StudentStatuses;
 			$conditions = [
@@ -1008,7 +1042,8 @@ class StudentsTable extends AppTable {
 		return $attr;
 	}
 
-	public function addOnChangePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addOnChangePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	{
 		$request = $this->request;
 		unset($request->query['period']);
 		unset($request->query['grade']);
@@ -1022,11 +1057,13 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	public function addOnInitialize(Event $event, Entity $entity) {
+	public function addOnInitialize(Event $event, Entity $entity)
+	{
 		$this->Session->delete('Institution.Students.new');
 	}
 
-	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	{
 		$options['validate'] = 'newStudent';
 		$entity = $this->patchEntity($entity, $data->getArrayCopy(), $options->getArrayCopy());
 		$errorCount = count($entity->errors());
@@ -1052,7 +1089,8 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	public function addOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	{
 		$request = $this->request;
 		unset($request->query['period']);
 		unset($request->query['grade']);
@@ -1069,7 +1107,8 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	public function ajaxUserAutocomplete() {
+	public function ajaxUserAutocomplete()
+	{
 		$this->controller->autoRender = false;
 		$this->ControllerAction->autoRender = false;
 
@@ -1106,7 +1145,8 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	private function _getSelectOptions() {
+	private function _getSelectOptions()
+	{
 		//Return all required options and their key
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$Grades = TableRegistry::get('Institution.InstitutionGrades');
@@ -1167,7 +1207,8 @@ class StudentsTable extends AppTable {
 	}
 
 	// Start PHPOE-1897
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+	{
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 		$studentId = $this->get($entity->id)->student_id;
 		$institutionId = $entity->institution_id;
@@ -1201,7 +1242,8 @@ class StudentsTable extends AppTable {
 	}
 	// End PHPOE-1897
 
-	public function checkEnrolledInInstitution($studentId, $institutionId) {
+	public function checkEnrolledInInstitution($studentId, $institutionId)
+	{
 		$statuses = TableRegistry::get('Student.StudentStatuses')->findCodeList();
 		$status = $this
 			->find()
@@ -1213,8 +1255,17 @@ class StudentsTable extends AppTable {
 		return $status > 0;
 	}
 
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($action == 'index') { // for promotion button in index page
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+	{
+		if ($action == 'index') {
+			// Export execute permission.
+			if (!$this->AccessControl->check(['Institutions', 'Students', 'excel'])) {
+				if (isset($toolbarButtons['export'])) {
+					unset($toolbarButtons['export']);
+				}
+			}
+
+			// for promotion button in index page
 			if ($this->AccessControl->check(['Institutions', 'Promotion', 'add'])) {
 				$graduateButton = $buttons['index'];
 				$graduateButton['url']['action'] = 'Promotion';
@@ -1278,7 +1329,8 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	public function checkIfCanTransfer($student, $institutionId) {
+	public function checkIfCanTransfer($student, $institutionId)
+	{
 		$gradeId = ($student->has('education_grade_id'))? $student->education_grade_id: null;
 		$studentId = ($student->has('student_id'))? $student->student_id: null;
 		if (empty($gradeId) || empty($studentId)) {
@@ -1360,7 +1412,8 @@ class StudentsTable extends AppTable {
 	}
 
 	// Function use by the mini dashboard (For Institution Students)
-	public function getNumberOfStudentsByGender($params=[]) {
+	public function getNumberOfStudentsByGender($params=[])
+	{
 		$query = $params['query'];
 		$InstitutionRecords = clone $query;
 		$InstitutionStudentCount = $InstitutionRecords
@@ -1383,7 +1436,8 @@ class StudentsTable extends AppTable {
 	}
 
 	// Function use by the mini dashboard (For Institution Students)
-	public function getNumberOfStudentsByAge($params=[]) {
+	public function getNumberOfStudentsByAge($params=[])
+	{
 		$query = $params['query'];
 		$InstitutionRecords = clone $query;
 		$ageQuery = $InstitutionRecords
@@ -1430,7 +1484,8 @@ class StudentsTable extends AppTable {
 	}
 
 	// Function use by the mini dashboard (For Institution Students)
-	public function getNumberOfStudentsByGradeByInstitution($params=[]) {
+	public function getNumberOfStudentsByGradeByInstitution($params=[])
+	{
 		$query = $params['query'];
 		$InstitutionRecords = clone $query;
 		$studentByGrades = $InstitutionRecords
@@ -1454,7 +1509,8 @@ class StudentsTable extends AppTable {
 	}
 
 	// For Dashboard (Institution Dashboard and Home Page)
-	public function getNumberOfStudentsByYear($params=[]) {
+	public function getNumberOfStudentsByYear($params=[])
+	{
 		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
 		$_conditions = [];
 		foreach ($conditions as $key => $value) {
@@ -1529,7 +1585,8 @@ class StudentsTable extends AppTable {
 	}
 
 	// For Dashboard (Home Page and Institution Dashboard page)
-	public function getNumberOfStudentsByGrade($params=[]) {
+	public function getNumberOfStudentsByGrade($params=[])
+	{
 		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
 		$_conditions = [];
 		foreach ($conditions as $key => $value) {
@@ -1609,7 +1666,8 @@ class StudentsTable extends AppTable {
 		return $params;
 	}
 
-	public function completedGrade($educationGradeId, $studentId) {
+	public function completedGrade($educationGradeId, $studentId)
+	{
 		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 
 		$statuses = $StudentStatuses->findCodeList();
