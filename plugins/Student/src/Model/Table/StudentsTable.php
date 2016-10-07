@@ -71,6 +71,9 @@ class StudentsTable extends AppTable {
 		$this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
 
 		$this->InstitutionStudent = TableRegistry::get('Institution.Students');
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Students' => ['index', 'add']
+        ]);
 	}
 
 	public static function handleAssociations($model) {

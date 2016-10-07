@@ -16,6 +16,9 @@ use Student\Model\Table\StudentsTable as UserTable;
 class StudentUserTable extends UserTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Students' => ['index', 'add']
+        ]);
 	}
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('username', ['visible' => false]);

@@ -21,6 +21,9 @@ class IdentityTypesTable extends ControllerActionTable {
 		$this->hasMany('Identities', ['className' => 'User.Identities', 'foreignKey' => 'identity_type_id']);
 
         $this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Students' => ['index', 'add']
+        ]);
     }
 
     public function findDefaultIdentityType(Query $query, array $options)
