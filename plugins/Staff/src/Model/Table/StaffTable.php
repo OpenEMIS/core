@@ -297,7 +297,7 @@ class StaffTable extends AppTable {
 
 		foreach ($studentTabElements as $key => $tab) {
 			if ($key == 'StaffLeave') {
-				$studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+				$studentUrl = array_key_exists('url', $options) ? $options['url'] : $studentUrl;
 				$userId = array_key_exists('user_id', $options) ? $options['user_id'] : 0;
 
 				$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index', 'user_id' => $userId]);

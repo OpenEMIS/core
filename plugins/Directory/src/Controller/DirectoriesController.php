@@ -411,7 +411,7 @@ class DirectoriesController extends AppController {
 			'Classes' => ['text' => __('Classes')],
 			'Subjects' => ['text' => __('Subjects')],
 			'Absences' => ['text' => __('Absences')],
-			'Leave' => ['text' => __('Leave')],
+			'StaffLeave' => ['text' => __('Leave')],
 			'Behaviours' => ['text' => __('Behaviours')],
 			'Awards' => ['text' => __('Awards')],
 		];
@@ -419,7 +419,8 @@ class DirectoriesController extends AppController {
 		$tabElements = array_merge($tabElements, $studentTabElements);
 
 		foreach ($studentTabElements as $key => $tab) {
-			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Staff'.$key, 'type' => 'staff']);
+			$action = strpos($key, "Staff") === false ? 'Staff'.$key : $key;
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $action, 'type' => 'staff']);
 		}
 		return $tabElements;
 	}
