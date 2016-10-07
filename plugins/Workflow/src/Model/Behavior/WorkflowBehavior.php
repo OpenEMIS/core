@@ -95,6 +95,7 @@ class WorkflowBehavior extends Behavior {
 		foreach($this->workflowEvents as $event) {
 			$events[$event['value']] = $event['method'];
 		}
+		$events['Model.SecurityGroupUsers.afterDelete'] = 'securityGroupUserAfterDelete';
 		return $events;
 	}
 
@@ -130,6 +131,9 @@ class WorkflowBehavior extends Behavior {
 		} catch (RecordNotFoundException $e) {
 			// Do nothing
 		}
+	}
+
+	public function securityGroupUserAfterDelete(Event $event, Entity $securityGroupUserEntity) {
 	}
 
 	public function getWorkflowEvents(Event $event, ArrayObject $eventsObject) {

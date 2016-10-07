@@ -1,9 +1,12 @@
 <?php
 namespace Security\Model\Table;
 
+use ArrayObject;
 use Cake\ORM\TableRegistry;
-use App\Model\Table\AppTable;
 use Cake\ORM\Query;
+use Cake\ORM\Entity;
+use App\Model\Table\AppTable;
+use Cake\Event\Event;
 use Cake\Log\Log;
 
 class SecurityGroupUsersTable extends AppTable {
@@ -12,6 +15,19 @@ class SecurityGroupUsersTable extends AppTable {
 		$this->belongsTo('SecurityRoles', ['className' => 'Security.SecurityRoles']);
 		$this->belongsTo('SecurityGroups', ['className' => 'Security.UserGroups']);
 		$this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
+	}
+
+	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+		$models = TableRegistry::get('Workflow.WorkflowModels')->find()->all();
+		$broadcaster = $this;
+		$listeners = [];
+		foreach ($models as $key => $obj) {
+			$listeners[] = TableRegistry::get($obj->model);
+		}
+
+		if (!empty($listeners)) {
+			$this->dispatchEventToModels('Model.SecurityGroupUsers.afterDelete', [$entity], $broadcaster, $listeners);
+		}
 	}
 
 	public function insertSecurityRoleForInstitution($data) {
