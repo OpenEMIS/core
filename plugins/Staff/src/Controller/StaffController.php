@@ -214,6 +214,7 @@ class StaffController extends AppController {
 	}
 
 	public function getCareerTabElements($options = []) {
+		$options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
 		return TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
 	}
 
