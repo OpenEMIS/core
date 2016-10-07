@@ -53,6 +53,9 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 		]);
 
 		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
+		$this->addBehavior('Restful.RestfulAccessControl', [
+            'Results' => ['index']
+        ]);
 	}
 
 	public function validationDefault(Validator $validator) {

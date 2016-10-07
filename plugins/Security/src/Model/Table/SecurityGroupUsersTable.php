@@ -12,6 +12,9 @@ class SecurityGroupUsersTable extends AppTable {
 		$this->belongsTo('SecurityRoles', ['className' => 'Security.SecurityRoles']);
 		$this->belongsTo('SecurityGroups', ['className' => 'Security.UserGroups']);
 		$this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
+		$this->addBehavior('Restful.RestfulAccessControl', [
+            'Results' => ['index']
+        ]);
 	}
 
 	public function insertSecurityRoleForInstitution($data) {
@@ -92,12 +95,12 @@ class SecurityGroupUsersTable extends AppTable {
 	}
 
 	public function findRoleByInstitution(Query $query, array $options)
-	{	
+	{
 		$userId = $options['security_user_id'];
 		$institutionId = $options['institution_id'];
 		$query
 			->innerJoin(['SecurityGroupInstitutions' => 'security_group_institutions'], [
-				'SecurityGroupInstitutions.security_group_id = '.$this->aliasField('security_group_id'), 
+				'SecurityGroupInstitutions.security_group_id = '.$this->aliasField('security_group_id'),
 				'SecurityGroupInstitutions.institution_id' => $institutionId
 			])
 			->where([$this->aliasField('security_user_id') => $userId])
