@@ -378,9 +378,9 @@ class InstitutionsController extends AppController  {
         $InstitutionStudents = TableRegistry::get('Institution.Students');
         $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_year', $params);
 
-        //Students By Grade for current year, only shows enrolled students
+        //Students By Grade for current year, excludes transferred and dropoout students
         $params = array(
-            'conditions' => array('institution_id' => $id, 'student_status_id' => $statuses['CURRENT'])
+            'conditions' => array('institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['DROPOUT']])
         );
 
         $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_grade', $params);
