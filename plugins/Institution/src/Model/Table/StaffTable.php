@@ -82,6 +82,11 @@ class StaffTable extends AppTable {
 		 * AdvanceSearchBehavior must be included first before adding other types of advance search.
 		 * If no "belongsTo" relation from the main model is needed, include its foreign key name in AdvanceSearch->exclude options.
 		 */
+        $advancedSearchFieldOrder = [
+            'first_name', 'middle_name', 'third_name', 'last_name', 
+            'contact_number', 'identity_type', 'identity_number'
+        ];
+
 		$this->addBehavior('AdvanceSearch', [
 			'exclude' => [
 				'staff_id',
@@ -90,7 +95,8 @@ class StaffTable extends AppTable {
 				'staff_status_id',
 				'institution_position_id',
 				'security_group_user_id'
-			]
+			],
+            'order' => $advancedSearchFieldOrder
 		]);
 		$this->addBehavior('User.AdvancedIdentitySearch', [
 			'associatedKey' => $this->aliasField('staff_id')
@@ -1027,16 +1033,19 @@ class StaffTable extends AppTable {
 
 			$this->controller->viewVars['indexElements'][] = ['name' => 'Institution.Staff/controls', 'data' => [], 'options' => [], 'order' => 0];
 			$indexDashboard = 'dashboard';
-			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
-	            'name' => $indexDashboard,
-	            'data' => [
-	            	'model' => 'staff',
-	            	'modelCount' => $staffCount,
-	            	'modelArray' => $InstitutionArray,
-	            ],
-	            'options' => [],
-	            'order' => 2
-	        ];
+
+            if ($this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
+    			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
+    	            'name' => $indexDashboard,
+    	            'data' => [
+    	            	'model' => 'staff',
+    	            	'modelCount' => $staffCount,
+    	            	'modelArray' => $InstitutionArray,
+    	            ],
+    	            'options' => [],
+    	            'order' => 2
+    	        ];
+            }
 			foreach ($this->controller->viewVars['indexElements'] as $key => $value) {
 				if ($value['name']=='advanced_search') {
 					$this->controller->viewVars['indexElements'][$key]['order'] = 1;
