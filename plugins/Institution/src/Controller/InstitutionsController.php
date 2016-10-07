@@ -370,7 +370,7 @@ class InstitutionsController extends AppController  {
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $statuses = $StudentStatuses->findCodeList();
 
-        //Students By Year
+        //Students By Year, excludes transferred and dropoout students
         $params = array(
             'conditions' => array('institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['DROPOUT']])
         );
@@ -378,7 +378,7 @@ class InstitutionsController extends AppController  {
         $InstitutionStudents = TableRegistry::get('Institution.Students');
         $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_year', $params);
 
-        //Students By Grade for current year
+        //Students By Grade for current year, only shows enrolled students
         $params = array(
             'conditions' => array('institution_id' => $id, 'student_status_id' => $statuses['CURRENT'])
         );
@@ -388,7 +388,7 @@ class InstitutionsController extends AppController  {
         $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
         $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
 
-        //Staffs By Position for current year
+        //Staffs By Position for current year, only shows assigned staff
         $params = array(
             'conditions' => array('institution_id' => $id, 'staff_status_id' => $assignedStatus)
         );
