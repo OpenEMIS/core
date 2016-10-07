@@ -8,12 +8,13 @@ use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 
-class BankBranchesTable extends ControllerActionTable {
+class BankBranchesTable extends ControllerActionTable
+{
 	public function initialize(array $config)
 	{
-		$this->addBehavior('FieldOption.FieldOption');
 		$this->table('bank_branches');
 		parent::initialize($config);
+
 		$this->belongsTo('Banks', ['className' => 'FieldOption.Banks']);
 		$this->hasMany('UserBankAccounts', ['className' => 'User.BankAccounts', 'foreignKey' => 'bank_branch_id']);
 		$this->hasMany('InstitutionBankAccounts', ['className' => 'Institution.InstitutionBankAccounts', 'foreignKey' => 'bank_branch_id']);
@@ -22,6 +23,8 @@ class BankBranchesTable extends ControllerActionTable {
 				'filter' => 'bank_id',
 			]);
 		}
+
+        $this->addBehavior('FieldOption.FieldOption');
 	}
 
 	public function validationUpdate($validator)
