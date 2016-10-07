@@ -1338,6 +1338,13 @@ class StudentsTable extends AppTable
 			return false;
 		}
 
+		// check if student exists in current year
+		$academicPeriodId = ($student->has('academic_period_id'))? $student->academic_period_id: null;
+		$currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
+		if ($academicPeriodId != $currentAcademicPeriod) {
+			return false;
+		}
+
 		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 		$studentStatusList = array_flip($StudentStatuses->findCodeList());
 
@@ -1346,6 +1353,7 @@ class StudentsTable extends AppTable
 		// check ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem && ruleStudentNotCompletedGrade
 		$newSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($gradeId);
 		$validateEnrolledInAnyInstitutionResult = $this->validateEnrolledInAnyInstitution($studentId, $newSystemId, ['excludeInstitutions' => $institutionId]);
+
 		if ($checkIfCanTransfer) {
 			if (!empty($validateEnrolledInAnyInstitutionResult) ||
 				$this->completedGrade($gradeId, $studentId)) {
