@@ -213,6 +213,8 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 					$this->aliasField('status'). ' IN ' => $statusToshow,
 					$this->aliasField('type') => self::TRANSFER
 				], [], true);
+
+		$extra['auto_contain_fields'] = ['PreviousInstitutions' => ['code'], 'Institutions' => ['code']];
 	}
 
 	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
@@ -459,4 +461,12 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 					]);
 		}
 	}
+
+	public function onGetPreviousInstitutionId(Event $event, Entity $entity) {
+        return $entity->previous_institution->code_name;
+    }
+
+    public function onGetInstitutionId(Event $event, Entity $entity) {
+        return $entity->institution->code_name;
+    }
 }

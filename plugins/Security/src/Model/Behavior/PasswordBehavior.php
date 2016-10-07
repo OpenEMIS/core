@@ -44,7 +44,10 @@ class PasswordBehavior extends Behavior {
 		$validator = $validator
 			->add('username', [
                 'ruleMinLength' => [
-                    'rule' => ['minLength', 6]
+                    'rule' => ['minLength', 6],
+                    'on' => function ($context) {
+						return ($context['data']['username'] != 'admin');
+					},
                 ],
 				'ruleUnique' => [
 					'rule' => 'validateUnique',
