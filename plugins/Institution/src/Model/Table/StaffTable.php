@@ -395,8 +395,15 @@ class StaffTable extends AppTable {
 	// IMPORTANT: when editing this method, need to consider impact on removeInactiveStaffSecurityRole()
 	public function removeStaffRole($staffEntity) {
 		$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
-		$affectedRows = $SecurityGroupUsersTable->deleteAll([$SecurityGroupUsersTable->primaryKey() => $staffEntity->security_group_user_id]);
-		$this->updateSecurityGroupUserId($staffEntity, NULL);
+		$securityGroupUserResults = $SecurityGroupUsersTable->find()->where([$SecurityGroupUsersTable->aliasField('id') => $staffEntity->security_group_user_id])->all();
+
+		$affectedRows = 0;
+		if (!$securityGroupUserResults->isEmpty()) {
+			$affectedRows = $securityGroupUserResults->count();
+			$deleteEntity = $securityGroupUserResults->first();
+			$SecurityGroupUsersTable->delete($deleteEntity);
+			$this->updateSecurityGroupUserId($staffEntity, NULL);
+		}
 
 		if ($affectedRows) {
 			$positionEntity = $this->Positions->find()
