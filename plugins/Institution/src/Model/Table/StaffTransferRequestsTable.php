@@ -53,6 +53,7 @@ class StaffTransferRequestsTable extends StaffTransfer {
 
 	public function indexBeforeQuery(Event $event, Query $query, $extra) {
 		$query->where([$this->aliasField('type') => self::TRANSFER]);
+		$extra['auto_contain_fields'] = ['PreviousInstitutions' => ['code']];
 	}
 
 	public function editBeforeQuery(Event $event, Query $query, $extra) {
@@ -132,10 +133,14 @@ class StaffTransferRequestsTable extends StaffTransfer {
 		$this->field('update', ['type' => 'hidden', 'value' => 0, 'visible' => true]);
 		$this->field('type', ['type' => 'hidden', 'visible' => true, 'value' => self::TRANSFER]);
 
-		$message = $this->getMessage($this->aliasField('alreadyAssigned'), ['sprintf' => [$staffName, $this->getEntityProperty($entity, 'transfer_from')]]);
+		$message = $this->getMessage($this->aliasField('alreadyAssigned'), ['sprintf' => [$staffName, $prevInstitutionCodeName]]);
 		$this->Alert->warning($message, ['type' => 'text']);
 		$this->Alert->info($this->aliasField('confirmRequest'));
 	}
+
+	public function onGetPreviousInstitutionId(Event $event, Entity $entity) {
+        return $entity->previous_institution->code_name;
+    }
 
 	public function onUpdateFieldInstitutionPositionId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'edit') {
