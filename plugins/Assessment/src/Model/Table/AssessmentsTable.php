@@ -21,15 +21,15 @@ class AssessmentsTable extends ControllerActionTable {
     use HtmlTrait;
     use OptionsTrait;
 
-    public function initialize(array $config) 
+    public function initialize(array $config)
     {
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-        
+
         $this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true, 'cascadeCallbacks' => true]);
-        
+
         $this->belongsToMany('GradingTypes', [
             'className' => 'Assessment.AssessmentGradingTypes',
             'joinTable' => 'assessment_items_grading_types',
@@ -51,6 +51,9 @@ class AssessmentsTable extends ControllerActionTable {
         ]);
 
         $this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Results' => ['index']
+        ]);
     }
 
     public function validationDefault(Validator $validator) {
@@ -75,13 +78,13 @@ class AssessmentsTable extends ControllerActionTable {
     }
 
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra) 
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
 
         $extra['selectedPeriod'] = $selectedPeriod;
         $extra['elements']['control'] = [
-            'name' => 'Assessment.controls', 
+            'name' => 'Assessment.controls',
             'data' => [
                 'periodOptions'=> $periodOptions,
                 'selectedPeriod'=> $selectedPeriod
@@ -95,7 +98,7 @@ class AssessmentsTable extends ControllerActionTable {
 
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) 
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->where([$this->aliasField('academic_period_id') => $extra['selectedPeriod']]);
     }
@@ -104,14 +107,14 @@ class AssessmentsTable extends ControllerActionTable {
     {
         $query->contain(['AssessmentItems.EducationSubjects']);
     }
-    
+
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $assessmentItems = $entity->assessment_items;
-        
+
         //this is to sort array based on certain value on subarray, in this case based on education order value
-        usort($assessmentItems, function($a,$b){ return $a['education_subject']['order']-$b['education_subject']['order'];} ); 
-        
+        usort($assessmentItems, function($a,$b){ return $a['education_subject']['order']-$b['education_subject']['order'];} );
+
         $entity->assessment_items = $assessmentItems;
 
         $this->setupFields($entity);
@@ -122,13 +125,13 @@ class AssessmentsTable extends ControllerActionTable {
         if ($this->action == 'edit')
         {
             $assessmentItems = $entity->assessment_items;
-        
+
             //this is to sort array based on certain value on subarray, in this case based on education order value
-            usort($assessmentItems, function($a,$b){ return $a['education_subject']['order']-$b['education_subject']['order'];} ); 
-        
+            usort($assessmentItems, function($a,$b){ return $a['education_subject']['order']-$b['education_subject']['order'];} );
+
             $entity->assessment_items = $assessmentItems;
         }
-        
+
         $this->setupFields($entity);
     }
 
@@ -150,7 +153,7 @@ class AssessmentsTable extends ControllerActionTable {
 
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra) 
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         // pr($entity);
         $errors = $entity->errors();
@@ -175,16 +178,16 @@ class AssessmentsTable extends ControllerActionTable {
             if ($action == 'add') {
 
                 list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
-                
+
                 $attr['options'] = $periodOptions;
                 $attr['default'] = $selectedPeriod;
 
             } else {
-                
+
                 $attr['type'] = 'readonly';
                 $attr['value'] = $attr['entity']->academic_period_id;
                 $attr['attr']['value'] = $this->AcademicPeriods->get($attr['entity']->academic_period_id)->name;
-                
+
             }
         }
         return $attr;
@@ -220,7 +223,7 @@ class AssessmentsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function addEditOnChangeEducationProgrammeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) 
+    public function addEditOnChangeEducationProgrammeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
         unset($request->query['programme']);
@@ -234,7 +237,7 @@ class AssessmentsTable extends ControllerActionTable {
         }
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request) 
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
@@ -256,7 +259,7 @@ class AssessmentsTable extends ControllerActionTable {
                 $attr['onChangeReload'] = 'changeEducationGrade';
 
             } else {
-                
+
                 $attr['type'] = 'readonly';
                 $attr['attr']['value'] = $this->EducationGrades->get($attr['entity']->education_grade_id)->name;
             }
@@ -265,7 +268,7 @@ class AssessmentsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function addEditOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) 
+    public function addEditOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
         unset($request->query['grade']);
@@ -283,7 +286,7 @@ class AssessmentsTable extends ControllerActionTable {
         }
     }
 
-    public function setupFields(Entity $entity) 
+    public function setupFields(Entity $entity)
     {
         $this->field('type', [
             'type' => 'hidden',
@@ -298,7 +301,7 @@ class AssessmentsTable extends ControllerActionTable {
         $this->field('education_programme_id', [
             'type' => 'select',
             'entity' => $entity
-        ]); 
+        ]);
         $this->field('education_grade_id', [
             'type' => 'select',
             'entity' => $entity
@@ -316,7 +319,7 @@ class AssessmentsTable extends ControllerActionTable {
     public function getAcademicPeriodOptions($querystringPeriod)
     {
         $periodOptions = $this->AcademicPeriods->getYearList();
-        
+
         if ($querystringPeriod) {
             $selectedPeriod = $querystringPeriod;
         } else {
