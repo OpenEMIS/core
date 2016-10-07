@@ -11,12 +11,12 @@ use Cake\Log\Log;
 use ControllerAction\Model\Traits\UtilityTrait;
 use App\Model\Table\ControllerActionTable;
 
-class StaffPositionTitlesTable extends ControllerActionTable {
+class StaffPositionTitlesTable extends ControllerActionTable
+{
 	use UtilityTrait;
 
 	public function initialize(array $config)
 	{
-        $this->addBehavior('FieldOption.FieldOption');
         $this->table('staff_position_titles');
         parent::initialize($config);
         $this->hasMany('Titles', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'staff_position_title_id']);
@@ -24,7 +24,7 @@ class StaffPositionTitlesTable extends ControllerActionTable {
         $this->belongsTo('SecurityRoles', ['className' => 'Security.SecurityRoles']);
         $this->hasMany('InstitutionPositions', ['className' => 'Institution.InstitutionPositions']);
 
-		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
+        $this->addBehavior('FieldOption.FieldOption');
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {

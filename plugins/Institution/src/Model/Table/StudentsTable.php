@@ -80,6 +80,11 @@ class StudentsTable extends AppTable
 		 * AdvanceSearchBehavior must be included first before adding other types of advance search.
 		 * If no "belongsTo" relation from the main model is needed, include its foreign key name in AdvanceSearch->exclude options.
 		 */
+        $advancedSearchFieldOrder = [
+            'first_name', 'middle_name', 'third_name', 'last_name', 
+            'contact_number', 'identity_type', 'identity_number'
+        ];
+        
 		$this->addBehavior('AdvanceSearch', [
 			'exclude' => [
 				'student_id',
@@ -87,8 +92,10 @@ class StudentsTable extends AppTable
 				'education_grade_id',
 				'academic_period_id',
 				'student_status_id',
-			]
+			],
+			'order' => $advancedSearchFieldOrder
 		]);
+
 		$this->addBehavior('User.AdvancedIdentitySearch', [
 			'associatedKey' => $this->aliasField('student_id')
 		]);
@@ -101,6 +108,8 @@ class StudentsTable extends AppTable
 		/**
 		 * End Advance Search Types
 		 */
+
+        $this->addBehavior('OpenEmis.Section');
 
 	}
 
@@ -643,16 +652,19 @@ class StudentsTable extends AppTable
 
 			$indexElements[] = ['name' => 'Institution.Students/controls', 'data' => [], 'options' => [], 'order' => 0];
 
-			$indexElements[] = [
-				'name' => $indexDashboard,
-				'data' => [
-					'model' => 'students',
-					'modelCount' => $studentCount,
-					'modelArray' => $InstitutionArray,
-				],
-				'options' => [],
-				'order' => 2
-			];
+            if ($this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
+    			$indexElements[] = [
+    				'name' => $indexDashboard,
+    				'data' => [
+    					'model' => 'students',
+    					'modelCount' => $studentCount,
+    					'modelArray' => $InstitutionArray,
+    				],
+    				'options' => [],
+    				'order' => 2
+    			];
+            }
+
 			foreach ($indexElements as $key => $value) {
 				if ($value['name']=='advanced_search') {
 					$indexElements[$key]['order'] = 1;
@@ -688,9 +700,37 @@ class StudentsTable extends AppTable
 		$this->ControllerAction->field('start_date', ['period' => $period]);
 		$this->ControllerAction->field('end_date', ['period' => $period]);
 
+        $errors = $entity->errors();
+
+
 		$this->ControllerAction->setFieldOrder([
 			'academic_period_id', 'education_grade_id', 'class', 'student_status_id', 'start_date', 'end_date', 'student_name'
 		]);
+
+        if (isset($errors['student_name']['ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem'])) {
+            $studentRecord = $this->find()
+                ->matching('Institutions.Areas')
+                ->innerJoinWith('StudentStatuses')
+                ->select([
+                    'institution_name' => 'Institutions.name',
+                    'institution_code' => 'Institutions.code',
+                    'institution_telephone' => 'Institutions.telephone',
+                    'institution_contact_person' => 'Institutions.contact_person',
+                    'area_name' => 'Areas.name',
+                    'area_code' => 'Areas.code'
+                ])
+                ->where([
+                    $this->aliasField('student_id') => $entity->student_id,
+                    'StudentStatuses.code' => 'CURRENT'
+                ])
+                ->hydrate(false)
+                ->first();
+            $this->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Institution Information')]);
+            $this->ControllerAction->field('institution', ['type' => 'disabled', 'attr' => ['value' => $studentRecord['institution_code'].' - '.$studentRecord['institution_name']]]);
+            $this->ControllerAction->field('area', ['type' => 'disabled', 'attr' => ['value' => $studentRecord['area_code'].' - '.$studentRecord['area_name']]]);
+            $this->ControllerAction->field('contact_person', ['type' => 'disabled', 'attr' => ['value' => $studentRecord['institution_contact_person']]]);
+            $this->ControllerAction->field('telephone', ['type' => 'disabled', 'attr' => ['value' => $studentRecord['institution_telephone']]]);
+        }
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity)
