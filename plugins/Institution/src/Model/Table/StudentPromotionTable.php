@@ -675,6 +675,10 @@ class StudentPromotionTable extends AppTable {
 					$this->Alert->warning($this->alias().'.noStudentSelected');
 				}
 			}
+		} else {
+			if (isset($errors['education_grade_id'])) {
+				$this->request->query['student_status'] = $studentStatus;
+			}
 		}
 	}
 
