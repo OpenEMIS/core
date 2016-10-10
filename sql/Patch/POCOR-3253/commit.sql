@@ -32,7 +32,7 @@ DROP TABLE IF EXISTS `workflow_steps`;
 CREATE TABLE IF NOT EXISTS `workflow_steps` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
-  `category` int(1) DEFAULT NULL COMMENT '1 -> TO-DO, 2 -> IN PROGRESS, 3 -> DONE',
+  `category` int(1) DEFAULT NULL COMMENT '1 -> TO DO, 2 -> IN PROGRESS, 3 -> DONE',
   `is_editable` int(1) NOT NULL DEFAULT '0',
   `is_removable` int(1) NOT NULL DEFAULT '0',
   `workflow_id` int(11) NOT NULL COMMENT 'links to workflows.id',
@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS `workflow_steps` (
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
   PRIMARY KEY (`id`),
+  KEY `category` (`category`),
   KEY `workflow_id` (`workflow_id`),
   KEY `modified_user_id` (`modified_user_id`),
   KEY `created_user_id` (`created_user_id`)
@@ -75,6 +76,7 @@ CREATE TABLE IF NOT EXISTS `workflow_actions` (
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
   PRIMARY KEY (`id`),
+  KEY `allow_by_assignee` (`allow_by_assignee`),
   KEY `next_workflow_step_id` (`next_workflow_step_id`),
   KEY `workflow_step_id` (`workflow_step_id`),
   KEY `modified_user_id` (`modified_user_id`),

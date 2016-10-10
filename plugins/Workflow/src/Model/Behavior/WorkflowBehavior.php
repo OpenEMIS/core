@@ -12,8 +12,13 @@ use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Network\Session;
 use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\Log\Log;
 
 class WorkflowBehavior extends Behavior {
+	// Workflow Steps - category
+	const TO_DO = 1;
+	const IN_PROGRESS = 2;
+	const DONE = 3;
 
 	protected $_defaultConfig = [
 		'model' => null,
@@ -134,6 +139,46 @@ class WorkflowBehavior extends Behavior {
 	}
 
 	public function securityGroupUserAfterDelete(Event $event, Entity $securityGroupUserEntity) {
+		$model = $this->_table;
+
+		$workflowModelEntity = $this->WorkflowModels->find()->where([$this->WorkflowModels->aliasField('model') => $model->registryAlias()])->first();
+		$isSchoolBased = $workflowModelEntity->is_school_based;
+		$groupId = $securityGroupUserEntity->security_group_id;
+		$userId = $securityGroupUserEntity->security_user_id;
+		$roleId = $securityGroupUserEntity->security_role_id;
+
+		$notDoneRecords = $model
+			->find()
+			->matching('Statuses', function ($q) {
+				return $q->where(['Statuses.category <> ' => self::DONE]);
+			})
+			->where([$model->aliasField('assignee_id') => $userId])
+			->all();
+
+		Log::write('debug', $workflowModelEntity->name. ' - Not Done Records:');
+		Log::write('debug', $notDoneRecords);
+
+		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+		foreach ($notDoneRecords as $key => $notDoneEntity) {
+			$stepId = $notDoneEntity->status_id;
+
+			$params = [
+				'is_school_based' => $isSchoolBased,
+				'workflow_step_id' => $stepId
+			];
+
+			if ($notDoneEntity->has('institution_id')) {
+				$params['institution_id'] = $notDoneEntity->institution_id;
+			}
+
+			$assigneeId = $SecurityGroupUsers->getFirstAssignee($params);
+			Log::write('debug', 'Affected Record Id: ' . $notDoneEntity->id . '; Assignee Id: ' . $assigneeId);
+
+			$model->updateAll(
+				['assignee_id' => $assigneeId],
+				['id' => $notDoneEntity->id]
+			);
+		}
 	}
 
 	public function getWorkflowEvents(Event $event, ArrayObject $eventsObject) {
@@ -422,11 +467,12 @@ class WorkflowBehavior extends Behavior {
 				$fieldOrder = [];
 				$fields = $model->fields;
 				foreach ($fields as $fieldKey => $fieldAttr) {
-					if (!in_array($fieldKey, ['workflow_status', 'workflow_transitions'])) {
+					if (!in_array($fieldKey, ['workflow_status', 'assignee_id', 'workflow_transitions'])) {
 						$fieldOrder[$fieldAttr['order']] = $fieldKey;
 					}
 				}
 				ksort($fieldOrder);
+				array_unshift($fieldOrder, 'assignee_id');	// Set workflow_status to second
 				array_unshift($fieldOrder, 'workflow_status');	// Set workflow_status to first
 				$fieldOrder[] = 'workflow_transitions';	// Set workflow_transitions to last
 				$ControllerAction->setFieldOrder($fieldOrder);
@@ -489,7 +535,9 @@ class WorkflowBehavior extends Behavior {
 	}
 
 	public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request) {
-		if ($action == 'add') {
+		if ($action == 'view') {
+			$attr['type'] = 'select';
+		} else if ($action == 'add') {
 			$attr['type'] = 'hidden';
 			$attr['value'] = 0;
 		} else if ($action == 'edit') {
