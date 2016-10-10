@@ -8,8 +8,9 @@ use Cake\Event\Event;
 use Cake\Utility\Security;
 
 require_once(ROOT . DS . 'vendor' . DS  . 'google' . DS . 'apiclient' . DS . 'src' . DS . 'Google' . DS . 'autoload.php');
+require_once(dirname(__FILE__) . '/../../OAuth/Client.php');
 
-class OAuth2OpenIDConnectComponent extends Component {
+class OAuth2OpenIDConnectAuthComponent extends Component {
 
     private $clientId;
     private $clientSecret;
@@ -22,7 +23,7 @@ class OAuth2OpenIDConnectComponent extends Component {
 
     public function initialize(array $config) {
         $AuthenticationTypeAttributesTable = TableRegistry::get('SSO.AuthenticationTypeAttributes');
-        $oAuthAttributes = $AuthenticationTypeAttributesTable->getTypeAttributeValues('OAuth');
+        $oAuthAttributes = $AuthenticationTypeAttributesTable->getTypeAttributeValues('OAuth2OpenIDConnect');
         $this->clientId = $oAuthAttributes['client_id'];
         $this->clientSecret = $oAuthAttributes['client_secret'];
         $this->redirectUri = $oAuthAttributes['redirect_uri'];
@@ -30,21 +31,21 @@ class OAuth2OpenIDConnectComponent extends Component {
         $this->tokenUri = $oAuthAttributes['token_uri'];
         $this->authUri = $oAuthAttributes['auth_uri'];
         $this->issuer = $oAuthAttributes['issuer'];
+        
 
-        $hashAttributes = $googleAttributes;
+        $hashAttributes = $oAuthAttributes;
         unset($hashAttributes['redirect_uri']);
         $this->authType = Security::hash(serialize($hashAttributes), 'sha256');
 
         $this->session = $this->request->session();
         $this->session->write('Google.hostedDomain', $this->hostedDomain);
 
-        $client = new \Google_Client();
+        $client = new \Custom_Client(null, $oAuthAttributes);
         $client->setClientId($this->clientId);
         $client->setClientSecret($this->clientSecret);
         $client->setRedirectUri($this->redirectUri);
         $client->setScopes(['openid', 'email', 'profile']);
         $client->setAccessType('offline');
-        $client->setHostedDomain($this->hostedDomain);
         $this->client = $client;
         $this->controller = $this->_registry->getController();
 
@@ -67,7 +68,7 @@ class OAuth2OpenIDConnectComponent extends Component {
                         'hashers' => ['Default', 'Legacy']
                     ]
                 ],
-                'SSO.Google' => [
+                'SSO.OAuth2OpenIDConnect' => [
                     'userModel' => $this->_config['userModel']
                 ]
             ]);
@@ -193,21 +194,21 @@ class OAuth2OpenIDConnectComponent extends Component {
           data only if the hosted domain matches our setting.
          ************************************************************************************************/
         if (isset($tokenData)) {
-            if (!empty($this->hostedDomain)) {
-                if (isset($tokenData['payload']['hd'])) {
-                    if ($tokenData['payload']['hd'] == $this->hostedDomain) {
-                        $this->session->write('Google.tokenData', $tokenData);
-                        $this->session->write('Google.client', $client);
-                    } else {
-                        $this->session->write('Google.remoteFail', true);
-                    }
-                } else {
-                    $this->session->write('Google.remoteFail', true);
-                }
-            } else {
+            // if (!empty($this->hostedDomain)) {
+            //     if (isset($tokenData['payload']['hd'])) {
+            //         if ($tokenData['payload']['hd'] == $this->hostedDomain) {
+            //             $this->session->write('Google.tokenData', $tokenData);
+            //             $this->session->write('Google.client', $client);
+            //         } else {
+            //             $this->session->write('Google.remoteFail', true);
+            //         }
+            //     } else {
+            //         $this->session->write('Google.remoteFail', true);
+            //     }
+            // } else {
                 $this->session->write('Google.tokenData', $tokenData);
                 $this->session->write('Google.client', $client);
-            }
+            // }
         } else {
             $this->session->delete('Google.tokenData');
             $this->session->delete('Google.client', $client);

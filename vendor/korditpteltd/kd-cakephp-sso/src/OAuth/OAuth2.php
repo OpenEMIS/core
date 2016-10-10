@@ -25,13 +25,13 @@ if (!class_exists('Google_Client')) {
  */
 class Custom_Auth_OAuth2 extends Google_Auth_Abstract
 {
-  $OAUTH2_REVOKE_URI = 'https://accounts.google.com/o/oauth2/revoke';
-  $OAUTH2_TOKEN_URI = 'https://sso.openemis.org/wp/oauth/token';
-  $OAUTH2_AUTH_URL = 'https://sso.openemis.org/wp/oauth/authorize';
+  private $OAUTH2_REVOKE_URI = 'https://accounts.google.com/o/oauth2/revoke';
+  private $OAUTH2_TOKEN_URI = 'https://sso.openemis.org/wp/oauth/token';
+  private $OAUTH2_AUTH_URL = 'https://sso.openemis.org/wp/oauth/authorize';
+  private $OAUTH2_ISSUER = 'sso.openemis.org/wp';
   const CLOCK_SKEW_SECS = 300; // five minutes in seconds
   const AUTH_TOKEN_LIFETIME_SECS = 300; // five minutes in seconds
   const MAX_TOKEN_LIFETIME_SECS = 86400; // one day in seconds
-  $OAUTH2_ISSUER = 'sso.openemis.org/wp';
   const OAUTH2_ISSUER_HTTPS = 'https://sso.openemis.org/wp';
 
   /** @var Google_Auth_AssertionCredentials $assertionCredentials */
@@ -58,7 +58,6 @@ class Custom_Auth_OAuth2 extends Google_Auth_Abstract
    */
   public function __construct($client)
   {
-    // parent::__construct($client);
     $this->client = $client;
   }
 
@@ -124,7 +123,7 @@ class Custom_Auth_OAuth2 extends Google_Auth_Abstract
     // We got here from the redirect from a successful authorization grant,
     // fetch the access token
     $request = new Google_Http_Request(
-        $OAUTH2_TOKEN_URI,
+        $this->OAUTH2_TOKEN_URI,
         'POST',
         array(),
         $arguments
@@ -193,7 +192,7 @@ class Custom_Auth_OAuth2 extends Google_Auth_Abstract
       $params['state'] = $this->state;
     }
 
-    return $OAUTH2_AUTH_URL . "?" . http_build_query($params, '', '&');
+    return $this->OAUTH2_AUTH_URL . "?" . http_build_query($params, '', '&');
   }
 
   /**
@@ -355,7 +354,7 @@ class Custom_Auth_OAuth2 extends Google_Auth_Abstract
     }
 
     $http = new Google_Http_Request(
-        $OAUTH2_TOKEN_URI,
+        $this->OAUTH2_TOKEN_URI,
         'POST',
         array(),
         $params
@@ -406,7 +405,7 @@ class Custom_Auth_OAuth2 extends Google_Auth_Abstract
       }
     }
     $request = new Google_Http_Request(
-        $OAUTH2_REVOKE_URI,
+        $this->OAUTH2_REVOKE_URI,
         'POST',
         array(),
         "token=$token"
@@ -514,7 +513,7 @@ class Custom_Auth_OAuth2 extends Google_Auth_Abstract
         $id_token,
         $certs,
         $audience,
-        array($OAUTH2_ISSUER, self::OAUTH2_ISSUER_HTTPS)
+        array($this->OAUTH2_ISSUER, self::OAUTH2_ISSUER_HTTPS)
     );
   }
 
