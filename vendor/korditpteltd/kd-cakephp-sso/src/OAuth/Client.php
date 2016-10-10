@@ -24,7 +24,7 @@ require_once dirname(__FILE__) . '/OAuth2.php';
  * The Google API Client
  * https://github.com/google/google-api-php-client
  */
-class Google_Client
+class Custom_Client extends Google_Client
 {
   const LIBVER = "1.1.5";
   const USER_AGENT_SUFFIX = "google-api-php-client/";
@@ -68,6 +68,8 @@ class Google_Client
   // Used to track authenticated state, can't discover services after doing authenticate()
   private $authenticated = false;
 
+  private $oAuthAttributes = [];
+
   /**
    * Construct the Google Client.
    *
@@ -100,22 +102,7 @@ class Google_Client
       }
     }
 
-    $this->auth = new Custom_Auth_OAuth2();
-    if (isset($oAuthAttributes['OAUTH2_AUTH_URL'])) {
-      $this->auth->setAuthUri($oAuthAttributes['OAUTH2_AUTH_URL']);
-    }
-
-    if (isset($oAuthAttributes['OAUTH2_TOKEN_URL'])) {
-      $this->auth->setAuthUri($oAuthAttributes['OAUTH2_TOKEN_URL']);
-    }
-
-    if (isset($oAuthAttributes['OAUTH2_REVOKE_URL'])) {
-      $this->auth->setAuthUri($oAuthAttributes['OAUTH2_REVOKE_URL']);
-    }
-
-    if (isset($oAuthAttributes['OAUTH2_ISSUER'])) {
-      $this->auth->setAuthUri($oAuthAttributes['OAUTH2_ISSUER']);
-    }
+    $this->oAuthAttributes = $oAuthAttributes;
 
     $this->config = $config;
   }
@@ -630,9 +617,28 @@ class Google_Client
    */
   public function getAuth()
   {
+
     if (!isset($this->auth)) {
-      $class = $this->config->getAuthClass();
-      $this->auth = new $class($this);
+      $this->config->setAuthClass('Custom_Auth_OAuth2');
+      $this->auth = new Custom_Auth_OAuth2($this);
+
+      $oAuthAttributes = $this->oAuthAttributes;
+
+      if (isset($oAuthAttributes['OAUTH2_AUTH_URL'])) {
+        $this->auth->setAuthUri($oAuthAttributes['OAUTH2_AUTH_URL']);
+      }
+
+      if (isset($oAuthAttributes['OAUTH2_TOKEN_URL'])) {
+        $this->auth->setAuthUri($oAuthAttributes['OAUTH2_TOKEN_URL']);
+      }
+
+      if (isset($oAuthAttributes['OAUTH2_REVOKE_URL'])) {
+        $this->auth->setAuthUri($oAuthAttributes['OAUTH2_REVOKE_URL']);
+      }
+
+      if (isset($oAuthAttributes['OAUTH2_ISSUER'])) {
+        $this->auth->setAuthUri($oAuthAttributes['OAUTH2_ISSUER']);
+      }
     }
     return $this->auth;
   }
