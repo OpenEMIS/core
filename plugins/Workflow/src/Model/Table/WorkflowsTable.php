@@ -17,9 +17,9 @@ class WorkflowsTable extends AppTable {
 	use OptionsTrait;
 
 	// Workflow Steps - category
-	const OPEN = 1;
-	const PENDING = 2;
-	const CLOSED = 3;
+	const TO_DO = 1;
+	const IN_PROGRESS = 2;
+	const DONE = 3;
 
 	// Workflow Actions - action
 	const APPROVE = 0;
@@ -65,9 +65,9 @@ class WorkflowsTable extends AppTable {
 		if ($entity->isNew()) {
 			$data = [
 				'workflow_steps' => [
-					['name' => __('Open'), 'category' => self::OPEN, 'is_editable' => 1, 'is_removable' => 1],
-					['name' => __('Pending For Approval'), 'category' => self::PENDING],
-					['name' => __('Closed'), 'category' => self::CLOSED]
+					['name' => __('Open'), 'category' => self::TO_DO, 'is_editable' => 1, 'is_removable' => 1],
+					['name' => __('Pending For Approval'), 'category' => self::IN_PROGRESS],
+					['name' => __('Closed'), 'category' => self::DONE]
 				]
 			];
 
@@ -635,13 +635,13 @@ class WorkflowsTable extends AppTable {
 
 		foreach ($entity->workflow_steps as $key => $step) {
 			switch ($step->category) {
-				case self::OPEN:
+				case self::TO_DO:
 					$stepOpen = $step;
 					break;
-				case self::PENDING:
+				case self::IN_PROGRESS:
 					$stepPending = $step;
 					break;
-				case self::CLOSED:
+				case self::DONE:
 					$stepClosed = $step;
 					break;
 				default:
@@ -808,7 +808,7 @@ class WorkflowsTable extends AppTable {
 
 			foreach ($steps as $key => $step) {
 				$stepIds[$step->id] = $step->id;
-				if ($step->category == self::OPEN) {
+				if ($step->category == self::TO_DO) {
 					$openStepId = $step->id;
 				}
 			}
@@ -851,7 +851,7 @@ class WorkflowsTable extends AppTable {
 							->find()
 							->where([
 								$this->WorkflowSteps->aliasField('workflow_id IN ') => $defaultWorkflowId,
-								$this->WorkflowSteps->aliasField('category') => self::OPEN
+								$this->WorkflowSteps->aliasField('category') => self::TO_DO
 							])
 							->first()
 							->id;
