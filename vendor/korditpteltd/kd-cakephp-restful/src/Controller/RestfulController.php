@@ -64,11 +64,11 @@ class RestfulController extends AppController
     public function isAuthorized($user = null)
     {
         $model = $this->model;
-        $controllerAction = $this->controllerAction;
+        $scope = $this->controllerAction;
         $action = $this->request->params['action'];
         $request = $this->request;
         $extra = new ArrayObject(['request' => $request]);
-        $event = $model->dispatchEvent('Restful.Model.isAuthorized', [$controllerAction, $action, $extra], $this);
+        $event = $model->dispatchEvent('Restful.Model.isAuthorized', [$scope, $action, $extra], $this);
         if ($event->result) {
             return $event->result;
         }
