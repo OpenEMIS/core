@@ -100,6 +100,7 @@ class WorkflowBehavior extends Behavior {
 		foreach($this->workflowEvents as $event) {
 			$events[$event['value']] = $event['method'];
 		}
+		$events['Model.SecurityGroupUsers.afterSave'] = 'securityGroupUserAfterSave';
 		$events['Model.SecurityGroupUsers.afterDelete'] = 'securityGroupUserAfterDelete';
 		return $events;
 	}
@@ -137,6 +138,28 @@ class WorkflowBehavior extends Behavior {
 			// Do nothing
 		}
 	}
+
+	public function securityGroupUserAfterSave(Event $event, Entity $securityGroupUserEntity) {
+		$model = $this->_table;
+		$groupId = $securityGroupUserEntity->security_group_id;
+		$userId = $securityGroupUserEntity->security_user_id;
+		$roleId = $securityGroupUserEntity->security_role_id;
+
+		$this->autoAssignAssignee($model->registryAlias(), $groupId, $userId, $roleId);
+	}
+
+	private function autoAssignAssignee($registryAlias, $groupId, $userId, $roleId) {
+        $cmd = ROOT . DS . 'bin' . DS . 'cake UpdateAssignee '.$registryAlias.' '.$groupId.' '.$userId.' '.$roleId;
+        $logs = ROOT . DS . 'logs' . DS . 'UpdateAssignee.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+
+        try {
+            $pid = exec($shellCmd);
+            Log::write('debug', $shellCmd);
+        } catch(\Exception $ex) {
+            Log::write('error', __METHOD__ . ' exception when auto assign assignees : '. $ex);
+        }
+    }
 
 	public function securityGroupUserAfterDelete(Event $event, Entity $securityGroupUserEntity) {
 		$model = $this->_table;

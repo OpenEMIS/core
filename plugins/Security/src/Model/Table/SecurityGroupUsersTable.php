@@ -17,6 +17,19 @@ class SecurityGroupUsersTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
 	}
 
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		$models = TableRegistry::get('Workflow.WorkflowModels')->find()->all();
+		$broadcaster = $this;
+		$listeners = [];
+		foreach ($models as $key => $obj) {
+			$listeners[] = TableRegistry::get($obj->model);
+		}
+
+		if (!empty($listeners)) {
+			$this->dispatchEventToModels('Model.SecurityGroupUsers.afterSave', [$entity], $broadcaster, $listeners);
+		}
+	}
+
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
 		$models = TableRegistry::get('Workflow.WorkflowModels')->find()->all();
 		$broadcaster = $this;
