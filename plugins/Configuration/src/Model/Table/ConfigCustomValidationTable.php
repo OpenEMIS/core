@@ -14,7 +14,7 @@ class ConfigCustomValidationTable extends ControllerActionTable {
         $this->table('config_items');
         parent::initialize($config);
         $this->addBehavior('Configuration.ConfigItems');
-        $this->addBehavior('Configuration.FormNotes');
+        // $this->addBehavior('Configuration.FormNotes');
         $this->toggle('add', false);
         $this->toggle('remove', false);
     }
