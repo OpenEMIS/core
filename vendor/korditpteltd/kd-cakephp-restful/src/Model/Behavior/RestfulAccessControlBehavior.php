@@ -15,10 +15,44 @@ class RestfulAccessControlBehavior extends Behavior {
      *
      *  @return array The list of authorised controller actions
      */
-    private function getControllerActions()
+    private function getScopes()
     {
         return $this->config();
     }
+
+    /**
+     *  Add scope and authorised actions
+     *
+     *  @param  array The scope and the actions
+     *  @return array The list of authorised controller actions
+     */
+    public function addScope($scope)
+    {
+        $scopes = $this->getScopes();
+        $scopes = $scopes + $scope;
+        $this->_config = $scopes;
+    }
+
+    /**
+     *  Remove scope and it's authorised actions
+     *
+     *  @param  string The scope
+     *  @return array The list of authorised controller actions
+     */
+    public function removeScope($scope)
+    {
+        $scopes = $this->getScopes();
+        if (isset($scope)) {
+            unset($scopes[$scope]);
+        }
+        $this->_config = $scopes;
+    }
+
+    /**
+     *  Get the list of the controller actions and the list of actions that the controller action can perform
+     *
+     *  @return array The list of authorised controller actions
+     */
 
     public function implementedEvents() {
         $events = parent::implementedEvents();
@@ -31,11 +65,12 @@ class RestfulAccessControlBehavior extends Behavior {
      *
      *  @return bool True if the user is authorised to access the api
      */
-    public function isAuthorized(Event $event, $controllerAction, $action, ArrayObject $extra)
+    public function isAuthorized(Event $event, $scope, $action, ArrayObject $extra)
     {
-        $authorizedControllerActions = $this->getControllerActions();
-        if (array_key_exists($controllerAction, $authorizedControllerActions)) {
-            if (in_array($action, $authorizedControllerActions[$controllerAction])) {
+        $authorisedScopes = $this->getScopes();
+        pr($authorisedScopes);die;
+        if (array_key_exists($scope, $authorisedScopes)) {
+            if (in_array($action, $authorisedScopes[$scope])) {
                 return true;
             }
         }
