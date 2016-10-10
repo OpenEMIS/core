@@ -14,9 +14,9 @@ class WorkflowStepsTable extends AppTable {
 	use OptionsTrait;
 
 	// Workflow Steps - category
-	const OPEN = 1;
-	const PENDING = 2;
-	const CLOSED = 3;
+	const TO_DO = 1;
+	const IN_PROGRESS = 2;
+	const DONE = 3;
 
 	// Workflow Actions - action
 	const APPROVE = 0;
@@ -45,10 +45,10 @@ class WorkflowStepsTable extends AppTable {
 		]);
 	}
 
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {		
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
 		// Auto insert default workflow_actions when add
 		if ($entity->isNew()) {
-			if ($entity->has('category') && in_array($entity->category, [self::OPEN, self::PENDING, self::CLOSED])) {
+			if ($entity->has('category') && in_array($entity->category, [self::TO_DO, self::IN_PROGRESS, self::DONE])) {
 				$data = [
 					'workflow_actions' => []
 				];
@@ -78,6 +78,18 @@ class WorkflowStepsTable extends AppTable {
 		}
 	}
 
+	public function onGetCategory(Event $event, Entity $entity) {
+		$value = '';
+		if (!empty($entity->category)) {
+			$categoryOptions = $this->getSelectOptions('WorkflowSteps.category');
+			$value = $categoryOptions[$entity->category];
+		} else {
+			$value = __('No Category');
+		}
+
+		return $value;
+	}
+
 	public function onGetIsEditable(Event $event, Entity $entity) {
 		return $entity->is_editable == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
 	}
@@ -87,7 +99,6 @@ class WorkflowStepsTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('category', ['visible' => false]);
 		$this->ControllerAction->field('security_roles', [
 			'type' => 'chosenSelect',
 			'placeholder' => __('Select Security Roles')
@@ -95,7 +106,7 @@ class WorkflowStepsTable extends AppTable {
 	}
 
 	public function indexBeforeAction(Event $event) {
-		$this->ControllerAction->setFieldOrder(['workflow_id', 'name', 'security_roles', 'is_editable', 'is_removable']);
+		$this->ControllerAction->setFieldOrder(['workflow_id', 'name', 'security_roles', 'category', 'is_editable', 'is_removable']);
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -218,6 +229,15 @@ class WorkflowStepsTable extends AppTable {
 		return $attr;
 	}
 
+	public function onUpdateFieldCategory(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'view' || $action == 'add' || $action == 'edit') {
+			$attr['type'] = 'select';
+			$attr['options'] = $this->getSelectOptions('WorkflowSteps.category');
+		}
+
+		return $attr;
+	}
+
 	public function onUpdateFieldIsEditable(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'view' || $action == 'add' || $action == 'edit') {
 			$attr['type'] = 'select';
@@ -258,10 +278,11 @@ class WorkflowStepsTable extends AppTable {
 		$this->ControllerAction->field('name', [
 			'attr' => ['entity' => $entity]
 		]);
+		$this->ControllerAction->field('category');
 		$this->ControllerAction->field('is_editable');
 		$this->ControllerAction->field('is_removable');
 
-		$this->ControllerAction->setFieldOrder(['workflow_model_id', 'workflow_id', 'name', 'security_roles', 'is_editable', 'is_removable']);
+		$this->ControllerAction->setFieldOrder(['workflow_model_id', 'workflow_id', 'name', 'security_roles', 'category', 'is_editable', 'is_removable']);
 	}
 
 	private function checkIfCanEditOrDelete($entity) {
@@ -269,7 +290,7 @@ class WorkflowStepsTable extends AppTable {
     	$isDeletable = true;
 
     	// not allow to edit name for Open, Pending For Approval and Closed
-		if (!is_null($entity->category) && in_array($entity->category, [self::OPEN, self::PENDING, self::CLOSED])) {
+		if (!is_null($entity->category) && in_array($entity->category, [self::TO_DO, self::IN_PROGRESS, self::DONE])) {
 			$isEditable = false;
     		$isDeletable = false;
 		}
