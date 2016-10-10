@@ -1193,6 +1193,19 @@ class StaffTable extends AppTable {
             $StaffAbsences->delete($value);
         }
 
+        // Staff Leave associated to institution must be deleted.
+		$StaffLeave = TableRegistry::get('Institution.StaffLeave');
+		$staffLeaveData = $StaffLeave->find()
+            ->where([
+    			$StaffLeave->aliasField('staff_id') => $entity->staff_id,
+    			$StaffLeave->aliasField('institution_id') => $entity->institution_id,
+    		])
+            ->toArray()
+            ;
+        foreach ($staffLeaveData as $key => $value) {
+            $StaffLeave->delete($value);
+        }
+
 		// Rubrics related to staff must be deleted. (institution_site_quality_rubrics)
 		// association cascade deletes institution_site_quality_rubric_answers
 		$InstitutionRubrics = TableRegistry::get('Institution.InstitutionRubrics');
