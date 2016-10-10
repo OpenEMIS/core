@@ -1275,9 +1275,11 @@ trait MessagesTrait {
                 'pass_mark' => [
                     'ruleNotMoreThanMax' => 'Min value cannot be more than max value',
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
                 ],
                 'max' => [
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
                 ],
             ],
             'GradingOptions' => [
@@ -1288,10 +1290,12 @@ trait MessagesTrait {
                 'min' => [
                     'ruleNotMoreThanMax' => 'Min value cannot be more than max value',
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
                 ],
                 'max' => [
                     'ruleNotMoreThanGradingTypeMax' => 'Grading Option max value cannot be more than Grading Type max value',
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
                 ],
             ],
         ],
@@ -1328,9 +1332,11 @@ trait MessagesTrait {
                 'pass_mark' => [
                     'ruleNotMoreThanMax' => 'Pass mark cannot be more than Max mark',
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' =>'Mark entered exceeds system limit'
                 ],
                 'max' => [
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
                 ]
             ],
             'GradingOptions' => [
@@ -1341,10 +1347,12 @@ trait MessagesTrait {
                 'min' => [
                     'ruleNotMoreThanMax' => 'Min value cannot be more than max value',
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
                 ],
                 'max' => [
                     'ruleNotMoreThanGradingTypeMax' => 'Grading Option max value cannot be more than Grading Type max value',
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
                 ]
             ]
         ],
