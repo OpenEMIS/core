@@ -1604,4 +1604,68 @@ class ValidationBehavior extends Behavior {
 
 		return true;
 	}
+
+	public static function validateCustomCode($field, array $globalData)
+	{
+		$subject = $field;
+		$pattern = '';
+		$model = $globalData['providers']['table'];
+
+		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+		$valuePattern = '/' . $ConfigItems->value('institution_code') . '/';
+
+		if (!empty($valuePattern) && !preg_match($valuePattern, $subject)) {
+			return $model->getMessage('User.Identities.number.custom_validation');
+		}
+
+		return true;
+	}
+
+	public static function validateCustomTelephone($field, array $globalData)
+	{
+		$subject = $field;
+		$pattern = '';
+		$model = $globalData['providers']['table'];
+
+		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+		$valuePattern = '/' . $ConfigItems->value('institution_telephone') . '/';
+
+		if (!empty($valuePattern) && !preg_match($valuePattern, $subject)) {
+			return $model->getMessage('User.Identities.number.custom_validation');
+		}
+
+		return true;
+	}
+
+	public static function validateCustomFax($field, array $globalData)
+	{
+		$subject = $field;
+		$pattern = '';
+		$model = $globalData['providers']['table'];
+
+		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+		$valuePattern = '/' . $ConfigItems->value('institution_fax') . '/';
+
+		if (!empty($valuePattern) && !preg_match($valuePattern, $subject)) {
+			return $model->getMessage('User.Identities.number.custom_validation');
+		}
+
+		return true;
+	}
+
+	public static function validateCustomPostalCode($field, array $globalData)
+	{
+		$subject = $field;
+		$pattern = '';
+		$model = $globalData['providers']['table'];
+
+		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+		$valuePattern = '/' . $ConfigItems->value('postal_code') . '/';
+
+		if (!empty($valuePattern) && !preg_match($valuePattern, $subject)) {
+			return $model->getMessage('User.Identities.number.custom_validation');
+		}
+
+		return true;
+	}
 }
