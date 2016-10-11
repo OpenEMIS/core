@@ -14,7 +14,4 @@ VALUES  ('38', 'Postal Code', 'postal_code', 'Custom Validation', 'Postal Code',
 
 -- Translation table
 INSERT INTO `translations` (`code`, `en`, `ar`, `zh`, `es`, `fr`, `ru`, `editable`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-VALUES (NULL, 'Please enter a valid Institution Code', NULL, NULL, NULL, NULL, NULL, '1', NULL, NULL, '0', NOW()),
-        (NULL, 'Please enter a valid Postal Code', NULL, NULL, NULL, NULL, NULL, '1', NULL, NULL, '0', NOW()),
-        (NULL, 'Please enter a valid Telephone Number', NULL, NULL, NULL, NULL, NULL, '1', NULL, NULL, '0', NOW()),
-        (NULL, 'Please enter a valid Fax Number', NULL, NULL, NULL, NULL, NULL, '1', NULL, NULL, '0', NOW());
+VALUES (NULL, 'Please enter a valid format', NULL, NULL, NULL, NULL, NULL, '1', NULL, NULL, '0', NOW());
