@@ -184,10 +184,14 @@ class WorkflowBehavior extends Behavior {
 		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 		foreach ($notDoneRecords as $key => $notDoneEntity) {
 			$stepId = $notDoneEntity->status_id;
+			$category = $notDoneEntity->_matchingData['Statuses']->category;
+			$createdUserId = $notDoneEntity->created_user_id;
 
 			$params = [
 				'is_school_based' => $isSchoolBased,
-				'workflow_step_id' => $stepId
+				'workflow_step_id' => $stepId,
+				'category' => $category,
+				'created_user_id' => $createdUserId
 			];
 
 			if ($notDoneEntity->has('institution_id')) {
