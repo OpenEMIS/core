@@ -7,14 +7,16 @@ use Cake\Network\Request;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
+use Cake\ORM\Entity;
 
-class ConfigCustomValidationTable extends ControllerActionTable {
 
-    public function initialize(array $config) {
+class ConfigCustomValidationTable extends ControllerActionTable
+{
+    public function initialize(array $config)
+    {
         $this->table('config_items');
         parent::initialize($config);
         $this->addBehavior('Configuration.ConfigItems');
-        $this->addBehavior('Configuration.FormNotes');
         $this->toggle('add', false);
         $this->toggle('remove', false);
     }
@@ -35,6 +37,12 @@ class ConfigCustomValidationTable extends ControllerActionTable {
             $extra['elements']['controls'] = $this->buildSystemConfigFilters();
             $this->checkController();
         }
+    }
+
+    // to trim white space "    aaaaa   " to "aaaaa"
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $entity->value = trim($entity->value);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
