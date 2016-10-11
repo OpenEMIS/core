@@ -134,33 +134,6 @@ class Custom_Client extends Google_Client
   }
 
   /**
-   * Loads a service account key and parameters from a JSON
-   * file from the Google Developer Console. Uses that and the
-   * given array of scopes to return an assertion credential for
-   * use with refreshTokenWithAssertionCredential.
-   *
-   * @param string $jsonLocation File location of the project-key.json.
-   * @param array $scopes The scopes to assert.
-   * @return Google_Auth_AssertionCredentials.
-   * @
-   */
-  public function loadServiceAccountJson($jsonLocation, $scopes)
-  {
-    $data = json_decode(file_get_contents($jsonLocation));
-    if (isset($data->type) && $data->type == 'service_account') {
-      // Service Account format.
-      $cred = new Google_Auth_AssertionCredentials(
-          $data->client_email,
-          $scopes,
-          $data->private_key
-      );
-      return $cred;
-    } else {
-      throw new Google_Exception("Invalid service account JSON file.");
-    }
-  }
-
-  /**
    * Set the auth config from the JSON string provided.
    * This structure should match the file downloaded from
    * the "Download JSON" button on in the Google Developer
@@ -497,10 +470,16 @@ class Custom_Client extends Google_Client
    * @param [$max_expiry] the max lifetime of a token, defaults to MAX_TOKEN_LIFETIME_SECS
    * @return mixed token information if valid, false if not
    */
-  public function verifySignedJwt($id_token, $cert_location, $audience, $issuer, $max_expiry = null)
+  public function verifySignedJwt($id_token, $cert_location, $audience = null, $issuer = null, $max_expiry = null)
   {
-    $auth = new Google_Auth_OAuth2($this);
-    $certs = $auth->retrieveCertsFromLocation($cert_location);
+    $auth = $this->getAuth();
+    if (is_null($audience)) {
+      $audience = $this->getClassConfig($auth, 'client_id');
+    }
+    if (is_null($issuer)) {
+      $issuer = $this->oAuthAttributes['issuer'];
+    }
+    $certs = [];
     return $auth->verifySignedJwtWithCerts($id_token, $certs, $audience, $issuer, $max_expiry);
   }
 
@@ -510,106 +489,6 @@ class Custom_Client extends Google_Client
   public function setAssertionCredentials(Google_Auth_AssertionCredentials $creds)
   {
     $this->getAuth()->setAssertionCredentials($creds);
-  }
-
-  /**
-   * Set the scopes to be requested. Must be called before createAuthUrl().
-   * Will remove any previously configured scopes.
-   * @param array $scopes, ie: array('https://www.googleapis.com/auth/plus.login',
-   * 'https://www.googleapis.com/auth/moderator')
-   */
-  public function setScopes($scopes)
-  {
-    $this->requestedScopes = array();
-    $this->addScope($scopes);
-  }
-
-  /**
-   * This functions adds a scope to be requested as part of the OAuth2.0 flow.
-   * Will append any scopes not previously requested to the scope parameter.
-   * A single string will be treated as a scope to request. An array of strings
-   * will each be appended.
-   * @param $scope_or_scopes string|array e.g. "profile"
-   */
-  public function addScope($scope_or_scopes)
-  {
-    if (is_string($scope_or_scopes) && !in_array($scope_or_scopes, $this->requestedScopes)) {
-      $this->requestedScopes[] = $scope_or_scopes;
-    } else if (is_array($scope_or_scopes)) {
-      foreach ($scope_or_scopes as $scope) {
-        $this->addScope($scope);
-      }
-    }
-  }
-
-  /**
-   * Returns the list of scopes requested by the client
-   * @return array the list of scopes
-   *
-   */
-  public function getScopes()
-  {
-     return $this->requestedScopes;
-  }
-
-  /**
-   * Declare whether batch calls should be used. This may increase throughput
-   * by making multiple requests in one connection.
-   *
-   * @param boolean $useBatch True if the batch support should
-   * be enabled. Defaults to False.
-   */
-  public function setUseBatch($useBatch)
-  {
-    // This is actually an alias for setDefer.
-    $this->setDefer($useBatch);
-  }
-
-  /**
-   * Declare whether making API calls should make the call immediately, or
-   * return a request which can be called with ->execute();
-   *
-   * @param boolean $defer True if calls should not be executed right away.
-   */
-  public function setDefer($defer)
-  {
-    $this->deferExecution = $defer;
-  }
-
-  /**
-   * Helper method to execute deferred HTTP requests.
-   *
-   * @param $request Google_Http_Request|Google_Http_Batch
-   * @throws Google_Exception
-   * @return object of the type of the expected class or array.
-   */
-  public function execute($request)
-  {
-    if ($request instanceof Google_Http_Request) {
-      $request->setUserAgent(
-          $this->getApplicationName()
-          . " " . self::USER_AGENT_SUFFIX
-          . $this->getLibraryVersion()
-      );
-      if (!$this->getClassConfig("Google_Http_Request", "disable_gzip")) {
-        $request->enableGzip();
-      }
-      $request->maybeMoveParametersToBody();
-      return Google_Http_REST::execute($this, $request);
-    } else if ($request instanceof Google_Http_Batch) {
-      return $request->execute();
-    } else {
-      throw new Google_Exception("Do not know how to execute this type of object.");
-    }
-  }
-
-  /**
-   * Whether or not to return raw requests
-   * @return boolean
-   */
-  public function shouldDefer()
-  {
-    return $this->deferExecution;
   }
 
   /**
@@ -624,20 +503,20 @@ class Custom_Client extends Google_Client
 
       $oAuthAttributes = $this->oAuthAttributes;
 
-      if (isset($oAuthAttributes['OAUTH2_AUTH_URL'])) {
-        $this->auth->setAuthUri($oAuthAttributes['OAUTH2_AUTH_URL']);
+      if (isset($oAuthAttributes['auth_uri'])) {
+        $this->auth->setAuthUri($oAuthAttributes['auth_uri']);
       }
 
-      if (isset($oAuthAttributes['OAUTH2_TOKEN_URL'])) {
-        $this->auth->setAuthUri($oAuthAttributes['OAUTH2_TOKEN_URL']);
+      if (isset($oAuthAttributes['token_uri'])) {
+        $this->auth->setTokenUri($oAuthAttributes['token_uri']);
       }
 
-      if (isset($oAuthAttributes['OAUTH2_REVOKE_URL'])) {
-        $this->auth->setAuthUri($oAuthAttributes['OAUTH2_REVOKE_URL']);
+      if (isset($oAuthAttributes['revoke_uri'])) {
+        $this->auth->setRevokeUri($oAuthAttributes['revoke_uri']);
       }
 
-      if (isset($oAuthAttributes['OAUTH2_ISSUER'])) {
-        $this->auth->setAuthUri($oAuthAttributes['OAUTH2_ISSUER']);
+      if (isset($oAuthAttributes['issuer'])) {
+        $this->auth->setIssuer($oAuthAttributes['issuer']);
       }
     }
     return $this->auth;
