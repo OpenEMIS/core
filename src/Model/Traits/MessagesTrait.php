@@ -148,7 +148,11 @@ trait MessagesTrait {
             'noClassRecords' => 'There are no available Classes',
             'date_opened' => 'Date Opened',
             'date_closed' => 'Date Closed',
-            'noClasses' => 'No Available Classes'
+            'noClasses' => 'No Available Classes',
+            'code_custom_validation' => 'Please enter a valid Institution Code',
+            'postal_code_custom_validation' => 'Please enter a valid Postal Code',
+            'telephone_custom_validation' => 'Please enter a valid Telephone Number',
+            'fax_custom_validation' => 'Please enter a valid Fax Number',
         ],
         'InstitutionStaff' => [
             'title' => 'Staff',

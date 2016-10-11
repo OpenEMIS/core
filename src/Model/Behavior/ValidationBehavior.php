@@ -1615,7 +1615,7 @@ class ValidationBehavior extends Behavior {
 		$valuePattern = '/' . $ConfigItems->value('institution_code') . '/';
 
 		if (!empty($valuePattern) && !preg_match($valuePattern, $subject)) {
-			return $model->getMessage('User.Identities.number.custom_validation');
+			return $model->getMessage('Institutions.code_custom_validation');
 		}
 
 		return true;
@@ -1631,7 +1631,7 @@ class ValidationBehavior extends Behavior {
 		$valuePattern = '/' . $ConfigItems->value('institution_telephone') . '/';
 
 		if (!empty($valuePattern) && !preg_match($valuePattern, $subject)) {
-			return $model->getMessage('User.Identities.number.custom_validation');
+			return $model->getMessage('Institutions.telephone_custom_validation');
 		}
 
 		return true;
@@ -1647,7 +1647,7 @@ class ValidationBehavior extends Behavior {
 		$valuePattern = '/' . $ConfigItems->value('institution_fax') . '/';
 
 		if (!empty($valuePattern) && !preg_match($valuePattern, $subject)) {
-			return $model->getMessage('User.Identities.number.custom_validation');
+			return $model->getMessage('Institutions.fax_custom_validation');
 		}
 
 		return true;
@@ -1663,7 +1663,7 @@ class ValidationBehavior extends Behavior {
 		$valuePattern = '/' . $ConfigItems->value('postal_code') . '/';
 
 		if (!empty($valuePattern) && !preg_match($valuePattern, $subject)) {
-			return $model->getMessage('User.Identities.number.custom_validation');
+			return $model->getMessage('Institutions.postal_code_custom_validation');
 		}
 
 		return true;

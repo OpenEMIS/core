@@ -1,4 +1,9 @@
 -- code here
+DELETE FROM `translations` WHERE `en` = 'Please enter a valid Institution Code';
+DELETE FROM `translations` WHERE `en` = 'Please enter a valid Postal Code';
+DELETE FROM `translations` WHERE `en` = 'Please enter a valid Telephone Number';
+DELETE FROM `translations` WHERE `en` = 'Please enter a valid Fax Number';
+
 DELETE FROM `config_items` WHERE `id` = 38; -- 38 postal code
 
 INSERT INTO `config_items` (`id`, `name`, `code`, `type`, `label`, `value`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created`)
