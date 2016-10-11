@@ -1,3 +1,8 @@
+v3.6.6
+- System splits the permission to view Salary list page and Salary Details page
+- System now allows user to search accounts from different Identity types in Advanced Search option
+- System now allows user to search Institutions that offers selected Education Grades in Advanced Search option
+
 v3.6.5
 - Institution contacts section is now moved from Overview page to Contacts page
 - System now allows users to create Non-Academic Institutions
