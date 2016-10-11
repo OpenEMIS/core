@@ -1,15 +1,14 @@
 var Authentication = {
-	populate: function(obj) {
-		console.log(obj);
+	populate: function(url) {
 		$.ajax({
 			url: url,
 			type: "GET",
 			success: function(data){
-				console.log(data);
-				// objToUpdate.html(data);
-				// lastSelectedValue = objToUpdate.find('select').last().val();
-				// // Populate hidden value
-				// $( objToUpdate ).next().val(lastSelectedValue);
+				$('#authUri').val(data.authorization_endpoint);
+				$('#tokenUri').val(data.token_endpoint);
+				$('#userInfoUri').val(data.userinfo_endpoint);
+				$('#issuer').val(data.issuer);
+				$('#jwksUri').val(data.jwks_uri);
 			}
 		});
 	}

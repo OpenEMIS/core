@@ -1,4 +1,4 @@
-<?= $this->Html->script('Configuration/authentication_config', ['block' => true]); ?>
+<?= $this->Html->script('Configuration.authentication_config', ['block' => true]); ?>
 
 <?php if ($ControllerAction['action'] == 'index') : ?>
 
