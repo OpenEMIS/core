@@ -9,8 +9,8 @@ use App\Model\Table\ControllerActionTable;
 
 class ShiftOptionsTable extends ControllerActionTable
 {
-    public function initialize(array $config) {
-        $this->addBehavior('FieldOption.FieldOption');
+    public function initialize(array $config)
+    {
         $this->table('shift_options');
         parent::initialize($config);
 
@@ -18,6 +18,8 @@ class ShiftOptionsTable extends ControllerActionTable
         $this->behaviors()->get('ControllerAction')->config('actions.add', false);
 
         $this->hasMany('Shifts', ['className' => 'Institution.InstitutionShifts', 'foreignKey' => 'shift_option_id']);
+
+        $this->addBehavior('FieldOption.FieldOption');
     }
 
     public function beforeAction(Event $event)
@@ -38,7 +40,7 @@ class ShiftOptionsTable extends ControllerActionTable
         $this->field('national_code', ['visible' => false]);
     }
 
-    public function onGetName(Event $event, Entity $entity) 
+    public function onGetName(Event $event, Entity $entity)
     {
         return __($entity->name);
     }
