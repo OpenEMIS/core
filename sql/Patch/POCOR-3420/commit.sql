@@ -1,4 +1,3 @@
--- POCOR-3420
 -- db_patches
 INSERT INTO `db_patches` (`issue`, `created`) VALUES('POCOR-3420', NOW());
 
@@ -16,8 +15,3 @@ VALUES  ('38', 'Postal Code', 'postal_code', 'Custom Validation', 'Postal Code',
 -- Translation table
 INSERT INTO `translations` (`code`, `en`, `ar`, `zh`, `es`, `fr`, `ru`, `editable`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 VALUES (NULL, 'Please enter a valid format', NULL, NULL, NULL, NULL, NULL, '1', NULL, NULL, '0', NOW());
-
-
--- 3.6.7
-UPDATE config_items SET value = '3.6.7' WHERE code = 'db_version';
-UPDATE db_patches SET version = (SELECT value FROM config_items WHERE code = 'db_version') WHERE version IS NULL;
