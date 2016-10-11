@@ -145,10 +145,10 @@ class WorkflowBehavior extends Behavior {
 		$userId = $securityGroupUserEntity->security_user_id;
 		$roleId = $securityGroupUserEntity->security_role_id;
 
-		$this->autoAssignAssignee($model->registryAlias(), $groupId, $userId, $roleId);
+		$this->triggerUpdateAssigneeShell($model->registryAlias(), $groupId, $userId, $roleId);
 	}
 
-	private function autoAssignAssignee($registryAlias, $groupId, $userId, $roleId) {
+	private function triggerUpdateAssigneeShell($registryAlias, $groupId, $userId, $roleId) {
         $cmd = ROOT . DS . 'bin' . DS . 'cake UpdateAssignee '.$registryAlias.' '.$groupId.' '.$userId.' '.$roleId;
         $logs = ROOT . DS . 'logs' . DS . 'UpdateAssignee.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
@@ -157,7 +157,7 @@ class WorkflowBehavior extends Behavior {
             $pid = exec($shellCmd);
             Log::write('debug', $shellCmd);
         } catch(\Exception $ex) {
-            Log::write('error', __METHOD__ . ' exception when auto assign assignees : '. $ex);
+            Log::write('error', __METHOD__ . ' exception when update assignee : '. $ex);
         }
     }
 
