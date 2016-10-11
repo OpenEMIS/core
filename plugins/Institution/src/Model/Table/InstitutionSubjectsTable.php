@@ -144,8 +144,9 @@ class InstitutionSubjectsTable extends ControllerActionTable
         ]);
 
         $academicPeriodOptions = $this->getAcademicPeriodOptions($extra['institution_id']);
-        if (empty($academicPeriodOptions)) {
-            $this->Alert->warning('InstitutionSubjects.noPeriods');
+        if (empty($academicPeriodOptions)) { //cant find programme which date range within available academic period
+            $this->Alert->warning('InstitutionSubjects.noProgrammes');
+            $extra['noProgrammes'] = true;
         }
 
         if (empty($this->request->query['academic_period_id'])) {
@@ -186,7 +187,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                                     $Classes->aliasField('institution_id') => $institutionId
                                 ])
                                 ->toArray();
-        if (empty($classOptions)) {
+        if (empty($classOptions) && !isset($extra['noProgrammes'])) {
             $this->Alert->warning('Institutions.noClassRecords');
         }
         $selectedClassId = $this->queryString('class_id', $classOptions);
@@ -224,6 +225,13 @@ class InstitutionSubjectsTable extends ControllerActionTable
         ];
         $extra['selectedClassId'] = $selectedClassId;
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
+
+        //to remove 'add' button if no class or programmes set
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        if (empty($classOptions) || isset($extra['noProgrammes'])) {
+            unset($toolbarButtonsArray['add']);
+        }
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
 
     public function findByClasses(Query $query, array $options)

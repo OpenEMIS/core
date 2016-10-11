@@ -227,6 +227,7 @@ trait MessagesTrait {
             'allSubjectsAlreadyAdded' => 'All Subjects for the assigned grade already added previously',
             'noSubjectsInClass' => 'There are no subjects in the assigned grade',
             'noSubjectSelected' => 'There is no subject selected',
+            'noProgrammes' => 'There is no programme set for available Academic Period on this institution'
         ],
         'InstitutionFees' => [
             'fee_types' => 'Fee Types',
