@@ -102,6 +102,7 @@ class WorkflowBehavior extends Behavior {
 		}
 		$events['Model.SecurityGroupUsers.afterSave'] = 'securityGroupUserAfterSave';
 		$events['Model.SecurityGroupUsers.afterDelete'] = 'securityGroupUserAfterDelete';
+		$events['Model.WorkflowSteps.afterSave'] = 'workflowStepAfterSave';
 		return $events;
 	}
 
@@ -141,15 +142,22 @@ class WorkflowBehavior extends Behavior {
 
 	public function securityGroupUserAfterSave(Event $event, Entity $securityGroupUserEntity) {
 		$model = $this->_table;
+		$statusId = 0;
 		$groupId = $securityGroupUserEntity->security_group_id;
 		$userId = $securityGroupUserEntity->security_user_id;
 		$roleId = $securityGroupUserEntity->security_role_id;
 
-		$this->triggerUpdateAssigneeShell($model->registryAlias(), $groupId, $userId, $roleId);
+		$this->triggerUpdateAssigneeShell($model->registryAlias(), $statusId, $groupId, $userId, $roleId);
 	}
 
-	private function triggerUpdateAssigneeShell($registryAlias, $groupId, $userId, $roleId) {
-        $cmd = ROOT . DS . 'bin' . DS . 'cake UpdateAssignee '.$registryAlias.' '.$groupId.' '.$userId.' '.$roleId;
+	private function triggerUpdateAssigneeShell($registryAlias, $statusId=null, $groupId=null, $userId=null, $roleId=null) {
+		$args = '';
+		$args .= !is_null($statusId) ? ' '.$statusId : '';
+		$args .= !is_null($groupId) ? ' '.$groupId : '';
+		$args .= !is_null($userId) ? ' '.$userId : '';
+		$args .= !is_null($roleId) ? ' '.$roleId : '';
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake UpdateAssignee '.$registryAlias.$args;
         $logs = ROOT . DS . 'logs' . DS . 'UpdateAssignee.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
 
@@ -205,6 +213,24 @@ class WorkflowBehavior extends Behavior {
 				['assignee_id' => $assigneeId],
 				['id' => $notDoneEntity->id]
 			);
+		}
+	}
+
+	public function workflowStepAfterSave(Event $event, Entity $workflowStepEntity) {
+		$model = $this->_table;
+
+		$statusId = $workflowStepEntity->id;
+		$WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+		$entity = $WorkflowSteps
+			->find()
+			->matching('Workflows.WorkflowModels')
+			->where([$WorkflowSteps->aliasField('id') => $workflowStepEntity->id])
+			->first();
+
+		$workflowModelEntity = $entity->_matchingData['WorkflowModels'];
+		// only trigger update assignee shell where the workflow step belongs to 
+		if ($workflowModelEntity->model == $model->registryAlias()) {
+			$this->triggerUpdateAssigneeShell($model->registryAlias(), $statusId);
 		}
 	}
 

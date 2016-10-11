@@ -15,6 +15,7 @@ class UpdateAssigneeShell extends Shell {
 		parent::initialize();
 		$this->loadModel('Workflow.WorkflowModels');
 		$this->loadModel('Security.SecurityGroupUsers');
+		$this->loadModel('Institution.Institutions');
 	}
 
  	public function main() {
@@ -26,28 +27,45 @@ class UpdateAssigneeShell extends Shell {
  			}
  		} else {
  			$triggeredModel = $this->args[0];
- 			$groupId = $this->args[1];
-	 		$userId = $this->args[2];
-	 		$roleId = $this->args[3];
+ 			$statusId = !empty($this->args[1]) ? $this->args[1] : 0;
+ 			$groupId = !empty($this->args[2]) ? $this->args[2] : 0;
+	 		$userId = !empty($this->args[3]) ? $this->args[3] : 0;
+	 		$roleId = !empty($this->args[4]) ? $this->args[4] : 0;
 
 	 		$workflowModelEntity = $this->WorkflowModels->find()->where([$this->WorkflowModels->aliasField('model') => $triggeredModel])->first();
-
-	 		$this->autoAssignAssignee($workflowModelEntity);
+	 		$this->autoAssignAssignee($workflowModelEntity, $statusId, $groupId, $userId, $roleId);
  		}
 	}
 
-	public function autoAssignAssignee(Entity $workflowModelEntity) {
+	public function autoAssignAssignee(Entity $workflowModelEntity, $statusId=0, $groupId=0, $userId=0, $roleId=0) {
 		try {
 			$model = TableRegistry::get($workflowModelEntity->model);
 			$isSchoolBased = $workflowModelEntity->is_school_based;
 			$this->out("Initialize Update Assignee Shell of " . $workflowModelEntity->name);
+
+			$where = [];
+			// only update records by status when user change security roles of a step
+			if (!empty($statusId)) {
+				$where[$model->aliasField('status_id')] = $statusId;
+			} else {
+				$where[$model->aliasField('assignee_id')] = 0;
+			}
+
+			// for school based workflow, only update records of the school with the same security group id where the new staff is added to
+			if ($isSchoolBased && !empty($groupId)) {
+				$institutionEntity = $this->Institutions->find()->where([$this->Institutions->aliasField('security_group_id') => $groupId])->first();
+				if ($institutionEntity) {
+					$this->out($workflowModelEntity->name.' : Affected Institution Id: '.$institutionEntity->id);
+					$where[$model->aliasField('institution_id')] = $institutionEntity->id;
+				}
+			}
 
 			$unassignedRecords = $model
 				->find()
 				->matching('Statuses', function ($q) {
 					return $q->where(['Statuses.category <> ' => self::DONE]);
 				})
-				->where([$model->aliasField('assignee_id') => 0])
+				->where($where)
 				->all();
 
 			$this->out($workflowModelEntity->name. ' - Unassigned Records : ' . $unassignedRecords->count());
@@ -72,14 +90,14 @@ class UpdateAssigneeShell extends Shell {
 
 				if (!empty($assigneeId)) {
 					$this->out($workflowModelEntity->name.' : Affected Record Id: '.$unassignedEntity->id.'; Assignee Id: '.$assigneeId);
-
-					$model->updateAll(
-						['assignee_id' => $assigneeId],
-						['id' => $unassignedEntity->id]
-					);
 				} else {
-					$this->out($workflowModelEntity->name.' : Affected Record Id: '.$unassignedEntity->id.'; Assignee not found.');
+					$this->out($workflowModelEntity->name.' : Affected Record Id: '.$unassignedEntity->id.'; Set to unassigned.');
 				}
+
+				$model->updateAll(
+					['assignee_id' => $assigneeId],
+					['id' => $unassignedEntity->id]
+				);
 			}
 
 			$this->out("End Processing Update Assignee Shell of ".$workflowModelEntity->name);
