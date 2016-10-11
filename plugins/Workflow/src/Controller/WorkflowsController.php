@@ -79,80 +79,22 @@ class WorkflowsController extends AppController
 
         $isSchoolBased = $this->request->query('is_school_based');
         $nextStepId = $this->request->query('next_step_id');
-        Log::write('debug', 'Is School Based: ' . $isSchoolBased);
-        Log::write('debug', 'Next Step Id: ' . $nextStepId);
 
-        $assigneeOptions = [];
-        if (!is_null($nextStepId)) {
-            $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
-            $stepRoles = $WorkflowStepsRoles->getRolesByStep($nextStepId);
-            Log::write('debug', 'Roles By Step:');
-            Log::write('debug', $stepRoles);
-
-            if (!empty($stepRoles)) {
-                $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                $Areas = TableRegistry::get('Area.Areas');
-                $Institutions = TableRegistry::get('Institution.Institutions');
-
-                if ($isSchoolBased) {
-                    $session = $this->request->session();
-
-                    if ($session->check('Institution.Institutions.id')) {
-                        $institutionId = $session->read('Institution.Institutions.id');
-                        $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
-                        $securityGroupId = $institutionObj->security_group_id;
-                        $areaObj = $institutionObj->area;
-
-                        Log::write('debug', $areaObj);
-                        Log::write('debug', 'Institution Id: ' . $institutionId);
-                        Log::write('debug', 'Security Group Id: ' . $securityGroupId);
-
-                        // School based assignee
-                        $where = [
-                            $SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId,
-                            $SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles
-                        ];
-                        $schoolBasedAssigneeQuery = $SecurityGroupUsers
-                            ->find('userList', ['where' => $where])
-                            ->find('assignedStaff', ['institution_id' => $institutionId, 'security_roles' => $stepRoles]);
-
-                        Log::write('debug', 'School based assignee query:');
-                        Log::write('debug', $schoolBasedAssigneeQuery->sql());
-
-                        $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
-                        Log::write('debug', 'School based assignee:');
-                        Log::write('debug', $schoolBasedAssigneeOptions);
-                        // End
-
-                        // Region based assignee
-                        $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
-                        $regionBasedAssigneeQuery = $SecurityGroupUsers
-                            ->find('userList', ['where' => $where, 'area' => $areaObj]);
-
-                        Log::write('debug', 'Region based assignee query:');
-                        Log::write('debug', $regionBasedAssigneeQuery->sql());
-
-                        $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
-                        Log::write('debug', 'Region based assignee:');
-                        Log::write('debug', $regionBasedAssigneeOptions);
-                        // End
-
-                        $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
-                    } else {
-                        Log::write('debug', 'Institution Id not found.');
-                    }
-                } else {
-                    $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
-                    $assigneeQuery = $SecurityGroupUsers
-                        ->find('userList', ['where' => $where]);
-
-                    Log::write('debug', 'Non-School based assignee query:');
-                    Log::write('debug', $assigneeQuery->sql());
-
-                    $assigneeOptions = $assigneeQuery->toArray();
-                }                
+        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $params = [
+            'is_school_based' => $isSchoolBased,
+            'workflow_step_id' => $nextStepId
+        ];
+        if ($isSchoolBased) {
+            $session = $this->request->session();
+            if ($session->check('Institution.Institutions.id')) {
+                $institutionId = $session->read('Institution.Institutions.id');
+                $params['institution_id'] = $institutionId;
             }
         }
+
+        $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
+
         Log::write('debug', 'Assignee:');
         Log::write('debug', $assigneeOptions);
 
