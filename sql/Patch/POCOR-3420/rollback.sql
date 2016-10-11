@@ -1,4 +1,3 @@
--- POCOR-3420
 -- code here
 DELETE FROM `translations` WHERE `en` = 'Please enter a valid format';
 
@@ -13,7 +12,3 @@ VALUES  ('38', 'Institution Postal Code', 'institution_postal_code', 'Custom Val
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3420';
-
-
--- 3.6.6
-UPDATE config_items SET value = '3.6.6' WHERE code = 'db_version';
