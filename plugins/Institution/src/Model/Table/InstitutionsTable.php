@@ -171,16 +171,15 @@ class InstitutionsTable extends AppTable  {
 			// 		'last' => true
 			// 	])
 
-			->allowEmpty('postal_code')
-			->add('postal_code', 'ruleCustomPostalCode', [
-	        		'rule' => ['validateCustomPostalCode'],
-	        		// 'rule' => ['validateCustomValidation'],
+			->add('code', 'ruleCustomCode', [
+	        		'rule' => ['validateCustomCode'],
 	        		'provider' => 'table',
 	        		'last' => true
 			    ])
 
-			->add('code', 'ruleCustomCode', [
-	        		'rule' => ['validateCustomCode'],
+			->allowEmpty('postal_code')
+			->add('postal_code', 'ruleCustomPostalCode', [
+	        		'rule' => ['validateCustomPostalCode'],
 	        		'provider' => 'table',
 	        		'last' => true
 			    ])
@@ -201,7 +200,6 @@ class InstitutionsTable extends AppTable  {
 			->allowEmpty('telephone')
 			->add('telephone', 'ruleCustomTelephone', [
 	        		'rule' => ['validateCustomTelephone'],
-	        		// 'rule' => ['validateCustomValidation'],
 	        		'provider' => 'table',
 	        		'last' => true
 			    ])
@@ -209,7 +207,6 @@ class InstitutionsTable extends AppTable  {
 			->allowEmpty('fax')
 			->add('fax', 'ruleCustomFax', [
 	        		'rule' => ['validateCustomFax'],
-	        		// 'rule' => ['validateCustomValidation'],
 	        		'provider' => 'table',
 	        		'last' => true
 			    ])
