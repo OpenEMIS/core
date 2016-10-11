@@ -16,8 +16,9 @@
  */
 
 if (!class_exists('Google_Client')) {
-  require_once dirname(__FILE__) . '/../../../google/apiclient/autoload.php';
+  require_once dirname(__FILE__) . '/../../../../google/apiclient/autoload.php';
 }
+require_once dirname(__FILE__) . '/../../../../phpseclib/phpseclib/phpseclib/Crypt/RSA.php';
 
 /**
  * Authentication class that deals with the OAuth 2 web-server authentication flow
@@ -26,13 +27,13 @@ if (!class_exists('Google_Client')) {
 class Custom_Auth_OAuth2 extends Google_Auth_Abstract
 {
   private $OAUTH2_REVOKE_URI = 'https://accounts.google.com/o/oauth2/revoke';
-  private $OAUTH2_TOKEN_URI = 'https://sso.openemis.org/wp/oauth/token';
-  private $OAUTH2_AUTH_URL = 'https://sso.openemis.org/wp/oauth/authorize';
-  private $OAUTH2_ISSUER = 'sso.openemis.org/wp';
+  private $OAUTH2_TOKEN_URI = 'https://accounts.google.com/o/oauth2/token';
+  private $OAUTH2_AUTH_URL = 'https://accounts.google.com/o/oauth2/auth';
+  private $OAUTH2_ISSUER = 'accounts.google.com';
   const CLOCK_SKEW_SECS = 300; // five minutes in seconds
   const AUTH_TOKEN_LIFETIME_SECS = 300; // five minutes in seconds
   const MAX_TOKEN_LIFETIME_SECS = 86400; // one day in seconds
-  const OAUTH2_ISSUER_HTTPS = 'https://sso.openemis.org/wp';
+  const OAUTH2_ISSUER_HTTPS = 'https://accounts.google.com';
 
   /** @var Google_Auth_AssertionCredentials $assertionCredentials */
   private $assertionCredentials;
@@ -63,22 +64,30 @@ class Custom_Auth_OAuth2 extends Google_Auth_Abstract
 
   public function setAuthUri($uri)
   {
-    $this->OAUTH2_AUTH_URL = $uri;
+    if (!empty($uri)) {
+      $this->OAUTH2_AUTH_URL = $uri;
+    }
   }
 
   public function setTokenUri($uri)
   {
-    $this->OAUTH2_TOKEN_URI = $uri;
+    if (!empty($uri)) {
+      $this->OAUTH2_TOKEN_URI = $uri;
+    }
   }
 
   public function setRevokeUri($uri)
   {
-    $this->OAUTH2_REVOKE_URI = $uri;
+    if (!empty($uri)) {
+      $this->OAUTH2_REVOKE_URI = $uri;
+    }
   }
 
   public function setIssuer($uri)
   {
-    $this->OAUTH2_ISSUER = $uri;
+    if (!empty($uri)) {
+      $this->OAUTH2_ISSUER = $uri;
+    }
   }
 
   /**
@@ -559,20 +568,6 @@ class Custom_Auth_OAuth2 extends Google_Auth_Abstract
     if (!$payload) {
       throw new Google_Auth_Exception("Can't parse token payload: " . $segments[1]);
     }
-
-    // Check signature
-    // $verified = false;
-    // foreach ($certs as $keyName => $pem) {
-    //   $public_key = new Google_Verifier_Pem($pem);
-    //   if ($public_key->verify($signed, $signature)) {
-    //     $verified = true;
-    //     break;
-    //   }
-    // }
-
-    // if (!$verified) {
-    //   throw new Google_Auth_Exception("Invalid token signature: $jwt");
-    // }
 
     // Check issued-at timestamp
     $iat = 0;
