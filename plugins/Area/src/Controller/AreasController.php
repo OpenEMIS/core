@@ -17,16 +17,13 @@ class AreasController extends AppController
 
 	public function initialize() {
 		parent::initialize();
-
-		$this->ControllerAction->models = [
-			'Areas' => ['className' => 'Area.Areas', 'options' => ['deleteStrategy' => 'transfer']],
-			'Administratives' => ['className' => 'Area.AreaAdministratives', 'options' => ['deleteStrategy' => 'transfer']]
-		];
 		$this->loadComponent('Paginator');
 	}
 
-    public function Levels() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Area.AreaLevels']); }
-    public function AdministrativeLevels() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Area.AreaAdministrativeLevels']); }
+    public function Levels() 				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Area.AreaLevels']); }
+    public function AdministrativeLevels() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Area.AreaAdministrativeLevels']); }
+    public function Areas() 				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Area.Areas']); }
+    public function Administratives() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Area.AreaAdministratives']); }
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
@@ -65,8 +62,8 @@ class AreasController extends AppController
 	}
 
 	public function ajaxGetArea($tableName, $targetModel, $id, $displayCountry = true) {
-		$this->getView()->layout('ajax');
-		$rootId = -1; // Root node
+		$this->viewBuilder()->layout('ajax');
+		$rootId = null; // Root node
 
 		$condition = [];
 		$accessControlAreaCount = 0;
@@ -82,14 +79,14 @@ class AreasController extends AppController
 		$formError = $this->request->query('formerror');
 		if (!$displayCountry) {
 			if ($tableName == 'Area.AreaAdministratives') {
-				$worldId = $Table->find()->where([$Table->aliasField('parent_id') => -1])->first()->id;
+				$worldId = $Table->find()->where([$Table->aliasField('parent_id') . ' IS NULL'])->first()->id;
 				$condition[] = [
 					'OR' => [
 						[$Table->aliasField('is_main_country') => 1],
 						[$Table->aliasField('parent_id').' IS NOT ' => $worldId]
 					]
 				];
-			} 
+			}
 		}
 		if (! $AccessControl->isAdmin()) {
 			if ($tableName == 'Area.Areas') {
@@ -101,8 +98,8 @@ class AreasController extends AppController
 					// Using the display country variable here which is passed over from the institution table
 					$areaId = $Table->find()
 						->select([
-							'area_id' => $Table->aliasField('id'), 
-							'lft' => $Table->aliasField('lft'), 
+							'area_id' => $Table->aliasField('id'),
+							'lft' => $Table->aliasField('lft'),
 							'rght'=> $Table->aliasField('rght')
 						])
 						->where([$Table->aliasField('id') => $displayCountry])
@@ -143,12 +140,14 @@ class AreasController extends AppController
 				} else {
 					$authorisedAreaId = [];
 				}
-				
-				$areaCondition[] = [
-						$Table->aliasField('id').' IN' => $authorisedParentIds
-					];
-				$authorisedParentIds = $authorisedParentIds;
-				$condition['OR'] = $areaCondition;
+
+				if (!empty($authorisedParentIds)) {
+					$areaCondition[] = [
+							$Table->aliasField('id').' IN' => $authorisedParentIds
+						];
+					$authorisedParentIds = $authorisedParentIds;
+					$condition['OR'] = $areaCondition;
+				}
 			}
 		}
 
@@ -171,7 +170,7 @@ class AreasController extends AppController
 			->order([$Table->aliasField('lft')])
 			->all();
 		$count = 1;
-		$prevousOptionId = -1;
+		$previousOptionId = null;
 		$pathToUnset = [];
 		$objParentIds = [];
 		foreach ($path as $obj) {
@@ -181,14 +180,20 @@ class AreasController extends AppController
 					$count++;
 					continue;
 				}
-			}	
+			}
 			$parentId = $obj->parent_id;
-			$list = $Table
+			$listQuery = $Table
 				->find('list')
-				->where([$Table->aliasField('parent_id') => $parentId])
 				->order([$Table->aliasField('order')])
-				->where($condition)
-				->toArray();
+				->where($condition);
+
+			if (is_null($parentId)) {
+				$listQuery->where([$Table->aliasField('parent_id') . ' IS NULL']);
+			} else {
+				$listQuery->where([$Table->aliasField('parent_id') => $parentId]);
+			}
+
+			$list = $listQuery->toArray();
 
 			$newList = [];
 			foreach ($list as $key => $area) {
@@ -206,7 +211,7 @@ class AreasController extends AppController
 					if( $count > 1 ){
 						if (! $AccessControl->isAdmin()) {
 							if (array_intersect($this->array_column($authorisedArea, 'area_id'), $objParentIds)) {
-								$list = [$previousOptionId => '--'.__('Select Area').'--'] + $list;	
+								$list = [$previousOptionId => '--'.__('Select Area').'--'] + $list;
 							}
 						} else {
 							$list = [$previousOptionId => '--'.__('Select Area').'--'] + $list;
@@ -222,7 +227,7 @@ class AreasController extends AppController
 			} else{
 				$obj->selectedId = $previousOptionId;
 			}
-			
+
 			$previousOptionId = $obj->id;
 			$obj->list = $list;
 			$count++;
@@ -231,7 +236,7 @@ class AreasController extends AppController
 		$path = $path->toArray();
 
 		$this->unsetUnauthorisedPath($path, $pathToUnset);
-		
+
 		$levelAssociation = Inflector::underscore(Inflector::singularize($levelAssociation));
 		$this->set(compact('path', 'targetModel', 'tableName', 'formError', 'displayCountry', 'levelAssociation'));
 	}
@@ -247,7 +252,7 @@ class AreasController extends AppController
 					$firstItem = false;
 					continue;
 				}
-			} 
+			}
 			unset($path[$arrIndex]);
 		}
 	}

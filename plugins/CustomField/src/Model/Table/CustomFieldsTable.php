@@ -16,6 +16,9 @@ class CustomFieldsTable extends AppTable {
 	const UNIQUE_NO = 0;
 
 	protected $fieldTypeFormat = ['OpenEMIS'];
+	// Supported Field Types contain full list by default and can by override in individual model extends CustomFieldsTable
+	protected $supportedFieldTypes = ['TEXT','NUMBER','TEXTAREA','DROPDOWN','CHECKBOX','TABLE','DATE','TIME','STUDENT_LIST','FILE','COORDINATES','REPEATER'];
+
 	private $fieldTypes = [];
 	private $fieldTypeOptions = [];
 	private $CustomFieldTypes = null;
@@ -23,11 +26,14 @@ class CustomFieldsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		// belongsTo: CustomFieldTypes is not needed as code is store instead of id
-		$this->hasMany('CustomFieldOptions', ['className' => 'CustomField.CustomFieldOptions', 'dependent' => true]);
-		$this->hasMany('CustomTableColumns', ['className' => 'CustomField.CustomTableColumns', 'dependent' => true]);
-		$this->hasMany('CustomTableRows', ['className' => 'CustomField.CustomTableRows', 'dependent' => true]);
-		$this->hasMany('CustomFieldValues', ['className' => 'CustomField.CustomFieldValues', 'dependent' => true]);
-		$this->hasMany('CustomTableCells', ['className' => 'CustomField.CustomTableCells', 'dependent' => true]);
+		$this->hasMany('CustomFieldOptions', ['className' => 'CustomField.CustomFieldOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('CustomFieldValues', ['className' => 'CustomField.CustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true]);
+		// Only add association if TABLE type is supported
+		if (in_array('TABLE', $this->supportedFieldTypes)) {
+			$this->hasMany('CustomTableColumns', ['className' => 'CustomField.CustomTableColumns', 'dependent' => true, 'cascadeCallbacks' => true]);
+			$this->hasMany('CustomTableRows', ['className' => 'CustomField.CustomTableRows', 'dependent' => true, 'cascadeCallbacks' => true]);
+			$this->hasMany('CustomTableCells', ['className' => 'CustomField.CustomTableCells', 'dependent' => true, 'cascadeCallbacks' => true]);
+		}
 		$this->belongsToMany('CustomForms', [
 			'className' => 'CustomField.CustomForms',
 			'joinTable' => 'custom_forms_fields',
@@ -36,15 +42,11 @@ class CustomFieldsTable extends AppTable {
 		]);
 
 		// Each field type will have one behavior attached
-		$this->addBehavior('CustomField.SetupText');
-		$this->addBehavior('CustomField.SetupNumber');
-		$this->addBehavior('CustomField.SetupTextarea');
-		$this->addBehavior('CustomField.SetupDropdown');
-		$this->addBehavior('CustomField.SetupCheckbox');
-		$this->addBehavior('CustomField.SetupTable');
-		$this->addBehavior('CustomField.SetupDate');
-		$this->addBehavior('CustomField.SetupTime');
-		$this->addBehavior('CustomField.SetupStudentList');
+		foreach ($this->supportedFieldTypes as $fieldTypeCode) {
+			$fieldType = Inflector::camelize(strtolower($fieldTypeCode));
+			// Only attach behavior of Supported Field Types
+			$this->addBehavior('CustomField.Setup'.$fieldType);
+		}
 		// End
 
 		$this->CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
@@ -70,9 +72,8 @@ class CustomFieldsTable extends AppTable {
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity) {
-		$selectedFieldType = key($this->fieldTypeOptions);
-		$entity->field_type = $selectedFieldType;
-		$this->request->query['field_type'] = $entity->field_type;
+		// always reset
+		unset($this->request->query['field_type']);
 	}
 
 	public function editOnInitialize(Event $event, Entity $entity) {
@@ -87,7 +88,6 @@ class CustomFieldsTable extends AppTable {
 		if ($action == 'view') {
 		} else if ($action == 'add') {
 			$fieldTypeOptions = $this->fieldTypeOptions;
-			$selectedFieldType = $this->queryString('field_type', $fieldTypeOptions);
 
 			$attr['type'] = 'select';
 			$attr['options'] = $fieldTypeOptions;
@@ -109,11 +109,12 @@ class CustomFieldsTable extends AppTable {
 		} else if ($action == 'add' || $action == 'edit') {
 			$selectedFieldType = $request->query('field_type');
 			$mandatoryOptions = $this->getSelectOptions('general.yesno');
-			$isMandatory = $this->CustomFieldTypes->findByCode($selectedFieldType)->first()->is_mandatory;
+			$isMandatory = !is_null($selectedFieldType) ? $this->CustomFieldTypes->findByCode($selectedFieldType)->first()->is_mandatory : 0;
 
 			if ($isMandatory) {
 				$attr['type'] = 'select';
 				$attr['options'] = $mandatoryOptions;
+				$attr['select'] = false;	// turn off automatic adding of '-- Select --'
 			} else {
 				$attr['type'] = 'hidden';
 				$attr['value'] = self::MANDATORY_NO;
@@ -128,11 +129,12 @@ class CustomFieldsTable extends AppTable {
 		} else if ($action == 'add' || $action == 'edit') {
 			$selectedFieldType = $request->query('field_type');
 			$uniqueOptions = $this->getSelectOptions('general.yesno');
-			$isUnique = $this->CustomFieldTypes->findByCode($selectedFieldType)->first()->is_unique;
+			$isUnique = !is_null($selectedFieldType) ? $this->CustomFieldTypes->findByCode($selectedFieldType)->first()->is_unique : 0;
 
 			if ($isUnique) {
 				$attr['type'] = 'select';
 				$attr['options'] = $uniqueOptions;
+				$attr['select'] = false;	// turn off automatic adding of '-- Select --'
 			} else {
 				$attr['type'] = 'hidden';
 				$attr['value'] = self::UNIQUE_NO;
@@ -148,7 +150,7 @@ class CustomFieldsTable extends AppTable {
 
 		if ($request->is(['post', 'put'])) {
 			if (array_key_exists($this->alias(), $request->data)) {
-				if (array_key_exists('field_type', $request->data[$this->alias()])) {
+				if (array_key_exists('field_type', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['field_type'])) {
 					$this->request->query['field_type'] = $request->data[$this->alias()]['field_type'];
 				}
 			}
@@ -174,5 +176,17 @@ class CustomFieldsTable extends AppTable {
 
 	public function getFieldTypes() {
 		return $this->fieldTypes;
+	}
+
+	public function getSupportedFieldTypesByModel($model) {
+		$CustomModules = TableRegistry::get('CustomField.CustomModules');
+
+		$supportedFieldTypes = $CustomModules
+			->find()
+			->where([$CustomModules->aliasField('model') => $model])
+			->first()
+			->supported_field_types;
+
+		 return $supportedFieldTypes;
 	}
 }

@@ -14,15 +14,9 @@ class SearchBehavior extends Behavior {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction', 'priority' => 5];
-		$events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 5];
-		$events['ControllerAction.Model.onGetFormButtons'] = ['callable' => 'onGetFormButtons', 'priority' => 5];
+		$events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 11];
+		$events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
 		return $events;
-	}
-
-	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
-		if ($this->_table->action == 'index') {
-			$buttons->exchangeArray([]);
-		}
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra) {
@@ -64,20 +58,11 @@ class SearchBehavior extends Behavior {
 		$model = $this->_table;
 		$search = $extra['config']['search'];
 
-		if ($extra['auto_contain']) {
-			$contain = $model->getContains();
-			if (!empty($contain)) {
-				$query->contain($contain);
-			}
-		}
-
 		$schema = $model->schema();
 		$columns = $schema->columns();
 		if ($extra['auto_search']) {
 			$OR = [];
 			if (!empty($search)) {
-				$schema = $model->schema();
-				$columns = $schema->columns();
 				foreach ($columns as $col) {
 					$attr = $schema->column($col);
 					if ($col == 'password') continue;
@@ -98,7 +83,28 @@ class SearchBehavior extends Behavior {
 
 		if ($extra['auto_order']) {
 			if (in_array($this->config('orderField'), $columns)) {
-				$query->order([$model->aliasField($this->config('orderField')) => 'asc']);
+				$extra['options']['sort'] = 'order';
+                $extra['options']['direction'] = 'asc';
+			}
+		}
+	}
+
+	//called by ControllerActionHelper
+	public function getSearchableFields(Event $event, ArrayObject $searchableFields) {
+		$model = $this->_table;
+		$schema = $model->schema();
+		$columns = $schema->columns();
+		$ControllerActionHelper = $event->subject();
+		$fields = $model->fields;
+
+		foreach ($columns as $col) {
+			$attr = $schema->column($col);
+			if ($col == 'password') continue;
+			if (in_array($attr['type'], ['string', 'text'])) {
+				$visible = $ControllerActionHelper->isFieldVisible($fields[$col], 'index');
+				if ($visible) {
+					$searchableFields[] = $col;
+				}
 			}
 		}
 	}

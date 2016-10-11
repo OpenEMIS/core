@@ -64,7 +64,7 @@ class ViewBlock
     /**
      * Should the currently captured content be discarded on ViewBlock::end()
      *
-     * @see ViewBlock::end()
+     * @see \Cake\View\ViewBlock::end()
      * @var bool
      */
     protected $_discardActiveBufferOnEnd = false;
@@ -98,7 +98,7 @@ class ViewBlock
      * End a capturing block. The compliment to ViewBlock::start()
      *
      * @return void
-     * @see ViewBlock::start()
+     * @see \Cake\View\ViewBlock::start()
      */
     public function end()
     {
@@ -129,7 +129,8 @@ class ViewBlock
      * of the new capturing context will be added to the existing block context.
      *
      * @param string $name Name of the block
-     * @param mixed $value The content for the block
+     * @param mixed $value The content for the block. Value will be type cast
+     *   to string.
      * @param string $mode If ViewBlock::APPEND content will be appended to existing content.
      *   If ViewBlock::PREPEND it will be prepended.
      * @return void
@@ -156,7 +157,8 @@ class ViewBlock
      * existing content.
      *
      * @param string $name Name of the block
-     * @param mixed $value The content for the block.
+     * @param mixed $value The content for the block. Value will be type cast
+     *   to string.
      * @return void
      */
     public function set($name, $value)
@@ -203,7 +205,7 @@ class ViewBlock
     /**
      * Get the name of the currently open block.
      *
-     * @return mixed Either null or the name of the last open block.
+     * @return string|null Either null or the name of the last open block.
      */
     public function active()
     {

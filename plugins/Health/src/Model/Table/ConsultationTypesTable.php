@@ -1,20 +1,17 @@
 <?php
 namespace Health\Model\Table;
 
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 
-class ConsultationTypesTable extends AppTable {
-	public function initialize(array $config) {
-		$this->addBehavior('ControllerAction.FieldOption');
-		$this->table('health_consultation_types');
-		parent::initialize($config);
+class ConsultationTypesTable extends ControllerActionTable
+{
+    public function initialize(array $config)
+    {
+        $this->table('health_consultation_types');
+        parent::initialize($config);
 
-		$this->hasMany('Consultations', ['className' => 'Health.Consultations', 'foreignKey' => 'health_consultation_type_id']);
+        $this->hasMany('Consultations', ['className' => 'Health.Consultations', 'foreignKey' => 'health_consultation_type_id']);
 
-		$this->addBehavior('OpenEmis.OpenEmis');
-		$this->addBehavior('ControllerAction.ControllerAction', [
-			'actions' => ['remove' => 'transfer'],
-			'fields' => ['excludes' => ['modified_user_id', 'created_user_id']]
-		]);
-	}
+        $this->addBehavior('FieldOption.FieldOption');
+    }
 }

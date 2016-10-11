@@ -18,9 +18,15 @@ class WorkflowActionsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 			->requirePresence('name')
-			->notEmpty('name', 'Please enter a name.');
+			->notEmpty('name', 'Please enter a name.')
+			->add('event_key', 'ruleUnique', [
+				'rule' => 'uniqueWorkflowActionEvent'
+			])
+			->allowEmpty('event_key');
 
 		return $validator;
 	}

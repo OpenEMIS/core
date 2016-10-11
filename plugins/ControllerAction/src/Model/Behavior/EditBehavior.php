@@ -23,6 +23,7 @@ class EditBehavior extends Behavior {
 		$model = $this->_table;
 		$request = $model->request;
 		$extra['config']['form'] = true;
+		$extra['patchEntity'] = true;
 
 		$event = $model->dispatchEvent('ControllerAction.Model.addEdit.beforeAction', [$extra], $this);
 		if ($event->isStopped()) { return $event->result; }
@@ -36,7 +37,8 @@ class EditBehavior extends Behavior {
 			$model = $event->result;
 		}
 
-		$primaryKey = $model->primaryKey();
+		$primaryKey = $model->getPrimaryKey();
+		
 		$idKey = $model->aliasField($primaryKey);
 
 		$id = $model->paramsPass(0);
@@ -79,7 +81,11 @@ class EditBehavior extends Behavior {
 					
 					$patchOptionsArray = $patchOptions->getArrayCopy();
 					$request->data = $requestData->getArrayCopy();
-					$entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
+					if ($extra['patchEntity']) {
+						$entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
+						$event = $model->dispatchEvent('ControllerAction.Model.edit.afterPatch', $params, $this);
+						if ($event->isStopped()) { return $event->result; }
+					}
 
 					$process = function ($model, $entity) {
 						return $model->save($entity);

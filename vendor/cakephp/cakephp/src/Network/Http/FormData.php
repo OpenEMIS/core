@@ -14,7 +14,9 @@
 namespace Cake\Network\Http;
 
 use Cake\Network\Http\FormData\Part;
+use Cake\Utility\Security;
 use Countable;
+use finfo;
 
 /**
  * Provides an interface for building
@@ -65,7 +67,7 @@ class FormData implements Countable
         if ($this->_boundary) {
             return $this->_boundary;
         }
-        $this->_boundary = md5(uniqid(time()));
+        $this->_boundary = md5(Security::randomBytes(16));
         return $this->_boundary;
     }
 
@@ -150,13 +152,13 @@ class FormData implements Countable
         if (is_resource($value)) {
             $content = stream_get_contents($value);
             if (stream_is_local($value)) {
-                $finfo = new \finfo(FILEINFO_MIME);
+                $finfo = new finfo(FILEINFO_MIME);
                 $metadata = stream_get_meta_data($value);
                 $contentType = $finfo->file($metadata['uri']);
                 $filename = basename($metadata['uri']);
             }
         } else {
-            $finfo = new \finfo(FILEINFO_MIME);
+            $finfo = new finfo(FILEINFO_MIME);
             $value = substr($value, 1);
             $filename = basename($value);
             $content = file_get_contents($value);

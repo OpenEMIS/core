@@ -20,26 +20,17 @@ class TrainingSessionsTable extends AppTable {
 	use HtmlTrait;
 	use ImportExcelTrait;
 
-	private $_contain = ['Trainers', 'Trainees'];
+	private $_contain = ['Trainers.Users', 'Trainees'];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('Courses', ['className' => 'Training.TrainingCourses', 'foreignKey' => 'training_course_id']);
 		$this->belongsTo('TrainingProviders', ['className' => 'Training.TrainingProviders', 'foreignKey' => 'training_provider_id']);
+		// revert back the association for Trainers to hasMany to handle saving of External Trainers
+		$this->hasMany('Trainers', ['className' => 'Training.TrainingSessionTrainers', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('SessionResults', ['className' => 'Training.TrainingSessionResults', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('TraineeResults', ['className' => 'Training.TrainingSessionTraineeResults', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		
-		// For these two belongsToMany relation, dependent is set to false.
-		// If dependent is set to true, the actual record in User.Users will be removed when a training session is removed.
-		$this->belongsToMany('Trainers', [
-			'className' => 'User.Users',
-			'joinTable' => 'training_session_trainers',
-			'foreignKey' => 'training_session_id',
-			'targetForeignKey' => 'trainer_id',
-			'through' => 'Training.TrainingSessionTrainers',
-			'dependent' => false
-		]);
 		$this->belongsToMany('Trainees', [
 			'className' => 'User.Users',
 			'joinTable' => 'training_sessions_trainees',
@@ -52,7 +43,7 @@ class TrainingSessionsTable extends AppTable {
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
-		
+
 		return $validator
 			->add('code', [
 				'ruleUnique' => [
@@ -87,6 +78,7 @@ class TrainingSessionsTable extends AppTable {
 		} else if ($action == 'edit') {
 			$tableHeaders[] = ''; // for delete column
 			$Form = $event->subject()->Form;
+			$Form->unlockField('TrainingSessions.trainees');
 
 			if ($this->request->is(['get'])) {
 				if (!array_key_exists($alias, $this->request->data)) {
@@ -170,8 +162,7 @@ class TrainingSessionsTable extends AppTable {
 			'associated' => [
 				'Trainers' => ['validate' => false],
 				'Trainees' => ['validate' => false],
-				'Trainers._joinData',
-				'Trainees._joinData',
+				'Trainees._joinData'
 			],
 		];
 
@@ -184,7 +175,7 @@ class TrainingSessionsTable extends AppTable {
 		// The same behavior occured on trainers.
 		// Additional logic written for trainers array is to add "id" parameter outside of each "_joinData" array so that each record
 		// will not be treated as a new User.Users record.
-		// Including the "id" parameter on the web form needs extra javascript or a page reload method to work since the trainers is selected 
+		// Including the "id" parameter on the web form needs extra javascript or a page reload method to work since the trainers is selected
 		// through a dropdown input.
 		if ($data->offsetExists('TrainingSessions')) {
 			if (!isset($data['TrainingSessions']['trainees'])) {
@@ -192,12 +183,6 @@ class TrainingSessionsTable extends AppTable {
 			}
 			if (!isset($data['TrainingSessions']['trainers'])) {
 				$data['TrainingSessions']['trainers'] = [];
-			} else {
-				foreach ($data['TrainingSessions']['trainers'] as $key => $trainer) {
-					if (isset($trainer['_joinData']['trainer_id'])) {
-						$data['TrainingSessions']['trainers'][$key]['id'] = $trainer['_joinData']['trainer_id'];
-					}
-				}
 			}
 		}
 	}
@@ -216,14 +201,24 @@ class TrainingSessionsTable extends AppTable {
 	}
 
 	public function addEditOnAddTrainer(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$dataOptions = [
-			'_joinData' => [
-				'type' => key($this->getSelectOptions($this->aliasField('trainer_types'))),
-				'trainer_id' => '',
-				'name' => '',
-				'training_session_id' => $entity->id
-			]
-		];
+        if (empty($data[$this->alias()]['trainers'])) {
+            $data[$this->alias()]['trainers'] = [];
+        }
+
+        // rearranging the data so that it is an array where the numerals are in running order
+        $trainerData = $data[$this->alias()]['trainers'];
+        $rearrangedTrainerData = [];
+        foreach ($trainerData as $key => $value) {
+            $rearrangedTrainerData[] = $value;
+        }
+        $data[$this->alias()]['trainers'] = $rearrangedTrainerData;
+
+        // adds a new trainer
+        $dataOptions = [
+            'type' => key($this->getSelectOptions($this->aliasField('trainer_types'))),
+            'trainer_id' => '',
+            'name' => ''
+        ];
 		$data[$this->alias()]['trainers'][] = $dataOptions;
 
 		//Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
@@ -263,10 +258,35 @@ class TrainingSessionsTable extends AppTable {
 		$this->request->query['course'] = $entity->training_course_id;
 	}
 
+	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+		$model = $this;
+    	$process = function($model, $entity) use ($data) {
+    		$errors = $entity->errors();
+
+    		if (empty($errors)) {
+				// always manual delete all trainers and re-insert
+				$trainerRecords = $this->Trainers
+					->find()
+					->where([$this->Trainers->aliasField('training_session_id') => $entity->id])
+					->all();
+
+				foreach ($trainerRecords as $key => $obj) {
+					$this->Trainers->delete($obj);
+				}
+
+    			return $model->save($entity);
+    		} else {
+    			return false;
+    		}
+    	};
+
+		return $process;
+	}
+
 	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
 		if ($action == 'edit') {
 			$includes['autocomplete'] = [
-				'include' => true, 
+				'include' => true,
 				'css' => ['OpenEmis.../plugins/autocomplete/css/autocomplete'],
 				'js' => ['OpenEmis.../plugins/autocomplete/js/autocomplete']
 			];
@@ -387,7 +407,7 @@ class TrainingSessionsTable extends AppTable {
 
 	public function onUpdateFieldTrainers(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add' || $action == 'edit') {
-			$Users = $this->Trainers;
+			$Users = $this->Trainers->Users;
 			$trainerOptions = $Users
 				->find('list', ['keyField' => 'id', 'valueField' => 'name_with_id'])
 				->where([
@@ -499,7 +519,7 @@ class TrainingSessionsTable extends AppTable {
 	public function template() {
 		// prepareDownload() resides in ImportTrait
 		$folder = $this->prepareDownload();
-		// Do not localize file name as certain non-latin characters might cause issue 
+		// Do not localize file name as certain non-latin characters might cause issue
 		$excelFile = 'OpenEMIS_Core_Import_Training_Session_Trainees.xlsx';
 		$excelPath = $folder . DS . $excelFile;
 
@@ -531,16 +551,16 @@ class TrainingSessionsTable extends AppTable {
 		// MAX_SIZE resides in ImportTrait
 		if ($request->env('CONTENT_LENGTH') >= $this->MAX_SIZE) {
 			$error = $model->getMessage('Import.over_max');
-		} 
+		}
 		// file_upload_max_size() resides in ImportTrait
 		if ($request->env('CONTENT_LENGTH') >= $this->file_upload_max_size()) {
 			$error = $model->getMessage('Import.over_max');
-		} 
+		}
 		if ($request->env('CONTENT_LENGTH') >= $this->post_upload_max_size()) {
 			$error = $model->getMessage('Import.over_max');
 		}
 		if (!array_key_exists($alias, $data)) {
-			$error = $model->getMessage('Import.not_supported_format');	
+			$error = $model->getMessage('Import.not_supported_format');
 		}
 		if (!array_key_exists('trainees_import', $data[$alias])) {
 			$error = $model->getMessage('Import.not_supported_format');
@@ -566,13 +586,13 @@ class TrainingSessionsTable extends AppTable {
 		foreach ($supportedFormats as $eachformat) {
 			if (in_array($fileFormat, $eachformat)) {
 				$formatFound = true;
-			} 
+			}
 		}
 		if (!$formatFound) {
 			if (!empty($fileFormat)) {
 				$error = $model->getMessage('Import.not_supported_format');
 			}
-		}				
+		}
 
 		$fileExt = $fileObj['name'];
 		$fileExt = explode('.', $fileExt);
@@ -610,12 +630,12 @@ class TrainingSessionsTable extends AppTable {
 			$Staff = TableRegistry::get('Institution.Staff');
 			$Users = TableRegistry::get('User.Users');
 			$Positions = TableRegistry::get('Institution.InstitutionPositions');
-			
+
 			$targetPopulationIds = $TargetPopulations
 				->find('list', ['keyField' => 'target_population_id', 'valueField' => 'target_population_id'])
 				->where([$TargetPopulations->aliasField('training_course_id') => $entity->training_course_id])
 				->toArray();
-		
+
 			if (array_key_exists($key, $data[$alias])) {
 				$trainees = new Collection($data[$alias][$key]);
 				$traineeIds = $trainees->extract('_joinData.openemis_no');
@@ -638,7 +658,7 @@ class TrainingSessionsTable extends AppTable {
 						break;
 					}
 				}
-					
+
 				$cell = $sheet->getCellByColumnAndRow(0, $row);
 				$openemis_no = $cell->getValue();
 				if (empty($openemis_no)) {

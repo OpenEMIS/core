@@ -164,7 +164,7 @@ class FieldOptionValuesTable extends AppTable {
 		$settings['model'] = $model;
 	}
 
-	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
 		$fieldOption = $this->fieldOption;
 	
 		$availFieldOptions = false;

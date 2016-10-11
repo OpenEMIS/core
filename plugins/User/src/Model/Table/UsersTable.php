@@ -34,7 +34,9 @@ class UsersTable extends AppTable {
 
 	private $defaultImgIndexClass = "profile-image-thumbnail";
 	private $defaultImgViewClass= "profile-image";
-	private $defaultImgMsg = "<p>* Advisable photo dimension 90 by 115px<br>* Format Supported: .jpg, .jpeg, .png, .gif </p>";
+	private $photoMessage = 'Advisable photo dimension 90 by 115px';
+	private $formatSupport = 'Format Supported: ';
+	private $defaultImgMsg = "<p>* %s <br>* %s.jpg, .jpeg, .png, .gif </p>";
 
 	public $fieldOrder1;
 	public $fieldOrder2;
@@ -53,7 +55,8 @@ class UsersTable extends AppTable {
 			'content' => 'photo_content',
 			'size' => '2MB',
 			'contentEditable' => true,
-			'allowable_file_types' => 'image'
+			'allowable_file_types' => 'image',
+			'useDefaultName' => true
 		]);
 
 		$this->addBehavior('Area.Areapicker');
@@ -77,6 +80,9 @@ class UsersTable extends AppTable {
         $genderList = $GenderTable->find('list')->toArray();
 
         // Just in case the gender is others
+        if (!isset($userInfo['gender'])) {
+        	$userInfo['gender'] = null;
+        }
         $gender = array_search($userInfo['gender'], $genderList);
         if ($gender === false) {
             $gender = key($genderList);
@@ -91,7 +97,10 @@ class UsersTable extends AppTable {
         } else {
         	$dateOfBirth = Time::createFromFormat('Y-m-d', '1970-01-01');
         }
-        
+
+        if (isset($userInfo['openemis_no'])) {
+        	$openemisNo = $userInfo['openemis_no'];
+        }
 
         $date = Time::now();
         $data = [
@@ -104,28 +113,28 @@ class UsersTable extends AppTable {
             'super_admin' => 0,
             'status' => 1,
             'created_user_id' => 1,
-            'created' => $date,    
+            'created' => $date,
         ];
         $userEntity = $this->newEntity($data, ['validate' => false]);
         if ($this->save($userEntity)) {
         	return $userName;
         } else {
         	return false;
-        }  
+        }
 	}
 
 	public static function handleAssociations($model) {
-		$model->belongsTo('Genders', ['className' => 'User.Genders']);
-		$model->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
+		$model->belongsTo('Genders', 		 ['className' => 'User.Genders']);
+		$model->belongsTo('AddressAreas', 	 ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
 		$model->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
 
 		$model->hasMany('Identities', 		['className' => 'User.Identities',		'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$model->hasMany('Nationalities', 	['className' => 'User.Nationalities',	'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$model->hasMany('SpecialNeeds', 		['className' => 'User.SpecialNeeds',	'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$model->hasMany('Contacts', 			['className' => 'User.Contacts',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Nationalities', 	['className' => 'User.UserNationalities',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('SpecialNeeds', 	['className' => 'User.SpecialNeeds',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Contacts', 		['className' => 'User.Contacts',		'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$model->hasMany('Attachments', 		['className' => 'User.Attachments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$model->hasMany('BankAccounts', 		['className' => 'User.BankAccounts',	'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$model->hasMany('Comments', 			['className' => 'User.Comments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('BankAccounts', 	['className' => 'User.BankAccounts',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Comments', 		['className' => 'User.Comments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$model->hasMany('Languages', 		['className' => 'User.UserLanguages',	'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$model->hasMany('Awards', 			['className' => 'User.Awards',			'foreignKey' => 'security_user_id', 'dependent' => true]);
 
@@ -135,6 +144,11 @@ class UsersTable extends AppTable {
 			'targetForeignKey' => 'security_user_id',
 			'through' => 'Security.SecurityGroupUsers',
 			'dependent' => true
+		]);
+
+		$model->hasMany('ClassStudents', [
+			'className' => 'Institution.InstitutionClassStudents',
+			'foreignKey' => 'student_id'
 		]);
 	}
 
@@ -177,7 +191,7 @@ class UsersTable extends AppTable {
 		if ($this->alias() != 'Users') {
 			return;
 		}
-		
+
 		$plugin = $this->controller->plugin;
 		$name = $this->controller->name;
 
@@ -198,7 +212,7 @@ class UsersTable extends AppTable {
 			],
 			'Accounts' => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
-				'text' => __('Account')	
+				'text' => __('Account')
 			]
 		];
 
@@ -245,10 +259,6 @@ class UsersTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$queryParams = $request->query;
-		
-		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
-			// $query->order(['name' => 'asc']);
-		}
 
 		if (array_key_exists('sort', $queryParams) && $queryParams['sort'] == 'name') {
 			$query->find('withName', ['direction' => $queryParams['direction']]);
@@ -281,7 +291,7 @@ class UsersTable extends AppTable {
         }
         $name = trim(sprintf('%s', $name));
         $name = str_replace($this->alias,"inner_users",$name);
-			
+
 		return $query
 			->join([
 					'table' => 'security_users',
@@ -291,15 +301,15 @@ class UsersTable extends AppTable {
 					'conditions' => ['inner_users.id' => $this->aliasField('id')],
 					'order' => ['inner_users.inner_name' => $options['direction']]
 				])
-			->order([$this->aliasField('first_name') => $options['direction']]);	   
-			
+			->order([$this->aliasField('first_name') => $options['direction']]);
+
 		// return $query
 		// 		->order([$this->aliasField('first_name') => $options['direction'],
 		// 				$this->aliasField('middle_name') => $options['direction'],
 		// 				$this->aliasField('third_name') => $options['direction'],
 		// 				$this->aliasField('last_name') => $options['direction']
-		// 			]);	
-	}	
+		// 			]);
+	}
 
 	public function findWithDefaultIdentityType(Query $query, array $options) {
 		return $query
@@ -325,7 +335,7 @@ class UsersTable extends AppTable {
 					}
 				])
 			->group(['Identities.number'])
-			->order(['Identities.number' => $options['direction']]);	   
+			->order(['Identities.number' => $options['direction']]);
 	}
 
 	public function viewBeforeAction(Event $event) {
@@ -340,7 +350,7 @@ class UsersTable extends AppTable {
 			$roleName = $this->controller->name.'.'.$this->alias();
 			if (array_key_exists('pass', $this->request->params)) {
 				$id = $this->request->params['pass'][1];
-			}	
+			}
 		}
 
 		if (isset($id)) {
@@ -368,11 +378,11 @@ class UsersTable extends AppTable {
 
 	public function getUniqueOpenemisId($options = []) {
 		$prefix = '';
-		
+
 		if (array_key_exists('model', $options)) {
 			switch ($options['model']) {
 				case 'Student': case 'Staff': case 'Guardian':
-					$prefix = TableRegistry::get('ConfigItems')->value(strtolower($options['model']).'_prefix');
+					$prefix = TableRegistry::get('Configuration.ConfigItems')->value(strtolower($options['model']).'_prefix');
 					$prefix = explode(",", $prefix);
 					$prefix = ($prefix[1] > 0)? $prefix[0]: '';
 					break;
@@ -393,7 +403,7 @@ class UsersTable extends AppTable {
 		}else{
 			$latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
 		}
-		
+
 		$currentStamp = time();
 		if($latestDbStamp >= $currentStamp){
 			$newStamp = $latestDbStamp + 1;
@@ -405,6 +415,8 @@ class UsersTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 			->add('first_name', [
 					'ruleCheckIfStringGotNoNumber' => [
@@ -429,6 +441,9 @@ class UsersTable extends AppTable {
 					]
 				])
 			->add('username', [
+                'ruleMinLength' => [
+                    'rule' => ['minLength', 6]
+                ],
 				'ruleUnique' => [
 					'rule' => 'validateUnique',
 					'provider' => 'table',
@@ -441,13 +456,12 @@ class UsersTable extends AppTable {
 			->allowEmpty('username')
 			->allowEmpty('password')
 			// password validation now in behavior
-			->add('address', [])
 			->allowEmpty('photo_content')
 			;
 		return $validator;
 	}
 
-	// this is the method to call for user validation - currently in use by Student Staff.. 
+	// this is the method to call for user validation - currently in use by Student Staff..
 	public function setUserValidation(Validator $validator, $thisModel = null) {
 		$validator
 			->add('first_name', [
@@ -470,6 +484,9 @@ class UsersTable extends AppTable {
 					]
 				])
 			->add('username', [
+                'ruleMinLength' => [
+                    'rule' => ['minLength', 6]
+                ],
 				'ruleUnique' => [
 					'rule' => 'validateUnique',
 					'provider' => 'table',
@@ -490,6 +507,7 @@ class UsersTable extends AppTable {
 		$thisModel->setValidationCode('first_name.ruleNotBlank', 'User.Users');
 		$thisModel->setValidationCode('last_name.ruleCheckIfStringGotNoNumber', 'User.Users');
 		$thisModel->setValidationCode('openemis_no.ruleUnique', 'User.Users');
+        $thisModel->setValidationCode('username.ruleMinLength', 'User.Users');
 		$thisModel->setValidationCode('username.ruleUnique', 'User.Users');
 		$thisModel->setValidationCode('username.ruleAlphanumeric', 'User.Users');
 		$thisModel->setValidationCode('username.ruleCheckUsername', 'User.Users');
@@ -545,7 +563,7 @@ class UsersTable extends AppTable {
 	}
 
 	public function getDefaultImgMsg() {
-		return $this->defaultImgMsg;
+		return sprintf($this->defaultImgMsg, __($this->photoMessage), __($this->formatSupport));
 	}
 
 	public function getDefaultImgIndexClass() {
@@ -558,7 +576,7 @@ class UsersTable extends AppTable {
 
 	public function getDefaultImgView() {
 		$value = "";
-		$controllerName = $this->controller->name;	
+		$controllerName = $this->controller->name;
 
 		if($this->hasBehavior('Student')){
 			$value = $this->defaultStudentProfileView;
@@ -568,7 +586,7 @@ class UsersTable extends AppTable {
 			$value = $this->defaultGuardianProfileView;
 		} else if($this->hasBehavior('User')){
 			$value = $this->defaultUserProfileView;
-		} 
+		}
 		return $value;
 	}
 
@@ -586,15 +604,23 @@ class UsersTable extends AppTable {
 				$buttons['remove']['attr']['field-value'] = $entity->security_user_id;
 			}
 		}
-		
+
 		return $buttons;
 	}
 
 	public function autocomplete($search) {
-		$search = sprintf('%%%s%%', $search);
-
+		$search = sprintf('%s%%', $search);
 		$list = $this
 			->find()
+			->select([
+				$this->aliasField('openemis_no'),
+				$this->aliasField('first_name'),
+				$this->aliasField('middle_name'),
+				$this->aliasField('third_name'),
+				$this->aliasField('last_name'),
+				$this->aliasField('preferred_name'),
+				$this->aliasField('id')
+			])
 			->where([
 				'OR' => [
 					$this->aliasField('openemis_no') . ' LIKE' => $search,
@@ -605,8 +631,9 @@ class UsersTable extends AppTable {
 				]
 			])
 			->order([$this->aliasField('first_name')])
+			->limit(100)
 			->all();
-		
+
 		$data = array();
 		foreach($list as $obj) {
 			$data[] = [
@@ -615,5 +642,35 @@ class UsersTable extends AppTable {
 			];
 		}
 		return $data;
+	}
+
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+	{
+		// This logic is meant for Import
+		if ($entity->has('customColumns')) {
+			foreach ($entity->customColumns as $column => $value) {
+				switch ($column) {
+					case 'Identity':
+						$userIdentitiesTable = TableRegistry::get('User.Identities');
+
+						$defaultValue = $userIdentitiesTable->IdentityTypes->getDefaultValue();
+
+						if ($defaultValue) {
+							$userIdentityData = $userIdentitiesTable->newEntity([
+							    'identity_type_id' => $defaultValue,
+							    'number' => $value,
+							    'security_user_id' => $entity->id
+							]);
+							$userIdentitiesTable->save($userIdentityData);
+						}
+						break;
+				}
+			}
+		}
+	}
+
+	public function updateIdentityNumber($userId, $identityNo)
+	{
+		$this->updateAll(['identity_number' => $identityNo], ['id' => $userId]);
 	}
 }

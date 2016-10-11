@@ -46,42 +46,6 @@ class AccountBehavior extends Behavior {
 		]);
 	}
 
-	public function getAccountValidation(Validator $validator) {
-		$this->_table->setValidationCode('username.ruleUnique', 'User.Accounts');
-		$this->_table->setValidationCode('username.ruleCheckUsername', 'User.Accounts');
-		$this->_table->setValidationCode('password.ruleNoSpaces', 'User.Accounts');
-		$this->_table->setValidationCode('password.ruleMinLength', 'User.Accounts');
-		$this->_table->setValidationCode('retype_password.ruleCompare', 'User.Accounts');
-		return $validator
-			->requirePresence('gender_id', 'create')
-			->add('username', [
-				'ruleUnique' => [
-					'rule' => 'validateUnique',
-					'provider' => 'table',
-				],
-				'ruleCheckUsername' => [
-					'rule' => 'checkUsername',
-					'provider' => 'table',
-				]
-			])
-			->add('password' , [
-				'ruleNoSpaces' => [
-					'rule' => 'checkNoSpaces'
-				],
-				'ruleMinLength' => [
-					'rule' => ['minLength', 6],
-					'on' => 'update'
-				]
-			])
-			->add('retype_password' , [
-				'ruleCompare' => [
-					'rule' => ['comparePasswords', 'password'],
-					'on' => 'update'
-				]
-			])
-			;
-	}
-
 	private function setupTabElements($entity) {
 		if ($this->userRole == 'Preferences') return; // has its own setupTabElements
 		$id = !is_null($this->_table->request->query('id')) ? $this->_table->request->query('id') : 0;
@@ -93,18 +57,15 @@ class AccountBehavior extends Behavior {
 			'userId' => $entity->id
 		];
 
-		$tabElements = $this->_table->controller->getUserTabElements($options);
-
 		if ($this->_table->action != 'add') {
 			if ($this->isInstitution) {
 				// url of tabElements is build in Institution->getUserTabElements()
 			} else {
-				foreach ($tabElements as $key => $value) {
-					end($tabElements[$key]['url']);
-					$tabElements[$key]['url'][key($tabElements[$key]['url'])] = $entity->id;
-				}
+				$options['id'] = $entity->id;
 			}
 		}
+
+		$tabElements = $this->_table->controller->getUserTabElements($options);
 
 		$this->_table->controller->set('tabElements', $tabElements);
 		$this->_table->controller->set('selectedAction', $this->_table->alias());
@@ -197,8 +158,13 @@ class AccountBehavior extends Behavior {
 		}
 	}
 
-	public function onUpdateFieldUsername(Event $event, array $attr, $action, Request $request) {
-		if ($action == 'edit' && !$this->_table->AccessControl->isAdmin()) {
+	public function onUpdateFieldUsername(Event $event, array $attr, $action, Request $request)
+	{
+		$isAdmin = $this->_table->AccessControl->isAdmin();
+		$loginUserId = $this->_table->Auth->user('id');
+		$id = $request->params['pass'][1];
+
+		if ($action == 'edit' && (($isAdmin && $loginUserId == $id) || !$isAdmin)) {
 			$attr['type'] = 'readonly';
 		}
 
