@@ -1,8 +1,5 @@
 -- code here
-DELETE FROM `translations` WHERE `en` = 'Please enter a valid Institution Code';
-DELETE FROM `translations` WHERE `en` = 'Please enter a valid Postal Code';
-DELETE FROM `translations` WHERE `en` = 'Please enter a valid Telephone Number';
-DELETE FROM `translations` WHERE `en` = 'Please enter a valid Fax Number';
+DELETE FROM `translations` WHERE `en` = 'Please enter a valid format';
 
 DELETE FROM `config_items` WHERE `id` = 38; -- 38 postal code
 
