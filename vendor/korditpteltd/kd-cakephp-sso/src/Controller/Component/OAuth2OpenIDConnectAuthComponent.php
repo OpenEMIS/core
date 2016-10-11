@@ -6,6 +6,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Utility\Security;
+use Cake\Network\Http\Client;
 
 require_once(ROOT . DS . 'vendor' . DS  . 'google' . DS . 'apiclient' . DS . 'src' . DS . 'Google' . DS . 'autoload.php');
 require_once(dirname(__FILE__) . '/../../OAuth/Client.php');
@@ -24,6 +25,7 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
     private $revokeUri;
     private $issuer;
     private $userInfoUri;
+    private $openIdConfiguration;
 
     public $components = ['Auth'];
 
@@ -32,6 +34,29 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
         $oAuthAttributes = $AuthenticationTypeAttributesTable->getTypeAttributeValues('OAuth2OpenIDConnect');
         $this->clientId = $oAuthAttributes['client_id'];
         $this->clientSecret = $oAuthAttributes['client_secret'];
+        $this->openIdConfiguration = $oAuthAttributes['openid_configuration'];
+        $http = new Client();
+        $response = $http->post($this->openIdConfiguration);
+        if (!empty($response->body())) {
+            $body = json_decode($response->body(), true);
+
+            if (isset($body['issuer'])) {
+                $oAuthAttributes['issuer'] = $body['issuer'];
+            }
+            if (isset($body['authorization_endpoint'])) {
+                $oAuthAttributes['auth_uri'] = $body['authorization_endpoint'];
+            }
+            if (isset($body['token_endpoint'])) {
+                $oAuthAttributes['token_uri'] = $body['token_endpoint'];
+            }
+            if (isset($body['userinfo_endpoint'])) {
+                $oAuthAttributes['userInfo_uri'] = $body['userinfo_endpoint'];
+            }
+            if (isset($body['jwks_uri'])) {
+                $oAuthAttributes['jwks_uri'] = $body['jwks_uri'];
+            }
+
+        }
         $this->redirectUri = $oAuthAttributes['redirect_uri'];
         $this->revokeUri = $oAuthAttributes['revoke_uri'];
         $this->tokenUri = $oAuthAttributes['token_uri'];

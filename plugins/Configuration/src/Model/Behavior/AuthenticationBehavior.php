@@ -273,11 +273,12 @@ class AuthenticationBehavior extends Behavior {
         $attribute['client_id'] = ['label' => 'Client ID', 'type' => 'text'];
         $attribute['client_secret'] = ['label' => 'Client Secret', 'type' => 'text'];
         $attribute['redirect_uri'] = ['label' => 'Redirect URI', 'type' => 'text', 'readonly' => true];
-        $attribute['auth_uri'] = ['label' => 'Authentication URI', 'type' => 'text'];
-        $attribute['token_uri'] = ['label' => 'Token URI', 'type' => 'text'];
+        $attribute['openid_configuration'] = ['label' => 'OpenID Configuration URI', 'type' => 'text', 'required' => false];
+        $attribute['auth_uri'] = ['label' => 'Authentication URI', 'type' => 'text', 'required' => false];
+        $attribute['token_uri'] = ['label' => 'Token URI', 'type' => 'text', 'required' => false];
         $attribute['revoke_uri'] = ['label' => 'Revoke URI', 'type' => 'text', 'required' => false];
         $attribute['userInfo_uri'] = ['label' => 'User Information URI', 'type' => 'text', 'required' => false];
-        $attribute['issuer'] = ['label' => 'issuer', 'type' => 'text'];
+        $attribute['issuer'] = ['label' => 'issuer', 'type' => 'text', 'required' => false];
         $attribute['username_mapping'] = ['label' => 'Username Mapping', 'type' => 'text'];
         $attribute['firstName_mapping'] = ['label' => 'First Name Mapping', 'type' => 'text', 'required' => false];
         $attribute['lastName_mapping'] = ['label' => 'Last Name Mapping', 'type' => 'text', 'required' => false];
