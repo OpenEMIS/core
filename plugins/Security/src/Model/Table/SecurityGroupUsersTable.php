@@ -10,6 +10,11 @@ use Cake\Event\Event;
 use Cake\Log\Log;
 
 class SecurityGroupUsersTable extends AppTable {
+	// Workflow Steps - category
+	const TO_DO = 1;
+	const IN_PROGRESS = 2;
+	const DONE = 3;
+
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('SecurityRoles', ['className' => 'Security.SecurityRoles']);
@@ -228,6 +233,8 @@ class SecurityGroupUsersTable extends AppTable {
 	{
 		$isSchoolBased = array_key_exists('is_school_based', $params) ? $params['is_school_based'] : null;
 		$stepId = array_key_exists('workflow_step_id', $params) ? $params['workflow_step_id'] : null;
+		$category = array_key_exists('category', $params) ? $params['category'] : null;
+		$createdUserId = array_key_exists('created_user_id', $params) ? $params['created_user_id'] : null;
 		$institutionId = array_key_exists('institution_id', $params) ? $params['institution_id'] : null;
 
 		Log::write('debug', 'Is School Based: ' . $isSchoolBased);
@@ -312,6 +319,11 @@ class SecurityGroupUsersTable extends AppTable {
                 }
             } else {
             	Log::write('debug', 'Roles By Step is empty:');
+
+            	// if not roles is configured in workflow step and the category is To Do, set assignee as creator
+            	if (!is_null($category) && $category == self::TO_DO) {
+            		$assigneeId = $createdUserId;
+            	}
             }
 		}
 

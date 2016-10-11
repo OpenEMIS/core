@@ -1104,6 +1104,12 @@ class StaffTable extends AppTable {
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+		$broadcaster = $this;
+		$listeners = [
+            TableRegistry::get('Institution.StaffLeave')	// Staff Leave associated to institution must be deleted.
+        ];
+        $this->dispatchEventToModels('Model.InstitutionStaff.afterDelete', [$entity], $broadcaster, $listeners);
+
 		// note that $this->table('institution_staff');
 		$id = $entity->id;
 		$institutionId = $entity->institution_id;
@@ -1191,19 +1197,6 @@ class StaffTable extends AppTable {
             ;
         foreach ($staffAbsencesData as $key => $value) {
             $StaffAbsences->delete($value);
-        }
-
-        // Staff Leave associated to institution must be deleted.
-		$StaffLeave = TableRegistry::get('Institution.StaffLeave');
-		$staffLeaveData = $StaffLeave->find()
-            ->where([
-    			$StaffLeave->aliasField('staff_id') => $entity->staff_id,
-    			$StaffLeave->aliasField('institution_id') => $entity->institution_id,
-    		])
-            ->toArray()
-            ;
-        foreach ($staffLeaveData as $key => $value) {
-            $StaffLeave->delete($value);
         }
 
 		// Rubrics related to staff must be deleted. (institution_site_quality_rubrics)

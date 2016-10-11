@@ -49,6 +49,13 @@ class StaffLeaveTable extends ControllerActionTable
 		;
 	}
 
+	public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.InstitutionStaff.afterDelete'] = 'institutionStaffAfterDelete';
+        return $events;
+    }
+
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
 	{
 		$dateFrom = date_create($entity->date_from);
@@ -138,5 +145,18 @@ class StaffLeaveTable extends ControllerActionTable
 		}
 
 		return null;
+	}
+
+	public function institutionStaffAfterDelete(Event $event, Entity $institutionStaffEntity) {
+		$staffLeaveData = $this->find()
+            ->where([
+    			$this->aliasField('staff_id') => $institutionStaffEntity->staff_id,
+    			$this->aliasField('institution_id') => $institutionStaffEntity->institution_id,
+    		])
+            ->toArray();
+
+        foreach ($staffLeaveData as $key => $staffLeaveEntity) {
+            $this->delete($staffLeaveEntity);
+        }
 	}
 }

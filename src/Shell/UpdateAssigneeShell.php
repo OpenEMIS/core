@@ -43,10 +43,14 @@ class UpdateAssigneeShell extends Shell {
 			$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 			foreach ($unassignedRecords as $key => $unassignedEntity) {
 				$stepId = $unassignedEntity->status_id;
+				$category = $unassignedEntity->_matchingData['Statuses']->category;
+				$createdUserId = $unassignedEntity->created_user_id;
 
 				$params = [
 					'is_school_based' => $isSchoolBased,
-					'workflow_step_id' => $stepId
+					'workflow_step_id' => $stepId,
+					'category' => $category,
+					'created_user_id' => $createdUserId
 				];
 
 				if ($unassignedEntity->has('institution_id')) {
@@ -56,7 +60,7 @@ class UpdateAssigneeShell extends Shell {
 				$assigneeId = $SecurityGroupUsers->getFirstAssignee($params);
 
 				if (!empty($assigneeId)) {
-					$this->out($workflowModelEntity->name.' > Affected Record Id: '.$unassignedEntity->id.'; Assignee Id: '.$assigneeId);
+					$this->out($workflowModelEntity->name.' : Affected Record Id: '.$unassignedEntity->id.'; Assignee Id: '.$assigneeId);
 
 					$model->updateAll(
 						['assignee_id' => $assigneeId],
