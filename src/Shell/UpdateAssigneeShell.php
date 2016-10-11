@@ -3,7 +3,7 @@ namespace App\Shell;
 
 use Cake\Console\Shell;
 use Cake\ORM\TableRegistry;
-use Cake\Log\Log;
+use Cake\ORM\Entity;
 
 class UpdateAssigneeShell extends Shell {
 	// Workflow Steps - category
@@ -13,20 +13,33 @@ class UpdateAssigneeShell extends Shell {
 
 	public function initialize() {
 		parent::initialize();
+		$this->loadModel('Workflow.WorkflowModels');
+		$this->loadModel('Security.SecurityGroupUsers');
 	}
 
  	public function main() {
- 		$triggeredModel = $this->args[0];
- 		$groupId = $this->args[1];
- 		$userId = $this->args[2];
- 		$roleId = $this->args[3];
+ 		if (empty($this->args[0])) {
+ 			$workflowModelResults = $this->WorkflowModels->find()->all();
 
- 		$WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
- 		$workflowModelEntity = $WorkflowModels->find()->where([$WorkflowModels->aliasField('model') => $triggeredModel])->first();
- 		$isSchoolBased = $workflowModelEntity->is_school_based;
+ 			foreach ($workflowModelResults as $workflowModelEntity) {
+ 				$this->autoAssignAssignee($workflowModelEntity);
+ 			}
+ 		} else {
+ 			$triggeredModel = $this->args[0];
+ 			$groupId = $this->args[1];
+	 		$userId = $this->args[2];
+	 		$roleId = $this->args[3];
 
+	 		$workflowModelEntity = $this->WorkflowModels->find()->where([$this->WorkflowModels->aliasField('model') => $triggeredModel])->first();
+
+	 		$this->autoAssignAssignee($workflowModelEntity);
+ 		}
+	}
+
+	public function autoAssignAssignee(Entity $workflowModelEntity) {
 		try {
 			$model = TableRegistry::get($workflowModelEntity->model);
+			$isSchoolBased = $workflowModelEntity->is_school_based;
 			$this->out("Initialize Update Assignee Shell of " . $workflowModelEntity->name);
 
 			$unassignedRecords = $model
@@ -37,10 +50,8 @@ class UpdateAssigneeShell extends Shell {
 				->where([$model->aliasField('assignee_id') => 0])
 				->all();
 
-			Log::write('debug', $workflowModelEntity->name. ' - Unassigned Records:');
-			Log::write('debug', $unassignedRecords);
+			$this->out($workflowModelEntity->name. ' - Unassigned Records : ' . $unassignedRecords->count());
 
-			$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 			foreach ($unassignedRecords as $key => $unassignedEntity) {
 				$stepId = $unassignedEntity->status_id;
 				$category = $unassignedEntity->_matchingData['Statuses']->category;
@@ -57,7 +68,7 @@ class UpdateAssigneeShell extends Shell {
 					$params['institution_id'] = $unassignedEntity->institution_id;
 				}
 
-				$assigneeId = $SecurityGroupUsers->getFirstAssignee($params);
+				$assigneeId = $this->SecurityGroupUsers->getFirstAssignee($params);
 
 				if (!empty($assigneeId)) {
 					$this->out($workflowModelEntity->name.' : Affected Record Id: '.$unassignedEntity->id.'; Assignee Id: '.$assigneeId);
@@ -66,6 +77,8 @@ class UpdateAssigneeShell extends Shell {
 						['assignee_id' => $assigneeId],
 						['id' => $unassignedEntity->id]
 					);
+				} else {
+					$this->out($workflowModelEntity->name.' : Affected Record Id: '.$unassignedEntity->id.'; Assignee not found.');
 				}
 			}
 
