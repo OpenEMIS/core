@@ -18,6 +18,12 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
     private $hostedDomain;
     private $client;
     private $authType;
+    private $mapping;
+    private $authUri;
+    private $tokenUri;
+    private $revokeUri;
+    private $issuer;
+    private $userInfoUri;
 
     public $components = ['Auth'];
 
@@ -31,14 +37,21 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
         $this->tokenUri = $oAuthAttributes['token_uri'];
         $this->authUri = $oAuthAttributes['auth_uri'];
         $this->issuer = $oAuthAttributes['issuer'];
-        
+        $this->userInfoUri = $oAuthAttributes['userInfo_uri'];
+
+        $this->mapping['username'] = $oAuthAttributes['username_mapping'];
+        $this->mapping['firstName'] = $oAuthAttributes['firstName_mapping'];
+        $this->mapping['lastName'] = $oAuthAttributes['lastName_mapping'];
+        $this->mapping['dob'] = $oAuthAttributes['dob_mapping'];
+        $this->mapping['gender'] = $oAuthAttributes['gender_mapping'];
+        $this->mapping['email'] = $oAuthAttributes['email_mapping'];
+
 
         $hashAttributes = $oAuthAttributes;
         unset($hashAttributes['redirect_uri']);
         $this->authType = Security::hash(serialize($hashAttributes), 'sha256');
 
         $this->session = $this->request->session();
-        $this->session->write('Google.hostedDomain', $this->hostedDomain);
 
         $client = new \Custom_Client(null, $oAuthAttributes);
         $client->setClientId($this->clientId);
@@ -59,7 +72,7 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
     }
 
     public function beforeFilter(Event $event) {
-        if (!$this->session->read('Google.remoteFail') && !$this->session->read('Auth.fallback')) {
+        if (!$this->session->read('OAuth2OpenIDconnect.remoteFail') && !$this->session->read('Auth.fallback')) {
             $this->controller->Auth->config('authenticate', [
                 'Form' => [
                     'userModel' => $this->_config['userModel'],
@@ -69,7 +82,9 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
                     ]
                 ],
                 'SSO.OAuth2OpenIDConnect' => [
-                    'userModel' => $this->_config['userModel']
+                    'userModel' => $this->_config['userModel'],
+                    'mapping' => $this->mapping,
+                    'userInfoUri' => $this->userInfoUri
                 ]
             ]);
 
@@ -101,24 +116,8 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
 
     public function startup(Event $event) {
         if (!$this->controller->Auth->user()) {
-            $client = $this->client;
-            $authUrl = $client->createAuthUrl();
-
-            if ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443) {
-                $redirect = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
-            } else {
-                $redirect = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
-            }
-            // if (isset(get_headers($authUrl, 1)['Set-Cookie'])) {
-            //     $cookieCounter = count(get_headers($authUrl, 1)['Set-Cookie']);
-            //     if ((empty($this->hostedDomain) && $cookieCounter != 3) || $cookieCounter < 2) {
-            //         $this->session->write('Auth.fallback', true);
-            //     } else {
-            //         $this->session->delete('Auth.fallback');
-            //     }
-            // }
             $action = $this->request->params['action'];
-            if ($action == $this->config('loginAction') && !$this->session->read('Google.remoteFail') && !$this->session->read('Auth.fallback')) {
+            if ($action == $this->config('loginAction') && !$this->session->read('OAuth2OpenIDConnect.remoteFail') && !$this->session->read('Auth.fallback')) {
                 $this->idpLogin();
             }
         }
@@ -136,33 +135,24 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
             } catch (\Google_Auth_Exception $e) {
                 return;
             }
-            $this->session->write('Google.accessToken', $client->getAccessToken());
-
-            // Zack: To revisit this part
-
-            // if ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443) {
-            //     $redirect = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
-            // } else {
-            //     $redirect = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
-            // }
-            // $this->controller->redirect($redirect);
+            $this->session->write('OAuth2OpenIDConnect.accessToken', $client->getAccessToken());
         }
 
         /************************************************************************************************
           If we have an access token, we can make requests, else we generate an authentication URL.
          ************************************************************************************************/
-        if ($this->session->check('Google.accessToken') && $this->session->read('Google.accessToken')) {
+        if ($this->session->check('OAuth2OpenIDConnect.accessToken') && $this->session->read('OAuth2OpenIDConnect.accessToken')) {
             if ($this->Auth->user()) {
-                $client->setAccessToken($this->session->read('Google.accessToken'));
+                $client->setAccessToken($this->session->read('OAuth2OpenIDConnect.accessToken'));
             } else {
                 // revoke the access token if the user is not authorised
-                $client->revokeToken($this->session->read('Google.accessToken'));
-                $this->session->delete('Google.accessToken');
+                $client->revokeToken($this->session->read('OAuth2OpenIDConnect.accessToken'));
+                $this->session->delete('OAuth2OpenIDConnect.accessToken');
                 $this->controller->Auth->logout();
 
-                if ($this->session->read('Google.reLogin')) {
+                if ($this->session->read('OAuth2OpenIDConnect.reLogin')) {
                     $authUrl = $client->createAuthUrl();
-                    $this->session->write('Google.reLogin', false);
+                    $this->session->write('OAuth2OpenIDConnect.reLogin', false);
                 }
             }
         } else {
@@ -177,7 +167,7 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
         if ($client->getAccessToken()) {
             // Check if the access token is expired, if it is expired reauthenticate
             if (!$client->isAccessTokenExpired()) {
-                $this->session->write('Google.accessToken', $client->getAccessToken());
+                $this->session->write('OAuth2OpenIDConnect.accessToken', $client->getAccessToken());
                 $tokenData = $client->verifyIdToken()->getAttributes();
             } else {
                 $authUrl = $client->createAuthUrl();
@@ -194,24 +184,11 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
           data only if the hosted domain matches our setting.
          ************************************************************************************************/
         if (isset($tokenData)) {
-            // if (!empty($this->hostedDomain)) {
-            //     if (isset($tokenData['payload']['hd'])) {
-            //         if ($tokenData['payload']['hd'] == $this->hostedDomain) {
-            //             $this->session->write('Google.tokenData', $tokenData);
-            //             $this->session->write('Google.client', $client);
-            //         } else {
-            //             $this->session->write('Google.remoteFail', true);
-            //         }
-            //     } else {
-            //         $this->session->write('Google.remoteFail', true);
-            //     }
-            // } else {
-                $this->session->write('Google.tokenData', $tokenData);
-                $this->session->write('Google.client', $client);
-            // }
+            $this->session->write('OAuth2OpenIDConnect.tokenData', $tokenData);
+            $this->session->write('OAuth2OpenIDConnect.client', $client);
         } else {
-            $this->session->delete('Google.tokenData');
-            $this->session->delete('Google.client', $client);
+            $this->session->delete('OAuth2OpenIDConnect.tokenData');
+            $this->session->delete('OAuth2OpenIDConnect.client', $client);
         }
     }
 
@@ -219,18 +196,18 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
         $extra['authType'] = $this->authType;
         if ($this->request->is('get')) {
             if ($this->request->query('submit') == 'retry') {
-                $this->session->delete('Google.remoteFail');
-                $this->session->write('Google.reLogin', true);
+                $this->session->delete('OAuth2OpenIDConnect.remoteFail');
+                $this->session->write('OAuth2OpenIDConnect.reLogin', true);
                 return $this->controller->redirect($this->redirectUri);
             }
             $username = 'Not Google Authenticated';
-            if (!$this->controller->Auth->user() && !$this->session->read('Google.remoteFail') && !$this->session->read('Auth.fallback')) {
+            if (!$this->controller->Auth->user() && !$this->session->read('OAuth2OpenIDConnect.remoteFail') && !$this->session->read('Auth.fallback')) {
                $this->idpLogin();
             } else {
                 return $this->checkLogin();
             }
-            if ($this->session->check('Google.tokenData')) {
-                $tokenData = $this->session->read('Google.tokenData');
+            if ($this->session->check('OAuth2OpenIDConnect.tokenData')) {
+                $tokenData = $this->session->read('OAuth2OpenIDConnect.tokenData');
                 $email = $tokenData['payload']['email'];
                 $username = explode('@', $tokenData['payload']['email'])[0];
             }
@@ -266,12 +243,12 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
                 $extra['status'] = true;
             } else {
                 $this->controller->Auth->setUser($user);
-                $this->session->delete('Google.remoteFail');
+                $this->session->delete('OAuth2OpenIDConnect.remoteFail');
                 $extra['loginStatus'] = true;
             }
         } else {
             $extra['loginStatus'] = false;
-            if ($this->session->read('Auth.fallback') || $this->session->read('Google.remoteFail')) {
+            if ($this->session->read('Auth.fallback') || $this->session->read('OAuth2OpenIDConnect.remoteFail')) {
                 $extra['fallback'] = true;
             }
         }
