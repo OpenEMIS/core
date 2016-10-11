@@ -273,12 +273,13 @@ class AuthenticationBehavior extends Behavior {
         $attribute['client_id'] = ['label' => 'Client ID', 'type' => 'text'];
         $attribute['client_secret'] = ['label' => 'Client Secret', 'type' => 'text'];
         $attribute['redirect_uri'] = ['label' => 'Redirect URI', 'type' => 'text', 'readonly' => true];
-        $attribute['openid_configuration'] = ['label' => 'OpenID Configuration URI', 'type' => 'text', 'required' => false, 'onblur' => 'populate(this)'];
-        $attribute['auth_uri'] = ['label' => 'Authentication URI', 'type' => 'text', 'required' => false, 'id' => 'authUri'];
-        $attribute['token_uri'] = ['label' => 'Token URI', 'type' => 'text', 'required' => false, 'id' => 'tokenUri'];
+        $attribute['openid_configuration'] = ['label' => 'OpenID Configuration URI', 'type' => 'text', 'required' => false, 'onblur' => 'Authentication.populate(this.value);'];
+        $attribute['auth_uri'] = ['label' => 'Authentication URI', 'type' => 'text', 'id' => 'authUri'];
+        $attribute['token_uri'] = ['label' => 'Token URI', 'type' => 'text', 'id' => 'tokenUri'];
         $attribute['revoke_uri'] = ['label' => 'Revoke URI', 'type' => 'text', 'required' => false];
-        $attribute['userInfo_uri'] = ['label' => 'User Information URI', 'type' => 'text', 'required' => false, 'id' => 'userInfoUri'];
-        $attribute['issuer'] = ['label' => 'issuer', 'type' => 'text', 'required' => false, 'id' => 'issuer'];
+        $attribute['userInfo_uri'] = ['label' => 'User Information URI', 'type' => 'text', 'id' => 'userInfoUri'];
+        $attribute['issuer'] = ['label' => 'Issuer', 'type' => 'text', 'required' => false, 'id' => 'issuer'];
+        $attribute['jwks_uri'] = ['label' => 'Public Key URI', 'type' => 'text', 'id' => 'jwksUri'];
         $attribute['username_mapping'] = ['label' => 'Username Mapping', 'type' => 'text'];
         $attribute['firstName_mapping'] = ['label' => 'First Name Mapping', 'type' => 'text', 'required' => false];
         $attribute['lastName_mapping'] = ['label' => 'Last Name Mapping', 'type' => 'text', 'required' => false];
