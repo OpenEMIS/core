@@ -78,6 +78,19 @@ class WorkflowStepsTable extends AppTable {
 		}
 	}
 
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		$models = TableRegistry::get('Workflow.WorkflowModels')->find()->all();
+		$broadcaster = $this;
+		$listeners = [];
+		foreach ($models as $key => $obj) {
+			$listeners[] = TableRegistry::get($obj->model);
+		}
+
+		if (!empty($listeners)) {
+			$this->dispatchEventToModels('Model.WorkflowSteps.afterSave', [$entity], $broadcaster, $listeners);
+		}
+	}
+
 	public function onGetCategory(Event $event, Entity $entity) {
 		$value = '';
 		if (!empty($entity->category)) {
