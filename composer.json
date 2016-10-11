@@ -13,7 +13,7 @@
         "korditpteltd/kd-cakephp-restful": "*",
         "admad/cakephp-jwt-auth": "2.0.1",
         "korditpteltd/kd-cakephp-sso": "1.0.1.x-dev",
-        "phpseclib/phpseclib": "^2.0"
+        "phpseclib/phpseclib": "2.0.1"
     },
     "require-dev": {
         "psy/psysh": "@stable",
