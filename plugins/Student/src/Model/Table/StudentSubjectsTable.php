@@ -27,6 +27,7 @@ class StudentSubjectsTable extends ControllerActionTable {
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->toggle('search', false);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
