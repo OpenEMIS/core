@@ -172,14 +172,14 @@ class InstitutionsTable extends AppTable  {
 			// 	])
 
 			->add('code', 'ruleCustomCode', [
-	        		'rule' => ['validateCustomCode'],
+	        		'rule' => ['validateCustomPattern', 'institution_code'],
 	        		'provider' => 'table',
 	        		'last' => true
 			    ])
 
 			->allowEmpty('postal_code')
 			->add('postal_code', 'ruleCustomPostalCode', [
-	        		'rule' => ['validateCustomPostalCode'],
+	        		'rule' => ['validateCustomPattern', 'postal_code'],
 	        		'provider' => 'table',
 	        		'last' => true
 			    ])
@@ -199,14 +199,14 @@ class InstitutionsTable extends AppTable  {
 
 			->allowEmpty('telephone')
 			->add('telephone', 'ruleCustomTelephone', [
-	        		'rule' => ['validateCustomTelephone'],
+	        		'rule' => ['validateCustomPattern', 'institution_telephone'],
 	        		'provider' => 'table',
 	        		'last' => true
 			    ])
 
 			->allowEmpty('fax')
 			->add('fax', 'ruleCustomFax', [
-	        		'rule' => ['validateCustomFax'],
+	        		'rule' => ['validateCustomPattern', 'institution_fax'],
 	        		'provider' => 'table',
 	        		'last' => true
 			    ])
