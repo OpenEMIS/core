@@ -18,7 +18,9 @@
 if (!class_exists('Google_Client')) {
   require_once dirname(__FILE__) . '/../../../../google/apiclient/autoload.php';
 }
-require_once dirname(__FILE__) . '/../../../../phpseclib/phpseclib/phpseclib/Crypt/RSA.php';
+require_once dirname(__FILE__).'/../../../../autoload.php';
+
+use Cake\Network\Http\Client;
 
 /**
  * Authentication class that deals with the OAuth 2 web-server authentication flow
@@ -560,6 +562,43 @@ class Custom_Auth_OAuth2 extends Google_Auth_Abstract
     $envelope = json_decode(Google_Utils::urlSafeB64Decode($segments[0]), true);
     if (!$envelope) {
       throw new Google_Auth_Exception("Can't parse token envelope: " . $segments[0]);
+    }
+
+    $message = "$segments[0].$segments[1]";
+    $http = new Client();
+    $response = $http->post('https://sso.openemis.org/wp/.well-known/keys');
+    $body = json_decode($response->body(), true);
+    $keys = [];
+    if (isset($body['keys'])) {
+      $keys = $body['keys'];
+    }
+
+    $algorithm = [
+        'HS256' => 'sha256',
+        'HS512' => 'sha512',
+        'HS384' => 'sha384',
+        'RS256' => 'sha256',
+    ];
+
+    foreach ($keys as $key) {
+      $rsa = new \phpseclib\Crypt\RSA();
+      if (isset($algorithm[$key['alg']])) {
+        $bigInt = substr($key['alg'], -3, 3);
+        $rsa->loadKey([
+            'n' => new \phpseclib\Math\BigInteger(Google_Utils::urlSafeB64Decode($key['n']), $bigInt),
+            'e' => new \phpseclib\Math\BigInteger(Google_Utils::urlSafeB64Decode($key['e']), $bigInt)
+        ]);
+        $rsa->setHash($algorithm[$key['alg']]);
+        $rsa->setSignatureMode($rsa::SIGNATURE_PKCS1);
+        $verified = $rsa->verify($message, $signature);
+        if ($verified) {
+          break;
+        }
+      }
+    }
+
+    if (!$verified) {
+      throw new Google_Auth_Exception("Invalid token signature: $jwt");
     }
 
     // Parse token
