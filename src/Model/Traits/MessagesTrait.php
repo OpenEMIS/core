@@ -104,7 +104,8 @@ trait MessagesTrait {
             'total' => 'Total',
             'notTransferrable' => 'No other alternative options available to convert records.',
             'validationRules' => 'Validation Rules',
-            'currentNotDeletable' => 'This record cannot be deleted because it is set as Current'
+            'currentNotDeletable' => 'This record cannot be deleted because it is set as Current',
+            'custom_validation_pattern' => 'Please enter a valid format'
         ],
         'fileUpload' => [
             'single' => '*File size should not be larger than 2MB.',
@@ -148,11 +149,7 @@ trait MessagesTrait {
             'noClassRecords' => 'There are no available Classes',
             'date_opened' => 'Date Opened',
             'date_closed' => 'Date Closed',
-            'noClasses' => 'No Available Classes',
-            'code_custom_validation' => 'Please enter a valid Institution Code',
-            'postal_code_custom_validation' => 'Please enter a valid Postal Code',
-            'telephone_custom_validation' => 'Please enter a valid Telephone Number',
-            'fax_custom_validation' => 'Please enter a valid Fax Number',
+            'noClasses' => 'No Available Classes'
         ],
         'InstitutionStaff' => [
             'title' => 'Staff',

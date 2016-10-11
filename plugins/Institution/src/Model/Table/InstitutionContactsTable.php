@@ -52,14 +52,14 @@ class InstitutionContactsTable extends ControllerActionTable {
 
             ->allowEmpty('telephone')
             ->add('telephone', 'ruleCustomTelephone', [
-                    'rule' => ['validateCustomTelephone'],
+                    'rule' => ['validateCustomPattern', 'institution_telephone'],
                     'provider' => 'table',
                     'last' => true
                 ])
 
             ->allowEmpty('fax')
             ->add('fax', 'ruleCustomFax', [
-                    'rule' => ['validateCustomFax'],
+                    'rule' => ['validateCustomPattern', 'institution_fax'],
                     'provider' => 'table',
                     'last' => true
                 ])
