@@ -24,6 +24,7 @@ class InstitutionStudentClassroomRatioTable extends AppTable  {
 			'excludes' => ['alternative_name','code','address','postal_code','contact_person','telephone','fax','email','website','date_opened','year_opened','date_closed','year_closed','longitude','latitude', 'area_administrative_id', 'institution_locality_id','institution_type_id','institution_ownership_id','institution_status_id','institution_sector_id','institution_provider_id','institution_gender_id','institution_network_connectivity_id','security_group_id','modified_user_id','modified','created_user_id','created','selected'], 
 			'pages' => false
 		]);
+		$this->addBehavior('Report.InstitutionSecurity');
 	}
 
 	public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
@@ -33,6 +34,15 @@ class InstitutionStudentClassroomRatioTable extends AppTable  {
 			'query' => $this->find(),
 			'orientation' => 'landscape'
 		];
+	}
+
+	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+		$requestData = json_decode($settings['process']['params']);
+		$superAdmin = $requestData->super_admin;
+		$userId = $requestData->user_id;
+		if (!$superAdmin) {
+			$query->find('ByAccess', ['user_id' => $userId, 'institution_field_alias' => $this->aliasField('id')]);
+		}
 	}
 
 	public function onExcelRenderStudentCount(Event $event, Entity $entity, $attr) {
@@ -62,20 +72,20 @@ class InstitutionStudentClassroomRatioTable extends AppTable  {
   	}
 
   	public function onExcelRenderClassCount(Event $event, Entity $entity, $attr) {
-  		$InstitutionSections = TableRegistry::get('Institution.InstitutionSections');
+  		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
 		$institutionId = $entity->id;
-		$query = $InstitutionSections->find();
+		$query = $InstitutionClasses->find();
 		$query->matching('Institutions', function ($q) use ($institutionId) {
 			return $q->where(['Institutions.id' => $institutionId]);
 		});
 
-		$query->select(['totalClasses' => $query->func()->count('DISTINCT '.$InstitutionSections->aliasField('id'))])
+		$query->select(['totalClasses' => $query->func()->count('DISTINCT '.$InstitutionClasses->aliasField('id'))])
 			->group('Institutions.id')
 			;
 
 		if (array_key_exists('academic_period_id', $attr) && !empty($attr['academic_period_id'])) {
 			$query->where([
-				$InstitutionSections->aliasField('academic_period_id') => $attr['academic_period_id']
+				$InstitutionClasses->aliasField('academic_period_id') => $attr['academic_period_id']
 			]);
 		}
 

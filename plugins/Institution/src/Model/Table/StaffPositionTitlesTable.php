@@ -11,18 +11,20 @@ use Cake\Log\Log;
 use ControllerAction\Model\Traits\UtilityTrait;
 use App\Model\Table\ControllerActionTable;
 
-class StaffPositionTitlesTable extends ControllerActionTable {
+class StaffPositionTitlesTable extends ControllerActionTable
+{
 	use UtilityTrait;
 
-	public function initialize(array $config) {
-        $this->addBehavior('ControllerAction.FieldOption');
+	public function initialize(array $config)
+	{
         $this->table('staff_position_titles');
         parent::initialize($config);
         $this->hasMany('Titles', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'staff_position_title_id']);
         $this->hasMany('TrainingCoursesTargetPopulations', ['className' => 'Training.TrainingCoursesTargetPopulations', 'foreignKey' => 'target_population_id']);
         $this->belongsTo('SecurityRoles', ['className' => 'Security.SecurityRoles']);
+        $this->hasMany('InstitutionPositions', ['className' => 'Institution.InstitutionPositions']);
 
-		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
+        $this->addBehavior('FieldOption.FieldOption');
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
@@ -148,7 +150,7 @@ class StaffPositionTitlesTable extends ControllerActionTable {
 				})
 				->innerJoinWith('SecurityGroupUsers')
 				->where([
-					$InstitutionStaffTable->aliasField('security_group_user_id').' IS NOT NULL', 
+					$InstitutionStaffTable->aliasField('security_group_user_id').' IS NOT NULL',
 					'SecurityGroupUsers.security_role_id <> ' => $newRoleId
 				])
 				->where([
@@ -165,7 +167,7 @@ class StaffPositionTitlesTable extends ControllerActionTable {
 				])
 				->limit(1000)
 				->page(1);
-			
+
 			$updateSubQuery = $this->query()
 				->select(['security_group_user_id' => 'GroupUsers.security_group_user_id', 'staff_id' => 'GroupUsers.staff_id'])
 				->from(['GroupUsers' => $subQuery]);
@@ -178,7 +180,7 @@ class StaffPositionTitlesTable extends ControllerActionTable {
 				foreach ($resultSet as $entity) {
 					Log::write('debug', __FUNCTION__ . ' - Updating roles for user_id (' . $entity->staff_id . ')');
 					$SecurityGroupUsersTable->updateAll(
-						['security_role_id' => $newRoleId], 
+						['security_role_id' => $newRoleId],
 						['id' => $entity->security_group_user_id]);
 				}
 			}

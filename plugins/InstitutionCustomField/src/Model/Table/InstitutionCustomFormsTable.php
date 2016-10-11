@@ -9,14 +9,6 @@ use Cake\Event\Event;
 class InstitutionCustomFormsTable extends CustomFormsTable {
 	public function initialize(array $config) {
 		$config['extra'] = [
-			'filterClass' => [
-				'className' => 'FieldOption.InstitutionTypes',
-				'joinTable' => 'institution_custom_forms_filters',
-				'foreignKey' => 'institution_custom_form_id',
-				'targetForeignKey' => 'institution_custom_filter_id',
-				'through' => 'InstitutionCustomField.InstitutionCustomFormsFilters',
-				'dependent' => true
-			],
 			'fieldClass' => [
 				'className' => 'InstitutionCustomField.InstitutionCustomFields',
 				'joinTable' => 'institution_custom_forms_fields',
@@ -24,10 +16,17 @@ class InstitutionCustomFormsTable extends CustomFormsTable {
 				'targetForeignKey' => 'institution_custom_field_id',
 				'through' => 'InstitutionCustomField.InstitutionCustomFormsFields',
 				'dependent' => true
+			],
+			'filterClass' => [
+				'className' => 'Institution.Types',
+				'joinTable' => 'institution_custom_forms_filters',
+				'foreignKey' => 'institution_custom_form_id',
+				'targetForeignKey' => 'institution_custom_filter_id',
+				'through' => 'InstitutionCustomField.InstitutionCustomFormsFilters',
+				'dependent' => true
 			]
 		];
 		parent::initialize($config);
-		$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
 	}
 
 	public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, Request $request) {

@@ -32,7 +32,6 @@ use Phinx\Db\Adapter\AdapterInterface;
 use Phinx\Db\Table;
 use Symfony\Component\Console\Output\OutputInterface;
 
-
 /**
  * Migration interface
  *
@@ -152,6 +151,15 @@ interface MigrationInterface
      * @return array
      */
     public function fetchAll($sql);
+
+    /**
+     * Insert data into a table.
+     *
+     * @param string $tableName
+     * @param array $data
+     * @return void
+     */
+    public function insert($tableName, $data);
 
     /**
      * Create a new database.

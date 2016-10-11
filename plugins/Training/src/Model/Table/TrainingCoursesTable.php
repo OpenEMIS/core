@@ -22,6 +22,7 @@ class TrainingCoursesTable extends AppTable {
 		$this->belongsTo('TrainingRequirements', ['className' => 'Training.TrainingRequirements', 'foreignKey' => 'training_requirement_id']);
 		$this->belongsTo('TrainingLevels', ['className' => 'Training.TrainingLevels', 'foreignKey' => 'training_level_id']);
 		$this->hasMany('TrainingSessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_course_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('TrainingNeeds', ['className' => 'Staff.TrainingNeeds', 'foreignKey' => 'course_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('TargetPopulations', [
 			'className' => 'Institution.StaffPositionTitles',
 			'joinTable' => 'training_courses_target_populations',
@@ -68,7 +69,8 @@ class TrainingCoursesTable extends AppTable {
 			// 'content' => 'file_content',
 			'size' => '10MB',
 			'contentEditable' => true,
-			'allowable_file_types' => 'all'
+			'allowable_file_types' => 'all',
+			'useDefaultName' => true
 		]);
 	}
 
@@ -145,6 +147,16 @@ class TrainingCoursesTable extends AppTable {
 		$this->request->query['course'] = $entity->id;
 	}
 
+	public function onUpdateFieldCreditHours(Event $event, array $attr, $action, Request $request) {
+		
+		$creditHours = TableRegistry::get('Configuration.ConfigItems')->value('training_credit_hour');
+
+		for ($i=1; $i <= $creditHours; $i++){
+  			$attr['options'][$i] = $i;
+  		}
+		return $attr;
+	}
+
 	public function onUpdateFieldTargetPopulations(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add' || $action == 'edit') {
 			$attr['options'] = TableRegistry::get('Institution.StaffPositionTitles')->getList()->toArray();
@@ -195,6 +207,9 @@ class TrainingCoursesTable extends AppTable {
 	}
 
 	public function setupFields() {
+		$this->ControllerAction->field('credit_hours', [
+			'type' => 'select'
+		]);
 		$this->ControllerAction->field('target_populations', [
 			'type' => 'chosenSelect',
 			'placeholder' => __('Select Target Populations'),

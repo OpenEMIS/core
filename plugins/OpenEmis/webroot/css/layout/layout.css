@@ -1,4 +1,4 @@
-/* GENERAL STYLE v.1.0.9 */
+/* GENERAL STYLE v.1.0.11 */
 
 html, body {
     overflow: hidden !important;
@@ -73,10 +73,7 @@ select,
     clear: both;
     padding: 10px 0;
     position: relative;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    height: calc(100% - 80px);
 }
 
 .wrapper-child {
@@ -211,8 +208,11 @@ body.large {
 /* PANEL HEADER */
 
 .panel {
+    height: inherit;
+    width: inherit;
     border: 0;
     box-shadow: none;
+    margin-bottom: 0;
 }
 
 .panel .col-md-12 {
@@ -229,7 +229,8 @@ body.large {
 /* PANEL BODY */
 
 .panel-body {
-    height: 100%;
+    height: inherit;
+    width: inherit;
     padding: 0;
 }
 
@@ -396,6 +397,17 @@ footer {
 
 /*==========  Non-Mobile First Method  ==========*/
 
+/* Desktop, Bigger Tablets */
+@media only screen and (max-width: 1024px) {
+    .has-header, 
+    .has-breadcrumb {
+        padding: 10px 0 !important;
+        position: relative !important;
+        top: 0 !important;
+        height: 90%;
+    }
+}
+
 /* Small Devices, Tablets */
 @media only screen and (max-width : 800px) {
     footer {
@@ -409,4 +421,25 @@ footer {
         text-align: center;
         font-size: 10px;
     }
+}
+
+/* RTL */
+
+.rtl body,
+.rtl .btn-default,
+.rtl .btn-outline,
+.rtl .navbar-right .username,
+.rtl .panel-breadcrumb li,
+.rtl .panel-breadcrumb li a,
+.rtl .alert,
+.rtl .table tbody,
+.rtl .table > thead:first-child > tr:first-child > th,
+.rtl .panel-toolbar,
+.rtl .view-image:hover:before,
+.rtl .search input,
+.rtl .advanced-search-wrapper .form-control,
+.rtl select,
+.rtl .dropdown-menu > li > a,
+.rtl .section-header {
+    font-size: 14px !important;
 }

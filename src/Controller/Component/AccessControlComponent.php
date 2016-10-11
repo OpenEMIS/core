@@ -71,28 +71,30 @@ class AccessControlComponent extends Component {
 
 		$selectedColumns = [
 			'modified' => '(
-				CASE 
-					WHEN '.$SecurityRoleFunctions->aliasField('modified').' > '.$SecurityRoleFunctions->aliasField('created').' 
-					THEN '.$SecurityRoleFunctions->aliasField('modified').' 
-					ELSE '.$SecurityRoleFunctions->aliasField('created').' 
+				CASE
+					WHEN '.$SecurityRoleFunctions->aliasField('modified').' > '.$SecurityRoleFunctions->aliasField('created').'
+					THEN '.$SecurityRoleFunctions->aliasField('modified').'
+					ELSE '.$SecurityRoleFunctions->aliasField('created').'
 					END
 				)'
 		];
 
-		$entity = $SecurityRoleFunctions
-			->find()
-			->select($selectedColumns)
-			->where([$SecurityRoleFunctions->aliasField('security_role_id') . ' IN' => $roles])
-			->order(['modified' => 'DESC'])
-			->first();
+		if ($roles->all()->count() > 0) {
+			$entity = $SecurityRoleFunctions
+				->find()
+				->select($selectedColumns)
+				->where([$SecurityRoleFunctions->aliasField('security_role_id') . ' IN' => $roles])
+				->order(['modified' => 'DESC'])
+				->first();
 
-		if (!is_null($entity)) {
-			$lastModified = $this->Session->read('Permissions.lastModified');
-			if (is_null($lastModified)) {
-				$isChanged = true;
-			} else {
-				if (!is_null($entity->modified) && $entity->modified->gt($lastModified)) {
+			if (!is_null($entity)) {
+				$lastModified = $this->Session->read('Permissions.lastModified');
+				if (is_null($lastModified)) {
 					$isChanged = true;
+				} else {
+					if (!is_null($entity->modified) && $entity->modified->gt($lastModified)) {
+						$isChanged = true;
+					}
 				}
 			}
 		}
@@ -116,57 +118,68 @@ class AccessControlComponent extends Component {
 
 		$selectedColumns = [
 			'modified' => '(
-				CASE 
-					WHEN '.$SecurityRoleFunctions->aliasField('modified').' > '.$SecurityRoleFunctions->aliasField('created').' 
-					THEN '.$SecurityRoleFunctions->aliasField('modified').' 
-					ELSE '.$SecurityRoleFunctions->aliasField('created').' 
+				CASE
+					WHEN '.$SecurityRoleFunctions->aliasField('modified').' > '.$SecurityRoleFunctions->aliasField('created').'
+					THEN '.$SecurityRoleFunctions->aliasField('modified').'
+					ELSE '.$SecurityRoleFunctions->aliasField('created').'
 					END
 				)'
 		];
 
-		$lastModified = $SecurityRoleFunctions->find()
-			->select($selectedColumns)
-			->where([$SecurityRoleFunctions->aliasField('security_role_id') . ' IN' => $roles])
-			->order(['modified' => 'DESC'])
-			->first()
-			->modified;
+		if ($roles->all()->count() > 0) {
+			// Newly created system role or user role will have no security functions prepopulated in the table, thus the following may return empty
+			$lastModified = $SecurityRoleFunctions->find()
+				->select($selectedColumns)
+				->where([$SecurityRoleFunctions->aliasField('security_role_id') . ' IN' => $roles])
+				->order(['modified' => 'DESC'])
+				->first();
 
-		foreach ($roles->all() as $role) { // for each role in user
-			$roleId = $role->security_role_id;
-			
-			$functions = $SecurityRoleFunctions->find()
-				->contain(['SecurityFunctions'])
-				->where([$SecurityRoleFunctions->aliasField('security_role_id') => $roleId])
-				->all();
+			if (!empty($lastModified)) {
+				$lastModified = $lastModified->modified;
+			} else {
+				$lastModified = '';
+			}
 
-			foreach ($functions as $entity) { // for each function in roles
-				if (!empty($entity->security_function)) {
-					$function = $entity->security_function;
+			foreach ($roles->all() as $role) { // for each role in user
+				$roleId = $role->security_role_id;
 
-					foreach ($operations as $op) { // for each operation in function
-						if (!empty($function->$op) && $entity->$op == 1) {
-							$actions = explode($separator, $function->$op);
+				$functions = $SecurityRoleFunctions->find()
+					->contain(['SecurityFunctions'])
+					->where([$SecurityRoleFunctions->aliasField('security_role_id') => $roleId])
+					->all();
 
-							if (is_array($actions)) {
-								foreach ($actions as $action) { // for each action in operation
-									if (!empty($action)) {
-										$permission = implode('.', [$function->controller, $action]);
-										$this->addPermission($permission, $roleId);
+				foreach ($functions as $entity) { // for each function in roles
+					if (!empty($entity->security_function)) {
+						$function = $entity->security_function;
+
+						foreach ($operations as $op) { // for each operation in function
+							if (!empty($function->$op) && $entity->$op == 1) {
+								$actions = explode($separator, $function->$op);
+
+								if (is_array($actions)) {
+									foreach ($actions as $action) { // for each action in operation
+										if (!empty($action)) {
+											$permission = implode('.', [$function->controller, $action]);
+											$this->addPermission($permission, $roleId);
+										}
 									}
+								} else {
+									$permission = implode('.', [$function->controller, $action]);
+									$this->addPermission($permission, $roleId);
 								}
-							} else {
-								$permission = implode('.', [$function->controller, $action]);
-								$this->addPermission($permission, $roleId);
 							}
 						}
 					}
 				}
 			}
+
+			$userRole = $this->getUserGroupRole();
+			$this->Session->write('System.User.roles', $userRole);
+			$this->Session->write('Permissions.lastModified', $lastModified);
+		} else {
+			$this->Session->write('System.User.roles', '');
+			$this->Session->write('Permissions.lastModified', '');
 		}
-		
-		$userRole = $this->getUserGroupRole();
-		$this->Session->write('System.User.roles', $userRole);
-		$this->Session->write('Permissions.lastModified', $lastModified);
 	}
 
 	public function addPermission($permission, $roleId) {
@@ -181,7 +194,7 @@ class AccessControlComponent extends Component {
 			$this->Session->write($permissionKey, $roles);
 		}
 	}
-	
+
 	public function check($url=[], $roleIds=[]) {
 		$superAdmin = $this->Auth->user('super_admin');
 
@@ -212,7 +225,7 @@ class AccessControlComponent extends Component {
 		$url = array_merge(['Permissions'], $url);
 		$permissionKey = implode('.', $url);
 		// pr($permissionKey);
-		
+
 		if ($this->Session->check($permissionKey)) {
 			if (!empty($roleIds)) {
 				$roles = $this->Session->read($permissionKey);
@@ -288,6 +301,12 @@ class AccessControlComponent extends Component {
 			} else {
 				$ignored = true;
 			}
+		} else {
+			$event = new Event('Controller.AccessControl.checkIgnoreActions', $this, [$controller, $action]);
+            $event = $this->controller->eventManager()->dispatch($event);
+            if ($event->result) {
+            	$ignored = $event->result;
+            }
 		}
 
 		return $ignored;
@@ -320,27 +339,31 @@ class AccessControlComponent extends Component {
 		->where([$SecurityGroupUsers->aliasField('security_user_id') => $userId])
 		->toArray();
 
-		$SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
-		$institutionIds = $SecurityGroupInstitutions
-		->find('list', ['keyField' => 'institution_id', 'valueField' => 'institution_id'])
-		->where([$SecurityGroupInstitutions->aliasField('security_group_id') . ' IN ' => $groupIds])
-		->toArray();
+		if (!empty($groupIds)) {
+			$SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+			$institutionIds = $SecurityGroupInstitutions
+			->find('list', ['keyField' => 'institution_id', 'valueField' => 'institution_id'])
+			->where([$SecurityGroupInstitutions->aliasField('security_group_id') . ' IN ' => $groupIds])
+			->toArray();
 
-		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
-		$areaInstitutions = $SecurityGroupAreas
-		->find('list', ['keyField' => 'Institutions.id', 'valueField' => 'Institutions.id'])
-		->select(['Institutions.id'])
-		->innerJoin(['AreaAll' => 'areas'], ['AreaAll.id = SecurityGroupAreas.area_id'])
-		->innerJoin(['Areas' => 'areas'], [
-			'Areas.lft >= AreaAll.lft',
-			'Areas.rght <= AreaAll.rght'
-		])
-		->innerJoin(['Institutions' => 'institutions'], ['Institutions.area_id = Areas.id'])
-		->where([$SecurityGroupAreas->aliasField('security_group_id') . ' IN ' => $groupIds])
-		->toArray();
+			$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+			$areaInstitutions = $SecurityGroupAreas
+			->find('list', ['keyField' => 'Institutions.id', 'valueField' => 'Institutions.id'])
+			->select(['Institutions.id'])
+			->innerJoin(['AreaAll' => 'areas'], ['AreaAll.id = SecurityGroupAreas.area_id'])
+			->innerJoin(['Areas' => 'areas'], [
+				'Areas.lft >= AreaAll.lft',
+				'Areas.rght <= AreaAll.rght'
+			])
+			->innerJoin(['Institutions' => 'institutions'], ['Institutions.area_id = Areas.id'])
+			->where([$SecurityGroupAreas->aliasField('security_group_id') . ' IN ' => $groupIds])
+			->toArray();
 
-		$institutionIds = $institutionIds + $areaInstitutions;
-		return $institutionIds;
+			$institutionIds = $institutionIds + $areaInstitutions;
+			return $institutionIds;
+		} else {
+			return [];
+		}
 	}
 
 	public function getAreasByUser($userId = null) {

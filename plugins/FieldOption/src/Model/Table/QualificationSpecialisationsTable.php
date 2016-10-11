@@ -10,9 +10,10 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
-class QualificationSpecialisationsTable extends ControllerActionTable {
-	public function initialize(array $config) {
-		$this->addBehavior('ControllerAction.FieldOption');
+class QualificationSpecialisationsTable extends ControllerActionTable
+{
+	public function initialize(array $config)
+	{
 		$this->table('qualification_specialisations');
 		parent::initialize($config);
 		$this->hasMany('Qualifications', ['className' => 'Staff.Qualifications', 'foreignKey' => 'qualification_specialisation_id']);
@@ -26,11 +27,11 @@ class QualificationSpecialisationsTable extends ControllerActionTable {
 			'dependent' => false
 		]);
 
-		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
+		$this->addBehavior('FieldOption.FieldOption');
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
-		$query->contain(['EducationSubjects']);	
+		$query->contain(['EducationSubjects']);
 	}
 
 	public function afterAction(Event $event) {
@@ -52,12 +53,12 @@ class QualificationSpecialisationsTable extends ControllerActionTable {
 				foreach ($subjectData as $key => $value) {
 					$subjectOptions[$value->id] = $value->code . ' - ' . $value->name;
 				}
-				
+
 				$attr['type'] = 'chosenSelect';
 				$attr['options'] = $subjectOptions;
 				$attr['model'] = 'QualificationSpecialisations';
 				break;
-			
+
 			default:
 				# code...
 				break;

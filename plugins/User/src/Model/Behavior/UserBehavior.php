@@ -24,7 +24,9 @@ class UserBehavior extends Behavior {
 
 	private $defaultImgIndexClass = "profile-image-thumbnail";
 	private $defaultImgViewClass= "profile-image";
-	private $defaultImgMsg = "<p>* Advisable photo dimension 90 by 115px<br>* Format Supported: .jpg, .jpeg, .png, .gif </p>";
+	private $photoMessage = 'Advisable photo dimension 90 by 115px';
+	private $formatSupport = 'Format Supported: ';
+	private $defaultImgMsg = "<p>* %s <br>* %s.jpg, .jpeg, .png, .gif </p>";
 
 	public function initialize(array $config) {
 		if ($this->_table->table() == 'security_users') {
@@ -40,6 +42,7 @@ class UserBehavior extends Behavior {
 				'field' => 'password',
 				'passwordAllowEmpty' => true
 			]);
+			$this->_table->addBehavior('Area.Areapicker');
 		}
 	}
 
@@ -88,7 +91,6 @@ class UserBehavior extends Behavior {
 		}	
 
 		if ($this->_table->table() == 'security_users') {
-			$this->_table->addBehavior('Area.Areapicker');
 			$this->_table->addBehavior('OpenEmis.Section');
 			$this->_table->fields['photo_name']['visible'] = false;
 			$this->_table->fields['super_admin']['visible'] = false;
@@ -116,6 +118,7 @@ class UserBehavior extends Behavior {
 				]
 			);
 			$this->_table->fields['date_of_birth']['order'] = $i++;
+			$this->_table->fields['identity_number']['order'] = $i++;
 			
 			$this->_table->fields['address']['order'] = $i++;
 			$this->_table->fields['postal_code']['order'] = $i++;
@@ -139,7 +142,7 @@ class UserBehavior extends Behavior {
 				$field = 'birthplace_area_id';
 				$areaLabel = $this->onGetFieldLabel($event, $userTableLabelAlias, $field, $language, true);
 				$this->_table->ControllerAction->field('birthplace_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
-				$this->_table->ControllerAction->field('contact_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+				$this->_table->ControllerAction->field('other_information_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
 			}	
 		}
 	}
@@ -201,7 +204,6 @@ class UserBehavior extends Behavior {
 			'order' => 1,
 			'sort' => true
 		]);
-		$this->_table->ControllerAction->field('identity', ['order' => 2]);
 
 		if ($this->_table->table() == 'security_users') {
 			$this->_table->ControllerAction->field('name', [
@@ -264,6 +266,12 @@ class UserBehavior extends Behavior {
 		return $value;
 	}
 
+    public function onGetGenderId(Event $event, Entity $entity) {
+        if ($entity->has('gender') && $entity->gender->name) {
+            return __($entity->gender->name);
+        }
+    }
+
 	public function onGetPhotoContent(Event $event, Entity $entity) {
 		// check file name instead of file content
 		$fileContent = null;
@@ -298,7 +306,8 @@ class UserBehavior extends Behavior {
 	}
 
 	public function getDefaultImgMsg() {
-		return $this->defaultImgMsg;
+
+		return sprintf($this->defaultImgMsg, __($this->photoMessage), __($this->formatSupport));
 	}
 
 	public function getDefaultImgIndexClass() {
@@ -334,7 +343,7 @@ class UserBehavior extends Behavior {
 	}
 
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
-		if ($field == 'identity') {
+		if ($field == 'identity_number') {
 			$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
 			$identity = $IdentityType->getDefaultEntity();
 
@@ -354,7 +363,7 @@ class UserBehavior extends Behavior {
 		if (array_key_exists('model', $options)) {
 			switch ($options['model']) {
 				case 'Student': case 'Staff': case 'Guardian':
-					$prefix = TableRegistry::get('ConfigItems')->value(strtolower($options['model']).'_prefix');
+					$prefix = TableRegistry::get('Configuration.ConfigItems')->value(strtolower($options['model']).'_prefix');
 					$prefix = explode(",", $prefix);
 					$prefix = ($prefix[1] > 0)? $prefix[0]: '';
 					break;

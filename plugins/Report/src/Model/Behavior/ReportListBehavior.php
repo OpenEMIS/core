@@ -10,6 +10,8 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Report\Model\Table\ReportProgressTable as Process;
 use Cake\I18n\I18n;
+use Cake\Network\Session;
+use Cake\I18n\Time;
 
 class ReportListBehavior extends Behavior {
 	public $ReportProgress;
@@ -23,13 +25,14 @@ class ReportListBehavior extends Behavior {
 		$events['ControllerAction.Model.add.beforeSave'] = 'addBeforeSave';
 		$events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
 		$events['ControllerAction.Model.afterAction'] = 'afterAction';
+		$events['Model.excel.onExcelBeforeWrite'] = 'onExcelBeforeWrite';
 		return $events;
 	}
 
 	public function afterAction(Event $event, $config) {
 		if ($this->_table->action == 'index') {
 			$this->_table->controller->set('ControllerAction', $config);
-			return $this->_table->controller->render('Report.index');
+			$this->_table->ControllerAction->renderView('/Reports/index');
 		}
 	}
 
@@ -58,18 +61,12 @@ class ReportListBehavior extends Behavior {
 		$clonedQuery = $this->ReportProgress->find();
 		$expiredReports = $clonedQuery
 			->where([
-				$this->ReportProgress->aliasField('module') => $this->_table->alias(), 
+				$this->ReportProgress->aliasField('module') => $this->_table->alias(),
+				$this->ReportProgress->aliasField('expiry_date'). ' IS NOT NULL',
 				$this->ReportProgress->aliasField('expiry_date').' < ' => date('Y-m-d')])
 			->toArray();
 
-		foreach($expiredReports as $report) {
-			if (file_exists($report['file_path'])) {
-				unlink($report['file_path']);
-				$this->ReportProgress->delete($report);
-			} else {
-				$this->ReportProgress->delete($report);
-			}
-		}
+		$this->ReportProgress->purge();
 
 		$query = $this->ReportProgress->find()
 			->where([$this->ReportProgress->aliasField('module') => $this->_table->alias()])
@@ -80,11 +77,15 @@ class ReportListBehavior extends Behavior {
 
 	public function onUpdateFieldFormat(Event $event, array $attr, $action, Request $request) {
 		$attr['options'] = ['xlsx' => 'Excel'];
+		$attr['select'] = false;
 		return $attr;
 	}
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		$data[$this->_table->alias()]['locale'] = I18n::locale();
+		$session = new Session();
+		$data[$this->_table->alias()]['user_id'] = $session->read('Auth.User.id');
+		$data[$this->_table->alias()]['super_admin'] = $session->read('Auth.User.super_admin');
 		$process = function($model, $entity) use ($data) {
 			$this->_generate($data);
 			return true;
@@ -126,8 +127,10 @@ class ReportListBehavior extends Behavior {
 
 	public function onExcelGenerateComplete(Event $event, ArrayObject $settings) {
 		$process = $settings['process'];
+		$expiryDate = new Time();
+		$expiryDate->addDays(5);
 		$this->ReportProgress->updateAll(
-			['status' => Process::COMPLETED, 'file_path' => $settings['file_path']],
+			['status' => Process::COMPLETED, 'file_path' => $settings['file_path'], 'expiry_date' => $expiryDate],
 			['id' => $process->id]
 		);
 	}
@@ -171,16 +174,7 @@ class ReportListBehavior extends Behavior {
 		$path = $entity->file_path;
 		if (!empty($path)) {
 			$filename = basename($path);
-			header("Pragma: public", true);
-			header("Expires: 0"); // set expiration time
-			header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-			header("Content-Type: application/force-download");
-			header("Content-Type: application/octet-stream");
-			header("Content-Type: application/download");
-			header("Content-Disposition: attachment; filename=".$filename);
-			header("Content-Transfer-Encoding: binary");
-			header("Content-Length: ".filesize($path));
-			echo file_get_contents($path);
+			return $this->_table->controller->redirect("/export/$filename");
 		}
 	}
 }

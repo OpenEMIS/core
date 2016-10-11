@@ -18,7 +18,7 @@
 						<th><?= $this->Label->get('WorkflowActions.next_step'); ?></th>
 						<th class="center"><?= $this->Label->get('WorkflowActions.comment_required'); ?></th>
 						<!-- Hide Event until it is in use -->
-						<!-- <th><?= $this->Label->get('WorkflowActions.event'); ?></th> -->
+						<th><?= $this->Label->get('WorkflowActions.event'); ?></th>
 					</tr>
 				</thead>
 				<?php if (!empty($data->workflow_actions)) : ?>
@@ -49,9 +49,9 @@
 								<?php endif ?>
 							</td>
 							<!-- Hide Event until it is in use -->
-							<!-- <td class="vertical-align-top">
+							<td class="vertical-align-top">
 								<?= !empty($obj->event_key) ? $eventOptions[$obj->event_key] : ''; ?>
-							</td> -->
+							</td>
 						</tr>
 						<?php endforeach ?>
 					</tbody>
@@ -85,7 +85,7 @@
 						<th><?= $this->Label->get('WorkflowActions.next_step'); ?></th>
 						<th class="center"><?= $this->Label->get('WorkflowActions.comment_required'); ?></th>
 						<!-- Hide Event until it is in use -->
-						<!-- <th><?= $this->Label->get('WorkflowActions.event'); ?></th> -->
+						 <th><?= $this->Label->get('WorkflowActions.event'); ?></th>
 						<th></th>
 					</tr>
 				</thead>
@@ -94,6 +94,11 @@
 						<?php foreach ($data->workflow_actions as $key => $obj) : ?>
 							<tr>
 								<?php if ($action == 'edit') : ?>
+									<?php 
+										if (is_null($obj->action)) {
+											$this->Form->unlockField("WorkflowSteps.workflow_actions.$key");
+										}
+									?>
 									<td class="checkbox-column vertical-align-top">
 										<?= $this->Form->checkbox("WorkflowSteps.workflow_actions.$key.visible", ['class' => 'icheck-input', 'checked' => $obj->visible]); ?>
 									</td>
@@ -113,14 +118,15 @@
 									</td>
 									<td class="vertical-align-top">
 										<?= $this->Form->input("WorkflowSteps.workflow_actions.$key.next_workflow_step_id", ['label' => false, 'options' => $nextStepOptions]); ?>
+										<?= $this->Form->hidden("WorkflowSteps.workflow_actions.$key.workflow_step_id", ['value' => $data->id]); ?>
 									</td>
 									<td class="center vertical-align-top">
 										<?= $this->Form->checkbox("WorkflowSteps.workflow_actions.$key.comment_required", ['class' => 'icheck-input', 'checked' => $obj->comment_required]); ?>
 									</td>
 									<!-- Hide Event until it is in use -->
-									<!-- <td class="vertical-align-top">
+									<td class="vertical-align-top">
 										<?= $this->Form->input("WorkflowSteps.workflow_actions.$key.event_key", ['label' => false, 'options' => $eventOptions]); ?>
-									</td> -->
+									</td>
 									<td class="vertical-align-top">
 										<?php if (is_null($obj->action)) : ?>
 											<button class="btn btn-dropdown action-toggle btn-single-action" style="cursor: pointer;" title="<?= $this->Label->get('general.delete.label'); ?>" onclick="jsTable.doRemove(this);">

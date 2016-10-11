@@ -7,6 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use CustomField\Model\Behavior\RenderBehavior;
 use Cake\I18n\Time;
+use Cake\I18n\Date;
 
 use Cake\View\Helper\IdGeneratorTrait;
 use ControllerAction\Model\Traits\PickerTrait;
@@ -64,8 +65,9 @@ class RenderDateBehavior extends RenderBehavior {
 		} else if ($action == 'edit') {
 			$attr['date_options'] = $_options;
 			$fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
-			
-			$attr['fieldName'] = $fieldPrefix.".date_value"; 
+			$unlockFields = [];
+			$attr['fieldName'] = $fieldPrefix.".date_value";
+			$unlockFields[] = $attr['fieldName'];
 
 			$attr['id'] = $attr['model'] . '_' . $attr['field']; 
 			if (array_key_exists('fieldName', $attr)) {
@@ -79,7 +81,7 @@ class RenderDateBehavior extends RenderBehavior {
 
 			if (!array_key_exists('value', $attr)) {
 				if (!is_null($savedValue)) {
-					if ($savedValue instanceof Time) {
+					if ($savedValue instanceof Time || $savedValue instanceof Date) {
 						$attr['value'] = $savedValue->format('d-m-Y');
 					} else {
 						$attr['value'] = date('d-m-Y', strtotime($savedValue));
@@ -88,7 +90,7 @@ class RenderDateBehavior extends RenderBehavior {
 					$attr['value'] = date('d-m-Y');
 				}
 			} else {	
-				if ($attr['value'] instanceof Time) {
+				if ($attr['value'] instanceof Time || $savedValue instanceof Date) {
 					$attr['value'] = $attr['value']->format('d-m-Y');
 				} else {
 					$attr['value'] = date('d-m-Y', strtotime($attr['value']));
@@ -100,10 +102,14 @@ class RenderDateBehavior extends RenderBehavior {
 			$value = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
 
 			$form = $event->subject()->Form;
+			
 			$value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
+			$unlockFields[] = $fieldPrefix.".".$attr['attr']['fieldKey'];
             if (!is_null($savedId)) {
                 $value .= $form->hidden($fieldPrefix.".id", ['value' => $savedId]);
+                $unlockFields[] = $fieldPrefix.".id";
             }
+            $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
 		}
 
         $event->stopPropagation();
