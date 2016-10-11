@@ -32,7 +32,7 @@ DROP TABLE IF EXISTS `workflow_steps`;
 CREATE TABLE IF NOT EXISTS `workflow_steps` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
-  `category` int(1) DEFAULT NULL COMMENT '1 -> TO DO, 2 -> IN PROGRESS, 3 -> DONE',
+  `category` int(1) NOT NULL DEFAULT '0' COMMENT '1 -> TO DO, 2 -> IN PROGRESS, 3 -> DONE',
   `is_editable` int(1) NOT NULL DEFAULT '0',
   `is_removable` int(1) NOT NULL DEFAULT '0',
   `workflow_id` int(11) NOT NULL COMMENT 'links to workflows.id',
