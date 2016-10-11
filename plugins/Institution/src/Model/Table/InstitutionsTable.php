@@ -171,6 +171,19 @@ class InstitutionsTable extends AppTable  {
 			// 		'last' => true
 			// 	])
 
+			->add('code', 'ruleCustomCode', [
+	        		'rule' => ['validateCustomCode'],
+	        		'provider' => 'table',
+	        		'last' => true
+			    ])
+
+			->allowEmpty('postal_code')
+			->add('postal_code', 'ruleCustomPostalCode', [
+	        		'rule' => ['validateCustomPostalCode'],
+	        		'provider' => 'table',
+	        		'last' => true
+			    ])
+
 			->add('code', 'ruleUnique', [
 	        		'rule' => 'validateUnique',
 	        		'provider' => 'table',
@@ -183,6 +196,21 @@ class InstitutionsTable extends AppTable  {
 						'rule' => 'email'
 					]
 				])
+
+			->allowEmpty('telephone')
+			->add('telephone', 'ruleCustomTelephone', [
+	        		'rule' => ['validateCustomTelephone'],
+	        		'provider' => 'table',
+	        		'last' => true
+			    ])
+
+			->allowEmpty('fax')
+			->add('fax', 'ruleCustomFax', [
+	        		'rule' => ['validateCustomFax'],
+	        		'provider' => 'table',
+	        		'last' => true
+			    ])
+
 			->add('area_id', 'ruleAuthorisedArea', [
 					'rule' => ['checkAuthorisedArea', $superAdmin, $userId]
 				])
