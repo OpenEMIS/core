@@ -13,7 +13,7 @@ class WorkflowsController extends AppController
 
         $this->ControllerAction->models = [
             'Workflows' => ['className' => 'Workflow.Workflows', 'options' => ['deleteStrategy' => 'transfer']],
-            'Steps' => ['className' => 'Workflow.WorkflowSteps'],
+            'Steps' => ['className' => 'Workflow.WorkflowSteps', 'options' => ['deleteStrategy' => 'restrict']],
             'Statuses' => ['className' => 'Workflow.WorkflowStatuses'],
         ];
 		$this->loadComponent('Paginator');

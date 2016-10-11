@@ -22,6 +22,7 @@ class InstitutionPositionsTable extends AppTable  {
 		
 		$this->addBehavior('Excel');
 		$this->addBehavior('Report.ReportList');
+		$this->addBehavior('Report.InstitutionSecurity');
 	}
 
 	public function beforeAction(Event $event) {
@@ -52,5 +53,9 @@ class InstitutionPositionsTable extends AppTable  {
    		} else {
    			$this->log($entity->name . ' has no staff_position_title...', 'debug');
    		}
+	}
+
+	public function onExcelGetInstitutionId(Event $event, Entity $entity) {
+		return $entity->institution->code_name;
 	}
 }

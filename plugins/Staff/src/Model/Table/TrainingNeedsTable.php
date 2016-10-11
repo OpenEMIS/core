@@ -45,6 +45,18 @@ class TrainingNeedsTable extends AppTable {
 					'provider' => 'table'
 				]
 			])
+			->allowEmpty('training_need_category_id', function ($context) {
+				if (array_key_exists('type', $context['data'])) {
+					$type = $context['data']['type'];
+					if ($type == 'CATALOGUE') {
+						return true;
+					} else {
+						return false;
+					}
+				} else {
+					return false;
+				}
+			})
 			->allowEmpty('course_code', function ($context) {
 				if (array_key_exists('type', $context['data'])) {
 					$type = $context['data']['type'];

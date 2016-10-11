@@ -1,4 +1,4 @@
-/* FORM v.1.2.1 */
+/* FORM v.1.2.4 */
 
 .form-horizontal {
     margin: 20px 0;
@@ -29,6 +29,10 @@ textarea[disabled="disabled"] {
     background-color: #EEE !important;
 }
 
+input:focus {
+    outline: 0 !important;
+}
+
 .form-horizontal input,
 .form-horizontal textarea,
 .form-horizontal .input-group,
@@ -50,7 +54,7 @@ textarea[disabled="disabled"] {
     font-size: 12px;
 }
 
-.form-horizontal input, 
+.form-horizontal input,
 .form-horizontal textarea {
     border: 1px solid #CCC;
 }
@@ -259,8 +263,8 @@ input[type="file"] {
     font-size: 9px;
 }
 
-.section-header .icheck-input {
-    margin: 0 10px -3px 0 !important;
+.section-header .selection-wrapper label {
+    font-weight: 700;
 }
 
 .form-control {
@@ -346,6 +350,7 @@ option {
 
 .form-horizontal option {
     padding: 5px 10px;
+    direction: ltr;
 }
 
 .form-horizontal input[disabled="disabled"] {
@@ -435,7 +440,7 @@ option {
     padding: 4px 5px 5px 25px !important;
 }
 
-.rtl .section-header .icheck-input {
+.rtl .section-header .check-input {
     margin: 0 0 -3px 10px !important;
 }
 
@@ -472,9 +477,9 @@ option {
     }
     .input-form-wrapper,
     .input .table-wrapper {
-        width: -webkit-calc(70% - 15px) !important;
-        width: -moz-calc(70% - 15px) !important;
-        width: calc(70% - 15px) !important;
+        width: -webkit-calc(80% - 15px) !important;
+        width: -moz-calc(80% - 15px) !important;
+        width: calc(80% - 15px) !important;
     }
     .form-horizontal .input-inline.input-prefix {
         width: 15% !important;
@@ -558,4 +563,46 @@ option {
         width: 100% !important;
         margin-left: 0 !important;
     }
+}
+
+
+/* RTL */
+
+.rtl .form-control {
+    padding: 5px 6px 3px;
+    height: 30px;
+}
+
+.rtl .form-control,
+.rtl .form-horizontal input,
+.rtl .form-horizontal textarea,
+.rtl .form-horizontal .chosen-choices,
+.rtl .form-horizontal label,
+.rtl .form-label,
+.rtl .form-input {
+    font-size: 14px !important;
+}
+
+.rtl .form-label,
+.rtl .form-input,
+.rtl .file .form-control {
+    line-height: 14px !important;
+}
+
+.rtl .fileinput-filename {
+    padding-bottom: 3px;
+}
+
+.rtl .file-input-text p,
+.rtl .file-input-buttons p,
+.rtl .input-text p {
+    font-size: 13px !important;
+}
+
+.rtl .form-input {
+    padding: 5px 0;
+}
+
+.rtl .form-horizontal option {
+    direction: ltr;
 }

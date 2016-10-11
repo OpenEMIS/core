@@ -8,6 +8,8 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
+use Cake\I18n\Time;
+use Cake\I18n\Date;
 
 class InstitutionStaffOnLeaveTable extends AppTable  {
 	public function initialize(array $config) {
@@ -17,15 +19,15 @@ class InstitutionStaffOnLeaveTable extends AppTable  {
 		$this->belongsTo('Users',			['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('Positions',		['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
 		$this->belongsTo('Institutions',	['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
-		$this->belongsTo('StaffTypes',		['className' => 'FieldOption.StaffTypes']);
-		$this->belongsTo('StaffStatuses',	['className' => 'FieldOption.StaffStatuses']);
+		$this->belongsTo('StaffTypes',		['className' => 'Staff.StaffTypes']);
+		$this->belongsTo('StaffStatuses',	['className' => 'Staff.StaffStatuses']);
 		$this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
 		$this->belongsTo('Leaves',	['className' => 'Staff.Leaves']);
 
 
 		$this->addBehavior('Report.ReportList');
 		$this->addBehavior('Excel', [
-			'excludes' => ['start_year', 'end_year', 'academic_period_id', 'security_group_user_id'], 
+			'excludes' => ['start_year', 'end_year', 'academic_period_id', 'security_group_user_id'],
 			'pages' => false
 		]);
 	}
@@ -36,7 +38,7 @@ class InstitutionStaffOnLeaveTable extends AppTable  {
 
 		$leaveDate = $requestData->leaveDate;
 
-		if (!$data[$field] instanceof Time) {
+		if (!$data[$field] instanceof Time || !$data[$field] instanceof Date) {
 			// to handle both d-m-y and d-m-Y because datepicker and cake doesnt validate
 			$dateObj = date_create_from_format("d-m-Y",$data[$field]);
 			if ($dateObj === false) {
@@ -47,7 +49,7 @@ class InstitutionStaffOnLeaveTable extends AppTable  {
 			}
 		}
 
-				
+
 		// have to check whether his is a legal date
 		if ($leaveDate!=0) {
 			// need to match the days on leave
@@ -72,10 +74,10 @@ class InstitutionStaffOnLeaveTable extends AppTable  {
 		$query
 			->contain(['Users.Genders', 'Institutions.Areas'])
 			->select([
-				'openemis_no' => 'Users.openemis_no', 
-				'number' => 'Identities.number', 
-				'code' => 'Institutions.code', 
-				'gender_id' => 'Genders.name', 
+				'openemis_no' => 'Users.openemis_no',
+				'number' => 'Identities.number',
+				'code' => 'Institutions.code',
+				'gender_id' => 'Genders.name',
 				'area_name' => 'Areas.name',
 				'area_code' => 'Areas.code'
 			]);
@@ -105,7 +107,7 @@ class InstitutionStaffOnLeaveTable extends AppTable  {
 				break;
 			}
 		}
-		
+
 		$extraField[] = [
 			'key' => 'Institutions.code',
 			'field' => 'code',

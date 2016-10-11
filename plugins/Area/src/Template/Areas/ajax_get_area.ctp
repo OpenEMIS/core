@@ -34,7 +34,7 @@
 				} else {
 					$options['options'] = $obj->list;
 				}
-				echo $this->Form->input($name, $options);
+				echo $this->Form->input('area_picker', $options);
 			}
 			$count++;
 		}

@@ -1,4 +1,4 @@
-/* TABLE v.1.0.12 */
+/* TABLE v.1.0.17 */
 
 .table-responsive {
     border: 0 !important;
@@ -11,6 +11,21 @@
 .table-wrapper {
     position: relative;
     margin-bottom: 20px;
+}
+
+.vertical-align-top td,
+.vertical-align-top {
+    vertical-align: top !important;
+}
+
+.vertical-align-bottom td,
+.vertical-align-bottom {
+    vertical-align: bottom !important;
+}
+
+.vertical-align-middle td,
+.vertical-align-middle {
+    vertical-align: middle !important;
 }
 
 .shadow-right:after,
@@ -98,6 +113,7 @@
 .table > tfoot > tr > th,
 .table > thead > tr > td,
 .table > thead > tr > th {
+    position: relative;
     padding: 10px;
     vertical-align: middle;
 }
@@ -141,10 +157,6 @@ table thead {
 table tbody {
     border-left: 1px solid #FFF;
     border-right: 1px solid #FFF;
-}
-
-table .input-group {
-    width: inherit !important;
 }
 
 .full-width {
@@ -323,6 +335,21 @@ table tr.sorting-row td {
 }
 
 
+/* TABLE ALIGNMENT */
+
+.vertical-align-top {
+    vertical-align: top !important;
+}
+
+.vertical-align-bottom {
+    vertical-align: bottom !important;
+}
+
+.vertical-align-middle {
+    vertical-align: middle !important;
+}
+
+
 /* TABLE WITH CURVE */
 
 .table-curved,
@@ -354,6 +381,14 @@ table tr.sorting-row td {
     -webkit-overflow-x: scroll;
     -ms-overflow-x: scroll;
     overflow-x: scroll;
+    border-collapse: collapse !important;
+}
+
+.rtl.chrome .table-curved,
+.rtl.chrome .table,
+.rtl.safari .table-curved,
+.rtl.safari .table {
+    border-collapse: separate !important;
 }
 
 .table > thead:first-child > tr:first-child > th,
@@ -361,10 +396,16 @@ table tr.sorting-row td {
 .table-curved > thead:first-child > tr:first-child > th,
 .table-curved tfoot,
 .table tfoot {
-    font-weight: bold;
+    font-weight: bold !important;
     border-top: 1px solid #DDD;
-    border-bottom: 1px solid #DDD;
-    background: rgba(204, 204, 204, 0.3);
+    border-bottom: 1px solid #DDD !important;
+    background: rgba(204, 204, 204, 0.3) !important;
+}
+
+.table-header,
+.table-footer {
+    background: rgba(204, 204, 204, 0.3) !important;
+    font-weight: bold !important;
 }
 
 .table-curved > thead:first-child > tr:first-child > th {
@@ -456,6 +497,25 @@ table tr.sorting-row td {
 }
 
 
+/* TABLE PLACEHOLDER */
+
+.canvas {
+    display: block;
+    width: 100%;
+    background: rgba(0, 0, 0, 0) url("./img/canvas.png") repeat scroll 0 0;
+    padding: 5px;
+    height: 52px;
+}
+
+.canvas h5 {
+    color: #BBB;
+    text-align: center;
+    line-height: 40px;
+    padding: 0;
+    margin: 0;
+}
+
+
 /* TABLE CENTER */
 
 .table .align-center {
@@ -470,6 +530,58 @@ table tr.sorting-row td {
     background-color: rgba(204, 204, 204, 0.2) !important;
     border-color: #DDD !important;
     font-weight: bold;
+}
+
+
+/* CREATE TABLE */
+
+.remove-row {
+    width: 40px !important;
+    min-width: 40px !important;
+}
+
+.remove-column {
+    position: relative;
+    height: 45px;
+}
+
+.remove-column .kd-remove {
+    position: absolute;
+    top: 25%;
+    left: 50%;
+    -webkit-transform: translate(-25%, -50%);
+    -moz-transform: translate(-25%, -50%);
+    -ms-transform: translate(-25%, -50%);
+    -o-transform: translate(-25%, -50%);
+    transform: translate(-25%, -50%);
+    z-index: 3;
+}
+
+.table-header {
+    min-width: 150px;
+}
+
+.table-header input {
+    font-weight: bold !important;
+}
+
+.table-edit-view .table-header {
+    border-right: 1px solid #DDD;
+}
+
+.table-edit-view td input,
+.table-edit-view th input {
+    min-width: 100% !important;
+    padding-right: 50px;
+}
+
+.input-group.input-group-invert {
+    width: 100% !important;
+    margin: 0;
+}
+
+.table-edit-view .table-header:last-child {
+    border-right: 0 !important;
 }
 
 
@@ -491,8 +603,39 @@ table tr.sorting-row td {
     background-color: transparent;
 }
 
+.table textarea {
+    min-width: 100%;
+    width: 200px !important;
+}
+
 table .input-group {
     width: inherit !important;
+}
+
+.table .time,
+.table .date {
+    display: block;
+}
+
+.table .time,
+.table .time input,
+.table .date,
+.table .date input,
+.table .input-select-wrapper {
+    width: 100% !important;
+}
+
+
+/* TABLE WITH DATE/TIME PICKER */
+
+.table .input-group-addon {
+    position: absolute;
+    right: 0;
+    line-height: 0;
+    cursor: pointer;
+    font-size: 15px;
+    width: 52px;
+    height: 30px;
 }
 
 @media (max-width: 767px) {
@@ -515,17 +658,17 @@ table .input-group {
 /* RTL v.1.0.1 */
 
 .rtl .table-responsive {
-  direction: ltr;
+    direction: ltr;
 }
 
 .rtl .table-responsive > table {
-  direction: rtl;
+    direction: rtl;
 }
 
 .rtl .table-curved >:first-child >:first-child >:first-child {
     border-top-right-radius: 5px;
     -webkit-border-top-left-radius: 0 !important;
-            border-top-left-radius: 0 !important;
+    border-top-left-radius: 0 !important;
     border-right: 1px solid #DDD;
     border-left: 0;
 }
@@ -535,12 +678,14 @@ table .input-group {
     border-bottom-right-radius: 5px;
     border-right: 1px solid #DDD;
     border-left: 0;
+    font-size: 14px;
+    line-height: 14px;
 }
 
 .rtl .table-curved >:first-child >:first-child >:last-child {
     border-top-left-radius: 5px;
     -webkit-border-top-right-radius: 0 !important;
-            border-top-right-radius: 0 !important;
+    border-top-right-radius: 0 !important;
     border-left: 1px solid #DDD;
     border-right: 0;
 }
@@ -601,4 +746,21 @@ table .input-group {
 
 .rtl .table input {
     float: right;
+}
+
+.rtl .table-edit-view .table-header,
+.rtl .table >:first-child >:first-child > .table-header:first-child {
+    border-left: 1px solid #DDD !important;
+    border-right: 0 !important;
+}
+
+.rtl .table .input-select-wrapper {
+    float: none;
+}
+
+/* RTL TABLE WITH DATE/TIME PICKER */
+
+.rtl .table .input-group-addon {
+    left: 0;
+    right: auto !important;
 }

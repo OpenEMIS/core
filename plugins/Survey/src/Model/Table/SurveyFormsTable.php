@@ -28,12 +28,13 @@ class SurveyFormsTable extends CustomFormsTable {
 			]
 		];
 		parent::initialize($config);
-		$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
 		$this->hasMany('SurveyStatuses', ['className' => 'Survey.SurveyStatuses', 'dependent' => true, 'cascadeCallbacks' => true]);
 		// The hasMany association for InstitutionSurveys and StudentSurveys is done in onBeforeDelete() and is added based on module to avoid conflict.
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 	    	->add('name', [
 	    		'unique' => [
@@ -60,7 +61,7 @@ class SurveyFormsTable extends CustomFormsTable {
     }
 
 	public function afterAction(Event $event){
-		$this->ControllerAction->setFieldOrder(['custom_module_id', 'code', 'name', 'description', 'custom_fields']);
+		$this->ControllerAction->setFieldOrder(['custom_module_id', 'code', 'name', 'description']);
 	}
 
 	public function addBeforeAction(Event $event) {
@@ -69,12 +70,6 @@ class SurveyFormsTable extends CustomFormsTable {
 
 	public function onGetCustomModuleId(Event $event, Entity $entity) {
 		return $entity->custom_module->code;
-	}
-
-	public function indexAfterAction(Event $event, $data) {
-		parent::indexAfterAction($event, $data);
-		unset($this->fields['apply_to_all']);
-		unset($this->fields['custom_filters']);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -112,7 +107,7 @@ class SurveyFormsTable extends CustomFormsTable {
 				$id = $buttons['download']['url'][1];
 				$toolbarButtons['download'] = $buttons['download'];
 				$toolbarButtons['download']['url'] = [
-					'plugin' => 'Restful',
+					'plugin' => 'Rest',
 					'controller' => 'Rest',
 					'action' => 'survey',
 					'download',
@@ -145,7 +140,7 @@ class SurveyFormsTable extends CustomFormsTable {
 			if (array_key_exists('view', $buttons)) {
 				$downloadButton = $buttons['view'];
 				$downloadButton['url'] = [
-					'plugin' => 'Restful',
+					'plugin' => 'Rest',
 					'controller' => 'Rest',
 					'action' => 'survey',
 					'download',

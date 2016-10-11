@@ -55,6 +55,7 @@ class AutocompleteBehavior extends Behavior {
 
 			$value .= $Form->input($fieldName, $options);
 			$value .= $Form->hidden($target['name'], ['autocomplete-value' => $target['key']]);
+			$Form->unlockField($target['name']);
 		}
 		return $value;
 	}

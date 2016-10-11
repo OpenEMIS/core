@@ -2,6 +2,7 @@
 <?php
 	$model = $ControllerAction['table'];
 	$trainerOptions = isset($attr['options']) ? $attr['options'] : [];
+	$this->Form->unlockField('TrainingSessions.trainers');
 ?>
 <?php if ($ControllerAction['action'] == 'view') : ?>
 	<div class="table-wrapper">
@@ -18,9 +19,9 @@
 					<tbody>
 						<?php foreach ($data->trainers as $key => $obj) : ?>
 						<tr>
-							<td><?= $trainerTypeOptions[$obj->_joinData->type]; ?></td>
-							<td><?= isset($obj->name_with_id) ? $obj->name_with_id : ''; ?></td>
-							<td><?= $obj->_joinData->name; ?></td>
+							<td><?= $trainerTypeOptions[$obj->type]; ?></td>
+							<td><?= isset($obj->user->name_with_id) ? $obj->user->name_with_id : ''; ?></td>
+							<td><?= $obj->name; ?></td>
 						</tr>
 						<?php endforeach ?>
 					</tbody>
@@ -57,15 +58,15 @@
 										<tr>
 											<td>
 												<?php
-													if(isset($obj['_joinData']->id)) {	// edit
-														echo $this->Form->hidden("$prefix._joinData.id");
-													}
-													echo $this->Form->hidden("$prefix._joinData.training_session_id");
-													echo $this->Form->input("$prefix._joinData.type", ['label' => false, 'options' => $trainerTypeOptions]);
+													// id is not needed as will always delete and re-insert trainers
+													// if(isset($obj['id'])) {	// edit
+														// echo $this->Form->hidden("$prefix.id");
+													// }
+													echo $this->Form->input("$prefix.type", ['label' => false, 'options' => $trainerTypeOptions]);
 												?>
 											</td>
-											<td><?= $this->Form->input("$prefix._joinData.trainer_id", ['label' => false, 'options' => $trainerOptions]); ?></td>
-											<td><?= $this->Form->input("$prefix._joinData.name", ['label' => false]); ?></td>
+											<td><?= $this->Form->input("$prefix.trainer_id", ['label' => false, 'options' => $trainerOptions]); ?></td>
+											<td><?= $this->Form->input("$prefix.name", ['label' => false]); ?></td>
 											<td>
 												<button class="btn btn-dropdown action-toggle btn-single-action" style="cursor: pointer;" title="<?= $this->Label->get('general.delete.label'); ?>" onclick="jsTable.doRemove(this);">
 													<i class="fa fa-trash"></i>&nbsp;<span><?= __('Delete')?></span>

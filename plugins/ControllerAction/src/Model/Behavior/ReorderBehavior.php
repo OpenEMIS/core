@@ -31,20 +31,22 @@ class ReorderBehavior extends Behavior {
 		if ($request->is('ajax')) {
 			$primaryKey = $model->primaryKey();
 			$orderField = $this->config('orderField');
-			
+
 			$ids = json_decode($request->data("ids"));
 
-			$originalOrder = $model->find('list')
-				->where([$model->aliasField($primaryKey).' IN ' => $ids])
-				->select(['id' => $model->aliasField($primaryKey), 'name' => $model->aliasField($orderField)])
-				->order([$model->aliasField($orderField)])
-				->toArray();
+			if (!empty($ids)) {
+				$originalOrder = $model->find('list')
+					->where([$model->aliasField($primaryKey).' IN ' => $ids])
+					->select(['id' => $model->aliasField($primaryKey), 'name' => $model->aliasField($orderField)])
+					->order([$model->aliasField($orderField)])
+					->toArray();
 
-			$originalOrder = array_reverse($originalOrder);
+				$originalOrder = array_reverse($originalOrder);
 
-			foreach ($ids as $order => $id) {
-				$orderValue = array_pop($originalOrder);
-				$model->updateAll([$orderField => $orderValue], [$primaryKey => $id]);
+				foreach ($ids as $order => $id) {
+					$orderValue = array_pop($originalOrder);
+					$model->updateAll([$orderField => $orderValue], [$primaryKey => $id]);
+				}
 			}
 		}
 		$event->stopPropagation();
@@ -70,9 +72,17 @@ class ReorderBehavior extends Behavior {
 					$filterValue = $entity->$filter;
 				}
 				$table = $this->_table;
+
+				if (!is_null($filterValue)) {
+					$condition = [$table->aliasField($filter).' IN ' => $filterValue];
+				} else {
+					// this logic will handle tree behavior, which parent_id is null.
+					$condition = [$table->aliasField($filter . ' IS NULL')];
+				}
+
 				$order = $table
 					->find()
-					->where([$table->aliasField($filter).' IN ' => $filterValue])
+					->where($condition)
 					->count();
 			}
 			$entity->$orderField = $order + 1;
@@ -94,9 +104,16 @@ class ReorderBehavior extends Behavior {
 			} else {
 				$filterValue = $entity->$filter;
 			}
+
+			if (!is_null($filterValue)) {
+				$condition = [$table->aliasField($filter).' IN ' => $filterValue];
+			} else {
+				// this logic will handle tree behavior, which parent_id is null.
+				$condition = [$table->aliasField($filter . ' IS NULL')];
+			}
 			$reorderItems = $table
 				->find('list')
-				->where([$table->aliasField($filter).' IN ' => $filterValue])
+				->where($condition)
 				->order([$table->aliasField($orderField)])
 				->toArray();
 		}

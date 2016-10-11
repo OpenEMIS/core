@@ -45,7 +45,8 @@ class SetupTextBehavior extends SetupBehavior {
 					return strlen($context['data']['maximum_length']);
 				}
 
-				return false;
+				// set to true so that asterisk will not appear
+				return true;
 			})
 			->add('minimum_length', 'naturalNumber', [
 				'rule' => 'naturalNumber',
@@ -72,7 +73,8 @@ class SetupTextBehavior extends SetupBehavior {
 					return strlen($context['data']['minimum_length']);
 				}
 
-				return false;
+				// set to true so that asterisk will not appear
+				return true;
 			})
 			->add('maximum_length', 'naturalNumber', [
 				'rule' => 'naturalNumber',
@@ -161,8 +163,8 @@ class SetupTextBehavior extends SetupBehavior {
 		        ]);
 		        $model->ControllerAction->field('validation_format', [
 		        	'type' => 'string',
-		        	'after' => 'validation_reference',
-		        	'attr' => ['onkeypress' => 'return Config.inputMaskCheck(event);']
+		        	'attr' => ['onkeypress' => 'return Config.inputMaskCheck(event);'],
+		        	'after' => 'validation_reference'
 		        ]);
 				break;
 			default:
