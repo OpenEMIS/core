@@ -142,16 +142,18 @@ class WorkflowBehavior extends Behavior {
 
 	public function securityGroupUserAfterSave(Event $event, Entity $securityGroupUserEntity) {
 		$model = $this->_table;
+		$id = 0;
 		$statusId = 0;
 		$groupId = $securityGroupUserEntity->security_group_id;
 		$userId = $securityGroupUserEntity->security_user_id;
 		$roleId = $securityGroupUserEntity->security_role_id;
 
-		$this->triggerUpdateAssigneeShell($model->registryAlias(), $statusId, $groupId, $userId, $roleId);
+		$this->triggerUpdateAssigneeShell($model->registryAlias(), $id, $statusId, $groupId, $userId, $roleId);
 	}
 
-	private function triggerUpdateAssigneeShell($registryAlias, $statusId=null, $groupId=null, $userId=null, $roleId=null) {
+	private function triggerUpdateAssigneeShell($registryAlias, $id=null, $statusId=null, $groupId=null, $userId=null, $roleId=null) {
 		$args = '';
+		$args .= !is_null($id) ? ' '.$id : '';
 		$args .= !is_null($statusId) ? ' '.$statusId : '';
 		$args .= !is_null($groupId) ? ' '.$groupId : '';
 		$args .= !is_null($userId) ? ' '.$userId : '';
@@ -219,6 +221,7 @@ class WorkflowBehavior extends Behavior {
 	public function workflowStepAfterSave(Event $event, Entity $workflowStepEntity) {
 		$model = $this->_table;
 
+		$id=0;
 		$statusId = $workflowStepEntity->id;
 		$WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
 		$entity = $WorkflowSteps
@@ -230,7 +233,7 @@ class WorkflowBehavior extends Behavior {
 		$workflowModelEntity = $entity->_matchingData['WorkflowModels'];
 		// only trigger update assignee shell where the workflow step belongs to 
 		if ($workflowModelEntity->model == $model->registryAlias()) {
-			$this->triggerUpdateAssigneeShell($model->registryAlias(), $statusId);
+			$this->triggerUpdateAssigneeShell($model->registryAlias(), $id, $statusId);
 		}
 	}
 
@@ -244,8 +247,14 @@ class WorkflowBehavior extends Behavior {
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
 		if ($entity->isNew()) {
-			$this->setAssigneeAsCreator($entity);
 			$this->setStatusAsOpen($entity);
+		}
+	}
+
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		$model = $this->_table;
+		if ($entity->isNew()) {
+			$this->triggerUpdateAssigneeShell($model->registryAlias(), $entity->id);
 		}
 	}
 
