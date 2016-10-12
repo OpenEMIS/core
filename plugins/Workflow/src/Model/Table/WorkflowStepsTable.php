@@ -97,7 +97,7 @@ class WorkflowStepsTable extends AppTable {
 			$categoryOptions = $this->getSelectOptions('WorkflowSteps.category');
 			$value = $categoryOptions[$entity->category];
 		} else {
-			$value = __('No Category');
+			$value = $this->getMessage($this->aliasField('notCategorized'));
 		}
 
 		return $value;
