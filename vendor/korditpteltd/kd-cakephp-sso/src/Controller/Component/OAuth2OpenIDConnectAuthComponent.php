@@ -29,67 +29,74 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
         $this->clientId = $oAuthAttributes['client_id'];
         $this->clientSecret = $oAuthAttributes['client_secret'];
         $http = new Client();
-        $response = $http->post($oAuthAttributes['openid_configuration']);
-        // Caching of openid configuration
-        if (!empty($response->body())) {
-            $body = json_decode($response->body(), true);
-            if (isset($body['issuer'])) {
-                if ($oAuthAttributes['issuer'] != $body['issuer']) {
-                    $oAuthAttributes['issuer'] = $body['issuer'];
-                    $AuthenticationTypeAttributesTable->updateAll([
-                        'attribute_field' => $body['issuer']
-                    ],[
-                        'authentication_type' => 'OAuth2OpenIDConnect',
-                        'attribute_field' => 'issuer'
-                    ]);
-                }
-            }
-            if (isset($body['authorization_endpoint'])) {
-                if ($oAuthAttributes['auth_uri'] != $body['authorization_endpoint']) {
-                    $oAuthAttributes['auth_uri'] = $body['authorization_endpoint'];
-                    $AuthenticationTypeAttributesTable->updateAll([
-                        'attribute_field' => $body['authorization_endpoint']
-                    ],[
-                        'authentication_type' => 'OAuth2OpenIDConnect',
-                        'attribute_field' => 'auth_uri'
-                    ]);
-                }
-            }
-            if (isset($body['token_endpoint'])) {
-                if ($oAuthAttributes['token_uri'] != $body['token_endpoint']) {
-                    $oAuthAttributes['token_uri'] = $body['token_endpoint'];
-                    $AuthenticationTypeAttributesTable->updateAll([
-                        'attribute_field' => $body['token_endpoint']
-                    ],[
-                        'authentication_type' => 'OAuth2OpenIDConnect',
-                        'attribute_field' => 'token_uri'
-                    ]);
-                }
-            }
-            if (isset($body['userinfo_endpoint'])) {
-                if ($oAuthAttributes['userInfo_uri'] != $body['userinfo_endpoint']) {
-                    $oAuthAttributes['userInfo_uri'] = $body['userinfo_endpoint'];
-                    $AuthenticationTypeAttributesTable->updateAll([
-                        'attribute_field' => $body['userinfo_endpoint']
-                    ],[
-                        'authentication_type' => 'OAuth2OpenIDConnect',
-                        'attribute_field' => 'userInfo_uri'
-                    ]);
-                }
-            }
-            if (isset($body['jwks_uri'])) {
-                if ($oAuthAttributes['jwk_uri'] != $body['jwks_uri']) {
-                    $oAuthAttributes['jwk_uri'] = $body['jwks_uri'];
-                    $AuthenticationTypeAttributesTable->updateAll([
-                        'attribute_field' => $body['jwks_uri']
-                    ],[
-                        'authentication_type' => 'OAuth2OpenIDConnect',
-                        'attribute_field' => 'jwk_uri'
-                    ]);
-                }
-            }
+        $responseBody = [];
+        $responseBody[] = $http->post($oAuthAttributes['openid_configuration']);
+        $responseBody[] = $http->get($oAuthAttributes['openid_configuration']);
 
+        foreach ($responseBody as $response) {
+            if ($response->statusCode() == 200) {
+                // Caching of openid configuration
+                if (!empty($response->body())) {
+                    $body = json_decode($response->body(), true);
+                    if (isset($body['issuer'])) {
+                        if ($oAuthAttributes['issuer'] != $body['issuer']) {
+                            $oAuthAttributes['issuer'] = $body['issuer'];
+                            $AuthenticationTypeAttributesTable->updateAll([
+                                'attribute_field' => $body['issuer']
+                            ],[
+                                'authentication_type' => 'OAuth2OpenIDConnect',
+                                'attribute_field' => 'issuer'
+                            ]);
+                        }
+                    }
+                    if (isset($body['authorization_endpoint'])) {
+                        if ($oAuthAttributes['auth_uri'] != $body['authorization_endpoint']) {
+                            $oAuthAttributes['auth_uri'] = $body['authorization_endpoint'];
+                            $AuthenticationTypeAttributesTable->updateAll([
+                                'attribute_field' => $body['authorization_endpoint']
+                            ],[
+                                'authentication_type' => 'OAuth2OpenIDConnect',
+                                'attribute_field' => 'auth_uri'
+                            ]);
+                        }
+                    }
+                    if (isset($body['token_endpoint'])) {
+                        if ($oAuthAttributes['token_uri'] != $body['token_endpoint']) {
+                            $oAuthAttributes['token_uri'] = $body['token_endpoint'];
+                            $AuthenticationTypeAttributesTable->updateAll([
+                                'attribute_field' => $body['token_endpoint']
+                            ],[
+                                'authentication_type' => 'OAuth2OpenIDConnect',
+                                'attribute_field' => 'token_uri'
+                            ]);
+                        }
+                    }
+                    if (isset($body['userinfo_endpoint'])) {
+                        if ($oAuthAttributes['userInfo_uri'] != $body['userinfo_endpoint']) {
+                            $oAuthAttributes['userInfo_uri'] = $body['userinfo_endpoint'];
+                            $AuthenticationTypeAttributesTable->updateAll([
+                                'attribute_field' => $body['userinfo_endpoint']
+                            ],[
+                                'authentication_type' => 'OAuth2OpenIDConnect',
+                                'attribute_field' => 'userInfo_uri'
+                            ]);
+                        }
+                    }
+                    if (isset($body['jwks_uri'])) {
+                        if ($oAuthAttributes['jwk_uri'] != $body['jwks_uri']) {
+                            $oAuthAttributes['jwk_uri'] = $body['jwks_uri'];
+                            $AuthenticationTypeAttributesTable->updateAll([
+                                'attribute_field' => $body['jwks_uri']
+                            ],[
+                                'authentication_type' => 'OAuth2OpenIDConnect',
+                                'attribute_field' => 'jwk_uri'
+                            ]);
+                        }
+                    }
+                }
+            }
         }
+
         $this->redirectUri = $oAuthAttributes['redirect_uri'];
         $this->userInfoUri = $oAuthAttributes['userInfo_uri'];
 
