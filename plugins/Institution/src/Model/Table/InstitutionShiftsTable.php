@@ -630,7 +630,7 @@ class InstitutionShiftsTable extends ControllerActionTable
 
             $term = trim($this->request->query['term']);
             $selectedAcademicPeriod = trim($this->request->query['academicperiod']);
-            $search = '%' . $term . '%';
+            $search = $term . '%';
 
             $query = $Institutions->find()
                 ->select([
