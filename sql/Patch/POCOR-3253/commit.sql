@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS `workflow_steps` (
   `category` int(1) NOT NULL DEFAULT '0' COMMENT '1 -> TO DO, 2 -> IN PROGRESS, 3 -> DONE',
   `is_editable` int(1) NOT NULL DEFAULT '0',
   `is_removable` int(1) NOT NULL DEFAULT '0',
+  `is_system_defined` int(1) NOT NULL DEFAULT '0',
   `workflow_id` int(11) NOT NULL COMMENT 'links to workflows.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
@@ -47,7 +48,7 @@ CREATE TABLE IF NOT EXISTS `workflow_steps` (
   KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of steps used by all workflows';
 
-INSERT INTO `workflow_steps` (`id`, `name`, `category`, `is_editable`, `is_removable`, `workflow_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+INSERT INTO `workflow_steps` (`id`, `name`, `category`, `is_editable`, `is_removable`, `is_system_defined`, `workflow_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT `id`, `name`,
   CASE `stage`
     WHEN 0 THEN 1
@@ -55,7 +56,13 @@ SELECT `id`, `name`,
     WHEN 2 THEN 3
     WHEN NULL THEN 0
     ELSE 0 
-  END AS `category`, `is_editable`, `is_removable`, `workflow_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+  END AS `category`, `is_editable`, `is_removable`,
+  CASE `stage`
+    WHEN 0 THEN 1
+    WHEN 1 THEN 1
+    WHEN 2 THEN 1
+    ELSE 0
+  END AS `is_system_defined`, `workflow_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
 FROM `z_3253_workflow_steps`;
 
 -- workflow_actions
@@ -404,3 +411,6 @@ VALUES (5049, 'Actions', 'Workflows', 'Administration', 'Workflows', 5000, 'Acti
 UPDATE `security_functions` SET `order` = 5049 WHERE `id` = 5038;
 
 UPDATE `security_functions` SET `controller` = 'Institutions', `_view` = 'StaffLeave.index|StaffLeave.view', `_edit` = 'StaffLeave.edit', `_add` = 'StaffLeave.add', `_delete` = 'StaffLeave.remove', `_execute` = 'StaffLeave.download' WHERE `id` = 3016;
+
+-- labels
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES ('de65853b-9054-11e6-88cb-525400b263eb', 'WorkflowSteps', 'is_system_defined', 'Workflow -> Steps', 'System Defined', 1, 1, NOW());

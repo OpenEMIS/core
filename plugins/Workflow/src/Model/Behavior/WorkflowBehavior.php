@@ -221,13 +221,13 @@ class WorkflowBehavior extends Behavior {
 	public function workflowStepAfterSave(Event $event, Entity $workflowStepEntity) {
 		$model = $this->_table;
 
-		$id=0;
+		$id = 0;
 		$statusId = $workflowStepEntity->id;
 		$WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
 		$entity = $WorkflowSteps
 			->find()
 			->matching('Workflows.WorkflowModels')
-			->where([$WorkflowSteps->aliasField('id') => $workflowStepEntity->id])
+			->where([$WorkflowSteps->aliasField('id') => $statusId])
 			->first();
 
 		$workflowModelEntity = $entity->_matchingData['WorkflowModels'];

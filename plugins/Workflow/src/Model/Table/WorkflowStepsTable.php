@@ -111,6 +111,10 @@ class WorkflowStepsTable extends AppTable {
 		return $entity->is_removable == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
 	}
 
+	public function onGetIsSystemDefined(Event $event, Entity $entity) {
+		return $entity->is_system_defined == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
+	}
+
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('security_roles', [
 			'type' => 'chosenSelect',
@@ -243,9 +247,22 @@ class WorkflowStepsTable extends AppTable {
 	}
 
 	public function onUpdateFieldCategory(Event $event, array $attr, $action, Request $request) {
-		if ($action == 'view' || $action == 'add' || $action == 'edit') {
+		$categoryOptions = $this->getSelectOptions('WorkflowSteps.category');
+		if ($action == 'view' || $action == 'add') {
 			$attr['type'] = 'select';
-			$attr['options'] = $this->getSelectOptions('WorkflowSteps.category');
+			$attr['options'] = $categoryOptions;
+		} else if ($action == 'edit') {
+			$entity = $attr['attr']['entity'];
+
+			list($isEditable) = array_values($this->checkIfCanEditOrDelete($entity));
+			if (!$isEditable) {
+				$attr['type'] = 'readonly';
+				$attr['value'] = $entity->category;
+				$attr['attr']['value'] = $categoryOptions[$entity->category];
+			} else {
+				$attr['type'] = 'select';
+				$attr['options'] = $this->getSelectOptions('WorkflowSteps.category');
+			}
 		}
 
 		return $attr;
@@ -264,6 +281,22 @@ class WorkflowStepsTable extends AppTable {
 		if ($action == 'view' || $action == 'add' || $action == 'edit') {
 			$attr['type'] = 'select';
 			$attr['options'] = $this->getSelectOptions('general.yesno');
+		}
+
+		return $attr;
+	}
+
+	public function onUpdateFieldIsSystemDefined(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
+			$attr['type'] = 'hidden';
+			$attr['value'] = 0;
+		} else if ($action == 'edit') {
+			$entity = $attr['attr']['entity'];
+			$systemDefinedOptions = $this->getSelectOptions('general.yesno');
+
+			$attr['type'] = 'readonly';
+			$attr['value'] = $entity->is_system_defined;
+			$attr['attr']['value'] = $systemDefinedOptions[$entity->is_system_defined];
 		}
 
 		return $attr;
@@ -291,19 +324,24 @@ class WorkflowStepsTable extends AppTable {
 		$this->ControllerAction->field('name', [
 			'attr' => ['entity' => $entity]
 		]);
-		$this->ControllerAction->field('category');
+		$this->ControllerAction->field('category', [
+			'attr' => ['entity' => $entity]
+		]);
 		$this->ControllerAction->field('is_editable');
 		$this->ControllerAction->field('is_removable');
+		$this->ControllerAction->field('is_system_defined', [
+			'attr' => ['entity' => $entity]
+		]);
 
-		$this->ControllerAction->setFieldOrder(['workflow_model_id', 'workflow_id', 'name', 'security_roles', 'category', 'is_editable', 'is_removable']);
+		$this->ControllerAction->setFieldOrder(['workflow_model_id', 'workflow_id', 'name', 'security_roles', 'category', 'is_editable', 'is_removable', 'is_system_defined']);
 	}
 
 	private function checkIfCanEditOrDelete($entity) {
 		$isEditable = true;
     	$isDeletable = true;
 
-    	// not allow to edit name for Open, Pending For Approval and Closed
-		if (!is_null($entity->category) && in_array($entity->category, [self::TO_DO, self::IN_PROGRESS, self::DONE])) {
+    	// not allow to edit name and delete for To Do, In Progress & Done
+    	if ($entity->has('is_system_defined') && !empty($entity->is_system_defined)) {
 			$isEditable = false;
     		$isDeletable = false;
 		}

@@ -65,9 +65,9 @@ class WorkflowsTable extends AppTable {
 		if ($entity->isNew()) {
 			$data = [
 				'workflow_steps' => [
-					['name' => __('Open'), 'category' => self::TO_DO, 'is_editable' => 1, 'is_removable' => 1],
-					['name' => __('Pending For Approval'), 'category' => self::IN_PROGRESS],
-					['name' => __('Closed'), 'category' => self::DONE]
+					['name' => __('Open'), 'category' => self::TO_DO, 'is_editable' => 1, 'is_removable' => 1, 'is_system_defined' => 1],
+					['name' => __('Pending For Approval'), 'category' => self::IN_PROGRESS, 'is_system_defined' => 1],
+					['name' => __('Closed'), 'category' => self::DONE, 'is_system_defined' => 1]
 				]
 			];
 
