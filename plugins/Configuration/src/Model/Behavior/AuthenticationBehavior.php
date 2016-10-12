@@ -212,6 +212,19 @@ class AuthenticationBehavior extends Behavior {
     	return true;
     }
 
+    public function oAuth2OpenIDConnectAuthenticationValidation($authenticationAttributes) {
+        $attribute = [];
+        $this->oAuth2OpenIDConnectAuthentication($attribute);
+        foreach ($attribute as $key => $values) {
+            if (!isset($values['required'])) {
+                if (empty($authenticationAttributes[$key]['value'])) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
 	public function saml2Authentication(&$attribute) {
 		$attribute['idp_entity_id'] = ['label' => 'Identity Provider - Entity ID', 'type' => 'text'];
 		$attribute['idp_sso'] = ['label' => 'Identity Provider - Single Signon Service', 'type' => 'text'];
@@ -256,12 +269,38 @@ class AuthenticationBehavior extends Behavior {
 		$attribute['hd'] = ['label' => 'Hosted Domain', 'type' => 'text', 'required' => false];
 	}
 
+    public function oAuth2OpenIDConnectAuthentication(&$attribute) {
+        $attribute['client_id'] = ['label' => 'Client ID', 'type' => 'text'];
+        $attribute['client_secret'] = ['label' => 'Client Secret', 'type' => 'text'];
+        $attribute['redirect_uri'] = ['label' => 'Redirect URI', 'type' => 'text', 'readonly' => true];
+        $attribute['openid_configuration'] = ['label' => 'OpenID Configuration URI', 'type' => 'text', 'required' => false, 'onblur' => 'Authentication.populate(this.value);'];
+        $attribute['auth_uri'] = ['label' => 'Authentication URI', 'type' => 'text', 'id' => 'authUri'];
+        $attribute['token_uri'] = ['label' => 'Token URI', 'type' => 'text', 'id' => 'tokenUri'];
+        $attribute['revoke_uri'] = ['label' => 'Revoke URI', 'type' => 'text', 'required' => false];
+        $attribute['userInfo_uri'] = ['label' => 'User Information URI', 'type' => 'text', 'id' => 'userInfoUri'];
+        $attribute['issuer'] = ['label' => 'Issuer', 'type' => 'text', 'id' => 'issuer'];
+        $attribute['jwk_uri'] = ['label' => 'Public Key URI', 'type' => 'text', 'id' => 'jwksUri'];
+        $attribute['username_mapping'] = ['label' => 'Username Mapping', 'type' => 'text'];
+        $attribute['firstName_mapping'] = ['label' => 'First Name Mapping', 'type' => 'text', 'required' => false];
+        $attribute['lastName_mapping'] = ['label' => 'Last Name Mapping', 'type' => 'text', 'required' => false];
+        $attribute['dob_mapping'] = ['label' => 'Date of Birth Mapping', 'type' => 'text', 'required' => false];
+        $attribute['email_mapping'] = ['label' => 'Email Mapping', 'type' => 'text', 'required' => false];
+        $attribute['gender_mapping'] = ['label' => 'Gender Mapping', 'type' => 'text', 'required' => false];
+    }
+
 	public function googleModifyValue($key, $attributeValue) {
 		if ($key == 'redirect_uri') {
 			return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'],true);
 		}
 		return false;
 	}
+
+    public function oAuth2OpenIDConnectModifyValue($key, $attributeValue) {
+        if ($key == 'redirect_uri') {
+            return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'],true);
+        }
+        return false;
+    }
 
 	public function onGetAuthenticationTypeElement(Event $event, $action, $entity, $attr, $options=[]) {
 		switch ($action){
