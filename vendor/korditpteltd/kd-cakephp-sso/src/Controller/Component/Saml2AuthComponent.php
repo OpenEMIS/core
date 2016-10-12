@@ -233,7 +233,7 @@ class Saml2AuthComponent extends Component {
                     return false;
                 }
             } else {
-                // $this->controller->Alert->error('security.login.remoteFail', ['reset' => true]);
+                $this->session->write('Auth.fallback', true);
                 return false;
             }
         } else {
@@ -264,7 +264,6 @@ class Saml2AuthComponent extends Component {
             if ($user[$this->_config['statusField']] != 1) {
                 $this->session->write('Auth.fallback', true);
                 $extra['status'] = false;
-                $extra['fallback'] = true;
             } else {
                 $this->controller->Auth->setUser($user);
                 $extra['loginStatus'] = true;
@@ -272,6 +271,11 @@ class Saml2AuthComponent extends Component {
         } else {
             $this->session->write('Saml2.remoteFail', true);
         }
+
+        if ($this->session->read('Auth.fallback')) {
+            $extra['fallback'] = true;
+        }
+
         $this->controller->dispatchEvent('Controller.Auth.afterCheckLogin', [$extra], $this);
         return $extra['loginStatus'];
     }
