@@ -16,16 +16,10 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
     private $clientId;
     private $clientSecret;
     private $redirectUri;
-    private $hostedDomain;
     private $client;
     private $authType;
     private $mapping;
-    private $authUri;
-    private $tokenUri;
-    private $revokeUri;
-    private $issuer;
     private $userInfoUri;
-    private $openIdConfiguration;
 
     public $components = ['Auth'];
 
@@ -34,9 +28,8 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
         $oAuthAttributes = $AuthenticationTypeAttributesTable->getTypeAttributeValues('OAuth2OpenIDConnect');
         $this->clientId = $oAuthAttributes['client_id'];
         $this->clientSecret = $oAuthAttributes['client_secret'];
-        $this->openIdConfiguration = $oAuthAttributes['openid_configuration'];
         $http = new Client();
-        $response = $http->post($this->openIdConfiguration);
+        $response = $http->post($oAuthAttributes['openid_configuration']);
         // Caching of openid configuration
         if (!empty($response->body())) {
             $body = json_decode($response->body(), true);
@@ -98,10 +91,6 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
 
         }
         $this->redirectUri = $oAuthAttributes['redirect_uri'];
-        $this->revokeUri = $oAuthAttributes['revoke_uri'];
-        $this->tokenUri = $oAuthAttributes['token_uri'];
-        $this->authUri = $oAuthAttributes['auth_uri'];
-        $this->issuer = $oAuthAttributes['issuer'];
         $this->userInfoUri = $oAuthAttributes['userInfo_uri'];
 
         $this->mapping['username'] = $oAuthAttributes['username_mapping'];
