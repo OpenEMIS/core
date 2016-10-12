@@ -33,7 +33,7 @@ class InstitutionsController extends AppController
             'StaffUser'         => ['className' => 'Institution.StaffUser', 'actions' => ['add', 'view', 'edit']],
             'StaffAccount'      => ['className' => 'Institution.StaffAccount', 'actions' => ['view', 'edit']],
             'StaffAttendances'  => ['className' => 'Institution.StaffAttendances', 'actions' => ['index']],
-            'StaffAbsences'     => ['className' => 'Institution.StaffAbsences'],
+            // 'StaffAbsences'     => ['className' => 'Institution.StaffAbsences'],
 
             'StaffBehaviours'   => ['className' => 'Institution.StaffBehaviours'],
 
@@ -92,8 +92,9 @@ class InstitutionsController extends AppController
     public function Exams()                 { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminations']); }
     public function UndoExaminationRegistration() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminationsUndoRegistration']); }
     public function ExaminationStudents()   { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminationStudents']); }
-    public function Contacts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionContacts']); }
-    // public function StaffAbsences() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
+    public function Contacts()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionContacts']); }
+    public function StaffAbsences()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
+    // public function StaffAttendances()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendances']); }
     // End
 
     // AngularJS
