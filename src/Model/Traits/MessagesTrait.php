@@ -1407,6 +1407,6 @@ trait MessagesTrait {
             }
         }
 
-        return !is_array($message) ? vsprintf(__($message), $sprintf) : $message;
+        return !is_array($message) ? __(vsprintf($message, $sprintf)) : $message;
     }
 }
