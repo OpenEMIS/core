@@ -48,13 +48,15 @@ CREATE TABLE IF NOT EXISTS `workflow_steps` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of steps used by all workflows';
 
 INSERT INTO `workflow_steps` (`id`, `name`, `category`, `is_editable`, `is_removable`, `workflow_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-SELECT `id`, `name`, `stage`, `is_editable`, `is_removable`, `workflow_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+SELECT `id`, `name`,
+  CASE `stage`
+    WHEN 0 THEN 1
+    WHEN 1 THEN 2
+    WHEN 2 THEN 3
+    WHEN NULL THEN 0
+    ELSE 0 
+  END AS `category`, `is_editable`, `is_removable`, `workflow_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
 FROM `z_3253_workflow_steps`;
-
-UPDATE `workflow_steps` SET `category` = 3 WHERE `category` = 2;
-UPDATE `workflow_steps` SET `category` = 2 WHERE `category` = 1;
-UPDATE `workflow_steps` SET `category` = 1 WHERE `category` = 0;
-UPDATE `workflow_steps` SET `category` = 0 WHERE `category` IS NULL;
 
 -- workflow_actions
 RENAME TABLE `workflow_actions` TO `z_3253_workflow_actions`;
@@ -66,11 +68,11 @@ CREATE TABLE IF NOT EXISTS `workflow_actions` (
   `description` text,
   `action` int(1) DEFAULT NULL COMMENT '0 -> Approve, 1 -> Reject',
   `visible` int(1) NOT NULL DEFAULT '1',
-  `next_workflow_step_id` int(11) NOT NULL,
-  `event_key` varchar(200) DEFAULT NULL,
   `comment_required` int(1) NOT NULL DEFAULT '0',
   `allow_by_assignee` int(1) NOT NULL DEFAULT '0',
+  `event_key` text,
   `workflow_step_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
+  `next_workflow_step_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -84,14 +86,14 @@ CREATE TABLE IF NOT EXISTS `workflow_actions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all actions used by different steps of any workflow';
 
 INSERT INTO `workflow_actions` (`id`, `name`, `description`, `action`, `visible`, `next_workflow_step_id`, `event_key`, `comment_required`, `allow_by_assignee`, `workflow_step_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-SELECT `id`, `name`, `description`, `action`, `visible`, `next_workflow_step_id`, `event_key`, `comment_required`, 0, `workflow_step_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
-FROM `z_3253_workflow_actions`;
-
-UPDATE `workflow_actions` AS `WorkflowActions`
+SELECT `WorkflowActions`.`id`, `WorkflowActions`.`name`, `WorkflowActions`.`description`, `WorkflowActions`.`action`, `WorkflowActions`.`visible`, `WorkflowActions`.`next_workflow_step_id`, `WorkflowActions`.`event_key`, `WorkflowActions`.`comment_required`,
+  CASE `WorkflowSteps`.`category`
+    WHEN 1 THEN 1
+    ELSE 0
+  END AS `allow_by_assignee`, `WorkflowActions`.`workflow_step_id`, `WorkflowActions`.`modified_user_id`, `WorkflowActions`.`modified`, `WorkflowActions`.`created_user_id`, `WorkflowActions`.`created`
+FROM `z_3253_workflow_actions` AS `WorkflowActions`
 INNER JOIN `workflow_steps` AS `WorkflowSteps`
-ON `WorkflowSteps`.`id` = `WorkflowActions`.`workflow_step_id`
-SET `WorkflowActions`.`allow_by_assignee` = 1
-WHERE `WorkflowSteps`.`category` = 1;
+ON `WorkflowSteps`.`id` = `WorkflowActions`.`workflow_step_id`;
 
 -- workflow_records
 RENAME TABLE `workflow_records` TO `z_3253_workflow_records`;

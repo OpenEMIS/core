@@ -21,6 +21,15 @@ class WorkflowActionsTable extends AppTable {
 		$this->belongsTo('NextWorkflowSteps', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'next_workflow_step_id']);
 	}
 
+	public function onGetNextWorkflowStepId(Event $event, Entity $entity) {
+		$value = '';
+		if (empty($entity->next_workflow_step_id)) {
+			$value = $this->getMessage('general.notConfigured');
+		}
+
+		return $value;
+	}
+
 	public function onGetCommentRequired(Event $event, Entity $entity) {
 		return $entity->comment_required == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
 	}
@@ -443,10 +452,17 @@ class WorkflowActionsTable extends AppTable {
 	}
 
 	public function getEvents($selectedWorkflow=null, $listOnly=true) {
-		$eventOptions = [];
+		$emptyOptions = [
+			0 => [
+				'value' => '',
+				'text' => $this->ControllerAction->Alert->getMessage('general.select.noOptions')
+			]
+		];
 
 		// trigger Workflow.getEvents to retrieve the list of available events for the model
-		if (!is_null($selectedWorkflow)) {
+		if (is_null($selectedWorkflow) || empty($selectedWorkflow)) {
+			return $emptyOptions;
+		} else {
 			$Workflows = TableRegistry::get('Workflow.Workflows');
 			$workflow = $Workflows
 				->find()
@@ -464,13 +480,10 @@ class WorkflowActionsTable extends AppTable {
 
 			$events = $eventsObject;
 			if (empty($events)) {
-				$eventOptions = [
-					0 => [
-						'value' => '',
-						'text' => $this->ControllerAction->Alert->getMessage('general.select.noOptions')
-					]
-				];
+				return $emptyOptions;
 			} else {
+				$eventOptions = [];
+
 				if ($listOnly) {
 					$eventOptions = [
 						0 => __('-- Select Event --')
@@ -489,10 +502,10 @@ class WorkflowActionsTable extends AppTable {
 						$eventOptions[] = $event;
 					}
 				}
+
+				return $eventOptions;
 			}
 		}
-
-		return $eventOptions;
 	}
 
 	private function convertEventsToEventKeys($data) {
