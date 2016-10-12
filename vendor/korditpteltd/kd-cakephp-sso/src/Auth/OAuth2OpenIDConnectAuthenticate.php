@@ -7,6 +7,7 @@ use Cake\Network\Response;
 use Cake\Auth\BaseAuthenticate;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Http\Client;
+use Cake\Log\Log;
 
 require_once(ROOT . DS . 'vendor' . DS  . 'google' . DS . 'apiclient' . DS . 'src' . DS . 'Google' . DS . 'autoload.php');
 
@@ -25,7 +26,11 @@ class OAuth2OpenIDConnectAuthenticate extends BaseAuthenticate
             $accessToken = $session->read('OAuth2OpenIDConnect.accessToken');
 
             $accessToken = json_decode($accessToken, true);
-            $userInfo = $tokenData['payload'];
+            $userInfo = [];
+
+            if (isset($tokenData['payload'])) {
+               $userInfo = $tokenData['payload'];
+            }
 
             if (!empty($this->config('userInfoUri'))) {
                 $http = new Client();
@@ -41,6 +46,7 @@ class OAuth2OpenIDConnectAuthenticate extends BaseAuthenticate
             }
 
             $userName = $this->getUserInfo($userInfo, $mapping['username']);
+            Log::write('debug', '[' . $userName . '] Attempt to login as ' . $userName . '@' . $_SERVER['REMOTE_ADDR']);
 
             if (empty($userName)) {
                 return false;
