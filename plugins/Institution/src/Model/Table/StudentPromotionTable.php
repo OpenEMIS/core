@@ -244,6 +244,9 @@ class StudentPromotionTable extends AppTable {
 				->where([$this->EducationGrades->aliasField($this->EducationGrades->primaryKey()) => $currentData->education_grade_id])
 				->select([$this->EducationGrades->aliasField('education_programme_id'), $this->EducationGrades->aliasField('name')])
 				->first();
+				$gradeName = (!empty($gradeData))? $gradeData->programme_grade_name: $this->getMessage($this->aliasField('noAvailableGrades'));
+		} else if ($currentData['student_status_id'] == $this->statuses['REPEATED']) {
+			$gradeData = $this->EducationGrades->get($currentData['grade_to_promote']);
 			$gradeName = (!empty($gradeData))? $gradeData->programme_grade_name: $this->getMessage($this->aliasField('noAvailableGrades'));
 		}
 
@@ -814,12 +817,8 @@ class StudentPromotionTable extends AppTable {
 		$this->ControllerAction->field('student_status', ['type' => 'readonly', 'attr' => ['label' => $this->getMessage($this->aliasField('status'))]]);
 		$statuses = $this->statuses;
 		$this->ControllerAction->field('students', ['type' => 'readonly']);
-		if (!in_array($currentData[$this->alias()]['student_status_id'], [$statuses['REPEATED']])) {
-			$this->ControllerAction->field('next_grade', ['type' => 'readonly', 'attr' => ['label' => $this->getMessage($this->aliasField('toGrade'))]]);
-			$this->ControllerAction->setFieldOrder(['from_academic_period_id', 'next_academic_period_id', 'grade_to_promote', 'class', 'student_status', 'next_grade',  'students']);
-		} else {
-			$this->ControllerAction->setFieldOrder(['from_academic_period_id', 'next_academic_period_id', 'grade_to_promote', 'class', 'student_status',  'students']);
-		}
+		$this->ControllerAction->field('next_grade', ['type' => 'readonly', 'attr' => ['label' => $this->getMessage($this->aliasField('toGrade'))]]);
+		$this->ControllerAction->setFieldOrder(['from_academic_period_id', 'next_academic_period_id', 'grade_to_promote', 'class', 'student_status', 'next_grade',  'students']);
 
 		if ($currentEntity && !empty($currentEntity)) {
 			if ($this->request->is(['post', 'put'])) {
