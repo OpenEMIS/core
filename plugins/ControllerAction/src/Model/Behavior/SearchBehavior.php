@@ -67,6 +67,8 @@ class SearchBehavior extends Behavior {
 					$attr = $schema->column($col);
 					if ($col == 'password') continue;
 					if (in_array($attr['type'], ['string', 'text'])) {
+						// if the field is not visible, no need to search by that field
+						// adding 1 more condition to check visible, so can remove the auto_search = false.
 						$OR[$model->aliasField($col).' LIKE'] = '%' . $search . '%';
 					}
 				}
