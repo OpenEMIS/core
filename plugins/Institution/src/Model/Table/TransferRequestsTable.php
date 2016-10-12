@@ -283,6 +283,7 @@ class TransferRequestsTable extends AppTable {
 			$this->ControllerAction->field('academic_period_id');
 			$this->ControllerAction->field('education_grade_id');
 			$this->ControllerAction->field('new_education_grade_id');
+			$this->ControllerAction->field('area_id');
 			$this->ControllerAction->field('institution_id');
 			$this->ControllerAction->field('status');
 			$this->ControllerAction->field('start_date');
@@ -296,7 +297,7 @@ class TransferRequestsTable extends AppTable {
 			$this->ControllerAction->setFieldOrder([
 				'transfer_status_header', 'transfer_status',
 				'existing_information_header', 'student', 'previous_institution_id', 'education_grade_id',
-				'new_information_header', 'new_education_grade_id', 'institution_id',
+				'new_information_header', 'new_education_grade_id', 'area_id', 'institution_id',
 				'academic_period_id',
 				'status', 'start_date', 'end_date',
 				'transfer_reasons_header', 'student_transfer_reason_id', 'comment'
@@ -333,6 +334,7 @@ class TransferRequestsTable extends AppTable {
 		$this->ControllerAction->field('transfer_status');
 		$this->ControllerAction->field('student');
 		$this->ControllerAction->field('student_id');
+		$this->ControllerAction->field('area_id');
 		$this->ControllerAction->field('institution_id');
 		$this->ControllerAction->field('academic_period_id');
 		$this->ControllerAction->field('education_grade_id');
@@ -353,7 +355,7 @@ class TransferRequestsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder([
 			'transfer_status_header', 'transfer_status',
 			'existing_information_header', 'student', 'previous_institution_id', 'education_grade_id',
-			'new_information_header', 'new_education_grade_id', 'institution_id',
+			'new_information_header', 'new_education_grade_id', 'area_id', 'institution_id',
 			'academic_period_id',
 			'status', 'start_date', 'end_date',
 			'transfer_reasons_header', 'student_transfer_reason_id', 'comment'
@@ -763,4 +765,22 @@ class TransferRequestsTable extends AppTable {
 		}
 	}
 	*/
+
+	public function onUpdateFieldAreaId(Event $event, array $attr, $action, $request) {
+		// $this->Institutions->find()
+		$Areas = $this->Institutions->Areas;
+		$areaOptions = $Areas->find('list', [
+				'keyField' => 'id',
+				'valueField' => 'code_name'
+			])
+			->innerJoinWith('Institutions')
+			->toArray();
+
+		$attr['type'] = 'chosenSelect';
+		$attr['attr']['multiple'] = false;
+		$attr['select'] = true;
+		$attr['options'] = $areaOptions;
+
+		return $attr;
+	}
 }
