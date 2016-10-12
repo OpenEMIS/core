@@ -276,7 +276,6 @@ class AuthenticationBehavior extends Behavior {
         $attribute['openid_configuration'] = ['label' => 'OpenID Configuration URI', 'type' => 'text', 'required' => false, 'onblur' => 'Authentication.populate(this.value);'];
         $attribute['auth_uri'] = ['label' => 'Authentication URI', 'type' => 'text', 'id' => 'authUri'];
         $attribute['token_uri'] = ['label' => 'Token URI', 'type' => 'text', 'id' => 'tokenUri'];
-        $attribute['revoke_uri'] = ['label' => 'Revoke URI', 'type' => 'text', 'required' => false];
         $attribute['userInfo_uri'] = ['label' => 'User Information URI', 'type' => 'text', 'id' => 'userInfoUri'];
         $attribute['issuer'] = ['label' => 'Issuer', 'type' => 'text', 'id' => 'issuer'];
         $attribute['jwk_uri'] = ['label' => 'Public Key URI', 'type' => 'text', 'id' => 'jwksUri'];
