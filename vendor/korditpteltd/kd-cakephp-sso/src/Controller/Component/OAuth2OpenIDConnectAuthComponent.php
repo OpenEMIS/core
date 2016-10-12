@@ -37,23 +37,63 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
         $this->openIdConfiguration = $oAuthAttributes['openid_configuration'];
         $http = new Client();
         $response = $http->post($this->openIdConfiguration);
+        // Caching of openid configuration
         if (!empty($response->body())) {
             $body = json_decode($response->body(), true);
-
             if (isset($body['issuer'])) {
-                $oAuthAttributes['issuer'] = $body['issuer'];
+                if ($oAuthAttributes['issuer'] != $body['issuer']) {
+                    $oAuthAttributes['issuer'] = $body['issuer'];
+                    $AuthenticationTypeAttributesTable->updateAll([
+                        'attribute_field' => $body['issuer']
+                    ],[
+                        'authentication_type' => 'OAuth2OpenIDConnect',
+                        'attribute_field' => 'issuer'
+                    ]);
+                }
             }
             if (isset($body['authorization_endpoint'])) {
-                $oAuthAttributes['auth_uri'] = $body['authorization_endpoint'];
+                if ($oAuthAttributes['auth_uri'] != $body['authorization_endpoint']) {
+                    $oAuthAttributes['auth_uri'] = $body['authorization_endpoint'];
+                    $AuthenticationTypeAttributesTable->updateAll([
+                        'attribute_field' => $body['authorization_endpoint']
+                    ],[
+                        'authentication_type' => 'OAuth2OpenIDConnect',
+                        'attribute_field' => 'auth_uri'
+                    ]);
+                }
             }
             if (isset($body['token_endpoint'])) {
-                $oAuthAttributes['token_uri'] = $body['token_endpoint'];
+                if ($oAuthAttributes['token_uri'] != $body['token_endpoint']) {
+                    $oAuthAttributes['token_uri'] = $body['token_endpoint'];
+                    $AuthenticationTypeAttributesTable->updateAll([
+                        'attribute_field' => $body['token_endpoint']
+                    ],[
+                        'authentication_type' => 'OAuth2OpenIDConnect',
+                        'attribute_field' => 'token_uri'
+                    ]);
+                }
             }
             if (isset($body['userinfo_endpoint'])) {
-                $oAuthAttributes['userInfo_uri'] = $body['userinfo_endpoint'];
+                if ($oAuthAttributes['userInfo_uri'] != $body['userinfo_endpoint']) {
+                    $oAuthAttributes['userInfo_uri'] = $body['userinfo_endpoint'];
+                    $AuthenticationTypeAttributesTable->updateAll([
+                        'attribute_field' => $body['userinfo_endpoint']
+                    ],[
+                        'authentication_type' => 'OAuth2OpenIDConnect',
+                        'attribute_field' => 'userInfo_uri'
+                    ]);
+                }
             }
             if (isset($body['jwks_uri'])) {
-                $oAuthAttributes['jwks_uri'] = $body['jwks_uri'];
+                if ($oAuthAttributes['jwk_uri'] != $body['jwks_uri']) {
+                    $oAuthAttributes['jwk_uri'] = $body['jwks_uri'];
+                    $AuthenticationTypeAttributesTable->updateAll([
+                        'attribute_field' => $body['jwks_uri']
+                    ],[
+                        'authentication_type' => 'OAuth2OpenIDConnect',
+                        'attribute_field' => 'jwk_uri'
+                    ]);
+                }
             }
 
         }
@@ -192,8 +232,13 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
         if ($client->getAccessToken()) {
             // Check if the access token is expired, if it is expired reauthenticate
             if (!$client->isAccessTokenExpired()) {
-                $this->session->write('OAuth2OpenIDConnect.accessToken', $client->getAccessToken());
-                $tokenData = $client->verifyIdToken()->getAttributes();
+                $accessToken = $client->getAccessToken();
+                $this->session->write('OAuth2OpenIDConnect.accessToken', $accessToken);
+                if (isset(json_decode($accessToken, true)['id_token'])) {
+                    // Exception will be thrown if the token signature does not match. This is to prevent
+                    // man in the middle
+                    $tokenData = $client->verifyIdToken()->getAttributes();
+                }
             } else {
                 $authUrl = $client->createAuthUrl();
             }
@@ -233,10 +278,8 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
             }
             if ($this->session->check('OAuth2OpenIDConnect.tokenData')) {
                 $tokenData = $this->session->read('OAuth2OpenIDConnect.tokenData');
-                $email = $tokenData['payload']['email'];
-                $username = explode('@', $tokenData['payload']['email'])[0];
             }
-            return $this->checkLogin($username);
+            return $this->checkLogin();
         } else {
             if ($this->request->is('post') && isset($this->request->data['submit'])) {
                 if ($this->request->data['submit'] == 'login') {
@@ -258,7 +301,6 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
 
     private function checkLogin($username = null, $extra = [])
     {
-        $this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'debug');
         $user = $this->Auth->identify();
         $extra['status'] = true;
         $extra['loginStatus'] = false;

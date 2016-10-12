@@ -278,8 +278,8 @@ class AuthenticationBehavior extends Behavior {
         $attribute['token_uri'] = ['label' => 'Token URI', 'type' => 'text', 'id' => 'tokenUri'];
         $attribute['revoke_uri'] = ['label' => 'Revoke URI', 'type' => 'text', 'required' => false];
         $attribute['userInfo_uri'] = ['label' => 'User Information URI', 'type' => 'text', 'id' => 'userInfoUri'];
-        $attribute['issuer'] = ['label' => 'Issuer', 'type' => 'text', 'required' => false, 'id' => 'issuer'];
-        $attribute['jwks_uri'] = ['label' => 'Public Key URI', 'type' => 'text', 'id' => 'jwksUri'];
+        $attribute['issuer'] = ['label' => 'Issuer', 'type' => 'text', 'id' => 'issuer'];
+        $attribute['jwk_uri'] = ['label' => 'Public Key URI', 'type' => 'text', 'id' => 'jwksUri'];
         $attribute['username_mapping'] = ['label' => 'Username Mapping', 'type' => 'text'];
         $attribute['firstName_mapping'] = ['label' => 'First Name Mapping', 'type' => 'text', 'required' => false];
         $attribute['lastName_mapping'] = ['label' => 'Last Name Mapping', 'type' => 'text', 'required' => false];

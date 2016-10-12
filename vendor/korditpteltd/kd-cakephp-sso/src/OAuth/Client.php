@@ -518,6 +518,10 @@ class Custom_Client extends Google_Client
       if (isset($oAuthAttributes['issuer'])) {
         $this->auth->setIssuer($oAuthAttributes['issuer']);
       }
+
+      if (isset($oAuthAttributes['jwk_uri'])) {
+        $this->auth->setJwksUri($oAuthAttributes['jwk_uri']);
+      }
     }
     return $this->auth;
   }
