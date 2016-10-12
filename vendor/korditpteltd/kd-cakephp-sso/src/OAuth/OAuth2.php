@@ -32,6 +32,7 @@ class Custom_Auth_OAuth2 extends Google_Auth_Abstract
   private $OAUTH2_TOKEN_URI = 'https://accounts.google.com/o/oauth2/token';
   private $OAUTH2_AUTH_URL = 'https://accounts.google.com/o/oauth2/auth';
   private $OAUTH2_ISSUER = 'accounts.google.com';
+  private $OAUTH2_JWKS_URI = 'https://www.googleapis.com/oauth2/v3/certs';
   const CLOCK_SKEW_SECS = 300; // five minutes in seconds
   const AUTH_TOKEN_LIFETIME_SECS = 300; // five minutes in seconds
   const MAX_TOKEN_LIFETIME_SECS = 86400; // one day in seconds
@@ -89,6 +90,13 @@ class Custom_Auth_OAuth2 extends Google_Auth_Abstract
   {
     if (!empty($uri)) {
       $this->OAUTH2_ISSUER = $uri;
+    }
+  }
+
+  public function setJwksUri($uri)
+  {
+    if (!empty($uri)) {
+      $this->OAUTH2_JWKS_URI = $uri;
     }
   }
 
@@ -566,7 +574,7 @@ class Custom_Auth_OAuth2 extends Google_Auth_Abstract
 
     $message = "$segments[0].$segments[1]";
     $http = new Client();
-    $response = $http->post('https://sso.openemis.org/wp/.well-known/keys');
+    $response = $http->post($this->OAUTH2_JWKS_URI);
     $body = json_decode($response->body(), true);
     $keys = [];
     if (isset($body['keys'])) {
