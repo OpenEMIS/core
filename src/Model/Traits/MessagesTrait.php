@@ -48,6 +48,7 @@ trait MessagesTrait {
         'general' => [
             'notExists' => 'The record does not exist.',
             'notEditable' => 'This record is not editable',
+            'notConfigured' => 'Not Configured',
             'exists' => 'The record exists in the system.',
             'noData' => 'There are no records.',
             'noRecords' => 'No Record',
@@ -393,6 +394,7 @@ trait MessagesTrait {
             'workflow_model_id' => 'Form'
         ],
         'WorkflowSteps' => [
+            'notCategorized' => 'Not Categorized',
             'restrictDelete' => 'Delete operation is not allowed as this is a system defined record.'
         ],
         'WorkflowActions' => [
