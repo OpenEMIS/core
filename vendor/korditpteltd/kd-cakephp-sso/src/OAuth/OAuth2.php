@@ -574,11 +574,22 @@ class Custom_Auth_OAuth2 extends Google_Auth_Abstract
 
     $message = "$segments[0].$segments[1]";
     $http = new Client();
-    $response = $http->post($this->OAUTH2_JWKS_URI);
-    $body = json_decode($response->body(), true);
     $keys = [];
-    if (isset($body['keys'])) {
-      $keys = $body['keys'];
+
+    $response = $http->get($this->OAUTH2_JWKS_URI);
+    if ($response->statusCode() == 200) {
+      $body = json_decode($response->body(), true);
+      if (isset($body['keys'])) {
+        $keys = $body['keys'];
+      }
+    }
+
+    $response = $http->post($this->OAUTH2_JWKS_URI);
+    if ($response->statusCode() == 200) {
+      $body = json_decode($response->body(), true);
+      if (isset($body['keys'])) {
+        $keys = $body['keys'];
+      }
     }
 
     $algorithm = [
@@ -587,9 +598,10 @@ class Custom_Auth_OAuth2 extends Google_Auth_Abstract
         'HS384' => 'sha384',
         'RS256' => 'sha256',
     ];
-
+    $verified = false;
     foreach ($keys as $key) {
       $rsa = new \phpseclib\Crypt\RSA();
+
       if (isset($algorithm[$key['alg']])) {
         $bigInt = substr($key['alg'], -3, 3);
         $rsa->loadKey([

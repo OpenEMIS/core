@@ -34,15 +34,19 @@ class OAuth2OpenIDConnectAuthenticate extends BaseAuthenticate
 
             if (!empty($this->config('userInfoUri'))) {
                 $http = new Client();
-                $response = $http->post($this->config('userInfoUri').'?access_token='.$accessToken['access_token']);
+                $responseBody = [];
+                $responseBody[] = $http->post($this->config('userInfoUri').'?access_token='.$accessToken['access_token']);
+                $responseBody[] = $http->get($this->config('userInfoUri').'?access_token='.$accessToken['access_token']);
 
-                if ($response->statusCode() != 200) {
-                    return false;
+                foreach ($responseBody as $response) {
+                    if ($response->statusCode() == 200) {
+                        $body = $response->body();
+                        if (!empty($body)) {
+                            $userInfo = array_merge(json_decode($body, true), $userInfo);
+                        }
+                    }
                 }
-                $body = $response->body();
-                if (!empty($body)) {
-                    $userInfo = array_merge(json_decode($body, true), $userInfo);
-                }
+
             }
 
             $userName = $this->getUserInfo($userInfo, $mapping['username']);
