@@ -27,25 +27,29 @@ class UpdateAssigneeShell extends Shell {
  			}
  		} else {
  			$triggeredModel = $this->args[0];
- 			$statusId = !empty($this->args[1]) ? $this->args[1] : 0;
- 			$groupId = !empty($this->args[2]) ? $this->args[2] : 0;
-	 		$userId = !empty($this->args[3]) ? $this->args[3] : 0;
-	 		$roleId = !empty($this->args[4]) ? $this->args[4] : 0;
+ 			$id = !empty($this->args[1]) ? $this->args[1] : 0;
+ 			$statusId = !empty($this->args[2]) ? $this->args[2] : 0;
+	 		$groupId = !empty($this->args[3]) ? $this->args[3] : 0;
+	 		$userId = !empty($this->args[4]) ? $this->args[4] : 0;
+	 		$roleId = !empty($this->args[5]) ? $this->args[5] : 0;
 
 	 		$workflowModelEntity = $this->WorkflowModels->find()->where([$this->WorkflowModels->aliasField('model') => $triggeredModel])->first();
-	 		$this->autoAssignAssignee($workflowModelEntity, $statusId, $groupId, $userId, $roleId);
+	 		$this->autoAssignAssignee($workflowModelEntity, $id, $statusId, $groupId, $userId, $roleId);
  		}
 	}
 
-	public function autoAssignAssignee(Entity $workflowModelEntity, $statusId=0, $groupId=0, $userId=0, $roleId=0) {
+	public function autoAssignAssignee(Entity $workflowModelEntity, $id=0, $statusId=0, $groupId=0, $userId=0, $roleId=0) {
 		try {
 			$model = TableRegistry::get($workflowModelEntity->model);
 			$isSchoolBased = $workflowModelEntity->is_school_based;
 			$this->out("Initialize Update Assignee Shell of " . $workflowModelEntity->name);
 
 			$where = [];
-			// only update records by status when user change security roles of a step
-			if (!empty($statusId)) {
+			if (!empty($id)) {
+				// only update records by status when user change security roles of a step
+				$where[$model->aliasField('id')] = $id;
+			} else if (!empty($statusId)) {
+				// only update records by status when user change security roles of a step
 				$where[$model->aliasField('status_id')] = $statusId;
 			} else {
 				$where[$model->aliasField('assignee_id')] = 0;

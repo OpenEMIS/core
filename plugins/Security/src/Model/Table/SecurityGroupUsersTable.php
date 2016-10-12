@@ -347,8 +347,10 @@ class SecurityGroupUsersTable extends AppTable {
                 }
             } else {
             	Log::write('debug', 'Roles By Step is empty:');
+            	Log::write('debug', 'Category: ' . $category);
+            	Log::write('debug', 'Creator Id: ' . $createdUserId);
 
-            	// if not roles is configured in workflow step and the category is To Do, set assignee as creator
+            	// Set assignee as creator only when no roles is configured in workflow step and category of the workflow step is To Do
             	if (!is_null($category) && $category == self::TO_DO) {
             		$assigneeId = $createdUserId;
             	}
