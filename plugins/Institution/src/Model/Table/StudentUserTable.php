@@ -190,21 +190,17 @@ class StudentUserTable extends UserTable
     private function addTransferButton(ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, Session $session)
     {
     	$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
-    	$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 
 		$statuses = $InstitutionStudentsTable->StudentStatuses->findCodeList();
 		$id = $session->read('Institution.Students.id');
 		$currentAcademicPeriodId = $session->read('AcademicPeriod.AcademicPeriods.id');
 		$academicPeriodId = $InstitutionStudentsTable->get($id)->academic_period_id;
-		$currentAcademicPeriodStartDate = $AcademicPeriods->get($currentAcademicPeriodId)->start_date->toUnixString();
-		$currentAcademicPeriodEndDate = $AcademicPeriods->get($currentAcademicPeriodId)->end_date->toUnixString();
-		$todayDate = strtotime(date('Y-m-d'));
+		$todayDate = date('Y-m-d');
 
 		// check the permission and the student academic period id is current academic period id and today date fall within the enrollment period
 		if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])
 			&& ($academicPeriodId == $currentAcademicPeriodId)
-			&& ($currentAcademicPeriodStartDate <= $todayDate)
-			&& ($todayDate <= $currentAcademicPeriodEndDate)) {
+			&& ($this->checkDateWithinEnrollmentPeriod($todayDate, $currentAcademicPeriodId))) {
 			$TransferRequests = TableRegistry::get('Institution.TransferRequests');
 			$studentData = $InstitutionStudentsTable->get($id);
 			$selectedStudent = $studentData->student_id;
@@ -445,5 +441,21 @@ class StudentUserTable extends UserTable
                 break;
             }
         }
+    }
+
+    public function checkDateWithinEnrollmentPeriod ($todayDate, $currentAcademicPeriodId)
+    {
+    	$isWithinEnrollmentDate = true;
+    	$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+
+    	$currentAcademicPeriodStartDate = $AcademicPeriods->get($currentAcademicPeriodId)->start_date->toUnixString();
+		$currentAcademicPeriodEndDate = $AcademicPeriods->get($currentAcademicPeriodId)->end_date->toUnixString();
+		$todayDateStamp = strtotime($todayDate);
+
+		if (($currentAcademicPeriodStartDate >= $todayDateStamp) || ($todayDateStamp >= $currentAcademicPeriodEndDate)) {
+			$isWithinEnrollmentDate = false;
+		}
+
+		return $isWithinEnrollmentDate;
     }
 }
