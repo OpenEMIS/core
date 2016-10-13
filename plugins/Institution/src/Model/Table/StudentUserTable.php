@@ -244,6 +244,92 @@ class StudentUserTable extends UserTable
 		}
     }
 
+
+
+
+    private function addPromoteButton(ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, Session $session)
+    {
+		if ($this->AccessControl->check([$this->controller->name, 'Promotion', 'add'])) {
+
+			$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+			$statuses = $InstitutionStudentsTable->StudentStatuses->findCodeList();
+
+			$id = $session->read('Institution.Students.id');
+			$studentData = $InstitutionStudentsTable->get($id);
+			$selectedStudent = $studentData->student_id;
+
+			// Show Promote button only if the Student Status is Current
+			if ($studentData->student_status_id == $statuses['CURRENT']) {
+
+				// check admission requests
+				$StudentAdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+				$conditions = [
+					'student_id' => $studentData->student_id,
+					'status' => $StudentAdmissionTable::NEW_REQUEST,
+					'education_grade_id' => $studentData->education_grade_id,
+					'institution_id' => $studentData->institution_id,
+					'type' => $StudentAdmissionTable::ADMISSION
+				];
+
+				$admissionCount = $StudentAdmissionTable->find()
+					->where($conditions)
+					->count();
+				// pr($admissionCount);
+
+				// check transfer requests
+				$conditions = [
+					'student_id' => $studentData->student_id,
+					'status' => $StudentAdmissionTable::NEW_REQUEST,
+					'new_education_grade_id' => $studentData->education_grade_id,
+					'previous_institution_id' => $studentData->institution_id,
+					'type' => $StudentAdmissionTable::TRANSFER,
+				];
+
+				$transferCount = $StudentAdmissionTable->find()
+					->where($conditions)
+					->count();
+				// pr($transferCount);
+
+				// check dropout requests
+				$StudentDropoutTable = TableRegistry::get('Institution.StudentDropout');
+				$conditions = [
+					'student_id' => $studentData->student_id,
+					'status' => $StudentDropoutTable::NEW_REQUEST,
+					'education_grade_id' => $studentData->education_grade_id,
+					'institution_id' => $studentData->institution_id,
+					'academic_period_id' => $studentData->academic_period_id,
+				];
+
+				$dropoutCount = $StudentDropoutTable->find()
+					->where($conditions)
+					->count();
+				// pr($dropoutCount);
+
+				$totalCount = $admissionCount + $transferCount + $dropoutCount;
+				// pr($totalCount);
+
+				if ($totalCount == 0) {
+					// Promote button
+					$promoteButton = $buttons['back'];
+					$promoteButton['type'] = 'button';
+					$promoteButton['label'] = '<i class="fa kd-graduate"></i>';
+					$promoteButton['attr'] = $attr;
+					$promoteButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+					$promoteButton['attr']['title'] = __('Promotion / Graduation');
+
+					$promoteButton['url'] = [
+						'plugin' => $buttons['back']['url']['plugin'],
+						'controller' => $buttons['back']['url']['controller'],
+						'action' => 'SinglePromotion',
+						'add'
+					];
+					$toolbarButtons['promote'] = $promoteButton;
+					// End
+				}
+			}
+		}
+    }
+
     private function addDropoutButton(ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, Session $session)
     {
     	$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
@@ -361,6 +447,7 @@ class StudentUserTable extends UserTable
 
 			$session = $this->request->session();
 			$this->addTransferButton($buttons, $toolbarButtons, $attr, $session);
+			$this->addPromoteButton($buttons, $toolbarButtons, $attr, $session);
 			$this->addDropoutButton($buttons, $toolbarButtons, $attr, $session);
 
 		} else if ($action == 'add') {
