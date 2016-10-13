@@ -71,7 +71,7 @@ class DirectoriesController extends AppController {
 	public function StaffClasses() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffClasses']); }
 	public function StaffSubjects() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSubjects']); }
 	public function StaffEmployments()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Employments']); }
-	public function StaffLeave()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffLeave']); }
+	public function StaffLeave()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Leave']); }
 	public function StudentClasses() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']); }
 	public function StudentSubjects() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']); }
     public function Nationalities() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
@@ -411,7 +411,7 @@ class DirectoriesController extends AppController {
 			'Classes' => ['text' => __('Classes')],
 			'Subjects' => ['text' => __('Subjects')],
 			'Absences' => ['text' => __('Absences')],
-			'StaffLeave' => ['text' => __('Leave')],
+			'Leave' => ['text' => __('Leave')],
 			'Behaviours' => ['text' => __('Behaviours')],
 			'Awards' => ['text' => __('Awards')],
 		];
@@ -419,8 +419,7 @@ class DirectoriesController extends AppController {
 		$tabElements = array_merge($tabElements, $studentTabElements);
 
 		foreach ($studentTabElements as $key => $tab) {
-			$action = strpos($key, "Staff") === false ? 'Staff'.$key : $key;
-			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $action, 'type' => 'staff']);
+			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Staff'.$key, 'type' => 'staff']);
 		}
 		return $tabElements;
 	}
