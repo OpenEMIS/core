@@ -68,10 +68,6 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
     StudentController.defaultIdentityTypeName;
     StudentController.postResponse;
 
-
-
-
-
     angular.element(document).ready(function () {
         InstitutionsStudentsSvc.init(angular.baseUrl);
         InstitutionsStudentsSvc.setInstitutionId(StudentController.institutionId);
@@ -104,6 +100,7 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
         }, function(error) {
             console.log(error);
             AlertSvc.warning($scope, error);
+            UtilsSvc.isAppendLoader(false);
         })
         .then(function(defaultIdentityType) {
             if (defaultIdentityType.length > 0) {
@@ -113,6 +110,7 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
         }, function(error){
             console.log(error);
             AlertSvc.warning($scope, error);
+            UtilsSvc.isAppendLoader(false);
         })
         .then(function(genders) {
             StudentController.genderOptions = genders;
@@ -125,8 +123,11 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
                     InstitutionsStudentsSvc.init(angular.baseUrl);
                     $scope.initGrid();
                 }, function(error) {
-                    console.log(error);
-                    AlertSvc.warning($scope, error);
+                    StudentController.hasExternalDataSource = false;
+                    InstitutionsStudentsSvc.init(angular.baseUrl);
+                    console.log('Error connecting to external source');
+                    $scope.initGrid();
+                    AlertSvc.warning($scope, 'Error connecting to external source');
                 });
             } else {
                 $scope.initGrid();
@@ -134,6 +135,7 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
 
         }, function(error) {
             console.log(error);
+            UtilsSvc.isAppendLoader(false);
             AlertSvc.warning($scope, error);
         });
 
@@ -243,6 +245,7 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
                 AlertSvc.reset($scope);
                 delete StudentController.selectedStudent;
                 if (withData) {
+                    InstitutionsStudentsSvc.init(angular.baseUrl);
                    InstitutionsStudentsSvc.getStudentRecords(
                     {
                         startRow: params.startRow,
@@ -310,6 +313,7 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
                             AlertSvc.warning($scope, error);
                         }
                         var studentRecords = [];
+                        InstitutionsStudentsSvc.init(angular.baseUrl);
                         return StudentController.processStudentRecord(studentRecords, params, 0);
                     })
                     .finally(function(res) {

@@ -25,7 +25,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 </div>
             </li>
 
-            <li data-step="2" data-name="externalSearch" ng-show="<?= $externalDataSource ?>">
+            <li data-step="2" data-name="externalSearch" ng-show="InstitutionStudentController.hasExternalDataSource">
                 <div class="step-wrapper">
                     External Search
                     <span class="chevron"></span>
