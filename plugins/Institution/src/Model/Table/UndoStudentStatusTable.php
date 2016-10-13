@@ -368,7 +368,7 @@ class UndoStudentStatusTable extends AppTable {
                             $conditions,
                             'OR' => [
                                 'InstitutionStudent.student_status_id NOT IN (' . implode(', ',$checkStatus) . ')',
-                                'InstitutionStudent.student_status_id IS NULL'
+                                'InstitutionStudent.student_status_id IS NULL' //null is a result of left join to detect new / single record
                             ],
                         ]);
 
