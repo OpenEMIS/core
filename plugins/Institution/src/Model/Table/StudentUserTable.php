@@ -193,14 +193,12 @@ class StudentUserTable extends UserTable
 
 		$statuses = $InstitutionStudentsTable->StudentStatuses->findCodeList();
 		$id = $session->read('Institution.Students.id');
-		$currentAcademicPeriodId = $session->read('AcademicPeriod.AcademicPeriods.id');
-		$academicPeriodId = $InstitutionStudentsTable->get($id)->academic_period_id;
+		$studentAcademicPeriodId = $InstitutionStudentsTable->get($id)->academic_period_id;
 		$todayDate = date('Y-m-d');
 
-		// check the permission and the student academic period id is current academic period id and today date fall within the enrollment period
+		// check the permission and today date fall within the student enrollment period
 		if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])
-			&& ($academicPeriodId == $currentAcademicPeriodId)
-			&& ($this->checkDateWithinEnrollmentPeriod($todayDate, $currentAcademicPeriodId))) {
+			&& ($this->checkDateWithinEnrollmentPeriod($todayDate, $studentAcademicPeriodId))) {
 			$TransferRequests = TableRegistry::get('Institution.TransferRequests');
 			$studentData = $InstitutionStudentsTable->get($id);
 			$selectedStudent = $studentData->student_id;
@@ -443,16 +441,16 @@ class StudentUserTable extends UserTable
         }
     }
 
-    public function checkDateWithinEnrollmentPeriod ($todayDate, $currentAcademicPeriodId)
+    public function checkDateWithinEnrollmentPeriod ($todayDate, $studentAcademicPeriodId)
     {
     	$isWithinEnrollmentDate = true;
     	$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 
-    	$currentAcademicPeriodStartDate = $AcademicPeriods->get($currentAcademicPeriodId)->start_date->toUnixString();
-		$currentAcademicPeriodEndDate = $AcademicPeriods->get($currentAcademicPeriodId)->end_date->toUnixString();
+    	$studentAcademicPeriodStartDate = $AcademicPeriods->get($studentAcademicPeriodId)->start_date->toUnixString();
+		$studentAcademicPeriodEndDate = $AcademicPeriods->get($studentAcademicPeriodId)->end_date->toUnixString();
 		$todayDateStamp = strtotime($todayDate);
 
-		if (($currentAcademicPeriodStartDate >= $todayDateStamp) || ($todayDateStamp >= $currentAcademicPeriodEndDate)) {
+		if (($studentAcademicPeriodStartDate >= $todayDateStamp) || ($todayDateStamp >= $studentAcademicPeriodEndDate)) {
 			$isWithinEnrollmentDate = false;
 		}
 
