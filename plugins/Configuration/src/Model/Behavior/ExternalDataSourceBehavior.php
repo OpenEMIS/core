@@ -155,7 +155,7 @@ class ExternalDataSourceBehavior extends Behavior {
 					'external_data_source_type' => $externalDataSourceType,
 					'attribute_field' => $key,
 					'attribute_name' => $value['name'],
-					'value' => $value['value']
+					'value' => trim($value['value'])
 				];
 				$entity = $ExternalDataSourceAttributesTable->newEntity($entityData);
 				$ExternalDataSourceAttributesTable->save($entity);
