@@ -297,9 +297,13 @@ class WorkflowBehavior extends Behavior {
 		$model = $this->_table;
 		if ($model->hasField('assignee_id')) {
 			if ($this->isCAv4()) {
-				$model->field('assignee_id', ['type' => 'hidden']);
+				$model->field('assignee_id', [
+					'visible' => ['index' => true, 'view' => true, 'add' => false, 'edit' => false]
+				]);
 			} else {
-				$model->ControllerAction->field('assignee_id', ['type' => 'hidden']);
+				$model->ControllerAction->field('assignee_id', [
+					'visible' => ['index' => true, 'view' => true, 'add' => false, 'edit' => false]
+				]);
 			}
 		}
 	}
@@ -623,11 +627,12 @@ class WorkflowBehavior extends Behavior {
 		$fieldOrder = [];
 		$fields = $this->_table->fields;
 		foreach ($fields as $fieldKey => $fieldAttr) {
-			if (!in_array($fieldKey, ['status_id'])) {
+			if (!in_array($fieldKey, ['status_id', 'assignee_id'])) {
 				$fieldOrder[$fieldAttr['order']] = $fieldKey;
 			}
 		}
 		ksort($fieldOrder);
+		array_unshift($fieldOrder, 'assignee_id');	// Set Status to second
 		array_unshift($fieldOrder, 'status_id');	// Set Status to first
 		if ($this->isCAv4()) {
 			$this->_table->setFieldOrder($fieldOrder);
