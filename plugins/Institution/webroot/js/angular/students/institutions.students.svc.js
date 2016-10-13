@@ -84,7 +84,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
     function getAccessToken()
     {
         var deferred = $q.defer();
-
+        this.init(angular.baseUrl);
         ExternalDataSourceAttributes
             .select()
             .where({
