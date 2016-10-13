@@ -109,8 +109,6 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
         $this->mapping['lastName'] = $oAuthAttributes['lastName_mapping'];
         $this->mapping['dob'] = $oAuthAttributes['dob_mapping'];
         $this->mapping['gender'] = $oAuthAttributes['gender_mapping'];
-        $this->mapping['email'] = $oAuthAttributes['email_mapping'];
-
 
         $hashAttributes = $oAuthAttributes;
         unset($hashAttributes['redirect_uri']);
