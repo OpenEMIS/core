@@ -283,7 +283,6 @@ class AuthenticationBehavior extends Behavior {
         $attribute['firstName_mapping'] = ['label' => 'First Name Mapping', 'type' => 'text', 'required' => false];
         $attribute['lastName_mapping'] = ['label' => 'Last Name Mapping', 'type' => 'text', 'required' => false];
         $attribute['dob_mapping'] = ['label' => 'Date of Birth Mapping', 'type' => 'text', 'required' => false];
-        $attribute['email_mapping'] = ['label' => 'Email Mapping', 'type' => 'text', 'required' => false];
         $attribute['gender_mapping'] = ['label' => 'Gender Mapping', 'type' => 'text', 'required' => false];
     }
 
