@@ -3,12 +3,12 @@
 INSERT INTO `db_patches` (`issue`, `created`) VALUES ('POCOR-2827', NOW());
 
 -- config_items
-INSERT INTO `config_items` (`name`, `code`, `type`, `label`, `value`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `created_user_id`, `created`) 
-VALUES ('Type', 'external_data_source_type', 'External Data Source', 'Type', 'None', 'None', 1, 1, 'Dropdown', 'external_data_source_type', 1, NOW());
+INSERT INTO `config_items` (`id`, `name`, `code`, `type`, `label`, `value`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `created_user_id`, `created`)
+VALUES (1002, 'Type', 'external_data_source_type', 'External Data Source', 'Type', 'None', 'None', 1, 1, 'Dropdown', 'external_data_source_type', 1, NOW());
 
 -- config_item_options
-INSERT INTO `config_item_options` (`option_type`, `option`, `value`, `order`, `visible`) VALUES ('external_data_source_type', 'None', 'None', 1, 1);
-INSERT INTO `config_item_options` (`option_type`, `option`, `value`, `order`, `visible`) VALUES ('external_data_source_type', 'Openemis Identities', 'Openemis Identities', 2, 1);
+INSERT INTO `config_item_options` (`id`, `option_type`, `option`, `value`, `order`, `visible`) VALUES (100, 'external_data_source_type', 'None', 'None', 1, 1);
+INSERT INTO `config_item_options` (`id`, `option_type`, `option`, `value`, `order`, `visible`) VALUES (101, 'external_data_source_type', 'Openemis Identities', 'Openemis Identities', 2, 1);
 
 -- external_data_source_attributes
 CREATE TABLE `external_data_source_attributes` (

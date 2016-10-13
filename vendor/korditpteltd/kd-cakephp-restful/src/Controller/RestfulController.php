@@ -370,7 +370,7 @@ class RestfulController extends AppController
 
         header('Access-Control-Allow-Origin: ' . $headers['Origin']);
         header('Access-Control-Allow-Methods: ' . implode(', ', $supportedMethods));
-        header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Authorization');
+        header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Authorization, ControllerAction');
         header('Content-Type: text/html; charset=utf-8');
 
         Log::write('debug', getallheaders());
