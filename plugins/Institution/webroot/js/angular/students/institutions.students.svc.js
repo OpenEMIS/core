@@ -71,6 +71,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
     function initExternal(baseUrl) {
         KdOrmSvc.base(baseUrl);
+        KdOrmSvc.controllerAction('ExternalAPI');
         KdOrmSvc.init(externalModels);
     };
 

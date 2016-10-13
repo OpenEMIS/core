@@ -944,6 +944,11 @@ class StudentsTable extends ControllerActionTable {
 					[$conditions]
 				);
 			}
+
+            $this->Users->updateAll(
+                ['is_student' => 1],
+                ['security_user_id' => $entity->student_id]
+            );
 		}
 	}
 
