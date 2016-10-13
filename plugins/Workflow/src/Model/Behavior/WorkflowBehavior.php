@@ -273,6 +273,16 @@ class WorkflowBehavior extends Behavior {
 		return '<span class="status highlight">' . $entity->workflow_status . '</span>';
 	}
 
+	public function onGetAssigneeId(Event $event, Entity $entity) {
+		$model = $this->_table;
+		$value = '';
+		if (empty($entity->assignee_id)) {
+			$value = $model->getMessage('general.unassigned');
+		}
+
+		return $value;
+	}
+
 	public function beforeAction(Event $event) {
 		// Initialize workflow
 		$this->controller = $this->_table->controller;

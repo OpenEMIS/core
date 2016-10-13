@@ -38,7 +38,7 @@ class WorkflowActionsTable extends AppTable {
 		return $entity->allow_by_assignee == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
 	}
 
-	public function onGetEvents(Event $event, Entity $entity) {
+	public function onGetPostEvents(Event $event, Entity $entity) {
 		$workflowSteps = $entity->workflow_step;
 		$selectedWorkflow = $workflowSteps->workflow_id;
 		$eventOptions = $this->getEvents($selectedWorkflow);
@@ -58,8 +58,8 @@ class WorkflowActionsTable extends AppTable {
 	}
 
 	public function indexBeforeAction(Event $event) {
-		$this->ControllerAction->field('events');
-		$this->ControllerAction->setFieldOrder(['visible', 'name', 'description', 'workflow_step_id', 'next_workflow_step_id', 'comment_required', 'allow_by_assignee', 'events']);
+		$this->ControllerAction->field('post_events');
+		$this->ControllerAction->setFieldOrder(['visible', 'name', 'description', 'workflow_step_id', 'next_workflow_step_id', 'comment_required', 'allow_by_assignee', 'post_events']);
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -124,7 +124,7 @@ class WorkflowActionsTable extends AppTable {
 			foreach ($events as $key => $event) {
 				$eventsData[] = ['event_key' => $event];
 			}
-			$entity->events = $eventsData;
+			$entity->post_events = $eventsData;
 		}
 	}
 
@@ -245,7 +245,7 @@ class WorkflowActionsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldEvents(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldPostEvents(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'view') {
 			$entity = $attr['attr']['entity'];
 			$workflowSteps = $entity->_matchingData['WorkflowSteps'];
@@ -286,8 +286,8 @@ class WorkflowActionsTable extends AppTable {
 			} else if ($request->is(['post', 'put'])) {
 				$requestData = $request->data;
 				if (array_key_exists($this->alias(), $requestData)) {
-					if (array_key_exists('events', $requestData[$this->alias()])) {
-						foreach ($requestData[$this->alias()]['events'] as $key => $event) {
+					if (array_key_exists('post_events', $requestData[$this->alias()])) {
+						foreach ($requestData[$this->alias()]['post_events'] as $key => $event) {
 							$selectedEventKeys[] = $event['event_key'];
 						}
 					}
@@ -351,7 +351,7 @@ class WorkflowActionsTable extends AppTable {
 			if (array_key_exists('event_method_key', $data[$this->alias()])) {
 				$methodKey = $data[$this->alias()]['event_method_key'];
 				if (!empty($methodKey)) {
-					$data[$this->alias()]['events'][] = [
+					$data[$this->alias()]['post_events'][] = [
 						'event_key' => $methodKey
 					];
 				}
@@ -372,14 +372,14 @@ class WorkflowActionsTable extends AppTable {
 		$this->ControllerAction->field('comment_required');
 		$this->ControllerAction->field('allow_by_assignee');
 		$this->ControllerAction->field('visible');
-		$this->ControllerAction->field('events', [
+		$this->ControllerAction->field('post_events', [
 			'type' => 'element',
 			'element' => 'Workflow.WorkflowActions/events',
 			'valueClass' => 'table-full-width',
 			'attr' => ['entity' => $entity]
 		]);
 
-		$this->ControllerAction->setFieldOrder(['workflow_model_id', 'workflow_id', 'workflow_step_id', 'name', 'description', 'next_workflow_step_id', 'comment_required', 'allow_by_assignee', 'visible', 'events']);
+		$this->ControllerAction->setFieldOrder(['workflow_model_id', 'workflow_id', 'workflow_step_id', 'name', 'description', 'next_workflow_step_id', 'comment_required', 'allow_by_assignee', 'visible', 'post_events']);
 	}
 
 	private function checkIfCanEditOrDelete($entity) {
@@ -511,9 +511,9 @@ class WorkflowActionsTable extends AppTable {
 	private function convertEventsToEventKeys($data) {
 		$eventKeys = [];
 		if (array_key_exists($this->alias(), $data)) {
-			if (array_key_exists('events', $data[$this->alias()])) {
+			if (array_key_exists('post_events', $data[$this->alias()])) {
 				$eventKeys = [];
-				foreach ($data[$this->alias()]['events'] as $key => $event) {
+				foreach ($data[$this->alias()]['post_events'] as $key => $event) {
 					if (!in_array($event['event_key'], $eventKeys)) {
 						$eventKeys[] = $event['event_key'];
 					}
