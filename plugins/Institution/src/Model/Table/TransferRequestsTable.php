@@ -601,6 +601,7 @@ class TransferRequestsTable extends AppTable {
 						}
 					]);
 					$attr['type'] = 'select';
+					$attr['select'] = false;
 					$attr['options'] = $gradeOptions;
 					$attr['onChangeReload'] = 'changeNewEducationGradeId';
 					$this->selectedGrade = $request->data[$this->alias()]['new_education_grade_id'];
