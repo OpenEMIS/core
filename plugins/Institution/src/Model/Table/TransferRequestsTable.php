@@ -474,11 +474,12 @@ class TransferRequestsTable extends AppTable {
 					'alias' => $InstitutionGrades->alias(),
 					'conditions' => [
 						$InstitutionGrades->aliasField('institution_id =') . $this->Institutions->aliasField('id'),
+						$InstitutionGrades->aliasField('institution_id') . ' <> ' . $institutionId,
 						$InstitutionGrades->aliasField('education_grade_id') => $this->selectedGrade,
-						$InstitutionGrades->aliasField('start_date').' <=' => $academicPeriodEndDate,
+						$InstitutionGrades->aliasField('start_date') . ' <= ' => $academicPeriodEndDate,
 						'OR' => [
-							$InstitutionGrades->aliasField('end_date').' IS NULL',
-							$InstitutionGrades->aliasField('end_date').' >=' => $academicPeriodStartDate
+							$InstitutionGrades->aliasField('end_date') . ' IS NULL',
+							$InstitutionGrades->aliasField('end_date') . ' >=' => $academicPeriodStartDate
 						]
 					]
 				])
@@ -487,9 +488,9 @@ class TransferRequestsTable extends AppTable {
 			$attr['type'] = 'chosenSelect';
 			$attr['attr']['multiple'] = false;
 			$attr['select'] = true;
-			if ($this->selectedGrade == $request->data[$this->alias()]['education_grade_id']) {
-				$institutionOptions->where([$this->Institutions->aliasField('id').' <> ' => $institutionId]);
-			}
+			// if ($this->selectedGrade == $request->data[$this->alias()]['education_grade_id']) {
+				// $institutionOptions->where([$this->Institutions->aliasField('id').' <> ' => $institutionId]);
+			// }
 
 			$attr['options'] = $institutionOptions->toArray();
 
@@ -558,46 +559,53 @@ class TransferRequestsTable extends AppTable {
 					break;
 
 				default:
-					$academicPeriodId = $request->data[$this->alias()]['academic_period_id'];
-					$educationGradeId = $request->data[$this->alias()]['education_grade_id'];
-					$requestInstitution = $request->data[$this->alias()]['previous_institution_id'];
-					$InstitutionGrades = $this->InstitutionGrades;
-					$grades = $this->EducationGrades
-						->find()
-						->contain(['EducationProgrammes'])
-						->select([
-							'EducationGrades.id',
-							'EducationGrades.name',
-							'EducationGrades.education_programme_id',
-							'EducationProgrammes.name',
-						])
-						->order(['EducationProgrammes.order', 'EducationGrades.order']);
+					// $academicPeriodId = $request->data[$this->alias()]['academic_period_id'];
+					// $educationGradeId = $request->data[$this->alias()]['education_grade_id'];
+					// $requestInstitution = $request->data[$this->alias()]['previous_institution_id'];
+					// $InstitutionGrades = $this->InstitutionGrades;
+					// $grades = $this->EducationGrades
+					// 	->find()
+					// 	->contain(['EducationProgrammes'])
+					// 	->select([
+					// 		'EducationGrades.id',
+					// 		'EducationGrades.name',
+					// 		'EducationGrades.education_programme_id',
+					// 		'EducationProgrammes.name',
+					// 	])
+					// 	->order(['EducationProgrammes.order', 'EducationGrades.order']);
 
-					$gradeOptions = [];
-					foreach ($grades as $grade) {
-						$gradeOptions[$grade->education_programme->name][$grade->id] = $grade->programme_grade_name;
-					}
-					$selectedGrade = key($gradeOptions);
-					if (!isset($request->data[$this->alias()]['new_education_grade_id'])) {
-						$request->data[$this->alias()]['new_education_grade_id'] = $educationGradeId;
-						$selectedGrade = $educationGradeId;
-					}
-					$this->advancedSelectOptions($gradeOptions, $selectedGrade, [
-						'message' => '{{label}} - ' . $this->getMessage('StudentTransfer.noInstitutions'),
-						'callable' => function($id) use ($InstitutionGrades, $academicPeriodId) {
-							return $InstitutionGrades
-								->find()
-								->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
-								->where([
-									$InstitutionGrades->aliasField('education_grade_id') => $id
-								])
-								->count();
-						}
-					]);
-					$attr['type'] = 'select';
-					$attr['options'] = $gradeOptions;
-					$attr['onChangeReload'] = true;
-					$this->selectedGrade = $request->data[$this->alias()]['new_education_grade_id'];
+					// $gradeOptions = [];
+					// foreach ($grades as $grade) {
+					// 	$gradeOptions[$grade->education_programme->name][$grade->id] = $grade->programme_grade_name;
+					// }
+					// $selectedGrade = key($gradeOptions);
+					// if (!isset($request->data[$this->alias()]['new_education_grade_id'])) {
+					// 	$request->data[$this->alias()]['new_education_grade_id'] = $educationGradeId;
+					// 	$selectedGrade = $educationGradeId;
+					// }
+					// $this->advancedSelectOptions($gradeOptions, $selectedGrade, [
+					// 	'message' => '{{label}} - ' . $this->getMessage('StudentTransfer.noInstitutions'),
+					// 	'callable' => function($id) use ($InstitutionGrades, $academicPeriodId) {
+					// 		return $InstitutionGrades
+					// 			->find()
+					// 			->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
+					// 			->where([
+					// 				$InstitutionGrades->aliasField('education_grade_id') => $id
+					// 			])
+					// 			->count();
+					// 	}
+					// ]);
+					// $attr['type'] = 'select';
+					// $attr['options'] = $gradeOptions;
+					// $attr['onChangeReload'] = true;
+					// $this->selectedGrade = $request->data[$this->alias()]['new_education_grade_id'];
+					// break;
+
+
+					$this->selectedGrade = $request->data[$this->alias()]['education_grade_id'];
+					$request->data[$this->alias()]['new_education_grade_id'] = $this->selectedGrade;
+					$attr['type'] = 'readonly';
+					$attr['attr']['value'] = $this->EducationGrades->get($this->selectedGrade)->programme_grade_name;
 					break;
 			}
 		} elseif ($action == 'edit') {
@@ -747,6 +755,9 @@ class TransferRequestsTable extends AppTable {
 			if ($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST) {
 				unset($toolbarButtons['edit']);
 			}
+			$toolbarButtons['back']['url']['action'] = 'StudentUser';
+			$toolbarButtons['back']['url'][0] = 'view';
+			$toolbarButtons['back']['url'][1] = $this->Session->read('Student.Students.id');
 		}
 	}
 
