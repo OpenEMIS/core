@@ -33,7 +33,8 @@ class StudentsTable extends AppTable
 		$this->belongsTo('EducationGrades',	['className' => 'Education.EducationGrades']);
 		$this->belongsTo('Institutions',	['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('AcademicPeriods',	['className' => 'AcademicPeriod.AcademicPeriods']);
-
+		$this->belongsTo('PreviousInstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'previous_institution_student_id']);
+		
 		// Behaviors
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 		$this->addBehavior('AcademicPeriod.Period');
@@ -931,6 +932,27 @@ class StudentsTable extends AppTable
 					[$conditions]
 				);
 			}
+
+			//to update previous_institution_student_id
+			if ($entity->has('prev_institution_student_id') && $entity->class > 0) { //if prev_institution_student_id determined
+				$prevInstitutionStudent = $entity->prev_institution_student_id;      
+	        } else {
+	        	$prevInstitutionStudent = $this
+	                                ->find()
+	                                ->where([
+	                                    $this->aliasField('student_id') => $entity->student_id,
+	                                    $this->aliasField('id <> ') => $entity->id,
+	                                ])
+	                                ->ORDER('start_date DESC, created DESC, id DESC')
+	                                ->first();
+
+	            $prevInstitutionStudentId = $prevInstitutionStudent->id;
+	            //pr($prevInstitutionStudentId);
+	        }
+	        $this->updateAll(
+                ['previous_institution_student_id' => $prevInstitutionStudentId],
+                ['id' => $entity->id]
+            );
 		}
 	}
 
