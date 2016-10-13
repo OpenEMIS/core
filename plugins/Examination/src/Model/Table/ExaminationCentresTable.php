@@ -73,7 +73,14 @@ class ExaminationCentresTable extends ControllerActionTable {
                 'rule' => ['validateUnique', ['scope' => 'examination_id']],
                 'provider' => 'table'
             ])
-            ->requirePresence('institutions', 'create');
+            ->requirePresence('institutions', 'create')
+            ->allowEmpty('postal_code')
+            ->add('postal_code', 'ruleCustomPostalCode', [
+                'rule' => ['validateCustomPattern', 'postal_code'],
+                'provider' => 'table',
+                'last' => true
+            ])
+            ;
 
         return $validator;
     }
