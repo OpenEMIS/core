@@ -19,6 +19,20 @@ class StaffUserTable extends UserTable {
 		$this->ControllerAction->field('username', ['visible' => false]);
 	}
 
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        $validator
+            ->allowEmpty('postal_code')
+            ->add('postal_code', 'ruleCustomPostalCode', [
+                'rule' => ['validateCustomPattern', 'postal_code'],
+                'provider' => 'table',
+                'last' => true
+            ])
+            ;
+        return $validator;
+    }
+
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
 		$sessionKey = 'Institution.Staff.new';
 		if ($this->Session->check($sessionKey)) {
@@ -110,14 +124,14 @@ class StaffUserTable extends UserTable {
 		return $attr;
 	}
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
         $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
-        
-        foreach ($fields as $key => $field) { 
+
+        foreach ($fields as $key => $field) {
             //get the value from the table, but change the label to become default identity type.
-            if ($field['field'] == 'identity_number') { 
+            if ($field['field'] == 'identity_number') {
                 $fields[$key] = [
                     'key' => 'StudentUser.identity_number',
                     'field' => 'identity_number',
