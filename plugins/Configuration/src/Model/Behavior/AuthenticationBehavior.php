@@ -115,7 +115,7 @@ class AuthenticationBehavior extends Behavior {
 				'authentication_type' => $authenticationType,
 				'attribute_field' => $key,
 				'attribute_name' => $value['name'],
-				'value' => $value['value']
+				'value' => trim($value['value'])
 			];
 			$entity = $AuthenticationTypeAttributesTable->newEntity($entityData);
 			$AuthenticationTypeAttributesTable->save($entity);
