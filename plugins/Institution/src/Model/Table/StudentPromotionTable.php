@@ -740,7 +740,12 @@ class StudentPromotionTable extends AppTable {
 						$existingStudentEntity->student_status_id = $statusToUpdate;
 						if ($this->save($existingStudentEntity)) {
 							if ($nextEducationGradeId != 0 && $nextAcademicPeriodId != 0) {
-								if ($this->save($entity)) {
+								
+								$entity->prev_institution_student_id = $existingStudentEntity->id;
+
+								//registry the Institution.Students so it will call the afterSave in it.
+								$InstitutionStudents = TableRegistry::get('Institution.Students');
+								if ($InstitutionStudents->save($entity)) {
 									$this->Alert->success($successMessage, ['reset' => true]);
 								} else {
 									$this->log($entity->errors(), 'debug');

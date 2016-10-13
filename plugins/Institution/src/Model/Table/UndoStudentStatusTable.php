@@ -338,20 +338,53 @@ class UndoStudentStatusTable extends AppTable {
 
 			if (!is_null($selectedPeriod) && $selectedGrade != -1 && $selectedStatus != -1) {
 				
-				$data = $this
-					->find()
-		    		->matching('Users')
-		    		->matching('EducationGrades')
-		    		->where([
-		    			$this->aliasField('institution_id') => $institutionId,
-		    			$this->aliasField('academic_period_id') =>  $selectedPeriod,
-		    			$this->aliasField('education_grade_id') => $selectedGrade,
-		    			$this->aliasField('student_status_id') => $selectedStatus
-		    		])
-		    		->find('studentClasses', ['institution_class_id' => $selectedClass])
-					->select(['institution_class_id' => 'InstitutionClassStudents.institution_class_id'])
-					->order(['Users.first_name'])
-					->autoFields(true);
+                $conditions = [
+                    $this->aliasField('institution_id') => $institutionId,
+                    $this->aliasField('academic_period_id') =>  $selectedPeriod,
+                    $this->aliasField('education_grade_id') => $selectedGrade,
+                    $this->aliasField('student_status_id') => $selectedStatus
+                ];
+
+                $data = $this
+                        ->find()
+                        ->matching('Users')
+                        ->matching('EducationGrades');
+
+                //to undo enrolled, then student cant have specific status before.
+                if ($selectedStatus == $this->statuses['CURRENT']){ 
+
+                    $checkStatus = [
+                        $this->statuses['GRADUATED'],
+                        $this->statuses['PROMOTED'],
+                        $this->statuses['REPEATED'],
+                        $this->statuses['TRANSFERRED']
+                    ];
+
+                    $data = $data
+                        ->leftJoin(['InstitutionStudent' => 'institution_students'], [
+                            'InstitutionStudent.id = ' . $this->aliasfield('previous_institution_student_id'),
+                        ])
+                        ->where([
+                            $conditions,
+                            'OR' => [
+                                'InstitutionStudent.student_status_id NOT IN (' . implode(', ',$checkStatus) . ')',
+                                'InstitutionStudent.student_status_id IS NULL'
+                            ],
+                        ]);
+
+                } else {
+                    
+                    $data = $data
+                        ->where([
+                            $conditions
+                        ]);
+                }
+
+                $data = $data
+                    ->find('studentClasses', ['institution_class_id' => $selectedClass])
+                    ->select(['institution_class_id' => 'InstitutionClassStudents.institution_class_id'])
+                    ->order(['Users.first_name'])
+                    ->autoFields(true);
 
 		    	// update students count here and show / hide form buttons in onGetFormButtons()
 		    	$this->dataCount = $data->count();
