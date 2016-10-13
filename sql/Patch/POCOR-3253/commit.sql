@@ -195,8 +195,13 @@ CREATE TABLE IF NOT EXISTS `staff_leaves` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all leave applications and their statuses of staff';
 
 INSERT INTO `staff_leaves` (`id`, `date_from`, `date_to`, `comments`, `staff_id`, `staff_leave_type_id`, `institution_id`, `assignee_id`, `status_id`, `number_of_days`, `file_name`, `file_content`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-SELECT `id`, `date_from`, `date_to`, `comments`, `staff_id`, `staff_leave_type_id`, 0, 0, `status_id`, `number_of_days`, `file_name`, `file_content`, `modified_user_id`, `modified`, `created_user_id`, `created`
-FROM `z_3253_staff_leaves`;
+SELECT `StaffLeaves`.`id`, `StaffLeaves`.`date_from`, `StaffLeaves`.`date_to`, `StaffLeaves`.`comments`, `StaffLeaves`.`staff_id`, `StaffLeaves`.`staff_leave_type_id`, `Staff`.`institution_id`, 0, `StaffLeaves`.`status_id`, `StaffLeaves`.`number_of_days`, `StaffLeaves`.`file_name`, `StaffLeaves`.`file_content`, `StaffLeaves`.`modified_user_id`, `StaffLeaves`.`modified`, `StaffLeaves`.`created_user_id`, `StaffLeaves`.`created`
+FROM `z_3253_staff_leaves` AS `StaffLeaves`
+INNER JOIN `institution_staff` AS `Staff`
+ON `Staff`.`staff_id` = `StaffLeaves`.`staff_id`
+INNER JOIN `staff_statuses` AS `StaffStatuses`
+ON `StaffStatuses`.`id` = `Staff`.`staff_status_id`
+WHERE `StaffStatuses`.`code` = 'ASSIGNED';
 
 -- institution_positions
 RENAME TABLE `institution_positions` TO `z_3253_institution_positions`;
