@@ -77,13 +77,7 @@ class StaffLeaveTable extends ControllerActionTable
 		$this->field('file_content', [
 			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
 		]);
-		$this->field('staff_leave_type_id', ['type' => 'select']);
-
-		if ($this->controller->name == 'Institutions') {
-			$this->field('staff_id', ['type' => 'hidden']);
-		} else if ($this->controller->name == 'Directories') {
-			$this->field('institution_id', ['type' => 'hidden']);
-		}
+		$this->field('staff_id', ['type' => 'hidden']);
 
 		$this->setFieldOrder(['staff_leave_type_id', 'date_from', 'date_to', 'number_of_days', 'comments', 'file_name', 'file_content']);
 	}
