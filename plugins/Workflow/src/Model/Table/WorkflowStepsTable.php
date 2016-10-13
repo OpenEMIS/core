@@ -27,6 +27,15 @@ class WorkflowStepsTable extends AppTable {
 		$this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
 		$this->hasMany('WorkflowActions', ['className' => 'Workflow.WorkflowActions', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('NextWorkflowSteps', ['className' => 'Workflow.WorkflowActions', 'foreignKey' => 'next_workflow_step_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+
+		$this->hasMany('StaffLeave', ['className' => 'Institution.StaffLeave', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('TrainingCourses', ['className' => 'Training.TrainingCourses', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('TrainingSessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('TrainingSessionResults', ['className' => 'Training.TrainingSessionResults', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('TrainingNeeds', ['className' => 'Staff.TrainingNeeds', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('WorkflowStatuses' , [
 			'className' => 'Workflow.WorkflowStatuses',
 			'joinTable' => 'workflow_statuses_steps',
@@ -111,10 +120,6 @@ class WorkflowStepsTable extends AppTable {
 		return $entity->is_removable == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
 	}
 
-	public function onGetIsSystemDefined(Event $event, Entity $entity) {
-		return $entity->is_system_defined == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
-	}
-
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('security_roles', [
 			'type' => 'chosenSelect',
@@ -123,6 +128,7 @@ class WorkflowStepsTable extends AppTable {
 	}
 
 	public function indexBeforeAction(Event $event) {
+		$this->ControllerAction->field('is_system_defined', ['visible' => false]);
 		$this->ControllerAction->setFieldOrder(['workflow_id', 'name', 'security_roles', 'category', 'is_editable', 'is_removable']);
 	}
 
@@ -175,7 +181,15 @@ class WorkflowStepsTable extends AppTable {
 		}
 
     	$extra['excludedModels'] = [
-    		$this->WorkflowActions->alias()
+    		$this->WorkflowActions->alias(),
+    		$this->StaffLeave->alias(),
+    		$this->InstitutionSurveys->alias(),
+    		$this->TrainingCourses->alias(),
+    		$this->TrainingSessions->alias(),
+    		$this->TrainingSessionResults->alias(),
+    		$this->TrainingNeeds->alias(),
+    		$this->InstitutionPositions->alias(),
+    		$this->StaffPositionProfiles->alias()
     	];
     }
 
@@ -185,6 +199,12 @@ class WorkflowStepsTable extends AppTable {
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
 		$this->setupFields($entity);
+	}
+
+	public function editAfterAction(Event $event, Entity $entity) {
+		if ($entity->has('is_system_defined') && !empty($entity->is_system_defined)) {
+			$this->Alert->info($this->aliasField('systemDefined'));
+		}
 	}
 
 	public function onUpdateFieldWorkflowModelId(Event $event, array $attr, $action, Request $request) {
@@ -288,15 +308,7 @@ class WorkflowStepsTable extends AppTable {
 
 	public function onUpdateFieldIsSystemDefined(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
-			$attr['type'] = 'hidden';
 			$attr['value'] = 0;
-		} else if ($action == 'edit') {
-			$entity = $attr['attr']['entity'];
-			$systemDefinedOptions = $this->getSelectOptions('general.yesno');
-
-			$attr['type'] = 'readonly';
-			$attr['value'] = $entity->is_system_defined;
-			$attr['attr']['value'] = $systemDefinedOptions[$entity->is_system_defined];
 		}
 
 		return $attr;
@@ -329,11 +341,9 @@ class WorkflowStepsTable extends AppTable {
 		]);
 		$this->ControllerAction->field('is_editable');
 		$this->ControllerAction->field('is_removable');
-		$this->ControllerAction->field('is_system_defined', [
-			'attr' => ['entity' => $entity]
-		]);
+		$this->ControllerAction->field('is_system_defined', ['type' => 'hidden']);
 
-		$this->ControllerAction->setFieldOrder(['workflow_model_id', 'workflow_id', 'name', 'security_roles', 'category', 'is_editable', 'is_removable', 'is_system_defined']);
+		$this->ControllerAction->setFieldOrder(['workflow_model_id', 'workflow_id', 'name', 'security_roles', 'category', 'is_editable', 'is_removable']);
 	}
 
 	private function checkIfCanEditOrDelete($entity) {

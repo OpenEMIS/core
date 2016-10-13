@@ -17,7 +17,7 @@
 		$alias = $model->alias();
 		$eventOptions = isset($attr['attr']['eventOptions']) ? $attr['attr']['eventOptions'] : [];
 		$eventSelectOptions = isset($attr['attr']['eventSelectOptions']) ? $attr['attr']['eventSelectOptions'] : [];
-		$this->Form->unlockField("WorkflowActions.events");
+		$this->Form->unlockField("WorkflowActions.post_events");
 	?>
 	<h3><?= isset($attr['label']) ? $attr['label'] : $attr['field']; ?></h3>
 	<div class="clearfix">
@@ -37,11 +37,11 @@
 					<th><?= $this->Label->get('general.name'); ?></th>
 					<th></th>
 				</thead>
-				<?php if (!empty($data->events)) : ?>
+				<?php if (!empty($data->post_events)) : ?>
 					<tbody>
-						<?php foreach ($data->events as $key => $obj) : ?>
+						<?php foreach ($data->post_events as $key => $obj) : ?>
 							<?php
-								$prefix = $model->alias().'.events.'.$key;
+								$prefix = $model->alias().'.post_events.'.$key;
 								$eventKey = $obj['event_key'];
 							?>
 							<tr class="checked">
