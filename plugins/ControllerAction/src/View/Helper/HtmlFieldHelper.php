@@ -794,9 +794,11 @@ class HtmlFieldHelper extends Helper {
 
 		if ($action == 'index' || $action == 'view') {
 			// $buttons = $this->_View->get('_buttons');
-			$buttons = $this->_View->get('ControllerAction');
-			$buttons = $buttons['buttons'];
-			$action = $buttons['download']['url'];
+			// $buttons = $this->_View->get('ControllerAction');
+			// $buttons = $buttons['buttons'];
+			// $action = $buttons['download']['url'];
+			$request = $this->request;
+			$action = ['action' => $request->action, 'download', $data->{$table->primaryKey()}];
 			$value = $this->link($data->$name, $action);
 		} else if ($action == 'edit') {
 			$this->includes['jasny']['include'] = true;
