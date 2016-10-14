@@ -48,7 +48,22 @@ class InstitutionContactsTable extends ControllerActionTable {
                     'ruleValidEmail' => [
                         'rule' => 'email'
                     ]
-            ]);
+                ])
+
+            ->allowEmpty('telephone')
+            ->add('telephone', 'ruleCustomTelephone', [
+                    'rule' => ['validateCustomPattern', 'institution_telephone'],
+                    'provider' => 'table',
+                    'last' => true
+                ])
+
+            ->allowEmpty('fax')
+            ->add('fax', 'ruleCustomFax', [
+                    'rule' => ['validateCustomPattern', 'institution_fax'],
+                    'provider' => 'table',
+                    'last' => true
+                ])
+            ;
         return $validator;
     }
 
