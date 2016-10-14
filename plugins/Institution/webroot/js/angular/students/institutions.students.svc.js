@@ -97,11 +97,11 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                 for(var i = 0; i < data.length; i++) {
                     externalDataSourceObject[data[i].attribute_field] = data[i].value;
                 }
-                if (externalDataSourceObject.hasOwnProperty('authentication_uri')) {
-                    var authenticationUri = externalDataSourceObject.authentication_uri;
+                if (externalDataSourceObject.hasOwnProperty('token_uri')) {
+                    var tokenUri = externalDataSourceObject.token_uri;
 
-                    if (authenticationUri != '') {
-                        delete externalDataSourceObject.authentication_uri;
+                    if (tokenUri != '') {
+                        delete externalDataSourceObject.token_uri;
                         delete externalDataSourceObject.record_uri;
                         delete externalDataSourceObject.redirect_uri;
                         var postData = 'grant_type=refresh_token';
@@ -111,7 +111,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                         }, log);
                         $http({
                             method: 'POST',
-                            url: authenticationUri,
+                            url: tokenUri,
                             data: postData,
                             headers: {'Content-Type': 'application/x-www-form-urlencoded'}
                         }).then(function(res) {
@@ -120,7 +120,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                             deferred.reject(error);
                         });
                     } else {
-                        var error = 'No authentication URI';
+                        var error = 'No Token URI';
                         deferred.reject(error);
                     }
                 }
