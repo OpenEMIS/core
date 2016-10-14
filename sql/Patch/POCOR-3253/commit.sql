@@ -166,8 +166,8 @@ FROM `z_3253_institution_surveys`;
 -- staff_leaves
 RENAME TABLE `staff_leaves` TO `z_3253_staff_leaves`;
 
-DROP TABLE IF EXISTS `staff_leaves`;
-CREATE TABLE IF NOT EXISTS `staff_leaves` (
+DROP TABLE IF EXISTS `institution_staff_leave`;
+CREATE TABLE IF NOT EXISTS `institution_staff_leave` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `date_from` date NOT NULL,
   `date_to` date NOT NULL,
@@ -194,7 +194,7 @@ CREATE TABLE IF NOT EXISTS `staff_leaves` (
   KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all leave applications and their statuses of staff';
 
-INSERT INTO `staff_leaves` (`id`, `date_from`, `date_to`, `comments`, `staff_id`, `staff_leave_type_id`, `institution_id`, `assignee_id`, `status_id`, `number_of_days`, `file_name`, `file_content`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+INSERT INTO `institution_staff_leave` (`id`, `date_from`, `date_to`, `comments`, `staff_id`, `staff_leave_type_id`, `institution_id`, `assignee_id`, `status_id`, `number_of_days`, `file_name`, `file_content`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT `StaffLeaves`.`id`, `StaffLeaves`.`date_from`, `StaffLeaves`.`date_to`, `StaffLeaves`.`comments`, `StaffLeaves`.`staff_id`, `StaffLeaves`.`staff_leave_type_id`, `Staff`.`institution_id`, 0, `StaffLeaves`.`status_id`, `StaffLeaves`.`number_of_days`, `StaffLeaves`.`file_name`, `StaffLeaves`.`file_content`, `StaffLeaves`.`modified_user_id`, `StaffLeaves`.`modified`, `StaffLeaves`.`created_user_id`, `StaffLeaves`.`created`
 FROM `z_3253_staff_leaves` AS `StaffLeaves`
 INNER JOIN `institution_staff` AS `Staff`

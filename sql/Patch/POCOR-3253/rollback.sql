@@ -16,7 +16,7 @@ RENAME TABLE `z_3253_workflow_transitions` TO `workflow_transitions`;
 DROP TABLE IF EXISTS `institution_surveys`;
 RENAME TABLE `z_3253_institution_surveys` TO `institution_surveys`;
 
-DROP TABLE IF EXISTS `staff_leaves`;
+DROP TABLE IF EXISTS `institution_staff_leave`;
 RENAME TABLE `z_3253_staff_leaves` TO `staff_leaves`;
 
 DROP TABLE IF EXISTS `institution_positions`;
