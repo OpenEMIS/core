@@ -65,7 +65,7 @@ class ExternalDataSourceBehavior extends Behavior {
 				->first()
 				->id;
 			$urlParams[0] = $externalDataSourceId;
-			if (isset($this->_table->request->pass[0]) && $this->request->pass[0] == $externalDataSourceId) {
+			if (isset($this->_table->request->pass[0]) && $this->_table->request->pass[0] == $externalDataSourceId) {
 			} else {
 				$this->_table->controller->redirect($urlParams);
 			}
@@ -151,6 +151,9 @@ class ExternalDataSourceBehavior extends Behavior {
 			);
 
 			foreach ($data['ExternalDataSourceTypeAttributes'] as $key => $value) {
+				if (strpos($value['name'], 'URI')) {
+					$value['value'] = rtrim($value['value'], '/');
+				}
 				$entityData = [
 					'external_data_source_type' => $externalDataSourceType,
 					'attribute_field' => $key,
@@ -170,7 +173,7 @@ class ExternalDataSourceBehavior extends Behavior {
 
 	public function openemisIdentitiesExternalSource(&$attribute)
 	{
-		$attribute['authentication_uri'] = ['label' => 'Authentication URI', 'type' => 'text'];
+		$attribute['token_uri'] = ['label' => 'Token URI', 'type' => 'text'];
 		$attribute['refresh_token'] = ['label' => 'Refresh Token', 'type' => 'textarea'];
 		$attribute['client_id'] = ['label' => 'Client ID', 'type' => 'text'];
 		$attribute['client_secret'] = ['label' => 'Client Secret', 'type' => 'text'];
