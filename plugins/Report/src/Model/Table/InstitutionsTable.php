@@ -7,12 +7,14 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
+use App\Model\Traits\OptionsTrait;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 
-class InstitutionsTable extends AppTable  {
-
+class InstitutionsTable extends AppTable  
+{
+    use OptionsTrait;
 	// filter
 	const NO_FILTER = 0;
 	const NO_STUDENT = 1;
@@ -41,6 +43,8 @@ class InstitutionsTable extends AppTable  {
 			'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 		$this->addBehavior('Report.InstitutionSecurity');
+
+        $this->shiftTypes = $this->getSelectOptions('Shifts.types'); //get from options trait
 	}
 
 	public function beforeAction(Event $event) {
@@ -123,6 +127,14 @@ class InstitutionsTable extends AppTable  {
 			$event->stopPropagation();
 		}
 	}
+
+    public function onExcelGetShiftType(Event $event, Entity $entity) {
+        if (isset($this->shiftTypes[$entity->shift_type])) {
+            return __($this->shiftTypes[$entity->shift_type]);
+        } else {
+            return '';
+        }
+    }
 
 	public function onUpdateFieldInstitutionFilter(Event $event, array $attr, $action, Request $request) {
 		if (isset($this->request->data[$this->alias()]['feature'])) {
