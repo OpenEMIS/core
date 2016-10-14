@@ -256,7 +256,6 @@ class StudentUserTable extends UserTable
 
 			$id = $session->read('Institution.Students.id');
 			$studentData = $InstitutionStudentsTable->get($id);
-			$selectedStudent = $studentData->student_id;
 
 			// Show Promote button only if the Student Status is Current
 			if ($studentData->student_status_id == $statuses['CURRENT']) {
@@ -309,6 +308,8 @@ class StudentUserTable extends UserTable
 				// pr($totalCount);
 
 				if ($totalCount == 0) {
+					$session->write('Institution.SinglePromotion.id', $id);
+
 					// Promote button
 					$promoteButton = $buttons['back'];
 					$promoteButton['type'] = 'button';
