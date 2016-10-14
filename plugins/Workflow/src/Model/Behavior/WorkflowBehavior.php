@@ -298,10 +298,12 @@ class WorkflowBehavior extends Behavior {
 		if ($model->hasField('assignee_id')) {
 			if ($this->isCAv4()) {
 				$model->field('assignee_id', [
+					'type' => 'select',
 					'visible' => ['index' => true, 'view' => true, 'add' => false, 'edit' => false]
 				]);
 			} else {
 				$model->ControllerAction->field('assignee_id', [
+					'type' => 'select',
 					'visible' => ['index' => true, 'view' => true, 'add' => false, 'edit' => false]
 				]);
 			}
