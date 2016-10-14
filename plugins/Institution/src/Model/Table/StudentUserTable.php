@@ -316,7 +316,7 @@ class StudentUserTable extends UserTable
 					$promoteButton['label'] = '<i class="fa kd-graduate"></i>';
 					$promoteButton['attr'] = $attr;
 					$promoteButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
-					$promoteButton['attr']['title'] = __('Promotion / Graduation');
+					$promoteButton['attr']['title'] = __('Promotion / Demotion');
 
 					$promoteButton['url'] = [
 						'plugin' => $buttons['back']['url']['plugin'],
