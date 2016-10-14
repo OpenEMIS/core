@@ -49,6 +49,37 @@ class TransferRequestsTable extends ControllerActionTable
 		$this->toggle('search', false);
 	}
 
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        $validator
+            ->requirePresence('new_education_grade_id')
+
+            ->add('student_id', 'ruleNoNewDropoutRequestInGradeAndInstitution', [
+                'rule' => ['noNewDropoutRequestInGradeAndInstitution'],
+                'on' => 'create'
+            ])
+            ->add('student_id', 'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem', [
+                'rule' => ['studentNotEnrolledInAnyInstitutionAndSameEducationSystem', [
+                    'excludeInstitutions' => ['previous_institution_id'],
+                    'targetInstitution' => ['previous_institution_id']
+                    ]
+                ],
+                'on' => 'create'
+            ])
+            ->add('student_id', 'ruleStudentNotCompletedGrade', [
+                'rule' => ['studentNotCompletedGrade', [
+                    'educationGradeField' => 'new_education_grade_id',
+                    'studentIdField' => 'student_id'
+                ]],
+                'on' => 'create'
+            ])
+        ;
+        $this->setValidationCode('student_name.ruleStudentNotCompletedGrade', 'Institution.Students');
+        return $validator;
+    }
+
 	public function implementedEvents()
 	{
     	$events = parent::implementedEvents();
@@ -115,35 +146,7 @@ class TransferRequestsTable extends ControllerActionTable
 		return __($statusName);
 	}
 
-	public function validationDefault(Validator $validator)
-	{
-		$validator = parent::validationDefault($validator);
 
-		return $validator
-			->add('student_id', 'ruleNoNewDropoutRequestInGradeAndInstitution', [
-				'rule' => ['noNewDropoutRequestInGradeAndInstitution'],
-				'on' => 'create'
-			])
-			->add('student_id', 'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem', [
-				'rule' => ['studentNotEnrolledInAnyInstitutionAndSameEducationSystem', [
-                    'excludeInstitutions' => ['previous_institution_id'],
-                    'targetInstitution' => ['previous_institution_id']
-                    ]
-                ],
-				'on' => 'create'
-			])
-			->add('student_id', 'ruleStudentNotCompletedGrade', [
-				'rule' => ['studentNotCompletedGrade', [
-					'educationGradeField' => 'new_education_grade_id',
-					'studentIdField' => 'student_id'
-				]],
-				'on' => 'create'
-			])
-			->requirePresence('new_education_grade_id')
-		;
-
-		$this->setValidationCode('student_name.ruleStudentNotCompletedGrade', 'Institution.Students');
-	}
 
 	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
 	{
@@ -175,16 +178,19 @@ class TransferRequestsTable extends ControllerActionTable
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data)
     {
-    	if ($this->Session->read($this->registryAlias().'.id')) {
-	    	$id = $this->Session->read('Student.Students.id');
-	    	$action = $this->url('add');
-			$action['action'] = 'StudentUser';
-			$action[0] = 'view';
-			$action[1] = $id;
-			$action['id'] = $this->Session->read($this->registryAlias().'.id');
-	    	$event->stopPropagation();
-	    	return $this->controller->redirect($action);
-    	}
+        $entityError = $entity->errors();
+        if (empty($entityError)) {
+        	if ($this->Session->read($this->registryAlias().'.id')) {
+    	    	$id = $this->Session->read('Student.Students.id');
+    	    	$action = $this->url('add');
+    			$action['action'] = 'StudentUser';
+    			$action[0] = 'view';
+    			$action[1] = $id;
+    			$action['id'] = $this->Session->read($this->registryAlias().'.id');
+    	    	$event->stopPropagation();
+    	    	return $this->controller->redirect($action);
+        	}
+        }
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity)
@@ -413,25 +419,24 @@ class TransferRequestsTable extends ControllerActionTable
 		$this->request->data[$this->alias()]['student_transfer_reason_id'] = $entity->student_transfer_reason_id;
 	}
 
-	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
 	{
 		$transferEntity = $this->newEntity($data[$this->alias()]);
 		if ($this->save($transferEntity)) {
 			$this->Alert->success('general.edit.success');
+
+            if ($this->Session->read($this->registryAlias().'.id')) {
+                $Students = TableRegistry::get('Institution.StudentUser');
+                $id = $this->Session->read('Student.Students.id');
+                $action = $this->url('edit');
+                $action['action'] = $this->alias();
+                $action[0] = 'view';
+                $action[1] = $this->Session->read($this->registryAlias().'.id');
+                $event->stopPropagation();
+                return $this->controller->redirect($action);
+            }
 		} else {
 			$this->log($transferEntity->errors(), 'debug');
-			$this->Alert->error('general.edit.failed');
-		}
-
-		if ($this->Session->read($this->registryAlias().'.id')) {
-			$Students = TableRegistry::get('Institution.StudentUser');
-			$id = $this->Session->read('Student.Students.id');
-			$action = $this->url('edit');
-			$action['action'] = $this->alias();
-			$action[0] = 'view';
-			$action[1] = $this->Session->read($this->registryAlias().'.id');
-			$event->stopPropagation();
-			return $this->controller->redirect($action);
 		}
     }
 
@@ -529,10 +534,16 @@ class TransferRequestsTable extends ControllerActionTable
 				])
 				->order([$this->Institutions->aliasField('code')]);
 
+                if (!empty($request->data[$this->alias()]['area_id'])) {
+                    $institutionOptions->where([$this->Institutions->aliasField('area_id') => $request->data[$this->alias()]['area_id']]);
+                }
+
 			$attr['type'] = 'chosenSelect';
 			$attr['attr']['multiple'] = false;
 			$attr['select'] = true;
 			$attr['options'] = $institutionOptions->toArray();
+            $attr['type'] = 'chosenSelect';
+
 
 			/* to be implemented with custom autocomplete
 			$attr['type'] = 'string';
@@ -753,8 +764,8 @@ class TransferRequestsTable extends ControllerActionTable
 				])
 				->innerJoinWith('Institutions.InstitutionGrades')
 				->where(['InstitutionGrades.education_grade_id' => $this->selectedGrade,
-					'InstitutionGrades.start_date <=' => $academicPeriodEndDate,
                     $this->Institutions->aliasField('id').' <> ' => $institutionId,
+					'InstitutionGrades.start_date <=' => $academicPeriodEndDate,
 					'OR' => [
 							'InstitutionGrades.end_date IS NULL',
 							'InstitutionGrades.end_date >=' => $academicPeriodStartDate
@@ -778,14 +789,5 @@ class TransferRequestsTable extends ControllerActionTable
 		}
 
 		return $attr;
-	}
-
-	public function addOnChangeNewEducationGradeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-    {
-		if (array_key_exists($this->alias(), $data)) {
-			if (array_key_exists('area_id', $data[$this->alias()])) {
-				unset($data[$this->alias()]['area_id']);
-			}
-        }
 	}
 }
