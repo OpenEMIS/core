@@ -245,7 +245,6 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
                 AlertSvc.reset($scope);
                 delete StudentController.selectedStudent;
                 if (withData) {
-                    InstitutionsStudentsSvc.init(angular.baseUrl);
                    InstitutionsStudentsSvc.getStudentRecords(
                     {
                         startRow: params.startRow,
@@ -310,7 +309,8 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
                             var message = 'You have not been authorised to fetch from external data source.';
                             AlertSvc.warning($scope, message);
                         } else {
-                            AlertSvc.warning($scope, error);
+                            var message = 'External search failed, please contact your administrator to verify the external search attributes';
+                            AlertSvc.warning($scope, message);
                         }
                         var studentRecords = [];
                         InstitutionsStudentsSvc.init(angular.baseUrl);
