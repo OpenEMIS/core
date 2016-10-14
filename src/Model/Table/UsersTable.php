@@ -15,6 +15,7 @@ use Cake\Datasource\Exception\RecordNotFoundException;
 
 // this file is used solely for Preferences/Users
 class UsersTable extends AppTable {
+	private $loginLanguages = [];
 	public function initialize(array $config) {
 		$this->table('security_users');
 		$this->entityClass('User.User');
@@ -31,6 +32,13 @@ class UsersTable extends AppTable {
 			'through' => 'Security.SecurityGroupUsers',
 			'dependent' => true
 		]);
+		$ConfigItemOptionsTable = TableRegistry::get('Configuration.ConfigItemOptions');
+		$this->loginLanguages = $ConfigItemOptionsTable->find('list', [
+				'keyField' => 'value',
+				'valueField' => 'option'
+			])
+			->where([$ConfigItemOptionsTable->aliasField('option_type') => 'language'])
+			->toArray();
 	}
 
 	public function beforeAction(Event $event) {
@@ -63,6 +71,13 @@ class UsersTable extends AppTable {
 		$this->controller->set('selectedAction', 'General');
 	}
 
+	public function onGetLoginLanguage(Event $event, Entity $entity)
+	{
+		if (isset($this->loginLanguages[$entity->login_language])) {
+			return $this->loginLanguages[$entity->login_language];
+		}
+	}
+
 	public function viewBeforeAction(Event $event) {
 		$this->ControllerAction->field('roles', [
 			'type' => 'role_table',
@@ -91,6 +106,33 @@ class UsersTable extends AppTable {
 		if ($this->action == 'edit') {
 			$this->ControllerAction->field('identity_number', ['visible' => false]);
 		}
+	}
+
+	public function editAfterAction(Event $event, Entity $entity)
+	{
+		$this->ControllerAction->field('login_language', ['type' => 'select', 'entity' => $entity]);
+	}
+
+	public function onUpdateFieldLoginLanguage(Event $event, array $attr, $action, Request $request)
+	{
+		$session = $this->request->session();
+		if ($session->read('System.language_menu')) {
+			$attr['options'] = $this->loginLanguages;
+		} else {
+			$attr['type'] = 'disabled';
+			$entity = $attr['entity'];
+			$attr['attr']['value'] = $this->loginLanguages[$entity->login_language];
+		}
+
+		return $attr;
+	}
+
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
+	{
+		// To change the language of the UI
+		$url = $this->ControllerAction->url('view');
+		$url['lang'] = $entity->login_language;
+		return $this->controller->redirect($url);
 	}
 
 	public function password() {
@@ -207,7 +249,7 @@ class UsersTable extends AppTable {
 		}
 	}
 
-	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) 
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
 	{
 		if ($field == 'identity_number') {
 			$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
