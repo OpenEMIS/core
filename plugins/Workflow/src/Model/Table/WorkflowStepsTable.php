@@ -180,17 +180,7 @@ class WorkflowStepsTable extends AppTable {
 			return $this->controller->redirect($url);
 		}
 
-    	$extra['excludedModels'] = [
-    		$this->WorkflowActions->alias(),
-    		$this->StaffLeave->alias(),
-    		$this->InstitutionSurveys->alias(),
-    		$this->TrainingCourses->alias(),
-    		$this->TrainingSessions->alias(),
-    		$this->TrainingSessionResults->alias(),
-    		$this->TrainingNeeds->alias(),
-    		$this->InstitutionPositions->alias(),
-    		$this->StaffPositionProfiles->alias()
-    	];
+		$extra['excludedModels'] = [$this->WorkflowActions->alias()] + $this->getExcludedModels($entity);
     }
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -381,5 +371,37 @@ class WorkflowStepsTable extends AppTable {
 		$selectedWorkflow = $this->queryString('workflow', $workflowOptions);
 
 		return compact('workflowOptions', 'selectedWorkflow');
+	}
+
+	public function getExcludedModels(Entity $entity) {
+		// defaultList should be updated when there are new workflow models added
+		$defaultList = [
+			$this->StaffLeave->registryAlias() => $this->StaffLeave->alias(),
+			$this->InstitutionSurveys->registryAlias() => $this->InstitutionSurveys->alias(),
+			$this->TrainingCourses->registryAlias() => $this->TrainingCourses->alias(),
+			$this->TrainingSessions->registryAlias() => $this->TrainingSessions->alias(),
+			$this->TrainingSessionResults->registryAlias() => $this->TrainingSessionResults->alias(),
+			$this->TrainingNeeds->registryAlias() => $this->TrainingNeeds->alias(),
+			$this->InstitutionPositions->registryAlias() => $this->InstitutionPositions->alias(),
+			$this->StaffPositionProfiles->registryAlias() => $this->StaffPositionProfiles->alias(),
+		];
+
+		$statusId = $entity->id;
+		$workflowStepEntity = $this
+			->find()
+			->matching('Workflows.WorkflowModels')
+			->where([$this->aliasField('id') => $statusId])
+			->first();
+
+		$workflowModelEntity = $workflowStepEntity->_matchingData['WorkflowModels'];
+		$model = TableRegistry::get($workflowModelEntity->model);
+
+		if (array_key_exists($model->registryAlias(), $defaultList)) {
+			unset($defaultList[$model->registryAlias()]);
+		}
+
+		$list = array_values($defaultList);
+
+		return $list;
 	}
 }

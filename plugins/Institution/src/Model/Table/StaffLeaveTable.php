@@ -17,7 +17,7 @@ class StaffLeaveTable extends ControllerActionTable
 {
 	public function initialize(array $config)
 	{
-		$this->table('staff_leaves');
+		$this->table('institution_staff_leave');
 		parent::initialize($config);
 
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
