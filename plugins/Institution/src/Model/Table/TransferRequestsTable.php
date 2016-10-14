@@ -52,7 +52,6 @@ class TransferRequestsTable extends ControllerActionTable
 	public function implementedEvents()
 	{
     	$events = parent::implementedEvents();
-    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
     	$events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
     	$events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 3];
     	return $events;
@@ -426,10 +425,9 @@ class TransferRequestsTable extends ControllerActionTable
 			$Students = TableRegistry::get('Institution.StudentUser');
 			$id = $this->Session->read('Student.Students.id');
 			$action = $this->url('edit');
-			$action['action'] = $Students->alias();
+			$action['action'] = $this->alias();
 			$action[0] = 'view';
-			$action[1] = $id;
-			$action['id'] = $this->Session->read($this->registryAlias().'.id');
+			$action[1] = $this->Session->read($this->registryAlias().'.id');
 			$event->stopPropagation();
 			return $this->controller->redirect($action);
 		}
