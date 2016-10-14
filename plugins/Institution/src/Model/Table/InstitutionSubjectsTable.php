@@ -1252,7 +1252,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
             $table = TableRegistry::get('Institution.InstitutionSubjectStudents');
             $count = $table
                         ->find()
-                        ->where([$table->aliasField('institution_subject_id') => $entity->id])
+                        ->where([
+                            $table->aliasField('institution_subject_id') => $entity->id,
+                            $table->aliasField('status') .' > 0'
+                            ])
                         ->count();
             return $count;
         }

@@ -283,6 +283,7 @@ class TransferRequestsTable extends AppTable {
 			$this->ControllerAction->field('academic_period_id');
 			$this->ControllerAction->field('education_grade_id');
 			$this->ControllerAction->field('new_education_grade_id');
+			$this->ControllerAction->field('area_id');
 			$this->ControllerAction->field('institution_id');
 			$this->ControllerAction->field('status');
 			$this->ControllerAction->field('start_date');
@@ -296,7 +297,7 @@ class TransferRequestsTable extends AppTable {
 			$this->ControllerAction->setFieldOrder([
 				'transfer_status_header', 'transfer_status',
 				'existing_information_header', 'student', 'previous_institution_id', 'education_grade_id',
-				'new_information_header', 'new_education_grade_id', 'institution_id',
+				'new_information_header', 'new_education_grade_id', 'area_id', 'institution_id',
 				'academic_period_id',
 				'status', 'start_date', 'end_date',
 				'transfer_reasons_header', 'student_transfer_reason_id', 'comment'
@@ -333,6 +334,7 @@ class TransferRequestsTable extends AppTable {
 		$this->ControllerAction->field('transfer_status');
 		$this->ControllerAction->field('student');
 		$this->ControllerAction->field('student_id');
+		$this->ControllerAction->field('area_id');
 		$this->ControllerAction->field('institution_id');
 		$this->ControllerAction->field('academic_period_id');
 		$this->ControllerAction->field('education_grade_id');
@@ -353,7 +355,7 @@ class TransferRequestsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder([
 			'transfer_status_header', 'transfer_status',
 			'existing_information_header', 'student', 'previous_institution_id', 'education_grade_id',
-			'new_information_header', 'new_education_grade_id', 'institution_id',
+			'new_information_header', 'new_education_grade_id', 'area_id', 'institution_id',
 			'academic_period_id',
 			'status', 'start_date', 'end_date',
 			'transfer_reasons_header', 'student_transfer_reason_id', 'comment'
@@ -484,6 +486,10 @@ class TransferRequestsTable extends AppTable {
 				])
 				->order([$this->Institutions->aliasField('code')]);
 
+			if (!empty($request->data[$this->alias()]['area_id'])) {
+				$institutionOptions->where([$this->Institutions->aliasField('area_id') => $request->data[$this->alias()]['area_id']]);
+			}
+
 			$attr['type'] = 'chosenSelect';
 			$attr['attr']['multiple'] = false;
 			$attr['select'] = true;
@@ -553,7 +559,7 @@ class TransferRequestsTable extends AppTable {
 						}
 
 						$attr['options'] = $moreAdvancedEducationGrades;
-						$attr['onChangeReload'] = true;
+						$attr['onChangeReload'] = 'changeNewEducationGradeId';
 
 					break;
 
@@ -595,8 +601,9 @@ class TransferRequestsTable extends AppTable {
 						}
 					]);
 					$attr['type'] = 'select';
+					$attr['select'] = false;
 					$attr['options'] = $gradeOptions;
-					$attr['onChangeReload'] = true;
+					$attr['onChangeReload'] = 'changeNewEducationGradeId';
 					$this->selectedGrade = $request->data[$this->alias()]['new_education_grade_id'];
 					break;
 			}
@@ -713,6 +720,71 @@ class TransferRequestsTable extends AppTable {
 		}
 
 		return $attr;
+	}
+
+	public function onUpdateFieldAreaId(Event $event, array $attr, $action, $request) {
+		if ($action == 'add') {
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+
+			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			$selectedAcademicPeriodData = $AcademicPeriods->get($this->selectedAcademicPeriod);
+
+			if ($selectedAcademicPeriodData->start_date instanceof Time || $selectedAcademicPeriodData->start_date instanceof Date) {
+				$academicPeriodStartDate = $selectedAcademicPeriodData->start_date->format('Y-m-d');
+			} else {
+				$academicPeriodStartDate = date('Y-m-d', $selectedAcademicPeriodData->start_date);
+			}
+
+			if ($selectedAcademicPeriodData->end_date instanceof Time || $selectedAcademicPeriodData->end_date instanceof Date) {
+				$academicPeriodEndDate = $selectedAcademicPeriodData->end_date->format('Y-m-d');
+			} else {
+				$academicPeriodEndDate = date('Y-m-d', $selectedAcademicPeriodData->end_date);
+			}
+
+			$Areas = $this->Institutions->Areas;
+			$areaOptions = $Areas->find('list', [
+					'keyField' => 'id',
+					'valueField' => 'code_name'
+				])
+				->innerJoinWith('Institutions.InstitutionGrades')
+				->where(['InstitutionGrades.education_grade_id' => $this->selectedGrade,
+					'InstitutionGrades.start_date <=' => $academicPeriodEndDate,
+					'OR' => [
+							'InstitutionGrades.end_date IS NULL',
+							'InstitutionGrades.end_date >=' => $academicPeriodStartDate
+					]
+				])
+				->order([$Areas->aliasField('order')]);
+
+			if ($this->selectedGrade == $request->data[$this->alias()]['education_grade_id']) {
+				$areaOptions->where([$this->Institutions->aliasField('id').' <> ' => $institutionId]);
+			}
+
+			$attr['type'] = 'chosenSelect';
+			$attr['attr']['multiple'] = false;
+			$attr['select'] = true;
+			$attr['options'] = $areaOptions->toArray();
+			$attr['onChangeReload'] = true;
+
+		} else if ($action == 'edit') {
+			$Areas = $this->Institutions->Areas;
+			$selectedInstitution = $request->data[$this->alias()]['institution_id'];
+			$selectedArea = $this->Institutions->get($selectedInstitution)->area_id;
+
+			$attr['type'] = 'readonly';
+			$attr['attr']['value'] = $Areas->get($selectedArea)->code_name;
+		}
+
+		return $attr;
+	}
+
+	public function addOnChangeNewEducationGradeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+		if (array_key_exists($this->alias(), $data)) {
+			if (array_key_exists('area_id', $data[$this->alias()])) {
+				unset($data[$this->alias()]['area_id']);
+			}
+        }
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
