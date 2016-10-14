@@ -277,7 +277,7 @@ class WorkflowBehavior extends Behavior {
 		$model = $this->_table;
 		$value = '';
 		if (empty($entity->assignee_id)) {
-			$value = $model->getMessage('general.unassigned');
+			$value = '<span>&lt;'.$model->getMessage('general.unassigned').'&gt;</span>';
 		}
 
 		return $value;

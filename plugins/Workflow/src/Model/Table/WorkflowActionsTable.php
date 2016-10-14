@@ -24,7 +24,7 @@ class WorkflowActionsTable extends AppTable {
 	public function onGetNextWorkflowStepId(Event $event, Entity $entity) {
 		$value = '';
 		if (empty($entity->next_workflow_step_id)) {
-			$value = $this->getMessage('general.notConfigured');
+			$value = '<span>&lt;'.$this->getMessage('general.notConfigured').'&gt;</span>';
 		}
 
 		return $value;
