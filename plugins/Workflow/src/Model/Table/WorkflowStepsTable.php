@@ -57,7 +57,7 @@ class WorkflowStepsTable extends AppTable {
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
 		// Auto insert default workflow_actions when add
 		if ($entity->isNew()) {
-			if ($entity->has('category') && in_array($entity->category, [self::TO_DO, self::IN_PROGRESS, self::DONE])) {
+			if ($entity->has('is_system_defined') && $entity->is_system_defined == 1) {
 				$data = [
 					'workflow_actions' => []
 				];
@@ -106,7 +106,7 @@ class WorkflowStepsTable extends AppTable {
 			$categoryOptions = $this->getSelectOptions('WorkflowSteps.category');
 			$value = $categoryOptions[$entity->category];
 		} else {
-			$value = $this->getMessage($this->aliasField('notCategorized'));
+			$value = '<span>&lt;'.$this->getMessage($this->aliasField('notCategorized')).'&gt;</span>';
 		}
 
 		return $value;
