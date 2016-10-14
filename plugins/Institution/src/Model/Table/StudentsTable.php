@@ -934,7 +934,7 @@ class StudentsTable extends AppTable
             }
 
             //if new record has no previous_institution_student_id value yet, then try to update it.
-            if (!$entity->has('prev_institution_student_id')) {
+            if (!$entity->has('previous_institution_student_id')) {
                 $prevInstitutionStudent = $this
                                     ->find()
                                     ->where([
@@ -944,10 +944,12 @@ class StudentsTable extends AppTable
                                     ->order(['created' => 'desc'])
                                     ->first();
 
-                $this->updateAll(
-                    ['previous_institution_student_id' => $prevInstitutionStudent->id],
-                    ['id' => $entity->id]
-                );
+                if ($prevInstitutionStudent) { //if has previous record.
+                    $this->updateAll(
+                        ['previous_institution_student_id' => $prevInstitutionStudent->id],
+                        ['id' => $entity->id]
+                    );
+                }
             }
         }
     }

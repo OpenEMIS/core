@@ -741,7 +741,7 @@ class StudentPromotionTable extends AppTable {
 						if ($this->save($existingStudentEntity)) {
 							if ($nextEducationGradeId != 0 && $nextAcademicPeriodId != 0) {
 								
-								$entity->prev_institution_student_id = $existingStudentEntity->id;
+								$entity->previous_institution_student_id = $existingStudentEntity->id;
 
 								//registry the Institution.Students so it will call the afterSave in it.
 								$InstitutionStudents = TableRegistry::get('Institution.Students');
