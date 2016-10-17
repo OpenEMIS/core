@@ -312,10 +312,6 @@ class StudentsTable extends AppTable
         $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'value' => $institutionId]);
         $this->ControllerAction->field('student_status_id', ['type' => 'select']);
     }
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/POCOR-3435-dev
 
     public function onBeforeDelete(Event $event, ArrayObject $options, $id)
     {
@@ -996,11 +992,6 @@ class StudentsTable extends AppTable
             $this->ControllerAction->field('student_status_id', ['type' => 'readonly', 'attr' => ['value' => $entity->student_status->name]]);
 
             $period = $entity->academic_period;
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/POCOR-3435-dev
-
             $dateOptions = [
                 'startDate' => $period->start_date->format('d-m-Y'),
                 'endDate' => $period->end_date->format('d-m-Y')
