@@ -61,19 +61,18 @@ $description = __d('open_emis', $_productName);
 			echo $this->Form->input('password', ['placeholder' => __('Password'), 'label' => false, 'value' => $password]);
 			?>
 			<?php
-				if (isset($showLanguage) && $showLanguage) {
+				if (isset($showLanguage) && $showLanguage) :
 			?>
-			<div class="input-select-wrapper">
-				<?php
-					echo $this->Form->input('System.language', [
+				<div class="input-select-wrapper">
+				<?= $this->Form->input('System.language', [
 						'label' => false,
 						'options' => $languageOptions,
 						'value' => $htmlLang,
 						'onchange' => "$('#reload').click()"
 					]);
 				?>
-			</div>
-			<?php }?>
+				</div>
+			<?php endif;?>
 			<div class="form-group">
 				<?= $this->Form->button(__('Login'), ['type' => 'submit', 'name' => 'submit', 'value' => 'login', 'class' => 'btn btn-primary btn-login']) ?>
 				<button class="hidden" value="reload" name="submit" type="submit" id="reload">reload</button>
