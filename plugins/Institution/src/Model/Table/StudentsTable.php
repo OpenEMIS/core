@@ -312,6 +312,10 @@ class StudentsTable extends AppTable
         $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'value' => $institutionId]);
         $this->ControllerAction->field('student_status_id', ['type' => 'select']);
     }
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/POCOR-3435-dev
 
     public function onBeforeDelete(Event $event, ArrayObject $options, $id)
     {
@@ -992,6 +996,10 @@ class StudentsTable extends AppTable
             $this->ControllerAction->field('student_status_id', ['type' => 'readonly', 'attr' => ['value' => $entity->student_status->name]]);
 
             $period = $entity->academic_period;
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/POCOR-3435-dev
 
             $dateOptions = [
                 'startDate' => $period->start_date->format('d-m-Y'),
@@ -1391,6 +1399,13 @@ class StudentsTable extends AppTable
             return false;
         }
 
+        // check if student exists in current year
+        $academicPeriodId = ($student->has('academic_period_id'))? $student->academic_period_id: null;
+        $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
+        if ($academicPeriodId != $currentAcademicPeriod) {
+            return false;
+        }
+
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $studentStatusList = array_flip($StudentStatuses->findCodeList());
 
@@ -1399,6 +1414,7 @@ class StudentsTable extends AppTable
         // check ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem && ruleStudentNotCompletedGrade
         $newSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($gradeId);
         $validateEnrolledInAnyInstitutionResult = $this->validateEnrolledInAnyInstitution($studentId, $newSystemId, ['excludeInstitutions' => $institutionId]);
+
         if ($checkIfCanTransfer) {
             if (!empty($validateEnrolledInAnyInstitutionResult) ||
                 $this->completedGrade($gradeId, $studentId)) {
