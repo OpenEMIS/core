@@ -77,8 +77,9 @@ class UserBehavior extends Behavior {
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
 	{
-		$configItems = TableRegistry::get('Configuration.ConfigItems');
-		$entity->preferred_language = $configItems->value('language');
+		if ($entity->isNew()) {
+			$entity->preferred_language = 'en';
+		}
 	}
 
 	public function beforeAction(Event $event) {

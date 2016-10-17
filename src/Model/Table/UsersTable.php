@@ -75,6 +75,8 @@ class UsersTable extends AppTable {
 	{
 		if (isset($this->loginLanguages[$entity->preferred_language])) {
 			return $this->loginLanguages[$entity->preferred_language];
+		} else {
+			return $entity->preferred_language;
 		}
 	}
 

@@ -44,7 +44,3 @@ UPDATE `security_users`
 SET `preferred_language` = (
     SELECT value FROM `config_items` WHERE `code` = 'language'
 );
-
-ALTER TABLE `security_users`
-CHANGE COLUMN `preferred_language` `preferred_language` CHAR(2) NOT NULL COMMENT '' ;
-
