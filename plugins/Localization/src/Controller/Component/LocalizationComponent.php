@@ -54,14 +54,36 @@ class LocalizationComponent extends Component {
 		$this->controller = $this->_registry->getController();
 		$this->Cookie->name = str_replace(' ', '_', $this->controller->_productName) . '_COOKIE';
 		$this->Cookie->time = 3600 * 24 * 30; // expires after one month
-		$this->language = $this->detectLanguage()['language'];
-		$this->showLanguage = $this->detectLanguage()['showLanguage'];
+		list($this->language, $this->showLanguage) = $this->detectLanguage();
 		$this->Session = $session;
 	}
 
 	public function getCookie()
 	{
 		return $this->Cookie;
+	}
+
+	private function dispatchEvent($subject, $eventKey, $method=null, $params=[], $autoOff=false) {
+		$this->onEvent($subject, $eventKey, $method);
+		$event = new Event($eventKey, $this, $params);
+		$event = $subject->eventManager()->dispatch($event);
+		if(!is_null($method) && $autoOff) {
+			$this->offEvent($subject, $eventKey, $method);
+		}
+		return $event;
+	}
+
+	private function onEvent($subject, $eventKey, $method) {
+		$eventMap = $subject->implementedEvents();
+		if (!array_key_exists($eventKey, $eventMap) && !is_null($method)) {
+			if (method_exists($subject, $method)) {
+				$subject->eventManager()->on($eventKey, [], [$subject, $method]);
+			}
+		}
+	}
+
+	private function offEvent($subject, $eventKey, $method) {
+		$subject->eventManager()->off($eventKey, [$subject, $method]);
 	}
 
 	/**
@@ -75,17 +97,13 @@ class LocalizationComponent extends Component {
 		$lang = $this->language;
 		$request = $this->request;
 		$session = $request->session();
-		$ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
-		$showLanguage = $session->read('System.language_menu');
-
-		// Check if the language menu is enabled
-		if (!$session->check('System.language_menu')) {
-			$languageMenu = $ConfigItemsTable->value('language_menu');
-			if (!$languageMenu) {
-				$systemLanguage = $ConfigItemsTable->value('language');
-				$session->write('System.language', $systemLanguage);
+		$showLanguage = $this->showLanguage;
+		$lang = $this->language;
+		$event = $this->dispatchEvent($this->controller, 'Controller.Localization.getLanguageOptions', 'getLanguageOptions', [], true);
+		if ($event->result) {
+			if (is_array($event->result)) {
+				list($showLanguage, $lang) = $event->result;
 			}
-			$session->write('System.language_menu', $languageMenu);
 		}
 
 		// Language menu enabled
@@ -94,8 +112,7 @@ class LocalizationComponent extends Component {
 				$lang = $request->query('lang');
 				$user = $this->Auth->user();
 				if ($user) {
-					$UsersTable = TableRegistry::get('User.Users');
-					$UsersTable->dispatchEvent('Model.Users.updateLoginLanguage', [$user, $lang], $this);
+					$event = $this->dispatchEvent($this->controller, 'Controller.Localization.updateLoginLanguage', 'updateLoginLanguage', [$user, $lang], true);
 				}
 				$this->Cookie->write('System.language', $lang);
 			} else if ($this->Cookie->check('System.language')) {
@@ -111,16 +128,15 @@ class LocalizationComponent extends Component {
 		}
 		// Language menu disabled
 		else {
-			$lang = $session->read('System.language');
+			// $lang = $session->read('System.language');
 			$user = $this->Auth->user();
 			if ($user) {
-				$UsersTable = TableRegistry::get('User.Users');
-				$UsersTable->dispatchEvent('Model.Users.updateLoginLanguage', [$user, $lang], $this);
+				$event = $this->dispatchEvent($this->controller, 'Controller.Localization.updateLoginLanguage', 'updateLoginLanguage', [$user, $lang], true);
 			}
 			$this->Cookie->write('System.language', $lang);
 		}
 
-		return ['language' => $lang, 'showLanguage' => $showLanguage];
+		return [$lang, $showLanguage];
 	}
 
 	public function beforeFilter(Event $event) {

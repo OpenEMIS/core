@@ -183,4 +183,30 @@ class AppController extends Controller {
 
 		return $displayProducts;
 	}
+
+	public function getLanguageOptions(Event $event)
+	{
+		$ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
+		$session = $event->subject()->request->session();
+		$showLanguage = $session->read('System.language_menu');
+		$systemLanguage = $session->read('System.language');
+
+		// Check if the language menu is enabled
+		if (!$session->check('System.language_menu')) {
+			$showLanguage = $ConfigItemsTable->value('language_menu');
+			if (!$showLanguage) {
+				$systemLanguage = $ConfigItemsTable->value('language');
+				$session->write('System.language', $systemLanguage);
+			}
+			$session->write('System.language_menu', $showLanguage);
+		}
+
+		return [$showLanguage, $systemLanguage];
+	}
+
+	public function updateLoginLanguage(Event $event, $user, $lang)
+	{
+		$UsersTable = TableRegistry::get('User.Users');
+		$UsersTable->dispatchEvent('Model.Users.updateLoginLanguage', [$user, $lang], $this);
+	}
 }
