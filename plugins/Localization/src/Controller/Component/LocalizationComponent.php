@@ -54,7 +54,8 @@ class LocalizationComponent extends Component {
 		$this->controller = $this->_registry->getController();
 		$this->Cookie->name = str_replace(' ', '_', $this->controller->_productName) . '_COOKIE';
 		$this->Cookie->time = 3600 * 24 * 30; // expires after one month
-		$this->language = $this->detectLanguage();
+		$this->language = $this->detectLanguage()['language'];
+		$this->showLanguage = $this->detectLanguage()['showLanguage'];
 		$this->Session = $session;
 	}
 
@@ -75,6 +76,7 @@ class LocalizationComponent extends Component {
 		$request = $this->request;
 		$session = $request->session();
 		$ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
+		$showLanguage = $session->read('System.language_menu');
 
 		// Check if the language menu is enabled
 		if (!$session->check('System.language_menu')) {
@@ -118,7 +120,7 @@ class LocalizationComponent extends Component {
 			$this->Cookie->write('System.language', $lang);
 		}
 
-		return $lang;
+		return ['language' => $lang, 'showLanguage' => $showLanguage];
 	}
 
 	public function beforeFilter(Event $event) {
