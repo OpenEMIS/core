@@ -171,7 +171,7 @@ class StudentsTable extends AppTable
 		$query->select([
                     'openemis_no' => 'Users.openemis_no',
                     'identity_number' => 'Users.identity_number',
-                    'gender_id' => 'Genders.name',
+                    'gender_name' => 'Genders.name',
                     'date_of_birth' => 'Users.date_of_birth',
                     'code' => 'Institutions.code'
                 ]);
@@ -235,7 +235,7 @@ class StudentsTable extends AppTable
 
 		$extraField[] = [
 			'key' => 'Users.gender_id',
-			'field' => 'gender_id',
+			'field' => 'gender_name',
 			'type' => 'string',
 			'label' => ''
 		];
@@ -749,6 +749,10 @@ class StudentsTable extends AppTable
 		$this->Session->write('Student.Students.id', $entity->student_id);
 		$this->Session->write('Student.Students.name', $entity->user->name);
 		$this->setupTabElements($entity);
+
+		if ($code != 'CURRENT') {
+			$this->ControllerAction->removeDefaultActions(['remove', 'edit']);
+		}
 	}
 
 	private function setupTabElements($entity)
@@ -1351,17 +1355,6 @@ class StudentsTable extends AppTable
 				$toolbarButtons['back']['type'] = null;
 			}
 		} else if ($action == 'view') { // for transfer button in view page
-			$statuses = $this->StudentStatuses->findCodeList();
-			$id = $this->request->params['pass'][1];
-			$studentStatusId = $this->get($id)->student_status_id;
-			// Start PHPOE-1897
-			if ($studentStatusId != $statuses['CURRENT']) {
-				if (isset($toolbarButtons['edit'])) {
-					unset($toolbarButtons['edit']);
-				}
-			}
-			// End PHPOE-1897
-
 			if (isset($toolbarButtons['back'])) {
 				$refererUrl = $this->request->referer();
 				$toolbarButtons['back']['url'] = $refererUrl;
@@ -1378,6 +1371,13 @@ class StudentsTable extends AppTable
 			return false;
 		}
 
+		// check if student exists in current year
+		$academicPeriodId = ($student->has('academic_period_id'))? $student->academic_period_id: null;
+		$currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
+		if ($academicPeriodId != $currentAcademicPeriod) {
+			return false;
+		}
+
 		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 		$studentStatusList = array_flip($StudentStatuses->findCodeList());
 
@@ -1386,6 +1386,7 @@ class StudentsTable extends AppTable
 		// check ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem && ruleStudentNotCompletedGrade
 		$newSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($gradeId);
 		$validateEnrolledInAnyInstitutionResult = $this->validateEnrolledInAnyInstitution($studentId, $newSystemId, ['excludeInstitutions' => $institutionId]);
+
 		if ($checkIfCanTransfer) {
 			if (!empty($validateEnrolledInAnyInstitutionResult) ||
 				$this->completedGrade($gradeId, $studentId)) {
@@ -1643,7 +1644,6 @@ class StudentsTable extends AppTable
 		}
 
 		$studentsByGradeConditions = [
-			'OR' => [['student_status_id' => 1], ['student_status_id' => 2]],
 			$this->aliasField('academic_period_id') => $currentYearId,
 			$this->aliasField('education_grade_id').' IS NOT NULL',
 			'Genders.name IS NOT NULL'
