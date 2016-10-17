@@ -67,7 +67,7 @@ class LocalizationComponent extends Component {
 	/**
 	 *	Function to get the language to display base on the system configuration
 	 *
-	 *	@return string Language to display
+	 *	@return array language - Language to display, showLanguage - If the language menu is to be displayed
 	 */
 	private function detectLanguage()
 	{
