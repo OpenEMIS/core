@@ -78,9 +78,9 @@ class UsersTable extends AppTable {
 
 	public function updateLoginLanguage(Event $event, $user, $language)
 	{
-		if ($user['login_language'] != $language) {
+		if ($user['preferred_language'] != $language) {
 			$user = $this->get($user['id']);
-			$user->login_language = $language;
+			$user->preferred_language = $language;
 			$this->save($user);
 		}
 	}
@@ -92,9 +92,9 @@ class UsersTable extends AppTable {
     	$SSO = $event->subject()->SSO;
     	$Cookie = $event->subject()->Localization->getCookie();
     	if ($session->read('System.language_menu') && $SSO->getAuthenticationType() != 'Local') {
-    		$Cookie->write('System.language', $userEntity->login_language);
+    		$Cookie->write('System.language', $userEntity->preferred_language);
     	} else {
-    		$userEntity->login_language = $session->read('System.language');
+    		$userEntity->preferred_language = $session->read('System.language');
     	}
     	$this->save($userEntity);
     }
