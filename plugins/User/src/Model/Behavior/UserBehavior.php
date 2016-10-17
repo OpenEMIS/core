@@ -77,10 +77,8 @@ class UserBehavior extends Behavior {
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
 	{
-		if (isset($entity['preferred_language']) && empty($entity['preferred_language'])) {
-			$configItems = TableRegistry::get('Configuration.ConfigItems');
-			$entity->preferred_language = $configItems->value('language');
-		}
+		$configItems = TableRegistry::get('Configuration.ConfigItems');
+		$entity->preferred_language = $configItems->value('language');
 	}
 
 	public function beforeAction(Event $event) {
