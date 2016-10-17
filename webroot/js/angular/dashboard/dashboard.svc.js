@@ -11,14 +11,15 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
     };
 
     var models = {
-        TransferApprovalsTable: 'Institution.TransferApprovals',
-        StudentAdmissionTable: 'Institution.StudentAdmission',
-        StudentDropoutTable: 'Institution.StudentDropout',
+        // TransferApprovalsTable: 'Institution.TransferApprovals',
+        // StudentAdmissionTable: 'Institution.StudentAdmission',
+        // StudentDropoutTable: 'Institution.StudentDropout',
+        // StaffTransferApprovalsTable: 'Institution.StaffTransferApprovals',
+        // StaffTransferRequestsTable: 'Institution.StaffTransferRequests',
+        StaffLeaveTable: 'Institution.StaffLeave',
         InstitutionSurveysTable: 'Institution.InstitutionSurveys',
         InstitutionPositionsTable: 'Institution.InstitutionPositions',
-        StaffPositionProfilesTable: 'Institution.StaffPositionProfiles',
-        StaffTransferApprovalsTable: 'Institution.StaffTransferApprovals',
-        StaffTransferRequestsTable: 'Institution.StaffTransferRequests'
+        StaffPositionProfilesTable: 'Institution.StaffPositionProfiles'
     };
 
     var service = {
@@ -131,7 +132,11 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
 
                     return eCell;
                 },
-                width: 500
+                width: 400
+            },
+            {
+                headerName: "Institution", field: "institution",
+                width: 250
             },
             {headerName: "Received Date", field: "received_date"},
             {headerName: "Requester", field: "requester"}
@@ -145,8 +150,8 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
             deferred.resolve(response);
         };
 
-        return window[model.code].find('workbench')
-            .afterFind('workbench')
+        return window[model.code]
+            .find('workbench')
             .limit(limit)
             .page(page)
             .ajax({success: success, defer: true});

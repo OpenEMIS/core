@@ -7,12 +7,19 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Controller\Component;
 use Cake\Network\Request;
+use Cake\Network\Session;
 use Cake\ORM\TableRegistry;
+use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\ControllerActionTable;
 use Cake\Validation\Validator;
 use Cake\I18n\Date;
 
 class StaffPositionProfilesTable extends ControllerActionTable {
+	// Workflow Steps - category
+	const TO_DO = 1;
+	const IN_PROGRESS = 2;
+	const DONE = 3;
+
 	private $staffChangeTypesList = [];
 
 	private $workflowEvents = [
@@ -59,7 +66,6 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		$events = parent::implementedEvents();
 		$events['Workflow.getEvents'] = 'getWorkflowEvents';
 		$events['Workflow.beforeTransition'] = 'workflowBeforeTransition';
-		$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
 		$events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
 		foreach($this->workflowEvents as $event) {
 			$events[$event['value']] = $event['method'];
@@ -528,119 +534,70 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		}
 	}
 
-	// Workbench.Model.onGetList
-	public function onGetWorkbenchList(Event $event, $isAdmin, $institutionRoles, ArrayObject $data) {
-		$excludedStatuses = ['APPROVED', 'CLOSED'];
-		$statusIds = $event->subject()->Workflow->getStepsByModel($this->registryAlias(), $excludedStatuses);
+	public function findWorkbench(Query $query, array $options) {
+		$session = new Session();
+		$userId = $session->read('Auth.User.id');
+		$Statuses = $this->Statuses;
+		$doneStatus = self::DONE;
 
-		$where = [];
-		if (empty($statusIds)) {
-			// returns empty list if there is no status mapping for workflows
-			// otherwise it will return all rows without any conditions which may cause out of memory
-			return [];
-		} else {
-			if ($isAdmin) {
-				$where[$this->aliasField('status_id') . ' IN '] = $statusIds;
-			} else {
-				if (empty($institutionRoles)) {
-					// return empty list if login user do not have roles in any schools
-					return [];
-				} else {
-					$where[$this->aliasField('institution_id') . ' IN '] = array_keys($institutionRoles);
-
-					$accessibleStatusIds = $event->subject()->Workflow->getAccessibleStatuses($institutionRoles, $statusIds);
-					if (empty($accessibleStatusIds)) {
-						// return empty list if login user do not have access to any steps
-						return [];
-					} else {
-						$where[$this->aliasField('status_id') . ' IN '] = $accessibleStatusIds;
-					}
-				}
-			}
-		}
-
-		$resultSetQuery = $this
-			->find()
+		$query
 			->select([
 				$this->aliasField('id'),
 				$this->aliasField('status_id'),
+				$this->aliasField('institution_id'),
 				$this->aliasField('modified'),
 				$this->aliasField('created'),
-				'Users.openemis_no',
-				'Users.first_name',
-				'Users.middle_name',
-				'Users.third_name',
-				'Users.last_name',
-				'Users.preferred_name',
-				'Institutions.id',
-				'Institutions.name',
-				'CreatedUser.username'
+				$this->Statuses->aliasField('name'),
+				$this->Users->aliasField('openemis_no'),
+				$this->Users->aliasField('first_name'),
+				$this->Users->aliasField('middle_name'),
+				$this->Users->aliasField('third_name'),
+				$this->Users->aliasField('last_name'),
+				$this->Users->aliasField('preferred_name'),
+				$this->Institutions->aliasField('code'),
+				$this->Institutions->aliasField('name'),
+				$this->CreatedUser->aliasField('openemis_no'),
+				$this->CreatedUser->aliasField('first_name'),
+				$this->CreatedUser->aliasField('middle_name'),
+				$this->CreatedUser->aliasField('third_name'),
+				$this->CreatedUser->aliasField('last_name'),
+				$this->CreatedUser->aliasField('preferred_name')
 			])
-			->contain(['Statuses', 'Users', 'Institutions', 'CreatedUser'])
-			->where($where)
-			->order([$this->aliasField('created')]);
+			->contain([$this->Users->alias(), $this->Institutions->alias(), $this->CreatedUser->alias()])
+			->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+				return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
+			})
+			->where([$this->aliasField('assignee_id') => $userId])
+			->order([$this->aliasField('created')])
+			->formatResults(function (ResultSetInterface $results) {
+				return $results->map(function ($row) {
+					$url = [
+						'plugin' => 'Institution',
+						'controller' => 'Institutions',
+						'action' => 'StaffPositionProfiles',
+						'view',
+						$row->id,
+						'institution_id' => $row->institution_id
+					];
 
-		// if is admin, only return the first 30 records
-		if ($isAdmin) {
-			$resultSetQuery->limit(30);
-		}
+					if (is_null($row->modified)) {
+						$receivedDate = $this->formatDate($row->created);
+					} else {
+						$receivedDate = $this->formatDate($row->modified);
+					}
 
-		$resultSet = $resultSetQuery->all();
+					$row['url'] = $url;
+	    			$row['status'] = $row->_matchingData['Statuses']->name;
+	    			$row['request_title'] = __('Change in Staff Assignment of').' '.$row->user->name_with_id;
+	    			$row['institution'] = $row->institution->code_name;
+	    			$row['received_date'] = $receivedDate;
+	    			$row['due_date'] = '<i class="fa fa-minus"></i>';
+	    			$row['requester'] = $row->created_user->name_with_id;
 
-		$WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
-		$stepRoles = [];
+					return $row;
+				});
+			});
 
-		$resultCount = 0;
-		foreach ($resultSet as $key => $obj) {
-			$institutionId = $obj->institution->id;
-
-			if ($isAdmin) {
-				$hasAccess = true;
-			} else {
-				$stepId = $obj->status_id;
-				$roles = $institutionRoles[$institutionId];
-
-				// Permission
-				$hasAccess = false;
-
-				// Array to store security roles in each Workflow Step
-				if (!array_key_exists($stepId, $stepRoles)) {
-					$stepRoles[$stepId] = $WorkflowStepsRoles->getRolesByStep($stepId);
-				}
-				// access is true if user roles exists in step roles
-				$hasAccess = count(array_intersect_key($roles, $stepRoles[$stepId])) > 0;
-				// End
-			}
-
-			if ($hasAccess) {
-				if ($resultCount++ == 30) {
-					break;
-				}
-
-				$requestTitle = sprintf('Change in Staff Assignment (%s) of %s', $obj->user->name_with_id, $obj->institution->name);
-				$url = [
-					'plugin' => 'Institution',
-					'controller' => 'Institutions',
-					'action' => 'StaffPositionProfiles',
-					'view',
-					$obj->id,
-					'institution_id' => $institutionId
-				];
-
-				if (is_null($obj->modified)) {
-					$receivedDate = $this->formatDate($obj->created);
-				} else {
-					$receivedDate = $this->formatDate($obj->modified);
-				}
-
-				$data[] = [
-					'request_title' => ['title' => $requestTitle, 'url' => $url],
-					'receive_date' => $receivedDate,
-					'due_date' => '<i class="fa fa-minus"></i>',
-					'requester' => $obj->created_user->username,
-					'type' => __('Change in Staff Assignment')
-				];
-			}
-		}
+		return $query;
 	}
 }
