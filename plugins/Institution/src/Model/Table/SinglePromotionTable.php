@@ -8,6 +8,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
+use Cake\I18n\Time;
 use App\Model\Table\ControllerActionTable;
 
 class SinglePromotionTable extends ControllerActionTable
@@ -145,7 +146,7 @@ class SinglePromotionTable extends ControllerActionTable
         if (count($nextGrades) != 0) {
             $statusOptions[$statusCodes['PROMOTED']] = __($studentStatusesList[$statusCodes['PROMOTED']]);
         }
-
+        $statusOptions[$statusCodes['DEMOTED']] = __($studentStatusesList[$statusCodes['DEMOTED']]);
         $statusOptions[$statusCodes['REPEATED']] = __($studentStatusesList[$statusCodes['REPEATED']]);
 
         $attr['options'] = $statusOptions;
@@ -168,17 +169,25 @@ class SinglePromotionTable extends ControllerActionTable
                 // list of grades available to promote to
                 // $listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($currentGradeId);
 
-                $programmeId = $this->EducationGrades->get($currentGradeId)->education_programme_id;
+                $gradeData = $this->EducationGrades->get($currentGradeId);
 
-                $listOfGrades = $this->EducationGrades->find('list', [
-                    'keyField' => 'id',
-                    'valueField' => 'programme_grade_name'
-                ])
-                ->where([
-                    $this->EducationGrades->aliasField('education_programme_id') => $programmeId,
-                    // $this->aliasField('order').' > ' => $order
-                ])
-                ->toArray();
+                $programmeId = $gradeData->education_programme_id;
+                $gradeOrder = $gradeData->order;
+
+                $query = $this->EducationGrades
+                    ->find('list', [
+                        'keyField' => 'id',
+                        'valueField' => 'programme_grade_name'
+                    ])
+                    ->where([$this->EducationGrades->aliasField('education_programme_id') => $programmeId]);
+
+                if ($studentStatusId == $statuses['PROMOTED']) {
+                    $query->where([$this->EducationGrades->aliasField('order').' > ' => $gradeOrder]);
+                } else if ($studentStatusId == $statuses['DEMOTED']) {
+                    $query->where([$this->EducationGrades->aliasField('order').' < ' => $gradeOrder]);
+                }
+
+                $listOfGrades = $query->toArray();
 
                 // list of grades available in the institution
                 $today = date('Y-m-d');
@@ -243,10 +252,9 @@ class SinglePromotionTable extends ControllerActionTable
             $studentData = $this->studentData;
             $studentStatuses = $this->statuses;
             $statusToUpdate = $requestData[$this->alias()]['student_status_id'];
-            $selectedAcademicPeriodId = $requestData[$this->alias()]['academic_period_id'];
-            $currentAcademicPeriodId = $this->AcademicPeriods->getCurrent();
-            $today = date('Y-m-d');
-            $yesterday = date('Y-m-d', strtotime('yesterday'));
+
+            $today = Time::now();
+            $yesterday = Time::now()->modify('-1 day');
 
             // insert new record for student
             if ($statusToUpdate == $studentStatuses['REPEATED']) {
@@ -255,20 +263,20 @@ class SinglePromotionTable extends ControllerActionTable
 
             $entity->student_status_id = $studentStatuses['CURRENT'];
 
-            // if student is promoted/demoted in the middle of the academic period
-            if ($selectedAcademicPeriodId == $currentAcademicPeriodId) {
-                $currentPeriod = $this->AcademicPeriods->get($currentAcademicPeriodId);
-                $entity->start_date = $today;
-                $entity->start_year = $today->format('Y');
-                $entity->end_date = $nextPeriod->end_date->format('Y-m-d');
-                $entity->end_year = $nextPeriod->end_date->format('Y');
+            $currentAcademicPeriodId = $this->AcademicPeriods->getCurrent();
+            $selectedAcademicPeriodId = $requestData[$this->alias()]['academic_period_id'];
+            $selectedPeriodData = $this->AcademicPeriods->get($selectedAcademicPeriodId);
 
+            $entity->end_date = $selectedPeriodData->end_date->format('Y-m-d');
+            $entity->end_year = $selectedPeriodData->end_date->format('Y');
+
+            if ($selectedAcademicPeriodId == $currentAcademicPeriodId) {
+                // if student is promoted/demoted in the middle of the academic period
+                $entity->start_date = $today;
+                $entity->start_year = $today->year;
             } else {
-                $nextPeriod = $this->AcademicPeriods->get($selectedAcademicPeriodId);
-                $entity->start_date = $nextPeriod->start_date->format('Y-m-d');
-                $entity->start_year = $nextPeriod->start_date->format('Y');
-                $entity->end_date = $nextPeriod->end_date->format('Y-m-d');
-                $entity->end_year = $nextPeriod->end_date->format('Y');
+                $entity->start_date = $selectedPeriodData->start_date->format('Y-m-d');
+                $entity->start_year = $selectedPeriodData->start_date->format('Y');
             }
             // End
 
@@ -284,7 +292,9 @@ class SinglePromotionTable extends ControllerActionTable
                 ->first();
 
             if ($selectedAcademicPeriodId == $currentAcademicPeriodId) {
-
+                // if student is promoted/demoted in the middle of the academic period
+                $existingStudentEntity->end_date = $yesterday;
+                $existingStudentEntity->end_year = $yesterday->year;
             }
 
             $existingStudentEntity->student_status_id = $statusToUpdate;
