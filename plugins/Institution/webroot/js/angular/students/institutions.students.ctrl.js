@@ -545,6 +545,7 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
     }
 
     function postForm() {
+
         var academicPeriodId = (StudentController.academicPeriodOptions.hasOwnProperty('selectedOption'))? StudentController.academicPeriodOptions.selectedOption.id: '';
         var educationGradeId = (StudentController.educationGradeOptions.hasOwnProperty('selectedOption'))? StudentController.educationGradeOptions.selectedOption.education_grade_id: '';
         var classId = null;
@@ -559,17 +560,21 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
         if (!StudentController.createNewStudent) {
             InstitutionsStudentsSvc.getStudentData(StudentController.selectedStudent)
             .then(function(studentData){
+
                 if (StudentController.externalSearch) {
+                    InstitutionsStudentsSvc.init(angular.baseUrl);
                     StudentController.addStudentUser(studentData, academicPeriodId, educationGradeId, classId, startDate, endDate);
                 } else {
                     var studentId = StudentController.selectedStudent;
                     StudentController.insertStudentData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate, {});
                 }
             }, function(error){
-
+                console.log(error);
             });
         } else {
+            console.log('postForm');
             if (StudentController.selectedStudentData != null) {
+                console.log('not null');
                 var studentData = {};
                 var log = [];
                 angular.forEach(StudentController.selectedStudentData, function(value, key) {
@@ -602,6 +607,7 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
                 delete studentData['created_user_id'];
                 StudentController.addStudentUser(studentData, academicPeriodId, educationGradeId, classId, startDate, endDate);
             }
+            console.log('done');
         }
     }
 
