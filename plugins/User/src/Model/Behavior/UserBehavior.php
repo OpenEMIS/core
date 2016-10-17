@@ -77,9 +77,9 @@ class UserBehavior extends Behavior {
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
 	{
-		if (isset($entity['login_language']) && empty($entity['login_language'])) {
+		if (isset($entity['preferred_language']) && empty($entity['preferred_language'])) {
 			$configItems = TableRegistry::get('Configuration.ConfigItems');
-			$entity->login_language = $configItems->value('language');
+			$entity->preferred_language = $configItems->value('language');
 		}
 	}
 
@@ -104,7 +104,7 @@ class UserBehavior extends Behavior {
 			$this->_table->fields['super_admin']['visible'] = false;
 			$this->_table->fields['date_of_death']['visible'] = false;
 			$this->_table->fields['status']['visible'] = false;
-			$this->_table->fields['login_language']['visible'] = false;
+			$this->_table->fields['preferred_language']['visible'] = false;
 			$this->_table->fields['address_area_id']['type'] = 'areapicker';
 			$this->_table->fields['address_area_id']['source_model'] = 'Area.AreaAdministratives';
 			$this->_table->fields['birthplace_area_id']['type'] = 'areapicker';

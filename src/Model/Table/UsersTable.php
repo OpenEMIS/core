@@ -71,10 +71,10 @@ class UsersTable extends AppTable {
 		$this->controller->set('selectedAction', 'General');
 	}
 
-	public function onGetLoginLanguage(Event $event, Entity $entity)
+	public function onGetPreferredLanguage(Event $event, Entity $entity)
 	{
-		if (isset($this->loginLanguages[$entity->login_language])) {
-			return $this->loginLanguages[$entity->login_language];
+		if (isset($this->loginLanguages[$entity->preferred_language])) {
+			return $this->loginLanguages[$entity->preferred_language];
 		}
 	}
 
@@ -110,10 +110,10 @@ class UsersTable extends AppTable {
 
 	public function editAfterAction(Event $event, Entity $entity)
 	{
-		$this->ControllerAction->field('login_language', ['type' => 'select', 'entity' => $entity]);
+		$this->ControllerAction->field('preferred_language', ['type' => 'select', 'entity' => $entity]);
 	}
 
-	public function onUpdateFieldLoginLanguage(Event $event, array $attr, $action, Request $request)
+	public function onUpdateFieldPreferredLanguage(Event $event, array $attr, $action, Request $request)
 	{
 		$session = $this->request->session();
 		if ($session->read('System.language_menu')) {
@@ -121,7 +121,7 @@ class UsersTable extends AppTable {
 		} else {
 			$attr['type'] = 'disabled';
 			$entity = $attr['entity'];
-			$attr['attr']['value'] = $this->loginLanguages[$entity->login_language];
+			$attr['attr']['value'] = $this->loginLanguages[$entity->preferred_language];
 		}
 
 		return $attr;
@@ -131,7 +131,7 @@ class UsersTable extends AppTable {
 	{
 		// To change the language of the UI
 		$url = $this->ControllerAction->url('view');
-		$url['lang'] = $entity->login_language;
+		$url['lang'] = $entity->preferred_language;
 		return $this->controller->redirect($url);
 	}
 
