@@ -45,13 +45,20 @@ class SinglePromotionTable extends ControllerActionTable
     //     $Navigation->addCrumb('Promotion');
     // }
 
+    public function indexBeforeAction(Event $event, arrayObject $extra)
+    {
+        return $this->controller->redirect($this->getRedirectLink());
+    }
+
+    public function viewBeforeAction(Event $event, arrayObject $extra)
+    {
+        return $this->controller->redirect($this->getRedirectLink());
+    }
+
     public function addBeforeAction(Event $event, arrayObject $extra)
     {
         if (isset($extra['toolbarButtons']['back'])) {
-            $Students = TableRegistry::get('Institution.StudentUser');
-            $extra['toolbarButtons']['back']['url']['action'] = $Students->alias();
-            $extra['toolbarButtons']['back']['url'][0] = 'view';
-            $extra['toolbarButtons']['back']['url'][1] = $this->Session->read('Student.Students.id');
+            $extra['toolbarButtons']['back']['url'] = $this->getRedirectLink();
         }
 
         $this->institutionId = $this->Session->read('Institution.Institutions.id');
@@ -63,6 +70,20 @@ class SinglePromotionTable extends ControllerActionTable
 
         $this->request->data[$this->alias()]['institution_id'] = $this->institutionId;
         $this->request->data[$this->alias()]['student_id'] = $this->studentData->student_id;
+
+        $this->fields = [];
+        $this->addSections();
+        $this->field('student_id');
+        $this->field('from_academic_period_id');
+        $this->field('from_education_grade_id');
+        $this->field('academic_period_id');
+        $this->field('education_grade_id');
+        $this->field('student_status_id');
+
+        $this->setFieldOrder([
+            'student_id',
+            'existing_information_header', 'from_academic_period_id', 'from_education_grade_id',
+            'new_information_header', 'academic_period_id', 'student_status_id', 'education_grade_id']);
     }
 
     private function addSections()
@@ -71,21 +92,18 @@ class SinglePromotionTable extends ControllerActionTable
         $this->field('new_information_header', ['type' => 'section', 'title' => __('Promote To')]);
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function getRedirectLink()
     {
-        $this->fields = [];
-        $this->addSections();
-        $this->field('student_id');
-        $this->field('from_academic_period_id');
-        $this->field('from_education_grade_id');
-        $this->field('academic_period_id');
-        $this->field('education_grade_id');
-        $this->field('student_status_id', ['entity' => $entity]);
+        $Students = TableRegistry::get('Institution.StudentUser');
+        $url['action'] = $Students->alias();
+        $url[0] = 'view';
+        $url[1] = $this->Session->read('Student.Students.id');
+        return $url;
+    }
 
-        $this->setFieldOrder([
-            'student_id',
-            'existing_information_header', 'from_academic_period_id', 'from_education_grade_id',
-            'new_information_header', 'academic_period_id', 'student_status_id', 'education_grade_id']);
+    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    {
+        $buttons[1]['url'] = $this->getRedirectLink();
     }
 
     public function onUpdateFieldStudentId(Event $event, array $attr, $action, Request $request)
@@ -262,13 +280,12 @@ class SinglePromotionTable extends ControllerActionTable
             }
 
             $entity->student_status_id = $studentStatuses['CURRENT'];
+            $entity->end_date = $selectedPeriodData->end_date->format('Y-m-d');
+            $entity->end_year = $selectedPeriodData->end_date->format('Y');
 
             $currentAcademicPeriodId = $this->AcademicPeriods->getCurrent();
             $selectedAcademicPeriodId = $requestData[$this->alias()]['academic_period_id'];
             $selectedPeriodData = $this->AcademicPeriods->get($selectedAcademicPeriodId);
-
-            $entity->end_date = $selectedPeriodData->end_date->format('Y-m-d');
-            $entity->end_year = $selectedPeriodData->end_date->format('Y');
 
             if ($selectedAcademicPeriodId == $currentAcademicPeriodId) {
                 // if student is promoted/demoted in the middle of the academic period
