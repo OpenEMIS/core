@@ -35,6 +35,7 @@ class InstitutionSurveysTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+		$this->belongsTo('Assignees', ['className' => 'User.Users']);
 		$this->addBehavior('Survey.Survey', [
 			'module' => $this->module
 		]);
@@ -341,9 +342,9 @@ class InstitutionSurveysTable extends AppTable {
 					$workflow = $this->getWorkflow($this->registryAlias(), null, $selectedFilter);
 					if (!empty($workflow)) {
 						foreach ($workflow->workflow_steps as $workflowStep) {
-							if ($workflowStep->stage == 0) {	// Open
+							if ($workflowStep->category == 1) {	// To Do
 								$this->openStatusId = $workflowStep->id;
-							} else if ($workflowStep->stage == 2) {	// Closed
+							} else if ($workflowStep->category == 3) {	// Done
 								$this->closedStatusId = $workflowStep->id;
 							}
 						}
@@ -487,7 +488,7 @@ class InstitutionSurveysTable extends AppTable {
 			$workflow = $this->getWorkflow($this->registryAlias(), null, $surveyFormId);
 			if (!empty($workflow)) {
 				foreach ($workflow->workflow_steps as $workflowStep) {
-					if ($workflowStep->stage == 0) {
+					if ($workflowStep->category == 1) {
 						$openStatusId = $workflowStep->id;
 						break;
 					}
