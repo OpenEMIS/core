@@ -5,12 +5,12 @@
 OpenEMIS
 Open Education Management Information System
 
-Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by the Free Software Foundation
-, either version 3 of the License, or any later version.  This program is distributed in the hope 
+, either version 3 of the License, or any later version.  This program is distributed in the hope
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should 
-have received a copy of the GNU General Public License along with this program.  If not, see 
+or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should
+have received a copy of the GNU General Public License along with this program.  If not, see
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
@@ -39,7 +39,8 @@ class LocalizationComponent extends Component {
 		'ru' => ['name' => 'русский', 'direction' => 'ltr', 'locale' => 'ru_RU'],
 		'es' => ['name' => 'español', 'direction' => 'ltr', 'locale' => 'es_ES']
 	];
-	public $components = ['Cookie'];
+
+	public $components = ['Cookie', 'Auth'];
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
@@ -51,24 +52,75 @@ class LocalizationComponent extends Component {
 	public function initialize(array $config) {
 		$session = $this->request->session();
 		$this->controller = $this->_registry->getController();
-		
 		$this->Cookie->name = str_replace(' ', '_', $this->controller->_productName) . '_COOKIE';
 		$this->Cookie->time = 3600 * 24 * 30; // expires after one month
+		$this->language = $this->detectLanguage()['language'];
+		$this->showLanguage = $this->detectLanguage()['showLanguage'];
+		$this->Session = $session;
+	}
+
+	public function getCookie()
+	{
+		return $this->Cookie;
+	}
+
+	/**
+	 *	Function to get the language to display base on the system configuration
+	 *
+	 *	@return string Language to display
+	 */
+	private function detectLanguage()
+	{
+		// Default language
 		$lang = $this->language;
-		$params = $this->controller->params;
+		$request = $this->request;
+		$session = $request->session();
+		$ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
+		$showLanguage = $session->read('System.language_menu');
 
-		if (!empty($params->query['lang'])) {
-			$lang = $params->query['lang'];
-
-		} else if ($this->Cookie->check('System.language')) {
-			$lang = $this->Cookie->read('System.language');
-
-		} else if ($session->check('System.language')) {
-			$lang = $session->read('System.language');
+		// Check if the language menu is enabled
+		if (!$session->check('System.language_menu')) {
+			$languageMenu = $ConfigItemsTable->value('language_menu');
+			if (!$languageMenu) {
+				$systemLanguage = $ConfigItemsTable->value('language');
+				$session->write('System.language', $systemLanguage);
+			}
+			$session->write('System.language_menu', $languageMenu);
 		}
 
-		$this->language = $lang;
-		$this->Session = $session;
+		// Language menu enabled
+		if ($session->read('System.language_menu')) {
+			if (array_key_exists($request->query('lang'), $this->languages)) {
+				$lang = $request->query('lang');
+				$user = $this->Auth->user();
+				if ($user) {
+					$UsersTable = TableRegistry::get('User.Users');
+					$UsersTable->dispatchEvent('Model.Users.updateLoginLanguage', [$user, $lang], $this);
+				}
+				$this->Cookie->write('System.language', $lang);
+			} else if ($this->Cookie->check('System.language')) {
+				$lang = $this->Cookie->read('System.language');
+			} else if ($session->check('System.language')) {
+				$lang = $session->read('System.language');
+				$this->Cookie->write('System.language', $lang);
+			} else {
+				// This condition will only be reach if the user has not login and the cookie for the system language has not been set on the browser
+				$lang = $ConfigItemsTable->value('language');
+				$this->Cookie->write('System.language', $lang);
+			}
+		}
+		// Language menu disabled
+		else {
+			$lang = $session->read('System.language');
+			$user = $this->Auth->user();
+			if ($user) {
+				$UsersTable = TableRegistry::get('User.Users');
+				$UsersTable->dispatchEvent('Model.Users.updateLoginLanguage', [$user, $lang], $this);
+			}
+			$this->Cookie->write('System.language', $lang);
+		}
+
+		return ['language' => $lang, 'showLanguage' => $showLanguage];
 	}
 
 	public function beforeFilter(Event $event) {
@@ -93,7 +145,7 @@ class LocalizationComponent extends Component {
 			$isChanged = $this->isChanged($lang);
 			if ($isChanged) {
 				$this->convertPO($lang, $isChanged);
-			}	
+			}
 		}
 	}
 
@@ -101,10 +153,10 @@ class LocalizationComponent extends Component {
 		$TranslationsTable = TableRegistry::get('Localization.Translations');
    		$selectedColumns = [
 			'modified' => '(
-				CASE 
-					WHEN '.$TranslationsTable->aliasField('modified').' > '.$TranslationsTable->aliasField('created').' 
-					THEN '.$TranslationsTable->aliasField('modified').' 
-					ELSE '.$TranslationsTable->aliasField('created').' 
+				CASE
+					WHEN '.$TranslationsTable->aliasField('modified').' > '.$TranslationsTable->aliasField('created').'
+					THEN '.$TranslationsTable->aliasField('modified').'
+					ELSE '.$TranslationsTable->aliasField('created').'
 					END
 				)'
 		];
@@ -151,7 +203,7 @@ class LocalizationComponent extends Component {
 		$TranslationsTable = TableRegistry::get('Localization.Translations');
 		$data = $TranslationsTable
 			->find('list' ,[
-				'keyField' => $this->defaultLocale, 
+				'keyField' => $this->defaultLocale,
 				'valueField' => $locale
 			])
 			->toArray();
@@ -171,7 +223,7 @@ class LocalizationComponent extends Component {
 		$str .= '"Content-Type: text/plain; charset=UTF-8\n"'."\n";
 		$str .= '"Content-Transfer-Encoding: 8bit\n"'."\n";
 		$str .= '"Language: '.$locale.'\n"'."\n";
-		
+
 		//Replace the whole file
 		if(file_put_contents($fileLocation, $str, LOCK_EX)){
 			// For populating the translation list
@@ -195,7 +247,7 @@ class LocalizationComponent extends Component {
 		$controller = $this->controller;
 		$htmlLang = $this->language;
 		$languages = $this->languages;
-		
+
 		if ($this->request->is('post') && array_key_exists('System', $this->request->data)) {
 			if (isset($this->request->data['System']['language'])) {
 				$htmlLang = $this->request->data['System']['language'];
