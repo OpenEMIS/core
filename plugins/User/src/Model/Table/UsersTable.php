@@ -13,6 +13,7 @@ use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\UserTrait;
 use Cake\I18n\Time;
+use Cake\Network\Session;
 
 class UsersTable extends AppTable {
 	use OptionsTrait;
@@ -66,12 +67,37 @@ class UsersTable extends AppTable {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$newEvent = [
-			'Model.Auth.createAuthorisedUser' => 'createAuthorisedUser'
+			'Model.Auth.createAuthorisedUser' => 'createAuthorisedUser',
+			'Model.Users.afterLogin' => 'afterLogin',
+			'Model.Users.updateLoginLanguage' => 'updateLoginLanguage'
 		];
 
 		$events = array_merge($events, $newEvent);
 		return $events;
 	}
+
+	public function updateLoginLanguage(Event $event, $user, $language)
+	{
+		if ($user['preferred_language'] != $language) {
+			$user = $this->get($user['id']);
+			$user->preferred_language = $language;
+			$this->save($user);
+		}
+	}
+
+	public function afterLogin(Event $event, Entity $userEntity)
+    {
+    	$userEntity->last_login = new Time();
+    	$session = new Session();
+    	$SSO = $event->subject()->SSO;
+    	$Cookie = $event->subject()->Localization->getCookie();
+    	if ($session->read('System.language_menu') && $SSO->getAuthenticationType() != 'Local') {
+    		$Cookie->write('System.language', $userEntity->preferred_language);
+    	} else {
+    		$userEntity->preferred_language = $session->read('System.language');
+    	}
+    	$this->save($userEntity);
+    }
 
 	public function createAuthorisedUser(Event $event, $userName, array $userInfo) {
 		$openemisNo = $this->getUniqueOpenemisId();
