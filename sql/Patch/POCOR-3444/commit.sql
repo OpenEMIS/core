@@ -38,13 +38,13 @@ DROP TABLE `z_3444_temp_language_mapping`;
 
 -- security_users
 ALTER TABLE `security_users`
-ADD COLUMN `login_language` CHAR(2) NULL COMMENT '' AFTER `photo_content`;
+ADD COLUMN `preferred_language` CHAR(2) NULL COMMENT '' AFTER `photo_content`;
 
 UPDATE `security_users`
-SET `login_language` = (
+SET `preferred_language` = (
     SELECT value FROM `config_items` WHERE `code` = 'language'
 );
 
 ALTER TABLE `security_users`
-CHANGE COLUMN `login_language` `login_language` CHAR(2) NOT NULL COMMENT '' ;
+CHANGE COLUMN `preferred_language` `preferred_language` CHAR(2) NOT NULL COMMENT '' ;
 

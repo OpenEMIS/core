@@ -34,7 +34,7 @@ DROP TABLE `z_3444_temp_language_mapping`;
 
 -- security_users
 ALTER TABLE `security_users`
-DROP COLUMN `login_language`;
+DROP COLUMN `preferred_language`;
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3444';
