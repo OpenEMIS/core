@@ -33,12 +33,12 @@ class PositionsTable extends ControllerActionTable {
 		$this->fields['start_year']['visible'] = false;
 		$this->fields['end_year']['visible'] = false;
 		$this->fields['FTE']['visible'] = false;
-		$this->fields['staff_type_id']['visible'] = false;
 		$this->fields['security_group_user_id']['visible'] = false;
 
 		$this->setFieldOrder([
 			'institution_id',
 			'institution_position_id',
+			'staff_type_id',
 			'start_date',
 			'end_date',
 			'staff_status_id'
