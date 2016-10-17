@@ -48,6 +48,8 @@ trait MessagesTrait {
         'general' => [
             'notExists' => 'The record does not exist.',
             'notEditable' => 'This record is not editable',
+            'notConfigured' => 'Not Configured',
+            'unassigned' => 'Unassigned',
             'exists' => 'The record exists in the system.',
             'noData' => 'There are no records.',
             'noRecords' => 'No Record',
@@ -389,13 +391,18 @@ trait MessagesTrait {
             'tabTitle' => 'User Groups'
         ],
         'Workflows' => [
+            'restrictDelete' => 'Delete operation is not allowed as this record is required by system.',
             'noWorkflows' => 'You need to configure Workflows for this form.',
             'workflow_model_id' => 'Form'
         ],
+        'WorkflowSteps' => [
+            'notCategorized' => 'Not Categorized',
+            'systemDefined' => 'This is a system defined record',
+            'restrictDelete' => 'Delete operation is not allowed as this is a system defined record.'
+        ],
         'WorkflowActions' => [
-            'next_step' => 'Next Step',
-            'comment_required' => 'Comment Required',
-            'event' => 'Post Event'
+            'add_event' => 'Add Event',
+            'restrictDelete' => 'Delete operation is not allowed as this is a system defined record.'
         ],
         'WorkflowStatuses' => [
             'noSteps' => 'No Available Workflow Steps'
@@ -632,12 +639,16 @@ trait MessagesTrait {
                     'ruleCompareAbsenceTimeReverse' => 'End Time should not be earlier than Start Time'
                 ]
             ],
+            'StaffLeave' => [
+                'date_to' => [
+                    'ruleCompareDateReverse' => 'Date To should not be earlier than Date From'
+                ]
+            ],
             'InstitutionStudentAbsences' => [
                 'end_time' => [
                     'ruleCompareAbsenceTimeReverse' => 'End Time should not be earlier than Start Time'
                 ]
             ],
-
             'InstitutionStudents' => [
                 'academicPeriod' => 'You need to configure Academic Periods first.',
                 'educationProgrammeId' => 'You need to configure Education Programmes first.',
@@ -1054,11 +1065,6 @@ trait MessagesTrait {
                     'ruleCompare' => 'Date of Birth cannot be future date',
                     'ruleValidDate' => 'You have entered an invalid date.'
                 ],
-            ],
-            'Leaves' => [
-                'date_to' => [
-                    'ruleCompareDateReverse' => 'Date To should not be earlier than Date From'
-                ]
             ],
             'Extracurriculars' => [
                 'name' => [
