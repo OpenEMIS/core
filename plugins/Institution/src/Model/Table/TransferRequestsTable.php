@@ -146,7 +146,16 @@ class TransferRequestsTable extends ControllerActionTable
 		return __($statusName);
 	}
 
-
+    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    {
+        if ($this->action == 'add') {
+            // cancel button direct to student user view
+            $id = $this->Session->read('Student.Students.id');
+            $buttons[1]['url']['action'] = 'StudentUser';
+            $buttons[1]['url'][0] = 'view';
+            $buttons[1]['url'][1] = $id;
+        }
+    }
 
 	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
 	{
@@ -175,6 +184,15 @@ class TransferRequestsTable extends ControllerActionTable
 			}
 		}
 	}
+
+    public function addBeforeAction(Event $event, arrayObject $extra)
+    {
+        // back button direct to student user view
+        $id = $this->Session->read('Student.Students.id');
+        $extra['toolbarButtons']['back']['url']['action'] = 'StudentUser';
+        $extra['toolbarButtons']['back']['url'][0] = 'view';
+        $extra['toolbarButtons']['back']['url'][1] = $id;
+    }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data)
     {
@@ -314,6 +332,12 @@ class TransferRequestsTable extends ControllerActionTable
     	$this->field('new_education_grade_id');
     	$this->field('comment');
     	$this->field('created', ['visible' => true]);
+
+        // back button direct to student user view
+        $id = $this->Session->read('Student.Students.id');
+        $extra['toolbarButtons']['back']['url']['action'] = 'StudentUser';
+        $extra['toolbarButtons']['back']['url'][0] = 'view';
+        $extra['toolbarButtons']['back']['url'][1] = $id;
     }
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
