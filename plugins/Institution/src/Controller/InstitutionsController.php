@@ -92,12 +92,9 @@ class InstitutionsController extends AppController
     public function Exams()                 { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminations']); }
     public function UndoExaminationRegistration() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminationsUndoRegistration']); }
     public function ExaminationStudents()   { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminationStudents']); }
-<<<<<<< HEAD
-    public function Contacts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionContacts']); }
-    public function SinglePromotion() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.SinglePromotion']); }
-=======
     public function Contacts()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionContacts']); }
->>>>>>> 69ec6e25cba4883037e784084767e607b5a8deba
+    public function SinglePromotion()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.SinglePromotion']); }
+
     // public function StaffAbsences() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
     // End
 
