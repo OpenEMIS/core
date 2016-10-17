@@ -100,7 +100,7 @@ class TransferRequestsTable extends ControllerActionTable
 		$statusToshow = [self::NEW_REQUEST, self::REJECTED];
 		$typeToShow = [];
 
-		if ($this->AccessControl->check(['Institutions', 'TransferApprovals', 'view'])) {
+		if ($this->AccessControl->check(['Institutions', 'TransferRequests', 'view'])) {
 			$typeToShow[] = self::TRANSFER;
 		}
 
@@ -150,7 +150,8 @@ class TransferRequestsTable extends ControllerActionTable
     {
         if ($this->action == 'add') {
             // cancel button direct to student user view
-            $id = $this->Session->read('Student.Students.id');
+            $studentAdmissionId = $this->request->params['pass'][1];
+            $id = $this->get($studentAdmissionId)->student_id;
             $buttons[1]['url']['action'] = 'StudentUser';
             $buttons[1]['url'][0] = 'view';
             $buttons[1]['url'][1] = $id;
@@ -188,7 +189,8 @@ class TransferRequestsTable extends ControllerActionTable
     public function addBeforeAction(Event $event, arrayObject $extra)
     {
         // back button direct to student user view
-        $id = $this->Session->read('Student.Students.id');
+        $studentAdmissionId = $this->request->params['pass'][1];
+        $id = $this->get($studentAdmissionId)->student_id;
         $extra['toolbarButtons']['back']['url']['action'] = 'StudentUser';
         $extra['toolbarButtons']['back']['url'][0] = 'view';
         $extra['toolbarButtons']['back']['url'][1] = $id;
@@ -334,7 +336,8 @@ class TransferRequestsTable extends ControllerActionTable
     	$this->field('created', ['visible' => true]);
 
         // back button direct to student user view
-        $id = $this->Session->read('Student.Students.id');
+        $studentAdmissionId = $this->request->params['pass'][1];
+        $id = $this->get($studentAdmissionId)->student_id;
         $extra['toolbarButtons']['back']['url']['action'] = 'StudentUser';
         $extra['toolbarButtons']['back']['url'][0] = 'view';
         $extra['toolbarButtons']['back']['url'][1] = $id;
