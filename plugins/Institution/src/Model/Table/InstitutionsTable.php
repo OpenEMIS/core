@@ -171,6 +171,19 @@ class InstitutionsTable extends AppTable  {
 			// 		'last' => true
 			// 	])
 
+			->add('code', 'ruleCustomCode', [
+	        		'rule' => ['validateCustomPattern', 'institution_code'],
+	        		'provider' => 'table',
+	        		'last' => true
+			    ])
+
+			->allowEmpty('postal_code')
+			->add('postal_code', 'ruleCustomPostalCode', [
+	        		'rule' => ['validateCustomPattern', 'postal_code'],
+	        		'provider' => 'table',
+	        		'last' => true
+			    ])
+
 			->add('code', 'ruleUnique', [
 	        		'rule' => 'validateUnique',
 	        		'provider' => 'table',
@@ -183,6 +196,21 @@ class InstitutionsTable extends AppTable  {
 						'rule' => 'email'
 					]
 				])
+
+			->allowEmpty('telephone')
+			->add('telephone', 'ruleCustomTelephone', [
+	        		'rule' => ['validateCustomPattern', 'institution_telephone'],
+	        		'provider' => 'table',
+	        		'last' => true
+			    ])
+
+			->allowEmpty('fax')
+			->add('fax', 'ruleCustomFax', [
+	        		'rule' => ['validateCustomPattern', 'institution_fax'],
+	        		'provider' => 'table',
+	        		'last' => true
+			    ])
+
 			->add('area_id', 'ruleAuthorisedArea', [
 					'rule' => ['checkAuthorisedArea', $superAdmin, $userId]
 				])
@@ -632,7 +660,7 @@ class InstitutionsTable extends AppTable  {
 		public function editBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
-			'name', 'alternative_name', 'code', 'institution_sector_id', 'institution_provider_id',  'institution_type_id',
+			'name', 'alternative_name', 'code', 'is_academic', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
 			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
 
 			'location_section',

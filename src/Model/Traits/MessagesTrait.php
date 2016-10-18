@@ -104,7 +104,8 @@ trait MessagesTrait {
             'total' => 'Total',
             'notTransferrable' => 'No other alternative options available to convert records.',
             'validationRules' => 'Validation Rules',
-            'currentNotDeletable' => 'This record cannot be deleted because it is set as Current'
+            'currentNotDeletable' => 'This record cannot be deleted because it is set as Current',
+            'custom_validation_pattern' => 'Please enter a valid format'
         ],
         'fileUpload' => [
             'single' => '*File size should not be larger than 2MB.',
@@ -1275,9 +1276,11 @@ trait MessagesTrait {
                 'pass_mark' => [
                     'ruleNotMoreThanMax' => 'Min value cannot be more than max value',
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
                 ],
                 'max' => [
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
                 ],
             ],
             'GradingOptions' => [
@@ -1288,10 +1291,12 @@ trait MessagesTrait {
                 'min' => [
                     'ruleNotMoreThanMax' => 'Min value cannot be more than max value',
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
                 ],
                 'max' => [
                     'ruleNotMoreThanGradingTypeMax' => 'Grading Option max value cannot be more than Grading Type max value',
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
                 ],
             ],
         ],
@@ -1328,9 +1333,11 @@ trait MessagesTrait {
                 'pass_mark' => [
                     'ruleNotMoreThanMax' => 'Pass mark cannot be more than Max mark',
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' =>'Mark entered exceeds system limit'
                 ],
                 'max' => [
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
                 ]
             ],
             'GradingOptions' => [
@@ -1341,10 +1348,12 @@ trait MessagesTrait {
                 'min' => [
                     'ruleNotMoreThanMax' => 'Min value cannot be more than max value',
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
                 ],
                 'max' => [
                     'ruleNotMoreThanGradingTypeMax' => 'Grading Option max value cannot be more than Grading Type max value',
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
                 ]
             ]
         ],
@@ -1398,6 +1407,6 @@ trait MessagesTrait {
             }
         }
 
-        return !is_array($message) ? vsprintf(__($message), $sprintf) : $message;
+        return !is_array($message) ? __(vsprintf($message, $sprintf)) : $message;
     }
 }
