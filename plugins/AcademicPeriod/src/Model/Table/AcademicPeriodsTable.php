@@ -123,7 +123,7 @@ class AcademicPeriodsTable extends AppTable {
     public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
         $canCopy = $this->checkIfCanCopy($entity);
 
-        $shells = ['Room'];
+        $shells = ['Room', 'Shift'];
         if ($canCopy) {
             // only trigger shell to copy data if is not empty
             if ($entity->has('copy_data_from') && !empty($entity->copy_data_from)) {

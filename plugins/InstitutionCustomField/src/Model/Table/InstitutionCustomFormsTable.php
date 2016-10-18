@@ -18,7 +18,7 @@ class InstitutionCustomFormsTable extends CustomFormsTable {
 				'dependent' => true
 			],
 			'filterClass' => [
-				'className' => 'FieldOption.InstitutionTypes',
+				'className' => 'Institution.Types',
 				'joinTable' => 'institution_custom_forms_filters',
 				'foreignKey' => 'institution_custom_form_id',
 				'targetForeignKey' => 'institution_custom_filter_id',

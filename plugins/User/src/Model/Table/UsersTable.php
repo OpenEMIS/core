@@ -609,10 +609,18 @@ class UsersTable extends AppTable {
 	}
 
 	public function autocomplete($search) {
-		$search = sprintf('%%%s%%', $search);
-
+		$search = sprintf('%s%%', $search);
 		$list = $this
 			->find()
+			->select([
+				$this->aliasField('openemis_no'),
+				$this->aliasField('first_name'),
+				$this->aliasField('middle_name'),
+				$this->aliasField('third_name'),
+				$this->aliasField('last_name'),
+				$this->aliasField('preferred_name'),
+				$this->aliasField('id')
+			])
 			->where([
 				'OR' => [
 					$this->aliasField('openemis_no') . ' LIKE' => $search,
@@ -623,6 +631,7 @@ class UsersTable extends AppTable {
 				]
 			])
 			->order([$this->aliasField('first_name')])
+			->limit(100)
 			->all();
 
 		$data = array();

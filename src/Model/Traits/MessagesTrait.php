@@ -104,7 +104,8 @@ trait MessagesTrait {
             'total' => 'Total',
             'notTransferrable' => 'No other alternative options available to convert records.',
             'validationRules' => 'Validation Rules',
-            'currentNotDeletable' => 'This record cannot be deleted because it is set as Current'
+            'currentNotDeletable' => 'This record cannot be deleted because it is set as Current',
+            'custom_validation_pattern' => 'Please enter a valid format'
         ],
         'fileUpload' => [
             'single' => '*File size should not be larger than 2MB.',
@@ -449,7 +450,7 @@ trait MessagesTrait {
             'success' => 'Students have been transferred.'
         ],
         'StaffPositionProfiles' => [
-            'request' => 'Request for change in Staff Position Profile has been submitted successfully.',
+            'request' => 'Request for Change in Assignment has been submitted successfully.',
             'notExists' => 'Staff record no longer exists in the system.',
             'errorApproval' => 'Record cannot be approved due to errors encountered.',
         ],
@@ -583,6 +584,11 @@ trait MessagesTrait {
                     'ruleLinkedSector' => 'Please select a provider linked to the chosen Sector'
                 ]
             ],
+            'InstitutionContacts' => [
+                'email' => [
+                    'ruleValidEmail' => 'Please enter a valid Email'
+                ]
+            ],
             'InstitutionClasses' => [
                 'noGrade' => 'There is no grade selected',
                 'emptyName' => 'Class name should not be empty',
@@ -669,7 +675,6 @@ trait MessagesTrait {
             'StudentGuardians' => [
                 'guardianRelationId' => 'You need to configure Guardian Relations first.',
                 'guardianEducationLevel' => 'You need to configure Guardian Education Level first.'
-
             ],
             'StaffPositions' => [
                 'end_date' => [
@@ -770,6 +775,16 @@ trait MessagesTrait {
                 ],
                 'new_start_date' => [
                     'ruleCompareDateReverse' => 'New Start Date should not be earlier than or same as Start Date'
+                ]
+            ],
+            'DropoutRequests' => [
+                'effective_date' => [
+                    'ruleDateAfterEnrollment' => 'Effective Date cannot be earlier than the Enrollment Date'
+                ]
+            ],
+            'StudentDropout' => [
+                'effective_date' => [
+                    'ruleDateAfterEnrollment' => 'Effective Date cannot be earlier than the Enrollment Date'
                 ]
             ],
             'InstitutionExaminationStudents' => [
@@ -892,10 +907,6 @@ trait MessagesTrait {
                 'identity_type_id' => [
                     'ruleNotBlank' => 'Please select a Type'
                 ],
-                'number' => [
-                    'ruleUniqueUserIdentity' => 'Please enter a unique identity number.',
-                    'ruleNotBlank' => 'Please enter a valid Number'
-                ],
                 'issue_location' => [
                     'ruleNotBlank' => 'Please enter a valid Issue Location'
                 ],
@@ -906,7 +917,8 @@ trait MessagesTrait {
                     'ruleNotBlank' => 'Expiry Date Is Required'
                 ],
                 'number' => [
-                    'ruleUnique' => 'This identity has already existed in the system.'
+                    'ruleUnique' => 'This identity has already existed in the system.',
+                    'custom_validation' => 'Please enter a valid Identity Number'
                 ],
             ],
             'Languages' => [
@@ -1281,9 +1293,11 @@ trait MessagesTrait {
                 'pass_mark' => [
                     'ruleNotMoreThanMax' => 'Min value cannot be more than max value',
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
                 ],
                 'max' => [
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
                 ],
             ],
             'GradingOptions' => [
@@ -1294,10 +1308,12 @@ trait MessagesTrait {
                 'min' => [
                     'ruleNotMoreThanMax' => 'Min value cannot be more than max value',
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
                 ],
                 'max' => [
                     'ruleNotMoreThanGradingTypeMax' => 'Grading Option max value cannot be more than Grading Type max value',
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
                 ],
             ],
         ],
@@ -1334,9 +1350,11 @@ trait MessagesTrait {
                 'pass_mark' => [
                     'ruleNotMoreThanMax' => 'Pass mark cannot be more than Max mark',
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' =>'Mark entered exceeds system limit'
                 ],
                 'max' => [
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
                 ]
             ],
             'GradingOptions' => [
@@ -1347,10 +1365,12 @@ trait MessagesTrait {
                 'min' => [
                     'ruleNotMoreThanMax' => 'Min value cannot be more than max value',
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
                 ],
                 'max' => [
                     'ruleNotMoreThanGradingTypeMax' => 'Grading Option max value cannot be more than Grading Type max value',
                     'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
                 ]
             ]
         ],
@@ -1404,6 +1424,6 @@ trait MessagesTrait {
             }
         }
 
-        return !is_array($message) ? vsprintf(__($message), $sprintf) : $message;
+        return !is_array($message) ? __(vsprintf($message, $sprintf)) : $message;
     }
 }

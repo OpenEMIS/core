@@ -16,8 +16,10 @@ class AssessmentGradingOptionsTable extends AssessmentsAppTable {
 		$this->fields['name']['required'] = true;
 		$this->fields['max']['attr']['min'] = 0;
 		$this->fields['max']['required'] = true;
+		$this->fields['max']['length'] = 7;
 		$this->fields['min']['attr']['min'] = 0;
 		$this->fields['min']['required'] = true;
+		$this->fields['min']['length'] = 7;
 	}
 
 	public function getFormFields($action = 'edit') {
@@ -48,7 +50,10 @@ class AssessmentGradingOptionsTable extends AssessmentsAppTable {
 				],
 				'ruleIsDecimal' => [
 				    'rule' => ['decimal', null],
-				]
+				],
+                'ruleRange' => [
+                    'rule' => ['range', 0, 9999.99]
+                ]
 			])
 			->add('max', [
 				'ruleNotMoreThanGradingTypeMax' => [
@@ -57,7 +62,10 @@ class AssessmentGradingOptionsTable extends AssessmentsAppTable {
 				],
 				'ruleIsDecimal' => [
 				    'rule' => ['decimal', null],
-				]
+				],
+                'ruleRange' => [
+                    'rule' => ['range', 0, 9999.99]
+                ]
 			])
 			;
 		return $validator;

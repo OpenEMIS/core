@@ -26,11 +26,37 @@ class ExaminationCentresTable extends ControllerActionTable {
         $this->hasMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentreStudents', ['className' => 'Examination.ExaminationCentreStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-        $this->behaviors()->get('ControllerAction')->config([
-            'actions' => [
-                'remove' => 'restrict'
+        $this->setDeleteStrategy('restrict');
+    }
+
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $newEvent = [
+            'Model.Institutions.afterSave' => 'institutionAfterSave',
+        ];
+        $events = array_merge($events, $newEvent);
+        return $events;
+    }
+
+    public function institutionAfterSave(Event $event, Entity $entity)
+    {
+        if (!$entity->isNew()) {
+            $this->updateAll([
+                'code' => $entity->code,
+                'name' => $entity->name,
+                'area_id' => $entity->area_id,
+                'address' => $entity->address,
+                'postal_code' => $entity->postal_code,
+                'contact_person' => $entity->contact_person,
+                'telephone' => $entity->telephone,
+                'fax' => $entity->fax,
+                'email' => $entity->email
             ],
-        ]);
+            [
+                'institution_id' => $entity->id
+            ]);
+        }
+
     }
 
     public function validationDefault(Validator $validator)
@@ -47,7 +73,14 @@ class ExaminationCentresTable extends ControllerActionTable {
                 'rule' => ['validateUnique', ['scope' => 'examination_id']],
                 'provider' => 'table'
             ])
-            ->requirePresence('institutions', 'create');
+            ->requirePresence('institutions', 'create')
+            ->allowEmpty('postal_code')
+            ->add('postal_code', 'ruleCustomPostalCode', [
+                'rule' => ['validateCustomPattern', 'postal_code'],
+                'provider' => 'table',
+                'last' => true
+            ])
+            ;
 
         return $validator;
     }

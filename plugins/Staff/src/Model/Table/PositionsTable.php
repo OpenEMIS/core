@@ -46,11 +46,7 @@ class PositionsTable extends ControllerActionTable {
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
-		$query->contain([
-			'Institutions',
-			'InstitutionPositions',
-			'StaffStatuses'
-		]);
+		$extra['auto_contain_fields'] = ['Institutions' => ['code']];
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
@@ -74,6 +70,10 @@ class PositionsTable extends ControllerActionTable {
 		$tabElements = $this->controller->getCareerTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function onGetInstitutionId(Event $event, Entity $entity) {
+		return $entity->institution->code_name;
 	}
 
 }

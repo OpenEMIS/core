@@ -102,10 +102,9 @@ class ValidationBehavior extends Behavior {
 		return ctype_digit($check);
 	}
 
-    public static function checkAuthorisedArea($check, array $globalData) {
+    public static function checkAuthorisedArea($check, $superAdmin, $userId, array $globalData) {
         $isValid = false;
-        $session = new Session();
-        if ($session->read('Auth.User.super_admin') == 1) {
+        if ($superAdmin == 1) {
         	$isValid = true;
         } else {
         	$data = $globalData['data'];
@@ -123,7 +122,7 @@ class ValidationBehavior extends Behavior {
         		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
 	        	$Areas = TableRegistry::get('Area.Areas');
 	        	// get areas from security group areas
-	        	$areasByUser = $SecurityGroupAreas->getAreasByUser($session->read('Auth.User.id'));
+	        	$areasByUser = $SecurityGroupAreas->getAreasByUser($userId);
 
 	        	if (count($areasByUser) > 0) {
 					foreach($areasByUser as $area) {
@@ -266,6 +265,25 @@ class ValidationBehavior extends Behavior {
 			} else {
 				return $dateTwo > $dateOne;
 			}
+		}
+	}
+
+	public static function dateAfterEnrollment($check, array $globalData) {
+		$id = $globalData['data']['student_id'];
+
+		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+		$enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
+
+		$studentData = TableRegistry::get('Institution.Students')
+			->find()
+			->where(['student_id' => $id, 'student_status_id' => $enrolledStatus])
+			->first();
+
+		if (!empty($studentData)) {
+			$enrolledDate = $studentData['start_date']->format('Y-m-d');
+			return $check > $enrolledDate;
+		} else {
+			return false;
 		}
 	}
 
@@ -1558,6 +1576,7 @@ class ValidationBehavior extends Behavior {
 		return false;
 	}
 
+<<<<<<< HEAD
 	public static function checkPendingAdmissionExist($field, array $globalData)
 	{
 		$data = $globalData['data'];
@@ -1578,5 +1597,49 @@ class ValidationBehavior extends Behavior {
 			->count();
 
 		return $studentExist == 0;
+=======
+	public static function validateCustomIdentityNumber($field, array $globalData)
+	{
+		$subject = $field;
+		$pattern = '';
+		$model = $globalData['providers']['table'];
+
+		if (array_key_exists('identity_type_id', $globalData['data']) && !empty($globalData['data']['identity_type_id'])) {
+			$identityTypeId = $globalData['data']['identity_type_id'];
+
+			$IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+			$IdentityTypesData = $IdentityTypes
+				->find()
+				->where([$IdentityTypes->aliasField('id') => $identityTypeId])
+				->first()
+			;
+
+			if (!empty($IdentityTypesData->validation_pattern)) {
+				$pattern = '/' . $IdentityTypesData->validation_pattern . '/';
+			}
+		}
+
+		// custom validation is nullable, have to cater for the null pattern.
+		if (!empty($pattern) && !preg_match($pattern, $subject)) {
+			return $model->getMessage('User.Identities.number.custom_validation');
+		}
+
+		return true;
+	}
+
+	public static function validateCustomPattern($field, $code, array $globalData)
+	{
+		$pattern = '';
+		$model = $globalData['providers']['table'];
+
+		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+		$valuePattern = '/' . $ConfigItems->value($code) . '/';
+
+		if (!empty($valuePattern) && !preg_match($valuePattern, $field)) {
+			return $model->getMessage('general.custom_validation_pattern');
+		}
+
+		return true;
+>>>>>>> origin/master
 	}
 }

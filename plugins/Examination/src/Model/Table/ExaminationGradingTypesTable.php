@@ -20,11 +20,7 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
 
         $this->hasMany('GradingOptions', ['className' => 'Examination.ExaminationGradingOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->behaviors()->get('ControllerAction')->config([
-            'actions' => [
-                'remove' => 'restrict'
-            ]
-        ]);
+        $this->setDeleteStrategy('restrict');
     }
 
     public function validationDefault(Validator $validator) {
@@ -41,10 +37,18 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
                 ],
                 'ruleIsDecimal' => [
                     'rule' => ['decimal', null],
+                ],
+                'ruleRange' => [
+                    'rule' => ['range', 0, 9999.99]
                 ]
             ])
-            ->add('max', 'ruleIsDecimal', [
-                'rule' => ['decimal', null],
+            ->add('max', [
+                'ruleIsDecimal' => [
+                    'rule' => ['decimal', null],
+                ],
+                'ruleRange' => [
+                    'rule' => ['range', 0, 9999.99]
+                ]
             ])
             ;
         return $validator;
@@ -54,8 +58,8 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
         $this->controller->getExamsTab();
 
         $this->field('result_type', ['type' => 'select', 'options' => $this->getSelectOptions($this->aliasField('result_type'))]);
-        $this->field('max', ['attr' => ['min' => 0]]);
-        $this->field('pass_mark', ['attr' => ['min' => 0]]);
+        $this->field('max', ['length' => 7, 'attr' => ['min' => 0]]);
+        $this->field('pass_mark', ['length' => 7, 'attr' => ['min' => 0]]);
         $this->field('grading_options', [
             'type' => 'element',
             'element' => 'Examination.grading_options',
@@ -119,40 +123,42 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
             ->where(['examination_grading_type_id' => $entity->id])
             ->toArray();
 
-        $gradingOptions = [];
-        foreach ($query as $key => $gradingOption) {
-            $gradingOptionId = $gradingOption->id;
-            $gradingOptions[$gradingOptionId] = 0;
-            if ($this->hasAssociatedRecords($ExaminationGradingOptions, $gradingOption, $extra)) {
-                $gradingOptions[$gradingOptionId] = 1;
+        if (!empty($query)) {
+            $gradingOptions = [];
+            foreach ($query as $key => $gradingOption) {
+                $gradingOptionId = $gradingOption->id;
+                $gradingOptions[$gradingOptionId] = 0;
+                if ($this->hasAssociatedRecords($ExaminationGradingOptions, $gradingOption, $extra)) {
+                    $gradingOptions[$gradingOptionId] = 1;
+                }
             }
-        }
 
-        // it will check if there are any in-used gradeOption, can't delete all the gradeOptions.
-        $allowedDeleteAll = max($gradingOptions);
+            // it will check if there are any in-used gradeOption, can't delete all the gradeOptions.
+            $allowedDeleteAll = max($gradingOptions);
 
-        $currentGradingOptionIds = (new Collection($entity->grading_options))->extract($this->GradingOptions->primaryKey())->toArray();
-        $originalGradingOptionIds = (new Collection($entity->getOriginal('grading_options')))->extract($this->GradingOptions->primaryKey())->toArray();
-        $tempRemovedGradingOptionIds = array_diff($originalGradingOptionIds, $currentGradingOptionIds);
+            $currentGradingOptionIds = (new Collection($entity->grading_options))->extract($this->GradingOptions->primaryKey())->toArray();
+            $originalGradingOptionIds = (new Collection($entity->getOriginal('grading_options')))->extract($this->GradingOptions->primaryKey())->toArray();
+            $tempRemovedGradingOptionIds = array_diff($originalGradingOptionIds, $currentGradingOptionIds);
 
-        // get the array of gradeOption that will be deleted, if the gradeOption was in-used it will be excluded from this array.
-        $removedGradingOptionIds = [];
-        foreach ($tempRemovedGradingOptionIds as $key => $value) {
-            if (!$gradingOptions[$value]) {
-                $removedGradingOptionIds[$key] = $value;
+            // get the array of gradeOption that will be deleted, if the gradeOption was in-used it will be excluded from this array.
+            $removedGradingOptionIds = [];
+            foreach ($tempRemovedGradingOptionIds as $key => $value) {
+                if (!$gradingOptions[$value]) {
+                    $removedGradingOptionIds[$key] = $value;
+                }
             }
-        }
 
-        // remove the gradeOption inside the removed gradeOptions array.
-        // remove all the gradeOptions if no in-use gradeOption.
-        if (!empty($removedGradingOptionIds)) {
-            $this->GradingOptions->deleteAll([
-                $this->GradingOptions->aliasField($this->GradingOptions->primaryKey()) . ' IN ' => $removedGradingOptionIds
-            ]);
-        } else if ((!array_key_exists('grading_options', $requestData['ExaminationGradingTypes'])) && (!$allowedDeleteAll)){
-            $this->GradingOptions->deleteAll([
-                $this->GradingOptions->aliasField('examination_grading_type_id') => $entity->id
-            ]);
+            // remove the gradeOption inside the removed gradeOptions array.
+            // remove all the gradeOptions if no in-use gradeOption.
+            if (!empty($removedGradingOptionIds)) {
+                $this->GradingOptions->deleteAll([
+                    $this->GradingOptions->aliasField($this->GradingOptions->primaryKey()) . ' IN ' => $removedGradingOptionIds
+                ]);
+            } else if ((!array_key_exists('grading_options', $requestData['ExaminationGradingTypes'])) && (!$allowedDeleteAll)){
+                $this->GradingOptions->deleteAll([
+                    $this->GradingOptions->aliasField('examination_grading_type_id') => $entity->id
+                ]);
+            }
         }
     }
 

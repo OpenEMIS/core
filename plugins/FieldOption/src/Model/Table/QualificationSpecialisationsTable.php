@@ -10,10 +10,10 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
-class QualificationSpecialisationsTable extends ControllerActionTable {
+class QualificationSpecialisationsTable extends ControllerActionTable
+{
 	public function initialize(array $config)
 	{
-		$this->addBehavior('FieldOption.FieldOption');
 		$this->table('qualification_specialisations');
 		parent::initialize($config);
 		$this->hasMany('Qualifications', ['className' => 'Staff.Qualifications', 'foreignKey' => 'qualification_specialisation_id']);
@@ -27,7 +27,7 @@ class QualificationSpecialisationsTable extends ControllerActionTable {
 			'dependent' => false
 		]);
 
-		$this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
+		$this->addBehavior('FieldOption.FieldOption');
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {

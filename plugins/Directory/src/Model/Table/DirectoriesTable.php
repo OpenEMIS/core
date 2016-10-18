@@ -37,12 +37,19 @@ class DirectoriesTable extends AppTable {
 
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
-		$this->addBehavior('AdvanceSearch');
 		$this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
 		$this->addBehavior('User.AdvancedIdentitySearch');
 		$this->addBehavior('User.AdvancedContactNumberSearch');
 		$this->addBehavior('User.AdvancedPositionSearch');
 		$this->addBehavior('User.AdvancedSpecificNameTypeSearch');
+
+        //specify order of advanced search fields
+        $advancedSearchFieldOrder = [
+            'first_name', 'middle_name', 'third_name', 'last_name',
+            'gender_id', 'contact_number', 'birthplace_area_id', 'address_area_id', 'position',
+            'identity_type', 'identity_number'
+        ];
+        $this->addBehavior('AdvanceSearch', ['order' => $advancedSearchFieldOrder]);
 
 		$this->addBehavior('HighChart', [
 			'user_gender' => [
@@ -61,6 +68,14 @@ class DirectoriesTable extends AppTable {
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
+        $validator
+            ->allowEmpty('postal_code')
+            ->add('postal_code', 'ruleCustomPostalCode', [
+                'rule' => ['validateCustomPattern', 'postal_code'],
+                'provider' => 'table',
+                'last' => true
+            ])
+            ;
 		$BaseUsers = TableRegistry::get('User.Users');
 		return $BaseUsers->setUserValidation($validator, $this);
 	}
@@ -278,6 +293,7 @@ class DirectoriesTable extends AppTable {
 
 			$indexElements[] = ['name' => 'Directory.Users/controls', 'data' => [], 'options' => [], 'order' => 0];
 
+<<<<<<< HEAD
 			$indexElements[] = [
 				'name' => $indexDashboard,
 				'data' => [
@@ -289,6 +305,22 @@ class DirectoriesTable extends AppTable {
 				'options' => [],
 				'order' => 2
 			];
+=======
+            if ($this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
+                $indexElements[] = [
+                    'name' => $indexDashboard,
+                    'data' => [
+                        'model' => $dashboardModel,
+                        'modelCount' => $userCount->count(),
+                        'modelArray' => $userArray,
+                        'iconClass' => $iconClass
+                    ],
+                    'options' => [],
+                    'order' => 2
+                ];
+            }
+
+>>>>>>> origin/master
 			foreach ($indexElements as $key => $value) {
 				if ($value['name']=='advanced_search') {
 					$indexElements[$key]['order'] = 1;
@@ -558,7 +590,7 @@ class DirectoriesTable extends AppTable {
 			$institutionIds = $this->AccessControl->getInstitutionsByUser();
 			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
 		}
-		
+
 		$isStudent = $entity->is_student;
 		$isStaff = $entity->is_staff;
 		$isGuardian = $entity->is_guardian;
