@@ -555,35 +555,16 @@ class WorkflowsTable extends AppTable {
 			if (!empty($filter)) {
 				$showFilters = false;
 
-				$workflows = $this
-					->find('list')
+				$filterResults = $this->WorkflowsFilters
+					->find()
 					->where([
-						$this->aliasField('workflow_model_id') => $selectedModel
+						$this->WorkflowsFilters->aliasField('workflow_id') => $entity->id,
+						$this->WorkflowsFilters->aliasField('filter_id') => 0
 					])
-					->toArray();
+					->all();
 
-				if (!empty($workflows)) {
-					$workflowKeys = array_keys($workflows);
-					$workflowIds = array_combine($workflowKeys, $workflowKeys);
-					if (isset($entity->id) && array_key_exists($entity->id, $workflowIds)) {
-						unset($workflowIds[$entity->id]);
-					}
-
-					if (!empty($workflowIds)) {
-						$filterResults = $this->WorkflowsFilters
-							->find()
-							->where([
-								$this->WorkflowsFilters->aliasField('workflow_id IN ') => $workflowIds,
-								$this->WorkflowsFilters->aliasField('filter_id') => 0
-							])
-							->all();
-
-						if (!$filterResults->isEmpty()) {
-							$showFilters = true;
-						}
-					} else {
-						$showFilters = true;
-					}
+				if ($filterResults->isEmpty()) {
+					$showFilters = true;
 				}
 
 				$applyToAllOptions = $this->getSelectOptions('general.yesno');
