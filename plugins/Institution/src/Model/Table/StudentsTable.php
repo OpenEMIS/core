@@ -311,6 +311,7 @@ class StudentsTable extends AppTable
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'value' => $institutionId]);
         $this->ControllerAction->field('student_status_id', ['type' => 'select']);
+        $this->ControllerAction->field('previous_institution_student_id', ['type' => 'hidden']);
     }
 
     public function onBeforeDelete(Event $event, ArrayObject $options, $id)
