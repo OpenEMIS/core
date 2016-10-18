@@ -1,4 +1,3 @@
--- POCOR-3253
 -- Restore tables
 DROP TABLE IF EXISTS `workflow_models`;
 RENAME TABLE `z_3253_workflow_models` TO `workflow_models`;
@@ -48,7 +47,3 @@ DELETE FROM `labels` WHERE `id` = 'de65853b-9054-11e6-88cb-525400b263eb';
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue`='POCOR-3253';
-
-
--- 3.6.7
-UPDATE config_items SET value = '3.6.7' WHERE code = 'db_version';
