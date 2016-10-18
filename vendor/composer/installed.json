@@ -2893,62 +2893,6 @@
         }
     },
     {
-<<<<<<< HEAD
-        "name": "korditpteltd/kd-cakephp-restful",
-        "version": "1.0.3.x-dev",
-        "version_normalized": "1.0.3.9999999-dev",
-        "source": {
-            "type": "git",
-            "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git",
-            "reference": "be0b29180ac42f863daa9f5391c9f17f76db0bed"
-        },
-        "require": {
-            "cakephp/cakephp": ">3.0.9"
-        },
-        "require-dev": {
-            "cakephp/cakephp-codesniffer": "dev-master",
-            "phpunit/phpunit": "4.1.*"
-        },
-        "time": "2016-10-13 08:38:32",
-        "type": "cakephp-plugin",
-        "extra": {
-            "branch-alias": {
-                "master": "1.0.2"
-            }
-        },
-        "installation-source": "source",
-        "autoload": {
-            "psr-4": {
-                "Restful\\": "src",
-                "Restful\\Test\\Fixture\\": "tests\\Fixture"
-            }
-        },
-        "autoload-dev": {
-            "psr-4": {
-                "Cake\\Test\\": "vendor/cakephp/cakephp/tests",
-                "Restful\\Test\\": "tests"
-            }
-        },
-        "license": [
-            "GPL-2.0"
-        ],
-        "authors": [
-            {
-                "name": "KORDIT PHP DEVELOPERS",
-                "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/commits/all"
-            }
-        ],
-        "description": "KORDIT CakePHP Restful Plugin",
-        "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-restful",
-        "keywords": [
-            "cakephp",
-            "kordit",
-            "restful"
-        ],
-        "support": {
-            "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
-        }
-=======
         "name": "phpseclib/phpseclib",
         "version": "2.0.4",
         "version_normalized": "2.0.4.0",
@@ -3041,6 +2985,5 @@
             "x.509",
             "x509"
         ]
->>>>>>> origin/master
     }
 ]

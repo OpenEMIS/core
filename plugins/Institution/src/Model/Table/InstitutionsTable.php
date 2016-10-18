@@ -130,17 +130,14 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('Institution.AdvancedProgrammeSearch');
 
         $this->shiftTypes = $this->getSelectOptions('Shifts.types'); //get from options trait
-<<<<<<< HEAD
         $this->addBehavior('Restful.RestfulAccessControl', [
         	'Students' => ['index']
         ]);
-=======
 
         $this->isAcademicOptions = [
 			self::ACADEMIC => 'Academic Institution',
 			self::NON_ACADEMIC => 'Non-Academic Institution'
 		];
->>>>>>> origin/master
 	}
 
 	public function validationDefault(Validator $validator) {

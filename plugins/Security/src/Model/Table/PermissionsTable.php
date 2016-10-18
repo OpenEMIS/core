@@ -79,14 +79,8 @@ class PermissionsTable extends AppTable
 	}
 
 	// Event: ControllerAction.Model.index.beforeAction
-<<<<<<< HEAD
 	public function indexBeforeAction(Event $event, ArrayObject $settings) {
         $query = $settings['query'];
-
-=======
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings)
-	{
->>>>>>> origin/master
 		$controller = $this->controller;
 
 		if (count($this->request->pass) != 2) {
@@ -163,10 +157,6 @@ class PermissionsTable extends AppTable
 		//also for super admin where redirect not necessary
 		//OR user is creator of the user role.
 		return (($roleOrder > $userRole['security_role']['order']) ||  ($roleEntity->created_user_id == $userId));
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/master
 	}
 
 	public function edit($roleId=0)
