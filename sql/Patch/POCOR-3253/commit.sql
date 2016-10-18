@@ -268,8 +268,8 @@ CREATE TABLE IF NOT EXISTS `institution_staff_position_profiles` (
   KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains change requests submitted for Staff profiles';
 
-INSERT INTO `institution_staff_position_profiles` (`id`, `institution_staff_id`, `staff_change_type_id`, `status_id`, `staff_id`, `staff_type_id`, `institution_id`, `assignee_id`, `institution_position_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-SELECT `id`, `institution_staff_id`, `staff_change_type_id`, `status_id`, `staff_id`, `staff_type_id`, `institution_id`, 0, `institution_position_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+INSERT INTO `institution_staff_position_profiles` (`id`, `institution_staff_id`, `staff_change_type_id`, `status_id`, `FTE`, `start_date`, `end_date`, `staff_id`, `staff_type_id`, `institution_id`, `assignee_id`, `institution_position_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT `id`, `institution_staff_id`, `staff_change_type_id`, `status_id`, `FTE`, `start_date`, `end_date`, `staff_id`, `staff_type_id`, `institution_id`, 0, `institution_position_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
 FROM `z_3253_institution_staff_position_profiles`;
 
 -- training_courses
@@ -416,6 +416,3 @@ VALUES (5049, 'Actions', 'Workflows', 'Administration', 'Workflows', 5000, 'Acti
 UPDATE `security_functions` SET `order` = 5049 WHERE `id` = 5038;
 
 UPDATE `security_functions` SET `controller` = 'Institutions', `_view` = 'StaffLeave.index|StaffLeave.view', `_edit` = 'StaffLeave.edit', `_add` = 'StaffLeave.add', `_delete` = 'StaffLeave.remove', `_execute` = 'StaffLeave.download' WHERE `id` = 3016;
-
--- labels
-INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES ('de65853b-9054-11e6-88cb-525400b263eb', 'WorkflowSteps', 'is_system_defined', 'Workflow -> Steps', 'System Defined', 1, 1, NOW());
