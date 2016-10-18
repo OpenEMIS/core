@@ -139,6 +139,23 @@ class AdvanceSearchBehavior extends Behavior {
 	        // trigger events for additional searchable fields
 	        $this->_table->dispatchEvent('AdvanceSearch.onSetupFormField', [$searchables, $advanceSearchModelData], $this);
 
+            if($this->isCAv4()) {
+                $this->_table->controller->viewVars['advanced_search'] = [
+                    'name' => 'advanced_search',
+                    'data' => compact('filters', 'searchables', 'advancedSearch'),
+                    'options' => [],
+                    'order' => 0
+                ];
+            }
+
+            // adding of the indexElement
+            $this->_table->controller->viewVars['indexElements']['advanced_search'] = [
+                'name' => 'advanced_search',
+                'data' => compact('filters', 'searchables', 'advancedSearch'),
+                'options' => [],
+                'order' => 0
+            ];
+
             if (empty($order)) { //if no order declared, then build the default order.
                 foreach ($filters as $key=>$filter) {
                     $order[] = $key;
@@ -306,6 +323,10 @@ class AdvanceSearchBehavior extends Behavior {
 		}
 		return $associatedEntityArrayKey;
 	}
+
+    private function isCAv4() {
+        return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
+    }
 
     public function isAdvancedSearchEnabled()
     {
