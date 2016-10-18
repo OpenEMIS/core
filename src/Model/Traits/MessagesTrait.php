@@ -442,7 +442,7 @@ trait MessagesTrait {
             'pendingRequest' => 'There is a pending student status change request at the moment.',
             'selectNextGrade' => 'Please select a grade to promote to.'
         ],
-        'SinglePromotion' => [
+        'IndividualPromotion' => [
             'noGrades' => 'No Available Grades',
             'noPeriods' => 'You need to configure Academic Periods for Promotion / Graduation',
             'current_period' => 'Current Academic Period',
