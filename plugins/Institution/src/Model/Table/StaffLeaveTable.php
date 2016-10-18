@@ -199,7 +199,7 @@ class StaffLeaveTable extends ControllerActionTable
 				return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
 			})
 			->where([$this->aliasField('assignee_id') => $userId])
-			->order([$this->aliasField('created')])
+			->order([$this->aliasField('created') => 'DESC'])
 			->formatResults(function (ResultSetInterface $results) {
 				return $results->map(function ($row) {
 					$url = [
