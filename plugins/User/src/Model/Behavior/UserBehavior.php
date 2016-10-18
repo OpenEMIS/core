@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace User\Model\Behavior;
 
 use ArrayObject;
@@ -75,6 +75,13 @@ class UserBehavior extends Behavior {
 		}
 	}
 
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+	{
+		if ($entity->isNew()) {
+			$entity->preferred_language = 'en';
+		}
+	}
+
 	public function beforeAction(Event $event) {
 		$this->_table->fields['is_student']['type'] = 'hidden';
 		$this->_table->fields['is_staff']['type'] = 'hidden';
@@ -88,7 +95,7 @@ class UserBehavior extends Behavior {
 				$this->_table->fields['username']['visible'] = false;
 				$this->_table->fields['last_login']['visible'] = false;
 			break;
-		}	
+		}
 
 		if ($this->_table->table() == 'security_users') {
 			$this->_table->addBehavior('OpenEmis.Section');
@@ -96,6 +103,7 @@ class UserBehavior extends Behavior {
 			$this->_table->fields['super_admin']['visible'] = false;
 			$this->_table->fields['date_of_death']['visible'] = false;
 			$this->_table->fields['status']['visible'] = false;
+			$this->_table->fields['preferred_language']['visible'] = false;
 			$this->_table->fields['address_area_id']['type'] = 'areapicker';
 			$this->_table->fields['address_area_id']['source_model'] = 'Area.AreaAdministratives';
 			$this->_table->fields['birthplace_area_id']['type'] = 'areapicker';
@@ -119,7 +127,7 @@ class UserBehavior extends Behavior {
 			);
 			$this->_table->fields['date_of_birth']['order'] = $i++;
 			$this->_table->fields['identity_number']['order'] = $i++;
-			
+
 			$this->_table->fields['address']['order'] = $i++;
 			$this->_table->fields['postal_code']['order'] = $i++;
 			$this->_table->fields['address_area_id']['order'] = $i++;
@@ -143,7 +151,7 @@ class UserBehavior extends Behavior {
 				$areaLabel = $this->onGetFieldLabel($event, $userTableLabelAlias, $field, $language, true);
 				$this->_table->ControllerAction->field('birthplace_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
 				$this->_table->ControllerAction->field('other_information_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
-			}	
+			}
 		}
 	}
 
@@ -156,7 +164,7 @@ class UserBehavior extends Behavior {
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
 		$plugin = $this->_table->controller->plugin;
 		$name = $this->_table->controller->name;
-		
+
 		switch ($this->_table->alias()) {
 			case 'Students':
 				$imageDefault = 'kd-students';
@@ -188,12 +196,12 @@ class UserBehavior extends Behavior {
 				$imageDefault = 'fa fa-user';
 				break;
 		}
-		
+
 		if ($this->_table->ControllerAction->getTriggerFrom() == 'Controller') {
 			// for controlleraction->model
 			$imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => 'getImage'];
 		} else {
-			// for controlleraction->modelS 
+			// for controlleraction->modelS
 			$imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->_table->alias(), 'getImage'];
 		}
 
@@ -207,7 +215,7 @@ class UserBehavior extends Behavior {
 
 		if ($this->_table->table() == 'security_users') {
 			$this->_table->ControllerAction->field('name', [
-				'order' => 3, 
+				'order' => 3,
 				'sort' => ['field' => 'first_name']
 			]);
 		}
@@ -286,7 +294,7 @@ class UserBehavior extends Behavior {
 			$fileContent = $entity->user->photo_content;
 			$userEntity = $entity->user;
 		}
-		
+
 		$value = "";
 		$alias = $this->_table->alias();
 		if (empty($fileContent) && is_null($fileContent)) {
@@ -359,7 +367,7 @@ class UserBehavior extends Behavior {
 
 	public function getUniqueOpenemisId($options = []) {
 		$prefix = '';
-		
+
 		if (array_key_exists('model', $options)) {
 			switch ($options['model']) {
 				case 'Student': case 'Staff': case 'Guardian':
@@ -374,7 +382,7 @@ class UserBehavior extends Behavior {
 			->order($this->_table->aliasField('id').' DESC')
 			->first();
 
-		
+
 		$latestOpenemisNo = $latest->openemis_no;
 		$latestOpenemisNo = 0;
 		if(empty($prefix)){
@@ -382,7 +390,7 @@ class UserBehavior extends Behavior {
 		}else{
 			$latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
 		}
-		
+
 		$currentStamp = time();
 		if($latestDbStamp >= $currentStamp){
 			$newStamp = $latestDbStamp + 1;
@@ -409,7 +417,7 @@ class UserBehavior extends Behavior {
 
 		if (!empty($photoData) && $photoData->has('Users') && $photoData->Users->has('photo_content')) {
 			$phpResourceFile = $photoData->Users->photo_content;
-			
+
 			if ($base64Format) {
 				echo base64_encode(stream_get_contents($phpResourceFile));
 			} else {
