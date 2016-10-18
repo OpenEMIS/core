@@ -1202,6 +1202,11 @@ trait MessagesTrait {
                 'code' => [
                     'ruleUnique' => 'This code already exists in the system'
                 ]
+            ],
+            'WorkflowActions' => [
+                'event_key' => [
+                    'ruleUnique' => 'This event has already been assigned.'
+                ]
             ]
         ],
         'Health' => [
@@ -1381,13 +1386,6 @@ trait MessagesTrait {
                     'ruleValidateJsonAPI' => 'URL or data in URL is invalid.'
                 ]
             ]
-        ],
-        'Workflow' => [
-        	'WorkflowActions' => [
-        		'event_key' => [
-        			'ruleUnique' => 'This event has already been assigned.'
-        		]
-        	]
         ]
     ];
 
