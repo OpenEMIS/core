@@ -20,11 +20,21 @@ class IdentityTypesTable extends ControllerActionTable
 
 		$this->hasMany('Identities', ['className' => 'User.Identities', 'foreignKey' => 'identity_type_id']);
 
-<<<<<<< HEAD
         $this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Students' => ['index', 'add']
         ]);
+        $this->addBehavior('FieldOption.FieldOption');
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('validation_pattern', ['after' => 'name']);
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $entity->validation_pattern = trim($entity->validation_pattern);
     }
 
     public function findDefaultIdentityType(Query $query, array $options)
@@ -36,19 +46,6 @@ class IdentityTypesTable extends ControllerActionTable
 	public function addEditBeforePatch(Event $event, Entity $entity)
 	{
 		$entity->prevDefaultIdentityType = $this->getDefaultValue(); //keep the current default value before it is being updated.
-=======
-		$this->addBehavior('FieldOption.FieldOption');
-    }
-
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
-	{
-		$this->field('validation_pattern', ['after' => 'name']);
-	}
-
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-	{
-		$entity->validation_pattern = trim($entity->validation_pattern);
->>>>>>> origin/master
 	}
 
 	public function afterSave(Event $event, Entity $entity)

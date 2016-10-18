@@ -293,19 +293,6 @@ class DirectoriesTable extends AppTable {
 
 			$indexElements[] = ['name' => 'Directory.Users/controls', 'data' => [], 'options' => [], 'order' => 0];
 
-<<<<<<< HEAD
-			$indexElements[] = [
-				'name' => $indexDashboard,
-				'data' => [
-					'model' => $dashboardModel,
-					'modelCount' => $userCount->count(),
-					'modelArray' => $userArray,
-					'iconClass' => $iconClass
-				],
-				'options' => [],
-				'order' => 2
-			];
-=======
             if ($this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
                 $indexElements[] = [
                     'name' => $indexDashboard,
@@ -320,7 +307,6 @@ class DirectoriesTable extends AppTable {
                 ];
             }
 
->>>>>>> origin/master
 			foreach ($indexElements as $key => $value) {
 				if ($value['name']=='advanced_search') {
 					$indexElements[$key]['order'] = 1;

@@ -14,11 +14,8 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
 ControllerActionComponent - Current Version 3.1.22
-<<<<<<< HEAD
-3.1.22 (Malcolm) - For 'ControllerAction.Model.index.beforeAction' removed $query from parameters and added it to $settings['query']
-=======
+3.1.23 (Malcolm) - For 'ControllerAction.Model.index.beforeAction' removed $query from parameters and added it to $settings['query']
 3.1.22 (Jeff) - Fixed a bug that caused out of memory when performing a delete on Restrict Delete strategy
->>>>>>> origin/master
 3.1.21 (Zack) - Amended restrict delete page and remove (event - ControllerAction.Model.onBeforeRestrictDelete). To use (event - deleteOnInitialize) instead.
 3.1.20 (Malcolm) - Added (deleteStrategy type - 'restrict') and (event - ControllerAction.Model.onBeforeRestrictDelete)
 3.1.19 (Malcolm) - Fixed an error issue when using getFields() on tables with joint primary keys
