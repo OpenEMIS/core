@@ -1576,7 +1576,6 @@ class ValidationBehavior extends Behavior {
 		return false;
 	}
 
-<<<<<<< HEAD
 	public static function checkPendingAdmissionExist($field, array $globalData)
 	{
 		$data = $globalData['data'];
@@ -1597,7 +1596,8 @@ class ValidationBehavior extends Behavior {
 			->count();
 
 		return $studentExist == 0;
-=======
+	}
+
 	public static function validateCustomIdentityNumber($field, array $globalData)
 	{
 		$subject = $field;
@@ -1640,6 +1640,5 @@ class ValidationBehavior extends Behavior {
 		}
 
 		return true;
->>>>>>> origin/master
 	}
 }

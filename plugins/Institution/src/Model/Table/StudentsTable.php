@@ -14,26 +14,16 @@ use Cake\Utility\Inflector;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
 
-<<<<<<< HEAD
-use App\Model\Table\ControllerActionTable;
-
-class StudentsTable extends ControllerActionTable {
-=======
 class StudentsTable extends AppTable
 {
->>>>>>> origin/master
 	const PENDING_TRANSFER = -2;
 	const PENDING_ADMISSION = -3;
 	const PENDING_DROPOUT = -4;
 
 	private $dashboardQuery = null;
 
-<<<<<<< HEAD
-	public function initialize(array $config) {
-=======
 	public function initialize(array $config)
 	{
->>>>>>> origin/master
 		$this->table('institution_students');
 		parent::initialize($config);
 
@@ -91,10 +81,10 @@ class StudentsTable extends AppTable
 		 * If no "belongsTo" relation from the main model is needed, include its foreign key name in AdvanceSearch->exclude options.
 		 */
         $advancedSearchFieldOrder = [
-            'first_name', 'middle_name', 'third_name', 'last_name', 
+            'first_name', 'middle_name', 'third_name', 'last_name',
             'contact_number', 'identity_type', 'identity_number'
         ];
-        
+
 		$this->addBehavior('AdvanceSearch', [
 			'exclude' => [
 				'student_id',
@@ -118,13 +108,9 @@ class StudentsTable extends AppTable
 		/**
 		 * End Advance Search Types
 		 */
-<<<<<<< HEAD
         $this->addBehavior('ControllerAction.Image');
-=======
 
         $this->addBehavior('OpenEmis.Section');
->>>>>>> origin/master
-
 	}
 
 	public function validationDefault(Validator $validator)

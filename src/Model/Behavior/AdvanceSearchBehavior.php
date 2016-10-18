@@ -52,15 +52,10 @@ class AdvanceSearchBehavior extends Behavior {
 ** CakePhp events
 **
 ******************************************************************************************************************/
-<<<<<<< HEAD
-	public function afterAction(Event $event, ArrayObject $extra) {
-=======
 
-	public function afterAction(Event $event) 
+	public function afterAction(Event $event)
 	{
         $order = $this->config('order');
-
->>>>>>> origin/master
 		if ($this->_table->action == 'index') {
 		    $labels = TableRegistry::get('Labels');
 			$filters = [];
@@ -80,7 +75,7 @@ class AdvanceSearchBehavior extends Behavior {
 					if ($this->isForeignKey($key)) {
 						$label = $labels->getLabel($this->_table->alias(), $key, $language);
 						$relatedModel = $this->getAssociatedBelongsToModel($key);
-						
+
 						$filters[$key] = [
 							'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->alias()),
 							'options' => $relatedModel->getList(),
@@ -115,11 +110,11 @@ class AdvanceSearchBehavior extends Behavior {
 								'options' => $result[$customFilterKey]['options'],
 								'selected' => $selected
 							];
-						}		
+						}
 					}
 				}
 			}
-            
+
             if (array_key_exists('belongsTo', $advanceSearchModelData)) {
 				foreach ($advanceSearchModelData['belongsTo'] as $field => $value) {
 					if (!empty($value) && $advancedSearch == false) {
@@ -144,25 +139,6 @@ class AdvanceSearchBehavior extends Behavior {
 	        // trigger events for additional searchable fields
 	        $this->_table->dispatchEvent('AdvanceSearch.onSetupFormField', [$searchables, $advanceSearchModelData], $this);
 
-<<<<<<< HEAD
-            if($this->isCAv4()) {
-                $this->_table->controller->viewVars['advanced_search'] = [
-                    'name' => 'advanced_search',
-                    'data' => compact('filters', 'searchables', 'advancedSearch'),
-                    'options' => [],
-                    'order' => 0
-                ];
-            }
-
-            // adding of the indexElement
-            $this->_table->controller->viewVars['indexElements']['advanced_search'] = [
-                'name' => 'advanced_search',
-                'data' => compact('filters', 'searchables', 'advancedSearch'),
-                'options' => [],
-                'order' => 0
-            ];
-
-=======
             if (empty($order)) { //if no order declared, then build the default order.
                 foreach ($filters as $key=>$filter) {
                     $order[] = $key;
@@ -178,7 +154,6 @@ class AdvanceSearchBehavior extends Behavior {
 	            'options' => [],
 	            'order' => 0
 	        ];
->>>>>>> origin/master
 		}
 	}
 
@@ -254,7 +229,7 @@ class AdvanceSearchBehavior extends Behavior {
 		$areaKeys[] = 'area_administrative_id';
 		$areaKeys[] = 'birthplace_area_id';
 		$areaKeys[] = 'address_area_id';
-        
+
 		foreach ($advancedSearchBelongsTo as $key=>$value) {
 			if (!empty($value) && $value>0) {
 				if(in_array($key, $areaKeys)){
@@ -332,13 +307,6 @@ class AdvanceSearchBehavior extends Behavior {
 		return $associatedEntityArrayKey;
 	}
 
-<<<<<<< HEAD
-    private function isCAv4() {
-        return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
-    }
-
-}
-=======
     public function isAdvancedSearchEnabled()
     {
         $requestData = $this->_table->request->data;
@@ -358,4 +326,3 @@ class AdvanceSearchBehavior extends Behavior {
         return true;
     }
 }
->>>>>>> origin/master

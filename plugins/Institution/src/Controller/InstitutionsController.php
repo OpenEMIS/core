@@ -120,7 +120,6 @@ class InstitutionsController extends AppController
     }
     // End
 
-<<<<<<< HEAD
     public function Students($pass = 'index') {
         if ($pass == 'addExisting') {
             $this->set('ngController', 'InstitutionsStudentsCtrl as InstitutionStudentController');
@@ -137,11 +136,8 @@ class InstitutionsController extends AppController
         }
     }
 
-    public function implementedEvents() {
-=======
     public function implementedEvents()
     {
->>>>>>> origin/master
         $events = parent::implementedEvents();
         $events['Controller.AccessControl.checkIgnoreActions'] = 'checkIgnoreActions';
         return $events;
