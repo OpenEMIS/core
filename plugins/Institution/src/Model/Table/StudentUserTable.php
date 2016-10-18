@@ -200,12 +200,9 @@ class StudentUserTable extends UserTable
 
 		$statuses = $InstitutionStudentsTable->StudentStatuses->findCodeList();
 		$id = $session->read('Institution.Students.id');
-		$studentAcademicPeriodId = $InstitutionStudentsTable->get($id)->academic_period_id;
-		$todayDate = date('Y-m-d');
 
-		// check the permission and today date fall within the student enrollment period
-		if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])
-			&& ($this->checkDateWithinEnrollmentPeriod($todayDate, $studentAcademicPeriodId))) {
+		// check the permission
+		if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])) {
 			$TransferRequests = TableRegistry::get('Institution.TransferRequests');
 			$studentData = $InstitutionStudentsTable->get($id);
 			$selectedStudent = $studentData->student_id;
@@ -448,21 +445,5 @@ class StudentUserTable extends UserTable
                 break;
             }
         }
-    }
-
-    public function checkDateWithinEnrollmentPeriod ($todayDate, $studentAcademicPeriodId)
-    {
-    	$isWithinEnrollmentDate = true;
-    	$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-
-    	$studentAcademicPeriodStartDate = $AcademicPeriods->get($studentAcademicPeriodId)->start_date->toUnixString();
-		$studentAcademicPeriodEndDate = $AcademicPeriods->get($studentAcademicPeriodId)->end_date->toUnixString();
-		$todayDateStamp = strtotime($todayDate);
-
-		if (($studentAcademicPeriodStartDate >= $todayDateStamp) || ($todayDateStamp >= $studentAcademicPeriodEndDate)) {
-			$isWithinEnrollmentDate = false;
-		}
-
-		return $isWithinEnrollmentDate;
     }
 }
