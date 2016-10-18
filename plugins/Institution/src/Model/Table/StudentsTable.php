@@ -993,10 +993,6 @@ class StudentsTable extends AppTable
             $this->ControllerAction->field('student_status_id', ['type' => 'readonly', 'attr' => ['value' => $entity->student_status->name]]);
 
             $period = $entity->academic_period;
-<<<<<<< HEAD
-=======
-
->>>>>>> 99fa37e89371d2c8a721455017abb4862a137e67
             $dateOptions = [
                 'startDate' => $period->start_date->format('d-m-Y'),
                 'endDate' => $period->end_date->format('d-m-Y')
@@ -1402,7 +1398,6 @@ class StudentsTable extends AppTable
             return false;
         }
 
-<<<<<<< HEAD
         // check if today's date is within the student start and end date.
         $studentStartDate = $student['start_date'];
         $studentEndDate = $student['end_date'];
@@ -1411,8 +1406,6 @@ class StudentsTable extends AppTable
             return false;
         }
 
-=======
->>>>>>> 99fa37e89371d2c8a721455017abb4862a137e67
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $studentStatusList = array_flip($StudentStatuses->findCodeList());
 
