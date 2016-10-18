@@ -11,11 +11,11 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
     };
 
     var models = {
-        // TransferApprovalsTable: 'Institution.TransferApprovals',
-        // StudentAdmissionTable: 'Institution.StudentAdmission',
-        // StudentDropoutTable: 'Institution.StudentDropout',
-        // StaffTransferApprovalsTable: 'Institution.StaffTransferApprovals',
-        // StaffTransferRequestsTable: 'Institution.StaffTransferRequests',
+        TransferApprovalsTable: 'Institution.TransferApprovals',
+        StudentAdmissionTable: 'Institution.StudentAdmission',
+        StudentDropoutTable: 'Institution.StudentDropout',
+        StaffTransferApprovalsTable: 'Institution.StaffTransferApprovals',
+        StaffTransferRequestsTable: 'Institution.StaffTransferRequests',
         StaffLeaveTable: 'Institution.StaffLeave',
         InstitutionSurveysTable: 'Institution.InstitutionSurveys',
         InstitutionPositionsTable: 'Institution.InstitutionPositions',

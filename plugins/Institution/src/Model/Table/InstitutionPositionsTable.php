@@ -5,13 +5,13 @@ use DateTime;
 use DateInterval;
 use ArrayObject;
 
+use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Cake\Network\Session;
-use Cake\ORM\TableRegistry;
 use Cake\Collection\Collection;
 use Cake\Datasource\ResultSetInterface;
 
@@ -514,7 +514,7 @@ class InstitutionPositionsTable extends ControllerActionTable {
 				return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
 			})
 			->where([$this->aliasField('assignee_id') => $userId])
-			->order([$this->aliasField('created')])
+			->order([$this->aliasField('created') => 'DESC'])
 			->formatResults(function (ResultSetInterface $results) {
 				return $results->map(function ($row) {
 					$url = [
