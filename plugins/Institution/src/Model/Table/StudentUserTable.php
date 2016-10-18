@@ -33,6 +33,13 @@ class StudentUserTable extends UserTable
 				'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
 				'on' => 'create'
 			])
+
+			->allowEmpty('postal_code')
+			->add('postal_code', 'ruleCustomPostalCode', [
+        		'rule' => ['validateCustomPattern', 'postal_code'],
+        		'provider' => 'table',
+        		'last' => true
+		    ])
 			;
 		return $validator;
 	}

@@ -92,7 +92,7 @@ class InstitutionsController extends AppController
     public function Exams()                 { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminations']); }
     public function UndoExaminationRegistration() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminationsUndoRegistration']); }
     public function ExaminationStudents()   { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminationStudents']); }
-    public function Contacts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionContacts']); }
+    public function Contacts()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionContacts']); }
     // public function StaffAbsences() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
     // End
 
@@ -409,24 +409,30 @@ class InstitutionsController extends AppController
 
         // $highChartDatas = ['{"chart":{"type":"column","borderWidth":1},"xAxis":{"title":{"text":"Position Type"},"categories":["Non-Teaching","Teaching"]},"yAxis":{"title":{"text":"Total"}},"title":{"text":"Number Of Staff"},"subtitle":{"text":"For Year 2015-2016"},"series":[{"name":"Male","data":[0,2]},{"name":"Female","data":[0,1]}]}'];
         $highChartDatas = [];
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $statuses = $StudentStatuses->findCodeList();
 
-        //Students By Year
+        //Students By Year, excludes transferred and dropoout students
         $params = array(
-            'conditions' => array('institution_id' => $id)
+            'conditions' => array('institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['DROPOUT']])
         );
+
         $InstitutionStudents = TableRegistry::get('Institution.Students');
         $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_year', $params);
 
-        //Students By Grade for current year
+        //Students By Grade for current year, excludes transferred and dropoout students
         $params = array(
-            'conditions' => array('institution_id' => $id)
+            'conditions' => array('institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['DROPOUT']])
         );
 
         $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_grade', $params);
 
-        //Staffs By Position for current year
+        $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+        $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
+
+        //Staffs By Position for current year, only shows assigned staff
         $params = array(
-            'conditions' => array('institution_id' => $id)
+            'conditions' => array('institution_id' => $id, 'staff_status_id' => $assignedStatus)
         );
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
         $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff', $params);
