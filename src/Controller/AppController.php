@@ -184,6 +184,8 @@ class AppController extends Controller {
 		return $displayProducts;
 	}
 
+	// Triggered from LocalizationComponent
+	// Controller.Localization.getLanguageOptions
 	public function getLanguageOptions(Event $event)
 	{
 		$ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
@@ -204,6 +206,8 @@ class AppController extends Controller {
 		return [$showLanguage, $systemLanguage];
 	}
 
+	// Triggered from Localization component
+	// Controller.Localization.updateLoginLanguage
 	public function updateLoginLanguage(Event $event, $user, $lang)
 	{
 		$UsersTable = TableRegistry::get('User.Users');
