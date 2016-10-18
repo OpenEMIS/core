@@ -1,4 +1,3 @@
--- POCOR-3253
 -- db_patches
 INSERT INTO `db_patches` (`issue`, `created`) VALUES('POCOR-3253', NOW());
 
@@ -56,7 +55,7 @@ SELECT `id`, `name`,
     WHEN 1 THEN 2
     WHEN 2 THEN 3
     WHEN NULL THEN 0
-    ELSE 0
+    ELSE 0 
   END AS `category`, `is_editable`, `is_removable`,
   CASE `stage`
     WHEN 0 THEN 1
@@ -420,8 +419,3 @@ UPDATE `security_functions` SET `controller` = 'Institutions', `_view` = 'StaffL
 
 -- labels
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES ('de65853b-9054-11e6-88cb-525400b263eb', 'WorkflowSteps', 'is_system_defined', 'Workflow -> Steps', 'System Defined', 1, 1, NOW());
-
-
--- 3.7.1
-UPDATE config_items SET value = '3.7.1' WHERE code = 'db_version';
-UPDATE db_patches SET version = (SELECT value FROM config_items WHERE code = 'db_version') WHERE version IS NULL;
