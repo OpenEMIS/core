@@ -22,7 +22,8 @@
         "cakephp/cakephp": ">3.0.0",
         "firebase/php-jwt": "~3.0",
         "google/apiclient": "1.1.7",
-        "onelogin/php-saml": "^2.9"
+        "onelogin/php-saml": "^2.9",
+        "phpseclib/phpseclib": "^2.0"
     },
     "autoload": {
         "psr-4": {
