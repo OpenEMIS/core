@@ -6,7 +6,8 @@ INSERT INTO `db_patches` (`issue`, `created`) VALUES ('POCOR-3444', NOW());
 CREATE TABLE `z_3444_temp_language_mapping` (
   `lang_old` VARCHAR(3) NOT NULL COMMENT '',
   `lang_new` VARCHAR(3) NOT NULL COMMENT '',
-  PRIMARY KEY (`lang_old`));
+  PRIMARY KEY (`lang_old`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE utf8mb4_unicode_ci;
 
 INSERT INTO `z_3444_temp_language_mapping` (`lang_old`, `lang_new`) VALUES ('eng', 'en');
 INSERT INTO `z_3444_temp_language_mapping` (`lang_old`, `lang_new`) VALUES ('chi', 'zh');
@@ -14,6 +15,14 @@ INSERT INTO `z_3444_temp_language_mapping` (`lang_old`, `lang_new`) VALUES ('ara
 INSERT INTO `z_3444_temp_language_mapping` (`lang_old`, `lang_new`) VALUES ('fre', 'fr');
 INSERT INTO `z_3444_temp_language_mapping` (`lang_old`, `lang_new`) VALUES ('spa', 'es');
 INSERT INTO `z_3444_temp_language_mapping` (`lang_old`, `lang_new`) VALUES ('ru', 'ru');
+
+UPDATE config_items
+SET created = '1970-01-01 00:00:00'
+WHERE created = '0000-00-00 00:00:00';
+
+ALTER TABLE config_items CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+ALTER TABLE config_item_options CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 UPDATE `config_item_options`
 INNER JOIN `z_3444_temp_language_mapping`
