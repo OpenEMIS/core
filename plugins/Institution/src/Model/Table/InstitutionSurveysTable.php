@@ -472,7 +472,7 @@ class InstitutionSurveysTable extends AppTable {
 				return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
 			})
 			->where([$this->aliasField('assignee_id') => $userId])
-			->order([$this->aliasField('created')])
+			->order([$this->aliasField('created') => 'DESC'])
 			->formatResults(function (ResultSetInterface $results) {
 				return $results->map(function ($row) {
 					$url = [
@@ -504,40 +504,4 @@ class InstitutionSurveysTable extends AppTable {
 		
 		return $query;
 	}
-
-	// public function indexAfterFindWorkbench(Event $event, $query, $data, ArrayObject $extra) {
- //    	$workbenchData = [];
-
- //    	foreach ($data as $key => $obj) {
- //    		$institutionId = $obj->institution->id;
-	// 		$stepId = $obj->status_id;
-
-	// 		$url = [
-	// 			'plugin' => 'Institution',
-	// 			'controller' => 'Institutions',
-	// 			'action' => 'Surveys',
-	// 			'view',
-	// 			$obj->id,
-	// 			'institution_id' => $institutionId
-	// 		];
-
-	// 		if (is_null($obj->modified)) {
-	// 			$receivedDate = $this->formatDate($obj->created);
-	// 		} else {
-	// 			$receivedDate = $this->formatDate($obj->modified);
-	// 		}
-
- //    		$workbenchData[] = [
- //    			'url' => $url,
- //    			'status' => $obj->status->name,
- //    			'request_title' => $obj->survey_form->name.' '.__('in').' '.$obj->academic_period->name,
- //    			'institution' => $obj->institution->code_name,
- //    			'received_date' => $receivedDate,
- //    			'due_date' => '<i class="fa fa-minus"></i>',
- //    			'requester' => $obj->created_user->name_with_id
- //    		];
- //    	}
-
- //    	return $workbenchData;
- //    }
 }
