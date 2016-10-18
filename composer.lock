@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "59eff4b08f623458ecb6f24876c0dd11",
-    "content-hash": "e0a26b869084b70da06d322d16e8fe87",
+    "hash": "c35fd5cf7ec0548b124423d322b7f8ab",
+    "content-hash": "facc1a752c0ecee647a37f505137e196",
     "packages": [
         {
             "name": "admad/cakephp-jwt-auth",
@@ -440,17 +440,18 @@
         },
         {
             "name": "korditpteltd/kd-cakephp-sso",
-            "version": "1.0.1.x-dev",
+            "version": "v1.0.3",
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git",
-                "reference": "69e4edf3a3988ee3188e4bae184a68f440c3c0b5"
+                "reference": "c4285d4d0ab8f9dfcd4ff8ac43e2f42c10b99f29"
             },
             "require": {
                 "cakephp/cakephp": ">3.0.0",
                 "firebase/php-jwt": "~3.0",
                 "google/apiclient": "1.1.7",
-                "onelogin/php-saml": "^2.9"
+                "onelogin/php-saml": "^2.9",
+                "phpseclib/phpseclib": "^2.0"
             },
             "type": "cakephp-plugin",
             "autoload": {
@@ -477,7 +478,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
             },
-            "time": "2016-09-05 08:47:27"
+            "time": "2016-10-18 02:37:33"
         },
         {
             "name": "mk-j/php_xlsxwriter",
@@ -2947,7 +2948,6 @@
         "phpoffice/phpexcel": 20,
         "mk-j/php_xlsxwriter": 20,
         "korditpteltd/kd-cakephp-restful": 20,
-        "korditpteltd/kd-cakephp-sso": 20,
         "psy/psysh": 0
     },
     "prefer-stable": true,
