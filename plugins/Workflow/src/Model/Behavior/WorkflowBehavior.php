@@ -36,12 +36,6 @@ class WorkflowBehavior extends Behavior {
 
 	private $workflowEvents = [
  		[
- 			'value' => 'Workflow.onDeleteRecord',
-			'text' => 'Delete of Current Record',
-			'description' => 'Performing this action will delete the current record from the system.',
- 			'method' => 'onDeleteRecord'
- 		],
- 		[
  			'value' => 'Workflow.onAssignBack',
 			'text' => 'Assign Back to Creator',
 			'description' => 'Performing this action will assign the current record back to creator.',
@@ -1204,15 +1198,16 @@ class WorkflowBehavior extends Behavior {
 		$model = $this->_table;
 		if ($model->hasBehavior('Workflow')) {
 			if (array_key_exists($this->WorkflowTransitions->alias(), $requestData)) {
-				if (array_key_exists('assignee_id', $requestData[$this->WorkflowTransitions->alias()])) {
+				if (array_key_exists('assignee_id', $requestData[$this->WorkflowTransitions->alias()]) && !empty($requestData[$this->WorkflowTransitions->alias()]['assignee_id'])) {
 					$assigneeId = $requestData[$this->WorkflowTransitions->alias()]['assignee_id'];
-					if ($entity->has('assignee_id')) {
-						$model->updateAll(
-							['assignee_id' => $assigneeId],
-							['id' => $entity->id]
-						);
-					}
+				} else {
+					$assigneeId = 0;
 				}
+
+				$model->updateAll(
+					['assignee_id' => $assigneeId],
+					['id' => $entity->id]
+				);
 			}
 		}
 	}
