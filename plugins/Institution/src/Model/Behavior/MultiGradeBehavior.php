@@ -64,7 +64,7 @@ class MultiGradeBehavior extends Behavior {
 		]);
 	}
 
-	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) 
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
 	{
 		$model = $this->_table;
 		$request = $this->_table->request;
@@ -74,13 +74,13 @@ class MultiGradeBehavior extends Behavior {
 		$selected = [];
 		$hasSelection = false; //to handle submitted value which is different when converted to form helper.
 		if (isset($education_grades) && count($education_grades)>0) {
-			foreach($education_grades as $key => $row) {
-				if ($row['id']) { //if has value, it means selected.
-					$selected[] = $row['id'];
+			foreach($education_grades['_ids'] as $key => $row) {
+				if ($row) { //if has value, it means selected.
+					$selected[] = $row;
 					$hasSelection = true;
 				}
 			}
-		} 
+		}
 
 		if (!$hasSelection) {
 			/*
@@ -104,4 +104,3 @@ class MultiGradeBehavior extends Behavior {
 	}
 
 }
-	

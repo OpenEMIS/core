@@ -37,11 +37,7 @@ class AreasTable extends ControllerActionTable
                 'filter' => 'parent_id',
             ]);
         }
-        $this->behaviors()->get('ControllerAction')->config([
-            'actions' => [
-                'remove' => 'restrict'
-            ],
-        ]);
+        $this->setDeleteStrategy('restrict');
     }
 
     public function implementedEvents()
@@ -397,7 +393,7 @@ class AreasTable extends ControllerActionTable
     // autocomplete used for UserGroups
     public function autocomplete($search)
     {
-        $search = sprintf('%%%s%%', $search);
+        $search = sprintf('%s%%', $search);
 
         $list = $this
             ->find()
@@ -551,10 +547,8 @@ class AreasTable extends ControllerActionTable
                     // Update the Institutions table
                     if (!empty($institutionResult)) {
                         foreach ($institutionResult as $key => $institution) {
-                            $institutionEntity =$this->newEntity([
-                                'id' => $institution->id,
-                                'area_id' => $newAreaId],
-                                ['validate' => false]);
+                            $institutionEntity = $this->patchEntity($institution, ['area_id' => $newAreaId], ['validate' =>false]);
+
                             $this->Institutions->save($institutionEntity);
                         }
                     }

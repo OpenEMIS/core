@@ -12,7 +12,8 @@ use Cake\Log\Log;
 
 use ControllerAction\Model\Traits\EventTrait;
 
-class ControllerActionBehavior extends Behavior {
+class ControllerActionBehavior extends Behavior
+{
     use EventTrait;
 
     protected $_defaultConfig = [
@@ -31,12 +32,14 @@ class ControllerActionBehavior extends Behavior {
         ]
     ];
 
-    public function initialize(array $config) {
+    public function initialize(array $config)
+    {
         $this->attachActions();
         $this->initializeFields();
     }
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
 
         // Model default priority is 10
@@ -44,7 +47,8 @@ class ControllerActionBehavior extends Behavior {
         return $events;
     }
 
-    public function buildValidator(Event $event, Validator $validator, $name) {
+    public function buildValidator(Event $event, Validator $validator, $name)
+    {
         $schema = $this->_table->schema();
 
         $columns = $schema->columns();
@@ -80,7 +84,15 @@ class ControllerActionBehavior extends Behavior {
         }
     }
 
-    private function attachActions() {
+    public function excludeDefaultValidations($fields)
+    {
+        if (!empty($fields)) {
+            $this->config('fields.excludes', $fields);
+        }
+    }
+
+    private function attachActions()
+    {
         $actions = $this->config('actions');
         $model = $this->_table;
 
@@ -95,7 +107,7 @@ class ControllerActionBehavior extends Behavior {
                     if (is_array($value)) {
                         if ($model->hasBehavior($behavior)) {
                             $model->removeBehavior($behavior);
-                            Log::write('debug', 'Conflicts in behavior: ' . $behavior);
+                            // Log::write('debug', 'Conflicts in behavior: ' . $behavior);
                         }
                         $model->addBehavior('ControllerAction.' . $behavior, $value);
                     } else {
@@ -106,7 +118,8 @@ class ControllerActionBehavior extends Behavior {
         }
     }
 
-    private function initializeFields() {
+    private function initializeFields()
+    {
         $alias = $this->_table->alias();
         $className = $this->_table->registryAlias();
         $schema = $this->_table->schema();
@@ -152,7 +165,8 @@ class ControllerActionBehavior extends Behavior {
         $this->_table->fields = $fields;
     }
 
-    public function isColumnExists($field) {
+    public function isColumnExists($field)
+    {
         $model = $this->_table;
         $schema = $model->schema();
         $columns = $schema->columns();
@@ -160,7 +174,8 @@ class ControllerActionBehavior extends Behavior {
         return in_array($field, $columns);
     }
 
-    public function actions($action=null) {
+    public function actions($action=null)
+    {
         $actions = $this->config('actions');
 
         $data = false;
@@ -178,7 +193,16 @@ class ControllerActionBehavior extends Behavior {
         return $data;
     }
 
-    public function paramsPass($index=null) {
+    public function setDeleteStrategy($strategy)
+    {
+        $strategies = ['cascade', 'restrict'];
+        if (in_array($strategy, $strategies)) {
+            $this->config('actions.remove', $strategy);
+        }
+    }
+
+    public function paramsPass($index=null)
+    {
         $params = $this->_table->request->pass;
         if (count($params) > 0) {
             if (!is_numeric($params[0])) {
@@ -195,16 +219,19 @@ class ControllerActionBehavior extends Behavior {
         return $params;
     }
 
-    public function paramsQuery() {
+    public function paramsQuery()
+    {
         return $this->_table->request->query;
     }
 
-    public function params() {
+    public function params()
+    {
         $params = $this->paramsPass();
         return array_merge($params, $this->paramsQuery());
     }
 
-    public function toggle($action, $enabled) {
+    public function toggle($action, $enabled)
+    {
         $actions = $this->config('actions');
 
         if (array_key_exists($action, $actions)) {
@@ -223,7 +250,8 @@ class ControllerActionBehavior extends Behavior {
         $this->config('actions', $actions);
     }
 
-    public function url($action, $params = true /* 'PASS' | 'QUERY' | false */) {
+    public function url($action, $params = true /* 'PASS' | 'QUERY' | false */)
+    {
         $controller = $this->_table->controller;
         $url = [
             'plugin' => $controller->plugin,
@@ -243,7 +271,8 @@ class ControllerActionBehavior extends Behavior {
         return $url;
     }
 
-    public function field($name, $attr=[]) {
+    public function field($name, $attr=[])
+    {
         $model = $this->_table;
 
         if (!isset($model->fieldOrder)) {
@@ -290,7 +319,8 @@ class ControllerActionBehavior extends Behavior {
         }
     }
 
-    public function setFieldVisible($actions, $fields) {
+    public function setFieldVisible($actions, $fields)
+    {
         foreach ($this->_table->fields as $key => $attr) {
             if (in_array($key, $fields)) {
                 foreach ($actions as $action) {
@@ -302,7 +332,8 @@ class ControllerActionBehavior extends Behavior {
         }
     }
 
-    public function setFieldOrder($field, $order=0) {
+    public function setFieldOrder($field, $order=0)
+    {
         $fields = $this->_table->fields;
 
         if (is_array($field)) {
@@ -338,7 +369,8 @@ class ControllerActionBehavior extends Behavior {
         $this->_table->fields = $fields;
     }
 
-    public function isForeignKey($field) {
+    public function isForeignKey($field)
+    {
         $model = $this->_table;
         foreach ($model->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
@@ -350,7 +382,8 @@ class ControllerActionBehavior extends Behavior {
         return false;
     }
 
-    public function getAssociatedModel($field, $type='belongsTo' /* hasOne | hasMany | belongsToMany */) {
+    public function getAssociatedModel($field, $type='belongsTo' /* hasOne | hasMany | belongsToMany */)
+    {
         $associationTypes = [
             'belongsTo' => 'manyToOne',
             'hasMany' => 'oneToMany',
@@ -369,7 +402,8 @@ class ControllerActionBehavior extends Behavior {
         return $model;
     }
 
-    public function getAssociatedEntity($field) {
+    public function getAssociatedEntity($field)
+    {
         $associationKey = $this->getAssociatedModel($field);
         $associatedEntity = null;
         if (is_object($associationKey)) {
@@ -381,19 +415,31 @@ class ControllerActionBehavior extends Behavior {
         return $associatedEntity;
     }
 
-    public function getSearchKey() {
+    public function getSearchKey()
+    {
         $session = $this->_table->request->session();
         return $session->read($this->_table->registryAlias().'.search.key');
     }
 
-    public function getContains($type = 'belongsTo') { // type is not being used atm
+    public function getContains($type = 'belongsTo', ArrayObject $extra)
+    { // type is not being used atm
         $model = $this->_table;
         $contain = [];
+        $containFields = [];
+
+        if (array_key_exists('auto_contain_fields', $extra)) {
+            $containFields = $extra['auto_contain_fields'];
+        }
+
         foreach ($model->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // only contain belongsTo associations
+                $fields = [];
+                if (array_key_exists($assoc->name(), $containFields)) {
+                    $fields = $containFields[$assoc->name()];
+                }
                 $columns = $assoc->schema()->columns();
                 if (in_array('name', $columns)) {
-                    $fields = ['id', 'name'];
+                    $fields = array_merge($fields, ['id', 'name']);
                     foreach ($columns as $col) {
                         if ($this->endsWith($col, '_id')) {
                             $fields[] = $col;
@@ -410,11 +456,13 @@ class ControllerActionBehavior extends Behavior {
         return $contain;
     }
 
-    public function endsWith($haystack, $needle) {
+    public function endsWith($haystack, $needle)
+    {
         return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== FALSE);
     }
 
-    private function getOrderValue($field, $insert) {
+    private function getOrderValue($field, $insert)
+    {
         $model = $this->_table;
         if (!array_key_exists($field, $model->fields)) {
             Log::write('debug', 'Attempted to add ' . $insert . ' invalid field: ' . $field);
@@ -447,7 +495,8 @@ class ControllerActionBehavior extends Behavior {
         return $order;
     }
 
-    private function _sortByOrder($a, $b) {
+    private function _sortByOrder($a, $b)
+    {
         if (!isset($a['order']) && !isset($b['order'])) {
             return true;
         } else if (!isset($a['order']) && isset($b['order'])) {

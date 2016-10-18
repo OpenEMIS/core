@@ -82,6 +82,11 @@ class StaffTable extends AppTable {
 		 * AdvanceSearchBehavior must be included first before adding other types of advance search.
 		 * If no "belongsTo" relation from the main model is needed, include its foreign key name in AdvanceSearch->exclude options.
 		 */
+        $advancedSearchFieldOrder = [
+            'first_name', 'middle_name', 'third_name', 'last_name', 
+            'contact_number', 'identity_type', 'identity_number'
+        ];
+
 		$this->addBehavior('AdvanceSearch', [
 			'exclude' => [
 				'staff_id',
@@ -90,7 +95,8 @@ class StaffTable extends AppTable {
 				'staff_status_id',
 				'institution_position_id',
 				'security_group_user_id'
-			]
+			],
+            'order' => $advancedSearchFieldOrder
 		]);
 		$this->addBehavior('User.AdvancedIdentitySearch', [
 			'associatedKey' => $this->aliasField('staff_id')
@@ -304,7 +310,7 @@ class StaffTable extends AppTable {
 		$StaffPositionProfilesTable = TableRegistry::get('Institution.StaffPositionProfiles');
 		$staffPositionProfilesRecordCount = $StaffPositionProfilesTable->find()
 			->where([
-				$StaffPositionProfilesTable->aliasField('institution_id') => $institutionId, 
+				$StaffPositionProfilesTable->aliasField('institution_id') => $institutionId,
 				$StaffPositionProfilesTable->aliasField('status_id'). ' NOT IN ' => $staffPositionProfileStatuses
 			])
 			->count();
@@ -792,7 +798,7 @@ class StaffTable extends AppTable {
 		}
 	}
 
-	public function addOnChangeStartDate(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) 
+	public function addOnChangeStartDate(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
 	{
 		if (isset($data[$this->alias()]['institution_position_id'])) {
 			unset($data[$this->alias()]['institution_position_id']);
@@ -800,12 +806,12 @@ class StaffTable extends AppTable {
 		$this->Session->delete($this->registryAlias().'.end_date_changed');
 	}
 
-	public function addOnChangeEndDate(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) 
+	public function addOnChangeEndDate(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
 	{
 		$this->Session->write($this->registryAlias().'.end_date_changed', true);
 	}
 
-	public function addOnChangePositionId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) 
+	public function addOnChangePositionId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
 	{
 		$data[$this->alias()]['position_id_changed'] = true;
 	}
@@ -870,7 +876,7 @@ class StaffTable extends AppTable {
 		} else {
 			$data[$this->alias()]['FTE'] = 0;
 		}
-		
+
 	}
 
 	public function onUpdateFieldPositionType(Event $event, array $attr, $action, Request $request) {
@@ -900,7 +906,7 @@ class StaffTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldFTE(Event $event, array $attr, $action, Request $request) 
+	public function onUpdateFieldFTE(Event $event, array $attr, $action, Request $request)
 	{
 		if ($action == 'add') {
 			if (!isset($request->data[$this->alias()]['FTE'])) {
@@ -1027,16 +1033,19 @@ class StaffTable extends AppTable {
 
 			$this->controller->viewVars['indexElements'][] = ['name' => 'Institution.Staff/controls', 'data' => [], 'options' => [], 'order' => 0];
 			$indexDashboard = 'dashboard';
-			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
-	            'name' => $indexDashboard,
-	            'data' => [
-	            	'model' => 'staff',
-	            	'modelCount' => $staffCount,
-	            	'modelArray' => $InstitutionArray,
-	            ],
-	            'options' => [],
-	            'order' => 2
-	        ];
+
+            if ($this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
+    			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
+    	            'name' => $indexDashboard,
+    	            'data' => [
+    	            	'model' => 'staff',
+    	            	'modelCount' => $staffCount,
+    	            	'modelArray' => $InstitutionArray,
+    	            ],
+    	            'options' => [],
+    	            'order' => 2
+    	        ];
+            }
 			foreach ($this->controller->viewVars['indexElements'] as $key => $value) {
 				if ($value['name']=='advanced_search') {
 					$this->controller->viewVars['indexElements'][$key]['order'] = 1;
@@ -1225,7 +1234,17 @@ class StaffTable extends AppTable {
 		if ($this->request->is(['ajax'])) {
 			$term = $this->request->query['term'];
 			// only search for staff
-			$query = $this->Users->find()->where([$this->Users->aliasField('is_staff') => 1]);
+			$query = $this->Users->find()
+				->select([
+					$this->Users->aliasField('openemis_no'),
+					$this->Users->aliasField('first_name'),
+					$this->Users->aliasField('middle_name'),
+					$this->Users->aliasField('third_name'),
+					$this->Users->aliasField('last_name'),
+					$this->Users->aliasField('preferred_name'),
+					$this->Users->aliasField('id')
+				])
+				->where([$this->Users->aliasField('is_staff') => 1])->limit(100);
 
 			$term = trim($term);
 			if (!empty($term)) {

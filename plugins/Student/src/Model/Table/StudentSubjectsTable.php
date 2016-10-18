@@ -27,6 +27,7 @@ class StudentSubjectsTable extends ControllerActionTable {
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->toggle('search', false);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -36,6 +37,10 @@ class StudentSubjectsTable extends ControllerActionTable {
         $this->field('academic_period_id', ['type' => 'integer', 'order' => 0]);
         $this->field('institution_id', ['type' => 'integer', 'after' => 'academic_period_id']);
         $this->field('total_mark', ['after' => 'institution_subject_id']);
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+        $query->where([$this->aliasField('status').' > 0']);
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
