@@ -43,6 +43,10 @@ INNER JOIN `z_3444_temp_language_mapping`
     AND `config_items`.`value` = `z_3444_temp_language_mapping`.`lang_old`
 SET `config_items`.`value` = `z_3444_temp_language_mapping`.`lang_new`;
 
+UPDATE `config_items`
+SET name = 'Allow Users to change Language', label = 'Allow Users to change Language'
+WHERE type = 'System' AND code = 'language_menu';
+
 DROP TABLE `z_3444_temp_language_mapping`;
 
 -- security_users
