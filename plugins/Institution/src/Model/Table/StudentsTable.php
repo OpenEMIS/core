@@ -13,6 +13,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
+use Cake\Chronos\Date;
 
 class StudentsTable extends AppTable
 {
@@ -1394,6 +1395,14 @@ class StudentsTable extends AppTable
         $academicPeriodId = ($student->has('academic_period_id'))? $student->academic_period_id: null;
         $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
         if ($academicPeriodId != $currentAcademicPeriod) {
+            return false;
+        }
+
+        // check if today's date is within the student start and end date.
+        $studentStartDate = $student['start_date'];
+        $studentEndDate = $student['end_date'];
+        $today = Date::today();
+        if (!$today->between($studentStartDate, $studentEndDate)) {
             return false;
         }
 
