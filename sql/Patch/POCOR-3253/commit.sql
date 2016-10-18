@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS `workflow_models` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of features that are workflow-enabled';
 
 INSERT INTO `workflow_models` (`id`, `name`, `model`, `filter`, `is_school_based`, `created_user_id`, `created`)
-SELECT `id`, `name`, `model`, `filter`, 0, `created_user_id`, `created`
+SELECT `id`, `name`, `model`, `filter`, 0, `created_user_id`, NOW()
 FROM `z_3253_workflow_models`;
 
 UPDATE `workflow_models` SET `is_school_based` = 1
