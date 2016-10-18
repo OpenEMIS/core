@@ -126,6 +126,8 @@ class SurveyRulesTable extends ControllerActionTable
 
             $sectionOptions = ['0' => '-- '.__('Select Section').' --'] + $surveySections;
             $sectionOptions = array_values($sectionOptions);
+            // original section options will not be translated
+            $originalOptions = $sectionOptions;
             $sectionId = $this->request->query('section_id');
             $this->advancedSelectOptions($sectionOptions, $sectionId);
             $this->controller->set(compact('sectionOptions'));
@@ -138,7 +140,8 @@ class SurveyRulesTable extends ControllerActionTable
             // Checking if the survey form id and the section id is 0 or empty
             if (!empty($sectionId))
             {
-                $section = $sectionOptions[$sectionId]['text'];
+                //get section text from original section options
+                $section = $originalOptions[$sectionId];
 
                 // Subquery for questions
                 $questionIds = $SurveyFormsQuestionsTable
@@ -150,6 +153,16 @@ class SurveyRulesTable extends ControllerActionTable
                     ]);
                 $query->where([$this->aliasField('survey_question_id').' IN ' => $questionIds]);
             }
+        }
+
+        // for searching survey forms, questions, dependent questions
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            $query->contain(['SurveyForms', 'SurveyQuestions', 'DependentQuestions']);
+
+            $extra['OR'] = [[$this->SurveyForms->aliasField('name').' LIKE' => '%' . $search . '%'],
+                [$this->SurveyQuestions->aliasField('name').' LIKE' => '%' . $search . '%'],
+                [$this->DependentQuestions->aliasField('name').' LIKE' => '%' . $search . '%']];
         }
     }
 
