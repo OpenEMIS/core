@@ -31,6 +31,10 @@ INNER JOIN `z_3444_temp_language_mapping`
     AND `config_items`.`value` = `z_3444_temp_language_mapping`.`lang_new`
 SET `config_items`.`value` = `z_3444_temp_language_mapping`.`lang_old`;
 
+UPDATE `config_items`
+SET name = 'Show Language Option during Login', label = 'Show Language Option during Login'
+WHERE type = 'System' AND code = 'language_menu';
+
 DROP TABLE `z_3444_temp_language_mapping`;
 
 ALTER TABLE config_items CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci;
