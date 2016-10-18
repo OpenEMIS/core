@@ -69,8 +69,11 @@ class UndoBehavior extends Behavior {
 			])
 			->first();
 		if (!empty($entity)) {
-			$this->model->delete($entity);
+			$prevInstitutionStudentId = $entity->previous_institution_student_id; //this is meant for undo transfer logic
+			$this->model->delete($entity); //this will also trigger StudentCascadeDeleteBehavior to delete associated data
 		}
+
+		return $this->model->get($prevInstitutionStudentId);
 	}
 
 	protected function updateStudentStatus($code, $conditions) {
