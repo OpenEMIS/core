@@ -239,14 +239,8 @@ class InstitutionsController extends AppController
         $this->set('contentHeader', $header);
     }
 
-<<<<<<< HEAD
-=======
-    private function attachAngularModules()
+	private function attachAngularModules()
     {
-        $action = $this->request->action;
->>>>>>> origin/master
-
-	private function attachAngularModules() {
 		$action = $this->request->action;
 
 		switch ($action) {
