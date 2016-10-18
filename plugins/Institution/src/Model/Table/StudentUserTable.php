@@ -315,7 +315,7 @@ class StudentUserTable extends UserTable
 				// pr($totalCount);
 
 				if ($totalCount == 0) {
-					$session->write('Institution.SinglePromotion.id', $id);
+					$session->write('Institution.IndividualPromotion.id', $id);
 
 					// Promote button
 					$promoteButton = $buttons['back'];
@@ -323,12 +323,12 @@ class StudentUserTable extends UserTable
 					$promoteButton['label'] = '<i class="fa kd-graduate"></i>';
 					$promoteButton['attr'] = $attr;
 					$promoteButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
-					$promoteButton['attr']['title'] = __('Promotion / Demotion');
+					$promoteButton['attr']['title'] = __('Promotion');
 
 					$promoteButton['url'] = [
 						'plugin' => $buttons['back']['url']['plugin'],
 						'controller' => $buttons['back']['url']['controller'],
-						'action' => 'SinglePromotion',
+						'action' => 'IndividualPromotion',
 						'add'
 					];
 					$toolbarButtons['promote'] = $promoteButton;
