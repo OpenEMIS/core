@@ -42,8 +42,5 @@ DELETE FROM `security_functions` WHERE `id` = 5049;
 
 UPDATE `security_functions` SET `controller` = 'Staff', `_view` = 'Leave.index|Leave.view', `_edit` = 'Leave.edit', `_add` = 'Leave.add', `_delete` = 'Leave.remove', `_execute` = 'Leave.download' WHERE `id` = 3016;
 
--- labels
-DELETE FROM `labels` WHERE `id` = 'de65853b-9054-11e6-88cb-525400b263eb';
-
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue`='POCOR-3253';
