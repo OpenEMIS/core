@@ -94,6 +94,7 @@ class InstitutionsController extends AppController
     public function ExaminationStudents()   { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminationStudents']); }
     public function Contacts()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionContacts']); }
     // public function StaffAbsences() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
+    public function StaffLeave()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffLeave']); }
     // End
 
     // AngularJS
@@ -584,5 +585,10 @@ class InstitutionsController extends AppController
             }
         }
         return $tabElements;
+    }
+
+    public function getCareerTabElements($options = []) {
+        $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+        return TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
     }
 }
