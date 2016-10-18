@@ -48,7 +48,6 @@ class DirectoriesController extends AppController {
 			'StaffClasses'			=> ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
 			'StaffQualifications'	=> ['className' => 'Staff.Qualifications'],
 			'StaffAbsences'			=> ['className' => 'Staff.Absences', 'actions' => ['index', 'view']],
-			'StaffLeave'			=> ['className' => 'Staff.Leaves'],
 			'StaffBehaviours'		=> ['className' => 'Staff.StaffBehaviours', 'actions' => ['index', 'view']],
 			'StaffExtracurriculars'	=> ['className' => 'Staff.Extracurriculars'],
 			'StaffTrainings'		=> ['className' => 'Staff.StaffTrainings'],
@@ -72,6 +71,7 @@ class DirectoriesController extends AppController {
 	public function StaffClasses() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffClasses']); }
 	public function StaffSubjects() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSubjects']); }
 	public function StaffEmployments()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Employments']); }
+	public function StaffLeave()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Leave']); }
 	public function StudentClasses() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']); }
 	public function StudentSubjects() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']); }
     public function Nationalities() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
