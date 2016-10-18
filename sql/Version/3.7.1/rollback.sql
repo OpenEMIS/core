@@ -3,7 +3,8 @@
 CREATE TABLE `z_3444_temp_language_mapping` (
   `lang_old` VARCHAR(3) NOT NULL COMMENT '',
   `lang_new` VARCHAR(3) NOT NULL COMMENT '',
-  PRIMARY KEY (`lang_old`));
+  PRIMARY KEY (`lang_old`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE utf8mb4_unicode_ci;
 
 INSERT INTO `z_3444_temp_language_mapping` (`lang_old`, `lang_new`) VALUES ('eng', 'en');
 INSERT INTO `z_3444_temp_language_mapping` (`lang_old`, `lang_new`) VALUES ('chi', 'zh');
@@ -31,7 +32,15 @@ INNER JOIN `z_3444_temp_language_mapping`
     AND `config_items`.`value` = `z_3444_temp_language_mapping`.`lang_new`
 SET `config_items`.`value` = `z_3444_temp_language_mapping`.`lang_old`;
 
+UPDATE `config_items`
+SET name = 'Show Language Option during Login', label = 'Show Language Option during Login'
+WHERE type = 'System' AND code = 'language_menu';
+
 DROP TABLE `z_3444_temp_language_mapping`;
+
+ALTER TABLE config_items CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci;
+
+ALTER TABLE config_item_options CONVERT TO CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 
 -- security_users
 ALTER TABLE `security_users`
