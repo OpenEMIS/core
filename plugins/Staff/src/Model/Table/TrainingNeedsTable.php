@@ -26,6 +26,7 @@ class TrainingNeedsTable extends AppTable {
 		$this->belongsTo('TrainingRequirements', ['className' => 'Training.TrainingRequirements', 'foreignKey' => 'training_requirement_id']);
 		$this->belongsTo('TrainingPriorities', ['className' => 'Training.TrainingPriorities', 'foreignKey' => 'training_priority_id']);
 		$this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+		$this->belongsTo('Assignees', ['className' => 'User.Users']);
 		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
 	}
 

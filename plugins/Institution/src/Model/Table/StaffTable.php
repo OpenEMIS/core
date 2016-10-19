@@ -184,7 +184,7 @@ class StaffTable extends AppTable {
 		$fields->exchangeArray($newFields);
 	}
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		$this->fields['staff_id']['order'] = 5;
 		$this->fields['institution_position_id']['order'] = 6;
 		$this->fields['FTE']['visible'] = false;
@@ -401,8 +401,15 @@ class StaffTable extends AppTable {
 	// IMPORTANT: when editing this method, need to consider impact on removeInactiveStaffSecurityRole()
 	public function removeStaffRole($staffEntity) {
 		$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
-		$affectedRows = $SecurityGroupUsersTable->deleteAll([$SecurityGroupUsersTable->primaryKey() => $staffEntity->security_group_user_id]);
-		$this->updateSecurityGroupUserId($staffEntity, NULL);
+		$securityGroupUserResults = $SecurityGroupUsersTable->find()->where([$SecurityGroupUsersTable->aliasField('id') => $staffEntity->security_group_user_id])->all();
+
+		$affectedRows = 0;
+		if (!$securityGroupUserResults->isEmpty()) {
+			$affectedRows = $securityGroupUserResults->count();
+			$deleteEntity = $securityGroupUserResults->first();
+			$SecurityGroupUsersTable->delete($deleteEntity);
+			$this->updateSecurityGroupUserId($staffEntity, NULL);
+		}
 
 		if ($affectedRows) {
 			$positionEntity = $this->Positions->find()
@@ -1106,6 +1113,12 @@ class StaffTable extends AppTable {
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+		$broadcaster = $this;
+		$listeners = [
+            TableRegistry::get('Institution.StaffLeave')	// Staff Leave associated to institution must be deleted.
+        ];
+        $this->dispatchEventToModels('Model.InstitutionStaff.afterDelete', [$entity], $broadcaster, $listeners);
+
 		// note that $this->table('institution_staff');
 		$id = $entity->id;
 		$institutionId = $entity->institution_id;
