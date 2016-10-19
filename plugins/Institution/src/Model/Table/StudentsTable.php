@@ -25,20 +25,6 @@ class StudentsTable extends ControllerActionTable
 
     private $dashboardQuery = null;
 
-<<<<<<< HEAD
-	public function initialize(array $config)
-	{
-		$this->table('institution_students');
-		parent::initialize($config);
-
-		// Associations
-		$this->belongsTo('Users',			['className' => 'Security.Users', 'foreignKey' => 'student_id']);
-		$this->belongsTo('StudentStatuses',	['className' => 'Student.StudentStatuses']);
-		$this->belongsTo('EducationGrades',	['className' => 'Education.EducationGrades']);
-		$this->belongsTo('Institutions',	['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
-		$this->belongsTo('AcademicPeriods',	['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('PreviousInstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'previous_institution_student_id']);
-=======
     public function initialize(array $config)
     {
         $this->table('institution_students');
@@ -50,8 +36,9 @@ class StudentsTable extends ControllerActionTable
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('Institutions',    ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+
+        // Association added in TST
         // $this->belongsTo('PreviousInstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'previous_institution_student_id']);
->>>>>>> f1a78de818c8c4362254dce63205465d63cf3802
 
 		// Behaviors
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
