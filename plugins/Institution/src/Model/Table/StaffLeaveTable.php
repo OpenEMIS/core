@@ -9,7 +9,6 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use Cake\Network\Request;
-use Cake\Network\Session;
 use Cake\Validation\Validator;
 use Cake\Datasource\ResultSetInterface;
 
@@ -164,7 +163,9 @@ class StaffLeaveTable extends ControllerActionTable
 
 	public function findWorkbench(Query $query, array $options)
 	{
-		$session = new Session();
+		$controller = $options['_controller'];
+		$session = $controller->request->session();
+
 		$userId = $session->read('Auth.User.id');
 		$Statuses = $this->Statuses;
 		$doneStatus = self::DONE;
@@ -223,7 +224,6 @@ class StaffLeaveTable extends ControllerActionTable
 	    			$row['request_title'] = $row->staff_leave_type->name.' '.__('of').' '.$row->user->name_with_id;
 	    			$row['institution'] = $row->institution->code_name;
 	    			$row['received_date'] = $receivedDate;
-	    			$row['due_date'] = '<i class="fa fa-minus"></i>';
 	    			$row['requester'] = $row->created_user->name_with_id;
 
 					return $row;
