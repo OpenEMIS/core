@@ -48,6 +48,8 @@ trait MessagesTrait {
         'general' => [
             'notExists' => 'The record does not exist.',
             'notEditable' => 'This record is not editable',
+            'notConfigured' => 'Not Configured',
+            'unassigned' => 'Unassigned',
             'exists' => 'The record exists in the system.',
             'noData' => 'There are no records.',
             'noRecords' => 'No Record',
@@ -389,13 +391,18 @@ trait MessagesTrait {
             'tabTitle' => 'User Groups'
         ],
         'Workflows' => [
+            'restrictDelete' => 'Delete operation is not allowed as this record is required by system.',
             'noWorkflows' => 'You need to configure Workflows for this form.',
             'workflow_model_id' => 'Form'
         ],
+        'WorkflowSteps' => [
+            'notCategorized' => 'Not Categorized',
+            'systemDefined' => 'This is a system defined record',
+            'restrictDelete' => 'Delete operation is not allowed as this is a system defined record.'
+        ],
         'WorkflowActions' => [
-            'next_step' => 'Next Step',
-            'comment_required' => 'Comment Required',
-            'event' => 'Post Event'
+            'add_event' => 'Add Event',
+            'restrictDelete' => 'Delete operation is not allowed as this is a system defined record.'
         ],
         'WorkflowStatuses' => [
             'noSteps' => 'No Available Workflow Steps'
@@ -632,12 +639,16 @@ trait MessagesTrait {
                     'ruleCompareAbsenceTimeReverse' => 'End Time should not be earlier than Start Time'
                 ]
             ],
+            'StaffLeave' => [
+                'date_to' => [
+                    'ruleCompareDateReverse' => 'Date To should not be earlier than Date From'
+                ]
+            ],
             'InstitutionStudentAbsences' => [
                 'end_time' => [
                     'ruleCompareAbsenceTimeReverse' => 'End Time should not be earlier than Start Time'
                 ]
             ],
-
             'InstitutionStudents' => [
                 'academicPeriod' => 'You need to configure Academic Periods first.',
                 'educationProgrammeId' => 'You need to configure Education Programmes first.',
@@ -733,6 +744,23 @@ trait MessagesTrait {
                 ],
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
+                ],
+            ],
+            'StudentAdmission' => [
+                'student_name' => [
+                    'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
+                        'inTargetSchool' => 'Student is already enrolled in this school.',
+                        'inAnotherSchool' => 'Student is already enrolled in another school.',
+                    ],
+                    'ruleStudentNotCompletedGrade' => 'Student has already completed the selected grade.',
+                    'ruleCheckAdmissionAgeWithEducationCycleGrade' => 'This student does not fall within the allowed age range for this grade',
+                    'ageHint' => 'The student should be %s years old',
+                    'ageRangeHint' => 'The student should be between %s to %s years old',
+                    'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.',
+                    'ruleCheckPendingAdmissionExist' => 'Student has already been added to admission list'
+                ],
+                'class' => [
+                    'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
                 ],
             ],
             'InstitutionFeeTypes' => [
@@ -1055,11 +1083,6 @@ trait MessagesTrait {
                     'ruleValidDate' => 'You have entered an invalid date.'
                 ],
             ],
-            'Leaves' => [
-                'date_to' => [
-                    'ruleCompareDateReverse' => 'Date To should not be earlier than Date From'
-                ]
-            ],
             'Extracurriculars' => [
                 'name' => [
                     'ruleNotBlank' => 'Please enter a valid Title.'
@@ -1195,6 +1218,11 @@ trait MessagesTrait {
             'Workflows' => [
                 'code' => [
                     'ruleUnique' => 'This code already exists in the system'
+                ]
+            ],
+            'WorkflowActions' => [
+                'event_key' => [
+                    'ruleUnique' => 'This event has already been assigned.'
                 ]
             ]
         ],
@@ -1375,13 +1403,6 @@ trait MessagesTrait {
                     'ruleValidateJsonAPI' => 'URL or data in URL is invalid.'
                 ]
             ]
-        ],
-        'Workflow' => [
-        	'WorkflowActions' => [
-        		'event_key' => [
-        			'ruleUnique' => 'This event has already been assigned.'
-        		]
-        	]
         ]
     ];
 
