@@ -58,7 +58,8 @@ class LeaveTable extends ControllerActionTable
 		$extra['auto_contain_fields'] = ['Institutions' => ['code']];
 	}
 
-	public function indexAfterAction(Event $event, ResultSet $data, ArrayObject $extra) {
+	public function indexAfterAction(Event $event, Query $data, ResultSet $data, ArrayObject $extra)
+	{
 		$options = ['type' => 'staff'];
 		$tabElements = $this->controller->getCareerTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
