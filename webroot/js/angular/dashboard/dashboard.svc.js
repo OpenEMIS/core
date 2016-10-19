@@ -17,7 +17,7 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
     };
 
     var configModels = {
-        TransferApprovalsTable: {
+        StudentTransferApprovalsTable: {
             cols: workbenchItemTypes.FIXED,
             model: 'Institution.TransferApprovals'
         },
@@ -49,7 +49,7 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
             cols: workbenchItemTypes.SCHOOL_BASED,
             model: 'Institution.InstitutionPositions'
         },
-        StaffPositionProfilesTable: {
+        ChangeInAssignmentTable: {
             cols: workbenchItemTypes.SCHOOL_BASED,
             model: 'Institution.StaffPositionProfiles'
         }
@@ -61,7 +61,7 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
         getNotices: getNotices,
         getWorkbenchItems: getWorkbenchItems,
         getWorkbenchItemsCount: getWorkbenchItemsCount,
-        getWorkbenchTitleByName: getWorkbenchTitleByName,
+        getWorkbenchTitle: getWorkbenchTitle,
         getWorkbenchColumnDefs: getWorkbenchColumnDefs,
         getWorkbenchRowData: getWorkbenchRowData
     };
@@ -112,12 +112,9 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
     function getWorkbenchItems() {
         var order = 1;
         angular.forEach(configModels, function(obj, key) {
-            var registryAlias = obj.model.split(".");
-            var modelName = registryAlias.length > 1 ? registryAlias[1] : registryAlias[0];
-
             var modelObj = {
                 code: key,
-                name: getWorkbenchTitleByName(modelName),
+                name: getWorkbenchTitle(key),
                 cols: obj.cols,
                 total: 0,
                 order: order++
@@ -139,8 +136,8 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
         return $q.all(promises);
     };
 
-    function getWorkbenchTitleByName(modelName) {
-        var title = modelName.replace(/([A-Z])/g, ' $1').trim();
+    function getWorkbenchTitle(modelKey) {
+        var title = modelKey.replace(/Table$/, '').replace(/([A-Z])/g, ' $1').trim();
         return title;
     };
 
