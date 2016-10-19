@@ -110,7 +110,7 @@ class ProgrammesTable extends ControllerActionTable
 		$this->controller->set('selectedAction', $this->alias());
 	}
 
-	public function indexAfterAction(Event $event, Query $data, ResultSet $data, ArrayObject $extra)
+	public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
 	{
 		$this->setupTabElements();
 	}
