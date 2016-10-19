@@ -18,7 +18,7 @@ WHERE `end_date` = '0000-00-00';
 
 UPDATE `institution_students`
 SET `created` = '1970-01-01'
-WHERE `created` = '0000-00-00';
+WHERE `created` = '0000-00-00 00:00:00';
 
 DROP TABLE IF EXISTS `institution_students_tmp`;
 CREATE TABLE IF NOT EXISTS `institution_students_tmp` (
