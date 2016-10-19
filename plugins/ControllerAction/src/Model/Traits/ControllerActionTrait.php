@@ -53,7 +53,7 @@ trait ControllerActionTrait {
 		// public function indexAfterPaginate(Event $event, $data) {}
 
 		'ControllerAction.Model.index.afterAction'			=> 'indexAfterAction',
-		// v4 - public function indexAfterAction(Event $event, Query $query, $data) {}
+		// v4 - public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra) {}
         // v3 - public function indexAfterAction(Event $event, $data) {}
 
 		'ControllerAction.Model.view.beforeAction'			=> 'viewBeforeAction',
