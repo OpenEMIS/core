@@ -13,26 +13,45 @@ use App\Model\Table\AppTable;
 use Cake\Network\Session;
 use Student\Model\Table\StudentsTable as UserTable;
 
-class StudentUserTable extends UserTable {
-	public function initialize(array $config) {
+class StudentUserTable extends UserTable
+{
+	public function initialize(array $config)
+	{
 		parent::initialize($config);
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Students' => ['index', 'add']
+        ]);
 	}
-	public function beforeAction(Event $event) {
+
+	public function beforeAction(Event $event)
+	{
 		$this->ControllerAction->field('username', ['visible' => false]);
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator)
+	{
 		$validator = parent::validationDefault($validator);
 		$validator
 			->add('date_of_birth', 'ruleCheckAdmissionAgeWithEducationCycleGrade', [
 				'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
 				'on' => 'create'
 			])
+			->add('education_grade_id', [
+			])
+			->add('academic_period_id', [
+			])
+			->allowEmpty('postal_code')
+			->add('postal_code', 'ruleCustomPostalCode', [
+        		'rule' => ['validateCustomPattern', 'postal_code'],
+        		'provider' => 'table',
+        		'last' => true
+		    ])
 			;
 		return $validator;
 	}
 
-	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	{
 		$sessionKey = 'Institution.Students.new';
 		if ($this->Session->check($sessionKey)) {
 			$academicData = $this->Session->read($sessionKey);
@@ -44,7 +63,8 @@ class StudentUserTable extends UserTable {
 		}
 	}
 
-	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
+	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data)
+	{
 		$sessionKey = 'Institution.Students.new';
 		if ($this->Session->check($sessionKey)) {
 			$academicData = $this->Session->read($sessionKey);
@@ -117,9 +137,9 @@ class StudentUserTable extends UserTable {
 					$AdmissionTable->log($admissionEntity->errors(), 'debug');
 					$this->Alert->error('general.add.failed');
 				}
-			} 
+			}
 
-			
+
 			$this->Session->delete($sessionKey);
 		}
 		$event->stopPropagation();
@@ -127,7 +147,8 @@ class StudentUserTable extends UserTable {
 		return $this->controller->redirect($action);
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
+	public function viewAfterAction(Event $event, Entity $entity)
+	{
 		if (!$this->AccessControl->isAdmin()) {
 			$institutionIds = $this->AccessControl->getInstitutionsByUser();
 			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
@@ -137,7 +158,8 @@ class StudentUserTable extends UserTable {
 		$this->setupTabElements($entity);
 	}
 
-	public function editAfterAction(Event $event, Entity $entity) {
+	public function editAfterAction(Event $event, Entity $entity)
+	{
 		$this->Session->write('Student.Students.id', $entity->id);
 		$this->Session->write('Student.Students.name', $entity->name);
 		$this->setupTabElements($entity);
@@ -151,9 +173,12 @@ class StudentUserTable extends UserTable {
 			return $this->controller->redirect($url);
 		}
 		// End POCOR-3010
+
+		$this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
 	}
 
-	private function setupTabElements($entity) {
+	private function setupTabElements($entity)
+	{
 		$id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
 
 		$options = [
@@ -168,13 +193,15 @@ class StudentUserTable extends UserTable {
 		$this->controller->set('selectedAction', $this->alias());
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents()
+	{
     	$events = parent::implementedEvents();
     	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
     	return $events;
     }
 
-    private function addTransferButton(ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, Session $session) {
+    private function addTransferButton(ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, Session $session)
+    {
     	$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
 		$statuses = $InstitutionStudentsTable->StudentStatuses->findCodeList();
 		$id = $session->read('Institution.Students.id');
@@ -217,7 +244,7 @@ class StudentUserTable extends UserTable {
 					$transferRequest->id
 				];
 				$toolbarButtons['transfer'] = $transferButton;
-			} 
+			}
 			else if ($checkIfCanTransfer) {
 				$transferButton['url'] = [
 					'plugin' => $buttons['back']['url']['plugin'],
@@ -226,11 +253,12 @@ class StudentUserTable extends UserTable {
 					'add'
 				];
 				$toolbarButtons['transfer'] = $transferButton;
-			} 
+			}
 		}
     }
 
-    private function addDropoutButton(ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, Session $session) {
+    private function addDropoutButton(ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, Session $session)
+    {
     	$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
 		if ($this->AccessControl->check([$this->controller->name, 'DropoutRequests', 'add'])) {
 			// Institution student id
@@ -244,10 +272,10 @@ class StudentUserTable extends UserTable {
 				$DropoutRequests = TableRegistry::get('Institution.DropoutRequests');
 				$session->write($DropoutRequests->registryAlias().'.id', $id);
 				$NEW = 0;
-				
+
 				$selectedStudent = $DropoutRequests->find()
 					->select(['institution_student_dropout_id' => 'id'])
-					->where([$DropoutRequests->aliasField('student_id') => $studentData->student_id, 
+					->where([$DropoutRequests->aliasField('student_id') => $studentData->student_id,
 							$DropoutRequests->aliasField('institution_id') => $studentData->institution_id,
 							$DropoutRequests->aliasField('education_grade_id') => $studentData->education_grade_id,
 							$DropoutRequests->aliasField('status') => $NEW
@@ -270,7 +298,7 @@ class StudentUserTable extends UserTable {
 							'action' => 'DropoutRequests',
 							'add'
 						];
-				} 
+				}
 				// If the application is not new
 				else {
 					$dropoutButton['url'] = [
@@ -286,7 +314,8 @@ class StudentUserTable extends UserTable {
 		}
     }
 
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+	{
 		if ($action == 'view') {
 			unset($toolbarButtons['back']);
 			$institutionId = $this->Session->read('Institution.Institutions.id');
@@ -313,7 +342,7 @@ class StudentUserTable extends UserTable {
 
 			if (!empty($id)) {
 				$this->Session->write('Institution.Students.id', $id);
-			} 
+			}
 
 			$id = $this->Session->read('Institution.Students.id');
 			$StudentTable = TableRegistry::get('Institution.Students');
@@ -326,6 +355,13 @@ class StudentUserTable extends UserTable {
 			}
 			// End PHPOE-1897
 
+			// Export execute permission.
+			if (!$this->AccessControl->check(['Institutions', 'StudentUser', 'excel'])) {
+				if (isset($toolbarButtons['export'])) {
+					unset($toolbarButtons['export']);
+				}
+			}
+
 			// POCOR-3010
 			$userId = $this->Auth->user('id');
 			$studentId = $this->request->pass[1];
@@ -335,7 +371,7 @@ class StudentUserTable extends UserTable {
 				}
 			}
 			// End POCOR-3010
-			
+
 			$session = $this->request->session();
 			$this->addTransferButton($buttons, $toolbarButtons, $attr, $session);
 			$this->addDropoutButton($buttons, $toolbarButtons, $attr, $session);
@@ -349,6 +385,16 @@ class StudentUserTable extends UserTable {
 		}
 	}
 
+	//to handle identity_number field that is automatically created by mandatory behaviour.
+	public function onUpdateFieldIdentityNumber(Event $event, array $attr, $action, Request $request)
+	{
+		if ($action == 'add') {
+			$attr['fieldName'] = $this->alias().'.identities.0.number';
+			$attr['attr']['label'] = __('Identity Number');
+		}
+		return $attr;
+	}
+
 	private function checkClassPermission($studentId, $userId)
 	{
 		$permission = false;
@@ -356,7 +402,7 @@ class StudentUserTable extends UserTable {
 			$event = $this->controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
 			$roles = [];
             if (is_array($event->result)) {
-                $roles = $event->result;    
+                $roles = $event->result;
             }
 			if (!$this->AccessControl->check(['Institutions', 'AllClasses', $permission], $roles)) {
 				$Class = TableRegistry::get('Institution.InstitutionClasses');
@@ -376,11 +422,29 @@ class StudentUserTable extends UserTable {
 			} else {
 				$permission = true;
 			}
-			
+
 		} else {
 			$permission = true;
 		}
 		return $permission;
 	}
 
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+        $identity = $IdentityType->getDefaultEntity();
+
+        foreach ($fields as $key => $field) {
+            //get the value from the table, but change the label to become default identity type.
+            if ($field['field'] == 'identity_number') {
+                $fields[$key] = [
+                    'key' => 'StudentUser.identity_number',
+                    'field' => 'identity_number',
+                    'type' => 'string',
+                    'label' => __($identity->name)
+                ];
+                break;
+            }
+        }
+    }
 }

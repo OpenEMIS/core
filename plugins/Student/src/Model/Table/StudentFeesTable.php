@@ -53,7 +53,7 @@ class StudentFeesTable extends ControllerActionTable {
 			$this->studentId = $session->read('Student.Students.id');
 		}
 
-		$ConfigItems = TableRegistry::get('ConfigItems');
+		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
     	$this->currency = $ConfigItems->value('currency');
 
 		$InstitutionStudents = TableRegistry::get('Institutions.InstitutionStudents');

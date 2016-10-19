@@ -29,11 +29,57 @@ class StudentAdmissionTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions']);
-		$this->belongsTo('StudentTransferReasons', ['className' => 'FieldOption.StudentTransferReasons']);
+		$this->belongsTo('StudentTransferReasons', ['className' => 'Student.StudentTransferReasons']);
 		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
 		$this->belongsTo('NewEducationGrades', ['className' => 'Education.EducationGrades']);
 
 		$this->addBehavior('User.AdvancedNameSearch');
+        $this->addBehavior('Restful.RestfulAccessControl', [
+        	'Students' => ['index', 'add']
+        ]);
+	}
+
+	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
+		$validator
+			->add('start_date', 'ruleCompareDate', [
+				'rule' => ['compareDate', 'end_date', false]
+			])
+			->add('end_date', [
+			])
+			->add('student_status_id', [
+			])
+			->add('academic_period_id', [
+			])
+			->add('education_grade_id', [
+			])
+			->allowEmpty('student_name')
+			->add('student_name', 'ruleCheckPendingAdmissionExist', [
+				'rule' => ['checkPendingAdmissionExist'],
+				'on' => 'create'
+			])
+			->add('student_name', 'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem', [
+				'rule' => ['studentNotEnrolledInAnyInstitutionAndSameEducationSystem', []],
+				'on' => 'create',
+				'last' => true
+			])
+			->add('student_name', 'ruleStudentNotCompletedGrade', [
+				'rule' => ['studentNotCompletedGrade', []],
+				'on' => 'create',
+				'last' => true
+			])
+			->add('student_name', 'ruleCheckAdmissionAgeWithEducationCycleGrade', [
+				'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
+				'on' => 'create'
+			])
+			->allowEmpty('class')
+			->add('class', 'ruleClassMaxLimit', [
+				'rule' => ['checkInstitutionClassMaxLimit'],
+				'on' => 'create'
+			])
+			;
+		return $validator;
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -86,20 +132,20 @@ class StudentAdmissionTable extends AppTable {
     	$this->ControllerAction->field('new_education_grade_id', ['visible' => false]);
     }
 
-    public function editAfterAction($event, Entity $entity) { 
+    public function editAfterAction($event, Entity $entity) {
     	$selectedClassId = $entity->institution_class_id;// it will check if the students have class
-    	
+
     	if (!is_null($selectedClassId)) {
 	    	try {
 				$selectedClassName = $this->InstitutionClasses->get($selectedClassId)->name;
-			} catch (RecordNotFoundException $ex) {				
+			} catch (RecordNotFoundException $ex) {
 				Log::write('debug', $ex->getMessage());
 				Log::write('debug', $selectedClassId);
 				$selectedClassId = NULL;
 				$entity->institution_class_id = null;
-				$this->save($entity);
-			} 
-		} 
+				$this->save($entity, ['validate' => false]);
+			}
+		}
 
 		if (is_null($selectedClassId)) {
     		$selectedClassName = $this->getMessage($this->aliasField('noClass'));
@@ -116,7 +162,7 @@ class StudentAdmissionTable extends AppTable {
   		$this->ControllerAction->setFieldOrder([
 			'created', 'status', 'type', 'student_id',
 			'institution_id', 'academic_period_id', 'education_grade_id', 'institution_class_id',
-			'start_date', 'end_date', 'comment', 
+			'start_date', 'end_date', 'comment',
 		]);
 
 		$urlParams = $this->ControllerAction->url('edit');
@@ -215,7 +261,7 @@ class StudentAdmissionTable extends AppTable {
 
 	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
 		if ($this->action == 'edit') {
-			// If the status is new application then display the approve and reject button, 
+			// If the status is new application then display the approve and reject button,
 			// if not remove the button just in case the user gets to access the edit page
 			if ($this->request->data[$this->alias()]['status'] == self::NEW_REQUEST && ($this->AccessControl->check(['Institutions', 'StudentAdmission', 'edit']))) {
 				$buttons[0] = [
@@ -418,7 +464,7 @@ class StudentAdmissionTable extends AppTable {
 			$classData['academic_period_id'] = $periodId;
 			$InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
 			$InstitutionClassStudents->autoInsertClassStudent($classData);
-		} 
+		}
 
 		$validateEnrolledInAnyInstitutionResult = $Students->validateEnrolledInAnyInstitution($studentId, $newSystemId, ['targetInstitutionId' => $newSchoolId]);
 		if (!empty($validateEnrolledInAnyInstitutionResult)) {
@@ -449,12 +495,12 @@ class StudentAdmissionTable extends AppTable {
 				$educationGradesToUpdate = $EducationGradesTable->getEducationGradesBySystem($educationSystemId);
 
 				$conditions = [
-					'student_id' => $entity->student_id, 
+					'student_id' => $entity->student_id,
 					'status' => self::NEW_REQUEST,
 					'education_grade_id IN' => $educationGradesToUpdate
 				];
 
-				// Reject all other new pending admission / transfer application entry of the 
+				// Reject all other new pending admission / transfer application entry of the
 				// same student for the same academic period
 				$this->updateAll(
 					['status' => self::REJECTED],
@@ -464,7 +510,7 @@ class StudentAdmissionTable extends AppTable {
 				// Update the status of the admission to be approved
 				$entity->start_date = $startDate;
 				$entity->status = self::APPROVED;
-				if (!$this->save($entity)) {
+				if (!$this->save($entity, ['validate' => false])) {
 					$this->log($entity->errors(), 'debug');
 				}
 			} else {
@@ -492,7 +538,7 @@ class StudentAdmissionTable extends AppTable {
 
 		$entity->comment = $data['StudentAdmission']['comment'];
 		$this->updateAll(
-			['status' => self::REJECTED, 'comment' => $entity->comment], 
+			['status' => self::REJECTED, 'comment' => $entity->comment],
 			['id' => $entity->id]);
 
 		$this->Alert->success('StudentAdmission.reject');

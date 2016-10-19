@@ -1,4 +1,4 @@
-/* HEADER v.1.0.3 */
+/* HEADER v.1.0.4 */
 
 
 /* TOP HEADER */
@@ -112,6 +112,12 @@
     border-radius: 0;
 }
 
+.username a:active,
+.username a.active {
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
+}
+
 .username .kd-role {
     vertical-align: top;
 }
@@ -157,8 +163,9 @@
     display: block;
     float: none;
     margin: 0 auto;
-    padding: 2px 0;
+    padding: 3px;
     width: 35px;
+    height: 35px;
     -webkit-border-radius: 5px;
     border-radius: 5px;
 }
@@ -256,7 +263,7 @@
         margin: 0;
     }
     .navbar-left h1 {
-        font-size: 22px;
+        font-size: 22px !important;
         color: #FFF;
     }
     .navbar-right {
@@ -462,3 +469,8 @@
     font-size: 12px;
     line-height: 12px;
 }
+
+.rtl .more-menu-item i {
+    float: right;
+}
+

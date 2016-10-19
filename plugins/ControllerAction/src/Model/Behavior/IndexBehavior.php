@@ -18,7 +18,14 @@ class IndexBehavior extends Behavior {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.index'] = 'index';
+		$events['ControllerAction.Model.onGetFormButtons'] = ['callable' => 'onGetFormButtons', 'priority' => 5];
 		return $events;
+	}
+
+	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+		if ($this->_table->action == 'index') {
+			$buttons->exchangeArray([]);
+		}
 	}
 
 	public function index(Event $mainEvent, ArrayObject $extra) {
@@ -45,6 +52,13 @@ class IndexBehavior extends Behavior {
 
 		$event = $model->controller->dispatchEvent('ControllerAction.Controller.beforeQuery', [$model, $query, $extra], $this);
 		$event = $model->dispatchEvent('ControllerAction.Model.index.beforeQuery', [$query, $extra], $this);
+
+		if ($extra['auto_contain']) {
+			$contain = $model->getContains('belongsTo', $extra);
+			if (!empty($contain)) {
+				$query->contain($contain);
+			}
+		}
 
 		$data = [];
 		if ($extra['pagination']) {

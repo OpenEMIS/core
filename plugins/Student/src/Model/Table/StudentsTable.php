@@ -12,10 +12,12 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use User\Model\Table\UsersTable AS BaseUsers;
 
-class StudentsTable extends AppTable {
+class StudentsTable extends AppTable
+{
 	public $InstitutionStudent;
 
-	public function initialize(array $config) {
+	public function initialize(array $config)
+	{
 		$this->table('security_users');
 		$this->entityClass('User.User');
 		parent::initialize($config);
@@ -63,14 +65,21 @@ class StudentsTable extends AppTable {
 				'_function' => 'getNumberOfStudentsByGender'
 			]
 		]);
+
+		$this->hasMany('InstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'student_id']);
+
         $this->addBehavior('Import.ImportLink');
 
 		$this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
 
 		$this->InstitutionStudent = TableRegistry::get('Institution.Students');
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Students' => ['index', 'add']
+        ]);
 	}
 
-	public static function handleAssociations($model) {
+	public static function handleAssociations($model)
+	{
 
 		// remove all student records from institution_students, institution_site_student_absences, student_behaviours, assessment_item_results, student_guardians, institution_student_admission, student_custom_field_values, student_custom_table_cells, student_fees, student_extracurriculars
 
@@ -102,20 +111,27 @@ class StudentsTable extends AppTable {
 		$model->hasMany('Extracurriculars', ['className' => 'Student.Extracurriculars',	'foreignKey' => 'security_user_id', 'dependent' => true]);
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator)
+	{
 		$validator = parent::validationDefault($validator);
 		$BaseUsers = TableRegistry::get('User.Users');
 		return $BaseUsers->setUserValidation($validator, $this);
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
+	public function viewAfterAction(Event $event, Entity $entity)
+	{
 		// to set the student name in headers
 		$this->Session->write('Student.Students.name', $entity->name);
 		$this->request->data[$this->alias()]['student_id'] = $entity->id;
 		$this->setupTabElements(['id' => $entity->id]);
 	}
 
+<<<<<<< HEAD
 	public function indexBeforeAction(Event $event, ArrayObject $settings) {
+=======
+	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings)
+	{
+>>>>>>> origin/master
 		// fields are set in UserBehavior
 		$this->fields = []; // unset all fields first
 
@@ -130,7 +146,8 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->field('status', ['order' => 51, 'sort' => false]);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+	{
 		$query->where([$this->aliasField('is_student') => 1]);
 
 		$search = $this->ControllerAction->getSearchKey();
@@ -148,7 +165,8 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	public function onGetInstitution(Event $event, Entity $entity) {
+	public function onGetInstitution(Event $event, Entity $entity)
+	{
 		$userId = $entity->id;
 
 		$session = $this->request->session();
@@ -184,7 +202,8 @@ class StudentsTable extends AppTable {
 		return $value;
 	}
 
-	public function onGetStatus(Event $event, Entity $entity) {
+	public function onGetStatus(Event $event, Entity $entity)
+	{
 		$value = ' ';
 		if ($entity->has('student_status')) {
 			$value = $entity->student_status;
@@ -192,13 +211,15 @@ class StudentsTable extends AppTable {
 		return $value;
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents()
+	{
 		$events = parent::implementedEvents();
 		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
 		return $events;
 	}
 
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+	{
 		switch ($action) {
 			case 'view':
 				if (!$this->AccessControl->isAdmin()) {
@@ -222,7 +243,8 @@ class StudentsTable extends AppTable {
 		}
 	}
 
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+	{
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 		if (!$this->AccessControl->isAdmin()) {
 			if ($entity->status_code != 'CURRENT') {
@@ -237,7 +259,8 @@ class StudentsTable extends AppTable {
 		return $buttons;
 	}
 
-	public function addBeforeAction(Event $event) {
+	public function addBeforeAction(Event $event)
+	{
 		$openemisNo = $this->getUniqueOpenemisId(['model' => Inflector::singularize('Student')]);
 		$this->ControllerAction->field('openemis_no', [
 			'attr' => ['value' => $openemisNo],
@@ -249,7 +272,12 @@ class StudentsTable extends AppTable {
 		$this->ControllerAction->field('is_student', ['value' => 1]);
 	}
 
+<<<<<<< HEAD
 	public function addAfterAction(Event $event) {
+=======
+	public function addAfterAction(Event $event)
+	{
+>>>>>>> origin/master
 		// need to find out order values because recordbehavior changes it
 		$allOrderValues = [];
 		foreach ($this->fields as $key => $value) {
@@ -309,7 +337,8 @@ class StudentsTable extends AppTable {
 	// }
 
 	// Logic for the mini dashboard
-	public function afterAction(Event $event) {
+	public function afterAction(Event $event)
+	{
 		if ($this->action == 'index') {
 
 			$searchConditions = $this->getSearchConditions($this, $this->request->data['Search']['searchField']);
@@ -345,7 +374,8 @@ class StudentsTable extends AppTable {
 	    }
 	}
 
-	private function joinInstitutionStudents(array $institutionIds, Query $query) {
+	private function joinInstitutionStudents(array $institutionIds, Query $query)
+	{
 		$query->innerJoin(
 			['InstitutionStudent' => 'institution_students'],
 			[
@@ -355,13 +385,19 @@ class StudentsTable extends AppTable {
 		);
 	}
 
+<<<<<<< HEAD
 	private function setupTabElements($options) {
+=======
+	private function setupTabElements($options)
+	{
+>>>>>>> origin/master
 		$this->controller->set('selectedAction', $this->alias);
 		$this->controller->set('tabElements', $this->controller->getUserTabElements($options));
 	}
 
 	// Function use by the mini dashboard (For Student.Students)
-	public function getNumberOfStudentsByGender($params=[]) {
+	public function getNumberOfStudentsByGender($params=[])
+	{
 		$searchConditions = isset($params['searchConditions']) ? $params['searchConditions'] : [];
 		$query = $this->find();
 		$query
@@ -388,12 +424,12 @@ class StudentsTable extends AppTable {
 		return $params;
 	}
 
-	public function getAcademicTabElements($options = []) {
+	public function getAcademicTabElements($options = [])
+	{
 		// $action = (array_key_exists('action', $options))? $options['action']: 'add';
 		$id = (array_key_exists('id', $options))? $options['id']: 0;
 
 		$tabElements = [];
-		$studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
 		$studentTabElements = [
 			'Programmes' => ['text' => __('Programmes')],
 			'Classes' => ['text' => __('Classes')],
@@ -407,9 +443,17 @@ class StudentsTable extends AppTable {
 
 		$tabElements = array_merge($tabElements, $studentTabElements);
 
+		// Programme will use institution controller, other will be still using student controller
 		foreach ($studentTabElements as $key => $tab) {
-			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
-		}
+            if ($key == 'Programmes') {
+                $type = (array_key_exists('type', $options))? $options['type']: null;
+        		$studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
+            } else {
+				$studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
+            }
+        }
 		return $tabElements;
 	}
 
@@ -424,11 +468,14 @@ class StudentsTable extends AppTable {
         $lastName = (array_key_exists('last_name', $options))? $options['last_name']: null;
         $openemisNo = (array_key_exists('openemis_no', $options))? $options['openemis_no']: null;
         $identityNumber = (array_key_exists('identity_number', $options))? $options['identity_number']: null;
+        $dateOfBirth = (array_key_exists('date_of_birth', $options))? $options['date_of_birth']: null;
+        $institutionId = (array_key_exists('institution_id', $options))? $options['institution_id']: null;
 
         $conditions = [];
         if (!empty($firstName)) $conditions['first_name LIKE'] = '%' . $firstName . '%';
         if (!empty($lastName)) $conditions['last_name LIKE'] = '%' . $lastName . '%';
         if (!empty($openemisNo)) $conditions['openemis_no LIKE'] = '%' . $openemisNo . '%';
+        if (!empty($dateOfBirth)) $conditions['date_of_birth'] = $dateOfBirth;
 
         $identityConditions = [];
         if (!empty($identityNumber)) $identityConditions['Identities.number LIKE'] = '%' . $identityNumber . '%';
@@ -447,22 +494,30 @@ class StudentsTable extends AppTable {
             ]
         ]);
 
-        // getting only enrolled student
-        $allInstitutionStudents = $this->InstitutionStudents->find()
-            ->select([
-                $this->InstitutionStudents->aliasField('student_id')
-            ])
-            ->where([
-                $this->InstitutionStudents->aliasField('student_status_id').' = 1',
-                $this->InstitutionStudents->aliasField('student_id').' = '.$this->aliasField('id')
-            ])
-            ->bufferResults(false);
-        $query->where(['NOT EXISTS ('.$allInstitutionStudents->sql().')']);
+        // Filter to exclude students from that existing institution from the list
+        $query->leftJoinWith('InstitutionStudents', function($q) use ($institutionId) {
+        	return $q->where([
+        		'InstitutionStudents.institution_id' => $institutionId,
+        		'InstitutionStudents.student_status_id' => 1
+        	]);
+        })
+        ->where(['InstitutionStudents.id IS NULL'])
+        ->group([$this->aliasField('id')]);
 
         if (!empty($conditions)) $query->where($conditions);
         if (!is_null($limit)) $query->limit($limit);
         if (!is_null($page)) $query->page($page);
 
         return $query;
+    }
+
+    public function findEnrolledInstitutionStudents(Query $query, array $options = []) {
+    	$query->contain([
+    		'InstitutionStudents' => function($q) {
+    			return $q->where(['InstitutionStudents.student_status_id' => 1]);
+    		},
+    		'InstitutionStudents.Institutions'
+    	]);
+    	return $query;
     }
 }

@@ -1,5 +1,5 @@
 /* 
-School Theme: v.1.0.2
+School Theme: v.1.0.7
 Product Color: #336600
 Darker Shade Color: #244700
 */
@@ -29,7 +29,9 @@ a:active,
 a:focus,
 .panel-breadcrumb li a,
 .panel-breadcrumb i,
-.loader-text i {
+.loader-text i,
+.btn-outline,
+.btn-circle {
     color: #336600;
 }
 
@@ -45,7 +47,8 @@ a:focus,
     color: #fff;
 }
 
-.selected {
+.selected,
+.switch-candy a {
     background-color: #336600 !important;
 }
 
@@ -74,7 +77,10 @@ a:focus,
 }
 
 .fileinput .btn-file-cancel,
-.input-left-btn button {
+.input-left-btn button,
+.tabs-action-btn,
+.customize-tab .tab-icon a,
+.sg-theme .ag-filter-header-container label {
     color: #336600 !important;
 }
 
@@ -98,6 +104,11 @@ a:focus,
     border-right-color: #336600;
 }
 
+.switch-sec-control .active {
+    background-color: #336600 !important;
+    border: 1px solid #244700 !important;
+}
+
 
 /* Extra Small Devices, Phones */
 
@@ -116,7 +127,20 @@ a:hover,
 .panel-breadcrumb a:hover,
 .panel-breadcrumb i:hover,
 .ellipsis,
-.btn-outline {
+.btn-outline,
+.sg-theme .ag-filter-header-container label:hover,
+[type="checkbox"]:not(:checked) + label:after,
+[type="checkbox"]:checked + label:after,
+[type="checkbox"]:not(:checked) + .ag-cell-value:after,
+[type="checkbox"]:checked + .ag-cell-value:after,
+[type="checkbox"]:not(:checked) + .ag-filter-value:after,
+[type="checkbox"]:checked + .ag-filter-value:after,
+[type="radio"]:not(:checked) + label:after,
+[type="radio"]:checked + label:after,
+[type="radio"]:not(:checked) + .ag-cell-value:after,
+[type="radio"]:checked + .ag-cell-value:after,
+[type="radio"]:not(:checked) + .ag-filter-value:after,
+[type="radio"]:checked + .ag-filter-value:after {
     color: #244700;
 }
 
@@ -137,17 +161,27 @@ a:hover,
 .ui-menu-item:hover,
 .btn-outline:hover,
 .pagination>li>a:focus,
+.horizontal-tabs span a:hover,
+.switch-sec-control button:hover,
 .scroll_tabs_container .scroll_tab_left_button,
 .scroll_tabs_container .scroll_tab_right_button,
 .input-left-btn button:hover,
 .input-left-btn button:focus,
 .scrolltabs .ui-tabs-scrollable > .nav-button.left-nav-button,
 .scrolltabs .ui-tabs-scrollable > .nav-button.right-nav-button,
-.scrolltabs .ui-tabs-scrollable > .btn-group > .btn.dropdown-toggle {
+.scrolltabs .ui-tabs-scrollable > .btn-group > .btn.dropdown-toggle,
+.sg-theme .ag-paging-button:hover,
+[type="checkbox"]:checked + label:before,
+[type="checkbox"]:checked + .ag-cell-value:before,
+[type="checkbox"]:checked + .ag-filter-value:before,
+[type="radio"]:checked + label:before,
+[type="radio"]:checked + .ag-cell-value:before,
+[type="radio"]:checked + .ag-filter-value:before {
     border: 1px solid #244700 !important;
 }
 
-.fileinput .btn-file-cancel:hover {
+.fileinput .btn-file-cancel:hover,
+.tabs-action-btn i:hover {
     color: #244700 !important;
 }
 
@@ -163,7 +197,9 @@ a:hover,
 .more-menu-item a:hover,
 #action-menu:hover,
 .horizontal-tabs span a:hover,
-.nav > li > a:hover,
+.left-menu .nav > li > a:hover,
+.scrolltabs .nav > li > a:hover,
+.horizontal-tabs .nav > li > a:hover,
 .btn-default:active,
 .btn-active,
 .action-dropdown > li > a:hover,
@@ -196,14 +232,20 @@ a:hover,
 .input-left-btn button:hover,
 .input-left-btn button:focus,
 .scrolltabs .dropdown-menu>li>a:focus, 
-.scrolltabs .dropdown-menu>li>a:hover {
+.scrolltabs .dropdown-menu>li>a:hover,
+.customize-tab .tab-icon .nav-pills > li.active > a:hover,
+.btn-toggled,
+.sg-theme .ag-menu-option-active,
+.sg-theme .ag-paging-button:hover {
     background-color: #244700 !important;
     color: #FFF !important;
     background-image: none !important;
 }
 
 .horizontal-tabs span a:hover,
-.btn-dropdown:hover {
+.btn-dropdown:hover,
+.customize-tab .tab-icon .nav-pills > li.active > a:hover,
+.switch-candy a {
     border-color: #244700;
 }
 

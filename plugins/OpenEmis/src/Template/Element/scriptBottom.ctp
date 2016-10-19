@@ -1,4 +1,4 @@
-<?php echo $this->Html->script('OpenEmis.angular/ng.layout-splitter'); ?>
+<?php echo $this->Html->script('OpenEmis.angular/kd-angular-splitter'); ?>
 <script type="text/javascript">
 $(document).ready(function() {
 	Chosen.init();

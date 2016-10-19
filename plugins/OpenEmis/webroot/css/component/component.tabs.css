@@ -1,4 +1,4 @@
-/* TABS v.1.0.8 */
+/* TABS v.1.0.9 */
 
 .tab-content {
     margin-top: -1px;
@@ -7,7 +7,7 @@
 .ng-tabs .nav-tabs,
 .scroll_tabs_container {
     height: 28px;
-    margin-bottom: 4px !important;
+    margin-bottom: 3px !important;
     position: relative;
 }
 
@@ -72,6 +72,7 @@
     color: #333;
     z-index: 2;
     border: 1px solid #DDD;
+    z-index: 0;
 }
 
 .scroll_tabs_container .scroll_tab_right_button,
@@ -82,6 +83,7 @@
     background-color: #FFF;
     color: #333;
     border: 1px solid #DDD;
+    z-index: 0;
 }
 
 .scroll_tabs_container .scroll_tab_left_button::before,
@@ -258,7 +260,7 @@
     .ng-tabs a,
     .ng-tabs a:focus,
     .ng-tabs a:hover {
-        height: 38px;
+        height: 37px;
     }
     .horizontal-tabs .nav-tabs > li.active > a,
     .scrolltabs .nav-tabs > li.active > a,
@@ -363,8 +365,8 @@
 .rtl .horizontal-tabs span.tab-active a,
 .rtl .horizontal-tabs span.tab-active a:hover,
 .rtl .horizontal-tabs span.tab-active a:focus {
-    height: 28px;
-    line-height: 30px;
+    height: 30px;
+    line-height: 31px;
     font-size: 14px;
 }
 
@@ -372,6 +374,7 @@
 .rtl .scroll_tabs_container {
     height: 30px;
 }
+
 
 @media only screen and (max-width: 1024px) {
     .rtl .ng-tabs .nav-tabs,

@@ -7,12 +7,14 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
+use App\Model\Traits\OptionsTrait;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 
-class InstitutionsTable extends AppTable  {
-
+class InstitutionsTable extends AppTable  
+{
+    use OptionsTrait;
 	// filter
 	const NO_FILTER = 0;
 	const NO_STUDENT = 1;
@@ -21,7 +23,7 @@ class InstitutionsTable extends AppTable  {
 	public function initialize(array $config) {
 		$this->table('institutions');
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Localities', 			['className' => 'Institution.Localities', 'foreignKey' => 'institution_locality_id']);
 		$this->belongsTo('Types', 				['className' => 'Institution.Types', 'foreignKey' => 'institution_type_id']);
 		$this->belongsTo('Ownerships',	 		['className' => 'Institution.Ownerships', 'foreignKey' => 'institution_ownership_id']);
@@ -31,7 +33,7 @@ class InstitutionsTable extends AppTable  {
 		$this->belongsTo('Genders',				['className' => 'Institution.Genders', 'foreignKey' => 'institution_gender_id']);
 		$this->belongsTo('Areas', 				['className' => 'Area.Areas']);
 		$this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
-		
+
 		$this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => false]);
 		$this->addBehavior('Report.ReportList');
 		$this->addBehavior('Report.CustomFieldList', [
@@ -40,6 +42,9 @@ class InstitutionsTable extends AppTable  {
 			'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true],
 			'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
+		$this->addBehavior('Report.InstitutionSecurity');
+
+        $this->shiftTypes = $this->getSelectOptions('Shifts.types'); //get from options trait
 	}
 
 	public function beforeAction(Event $event) {
@@ -123,6 +128,14 @@ class InstitutionsTable extends AppTable  {
 		}
 	}
 
+    public function onExcelGetShiftType(Event $event, Entity $entity) {
+        if (isset($this->shiftTypes[$entity->shift_type])) {
+            return __($this->shiftTypes[$entity->shift_type]);
+        } else {
+            return '';
+        }
+    }
+
 	public function onUpdateFieldInstitutionFilter(Event $event, array $attr, $action, Request $request) {
 		if (isset($this->request->data[$this->alias()]['feature'])) {
 			$feature = $this->request->data[$this->alias()]['feature'];
@@ -183,7 +196,7 @@ class InstitutionsTable extends AppTable  {
 				$typeOptions = [];
 				$typeOptions[0] = __('All Types');
 
-				$Types = TableRegistry::get('FieldOption.StaffTypes');
+				$Types = TableRegistry::get('Staff.StaffTypes');
 				$typeData = $Types->getList();
 				foreach ($typeData as $key => $value) {
 					$typeOptions[$key] = $value;
@@ -204,7 +217,6 @@ class InstitutionsTable extends AppTable  {
 			if (in_array($feature, ['Report.InstitutionStudents', 'Report.InstitutionStudentEnrollments', 'Report.InstitutionStaff'])) {
 				// need to find all status
 				$statusOptions = [];
-				$statusOptions[0] = __('All Statuses');
 
 				switch ($feature) {
 					case 'Report.InstitutionStudents': case 'Report.InstitutionStudentEnrollments':
@@ -214,7 +226,7 @@ class InstitutionsTable extends AppTable  {
 							$statusOptions[$value->id] = $value->name;
 						}
 						break;
-					
+
 					case 'Report.InstitutionStaff':
 						$Statuses = TableRegistry::get('Staff.StaffStatuses');
 						$statusData = $Statuses->getList();
@@ -243,9 +255,6 @@ class InstitutionsTable extends AppTable  {
 			if (in_array($feature, ['Report.InstitutionStudents', 'Report.InstitutionStudentTeacherRatio', 'Report.InstitutionStudentClassroomRatio'])) {
 				$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
 				$academicPeriodOptions = [];
-				if (in_array($feature, ['Report.InstitutionStudents'])) {
-					$academicPeriodOptions[0] = __('All Academic Periods');
-				}
 				$academicPeriodData = $InstitutionStudentsTable->find()
 					->matching('AcademicPeriods')
 					->select(['id' => $InstitutionStudentsTable->aliasField('academic_period_id'), 'name' => 'AcademicPeriods.name'])
@@ -260,6 +269,7 @@ class InstitutionsTable extends AppTable  {
 				// $attr['onChangeReload'] = true;
 				$attr['options'] = $academicPeriodOptions;
 				$attr['type'] = 'select';
+				$attr['select'] = false;
 
 				if (empty($request->data[$this->alias()]['academic_period_id'])) {
 					reset($academicPeriodOptions);
@@ -268,7 +278,6 @@ class InstitutionsTable extends AppTable  {
 				return $attr;
 			} else if ((in_array($feature, ['Report.StaffAbsences'])) || (in_array($feature, ['Report.StudentAbsences']))) {
 				$academicPeriodOptions = [];
-				$academicPeriodOptions[0] = __('All Academic Periods');
 				$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 				$periodOptions = $AcademicPeriodTable->getList();
 
@@ -277,6 +286,7 @@ class InstitutionsTable extends AppTable  {
 				// $attr['onChangeReload'] = true;
 				$attr['options'] = $academicPeriodOptions;
 				$attr['type'] = 'select';
+				$attr['select'] = false;
 
 				if (empty($request->data[$this->alias()]['academic_period_id'])) {
 					reset($academicPeriodOptions);
@@ -290,6 +300,8 @@ class InstitutionsTable extends AppTable  {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$requestData = json_decode($settings['process']['params']);
 		$filter = $requestData->institution_filter;
+		$superAdmin = $requestData->super_admin;
+		$userId = $requestData->user_id;
 		$query
 			->contain(['Areas'])
 			->select(['area_code' => 'Areas.code']);
@@ -318,6 +330,9 @@ class InstitutionsTable extends AppTable  {
 
 			case self::NO_FILTER:
 				break;
+		}
+		if (!$superAdmin) {
+			$query->find('ByAccess', ['user_id' => $userId, 'institution_field_alias' => $this->aliasField('id')]);
 		}
 	}
 }

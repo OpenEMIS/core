@@ -33,7 +33,7 @@ class PasswordBehavior extends Behavior {
 	}
 
 	public function buildValidator(Event $event, Validator $validator, $name) {
-		$ConfigItems = TableRegistry::get('ConfigItems');
+		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 
 		$passwordMinLength = $ConfigItems->value('password_min_length');
 		$passwordHasUppercase = $ConfigItems->value('password_has_uppercase');
@@ -44,7 +44,10 @@ class PasswordBehavior extends Behavior {
 		$validator = $validator
 			->add('username', [
                 'ruleMinLength' => [
-                    'rule' => ['minLength', 6]
+                    'rule' => ['minLength', 6],
+                    'on' => function ($context) {
+						return ($context['data']['username'] != 'admin');
+					},
                 ],
 				'ruleUnique' => [
 					'rule' => 'validateUnique',

@@ -91,8 +91,9 @@ Router::scope('/restful', [], function ($routes) {
 
     $routes->scope('/', ['controller' => 'Restful'], function ($routes) {
         $routes->extensions(['json', 'xml']);
-        $routes->connect( '/', ['action' => 'nothing']);
-        $routes->connect( '/:model',
+        $routes->connect('/', ['action' => 'nothing']);
+        $routes->connect('/token', ['action' => 'token', '_method' => 'GET']);
+        $routes->connect('/:model',
             ['action' => 'index', '_method' => 'GET'],
             ['pass' => ['model']]
         );

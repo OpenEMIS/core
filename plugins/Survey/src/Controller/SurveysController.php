@@ -54,15 +54,22 @@ class SurveysController extends AppController
         $this->set('selectedAction', $this->request->action);
 	}
 
-	public function Rules() {
-		$pass = isset($this->request->pass[0]) ? $this->request->pass[0] : 'index';
-		
+	public function Rules($pass = 'index') {
 		if ($pass != 'edit') {
 			$this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Survey.SurveyRules']);
 		} else {
-			$this->set('ngController', 'SurveyRulesCtrl as SurveyRulesController');
+			if ($this->checkSurveyRuleEditPermission()) {
+				$this->set('ngController', 'SurveyRulesCtrl as SurveyRulesController');
+			} else {
+				return $this->redirect(['plugin' => 'Survey', 'controller' => 'Surveys', 'action' => 'Rules']);
+			}
+			
 		}
 		
+	}
+
+	private function checkSurveyRuleEditPermission() {
+		return $this->Auth->user('super_admin') == 1 || $this->AccessControl->check(['Surveys', 'Rules', 'edit']);
 	}
 
 	private function attachAngularModules() {
@@ -71,7 +78,7 @@ class SurveysController extends AppController
 		// pr($action);
 		switch ($action) {
 			case 'Rules':
-				if ($pass == 'edit') {
+				if ($pass == 'edit' && $this->checkSurveyRuleEditPermission()) {
 					$this->Angular->addModules([
 						'alert.svc',
 						'survey.rules.ctrl',

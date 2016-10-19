@@ -18,7 +18,7 @@ class PositionsTable extends ControllerActionTable {
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-		$this->belongsTo('StaffTypes', ['className' => 'FieldOption.StaffTypes']);
+		$this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes']);
 		$this->belongsTo('StaffStatuses', ['className' => 'Staff.StaffStatuses']);
 		$this->belongsTo('InstitutionPositions', ['className' => 'Institution.InstitutionPositions']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -37,8 +37,8 @@ class PositionsTable extends ControllerActionTable {
 		$this->fields['security_group_user_id']['visible'] = false;
 
 		$this->setFieldOrder([
-			'institution_id', 
-			'institution_position_id', 
+			'institution_id',
+			'institution_position_id',
 			'start_date',
 			'end_date',
 			'staff_status_id'
@@ -46,11 +46,7 @@ class PositionsTable extends ControllerActionTable {
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
-		$query->contain([
-			'Institutions',
-			'InstitutionPositions',
-			'StaffStatuses'
-		]);
+		$extra['auto_contain_fields'] = ['Institutions' => ['code']];
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
@@ -58,8 +54,8 @@ class PositionsTable extends ControllerActionTable {
 		if (array_key_exists('view', $buttons)) {
 			$institutionId = $entity->institution->id;
 			$url = [
-				'plugin' => 'Institution', 
-				'controller' => 'Institutions', 
+				'plugin' => 'Institution',
+				'controller' => 'Institutions',
 				'action' => 'Staff',
 				'view', $entity->id,
 				'institution_id' => $institutionId,
@@ -74,6 +70,10 @@ class PositionsTable extends ControllerActionTable {
 		$tabElements = $this->controller->getCareerTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
+	}
+
+	public function onGetInstitutionId(Event $event, Entity $entity) {
+		return $entity->institution->code_name;
 	}
 
 }

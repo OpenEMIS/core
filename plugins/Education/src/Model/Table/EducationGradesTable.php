@@ -2,29 +2,42 @@
 namespace Education\Model\Table;
 
 use ArrayObject;
-use App\Model\Table\AppTable;
+
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
-class EducationGradesTable extends AppTable {
+use App\Model\Table\ControllerActionTable;
+
+class EducationGradesTable extends ControllerActionTable
+{
 	private $_contain = ['EducationSubjects._joinData'];
 	private $_fieldOrder = ['name', 'code', 'education_programme_id', 'visible'];
 
-	public function initialize(array $config) {
+	public function initialize(array $config)
+	{
 		parent::initialize($config);
-		$this->belongsTo('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
-		$this->hasMany('Programmes', ['className' => 'Institution.InstitutionGrades']);
-		$this->hasMany('Assessments', ['className' => 'Assessment.Assessments']);
-		$this->hasMany('InstitutionFees', ['className' => 'Institution.InstitutionFees']);
-		$this->hasMany('Rubrics', ['className' => 'Institution.InstitutionRubrics']);
-		$this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
-		$this->hasMany('InstitutionClassStudents', ['className' => 'Institution.InstitutionClassStudents']);
-		$this->hasMany('InstitutionStudents', ['className' => 'Institution.Students']);
-		$this->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission']);
-		$this->hasMany('StudentDropout', ['className' => 'Institution.StudentDropout']);
+
+		$this->belongsToMany('Institutions', [
+			'className' => 'Institution.Institutions',
+			'joinTable' => 'institution_grades',
+			'foreignKey' => 'education_grade_id',
+			'targetForeignKey' => 'Institution_id',
+			'through' => 'Institution.InstitutionGrades',
+			'dependent' => true,
+			'cascadeCallbacks' => true
+		]);
+		$this->belongsTo('EducationProgrammes',		['className' => 'Education.EducationProgrammes']);
+		$this->hasMany('Assessments',				['className' => 'Assessment.Assessments', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionFees',			['className' => 'Institution.InstitutionFees', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('Rubrics',					['className' => 'Institution.InstitutionRubrics', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionClassGrades',	['className' => 'Institution.InstitutionClassGrades', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionClassStudents',	['className' => 'Institution.InstitutionClassStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionStudents',		['className' => 'Institution.Students', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StudentAdmission',			['className' => 'Institution.StudentAdmission', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StudentDropout',			['className' => 'Institution.StudentDropout', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->belongsToMany('EducationSubjects', [
 			'className' => 'Education.EducationSubjects',
@@ -32,7 +45,8 @@ class EducationGradesTable extends AppTable {
 			'foreignKey' => 'education_grade_id',
 			'targetForeignKey' => 'education_subject_id',
 			'through' => 'Education.EducationGradesSubjects',
-			'dependent' => false,
+			'dependent' => true,
+			'cascadeCallbacks' => true
 			// 'saveStrategy' => 'append'
 		]);
 
@@ -41,6 +55,8 @@ class EducationGradesTable extends AppTable {
 				'filter' => 'education_programme_id',
 			]);
 		}
+
+		$this->setDeleteStrategy('restrict');
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
@@ -121,20 +137,20 @@ class EducationGradesTable extends AppTable {
 		}
 	}
 
-	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
-		$query->where([$this->aliasField('education_programme_id') => $entity->education_programme_id]);
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
+		$this->association('Institutions')->name('InstitutionProgrammes');
 	}
 
-	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('subjects', ['type' => 'custom_subject', 'valueClass' => 'table-full-width']);
+	public function beforeAction(Event $event, ArrayObject $extra) {
+		$this->field('subjects', ['type' => 'custom_subject', 'valueClass' => 'table-full-width']);
 		$this->_fieldOrder[] = 'subjects';
 	}
 
-	public function afterAction(Event $event) {
-		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	public function afterAction(Event $event, ArrayObject $extra) {
+		$this->setFieldOrder($this->_fieldOrder);
 	}
 
-	public function indexBeforeAction(Event $event) {
+	public function indexBeforeAction(Event $event, ArrayObject $extra) {
 		//Add controls filter to index page
 		$toolbarElements = [
             ['name' => 'Education.controls', 'data' => [], 'options' => []]
@@ -145,22 +161,26 @@ class EducationGradesTable extends AppTable {
 		$this->_fieldOrder = ['visible', 'name', 'code', 'education_programme_id', 'subjects'];
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	{
 		list($levelOptions, $selectedLevel, $programmeOptions, $selectedProgramme) = array_values($this->_getSelectOptions());
+		$extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
         $this->controller->set(compact('levelOptions', 'selectedLevel', 'programmeOptions', 'selectedProgramme'));
-
 		$query->where([$this->aliasField('education_programme_id') => $selectedProgramme]);
 	}
 
-	public function viewEditBeforeQuery(Event $event, Query $query) {
+	public function viewEditBeforeQuery(Event $event, Query $query)
+	{
 		$query->contain(['EducationSubjects']);
 	}
 
-	public function addEditBeforeAction(Event $event) {
-		$this->ControllerAction->field('education_programme_id');
+	public function addEditBeforeAction(Event $event, ArrayObject $extra)
+	{
+		$this->field('education_programme_id');
 	}
 
-	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+	{
 		// to be revisit
 		// $data[$this->alias()]['setVisible'] = true;
 
@@ -178,7 +198,8 @@ class EducationGradesTable extends AppTable {
 		$options->exchangeArray($arrayOptions);
 	}
 
-	public function onGetCustomSubjectElement(Event $event, $action, $entity, $attr, $options=[]) {
+	public function onGetCustomSubjectElement(Event $event, $action, $entity, $attr, $options=[])
+	{
 		if ($action == 'index') {
 			$EducationGradesSubjects = TableRegistry::get('EducationGradesSubjects');
 			$value = $EducationGradesSubjects
@@ -307,7 +328,8 @@ class EducationGradesTable extends AppTable {
 		return $event->subject()->renderElement('Education.subjects', ['attr' => $attr]);
 	}
 
-	public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
+	{
 		list(, , $programmeOptions, $selectedProgramme) = array_values($this->_getSelectOptions());
 		$attr['options'] = $programmeOptions;
 		if ($action == 'add') {
@@ -317,7 +339,8 @@ class EducationGradesTable extends AppTable {
 		return $attr;
 	}
 
-	public function _getSelectOptions() {
+	public function _getSelectOptions()
+	{
 		//Return all required options and their key
 		$levelOptions = $this->EducationProgrammes->EducationCycles->EducationLevels->getLevelOptions();
 		$selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
@@ -327,6 +350,12 @@ class EducationGradesTable extends AppTable {
 			->find('visible')
 			->where([$this->EducationProgrammes->EducationCycles->aliasField('education_level_id') => $selectedLevel])
 			->toArray();
+
+		if (is_array($cycleIds) && !empty($cycleIds)) {
+			$cycleIds = implode(', ', $cycleIds);
+		} else {
+			$cycleIds = 0;
+		}
 
 		$EducationProgrammes = $this->EducationProgrammes;
 		$programmeOptions = $EducationProgrammes
@@ -338,7 +367,7 @@ class EducationGradesTable extends AppTable {
 				$EducationProgrammes->aliasField('order')
 			])
 			->where([
-				$EducationProgrammes->aliasField('education_cycle_id IN') => $cycleIds
+				$EducationProgrammes->aliasField('education_cycle_id') . ' IN (' .  $cycleIds . ')'
 			])
 			->toArray();
 		$selectedProgramme = !is_null($this->request->query('programme')) ? $this->request->query('programme') : key($programmeOptions);

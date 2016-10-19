@@ -179,12 +179,43 @@ class ImportStaffTable extends AppTable
     {
         $institutionId = ($this->_institution instanceof Entity) ? $this->_institution->id : false;
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        $modelData = $lookedUpTable->find()
-                                ->where(['institution_id'=>$institutionId])
-                                ->contain(['StaffPositionTitles', 'Statuses'])
-                                ;
+
+        $activeStatusId = $this->Workflow->getStepsByModelCode($lookedUpTable->registryAlias(), 'ACTIVE');
+
+        //select necessary field for position which total FTE not used of not fully used based on the end_date of the staff
+        $modelData = $lookedUpTable->find();
+        $modelData = $modelData
+                    ->select([
+                        $lookedUpTable->aliasField('position_no'),
+                        'StaffPositionTitles.name',
+                        'StaffPositionTitles.type',
+                        'Statuses.name',
+                        $lookedUpTable->aliasField('is_homeroom'),
+                        'total_fte' => $modelData->func()->sum('InstitutionStaff.FTE')
+                    ])
+                    ->contain(['StaffPositionTitles', 'Statuses'])
+                    ->leftJoin(['InstitutionStaff' => 'institution_staff'], [
+                        'InstitutionStaff.institution_position_id = ' . $lookedUpTable->aliasField('id'),
+                        'OR' => [
+                            'DATE(InstitutionStaff.end_date) > DATE(NOW())',
+                            'InstitutionStaff.end_date IS NULL'
+                        ]
+                    ])
+                    ->where([
+                        $lookedUpTable->aliasField('institution_id') => $institutionId,
+                        $lookedUpTable->aliasField('status_id IN ') => $activeStatusId
+                    ])
+                    ->group($lookedUpTable->aliasField('id'))
+                    ->having([
+                        'OR' => [
+                            'total_fte < 1',
+                            'total_fte IS NULL' //FTE not used at all
+                        ]
+                    ])
+                    ->toArray();
 
         $codeLabel = $this->getExcelLabel($lookedUpTable, 'code');
+        $typeLabel = $this->getExcelLabel($lookedUpTable, 'type');
         $nameLabel = $this->getExcelLabel($lookedUpTable, 'name');
         $statusLabel = $this->getExcelLabel($lookedUpTable, 'status');
         $isHomeroomLabel = $this->getExcelLabel($lookedUpTable, 'is_homeroom');
@@ -192,11 +223,18 @@ class ImportStaffTable extends AppTable
         $yesNoOptions = $this->getSelectOptions('general.yesno');
 
         $data[$columnOrder]['lookupColumn'] = 1;
-        $data[$columnOrder]['data'][] = [$codeLabel, $nameLabel, $statusLabel, $isHomeroomLabel];
+        $data[$columnOrder]['data'][] = [$typeLabel, $codeLabel, $nameLabel, $statusLabel, $isHomeroomLabel];
         if (!empty($modelData)) {
             foreach($modelData as $row) {
+                $positionTitleType = $row->staff_position_title->type;
+                if ($positionTitleType) {
+                    $positionTitleType = __('Teaching');
+                } else {
+                    $positionTitleType = __('Non-Teaching');
+                }
                 $data[$columnOrder]['data'][] = [
                     $row->position_no,
+                    $positionTitleType,
                     $row->staff_position_title->name,
                     $row->status->name,
                     $yesNoOptions[$row->is_homeroom]
@@ -229,6 +267,29 @@ class ImportStaffTable extends AppTable
             return false;
         }
         $tempRow['staff_name'] = $tempRow['staff_id'];
+
+        //logic to check whether staff tried to be imported from one institution to another.
+        $staffRecord = $this->InstitutionStaff
+            ->find()
+            ->select([
+                'institution_id'
+            ])
+            ->matching('StaffStatuses', function ($q) {
+                return $q->where(['StaffStatuses.code' => 'ASSIGNED']);
+            })
+            ->where([$this->InstitutionStaff->aliasField('staff_Id') => $tempRow['staff_id']])
+            ->distinct() //to cater when staff have few position on same institution
+            ->toArray();
+
+        //the result of institution_id can be array of multiple institution where the staff is assigned to
+        foreach ($staffRecord as $key => $value) {
+            $institutionList[] = $staffRecord[$key]['institution_id'];
+        }
+
+        if ((isset($institutionList)) && (!is_numeric(array_search($this->_institution->id, $institutionList)))) { //if the current session not on the institution list on where the staff assigned to.
+            $rowInvalidCodeCols['staff_id'] = __('The staff is already assigned to another school');
+            return false;
+        }
 
         if (!$this->_institution instanceof Entity) {
             $rowInvalidCodeCols['institution_id'] = __('No active institution');

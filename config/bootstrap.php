@@ -107,7 +107,7 @@ if (!Configure::read('debug')) {
  * Set server timezone to UTC. You can change it to another timezone of your
  * choice but using UTC makes time calculations / conversions easier.
  */
-date_default_timezone_set('UTC');
+// date_default_timezone_set('UTC');
 
 /**
  * Configure the mbstring extension to use the correct encoding.
@@ -247,12 +247,15 @@ Plugin::load('Health', ['routes' => true, 'autoload' => true]);
 Plugin::load('Cache', ['routes' => true, 'autoload' => true]);
 Plugin::load('Restful');
 Plugin::load('ADmad/JwtAuth');
+Plugin::load('SSO');
 Plugin::load('InstitutionRepeater', ['routes' => true, 'autoload' => true]);
+Plugin::load('Examination', ['routes' => true, 'autoload' => true]);
+Plugin::load('Configuration', ['routes' => true, 'autoload' => true]);
 
 // Only try to load DebugKit in development mode
 // Debug Kit should not be installed on a production system
 if (Configure::read('debug')) {
-    // Plugin::load('DebugKit', ['bootstrap' => true]);
+    Plugin::load('DebugKit', ['bootstrap' => true]);
 }
 
 /**

@@ -31,10 +31,10 @@ angular.module('OE_Styleguide')
         //Reset the values on the Advanced Search
         $scope.resetFields = function() {
             var searchForm = angular.element('#search-form');
-            var resetCheckbox = angular.element('.icheckbox_minimal-grey');
+            var resetCheckbox = angular.element('input[type="checkbox"]');
 
             searchForm.find('input:text, select').val('');
-            resetCheckbox.removeClass('checked');
+            resetCheckbox.removeAttr('checked');
         }
 
         $scope.submitSearch = function() {

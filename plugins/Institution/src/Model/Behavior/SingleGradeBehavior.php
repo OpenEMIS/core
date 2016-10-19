@@ -71,7 +71,7 @@ class SingleGradeBehavior extends Behavior {
 
         $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $gradeOptions = [0 => '-- '.__('Select').' --'] + $gradeOptions;
-       
+
         $this->_table->advancedSelectOptions($gradeOptions, $selectedEducationGradeId, [
 			'message' => '{{label}} - ' . $this->_table->getMessage($this->_table->aliasField('expiredGrade')),
 			'callable' => function($id) use ($InstitutionGrades, $institutionId, $AcademicPeriodTable, $selectedAcademicPeriodId) {
@@ -83,7 +83,7 @@ class SingleGradeBehavior extends Behavior {
 					->where([
 						$InstitutionGrades->aliasField('education_grade_id') => $id,
 						$InstitutionGrades->aliasField('institution_id') => $institutionId,
-						
+
 						'OR' => [
 							[$InstitutionGrades->aliasField('end_date') . ' >= ' => $functionQuery->func()->now('date')],
 							[$InstitutionGrades->aliasField('end_date'). ' IS NULL']
@@ -92,7 +92,7 @@ class SingleGradeBehavior extends Behavior {
 				return $query->count();
 			}
 		]);
-		
+
 		$model->field('education_grade', [
 			'type' => 'select',
 			'options' => $gradeOptions,
@@ -101,7 +101,7 @@ class SingleGradeBehavior extends Behavior {
 		]);
 
 		$model->field('number_of_classes', [
-			'type' => 'select', 
+			'type' => 'select',
 			'options' => $this->numberOfClassesOptions(),
 			'onChangeReload' => true,
 			'select' => false
@@ -113,7 +113,7 @@ class SingleGradeBehavior extends Behavior {
 		}
 
 		$model->field('single_grade_field', [
-			'type' 		=> 'element', 
+			'type' 		=> 'element',
 			'element' 	=> 'Institution.Classes/single_grade',
 			'data' 		=> [	'numberOfClasses' 	=> $numberOfClasses,
 					 			'staffOptions' 		=> $model->getStaffOptions('add', $selectedAcademicPeriodId, $institutionId),
@@ -143,10 +143,9 @@ class SingleGradeBehavior extends Behavior {
 					$requestData['MultiClasses'][$key]['institution_shift_id'] = $commonData['institution_shift_id'];
 					$requestData['MultiClasses'][$key]['institution_id'] = $commonData['institution_id'];
 					$requestData['MultiClasses'][$key]['academic_period_id'] = $commonData['academic_period_id'];
-					$requestData['MultiClasses'][$key]['education_grades'][0] = [
-							'id' => $commonData['education_grade']
-						];
+					$requestData['MultiClasses'][$key]['education_grades']['_ids'] = [$commonData['education_grade']];
 				}
+
 				$classes = $model->newEntities($requestData['MultiClasses']);
 				$error = false;
 				foreach ($classes as $key=>$class) {
@@ -216,8 +215,7 @@ class SingleGradeBehavior extends Behavior {
 		for ($i=1; $i<=$total; $i++) {
 			$options[$i] = $i;
 		}
-		
+
 		return $options;
 	}
 }
-	

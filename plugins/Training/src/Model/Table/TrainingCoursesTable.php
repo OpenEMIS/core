@@ -147,6 +147,16 @@ class TrainingCoursesTable extends AppTable {
 		$this->request->query['course'] = $entity->id;
 	}
 
+	public function onUpdateFieldCreditHours(Event $event, array $attr, $action, Request $request) {
+		
+		$creditHours = TableRegistry::get('Configuration.ConfigItems')->value('training_credit_hour');
+
+		for ($i=1; $i <= $creditHours; $i++){
+  			$attr['options'][$i] = $i;
+  		}
+		return $attr;
+	}
+
 	public function onUpdateFieldTargetPopulations(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add' || $action == 'edit') {
 			$attr['options'] = TableRegistry::get('Institution.StaffPositionTitles')->getList()->toArray();
@@ -197,6 +207,9 @@ class TrainingCoursesTable extends AppTable {
 	}
 
 	public function setupFields() {
+		$this->ControllerAction->field('credit_hours', [
+			'type' => 'select'
+		]);
 		$this->ControllerAction->field('target_populations', [
 			'type' => 'chosenSelect',
 			'placeholder' => __('Select Target Populations'),

@@ -7,6 +7,7 @@ use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
+use Cake\I18n\Date;
 
 class DropoutRequestsTable extends AppTable {
 	const NEW_REQUEST = 0;
@@ -20,7 +21,7 @@ class DropoutRequestsTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-		$this->belongsTo('StudentDropoutReasons', ['className' => 'FieldOption.StudentDropoutReasons', 'foreignKey' => 'student_dropout_reason_id']);
+		$this->belongsTo('StudentDropoutReasons', ['className' => 'Student.StudentDropoutReasons', 'foreignKey' => 'student_dropout_reason_id']);
 	}
 
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
@@ -39,7 +40,7 @@ class DropoutRequestsTable extends AppTable {
 		$StudentAdmissionTable = TableRegistry::get('Institution.StudentAdmission');
 
 		$conditions = [
-			'student_id' => $entity->student_id, 
+			'student_id' => $entity->student_id,
 			'status' => self::NEW_REQUEST,
 			'type' => 2,
 			'education_grade_id' => $entity->education_grade_id,
@@ -97,7 +98,7 @@ class DropoutRequestsTable extends AppTable {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
-		$this->ControllerAction->field('application_status');
+		$this->ControllerAction->field('application_status', ['status' => $entity->status]);
 		$this->ControllerAction->field('status', ['type' => 'hidden']);
 		$this->ControllerAction->field('student_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->student_id)->name_with_id]]);
 		$this->ControllerAction->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
@@ -129,8 +130,13 @@ class DropoutRequestsTable extends AppTable {
 		$this->request->data[$this->alias()]['education_grade_id'] = $entity->education_grade_id;
 	}
 
-	public function editOnInitialize(Event $event, Entity $entity) {
-		$this->request->data[$this->alias()]['transfer_status'] = $entity->status;
+	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+		$validator->add('effective_date', 'ruleDateAfterEnrollment', [
+		            'rule' => ['dateAfterEnrollment'],
+		            'provider' => 'table'
+	    			]);
+		return $validator;
 	}
 
 	public function onUpdateFieldApplicationStatus(Event $event, array $attr, $action, $request) {
@@ -140,7 +146,7 @@ class DropoutRequestsTable extends AppTable {
 				$attr['attr']['value'] = __('New');
 				break;
 			case 'edit':
-				$transferStatus = $request->data[$this->alias()]['transfer_status'];
+				$transferStatus = $attr['status'];
 				$attr['type'] = 'readonly';
 
 				switch ($transferStatus) {
@@ -156,7 +162,7 @@ class DropoutRequestsTable extends AppTable {
 				}
 				break;
 		}
-		return $attr;		
+		return $attr;
 	}
 
 	public function implementedEvents() {
@@ -172,5 +178,15 @@ class DropoutRequestsTable extends AppTable {
 			$toolbarButtons['back']['url'][0] = 'view';
 			$toolbarButtons['back']['url'][1] = $this->Session->read('Student.Students.id');
 		}
+	}
+
+	public function onUpdateFieldEffectiveDate(Event $event, array $attr, $action, $request) {
+
+		$id = $this->Session->read($this->registryAlias().'.id');
+		$studentData = TableRegistry::get('Institution.Students')->get($id);
+		$enrolledDate = $studentData['start_date']->format('d-m-Y');
+		$attr['date_options'] = ['startDate' => $enrolledDate];
+
+		return $attr;
 	}
 }

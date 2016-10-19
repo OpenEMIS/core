@@ -185,12 +185,13 @@ trait UtilityTrait {
 			$selected = $defaultValue['selected'];
 			$group = $defaultValue['group'];
 			if ($group !== false) {
-				$options[$group][$selected][] = 'selected';
+				if ($selectOption) {
+					$options[$group][$selected][] = 'selected';
+				}
 			} else if (strlen($selected) > 0) {
 				if ($selectOption) {
 					$options[$selected][] = 'selected';
-				}
-				
+				}	
 			}
 		}
 		

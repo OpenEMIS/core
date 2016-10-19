@@ -38,6 +38,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
         $fieldPrefix = $attr['model'] . '.institution_repeater_surveys.' . $fieldId;
         $form->unlockField($fieldPrefix);
         $unlockFields = [$attr['model'] . '.repeater_question_id'];
+        $form->unlockField($attr['model'] . '.repeater_question_id');
         $tableHeaders = [];
         $tableCells = [];
         $cellCount = 0;

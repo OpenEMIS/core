@@ -20,13 +20,13 @@ class InstitutionStaffTable extends AppTable  {
 		$this->belongsTo('Users',			['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('Positions',		['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
 		$this->belongsTo('Institutions',	['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
-		$this->belongsTo('StaffTypes',		['className' => 'FieldOption.StaffTypes']);
+		$this->belongsTo('StaffTypes',		['className' => 'Staff.StaffTypes']);
 		$this->belongsTo('StaffStatuses',	['className' => 'Staff.StaffStatuses']);
 		$this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
 
 		$this->addBehavior('Report.ReportList');
 		$this->addBehavior('Excel', [
-			'excludes' => ['start_year', 'end_year', 'FTE', 'security_group_user_id'], 
+			'excludes' => ['start_year', 'end_year', 'FTE', 'security_group_user_id'],
 			'pages' => false
 		]);
 		$this->addBehavior('Report.InstitutionSecurity');
@@ -46,8 +46,6 @@ class InstitutionStaffTable extends AppTable  {
 		$requestData = json_decode($settings['process']['params']);
 		$statusId = $requestData->status;
 		$typeId = $requestData->type;
-		$userId = $requestData->user_id;
-		$superAdmin = $requestData->super_admin;
 
 		if ($statusId!=0) {
 			$query->where([
@@ -61,30 +59,19 @@ class InstitutionStaffTable extends AppTable  {
 			]);
 		}
 
-		$query->leftJoin(
-			['Identities' => 'user_identities'],
-			[
-				'Identities.security_user_id = '.$this->aliasField('staff_id'),
-				'Identities.identity_type_id' => $settings['identity']->id
-			]
-		);
-
-		$query->contain(['Users.Genders', 'Institutions.Areas', 'Positions.StaffPositionTitles'])->select([
+		$query->contain(['Users.Genders', 'Institutions.Areas', 'Positions.StaffPositionTitles', 'Institutions.Types'])->select([
 			'openemis_no' => 'Users.openemis_no',
 			'first_name' => 'Users.first_name',
 			'middle_name' => 'Users.middle_name',
 			'last_name' => 'Users.last_name',
-			'number' => 'Identities.number', 
-			'code' => 'Institutions.code', 
-			'gender' => 'Genders.name', 
-			'area_name' => 'Areas.name', 
+			'number' => 'Users.identity_number',
+			'code' => 'Institutions.code',
+			'gender' => 'Genders.name',
+			'area_name' => 'Areas.name',
 			'area_code' => 'Areas.code',
-			'position_title_teaching' => 'StaffPositionTitles.type'
+			'position_title_teaching' => 'StaffPositionTitles.type', 
+			'institution_type' => 'Types.name'
 		]);
-
-		if (!$superAdmin) {
-			$query->find('ByAccess', ['user_id' => $userId, 'institution_field_alias' => $this->aliasField('institution_id')]);
-		}
 	}
 
 	public function onExcelGetFTE(Event $event, Entity $entity) {
@@ -121,10 +108,9 @@ class InstitutionStaffTable extends AppTable  {
 		foreach ($fields as $key => $field) {
 			if ($field['field'] == 'institution_id' || $field['field'] == 'staff_id') {
 				unset($fields[$key]);
-				break;
 			}
 		}
-		
+
 		$extraField[] = [
 			'key' => 'Institutions.code',
 			'field' => 'code',
@@ -135,6 +121,13 @@ class InstitutionStaffTable extends AppTable  {
 		$extraField[] = [
 			'key' => 'Staff.institution_id',
 			'field' => 'institution_id',
+			'type' => 'integer',
+			'label' => '',
+		];
+
+		$extraField[] = [
+			'key' => 'Institutions.institution_type_id',
+			'field' => 'institution_type',
 			'type' => 'integer',
 			'label' => '',
 		];
@@ -168,7 +161,7 @@ class InstitutionStaffTable extends AppTable  {
 		];
 
 		$extraField[] = [
-			'key' => 'Identities.number',
+			'key' => 'Users.identity_number',
 			'field' => 'number',
 			'type' => 'string',
 			'label' => __($identity->name)

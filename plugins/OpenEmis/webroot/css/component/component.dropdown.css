@@ -1,4 +1,4 @@
-/* DROPDOWN v.1.0.0 */
+/* DROPDOWN v.1.0.1 */
 
 select:focus {
     outline: none !important;
@@ -50,7 +50,8 @@ select:focus {
 }
 
 .dropdown-filter label,
-.dropdown-filter select {
+.dropdown-filter select,
+.dropdown-filter .text input {
     font-size: 12px;
 }
 
@@ -58,22 +59,33 @@ select:focus {
     font-weight: normal;
     margin: 0 5px 5px 0 !important;
     display: block;
+    padding: 0;
 }
 
 .dropdown-filter .input-select-wrapper,
-.dropdown-filter select {
+.dropdown-filter select,
+.dropdown-filter .text input {
     background-color: #FFF;
     width: 100%;
     min-width: 150px;
     height: 25px;
 }
 
-.dropdown-filter select {
+.dropdown-filter .text input {
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    border: 1px solid #CCC;
+}
+
+.dropdown-filter select,
+.dropdown-filter .text input {
     padding: 3px 25px 4px 5px !important;
 }
 
 .chrome .dropdown-filter select,
-.safari .dropdown-filter select {
+.safari .dropdown-filter select,
+.chrome .dropdown-filter .text input,
+.safari .dropdown-filter .text input {
     padding: 4px 25px 4px 5px !important;
 }
 
@@ -81,10 +93,36 @@ select:focus {
     top: 40%;
 }
 
-.dropdown-filter .select {
+.dropdown-filter .select,
+.dropdown-filter .text {
     display: inline-block;
     margin-right: 10px;
     width: 15%;
+}
+
+.dropdown-filter .text {
+    margin-bottom: 15px !important;
+}
+
+.dropdown-filter .filter-action-btn {
+    display: block;
+    clear: both;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.dropdown-filter .checkbox .input-selection,
+.dropdown-filter .checkbox .input-selection-inline {
+    border: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.dropdown-filter .checkbox .input-selection .selection-label,
+.dropdown-filter .checkbox .input-selection-inline .selection-label {
+    width: auto !important;
+    display: inline !important;
+    line-height: 25px;
 }
 
 
@@ -94,18 +132,21 @@ select:focus {
     .dropdown-filter label {
         display: block;
     }
-    .dropdown-filter .select {
+    .dropdown-filter .select,
+    .dropdown-filter .text {
         width: 35%;
         margin: 0 5px;
     }
     .dropdown-filter .input-select-wrapper,
-    .dropdown-filter select {
+    .dropdown-filter select,
+    .dropdown-filter .text input {
         width: 100%;
     }
 }
 
 @media only screen and (max-width: 480px) {
-    .dropdown-filter .select {
+    .dropdown-filter .select,
+    .dropdown-filter .text {
         width: 100%;
         margin: 0;
     }

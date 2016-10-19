@@ -18,6 +18,7 @@ class AdvanceSearchBehavior extends Behavior {
 	protected $_defaultConfig = [
 		'display_country' => true,
 		'exclude' => ['id', 'modified_user_id', 'modified', 'created_user_id', 'created'],
+        'order' => []
 	];
 
 	public function initialize(array $config) {
@@ -51,7 +52,10 @@ class AdvanceSearchBehavior extends Behavior {
 ** CakePhp events
 **
 ******************************************************************************************************************/
-	public function afterAction(Event $event, ArrayObject $extra) {
+
+	public function afterAction(Event $event)
+	{
+        $order = $this->config('order');
 		if ($this->_table->action == 'index') {
 		    $labels = TableRegistry::get('Labels');
 			$filters = [];
@@ -65,10 +69,12 @@ class AdvanceSearchBehavior extends Behavior {
 
 			foreach ($fields as $key) {
 				if (!in_array($key , $this->config('exclude'))) {
+
+					$selected = (isset($advanceSearchModelData['belongsTo']) && isset($advanceSearchModelData['belongsTo'][$key])) ? $advanceSearchModelData['belongsTo'][$key] : '' ;
+
 					if ($this->isForeignKey($key)) {
 						$label = $labels->getLabel($this->_table->alias(), $key, $language);
 						$relatedModel = $this->getAssociatedBelongsToModel($key);
-						$selected = (isset($advanceSearchModelData['belongsTo']) && isset($advanceSearchModelData['belongsTo'][$key])) ? $advanceSearchModelData['belongsTo'][$key] : '' ;
 
 						$filters[$key] = [
 							'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->alias()),
@@ -91,10 +97,25 @@ class AdvanceSearchBehavior extends Behavior {
 							}
 						}
 					}
+
+					$customFilter  = $this->_table->dispatchEvent('AdvanceSearch.getCustomFilter'); //get custom filter set by the table
+
+					if ($customFilter->result) {
+						$result = $customFilter->result;
+						$customFilterKey = key($result);
+
+						if ($key == $customFilterKey) {
+							$filters[$customFilterKey] = [
+								'label' => $result[$customFilterKey]['label'],
+								'options' => $result[$customFilterKey]['options'],
+								'selected' => $selected
+							];
+						}
+					}
 				}
 			}
 
-			if (array_key_exists('belongsTo', $advanceSearchModelData)) {
+            if (array_key_exists('belongsTo', $advanceSearchModelData)) {
 				foreach ($advanceSearchModelData['belongsTo'] as $field => $value) {
 					if (!empty($value) && $advancedSearch == false) {
 						$advancedSearch = true;
@@ -135,6 +156,21 @@ class AdvanceSearchBehavior extends Behavior {
                 'order' => 0
             ];
 
+            if (empty($order)) { //if no order declared, then build the default order.
+                foreach ($filters as $key=>$filter) {
+                    $order[] = $key;
+                }
+                foreach ($searchables as $key=>$searchable) {
+                    $order[] = $key;
+                }
+            }
+
+            $this->_table->controller->viewVars['indexElements']['advanced_search'] = [
+	            'name' => 'advanced_search',
+	            'data' => compact('filters', 'searchables', 'order', 'advancedSearch'),
+	            'options' => [],
+	            'order' => 0
+	        ];
 		}
 	}
 
@@ -292,4 +328,22 @@ class AdvanceSearchBehavior extends Behavior {
         return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
 
+    public function isAdvancedSearchEnabled()
+    {
+        $requestData = $this->_table->request->data;
+        $advanceSearchData = isset($requestData['AdvanceSearch']) ? $requestData['AdvanceSearch'] : [];
+
+        if ($advanceSearchData) {
+            foreach ($advanceSearchData[$this->_table->alias()] as $key => $value) {
+                if (!empty($value)) {
+                    foreach ($value as $key => $searchValue) {
+                        if (!empty($searchValue)){
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
 }

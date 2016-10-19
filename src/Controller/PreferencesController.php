@@ -19,20 +19,19 @@ class PreferencesController extends AppController {
 		$this->ControllerAction->models = [
 			'Users' 				=> ['className' => 'Users'],
 			'Account' 				=> ['className' => 'UserAccounts'],
-			'Contacts'				=> ['className' => 'UserContacts'],
-			'Identities' 			=> ['className' => 'User.Identities'],
-			'Languages' 			=> ['className' => 'User.UserLanguages'],
 			'Nationalities' 		=> ['className' => 'User.Nationalities'],
-			'Comments' 				=> ['className' => 'User.Comments'],
 			'Attachments' 			=> ['className' => 'User.Attachments'],
 			'History' 				=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 		];
 	}
 
     // CAv4
-    public function Nationalities() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
-    public function Languages() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
-    public function SpecialNeeds() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
+    public function Nationalities()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
+    public function Languages()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
+    public function SpecialNeeds()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
+    public function Comments()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
+    public function Contacts()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'UserContacts']); }
+    public function Identities() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']); }
     // End
 
 	public function beforeFilter(Event $event) {
@@ -69,7 +68,7 @@ class PreferencesController extends AppController {
 	}
 
 	public function getUserTabElements() {
-		$Config = TableRegistry::get('ConfigItems');
+		$Config = TableRegistry::get('Configuration.ConfigItems');
 		$canChangeAdminPassword = $Config->value('change_password');
 		$isSuperAdmin = $this->Auth->user('super_admin');
 		$userId = $this->Auth->user('id');
@@ -92,19 +91,19 @@ class PreferencesController extends AppController {
 			],
 			'UserNationalities' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Nationalities'],
-				'text' => __('Nationalities')	
+				'text' => __('Nationalities')
 			],
 			'Languages' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Languages'],
-				'text' => __('Languages')	
+				'text' => __('Languages')
 			],
 			'Comments' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Comments'],
-				'text' => __('Comments')	
+				'text' => __('Comments')
 			],
 			'Attachments' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Attachments'],
-				'text' => __('Attachments')	
+				'text' => __('Attachments')
 			],
 			'SpecialNeeds' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'SpecialNeeds'],
@@ -112,7 +111,7 @@ class PreferencesController extends AppController {
 			],
 			'History' => [
 				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'History'],
-				'text' => __('History')	
+				'text' => __('History')
 			]
 		];
 		if (!$canChangeAdminPassword && $isSuperAdmin) {

@@ -21,7 +21,7 @@ class UserCascadeBehavior extends Behavior {
 		$this->cleanUserRecords($userId);
 	}
 
-	// this function is to delete all records from user's related tables 
+	// this function is to delete all records from user's related tables
 	// (tables that contains security_user_id, student_id, staff_id, guardian_id)
 	// excluding the one specified
 	private function cleanUserRecords($userId) {
@@ -32,6 +32,9 @@ class UserCascadeBehavior extends Behavior {
 		$fields = ['security_user_id', 'student_id', 'staff_id', 'guardian_id', 'trainee_id'];
 
 		foreach ($tables as $key => $table) {
+			if ($this->_table->startsWith($table, 'z_')) { // to exclude all z_ prefix tables
+				continue;
+			}
 			try {
 				$tableObj = TableRegistry::get($table);
 				$columns = $tableObj->schema()->columns();

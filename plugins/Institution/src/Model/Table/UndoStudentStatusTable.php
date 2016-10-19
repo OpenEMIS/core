@@ -47,6 +47,12 @@ class UndoStudentStatusTable extends AppTable {
 		// End
 	}
 
+	public function addOnInitialize(Event $event, Entity $entity)
+	{
+		// To clear the query string from the previous page to prevent logic conflict on this page
+		$this->request->query = [];
+	}
+
 	public function beforeAction(Event $event) {
 		$institutionClassTable = TableRegistry::get('Institution.InstitutionClasses');
 		$this->institutionId = $this->Session->read('Institution.Institutions.id');
@@ -73,14 +79,6 @@ class UndoStudentStatusTable extends AppTable {
 		$url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'];
 		$Navigation->substituteCrumb('Undo', 'Students', $url);
 		$Navigation->addCrumb('Undo');
-	}
-
-	public function addOnInitialize(Event $event, Entity $entity) {
-		$selectedGrade = !is_null($this->request->query('grade')) ? $this->request->query('grade') : -1;
-		$selectedStatus = !is_null($this->request->query('status')) ? $this->request->query('status') : -1;
-
-		$this->request->query['grade'] = $selectedGrade;
-		$this->request->query['status'] = $selectedStatus;
 	}
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
@@ -155,7 +153,7 @@ class UndoStudentStatusTable extends AppTable {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$Grades = $this->Grades;
 
-			$periodOptions = $this->AcademicPeriods->getYearList();
+			$periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
 			$selectedPeriod = null;
 			$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 				'selectOption' => false,
@@ -254,7 +252,6 @@ class UndoStudentStatusTable extends AppTable {
 					$this->StudentStatuses->aliasField('id IN') => $codes
 				])
 				->toArray();
-			$selectedStatus = $request->query['status'];
 
 			$attr['options'] = $statusOptions;
 			$attr['onChangeReload'] = 'changeStatus';
@@ -271,7 +268,7 @@ class UndoStudentStatusTable extends AppTable {
 			if ($selectedClass != -1) {
 				$institutionClassRecord = $InstitutionClasses->get($selectedClass)->name;
 			} else {
-				$institutionClassRecord = __('All Classes');
+				$institutionClassRecord = __('Students without Class');
 			}
 			
 			$attr['attr']['value'] = $institutionClassRecord;
@@ -288,7 +285,7 @@ class UndoStudentStatusTable extends AppTable {
 					'ClassGrades.education_grade_id' => $selectedGrade
 				])
 				->toArray();
-			$options = ['-1' => __('All Classes')] + $institutionClassRecords;
+			$options = ['-1' => __('Students without Class')] + $institutionClassRecords;
 			$selectedClass = $request->query('class');
 			if (empty($selectedClass)) {
 				if (!empty($classes)) {
@@ -315,10 +312,6 @@ class UndoStudentStatusTable extends AppTable {
 			$student_ids = $request->data[$this->alias()]['student_ids'];
 			$selectedClass = $request->query('class');
 
-			if ($selectedClass == -1) {
-				$selectedClass = '';
-			}
-
 			$data = $this
 				->find()
 	    		->matching('Users')
@@ -344,11 +337,7 @@ class UndoStudentStatusTable extends AppTable {
 			$selectedClass = $request->query('class');
 
 			if (!is_null($selectedPeriod) && $selectedGrade != -1 && $selectedStatus != -1) {
-
-				if ($selectedClass == -1) {
-					$selectedClass = '';
-				}
-
+				
 				$data = $this
 					->find()
 		    		->matching('Users')
