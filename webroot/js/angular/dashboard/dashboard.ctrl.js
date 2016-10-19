@@ -116,7 +116,7 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
 
     function onChangeModel(model) {
         vm.showSplitContentResponsive();
-        vm.workbenchTitle = DashboardSvc.getWorkbenchTitleByName(model.name);
+        vm.workbenchTitle = DashboardSvc.getWorkbenchTitle(model.code);
 
         // reset to empty
         vm.gridOptions[vm.target].api.setColumnDefs([]);
