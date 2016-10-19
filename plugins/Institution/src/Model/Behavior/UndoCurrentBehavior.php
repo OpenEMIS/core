@@ -26,7 +26,7 @@ class UndoCurrentBehavior extends UndoBehavior {
 				if ($studentId != 0) {
 					$studentIds[$studentId] = $studentId;
 
-					$this->deleteEnrolledStudents($studentId);
+					$this->deleteEnrolledStudents($studentId, $this->statuses['CURRENT']);
 				}
 			}
 		}

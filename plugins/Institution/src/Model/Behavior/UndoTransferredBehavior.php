@@ -42,7 +42,7 @@ class UndoTransferredBehavior extends UndoBehavior {
                 if ($studentId != 0) {
                     $studentIds[$studentId] = $studentId;
 
-                    $prevInstitutionStudent = $this->deleteEnrolledStudents($studentId);
+                    $prevInstitutionStudent = $this->deleteEnrolledStudents($studentId, $this->statuses['TRANSFERRED']);
                     
                     $where = [
                         'institution_id' => $prevInstitutionStudent->institution_id, //for transferred status, then need to enrolled back the status on the previous institution
