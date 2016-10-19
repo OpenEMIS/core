@@ -122,7 +122,6 @@ class LocalizationComponent extends Component {
 				$this->Cookie->write('System.language', $lang);
 			} else {
 				// This condition will only be reach if the user has not login and the cookie for the system language has not been set on the browser
-				$lang = $ConfigItemsTable->value('language');
 				$this->Cookie->write('System.language', $lang);
 			}
 		}
