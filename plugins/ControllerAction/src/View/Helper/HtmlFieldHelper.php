@@ -794,6 +794,7 @@ class HtmlFieldHelper extends Helper {
 
 		if ($action == 'index' || $action == 'view') {
 			// $buttons = $this->_View->get('_buttons');
+<<<<<<< HEAD
 			$buttons = $this->_View->get('ControllerAction');
 
 			if (array_key_exists('buttons', $buttons)) { // for CAv3
@@ -801,6 +802,12 @@ class HtmlFieldHelper extends Helper {
 			} else { // for CAv4
 				$action = $buttons['table']->url('download', false);
 			}
+=======
+			// $buttons = $this->_View->get('ControllerAction');
+			// $buttons = $buttons['buttons'];
+			// $action = $buttons['download']['url'];
+			$request = $this->request;
+			$action = ['action' => $request->action, 'download', $data->{$table->primaryKey()}];
 			$value = $this->link($data->$name, $action);
 		} else if ($action == 'edit') {
 			$this->includes['jasny']['include'] = true;
