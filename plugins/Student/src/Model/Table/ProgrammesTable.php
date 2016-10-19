@@ -7,6 +7,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Cake\ORM\ResultSet;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -103,7 +104,7 @@ class ProgrammesTable extends ControllerActionTable
 		$this->controller->set('selectedAction', $this->alias());
 	}
 
-	public function indexAfterAction(Event $event, $data, ArrayObject $extra)
+	public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
 	{
 		$this->setupTabElements();
 	}

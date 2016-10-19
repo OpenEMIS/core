@@ -111,7 +111,6 @@ class StudentsTable extends ControllerActionTable
 		 * End Advance Search Types
 		 */
         $this->addBehavior('ControllerAction.Image'); // To be verified
-        // $this->addBehavior('OpenEmis.Section');
 
 	}
 
@@ -834,7 +833,7 @@ class StudentsTable extends ControllerActionTable
 	private function setupTabElements($entity)
 	{
 		$options['type'] = 'student';
-		$tabElements = TableRegistry::get('Student.Students')->getAcademicTabElements($options);
+		$tabElements = TableRegistry::get('Institution.StudentUser')->getAcademicTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', 'Programmes');
 	}
