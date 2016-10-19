@@ -34,6 +34,52 @@ class StudentAdmissionTable extends AppTable {
 		$this->belongsTo('NewEducationGrades', ['className' => 'Education.EducationGrades']);
 
 		$this->addBehavior('User.AdvancedNameSearch');
+        $this->addBehavior('Restful.RestfulAccessControl', [
+        	'Students' => ['index', 'add']
+        ]);
+	}
+
+	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
+		$validator
+			->add('start_date', 'ruleCompareDate', [
+				'rule' => ['compareDate', 'end_date', false]
+			])
+			->add('end_date', [
+			])
+			->add('student_status_id', [
+			])
+			->add('academic_period_id', [
+			])
+			->add('education_grade_id', [
+			])
+			->allowEmpty('student_name')
+			->add('student_name', 'ruleCheckPendingAdmissionExist', [
+				'rule' => ['checkPendingAdmissionExist'],
+				'on' => 'create'
+			])
+			->add('student_name', 'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem', [
+				'rule' => ['studentNotEnrolledInAnyInstitutionAndSameEducationSystem', []],
+				'on' => 'create',
+				'last' => true
+			])
+			->add('student_name', 'ruleStudentNotCompletedGrade', [
+				'rule' => ['studentNotCompletedGrade', []],
+				'on' => 'create',
+				'last' => true
+			])
+			->add('student_name', 'ruleCheckAdmissionAgeWithEducationCycleGrade', [
+				'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
+				'on' => 'create'
+			])
+			->allowEmpty('class')
+			->add('class', 'ruleClassMaxLimit', [
+				'rule' => ['checkInstitutionClassMaxLimit'],
+				'on' => 'create'
+			])
+			;
+		return $validator;
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -97,7 +143,7 @@ class StudentAdmissionTable extends AppTable {
 				Log::write('debug', $selectedClassId);
 				$selectedClassId = NULL;
 				$entity->institution_class_id = null;
-				$this->save($entity);
+				$this->save($entity, ['validate' => false]);
 			}
 		}
 
@@ -464,7 +510,7 @@ class StudentAdmissionTable extends AppTable {
 				// Update the status of the admission to be approved
 				$entity->start_date = $startDate;
 				$entity->status = self::APPROVED;
-				if (!$this->save($entity)) {
+				if (!$this->save($entity, ['validate' => false])) {
 					$this->log($entity->errors(), 'debug');
 				}
 			} else {

@@ -36,7 +36,9 @@ class ReportListBehavior extends Behavior {
 		}
 	}
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+	public function indexBeforeAction(Event $event, ArrayObject $settings) {
+        $query = $settings['query'];
+
 		$userId = $this->_table->Auth->user('id');
 		// $this->ReportProgress->purge($userId, true);
 
@@ -145,7 +147,7 @@ class ReportListBehavior extends Behavior {
 		}
 		$table = TableRegistry::get($feature);
 
-		// Event: 
+		// Event:
 		// $eventKey = 'Model.Report.onGetName';
 		// $event = new Event($eventKey, $this, [$data]);
 		// $event = $table->eventManager()->dispatch($event);

@@ -20,6 +20,8 @@ class SecuritiesController extends AppController {
 		];
 	}
 
+	public function RefreshToken() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.RefreshTokens']); }
+
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 		$header = 'Security';

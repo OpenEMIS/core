@@ -10,6 +10,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
+use Cake\Network\Request;
 use Restful\Controller\RestfulController as BaseController;
 
 class RestfulController extends BaseController

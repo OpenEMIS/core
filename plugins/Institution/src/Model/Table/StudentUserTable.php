@@ -18,6 +18,9 @@ class StudentUserTable extends UserTable
 	public function initialize(array $config)
 	{
 		parent::initialize($config);
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Students' => ['index', 'add']
+        ]);
 	}
 
 	public function beforeAction(Event $event)
@@ -33,7 +36,10 @@ class StudentUserTable extends UserTable
 				'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
 				'on' => 'create'
 			])
-
+			->add('education_grade_id', [
+			])
+			->add('academic_period_id', [
+			])
 			->allowEmpty('postal_code')
 			->add('postal_code', 'ruleCustomPostalCode', [
         		'rule' => ['validateCustomPattern', 'postal_code'],

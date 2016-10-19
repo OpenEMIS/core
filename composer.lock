@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "a4cbe03d8bcc6038e3679be671a3cd95",
-    "content-hash": "f2f59f6435574c87c99ac0622158b244",
+    "hash": "c35fd5cf7ec0548b124423d322b7f8ab",
+    "content-hash": "facc1a752c0ecee647a37f505137e196",
     "packages": [
         {
             "name": "admad/cakephp-jwt-auth",
@@ -386,11 +386,11 @@
         },
         {
             "name": "korditpteltd/kd-cakephp-restful",
-            "version": "dev-master",
+            "version": "1.0.3.x-dev",
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git",
-                "reference": "3e2d1b726facf302333fec5b538458e732d7c0d8"
+                "reference": "be0b29180ac42f863daa9f5391c9f17f76db0bed"
             },
             "require": {
                 "cakephp/cakephp": ">3.0.9"
@@ -436,15 +436,15 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
             },
-            "time": "2016-07-22 07:45:31"
+            "time": "2016-10-13 08:38:32"
         },
         {
             "name": "korditpteltd/kd-cakephp-sso",
-            "version": "v1.0.2",
+            "version": "v1.0.3",
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git",
-                "reference": "26030b0ad3d14df612ba105f90f572ce7ea87028"
+                "reference": "c4285d4d0ab8f9dfcd4ff8ac43e2f42c10b99f29"
             },
             "require": {
                 "cakephp/cakephp": ">3.0.0",
@@ -478,7 +478,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
             },
-            "time": "2016-10-17 08:11:11"
+            "time": "2016-10-18 02:37:33"
         },
         {
             "name": "mk-j/php_xlsxwriter",
@@ -2947,6 +2947,7 @@
     "stability-flags": {
         "phpoffice/phpexcel": 20,
         "mk-j/php_xlsxwriter": 20,
+        "korditpteltd/kd-cakephp-restful": 20,
         "psy/psysh": 0
     },
     "prefer-stable": true,
