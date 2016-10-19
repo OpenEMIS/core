@@ -17,6 +17,7 @@ class TrainingSessionResultsTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('Sessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_session_id']);
+		$this->belongsTo('Assignees', ['className' => 'User.Users']);
 	}
 
 	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
@@ -390,7 +391,7 @@ class TrainingSessionResultsTable extends AppTable {
 		$workflow = $this->getWorkflow($this->registryAlias());
 		if (!empty($workflow)) {
 			foreach ($workflow->workflow_steps as $workflowStep) {
-				if ($workflowStep->stage == 0) {
+				if ($workflowStep->category == 1) {
 					$openStatusId = $workflowStep->id;
 					break;
 				}

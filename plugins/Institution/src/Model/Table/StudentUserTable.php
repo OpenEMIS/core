@@ -203,8 +203,11 @@ class StudentUserTable extends UserTable
     private function addTransferButton(ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, Session $session)
     {
     	$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+
 		$statuses = $InstitutionStudentsTable->StudentStatuses->findCodeList();
 		$id = $session->read('Institution.Students.id');
+
+		// check the permission
 		if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])) {
 			$TransferRequests = TableRegistry::get('Institution.TransferRequests');
 			$studentData = $InstitutionStudentsTable->get($id);
@@ -217,42 +220,44 @@ class StudentUserTable extends UserTable
 			$checkIfCanTransfer = $InstitutionStudentsTable->checkIfCanTransfer($studentData, $institutionId);
 			// End
 
-			// Transfer button
-			$transferButton = $buttons['back'];
-			$transferButton['type'] = 'button';
-			$transferButton['label'] = '<i class="fa kd-transfer"></i>';
-			$transferButton['attr'] = $attr;
-			$transferButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
-			$transferButton['attr']['title'] = __('Transfer');
-			//End
+			if ($checkIfCanTransfer) {
+				// Transfer button
+				$transferButton = $buttons['back'];
+				$transferButton['type'] = 'button';
+				$transferButton['label'] = '<i class="fa kd-transfer"></i>';
+				$transferButton['attr'] = $attr;
+				$transferButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+				$transferButton['attr']['title'] = __('Transfer');
+				//End
 
-			$transferRequest = $TransferRequests
-					->find()
-					->where([
-						$TransferRequests->aliasField('previous_institution_id') => $institutionId,
-						$TransferRequests->aliasField('student_id') => $selectedStudent,
-						$TransferRequests->aliasField('status') => 0
-					])
-					->first();
+				$transferRequest = $TransferRequests
+						->find()
+						->where([
+							$TransferRequests->aliasField('previous_institution_id') => $institutionId,
+							$TransferRequests->aliasField('student_id') => $selectedStudent,
+							$TransferRequests->aliasField('status') => 0
+						])
+						->first();
 
-			if (!empty($transferRequest)) {
-				$transferButton['url'] = [
-					'plugin' => $buttons['back']['url']['plugin'],
-					'controller' => $buttons['back']['url']['controller'],
-					'action' => 'TransferRequests',
-					'edit',
-					$transferRequest->id
-				];
-				$toolbarButtons['transfer'] = $transferButton;
-			}
-			else if ($checkIfCanTransfer) {
-				$transferButton['url'] = [
-					'plugin' => $buttons['back']['url']['plugin'],
-					'controller' => $buttons['back']['url']['controller'],
-					'action' => 'TransferRequests',
-					'add'
-				];
-				$toolbarButtons['transfer'] = $transferButton;
+				if (!empty($transferRequest)) {
+					$transferButton['url'] = [
+						'plugin' => $buttons['back']['url']['plugin'],
+						'controller' => $buttons['back']['url']['controller'],
+						'action' => 'TransferRequests',
+						'view',
+						$transferRequest->id
+					];
+					$toolbarButtons['transfer'] = $transferButton;
+				}
+				else if ($checkIfCanTransfer) {
+					$transferButton['url'] = [
+						'plugin' => $buttons['back']['url']['plugin'],
+						'controller' => $buttons['back']['url']['controller'],
+						'action' => 'TransferRequests',
+						'add'
+					];
+					$toolbarButtons['transfer'] = $transferButton;
+				}
 			}
 		}
     }
