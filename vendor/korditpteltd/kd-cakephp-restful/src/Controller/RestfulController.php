@@ -149,15 +149,11 @@ class RestfulController extends AppController
 
     private function _finder(Query $query, $value, ArrayObject $extra)
     {
-        $components = [
-            '_Session' => $this->request->session()
-        ];
-
         if (!empty($value)) {
             $table = $extra['table'];
             $finders = $this->decode($value);
             foreach ($finders as $name => $options) {
-                $options = array_merge($options, $components);
+                $options['_controller'] = $this;
                 $finderFunction = 'find' . ucfirst($name);
                 if (method_exists($table, $finderFunction) || $table->behaviors()->hasMethod($finderFunction)) {
                     $query->find($name, $options);
