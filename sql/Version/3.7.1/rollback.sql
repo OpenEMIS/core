@@ -1,3 +1,11 @@
+-- POCOR-3388
+-- institution_students
+ALTER TABLE `institution_students` DROP `previous_institution_student_id`;
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue`='POCOR-3388';
+
+
 -- POCOR-3444
 -- config_item_options
 CREATE TABLE `z_3444_temp_language_mapping` (

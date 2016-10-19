@@ -50,7 +50,6 @@ class InstitutionsController extends AppController
             'TransferApprovals' => ['className' => 'Institution.TransferApprovals', 'actions' => ['edit', 'view']],
             'StudentDropout'    => ['className' => 'Institution.StudentDropout', 'actions' => ['index', 'edit', 'view']],
             'DropoutRequests'   => ['className' => 'Institution.DropoutRequests', 'actions' => ['add', 'edit', 'remove']],
-            'TransferRequests'  => ['className' => 'Institution.TransferRequests', 'actions' => ['index', 'view', 'add', 'edit', 'remove']],
             'StudentAdmission'  => ['className' => 'Institution.StudentAdmission', 'actions' => ['index', 'edit', 'view', 'search']],
             'Undo'              => ['className' => 'Institution.UndoStudentStatus', 'actions' => ['view', 'add']],
             'ClassStudents'     => ['className' => 'Institution.InstitutionClassStudents', 'actions' => ['excel']],
@@ -93,6 +92,7 @@ class InstitutionsController extends AppController
     public function UndoExaminationRegistration() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminationsUndoRegistration']); }
     public function ExaminationStudents()   { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminationStudents']); }
     public function Contacts()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionContacts']); }
+    public function TransferRequests()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.TransferRequests']); }
     // public function StaffAbsences() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
     public function StaffLeave()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffLeave']); }
     // End
