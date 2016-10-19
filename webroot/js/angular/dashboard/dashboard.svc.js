@@ -17,7 +17,7 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
     };
 
     var configModels = {
-        StudentTransferApprovalsTable: {
+        StudentTransferApprovalTable: {
             cols: workbenchItemTypes.FIXED,
             model: 'Institution.TransferApprovals'
         },
@@ -29,11 +29,11 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
             cols: workbenchItemTypes.FIXED,
             model: 'Institution.StudentDropout'
         },
-        StaffTransferApprovalsTable: {
+        StaffTransferApprovalTable: {
             cols: workbenchItemTypes.FIXED,
             model: 'Institution.StaffTransferApprovals'
         },
-        StaffTransferRequestsTable: {
+        StaffTransferRequestTable: {
             cols: workbenchItemTypes.FIXED,
             model: 'Institution.StaffTransferRequests'
         },
