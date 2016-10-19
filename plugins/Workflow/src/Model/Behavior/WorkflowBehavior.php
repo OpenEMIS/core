@@ -243,13 +243,7 @@ class WorkflowBehavior extends Behavior {
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
 		if ($entity->isNew()) {
 			$this->setStatusAsOpen($entity);
-		}
-	}
-
-	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-		$model = $this->_table;
-		if ($entity->isNew()) {
-			$this->triggerUpdateAssigneeShell($model->registryAlias(), $entity->id);
+			$this->autoAssignAssignee($entity);
 		}
 	}
 
@@ -1193,6 +1187,37 @@ class WorkflowBehavior extends Behavior {
 				// End
 			}
 		}
+	}
+
+	public function autoAssignAssignee(Entity $entity) {
+		$stepId = $entity->status_id;
+
+		$workflowStepEntity = $this->WorkflowSteps
+			->find()
+			->matching('Workflows.WorkflowModels')
+			->where([$this->WorkflowSteps->aliasField('id') => $stepId])
+			->first();
+		$workflowModelEntity = $workflowStepEntity->_matchingData['WorkflowModels'];
+
+		$isSchoolBased = $workflowModelEntity->is_school_based;
+		$category = $workflowStepEntity->category;
+		$createdUserId = $entity->created_user_id;
+
+		$params = [
+			'is_school_based' => $isSchoolBased,
+			'workflow_step_id' => $stepId,
+			'category' => $category,
+			'created_user_id' => $createdUserId
+		];
+
+		if ($entity->has('institution_id')) {
+			$params['institution_id'] = $entity->institution_id;
+		}
+
+		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+		$assigneeId = $SecurityGroupUsers->getFirstAssignee($params);
+
+		$entity->assignee_id = $assigneeId;
 	}
 
 	public function setAssigneeId(Entity $entity, $requestData) {
