@@ -81,6 +81,7 @@ class IndexBehavior extends Behavior {
 			Log::write('debug', $query->__toString());
 		}
 
+
 		$event = $model->dispatchEvent('ControllerAction.Model.index.afterAction', [$query, $data, $extra], $this);
 		if ($event->isStopped()) {
             $mainEvent->stopPropagation();
