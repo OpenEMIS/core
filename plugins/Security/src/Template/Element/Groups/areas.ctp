@@ -25,6 +25,7 @@ $tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
 		'autocomplete-no-results' => __('No Area found.'),
 		'autocomplete-class' => 'error-message',
 		'autocomplete-target' => 'area_id',
+		'length' => 2,
 		'autocomplete-submit' => "$('#reload').val('addArea').click();"
 	]);
 	echo $this->Form->hidden('area_id', ['autocomplete-value' => 'area_id']);

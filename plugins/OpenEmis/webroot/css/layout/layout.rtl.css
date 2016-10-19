@@ -324,8 +324,8 @@
     clear: left;
 }
 
-.rtl .format-item .icheck-input,
-.rtl .chart-item .icheck-input {
+.rtl .format-item .check-input,
+.rtl .chart-item .check-input {
     margin: 0 5px;
 }
 

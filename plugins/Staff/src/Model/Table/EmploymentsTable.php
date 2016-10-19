@@ -1,40 +1,24 @@
 <?php
 namespace Staff\Model\Table;
 
-use App\Model\Table\AppTable;
-use Cake\Validation\Validator;
+use ArrayObject;
 use Cake\Event\Event;
+use App\Model\Table\ControllerActionTable;
 
-class EmploymentsTable extends AppTable {
+class EmploymentsTable extends ControllerActionTable {
 	public function initialize(array $config) {
 		$this->table('staff_employments');
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('EmploymentTypes', ['className' => 'FieldOption.EmploymentTypes']);
+
+		$this->behaviors()->get('ControllerAction')->config('actions.search', false);
 	}
 
-	public function beforeAction() {
-		$this->fields['employment_type_id']['type'] = 'select';
-	}
-	
-	public function indexBeforeAction(Event $event) {
-		$order = 0;
-		$this->ControllerAction->setFieldOrder('employment_type_id', $order++);
-		$this->ControllerAction->setFieldOrder('employment_date', $order++);
-		$this->ControllerAction->setFieldOrder('comment', $order++);
-	}
-
-	public function addEditBeforeAction(Event $event) {
-		$order = 0;
-		$this->ControllerAction->setFieldOrder('employment_type_id', $order++);
-		$this->ControllerAction->setFieldOrder('employment_date', $order++);
-		$this->ControllerAction->setFieldOrder('comment', $order++);
-	}
-
-	public function validationDefault(Validator $validator) {
-		$validator = parent::validationDefault($validator);
-		return $validator;
+	public function beforeAction(Event $event, ArrayObject $extra) {
+		$this->field('employment_type_id', ['type' => 'select', 'before' => 'employment_date']);
+		$this->setupTabElements();
 	}
 
 	private function setupTabElements() {
@@ -42,9 +26,5 @@ class EmploymentsTable extends AppTable {
 		$tabElements = $this->controller->getCareerTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
-	}
-
-	public function indexAfterAction(Event $event, $data) {
-		$this->setupTabElements();
 	}
 }

@@ -1,8 +1,74 @@
+v3.6.7
+- The date and time in reports are fixed
+- System allows user to search for Institution by Area in Student Transfer page
+
+v3.6.6
+- System splits the permission to view Salary list page and Salary Details page
+- System now allows user to search accounts from different Identity types in Advanced Search option
+- System now allows user to search Institutions that offers selected Education Grades in Advanced Search option
+
+v3.6.5
+- Institution contacts section is now moved from Overview page to Contacts page
+- System now allows users to create Non-Academic Institutions
+
+v3.6.4
+- Introduced Examinations feature
+- Institution Sector is now linked to Institution Provider
+
+v3.6.3
+- Users can now switch in between different OpenEMIS products while still logged in
+- Users should be able to see the default identity number on Student/Staff overview page
+- Out of School Student Report will include the student's default identity
+- Users can update Areas via API
+
+v3.6.2
+- Occupier schools only have view access on Infrastructure of the Owner's School
+- Infrastructure custom fields is now linked to Infrastructure Types instead of Levels
+- You can now track changes done to Infrastructure Rooms at a Year level
+- Assessment periods is now configurable in Assessment Periods tab
+- Able to assign different grading type to an Education subject for an Assessment Period
+- Assessment Reports is available on School and Class level
+- Deleting an Academic Period will now delete all related information linked to that academic period
+
+v3.6.1
+- Added Shift type in Institution Overview page and is searchable in Advanced Search
+- Rename This Institution and External Institution to Owner and Occupier
+- Shift name changed to Shift option and is configurable in Field Options
+- When adding student absence record, the start date and end date must be within the academic period
+- System will only show available positions in Add staff page
+- Student punctuality is based on classes shifts start time
+- Staff punctuality is based on Institution's shifts start time
+- Added a maximum limit of 1000 to Maximum Credits for Training Courses	
+- Fixed a bug on Survey Rules where checkboxes are not shown properly
+- Fixed 404 error on certain pages
+
+v3.5.12
+- Fixed a bug that caused some Field Options not able to be sorted
+
+v3.5.11.2
+- Student out of school has been moved from Institution Reports to Student Reports 
+- All Institution Reports are now generated based on Area access of the user
+
+v3.5.11
+- Student and Staff Reports now include Institution Types
+- Fixed a bug that prevented users from deleting Infrastructure records
+- Fixed a bug that caused 404 error page when adding Staff Behaviour
+- Fixed a bug that shows incorrect message to the user after deleting an institution	
+- Fixed a bug that caused the system to add un-selected subjects when adding new subjects
+- Class field in Student Transfer Approval page is now an optional field	
+- Fixed a bug that removes Group Administrator when editing User Groups
+- Added new field called Type in Comments feature
+- Fixed a bug that creates 2 Enrolled records when performing Student Transfers
+- Added new workflow event to delete the record when Cancel is clicked during Open status
+- The number of credit hours in Training Courses should fetch the correct value from System Configuration now	 
+- Security role names are now unique in the system
+
 v3.5.10
 - User must enter a valid end date when creating a new academic period now
 - Fixed a bug that prevented user from viewing guardian profile
 - Fixed a bug that caused 404 error page when accessing Students -> Fees after the student record was deleted
 - Dropdown field type can now be set as mandatory in Survey setup
+- Institution can only be deleted if there are no associated records linked to it (eg. students, classes, programmes)
 
 v3.5.9.3
 - Added new permissions for creating Student or Staff Profile
@@ -24,16 +90,16 @@ v3.5.8
 v3.5.7
 - Fixed a bug that caused 404 error page in Staff Training page after the training course was deleted
 - You can now transfer students from one grade to another grade
-- Fixed a bug that caused the system to allow user to add classes to grades that are no longer active	
-- Fixed a bug that caused Students not able to be added to Class via Pending Admission workflow	
-- Fixed a bug that caused Training Session -> External Trainer not to be saved properly	
-- New Report - Staff Qualifications	
-- Users can now see the summary of student results in Student -> Academic -> Results	
-- New Report - Student Absences	
-- Students can only be added to schools with Academic Periods of Year level	
-- You can now find Institutions easily when performing Student Transfer	
-- In Institutions -> Students, only Homeroom teachers are allowed to edit their own students	
-- Fixed a bug that caused 404 error page when deleting an Area	
+- Fixed a bug that caused the system to allow user to add classes to grades that are no longer active
+- Fixed a bug that caused Students not able to be added to Class via Pending Admission workflow
+- Fixed a bug that caused Training Session -> External Trainer not to be saved properly
+- New Report - Staff Qualifications
+- Users can now see the summary of student results in Student -> Academic -> Results
+- New Report - Student Absences
+- Students can only be added to schools with Academic Periods of Year level
+- You can now find Institutions easily when performing Student Transfer
+- In Institutions -> Students, only Homeroom teachers are allowed to edit their own students
+- Fixed a bug that caused 404 error page when deleting an Area
 
 v3.5.6
 - Zero value can now be saved properly in Survey Forms
@@ -87,11 +153,11 @@ v3.5.5
 
 v3.5.4
 - Students can only be added to schools with academic period of Year level now
-- Fixed a bug that caused Area Levels not displaying correct names	
-- Fixed a bug that caused 404 error page when access Workflow Statuses	
-- Fixed a bug that caused 404 error page when trying to add a new workflow	
-- Add attachments now retain the original file name	
-- Fixed a bug that caused additional 's' character in breadcrumb when accessing in Arabic	
+- Fixed a bug that caused Area Levels not displaying correct names
+- Fixed a bug that caused 404 error page when access Workflow Statuses
+- Fixed a bug that caused 404 error page when trying to add a new workflow
+- Add attachments now retain the original file name
+- Fixed a bug that caused additional 's' character in breadcrumb when accessing in Arabic
 - Added a new Survey question type - Coordinates
 - Added new Survey question type - File
 
@@ -107,10 +173,10 @@ v3.5.3
 v3.5.2
 - Added Weights to Assessment Items and Assessment Periods for calculating results
 - Improved UI on Results data entry
-- Position workflow items will now appear on workbench	
+- Position workflow items will now appear on workbench
 - Fixed a bug that caused surveys not showing in workbench for school principal
 - Fixed a bug that caused 404 error in Classes -> Add when an academic period with no available grades is selected
-- Fixed a bug that prevent user from creating new students in institution	
+- Fixed a bug that prevent user from creating new students in institution
 
 v3.5.1
 - Attachment is now an optional field in Staff Qualifications

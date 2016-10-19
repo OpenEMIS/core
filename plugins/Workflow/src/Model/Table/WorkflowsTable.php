@@ -107,9 +107,12 @@ class WorkflowsTable extends AppTable {
 		$selectedModel = $this->queryString('model', $modelOptions);
 		$this->controller->set(compact('modelOptions', 'selectedModel'));
 		
-		$query
-			->matching('WorkflowModels')
-			->order([$this->aliasField('workflow_model_id'), $this->aliasField('code'), $this->aliasField('name')]);
+		$query->matching('WorkflowModels');
+		$options['order'] = [
+			$this->aliasField('workflow_model_id') => 'asc', 
+			$this->aliasField('code') => 'asc', 
+			$this->aliasField('name') => 'asc'
+		];
 
 		if ($selectedModel != -1) {
 			$query->where([$this->aliasField('workflow_model_id') => $selectedModel]);
@@ -208,7 +211,7 @@ class WorkflowsTable extends AppTable {
     	$this->setupFields($entity);
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
 		$query->where([
 			$this->aliasField('workflow_model_id') => $entity->workflow_model_id
 		]);

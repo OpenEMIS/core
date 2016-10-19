@@ -21,7 +21,7 @@ class GuardiansTable extends AppTable {
 
         $this->belongsTo('Students',            ['className' => 'Student.Students', 'foreignKey' => 'student_id']);
         $this->belongsTo('Users',               ['className' => 'Security.Users', 'foreignKey' => 'guardian_id']);
-        $this->belongsTo('GuardianRelations',   ['className' => 'FieldOption.GuardianRelations', 'foreignKey' => 'guardian_relation_id']);
+        $this->belongsTo('GuardianRelations',   ['className' => 'Student.GuardianRelations', 'foreignKey' => 'guardian_relation_id']);
 
         // to handle field type (autocomplete)
         $this->addBehavior('OpenEmis.Autocomplete');
@@ -188,7 +188,17 @@ class GuardiansTable extends AppTable {
         if ($this->request->is(['ajax'])) {
             $term = $this->request->query['term'];
             // only search for guardian
-            $query = $this->Users->find()->where([$this->Users->aliasField('is_guardian') => 1]);
+            $query = $this->Users->find()
+                ->select([
+                    $this->Users->aliasField('openemis_no'),
+                    $this->Users->aliasField('first_name'),
+                    $this->Users->aliasField('middle_name'),
+                    $this->Users->aliasField('third_name'),
+                    $this->Users->aliasField('last_name'),
+                    $this->Users->aliasField('preferred_name'),
+                    $this->Users->aliasField('id')
+                ])
+                ->where([$this->Users->aliasField('is_guardian') => 1])->limit(100);
 
             $term = trim($term);
             if (!empty($term)) {

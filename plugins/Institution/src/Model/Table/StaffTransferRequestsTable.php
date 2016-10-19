@@ -53,6 +53,7 @@ class StaffTransferRequestsTable extends StaffTransfer {
 
 	public function indexBeforeQuery(Event $event, Query $query, $extra) {
 		$query->where([$this->aliasField('type') => self::TRANSFER]);
+		$extra['auto_contain_fields'] = ['PreviousInstitutions' => ['code']];
 	}
 
 	public function editBeforeQuery(Event $event, Query $query, $extra) {
@@ -61,6 +62,8 @@ class StaffTransferRequestsTable extends StaffTransfer {
 
 	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		parent::editAfterAction($event, $entity, $extra);
+
+		$this->field('previous_institution_id', ['type' => 'readonly', 'after' => 'staff_id', 'attr' => ['value' => $entity->previous_institution->code_name]]);
 		$this->field('institution_position_id', ['type' => 'select', 'attr' => ['value' => $this->getEntityProperty($entity, 'institution_position_id')]]);
 		$this->field('staff_type_id', ['type' => 'select']);
 		$this->field('FTE', ['type' => 'select']);
@@ -114,13 +117,14 @@ class StaffTransferRequestsTable extends StaffTransfer {
 	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$staffName = $this->Users->get($this->getEntityProperty($entity, 'staff_id'))->name_with_id;
 		$staffTypeName = $this->StaffTypes->get($this->getEntityProperty($entity, 'staff_type_id'))->name;
-		$institutionName = $this->Institutions->get($this->getEntityProperty($entity, 'institution_id'))->name;
+		$institutionCodeName = $this->Institutions->get($this->getEntityProperty($entity, 'institution_id'))->code_name;
+		$prevInstitutionCodeName = $this->Institutions->get($entity->previous_institution_id)->code_name;
 		$positionName = $this->Positions->get($this->getEntityProperty($entity, 'institution_position_id'))->name;
-		
+
 		$this->field('status', ['type' => 'readonly']);
 		$this->field('staff_id', ['type' => 'readonly', 'attr' => ['value' => $staffName]]);
-		$this->field('previous_institution_id', ['type' => 'readonly', 'attr' => ['value' => $entity->transfer_from]]);
-		$this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $institutionName]]);
+		$this->field('previous_institution_id', ['type' => 'readonly', 'attr' => ['value' => $prevInstitutionCodeName]]);
+		$this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $institutionCodeName]]);
 		$this->field('institution_position_id', ['after' => 'institution_id', 'type' => 'readonly', 'attr' => ['value' => $positionName]]);
 		$this->field('staff_type_id', ['type' => 'readonly', 'attr' => ['value' => $staffTypeName]]);
 		$this->field('FTE', ['type' => 'readonly']);
@@ -129,10 +133,14 @@ class StaffTransferRequestsTable extends StaffTransfer {
 		$this->field('update', ['type' => 'hidden', 'value' => 0, 'visible' => true]);
 		$this->field('type', ['type' => 'hidden', 'visible' => true, 'value' => self::TRANSFER]);
 
-		$message = $this->getMessage($this->aliasField('alreadyAssigned'), ['sprintf' => [$staffName, $this->getEntityProperty($entity, 'transfer_from')]]);
+		$message = $this->getMessage($this->aliasField('alreadyAssigned'), ['sprintf' => [$staffName, $prevInstitutionCodeName]]);
 		$this->Alert->warning($message, ['type' => 'text']);
 		$this->Alert->info($this->aliasField('confirmRequest'));
 	}
+
+	public function onGetPreviousInstitutionId(Event $event, Entity $entity) {
+        return $entity->previous_institution->code_name;
+    }
 
 	public function onUpdateFieldInstitutionPositionId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'edit') {

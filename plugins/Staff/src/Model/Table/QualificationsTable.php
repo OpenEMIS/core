@@ -16,7 +16,7 @@ class QualificationsTable extends ControllerActionTable {
 		parent::initialize($config);
 
 		$this->addBehavior('ControllerAction.FileUpload', ['size' => '2MB', 'contentEditable' => false, 'allowable_file_types' => 'all', 'useDefaultName' => true]);
-		
+
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('QualificationLevels', ['className' => 'FieldOption.QualificationLevels']);
 		$this->belongsTo('QualificationInstitutions', ['className' => 'Staff.QualificationInstitutions']);
@@ -26,7 +26,7 @@ class QualificationsTable extends ControllerActionTable {
 
 		// setting this up to be overridden in viewAfterAction(), this code is required
 		$this->behaviors()->get('ControllerAction')->config(
-			'actions.download.show', 
+			'actions.download.show',
 			true
 		);
 	}
@@ -35,10 +35,14 @@ class QualificationsTable extends ControllerActionTable {
 		$validator = parent::validationDefault($validator);
 
 		return $validator
-			->add('graduate_year', 'ruleNumeric', 
-				['rule' => 'numeric']
-			)
-			->notEmpty('institution_name', 'Please enter the institution')
+			->allowEmpty('graduate_year')
+			->add('graduate_year', 'ruleNumeric', [
+                    'rule' => ['numeric'],
+                    'on' => function ($context) { //validate when only graduate_year is not empty
+                        return !empty($context['data']['graduate_year']);
+                    }
+			])
+			->notEmpty('institution_name', __('Please enter the institution'))
 			->allowEmpty('file_content')
 			;
 		;
@@ -93,7 +97,7 @@ class QualificationsTable extends ControllerActionTable {
 		if (empty($data[$alias]['qualification_institution_id'])) {
 			if (!empty($data[$alias]['institution_name'])) {
 				$institutionName = $data[$alias]['institution_name'];
-				
+
 				$obj = ['name' => $institutionName, 'visible' => 1];
 
 				$newEntity = $this->QualificationInstitutions->newEntity($obj);
@@ -114,7 +118,7 @@ class QualificationsTable extends ControllerActionTable {
 			return !empty($filename);
 		};
 		$this->behaviors()->get('ControllerAction')->config(
-			'actions.download.show', 
+			'actions.download.show',
 			$showFunc
 		);
 
@@ -136,7 +140,7 @@ class QualificationsTable extends ControllerActionTable {
 		}
 		return $attr;
 	}
-	
+
 	public function onUpdateFieldQualificationInstitutionId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
 			$attr['fieldName'] = $this->aliasField('institution_name');
@@ -156,14 +160,14 @@ class QualificationsTable extends ControllerActionTable {
 
 		if ($this->request->is(['ajax'])) {
 			$term = trim($this->request->query['term']);
-			$search = '%' . $term . '%';
+			$search = $term . '%';
 
 			$query = $this->QualificationInstitutions
 			->find('list')
 			->where([$this->QualificationInstitutions->aliasField('name') . ' LIKE ' => $search]);
-			
+
 			$list = $query->toArray();
-			
+
 			$data = [];
 			foreach ($list as $id => $value) {
 				$label = $value;
@@ -188,7 +192,7 @@ class QualificationsTable extends ControllerActionTable {
 	public function afterAction(Event $event, ArrayObject $extra) {
 		$this->setupTabElements();
 	}
-	
+
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
     	$events['ControllerAction.Model.ajaxInstitutionsAutocomplete'] = 'ajaxInstitutionsAutocomplete';

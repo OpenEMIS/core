@@ -12,11 +12,26 @@ use Cake\Validation\Validator;
 use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 use Cake\I18n\I18n;
 use Cake\ORM\ResultSet;
-
+use Cake\Network\Session;
 use App\Model\Table\AppTable;
+use App\Model\Traits\OptionsTrait;
 
 class InstitutionsTable extends AppTable  {
+	use OptionsTrait;
 	private $dashboardQuery = null;
+
+	public $shiftTypes = [];
+
+	private $isAcademicOptions = [];
+
+	CONST SINGLE_OWNER = 1;
+	CONST SINGLE_OCCUPIER = 2;
+	CONST MULTIPLE_OWNER = 3;
+	CONST MULTIPLE_OCCUPIER = 4;
+
+	// For Academic / Non-Academic Institution type
+	const ACADEMIC = 1;
+	const NON_ACADEMIC = 0;
 
 	public function initialize(array $config) {
 		$this->table('institutions');
@@ -42,9 +57,9 @@ class InstitutionsTable extends AppTable  {
 
 		$this->hasMany('InstitutionActivities', 			['className' => 'Institution.InstitutionActivities', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionAttachments', 			['className' => 'Institution.InstitutionAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
-        
+
 		$this->hasMany('InstitutionPositions', 				['className' => 'Institution.InstitutionPositions', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('InstitutionShifts', 				['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionShifts', 				['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);
 		$this->hasMany('InstitutionClasses', 				['className' => 'Institution.InstitutionClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
         // Note: InstitutionClasses already cascade deletes 'InstitutionSubjectStudents' - dependent and cascade not neccessary
         $this->hasMany('InstitutionSubjectStudents',        ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -64,7 +79,7 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('InstitutionFees', 					['className' => 'Institution.InstitutionFees', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->hasMany('InstitutionGrades', 				['className' => 'Institution.InstitutionGrades', 'dependent' => true, 'cascadeCallbacks' => true]);
-		
+
 		$this->hasMany('StudentPromotion', 					['className' => 'Institution.StudentPromotion', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StudentAdmission', 					['className' => 'Institution.StudentAdmission', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StudentDropout', 					['className' => 'Institution.StudentDropout', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -75,10 +90,12 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('StudentSurveys', 					['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionSurveys', 				['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
 
+		$this->hasMany('ExaminationCentres',				['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
+
 		$this->belongsToMany('SecurityGroups', [
 			'className' => 'Security.SystemGroups',
 			'joinTable' => 'security_group_institutions',
-			'foreignKey' => 'institution_id', 
+			'foreignKey' => 'institution_id',
 			'targetForeignKey' => 'security_group_id',
 			'through' => 'Security.SecurityGroupInstitutions',
 			'dependent' => true
@@ -109,10 +126,25 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('OpenEmis.Map');
         $this->addBehavior('HighChart', ['institutions' => ['_function' => 'getNumberOfInstitutionsByModel']]);
         $this->addBehavior('Import.ImportLink');
+
+        $this->addBehavior('Institution.AdvancedProgrammeSearch');
+
+        $this->shiftTypes = $this->getSelectOptions('Shifts.types'); //get from options trait
+        $this->addBehavior('Restful.RestfulAccessControl', [
+        	'Students' => ['index']
+        ]);
+
+        $this->isAcademicOptions = [
+			self::ACADEMIC => 'Academic Institution',
+			self::NON_ACADEMIC => 'Non-Academic Institution'
+		];
 	}
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
+		$session = new Session();
+		$userId = $session->read('Auth.User.id');
+		$superAdmin = $session->read('Auth.User.super_admin');
 
 		$validator
 			->add('date_opened', [
@@ -130,17 +162,30 @@ class InstitutionsTable extends AppTable  {
 			->add('longitude', 'ruleLongitude', [
 					'rule' => 'checkLongitude'
 				])
-		
+
 	        ->allowEmpty('latitude')
 			->add('latitude', 'ruleLatitude', [
 					'rule' => 'checkLatitude'
 				])
-		
+
 			// ->add('address', 'ruleMaximum255', [
 			// 		'rule' => ['maxLength', 255],
 			// 		'message' => 'Maximum allowable character is 255',
 			// 		'last' => true
 			// 	])
+
+			->add('code', 'ruleCustomCode', [
+	        		'rule' => ['validateCustomPattern', 'institution_code'],
+	        		'provider' => 'table',
+	        		'last' => true
+			    ])
+
+			->allowEmpty('postal_code')
+			->add('postal_code', 'ruleCustomPostalCode', [
+	        		'rule' => ['validateCustomPattern', 'postal_code'],
+	        		'provider' => 'table',
+	        		'last' => true
+			    ])
 
 			->add('code', 'ruleUnique', [
 	        		'rule' => 'validateUnique',
@@ -154,11 +199,45 @@ class InstitutionsTable extends AppTable  {
 						'rule' => 'email'
 					]
 				])
+
+			->allowEmpty('telephone')
+			->add('telephone', 'ruleCustomTelephone', [
+	        		'rule' => ['validateCustomPattern', 'institution_telephone'],
+	        		'provider' => 'table',
+	        		'last' => true
+			    ])
+
+			->allowEmpty('fax')
+			->add('fax', 'ruleCustomFax', [
+	        		'rule' => ['validateCustomPattern', 'institution_fax'],
+	        		'provider' => 'table',
+	        		'last' => true
+			    ])
+
 			->add('area_id', 'ruleAuthorisedArea', [
-					'rule' => 'checkAuthorisedArea'
+					'rule' => ['checkAuthorisedArea', $superAdmin, $userId]
+				])
+			->add('institution_provider_id', 'ruleLinkedSector', [
+						'rule' => 'checkLinkedSector',
+						'provider' => 'table'
 				])
 	        ;
 		return $validator;
+	}
+
+	public function getNonAcademicConstant() {
+		return self::NON_ACADEMIC;
+	}
+
+	public function getAcademicConstant() {
+		return self::ACADEMIC;
+	}
+
+	public function implementedEvents()
+	{
+		$events = parent::implementedEvents();
+		$events['AdvanceSearch.getCustomFilter'] = 'getCustomFilter';
+		return $events;
 	}
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
@@ -178,6 +257,14 @@ class InstitutionsTable extends AppTable  {
 		$fields->exchangeArray($newFields);
 	}
 
+	public function onExcelGetShiftType(Event $event, Entity $entity) {
+		if (isset($this->shiftTypes[$entity->shift_type])) {
+			return __($this->shiftTypes[$entity->shift_type]);
+		} else {
+			return '';
+		}
+	}
+
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$query
 			->contain(['Areas'])
@@ -188,24 +275,74 @@ class InstitutionsTable extends AppTable  {
 		$name = $entity->name;
 
 		if ($this->AccessControl->check([$this->controller->name, 'dashboard'])) {
-			$name = $event->subject()->Html->link($entity->name, [
+			$name = $event->subject()->HtmlField->link($entity->name, [
 				'plugin' => $this->controller->plugin,
 				'controller' => $this->controller->name,
 				'action' => 'dashboard',
 				'0' => $entity->id
 			]);
 		}
-		
+
 		return $name;
+	}
+
+	public function onGetShiftType(Event $event, Entity $entity)
+	{
+		$type = '-';
+		if (array_key_exists($entity->shift_type, $this->shiftTypes)) {
+			$type = $this->shiftTypes[$entity->shift_type];
+		}
+		return $type;
+	}
+
+	public function getViewShiftDetail($institutionId, $academicPeriod)
+	{
+		$data = $this->InstitutionShifts->find()
+				->innerJoinWith('Institutions')
+				->innerJoinWith('LocationInstitutions')
+				->innerJoinWith('ShiftOptions')
+				->select([
+					'Owner' => 'Institutions.name',
+					'OwnerId' => 'Institutions.id',
+					'Occupier' => 'LocationInstitutions.name',
+					'OccupierId' => 'LocationInstitutions.id',
+					'Shift' => 'ShiftOptions.name',
+					'ShiftId' => 'ShiftOptions.id',
+					'StartTime' => 'InstitutionShifts.start_time',
+					'EndTime' => 'InstitutionShifts.end_time'
+				])
+				->where([
+					'OR' => [
+						[$this->InstitutionShifts->aliasField('location_institution_id') => $institutionId],
+						[$this->InstitutionShifts->aliasField('institution_id') => $institutionId]
+					],
+					$this->InstitutionShifts->aliasField('academic_period_id') => $academicPeriod
+				])
+				->toArray();
+
+		return $data;
 	}
 
 	public function onUpdateDefaultActions(Event $event) {
 		return ['downloadFile'];
 	}
 
+	public function onUpdateFieldDateClosed(Event $event, array $attr, $action, Request $request)
+	{
+		$attr['default_date'] = false;
+		return $attr;
+	}
+
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+		if ($entity->isNew()) {
+			$entity->shift_type = 0;
+		}
+	}
+
 	public function beforeAction($event) {
 		$this->ControllerAction->field('security_group_id', ['visible' => false]);
 		// $this->ControllerAction->field('institution_site_area_id', ['visible' => false]);
+		$this->ControllerAction->field('date_closed');
 		$this->ControllerAction->field('modified', ['visible' => false]);
 		$this->ControllerAction->field('modified_user_id', ['visible' => false]);
 		$this->ControllerAction->field('created', ['visible' => false]);
@@ -214,16 +351,29 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('institution_locality_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_ownership_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_status_id', ['type' => 'select']);
-		$this->ControllerAction->field('institution_sector_id', ['type' => 'select']);
-		$this->ControllerAction->field('institution_provider_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_sector_id', ['type' => 'select', 'onChangeReload' => true]);
+		if ($this->action == 'index' || $this->action == 'view') {
+			$this->ControllerAction->field('institution_provider_id', ['type' => 'select']);
+		}
 		$this->ControllerAction->field('institution_gender_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_network_connectivity_id', ['type' => 'select']);
 		$this->ControllerAction->field('area_administrative_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives', 'displayCountry' => false]);
 		$this->ControllerAction->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
 
 		$this->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information')]);
+
+		$this->ControllerAction->field('shift_section', ['type' => 'section', 'title' => __('Shifts'), 'visible' => ['view'=>true]]);
+		$this->ControllerAction->field('shift_type', ['visible' => ['view' => true]]);
+
+		$this->ControllerAction->field('shift_details', [
+			'type' => 'element',
+			'element' => 'Institution.Shifts/details',
+			'visible' => ['view'=>true],
+			'data' => $this->getViewShiftDetail($this->Session->read('Institution.Institutions.id'), $this->InstitutionShifts->AcademicPeriods->getCurrent())
+		]);
+
 		$this->ControllerAction->field('location_section', ['type' => 'section', 'title' => __('Location')]);
-		
+
 		$language = I18n::locale();
 		$field = 'area_id';
 		$areaLabel = $this->onGetFieldLabel($event, $this->alias(), $field, $language, true);
@@ -238,49 +388,30 @@ class InstitutionsTable extends AppTable  {
 		if (strtolower($this->action) != 'index') {
 			$this->Navigation->addCrumb($this->getHeader($this->action));
 		}
+
+		if ($this->action == 'view' || $this->action == 'edit') {
+			// Moved to InstitutionContacts
+			$this->ControllerAction->field('contact_section', ['visible' => false]);
+			$this->ControllerAction->field('contact_person', ['visible' => false]);
+	        $this->ControllerAction->field('telephone', ['visible' => false]);
+	        $this->ControllerAction->field('fax', ['visible' => false]);
+	        $this->ControllerAction->field('email', ['visible' => false]);
+	        $this->ControllerAction->field('website', ['visible' => false]);
+		}
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
 		$SecurityGroup = TableRegistry::get('Security.SystemGroups');
-		$SecurityInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
 
-        if ($entity->isNew()) {
-			$obj = $SecurityGroup->newEntity(['name' => $entity->code . ' - ' . $entity->name]);
-			$securityGroup = $SecurityGroup->save($obj);
-			if ($securityGroup) {
-				// add the relationship of security group and institutions
-				$securityInstitution = $SecurityInstitutions->newEntity([
-					'security_group_id' => $securityGroup->id, 
-					'institution_id' => $entity->id
-				]);
-				$SecurityInstitutions->save($securityInstitution);
+		$dispatchTable = [];
+		$dispatchTable[] = $SecurityGroup;
+		$dispatchTable[] = $this->ExaminationCentres;
+		$dispatchTable[] = $SecurityGroupAreas;
 
-				$this->trackActivity = false;
-				$entity->security_group_id = $securityGroup->id;
-				if (!$this->save($entity)) {
-					return false;
-				}
-				
-			} else {
-				return false;
-			}
-
-        } else {
-			$securityGroupId = $entity->security_group_id;
-			if (!empty($securityGroupId)) {
-				$obj = $SecurityGroup->get($securityGroupId);
-				if (is_object($obj)) {
-					$data = ['name' => $entity->code . ' - ' . $entity->name];
-					$obj = $SecurityGroup->patchEntity($obj, $data);
-					$securityGroup = $SecurityGroup->save($obj);
-					if (!$securityGroup) {
-						return false;
-					}
-				}
-			}
-
-        }
-        return true;
+		foreach ($dispatchTable as $model) {
+			$model->dispatchEvent('Model.Institutions.afterSave', [$entity], $this);
+		}
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
@@ -312,16 +443,19 @@ class InstitutionsTable extends AppTable  {
 			$indexDashboard = 'dashboard';
 			$count = $institutionCount->count();
 			unset($institutionCount);
-			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
-	            'name' => $indexDashboard,
-	            'data' => [ 
-	            	'model' => 'institutions',
-	            	'modelCount' => $count,
-	            	'modelArray' => $institutionArray,
-	            ],
-	            'options' => [],
-	            'order' => 1
-	        ];
+
+			if ($this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
+				$this->controller->viewVars['indexElements']['mini_dashboard'] = [
+		            'name' => $indexDashboard,
+		            'data' => [
+		            	'model' => 'institutions',
+		            	'modelCount' => $count,
+		            	'modelArray' => $institutionArray,
+		            ],
+		            'options' => [],
+		            'order' => 1
+		        ];
+            }
 	    }
 	    $config['formButtons'] = false;
 	}
@@ -337,7 +471,7 @@ class InstitutionsTable extends AppTable  {
 			$params['key'] = __($key);
 
 			$institutionRecords = clone $query;
-			
+
 			$selectString = $modelName.'.name';
 			$institutionTypesCount = $institutionRecords
 				->contain([$modelName])
@@ -350,7 +484,7 @@ class InstitutionsTable extends AppTable  {
 
 			$this->advancedSearchQuery($this->request, $institutionTypesCount);
 
-			// Creating the data set		
+			// Creating the data set
 			$dataSet = [];
 			foreach ($institutionTypesCount->toArray() as $key => $value) {
 	            // Compile the dataset
@@ -385,7 +519,7 @@ class InstitutionsTable extends AppTable  {
 		if($this->action == 'index'){
 			$areaName = $entity->Areas['name'];
 			// Getting the system value for the area
-			$ConfigItems = TableRegistry::get('ConfigItems');
+			$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 			$areaLevel = $ConfigItems->value('institution_area_level_id');
 
 			// Getting the current area id
@@ -413,13 +547,13 @@ class InstitutionsTable extends AppTable  {
 	public function onGetAreaAdministrativeId(Event $event, Entity $entity) {
 		if ($this->action == 'view') {
 			return $entity->area_administrative_id;
-		}	
+		}
 	}
 
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
 			if ($field == 'area_id' && $this->action == 'index') {
 				// Getting the system value for the area
-				$ConfigItems = TableRegistry::get('ConfigItems');
+				$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 				$areaLevel = $ConfigItems->value('institution_area_level_id');
 
 				$AreaTable = TableRegistry::get('Area.AreaLevels');
@@ -450,9 +584,7 @@ class InstitutionsTable extends AppTable  {
 		$query->join($options['query']['join']);
 
 		$queryParams = $request->query;
-		if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
-			$query->order([$this->aliasField('name') => 'asc']);
-		}
+		$options['order'] = [$this->aliasField('name') => 'asc'];
 	}
 
 	public function indexAfterPaginate(Event $event, ResultSet $resultSet, Query $query) {
@@ -482,38 +614,38 @@ class InstitutionsTable extends AppTable  {
 	public function viewBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
-			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id', 
+			'name', 'alternative_name', 'code', 'is_academic', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
 			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
-			
+
+			'shift_section',
+			'shift_type', 'shift_details',
+
 			'location_section',
 			'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
 
 			'area_section',
-			'area_id', 
+			'area_id',
 
 			'area_administrative_section',
 			'area_administrative_id',
 
-			'contact_section',
-			'contact_person', 'telephone', 'fax', 'email', 'website',
-
 			'map_section',
 			'map',
-
 		]);
 	}
 
 /******************************************************************************************************************
 **
-** addEdit action methods
+** add / addEdit action methods
 **
 ******************************************************************************************************************/
-	public function addEditBeforeAction(Event $event) {
+
+	public function addBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
-			'name', 'alternative_name', 'code', 'institution_provider_id', 'institution_sector_id', 'institution_type_id', 
+			'name', 'alternative_name', 'code', 'is_academic', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
 			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
-			
+
 			'location_section',
 			'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
 
@@ -528,20 +660,78 @@ class InstitutionsTable extends AppTable  {
 		]);
 	}
 
+		public function editBeforeAction(Event $event) {
+		$this->ControllerAction->setFieldOrder([
+			'information_section',
+			'name', 'alternative_name', 'code', 'is_academic', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
+			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
+
+			'location_section',
+			'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
+
+			'area_section',
+			'area_id',
+
+			'area_administrative_section',
+			'area_administrative_id',
+		]);
+	}
+
 	public function addEditAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('institution_type_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_provider_id', ['type' => 'select', 'sectorId' => $entity->institution_sector_id]);
+		$this->ControllerAction->field('is_academic', ['type' => 'select', 'options' => [], 'entity' => $entity, 'after' => 'code']);
 	}
+
+	public function viewAfterAction(Event $event, Entity $entity)
+	{
+		$this->ControllerAction->field('is_academic', ['type' => 'select', 'options' => [], 'entity' => $entity, 'after' => 'code']);
+	}
+
+	public function onUpdateFieldInstitutionProviderId(Event $event, array $attr, $action, Request $request) {
+		$providerOptions = [];
+		$selectedSectorId = '';
+
+		if (isset($request->data[$this->alias()]['institution_sector_id'])) {
+            $selectedSectorId = $request->data[$this->alias()]['institution_sector_id'];
+
+        } else if ($action == 'add') {
+        	$SectorTable = $this->Sectors;
+        	$defaultSector = $SectorTable
+        		->find()
+        		->where([$SectorTable->aliasField('default') => 1])
+        		->first();
+
+        	if(!empty($defaultSector)) {
+        		$selectedSectorId = $defaultSector->id;
+        	}
+
+        } else if ($action == 'edit') {
+        	$selectedSectorId = $attr['sectorId'];
+        }
+
+        if (!empty($selectedSectorId)) {
+	        $ProviderTable = $this->Providers;
+	        $providerOptions = $ProviderTable->find('list')
+				->where([$ProviderTable->aliasField('institution_sector_id') => $selectedSectorId])
+				->toArray();
+		}
+
+        $attr['options'] = $providerOptions;
+        $attr['empty'] = true;
+        return $attr;
+    }
 
 /******************************************************************************************************************
 **
 ** essential methods
 **
 ******************************************************************************************************************/
-	
+
 	// autocomplete used for UserGroups
 	public function autocomplete($search, $params = []) {
 		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
-		$search = sprintf('%%%s%%', $search);
+		$search = sprintf('%s%%', $search);
 
 		$list = $this
 			->find()
@@ -554,7 +744,7 @@ class InstitutionsTable extends AppTable  {
 			->where([$conditions])
 			->order([$this->aliasField('name')])
 			->all();
-		
+
 		$data = array();
 		foreach($list as $obj) {
 			$data[] = [
@@ -621,7 +811,25 @@ class InstitutionsTable extends AppTable  {
 ** Security Functions
 **
 ******************************************************************************************************************/
-	
+
+	public function onUpdateFieldIsAcademic(Event $event, array $attr, $action, Request $request) {
+
+		if ($action == 'add') {
+			$attr['select'] = false;
+			$attr['options'] = $this->isAcademicOptions;
+		} else if ($action == 'edit') {
+			$attr['type'] = 'disabled';
+			$attr['attr']['value'] = __($this->isAcademicOptions[$attr['entity']->is_academic]);
+		}
+		return $attr;
+	}
+
+	public function onGetIsAcademic(Event $event, Entity $entity)
+	{
+		$selectedIsAcademic = $entity->is_academic;
+		return __($this->isAcademicOptions[$selectedIsAcademic]);
+	}
+
 	/**
 	 * To get the list of security group id for the particular institution and user
 	 *
@@ -679,4 +887,38 @@ class InstitutionsTable extends AppTable  {
 		return $SecurityGroupUsers->getRolesByUserAndGroup($groupIds, $userId);
 	}
 
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+    	$extra['excludedModels'] = [
+    		$this->SecurityGroups->alias(), $this->InstitutionSurveys->alias(), $this->StudentSurveys->alias(),
+    		$this->StaffPositionProfiles->alias(), $this->InstitutionActivities->alias(), $this->StudentPromotion->alias(),
+    		$this->StudentAdmission->alias(), $this->StudentDropout->alias(), $this->TransferApprovals->alias(),
+            $this->CustomFieldValues->alias(), $this->CustomTableCells->alias()
+    	];
+    }
+
+	public function getCustomFilter(Event $event)
+	{
+		$filters['shift_type'] = [
+			'label' => __('Shift Type'),
+			'options' => $this->shiftTypes
+		];
+		return $filters;
+	}
+
+	public function findNotExamCentres(Query $query, array $options)
+	{
+		if (isset($options['examination_id'])) {
+			$query
+				->leftJoinWith('ExaminationCentres', function($q) use ($options) {
+					return $q
+						->where(['ExaminationCentres.examination_id' => $options['examination_id']]);
+				})
+				->where([
+					'ExaminationCentres.institution_id IS NULL'
+				])
+				;
+			return $query;
+		}
+	}
 }
