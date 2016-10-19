@@ -40,11 +40,11 @@ class StudentsTable extends ControllerActionTable
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 		$this->addBehavior('AcademicPeriod.Period');
 		// to handle field type (autocomplete)
-		$this->addBehavior('OpenEmis.Autocomplete');
+		// $this->addBehavior('OpenEmis.Autocomplete');
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
 		$this->addBehavior('Institution.StudentCascadeDelete'); // for cascade delete on student related tables from an institution
-		$this->addBehavior('AcademicPeriod.AcademicPeriod');
+		$this->addBehavior('AcademicPeriod.AcademicPeriod'); // to make sure it is compatible with v4
 
 		$this->addBehavior('Excel', [
 			'excludes' => ['start_year', 'end_year'],
@@ -75,7 +75,7 @@ class StudentsTable extends ControllerActionTable
 			]
 		]);
         $this->addBehavior('Import.ImportLink');
-        $this->addBehavior('Institution.UpdateStudentStatus');
+        $this->addBehavior('Institution.UpdateStudentStatus'); // to move logic into InstitutionClassStudentsTable using events
 
 		/**
 		 * Advance Search Types.
@@ -110,7 +110,7 @@ class StudentsTable extends ControllerActionTable
 		/**
 		 * End Advance Search Types
 		 */
-        $this->addBehavior('ControllerAction.Image');
+        $this->addBehavior('ControllerAction.Image'); // To be verified
         // $this->addBehavior('OpenEmis.Section');
 
 	}
@@ -155,6 +155,7 @@ class StudentsTable extends ControllerActionTable
 		return $validator;
 	}
 
+	// to be verified
 	public function validationNewStudent(Validator $validator)
 	{
         $validator = $this->validationDefault($validator);
@@ -306,9 +307,10 @@ class StudentsTable extends ControllerActionTable
 		$this->field('institution_id', ['type' => 'hidden', 'value' => $institutionId]);
 		$this->field('student_status_id', ['type' => 'select']);
         // hardcoded for v4 to work
-        $extra['isFromModel'] = true;
+        $extra['isFromModel'] = true; // to be verifed
 	}
 
+	// logic to be moved to beforeDelete cake event instead
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra) {
         // PHPOE-2123 moved.. 'Another check to check before deletion. In case of concurrency issue.'
         $status = $entity->student_status_id;
@@ -492,6 +494,7 @@ class StudentsTable extends ControllerActionTable
 		}
 	}
 
+	// need to refactor to convert into a finder
 	private function getEnrolledRecords($studentId, $options = [])
 	{
 		$selectParams = (array_key_exists('select', $options))? $options['select']: null;
@@ -755,57 +758,57 @@ class StudentsTable extends ControllerActionTable
 		}
 	}
 
-	public function addBeforeAction(Event $event, ArrayObject $extra)
-    {
-		list($periodOptions, $selectedPeriod, $gradeOptions, $selectedGrade, $classOptions, $selectedClass) = array_values($this->_getSelectOptions());
+	// public function addBeforeAction(Event $event, ArrayObject $extra)
+ //    {
+	// 	list($periodOptions, $selectedPeriod, $gradeOptions, $selectedGrade, $classOptions, $selectedClass) = array_values($this->_getSelectOptions());
 
-		$this->field('academic_period_id', ['options' => $periodOptions]);
-		$this->field('education_grade_id', ['options' => $gradeOptions]);
-		$this->field('class', ['options' => $classOptions]);
+	// 	$this->field('academic_period_id', ['options' => $periodOptions]);
+	// 	$this->field('education_grade_id', ['options' => $gradeOptions]);
+	// 	$this->field('class', ['options' => $classOptions]);
 
-		if ($selectedPeriod != 0) {
-			$period = $this->AcademicPeriods->get($selectedPeriod);
-		} else if (!empty($selectedPeriod)) {
-			$period = $this->AcademicPeriods->get(key($periodOptions));
-		} else {
-			$period = null;
-		}
+	// 	if ($selectedPeriod != 0) {
+	// 		$period = $this->AcademicPeriods->get($selectedPeriod);
+	// 	} else if (!empty($selectedPeriod)) {
+	// 		$period = $this->AcademicPeriods->get(key($periodOptions));
+	// 	} else {
+	// 		$period = null;
+	// 	}
 
-		$this->field('id', ['value' => Text::uuid()]);
-		$this->field('start_date', ['period' => $period]);
-		$this->field('end_date', ['period' => $period]);
+	// 	$this->field('id', ['value' => Text::uuid()]);
+	// 	$this->field('start_date', ['period' => $period]);
+	// 	$this->field('end_date', ['period' => $period]);
 
-		$this->setFieldOrder([
-			'academic_period_id', 'education_grade_id', 'class', 'student_status_id', 'start_date', 'end_date'
-		]);
+	// 	$this->setFieldOrder([
+	// 		'academic_period_id', 'education_grade_id', 'class', 'student_status_id', 'start_date', 'end_date'
+	// 	]);
 
-        $errors = [];
+ //        $errors = [];
 
-        if (isset($errors['student_name']['ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem'])) {
-            $studentRecord = $this->find()
-                ->matching('Institutions.Areas')
-                ->innerJoinWith('StudentStatuses')
-                ->select([
-                    'institution_name' => 'Institutions.name',
-                    'institution_code' => 'Institutions.code',
-                    'institution_telephone' => 'Institutions.telephone',
-                    'institution_contact_person' => 'Institutions.contact_person',
-                    'area_name' => 'Areas.name',
-                    'area_code' => 'Areas.code'
-                ])
-                ->where([
-                    $this->aliasField('student_id') => $entity->student_id,
-                    'StudentStatuses.code' => 'CURRENT'
-                ])
-                ->hydrate(false)
-                ->first();
-            $this->field('information_section', ['type' => 'section', 'title' => __('Institution Information')]);
-            $this->field('institution', ['type' => 'disabled', 'attr' => ['value' => $studentRecord['institution_code'].' - '.$studentRecord['institution_name']]]);
-            $this->ControllerAction->field('area', ['type' => 'disabled', 'attr' => ['value' => $studentRecord['area_code'].' - '.$studentRecord['area_name']]]);
-            $this->field('contact_person', ['type' => 'disabled', 'attr' => ['value' => $studentRecord['institution_contact_person']]]);
-            $this->field('telephone', ['type' => 'disabled', 'attr' => ['value' => $studentRecord['institution_telephone']]]);
-        }
-	}
+ //        if (isset($errors['student_name']['ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem'])) {
+ //            $studentRecord = $this->find()
+ //                ->matching('Institutions.Areas')
+ //                ->innerJoinWith('StudentStatuses')
+ //                ->select([
+ //                    'institution_name' => 'Institutions.name',
+ //                    'institution_code' => 'Institutions.code',
+ //                    'institution_telephone' => 'Institutions.telephone',
+ //                    'institution_contact_person' => 'Institutions.contact_person',
+ //                    'area_name' => 'Areas.name',
+ //                    'area_code' => 'Areas.code'
+ //                ])
+ //                ->where([
+ //                    $this->aliasField('student_id') => $entity->student_id,
+ //                    'StudentStatuses.code' => 'CURRENT'
+ //                ])
+ //                ->hydrate(false)
+ //                ->first();
+ //            $this->field('information_section', ['type' => 'section', 'title' => __('Institution Information')]);
+ //            $this->field('institution', ['type' => 'disabled', 'attr' => ['value' => $studentRecord['institution_code'].' - '.$studentRecord['institution_name']]]);
+ //            $this->ControllerAction->field('area', ['type' => 'disabled', 'attr' => ['value' => $studentRecord['area_code'].' - '.$studentRecord['area_name']]]);
+ //            $this->field('contact_person', ['type' => 'disabled', 'attr' => ['value' => $studentRecord['institution_contact_person']]]);
+ //            $this->field('telephone', ['type' => 'disabled', 'attr' => ['value' => $studentRecord['institution_telephone']]]);
+ //        }
+	// }
 
 	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$studentStatusId = $entity->student_status_id;
@@ -895,84 +898,85 @@ class StudentsTable extends ControllerActionTable
 		}
 	}
 
-	public function onGetFormButtons(Event $event, ArrayObject $buttons)
-	{
-		if ($this->action == 'add') {
-			$buttons[0]['name'] = '<i class="fa kd-add"></i> ' . __('Create New');
-			$buttons[0]['attr']['value'] = 'new';
-		}
-	}
+	// public function onGetFormButtons(Event $event, ArrayObject $buttons)
+	// {
+	// 	if ($this->action == 'add') {
+	// 		$buttons[0]['name'] = '<i class="fa kd-add"></i> ' . __('Create New');
+	// 		$buttons[0]['attr']['value'] = 'new';
+	// 	}
+	// }
 
-	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
-    {
-		$AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
-		$studentData = $data['Students'];
-		$studentExist = 0;
-		$studentId = $entity->student_id;
+	// public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+ //    {
+	// 	$AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+	// 	$studentData = $data['Students'];
+	// 	$studentExist = 0;
+	// 	$studentId = $entity->student_id;
 
-		if (!empty ($studentId)) {
-			$StudentStatusesTable = $this->StudentStatuses;
-			$pendingAdmissionCode = $StudentStatusesTable->PENDING_ADMISSION;
-			if (!empty($entity->education_grade_id)) {
-				$educationSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($entity->education_grade_id);
-			} else {
-				$educationSystemId = '';
-			}
-			// Check if the student that is pass over is a pending admission student
-			if ($pendingAdmissionCode == $studentData['student_status_id']) {
-				// validation is handled by $this (institution_student), no need to add any more validation - except checking if there is already a pending admission
+	// 	if (!empty ($studentId)) {
+	// 		$StudentStatusesTable = $this->StudentStatuses;
+	// 		$pendingAdmissionCode = $StudentStatusesTable->PENDING_ADMISSION;
+	// 		if (!empty($entity->education_grade_id)) {
+	// 			$educationSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($entity->education_grade_id);
+	// 		} else {
+	// 			$educationSystemId = '';
+	// 		}
+	// 		// Check if the student that is pass over is a pending admission student
+	// 		if ($pendingAdmissionCode == $studentData['student_status_id']) {
+	// 			// validation is handled by $this (institution_student), no need to add any more validation - except checking if there is already a pending admission
 
-				// Check if the student is a new record in the admission table, if the record exist as an approved record or rejected record, that record should
-				// be retained for auditing purposes as the student may be approved in the first place, then remove from the institution for some reason, then added back
+	// 			// Check if the student is a new record in the admission table, if the record exist as an approved record or rejected record, that record should
+	// 			// be retained for auditing purposes as the student may be approved in the first place, then remove from the institution for some reason, then added back
 
-				$studentExist = $AdmissionTable->find()
-					->where([
-							$AdmissionTable->aliasField('status') => 0,
-							$AdmissionTable->aliasField('student_id') => $studentId,
-							$AdmissionTable->aliasField('institution_id') => $studentData['institution_id'],
-							$AdmissionTable->aliasField('academic_period_id') => $studentData['academic_period_id'],
-							$AdmissionTable->aliasField('education_grade_id') => $studentData['education_grade_id'],
-							$AdmissionTable->aliasField('type') => 1
-						])
-					->count();
-				// Check if the student is already added to the student admission table
-				if ($studentExist == 0) {
-					$process = function ($model, $entity) use ($studentData, $AdmissionTable, $studentId) {
-						$admissionStatus = 1;
-						$entityData = [
-							'start_date' => $studentData['start_date'],
-							'end_date' => $studentData['end_date'],
-							'student_id' => $studentId,
-							'status' => 0,
-							'institution_id' => $studentData['institution_id'],
-							'academic_period_id' => $studentData['academic_period_id'],
-							'education_grade_id' => $studentData['education_grade_id'],
-							'institution_class_id' => $studentData['class'],
-							'previous_institution_id' => 0,
-							'student_transfer_reason_id' => 0,
-							'type' => $admissionStatus,
-						];
+	// 			$studentExist = $AdmissionTable->find()
+	// 				->where([
+	// 						$AdmissionTable->aliasField('status') => 0,
+	// 						$AdmissionTable->aliasField('student_id') => $studentId,
+	// 						$AdmissionTable->aliasField('institution_id') => $studentData['institution_id'],
+	// 						$AdmissionTable->aliasField('academic_period_id') => $studentData['academic_period_id'],
+	// 						$AdmissionTable->aliasField('education_grade_id') => $studentData['education_grade_id'],
+	// 						$AdmissionTable->aliasField('type') => 1
+	// 					])
+	// 				->count();
+	// 			// Check if the student is already added to the student admission table
+	// 			if ($studentExist == 0) {
+	// 				$process = function ($model, $entity) use ($studentData, $AdmissionTable, $studentId) {
+	// 					$admissionStatus = 1;
+	// 					$entityData = [
+	// 						'start_date' => $studentData['start_date'],
+	// 						'end_date' => $studentData['end_date'],
+	// 						'student_id' => $studentId,
+	// 						'status' => 0,
+	// 						'institution_id' => $studentData['institution_id'],
+	// 						'academic_period_id' => $studentData['academic_period_id'],
+	// 						'education_grade_id' => $studentData['education_grade_id'],
+	// 						'institution_class_id' => $studentData['class'],
+	// 						'previous_institution_id' => 0,
+	// 						'student_transfer_reason_id' => 0,
+	// 						'type' => $admissionStatus,
+	// 					];
 
-						$admissionEntity = $AdmissionTable->newEntity($entityData);
-						if ( $AdmissionTable->save($admissionEntity) ) {
-							return true;
-						} else {
-							$AdmissionTable->log($admissionEntity->errors(), 'debug');
-							return false;
-						}
-					};
-					return $process;
-				} else {
-					$process = function ($model, $entity){
-						return false;
-					};
-						$this->Alert->error('StudentAdmission.existsInRecord');
-						return $process;
-				}
-			}
-		}
-	}
+	// 					$admissionEntity = $AdmissionTable->newEntity($entityData);
+	// 					if ( $AdmissionTable->save($admissionEntity) ) {
+	// 						return true;
+	// 					} else {
+	// 						$AdmissionTable->log($admissionEntity->errors(), 'debug');
+	// 						return false;
+	// 					}
+	// 				};
+	// 				return $process;
+	// 			} else {
+	// 				$process = function ($model, $entity){
+	// 					return false;
+	// 				};
+	// 					$this->Alert->error('StudentAdmission.existsInRecord');
+	// 					return $process;
+	// 			}
+	// 		}
+	// 	}
+	// }
 
+	// to refactor into events
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options)
 	{
 		if ($entity->isNew()) {
@@ -1065,58 +1069,56 @@ class StudentsTable extends ControllerActionTable
 		}
 	}
 
-	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
-	{
-		if ($action == 'add') {
-			$attr['onChangeReload'] = 'changePeriod';
-		}
-		return $attr;
-	}
+	// public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+	// {
+	// 	if ($action == 'add') {
+	// 		$attr['onChangeReload'] = 'changePeriod';
+	// 	}
+	// 	return $attr;
+	// }
 
-	public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
-	{
-		$attr['onChangeReload'] = 'changeEducationGrade';
-		return $attr;
-	}
+	// public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+	// {
+	// 	$attr['onChangeReload'] = 'changeEducationGrade';
+	// 	return $attr;
+	// }
 
-	public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
-	{
-		if ($action == 'add') {
-			$period = $attr['period'];
-			if ($period instanceOf Entity) {
-				$attr['date_options']['startDate'] = $period->start_date->format('d-m-Y');
-				$attr['date_options']['endDate'] = $period->end_date->format('d-m-Y');
-				$attr['value'] = $period->start_date->format('d-m-Y');
-			} else {
-				$attr['date_options']['startDate'] = '';
-				$attr['date_options']['endDate'] = '';
-			}
-			$attr['default_date'] = false;
-		}
-		return $attr;
-	}
+	// public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
+	// {
+	// 	if ($action == 'add') {
+	// 		$period = $attr['period'];
+	// 		if ($period instanceOf Entity) {
+	// 			$attr['date_options']['startDate'] = $period->start_date->format('d-m-Y');
+	// 			$attr['date_options']['endDate'] = $period->end_date->format('d-m-Y');
+	// 			$attr['value'] = $period->start_date->format('d-m-Y');
+	// 		} else {
+	// 			$attr['date_options']['startDate'] = '';
+	// 			$attr['date_options']['endDate'] = '';
+	// 		}
+	// 		$attr['default_date'] = false;
+	// 	}
+	// 	return $attr;
+	// }
 
-	public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request)
-	{
-		if ($action == 'add') {
-			$period = $attr['period'];
-			$attr['type'] = 'readonly';
-			if ($period instanceOf Entity) {
-				$attr['attr'] = ['value' => $period->end_date->format('d-m-Y')];
-				$attr['value'] = $period->end_date->format('Y-m-d');
-			} else {
-				$attr['attr'] = ['value'=>''];
-				$attr['value'] = '';
-			}
-		}
-		return $attr;
-	}
+	// public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request)
+	// {
+	// 	if ($action == 'add') {
+	// 		$period = $attr['period'];
+	// 		$attr['type'] = 'readonly';
+	// 		if ($period instanceOf Entity) {
+	// 			$attr['attr'] = ['value' => $period->end_date->format('d-m-Y')];
+	// 			$attr['value'] = $period->end_date->format('Y-m-d');
+	// 		} else {
+	// 			$attr['attr'] = ['value'=>''];
+	// 			$attr['value'] = '';
+	// 		}
+	// 	}
+	// 	return $attr;
+	// }
 
 	public function onUpdateFieldStudentId(Event $event, array $attr, $action, Request $request)
 	{
-		if ($action == 'add') {
-			$attr['visible'] = false;
-		} elseif ($action == 'index') {
+		if ($action == 'index') {
 			$attr['sort'] = ['field' => 'Users.first_name'];
 		}
 		return $attr;
@@ -1124,208 +1126,195 @@ class StudentsTable extends ControllerActionTable
 
 	public function onUpdateFieldStudentName(Event $event, array $attr, $action, Request $request)
 	{
-		if ($action == 'add') {
-			$attr['type'] = 'autocomplete';
-			$attr['target'] = ['key' => 'student_id', 'name' => $this->aliasField('student_id')];
-			$attr['noResults'] = $this->getMessage($this->aliasField('noStudents'));
-			$attr['attr'] = ['placeholder' => __('OpenEMIS ID or Name')];
-			$attr['url'] = ['controller' => 'Institutions', 'action' => 'Students', 'ajaxUserAutocomplete'];
-
-			$iconSave = '<i class="fa fa-check"></i> ' . __('Save');
-			$iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
-
-			$attr['onSelect'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
-			$attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
-			$attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
-		} else if ($action == 'index') {
+		if ($action == 'index') {
 			$attr['sort'] = ['field' => 'Users.first_name'];
 		}
 		return $attr;
 	}
 
-	public function onUpdateFieldStudentStatusId(Event $event, array $attr, $action, Request $request)
-	{
-		if ($action == 'add') {
-			$StudentStatusesTable = $this->StudentStatuses;
-			$conditions = [
-				$StudentStatusesTable->aliasField('code') => 'CURRENT'
-			];
-			$options = $StudentStatusesTable
-				->find('list')
-				->where([$conditions])
-				->toArray();
-			$options[$StudentStatusesTable->PENDING_ADMISSION] = 'Pending Admission';
-			foreach ($options as $key => $value) {
-				$options[$key] = __($value);
-			}
-			$attr['options'] = $options;
-		}
-		return $attr;
-	}
+	// public function onUpdateFieldStudentStatusId(Event $event, array $attr, $action, Request $request)
+	// {
+	// 	if ($action == 'add') {
+	// 		$StudentStatusesTable = $this->StudentStatuses;
+	// 		$conditions = [
+	// 			$StudentStatusesTable->aliasField('code') => 'CURRENT'
+	// 		];
+	// 		$options = $StudentStatusesTable
+	// 			->find('list')
+	// 			->where([$conditions])
+	// 			->toArray();
+	// 		$options[$StudentStatusesTable->PENDING_ADMISSION] = 'Pending Admission';
+	// 		foreach ($options as $key => $value) {
+	// 			$options[$key] = __($value);
+	// 		}
+	// 		$attr['options'] = $options;
+	// 	}
+	// 	return $attr;
+	// }
 
-	public function addOnChangePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-	{
-		$request = $this->request;
-		unset($request->query['period']);
-		unset($request->query['grade']);
+	// public function addOnChangePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	// {
+	// 	$request = $this->request;
+	// 	unset($request->query['period']);
+	// 	unset($request->query['grade']);
 
-		if ($request->is(['post', 'put'])) {
-			if (array_key_exists($this->alias(), $request->data)) {
-				if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
-					$request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
-				}
-			}
-		}
-	}
+	// 	if ($request->is(['post', 'put'])) {
+	// 		if (array_key_exists($this->alias(), $request->data)) {
+	// 			if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
+	// 				$request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
+	// 			}
+	// 		}
+	// 	}
+	// }
 
-	public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
-    {
-		$this->Session->delete('Institution.Students.new');
-	}
+	// public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+ //    {
+	// 	$this->Session->delete('Institution.Students.new');
+	// }
 
-	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-	{
-		$options['validate'] = 'newStudent';
-		$entity = $this->patchEntity($entity, $data->getArrayCopy(), $options->getArrayCopy());
-		$errorCount = count($entity->errors());
-		if ($errorCount == 0 || ($errorCount == 1 && array_key_exists('student_id', $entity->errors()))) {
-			if (isset($data['Students']['academic_period_id'])) {
-				// For PHPOE-1916
-				$editable = $this->AcademicPeriods->getEditable($data['Students']['academic_period_id']);
-				if (! $editable) {
-					$this->Alert->error('general.academicPeriod.notEditable');
-				}
-				// End PHPOE-1916
-				else {
-					$this->Session->write('Institution.Students.new', $data[$this->alias()]);
-					$event->stopPropagation();
-					$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StudentUser', 'add'];
-					return $this->controller->redirect($action);
-				}
-			} else {
-				$this->Alert->error('Institution.InstitutionStudents.educationProgrammeId');
-			}
-		} else {
-			$this->Alert->error('general.add.failed', ['reset' => true]) ;
-		}
-	}
+	// public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	// {
+	// 	$options['validate'] = 'newStudent';
+	// 	$entity = $this->patchEntity($entity, $data->getArrayCopy(), $options->getArrayCopy());
+	// 	$errorCount = count($entity->errors());
+	// 	if ($errorCount == 0 || ($errorCount == 1 && array_key_exists('student_id', $entity->errors()))) {
+	// 		if (isset($data['Students']['academic_period_id'])) {
+	// 			// For PHPOE-1916
+	// 			$editable = $this->AcademicPeriods->getEditable($data['Students']['academic_period_id']);
+	// 			if (! $editable) {
+	// 				$this->Alert->error('general.academicPeriod.notEditable');
+	// 			}
+	// 			// End PHPOE-1916
+	// 			else {
+	// 				$this->Session->write('Institution.Students.new', $data[$this->alias()]);
+	// 				$event->stopPropagation();
+	// 				$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StudentUser', 'add'];
+	// 				return $this->controller->redirect($action);
+	// 			}
+	// 		} else {
+	// 			$this->Alert->error('Institution.InstitutionStudents.educationProgrammeId');
+	// 		}
+	// 	} else {
+	// 		$this->Alert->error('general.add.failed', ['reset' => true]) ;
+	// 	}
+	// }
 
-	public function addOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-	{
-		$request = $this->request;
-		unset($request->query['period']);
-		unset($request->query['grade']);
+	// public function addOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	// {
+	// 	$request = $this->request;
+	// 	unset($request->query['period']);
+	// 	unset($request->query['grade']);
 
-		if ($request->is(['post', 'put'])) {
-			if (array_key_exists($this->alias(), $request->data)) {
-				if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
-					$request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
-				}
-				if (array_key_exists('education_grade_id', $request->data[$this->alias()])) {
-					$request->query['grade'] = $request->data[$this->alias()]['education_grade_id'];
-				}
-			}
-		}
-	}
+	// 	if ($request->is(['post', 'put'])) {
+	// 		if (array_key_exists($this->alias(), $request->data)) {
+	// 			if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
+	// 				$request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
+	// 			}
+	// 			if (array_key_exists('education_grade_id', $request->data[$this->alias()])) {
+	// 				$request->query['grade'] = $request->data[$this->alias()]['education_grade_id'];
+	// 			}
+	// 		}
+	// 	}
+	// }
 
-	public function ajaxUserAutocomplete()
-	{
-		$this->controller->autoRender = false;
-		$this->ControllerAction->autoRender = false;
+	// public function ajaxUserAutocomplete()
+	// {
+	// 	$this->controller->autoRender = false;
+	// 	$this->ControllerAction->autoRender = false;
 
-		if ($this->request->is(['ajax'])) {
-			$term = $this->request->query['term'];
-			// only search for students
-			$query = $this->Users->find()
-				->select([
-					$this->Users->aliasField('openemis_no'),
-					$this->Users->aliasField('first_name'),
-					$this->Users->aliasField('middle_name'),
-					$this->Users->aliasField('third_name'),
-					$this->Users->aliasField('last_name'),
-					$this->Users->aliasField('preferred_name'),
-					$this->Users->aliasField('id')
-				])
-				->where([$this->Users->aliasField('is_student') => 1])->limit(100);
+	// 	if ($this->request->is(['ajax'])) {
+	// 		$term = $this->request->query['term'];
+	// 		// only search for students
+	// 		$query = $this->Users->find()
+	// 			->select([
+	// 				$this->Users->aliasField('openemis_no'),
+	// 				$this->Users->aliasField('first_name'),
+	// 				$this->Users->aliasField('middle_name'),
+	// 				$this->Users->aliasField('third_name'),
+	// 				$this->Users->aliasField('last_name'),
+	// 				$this->Users->aliasField('preferred_name'),
+	// 				$this->Users->aliasField('id')
+	// 			])
+	// 			->where([$this->Users->aliasField('is_student') => 1])->limit(100);
 
-			$term = trim($term);
-			if (!empty($term)) {
-				$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $term]);
-			}
+	// 		$term = trim($term);
+	// 		if (!empty($term)) {
+	// 			$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $term]);
+	// 		}
 
-    		$list = $query->all();
+ //    		$list = $query->all();
 
-			$data = [];
-			foreach($list as $obj) {
-				$label = sprintf('%s - %s', $obj->openemis_no, $obj->name);
-				$data[] = ['label' => $label, 'value' => $obj->id];
-			}
+	// 		$data = [];
+	// 		foreach($list as $obj) {
+	// 			$label = sprintf('%s - %s', $obj->openemis_no, $obj->name);
+	// 			$data[] = ['label' => $label, 'value' => $obj->id];
+	// 		}
 
-			echo json_encode($data);
-			die;
-		}
-	}
+	// 		echo json_encode($data);
+	// 		die;
+	// 	}
+	// }
 
-	private function _getSelectOptions()
-	{
-		//Return all required options and their key
-		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$Grades = TableRegistry::get('Institution.InstitutionGrades');
-		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-		$institutionId = $this->Session->read('Institution.Institutions.id');
+	// private function _getSelectOptions()
+	// {
+	// 	//Return all required options and their key
+	// 	$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+	// 	$Grades = TableRegistry::get('Institution.InstitutionGrades');
+	// 	$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+	// 	$institutionId = $this->Session->read('Institution.Institutions.id');
 
-		// Academic Period
+	// 	// Academic Period
 
-		$periodOptions = $AcademicPeriod->getList(['isEditable'=>true, 'restrictLevel' => ['1'], 'withLevels' => false]);
-		if (empty($this->request->query['period'])) {
-			$this->request->query['period'] = $this->AcademicPeriods->getCurrent();
-		}
+	// 	$periodOptions = $AcademicPeriod->getList(['isEditable'=>true, 'restrictLevel' => ['1'], 'withLevels' => false]);
+	// 	if (empty($this->request->query['period'])) {
+	// 		$this->request->query['period'] = $this->AcademicPeriods->getCurrent();
+	// 	}
 
-		$selectedPeriod = 0;
-		if ($this->request->is('post')) {
-			$selectedPeriod = $this->request->data['Students']['academic_period_id'];
-		}
-		$periodOptions = ['' => '-- ' . __('Select') . ' --'] + $periodOptions;
-		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
-			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
-			'callable' => function($id) use ($Grades, $institutionId) {
-				return $Grades
-					->find()
-					->where([$Grades->aliasField('institution_id') => $institutionId])
-					->find('academicPeriod', ['academic_period_id' => $id])
-					->count();
-			}
-		]);
-		// End
+	// 	$selectedPeriod = 0;
+	// 	if ($this->request->is('post')) {
+	// 		$selectedPeriod = $this->request->data['Students']['academic_period_id'];
+	// 	}
+	// 	$periodOptions = ['' => '-- ' . __('Select') . ' --'] + $periodOptions;
+	// 	$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+	// 		'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
+	// 		'callable' => function($id) use ($Grades, $institutionId) {
+	// 			return $Grades
+	// 				->find()
+	// 				->where([$Grades->aliasField('institution_id') => $institutionId])
+	// 				->find('academicPeriod', ['academic_period_id' => $id])
+	// 				->count();
+	// 		}
+	// 	]);
+	// 	// End
 
-		// Grade
-		$gradeOptions = ['' => '-- ' .  __('Select') . ' --'];
-		$classOptions = ['' => '-- ' .  __('Select') . ' --'];
-		$selectedClass = 0;
-		$selectedGrade = 0;
+	// 	// Grade
+	// 	$gradeOptions = ['' => '-- ' .  __('Select') . ' --'];
+	// 	$classOptions = ['' => '-- ' .  __('Select') . ' --'];
+	// 	$selectedClass = 0;
+	// 	$selectedGrade = 0;
 
-		if ($selectedPeriod != 0) {
-			$data = $Grades->find()
-			->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
-			->contain('EducationGrades.EducationProgrammes')
-			->where([$Grades->aliasField('institution_id') => $institutionId])
-			->all();
+	// 	if ($selectedPeriod != 0) {
+	// 		$data = $Grades->find()
+	// 		->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
+	// 		->contain('EducationGrades.EducationProgrammes')
+	// 		->where([$Grades->aliasField('institution_id') => $institutionId])
+	// 		->all();
 
-			foreach ($data as $entity) {
-				$gradeOptions[$entity->education_grade->id] = $entity->education_grade->programme_grade_name;
-			}
+	// 		foreach ($data as $entity) {
+	// 			$gradeOptions[$entity->education_grade->id] = $entity->education_grade->programme_grade_name;
+	// 		}
 
-			$selectedGrade = !is_null($this->postString('education_grade_id')) ? $this->postString('education_grade_id') : key($gradeOptions);
-			$this->advancedSelectOptions($gradeOptions, $selectedGrade, []);
-			// End
+	// 		$selectedGrade = !is_null($this->postString('education_grade_id')) ? $this->postString('education_grade_id') : key($gradeOptions);
+	// 		$this->advancedSelectOptions($gradeOptions, $selectedGrade, []);
+	// 		// End
 
-			// class
-			$classOptions = $classOptions + $InstitutionClasses->getClassOptions($selectedPeriod, $institutionId, $selectedGrade);
-			// End
-		}
+	// 		// class
+	// 		$classOptions = $classOptions + $InstitutionClasses->getClassOptions($selectedPeriod, $institutionId, $selectedGrade);
+	// 		// End
+	// 	}
 
-		return compact('periodOptions', 'selectedPeriod', 'gradeOptions', 'selectedGrade', 'classOptions', 'selectedClass');
-	}
+	// 	return compact('periodOptions', 'selectedPeriod', 'gradeOptions', 'selectedGrade', 'classOptions', 'selectedClass');
+	// }
 
 	// Start PHPOE-1897
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
