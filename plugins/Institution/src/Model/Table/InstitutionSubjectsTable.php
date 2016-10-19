@@ -252,7 +252,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, ResultSet $data, ArrayObject $extra)
     {
-
         if (isset($extra[$this->aliasField('notice')]) && !empty($extra[$this->aliasField('notice')])) {
             $this->Alert->warning($extra[$this->aliasField('notice')], ['reset'=>true]);
             unset($extra[$this->aliasField('notice')]);

@@ -121,6 +121,22 @@ class InstitutionsController extends AppController
     }
     // End
 
+    public function Students($pass = 'index') {
+        if ($pass == 'addExisting') {
+            $this->set('ngController', 'InstitutionsStudentsCtrl as InstitutionStudentController');
+            $externalDataSource = false;
+        	$ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        	$externalSourceType = $ConfigItemTable->find()->where([$ConfigItemTable->aliasField('code') => 'external_data_source_type'])->first();
+        	if (!empty($externalSourceType) && $externalSourceType['value'] != 'None') {
+        		$externalDataSource = true;
+        	}
+        	$this->set('externalDataSource', $externalDataSource);
+            $this->render('studentAdd');
+        } else {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Students']);
+        }
+    }
+
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
@@ -224,26 +240,43 @@ class InstitutionsController extends AppController
         $this->set('contentHeader', $header);
     }
 
-    private function attachAngularModules()
+	private function attachAngularModules()
     {
-        $action = $this->request->action;
+		$action = $this->request->action;
 
-        switch ($action) {
-            case 'Results':
-                $this->Angular->addModules([
-                    'alert.svc',
-                    'institutions.results.ctrl',
-                    'institutions.results.svc'
-                ]);
+		switch ($action) {
+			case 'Results':
+				$this->Angular->addModules([
+					'alert.svc',
+					'institutions.results.ctrl',
+					'institutions.results.svc'
+				]);
+				break;
+			case 'Surveys':
+				$this->Angular->addModules([
+					'relevancy.rules.ctrl'
+				]);
+				$this->set('ngController', 'RelevancyRulesCtrl as RelevancyRulesController');
+				break;
+            case 'Students':
+            	if (isset($this->request->pass[0])) {
+            		if ($this->request->param('pass')[0] == 'addExisting') {
+	                    $this->Angular->addModules([
+	                        'alert.svc',
+	                        'institutions.students.ctrl',
+	                        'institutions.students.svc'
+	                    ]);
+	                } elseif ($this->request->param('pass')[0] == 'addExternal') {
+	                	$this->Angular->addModules([
+	                        'alert.svc',
+	                        'institutions.external_students.ctrl',
+	                        'institutions.external_students.svc'
+	                    ]);
+	                }
+            	}
                 break;
-            case 'Surveys':
-                $this->Angular->addModules([
-                    'relevancy.rules.ctrl'
-                ]);
-                $this->set('ngController', 'RelevancyRulesCtrl as RelevancyRulesController');
-                break;
-        }
-    }
+		}
+	}
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {

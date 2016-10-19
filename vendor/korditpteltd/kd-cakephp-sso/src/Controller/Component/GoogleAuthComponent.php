@@ -17,6 +17,7 @@ class GoogleAuthComponent extends Component {
     private $hostedDomain;
     private $client;
     private $authType;
+    private $createUser;
 
     public $components = ['Auth'];
 
@@ -27,6 +28,7 @@ class GoogleAuthComponent extends Component {
         $this->clientSecret = $googleAttributes['client_secret'];
         $this->redirectUri = $googleAttributes['redirect_uri'];
         $this->hostedDomain = $googleAttributes['hd'];
+        $this->createUser = isset($googleAttributes['allow_create_user']) ?  $googleAttributes['allow_create_user'] : 0;
 
         $hashAttributes = $googleAttributes;
         unset($hashAttributes['redirect_uri']);
@@ -65,33 +67,10 @@ class GoogleAuthComponent extends Component {
                     ]
                 ],
                 'SSO.Google' => [
-                    'userModel' => $this->_config['userModel']
+                    'userModel' => $this->_config['userModel'],
+                    'createUser' => $this->createUser
                 ]
             ]);
-
-            if ($this->config('cookieAuth.enabled')) {
-                $this->controller->Auth->config('authenticate', [
-                    'SSO.Cookie' => [
-                        'userModel' => $this->_config['userModel'],
-                        'fields' => [
-                            'username' => $this->_config['cookieAuth']['username']
-                        ],
-                        'cookie' => [
-                            'name' => $this->_config['cookie']['name'],
-                            'path' => $this->_config['cookie']['path'],
-                            'expires' => $this->_config['cookie']['expires'],
-                            'domain' => $this->_config['cookie']['domain'],
-                            'encryption' => $this->_config['cookie']['encryption']
-                        ],
-                        'authType' => $this->authType
-                    ]
-                ]);
-
-                $user = $this->controller->Auth->identify();
-                if ($user) {
-                    $this->controller->Auth->setUser($user);
-                }
-            }
         }
     }
 

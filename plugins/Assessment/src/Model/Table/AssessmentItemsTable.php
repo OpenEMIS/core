@@ -15,7 +15,9 @@ class AssessmentItemsTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
 		$this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
-
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Results' => ['index']
+        ]);
 	}
 
     public function validationDefault(Validator $validator)
