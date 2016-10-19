@@ -126,12 +126,8 @@ class StudentsTable extends AppTable
 		$this->setupTabElements(['id' => $entity->id]);
 	}
 
-<<<<<<< HEAD
-	public function indexBeforeAction(Event $event, ArrayObject $settings) {
-=======
 	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings)
 	{
->>>>>>> origin/master
 		// fields are set in UserBehavior
 		$this->fields = []; // unset all fields first
 
@@ -272,12 +268,8 @@ class StudentsTable extends AppTable
 		$this->ControllerAction->field('is_student', ['value' => 1]);
 	}
 
-<<<<<<< HEAD
-	public function addAfterAction(Event $event) {
-=======
 	public function addAfterAction(Event $event)
 	{
->>>>>>> origin/master
 		// need to find out order values because recordbehavior changes it
 		$allOrderValues = [];
 		foreach ($this->fields as $key => $value) {
@@ -385,12 +377,8 @@ class StudentsTable extends AppTable
 		);
 	}
 
-<<<<<<< HEAD
-	private function setupTabElements($options) {
-=======
 	private function setupTabElements($options)
 	{
->>>>>>> origin/master
 		$this->controller->set('selectedAction', $this->alias);
 		$this->controller->set('tabElements', $this->controller->getUserTabElements($options));
 	}
