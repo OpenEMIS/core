@@ -401,7 +401,7 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->model->action = $this->request->action;
 
-        $isAcademic = $this->activeObj->is_academic;
+        $isAcademic = $this->Institutions->get($id)->is_academic;
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $currentPeriod = $AcademicPeriods->getCurrent();
         if (empty($currentPeriod)) {
