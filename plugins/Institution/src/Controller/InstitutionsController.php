@@ -401,6 +401,7 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->model->action = $this->request->action;
 
+        $isAcademic = $this->activeObj->is_academic;
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $currentPeriod = $AcademicPeriods->getCurrent();
         if (empty($currentPeriod)) {
@@ -409,23 +410,27 @@ class InstitutionsController extends AppController
 
         // $highChartDatas = ['{"chart":{"type":"column","borderWidth":1},"xAxis":{"title":{"text":"Position Type"},"categories":["Non-Teaching","Teaching"]},"yAxis":{"title":{"text":"Total"}},"title":{"text":"Number Of Staff"},"subtitle":{"text":"For Year 2015-2016"},"series":[{"name":"Male","data":[0,2]},{"name":"Female","data":[0,1]}]}'];
         $highChartDatas = [];
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-        $statuses = $StudentStatuses->findCodeList();
 
-        //Students By Year, excludes transferred and dropoout students
-        $params = array(
-            'conditions' => array('institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['DROPOUT']])
-        );
+        // only show student charts if institution is academic
+        if ($isAcademic) {
+            $InstitutionStudents = TableRegistry::get('Institution.Students');
+            $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+            $statuses = $StudentStatuses->findCodeList();
 
-        $InstitutionStudents = TableRegistry::get('Institution.Students');
-        $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_year', $params);
+            //Students By Year, excludes transferred and dropoout students
+            $params = array(
+                'conditions' => array('institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['DROPOUT']])
+            );
 
-        //Students By Grade for current year, excludes transferred and dropoout students
-        $params = array(
-            'conditions' => array('institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['DROPOUT']])
-        );
+            $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_year', $params);
 
-        $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_grade', $params);
+            //Students By Grade for current year, excludes transferred and dropoout students
+            $params = array(
+                'conditions' => array('institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['DROPOUT']])
+            );
+
+            $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_grade', $params);
+        }
 
         $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
         $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
