@@ -59,7 +59,7 @@ class UndoBehavior extends Behavior {
 		return $list;
 	}
 
-	protected function deleteEnrolledStudents($studentId) {
+	protected function deleteEnrolledStudents($studentId, $selectedStatus) {
 		$currentStatus = $this->statuses['CURRENT'];
 		$entity = $this->model
 			->find()
@@ -69,11 +69,20 @@ class UndoBehavior extends Behavior {
 			])
 			->first();
 		if (!empty($entity)) {
-			$prevInstitutionStudentId = $entity->previous_institution_student_id; //this is meant for undo transfer logic
-			$this->model->delete($entity); //this will also trigger StudentCascadeDeleteBehavior to delete associated data
-		}
-
-		return $this->model->get($prevInstitutionStudentId);
+                $prevInstitutionStudentId = $entity->previous_institution_student_id; //this is meant for undo transfer logic
+                $this->model->delete($entity); //this will also trigger StudentCascadeDeleteBehavior to delete associated data
+        } else {
+            $entity = $this->model
+                    ->find()
+                    ->where([
+                        $this->model->aliasField('student_id') => $studentId,
+                        $this->model->aliasField('student_status_id') => $selectedStatus
+                    ])
+                    ->order(['start_date' => 'desc', 'created' => 'desc', 'id' => 'desc'])
+                    ->first();
+            $prevInstitutionStudentId = $entity->id;
+        }
+        return $this->model->get($prevInstitutionStudentId);
 	}
 
 	protected function updateStudentStatus($code, $conditions) {
