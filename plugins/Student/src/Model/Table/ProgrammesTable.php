@@ -23,6 +23,7 @@ class ProgrammesTable extends ControllerActionTable
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+        $this->belongsTo('PreviousInstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'previous_institution_student_id']);
 
 		$this->toggle('remove', false);
 		$this->toggle('add', false);
@@ -39,6 +40,11 @@ class ProgrammesTable extends ControllerActionTable
 		return $entity->institution->code_name;
 	}
 
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('previous_institution_student_id', ['visible' => false]);
+    }
+
 	public function indexBeforeAction(Event $event, ArrayObject $extra)
 	{
 		$this->fields['student_id']['visible'] = 'false';
@@ -46,7 +52,7 @@ class ProgrammesTable extends ControllerActionTable
 		$this->fields['start_year']['visible'] = 'false';
 		$this->fields['end_year']['visible'] = 'false';
 		$this->fields['institution_id']['type'] = 'integer';
-
+        
 		$this->setFieldOrder([
 			'institution_id', 'education_grade_id', 'start_date', 'end_date', 'student_status_id'
 		]);

@@ -75,6 +75,13 @@ class UserBehavior extends Behavior {
         }
     }
 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if ($entity->isNew()) {
+            $entity->preferred_language = 'en';
+        }
+    }
+
     public function beforeAction(Event $event) {
         $this->_table->fields['is_student']['type'] = 'hidden';
         $this->_table->fields['is_staff']['type'] = 'hidden';
@@ -95,6 +102,7 @@ class UserBehavior extends Behavior {
             $this->_table->fields['super_admin']['visible'] = false;
             $this->_table->fields['date_of_death']['visible'] = false;
             $this->_table->fields['status']['visible'] = false;
+            $this->_table->fields['preferred_language']['visible'] = false;
             $this->_table->fields['address_area_id']['type'] = 'areapicker';
             $this->_table->fields['address_area_id']['source_model'] = 'Area.AreaAdministratives';
             $this->_table->fields['birthplace_area_id']['type'] = 'areapicker';
@@ -153,7 +161,7 @@ class UserBehavior extends Behavior {
         $this->_table->fields['is_guardian']['value'] = 0;
     }
 
-    public function indexBeforeAction(Event $event) {
+    public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
         $plugin = $this->_table->controller->plugin;
         $name = $this->_table->controller->name;
 
@@ -422,5 +430,4 @@ class UserBehavior extends Behavior {
             }
         }
     }
-
 }
