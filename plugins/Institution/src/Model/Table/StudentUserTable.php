@@ -11,16 +11,107 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use Cake\Network\Session;
-use Student\Model\Table\StudentsTable as UserTable;
 
-class StudentUserTable extends UserTable
+class StudentUserTable extends AppTable
 {
 	public function initialize(array $config)
 	{
+		$this->table('security_users');
+		$this->entityClass('User.User');
 		parent::initialize($config);
+
+		// Associations
+		self::handleAssociations($this);
+
+		// Behaviors
+		$this->addBehavior('User.User');
+
+		$this->addBehavior('CustomField.Record', [
+			'model' => 'Student.Students',
+			'behavior' => 'Student',
+			'fieldKey' => 'student_custom_field_id',
+			'tableColumnKey' => 'student_custom_table_column_id',
+			'tableRowKey' => 'student_custom_table_row_id',
+			'fieldClass' => ['className' => 'StudentCustomField.StudentCustomFields'],
+			'formKey' => 'student_custom_form_id',
+			'filterKey' => 'student_custom_filter_id',
+			'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
+			'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
+			'recordKey' => 'student_id',
+			'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
+			'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]
+		]);
+
+		$this->addBehavior('Excel', [
+			'excludes' => ['photo_name', 'is_student', 'is_staff', 'is_guardian', 'super_admin', 'date_of_death'],
+			'filename' => 'Students',
+			'pages' => ['view']
+		]);
+
+		$this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
+		$this->hasMany('InstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'student_id']);
 		$this->addBehavior('Restful.RestfulAccessControl', [
         	'Students' => ['index', 'add']
         ]);
+	}
+
+	public static function handleAssociations($model)
+	{
+		$model->belongsTo('Genders', 		 ['className' => 'User.Genders']);
+		$model->belongsTo('AddressAreas', 	 ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
+		$model->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
+
+		$model->hasMany('Identities', 		['className' => 'User.Identities',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Nationalities', 	['className' => 'User.UserNationalities',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('SpecialNeeds', 	['className' => 'User.SpecialNeeds',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Contacts', 		['className' => 'User.Contacts',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Attachments', 		['className' => 'User.Attachments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('BankAccounts', 	['className' => 'User.BankAccounts',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Comments', 		['className' => 'User.Comments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Languages', 		['className' => 'User.UserLanguages',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Awards', 			['className' => 'User.Awards',			'foreignKey' => 'security_user_id', 'dependent' => true]);
+
+		$model->belongsToMany('SecurityRoles', [
+			'className' => 'Security.SecurityRoles',
+			'foreignKey' => 'security_role_id',
+			'targetForeignKey' => 'security_user_id',
+			'through' => 'Security.SecurityGroupUsers',
+			'dependent' => true
+		]);
+
+		$model->hasMany('ClassStudents', [
+			'className' => 'Institution.InstitutionClassStudents',
+			'foreignKey' => 'student_id'
+		]);
+
+		// remove all student records from institution_students, institution_site_student_absences, student_behaviours, assessment_item_results, student_guardians, institution_student_admission, student_custom_field_values, student_custom_table_cells, student_fees, student_extracurriculars
+
+
+		$model->belongsToMany('Institutions', [
+			'className' => 'Institution.Institutions',
+			'joinTable' => 'institution_students',
+			'foreignKey' => 'student_id',
+			'targetForeignKey' => 'institution_id',
+			'through' => 'Institution.Students',
+			'dependent' => true
+		]);
+
+        $model->hasMany('InstitutionStudents', ['className' => 'Institution.Students',    'foreignKey' => 'student_id', 'dependent' => true]);
+		$model->hasMany('StudentAbsences', ['className' => 'Institution.InstitutionSiteStudentAbsences',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('StudentBehaviours', ['className' => 'Institution.StudentBehaviours',	'foreignKey' => 'student_id', 'dependent' => true]);
+		$model->hasMany('AssessmentItemResults', ['className' => 'Assessment.AssessmentItemResults',	'foreignKey' => 'student_id', 'dependent' => true]);
+		$model->belongsToMany('Guardians', [
+			'className' => 'Student.Guardians',
+			'foreignKey' => 'student_id',
+			'targetForeignKey' => 'guardian_id',
+			'through' => 'Student.StudentGuardians',
+			'dependent' => true
+		]);
+		$model->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission',	'foreignKey' => 'student_id', 'dependent' => true]);
+		$model->hasMany('StudentCustomFieldValues', ['className' => 'CustomField.StudentCustomFieldValues',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('StudentCustomTableCells', ['className' => 'CustomField.StudentCustomTableCells',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('StudentFees', ['className' => 'Institution.StudentFeesAbstract',	'foreignKey' => 'student_id', 'dependent' => true]);
+		$model->hasMany('Extracurriculars', ['className' => 'Student.Extracurriculars',	'foreignKey' => 'security_user_id', 'dependent' => true]);
 	}
 
 	public function beforeAction(Event $event)
@@ -31,6 +122,8 @@ class StudentUserTable extends UserTable
 	public function validationDefault(Validator $validator)
 	{
 		$validator = parent::validationDefault($validator);
+		$BaseUsers = TableRegistry::get('User.Users');
+		$validator = $BaseUsers->setUserValidation($validator, $this);
 		$validator
 			->add('date_of_birth', 'ruleCheckAdmissionAgeWithEducationCycleGrade', [
 				'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
@@ -50,104 +143,7 @@ class StudentUserTable extends UserTable
 		return $validator;
 	}
 
-	// logic moved to angular
-	// public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-	// {
-	// 	$sessionKey = 'Institution.Students.new';
-	// 	if ($this->Session->check($sessionKey)) {
-	// 		$academicData = $this->Session->read($sessionKey);
-	// 		$data[$this->alias()]['academic_period_id'] = $academicData['academic_period_id'];
-	// 		$data[$this->alias()]['education_grade_id'] = $academicData['education_grade_id'];
-	// 	} else {
-	// 		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
-	// 		return $this->controller->redirect($action);
-	// 	}
-	// }
 
-	// to be verified
-	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data)
-	{
-		$sessionKey = 'Institution.Students.new';
-		if ($this->Session->check($sessionKey)) {
-			$academicData = $this->Session->read($sessionKey);
-			$academicData['student_id'] = $entity->id;
-			$StudentStatusesTable = TableRegistry::get('Student.StudentStatuses');
-			$pendingAdmissionCode = $StudentStatusesTable->PENDING_ADMISSION;
-			if ($academicData['student_status_id'] != $pendingAdmissionCode) {
-				$Student = TableRegistry::get('Institution.Students');
-				if (empty($academicData['student_name'])) {
-					$academicData['student_name'] = $entity->openemis_no;
-				}
-
-				$newStudentEntity = $Student->newEntity($academicData);
-				$newStudentEntity->class = $academicData['class']; // add the class value so the student will be added to the selected class
-				if (!$Student->save($newStudentEntity)) {
-					$validationErrors = [];
-					foreach ($newStudentEntity->errors() as $nkey => $nvalue) {
-						foreach ($nvalue as $ekey => $evalue) {
-							$validationErrors[] = $evalue;
-						}
-					}
-
-					$validationErrors = implode('; ', $validationErrors);
-					$this->controller->ControllerAction->Alert->error($validationErrors, ['type' => 'text']);
-					$event->stopPropagation();
-					$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
-					return $this->controller->redirect($action);
-					// if ($class > 0) {
-					// 	$classData = [];
-					// 	$classData['student_id'] = $entity->id;
-					// 	$classData['education_grade_id'] = $academicData['education_grade_id'];
-					// 	$classData['institution_class_id'] = $class;
-					// 	$InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-					// 	$InstitutionClassStudents->autoInsertClassStudent($classData);
-					// }
-				}
-				//  else {
-				// 	$validationErrors = [];
-				// 	foreach ($newStudentEntity->errors() as $nkey => $nvalue) {
-				// 		foreach ($nvalue as $ekey => $evalue) {
-				// 			$validationErrors[] = $evalue;
-				// 		}
-				// 	}
-
-				// 	$validationErrors = implode('; ', $validationErrors);
-				// 	$this->controller->ControllerAction->Alert->error($validationErrors, ['type' => 'text']);
-				// 	$event->stopPropagation();
-				// 	$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
-				// 	return $this->controller->redirect($action);
-				// }
-			} else {
-				$AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
-				$admissionStatus = 1;
-				$entityData = [
-					'start_date' => $academicData['start_date'],
-					'end_date' => $academicData['end_date'],
-					'student_id' => $academicData['student_id'],
-					'status' => 0,
-					'institution_id' => $academicData['institution_id'],
-					'academic_period_id' => $academicData['academic_period_id'],
-					'education_grade_id' => $academicData['education_grade_id'],
-					'institution_class_id' => $academicData['class'],
-					'previous_institution_id' => 0,
-					'student_transfer_reason_id' => 0,
-					'type' => $admissionStatus,
-				];
-				if ($AdmissionTable->save($AdmissionTable->newEntity($entityData))) {
-					$this->Alert->success('general.add.success');
-				} else {
-					$AdmissionTable->log($admissionEntity->errors(), 'debug');
-					$this->Alert->error('general.add.failed');
-				}
-			}
-
-
-			$this->Session->delete($sessionKey);
-		}
-		$event->stopPropagation();
-		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'index'];
-		return $this->controller->redirect($action);
-	}
 
 	public function viewAfterAction(Event $event, Entity $entity)
 	{
@@ -448,5 +444,95 @@ class StudentUserTable extends UserTable
                 break;
             }
         }
+    }
+
+	public function getAcademicTabElements($options = [])
+	{
+		// $action = (array_key_exists('action', $options))? $options['action']: 'add';
+		$id = (array_key_exists('id', $options))? $options['id']: 0;
+
+		$tabElements = [];
+		$studentTabElements = [
+			'Programmes' => ['text' => __('Programmes')],
+			'Classes' => ['text' => __('Classes')],
+			'Subjects' => ['text' => __('Subjects')],
+			'Absences' => ['text' => __('Absences')],
+			'Behaviours' => ['text' => __('Behaviours')],
+			'Results' => ['text' => __('Results')],
+			'Awards' => ['text' => __('Awards')],
+			'Extracurriculars' => ['text' => __('Extracurriculars')],
+		];
+
+		$tabElements = array_merge($tabElements, $studentTabElements);
+
+		// Programme will use institution controller, other will be still using student controller
+		foreach ($studentTabElements as $key => $tab) {
+            if ($key == 'Programmes') {
+                $type = (array_key_exists('type', $options))? $options['type']: null;
+        		$studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
+            } else {
+				$studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
+            }
+        }
+		return $tabElements;
+	}
+
+	// needs to migrate
+    public function findStudents(Query $query, array $options = []) {
+        $query->where([$this->aliasField('super_admin').' <> ' => 1]);
+
+        $limit = (array_key_exists('limit', $options))? $options['limit']: null;
+        $page = (array_key_exists('page', $options))? $options['page']: null;
+
+        // conditions
+        $firstName = (array_key_exists('first_name', $options))? $options['first_name']: null;
+        $lastName = (array_key_exists('last_name', $options))? $options['last_name']: null;
+        $openemisNo = (array_key_exists('openemis_no', $options))? $options['openemis_no']: null;
+        $identityNumber = (array_key_exists('identity_number', $options))? $options['identity_number']: null;
+        $dateOfBirth = (array_key_exists('date_of_birth', $options))? $options['date_of_birth']: null;
+
+        $conditions = [];
+        if (!empty($firstName)) $conditions['first_name LIKE'] = $firstName . '%';
+        if (!empty($lastName)) $conditions['last_name LIKE'] = $lastName . '%';
+        if (!empty($openemisNo)) $conditions['openemis_no LIKE'] = $openemisNo . '%';
+        if (!empty($dateOfBirth)) $conditions['date_of_birth'] = $dateOfBirth;
+
+        $identityConditions = [];
+        if (!empty($identityNumber)) $identityConditions['Identities.number LIKE'] = $identityNumber . '%';
+
+        $identityJoinType = (empty($identityNumber))? 'LEFT': 'INNER';
+        $default_identity_type = $this->Identities->IdentityTypes->getDefaultValue();
+        $query->join([
+            [
+                'type' => $identityJoinType,
+                'table' => 'user_identities',
+                'alias' => 'Identities',
+                'conditions' => array_merge([
+                        'Identities.security_user_id = ' . $this->aliasField('id'),
+                        'Identities.identity_type_id' => $default_identity_type
+                    ], $identityConditions)
+            ]
+        ]);
+
+        $query->group([$this->aliasField('id')]);
+
+        if (!empty($conditions)) $query->where($conditions);
+        if (!is_null($limit)) $query->limit($limit);
+        if (!is_null($page)) $query->page($page);
+
+        return $query;
+    }
+
+    // needs to migrate
+    public function findEnrolledInstitutionStudents(Query $query, array $options = []) {
+    	$query->contain([
+    		'InstitutionStudents' => function($q) {
+    			return $q->where(['InstitutionStudents.student_status_id' => 1]);
+    		},
+    		'InstitutionStudents.Institutions'
+    	]);
+    	return $query;
     }
 }
