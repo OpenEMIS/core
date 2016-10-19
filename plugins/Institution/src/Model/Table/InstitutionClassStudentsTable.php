@@ -53,7 +53,33 @@ class InstitutionClassStudentsTable extends AppTable {
             'pages' => ['index'],
             'orientation' => 'landscape'
         ]);
+    }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.Students.afterSave'] = 'studentsAfterSave';
+        return $events;
+    }
+
+    public function studentsAfterSave(Event $event, $student)
+    {
+        if ($student->isNew()) {
+            if ($this->StudentStatuses->get($student->student_status_id)->code == 'CURRENT') {
+                // to automatically add the student into a specific class when the student is successfully added to a school
+                if ($student->has('class') && $student->class > 0) {
+                    $classData = [];
+                    $classData['student_id'] = $student->student_id;
+                    $classData['education_grade_id'] = $student->education_grade_id;
+                    $classData['institution_class_id'] = $student->class;
+                    $classData['student_status_id'] = $student->student_status_id;
+                    $classData['institution_id'] = $student->institution_id;
+                    $classData['academic_period_id'] = $student->academic_period_id;
+
+                    $this->autoInsertClassStudent($classData);
+                }
+            }
+        }
     }
 
     public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {
