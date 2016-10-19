@@ -445,20 +445,15 @@ trait MessagesTrait {
         'IndividualPromotion' => [
             'noGrades' => 'No Available Grades',
             'noPeriods' => 'You need to configure Academic Periods for Promotion / Graduation',
-            'current_period' => 'Current Academic Period',
-            'next_period' => 'Next Academic Period',
-            'success' => 'Students have been promoted',
+            'success' => 'Students status changed successfully.',
             'noNextGrade' => 'Next grade in the Education Structure is not available in this Institution',
             'reconfirm' => 'Please review the information before proceeding with the operation',
             'noAvailableGrades' => 'No Available Grades in this Institution',
             'noAvailableAcademicPeriod' => 'No Available Academic Periods',
             'noNextGradeOrNextPeriod' => 'Next grade in the Education Structure is not available in this Institution or no Next Academic Period defined',
-            'savingPromotionError' => 'Some selected students record were not updated succesfully',
-            'successGraduated' => 'Students have graduated',
-            'successOthers' => 'Students status changed successfully',
+            'savingPromotionError' => 'The student record was not updated succesfully',
             'noNextAcademicPeriod' => 'There is no next academic period for the promotion.',
-            'pendingRequest' => 'There is a pending student status change request at the moment.',
-            'selectNextGrade' => 'Please select a grade to promote to.'
+            'pendingRequest' => 'There is a pending student status change request at the moment.'
         ],
         'StudentTransfer' => [
             'noGrades' => 'No Available Grades',
@@ -721,6 +716,11 @@ trait MessagesTrait {
                         'inAnotherSchool' => 'Student is already enrolled in another school.',
                     ],
                     'ruleStudentNotCompletedGrade' => 'Student has already completed the selected grade.',
+                ]
+            ],
+            'IndividualPromotion' => [
+                'effective_date' => [
+                    'ruleDateWithinAcademicPeriod' => 'Please select a date within the chosen Academic Period'
                 ]
             ],
             'Students' => [
