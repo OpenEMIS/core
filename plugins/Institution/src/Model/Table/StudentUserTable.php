@@ -11,8 +11,9 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use Cake\Network\Session;
+use App\Model\Table\ControllerActionTable;
 
-class StudentUserTable extends AppTable
+class StudentUserTable extends ControllerActionTable
 {
 	public function initialize(array $config)
 	{
@@ -114,9 +115,9 @@ class StudentUserTable extends AppTable
 		$model->hasMany('Extracurriculars', ['className' => 'Student.Extracurriculars',	'foreignKey' => 'security_user_id', 'dependent' => true]);
 	}
 
-	public function beforeAction(Event $event)
+	public function beforeAction(Event $event, ArrayObject $extra)
 	{
-		$this->ControllerAction->field('username', ['visible' => false]);
+		$this->field('username', ['visible' => false]);
 	}
 
 	public function validationDefault(Validator $validator)
@@ -145,7 +146,7 @@ class StudentUserTable extends AppTable
 
 
 
-	public function viewAfterAction(Event $event, Entity $entity)
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
 	{
 		if (!$this->AccessControl->isAdmin()) {
 			$institutionIds = $this->AccessControl->getInstitutionsByUser();
@@ -156,7 +157,7 @@ class StudentUserTable extends AppTable
 		$this->setupTabElements($entity);
 	}
 
-	public function editAfterAction(Event $event, Entity $entity)
+	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
 	{
 		$this->Session->write('Student.Students.id', $entity->id);
 		$this->Session->write('Student.Students.name', $entity->name);
@@ -167,7 +168,7 @@ class StudentUserTable extends AppTable
 		if (!$this->checkClassPermission($entity->id, $userId)) {
 			$this->Alert->error('security.noAccess');
 			$event->stopPropagation();
-			$url = $this->ControllerAction->url('view');
+			$url = $this->url('view');
 			return $this->controller->redirect($url);
 		}
 		// End POCOR-3010

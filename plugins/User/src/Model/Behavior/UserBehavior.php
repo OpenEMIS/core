@@ -89,7 +89,6 @@ class UserBehavior extends Behavior {
                 $this->_table->fields['last_login']['visible'] = false;
             break;
         }
-
         if ($this->_table->table() == 'security_users') {
             $this->_table->addBehavior('OpenEmis.Section');
             $this->_table->fields['photo_name']['visible'] = false;
@@ -144,6 +143,7 @@ class UserBehavior extends Behavior {
                 $this->_table->ControllerAction->field('birthplace_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
                 $this->_table->ControllerAction->field('other_information_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
             }
+
         }
     }
 
