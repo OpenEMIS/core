@@ -62,20 +62,23 @@ class OAuth2OpenIDConnectAuthenticate extends BaseAuthenticate
             if ($isFound) {
                 return $isFound;
             } else {
-                $userInfo = [
-                    'firstName' => $this->getUserInfo($userInfo, $mapping['firstName']),
-                    'lastName' => $this->getUserInfo($userInfo, $mapping['lastName']),
-                    'gender' => $this->getUserInfo($userInfo, $mapping['gender']),
-                    'email' => $this->getUserInfo($userInfo, $mapping['email']),
-                    'dateOfBirth' => $this->getUserInfo($userInfo, $mapping['dob'])
-                ];
+                if ($this->config('createUser')) {
+                    $userInfo = [
+                        'firstName' => $this->getUserInfo($userInfo, $mapping['firstName']),
+                        'lastName' => $this->getUserInfo($userInfo, $mapping['lastName']),
+                        'gender' => $this->getUserInfo($userInfo, $mapping['gender']),
+                        'dateOfBirth' => $this->getUserInfo($userInfo, $mapping['dob'])
+                    ];
 
-                $User = TableRegistry::get($this->_config['userModel']);
-                $event = $User->dispatchEvent('Model.Auth.createAuthorisedUser', [$userName, $userInfo], $this);
-                if ($event->result === false) {
-                    return false;
+                    $User = TableRegistry::get($this->_config['userModel']);
+                    $event = $User->dispatchEvent('Model.Auth.createAuthorisedUser', [$userName, $userInfo], $this);
+                    if ($event->result === false) {
+                        return false;
+                    } else {
+                        return $this->_findUser($event->result);
+                    }
                 } else {
-                    return $this->_findUser($event->result);
+                    return false;
                 }
             }
         }
