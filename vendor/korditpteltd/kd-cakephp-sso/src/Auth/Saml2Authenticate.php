@@ -11,7 +11,7 @@ class Saml2Authenticate extends BaseAuthenticate
 {
 
     public function authenticate(Request $request, Response $response)
-    {   
+    {
         $session = $request->session();
 
         if ($session->check('Saml2.userAttribute')) {
@@ -28,20 +28,24 @@ class Saml2Authenticate extends BaseAuthenticate
             if ($isFound) {
                 return $isFound;
             } else {
-                $fields = $AuthenticationTypeAttributesTable->getTypeAttributeValues('Saml2');
-                $userInfo = [
-                    'firstName' => isset($userAttribute[$fields['saml_first_name_mapping']][0]) ? $userAttribute[$fields['saml_first_name_mapping']][0] : ' - ',
-                    'lastName' => isset($userAttribute[$fields['saml_last_name_mapping']][0]) ? $userAttribute[$fields['saml_last_name_mapping']][0] : ' - ',
-                    'gender' => isset($userAttribute[$fields['saml_gender_mapping']][0]) ? $userAttribute[$fields['saml_gender_mapping']][0] : ' - ',
-                    'dateOfBirth' => isset($userAttribute[$fields['saml_date_of_birth_mapping']][0]) ? $userAttribute[$fields['saml_date_of_birth_mapping']][0] : ' - ',
-                ];
+                if ($this->config('createUser')) {
+                    $fields = $AuthenticationTypeAttributesTable->getTypeAttributeValues('Saml2');
+                    $userInfo = [
+                        'firstName' => isset($userAttribute[$fields['saml_first_name_mapping']][0]) ? $userAttribute[$fields['saml_first_name_mapping']][0] : ' - ',
+                        'lastName' => isset($userAttribute[$fields['saml_last_name_mapping']][0]) ? $userAttribute[$fields['saml_last_name_mapping']][0] : ' - ',
+                        'gender' => isset($userAttribute[$fields['saml_gender_mapping']][0]) ? $userAttribute[$fields['saml_gender_mapping']][0] : ' - ',
+                        'dateOfBirth' => isset($userAttribute[$fields['saml_date_of_birth_mapping']][0]) ? $userAttribute[$fields['saml_date_of_birth_mapping']][0] : ' - ',
+                    ];
 
-                $User = TableRegistry::get($this->_config['userModel']);
-                $event = $User->dispatchEvent('Model.Auth.createAuthorisedUser', [$userName, $userInfo], $this);
-                if ($event->result === false) {
-                    return false;
+                    $User = TableRegistry::get($this->_config['userModel']);
+                    $event = $User->dispatchEvent('Model.Auth.createAuthorisedUser', [$userName, $userInfo], $this);
+                    if ($event->result === false) {
+                        return false;
+                    } else {
+                        return $this->_findUser($event->result);
+                    }
                 } else {
-                    return $this->_findUser($event->result);
+                    return false;
                 }
             }
         } else {

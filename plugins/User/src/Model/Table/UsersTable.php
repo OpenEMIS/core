@@ -257,7 +257,7 @@ class UsersTable extends AppTable {
         $this->controller->set('tabElements', $tabElements);
 	}
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		$this->ControllerAction->field('first_name', ['visible' => false]);
 		$this->ControllerAction->field('middle_name', ['visible' => false]);
 		$this->ControllerAction->field('third_name', ['visible' => false]);

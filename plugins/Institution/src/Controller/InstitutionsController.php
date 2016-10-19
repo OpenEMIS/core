@@ -121,6 +121,22 @@ class InstitutionsController extends AppController
     }
     // End
 
+    public function Students($pass = 'index') {
+        if ($pass == 'addExisting') {
+            $this->set('ngController', 'InstitutionsStudentsCtrl as InstitutionStudentController');
+            $externalDataSource = false;
+        	$ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        	$externalSourceType = $ConfigItemTable->find()->where([$ConfigItemTable->aliasField('code') => 'external_data_source_type'])->first();
+        	if (!empty($externalSourceType) && $externalSourceType['value'] != 'None') {
+        		$externalDataSource = true;
+        	}
+        	$this->set('externalDataSource', $externalDataSource);
+            $this->render('studentAdd');
+        } else {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Students']);
+        }
+    }
+
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
@@ -224,26 +240,43 @@ class InstitutionsController extends AppController
         $this->set('contentHeader', $header);
     }
 
-    private function attachAngularModules()
+	private function attachAngularModules()
     {
-        $action = $this->request->action;
+		$action = $this->request->action;
 
-        switch ($action) {
-            case 'Results':
-                $this->Angular->addModules([
-                    'alert.svc',
-                    'institutions.results.ctrl',
-                    'institutions.results.svc'
-                ]);
+		switch ($action) {
+			case 'Results':
+				$this->Angular->addModules([
+					'alert.svc',
+					'institutions.results.ctrl',
+					'institutions.results.svc'
+				]);
+				break;
+			case 'Surveys':
+				$this->Angular->addModules([
+					'relevancy.rules.ctrl'
+				]);
+				$this->set('ngController', 'RelevancyRulesCtrl as RelevancyRulesController');
+				break;
+            case 'Students':
+            	if (isset($this->request->pass[0])) {
+            		if ($this->request->param('pass')[0] == 'addExisting') {
+	                    $this->Angular->addModules([
+	                        'alert.svc',
+	                        'institutions.students.ctrl',
+	                        'institutions.students.svc'
+	                    ]);
+	                } elseif ($this->request->param('pass')[0] == 'addExternal') {
+	                	$this->Angular->addModules([
+	                        'alert.svc',
+	                        'institutions.external_students.ctrl',
+	                        'institutions.external_students.svc'
+	                    ]);
+	                }
+            	}
                 break;
-            case 'Surveys':
-                $this->Angular->addModules([
-                    'relevancy.rules.ctrl'
-                ]);
-                $this->set('ngController', 'RelevancyRulesCtrl as RelevancyRulesController');
-                break;
-        }
-    }
+		}
+	}
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
@@ -402,6 +435,7 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->model->action = $this->request->action;
 
+        $isAcademic = $this->Institutions->get($id)->is_academic;
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $currentPeriod = $AcademicPeriods->getCurrent();
         if (empty($currentPeriod)) {
@@ -410,23 +444,27 @@ class InstitutionsController extends AppController
 
         // $highChartDatas = ['{"chart":{"type":"column","borderWidth":1},"xAxis":{"title":{"text":"Position Type"},"categories":["Non-Teaching","Teaching"]},"yAxis":{"title":{"text":"Total"}},"title":{"text":"Number Of Staff"},"subtitle":{"text":"For Year 2015-2016"},"series":[{"name":"Male","data":[0,2]},{"name":"Female","data":[0,1]}]}'];
         $highChartDatas = [];
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-        $statuses = $StudentStatuses->findCodeList();
 
-        //Students By Year, excludes transferred and dropoout students
-        $params = array(
-            'conditions' => array('institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['DROPOUT']])
-        );
+        // only show student charts if institution is academic
+        if ($isAcademic) {
+            $InstitutionStudents = TableRegistry::get('Institution.Students');
+            $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+            $statuses = $StudentStatuses->findCodeList();
 
-        $InstitutionStudents = TableRegistry::get('Institution.Students');
-        $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_year', $params);
+            //Students By Year, excludes transferred and dropoout students
+            $params = array(
+                'conditions' => array('institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['DROPOUT']])
+            );
 
-        //Students By Grade for current year, excludes transferred and dropoout students
-        $params = array(
-            'conditions' => array('institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['DROPOUT']])
-        );
+            $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_year', $params);
 
-        $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_grade', $params);
+            //Students By Grade for current year, excludes transferred and dropoout students
+            $params = array(
+                'conditions' => array('institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['DROPOUT']])
+            );
+
+            $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_grade', $params);
+        }
 
         $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
         $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');

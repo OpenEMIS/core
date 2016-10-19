@@ -15,6 +15,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
     return {
         init: function(baseUrl) {
             KdOrmSvc.base(baseUrl);
+            KdOrmSvc.controllerAction('Results');
             KdSessionSvc.base(baseUrl);
             angular.forEach(models, function(model, key) {
                 window[key] = KdOrmSvc.init(model);
@@ -95,12 +96,12 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                 var success = function(response, deferred) {
                     var items = response.data.data;
 
-                    if (angular.isObject(items) && items.length > 0) 
+                    if (angular.isObject(items) && items.length > 0)
                     {
                         var educationSubject = null;
 
                         var subjects = [];
-                        angular.forEach(items, function(item, key) 
+                        angular.forEach(items, function(item, key)
                         {
                             educationSubject = item.education_subject;
                             educationSubject.grading_type = item.grading_type;
@@ -109,17 +110,17 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         }, subjects);
 
                         deferred.resolve(subjects);
-                    } else 
+                    } else
                     {
                         deferred.reject('You need to configure Assessment Items first');
                     }
                 };
 
-                if (isSuperAdmin) 
+                if (isSuperAdmin)
                 {
                     // Super admin will return all subjects
                     assessmentSubjects = assessmentSubjects.ajax({success: success, defer: true});
-                } else 
+                } else
                 {
                     // Non super admin logic
 
@@ -134,7 +135,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                                 .find('staffSubjects', {class_id: classId, staff_id: securityUserId})
                                 .ajax({success: success, defer: true});
                         } else
-                        {   
+                        {
                             // Display nothing
                             assessmentSubjects = AssessmentItemsTable.ajax({success: fail, defer: true});
                         }
@@ -163,7 +164,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             return deferred.promise;
         },
 
-        getPeriods: function(assessmentId) 
+        getPeriods: function(assessmentId)
         {
             var success = function(response, deferred) {
                 var periods = response.data.data;
@@ -172,7 +173,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                     deferred.resolve(periods);
                 } else {
                     deferred.reject('You need to configure Assessment Periods first');
-                }   
+                }
             };
 
             return AssessmentPeriodsTable
@@ -488,9 +489,9 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
                             if (studentId != currentStudentId) {
                                 if (studentId != null) {
-                                    this.push(studentResults);   
+                                    this.push(studentResults);
                                 }
-                                
+
                                 studentResults = {
                                     openemis_id: subjectStudent._matchingData.Users.openemis_no,
                                     name: subjectStudent._matchingData.Users.name,
