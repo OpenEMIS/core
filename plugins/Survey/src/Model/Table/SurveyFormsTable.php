@@ -30,6 +30,9 @@ class SurveyFormsTable extends CustomFormsTable {
 		parent::initialize($config);
 		$this->hasMany('SurveyStatuses', ['className' => 'Survey.SurveyStatuses', 'dependent' => true, 'cascadeCallbacks' => true]);
 		// The hasMany association for InstitutionSurveys and StudentSurveys is done in onBeforeDelete() and is added based on module to avoid conflict.
+		$this->addBehavior('Restful.RestfulAccessControl', [
+            'Rules' => ['index']
+        ]);
 	}
 
 	public function validationDefault(Validator $validator) {

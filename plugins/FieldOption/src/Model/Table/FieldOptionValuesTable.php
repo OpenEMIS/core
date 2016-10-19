@@ -20,7 +20,7 @@ class FieldOptionValuesTable extends AppTable {
 	private $fieldOption = null;
 
 	public $defaultFieldOrder = ['field_option_id', 'parent_field_option_id', 'name', 'national_code', 'international_code', 'visible', 'default', 'editable'];
-	
+
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -64,7 +64,7 @@ class FieldOptionValuesTable extends AppTable {
 		$this->ControllerAction->field('order', ['type' => 'hidden']);
 		$this->ControllerAction->field('default', ['options' => $this->getSelectOptions('general.yesno')]);
 		$this->ControllerAction->field('editable', ['options' => $this->getSelectOptions('general.yesno'), 'visible' => ['index' => true]]);
-		
+
 		$fieldOptions = [];
 		$data = $this->FieldOptions
 			->find()
@@ -74,7 +74,7 @@ class FieldOptionValuesTable extends AppTable {
 
 		foreach ($data as $obj) {
 			$key = $obj->id;
-			
+
 			$parent = __($obj->parent);
 			if (!array_key_exists($parent, $fieldOptions)) {
 				$fieldOptions[$parent] = array();
@@ -105,7 +105,7 @@ class FieldOptionValuesTable extends AppTable {
 
 		$fieldOptionList = $this->FieldOptions->getList()->toArray();
 		$this->ControllerAction->field('field_option_id', [
-			'type' => 'readonly', 
+			'type' => 'readonly',
 			'options' => $fieldOptionList,
 			'attr' => ['value' => $this->fieldOption->name],
 			'visible' => ['index' => false, 'view' => true, 'edit' => true]
@@ -116,7 +116,7 @@ class FieldOptionValuesTable extends AppTable {
 		$currentFieldOptionName = $currentFieldOption->plugin.'.'.$currentFieldOption->code;
 		if (array_key_exists($currentFieldOptionName, $this->parentFieldOptionList)) {
 			$behavior = $this->parentFieldOptionList[$currentFieldOptionName]['behavior'];
-			if (!empty($behavior)) {	
+			if (!empty($behavior)) {
 				$this->addBehavior('FieldOption.'.$behavior, [
 									'fieldOptionName' => $currentFieldOptionName,
 									'parentFieldOptionList' => $this->parentFieldOptionList
@@ -128,12 +128,13 @@ class FieldOptionValuesTable extends AppTable {
 					$this->ControllerAction->field($field, ['visible' => false]);
 				}
 			}
-		}		
-	
-		$this->ControllerAction->setFieldOrder($defaultFieldOrder); 
+		}
+
+		$this->ControllerAction->setFieldOrder($defaultFieldOrder);
 	}
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {		
+	public function indexBeforeAction(Event $event, ArrayObject $settings) {
+        $query = $settings['query'];
 		$settings['pagination'] = false;
 		$selectedOption = $this->ControllerAction->getVar('selectedOption');
 		$query->where([$this->aliasField('field_option_id') => $selectedOption]);
@@ -156,7 +157,7 @@ class FieldOptionValuesTable extends AppTable {
 	public function deleteBeforeAction(Event $event, ArrayObject $settings) {
 		$fieldOption = $this->fieldOption;
 		$settings['deleteStrategy'] = 'transfer';
-		
+
 		$model = $fieldOption->code;
 		if (!is_null($fieldOption->plugin)) {
 			$model = $fieldOption->plugin . '.' . $model;
@@ -166,13 +167,13 @@ class FieldOptionValuesTable extends AppTable {
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
 		$fieldOption = $this->fieldOption;
-	
+
 		$availFieldOptions = false;
 		if (empty($fieldOption->params)) {
 			$query->where([$query->repository()->aliasField('field_option_id') => $fieldOption->id]);
 			$availFieldOptions = $this->find()->where([$this->aliasField('field_option_id')	 => $fieldOption->id])->count();
 		}
-	
+
 		if($availFieldOptions == 1) {
 			$this->Alert->warning('general.notTransferrable');
 			$event->stopPropagation();
@@ -208,7 +209,7 @@ class FieldOptionValuesTable extends AppTable {
 		if (array_key_exists('conditions', $customOptions)) {
 			$options['conditions'] = array_merge($options['conditions'], $customOptions['conditions']);
 		}
-		
+
 		if (array_key_exists('value', $customOptions)) {
 			$selected = $customOptions['value'];
 		} else {
@@ -228,11 +229,11 @@ class FieldOptionValuesTable extends AppTable {
 			}
 		} else {
 			foreach ($query as $key => $value) {
-				array_push($result, 
+				array_push($result,
 					array(
 						'id' => $value->id,
-						'text' => __($value->name), 
-						'national_code' => $value->national_code, 
+						'text' => __($value->name),
+						'national_code' => $value->national_code,
 						'value' => $value->id,
 						'obsolete' => ($value->visible!='0') ? false : true,
 						'selected' => ($selected && $selected==$value->id) ? true : ((!$selected && $value->default!='0') ? true : false)
@@ -253,7 +254,7 @@ class FieldOptionValuesTable extends AppTable {
 						if ($ovalue['obsolete'] == '1' && $ovalue['value']!=$value) {
 							unset($result[$okey]);
 						}
-					}	
+					}
 				}
 			}
 		}

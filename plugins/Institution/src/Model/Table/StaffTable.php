@@ -184,7 +184,7 @@ class StaffTable extends AppTable {
 		$fields->exchangeArray($newFields);
 	}
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		$this->fields['staff_id']['order'] = 5;
 		$this->fields['institution_position_id']['order'] = 6;
 		$this->fields['FTE']['visible'] = false;
