@@ -199,11 +199,15 @@ class UserBehavior extends Behavior {
 
         // need to find out what kind of user is it
         $this->_table->ControllerAction->field('photo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"'.$imageDefault.'"', 'order' => 0]);
+
+        $this->_table->field('photo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"'.$imageDefault.'"', 'order' => 0]);
         $this->_table->ControllerAction->field('openemis_no', [
             'type' => 'readonly',
             'order' => 1,
             'sort' => true
         ]);
+
+        $this->_table->field('openemis_no', ['type' => 'readonly', 'order' => 1, 'sort' => true]);
 
         if ($this->_table->table() == 'security_users') {
             $this->_table->ControllerAction->field('name', [
