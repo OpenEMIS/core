@@ -9,7 +9,6 @@ use App\Model\Table\AppTable;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
-use Cake\Network\Session;
 use Cake\Datasource\ResultSetInterface;
 
 class StudentDropoutTable extends AppTable {
@@ -346,15 +345,19 @@ class StudentDropoutTable extends AppTable {
 	}
 
 	public function findWorkbench(Query $query, array $options) {
-		$session = new Session();
+		$controller = $options['_controller'];
+		$controller->loadComponent('AccessControl');
+
+		$session = $controller->request->session();
+		$AccessControl = $controller->AccessControl;
+
 		$isAdmin = $session->read('Auth.User.super_admin');
 		$userId = $session->read('Auth.User.id');
 
 		$where = [];
 
 		if (!$isAdmin) {
-			// to-do: check permission
-			// if ($AccessControl->check(['Institutions', $this->alias(), 'edit'])) {
+			if ($AccessControl->check(['Institutions', $this->alias(), 'edit'])) {
 				$institutionRoles = [];
 
 				$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
@@ -372,10 +375,10 @@ class StudentDropoutTable extends AppTable {
 				} else {
 					$where[$this->aliasField('institution_id') . ' IN '] = array_keys($institutionRoles);
 				}
-			// } else {
-			// 	// return empty list if the user does not permission to approve Student Admission
-			// 	return $query->where([$this->aliasField('id') => -1]);
-			// }
+			} else {
+				// return empty list if the user does not permission to approve Student Admission
+				return $query->where([$this->aliasField('id') => -1]);
+			}
 		}
 
 		$query
@@ -423,7 +426,6 @@ class StudentDropoutTable extends AppTable {
 	    			$row['request_title'] = __('Dropout request of').' '.$row->user->name_with_id;
 	    			$row['institution'] = $row->institution->code_name;
 	    			$row['received_date'] = $receivedDate;
-	    			$row['due_date'] = '<i class="fa fa-minus"></i>';
 	    			$row['requester'] = $row->created_user->name_with_id;
 
 					return $row;

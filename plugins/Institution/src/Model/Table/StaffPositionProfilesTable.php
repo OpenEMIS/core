@@ -7,7 +7,6 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Controller\Component;
 use Cake\Network\Request;
-use Cake\Network\Session;
 use Cake\ORM\TableRegistry;
 use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\ControllerActionTable;
@@ -535,7 +534,9 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 	}
 
 	public function findWorkbench(Query $query, array $options) {
-		$session = new Session();
+		$controller = $options['_controller'];
+		$session = $controller->request->session();
+
 		$userId = $session->read('Auth.User.id');
 		$Statuses = $this->Statuses;
 		$doneStatus = self::DONE;
@@ -591,7 +592,6 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 	    			$row['request_title'] = __('Change in Staff Assignment of').' '.$row->user->name_with_id;
 	    			$row['institution'] = $row->institution->code_name;
 	    			$row['received_date'] = $receivedDate;
-	    			$row['due_date'] = '<i class="fa fa-minus"></i>';
 	    			$row['requester'] = $row->created_user->name_with_id;
 
 					return $row;

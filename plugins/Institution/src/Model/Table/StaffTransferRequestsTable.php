@@ -8,7 +8,6 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Network\Request;
-use Cake\Network\Session;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Validation\Validator;
 
@@ -277,7 +276,12 @@ class StaffTransferRequestsTable extends StaffTransfer {
 	}
 
 	public function findWorkbench(Query $query, array $options) {
-		$session = new Session();
+		$controller = $options['_controller'];
+		$controller->loadComponent('AccessControl');
+
+		$session = $controller->request->session();
+		$AccessControl = $controller->AccessControl;
+
 		$isAdmin = $session->read('Auth.User.super_admin');
 		$userId = $session->read('Auth.User.id');
 
@@ -287,8 +291,7 @@ class StaffTransferRequestsTable extends StaffTransfer {
 		];
 
 		if (!$isAdmin) {
-			// to-do: check permission
-			// if ($AccessControl->check(['Institutions', 'StaffTransferRequests', 'edit'])) {
+			if ($AccessControl->check(['Institutions', 'StaffTransferRequests', 'edit'])) {
 				$institutionRoles = [];
 
 				$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
@@ -306,10 +309,10 @@ class StaffTransferRequestsTable extends StaffTransfer {
 				} else {
 					$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
 				}
-			// } else {
+			} else {
 				// return empty list if the user does not permission to approve Staff Transfer Requests
-			// return $query->where([$this->aliasField('id') => -1]);
-			// }
+				return $query->where([$this->aliasField('id') => -1]);
+			}
 		}
 
 		$query
@@ -361,7 +364,6 @@ class StaffTransferRequestsTable extends StaffTransfer {
 	    			$row['request_title'] = __('Staff Transfer Approved of').' '.$row->user->name_with_id.' '.__('from').' '.$row->previous_institution->code_name;
 	    			$row['institution'] = $row->institution->code_name;
 	    			$row['received_date'] = $receivedDate;
-	    			$row['due_date'] = '<i class="fa fa-minus"></i>';
 	    			$row['requester'] = $row->created_user->name_with_id;
 
 					return $row;

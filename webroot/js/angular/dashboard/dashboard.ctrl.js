@@ -110,11 +110,7 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
             suppressMenuHide: true,
             suppressCellSelection: true,
             suppressMovableColumns: true,
-            rowModelType: 'pagination',
-            onGridReady: function() {
-                var columnDefs = DashboardSvc.getWorkbenchColumnDefs();
-                vm.gridOptions[target].api.setColumnDefs(columnDefs);
-            }
+            rowModelType: 'pagination'
         };
     }
 
@@ -123,9 +119,14 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
         vm.workbenchTitle = DashboardSvc.getWorkbenchTitleByName(model.name);
 
         // reset to empty
+        vm.gridOptions[vm.target].api.setColumnDefs([]);
         vm.gridOptions[vm.target].api.setRowData([]);
-        var limit = 10;
 
+        var columnDefs = DashboardSvc.getWorkbenchColumnDefs(model.cols);
+        vm.gridOptions[vm.target].api.setColumnDefs(columnDefs);
+        vm.gridOptions[vm.target].api.sizeColumnsToFit();
+
+        var limit = 10;
         var dataSource = {
             pageSize: limit,
             getRows: function (params) {
