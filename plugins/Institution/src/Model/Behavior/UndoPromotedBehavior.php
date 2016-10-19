@@ -36,7 +36,7 @@ class UndoPromotedBehavior extends UndoBehavior {
 				if ($studentId != 0) {
 					$studentIds[$studentId] = $studentId;
 
-					$this->deleteEnrolledStudents($studentId);
+					$this->deleteEnrolledStudents($studentId, $this->statuses['PROMOTED']);
 					$where = [
 						'institution_id' => $institutionId,
 						'academic_period_id' => $selectedPeriod,

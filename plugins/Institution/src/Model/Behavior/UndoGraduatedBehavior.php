@@ -36,7 +36,7 @@ class UndoGraduatedBehavior extends UndoBehavior {
 				if ($studentId != 0) {
 					$studentIds[$studentId] = $studentId;
 
-					$this->deleteEnrolledStudents($studentId);
+					$this->deleteEnrolledStudents($studentId, $this->statuses['GRADUATED']);
 					$where = [
 						'institution_id' => $institutionId,
 						'academic_period_id' => $selectedPeriod,
