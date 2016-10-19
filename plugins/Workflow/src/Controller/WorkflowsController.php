@@ -3,8 +3,10 @@ namespace Workflow\Controller;
 
 use ArrayObject;
 use App\Controller\AppController;
+use Cake\ORM\TableRegistry;
 use Cake\ORM\Table;
 use Cake\Event\Event;
+use Cake\Log\Log;
 
 class WorkflowsController extends AppController
 {
@@ -14,6 +16,7 @@ class WorkflowsController extends AppController
         $this->ControllerAction->models = [
             'Workflows' => ['className' => 'Workflow.Workflows', 'options' => ['deleteStrategy' => 'transfer']],
             'Steps' => ['className' => 'Workflow.WorkflowSteps', 'options' => ['deleteStrategy' => 'restrict']],
+            'Actions' => ['className' => 'Workflow.WorkflowActions'],
             'Statuses' => ['className' => 'Workflow.WorkflowStatuses'],
         ];
 		$this->loadComponent('Paginator');
@@ -34,6 +37,10 @@ class WorkflowsController extends AppController
             $tabElements['Steps'] = [
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Steps'],
                 'text' => __('Steps')
+            ];
+            $tabElements['Actions'] = [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Actions'],
+                'text' => __('Actions')
             ];
         }
 
@@ -65,5 +72,41 @@ class WorkflowsController extends AppController
         $this->Navigation->addCrumb($model->getHeader($model->alias));
 
         $this->set('contentHeader', $header);
+    }
+
+    public function ajaxGetAssignees() {
+        $this->viewBuilder()->layout('ajax');
+
+        $isSchoolBased = $this->request->query('is_school_based');
+        $nextStepId = $this->request->query('next_step_id');
+
+        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $params = [
+            'is_school_based' => $isSchoolBased,
+            'workflow_step_id' => $nextStepId
+        ];
+        if ($isSchoolBased) {
+            $session = $this->request->session();
+            if ($session->check('Institution.Institutions.id')) {
+                $institutionId = $session->read('Institution.Institutions.id');
+                $params['institution_id'] = $institutionId;
+            }
+        }
+
+        $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
+
+        Log::write('debug', 'Assignee:');
+        Log::write('debug', $assigneeOptions);
+
+        $defaultKey = empty($assigneeOptions) ? __('No options') : '-- '.__('Select').' --';
+        $responseData = [
+            'default_key' => $defaultKey,
+            'assignees' => $assigneeOptions
+        ];
+
+        $this->response->body(json_encode($responseData, JSON_UNESCAPED_UNICODE));
+        $this->response->type('json');
+
+        return $this->response;
     }
 }
