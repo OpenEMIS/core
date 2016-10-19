@@ -90,7 +90,7 @@ class StaffLeaveTable extends ControllerActionTable
 		]);
 	}
 
-	public function indexAfterAction(Event $event, Query $data, ResultSet $data, ArrayObject $extra)
+	public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
 	{
 		$this->setupTabElements();
 	}
