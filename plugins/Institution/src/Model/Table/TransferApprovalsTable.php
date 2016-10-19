@@ -117,7 +117,8 @@ class TransferApprovalsTable extends AppTable {
                     'student_id' => $studentId,
                     'academic_period_id' => $periodId,
                     'education_grade_id' => $gradeId,
-                    'student_status_id' => $statuses['CURRENT']
+                    'student_status_id' => $statuses['CURRENT'],
+                    'previous_institution_student_id' => $existingStudentEntity->id
                 ];
 				$newData['start_date'] = $startDate;
 				$newData['end_date'] = $entity->end_date->format('Y-m-d');
