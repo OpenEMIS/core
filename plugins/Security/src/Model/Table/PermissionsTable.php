@@ -79,8 +79,8 @@ class PermissionsTable extends AppTable
 	}
 
 	// Event: ControllerAction.Model.index.beforeAction
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings)
-	{
+	public function indexBeforeAction(Event $event, ArrayObject $settings) {
+        $query = $settings['query'];
 		$controller = $this->controller;
 
 		if (count($this->request->pass) != 2) {

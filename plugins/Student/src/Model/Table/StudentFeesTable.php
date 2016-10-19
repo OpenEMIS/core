@@ -132,7 +132,7 @@ class StudentFeesTable extends ControllerActionTable {
 		}
 	}
 
-	public function indexAfterAction(Event $event, ResultSet $resultSet, ArrayObject $extra) {
+	public function indexAfterAction(Event $event, Query $query, ResultSet $resultSet, ArrayObject $extra) {
 		$options = ['type' => 'student'];
 		$tabElements = $this->controller->getFinanceTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
