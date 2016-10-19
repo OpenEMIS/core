@@ -8,7 +8,6 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
-use Cake\Network\Session;
 use Cake\Log\Log;
 use Cake\Datasource\ResultSetInterface;
 
@@ -443,7 +442,9 @@ class InstitutionSurveysTable extends AppTable {
 	}
 
 	public function findWorkbench(Query $query, array $options) {
-		$session = new Session();
+		$controller = $options['_controller'];
+		$session = $controller->request->session();
+
 		$userId = $session->read('Auth.User.id');
 		$Statuses = $this->Statuses;
 		$doneStatus = self::DONE;
@@ -495,7 +496,6 @@ class InstitutionSurveysTable extends AppTable {
 	    			$row['request_title'] = $row->survey_form->name.' '.__('in').' '.$row->academic_period->name;
 	    			$row['institution'] = $row->institution->code_name;
 	    			$row['received_date'] = $receivedDate;
-	    			$row['due_date'] = '<i class="fa fa-minus"></i>';
 	    			$row['requester'] = $row->created_user->name_with_id;
 
 					return $row;

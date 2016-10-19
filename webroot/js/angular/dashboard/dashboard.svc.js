@@ -5,25 +5,59 @@ angular
 DashboardSvc.$inject = ['$q', '$filter', 'KdOrmSvc'];
 
 function DashboardSvc($q, $filter, KdOrmSvc) {
+    const workbenchItemTypes = {
+        FIXED: ['request_title', 'institution', 'received_date', 'requester'],
+        SCHOOL_BASED: ['status', 'request_title', 'institution', 'received_date', 'requester'],
+        NON_SCHOOL_BASED: ['status', 'request_title', 'received_date', 'requester']
+    };
+
     var properties = {
         notices: {},
         workbenchItems: {}
     };
 
-    var models = {
-        TransferApprovalsTable: 'Institution.TransferApprovals',
-        StudentAdmissionTable: 'Institution.StudentAdmission',
-        StudentDropoutTable: 'Institution.StudentDropout',
-        StaffTransferApprovalsTable: 'Institution.StaffTransferApprovals',
-        StaffTransferRequestsTable: 'Institution.StaffTransferRequests',
-        StaffLeaveTable: 'Institution.StaffLeave',
-        InstitutionSurveysTable: 'Institution.InstitutionSurveys',
-        InstitutionPositionsTable: 'Institution.InstitutionPositions',
-        StaffPositionProfilesTable: 'Institution.StaffPositionProfiles'
+    var configModels = {
+        TransferApprovalsTable: {
+            cols: workbenchItemTypes.FIXED,
+            model: 'Institution.TransferApprovals'
+        },
+        StudentAdmissionTable: {
+            cols: workbenchItemTypes.FIXED,
+            model: 'Institution.StudentAdmission'
+        },
+        StudentDropoutTable: {
+            cols: workbenchItemTypes.FIXED,
+            model: 'Institution.StudentDropout'
+        },
+        StaffTransferApprovalsTable: {
+            cols: workbenchItemTypes.FIXED,
+            model: 'Institution.StaffTransferApprovals'
+        },
+        StaffTransferRequestsTable: {
+            cols: workbenchItemTypes.FIXED,
+            model: 'Institution.StaffTransferRequests'
+        },
+        StaffLeaveTable: {
+            cols: workbenchItemTypes.SCHOOL_BASED,
+            model: 'Institution.StaffLeave'
+        },
+        InstitutionSurveysTable: {
+            cols: workbenchItemTypes.SCHOOL_BASED,
+            model: 'Institution.InstitutionSurveys'
+        },
+        InstitutionPositionsTable: {
+            cols: workbenchItemTypes.SCHOOL_BASED,
+            model: 'Institution.InstitutionPositions'
+        },
+        StaffPositionProfilesTable: {
+            cols: workbenchItemTypes.SCHOOL_BASED,
+            model: 'Institution.StaffPositionProfiles'
+        }
     };
 
     var service = {
         init: init,
+        extractModels: extractModels,
         getNotices: getNotices,
         getWorkbenchItems: getWorkbenchItems,
         getWorkbenchItemsCount: getWorkbenchItemsCount,
@@ -37,7 +71,19 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
     function init(baseUrl) {
         KdOrmSvc.base(baseUrl);
         KdOrmSvc.init({NoticesTable: 'Notices'});
-        KdOrmSvc.init(models);
+
+        var models = this.extractModels();
+        KdOrmSvc.init(this.extractModels());
+    };
+
+    function extractModels() {
+        var models = {};
+
+        angular.forEach(configModels, function(obj, key) {
+            models[key] = obj.model;
+        });
+
+        return models;
     };
 
     function getNotices() {
@@ -65,13 +111,14 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
 
     function getWorkbenchItems() {
         var order = 1;
-        angular.forEach(models, function(model, key) {
-            var registryAlias = model.split(".");
+        angular.forEach(configModels, function(obj, key) {
+            var registryAlias = obj.model.split(".");
             var modelName = registryAlias.length > 1 ? registryAlias[1] : registryAlias[0];
 
             var modelObj = {
                 code: key,
                 name: getWorkbenchTitleByName(modelName),
+                cols: obj.cols,
                 total: 0,
                 order: order++
             };
@@ -97,10 +144,15 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
         return title;
     };
 
-    function getWorkbenchColumnDefs() {
-        var columnDefs = [
-            {headerName: "Status", field: "status"},
-            {
+    function getWorkbenchColumnDefs(cols) {
+        var columnDefs = [];
+
+        if (cols.indexOf('status') !== -1) {
+            columnDefs.push({headerName: "Status", field: "status"});
+        }
+
+        if (cols.indexOf('request_title') !== -1) {
+            columnDefs.push({
                 headerName: "Request Title",
                 field: "request_title",
                 cellRenderer: function(params) {
@@ -133,14 +185,23 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
                     return eCell;
                 },
                 width: 400
-            },
-            {
+            });
+        }
+
+        if (cols.indexOf('institution') !== -1) {
+            columnDefs.push({
                 headerName: "Institution", field: "institution",
                 width: 250
-            },
-            {headerName: "Received Date", field: "received_date"},
-            {headerName: "Requester", field: "requester"}
-        ];
+            });
+        }
+
+        if (cols.indexOf('received_date') !== -1) {
+            columnDefs.push({headerName: "Received Date", field: "received_date"});
+        }
+
+        if (cols.indexOf('requester') !== -1) {
+            columnDefs.push({headerName: "Requester", field: "requester"});
+        }
 
         return columnDefs;
     };
