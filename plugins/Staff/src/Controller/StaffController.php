@@ -23,7 +23,6 @@ class StaffController extends AppController {
 			'Classes'			=> ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
 			'Qualifications'	=> ['className' => 'Staff.Qualifications'],
 			'Absences'			=> ['className' => 'Staff.Absences', 'actions' => ['index', 'view']],
-			'Leave'  			=> ['className' => 'Staff.Leaves'],
 			'Behaviours'		=> ['className' => 'Staff.StaffBehaviours', 'actions' => ['index', 'view']],
 			'Extracurriculars'	=> ['className' => 'Staff.Extracurriculars'],
 			'Trainings'			=> ['className' => 'Staff.StaffTrainings'],
@@ -215,6 +214,12 @@ class StaffController extends AppController {
 	}
 
 	public function getCareerTabElements($options = []) {
+		$options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+		$session = $this->request->session();
+		if ($session->check('Staff.Staff.id')) {
+			$userId = $session->read('Staff.Staff.id');
+			$options['user_id'] = $userId;
+		}
 		return TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
 	}
 
