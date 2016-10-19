@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
+use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 
 class WorkflowStepsTable extends AppTable {
@@ -52,6 +53,16 @@ class WorkflowStepsTable extends AppTable {
 			'through' => 'Workflow.WorkflowStepsRoles',
 			'dependent' => true
 		]);
+	}
+
+	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
+		return $validator
+			->requirePresence('category')
+			->requirePresence('is_editable')
+			->requirePresence('is_removable')
+			->requirePresence('is_system_defined');
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
@@ -281,6 +292,7 @@ class WorkflowStepsTable extends AppTable {
 	public function onUpdateFieldIsEditable(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'view' || $action == 'add' || $action == 'edit') {
 			$attr['type'] = 'select';
+			$attr['select'] = false;
 			$attr['options'] = $this->getSelectOptions('general.yesno');
 		}
 
@@ -290,6 +302,7 @@ class WorkflowStepsTable extends AppTable {
 	public function onUpdateFieldIsRemovable(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'view' || $action == 'add' || $action == 'edit') {
 			$attr['type'] = 'select';
+			$attr['select'] = false;
 			$attr['options'] = $this->getSelectOptions('general.yesno');
 		}
 
