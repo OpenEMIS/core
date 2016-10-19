@@ -196,10 +196,8 @@ class AppController extends Controller {
 		// Check if the language menu is enabled
 		if (!$session->check('System.language_menu')) {
 			$showLanguage = $ConfigItemsTable->value('language_menu');
-			if (!$showLanguage) {
-				$systemLanguage = $ConfigItemsTable->value('language');
-				$session->write('System.language', $systemLanguage);
-			}
+			$systemLanguage = $ConfigItemsTable->value('language');
+			$session->write('System.language', $systemLanguage);
 			$session->write('System.language_menu', $showLanguage);
 		}
 
