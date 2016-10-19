@@ -43,11 +43,11 @@ class InstitutionSubjectStudent extends Entity {
 		if ($this->has('user')) {
 			if ($this->user instanceof Entity) {
 				if ($this->user->has('gender')) {
-					$value = $this->user->gender->name;
+					$value = __($this->user->gender->name);
 				}
 			} else if (is_array($this->user)) {
 				if (array_key_exists('gender', $this->user)) {
-					$value = $this->user['gender']['name'];
+					$value = __($this->user['gender']['name']);
 				}
 			}
 		}

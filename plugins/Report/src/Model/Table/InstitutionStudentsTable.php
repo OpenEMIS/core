@@ -24,6 +24,7 @@ class InstitutionStudentsTable extends AppTable  {
 			'excludes' => ['start_year', 'end_year'], 
 			'pages' => false
 		]);
+		$this->addBehavior('Report.InstitutionSecurity');
 	}
 
 	public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
@@ -59,18 +60,10 @@ class InstitutionStudentsTable extends AppTable  {
 				$this->aliasField('student_status_id') => $statusId
 			]);
 		}
-
-
-
-		$query->leftJoin(
-			['Identities' => 'user_identities'],
-			[
-				'Identities.security_user_id = '.$this->aliasField('student_id'),
-				'Identities.identity_type_id' => $settings['identity']->id
-			]
-		);
-
-		$query->contain(['Users.Genders', 'Institutions.Areas'])->select(['openemis_no' => 'Users.openemis_no', 'number' => 'Identities.number', 'code' => 'Institutions.code', 'gender_id' => 'Genders.name', 'area_name' => 'Areas.name', 'area_code' => 'Areas.code']);
+		
+		$query
+			->contain(['Users.Genders', 'Institutions.Areas', 'Institutions.Types'])
+			->select(['openemis_no' => 'Users.openemis_no', 'number' => 'Users.identity_number', 'code' => 'Institutions.code', 'gender_name' => 'Genders.name', 'area_name' => 'Areas.name', 'area_code' => 'Areas.code', 'institution_type' => 'Types.name']);
 	}
 
 	public function onExcelRenderAge(Event $event, Entity $entity, $attr) {
@@ -117,6 +110,13 @@ class InstitutionStudentsTable extends AppTable  {
 		];
 
 		$extraField[] = [
+			'key' => 'Institutions.institution_type_id',
+			'field' => 'institution_type',
+			'type' => 'integer',
+			'label' => '',
+		];
+
+		$extraField[] = [
 			'key' => 'Users.openemis_no',
 			'field' => 'openemis_no',
 			'type' => 'string',
@@ -124,7 +124,7 @@ class InstitutionStudentsTable extends AppTable  {
 		];
 
 		$extraField[] = [
-			'key' => 'Identities.number',
+			'key' => 'Users.identity_number',
 			'field' => 'number',
 			'type' => 'string',
 			'label' => __($identity->name)
@@ -132,7 +132,7 @@ class InstitutionStudentsTable extends AppTable  {
 
 		$extraField[] = [
 			'key' => 'Users.gender_id',
-			'field' => 'gender_id',
+			'field' => 'gender_name',
 			'type' => 'string',
 			'label' => ''
 		];

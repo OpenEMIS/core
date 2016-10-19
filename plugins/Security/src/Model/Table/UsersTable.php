@@ -21,6 +21,8 @@ class UsersTable extends AppTable {
 		$this->entityClass('User.User');
 
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
+		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
+		$this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
 
 		$this->belongsToMany('Roles', [
 			'className' => 'Security.SecurityRoles',
@@ -40,6 +42,7 @@ class UsersTable extends AppTable {
 		$this->hasMany('Comments', 			['className' => 'User.Comments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$this->hasMany('Languages', 		['className' => 'User.UserLanguages',	'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$this->hasMany('Awards', 			['className' => 'User.Awards',			'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$this->hasMany('Logins', 			['className' => 'Security.SecurityUserLogins', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->addBehavior('User.User');
 		$this->addBehavior('User.AdvancedNameSearch');
@@ -48,10 +51,19 @@ class UsersTable extends AppTable {
 
 	// autocomplete used for UserGroups
 	public function autocomplete($search) {
-		$search = sprintf('%%%s%%', $search);
+		$search = sprintf('%s%%', $search);
 
 		$list = $this
 			->find()
+			->select([
+				$this->aliasField('openemis_no'),
+				$this->aliasField('first_name'),
+				$this->aliasField('middle_name'),
+				$this->aliasField('third_name'),
+				$this->aliasField('last_name'),
+				$this->aliasField('preferred_name'),
+				$this->aliasField('id')
+			])
 			->where([
 				'OR' => [
 					$this->aliasField('openemis_no') . ' LIKE' => $search,
@@ -62,8 +74,9 @@ class UsersTable extends AppTable {
 				]
 			])
 			->order([$this->aliasField('first_name')])
+			->limit(100)
 			->all();
-		
+
 		$data = array();
 		foreach($list as $obj) {
 			$data[] = [
@@ -107,8 +120,6 @@ class UsersTable extends AppTable {
 		$this->fields['last_name']['visible'] = false;
 		$this->fields['gender_id']['visible'] = false;
 		$this->fields['date_of_birth']['visible'] = false;
-		$this->fields['identity']['visible'] = false;
-
 		$this->fields['username']['visible'] = true;
 
 		$this->ControllerAction->field('name');
@@ -131,7 +142,7 @@ class UsersTable extends AppTable {
 
 	public function viewBeforeAction(Event $event) {
 		$this->ControllerAction->field('roles', [
-			'type' => 'role_table', 
+			'type' => 'role_table',
 			'order' => 69,
 			'valueClass' => 'table-full-width',
 			'visible' => ['index' => false, 'view' => true, 'edit' => false]
@@ -169,7 +180,7 @@ class UsersTable extends AppTable {
 				->matching('SecurityRoles')
 				->where([$GroupUsers->aliasField('security_user_id') => $entity->id])
 				->group([
-					$GroupUsers->aliasField('security_group_id'), 
+					$GroupUsers->aliasField('security_group_id'),
 					$GroupUsers->aliasField('security_role_id')
 				])
 				->select(['group_name' => 'SecurityGroups.name', 'role_name' => 'SecurityRoles.name', 'group_id' => 'SecurityGroups.id'])
@@ -201,9 +212,17 @@ class UsersTable extends AppTable {
 
 	public function addBeforeAction(Event $event) {
 		$uniqueOpenemisId = $this->getUniqueOpenemisId(['model'=>Inflector::singularize('User')]);
-		
+
 		// first value is for the hidden field value, the second value is for the readonly value
 		$this->ControllerAction->field('openemis_no', ['type' => 'readonly', 'value' => $uniqueOpenemisId, 'attr' => ['value' => $uniqueOpenemisId]]);
+
+		//this field value will be generated automatically when identity details changed.
+		$this->ControllerAction->field('identity_number', ['type' => 'hidden']);
+	}
+
+	public function editAfterAction(Event $event, Entity $entity)
+	{
+		$this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
 	}
 
 	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {

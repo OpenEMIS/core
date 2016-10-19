@@ -55,8 +55,11 @@ class AlertComponent extends Component {
 				$alerts = $session->read('_alert');
 			}
 
-			$alerts[] = $_options;
-			$session->write('_alert', $alerts);
+			$override = in_array('override', array_column($alerts, 'reset'));
+			if (!$override) {
+				$alerts[] = $_options;
+				$session->write('_alert', $alerts);
+			}
 		}
 	}
 

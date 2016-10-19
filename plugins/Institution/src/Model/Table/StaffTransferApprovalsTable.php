@@ -42,7 +42,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
 		parent::beforeAction($event, $extra);
-		
+
 		if ($this->action == 'edit' || $this->action == 'view') {
 			$toolbarButtons = $extra['toolbarButtons'];
 			if ($toolbarButtons['back']['url']['controller']=='Dashboard') {
@@ -79,10 +79,12 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 			$entity->start_date = Time::parse($entity->start_date);
 		}
 		$startDate = $this->formatDate($entity->start_date);
-		
+
 		$staffId = $entity->staff_id;
 
 		$institutionId = $entity->previous_institution_id;
+		$prevInstitutionCodeName = $entity->previous_institution->code_name;
+
 		$InstitutionStaff = TableRegistry::get('Institution.Staff');
 		$staffRecord = $InstitutionStaff->find()
 			->contain(['Positions', 'StaffTypes'])
@@ -99,6 +101,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 
 		if (!is_null($staffRecord)) {
 			$this->field('transfer_type');
+			$this->field('previous_institution_id', ['type' => 'disabled', 'after' => 'staff_id', 'attr' => ['value' => $prevInstitutionCodeName]]);
 			$this->field('current_institution_position_id', ['after' => 'previous_institution_id', 'type' => 'disabled', 'attr' => ['value' => $staffRecord->position->name]]);
 			$this->field('current_FTE', ['after' => 'current_institution_position_id', 'type' => 'disabled', 'attr' => ['value' => $staffRecord->FTE]]);
 			$this->field('current_staff_type', ['after' => 'current_FTE', 'type' => 'disabled', 'attr' => ['value' => $staffRecord->staff_type->name]]);
@@ -111,9 +114,9 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 
 			$this->field('new_FTE', ['currentFTE' => $staffRecord->FTE, 'attr' => ['required' => true]]);
 			$this->field('new_staff_type_id', ['attr' => ['value' => $staffRecord->staff_type_id], 'select' => false]);
-			$this->field('staff_end_date', ['type' => 'date', 'value' => new Date(), 
+			$this->field('staff_end_date', ['type' => 'date', 'value' => new Date(),
 				'date_options' => ['startDate' => $staffRecord->start_date->format('d-m-Y')]]);
-			$this->field('effective_date', ['after' => 'new_staff_type_id', 'type' => 'date', 'value' => new Date(), 
+			$this->field('effective_date', ['after' => 'new_staff_type_id', 'type' => 'date', 'value' => new Date(),
 				'date_options' => ['startDate' => $staffRecord->start_date->format('d-m-Y')]]);
 		} else {
 			$this->Alert->info($this->aliasField('staffEndOfAssignment'));
@@ -146,7 +149,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 			->order([$InstitutionStaff->aliasField('created') => 'DESC'])
 			->first();
 		if (empty($data[$this->alias()]['transfer_type']) && !is_null($staffRecord)) {
-			$extra[$this->aliasField('notice')] = $this->aliasField('transferType'); 
+			$extra[$this->aliasField('notice')] = $this->aliasField('transferType');
 		} else {
 			$error = false;
 
@@ -160,7 +163,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 					$extra[$this->aliasField('notice')] = $this->aliasField('newFTE');
 					$error = true;
 				}
-			} 
+			}
 
 			if (!$error) {
 				$entity->staffRecord = $staffRecord;
@@ -171,7 +174,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 				return $process;
 			}
 		}
-		
+
 	}
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
@@ -210,11 +213,13 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 					$this->aliasField('status'). ' IN ' => $statusToshow,
 					$this->aliasField('type') => self::TRANSFER
 				], [], true);
+
+		$extra['auto_contain_fields'] = ['PreviousInstitutions' => ['code'], 'Institutions' => ['code']];
 	}
 
 	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
 		if ($this->action == 'edit') {
-			// If the status is new application then display the approve and reject button, 
+			// If the status is new application then display the approve and reject button,
 			// if not remove the button just in case the user gets to access the edit page
 			if ($this->request->data[$this->alias()]['status'] == self::PENDING || !($this->AccessControl->check(['Institutions', 'StaffTransferApprovals', 'edit']))) {
 				$buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Approve');
@@ -289,7 +294,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 				} else {
 					$receivedDate = $this->formatDate($obj->modified);
 				}
-				
+
 				$data[] = [
 					'request_title' => ['title' => $requestTitle, 'url' => $url],
 					'receive_date' => $receivedDate,
@@ -306,9 +311,9 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 		$attr['options'] = $options;
 		$attr['onChangeReload'] = true;
 		if (!isset($request->data[$this->alias()]['transfer_type'])) {
-			$request->data[$this->alias()]['transfer_type'] = '';	
+			$request->data[$this->alias()]['transfer_type'] = '';
 		}
-		
+
 		return $attr;
 	}
 
@@ -318,17 +323,24 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 		if (isset($fteOptions[strval($val)])) {
 			$attr['attr']['value'] = $fteOptions[strval($val)];
 		}
-		
+
 		return $attr;
 	}
 
 	public function onUpdateFieldNewFTE(Event $event, array $attr, $action, Request $request) {
 		$fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
 		if (isset($fteOptions[strval($attr['currentFTE'])])) {
-			unset($fteOptions[strval($attr['currentFTE'])]);
+			$currentFTE = strval($attr['currentFTE']);
+			foreach ($fteOptions as $key => $val) {
+				if (floatval($key) > floatval($currentFTE)) {
+					unset($fteOptions[$key]);
+				}
+			}
+			$this->advancedSelectOptions($fteOptions, $currentFTE);
+			$fteOptions = array_values($fteOptions);
 		}
 		$transferType = $request->data[$this->alias()]['transfer_type'];
-		
+
 		if ($transferType == self::PARTIAL_TRANSFER) {
 			$attr['visible'] = true;
 			$attr['options'] = $fteOptions;
@@ -342,9 +354,9 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 
 	public function onUpdateFieldNewStaffTypeId(Event $event, array $attr, $action, Request $request) {
 		$transferType = $request->data[$this->alias()]['transfer_type'];
-		
+
 		if ($transferType == self::PARTIAL_TRANSFER) {
-			$StaffTypes = TableRegistry::get('FieldOption.StaffTypes');
+			$StaffTypes = TableRegistry::get('Staff.StaffTypes');
 			$options = $StaffTypes->getList()->toArray();
 			$attr['visible'] = true;
 			$attr['type'] = 'select';
@@ -358,7 +370,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 
 	public function onUpdateFieldStaffEndDate(Event $event, array $attr, $action, Request $request) {
 		$transferType = $request->data[$this->alias()]['transfer_type'];
-		if ($transferType == self::FULL_TRANSFER) {	
+		if ($transferType == self::FULL_TRANSFER) {
 			$attr['visible'] = true;
 		} else {
 			$attr['visible'] = false;
@@ -368,9 +380,9 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 
 	public function onUpdateFieldEffectiveDate(Event $event, array $attr, $action, Request $request) {
 		$transferType = $request->data[$this->alias()]['transfer_type'];
-		
+
 		if ($transferType == self::PARTIAL_TRANSFER) {
-			$StaffTypes = TableRegistry::get('FieldOption.StaffTypes');
+			$StaffTypes = TableRegistry::get('Staff.StaffTypes');
 			$options = $StaffTypes->getList()->toArray();
 			$attr['visible'] = true;
 			$attr['type'] = 'date';
@@ -407,7 +419,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 		// End
 
 		$this->Alert->success('TransferApprovals.reject');
-		
+
 		// To redirect back to the student admission if it is not access from the workbench
 		$urlParams = $this->url('index');
 		$plugin = false;
@@ -434,4 +446,27 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 			}
 		}
 	}
+
+	public function onGetStaffId(Event $event, Entity $entity) {
+		if ($this->action == 'view') {
+			$staffId = $entity->staff_id;
+			return $event->subject()->Html->link($entity->user->name, [
+						'plugin' => 'Institution',
+						'controller' => 'Institutions',
+						'action' => 'StaffUser',
+						'0' => 'view',
+						'1' => $staffId,
+						'institution_id' => $entity->previous_institution_id
+
+					]);
+		}
+	}
+
+	public function onGetPreviousInstitutionId(Event $event, Entity $entity) {
+        return $entity->previous_institution->code_name;
+    }
+
+    public function onGetInstitutionId(Event $event, Entity $entity) {
+        return $entity->institution->code_name;
+    }
 }

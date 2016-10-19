@@ -17,15 +17,10 @@ class StudentsController extends AppController {
 		$this->ControllerAction->model('Student.Students');
 		$this->ControllerAction->models = [
 			'Accounts' 			=> ['className' => 'Student.Accounts', 'actions' => ['view', 'edit']],
-			'Identities' 		=> ['className' => 'User.Identities'],
-			'Languages' 		=> ['className' => 'User.UserLanguages'],
 			'Nationalities' 	=> ['className' => 'User.Nationalities'],
-			'Comments' 			=> ['className' => 'User.Comments'],
-			'Awards' 			=> ['className' => 'User.Awards'],
 			'Attachments' 		=> ['className' => 'User.Attachments'],
 			'Guardians' 		=> ['className' => 'Student.Guardians'],
 			'GuardianUser' 		=> ['className' => 'Student.GuardianUser', 'actions' => ['add', 'view', 'edit']],
-			'Programmes' 		=> ['className' => 'Student.Programmes', 'actions' => ['index', 'view']],
 			'Absences' 			=> ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
 			'Behaviours' 		=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
 			'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],
@@ -51,14 +46,17 @@ class StudentsController extends AppController {
 	}
 
 	// CAv4
-	public function StudentFees() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentFees']); }
-	public function Classes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']); }
-	public function Subjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']); }
+	public function StudentFees() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentFees']); }
+	public function Classes() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']); }
+	public function Subjects() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']); }
     public function Nationalities() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
-    public function Languages() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
-    public function SpecialNeeds() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
-    public function Contacts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Contacts']); }
-    public function BankAccounts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.BankAccounts']); }
+    public function Languages() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
+    public function SpecialNeeds() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
+    public function Contacts() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Contacts']); }
+    public function BankAccounts() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.BankAccounts']); }
+    public function Comments() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
+    public function Identities() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']); }
+    public function Awards() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
 	// End
 
 	// AngularJS
@@ -83,7 +81,7 @@ class StudentsController extends AppController {
 
 	private function attachAngularModules() {
 		$action = $this->request->action;
-		
+
 		switch ($action) {
 			case 'Results':
 				$this->Angular->addModules([
@@ -107,7 +105,7 @@ class StudentsController extends AppController {
 		$header = __('Students');
 
 		if ($action == 'index') {
-			
+
 		} else if ($session->check('Student.Students.id') || $action == 'view' || $action == 'edit' || $action == 'Results') {
 			// add the student name to the header
 			$id = 0;
@@ -133,7 +131,7 @@ class StudentsController extends AppController {
 		/**
 		 * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
 		 */
-		
+
 		$session = $this->request->session();
 		if ($session->check('Student.Students.id')) {
 			$header = '';
@@ -161,6 +159,8 @@ class StudentsController extends AppController {
 				$header = $session->read('Student.Students.name');
 			}
 
+			$idKey = $this->ControllerAction->getPrimaryKey($model);
+
 			$alias = $model->alias;
 			$this->Navigation->addCrumb($model->getHeader($alias));
 			$header = $header . ' - ' . $model->getHeader($alias);
@@ -176,10 +176,10 @@ class StudentsController extends AppController {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
 					$exists = $model->exists([
-						$model->aliasField($model->primaryKey()) => $modelId,
+						$model->aliasField($idKey) => $modelId,
 						$model->aliasField('security_user_id') => $userId
 					]);
-					
+
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
 					 */
@@ -196,10 +196,10 @@ class StudentsController extends AppController {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
 					$exists = $model->exists([
-						$model->aliasField($model->primaryKey()) => $modelId,
+						$model->aliasField($idKey) => $modelId,
 						$model->aliasField('student_id') => $userId
 					]);
-					
+
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
 					 */
@@ -224,7 +224,7 @@ class StudentsController extends AppController {
 
 	public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {
 		$session = $this->request->session();
-		
+
 		if ($model->alias() != 'Students') {
 			if ($session->check('Student.Students.id')) {
 				if ($model->hasField('security_user_id')) {
@@ -264,7 +264,7 @@ class StudentsController extends AppController {
 	// 		],
 	// 		'Accounts' => [
 	// 			'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
-	// 			'text' => __('Account')	
+	// 			'text' => __('Account')
 	// 		]
 	// 	];
 
@@ -274,7 +274,7 @@ class StudentsController extends AppController {
 	public function getUserTabElements($options = []) {
 		$session = $this->request->session();
 		$tabElements = $session->read('Institution.Students.tabElements');
-		
+
 		return $tabElements;
 	}
 
@@ -316,7 +316,7 @@ class StudentsController extends AppController {
 		$tabElements = [
 			'Guardians' => [
 				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Guardians', 'type' => $type],
-				'text' => __('Guardians')	
+				'text' => __('Guardians')
 			],
 		];
 		return $tabElements;

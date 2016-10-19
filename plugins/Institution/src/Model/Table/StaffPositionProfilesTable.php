@@ -5,6 +5,7 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\Controller\Component;
 use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
@@ -17,7 +18,8 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 	private $workflowEvents = [
  		[
  			'value' => 'Workflow.onApprove',
-			'text' => 'Approval of Changes to Staff Position Profiles',
+			'text' => 'Approval of Change in Assignment',
+			'description' => 'Performing this action will apply the proposed changes to the staff record.',
  			'method' => 'OnApprove'
  		]
  	];
@@ -45,7 +47,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		$this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('StaffChangeTypes', ['className' => 'Staff.StaffChangeTypes', 'foreignKey' => 'staff_change_type_id']);
 		$this->belongsTo('Institutions',	['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
-		$this->belongsTo('StaffTypes',		['className' => 'FieldOption.StaffTypes']);
+		$this->belongsTo('StaffTypes',		['className' => 'Staff.StaffTypes']);
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
 		$this->staffChangeTypesList = $this->StaffChangeTypes->findCodeList();
@@ -57,6 +59,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		$events['Workflow.getEvents'] = 'getWorkflowEvents';
 		$events['Workflow.beforeTransition'] = 'workflowBeforeTransition';
 		$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
+		$events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
 		foreach($this->workflowEvents as $event) {
 			$events[$event['value']] = $event['method'];
 		}
@@ -108,14 +111,15 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 				return $this->controller->redirect($url);
 			}
 		}
-		
+
 	}
 
-	public function getWorkflowEvents(Event $event) {
+	public function getWorkflowEvents(Event $event, ArrayObject $eventsObject) {
 		foreach ($this->workflowEvents as $key => $attr) {
-			$this->workflowEvents[$key]['text'] = __($attr['text']);
+			$attr['text'] = __($attr['text']);
+			$attr['description'] = __($attr['description']);
+			$eventsObject[] = $attr;
 		}
-		return $this->workflowEvents;
 	}
 
 	public function onApprove(Event $event, $id, Entity $workflowTransitionEntity) {
@@ -153,19 +157,29 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		return '<span class="status past">'.$oldValue.'</span> <span class="transition-arrow"></span> <span class="status highlight">'.$newValue.'</span>';
 	}
 
+	public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona) {
+			$url = [];
+
+			if ($this->action != 'index') {
+				$url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $this->alias];
+			}
+
+			$Navigation->substituteCrumb('Staff Position Profiles', 'Change in Assignment', $url);
+	}
+
 	public function onGetFTE(Event $event, Entity $entity) {
 		if ($this->action == 'view') {
 			$oldValue = ($entity->institution_staff->FTE * 100). '%';
 			$newValue = '100%';
-			if ($entity->FTE < 1) {	
+			if ($entity->FTE < 1) {
 				$newValue = ($entity->FTE * 100) . '%';
 			}
-	
+
 			if ($newValue != $oldValue) {
 				return $this->getStyling($oldValue, $newValue);
 			} else {
 				return $newValue;
-			}	
+			}
 		}
 	}
 
@@ -216,6 +230,11 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
+		// Set the header of the page
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+		$institutionName = $this->Institutions->get($institutionId)->name;
+		$this->controller->set('contentHeader', $institutionName. ' - ' .__('Pending Change in Assignment'));
+
 		$this->field('institution_staff_id', ['visible' => false]);
 		$this->field('staff_id', ['before' => 'start_date']);
 		$this->field('FTE', ['type' => 'select','visible' => ['view' => true, 'edit' => true, 'add' => true]]);
@@ -250,7 +269,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 				$endDate = (new Date($newEndDate))->modify('-1 day');
 				$requestData[$this->alias()]['end_date'] = $endDate->format('Y-m-d');
 			}
-		}		
+		}
 	}
 
 	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
@@ -299,7 +318,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 				}
 			} else {
 				$attr['visible'] = false;
-				
+
 			}
 		}
 		return $attr;
@@ -386,7 +405,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 					$entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
 					$startDateClone = clone ($entity->start_date);
 					$startDate = $startDateClone->modify('+1 day');
-					$attr['date_options']['startDate'] = $startDate->format('d-m-Y');	
+					$attr['date_options']['startDate'] = $startDate->format('d-m-Y');
 				}
 				$attr['value'] = (new Date())->modify('+1 day');
 			} else {
@@ -403,14 +422,14 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 				$attr['type'] = 'date';
 				if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
 					$entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
-					$attr['date_options']['startDate'] = $entity->start_date->format('d-m-Y');	
+					$attr['date_options']['startDate'] = $entity->start_date->format('d-m-Y');
 				}
 			} else {
 				$attr['type'] = 'hidden';
 				if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
 					$entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
 					if (!empty($entity->end_date)) {
-						$attr['value'] = $entity->end_date->format('Y-m-d');	
+						$attr['value'] = $entity->end_date->format('Y-m-d');
 					} else {
 						$attr['value'] = '';
 					}
@@ -453,10 +472,14 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		$InstitutionStaff = TableRegistry::get('Institution.Staff');
 		$staff = $InstitutionStaff->get($institutionStaffId);
 		$approvedStatus = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'APPROVED');
+		$closedStatus = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'CLOSED');
+
+		$statuses = array_merge($approvedStatus, $closedStatus);
+		
 		$staffPositionProfilesRecord = $this->find()
 			->where([
 				$this->aliasField('institution_staff_id') => $staff->id,
-				$this->aliasField('status_id').' NOT IN ' => $approvedStatus
+				$this->aliasField('status_id').' NOT IN ' => $statuses
 			])
 			->first();
 		if (empty($staffPositionProfilesRecord)) {

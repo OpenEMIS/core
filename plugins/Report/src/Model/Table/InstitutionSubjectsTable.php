@@ -19,6 +19,7 @@ class InstitutionSubjectsTable extends AppTable  {
 		
 		$this->addBehavior('Excel');
 		$this->addBehavior('Report.ReportList');
+		$this->addBehavior('Report.InstitutionSecurity');
 	}
 
 	public function beforeAction(Event $event) {
