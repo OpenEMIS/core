@@ -513,6 +513,7 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
 
         StudentController.educationGradeOptions = null;
         InstitutionsStudentsSvc.getEducationGrades({
+            institutionId: StudentController.institutionId,
             academicPeriodId: StudentController.academicPeriodOptions.selectedOption.id
         })
         .then(function(educationGrades) {
@@ -531,6 +532,7 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
         StudentController.classOptions = null;
 
         InstitutionsStudentsSvc.getClasses({
+            institutionId: StudentController.institutionId,
             academicPeriodId: StudentController.academicPeriodOptions.selectedOption.id,
             gradeId: StudentController.educationGradeOptions.selectedOption.education_grade_id
         })
