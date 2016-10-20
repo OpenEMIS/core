@@ -83,7 +83,7 @@ class StaffTable extends AppTable {
 		 * If no "belongsTo" relation from the main model is needed, include its foreign key name in AdvanceSearch->exclude options.
 		 */
         $advancedSearchFieldOrder = [
-            'first_name', 'middle_name', 'third_name', 'last_name', 
+            'first_name', 'middle_name', 'third_name', 'last_name',
             'contact_number', 'identity_type', 'identity_number'
         ];
 
@@ -1287,7 +1287,7 @@ class StaffTable extends AppTable {
 				'count' => $InstitutionRecords->func()->count('DISTINCT staff_id'),
 				'gender' => 'Genders.name'
 			])
-			->group('gender_id');
+			->group('Users.gender_id');
 
 		// Creating the data set
 		$dataSet = [];
