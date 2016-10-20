@@ -48,12 +48,8 @@ class UserBehavior extends Behavior {
 
     public function implementedEvents() {
         $events = parent::implementedEvents();
-
-        if ($this->isCAv4()) {
-            $events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 0];
-        } else {
-            $events['ControllerAction.Model.index.beforePaginate'] = ['callable' => 'indexBeforePaginate', 'priority' => 0];
-        }
+        $events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 0];
+        $events['ControllerAction.Model.index.beforePaginate'] = ['callable' => 'indexBeforePaginate', 'priority' => 0];
         $events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction', 'priority' => 50];
         $events['ControllerAction.Model.add.beforeAction'] = ['callable' => 'addBeforeAction', 'priority' => 0];
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 0];
@@ -287,20 +283,7 @@ class UserBehavior extends Behavior {
     }
 
     public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-        $options['auto_search'] = false;
-        $options['auto_contain'] = false;
-
-        $table = $query->repository()->table();
-        if ($table != 'security_users') {
-            $query->matching('Users');
-
-            $this->_table->fields['openemis_no']['sort'] = ['field' => 'Users.openemis_no'];
-            $sortList = ['Users.openemis_no', 'Users.first_name'];
-            if (array_key_exists('sortWhitelist', $options)) {
-                $sortList = array_merge($options['sortWhitelist'], $sortList);
-            }
-            $options['sortWhitelist'] = $sortList;
-        }
+        $this->indexBeforeQuery($event, $query, $options);
     }
 
     public function onGetOpenemisNo(Event $event, Entity $entity) {
