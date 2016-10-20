@@ -38,6 +38,7 @@ class IndexBehavior extends Behavior {
 		$extra['auto_order'] = true;
 		$extra['config']['pageOptions'] = $this->config('pageOptions');
 		$query = $model->find();
+		$extra['query'] = $query;
 
 		$event = $model->dispatchEvent('ControllerAction.Model.index.beforeAction', [$extra], $this);
 
