@@ -36,6 +36,7 @@ class StudentAdmissionTable extends AppTable {
 
 		$this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Restful.RestfulAccessControl', [
+        	'Dashboard' => ['index'],
         	'Students' => ['index', 'add']
         ]);
 	}

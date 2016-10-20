@@ -33,6 +33,9 @@ class TransferApprovalsTable extends AppTable {
 		$this->belongsTo('NewEducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
 		$this->addBehavior('OpenEmis.Section');
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Dashboard' => ['index']
+        ]);
 	}
 
 	public function implementedEvents() {
