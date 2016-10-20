@@ -58,38 +58,23 @@ class IndividualPromotionTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $Students = TableRegistry::get('Institution.StudentUser');
-        $url['action'] = $Students->alias();
-        $url[0] = 'view';
-        $url[1] = $this->Session->read('Student.Students.id');
-        $this->redirectUrl = $url;
+        $this->toggle('index', false);
+        $this->toggle('view', false);
     }
 
-    public function indexBeforeAction(Event $event, arrayObject $extra)
+    public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        return $this->controller->redirect($this->redirectUrl);
-    }
-
-    public function viewBeforeAction(Event $event, arrayObject $extra)
-    {
-        return $this->controller->redirect($this->redirectUrl);
-    }
-
-    public function addBeforeAction(Event $event, arrayObject $extra)
-    {
-        $this->institutionId = $this->Session->read('Institution.Institutions.id');
-        $this->id = $this->Session->read($this->registryAlias().'.id');
-        $this->statuses = $this->StudentStatuses->findCodeList();
-        $this->studentData = $this->get($this->id);
-
-        $StudentAdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+        $id = $this->Session->read($this->registryAlias().'.id');
+        $studentData = $this->get($id);
 
         // check transfer requests
+        $StudentAdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+
         $conditions = [
-         'student_id' => $this->studentData->student_id,
+         'student_id' => $studentData->student_id,
          'status' => $StudentAdmissionTable::NEW_REQUEST,
-         'new_education_grade_id' => $this->studentData->education_grade_id,
-         'previous_institution_id' => $this->studentData->institution_id,
+         'new_education_grade_id' => $studentData->education_grade_id,
+         'previous_institution_id' => $studentData->institution_id,
          'type' => $StudentAdmissionTable::TRANSFER,
         ];
 
@@ -97,51 +82,48 @@ class IndividualPromotionTable extends ControllerActionTable
          ->where($conditions)
          ->count();
 
-        // check dropout requests
-        $StudentDropoutTable = TableRegistry::get('Institution.StudentDropout');
-        $conditions = [
-         'student_id' => $this->studentData->student_id,
-         'status' => $StudentDropoutTable::NEW_REQUEST,
-         'education_grade_id' => $this->studentData->education_grade_id,
-         'institution_id' => $this->studentData->institution_id,
-         'academic_period_id' => $this->studentData->academic_period_id,
-        ];
+        if ($transferCount) {
+            $this->Session->write($this->registryAlias().'.pendingRequest.transfer', true);
+            return $this->controller->redirect($this->getredirectUrl());
 
-        $dropoutCount = $StudentDropoutTable->find()
-         ->where($conditions)
-         ->count();
+        } else {
+            // check dropout requests
+            $StudentDropoutTable = TableRegistry::get('Institution.StudentDropout');
+            $conditions = [
+             'student_id' => $studentData->student_id,
+             'status' => $StudentDropoutTable::NEW_REQUEST,
+             'education_grade_id' => $studentData->education_grade_id,
+             'institution_id' => $studentData->institution_id,
+             'academic_period_id' => $studentData->academic_period_id,
+            ];
 
-        if ($transferCount || $dropoutCount) {
-            // to show error messages
-            if ($transferCount) {
-                $this->Session->write($this->registryAlias().'.pendingRequest.transfer', true);
-            }
-            if ($dropoutCount) {
+            $dropoutCount = $StudentDropoutTable->find()
+             ->where($conditions)
+             ->count();
+
+             if ($dropoutCount) {
                 $this->Session->write($this->registryAlias().'.pendingRequest.dropout', true);
-            }
-            return $this->controller->redirect($this->redirectUrl);
+                return $this->controller->redirect($this->getredirectUrl());
+             }
         }
 
         if (isset($extra['toolbarButtons']['back'])) {
-            $extra['toolbarButtons']['back']['url'] = $this->redirectUrl;
+            $extra['toolbarButtons']['back']['url'] = $this->getRedirectUrl();
         }
 
-        // populate request data for readonly fields
-        $this->request->data[$this->alias()]['institution_id'] = $this->institutionId;
-        $this->request->data[$this->alias()]['student_id'] = $this->studentData->student_id;
-        $this->request->data[$this->alias()]['from_academic_period_id'] = $this->studentData->academic_period_id;
-        $this->request->data[$this->alias()]['from_education_grade_id'] = $this->studentData->education_grade_id;
+        // populate request data for institution
+        $this->request->data[$this->alias()]['institution_id'] = $studentData->institution_id;
 
         $this->fields = [];
         $this->addSections();
-        $this->field('student_id');
-        $this->field('from_academic_period_id');
-        $this->field('from_education_grade_id');
-        $this->field('student_status_id');
-        $this->field('academic_period_id');
-        $this->field('education_grade_id');
-        $this->field('institution_class_id');
-        $this->field('effective_date');
+        $this->field('student_id', ['studentData' => $studentData]);
+        $this->field('from_academic_period_id', ['studentData' => $studentData]);
+        $this->field('from_education_grade_id', ['studentData' => $studentData]);
+        $this->field('student_status_id', ['studentData' => $studentData]);
+        $this->field('academic_period_id', ['studentData' => $studentData]);
+        $this->field('education_grade_id', ['studentData' => $studentData]);
+        $this->field('institution_class_id', ['studentData' => $studentData]);
+        $this->field('effective_date', ['studentData' => $studentData]);
 
         $this->setFieldOrder([
             'student_id',
@@ -160,16 +142,12 @@ class IndividualPromotionTable extends ControllerActionTable
         switch ($this->action) {
             case 'add':
                 $buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Next');
-                $buttons[1]['url'] = $this->redirectUrl;
+                $buttons[1]['url'] = $this->getRedirectUrl();
                 break;
 
             case 'reconfirm':
                 $buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Confirm');
                 $buttons[1]['url'] = $this->url('add');
-                break;
-
-            default:
-                # code...
                 break;
         }
     }
@@ -187,12 +165,12 @@ class IndividualPromotionTable extends ControllerActionTable
                 break;
 
             default:
-                $studentId = $this->studentData->student_id;
+                $studentId = $attr['studentData']->student_id;
                 break;
         }
 
-
         $attr['type'] = 'readonly';
+        $attr['value'] = $studentId;
         $attr['attr']['value'] = $this->Users->get($studentId)->name_with_id;
         return $attr;
     }
@@ -210,11 +188,12 @@ class IndividualPromotionTable extends ControllerActionTable
                 break;
 
             default:
-                $academicPeriodId = $this->studentData->academic_period_id;
+                $academicPeriodId = $attr['studentData']->academic_period_id;
                 break;
         }
 
         $attr['type'] = 'readonly';
+        $attr['value'] = $academicPeriodId;
         $attr['attr']['value'] = $this->AcademicPeriods->get($academicPeriodId)->name;
         return $attr;
     }
@@ -232,11 +211,12 @@ class IndividualPromotionTable extends ControllerActionTable
                 break;
 
             default:
-                $educationGradeId = $this->studentData->education_grade_id;
+                $educationGradeId = $attr['studentData']->education_grade_id;
                 break;
         }
 
         $attr['type'] = 'readonly';
+        $attr['value'] = $educationGradeId;
         $attr['attr']['value'] = $this->EducationGrades->get($educationGradeId)->programme_grade_name;
         return $attr;
     }
@@ -259,7 +239,7 @@ class IndividualPromotionTable extends ControllerActionTable
             default:
                 $statusOptions = [];
                 $statusCodes = $this->StudentStatuses->findCodeList();
-                $educationGradeId = $this->studentData->education_grade_id;
+                $educationGradeId = $attr['studentData']->education_grade_id;
                 $nextGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId, false);
 
                 if (count($nextGrades) != 0) {
@@ -290,7 +270,7 @@ class IndividualPromotionTable extends ControllerActionTable
                 break;
 
             default:
-                $fromPeriodId = $this->studentData->academic_period_id;
+                $fromPeriodId = $attr['studentData']->academic_period_id;
                 $fromPeriod = $this->AcademicPeriods->get($fromPeriodId);
 
                 // only current and later academic periods will be shown
@@ -320,12 +300,13 @@ class IndividualPromotionTable extends ControllerActionTable
                 break;
 
             default:
-                $studentStatusId = (!empty($request->data[$this->alias()]['student_status_id']))? $request->data[$this->alias()]['student_status_id']: '';
-                $toAcademicPeriodId = (!empty($request->data[$this->alias()]['academic_period_id']))? $request->data[$this->alias()]['academic_period_id']: '';
+                if (!empty($request->data[$this->alias()]['student_status_id']) && !empty($request->data[$this->alias()]['academic_period_id'])) {
+                    $studentStatusId = $request->data[$this->alias()]['student_status_id'];
+                    $toAcademicPeriodId = $request->data[$this->alias()]['academic_period_id'];
 
-                if (!empty($studentStatusId) && !empty($toAcademicPeriodId)) {
+                    $institutionId = $attr['studentData']->institution_id;
                     $InstitutionGrades = $this->Institutions->InstitutionGrades;
-                    $fromGradeId = $this->studentData->education_grade_id;
+                    $fromGradeId = $attr['studentData']->education_grade_id;
                     $today = date('Y-m-d');
 
                     // list of grades available in the institution
@@ -335,7 +316,7 @@ class IndividualPromotionTable extends ControllerActionTable
                             'valueField' => 'education_grade.programme_grade_name'])
                         ->contain(['EducationGrades.EducationProgrammes'])
                         ->where([
-                            $InstitutionGrades->aliasField('institution_id') => $this->institutionId,
+                            $InstitutionGrades->aliasField('institution_id') => $institutionId,
                             'OR' => [
                                 [
                                     $InstitutionGrades->aliasField('end_date IS NULL'),
@@ -351,14 +332,16 @@ class IndividualPromotionTable extends ControllerActionTable
                         ->order(['EducationProgrammes.order', 'EducationGrades.order'])
                         ->toArray();
 
+                    $statuses = $this->StudentStatuses->findCodeList();
+
                     // PROMOTED status
-                    if ($studentStatusId == $this->statuses['PROMOTED']) {
+                    if ($studentStatusId == $statuses['PROMOTED']) {
                         // list of grades available to promote to
                         $listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($fromGradeId);
 
                     // REPEATED status
-                    } else if ($studentStatusId == $this->statuses['REPEATED'])  {
-                        $fromAcademicPeriodId = $this->studentData->academic_period_id;
+                    } else if ($studentStatusId == $statuses['REPEATED'])  {
+                        $fromAcademicPeriodId = $attr['studentData']->academic_period_id;
 
                         $gradeData = $this->EducationGrades->get($fromGradeId);
                         $programmeId = $gradeData->education_programme_id;
@@ -388,7 +371,7 @@ class IndividualPromotionTable extends ControllerActionTable
 
                     if (count($options) == 0) {
                         $attr['select'] = false;
-                        $options = [0 => $this->getMessage($this->aliasField('noAvailableGrades'))];
+                        $options = ['' => $this->getMessage($this->aliasField('noAvailableGrades'))];
                     }
                 }
 
@@ -419,16 +402,17 @@ class IndividualPromotionTable extends ControllerActionTable
                 break;
 
             default:
-                $fromAcademicPeriodId = $this->studentData->academic_period_id;
+                $fromAcademicPeriodId = $attr['studentData']->academic_period_id;
                 $toAcademicPeriodId = (!empty($request->data[$this->alias()]['academic_period_id']))? $request->data[$this->alias()]['academic_period_id']: '';
-                $toGrade = (!empty($request->data[$this->alias()]['education_grade_id']))? $request->data[$this->alias()]['education_grade_id']: '';
 
-                if (!empty($toGrade) && !empty($toAcademicPeriodId) && $toAcademicPeriodId == $fromAcademicPeriodId) {
+                if (!empty($request->data[$this->alias()]['education_grade_id']) && !empty($toAcademicPeriodId) && $toAcademicPeriodId == $fromAcademicPeriodId) {
+                    $toGrade = $request->data[$this->alias()]['education_grade_id'];
+                    $institutionId = $attr['studentData']->institution_id;
                     $InstitutionClass = $this->InstitutionClasses;
                     $classOptions = $InstitutionClass
                         ->find('list')
                         ->matching('ClassGrades')
-                        ->where([$InstitutionClass->aliasField('institution_id') => $this->institutionId,
+                        ->where([$InstitutionClass->aliasField('institution_id') => $institutionId,
                             $InstitutionClass->aliasField('academic_period_id') => $toAcademicPeriodId,
                             'ClassGrades.education_grade_id' => $toGrade])
                         ->order($InstitutionClass->aliasField('name'))
@@ -460,10 +444,9 @@ class IndividualPromotionTable extends ControllerActionTable
                 break;
 
             default:
-                $toAcademicPeriodId = (!empty($request->data[$this->alias()]['academic_period_id']))? $request->data[$this->alias()]['academic_period_id']: '';
-                $fromAcademicPeriodId = $this->studentData->academic_period_id;
-
-                if (!empty($toAcademicPeriodId)) {
+                if (!empty($request->data[$this->alias()]['academic_period_id'])) {
+                    $toAcademicPeriodId = $request->data[$this->alias()]['academic_period_id'];
+                    $fromAcademicPeriodId = $attr['studentData']->academic_period_id;
                     $toPeriodData = $this->AcademicPeriods->get($toAcademicPeriodId);
                     $startDate = $toPeriodData->start_date->format('d-m-Y');
                     $endDate = $toPeriodData->end_date->format('d-m-Y');
@@ -509,11 +492,6 @@ class IndividualPromotionTable extends ControllerActionTable
             return $this->controller->redirect($this->url('add'));
         }
 
-        $Students = TableRegistry::get('Institution.StudentUser');
-        $url['action'] = $Students->alias();
-        $url[0] = 'view';
-        $url[1] = $this->Session->read('Student.Students.id');
-
         $extra['config']['form'] = true;
         $extra['elements']['edit'] = ['name' => 'OpenEmis.ControllerAction/edit'];
 
@@ -542,7 +520,7 @@ class IndividualPromotionTable extends ControllerActionTable
                     $this->Alert->success($this->aliasField('success'), ['reset' => true]);
                     $this->Session->delete($this->registryAlias());
                     $event->stopPropagation();
-                    return $this->controller->redirect($url);
+                    return $this->controller->redirect($this->getRedirectUrl());
 
                 } else {
                     $this->Alert->error($this->aliasField('savingPromotionError'), ['reset' => true]);
@@ -563,7 +541,7 @@ class IndividualPromotionTable extends ControllerActionTable
         $id = $this->Session->read($this->registryAlias().'.id');
         $studentData = $this->get($id);
 
-        $fromAcademicPeriodId = $studentData->academic_period_id;
+        $fromAcademicPeriodId = $entity->from_academic_period_id;
         $toAcademicPeriodId = $entity->academic_period_id;
         $toPeriodData = $this->AcademicPeriods->get($toAcademicPeriodId);
         $statusToUpdate = $entity->student_status_id;
@@ -661,5 +639,18 @@ class IndividualPromotionTable extends ControllerActionTable
         }
 
         return false;
+    }
+
+    private function getRedirectUrl()
+    {
+        $id = $this->Session->read('Institution.StudentUser.id');
+        $url = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'StudentUser',
+            'view',
+            $id
+        ];
+        return $url;
     }
 }
