@@ -499,6 +499,10 @@ class StudentUserTable extends ControllerActionTable
         $identityNumber = (array_key_exists('identity_number', $options))? $options['identity_number']: null;
         $dateOfBirth = (array_key_exists('date_of_birth', $options))? $options['date_of_birth']: null;
 
+        if (is_null($firstName) && is_null($lastName) && is_null($openemisNo) && is_null($identityNumber) && is_null($dateOfBirth)) {
+        	return $query->where(['1 = 0']);
+        }
+
         $conditions = [];
         if (!empty($firstName)) $conditions['first_name LIKE'] = $firstName . '%';
         if (!empty($lastName)) $conditions['last_name LIKE'] = $lastName . '%';
