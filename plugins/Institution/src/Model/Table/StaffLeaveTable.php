@@ -10,11 +10,17 @@ use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
+use Cake\Datasource\ResultSetInterface;
 
 use App\Model\Table\ControllerActionTable;
 
 class StaffLeaveTable extends ControllerActionTable
 {
+	// Workflow Steps - category
+	const TO_DO = 1;
+	const IN_PROGRESS = 2;
+	const DONE = 3;
+
 	public function initialize(array $config)
 	{
 		$this->table('institution_staff_leave');
@@ -35,6 +41,9 @@ class StaffLeaveTable extends ControllerActionTable
 			'useDefaultName' => true
 		]);
 		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Dashboard' => ['index']
+        ]);
 	}
 
 	public function validationDefault(Validator $validator)
@@ -141,7 +150,8 @@ class StaffLeaveTable extends ControllerActionTable
 		return null;
 	}
 
-	public function institutionStaffAfterDelete(Event $event, Entity $institutionStaffEntity) {
+	public function institutionStaffAfterDelete(Event $event, Entity $institutionStaffEntity)
+	{
 		$staffLeaveData = $this->find()
             ->where([
     			$this->aliasField('staff_id') => $institutionStaffEntity->staff_id,
@@ -152,5 +162,77 @@ class StaffLeaveTable extends ControllerActionTable
         foreach ($staffLeaveData as $key => $staffLeaveEntity) {
             $this->delete($staffLeaveEntity);
         }
+	}
+
+	public function findWorkbench(Query $query, array $options)
+	{
+		$controller = $options['_controller'];
+		$session = $controller->request->session();
+
+		$userId = $session->read('Auth.User.id');
+		$Statuses = $this->Statuses;
+		$doneStatus = self::DONE;
+
+		$query
+			->select([
+				$this->aliasField('id'),
+				$this->aliasField('status_id'),
+				$this->aliasField('staff_id'),
+				$this->aliasField('institution_id'),
+				$this->aliasField('modified'),
+				$this->aliasField('created'),
+				$this->Statuses->aliasField('name'),
+				$this->Users->aliasField('openemis_no'),
+				$this->Users->aliasField('first_name'),
+				$this->Users->aliasField('middle_name'),
+				$this->Users->aliasField('third_name'),
+				$this->Users->aliasField('last_name'),
+				$this->Users->aliasField('preferred_name'),
+				$this->StaffLeaveTypes->aliasField('name'),
+				$this->Institutions->aliasField('code'),
+				$this->Institutions->aliasField('name'),
+				$this->CreatedUser->aliasField('openemis_no'),
+				$this->CreatedUser->aliasField('first_name'),
+				$this->CreatedUser->aliasField('middle_name'),
+				$this->CreatedUser->aliasField('third_name'),
+				$this->CreatedUser->aliasField('last_name'),
+				$this->CreatedUser->aliasField('preferred_name')
+			])
+			->contain([$this->Users->alias(), $this->StaffLeaveTypes->alias(), $this->Institutions->alias(), $this->CreatedUser->alias()])
+			->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+				return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
+			})
+			->where([$this->aliasField('assignee_id') => $userId])
+			->order([$this->aliasField('created') => 'DESC'])
+			->formatResults(function (ResultSetInterface $results) {
+				return $results->map(function ($row) {
+					$url = [
+						'plugin' => 'Institution',
+						'controller' => 'Institutions',
+						'action' => 'StaffLeave',
+						'view',
+						$row->id,
+						'user_id' => $row->staff_id,
+						'institution_id' => $row->institution_id
+					];
+
+					if (is_null($row->modified)) {
+						$receivedDate = $this->formatDate($row->created);
+					} else {
+						$receivedDate = $this->formatDate($row->modified);
+					}
+
+					$row['url'] = $url;
+	    			$row['status'] = $row->_matchingData['Statuses']->name;
+	    			$row['request_title'] = $row->staff_leave_type->name.' '.__('of').' '.$row->user->name_with_id;
+	    			$row['institution'] = $row->institution->code_name;
+	    			$row['received_date'] = $receivedDate;
+	    			$row['requester'] = $row->created_user->name_with_id;
+
+					return $row;
+				});
+			});
+
+		return $query;
 	}
 }
