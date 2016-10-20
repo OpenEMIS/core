@@ -185,7 +185,30 @@ class StudentAdmissionTable extends AppTable {
    	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		$events['Model.Students.afterSave'] = 'studentsAfterSave';
+		$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
 		return $events;
+	}
+
+	public function studentsAfterSave(Event $event, $student)
+	{
+		if ($student->isNew()) {
+			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+			if ($StudentStatuses->get($student->student_status_id)->code == 'CURRENT') {
+				// the logic below is to set all pending admission applications to rejected status once the student is successfully enrolled in a school
+				$educationSystemId = $this->EducationGrades->getEducationSystemId($student->education_grade_id);
+				$educationGradesToUpdate = $this->EducationGrades->getEducationGradesBySystem($educationSystemId);
+
+				$conditions = [
+					'student_id' => $student->student_id,
+					'status' => 0, // pending status
+					'education_grade_id IN' => $educationGradesToUpdate
+				];
+
+				// set to rejected status
+				$this->updateAll(['status' => 2], $conditions);
+			}
+		}
 	}
 
 	public function onGetStatus(Event $event, Entity $entity) {
