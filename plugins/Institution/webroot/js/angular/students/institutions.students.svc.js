@@ -44,7 +44,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
     var models = {
         Genders: 'User.Genders',
         StudentRecords: 'Institution.StudentAdmission',
-        Students: 'Student.Students',
         StudentUser: 'Institution.StudentUser',
         InstitutionGrades: 'Institution.InstitutionGrades',
         Institutions: 'Institution.Institutions',
@@ -228,12 +227,12 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             }
         }
         params['institution_id'] = institutionId;
-        Students.reset();
-        Students.find('Students', params);
-        Students.find('enrolledInstitutionStudents');
-        Students.contain(['Genders']);
+        StudentUser.reset();
+        StudentUser.find('Students', params);
+        // StudentUser.find('enrolledInstitutionStudents');
+        StudentUser.contain(['Genders']);
 
-        return Students.ajax({defer: true});
+        return StudentUser.ajax({defer: true});
     };
 
     function getStudentData(id) {
@@ -247,7 +246,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             }
         };
 
-        Students.select();
+        StudentUser.select();
         var settings = {success: success, defer: true};
         if (externalSource != null && externalToken !=null) {
             vm.initExternal(externalSource);
@@ -260,7 +259,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                 })
                 .ajax(settings);
         } else {
-            return Students
+            return StudentUser
                 .contain(['Genders', 'Identities.IdentityTypes'])
                 .find('enrolledInstitutionStudents')
                 .where({
@@ -372,7 +371,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                 if (response.data.length > 0) {
                     userData = response.data[0];
                     modifiedUser = {id: userData.id, is_student: 1};
-                    Students.save(modifiedUser)
+                    StudentUser.save(modifiedUser)
                     .then(function(response) {
                         deferred.resolve([response.data, userData]);
                     }, function(error) {
@@ -439,7 +438,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
     function getUserRecord(openemisNo)
     {
-        return Students
+        return StudentUser
             .select()
             .where({
                 'openemis_no': openemisNo
@@ -590,9 +589,9 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         InstitutionGrades.select();
 
         if (typeof options !== "undefined" && options.hasOwnProperty('academicPeriodId')) {
-            InstitutionGrades.find('EducationGradeInCurrentInstitution', {academic_period_id: options.academicPeriodId});
+            InstitutionGrades.find('EducationGradeInCurrentInstitution', {academic_period_id: options.academicPeriodId, institution_id: options.institutionId});
         } else {
-            InstitutionGrades.find('EducationGradeInCurrentInstitution');
+            InstitutionGrades.find('EducationGradeInCurrentInstitution', {institution_id: options.institutionId});
         }
 
         return InstitutionGrades.ajax({success: success, defer: true});
@@ -607,6 +606,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         return InstitutionClasses
             .select()
             .find('ClassOptions', {
+                institution_id: options.institutionId,
                 academic_period_id: options.academicPeriodId,
                 grade_id: options.gradeId
             })

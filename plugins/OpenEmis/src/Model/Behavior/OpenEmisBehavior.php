@@ -130,6 +130,17 @@ class OpenEmisBehavior extends Behavior {
                     }
                 }
             }
+
+            $actions = ['index', 'add', 'edit', 'remove'];
+            $disabledActions = [];
+            foreach ($toolbarButtons as $action => $attr) {
+                if (in_array($action, $actions) && !$model->actions($action)) {
+                    $disabledActions[] = $action;
+                }
+            }
+            foreach ($disabledActions as $action) {
+                $toolbarButtons->offsetUnset($action);
+            }
             $model->controller->set('toolbarButtons', $toolbarButtons);
         }
     }
@@ -307,7 +318,7 @@ class OpenEmisBehavior extends Behavior {
                 }
             }
 
-            
+
         } else if ($action == 'transfer' || ($action == 'remove' && $model->actions('remove') == 'restrict')) {
             $toolbarButtons['back']['url'] = $model->url('index', 'QUERY');
             $toolbarButtons['back']['type'] = 'button';

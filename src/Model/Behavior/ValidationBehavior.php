@@ -702,7 +702,7 @@ class ValidationBehavior extends Behavior {
 
 		if (array_key_exists('student_id', $data)) {
 			// saving for existing students
-			$Students = TableRegistry::get('Student.Students');
+			$Students = TableRegistry::get('Institution.StudentUser');
 			$studentQuery = $Students->find()
 				->select([$Students->aliasField('date_of_birth')])
 				->where([$Students->aliasField($Students->primaryKey()) => $data['student_id']])
