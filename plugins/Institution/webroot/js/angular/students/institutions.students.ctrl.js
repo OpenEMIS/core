@@ -259,6 +259,11 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
                     }
                     )
                     .then(function(response) {
+                        if (response.conditionsCount == 0) {
+                            StudentController.initialLoad = true;
+                        } else {
+                            StudentController.initialLoad = false;
+                        }
                         var studentRecords = response.data;
                         var totalRowCount = response.total;
                         return StudentController.processStudentRecord(studentRecords, params, totalRowCount);
@@ -361,7 +366,6 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
         params.successCallback(StudentController.rowsThisPage, lastRow);
         StudentController.externalDataLoaded = true;
         UtilsSvc.isAppendLoader(false);
-        StudentController.initialLoad = false;
         return studentRecords;
     }
 
@@ -704,7 +708,7 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
         StudentController.addStudentButton = false;
         // Step 1 - Internal search
         if (data.step == 1) {
-            StudentController.reloadInternalDatasource(false);
+            StudentController.reloadInternalDatasource(true);
             StudentController.createNewStudent = false;
             StudentController.externalSearch = false;
             StudentController.step = 'internal_search';
