@@ -453,7 +453,8 @@ trait MessagesTrait {
             'noNextGradeOrNextPeriod' => 'Next grade in the Education Structure is not available in this Institution or no Next Academic Period defined',
             'savingPromotionError' => 'The student record was not updated succesfully',
             'noNextAcademicPeriod' => 'There is no next academic period for the promotion.',
-            'pendingRequest' => 'There is a pending student status change request at the moment.'
+            'pendingTransfer' => 'There is a pending transfer request for this student.',
+            'pendingDropout' => 'There is a pending dropout request for this student.',
         ],
         'StudentTransfer' => [
             'noGrades' => 'No Available Grades',
