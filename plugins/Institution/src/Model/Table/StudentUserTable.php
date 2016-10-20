@@ -150,6 +150,17 @@ class StudentUserTable extends UserTable
 		$this->Session->write('Student.Students.id', $entity->id);
 		$this->Session->write('Student.Students.name', $entity->name);
 		$this->setupTabElements($entity);
+
+		// individual promotion: show error if student has pending transfer or dropout requests
+		if ($this->Session->check('Institution.IndividualPromotion.pendingRequest')) {
+			if ($this->Session->check('Institution.IndividualPromotion.pendingRequest.transfer')) {
+				$this->Alert->error('IndividualPromotion.pendingTransfer');
+			}
+			if ($this->Session->check('Institution.IndividualPromotion.pendingRequest.dropout')) {
+				$this->Alert->error('IndividualPromotion.pendingDropout');
+			}
+			$this->Session->delete('Institution.IndividualPromotion.pendingRequest');
+		}
 	}
 
 	public function editAfterAction(Event $event, Entity $entity)
@@ -247,6 +258,45 @@ class StudentUserTable extends UserTable
 					'add'
 				];
 				$toolbarButtons['transfer'] = $transferButton;
+			}
+		}
+    }
+
+    private function addPromoteButton(ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, Session $session)
+    {
+		if ($this->AccessControl->check([$this->controller->name, 'Promotion', 'add'])) {
+
+			$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+			$statuses = $InstitutionStudentsTable->StudentStatuses->findCodeList();
+			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			$editableAcademicPeriods = $AcademicPeriods->getYearList(['isEditable' => true]);
+
+			$id = $session->read('Institution.Students.id');
+			$studentData = $InstitutionStudentsTable->get($id);
+			$academicPeriodId = $studentData->academic_period_id;
+
+			// Show Promote button only if the Student Status is Current and academic period is editable
+			if ($studentData->student_status_id == $statuses['CURRENT'] && array_key_exists($academicPeriodId, $editableAcademicPeriods)) {
+
+				// Promote button
+				$promoteButton = $buttons['back'];
+				$promoteButton['type'] = 'button';
+				$promoteButton['label'] = '<i class="fa kd-graduate"></i>';
+				$promoteButton['attr'] = $attr;
+				$promoteButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+				$promoteButton['attr']['title'] = __('Promotion');
+
+				$promoteButton['url'] = [
+					'plugin' => $buttons['back']['url']['plugin'],
+					'controller' => $buttons['back']['url']['controller'],
+					'action' => 'IndividualPromotion',
+					'add'
+				];
+
+				$toolbarButtons['promote'] = $promoteButton;
+				//End
+
+				$session->write('Institution.IndividualPromotion.id', $id);
 			}
 		}
     }
@@ -367,6 +417,7 @@ class StudentUserTable extends UserTable
 			// End POCOR-3010
 
 			$session = $this->request->session();
+			$this->addPromoteButton($buttons, $toolbarButtons, $attr, $session);
 			$this->addTransferButton($buttons, $toolbarButtons, $attr, $session);
 			$this->addDropoutButton($buttons, $toolbarButtons, $attr, $session);
 
