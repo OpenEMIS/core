@@ -59,7 +59,8 @@ class UndoBehavior extends Behavior {
 		return $list;
 	}
 
-	protected function deleteEnrolledStudents($studentId, $selectedStatus) {
+	protected function deleteEnrolledStudents($studentId, $selectedStatus) 
+    {
 		$currentStatus = $this->statuses['CURRENT'];
 		$entity = $this->model
 			->find()
@@ -68,8 +69,8 @@ class UndoBehavior extends Behavior {
 				$this->model->aliasField('student_status_id') => $currentStatus
 			])
 			->first();
-		if (!empty($entity)) {
-                $prevInstitutionStudentId = $entity->previous_institution_student_id; //this is meant for undo transfer logic
+		if (!empty($entity)) { //this is meant for get the immediate record before its being deleted
+                $prevInstitutionStudentId = $entity->previous_institution_student_id; 
                 $this->model->delete($entity); //this will also trigger StudentCascadeDeleteBehavior to delete associated data
         } else {
             $entity = $this->model
@@ -85,10 +86,87 @@ class UndoBehavior extends Behavior {
         return $this->model->get($prevInstitutionStudentId);
 	}
 
-	protected function updateStudentStatus($code, $conditions) {
+	protected function updateStudentStatus($code, $id, $conditions) 
+    {
 		$status = $this->statuses[$code];
-		$entity = $this->model->find()->where([$conditions])->first();
-		$entity->student_status_id = $status;
-		$this->model->save($entity);
+        $entity = $this->model->find()->where([$id])->first();
+
+        if (empty($entity)) { //if by ID cant find because of data problem.
+           $entity = $this->model->find()->where([$conditions])->first();
+        }
+
+        if (!empty($entity)) {
+            $entity->student_status_id = $status;
+            $this->model->save($entity);
+        }
 	}
+
+    protected function removePendingAdmission($selectedStatus, $studentId, $institutionId) 
+    {
+        $StudentAdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+
+        //remove pending transfer request.
+        //could not include grade / academic period because not always valid. (promotion/graduation/repeat and transfer/admission can be done on different grade / academic period)
+        $conditions = [
+            'student_id' => $studentId,
+            'previous_institution_id' => $institutionId,
+            'status' => 0, //pending status
+            'type' => 2 //transfer
+        ];
+        
+        $entity = $StudentAdmissionTable
+                ->find()
+                ->where(
+                    $conditions
+                )
+                ->first();
+        
+        if (!empty($entity)) {
+            $StudentAdmissionTable->delete($entity);
+        }
+        
+        //remove pending admission request.
+        //no institution_id because in the pending admission, the value will be (0)
+        if ($selectedStatus == $this->statuses['PROMOTED'] || $selectedStatus == $this->statuses['GRADUATED']) {
+            $conditions = [
+                'student_id' => $studentId,
+                'status' => 0, //pending status
+                'type' => 1 //admission
+            ];
+            
+            $entity = $StudentAdmissionTable
+                    ->find()
+                    ->where(
+                        $conditions
+                    )
+                    ->first();
+            
+            if (!empty($entity)) {
+                $StudentAdmissionTable->delete($entity);
+            }
+        }
+    }
+
+    protected function removePendingDropout($studentId, $institutionId) 
+    {
+        $StudentDropoutTable = TableRegistry::get('Institution.StudentDropout');
+        
+        //could not include grade / academic period because not always valid. (promotion/graduation/repeat and dropout can be done on different grade / academic period)
+        $conditions = [
+            'student_id' => $studentId,
+            'institution_id' => $institutionId,
+            'status' => 0, //pending status
+        ];
+        
+        $entity = $StudentDropoutTable
+                ->find()
+                ->where(
+                    $conditions
+                )
+                ->first();
+        
+        if (!empty($entity)) {
+            $StudentDropoutTable->delete($entity);
+        }
+    }
 }

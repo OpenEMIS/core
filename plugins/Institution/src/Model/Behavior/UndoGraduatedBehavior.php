@@ -22,7 +22,8 @@ class UndoGraduatedBehavior extends UndoBehavior {
 		return $this->getStudents($data);
 	}
 
-	public function processSaveGraduatedStudents(Event $event, Entity $entity, ArrayObject $data) {
+	public function processSaveGraduatedStudents(Event $event, Entity $entity, ArrayObject $data) 
+    {
 		$studentIds = [];
 
 		$institutionId = $entity->institution_id;
@@ -36,15 +37,22 @@ class UndoGraduatedBehavior extends UndoBehavior {
 				if ($studentId != 0) {
 					$studentIds[$studentId] = $studentId;
 
-					$this->deleteEnrolledStudents($studentId, $this->statuses['GRADUATED']);
-					$where = [
+					$prevInstitutionStudent = $this->deleteEnrolledStudents($studentId, $this->statuses['GRADUATED']);
+                    $whereId = [
+                        'id' => $prevInstitutionStudent->id
+                    ];
+					$whereConditions = [
 						'institution_id' => $institutionId,
 						'academic_period_id' => $selectedPeriod,
 						'education_grade_id' => $selectedGrade,
 						'student_status_id' => $selectedStatus,
 						'student_id' => $studentId
 					];
-					$this->updateStudentStatus('CURRENT', $where);
+					$this->updateStudentStatus('CURRENT', $whereId, $whereConditions);
+
+                    //remove pending admission/transfer/dropout that occured after the process that is undone.
+                    $this->removePendingAdmission($this->statuses['GRADUATED'], $studentId, $institutionId);
+                    $this->removePendingDropout($studentId, $institutionId);
 				}
 			}
 		}
