@@ -169,16 +169,19 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                     .page(pageParams.page)
                     .limit(pageParams.limit);
 
+                var conditionsCount = 0;
+
                 if (options.hasOwnProperty('conditions')) {
                     for (var key in options['conditions']) {
                         if (typeof options['conditions'][key] == 'string') {
                             options['conditions'][key] = options['conditions'][key].trim();
                             if (options['conditions'][key] !== '') {
                                 if (key != 'date_of_birth') {
-                                    params[key] = '_' + options['conditions'][key] + '_';
+                                    params[key] = options['conditions'][key] + '_';
                                 } else {
                                     params[key] = vm.formatDateToYMD(options['conditions'][key]);
                                 }
+                                conditionsCount++;
                             }
                         }
                     }
@@ -188,7 +191,18 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                 }
                 Users.contain(['Genders']);
                 var authorizationHeader = 'Bearer ' + token;
-                return Users.ajax({defer: true, authorizationHeader: authorizationHeader});
+
+                var success = function(response, deferred) {
+                    var studentData = response.data;
+                    studentData['conditionsCount'] = conditionsCount;
+                    if (angular.isObject(studentData)) {
+                        deferred.resolve(studentData);
+                    } else {
+                        deferred.reject('Error getting student records');
+                    }
+                };
+
+                return Users.ajax({defer: true, success: success, authorizationHeader: authorizationHeader});
             }, function(error){
                 deferred.reject(error);
             })
@@ -212,6 +226,10 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             page: options['endRow'] / (options['endRow'] - options['startRow']),
         }
 
+
+
+        var conditionsCount = 0;
+
         if (options.hasOwnProperty('conditions')) {
             for (var key in options['conditions']) {
                 if (typeof options['conditions'][key] == 'string') {
@@ -222,17 +240,29 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                             options['conditions'][key] = vm.formatDateToYMD(options['conditions'][key]);
                         }
                         params[key] = options['conditions'][key];
+                        conditionsCount++;
                     }
                 }
             }
         }
+
+        var success = function(response, deferred) {
+            var studentData = response.data;
+            studentData['conditionsCount'] = conditionsCount;
+            if (angular.isObject(studentData)) {
+                deferred.resolve(studentData);
+            } else {
+                deferred.reject('Error getting student records');
+            }
+        };
+
         params['institution_id'] = institutionId;
         StudentUser.reset();
         StudentUser.find('Students', params);
-        // StudentUser.find('enrolledInstitutionStudents');
+        StudentUser.find('enrolledInstitutionStudents');
         StudentUser.contain(['Genders']);
 
-        return StudentUser.ajax({defer: true});
+        return StudentUser.ajax({defer: true, success: success});
     };
 
     function getStudentData(id) {
