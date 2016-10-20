@@ -995,7 +995,7 @@ class StudentsTable extends ControllerActionTable
 
         // if student is not currently enrolled in this institution, remove the delete button
         $studentStatuses = $this->StudentStatuses->findCodeList();
-        if ($$entity->student_status_id != $studentStatuses['CURRENT']) {
+        if ($entity->student_status_id != $studentStatuses['CURRENT']) {
             if (isset($buttons['remove'])) {
                 unset($buttons['remove']);
             }
