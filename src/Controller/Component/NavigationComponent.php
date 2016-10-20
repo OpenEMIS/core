@@ -578,7 +578,7 @@ class NavigationComponent extends Component
 				'title' => 'Professional Development',
 				'parent' => 'Institutions.Staff.index',
 				'params' => ['plugin' => 'Staff'],
-				'selected' => ['Staff.Qualifications', 'Staff.Extracurriculars', 'Staff.Memberships', 'Staff.Licenses', 'Staff.Trainings'],
+				'selected' => ['Staff.Qualifications', 'Staff.Extracurriculars', 'Staff.Memberships', 'Staff.Licenses', 'Staff.Trainings', 'Staff.Appraisals'],
 			],
 			'Staff.BankAccounts' => [
 				'title' => 'Finance',
