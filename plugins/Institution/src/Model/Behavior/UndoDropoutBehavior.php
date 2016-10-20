@@ -3,7 +3,6 @@ namespace Institution\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Institution\Model\Behavior\UndoBehavior;
 
@@ -27,8 +26,6 @@ class UndoDropoutBehavior extends UndoBehavior {
 
     public function processSaveDropoutStudents(Event $event, Entity $entity, ArrayObject $data) 
     {
-        $StudentDropoutTable = TableRegistry::get('Institution.StudentDropout');
-        
         $studentIds = [];
 
         $institutionId = $entity->institution_id;
@@ -42,9 +39,12 @@ class UndoDropoutBehavior extends UndoBehavior {
                 if ($studentId != 0) {
                     $studentIds[$studentId] = $studentId;
 
-                    $this->deleteEnrolledStudents($studentId, $this->statuses['DROPOUT']);
+                    $prevInstitutionStudent = $this->deleteEnrolledStudents($studentId, $this->statuses['DROPOUT']);
 
-                    $where = [
+                    $whereId = [
+                        'id' => $prevInstitutionStudent->id
+                    ];
+                    $whereConditions = [
                         'institution_id' => $institutionId,
                         'academic_period_id' => $selectedPeriod,
                         'education_grade_id' => $selectedGrade,
@@ -52,7 +52,7 @@ class UndoDropoutBehavior extends UndoBehavior {
                         'student_id' => $studentId
                     ];
                     
-                    $this->updateStudentStatus('CURRENT', $where);
+                    $this->updateStudentStatus('CURRENT', $whereId, $whereConditions);
 
                     //update dropout request (institution_student_dropout) to undo status.
                     $conditions = [
@@ -67,6 +67,9 @@ class UndoDropoutBehavior extends UndoBehavior {
                         ['status' => 3], //status 3 = undo
                         [$conditions]
                     );
+
+                    //remove pending admission/transfer that occured after the process that is undone.
+                    $this->removePendingAdmission($this->statuses['DROPOUT'], $studentId, $institutionId);
                 }
             }
         }

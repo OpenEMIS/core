@@ -3,7 +3,6 @@ namespace Institution\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Institution\Model\Behavior\UndoBehavior;
 
@@ -27,8 +26,6 @@ class UndoTransferredBehavior extends UndoBehavior {
 
     public function processSaveTransferredStudents(Event $event, Entity $entity, ArrayObject $data) 
     {
-        $StudentAdmissionTable = TableRegistry::get('Institution.StudentAdmission');
-        
         $studentIds = [];
 
         $institutionId = $entity->institution_id;
@@ -43,8 +40,10 @@ class UndoTransferredBehavior extends UndoBehavior {
                     $studentIds[$studentId] = $studentId;
 
                     $prevInstitutionStudent = $this->deleteEnrolledStudents($studentId, $this->statuses['TRANSFERRED']);
-                    
-                    $where = [
+                    $whereId = [
+                        'id' => $prevInstitutionStudent->id
+                    ];
+                    $whereConditions = [
                         'institution_id' => $prevInstitutionStudent->institution_id, //for transferred status, then need to enrolled back the status on the previous institution
                         'academic_period_id' => $selectedPeriod,
                         'education_grade_id' => $prevInstitutionStudent->education_grade_id,
@@ -52,7 +51,7 @@ class UndoTransferredBehavior extends UndoBehavior {
                         'student_id' => $studentId
                     ];
                     
-                    $this->updateStudentStatus('CURRENT', $where);
+                    $this->updateStudentStatus('CURRENT', $whereId, $whereConditions);
 
                     //update transfer request (student admission) to undo status.
                     $conditions = [
@@ -69,6 +68,10 @@ class UndoTransferredBehavior extends UndoBehavior {
                         ['status' => 3], //status 3 = undo
                         [$conditions]
                     );
+
+                    //remove pending admission/transfer/dropout that occured after the process that is undone.
+                    $this->removePendingAdmission($this->statuses['TRANSFERRED'], $studentId, $institutionId);
+                    $this->removePendingDropout($studentId, $institutionId);
                 }
             }
         }

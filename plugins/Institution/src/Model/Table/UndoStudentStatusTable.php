@@ -265,10 +265,18 @@ class UndoStudentStatusTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request) 
+    {   
 		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+
 		if ($action == 'reconfirm') {
-			$attr['type'] = 'readonly';
+
+            if ($request->query('status') == $this->statuses['TRANSFERRED']) {
+                $attr['type'] = 'hidden';
+            } else {
+                $attr['type'] = 'readonly';
+            }
+
 			$selectedClass = $request->query('class');
 			if ($selectedClass != -1) {
 				$institutionClassRecord = $InstitutionClasses->get($selectedClass)->name;
@@ -277,7 +285,13 @@ class UndoStudentStatusTable extends AppTable {
 			}
 			
 			$attr['attr']['value'] = $institutionClassRecord;
+
 		} else {
+
+            if ($request->query('status') == $this->statuses['TRANSFERRED']) {
+                $attr['type'] = 'hidden';
+            }
+
 			$institutionId = $institutionId = $this->Session->read('Institution.Institutions.id');
 			$selectedPeriod = $request->query('period');
 			$selectedGrade = $request->query('grade');
@@ -342,11 +356,11 @@ class UndoStudentStatusTable extends AppTable {
                     ->where([
                         $conditions
                     ])
-                    ->find('studentClasses', ['institution_class_id' => $selectedClass]);
+                    ->find('studentClasses', ['institution_class_id' => $selectedClass])
+                    ->select(['institution_class_id' => 'InstitutionClassStudents.institution_class_id']);
             }
 	    	
             $data = $data
-				->select(['institution_class_id' => 'InstitutionClassStudents.institution_class_id'])
 				->order(['Users.first_name'])
 				->autoFields(true);
 
@@ -418,12 +432,13 @@ class UndoStudentStatusTable extends AppTable {
                         ]);
                 }
 
-                if ($selectedStatus != $this->statuses['TRANSFERRED']) { //for undo transfer, class must join to receiving school, logic already added on findUndoTransferredStudent
-                    $data = $data->find('studentClasses', ['institution_class_id' => $selectedClass]);
+                if ($selectedStatus != $this->statuses['TRANSFERRED']) { //for undo transfer, class filter is unnecessary.
+                    $data = $data
+                        ->find('studentClasses', ['institution_class_id' => $selectedClass])
+                        ->select(['institution_class_id' => 'InstitutionClassStudents.institution_class_id']);
                 }
 
                 $data = $data
-                    ->select(['institution_class_id' => 'InstitutionClassStudents.institution_class_id'])
                     ->order(['Users.first_name'])
                     ->autoFields(true);
 
@@ -629,7 +644,7 @@ class UndoStudentStatusTable extends AppTable {
 		$this->ControllerAction->field('student_status_id', ['type' => 'select']);
 		$this->ControllerAction->field('students');
 
-		$this->ControllerAction->setFieldOrder(['academic_period_id', 'education_grade_id', 'class', 'student_status_id', 'students']);
+		$this->ControllerAction->setFieldOrder(['student_status_id', 'academic_period_id', 'education_grade_id', 'class', 'students']);
 	}
 
     public function findUndoTransferredStudent(Query $query, array $options) 
@@ -668,26 +683,6 @@ class UndoStudentStatusTable extends AppTable {
                     'InstitutionStudent.student_status_id IS NULL' //null is a result of left join to detect transferred without enrolled record (Jordan data)
                 ],
             ]);
-
-        //take care record with class, since we use accessing transfer record from receiving school, then need to join to receiving school
-        $query
-            ->leftJoin(['InstitutionClassStudents' => 'institution_class_students'],
-                [   
-                    'InstitutionClassStudents.education_grade_id = StudentAdmission.new_education_grade_id',
-                    'InstitutionClassStudents.student_id = StudentAdmission.student_id',
-                    'InstitutionClassStudents.institution_id = StudentAdmission.institution_id',
-                    'InstitutionClassStudents.academic_period_id = StudentAdmission.academic_period_id',
-                ]);
-
-        if (array_key_exists('selectedClass', $options)) {
-            if (!empty($options['selectedClass'])) {
-                if ($options['selectedClass'] != -1) {
-                    $query->where(['InstitutionClassStudents.institution_class_id' => $options['selectedClass']]);
-                } else {
-                    $query->where(['InstitutionClassStudents.institution_class_id IS NULL']);
-                }
-            }
-        }
 
         return $query;
     }
