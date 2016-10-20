@@ -59,6 +59,9 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		$this->belongsTo('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
 		$this->staffChangeTypesList = $this->StaffChangeTypes->findCodeList();
 		$this->addBehavior('Institution.StaffValidation');
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Dashboard' => ['index']
+        ]);
 	}
 
 	public function implementedEvents() {
