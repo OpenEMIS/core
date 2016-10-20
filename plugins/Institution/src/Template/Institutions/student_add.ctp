@@ -320,7 +320,12 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 </div>
                 <div class="input string" ng-show="InstitutionStudentController.completeDisabled">
                     <label><?= __('Institution') ?></label>
-                    <input type="string" ng-model="InstitutionStudentController['selectedStudentData']['institution_students'][0]['institution']['name']" disabled="disabled">
+                    <input type="string" ng-model="InstitutionStudentController['selectedStudentData']['institution_students'][0]['institution']['code_name']" disabled="disabled">
+                </div>
+
+                <div class="input string" ng-show="InstitutionStudentController.completeDisabled">
+                    <label><?= __('Area') ?></label>
+                    <input type="string" ng-model="InstitutionStudentController['selectedStudentData']['institution_students'][0]['institution']['area']['code_name']" disabled="disabled">
                 </div>
 
                 <div class="input string" ng-show="InstitutionStudentController.completeDisabled">
