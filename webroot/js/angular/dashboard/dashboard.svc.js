@@ -70,6 +70,7 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
 
     function init(baseUrl) {
         KdOrmSvc.base(baseUrl);
+        KdOrmSvc.controllerAction('Dashboard');
         KdOrmSvc.init({NoticesTable: 'Notices'});
 
         var models = this.extractModels();
