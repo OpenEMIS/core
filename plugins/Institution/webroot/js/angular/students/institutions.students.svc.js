@@ -589,9 +589,9 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         InstitutionGrades.select();
 
         if (typeof options !== "undefined" && options.hasOwnProperty('academicPeriodId')) {
-            InstitutionGrades.find('EducationGradeInCurrentInstitution', {academic_period_id: options.academicPeriodId});
+            InstitutionGrades.find('EducationGradeInCurrentInstitution', {academic_period_id: options.academicPeriodId, institution_id: options.institutionId});
         } else {
-            InstitutionGrades.find('EducationGradeInCurrentInstitution');
+            InstitutionGrades.find('EducationGradeInCurrentInstitution', {institution_id: options.institutionId});
         }
 
         return InstitutionGrades.ajax({success: success, defer: true});
@@ -606,6 +606,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         return InstitutionClasses
             .select()
             .find('ClassOptions', {
+                institution_id: options.institutionId,
                 academic_period_id: options.academicPeriodId,
                 grade_id: options.gradeId
             })
