@@ -56,9 +56,9 @@ class UsersTable extends AppTable {
 		return $events;
 	}
 
-	public function studentsAfterSave(Event $event, $student)
+	public function studentsAfterSave(Event $event, Entity $entity)
 	{
-		if ($student->isNew()) {
+		if ($entity->isNew()) {
 			$this->updateAll(['is_student' => 1], ['id' => $entity->student_id]);
 		}
 	}
