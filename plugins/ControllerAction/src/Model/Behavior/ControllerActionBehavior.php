@@ -271,6 +271,26 @@ class ControllerActionBehavior extends Behavior
         return $url;
     }
 
+    public function getUrlParams($hash, $delete = true)
+    {
+        $session = $this->_table->request->session();
+        $sessionKey = 'Url.params.' . $hash;
+        $params = $session->read($sessionKey);
+        if ($delete) {
+            $session->delete($sessionKey);
+        }
+        return $params;
+    }
+
+    public function setUrlParams($params=[])
+    {
+        $session = $this->_table->request->session();
+        $hash = sha1(time());
+        $sessionKey = 'Url.params.' . $hash;
+        $session->write($sessionKey, $params);
+        return $hash;
+    }
+
     public function field($name, $attr=[])
     {
         $model = $this->_table;

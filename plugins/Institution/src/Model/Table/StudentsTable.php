@@ -929,14 +929,9 @@ class StudentsTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        $studentId = $this->get($entity->id)->student_id;
-        $institutionId = $entity->institution_id;
         if (isset($buttons['view'])) {
             $url = $this->url('view');
-            $url['action'] = 'StudentUser';
-            $url[1] = $entity['user']['id'];
-            $url['id'] = $entity->id;
-            $buttons['view']['url'] = $url;
+            $buttons['view']['url'] = array_merge($url, ['action' => 'StudentUser', 'id' => $entity->id, $entity->user->id]);
         }
 
         // Remove in POCOR-3010

@@ -54,6 +54,9 @@ class StudentUserTable extends ControllerActionTable
 		$this->addBehavior('Restful.RestfulAccessControl', [
         	'Students' => ['index', 'add']
         ]);
+
+		$this->toggle('index', false);
+        $this->toggle('remove', false);
 	}
 
 	public static function handleAssociations($model)
@@ -115,82 +118,12 @@ class StudentUserTable extends ControllerActionTable
 		$model->hasMany('Extracurriculars', ['className' => 'Student.Extracurriculars',	'foreignKey' => 'security_user_id', 'dependent' => true]);
 	}
 
-	public function beforeAction(Event $event, ArrayObject $extra)
+	public function implementedEvents()
 	{
-		$this->field('username', ['visible' => false]);
-		$toolbarButtons = $extra['toolbarButtons'];
-		$action = $this->action;
-		if ($action == 'view') {
-			$buttons = clone $extra['toolbarButtons'];
-			$attr = $buttons['back']['attr'];
-			unset($toolbarButtons['back']);
-			unset($toolbarButtons['remove']);
-			$institutionId = $this->Session->read('Institution.Institutions.id');
-			$id = $this->request->query('id');
-
-			if (empty($id)) {
-				// if no url param found... query the database to find the latest one
-				// for catering redirections that do not contain institution_student_id url param - POCOR-2511
-				$securityUserId = $this->request->pass[1];
-				$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
-				$institutionStudentRecord = $InstitutionStudentsTable->find()
-					->select([$InstitutionStudentsTable->aliasField('id')])
-					->where([
-						$InstitutionStudentsTable->aliasField('student_id') => $securityUserId,
-						$InstitutionStudentsTable->aliasField('institution_id') => $institutionId
-					])
-					->order($InstitutionStudentsTable->aliasField('end_date').' DESC')
-					->first()
-					;
-				$institutionStudentRecord = (!empty($institutionStudentRecord))? $institutionStudentRecord->toArray(): null;
-				$institutionStudentId = (!empty($institutionStudentRecord))? $institutionStudentRecord['id']: null;
-				$id = $institutionStudentId;
-			}
-
-			if (!empty($id)) {
-				$this->Session->write('Institution.Students.id', $id);
-			}
-
-			$id = $this->Session->read('Institution.Students.id');
-			$StudentTable = TableRegistry::get('Institution.Students');
-			$studentId = $StudentTable->get($id)->student_id;
-			// Start PHPOE-1897
-			if (! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
-				if (isset($toolbarButtons['edit'])) {
-					unset($toolbarButtons['edit']);
-				}
-			}
-			// End PHPOE-1897
-
-			// Export execute permission.
-			if (!$this->AccessControl->check(['Institutions', 'StudentUser', 'excel'])) {
-				if (isset($toolbarButtons['export'])) {
-					unset($toolbarButtons['export']);
-				}
-			}
-
-			// POCOR-3010
-			$userId = $this->Auth->user('id');
-			$studentId = $this->request->pass[1];
-			if (!$this->checkClassPermission($studentId, $userId)) {
-				if (isset($toolbarButtons['edit'])) {
-					unset($toolbarButtons['edit']);
-				}
-			}
-			// End POCOR-3010
-
-			$session = $this->request->session();
-			$this->addTransferButton($buttons, $toolbarButtons, $attr, $session);
-			$this->addDropoutButton($buttons, $toolbarButtons, $attr, $session);
-
-		} else if ($action == 'add') {
-			$backAction = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
-			$toolbarButtons['back']['url'] = $backAction;
-			if ($toolbarButtons->offsetExists('export')) {
-				unset($toolbarButtons['export']);
-			}
-		}
-	}
+    	$events = parent::implementedEvents();
+    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	return $events;
+    }
 
 	public function validationDefault(Validator $validator)
 	{
@@ -216,7 +149,46 @@ class StudentUserTable extends ControllerActionTable
 		return $validator;
 	}
 
+	public function beforeAction(Event $event, ArrayObject $extra)
+	{
+		$this->field('username', ['visible' => false]);
+		$toolbarButtons = $extra['toolbarButtons'];
+		$action = $this->action;
+		if ($action == 'add') {
+			$backAction = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
+			$toolbarButtons['back']['url'] = $backAction;
+			if ($toolbarButtons->offsetExists('export')) {
+				unset($toolbarButtons['export']);
+			}
+		}
 
+		// this value comes from the list page from StudentsTable->onUpdateActionButtons
+		$institutionStudentId = $this->request->query('id');
+		if (empty($institutionStudentId)) { // if value is empty, redirect back to the list page
+			$event->stopPropagation();
+			return $this->controller->redirect(['action' => 'Students', 'index']);
+		} else {
+			$extra['institutionStudentId'] = $institutionStudentId;
+		}
+	}
+
+	public function afterAction(Event $event, ArrayObject $extra)
+	{
+		$entity = $extra['entity'];
+		if (!is_null($entity)) {
+			$StudentTable = TableRegistry::get('Institution.Students');
+			$studentEntity = $StudentTable->get($extra['institutionStudentId']);
+
+			$userId = $this->Auth->user('id');
+			$studentId = $studentEntity->student_id;
+
+			$isStudentEnrolled = $StudentTable->checkEnrolledInInstitution($studentId, $studentEntity->institution_id); // PHPOE-1897
+			$isAllowedByClass = $this->checkClassPermission($studentId, $userId); // POCOR-3010
+			if (!$isStudentEnrolled || $isAllowedByClass) {
+				$this->toggle('edit', false);
+			}
+		}
+	}
 
 	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
 	{
@@ -227,6 +199,7 @@ class StudentUserTable extends ControllerActionTable
 		$this->Session->write('Student.Students.id', $entity->id);
 		$this->Session->write('Student.Students.name', $entity->name);
 		$this->setupTabElements($entity);
+		$this->setupToolbarButtons($entity, $extra);
 	}
 
 	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -248,6 +221,22 @@ class StudentUserTable extends ControllerActionTable
 		$this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
 	}
 
+	private function setupToolbarButtons(Entity $entity, ArrayObject $extra)
+	{
+		$toolbarButtons = $extra['toolbarButtons'];
+		$toolbarButtons['back']['url']['action'] = 'Students';
+
+		// Export execute permission.
+		if (!$this->AccessControl->check(['Institutions', 'StudentUser', 'excel'])) {
+			if (isset($toolbarButtons['export'])) {
+				unset($toolbarButtons['export']);
+			}
+		}
+
+		$this->addTransferButton($entity, $extra);
+		$this->addDropoutButton($entity, $extra);
+	}
+
 	private function setupTabElements($entity)
 	{
 		$id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
@@ -264,126 +253,93 @@ class StudentUserTable extends ControllerActionTable
 		$this->controller->set('selectedAction', $this->alias());
 	}
 
-	public function implementedEvents()
-	{
-    	$events = parent::implementedEvents();
-    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-    	return $events;
-    }
-
-    private function addTransferButton(ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, Session $session)
+    private function addTransferButton(Entity $entity, ArrayObject $extra)
     {
-    	$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+    	if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])) {
+    		$session = $this->Session;
+    		$toolbarButtons = $extra['toolbarButtons'];
 
-		$statuses = $InstitutionStudentsTable->StudentStatuses->findCodeList();
-		$id = $session->read('Institution.Students.id');
+    		$StudentsTable = TableRegistry::get('Institution.Students');
+    		$TransferRequests = TableRegistry::get('Institution.TransferRequests');
 
-		// check the permission
-		if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])) {
-			$TransferRequests = TableRegistry::get('Institution.TransferRequests');
-			$studentData = $InstitutionStudentsTable->get($id);
-			$selectedStudent = $studentData->student_id;
-			$selectedGrade = $studentData->education_grade_id;
-			$session->write($TransferRequests->registryAlias().'.id', $id);
+    		$institutionStudentId = $extra['institutionStudentId'];
+			$studentEntity = $StudentsTable->get($institutionStudentId);
 
-			// Show Transfer button only if the Student Status is Current
-			$institutionId = $session->read('Institution.Institutions.id');
-			$checkIfCanTransfer = $InstitutionStudentsTable->checkIfCanTransfer($studentData, $institutionId);
-			// End
+			$institutionId = $studentEntity->institution_id;
+			$studentId = $studentEntity->student_id;
+			$session->write($TransferRequests->registryAlias().'.id', $institutionStudentId);
+			$checkIfCanTransfer = $StudentsTable->checkIfCanTransfer($studentEntity, $institutionId);
 
 			if ($checkIfCanTransfer) {
-				// Transfer button
-				$transferButton = $buttons['back'];
+				$transferButton = $toolbarButtons['back'];
 				$transferButton['type'] = 'button';
 				$transferButton['label'] = '<i class="fa kd-transfer"></i>';
-				$transferButton['attr'] = $attr;
 				$transferButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
 				$transferButton['attr']['title'] = __('Transfer');
-				//End
+				$transferButton['url']['action'] = 'TransferRequests';
+				$transferButton['url'][0] = 'add';
 
+				// check if there is an existing transfer request
 				$transferRequest = $TransferRequests
-						->find()
-						->where([
-							$TransferRequests->aliasField('previous_institution_id') => $institutionId,
-							$TransferRequests->aliasField('student_id') => $selectedStudent,
-							$TransferRequests->aliasField('status') => 0
-						])
-						->first();
+					->find()
+					->where([
+						$TransferRequests->aliasField('previous_institution_id') => $institutionId,
+						$TransferRequests->aliasField('student_id') => $studentId,
+						$TransferRequests->aliasField('status') => 0
+					])
+					->first();
 
 				if (!empty($transferRequest)) {
-					$transferButton['url'] = [
-						'plugin' => $buttons['back']['url']['plugin'],
-						'controller' => $buttons['back']['url']['controller'],
-						'action' => 'TransferRequests',
-						'view',
-						$transferRequest->id
-					];
-					$toolbarButtons['transfer'] = $transferButton;
+					$transferButton['url'][0] = 'view';
+					$transferButton['url'][1] = $transferRequest->id;
 				}
-				else if ($checkIfCanTransfer) {
-					$transferButton['url'] = [
-						'plugin' => $buttons['back']['url']['plugin'],
-						'controller' => $buttons['back']['url']['controller'],
-						'action' => 'TransferRequests',
-						'add'
-					];
-					$toolbarButtons['transfer'] = $transferButton;
-				}
+
+				$toolbarButtons['transfer'] = $transferButton;
 			}
-		}
+    	}
     }
 
-    private function addDropoutButton(ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, Session $session)
+    private function addDropoutButton(Entity $entity, ArrayObject $extra)
     {
-    	$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
-		if ($this->AccessControl->check([$this->controller->name, 'DropoutRequests', 'add'])) {
-			// Institution student id
-			$id = $session->read('Institution.Students.id');
-			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-			$enrolledStatus = $StudentStatuses->find()->where([$StudentStatuses->aliasField('code') => 'CURRENT'])->first()->id;
-			$studentData = $InstitutionStudentsTable->get($id);
-			// Check if the student is enrolled
-			if ($studentData->student_status_id == $enrolledStatus) {
+    	if ($this->AccessControl->check([$this->controller->name, 'DropoutRequests', 'add'])) {
+    		$session = $this->Session;
+    		$toolbarButtons = $extra['toolbarButtons'];
 
+    		$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+    		$StudentsTable = TableRegistry::get('Institution.Students');
+    		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+
+    		$institutionStudentId = $extra['institutionStudentId'];
+    		$studentEntity = $StudentsTable->get($institutionStudentId);
+			$enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
+
+			// Check if the student is enrolled
+			if ($studentEntity->student_status_id == $enrolledStatus) {
 				$DropoutRequests = TableRegistry::get('Institution.DropoutRequests');
-				$session->write($DropoutRequests->registryAlias().'.id', $id);
+				$session->write($DropoutRequests->registryAlias().'.id', $institutionStudentId);
 				$NEW = 0;
 
-				$selectedStudent = $DropoutRequests->find()
+				// check if there is an existing dropout request
+				$dropoutRequest = $DropoutRequests->find()
 					->select(['institution_student_dropout_id' => 'id'])
-					->where([$DropoutRequests->aliasField('student_id') => $studentData->student_id,
-							$DropoutRequests->aliasField('institution_id') => $studentData->institution_id,
-							$DropoutRequests->aliasField('education_grade_id') => $studentData->education_grade_id,
+					->where([$DropoutRequests->aliasField('student_id') => $studentEntity->student_id,
+							$DropoutRequests->aliasField('institution_id') => $studentEntity->institution_id,
+							$DropoutRequests->aliasField('education_grade_id') => $studentEntity->education_grade_id,
 							$DropoutRequests->aliasField('status') => $NEW
 						])
 					->first();
 
-				// Dropout button
-				$dropoutButton = $buttons['back'];
+				$dropoutButton = $toolbarButtons['back'];
 				$dropoutButton['type'] = 'button';
 				$dropoutButton['label'] = '<i class="fa kd-dropout"></i>';
-				$dropoutButton['attr'] = $attr;
 				$dropoutButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
 				$dropoutButton['attr']['title'] = __('Dropout');
+				$dropoutButton['url']['action'] = 'DropoutRequests';
+				$dropoutButton['url'][0] = 'add';
 
-				// If this is a new application
-				if (count($selectedStudent) == 0) {
-					$dropoutButton['url'] = [
-							'plugin' => $buttons['back']['url']['plugin'],
-							'controller' => $buttons['back']['url']['controller'],
-							'action' => 'DropoutRequests',
-							'add'
-						];
-				}
-				// If the application is not new
-				else {
-					$dropoutButton['url'] = [
-							'plugin' => $buttons['back']['url']['plugin'],
-							'controller' => $buttons['back']['url']['controller'],
-							'action' => 'DropoutRequests',
-							'edit',
-							$selectedStudent->institution_student_dropout_id
-						];
+				if (!empty($dropoutRequest)) {
+					$dropoutButton['url'][0] = 'edit';
+					$dropoutButton['url'][1] = $dropoutRequest->institution_student_dropout_id;
 				}
 				$toolbarButtons['dropout'] = $dropoutButton;
 			}
