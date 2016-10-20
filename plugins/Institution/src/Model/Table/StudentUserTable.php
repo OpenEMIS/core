@@ -118,6 +118,78 @@ class StudentUserTable extends ControllerActionTable
 	public function beforeAction(Event $event, ArrayObject $extra)
 	{
 		$this->field('username', ['visible' => false]);
+		$toolbarButtons = $extra['toolbarButtons'];
+		$action = $this->action;
+		if ($action == 'view') {
+			$buttons = clone $extra['toolbarButtons'];
+			$attr = $buttons['back']['attr'];
+			unset($toolbarButtons['back']);
+			unset($toolbarButtons['remove']);
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+			$id = $this->request->query('id');
+
+			if (empty($id)) {
+				// if no url param found... query the database to find the latest one
+				// for catering redirections that do not contain institution_student_id url param - POCOR-2511
+				$securityUserId = $this->request->pass[1];
+				$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+				$institutionStudentRecord = $InstitutionStudentsTable->find()
+					->select([$InstitutionStudentsTable->aliasField('id')])
+					->where([
+						$InstitutionStudentsTable->aliasField('student_id') => $securityUserId,
+						$InstitutionStudentsTable->aliasField('institution_id') => $institutionId
+					])
+					->order($InstitutionStudentsTable->aliasField('end_date').' DESC')
+					->first()
+					;
+				$institutionStudentRecord = (!empty($institutionStudentRecord))? $institutionStudentRecord->toArray(): null;
+				$institutionStudentId = (!empty($institutionStudentRecord))? $institutionStudentRecord['id']: null;
+				$id = $institutionStudentId;
+			}
+
+			if (!empty($id)) {
+				$this->Session->write('Institution.Students.id', $id);
+			}
+
+			$id = $this->Session->read('Institution.Students.id');
+			$StudentTable = TableRegistry::get('Institution.Students');
+			$studentId = $StudentTable->get($id)->student_id;
+			// Start PHPOE-1897
+			if (! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
+				if (isset($toolbarButtons['edit'])) {
+					unset($toolbarButtons['edit']);
+				}
+			}
+			// End PHPOE-1897
+
+			// Export execute permission.
+			if (!$this->AccessControl->check(['Institutions', 'StudentUser', 'excel'])) {
+				if (isset($toolbarButtons['export'])) {
+					unset($toolbarButtons['export']);
+				}
+			}
+
+			// POCOR-3010
+			$userId = $this->Auth->user('id');
+			$studentId = $this->request->pass[1];
+			if (!$this->checkClassPermission($studentId, $userId)) {
+				if (isset($toolbarButtons['edit'])) {
+					unset($toolbarButtons['edit']);
+				}
+			}
+			// End POCOR-3010
+
+			$session = $this->request->session();
+			$this->addTransferButton($buttons, $toolbarButtons, $attr, $session);
+			$this->addDropoutButton($buttons, $toolbarButtons, $attr, $session);
+
+		} else if ($action == 'add') {
+			$backAction = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
+			$toolbarButtons['back']['url'] = $backAction;
+			if ($toolbarButtons->offsetExists('export')) {
+				unset($toolbarButtons['export']);
+			}
+		}
 	}
 
 	public function validationDefault(Validator $validator)

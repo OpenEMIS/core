@@ -82,6 +82,10 @@ class UserBehavior extends Behavior {
         }
     }
 
+    private function isCAv4() {
+        return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
+    }
+
     public function beforeAction(Event $event) {
         $this->_table->fields['is_student']['type'] = 'hidden';
         $this->_table->fields['is_staff']['type'] = 'hidden';
@@ -133,8 +137,13 @@ class UserBehavior extends Behavior {
             $this->_table->fields['birthplace_area_id']['order'] = $i++;
 
             if ($this->_table->action != 'index') {
-                $this->_table->ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
-                $this->_table->ControllerAction->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
+                if ($this->isCAv4()) {
+                    $this->_table->field('photo_content', ['type' => 'image', 'order' => 0]);
+                    $this->_table->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
+                } else {
+                    $this->_table->ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
+                    $this->_table->ControllerAction->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
+                }
             }
 
             if ($this->_table->registryAlias() != 'Security.Users') {
@@ -197,7 +206,9 @@ class UserBehavior extends Behavior {
                 break;
         }
 
-        if ($this->_table->ControllerAction->getTriggerFrom() == 'Controller') {
+        if ($this->isCAv4()) {
+            $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->_table->alias(), 'image'];
+        } else if ($this->_table->ControllerAction->getTriggerFrom() == 'Controller') {
             // for controlleraction->model
             $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => 'getImage'];
         } else {
@@ -205,17 +216,22 @@ class UserBehavior extends Behavior {
             $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->_table->alias(), 'getImage'];
         }
 
+        if ($this->isCAv4()) {
+            $this->_table->field('photo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"'.$imageDefault.'"', 'order' => 0]);
+            $this->_table->field('openemis_no', ['type' => 'readonly', 'order' => 1, 'sort' => true]);
+        }
+
         // need to find out what kind of user is it
         $this->_table->ControllerAction->field('photo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"'.$imageDefault.'"', 'order' => 0]);
 
-        $this->_table->field('photo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"'.$imageDefault.'"', 'order' => 0]);
+
         $this->_table->ControllerAction->field('openemis_no', [
             'type' => 'readonly',
             'order' => 1,
             'sort' => true
         ]);
 
-        $this->_table->field('openemis_no', ['type' => 'readonly', 'order' => 1, 'sort' => true]);
+
 
         if ($this->_table->table() == 'security_users') {
             $this->_table->ControllerAction->field('name', [
