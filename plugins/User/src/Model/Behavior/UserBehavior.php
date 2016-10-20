@@ -48,17 +48,23 @@ class UserBehavior extends Behavior {
 
     public function implementedEvents() {
         $events = parent::implementedEvents();
-        $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 0];
-        $events['ControllerAction.Model.add.beforeAction'] = ['callable' => 'addBeforeAction', 'priority' => 0];
-        $events['ControllerAction.Model.index.beforePaginate'] = ['callable' => 'indexBeforePaginate', 'priority' => 0];
+
+        if ($this->isCAv4()) {
+            $events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 0];
+        } else {
+            $events['ControllerAction.Model.index.beforePaginate'] = ['callable' => 'indexBeforePaginate', 'priority' => 0];
+        }
         $events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction', 'priority' => 50];
+        $events['ControllerAction.Model.add.beforeAction'] = ['callable' => 'addBeforeAction', 'priority' => 0];
+        $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 0];
         $events['ControllerAction.Model.addEdit.beforePatch'] = ['callable' => 'addEditBeforePatch', 'priority' => 50];
         $events['ControllerAction.Model.onGetFieldLabel'] = ['callable' => 'onGetFieldLabel', 'priority' => 50];
         $events['Model.excel.onExcelGetStatus'] = 'onExcelGetStatus';
+
         return $events;
     }
 
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    public function addEditBeforePatchV3(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
         $dataArray = $data->getArrayCopy();
         if (array_key_exists($this->_table->alias(), $dataArray)) {
             if (array_key_exists('username', $dataArray[$this->_table->alias()])) {
@@ -120,14 +126,23 @@ class UserBehavior extends Behavior {
             $this->_table->fields['last_name']['order'] = $i++;
             $this->_table->fields['preferred_name']['order'] = $i++;
             $this->_table->fields['gender_id']['order'] = $i++;
-
-            $this->_table->ControllerAction->field('date_of_birth', [
+            if ($this->isCAv4()) {
+                $this->_table->field('date_of_birth', [
                     'date_options' => [
                         'endDate' => date('d-m-Y')
                     ],
                     'default_date' => false,
-                ]
-            );
+                ]);
+            } else {
+                $this->_table->ControllerAction->field('date_of_birth', [
+                        'date_options' => [
+                            'endDate' => date('d-m-Y')
+                        ],
+                        'default_date' => false,
+                    ]
+                );
+            }
+
             $this->_table->fields['date_of_birth']['order'] = $i++;
             $this->_table->fields['identity_number']['order'] = $i++;
 
@@ -144,21 +159,35 @@ class UserBehavior extends Behavior {
                     $this->_table->ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
                     $this->_table->ControllerAction->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
                 }
+
             }
 
             if ($this->_table->registryAlias() != 'Security.Users') {
-                $this->_table->ControllerAction->field('information_section', ['type' => 'section', 'title' => __('Information'), 'before' => 'photo_content', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
-                $this->_table->ControllerAction->field('location_section', ['type' => 'section', 'title' => __('Location'), 'before' => 'address', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
-
                 $language = I18n::locale();
-                $field = 'address_area_id';
-                $userTableLabelAlias = 'Users';
-                $areaLabel = $this->onGetFieldLabel($event, $userTableLabelAlias, $field, $language, true);
-                $this->_table->ControllerAction->field('address_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
-                $field = 'birthplace_area_id';
-                $areaLabel = $this->onGetFieldLabel($event, $userTableLabelAlias, $field, $language, true);
-                $this->_table->ControllerAction->field('birthplace_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
-                $this->_table->ControllerAction->field('other_information_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+                if ($this->isCAv4()) {
+                    $this->_table->field('information_section', ['type' => 'section', 'title' => __('Information'), 'before' => 'photo_content', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+                    $this->_table->field('location_section', ['type' => 'section', 'title' => __('Location'), 'before' => 'address', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+                    $field = 'address_area_id';
+                    $userTableLabelAlias = 'Users';
+                    $areaLabel = $this->onGetFieldLabel($event, $userTableLabelAlias, $field, $language, true);
+                    $this->_table->field('address_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+                    $field = 'birthplace_area_id';
+                    $areaLabel = $this->onGetFieldLabel($event, $userTableLabelAlias, $field, $language, true);
+                    $this->_table->field('birthplace_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+                    $this->_table->field('other_information_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+                } else {
+                    $this->_table->field('information_section', ['type' => 'section', 'title' => __('Information'), 'before' => 'photo_content', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+                    $this->_table->field('location_section', ['type' => 'section', 'title' => __('Location'), 'before' => 'address', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+                    $field = 'address_area_id';
+                    $userTableLabelAlias = 'Users';
+                    $areaLabel = $this->onGetFieldLabel($event, $userTableLabelAlias, $field, $language, true);
+                    $this->_table->ControllerAction->field('address_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+                    $field = 'birthplace_area_id';
+                    $areaLabel = $this->onGetFieldLabel($event, $userTableLabelAlias, $field, $language, true);
+                    $this->_table->ControllerAction->field('birthplace_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+                    $this->_table->ControllerAction->field('other_information_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
+                }
+
             }
 
         }
@@ -219,25 +248,41 @@ class UserBehavior extends Behavior {
         if ($this->isCAv4()) {
             $this->_table->field('photo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"'.$imageDefault.'"', 'order' => 0]);
             $this->_table->field('openemis_no', ['type' => 'readonly', 'order' => 1, 'sort' => true]);
+        } else {
+            $this->_table->ControllerAction->field('photo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"'.$imageDefault.'"', 'order' => 0]);
+            $this->_table->ControllerAction->field('openemis_no', [
+                'type' => 'readonly',
+                'order' => 1,
+                'sort' => true
+            ]);
         }
 
-        // need to find out what kind of user is it
-        $this->_table->ControllerAction->field('photo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"'.$imageDefault.'"', 'order' => 0]);
-
-
-        $this->_table->ControllerAction->field('openemis_no', [
-            'type' => 'readonly',
-            'order' => 1,
-            'sort' => true
-        ]);
-
-
-
         if ($this->_table->table() == 'security_users') {
-            $this->_table->ControllerAction->field('name', [
-                'order' => 3,
-                'sort' => ['field' => 'first_name']
-            ]);
+            if ($this->isCAv4()) {
+                $this->_table->field('name', ['order' => 3, 'sort' => ['field' => 'first_name']]);
+            } else {
+                $this->_table->ControllerAction->field('name', [
+                    'order' => 3,
+                    'sort' => ['field' => 'first_name']
+                ]);
+            }
+        }
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+        $options['auto_search'] = false;
+        $options['auto_contain'] = false;
+
+        $table = $query->repository()->table();
+        if ($table != 'security_users') {
+            $query->matching('Users');
+
+            $this->_table->fields['openemis_no']['sort'] = ['field' => 'Users.openemis_no'];
+            $sortList = ['Users.openemis_no', 'Users.first_name'];
+            if (array_key_exists('sortWhitelist', $options)) {
+                $sortList = array_merge($options['sortWhitelist'], $sortList);
+            }
+            $options['sortWhitelist'] = $sortList;
         }
     }
 

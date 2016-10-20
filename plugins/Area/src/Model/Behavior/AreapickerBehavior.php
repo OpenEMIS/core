@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace Area\Model\Behavior;
 
 use ArrayObject;
@@ -11,11 +11,20 @@ use Cake\Utility\Inflector;
 class AreapickerBehavior extends Behavior {
 	public function implementedEvents() {
         $events = parent::implementedEvents();
-		$events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
-		$events['ControllerAction.Model.edit.afterQuery'] = 'editAfterQuery';
 		$events['ControllerAction.Model.edit.beforePatch'] = 'editBeforePatch';
-
+		if ($this->isCAv4()) {
+			$events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
+			$events['ControllerAction.Model.edit.afterQuery'] = 'editAfterQuery';
+		} else {
+			$events['ControllerAction.Model.view.afterAction'] = 'viewAfterActionV3';
+			$events['ControllerAction.Model.edit.afterQuery'] = 'editAfterQueryV3';
+		}
         return $events;
+    }
+
+    private function isCAv4()
+    {
+    	return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
 
 	public function onGetAreapickerElement(Event $event, $action, Entity $entity, $attr, $options) {
@@ -41,7 +50,7 @@ class AreapickerBehavior extends Behavior {
 				$areaOptions = $areaOptions
 					->where([$targetTable->aliasField('parent_id').' <> ' => -1])
 					->order([$targetTable->aliasField('lft')]);
-			}	
+			}
 
 			if ($targetModel == 'Area.Areas' && isset($attr['displayCountry'])) {
 				if (!$entity->isNew()) {
@@ -63,7 +72,7 @@ class AreapickerBehavior extends Behavior {
 					$areaOptions = $areaOptions
 						->where(['OR' => $areaCondition]);
 				}
-			} 
+			}
 			// If there is a restriction on the area administrative's main country to display (Use in Institution only)
 			else if ($targetModel == 'Area.AreaAdministratives' && isset($attr['displayCountry']) && !$attr['displayCountry']) {
 				$options['display-country'] = 0;
@@ -75,7 +84,7 @@ class AreapickerBehavior extends Behavior {
 			}
 
 			$areaOptions = $areaOptions->toArray();
-			
+
 			$fieldName = $attr['model'] . '.' . $attr['field'];
 			$options['onchange'] = "Area.reload(this)";
 			$options['url'] = $Url->build(['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'ajaxGetArea']);
@@ -101,6 +110,7 @@ class AreapickerBehavior extends Behavior {
 		return $value;
 	}
 
+	// Controller action v4 logic
 	public function viewAfterAction(Event $event, Entity $entity) {
 		foreach ($this->_table->fields as $field => $attr) {
 			if ($attr['type'] == 'areapicker') {
@@ -114,8 +124,8 @@ class AreapickerBehavior extends Behavior {
 				}
 				$after = $field;
 				foreach ($list as $key => $area) {
-					$this->_table->ControllerAction->field($field.$key, [
-						'type' => 'readonly', 
+					$this->_table->field($field.$key, [
+						'type' => 'readonly',
 						'attr' => ['label' => __($area['level_name'])],
 						'value' => __($area['area_name']),
 						'after' => $after
@@ -126,6 +136,7 @@ class AreapickerBehavior extends Behavior {
 		}
 	}
 
+	// Controller action v4 logic
 	public function editAfterQuery(Event $event, Entity $entity) {
 		$userId = $this->_table->Auth->user('id');
 		$areasByUser = $this->_table->AccessControl->getAreasByUser($userId);
@@ -140,8 +151,63 @@ class AreapickerBehavior extends Behavior {
 					$list = $this->getAreaLevelName($targetModel, $areaId);
 					$after = $field;
 					foreach ($list as $key => $area) {
+						$this->_table->field($field.$key, [
+							'type' => 'disabled',
+							'attr' => ['label' => __($area['level_name']), 'value' => $area['area_name']],
+							'value' => __($area['area_name']),
+							'after' => $after
+						]);
+						$after = $field.$key;
+					}
+				}
+			}
+			$entity->area_restricted = true;
+		}
+	}
+
+	// Controller action v3 logic
+	public function viewAfterActionV3(Event $event, Entity $entity) {
+		foreach ($this->_table->fields as $field => $attr) {
+			if ($attr['type'] == 'areapicker') {
+				$this->_table->fields[$field]['type'] = 'hidden';
+				$targetModel = $attr['source_model'];
+				$areaId = $entity->$field;
+				if (!empty($areaId)) {
+					$list = $this->getAreaLevelName($targetModel, $areaId);
+				} else {
+					$list = [];
+				}
+				$after = $field;
+				foreach ($list as $key => $area) {
+					$this->_table->ControllerAction->field($field.$key, [
+						'type' => 'readonly',
+						'attr' => ['label' => __($area['level_name'])],
+						'value' => __($area['area_name']),
+						'after' => $after
+					]);
+					$after = $field.$key;
+				}
+			}
+		}
+	}
+
+	// Controller action v3 logic
+	public function editAfterQueryV3(Event $event, Entity $entity) {
+		$userId = $this->_table->Auth->user('id');
+		$areasByUser = $this->_table->AccessControl->getAreasByUser($userId);
+
+		// $areasByUser will always be empty for system groups because system groups are linked directly to schools
+		if (!$this->_table->AccessControl->isAdmin() && empty($areasByUser)) {
+			foreach ($this->_table->fields as $field => $attr) {
+				if ($attr['type'] == 'areapicker' && $attr['source_model'] == 'Area.Areas') {
+					$this->_table->fields[$field]['visible'] = false;
+					$targetModel = $attr['source_model'];
+					$areaId = $entity->$field;
+					$list = $this->getAreaLevelName($targetModel, $areaId);
+					$after = $field;
+					foreach ($list as $key => $area) {
 						$this->_table->ControllerAction->field($field.$key, [
-							'type' => 'disabled', 
+							'type' => 'disabled',
 							'attr' => ['label' => __($area['level_name']), 'value' => $area['area_name']],
 							'value' => __($area['area_name']),
 							'after' => $after
@@ -179,6 +245,6 @@ class AreapickerBehavior extends Behavior {
 			unset($path[0]);
 		}
 		return $path;
-	
+
 	}
 }
