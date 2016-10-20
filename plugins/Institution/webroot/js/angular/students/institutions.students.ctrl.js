@@ -415,6 +415,11 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
 
     function onAddNewStudentClick() {
         StudentController.createNewStudent = true;
+        StudentController.completeDisabled = false;
+        StudentController.selectedStudentData = {};
+        StudentController.selectedStudentData.first_name = '';
+        StudentController.selectedStudentData.last_name = '';
+        StudentController.selectedStudentData.date_of_birth = '';
         angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
             step: "createUser"
         });
@@ -708,6 +713,7 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
         StudentController.addStudentButton = false;
         // Step 1 - Internal search
         if (data.step == 1) {
+            StudentController.postResponse = {};
             StudentController.reloadInternalDatasource(true);
             StudentController.createNewStudent = false;
             StudentController.externalSearch = false;
@@ -715,6 +721,7 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
         }
         // Step 2 - External search
         else if (data.step == 2) {
+            StudentController.postResponse = {};
             StudentController.reloadExternalDatasource(true);
             StudentController.createNewStudent = false;
             StudentController.externalSearch = true;
