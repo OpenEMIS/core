@@ -27,6 +27,9 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 		$this->behaviors()->get('ControllerAction')->config([
 			'actions' => ['add' => false, 'remove' => false]
 		]);
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Dashboard' => ['index']
+        ]);
 	}
 
 	public function validationDefault(Validator $validator) {

@@ -41,6 +41,9 @@ class StaffLeaveTable extends ControllerActionTable
 			'useDefaultName' => true
 		]);
 		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Dashboard' => ['index']
+        ]);
 	}
 
 	public function validationDefault(Validator $validator)

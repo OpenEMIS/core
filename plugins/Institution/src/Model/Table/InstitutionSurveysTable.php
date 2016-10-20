@@ -65,6 +65,9 @@ class InstitutionSurveysTable extends AppTable {
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Import.ImportLink');
         $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
+        $this->addBehavior('Restful.RestfulAccessControl', [
+        	'Dashboard' => ['index']
+        ]);
 	}
 
 	public function implementedEvents() {
