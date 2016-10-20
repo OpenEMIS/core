@@ -392,7 +392,7 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
                 if (userRecord.hasOwnProperty('institution_students')) {
                     if (userRecord.institution_students.length > 0) {
                         var schoolName = userRecord['institution_students'][0]['institution']['name'];
-                        AlertSvc.warning($scope, 'This student is already allocated to ' + schoolName);
+                        AlertSvc.warning($scope, 'Student is already enrolled in ' + schoolName);
                         userRecord.date_of_birth = InstitutionsStudentsSvc.formatDate(userRecord.date_of_birth);
                         StudentController.selectedStudentData = userRecord;
                         StudentController.completeDisabled = true;
