@@ -5,6 +5,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
+use Cake\Controller\Component;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
@@ -28,7 +29,15 @@ class IndividualPromotionTable extends ControllerActionTable
     public function implementedEvents() {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.reconfirm'] = 'reconfirm';
+        $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
         return $events;
+    }
+
+    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    {
+        $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'];
+        $Navigation->substituteCrumb('Individual Promotion', 'Students', $url);
+        $Navigation->addCrumb('Individual Promotion');
     }
 
     public function validationDefault(Validator $validator)
@@ -103,7 +112,13 @@ class IndividualPromotionTable extends ControllerActionTable
          ->count();
 
         if ($transferCount || $dropoutCount) {
-            $this->Session->write($this->registryAlias().'.pendingRequest', true);
+            // to show error messages
+            if ($transferCount) {
+                $this->Session->write($this->registryAlias().'.pendingRequest.transfer', true);
+            }
+            if ($dropoutCount) {
+                $this->Session->write($this->registryAlias().'.pendingRequest.dropout', true);
+            }
             return $this->controller->redirect($this->redirectUrl);
         }
 
@@ -455,10 +470,11 @@ class IndividualPromotionTable extends ControllerActionTable
 
                     if ($toAcademicPeriodId == $fromAcademicPeriodId) {
                         $attr['type'] = 'date';
+                        $attr['value'] = Time::now()->format('d-m-Y');
                         $attr['date_options'] = ['startDate' => $startDate, 'endDate' => $endDate];
-
                     } else {
                         $attr['type'] = 'readonly';
+                        $attr['value'] = $startDate;
                         $attr['attr']['value'] = $startDate;
                     }
                 } else {
@@ -466,7 +482,6 @@ class IndividualPromotionTable extends ControllerActionTable
                 }
                 break;
         }
-
 
         return $attr;
     }
@@ -599,7 +614,6 @@ class IndividualPromotionTable extends ControllerActionTable
 
         // InstitutionClassStudents: Insert and update records
         $classId = $entity->institution_class_id;
-
         if (!empty($classId)) {
             $newClassStudent = [];
             $newClassStudent['student_id'] = $entity->student_id;
@@ -608,30 +622,32 @@ class IndividualPromotionTable extends ControllerActionTable
             $newClassStudent['student_status_id'] = $studentStatuses['CURRENT'];
             $newClassStudent['institution_id'] = $entity->institution_id;
             $newClassStudent['academic_period_id'] = $entity->academic_period_id;
+        }
 
-            $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-            $existingClassStudent = $InstitutionClassStudents->find()
-            ->where([
-                $InstitutionClassStudents->aliasField('institution_id') => $studentData->institution_id,
-                $InstitutionClassStudents->aliasField('student_id') => $studentData->student_id,
-                $InstitutionClassStudents->aliasField('academic_period_id') => $studentData->academic_period_id,
-                $InstitutionClassStudents->aliasField('education_grade_id') => $studentData->education_grade_id,
-                $InstitutionClassStudents->aliasField('student_status_id') => $studentStatuses['CURRENT']
-            ])
-            ->first();
+        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $existingClassStudent = $InstitutionClassStudents->find()
+        ->where([
+            $InstitutionClassStudents->aliasField('institution_id') => $studentData->institution_id,
+            $InstitutionClassStudents->aliasField('student_id') => $studentData->student_id,
+            $InstitutionClassStudents->aliasField('academic_period_id') => $studentData->academic_period_id,
+            $InstitutionClassStudents->aliasField('education_grade_id') => $studentData->education_grade_id,
+            $InstitutionClassStudents->aliasField('student_status_id') => $studentStatuses['CURRENT']
+        ])
+        ->first();
 
-            if (!empty($existingClassStudent)) {
-                $existingClassStudent->student_status_id = $statusToUpdate;
-            }
+        if (!empty($existingClassStudent)) {
+            $existingClassStudent->student_status_id = $statusToUpdate;
         }
         // End
 
         if ($this->save($existingInstitutionStudent)) {
             if ($this->save($newInstitutionStudent)) {
+                // update old class if exists
+                if (!empty($existingClassStudent)) {
+                    $InstitutionClassStudents->save($existingClassStudent);
+                }
+                // insert new class if class is selected
                 if (!empty($classId)) {
-                    if (!empty($existingClassStudent)) {
-                        $InstitutionClassStudents->save($existingClassStudent);
-                    }
                     $InstitutionClassStudents->autoInsertClassStudent($newClassStudent);
                 }
                 return true;

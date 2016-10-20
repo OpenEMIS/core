@@ -153,7 +153,12 @@ class StudentUserTable extends UserTable
 
 		// individual promotion: show error if student has pending transfer or dropout requests
 		if ($this->Session->check('Institution.IndividualPromotion.pendingRequest')) {
-			$this->Alert->error('IndividualPromotion.pendingRequest');
+			if ($this->Session->check('Institution.IndividualPromotion.pendingRequest.transfer')) {
+				$this->Alert->error('IndividualPromotion.pendingTransfer');
+			}
+			if ($this->Session->check('Institution.IndividualPromotion.pendingRequest.dropout')) {
+				$this->Alert->error('IndividualPromotion.pendingDropout');
+			}
 			$this->Session->delete('Institution.IndividualPromotion.pendingRequest');
 		}
 	}
