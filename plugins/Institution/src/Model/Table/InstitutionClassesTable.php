@@ -1068,12 +1068,7 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function findClassOptions(Query $query, array $options)
     {
-        $session = $options['_Session'];
-        $institutionId = null;
-        if ($session->check('Institution.Institutions.id')) {
-            $institutionId = $session->read('Institution.Institutions.id');
-        }
-
+        $institutionId = array_key_exists('institution_id', $options)? $options['institution_id']: null;
         $academicPeriodId = array_key_exists('academic_period_id', $options)? $options['academic_period_id']: null;
         $gradeId = array_key_exists('grade_id', $options)? $options['grade_id']: null;
 
