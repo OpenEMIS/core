@@ -37,10 +37,7 @@ class ReportListBehavior extends Behavior {
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $settings) {
-        $query = $settings['query'];
-
-		$userId = $this->_table->Auth->user('id');
-		// $this->ReportProgress->purge($userId, true);
+		$query = $settings['query'];
 
 		$settings['pagination'] = false;
 		$fields = $this->_table->ControllerAction->getFields($this->ReportProgress);
@@ -60,14 +57,6 @@ class ReportListBehavior extends Behavior {
 		$this->_table->ControllerAction->setFieldOrder(['name', 'created', 'modified', 'expiry_date', 'status']);
 
 		// To remove expired reports
-		$clonedQuery = $this->ReportProgress->find();
-		$expiredReports = $clonedQuery
-			->where([
-				$this->ReportProgress->aliasField('module') => $this->_table->alias(),
-				$this->ReportProgress->aliasField('expiry_date'). ' IS NOT NULL',
-				$this->ReportProgress->aliasField('expiry_date').' < ' => date('Y-m-d')])
-			->toArray();
-
 		$this->ReportProgress->purge();
 
 		$query = $this->ReportProgress->find()
