@@ -79,6 +79,21 @@ class InstitutionClassStudentsTable extends AppTable {
                     $this->autoInsertClassStudent($classData);
                 }
             }
+        } else {
+            // to update student status in class if student status in school has been changed
+            $classStudent = $this->find()
+                ->matching('InstitutionClasses')
+                ->where([
+                    'InstitutionClasses.institution_id' => $student->institution_id,
+                    'InstitutionClasses.academic_period_id' => $student->academic_period_id,
+                    $this->aliasField('education_grade_id') => $student->education_grade_id,
+                    $this->aliasField('student_id') => $student->student_id,
+                ])->first();
+
+            if (!empty($classStudent) && $classStudent->student_status_id != $student->student_status_id) {
+                $classStudent->student_status_id = $student->student_status_id;
+                $this->save($classStudent);
+            }
         }
     }
 
