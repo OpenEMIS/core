@@ -12,13 +12,8 @@ class AreapickerBehavior extends Behavior {
 	public function implementedEvents() {
         $events = parent::implementedEvents();
 		$events['ControllerAction.Model.edit.beforePatch'] = 'editBeforePatch';
-		if ($this->isCAv4()) {
-			$events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
-			$events['ControllerAction.Model.edit.afterQuery'] = 'editAfterQuery';
-		} else {
-			$events['ControllerAction.Model.view.afterAction'] = 'viewAfterActionV3';
-			$events['ControllerAction.Model.edit.afterQuery'] = 'editAfterQueryV3';
-		}
+		$events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
+		$events['ControllerAction.Model.edit.afterQuery'] = 'editAfterQuery';
         return $events;
     }
 
@@ -110,33 +105,6 @@ class AreapickerBehavior extends Behavior {
 		return $value;
 	}
 
-	// Controller action v4 logic
-	public function viewAfterAction(Event $event, Entity $entity) {
-		foreach ($this->_table->fields as $field => $attr) {
-			if ($attr['type'] == 'areapicker') {
-				$this->_table->fields[$field]['type'] = 'hidden';
-				$targetModel = $attr['source_model'];
-				$areaId = $entity->$field;
-				if (!empty($areaId)) {
-					$list = $this->getAreaLevelName($targetModel, $areaId);
-				} else {
-					$list = [];
-				}
-				$after = $field;
-				foreach ($list as $key => $area) {
-					$this->_table->field($field.$key, [
-						'type' => 'readonly',
-						'attr' => ['label' => __($area['level_name'])],
-						'value' => __($area['area_name']),
-						'after' => $after
-					]);
-					$after = $field.$key;
-				}
-			}
-		}
-	}
-
-	// Controller action v4 logic
 	public function editAfterQuery(Event $event, Entity $entity) {
 		$userId = $this->_table->Auth->user('id');
 		$areasByUser = $this->_table->AccessControl->getAreasByUser($userId);
@@ -151,12 +119,21 @@ class AreapickerBehavior extends Behavior {
 					$list = $this->getAreaLevelName($targetModel, $areaId);
 					$after = $field;
 					foreach ($list as $key => $area) {
-						$this->_table->field($field.$key, [
-							'type' => 'disabled',
-							'attr' => ['label' => __($area['level_name']), 'value' => $area['area_name']],
-							'value' => __($area['area_name']),
-							'after' => $after
-						]);
+						if ($this->isCAv4()) {
+							$this->_table->ControllerAction->field($field.$key, [
+								'type' => 'disabled',
+								'attr' => ['label' => __($area['level_name']), 'value' => $area['area_name']],
+								'value' => __($area['area_name']),
+								'after' => $after
+							]);
+						} else {
+							$this->_table->field($field.$key, [
+								'type' => 'readonly',
+								'attr' => ['label' => __($area['level_name'])],
+								'value' => __($area['area_name']),
+								'after' => $after
+							]);
+						}
 						$after = $field.$key;
 					}
 				}
@@ -165,8 +142,7 @@ class AreapickerBehavior extends Behavior {
 		}
 	}
 
-	// Controller action v3 logic
-	public function viewAfterActionV3(Event $event, Entity $entity) {
+	public function viewAfterAction(Event $event, Entity $entity) {
 		foreach ($this->_table->fields as $field => $attr) {
 			if ($attr['type'] == 'areapicker') {
 				$this->_table->fields[$field]['type'] = 'hidden';
@@ -179,44 +155,24 @@ class AreapickerBehavior extends Behavior {
 				}
 				$after = $field;
 				foreach ($list as $key => $area) {
-					$this->_table->ControllerAction->field($field.$key, [
-						'type' => 'readonly',
-						'attr' => ['label' => __($area['level_name'])],
-						'value' => __($area['area_name']),
-						'after' => $after
-					]);
-					$after = $field.$key;
-				}
-			}
-		}
-	}
-
-	// Controller action v3 logic
-	public function editAfterQueryV3(Event $event, Entity $entity) {
-		$userId = $this->_table->Auth->user('id');
-		$areasByUser = $this->_table->AccessControl->getAreasByUser($userId);
-
-		// $areasByUser will always be empty for system groups because system groups are linked directly to schools
-		if (!$this->_table->AccessControl->isAdmin() && empty($areasByUser)) {
-			foreach ($this->_table->fields as $field => $attr) {
-				if ($attr['type'] == 'areapicker' && $attr['source_model'] == 'Area.Areas') {
-					$this->_table->fields[$field]['visible'] = false;
-					$targetModel = $attr['source_model'];
-					$areaId = $entity->$field;
-					$list = $this->getAreaLevelName($targetModel, $areaId);
-					$after = $field;
-					foreach ($list as $key => $area) {
-						$this->_table->ControllerAction->field($field.$key, [
+					if ($this->isCAv4()) {
+						$this->_table->field($field.$key, [
 							'type' => 'disabled',
 							'attr' => ['label' => __($area['level_name']), 'value' => $area['area_name']],
 							'value' => __($area['area_name']),
 							'after' => $after
 						]);
-						$after = $field.$key;
+					} else {
+						$this->_table->ControllerAction->field($field.$key, [
+							'type' => 'readonly',
+							'attr' => ['label' => __($area['level_name'])],
+							'value' => __($area['area_name']),
+							'after' => $after
+						]);
 					}
+					$after = $field.$key;
 				}
 			}
-			$entity->area_restricted = true;
 		}
 	}
 
