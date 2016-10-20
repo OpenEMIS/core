@@ -84,7 +84,6 @@ class TransferRequestsTable extends ControllerActionTable
     {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
-        $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 3];
         return $events;
     }
 
@@ -146,18 +145,33 @@ class TransferRequestsTable extends ControllerActionTable
         return __($statusName);
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function beforeAction(Event $event, ArrayObject $extra)
     {
-        if ($this->action == 'add') {
-            // cancel button direct to student user view
-            $id = $this->Session->read('Student.Students.id');
-            $buttons[1]['url']['action'] = 'StudentUser';
-            $buttons[1]['url'][0] = 'view';
-            $buttons[1]['url'][1] = $id;
+        if ($this->action == 'index') {
+            $this->toggle('add', false);
+        }
+
+        $this->field('institution_class_id', ['visible' => false]);
+
+        $hash = $this->request->query('hash');
+        if (empty($hash)) { // if value is empty, redirect back to the list page
+            $event->stopPropagation();
+            return $this->controller->redirect(['action' => 'Students', 'index']);
+        } else {
+            $params = $this->getUrlParams([$this->alias(), 'add'], $hash);
+            // back button direct to student user view
+            $backBtn = $extra['toolbarButtons']['back'];
+            $backBtn['url']['action'] = 'StudentUser';
+            $backBtn['url'][0] = 'view';
+            $backBtn['url'][1] = $params['user_id'];
+            $backBtn['url']['id'] = $params['student_id'];
+            $extra['toolbarButtons']['back'] = $backBtn;
+
+            $extra['params'] = $params;
         }
     }
 
-    public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $entityError = $entity->errors();
         if (!empty($entityError)) {
@@ -168,7 +182,7 @@ class TransferRequestsTable extends ControllerActionTable
             }
         } else {
             $Students = TableRegistry::get('Institution.Students');
-            $id = $this->Session->read('Institution.Students.id');
+            $id = $extra['params']['student_id'];
             $institutionStudentData = $Students->get($id);
 
             $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
@@ -185,29 +199,18 @@ class TransferRequestsTable extends ControllerActionTable
         }
     }
 
-    public function addBeforeAction(Event $event, arrayObject $extra)
-    {
-        // back button direct to student user view
-        $id = $this->Session->read('Student.Students.id');
-        $extra['toolbarButtons']['back']['url']['action'] = 'StudentUser';
-        $extra['toolbarButtons']['back']['url'][0] = 'view';
-        $extra['toolbarButtons']['back']['url'][1] = $id;
-    }
-
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
-        if ($this->Session->read($this->registryAlias().'.id')) {
-            $id = $entity->student_id;
-            $extra['redirect']['action'] = 'StudentUser';
-            $extra['redirect'][0] = 'view';
-            $extra['redirect'][1] = $id;
-        }
+        $extra['redirect']['action'] = 'StudentUser';
+        $extra['redirect'][0] = 'view';
+        $extra['redirect'][1] = $entity->student_id;
+        $extra['redirect']['id'] = $extra['params']['student_id'];
     }
 
-    public function addOnInitialize(Event $event, Entity $entity)
+    public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $id = $this->Session->read($this->registryAlias().'.id');
+        $id = $extra['params']['student_id'];
 
         $Students = TableRegistry::get('Institution.Students');
         $studentData = $Students->get($id);
@@ -253,13 +256,34 @@ class TransferRequestsTable extends ControllerActionTable
         $this->request->data[$this->alias()]['student_status_id'] = $entity->student_status_id;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        if ($this->action == 'index') {
-            $this->toggle('add', false);
-        }
+        $this->addSections();
+        $this->field('transfer_status');
+        $this->field('student');
+        $this->field('student_id');
+        $this->field('academic_period_id', ['student_id' => $extra['params']['student_id']]);
+        $this->field('education_grade_id');
+        $this->field('new_education_grade_id', ['student_id' => $extra['params']['student_id']]);
+        $this->field('area_id');
+        $this->field('institution_id');
+        $this->field('status');
+        $this->field('start_date');
+        $this->field('end_date');
+        $this->field('student_transfer_reason_id', ['type' => 'select']);
+        $this->field('comment');
+        $this->field('previous_institution_id');
+        $this->field('type', ['type' => 'hidden', 'value' => self::TRANSFER]);
+        $this->field('student_status_id', ['type' => 'hidden']);
 
-        $this->field('institution_class_id', ['visible' => false]);
+        $this->setFieldOrder([
+            'transfer_status_header', 'transfer_status',
+            'existing_information_header', 'student', 'previous_institution_id', 'education_grade_id',
+            'new_information_header', 'new_education_grade_id', 'area_id', 'institution_id',
+            'academic_period_id',
+            'status', 'start_date', 'end_date',
+            'transfer_reasons_header', 'student_transfer_reason_id', 'comment'
+        ]);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -327,44 +351,6 @@ class TransferRequestsTable extends ControllerActionTable
         $this->field('created', ['visible' => true]);
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        if ($this->Session->check($this->registryAlias().'.id')) {
-            $this->addSections();
-            $this->field('transfer_status');
-            $this->field('student');
-            $this->field('student_id');
-            $this->field('academic_period_id');
-            $this->field('education_grade_id');
-            $this->field('new_education_grade_id');
-            $this->field('area_id');
-            $this->field('institution_id');
-            $this->field('status');
-            $this->field('start_date');
-            $this->field('end_date');
-            $this->field('student_transfer_reason_id', ['type' => 'select']);
-            $this->field('comment');
-            $this->field('previous_institution_id');
-            $this->field('type', ['type' => 'hidden', 'value' => self::TRANSFER]);
-            $this->field('student_status_id', ['type' => 'hidden']);
-
-            $this->setFieldOrder([
-                'transfer_status_header', 'transfer_status',
-                'existing_information_header', 'student', 'previous_institution_id', 'education_grade_id',
-                'new_information_header', 'new_education_grade_id', 'area_id', 'institution_id',
-                'academic_period_id',
-                'status', 'start_date', 'end_date',
-                'transfer_reasons_header', 'student_transfer_reason_id', 'comment'
-            ]);
-        } else {
-            $Students = TableRegistry::get('Institution.Students');
-            $action = $this->url('index');
-            $action['action'] = $Students->alias();
-
-            return $this->controller->redirect($action);
-        }
-    }
-
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->request->data[$this->alias()]['status'] = $entity->status;
@@ -374,12 +360,6 @@ class TransferRequestsTable extends ControllerActionTable
             'new_information_header', 'new_education_grade_id', 'institution_id',
             'transfer_reasons_header', 'student_transfer_reason_id', 'comment'
         ]);
-
-        // back button direct to student user view
-        $id = $entity->student_id;
-        $extra['toolbarButtons']['back']['url']['action'] = 'StudentUser';
-        $extra['toolbarButtons']['back']['url'][0] = 'view';
-        $extra['toolbarButtons']['back']['url'][1] = $id;
     }
 
     // add viewAfterAction to perform redirect if type is not 2
@@ -435,6 +415,15 @@ class TransferRequestsTable extends ControllerActionTable
         $this->request->data[$this->alias()]['end_date'] = $entity->end_date;
         $this->request->data[$this->alias()]['student_transfer_reason_id'] = $entity->student_transfer_reason_id;
     }
+
+    public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $extra['redirect']['action'] = 'StudentUser';
+        $extra['redirect'][0] = 'view';
+        $extra['redirect'][1] = $entity->student_id;
+        $extra['redirect']['id'] = $extra['params']['student_id'];
+    }
+
 
     /* to be implemented with custom autocomplete
     public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
@@ -559,7 +548,7 @@ class TransferRequestsTable extends ControllerActionTable
     public function onUpdateFieldNewEducationGradeId(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add') {
-            $id = $this->Session->read($this->registryAlias().'.id');
+            $id = $attr['student_id'];
             $Students = TableRegistry::get('Institution.Students');
 
             $studentInfo = $Students->find()->contain(['EducationGrades', 'StudentStatuses'])->where([$Students->aliasField($Students->primaryKey()) => $id])->first();
@@ -626,7 +615,7 @@ class TransferRequestsTable extends ControllerActionTable
             switch ($studentStatus) {
                 case $status['PROMOTED']:
                 case $status['GRADUATED']:
-                    $id = $this->Session->read($this->registryAlias().'.id');
+                    $id = $attr['student_id'];
                     $Students = TableRegistry::get('Institution.Students');
                     $studentInfo = $Students->find()->contain(['AcademicPeriods'])->where([$Students->aliasField($Students->primaryKey()) => $id])->first();
 
