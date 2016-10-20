@@ -478,12 +478,7 @@ class InstitutionGradesTable extends AppTable {
     public function findEducationGradeInCurrentInstitution(Query $query, array $options)
     {
         $academicPeriodId = (array_key_exists('academic_period_id', $options))? $options['academic_period_id']: null;
-        $session = $options['_Session'];
-
-        $institutionId = -1;
-        if ($session->check('Institution.Institutions.id')) {
-            $institutionId = $session->read('Institution.Institutions.id');
-        }
+        $institutionId = (array_key_exists('institution_id', $options))? $options['institution_id']: null;
 
         $query->contain('EducationGrades.EducationProgrammes');
         $query->where([

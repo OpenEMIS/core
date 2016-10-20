@@ -35,12 +35,8 @@ class AdvanceSearchBehavior extends Behavior {
 		$events = parent::implementedEvents();
         $newEvent = [];
         $newEvent['ControllerAction.Model.afterAction'] = 'afterAction';
-
-        if($this->isCAv4()) {
-            $newEvent['ControllerAction.Model.index.beforeQuery'] = 'indexBeforeQuery';
-        } else{
-            $newEvent['ControllerAction.Model.index.beforePaginate'] = 'indexBeforePaginate';
-        }
+        $newEvent['ControllerAction.Model.index.beforeQuery'] = 'indexBeforeQuery';
+        $newEvent['ControllerAction.Model.index.beforePaginate'] = 'indexBeforePaginate';
 
 		$events = array_merge($events,$newEvent);
 		return $events;
