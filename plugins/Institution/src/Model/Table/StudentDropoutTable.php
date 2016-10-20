@@ -2,13 +2,14 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
+use Cake\ORM\Entity;
+use Cake\ORM\Query;
 use App\Model\Table\AppTable;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
-use Cake\ORM\Query;
+use Cake\Datasource\ResultSetInterface;
 
 class StudentDropoutTable extends AppTable {
 	const NEW_REQUEST = 0;
@@ -23,6 +24,9 @@ class StudentDropoutTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('StudentDropoutReasons', ['className' => 'Student.StudentDropoutReasons', 'foreignKey' => 'student_dropout_reason_id']);
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Dashboard' => ['index']
+        ]);
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -33,7 +37,6 @@ class StudentDropoutTable extends AppTable {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-		$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
 		return $events;
 	}
 
@@ -135,70 +138,6 @@ class StudentDropoutTable extends AppTable {
 					'0' => 'edit',
 					'1' => $entity->id
 				]);
-			}
-		}
-	}
-
-	// Workbench.Model.onGetList
-	public function onGetWorkbenchList(Event $event, $AccessControl, ArrayObject $data) {
-		if ($AccessControl->check(['Institutions', $this->alias(), 'edit'])) {
-			$institutionIds = $AccessControl->getInstitutionsByUser();
-
-			$where = [$this->aliasField('status') => 0];
-			if (!$AccessControl->isAdmin()) {
-				if (!empty($institutionIds)) {
-					$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
-				} else {
-					$where[$this->aliasField('institution_id')] = '-1';
-				}
-			}
-
-			$resultSet = $this
-				->find()
-				->select([
-					$this->aliasField('id'),
-					$this->aliasField('modified'),
-					$this->aliasField('created'),
-					'Users.openemis_no',
-					'Users.first_name',
-					'Users.middle_name',
-					'Users.third_name',
-					'Users.last_name',
-					'Users.preferred_name',
-					'Institutions.name',
-					'CreatedUser.username'
-				])
-				->contain(['Users', 'Institutions', 'CreatedUser'])
-				->where($where)
-				->order([
-					$this->aliasField('created')
-				])
-				->limit(30)
-				->toArray();
-
-			foreach ($resultSet as $key => $obj) {
-				$requestTitle = sprintf('Dropout request from (%s) in %s', $obj->user->name_with_id, $obj->institution->name);
-				$url = [
-					'plugin' => false,
-					'controller' => 'Dashboard',
-					'action' => $this->alias(),
-					'edit',
-					$obj->id
-				];
-
-				if (is_null($obj->modified)) {
-					$receivedDate = $this->formatDate($obj->created);
-				} else {
-					$receivedDate = $this->formatDate($obj->modified);
-				}
-
-				$data[] = [
-					'request_title' => ['title' => $requestTitle, 'url' => $url],
-					'receive_date' => $receivedDate,
-					'due_date' => '<i class="fa fa-minus"></i>',
-					'requester' => $obj->created_user->username,
-					'type' => __('Dropout')
-				];
 			}
 		}
 	}
@@ -406,5 +345,96 @@ class StudentDropoutTable extends AppTable {
 		            'provider' => 'table'
 	    			]);
 		return $validator;
+	}
+
+	public function findWorkbench(Query $query, array $options) {
+		$controller = $options['_controller'];
+		$controller->loadComponent('AccessControl');
+
+		$session = $controller->request->session();
+		$AccessControl = $controller->AccessControl;
+
+		$isAdmin = $session->read('Auth.User.super_admin');
+		$userId = $session->read('Auth.User.id');
+
+		$where = [];
+
+		if (!$isAdmin) {
+			if ($AccessControl->check(['Institutions', $this->alias(), 'edit'])) {
+				$institutionRoles = [];
+
+				$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+				$institutionIds = $SecurityGroupUsers->getInstitutionsByUser($userId);
+
+				$Institutions = TableRegistry::get('Institution.Institutions');
+				foreach ($institutionIds as $institutionId) {
+					$roles = $Institutions->getInstitutionRoles($userId, $institutionId);
+					$institutionRoles[$institutionId] = $roles;
+				}
+
+				if (empty($institutionRoles)) {
+					// return empty list if the user does not have access to any schools
+					return $query->where([$this->aliasField('id') => -1]);
+				} else {
+					$where[$this->aliasField('institution_id') . ' IN '] = array_keys($institutionRoles);
+				}
+			} else {
+				// return empty list if the user does not permission to approve Student Admission
+				return $query->where([$this->aliasField('id') => -1]);
+			}
+		}
+
+		$query
+			->select([
+				$this->aliasField('id'),
+				$this->aliasField('institution_id'),
+				$this->aliasField('modified'),
+				$this->aliasField('created'),
+				$this->Users->aliasField('openemis_no'),
+				$this->Users->aliasField('first_name'),
+				$this->Users->aliasField('middle_name'),
+				$this->Users->aliasField('third_name'),
+				$this->Users->aliasField('last_name'),
+				$this->Users->aliasField('preferred_name'),
+				$this->Institutions->aliasField('code'),
+				$this->Institutions->aliasField('name'),
+				$this->CreatedUser->aliasField('openemis_no'),
+				$this->CreatedUser->aliasField('first_name'),
+				$this->CreatedUser->aliasField('middle_name'),
+				$this->CreatedUser->aliasField('third_name'),
+				$this->CreatedUser->aliasField('last_name'),
+				$this->CreatedUser->aliasField('preferred_name')
+			])
+			->contain([$this->Users->alias(), $this->Institutions->alias(), $this->CreatedUser->alias()])
+			->where($where)
+			->order([$this->aliasField('created') => 'DESC'])
+			->formatResults(function (ResultSetInterface $results) {
+				return $results->map(function ($row) {
+					$url = [
+						'plugin' => false,
+						'controller' => 'Dashboard',
+						'action' => $this->alias(),
+						'edit',
+						$row->id
+					];
+
+					if (is_null($row->modified)) {
+						$receivedDate = $this->formatDate($row->created);
+					} else {
+						$receivedDate = $this->formatDate($row->modified);
+					}
+
+					$row['url'] = $url;
+	    			$row['status'] = '<i class="fa fa-minus"></i>';
+	    			$row['request_title'] = __('Dropout request of').' '.$row->user->name_with_id;
+	    			$row['institution'] = $row->institution->code_name;
+	    			$row['received_date'] = $receivedDate;
+	    			$row['requester'] = $row->created_user->name_with_id;
+
+					return $row;
+				});
+			});
+
+		return $query;
 	}
 }
