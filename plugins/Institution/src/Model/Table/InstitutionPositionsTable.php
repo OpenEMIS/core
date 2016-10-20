@@ -41,6 +41,9 @@ class InstitutionPositionsTable extends ControllerActionTable {
 
 		$this->setDeleteStrategy('restrict');
 		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Dashboard' => ['index']
+        ]);
 	}
 
 	public function transferAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
