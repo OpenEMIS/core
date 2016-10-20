@@ -60,7 +60,7 @@ class UserBehavior extends Behavior {
         return $events;
     }
 
-    public function addEditBeforePatchV3(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
         $dataArray = $data->getArrayCopy();
         if (array_key_exists($this->_table->alias(), $dataArray)) {
             if (array_key_exists('username', $dataArray[$this->_table->alias()])) {
