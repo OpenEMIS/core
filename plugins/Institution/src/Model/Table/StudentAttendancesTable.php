@@ -621,7 +621,8 @@ class StudentAttendancesTable extends AppTable {
 	}
 
 	// Event: ControllerAction.Model.index.beforeAction
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+    public function indexBeforeAction(Event $event, ArrayObject $settings) {
+        $query = $settings['query'];
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$periodOptionsData = $AcademicPeriod->getList();
@@ -820,6 +821,7 @@ class StudentAttendancesTable extends AppTable {
 			$indexDashboard = 'attendance';
 
 			$dataSet = $this->getNumberOfStudentByAttendance(['query' => $query, 'selectedDay' => $selectedDay]);
+
 			$present = 0;
 			$absent = 0;
 			$late = 0;

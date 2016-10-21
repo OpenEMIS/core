@@ -14,7 +14,7 @@ use Cake\Utility\Text;
 class InstitutionSubjectStudentsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects']);
 		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
@@ -33,6 +33,10 @@ class InstitutionSubjectStudentsTable extends AppTable {
 				'student_id'
 			]
 		]);
+
+		$this->addBehavior('Restful.RestfulAccessControl', [
+            'Results' => ['index', 'add']
+        ]);
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
@@ -145,13 +149,13 @@ class InstitutionSubjectStudentsTable extends AppTable {
 		$gradeArray = array_unique($gradeArray);
 
 		$AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
-		// conditions: 'assessment_item_results' removing from student_id, institution_id, academic_period_id, assessment_item_id->education_subject_id; 
+		// conditions: 'assessment_item_results' removing from student_id, institution_id, academic_period_id, assessment_item_id->education_subject_id;
 		$deleteAssessmentItemResults = $AssessmentItemResults->find()
 			->where([
-				$AssessmentItemResults->aliasField('student_id') => $entity->student_id, 
-				$AssessmentItemResults->aliasField('institution_id') => $institutionClassData->institution_id, 
-				$AssessmentItemResults->aliasField('academic_period_id') => $institutionClassData->academic_period_id, 
-				
+				$AssessmentItemResults->aliasField('student_id') => $entity->student_id,
+				$AssessmentItemResults->aliasField('institution_id') => $institutionClassData->institution_id,
+				$AssessmentItemResults->aliasField('academic_period_id') => $institutionClassData->academic_period_id,
+
 			])
 			;
 
