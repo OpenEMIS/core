@@ -163,7 +163,9 @@ class StudentUserTable extends ControllerActionTable
 		}
 
 		// this value comes from the list page from StudentsTable->onUpdateActionButtons
-		$institutionStudentId = $this->request->query('id');
+		$id = $this->request->query('id') ? $this->request->query('id') : $this->Session->read('Institution.Students.id');
+		$this->Session->write('Institution.Students.id', $id);
+		$institutionStudentId = $id;
 		if (empty($institutionStudentId)) { // if value is empty, redirect back to the list page
 			$event->stopPropagation();
 			return $this->controller->redirect(['action' => 'Students', 'index']);
