@@ -73,6 +73,12 @@ class InstitutionsController extends AppController
 
         $this->loadComponent('Institution.InstitutionAccessControl');
         $this->attachAngularModules();
+
+        $controller = $this->name;
+        $accessMap = [
+            "$controller.StudentUser" => "$controller.%s"
+        ];
+        $this->request->addParams(['accessMap' => $accessMap]);
     }
 
     // CAv4
@@ -123,7 +129,7 @@ class InstitutionsController extends AppController
     // End
 
     public function Students($pass = 'index') {
-        if ($pass == 'addExisting') {
+        if ($pass == 'add') {
             $this->set('ngController', 'InstitutionsStudentsCtrl as InstitutionStudentController');
             $externalDataSource = false;
         	$ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
@@ -261,17 +267,11 @@ class InstitutionsController extends AppController
 				break;
             case 'Students':
             	if (isset($this->request->pass[0])) {
-            		if ($this->request->param('pass')[0] == 'addExisting') {
+            		if ($this->request->param('pass')[0] == 'add') {
 	                    $this->Angular->addModules([
 	                        'alert.svc',
 	                        'institutions.students.ctrl',
 	                        'institutions.students.svc'
-	                    ]);
-	                } elseif ($this->request->param('pass')[0] == 'addExternal') {
-	                	$this->Angular->addModules([
-	                        'alert.svc',
-	                        'institutions.external_students.ctrl',
-	                        'institutions.external_students.svc'
 	                    ]);
 	                }
             	}
@@ -572,18 +572,17 @@ class InstitutionsController extends AppController
         }
 
         foreach ($tabElements as $key => $tabElement) {
+            $params = [];
             switch ($key) {
                 case $userRole.'User':
-                    $params = [$userId];
+                    $params = [$userId, 'id' => $id];
                     break;
                 case $userRole.'Account':
-                    $params = [$userId];
+                    $params = [$userId, 'id' => $id];
                     break;
                 case $userRole.'Surveys':
                     $params = ['user_id' => $userId];
                     break;
-                default:
-                    $params = [];
             }
             $tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
         }

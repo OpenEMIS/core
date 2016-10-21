@@ -1,5 +1,5 @@
 /*
-Core Overwrites: v.1.0.10
+Core Overwrites: v.1.0.11
 */
 
 
@@ -861,3 +861,50 @@ a,
     }
 }
 /* End of Fix for Datepicker inside Filter - POCOR-2827 */
+
+/* Fix for POCOR-1908 */
+
+.rtl #workbench .list-group-item > .badge {
+    float: left;
+}
+
+#workbench .list-group-item:first-child,
+#workbench .list-group-item:last-child {
+    -webkit-border-radius: 0 !important;
+            border-radius: 0 !important;
+}
+
+#workbench .dashboard-content {
+    background-color: #FFF;
+}
+
+#workbench .list-group-item {
+    border-left: 0;
+    border-right: 0;
+}
+
+#workbench .list-group-item:first-child {
+    border-top: 0;
+}
+
+.wrapper {
+    height: calc(100% - 76px);
+}
+
+.wrapper.no-breadcrumb {
+    height: calc(100% - 39px);
+    padding: 0;
+}
+
+.content-splitter.split-panes.horizontal > .split-handler,
+.rtl .content-splitter.split-panes.horizontal > .split-handler {
+    top: 0 !important;
+    bottom: 0 !important;
+}
+
+.split-content-header,
+.split-content-area {
+    padding: 0;
+}
+
+/* End of Fix for POCOR-1908 */
