@@ -20,6 +20,7 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
     private $authType;
     private $mapping;
     private $userInfoUri;
+    private $createUser;
 
     public $components = ['Auth'];
 
@@ -109,6 +110,7 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
         $this->mapping['lastName'] = $oAuthAttributes['lastName_mapping'];
         $this->mapping['dob'] = $oAuthAttributes['dob_mapping'];
         $this->mapping['gender'] = $oAuthAttributes['gender_mapping'];
+        $this->createUser = isset($oAuthAttributes['allow_create_user']) ?  $oAuthAttributes['allow_create_user'] : 0;
 
         $hashAttributes = $oAuthAttributes;
         unset($hashAttributes['redirect_uri']);
@@ -146,33 +148,10 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
                 'SSO.OAuth2OpenIDConnect' => [
                     'userModel' => $this->_config['userModel'],
                     'mapping' => $this->mapping,
-                    'userInfoUri' => $this->userInfoUri
+                    'userInfoUri' => $this->userInfoUri,
+                    'createUser' => $this->createUser
                 ]
             ]);
-
-            if ($this->config('cookieAuth.enabled')) {
-                $this->controller->Auth->config('authenticate', [
-                    'SSO.Cookie' => [
-                        'userModel' => $this->_config['userModel'],
-                        'fields' => [
-                            'username' => $this->_config['cookieAuth']['username']
-                        ],
-                        'cookie' => [
-                            'name' => $this->_config['cookie']['name'],
-                            'path' => $this->_config['cookie']['path'],
-                            'expires' => $this->_config['cookie']['expires'],
-                            'domain' => $this->_config['cookie']['domain'],
-                            'encryption' => $this->_config['cookie']['encryption']
-                        ],
-                        'authType' => $this->authType
-                    ]
-                ]);
-
-                $user = $this->controller->Auth->identify();
-                if ($user) {
-                    $this->controller->Auth->setUser($user);
-                }
-            }
         }
     }
 
