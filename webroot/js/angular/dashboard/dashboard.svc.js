@@ -6,9 +6,9 @@ DashboardSvc.$inject = ['$q', '$filter', 'KdOrmSvc'];
 
 function DashboardSvc($q, $filter, KdOrmSvc) {
     const workbenchItemTypes = {
-        FIXED: ['request_title', 'institution', 'received_date', 'requester'],
-        SCHOOL_BASED: ['status', 'request_title', 'institution', 'received_date', 'requester'],
-        NON_SCHOOL_BASED: ['status', 'request_title', 'received_date', 'requester']
+        FIXED: ['request_title', 'institution', 'received_date'],
+        SCHOOL_BASED: ['status', 'request_title', 'institution', 'received_date'],
+        NON_SCHOOL_BASED: ['status', 'request_title', 'received_date']
     };
 
     var properties = {
@@ -17,6 +17,7 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
     };
 
     var configModels = {
+        // FIXED Workflow
         StudentTransferApprovalTable: {
             cols: workbenchItemTypes.FIXED,
             model: 'Institution.TransferApprovals'
@@ -37,6 +38,7 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
             cols: workbenchItemTypes.FIXED,
             model: 'Institution.StaffTransferRequests'
         },
+        // SCHOOL_BASED Workflow
         StaffLeaveTable: {
             cols: workbenchItemTypes.SCHOOL_BASED,
             model: 'Institution.StaffLeave'
@@ -52,6 +54,23 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
         ChangeInAssignmentTable: {
             cols: workbenchItemTypes.SCHOOL_BASED,
             model: 'Institution.StaffPositionProfiles'
+        },
+        // NON_SCHOOL_BASED Workflow
+        TrainingCoursesTable: {
+            cols: workbenchItemTypes.NON_SCHOOL_BASED,
+            model: 'Training.TrainingCourses'
+        },
+        TrainingSessionsTable: {
+            cols: workbenchItemTypes.NON_SCHOOL_BASED,
+            model: 'Training.TrainingSessions'
+        },
+        TrainingSessionResultsTable: {
+            cols: workbenchItemTypes.NON_SCHOOL_BASED,
+            model: 'Training.TrainingSessionResults'
+        },
+        StaffTrainingNeedsTable: {
+            cols: workbenchItemTypes.NON_SCHOOL_BASED,
+            model: 'Staff.TrainingNeeds'
         }
     };
 
@@ -146,7 +165,12 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
         var columnDefs = [];
 
         if (cols.indexOf('status') !== -1) {
-            columnDefs.push({headerName: "Status", field: "status"});
+            columnDefs.push({
+                headerName: "Status",
+                field: "status",
+                width: 150,
+                suppressSizeToFit: true
+            });
         }
 
         if (cols.indexOf('request_title') !== -1) {
@@ -182,23 +206,35 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
 
                     return eCell;
                 },
-                width: 400
+                // width: 500
             });
         }
 
         if (cols.indexOf('institution') !== -1) {
             columnDefs.push({
-                headerName: "Institution", field: "institution",
-                width: 250
+                headerName: "Institution",
+                field: "institution",
+                width: 250,
+                suppressSizeToFit: true
             });
         }
 
         if (cols.indexOf('received_date') !== -1) {
-            columnDefs.push({headerName: "Received Date", field: "received_date"});
+            columnDefs.push({
+                headerName: "Received Date",
+                field: "received_date",
+                width: 150,
+                suppressSizeToFit: true
+            });
         }
 
         if (cols.indexOf('requester') !== -1) {
             columnDefs.push({headerName: "Requester", field: "requester"});
+        }
+
+        var bodyDir = getComputedStyle(document.body).direction;
+        if (bodyDir == 'rtl') {
+            columnDefs.reverse();
         }
 
         return columnDefs;
