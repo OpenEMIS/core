@@ -868,11 +868,6 @@ a,
     float: left;
 }
 
-.content-splitter.split-panes.horizontal > .split-handler {
-    top: -10px !important;
-    bottom: -50px !important;
-}
-
 #workbench .list-group-item:first-child,
 #workbench .list-group-item:last-child {
     -webkit-border-radius: 0 !important;
@@ -892,15 +887,24 @@ a,
     border-top: 0;
 }
 
-.split-panes {
-    height: 100%;
+.wrapper {
+    height: calc(100% - 76px);
 }
 
-.main-content.split-pane1,
-.rtl .main-content.split-pane1 {
-    padding-bottom: 40px !important;
+.wrapper.no-breadcrumb {
+    height: calc(100% - 39px);
+    padding: 0;
 }
 
+.content-splitter.split-panes.horizontal > .split-handler,
+.rtl .content-splitter.split-panes.horizontal > .split-handler {
+    top: 0 !important;
+    bottom: 0 !important;
+}
 
+.split-content-header,
+.split-content-area {
+    padding: 0;
+}
 
 /* End of Fix for POCOR-1908 */

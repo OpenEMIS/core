@@ -121,7 +121,6 @@ class StudentUserTable extends ControllerActionTable
 	public function implementedEvents()
 	{
     	$events = parent::implementedEvents();
-    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
     	return $events;
     }
 
