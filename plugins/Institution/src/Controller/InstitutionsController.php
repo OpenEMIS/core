@@ -572,18 +572,17 @@ class InstitutionsController extends AppController
         }
 
         foreach ($tabElements as $key => $tabElement) {
+            $params = [];
             switch ($key) {
                 case $userRole.'User':
-                    $params = [$userId];
+                    $params = [$userId, 'id' => $id];
                     break;
                 case $userRole.'Account':
-                    $params = [$userId];
+                    $params = [$userId, 'id' => $id];
                     break;
                 case $userRole.'Surveys':
                     $params = ['user_id' => $userId];
                     break;
-                default:
-                    $params = [];
             }
             $tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
         }
