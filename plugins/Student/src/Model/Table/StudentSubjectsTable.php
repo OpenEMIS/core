@@ -60,7 +60,7 @@ class StudentSubjectsTable extends ControllerActionTable {
         return $buttons;
     }
 
-    public function indexAfterAction(Event $event, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $options = ['type' => 'student'];
         $tabElements = $this->controller->getAcademicTabElements($options);

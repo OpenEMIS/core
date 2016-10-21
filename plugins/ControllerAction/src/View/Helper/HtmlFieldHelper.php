@@ -793,10 +793,22 @@ class HtmlFieldHelper extends Helper {
 		}
 
 		if ($action == 'index' || $action == 'view') {
+
+			// Modified logic
 			// $buttons = $this->_View->get('_buttons');
 			$buttons = $this->_View->get('ControllerAction');
-			$buttons = $buttons['buttons'];
-			$action = $buttons['download']['url'];
+			if (array_key_exists('buttons', $buttons)) { // for CAv3
+				$action = $buttons['buttons']['download']['url'];
+			} else { // for CAv4
+				$action = $buttons['table']->url('download', false);
+			}
+
+			// New logic from master
+			// $buttons = $this->_View->get('ControllerAction');
+			// $buttons = $buttons['buttons'];
+			// $action = $buttons['download']['url'];
+			$request = $this->request;
+			$action = ['action' => $request->action, 'download', $data->{$table->primaryKey()}];
 			$value = $this->link($data->$name, $action);
 		} else if ($action == 'edit') {
 			$this->includes['jasny']['include'] = true;

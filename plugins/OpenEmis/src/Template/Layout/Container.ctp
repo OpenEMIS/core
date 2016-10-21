@@ -26,6 +26,13 @@
 	} else {
 		$ngController = '';
 	}
+
+	// For page where no Breadcrumb
+	if (isset($noBreadcrumb)) {
+		$wrapperClass = 'wrapper no-breadcrumb';
+	} else {
+		$wrapperClass = 'wrapper';
+	}
 ?>
 
 <div class="content-wrapper" <?= $ngController; ?>>
@@ -41,7 +48,7 @@
 		<?php endif ?>
 	</div>
 
-	<div class="wrapper">
+	<div class="<?= $wrapperClass;?>">
 		<div class="wrapper-child">
 			<?= $this->fetch('contentBody') ?>
 		</div>
