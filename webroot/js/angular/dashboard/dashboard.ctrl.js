@@ -102,7 +102,6 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
             rowData: [],
             headerHeight: 38,
             rowHeight: 38,
-            minColWidth: 200,
             enableColResize: true,
             enableSorting: true,
             unSortIcon: true,
@@ -110,7 +109,10 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
             suppressMenuHide: true,
             suppressCellSelection: true,
             suppressMovableColumns: true,
-            rowModelType: 'pagination'
+            rowModelType: 'pagination',
+            onGridSizeChanged: function(e) {
+                this.api.sizeColumnsToFit();
+            }
         };
     }
 
@@ -124,7 +126,6 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
 
         var columnDefs = DashboardSvc.getWorkbenchColumnDefs(model.cols);
         vm.gridOptions[vm.target].api.setColumnDefs(columnDefs);
-        vm.gridOptions[vm.target].api.sizeColumnsToFit();
 
         var limit = 10;
         var dataSource = {

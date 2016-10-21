@@ -996,7 +996,7 @@ class WorkflowBehavior extends Behavior {
 		return $steps;
 	}
 
-	public function setToolbarButtons(ArrayObject $toolbarButtons, array $attr, $action) {
+	private function setToolbarButtons(ArrayObject $toolbarButtons, array $attr, $action) {
 		// Unset edit buttons and add action buttons
 		if ($this->attachWorkflow) {
 			if ($action == 'index') {
