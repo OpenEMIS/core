@@ -319,6 +319,9 @@ class StudentUserTable extends ControllerActionTable
 			$studentEntity = $StudentsTable->get($institutionStudentId);
 			$academicPeriodId = $studentEntity->academic_period_id;
 
+			$params = ['student_id' => $institutionStudentId, 'user_id' => $entity->id];
+			$action = $this->setUrlParams(['action' => 'IndividualPromotion', 'add'], $params);
+
 			// Show Promote button only if the Student Status is Current and academic period is editable
 			if ($studentEntity->student_status_id == $Enrolled && array_key_exists($academicPeriodId, $editableAcademicPeriods)) {
 				// Promote button
@@ -327,13 +330,10 @@ class StudentUserTable extends ControllerActionTable
 				$promoteButton['label'] = '<i class="fa kd-graduate"></i>';
 				$promoteButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
 				$promoteButton['attr']['title'] = __('Promotion');
-				$promoteButton['url']['action'] = 'IndividualPromotion';
-				$promoteButton['url'][0] = 'add';
+				$promoteButton['url'] = $action;
 
 				$toolbarButtons['promote'] = $promoteButton;
 				//End
-
-				// $session->write('Institution.IndividualPromotion.id', $institutionStudentId);
 			}
 		}
     }
