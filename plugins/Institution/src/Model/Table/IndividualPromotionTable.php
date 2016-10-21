@@ -72,12 +72,8 @@ class IndividualPromotionTable extends ControllerActionTable
 
         } else {
             $params = $this->getUrlParams([$this->alias(), 'add'], $hash);
-
-            // student_id and user_id in extra
-            $extra['params'] = $params;
-
-            // url to redirect to StudentUser view
-            $extra['redirect'] = [
+            $extra['params'] = $params; // student_id and user_id in extra
+            $extra['redirect'] = [ // url to redirect to StudentUser view
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'StudentUser',
@@ -85,7 +81,6 @@ class IndividualPromotionTable extends ControllerActionTable
                 '1' => $params['user_id'],
                 'id' => $params['student_id']
             ];
-
             // back/cancel button
             $extra['toolbarButtons']['back']['url'] = $extra['redirect'];
         }
