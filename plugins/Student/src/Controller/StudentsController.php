@@ -14,7 +14,7 @@ class StudentsController extends AppController {
 	public function initialize() {
 		parent::initialize();
 
-		$this->ControllerAction->model('Student.Students');
+		$this->ControllerAction->model('Institution.StudentUser');
 		$this->ControllerAction->models = [
 			'Accounts' 			=> ['className' => 'Student.Accounts', 'actions' => ['view', 'edit']],
 			'Nationalities' 	=> ['className' => 'User.Nationalities'],
@@ -118,12 +118,13 @@ class StudentsController extends AppController {
 			}
 
 			if (!empty($id)) {
-				$entity = $this->Students->get($id);
+				$entity = $this->StudentUser->get($id);
 				$name = $entity->name;
 				$header = $action == 'Results' ? $name . ' - ' . __('Results') : $name . ' - ' . __('Overview');
 				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $id]);
 			}
 		}
+
 		$this->set('contentHeader', $header);
 	}
 
@@ -279,7 +280,7 @@ class StudentsController extends AppController {
 	}
 
 	public function getAcademicTabElements($options = []) {
-		return TableRegistry::get('Student.Students')->getAcademicTabElements($options);
+		return TableRegistry::get('Institution.StudentUser')->getAcademicTabElements($options);
 	}
 
 	public function getFinanceTabElements($options = []) {
