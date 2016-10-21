@@ -91,6 +91,9 @@ class OpenEmisBehavior extends Behavior {
         if ($extra->offsetExists('indexButtons')) {
             $model->controller->set('indexButtons', $extra['indexButtons']);
         }
+        if ($extra['toolbarButtons']->offsetExists('back')) {
+            $model->controller->set('backButton', $extra['toolbarButtons']['back']);
+        }
     }
 
     private function attachEntityInfoToToolBar($extra) {
@@ -348,10 +351,6 @@ class OpenEmisBehavior extends Behavior {
             $indexButtons['remove']['url'] = $model->url($removeUrl);
             $indexButtons['remove']['label'] = '<i class="fa fa-trash"></i>' . __('Delete');
             $indexButtons['remove']['attr'] = $indexAttr;
-        }
-
-        if ($toolbarButtons->offsetExists('back')) {
-            $controller->set('backButton', $toolbarButtons['back']);
         }
 
         $access = $model->AccessControl;

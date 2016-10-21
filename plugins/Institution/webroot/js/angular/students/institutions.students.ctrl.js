@@ -259,6 +259,11 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
                     }
                     )
                     .then(function(response) {
+                        if (response.conditionsCount == 0) {
+                            StudentController.initialLoad = true;
+                        } else {
+                            StudentController.initialLoad = false;
+                        }
                         var studentRecords = response.data;
                         var totalRowCount = response.total;
                         return StudentController.processStudentRecord(studentRecords, params, totalRowCount);
@@ -361,7 +366,6 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
         params.successCallback(StudentController.rowsThisPage, lastRow);
         StudentController.externalDataLoaded = true;
         UtilsSvc.isAppendLoader(false);
-        StudentController.initialLoad = false;
         return studentRecords;
     }
 
@@ -411,6 +415,11 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
 
     function onAddNewStudentClick() {
         StudentController.createNewStudent = true;
+        StudentController.completeDisabled = false;
+        StudentController.selectedStudentData = {};
+        StudentController.selectedStudentData.first_name = '';
+        StudentController.selectedStudentData.last_name = '';
+        StudentController.selectedStudentData.date_of_birth = '';
         angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
             step: "createUser"
         });
@@ -704,13 +713,15 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
         StudentController.addStudentButton = false;
         // Step 1 - Internal search
         if (data.step == 1) {
-            StudentController.reloadInternalDatasource(false);
+            StudentController.postResponse = {};
+            StudentController.reloadInternalDatasource(true);
             StudentController.createNewStudent = false;
             StudentController.externalSearch = false;
             StudentController.step = 'internal_search';
         }
         // Step 2 - External search
         else if (data.step == 2) {
+            StudentController.postResponse = {};
             StudentController.reloadExternalDatasource(true);
             StudentController.createNewStudent = false;
             StudentController.externalSearch = true;
