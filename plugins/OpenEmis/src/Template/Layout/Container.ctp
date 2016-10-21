@@ -41,7 +41,7 @@
 		<?php endif ?>
 	</div>
 
-	<div class="wrapper">
+	<div class="wrapper no-breadcrumb">
 		<div class="wrapper-child">
 			<?= $this->fetch('contentBody') ?>
 		</div>
