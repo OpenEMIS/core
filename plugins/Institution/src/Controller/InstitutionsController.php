@@ -123,7 +123,7 @@ class InstitutionsController extends AppController
     // End
 
     public function Students($pass = 'index') {
-        if ($pass == 'addExisting') {
+        if ($pass == 'add') {
             $this->set('ngController', 'InstitutionsStudentsCtrl as InstitutionStudentController');
             $externalDataSource = false;
         	$ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
@@ -261,17 +261,11 @@ class InstitutionsController extends AppController
 				break;
             case 'Students':
             	if (isset($this->request->pass[0])) {
-            		if ($this->request->param('pass')[0] == 'addExisting') {
+            		if ($this->request->param('pass')[0] == 'add') {
 	                    $this->Angular->addModules([
 	                        'alert.svc',
 	                        'institutions.students.ctrl',
 	                        'institutions.students.svc'
-	                    ]);
-	                } elseif ($this->request->param('pass')[0] == 'addExternal') {
-	                	$this->Angular->addModules([
-	                        'alert.svc',
-	                        'institutions.external_students.ctrl',
-	                        'institutions.external_students.svc'
 	                    ]);
 	                }
             	}
