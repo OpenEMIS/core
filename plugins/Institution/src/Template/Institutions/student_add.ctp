@@ -48,12 +48,16 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
     </div>
     <div class="actions top">
         <button
-            ng-if="(InstitutionStudentController.rowsThisPage.length===0 && !InstitutionStudentController.initialLoad) && InstitutionStudentController.step!='create_user' && ((InstitutionStudentController.step=='external_search' && InstitutionStudentController.externalDataLoaded) || (InstitutionStudentController.step=='internal_search' && !InstitutionStudentController.hasExternalDataSource))"
+            ng-if="((!InstitutionStudentController.initialLoad && !InstitutionStudentController.hasExternalDataSource)
+            || (!InstitutionStudentController.initialLoad && InstitutionStudentController.step == 'external_search')
+            ) && (InstitutionStudentController.step == 'external_search' || InstitutionStudentController.step == 'internal_search')"
+            ng-disabled="InstitutionStudentController.selectedStudent"
             ng-click="InstitutionStudentController.onAddNewStudentClick()"
             type="button" class="btn btn-default"><?= __('Create New Student') ?>
         </button>
         <button
-            type="button" class="btn btn-default" ng-click="InstitutionStudentController.onExternalSearchClick()" ng-if="(InstitutionStudentController.hasExternalDataSource && InstitutionStudentController.showExternalSearchButton && InstitutionStudentController.step=='internal_search')" ng-disabled="InstitutionStudentController.selectedStudent"><?= __('External Search') ?>
+            type="button" class="btn btn-default" ng-click="InstitutionStudentController.onExternalSearchClick()"
+            ng-if="(!InstitutionStudentController.initialLoad && InstitutionStudentController.hasExternalDataSource && InstitutionStudentController.showExternalSearchButton && InstitutionStudentController.step=='internal_search')" ng-disabled="InstitutionStudentController.selectedStudent"><?= __('External Search') ?>
         </button>
         <button
             ng-if="InstitutionStudentController.rowsThisPage.length > 0 && (InstitutionStudentController.step=='internal_search' || InstitutionStudentController.step=='external_search')"

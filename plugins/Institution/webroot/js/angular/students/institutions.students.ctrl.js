@@ -2,9 +2,9 @@ angular
     .module('institutions.students.ctrl', ['utils.svc', 'alert.svc', 'institutions.students.svc'])
     .controller('InstitutionsStudentsCtrl', InstitutionStudentController);
 
-InstitutionStudentController.$inject = ['$q', '$scope', '$window', '$filter', 'UtilsSvc', 'AlertSvc', 'InstitutionsStudentsSvc'];
+InstitutionStudentController.$inject = ['$location', '$q', '$scope', '$window', '$filter', 'UtilsSvc', 'AlertSvc', 'InstitutionsStudentsSvc'];
 
-function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, AlertSvc, InstitutionsStudentsSvc) {
+function InstitutionStudentController($location, $q, $scope, $window, $filter, UtilsSvc, AlertSvc, InstitutionsStudentsSvc) {
     // ag-grid vars
 
 
@@ -137,6 +137,12 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
             console.log(error);
             UtilsSvc.isAppendLoader(false);
             AlertSvc.warning($scope, error);
+        })
+        .finally(function(result) {
+            UtilsSvc.isAppendLoader(false);
+            if ($location.search().student_added) {
+                AlertSvc.success($scope, 'The record has been added successfully.');
+            }
         });
 
     });
@@ -172,10 +178,6 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
             rowData: [],
             rowHeight: 38,
             rowModelType: 'pagination',
-            onGridReady: function() {
-                StudentController.reloadInternalDatasource(false);
-                UtilsSvc.isAppendLoader(false);
-            },
             angularCompileRows: true
         };
 
@@ -231,6 +233,7 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
         StudentController.internalFilterLastName = '';
         StudentController.internalFilterIdentityNumber = '';
         StudentController.internalFilterDateOfBirth = '';
+        StudentController.initialLoad = true;
         StudentController.createNewInternalDatasource(StudentController.internalGridOptions);
     }
 
@@ -284,6 +287,7 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
 
     function createNewExternalDatasource(gridObj, withData) {
         StudentController.externalDataLoaded = false;
+        StudentController.initialLoad = true;
         var dataSource = {
             pageSize: pageSize,
             getRows: function (params) {
@@ -306,6 +310,7 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
                     .then(function(response) {
                         var studentRecords = response.data;
                         var totalRowCount = response.total;
+                        StudentController.initialLoad = false;
                         return StudentController.processStudentRecord(studentRecords, params, totalRowCount);
                     }, function(error) {
                         console.log(error);
@@ -391,7 +396,7 @@ function InstitutionStudentController($q, $scope, $window, $filter, UtilsSvc, Al
             UtilsSvc.isAppendLoader(false);
             if (postResponse.data.error.length === 0) {
                 AlertSvc.success($scope, 'The record has been added successfully.');
-                $window.location.href = 'index'
+                $window.location.href = 'add?student_added=true';
             } else {
                 if (userRecord.hasOwnProperty('institution_students')) {
                     if (userRecord.institution_students.length > 0) {

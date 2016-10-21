@@ -461,11 +461,6 @@ class StudentsTable extends ControllerActionTable
         ];
         $buttons = $extra['indexButtons'];
 
-        // changing the default add url to addExisting
-        if ($extra['toolbarButtons']->offsetExists('add')) {
-            $extra['toolbarButtons']['add']['url'][0] = 'addExisting';
-        }
-
         $extraButtons = [
             'graduate' => [
                 'permission' => ['Institutions', 'Promotion', 'add'],
