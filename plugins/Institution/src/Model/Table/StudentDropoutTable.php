@@ -357,7 +357,7 @@ class StudentDropoutTable extends AppTable {
 		$isAdmin = $session->read('Auth.User.super_admin');
 		$userId = $session->read('Auth.User.id');
 
-		$where = [];
+		$where = [$this->aliasField('status') => self::NEW_REQUEST];
 
 		if (!$isAdmin) {
 			if ($AccessControl->check(['Institutions', $this->alias(), 'edit'])) {
