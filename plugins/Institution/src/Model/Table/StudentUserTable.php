@@ -268,7 +268,10 @@ class StudentUserTable extends ControllerActionTable
 
 			$institutionId = $studentEntity->institution_id;
 			$studentId = $studentEntity->student_id;
-			$session->write($TransferRequests->registryAlias().'.id', $institutionStudentId);
+
+			$params = ['student_id' => $institutionStudentId, 'user_id' => $entity->id];
+			$action = $this->setUrlParams(['action' => 'TransferRequests', 'add'], $params);
+
 			$checkIfCanTransfer = $StudentsTable->checkIfCanTransfer($studentEntity, $institutionId);
 
 			if ($checkIfCanTransfer) {
@@ -277,8 +280,7 @@ class StudentUserTable extends ControllerActionTable
 				$transferButton['label'] = '<i class="fa kd-transfer"></i>';
 				$transferButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
 				$transferButton['attr']['title'] = __('Transfer');
-				$transferButton['url']['action'] = 'TransferRequests';
-				$transferButton['url'][0] = 'add';
+				$transferButton['url'] = $action;
 
 				// check if there is an existing transfer request
 				$transferRequest = $TransferRequests
@@ -533,7 +535,7 @@ class StudentUserTable extends ControllerActionTable
     		'InstitutionStudents' => function($q) {
     			return $q->where(['InstitutionStudents.student_status_id' => 1]);
     		},
-    		'InstitutionStudents.Institutions'
+    		'InstitutionStudents.Institutions.Areas'
     	]);
     	return $query;
     }
