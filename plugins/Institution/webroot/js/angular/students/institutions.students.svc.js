@@ -164,6 +164,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                 };
 
                 var params = {};
+                params['super_admin'] = 0;
                 Users.reset();
                 Users
                     .page(pageParams.page)
