@@ -147,27 +147,26 @@ class TransferRequestsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $this->field('institution_class_id', ['visible' => false]);
         if ($this->action == 'index') {
             $this->toggle('add', false);
-        }
-
-        $this->field('institution_class_id', ['visible' => false]);
-
-        $hash = $this->request->query('hash');
-        if (empty($hash)) { // if value is empty, redirect back to the list page
-            $event->stopPropagation();
-            return $this->controller->redirect(['action' => 'Students', 'index']);
         } else {
-            $params = $this->getUrlParams([$this->alias(), 'add'], $hash);
-            // back button direct to student user view
-            $backBtn = $extra['toolbarButtons']['back'];
-            $backBtn['url']['action'] = 'StudentUser';
-            $backBtn['url'][0] = 'view';
-            $backBtn['url'][1] = $params['user_id'];
-            $backBtn['url']['id'] = $params['student_id'];
-            $extra['toolbarButtons']['back'] = $backBtn;
+            $hash = $this->request->query('hash');
+            if (empty($hash)) { // if value is empty, redirect back to the list page
+                $event->stopPropagation();
+                return $this->controller->redirect(['action' => 'Students', 'index']);
+            } else {
+                $params = $this->getUrlParams([$this->alias(), 'add'], $hash);
+                // back button direct to student user view
+                $backBtn = $extra['toolbarButtons']['back'];
+                $backBtn['url']['action'] = 'StudentUser';
+                $backBtn['url'][0] = 'view';
+                $backBtn['url'][1] = $params['user_id'];
+                $backBtn['url']['id'] = $params['student_id'];
+                $extra['toolbarButtons']['back'] = $backBtn;
 
-            $extra['params'] = $params;
+                $extra['params'] = $params;
+            }
         }
     }
 
@@ -302,7 +301,6 @@ class TransferRequestsTable extends ControllerActionTable
         $this->field('comment');
         $this->field('created', ['visible' => false]);
         $this->field('student_transfer_reason_id', ['visible' => true]);
-        $this->Session->delete($this->registryAlias().'.id');
 
         // back button
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
@@ -369,7 +367,7 @@ class TransferRequestsTable extends ControllerActionTable
     {
         if ($entity->type != self::TRANSFER) {
             $event->stopPropagation();
-            return $this->controller->redirect(['controller' => 'Institutions', 'action' => 'Students', 'plugin'=>'Institution']);
+            return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students']);
         }
         $this->addSections();
         $this->field('transfer_status');
