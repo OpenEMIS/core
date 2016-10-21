@@ -13,6 +13,7 @@ use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\UserTrait;
 use Cake\I18n\Time;
+use Cake\Network\Session;
 
 class UsersTable extends AppTable {
 	use OptionsTrait;
@@ -66,12 +67,41 @@ class UsersTable extends AppTable {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$newEvent = [
-			'Model.Auth.createAuthorisedUser' => 'createAuthorisedUser'
+			'Model.Auth.createAuthorisedUser' => 'createAuthorisedUser',
+			'Model.Users.afterLogin' => 'afterLogin',
+			'Model.Users.updateLoginLanguage' => 'updateLoginLanguage'
 		];
 
 		$events = array_merge($events, $newEvent);
 		return $events;
 	}
+
+	public function updateLoginLanguage(Event $event, $user, $language)
+	{
+		if ($user['preferred_language'] != $language) {
+			$user = $this->get($user['id']);
+			$user->preferred_language = $language;
+			$this->save($user);
+		}
+	}
+
+	public function afterLogin(Event $event, Entity $userEntity)
+    {
+    	$userEntity->last_login = new Time();
+    	$controller = $event->subject();
+    	$SSO = $controller->SSO;
+    	$Cookie = $controller->Localization->getCookie();
+    	$session = $controller->request->session();
+    	if ($session->read('System.language_menu') && $SSO->getAuthenticationType() != 'Local') {
+    		if (empty($userEntity->preferred_language)) {
+    			$userEntity->preferred_language = 'en';
+    		}
+    		$Cookie->write('System.language', $userEntity->preferred_language);
+    	} else {
+    		$userEntity->preferred_language = $session->read('System.language');
+    	}
+    	$this->save($userEntity);
+    }
 
 	public function createAuthorisedUser(Event $event, $userName, array $userInfo) {
 		$openemisNo = $this->getUniqueOpenemisId();
@@ -227,7 +257,7 @@ class UsersTable extends AppTable {
         $this->controller->set('tabElements', $tabElements);
 	}
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		$this->ControllerAction->field('first_name', ['visible' => false]);
 		$this->ControllerAction->field('middle_name', ['visible' => false]);
 		$this->ControllerAction->field('third_name', ['visible' => false]);

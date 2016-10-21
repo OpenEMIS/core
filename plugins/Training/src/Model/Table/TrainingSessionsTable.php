@@ -2,12 +2,13 @@
 namespace Training\Model\Table;
 
 use ArrayObject;
-use App\Model\Table\AppTable;
+
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
+use Cake\Datasource\ResultSetInterface;
 use Cake\Event\Event;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\HtmlTrait;
@@ -15,18 +16,26 @@ use Cake\Collection\Collection;
 use Cake\Routing\Router;
 use Import\Model\Traits\ImportExcelTrait;
 
-class TrainingSessionsTable extends AppTable {
+use App\Model\Table\ControllerActionTable;
+
+class TrainingSessionsTable extends ControllerActionTable
+{
 	use OptionsTrait;
 	use HtmlTrait;
 	use ImportExcelTrait;
 
-	private $_contain = ['Trainers.Users', 'Trainees'];
+	// Workflow Steps - category
+	const TO_DO = 1;
+	const IN_PROGRESS = 2;
+	const DONE = 3;
 
-	public function initialize(array $config) {
+	public function initialize(array $config)
+	{
 		parent::initialize($config);
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('Courses', ['className' => 'Training.TrainingCourses', 'foreignKey' => 'training_course_id']);
 		$this->belongsTo('TrainingProviders', ['className' => 'Training.TrainingProviders', 'foreignKey' => 'training_provider_id']);
+		$this->belongsTo('Assignees', ['className' => 'User.Users']);
 		// revert back the association for Trainers to hasMany to handle saving of External Trainers
 		$this->hasMany('Trainers', ['className' => 'Training.TrainingSessionTrainers', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('SessionResults', ['className' => 'Training.TrainingSessionResults', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -39,9 +48,13 @@ class TrainingSessionsTable extends AppTable {
 			'through' => 'Training.TrainingSessionsTrainees',
 			'dependent' => false
 		]);
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Dashboard' => ['index']
+        ]);
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator)
+	{
 		$validator = parent::validationDefault($validator);
 
 		return $validator
@@ -56,7 +69,8 @@ class TrainingSessionsTable extends AppTable {
 			]);
 	}
 
-	public function onGetTraineeTableElement(Event $event, $action, $entity, $attr, $options=[]) {
+	public function onGetTraineeTableElement(Event $event, $action, $entity, $attr, $options=[])
+	{
 		$tableHeaders = [__('OpenEMIS No'), __('Name')];
 		$tableCells = [];
 		$alias = $this->alias();
@@ -124,35 +138,41 @@ class TrainingSessionsTable extends AppTable {
 		return $event->subject()->renderElement('Training.Sessions/' . $key, ['attr' => $attr]);
 	}
 
-	public function beforeAction(Event $event) {
+	public function beforeAction(Event $event, ArrayObject $extra)
+	{
 		// Type / Visible
 		$visible = ['index' => false, 'view' => true, 'edit' => true, 'add' => true];
-		$this->ControllerAction->field('end_date', ['visible' => $visible]);
-		$this->ControllerAction->field('comment', ['visible' => $visible]);
+		$this->field('end_date', ['visible' => $visible]);
+		$this->field('comment', ['visible' => $visible]);
 
 		$trainerTypeOptions = $this->getSelectOptions($this->aliasField('trainer_types'));
 		$this->controller->set('trainerTypeOptions', $trainerTypeOptions);
 	}
 
-	public function indexBeforeAction(Event $event) {
-		$this->ControllerAction->setFieldOrder([
+	public function indexBeforeAction(Event $event, ArrayObject $extra)
+	{
+		$this->setFieldOrder([
 			'code', 'name', 'start_date', 'end_date', 'training_course_id', 'training_provider_id'
 		]);
 	}
 
-	public function viewEditBeforeQuery(Event $event, Query $query) {
-		$query->contain($this->_contain);
+	public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	{
+		$query->contain(['Trainers.Users', 'Trainees']);
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+	{
 		$this->setupFields($event, $entity);
 	}
 
-	public function addEditAfterAction(Event $event, Entity $entity) {
+	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+	{
 		$this->setupFields($event, $entity);
 	}
 
-	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+	{
 		//Required by patchEntity for associated data
 		// _joinData is required for 'saveStrategy' => 'replace' to work
 		// Trainers and Trainees will not be validated since they are User.Users model and only their id is included so that
@@ -187,7 +207,8 @@ class TrainingSessionsTable extends AppTable {
 		}
 	}
 
-	public function addEditOnChangeCourse(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditOnChangeCourse(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	{
 		$request = $this->request;
 		unset($request->query['course']);
 
@@ -200,7 +221,8 @@ class TrainingSessionsTable extends AppTable {
 		}
 	}
 
-	public function addEditOnAddTrainer(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditOnAddTrainer(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	{
         if (empty($data[$this->alias()]['trainers'])) {
             $data[$this->alias()]['trainers'] = [];
         }
@@ -227,7 +249,8 @@ class TrainingSessionsTable extends AppTable {
 		];
 	}
 
-	public function addEditOnAddTrainee(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditOnAddTrainee(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	{
 		$alias = $this->alias();
 		$key = 'trainees';
 
@@ -254,11 +277,26 @@ class TrainingSessionsTable extends AppTable {
 		];
 	}
 
-	public function editOnInitialize(Event $event, Entity $entity) {
+	public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+	{
 		$this->request->query['course'] = $entity->training_course_id;
 	}
 
-	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+	public function editBeforeAction(Event $event, ArrayObject $extra)
+	{
+		$toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+
+		// $downloadUrl = $toolbarButtons['back']['url'];
+		$downloadUrl = $toolbarButtonsArray['back']['url'];
+		$downloadUrl[0] = 'template';
+		$this->controller->set('downloadOnClick', "javascript:window.location.href='". Router::url($downloadUrl) ."'");
+		$this->controller->set('importOnClick', "$('#reload').val('massAddTrainees').click();$('#file-input-wrapper').trigger('clear.bs.fileinput');");
+
+		$extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+	}
+
+	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+	{
 		$model = $this;
     	$process = function($model, $entity) use ($data) {
     		$errors = $entity->errors();
@@ -283,7 +321,8 @@ class TrainingSessionsTable extends AppTable {
 		return $process;
 	}
 
-	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
+	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action)
+	{
 		if ($action == 'edit') {
 			$includes['autocomplete'] = [
 				'include' => true,
@@ -293,9 +332,10 @@ class TrainingSessionsTable extends AppTable {
 		}
 	}
 
-	public function ajaxTraineeAutocomplete() {
+	public function ajaxTraineeAutocomplete()
+	{
 		$this->controller->autoRender = false;
-		$this->ControllerAction->autoRender = false;
+		$this->autoRender = false;
 
 		if ($this->request->is(['ajax'])) {
 			$term = $this->request->query['term'];
@@ -364,7 +404,8 @@ class TrainingSessionsTable extends AppTable {
 		}
 	}
 
-	public function onUpdateFieldTrainingCourseId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldTrainingCourseId(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'add') {
 			$courseOptions = $this->Training->getCourseList();
 			$courseId = $this->queryString('course', $courseOptions);
@@ -382,7 +423,8 @@ class TrainingSessionsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldTrainingProviderId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldTrainingProviderId(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'add' || $action == 'edit') {
 			$courseId = $request->query('course');
 
@@ -405,7 +447,8 @@ class TrainingSessionsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldTrainers(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldTrainers(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'add' || $action == 'edit') {
 			$Users = $this->Trainers->Users;
 			$trainerOptions = $Users
@@ -424,7 +467,8 @@ class TrainingSessionsTable extends AppTable {
 		return $attr;
 	}
 
-	public function getTrainingSession($id=null) {
+	public function getTrainingSession($id=null)
+	{
 		if (!is_null($id)) {
 			return $results = $this
 				->find()
@@ -440,21 +484,22 @@ class TrainingSessionsTable extends AppTable {
 		return null;
 	}
 
-	public function setupFields(Event $event, Entity $entity) {
+	public function setupFields(Event $event, Entity $entity)
+	{
 		$fieldOrder = [
 			'training_course_id', 'training_provider_id',
 			'code', 'name', 'start_date', 'end_date', 'comment',
 			'trainers'
 		];
 
-		$this->ControllerAction->field('training_course_id', [
+		$this->field('training_course_id', [
 			'type' => 'select'
 		]);
-		$this->ControllerAction->field('training_provider_id', [
+		$this->field('training_provider_id', [
 			'type' => 'select',
 			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
 		]);
-		$this->ControllerAction->field('trainers', [
+		$this->field('trainers', [
 			'type' => 'element',
 			'element' => 'Training.Sessions/trainers',
 			'valueClass' => 'table-full-width'
@@ -470,7 +515,8 @@ class TrainingSessionsTable extends AppTable {
 			$comment .= __('* Recommended Maximum File Size: ' . $this->bytesToReadableFormat($this->MAX_SIZE));
 			$comment .= '<br/>';
 			$comment .= __('* Recommended Maximum Records: ' . $this->MAX_ROWS);
-			$data = $event->subject()->request->data;
+			// $data = $event->subject()->request->data;
+			$data = $this->controller->request->data;
 			if ((is_object($data) && $data->offsetExists('trainees_import_error')) || (is_array($data) && isset($data['trainees_import_error']))) {
 				$entity->errors('trainees_import', $data['trainees_import_error']);
 			}
@@ -479,9 +525,9 @@ class TrainingSessionsTable extends AppTable {
 			 */
 
 			// this is a fake field to make the form render with an "enctype"
-			$this->ControllerAction->field('trainees_fake_field', ['type' => 'binary', 'visible'=>false]);
+			$this->field('trainees_fake_field', ['type' => 'binary', 'visible'=>false]);
 
-			$this->ControllerAction->field('trainees', [
+			$this->field('trainees', [
 				'type' => 'trainee_table',
 				'valueClass' => 'table-full-width',
 				'comment' => $comment
@@ -489,7 +535,7 @@ class TrainingSessionsTable extends AppTable {
 			$fieldOrder[] = 'trainees';
 		}
 
-		$this->ControllerAction->setFieldOrder($fieldOrder);
+		$this->setFieldOrder($fieldOrder);
 	}
 
 
@@ -498,25 +544,18 @@ class TrainingSessionsTable extends AppTable {
 ** Import Functions
 **
 ******************************************************************************************************************/
-	public function implementedEvents() {
+	public function implementedEvents()
+	{
 		$events = parent::implementedEvents();
-		$events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 1];
+		$events['ControllerAction.Model.template'] = 'template';
+		$events['ControllerAction.Model.ajaxTraineeAutocomplete'] = 'ajaxTraineeAutocomplete';
+		// $events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 1];
 		$events['ControllerAction.Model.addEdit.onMassAddTrainees'] = ['callable' => 'addEditOnMassAddTrainees'];
 		return $events;
 	}
 
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		switch ($action) {
-			case 'edit':
-				$downloadUrl = $toolbarButtons['back']['url'];
-				$downloadUrl[0] = 'template';
-				$this->controller->set('downloadOnClick', "javascript:window.location.href='". Router::url($downloadUrl) ."'");
-				$this->controller->set('importOnClick', "$('#reload').val('massAddTrainees').click();$('#file-input-wrapper').trigger('clear.bs.fileinput');");
-				break;
-		}
-	}
-
-	public function template() {
+	public function template()
+	{
 		// prepareDownload() resides in ImportTrait
 		$folder = $this->prepareDownload();
 		// Do not localize file name as certain non-latin characters might cause issue
@@ -541,9 +580,9 @@ class TrainingSessionsTable extends AppTable {
 		die;
 	}
 
-	public function addEditOnMassAddTrainees(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-
-		$request = $event->subject()->request;
+	public function addEditOnMassAddTrainees(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	{
+		$request = $this->controller->request;
 		$model = $this;
 		$alias = $model->alias();
 		$key = 'trainees';
@@ -606,7 +645,6 @@ class TrainingSessionsTable extends AppTable {
 		if (!empty($error)) {
 			$data['trainees_import_error'] = $error;
 		} else {
-
 			$controller = $model->controller;
 			$controller->loadComponent('PhpExcel');
 			$columns = ['trainees_import'];
@@ -703,4 +741,64 @@ class TrainingSessionsTable extends AppTable {
 ** End Import Functions
 ******************************************************************************************************************/
 
+	public function findWorkbench(Query $query, array $options)
+	{
+		$controller = $options['_controller'];
+		$session = $controller->request->session();
+
+		$userId = $session->read('Auth.User.id');
+		$Statuses = $this->Statuses;
+		$doneStatus = self::DONE;
+
+		$query
+			->select([
+				$this->aliasField('id'),
+				$this->aliasField('status_id'),
+				$this->aliasField('code'),
+				$this->aliasField('name'),
+				$this->aliasField('modified'),
+				$this->aliasField('created'),
+				$this->Statuses->aliasField('name'),
+				$this->CreatedUser->aliasField('openemis_no'),
+				$this->CreatedUser->aliasField('first_name'),
+				$this->CreatedUser->aliasField('middle_name'),
+				$this->CreatedUser->aliasField('third_name'),
+				$this->CreatedUser->aliasField('last_name'),
+				$this->CreatedUser->aliasField('preferred_name')
+			])
+			->contain([$this->CreatedUser->alias()])
+			->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+				return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
+			})
+			->where([$this->aliasField('assignee_id') => $userId])
+			->order([$this->aliasField('created') => 'DESC'])
+			->formatResults(function (ResultSetInterface $results) {
+
+				return $results->map(function ($row) {
+					$url = [
+						'plugin' => 'Training',
+						'controller' => 'Trainings',
+						'action' => 'Sessions',
+						'view',
+						$row->id
+					];
+
+					if (is_null($row->modified)) {
+						$receivedDate = $this->formatDate($row->created);
+					} else {
+						$receivedDate = $this->formatDate($row->modified);
+					}
+
+					$row['url'] = $url;
+	    			$row['status'] = $row->_matchingData['Statuses']->name;
+	    			$row['request_title'] = $row->code_name;
+	    			$row['received_date'] = $receivedDate;
+	    			$row['requester'] = $row->created_user->name_with_id;
+
+					return $row;
+				});
+			});
+		
+		return $query;
+	}
 }
