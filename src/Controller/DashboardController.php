@@ -36,6 +36,7 @@ class DashboardController extends AppController {
 
 	public function index() {
 		$this->set('ngController', 'DashboardCtrl as DashboardController');
+		$this->set('noBreadcrumb', true);
 	}
 
 	private function attachAngularModules() {
