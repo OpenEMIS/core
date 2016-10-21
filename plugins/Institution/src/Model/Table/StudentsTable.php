@@ -616,6 +616,7 @@ class StudentsTable extends ControllerActionTable
         $this->field('photo_content', ['type' => 'image', 'order' => 0]);
         $this->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
         $this->fields['student_id']['order'] = 10;
+        $extra['toolbarButtons']['back']['url']['action'] = 'StudentProgrammes';
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
@@ -853,88 +854,13 @@ class StudentsTable extends ControllerActionTable
         }
     }
 
-    // public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
- //    {
-    //     $AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
-    //     $studentData = $data['Students'];
-    //     $studentExist = 0;
-    //     $studentId = $entity->student_id;
-
-    //     if (!empty ($studentId)) {
-    //         $StudentStatusesTable = $this->StudentStatuses;
-    //         $pendingAdmissionCode = $StudentStatusesTable->PENDING_ADMISSION;
-    //         if (!empty($entity->education_grade_id)) {
-    //             $educationSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($entity->education_grade_id);
-    //         } else {
-    //             $educationSystemId = '';
-    //         }
-    //         // Check if the student that is pass over is a pending admission student
-    //         if ($pendingAdmissionCode == $studentData['student_status_id']) {
-    //             // validation is handled by $this (institution_student), no need to add any more validation - except checking if there is already a pending admission
-
-    //             // Check if the student is a new record in the admission table, if the record exist as an approved record or rejected record, that record should
-    //             // be retained for auditing purposes as the student may be approved in the first place, then remove from the institution for some reason, then added back
-
-    //             $studentExist = $AdmissionTable->find()
-    //                 ->where([
-    //                         $AdmissionTable->aliasField('status') => 0,
-    //                         $AdmissionTable->aliasField('student_id') => $studentId,
-    //                         $AdmissionTable->aliasField('institution_id') => $studentData['institution_id'],
-    //                         $AdmissionTable->aliasField('academic_period_id') => $studentData['academic_period_id'],
-    //                         $AdmissionTable->aliasField('education_grade_id') => $studentData['education_grade_id'],
-    //                         $AdmissionTable->aliasField('type') => 1
-    //                     ])
-    //                 ->count();
-    //             // Check if the student is already added to the student admission table
-    //             if ($studentExist == 0) {
-    //                 $process = function ($model, $entity) use ($studentData, $AdmissionTable, $studentId) {
-    //                     $admissionStatus = 1;
-    //                     $entityData = [
-    //                         'start_date' => $studentData['start_date'],
-    //                         'end_date' => $studentData['end_date'],
-    //                         'student_id' => $studentId,
-    //                         'status' => 0,
-    //                         'institution_id' => $studentData['institution_id'],
-    //                         'academic_period_id' => $studentData['academic_period_id'],
-    //                         'education_grade_id' => $studentData['education_grade_id'],
-    //                         'institution_class_id' => $studentData['class'],
-    //                         'previous_institution_id' => 0,
-    //                         'student_transfer_reason_id' => 0,
-    //                         'type' => $admissionStatus,
-    //                     ];
-
-    //                     $admissionEntity = $AdmissionTable->newEntity($entityData);
-    //                     if ( $AdmissionTable->save($admissionEntity) ) {
-    //                         return true;
-    //                     } else {
-    //                         $AdmissionTable->log($admissionEntity->errors(), 'debug');
-    //                         return false;
-    //                     }
-    //                 };
-    //                 return $process;
-    //             } else {
-    //                 $process = function ($model, $entity){
-    //                     return false;
-    //                 };
-    //                     $this->Alert->error('StudentAdmission.existsInRecord');
-    //                     return $process;
-    //             }
-    //         }
-    //     }
-    // }
-
     // Start PHPOE-1897
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        $studentId = $this->get($entity->id)->student_id;
-        $institutionId = $entity->institution_id;
         if (isset($buttons['view'])) {
             $url = $this->url('view');
-            $url['action'] = 'StudentUser';
-            $url[1] = $entity['user']['id'];
-            $url['id'] = $entity->id;
-            $buttons['view']['url'] = $url;
+            $buttons['view']['url'] = array_merge($url, ['action' => 'StudentUser', 'id' => $entity->id, $entity->user->id]);
         }
 
         // Remove in POCOR-3010
