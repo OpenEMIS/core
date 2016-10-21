@@ -281,6 +281,15 @@ class AppTable extends Table {
 		return __($this->getFieldLabel($module, $col, $language));
 	}
 
+    public function getButtonAttr() {
+        return [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+    }
+
 	// Event: 'ControllerAction.Model.onInitializeButtons'
 	public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel, ArrayObject $extra) {
 		// needs clean up
@@ -290,12 +299,7 @@ class AppTable extends Table {
 		$toolbarButtons = new ArrayObject([]);
 		$indexButtons = new ArrayObject([]);
 
-		$toolbarAttr = [
-			'class' => 'btn btn-xs btn-default',
-			'data-toggle' => 'tooltip',
-			'data-placement' => 'bottom',
-			'escape' => false
-		];
+		$toolbarAttr = $this->getButtonAttr();
 		$indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
 
 		// Set for roles belonging to the controller
