@@ -538,7 +538,7 @@ class InstitutionPositionsTable extends ControllerActionTable {
 
 					$row['url'] = $url;
 	    			$row['status'] = $row->_matchingData['Statuses']->name;
-	    			$row['request_title'] = $row->staff_position_grade->name.' '.__('with').' '.$row->staff_position_grade->name;
+	    			$row['request_title'] = $row->staff_position_title->name.' '.__('with').' '.$row->staff_position_grade->name;
 	    			$row['institution'] = $row->institution->code_name;
 	    			$row['received_date'] = $receivedDate;
 	    			$row['requester'] = $row->created_user->name_with_id;
