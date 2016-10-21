@@ -140,6 +140,9 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.delete.onInitialize'		=> 'deleteOnInitialize',
 		// public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {}
 
+		'ControllerAction.Model.delete.afterAction'			=> 'deleteAfterAction',
+		// public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra) {}
+
 		'ControllerAction.Model.onGetConvertOptions'=> 'onGetConvertOptions',
 		// public function onGetConvertOptions(Event $event, Entity $entity, Query $query) {}
 
