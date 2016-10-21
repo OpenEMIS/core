@@ -134,6 +134,7 @@ class StudentUserTable extends ControllerActionTable
 				'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
 				'on' => 'create'
 			])
+			->requirePresence('start_date', 'create')
 			->add('education_grade_id', [
 			])
 			->add('academic_period_id', [

@@ -719,6 +719,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         // Step 1 - Internal search
         if (data.step == 1) {
             StudentController.postResponse = {};
+            StudentController.educationGradeOptions.selectedOption = '';
+            StudentController.classOptions.selectedOption = '';
             StudentController.reloadInternalDatasource(true);
             StudentController.createNewStudent = false;
             StudentController.externalSearch = false;
@@ -727,6 +729,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         // Step 2 - External search
         else if (data.step == 2) {
             StudentController.postResponse = {};
+            StudentController.educationGradeOptions.selectedOption = '';
+            StudentController.classOptions.selectedOption = '';
             StudentController.reloadExternalDatasource(true);
             StudentController.createNewStudent = false;
             StudentController.externalSearch = true;
