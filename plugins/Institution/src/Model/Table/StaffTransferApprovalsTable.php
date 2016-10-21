@@ -481,7 +481,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 					}
 
 					$row['url'] = $url;
-	    			$row['status'] = '<i class="fa fa-minus"></i>';
+	    			$row['status'] = __('Pending For Approval');
 	    			$row['request_title'] = __('Transfer of staff').' '.$row->user->name_with_id.' '.__('to').' '.$row->institution->code_name;
 	    			$row['institution'] = $row->previous_institution->code_name;
 	    			$row['received_date'] = $receivedDate;

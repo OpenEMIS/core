@@ -6,7 +6,7 @@ DashboardSvc.$inject = ['$q', '$filter', 'KdOrmSvc'];
 
 function DashboardSvc($q, $filter, KdOrmSvc) {
     const workbenchItemTypes = {
-        FIXED: ['request_title', 'institution', 'received_date'],
+        FIXED: ['status', 'request_title', 'institution', 'received_date'],
         SCHOOL_BASED: ['status', 'request_title', 'institution', 'received_date'],
         NON_SCHOOL_BASED: ['status', 'request_title', 'received_date']
     };
