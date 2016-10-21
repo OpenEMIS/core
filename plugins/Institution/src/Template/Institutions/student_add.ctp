@@ -69,7 +69,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
         <button type="button" class="btn btn-default btn-next"
             ng-model="InstitutionStudentController.selectedStudent"
             ng-disabled="InstitutionStudentController.completeDisabled"
-            ng-show="InstitutionStudentController.step=='add_student' || InstitutionStudentController.step=='create_user'"
+            ng-show="(InstitutionStudentController.step=='add_student' || InstitutionStudentController.step=='create_user')"
             data-last="Complete">
             <?= __('Next') ?>
         </button>
