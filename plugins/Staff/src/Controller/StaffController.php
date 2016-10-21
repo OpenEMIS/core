@@ -29,7 +29,6 @@ class StaffController extends AppController {
 			'Salaries'			=> ['className' => 'Staff.Salaries'],
 			'History'			=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 			'ImportStaff' 		=> ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
-			'TrainingNeeds'		=> ['className' => 'Staff.TrainingNeeds'],
 			'TrainingResults'	=> ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
 			'Achievements'		=> ['className' => 'Staff.Achievements'],
 
@@ -67,6 +66,7 @@ class StaffController extends AppController {
     public function Comments()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
     public function Identities() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']); }
     public function Awards() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
+    public function TrainingNeeds() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.TrainingNeeds']); }
 	// End
 
 	public function beforeFilter(Event $event) {
