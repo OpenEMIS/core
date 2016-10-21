@@ -60,8 +60,11 @@ class AcademicPeriodsTable extends AppTable {
         $this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('Examinations', ['className' => 'Examination.Examinations', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentreStudents', ['className' => 'Examination.ExaminationCentreStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
-
         $this->addBehavior('Tree');
+
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Students' => ['index']
+        ]);
     }
 
     public function validationDefault(Validator $validator) {
@@ -405,6 +408,15 @@ class AcademicPeriodsTable extends AppTable {
         }
 
         return $list;
+    }
+
+    public function findSchoolAcademicPeriod(Query $query, array $options)
+    {
+        $query
+            ->find('visible')
+            ->find('editable', ['isEditable' => true])
+            ->find('order')
+            ->where([$this->aliasField('parent_id') . ' <> ' => 0]);
     }
 
     public function getList($params=[]) {
