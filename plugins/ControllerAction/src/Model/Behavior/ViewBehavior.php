@@ -18,7 +18,10 @@ class ViewBehavior extends Behavior {
 		$model = $this->_table;
 
 		$event = $model->dispatchEvent('ControllerAction.Model.view.beforeAction', [$extra], $this);
-		if ($event->isStopped()) { return $event->result; }
+		if ($event->isStopped()) {
+			$mainEvent->stopPropagation();
+			return $event->result;
+		}
 		if ($event->result instanceof Table) {
 			$model = $event->result;
 		}
@@ -53,7 +56,10 @@ class ViewBehavior extends Behavior {
 		}
 
 		$event = $model->dispatchEvent('ControllerAction.Model.view.afterAction', [$entity, $extra], $this);
-		if ($event->isStopped()) { return $event->result; }
+		if ($event->isStopped()) {
+			$mainEvent->stopPropagation();
+			return $event->result;
+		}
 
 		if (!empty($entity)) {
 			$model->Session->write($sessionKey, $id);

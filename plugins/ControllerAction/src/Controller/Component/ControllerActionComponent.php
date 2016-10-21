@@ -14,6 +14,7 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
 ControllerActionComponent - Current Version 3.1.22
+3.1.23 (Malcolm) - For 'ControllerAction.Model.index.beforeAction' removed $query from parameters and added it to $settings['query']
 3.1.22 (Jeff) - Fixed a bug that caused out of memory when performing a delete on Restrict Delete strategy
 3.1.21 (Zack) - Amended restrict delete page and remove (event - ControllerAction.Model.onBeforeRestrictDelete). To use (event - deleteOnInitialize) instead.
 3.1.20 (Malcolm) - Added (deleteStrategy type - 'restrict') and (event - ControllerAction.Model.onBeforeRestrictDelete)
@@ -852,7 +853,8 @@ class ControllerActionComponent extends Component {
         $query = $model->find();
 
         $this->debug(__METHOD__, ': Event -> ControllerAction.Model.index.beforeAction');
-        $event = new Event('ControllerAction.Model.index.beforeAction', $this, [$query, $settings]);
+        $settings['query'] = $query;
+        $event = new Event('ControllerAction.Model.index.beforeAction', $this, [$settings]);
         $event = $model->eventManager()->dispatch($event);
         if ($event->isStopped()) { return $event->result; }
         if ($event->result) {
@@ -1842,7 +1844,7 @@ class ControllerActionComponent extends Component {
 
     private function getOrderValue($model, $field, $insert) {
         if (!array_key_exists($field, $model->fields)) {
-            Log::write('Attempted to add ' . $insert . ' invalid field: ' . $field);
+            Log::write('debug', 'Attempted to add ' . $insert . ' invalid field: ' . $field);
             return false;
         }
         $order = 0;
