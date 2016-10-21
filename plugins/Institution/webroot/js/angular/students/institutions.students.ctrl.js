@@ -141,7 +141,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         .finally(function(result) {
             UtilsSvc.isAppendLoader(false);
             if ($location.search().student_added) {
-                AlertSvc.success($scope, 'The record has been added successfully.');
+                AlertSvc.success($scope, 'The student is added to the Pending Admission list successfully.');
             }
         });
 
@@ -395,7 +395,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.postResponse = postResponse.data;
             UtilsSvc.isAppendLoader(false);
             if (postResponse.data.error.length === 0) {
-                AlertSvc.success($scope, 'The record has been added successfully.');
                 $window.location.href = 'add?student_added=true';
             } else {
                 if (userRecord.hasOwnProperty('institution_students')) {
@@ -718,9 +717,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.addStudentButton = false;
         // Step 1 - Internal search
         if (data.step == 1) {
-            StudentController.postResponse = {};
             StudentController.educationGradeOptions.selectedOption = '';
             StudentController.classOptions.selectedOption = '';
+            delete StudentController.postResponse;
             StudentController.reloadInternalDatasource(true);
             StudentController.createNewStudent = false;
             StudentController.externalSearch = false;
@@ -728,9 +727,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
         // Step 2 - External search
         else if (data.step == 2) {
-            StudentController.postResponse = {};
             StudentController.educationGradeOptions.selectedOption = '';
             StudentController.classOptions.selectedOption = '';
+            delete StudentController.postResponse;
             StudentController.reloadExternalDatasource(true);
             StudentController.createNewStudent = false;
             StudentController.externalSearch = true;
