@@ -93,6 +93,7 @@ Router::scope('/restful', [], function ($routes) {
         $routes->extensions(['json', 'xml']);
         $routes->connect('/', ['action' => 'nothing']);
         $routes->connect('/token', ['action' => 'token', '_method' => 'GET']);
+        $routes->connect('/translate', ['action' => 'translate', '_method' => 'GET']);
         $routes->connect('/:model',
             ['action' => 'index', '_method' => 'GET'],
             ['pass' => ['model']]
