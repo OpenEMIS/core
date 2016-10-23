@@ -38,7 +38,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         resetExternalVariable: resetExternalVariable,
         getGenders: getGenders,
         getUniqueOpenEmisId: getUniqueOpenEmisId,
-        formatDateToYMD: formatDateToYMD
+        formatDateReverse: formatDateReverse
     };
 
     var models = {
@@ -180,7 +180,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                                 if (key != 'date_of_birth') {
                                     params[key] = options['conditions'][key] + '_';
                                 } else {
-                                    params[key] = vm.formatDateToYMD(options['conditions'][key]);
+                                    params[key] = vm.formatDateReverse(options['conditions'][key]);
                                 }
                                 conditionsCount++;
                             }
@@ -238,7 +238,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
                     if (options['conditions'][key] !== '') {
                         if (key == 'date_of_birth') {
-                            options['conditions'][key] = vm.formatDateToYMD(options['conditions'][key]);
+                            options['conditions'][key] = vm.formatDateReverse(options['conditions'][key]);
                         }
                         params[key] = options['conditions'][key];
                         conditionsCount++;
@@ -577,7 +577,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         return defer.promise;
     };
 
-    function formatDateToYMD(datetime) {
+    function formatDateReverse(datetime) {
         var dateArr = datetime.split('-');
         return dateArr[2] + '-' + dateArr[1] + '-' + dateArr[0];
     }
