@@ -151,8 +151,7 @@ class ExternalDataSourceBehavior extends Behavior {
     		$configItem['value'] = lcfirst(Inflector::camelize($configItem['value'], ' '));
 
     		$methodName = $configItem['value'].'Validation';
-
-    		if (method_exists($this, $methodName) && !$this->$methodName($data[$this->alias])) {
+    		if (method_exists($this, $methodName) && !$this->$methodName($data['ExternalDataSourceTypeAttributes'])) {
     			$this->_table->Alert->error('ExternalDataSource.emptyFields', ['reset' => true]);;
     			$entity->errors('error', ['There are invalid attributes']);
     		}
@@ -161,7 +160,7 @@ class ExternalDataSourceBehavior extends Behavior {
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$ExternalDataSourceAttributesTable = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
-		if ($data[$this->alias]['value'] != 'None' && $data[$this->alias]['type'] == 'External Data Source') {
+		if ($data[$this->alias]['value'] != 'None' && $data[$this->alias]['type'] == 'External Data Source' && empty($entity->errors())) {
 			$externalDataSourceType = $data[$this->alias]['value'];
 			$ExternalDataSourceAttributesTable->deleteAll(
 				['external_data_source_type' => $externalDataSourceType]
