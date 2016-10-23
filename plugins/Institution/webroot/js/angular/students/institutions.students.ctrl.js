@@ -631,6 +631,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         var newStudentData = studentData;
         newStudentData['academic_period_id'] = academicPeriodId;
         newStudentData['education_grade_id'] = educationGradeId;
+        newStudentData['start_date'] = startDate;
         InstitutionsStudentsSvc.addUser(newStudentData)
         .then(function(user){
             if (user[0].error.length === 0) {
