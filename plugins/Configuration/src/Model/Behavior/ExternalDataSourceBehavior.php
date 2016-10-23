@@ -188,7 +188,7 @@ class ExternalDataSourceBehavior extends Behavior {
 		}
 	}
 
-	public function openemisIdentitiesExternalSource(&$attribute)
+	public function openEMISIdentityExternalSource(&$attribute)
 	{
 		$attribute['token_uri'] = ['label' => 'Token URI', 'type' => 'text'];
 		$attribute['refresh_token'] = ['label' => 'Refresh Token', 'type' => 'textarea'];
@@ -199,9 +199,9 @@ class ExternalDataSourceBehavior extends Behavior {
 		$attribute['record_uri'] = ['label' => 'Record URI', 'type' => 'text'];
 	}
 
-	public function openemisIdentitiesValidation($attributes) {
+	public function openEMISIdentityValidation($attributes) {
     	$attribute = [];
-    	$this->openemisIdentitiesExternalSource($attribute);
+    	$this->openEMISIdentityExternalSource($attribute);
     	foreach ($attribute as $key => $values) {
     		if (!isset($values['required'])) {
     			if (empty($attributes[$key]['value'])) {
