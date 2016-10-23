@@ -18,6 +18,7 @@ class RestfulController extends BaseController
     public function initialize() {
         parent::initialize();
         $this->loadComponent('Csrf');
+        $this->loadComponent('Localization.Localization');
         $this->Auth->config('authenticate', [
             'Form' => [
                 'userModel' => 'User.Users',

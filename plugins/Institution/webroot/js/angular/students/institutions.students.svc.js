@@ -38,7 +38,8 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         resetExternalVariable: resetExternalVariable,
         getGenders: getGenders,
         getUniqueOpenEmisId: getUniqueOpenEmisId,
-        formatDateReverse: formatDateReverse
+        formatDateReverse: formatDateReverse,
+        translate: translate
     };
 
     var models = {
@@ -675,5 +676,9 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         // }, function(error) {
         //     deferred.reject(error);
         // });
+    }
+
+    function translate(text) {
+        return KdOrmSvc.translate(text);
     }
 };

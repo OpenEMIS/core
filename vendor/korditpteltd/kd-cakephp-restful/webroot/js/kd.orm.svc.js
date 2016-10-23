@@ -260,12 +260,27 @@ angular.module('kd.orm.svc', [])
     return {
         base: base,
         controllerAction: controllerAction,
+        translate: translate,
         init: init,
         wildcard: wildcard
     };
 
     function controllerAction(action) {
         query._controllerAction = action;
+    };
+
+    function translate(text) {
+        var action = 'translate';
+        var url = [query._base, query._controller, action].join('/');
+        url += '?text=' + text;
+        var deferred = $q.defer();
+        $http.get(url)
+        .then(function(data) {
+            deferred.resolve(data.data.translated);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
     };
 
     function base(base) {
