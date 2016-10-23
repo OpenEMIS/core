@@ -322,6 +322,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <label for="students-end-date"><?= __('End Date') ?></label>
                     <input ng-model="InstitutionStudentController.endDateFormatted" type="text" disabled="disabled">
                 </div>
+                <div class="section-header"><?= __('Institution Information') ?></div>
                 <div class="input string" ng-show="InstitutionStudentController.completeDisabled">
                     <label><?= __('Institution') ?></label>
                     <input type="string" ng-model="InstitutionStudentController['selectedStudentData']['institution_students'][0]['institution']['code_name']" disabled="disabled">
@@ -338,7 +339,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 </div>
 
                 <div class="input string" ng-show="InstitutionStudentController.completeDisabled">
-                    <label><?= __('Contact Information') ?></label>
+                    <label><?= __('Telephone') ?></label>
                     <input type="string" ng-model="InstitutionStudentController['selectedStudentData']['institution_students'][0]['institution']['telephone']" disabled="disabled">
                 </div>
             </form>
