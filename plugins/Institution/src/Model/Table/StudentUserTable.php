@@ -130,15 +130,33 @@ class StudentUserTable extends ControllerActionTable
 		$BaseUsers = TableRegistry::get('User.Users');
 		$validator = $BaseUsers->setUserValidation($validator, $this);
 		$validator
+            ->allowEmpty('student_name')
+            ->add('student_name', 'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem', [
+                'rule' => ['studentNotEnrolledInAnyInstitutionAndSameEducationSystem', []],
+                'on' => 'create',
+                'last' => true
+            ])
+            ->add('student_name', 'ruleStudentNotCompletedGrade', [
+                'rule' => ['studentNotCompletedGrade', []],
+                'on' => 'create',
+                'last' => true
+            ])
+            ->add('student_name', 'ruleCheckAdmissionAgeWithEducationCycleGrade', [
+                'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
+                'on' => 'create'
+            ])
+            ->allowEmpty('class')
+            ->add('class', 'ruleClassMaxLimit', [
+                'rule' => ['checkInstitutionClassMaxLimit'],
+                'on' => 'create'
+            ])
 			->add('date_of_birth', 'ruleCheckAdmissionAgeWithEducationCycleGrade', [
 				'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
 				'on' => 'create'
 			])
 			->requirePresence('start_date', 'create')
-			->add('education_grade_id', [
-			])
-			->add('academic_period_id', [
-			])
+			->requirePresence('education_grade_id', 'create')
+			->requirePresence('academic_period_id', 'create')
 			->allowEmpty('postal_code')
 			->add('postal_code', 'ruleCustomPostalCode', [
         		'rule' => ['validateCustomPattern', 'postal_code'],
