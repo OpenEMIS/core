@@ -152,10 +152,7 @@ class TransferRequestsTable extends ControllerActionTable
             $this->toggle('add', false);
         } else {
             $hash = $this->request->query('hash');
-            if (empty($hash)) { // if value is empty, redirect back to the list page
-                $event->stopPropagation();
-                return $this->controller->redirect(['action' => 'Students', 'index']);
-            } else {
+            if (!empty($hash)) { // if value is empty, redirect back to the list page
                 $params = $this->getUrlParams([$this->alias(), 'add'], $hash);
                 // back button direct to student user view
                 $backBtn = $extra['toolbarButtons']['back'];
@@ -416,10 +413,12 @@ class TransferRequestsTable extends ControllerActionTable
 
     public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $extra['redirect']['action'] = 'StudentUser';
-        $extra['redirect'][0] = 'view';
-        $extra['redirect'][1] = $entity->student_id;
-        $extra['redirect']['id'] = $extra['params']['student_id'];
+        if ($extra->offsetExists('params')) {
+            $extra['redirect']['action'] = 'StudentUser';
+            $extra['redirect'][0] = 'view';
+            $extra['redirect'][1] = $entity->student_id;
+            $extra['redirect']['id'] = $extra['params']['student_id'];
+        }
     }
 
 

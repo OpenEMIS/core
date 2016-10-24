@@ -134,6 +134,7 @@ class StudentUserTable extends ControllerActionTable
 				'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
 				'on' => 'create'
 			])
+			->requirePresence('start_date', 'create')
 			->add('education_grade_id', [
 			])
 			->add('academic_period_id', [
@@ -185,7 +186,7 @@ class StudentUserTable extends ControllerActionTable
 
 			$isStudentEnrolled = $StudentTable->checkEnrolledInInstitution($studentId, $studentEntity->institution_id); // PHPOE-1897
 			$isAllowedByClass = $this->checkClassPermission($studentId, $userId); // POCOR-3010
-			if (!$isStudentEnrolled || $isAllowedByClass) {
+			if (!$isStudentEnrolled || !$isAllowedByClass) {
 				$this->toggle('edit', false);
 			}
 		}

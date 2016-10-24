@@ -12,6 +12,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 use Cake\Utility\Inflector;
 use Restful\Controller\AppController;
+use Cake\I18n\I18n;
 
 class RestfulController extends AppController
 {
@@ -28,6 +29,7 @@ class RestfulController extends AppController
             'unauthorizedRedirect' => false
         ]);
         $this->Auth->allow('token');
+        $this->Auth->allow('translate');
     }
 
     public function token()
