@@ -48,6 +48,8 @@ class TrainingSessionsTable extends ControllerActionTable
 			'through' => 'Training.TrainingSessionsTrainees',
 			'dependent' => false
 		]);
+
+		$this->setDeleteStrategy('restrict');
 		$this->addBehavior('Restful.RestfulAccessControl', [
         	'Dashboard' => ['index']
         ]);
