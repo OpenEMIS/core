@@ -1,3 +1,7 @@
+v3.6.7
+- The date and time in reports are fixed
+- System allows user to search for Institution by Area in Student Transfer page
+
 v3.6.6
 - System splits the permission to view Salary list page and Salary Details page
 - System now allows user to search accounts from different Identity types in Advanced Search option

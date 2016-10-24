@@ -38,7 +38,6 @@ class InstitutionsController extends AppController
             'StaffBehaviours'   => ['className' => 'Institution.StaffBehaviours'],
 
             'Students'          => ['className' => 'Institution.Students'],
-            'StudentUser'       => ['className' => 'Institution.StudentUser', 'actions' => ['add', 'view', 'edit']],
             'StudentAccount'    => ['className' => 'Institution.StudentAccount', 'actions' => ['view', 'edit']],
             'StudentSurveys'    => ['className' => 'Student.StudentSurveys', 'actions' => ['index', 'view', 'edit']],
             'StudentAbsences'   => ['className' => 'Institution.InstitutionStudentAbsences'],
@@ -50,7 +49,6 @@ class InstitutionsController extends AppController
             'TransferApprovals' => ['className' => 'Institution.TransferApprovals', 'actions' => ['edit', 'view']],
             'StudentDropout'    => ['className' => 'Institution.StudentDropout', 'actions' => ['index', 'edit', 'view']],
             'DropoutRequests'   => ['className' => 'Institution.DropoutRequests', 'actions' => ['add', 'edit', 'remove']],
-            'TransferRequests'  => ['className' => 'Institution.TransferRequests', 'actions' => ['index', 'view', 'add', 'edit', 'remove']],
             'StudentAdmission'  => ['className' => 'Institution.StudentAdmission', 'actions' => ['index', 'edit', 'view', 'search']],
             'Undo'              => ['className' => 'Institution.UndoStudentStatus', 'actions' => ['view', 'add']],
             'ClassStudents'     => ['className' => 'Institution.InstitutionClassStudents', 'actions' => ['excel']],
@@ -75,6 +73,12 @@ class InstitutionsController extends AppController
 
         $this->loadComponent('Institution.InstitutionAccessControl');
         $this->attachAngularModules();
+
+        $controller = $this->name;
+        $accessMap = [
+            "$controller.StudentUser" => "$controller.%s"
+        ];
+        $this->request->addParams(['accessMap' => $accessMap]);
     }
 
     // CAv4
@@ -92,8 +96,12 @@ class InstitutionsController extends AppController
     public function Exams()                 { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminations']); }
     public function UndoExaminationRegistration() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminationsUndoRegistration']); }
     public function ExaminationStudents()   { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminationStudents']); }
-    public function Contacts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionContacts']); }
+    public function Contacts()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionContacts']); }
+    public function StudentUser()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentUser']);
+    }
+    public function TransferRequests()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.TransferRequests']); }
     // public function StaffAbsences() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
+    public function StaffLeave()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffLeave']); }
     // End
 
     // AngularJS
@@ -119,6 +127,22 @@ class InstitutionsController extends AppController
         $this->set('ngController', 'InstitutionsResultsCtrl');
     }
     // End
+
+    public function Students($pass = 'index') {
+        if ($pass == 'add') {
+            $this->set('ngController', 'InstitutionsStudentsCtrl as InstitutionStudentController');
+            $externalDataSource = false;
+        	$ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        	$externalSourceType = $ConfigItemTable->find()->where([$ConfigItemTable->aliasField('code') => 'external_data_source_type'])->first();
+        	if (!empty($externalSourceType) && $externalSourceType['value'] != 'None') {
+        		$externalDataSource = true;
+        	}
+        	$this->set('externalDataSource', $externalDataSource);
+            $this->render('studentAdd');
+        } else {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Students']);
+        }
+    }
 
     public function implementedEvents()
     {
@@ -223,26 +247,37 @@ class InstitutionsController extends AppController
         $this->set('contentHeader', $header);
     }
 
-    private function attachAngularModules()
+	private function attachAngularModules()
     {
-        $action = $this->request->action;
+		$action = $this->request->action;
 
-        switch ($action) {
-            case 'Results':
-                $this->Angular->addModules([
-                    'alert.svc',
-                    'institutions.results.ctrl',
-                    'institutions.results.svc'
-                ]);
+		switch ($action) {
+			case 'Results':
+				$this->Angular->addModules([
+					'alert.svc',
+					'institutions.results.ctrl',
+					'institutions.results.svc'
+				]);
+				break;
+			case 'Surveys':
+				$this->Angular->addModules([
+					'relevancy.rules.ctrl'
+				]);
+				$this->set('ngController', 'RelevancyRulesCtrl as RelevancyRulesController');
+				break;
+            case 'Students':
+            	if (isset($this->request->pass[0])) {
+            		if ($this->request->param('pass')[0] == 'add') {
+	                    $this->Angular->addModules([
+	                        'alert.svc',
+	                        'institutions.students.ctrl',
+	                        'institutions.students.svc'
+	                    ]);
+	                }
+            	}
                 break;
-            case 'Surveys':
-                $this->Angular->addModules([
-                    'relevancy.rules.ctrl'
-                ]);
-                $this->set('ngController', 'RelevancyRulesCtrl as RelevancyRulesController');
-                break;
-        }
-    }
+		}
+	}
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
@@ -401,6 +436,7 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->model->action = $this->request->action;
 
+        $isAcademic = $this->Institutions->get($id)->is_academic;
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $currentPeriod = $AcademicPeriods->getCurrent();
         if (empty($currentPeriod)) {
@@ -410,23 +446,33 @@ class InstitutionsController extends AppController
         // $highChartDatas = ['{"chart":{"type":"column","borderWidth":1},"xAxis":{"title":{"text":"Position Type"},"categories":["Non-Teaching","Teaching"]},"yAxis":{"title":{"text":"Total"}},"title":{"text":"Number Of Staff"},"subtitle":{"text":"For Year 2015-2016"},"series":[{"name":"Male","data":[0,2]},{"name":"Female","data":[0,1]}]}'];
         $highChartDatas = [];
 
-        //Students By Year
-        $params = array(
-            'conditions' => array('institution_id' => $id)
-        );
-        $InstitutionStudents = TableRegistry::get('Institution.Students');
-        $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_year', $params);
+        // only show student charts if institution is academic
+        if ($isAcademic) {
+            $InstitutionStudents = TableRegistry::get('Institution.Students');
+            $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+            $statuses = $StudentStatuses->findCodeList();
 
-        //Students By Grade for current year
-        $params = array(
-            'conditions' => array('institution_id' => $id)
-        );
+            //Students By Year, excludes transferred and dropoout students
+            $params = array(
+                'conditions' => array('institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['DROPOUT']])
+            );
 
-        $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_grade', $params);
+            $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_year', $params);
 
-        //Staffs By Position for current year
+            //Students By Grade for current year, excludes transferred and dropoout students
+            $params = array(
+                'conditions' => array('institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['DROPOUT']])
+            );
+
+            $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_grade', $params);
+        }
+
+        $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+        $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
+
+        //Staffs By Position for current year, only shows assigned staff
         $params = array(
-            'conditions' => array('institution_id' => $id)
+            'conditions' => array('institution_id' => $id, 'staff_status_id' => $assignedStatus)
         );
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
         $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff', $params);
@@ -526,18 +572,17 @@ class InstitutionsController extends AppController
         }
 
         foreach ($tabElements as $key => $tabElement) {
+            $params = [];
             switch ($key) {
                 case $userRole.'User':
-                    $params = [$userId];
+                    $params = [$userId, 'id' => $id];
                     break;
                 case $userRole.'Account':
-                    $params = [$userId];
+                    $params = [$userId, 'id' => $id];
                     break;
                 case $userRole.'Surveys':
                     $params = ['user_id' => $userId];
                     break;
-                default:
-                    $params = [];
             }
             $tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
         }
@@ -578,5 +623,10 @@ class InstitutionsController extends AppController
             }
         }
         return $tabElements;
+    }
+
+    public function getCareerTabElements($options = []) {
+        $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+        return TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
     }
 }

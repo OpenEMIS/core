@@ -21,7 +21,9 @@ class IdentitiesTable extends ControllerActionTable
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('IdentityTypes', ['className' => 'FieldOption.IdentityTypes']);
-
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Students' => ['index', 'add']
+        ]);
 		$this->excludeDefaultValidations(['security_user_id']);
 	}
 
