@@ -583,6 +583,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         var startDate = StudentController.startDate;
         var startDateArr = startDate.split("-");
         startDate = startDateArr[2] + '-' + startDateArr[1] + '-' + startDateArr[0];
+        for(i = 0; i < startDateArr.length; i++) {
+            if (startDateArr[i] == undefined || startDateArr[i] == null || startDateArr[i] == '') {
+                startDate = undefined;
+            }
+        }
         var endDate = $scope.endDate;
 
         if (!StudentController.createNewStudent) {
