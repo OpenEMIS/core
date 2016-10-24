@@ -81,8 +81,15 @@ class ExcelBehavior extends Behavior {
     public function excelV4(Event $mainEvent, ArrayObject $extra)
     {
         $id = 0;
-        if (isset($this->_table->request->pass[0])) {
-            $id = $this->_table->request->pass[0];
+        $break = false;
+        $action = $this->_table->action;
+        $pass = $this->_table->request->pass;
+        if (in_array($action, $pass)) {
+            unset($pass[array_search($action, $pass)]);
+            $pass = array_values($pass);
+        }
+        if (isset($pass[0])) {
+            $id = $pass[0];
         }
         $this->generateXLXS(['id' => $id]);
     }
