@@ -321,6 +321,9 @@ trait MessagesTrait {
             'noAccess' => 'You do not have access to this location.',
             'emptyFields' => 'Some of the required fields for this authentication type are empty.'
         ],
+        'ExternalDataSource' => [
+            'emptyFields' => 'Some of the required fields for this external datasource type are empty.'
+        ],
         'SecurityRoles' => [
             'userRoles' => 'User Roles',
             'systemRoles' => 'System Roles'
