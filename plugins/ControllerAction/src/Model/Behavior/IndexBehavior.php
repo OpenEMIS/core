@@ -38,9 +38,15 @@ class IndexBehavior extends Behavior {
 		$extra['auto_order'] = true;
 		$extra['config']['pageOptions'] = $this->config('pageOptions');
 		$query = $model->find();
+		$extra['query'] = $query;
 
 		$event = $model->dispatchEvent('ControllerAction.Model.index.beforeAction', [$extra], $this);
-		if ($event->isStopped()) { return $event->result; }
+
+		if ($event->isStopped()) {
+            $mainEvent->stopPropagation();
+            return $event->result;
+        }
+
 		if ($event->result instanceof Table) {
 			$query = $event->result->find();
 		}
@@ -76,8 +82,12 @@ class IndexBehavior extends Behavior {
 			Log::write('debug', $query->__toString());
 		}
 
-		$event = $model->dispatchEvent('ControllerAction.Model.index.afterAction', [$data, $extra], $this);
-		if ($event->isStopped()) { return $event->result; }
+
+		$event = $model->dispatchEvent('ControllerAction.Model.index.afterAction', [$query, $data, $extra], $this);
+		if ($event->isStopped()) {
+            $mainEvent->stopPropagation();
+            return $event->result;
+        }
 		if ($event->result) {
 			$data = $event->result;
 		}

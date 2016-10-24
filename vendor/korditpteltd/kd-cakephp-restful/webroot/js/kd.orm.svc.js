@@ -16,6 +16,7 @@ angular.module('kd.orm.svc', [])
         _order: [],
         _limit: 0,
         _page: 0,
+        _controllerAction: null,
 
         className: function(className) {
             this._className = className;
@@ -33,6 +34,7 @@ angular.module('kd.orm.svc', [])
             this._contain = [];
             this._finder = [];
             this._where = {};
+            this._orWhere = [];
             this._limit = 0;
             this._group = [];
             this._order = [];
@@ -180,6 +182,16 @@ angular.module('kd.orm.svc', [])
             if (settings.headers == undefined) {
                 settings.headers = {'Content-Type': 'application/x-www-form-urlencoded'};
             }
+
+            if (settings.authorizationHeader != undefined) {
+                settings.headers.authorization = settings.authorizationHeader;
+                delete settings.authorizationHeader;
+            }
+
+            if (query._controllerAction != null) {
+                settings.headers.ControllerAction = query._controllerAction;
+            }
+
             var url = this.toURL();
             settings.url = url.replace('@type', type);
 
@@ -247,8 +259,13 @@ angular.module('kd.orm.svc', [])
 
     return {
         base: base,
+        controllerAction: controllerAction,
         init: init,
         wildcard: wildcard
+    };
+
+    function controllerAction(action) {
+        query._controllerAction = action;
     };
 
     function base(base) {

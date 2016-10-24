@@ -49,6 +49,20 @@ class UsersTable extends AppTable {
 		$this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
 	}
 
+	public function implementedEvents()
+	{
+		$events = parent::implementedEvents();
+		$events['Model.Students.afterSave'] = 'studentsAfterSave';
+		return $events;
+	}
+
+	public function studentsAfterSave(Event $event, Entity $entity)
+	{
+		if ($entity->isNew()) {
+			$this->updateAll(['is_student' => 1], ['id' => $entity->student_id]);
+		}
+	}
+
 	// autocomplete used for UserGroups
 	public function autocomplete($search) {
 		$search = sprintf('%s%%', $search);

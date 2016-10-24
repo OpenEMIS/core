@@ -173,6 +173,8 @@ class DirectoriesTable extends AppTable {
             }
 		}
 
+        $options['auto_search'] = false;
+
 		$this->dashboardQuery = clone $query;
 	}
 
@@ -384,12 +386,12 @@ class DirectoriesTable extends AppTable {
 		}
 	}
 
-	public function addBeforeAction(Event $event)
-	{
-		if (!isset($this->request->data[$this->alias()]['user_type'])) {
-			$this->request->data[$this->alias()]['user_type'] = $this->request->query('user_type');
-		}
-	}
+    public function addBeforeAction(Event $event)
+    {
+        if (!isset($this->request->data[$this->alias()]['user_type'])) {
+            $this->request->data[$this->alias()]['user_type'] = $this->request->query('user_type');
+        }
+    }
 
 	public function addAfterAction(Event $event) {
 		// need to find out order values because recordbehavior changes it
@@ -505,7 +507,7 @@ class DirectoriesTable extends AppTable {
 		$requestData[$this->alias()] = $directoryEntity;
 	}
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		$this->fields = [];
 		$this->controller->set('ngController', 'AdvancedSearchCtrl');
 
