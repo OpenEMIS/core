@@ -17,12 +17,15 @@ class InstitutionGradesTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('institution_grades');
 		parent::initialize($config);
-		
+
 		$this->belongsTo('EducationGrades', 			['className' => 'Education.EducationGrades']);
 		$this->belongsTo('Institutions', 				['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
-		
+
 		$this->addBehavior('AcademicPeriod.Period');
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Students' => ['index']
+        ]);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -71,9 +74,9 @@ class InstitutionGradesTable extends AppTable {
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$query->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels']);
 		$options['order'] = [
-			'EducationLevels.order' => 'asc', 
-			'EducationCycles.order' => 'asc', 
-			'EducationProgrammes.order' => 'asc', 
+			'EducationLevels.order' => 'asc',
+			'EducationCycles.order' => 'asc',
+			'EducationProgrammes.order' => 'asc',
 			'EducationGrades.order' => 'asc'
 		];
 	}
@@ -100,7 +103,7 @@ class InstitutionGradesTable extends AppTable {
 			/**
 			 * PHPOE-2117
 			 * Remove 		$this->ControllerAction->field('institution_programme_id', ['type' => 'hidden']);
-			 * 
+			 *
 			 * education_grade_id will always be empty
 			 * so if errors array is more than 1, other fields are having an error
 			 */
@@ -212,7 +215,7 @@ class InstitutionGradesTable extends AppTable {
 		$data[$this->alias()]['programme'] = 0;
 	}
 
-	
+
 /******************************************************************************************************************
 **
 ** edit action methods
@@ -378,8 +381,8 @@ class InstitutionGradesTable extends AppTable {
 
 	/**
 	 * Used by InstitutionClassesTable & InstitutionSubjectsTable.
-	 * This function resides here instead of inside AcademicPeriodsTable because the first query is to get 'start_date' and 'end_date' 
-	 * of registered Programmes in the Institution. 
+	 * This function resides here instead of inside AcademicPeriodsTable because the first query is to get 'start_date' and 'end_date'
+	 * of registered Programmes in the Institution.
 	 * @param  integer $model           		 [description]
 	 * @param  array   $conditions               [description]
 	 * @return [type]                            [description]
@@ -471,6 +474,23 @@ class InstitutionGradesTable extends AppTable {
 		}
 		return (($a->toUnixString() >= $b->toUnixString()) ? $a : $b);
 	}
+
+    public function findEducationGradeInCurrentInstitution(Query $query, array $options)
+    {
+        $academicPeriodId = (array_key_exists('academic_period_id', $options))? $options['academic_period_id']: null;
+        $institutionId = (array_key_exists('institution_id', $options))? $options['institution_id']: null;
+
+        $query->contain('EducationGrades.EducationProgrammes');
+        $query->where([
+            $this->aliasField('institution_id') => $institutionId
+        ]);
+        if (!is_null($academicPeriodId)) {
+            $query->find('academicPeriod', ['academic_period_id' => $academicPeriodId]);
+        }
+        $query->group([$this->aliasField('education_grade_id')]);
+
+        return $query;
+    }
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
 	{

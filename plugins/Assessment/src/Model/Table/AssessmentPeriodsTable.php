@@ -41,6 +41,9 @@ class AssessmentPeriodsTable extends ControllerActionTable {
             'cascadeCallbacks' => true
         ]);
 
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Results' => ['index']
+        ]);
         $this->setDeleteStrategy('restrict');
     }
 

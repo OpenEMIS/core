@@ -329,6 +329,17 @@ class AccessControlComponent extends Component {
 	}
 
 	public function getInstitutionsByUser($userId = null) {
+		$institutionIds = [];
+
+		if (is_null($userId)) {
+			$userId = $this->Auth->user('id');
+		}
+
+		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+		$institutionIds = $SecurityGroupUsers->getInstitutionsByUser($userId);
+
+		return $institutionIds;
+		/*
 		if (is_null($userId)) {
 			$userId = $this->Auth->user('id');
 		}
@@ -364,6 +375,7 @@ class AccessControlComponent extends Component {
 		} else {
 			return [];
 		}
+		*/
 	}
 
 	public function getAreasByUser($userId = null) {

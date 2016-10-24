@@ -702,7 +702,7 @@ class ValidationBehavior extends Behavior {
 
 		if (array_key_exists('student_id', $data)) {
 			// saving for existing students
-			$Students = TableRegistry::get('Student.Students');
+			$Students = TableRegistry::get('Institution.StudentUser');
 			$studentQuery = $Students->find()
 				->select([$Students->aliasField('date_of_birth')])
 				->where([$Students->aliasField($Students->primaryKey()) => $data['student_id']])
@@ -1576,6 +1576,28 @@ class ValidationBehavior extends Behavior {
 		return false;
 	}
 
+	public static function checkPendingAdmissionExist($field, array $globalData)
+	{
+		$data = $globalData['data'];
+		$studentId = $data['student_id'];
+		$institutionId = $data['institution_id'];
+		$academicPeriodId = $data['academic_period_id'];
+		$educationGradeId = $data['education_grade_id'];
+		$AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+		$studentExist = $AdmissionTable->find()
+			->where([
+					$AdmissionTable->aliasField('status') => 0,
+					$AdmissionTable->aliasField('student_id') => $studentId,
+					$AdmissionTable->aliasField('institution_id') => $institutionId,
+					$AdmissionTable->aliasField('academic_period_id') => $academicPeriodId,
+					$AdmissionTable->aliasField('education_grade_id') => $educationGradeId,
+					$AdmissionTable->aliasField('type') => 1
+				])
+			->count();
+
+		return $studentExist == 0;
+	}
+
 	public static function validateCustomIdentityNumber($field, array $globalData)
 	{
 		$subject = $field;
@@ -1600,6 +1622,21 @@ class ValidationBehavior extends Behavior {
 		// custom validation is nullable, have to cater for the null pattern.
 		if (!empty($pattern) && !preg_match($pattern, $subject)) {
 			return $model->getMessage('User.Identities.number.custom_validation');
+		}
+
+		return true;
+	}
+
+	public static function validateCustomPattern($field, $code, array $globalData)
+	{
+		$pattern = '';
+		$model = $globalData['providers']['table'];
+
+		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+		$valuePattern = '/' . $ConfigItems->value($code) . '/';
+
+		if (!empty($valuePattern) && !preg_match($valuePattern, $field)) {
+			return $model->getMessage('general.custom_validation_pattern');
 		}
 
 		return true;
