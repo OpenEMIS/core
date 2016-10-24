@@ -392,14 +392,6 @@ class RestfulController extends AppController
         */
     }
 
-    public function translate()
-    {
-        $text = $this->request->query('text');
-        $serialize = ['original' => $text, 'locale' => I18n::locale(), 'translated' => __($text)];
-        $serialize['_serialize'] = array_keys($serialize);
-        $this->set($serialize);
-    }
-
     public function index()
     {
         if (is_null($this->model)) {

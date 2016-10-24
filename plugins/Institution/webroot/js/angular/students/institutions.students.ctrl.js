@@ -59,7 +59,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.clearInternalSearchFilters = clearInternalSearchFilters;
     StudentController.initialLoad = true;
     StudentController.date_of_birth = '';
-    StudentController.translatedText = {};
     $scope.endDate;
 
     StudentController.selectedStudent;
@@ -116,42 +115,44 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         })
         .then(function(genders) {
             StudentController.genderOptions = genders;
-            var promises = [];
-            promises.push(InstitutionsStudentsSvc.translate('OpenEMIS ID'));
-            promises.push(InstitutionsStudentsSvc.translate('Name'));
-            promises.push(InstitutionsStudentsSvc.translate('Gender'));
-            promises.push(InstitutionsStudentsSvc.translate('Date of Birth'));
-            promises.push(InstitutionsStudentsSvc.translate(StudentController.defaultIdentityTypeName));
+            var deferred = $q.defer();
             if (StudentController.hasExternalDataSource) {
                 InstitutionsStudentsSvc.getExternalDefaultIdentityType()
                 .then(function(externalIdentityType) {
                     if (externalIdentityType.length > 0) {
-                        StudentController.defaultExternalIdentityTypeName = externalIdentityType[0].name;
+                        deferred.resolve(externalIdentityType[0].name);
+                    } else {
+                        deferred.reject('No External Identity Type');
                     }
-                    InstitutionsStudentsSvc.init(angular.baseUrl);
                 }, function(error) {
                     StudentController.hasExternalDataSource = false;
                     InstitutionsStudentsSvc.init(angular.baseUrl);
-                    console.log('Error connecting to external source');
-                    AlertSvc.warning($scope, 'Error connecting to external source');
+                    deferred.reject(error);
                 });
+                return deferred.promise;
             } else {
-                
+                return StudentController.genderOptions;
             }
-            return $q.all(promises);
         }, function(error) {
             console.log(error);
             UtilsSvc.isAppendLoader(false);
             AlertSvc.warning($scope, error);
         })
         .then(function(arr) {
-            StudentController.translatedText['openemis_id'] = arr[0];
-            StudentController.translatedText['name'] = arr[1];
-            StudentController.translatedText['gender'] = arr[2];
-            StudentController.translatedText['date_of_birth'] = arr[3];
-            StudentController.translatedText['internal_identity_type'] = arr[4];
+            if (StudentController.hasExternalDataSource) {
+                externalIdentityType = arr;
+                console.log(arr);
+                StudentController.defaultExternalIdentityTypeName = externalIdentityType;
+                InstitutionsStudentsSvc.init(angular.baseUrl);
+                return true;
+            } else {
+                return true;
+            }
         }, function(error) {
-
+            StudentController.hasExternalDataSource = false;
+            InstitutionsStudentsSvc.init(angular.baseUrl);
+            console.log('Error connecting to external source');
+            AlertSvc.warning($scope, 'Error connecting to external source');
         })
         .finally(function(result) {
             $scope.initGrid();
@@ -179,11 +180,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         return '<div><input  name="ngSelectionCell" ng-click="InstitutionStudentController.selectStudent('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStudent="'+params.value+'"/></div>';
                     }
                 },
-                {headerName: StudentController.translatedText.openemis_id, field: "openemis_no", suppressMenu: true, suppressSorting: true},
-                {headerName: StudentController.translatedText.name, field: "name", suppressMenu: true, suppressSorting: true},
-                {headerName: StudentController.translatedText.gender, field: "gender_name", suppressMenu: true, suppressSorting: true},
-                {headerName: StudentController.translatedText.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                {headerName: (angular.isDefined(StudentController.defaultIdentityTypeName))? StudentController.translatedText.internal_identity_type : "[default identity type not set]", field: "identity_number", suppressMenu: true, suppressSorting: true},
+                {headerName: 'OpenEMIS ID', field: "openemis_no", suppressMenu: true, suppressSorting: true},
+                {headerName: 'Name', field: "name", suppressMenu: true, suppressSorting: true},
+                {headerName: 'Gender', field: "gender_name", suppressMenu: true, suppressSorting: true},
+                {headerName: 'Date of Birth', field: "date_of_birth", suppressMenu: true, suppressSorting: true},
+                {headerName: (angular.isDefined(StudentController.defaultIdentityTypeName))? StudentController.defaultIdentityTypeName : "[default identity type not set]", field: "identity_number", suppressMenu: true, suppressSorting: true},
             ],
             enableColResize: false,
             enableFilter: true,
@@ -211,10 +212,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         return '<div><input  name="ngSelectionCell" ng-click="InstitutionStudentController.selectStudent('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStudent="'+params.value+'"/></div>';
                     }
                 },
-                {headerName: StudentController.translatedText.openemis_id, field: "openemis_no", suppressMenu: true, suppressSorting: true},
-                {headerName: StudentController.translatedText.name, field: "name", suppressMenu: true, suppressSorting: true},
-                {headerName: StudentController.translatedText.gender, field: "gender_name", suppressMenu: true, suppressSorting: true},
-                {headerName: StudentController.translatedText.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
+                {headerName: 'OpenEMIS ID', field: "openemis_no", suppressMenu: true, suppressSorting: true},
+                {headerName: 'Name', field: "name", suppressMenu: true, suppressSorting: true},
+                {headerName: 'Gender', field: "gender_name", suppressMenu: true, suppressSorting: true},
+                {headerName: 'Date of Birth', field: "date_of_birth", suppressMenu: true, suppressSorting: true},
                 {headerName: (angular.isDefined(StudentController.defaultExternalIdentityTypeName))? StudentController.defaultExternalIdentityTypeName: "[default identity type not set]", field: "identity_number", suppressMenu: true, suppressSorting: true},
             ],
             enableColResize: false,
