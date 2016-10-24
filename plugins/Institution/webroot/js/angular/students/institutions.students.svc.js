@@ -38,7 +38,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         resetExternalVariable: resetExternalVariable,
         getGenders: getGenders,
         getUniqueOpenEmisId: getUniqueOpenEmisId,
-        formatDateToYMD: formatDateToYMD
+        formatDateReverse: formatDateReverse
     };
 
     var models = {
@@ -52,6 +52,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         IdentityTypes: 'FieldOption.IdentityTypes',
         ExternalDataSourceAttributes: 'Configuration.ExternalDataSourceAttributes',
         Identities: 'User.Identities',
+        ConfigItems: 'Configuration.ConfigItems'
     };
 
     var externalModels = {
@@ -84,10 +85,18 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
     {
         var deferred = $q.defer();
         this.init(angular.baseUrl);
-        ExternalDataSourceAttributes
+        ConfigItems
+        .select()
+        .where({
+            code: 'external_data_source_type'
+        })
+        .ajax({defer: true})
+        .then(function(response) {
+            var externalDataSourceType = response.data[0]['value'];
+            ExternalDataSourceAttributes
             .select()
             .where({
-                external_data_source_type: 'Openemis Identities'
+                external_data_source_type: externalDataSourceType
             })
             .ajax({defer: true})
             .then(function(response) {
@@ -126,6 +135,9 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             }, function(error){
                 deferred.reject(error);
             });
+        }, function(error) {
+            deferred.reject(error);
+        });
 
         return deferred.promise;
     }
@@ -164,6 +176,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                 };
 
                 var params = {};
+                params['super_admin'] = 0;
                 Users.reset();
                 Users
                     .page(pageParams.page)
@@ -179,7 +192,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                                 if (key != 'date_of_birth') {
                                     params[key] = options['conditions'][key] + '_';
                                 } else {
-                                    params[key] = vm.formatDateToYMD(options['conditions'][key]);
+                                    params[key] = vm.formatDateReverse(options['conditions'][key]);
                                 }
                                 conditionsCount++;
                             }
@@ -237,7 +250,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
                     if (options['conditions'][key] !== '') {
                         if (key == 'date_of_birth') {
-                            options['conditions'][key] = vm.formatDateToYMD(options['conditions'][key]);
+                            options['conditions'][key] = vm.formatDateReverse(options['conditions'][key]);
                         }
                         params[key] = options['conditions'][key];
                         conditionsCount++;
@@ -538,14 +551,12 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         var vm = this;
         var defer = $q.defer();
 
-
         this.getExternalSourceUrl()
         .then(function(sourceUrl) {
             var source = sourceUrl.data;
             if (source.length > 0) {
                 sourceUrl = source[0].value;
             }
-            vm.initExternal(sourceUrl);
             vm.getAccessToken()
             .then(function(token){
                 var authorizationHeader = 'Bearer ' + token;
@@ -557,6 +568,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                         deferred.resolve(defaultIdentityType);
                     }
                 };
+                vm.initExternal(sourceUrl);
                 return IdentityTypes
                     .find('DefaultIdentityType')
                     .ajax({defer: true, success: success, authorizationHeader: authorizationHeader});
@@ -572,11 +584,10 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         }, function(error) {
             defer.reject(error);
         });
-
         return defer.promise;
     };
 
-    function formatDateToYMD(datetime) {
+    function formatDateReverse(datetime) {
         var dateArr = datetime.split('-');
         return dateArr[2] + '-' + dateArr[1] + '-' + dateArr[0];
     }
@@ -588,7 +599,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         var mm = (datetime.getMonth()+1).toString(); // getMonth() is zero-based
         var dd  = datetime.getDate().toString();
 
-        return yyyy + '-' + (mm[1]?mm:"0"+mm[0]) + '-' + (dd[1]?dd:"0"+dd[0]); // padding
+        return (dd[1]?dd:"0"+dd[0]) + '-' + (mm[1]?mm:"0"+mm[0])  + '-' +   yyyy; // padding
     };
 
     function getAcademicPeriods() {
@@ -666,13 +677,5 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             deferred.reject(error);
         });
         return deferred.promise;
-        // $http({
-        //     method: 'GET',
-        //     url: 'http://localhost:8080/openemis-phpoe/Users/getUniqueOpenemisId/Student',
-        // }).then(function(res) {
-        //     deferred.resolve(res.data.openemis_no);
-        // }, function(error) {
-        //     deferred.reject(error);
-        // });
     }
 };

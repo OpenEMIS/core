@@ -30,6 +30,9 @@ class ExternalDataSourceBehavior extends Behavior {
 			'ControllerAction.Model.edit.beforeAction'  => 'editBeforeAction',
 			'ControllerAction.Model.view.beforeAction'	=> 'viewBeforeAction',
 			'ControllerAction.Model.index.beforeAction'	=> ['callable' => 'indexBeforeAction', 'priority' => 100],
+			'ControllerAction.Model.edit.beforePatch'	=> 'editBeforePatch'
+
+
 		];
 		$events = array_merge($events, $newEvent);
 		return $events;
@@ -142,9 +145,22 @@ class ExternalDataSourceBehavior extends Behavior {
 		}
 	}
 
+	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    	$configItem = $data[$this->alias];
+    	if ($configItem['type'] == 'External Data Source') {
+    		$configItem['value'] = lcfirst(Inflector::camelize($configItem['value'], ' '));
+
+    		$methodName = $configItem['value'].'Validation';
+    		if (method_exists($this, $methodName) && !$this->$methodName($data['ExternalDataSourceTypeAttributes'])) {
+    			$this->_table->Alert->error('ExternalDataSource.emptyFields', ['reset' => true]);;
+    			$entity->errors('error', ['There are invalid attributes']);
+    		}
+    	}
+    }
+
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$ExternalDataSourceAttributesTable = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
-		if ($data[$this->alias]['value'] != 'None' && $data[$this->alias]['type'] == 'External Data Source') {
+		if ($data[$this->alias]['value'] != 'None' && $data[$this->alias]['type'] == 'External Data Source' && empty($entity->errors())) {
 			$externalDataSourceType = $data[$this->alias]['value'];
 			$ExternalDataSourceAttributesTable->deleteAll(
 				['external_data_source_type' => $externalDataSourceType]
@@ -171,7 +187,7 @@ class ExternalDataSourceBehavior extends Behavior {
 		}
 	}
 
-	public function openemisIdentitiesExternalSource(&$attribute)
+	public function openEMISIdentityExternalSource(&$attribute)
 	{
 		$attribute['token_uri'] = ['label' => 'Token URI', 'type' => 'text'];
 		$attribute['refresh_token'] = ['label' => 'Refresh Token', 'type' => 'textarea'];
@@ -181,6 +197,19 @@ class ExternalDataSourceBehavior extends Behavior {
 		// $attribute['hd'] = ['label' => 'Hosted Domain', 'type' => 'text', 'required' => false];
 		$attribute['record_uri'] = ['label' => 'Record URI', 'type' => 'text'];
 	}
+
+	public function openEMISIdentityValidation($attributes) {
+    	$attribute = [];
+    	$this->openEMISIdentityExternalSource($attribute);
+    	foreach ($attribute as $key => $values) {
+    		if (!isset($values['required'])) {
+    			if (empty($attributes[$key]['value'])) {
+    				return false;
+    			}
+    		}
+    	}
+    	return true;
+    }
 
 	public function onGetExternalDataSourceTypeElement(Event $event, $action, $entity, $attr, $options=[]) {
 		switch ($action){
