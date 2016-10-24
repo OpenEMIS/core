@@ -8,7 +8,7 @@ VALUES (1002, 'Type', 'external_data_source_type', 'External Data Source', 'Type
 
 -- config_item_options
 INSERT INTO `config_item_options` (`id`, `option_type`, `option`, `value`, `order`, `visible`) VALUES (100, 'external_data_source_type', 'None', 'None', 1, 1);
-INSERT INTO `config_item_options` (`id`, `option_type`, `option`, `value`, `order`, `visible`) VALUES (101, 'external_data_source_type', 'Openemis Identities', 'Openemis Identities', 2, 1);
+INSERT INTO `config_item_options` (`id`, `option_type`, `option`, `value`, `order`, `visible`) VALUES (101, 'external_data_source_type', 'OpenEMIS Identity', 'OpenEMIS Identity', 2, 1);
 
 -- external_data_source_attributes
 CREATE TABLE `external_data_source_attributes` (
