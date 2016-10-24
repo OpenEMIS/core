@@ -227,11 +227,9 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
 
         //to remove 'add' button if no class or programmes set
-        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         if (empty($classOptions) || isset($extra['noProgrammes'])) {
-            unset($toolbarButtonsArray['add']);
+            $this->toggle('add', false);
         }
-        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
 
     public function findByClasses(Query $query, array $options)
