@@ -419,7 +419,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         AlertSvc.warning($scope, 'Student is already enrolled in ' + schoolName);
                         userRecord.date_of_birth = InstitutionsStudentsSvc.formatDate(userRecord.date_of_birth);
                         StudentController.selectedStudentData = userRecord;
-                        StudentController.date_of_birth = InstitutionsStudentsSvc.formatDateReverse(userRecord.date_of_birth);
                         StudentController.completeDisabled = true;
                     } else {
                         AlertSvc.error($scope, 'The record is not added due to errors encountered.');
@@ -447,10 +446,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function onAddStudentClick() {
-        if (StudentController.selectedStudentData.hasOwnProperty('date_of_birth')) {
-            var dob = StudentController.selectedStudentData.date_of_birth.split('-');
-            StudentController.selectedStudentData.date_of_birth = dob[2] + '-' + dob[1] + '-' + dob[0];
-        }
         angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
             step: "addStudent"
         });
@@ -703,8 +698,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if (StudentController.selectedStudentData.date_of_birth == '') {
             StudentController.postResponse.error.date_of_birth = {'_empty': 'This field cannot be left empty'};
             remain = true;
-        } else {
-            StudentController.date_of_birth = InstitutionsStudentsSvc.formatDateReverse(StudentController.selectedStudentData.date_of_birth);
         }
 
         if (remain) {
