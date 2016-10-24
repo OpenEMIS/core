@@ -38,8 +38,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         resetExternalVariable: resetExternalVariable,
         getGenders: getGenders,
         getUniqueOpenEmisId: getUniqueOpenEmisId,
-        formatDateReverse: formatDateReverse,
-        translate: translate
+        formatDateReverse: formatDateReverse
     };
 
     var models = {
@@ -53,6 +52,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         IdentityTypes: 'FieldOption.IdentityTypes',
         ExternalDataSourceAttributes: 'Configuration.ExternalDataSourceAttributes',
         Identities: 'User.Identities',
+        ConfigItems: 'Configuration.ConfigItems'
     };
 
     var externalModels = {
@@ -85,10 +85,18 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
     {
         var deferred = $q.defer();
         this.init(angular.baseUrl);
-        ExternalDataSourceAttributes
+        ConfigItems
+        .select()
+        .where({
+            code: 'external_data_source_type'
+        })
+        .ajax({defer: true})
+        .then(function(response) {
+            var externalDataSourceType = response.data[0]['value'];
+            ExternalDataSourceAttributes
             .select()
             .where({
-                external_data_source_type: 'Openemis Identities'
+                external_data_source_type: externalDataSourceType
             })
             .ajax({defer: true})
             .then(function(response) {
@@ -127,6 +135,9 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             }, function(error){
                 deferred.reject(error);
             });
+        }, function(error) {
+            deferred.reject(error);
+        });
 
         return deferred.promise;
     }
@@ -540,7 +551,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         var vm = this;
         var defer = $q.defer();
 
-
         this.getExternalSourceUrl()
         .then(function(sourceUrl) {
             var source = sourceUrl.data;
@@ -574,7 +584,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         }, function(error) {
             defer.reject(error);
         });
-
         return defer.promise;
     };
 
@@ -668,17 +677,5 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             deferred.reject(error);
         });
         return deferred.promise;
-        // $http({
-        //     method: 'GET',
-        //     url: 'http://localhost:8080/openemis-phpoe/Users/getUniqueOpenemisId/Student',
-        // }).then(function(res) {
-        //     deferred.resolve(res.data.openemis_no);
-        // }, function(error) {
-        //     deferred.reject(error);
-        // });
-    }
-
-    function translate(text) {
-        return KdOrmSvc.translate(text);
     }
 };
