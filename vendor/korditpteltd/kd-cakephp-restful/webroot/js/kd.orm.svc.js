@@ -194,7 +194,6 @@ angular.module('kd.orm.svc', [])
 
             var url = this.toURL();
             settings.url = url.replace('@type', type);
-            console.log(settings.url);
 
             if (success == null && error == null) {
                 return $http(settings);
