@@ -23,6 +23,9 @@ class ConfigItemsTable extends AppTable {
 		parent::initialize($config);
 		$this->addBehavior('Configuration.ConfigItems');
 		$this->belongsTo('ConfigItemOptions', ['className' => 'Configuration.ConfigItemOptions', 'foreignKey'=>'value']);
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Students' => ['index']
+        ]);
 	}
 
 	public function beforeAction(Event $event) {
