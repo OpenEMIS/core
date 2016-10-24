@@ -173,6 +173,8 @@ class DirectoriesTable extends AppTable {
             }
 		}
 
+        $options['auto_search'] = false;
+
 		$this->dashboardQuery = clone $query;
 	}
 
