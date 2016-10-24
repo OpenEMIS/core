@@ -19,6 +19,7 @@ class UndoCurrentBehavior extends UndoBehavior {
 
 	public function processSaveCurrentStudents(Event $event, Entity $entity, ArrayObject $data) 
 	{
+		$model = $this->model;
 		$studentIds = [];
 
         $institutionId = $entity->institution_id;
@@ -29,11 +30,17 @@ class UndoCurrentBehavior extends UndoBehavior {
 				if ($studentId != 0) {
 					$studentIds[$studentId] = $studentId;
 
-					$this->deleteEnrolledStudents($studentId, $this->statuses['CURRENT']);
+                    $enrolmentRecord = $model->find()
+                        ->where([
+                            $model->aliasField('institution_id') => $institutionId,
+                            $model->aliasField('student_id') => $studentId,
+                            $model->aliasField('student_status_id') => $this->statuses['CURRENT']
+                        ])
+                        ->first();
 
-					//remove pending admission/transfer/dropout that occured after the process that is undone.
-                    $this->removePendingAdmission($this->statuses['CURRENT'], $studentId, $institutionId);
-                    $this->removePendingDropout($studentId, $institutionId);
+                    if ($enrolmentRecord) {
+                        $model->delete($enrolmentRecord);
+                    }
 				}
 			}
 		}

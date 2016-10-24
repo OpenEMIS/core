@@ -62,15 +62,17 @@ class UndoBehavior extends Behavior {
 	protected function deleteEnrolledStudents($studentId, $selectedStatus) 
     {
 		$currentStatus = $this->statuses['CURRENT'];
-		$entity = $this->model
+		
+        $entity = $this->model
 			->find()
 			->where([
 				$this->model->aliasField('student_id') => $studentId,
 				$this->model->aliasField('student_status_id') => $currentStatus
 			])
 			->first();
+
 		if (!empty($entity)) { //this is meant for get the immediate record before its being deleted
-                $prevInstitutionStudentId = $entity->previous_institution_student_id; 
+                $prevInstitutionStudentId = $entity->previous_institution_student_id;
                 $this->model->delete($entity); //this will also trigger StudentCascadeDeleteBehavior to delete associated data
         } else {
             $entity = $this->model
@@ -81,23 +83,31 @@ class UndoBehavior extends Behavior {
                     ])
                     ->order(['start_date' => 'desc', 'created' => 'desc', 'id' => 'desc'])
                     ->first();
-            $prevInstitutionStudentId = $entity->id;
+            if (!empty($entity)) {
+                $prevInstitutionStudentId = $entity->id;
+            }
         }
-        return $this->model->get($prevInstitutionStudentId);
+        if ($prevInstitutionStudentId) {
+            return $this->model->get($prevInstitutionStudentId);
+        } else {
+            return null;
+        }
 	}
 
 	protected function updateStudentStatus($code, $id, $conditions) 
     {
 		$status = $this->statuses[$code];
-        $entity = $this->model->find()->where([$id])->first();
 
-        if (empty($entity)) { //if by ID cant find because of data problem.
-           $entity = $this->model->find()->where([$conditions])->first();
-        }
+        if ($id || $conditions) {
+            $entity = $this->model->find()->where([$id])->first();
+            if (empty($entity)) { //if by ID cant find because of data problem.
+                $entity = $this->model->find()->where([$conditions])->first();
+            }
 
-        if (!empty($entity)) {
-            $entity->student_status_id = $status;
-            $this->model->save($entity);
+            if (!empty($entity)) {
+                $entity->student_status_id = $status;
+                $this->model->save($entity);
+            }
         }
 	}
 

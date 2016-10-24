@@ -37,8 +37,35 @@ class StudentDropoutTable extends AppTable {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		$events['Model.Students.afterDelete'] = 'studentsAfterDelete';
 		return $events;
 	}
+
+    public function studentsAfterDelete(Event $event, Entity $student)
+    {
+        $this->removePendingDropout($student->student_id, $student->institution_id);
+    }
+
+	protected function removePendingDropout($studentId, $institutionId) 
+    {
+        //could not include grade / academic period because not always valid. (promotion/graduation/repeat and dropout can be done on different grade / academic period)
+        $conditions = [
+            'student_id' => $studentId,
+            'institution_id' => $institutionId,
+            'status' => 0, //pending status
+        ];
+        
+        $entity = $this
+                ->find()
+                ->where(
+                    $conditions
+                )
+                ->first();
+        
+        if (!empty($entity)) {
+            $this->delete($entity);
+        }
+    }
 
 	public function editOnInitialize(Event $event, Entity $entity) {
 		$this->request->data[$this->alias()]['status'] = $entity->status;
