@@ -1034,8 +1034,12 @@ class WorkflowBehavior extends Behavior {
 
 						$eventDescription = '';
 						$events = explode(",", $eventKeys);
+						$actionObj->assignee_required = 1;
 						foreach ($events as $eventKey) {
-							$actionObj->assignee_required = ($eventKey == 'Workflow.onAssignBack') ? 0 : 1;	// assignee is required by default unless onAssignBack event is added
+							// assignee is required by default unless onAssignBack event is added
+							if ($eventKey == 'Workflow.onAssignBack') {
+								$actionObj->assignee_required = 0;
+							}
 							$key = array_search($eventKey, array_column($eventArray, 'value'));
 							if ($key !== false) {
 								if (isset($eventArray[$key]['description']) && $eventKey != 'Workflow.onAssignBack') {
