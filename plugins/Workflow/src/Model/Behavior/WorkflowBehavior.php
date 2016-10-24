@@ -1003,7 +1003,7 @@ class WorkflowBehavior extends Behavior {
 				if ($this->hasWorkflow == false && $toolbarButtons->offsetExists('add')) {
 					unset($toolbarButtons['add']);
 				}
-			} else {
+			} else if ($action == 'view') {
 				$isEditable = false;
 				$isDeletable = false;
 
