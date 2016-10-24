@@ -425,7 +425,7 @@ class StudentDropoutTable extends AppTable {
 					}
 
 					$row['url'] = $url;
-	    			$row['status'] = '<i class="fa fa-minus"></i>';
+	    			$row['status'] = __('Pending For Approval');
 	    			$row['request_title'] = __('Dropout request of').' '.$row->user->name_with_id;
 	    			$row['institution'] = $row->institution->code_name;
 	    			$row['received_date'] = $receivedDate;
