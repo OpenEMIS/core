@@ -43,7 +43,8 @@ trait ControllerActionTrait {
 		// public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel) {}
 
 		'ControllerAction.Model.index.beforeAction'			=> 'indexBeforeAction',
-		// public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {}
+		// public function indexBeforeAction(Event $event, ArrayObject $settings) {}
+        // if u need query look for it in $settings['query']
 
 		'ControllerAction.Model.index.beforePaginate'		=> 'indexBeforePaginate',
 		// public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {}
@@ -52,7 +53,8 @@ trait ControllerActionTrait {
 		// public function indexAfterPaginate(Event $event, $data) {}
 
 		'ControllerAction.Model.index.afterAction'			=> 'indexAfterAction',
-		// public function indexAfterAction(Event $event, $data) {}
+		// v4 - public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra) {}
+        // v3 - public function indexAfterAction(Event $event, $data) {}
 
 		'ControllerAction.Model.view.beforeAction'			=> 'viewBeforeAction',
 		// public function viewBeforeAction(Event $event) {}
@@ -137,6 +139,9 @@ trait ControllerActionTrait {
 
 		'ControllerAction.Model.delete.onInitialize'		=> 'deleteOnInitialize',
 		// public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {}
+
+		'ControllerAction.Model.delete.afterAction'			=> 'deleteAfterAction',
+		// public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra) {}
 
 		'ControllerAction.Model.onGetConvertOptions'=> 'onGetConvertOptions',
 		// public function onGetConvertOptions(Event $event, Entity $entity, Query $query) {}
