@@ -411,6 +411,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.postResponse = postResponse.data;
             UtilsSvc.isAppendLoader(false);
             if (postResponse.data.error.length === 0) {
+                AlertSvc.success($scope, 'The student is added to the Pending Admission list successfully.');
                 $window.location.href = 'add?student_added=true';
             } else {
                 if (userRecord.hasOwnProperty('institution_students')) {
