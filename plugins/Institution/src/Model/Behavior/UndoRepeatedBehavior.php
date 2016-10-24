@@ -38,21 +38,23 @@ class UndoRepeatedBehavior extends UndoBehavior {
 					$studentIds[$studentId] = $studentId;
 
 					$prevInstitutionStudent = $this->deleteEnrolledStudents($studentId, $this->statuses['REPEATED']);
-					$whereId = [
-                        'id' => $prevInstitutionStudent->id
-                    ];
-                    $whereConditions = [
-						'institution_id' => $institutionId,
-						'academic_period_id' => $selectedPeriod,
-						'education_grade_id' => $selectedGrade,
-						'student_status_id' => $selectedStatus,
-						'student_id' => $studentId
-					];
-					$this->updateStudentStatus('CURRENT', $whereId, $whereConditions);
+					$whereId = '';
+                    $whereConditions = '';
 
-					//remove pending admission/transfer/dropout that occured after the process that is undone.
-                    $this->removePendingAdmission($this->statuses['REPEATED'], $studentId, $institutionId);
-                    $this->removePendingDropout($studentId, $institutionId);
+                    if ($prevInstitutionStudent) {
+                        $whereId = [
+                            'id' => $prevInstitutionStudent->id
+                        ];
+                    } else {
+                        $whereConditions = [
+                            'institution_id' => $institutionId,
+                            'academic_period_id' => $selectedPeriod,
+                            'education_grade_id' => $selectedGrade,
+                            'student_status_id' => $selectedStatus,
+                            'student_id' => $studentId
+                        ];
+                    }
+					$this->updateStudentStatus('CURRENT', $whereId, $whereConditions);
 				}
 			}
 		}

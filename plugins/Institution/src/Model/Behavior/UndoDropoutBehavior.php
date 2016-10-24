@@ -4,6 +4,7 @@ namespace Institution\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
+use Cake\ORM\TableRegistry;
 use Institution\Model\Behavior\UndoBehavior;
 
 class UndoDropoutBehavior extends UndoBehavior {
@@ -26,6 +27,7 @@ class UndoDropoutBehavior extends UndoBehavior {
 
     public function processSaveDropoutStudents(Event $event, Entity $entity, ArrayObject $data) 
     {
+        $StudentDropoutTable = TableRegistry::get('Institution.StudentDropout');
         $studentIds = [];
 
         $institutionId = $entity->institution_id;
@@ -40,17 +42,22 @@ class UndoDropoutBehavior extends UndoBehavior {
                     $studentIds[$studentId] = $studentId;
 
                     $prevInstitutionStudent = $this->deleteEnrolledStudents($studentId, $this->statuses['DROPOUT']);
+                    $whereId = '';
+                    $whereConditions = '';
 
-                    $whereId = [
-                        'id' => $prevInstitutionStudent->id
-                    ];
-                    $whereConditions = [
-                        'institution_id' => $institutionId,
-                        'academic_period_id' => $selectedPeriod,
-                        'education_grade_id' => $selectedGrade,
-                        'student_status_id' => $selectedStatus,
-                        'student_id' => $studentId
-                    ];
+                    if ($prevInstitutionStudent) {
+                        $whereId = [
+                            'id' => $prevInstitutionStudent->id
+                        ];
+                    } else {
+                        $whereConditions = [
+                            'institution_id' => $institutionId,
+                            'academic_period_id' => $selectedPeriod,
+                            'education_grade_id' => $selectedGrade,
+                            'student_status_id' => $selectedStatus,
+                            'student_id' => $studentId
+                        ];
+                    }
                     
                     $this->updateStudentStatus('CURRENT', $whereId, $whereConditions);
 
@@ -67,9 +74,6 @@ class UndoDropoutBehavior extends UndoBehavior {
                         ['status' => 3], //status 3 = undo
                         [$conditions]
                     );
-
-                    //remove pending admission/transfer that occured after the process that is undone.
-                    $this->removePendingAdmission($this->statuses['DROPOUT'], $studentId, $institutionId);
                 }
             }
         }
