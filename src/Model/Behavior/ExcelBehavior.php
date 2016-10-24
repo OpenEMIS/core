@@ -81,8 +81,15 @@ class ExcelBehavior extends Behavior {
     public function excelV4(Event $mainEvent, ArrayObject $extra)
     {
         $id = 0;
-        if (isset($this->_table->request->pass[0])) {
-            $id = $this->_table->request->pass[0];
+        $break = false;
+        $action = $this->_table->action;
+        $pass = $this->_table->request->pass;
+        if (in_array($action, $pass)) {
+            unset($pass[array_search($action, $pass)]);
+            $pass = array_values($pass);
+        }
+        if (isset($pass[0])) {
+            $id = $pass[0];
         }
         $this->generateXLXS(['id' => $id]);
     }
@@ -171,7 +178,7 @@ class ExcelBehavior extends Behavior {
                     $initialLength = strlen($sheetName);
                 }
                 if (strlen($sheetName) > 23) {
-                	$sheetName = substr($sheetName,0,23).'('.$counter++.')';
+                    $sheetName = substr($sheetName,0,23).'('.$counter++.')';
                 } else {
                     $sheetName = $sheetName.'('.$counter++.')';
                 }
@@ -244,16 +251,16 @@ class ExcelBehavior extends Behavior {
                     // process each row based on the result set
                     foreach ($resultSet as $entity) {
 
-						if ($sheetRowCount >= $this->config('sheet_limit')) {
+                        if ($sheetRowCount >= $this->config('sheet_limit')) {
 
-							$sheetCount++;
-							$sheetName = $baseSheetName . '_' . $sheetCount;
+                            $sheetCount++;
+                            $sheetName = $baseSheetName . '_' . $sheetCount;
 
-							// rewrite header into new sheet
-							$writer->writeSheetRow($sheetName, $headerRow);
+                            // rewrite header into new sheet
+                            $writer->writeSheetRow($sheetName, $headerRow);
 
-						 	$sheetRowCount= 0;
-						}
+                            $sheetRowCount= 0;
+                        }
 
                         $settings['entity'] = $entity;
 

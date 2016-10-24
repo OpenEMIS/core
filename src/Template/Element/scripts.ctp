@@ -13,7 +13,7 @@ echo $this->Html->script('app/shared/ngSlider/slider');
 echo $this->Html->script('app/app.ctrl');
 echo $this->Html->script('app/app.svc');
 echo $this->Html->script('app/services/app/utils.svc');
-echo $this->Html->script('app/services/app/kd.orm.svc');
+echo $this->Html->script('Restful.kd.orm.svc');
 echo $this->Html->script('app/services/app/kd.session.svc');
 echo $this->Html->script('app/services/app/kd.access.svc');
 

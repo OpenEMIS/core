@@ -19,7 +19,7 @@ class GuardiansTable extends AppTable {
         $this->table('student_guardians');
         parent::initialize($config);
 
-        $this->belongsTo('Students',            ['className' => 'Student.Students', 'foreignKey' => 'student_id']);
+        $this->belongsTo('Students',            ['className' => 'Institution.StudentUser', 'foreignKey' => 'student_id']);
         $this->belongsTo('Users',               ['className' => 'Security.Users', 'foreignKey' => 'guardian_id']);
         $this->belongsTo('GuardianRelations',   ['className' => 'Student.GuardianRelations', 'foreignKey' => 'guardian_relation_id']);
 
