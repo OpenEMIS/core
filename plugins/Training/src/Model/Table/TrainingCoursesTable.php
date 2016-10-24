@@ -73,6 +73,7 @@ class TrainingCoursesTable extends ControllerActionTable
 			'dependent' => true
 		]);
 
+		$this->setDeleteStrategy('restrict');
 		$this->addBehavior('ControllerAction.FileUpload', [
 			// 'name' => 'file_name',
 			// 'content' => 'file_content',
