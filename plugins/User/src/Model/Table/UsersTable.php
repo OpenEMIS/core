@@ -104,53 +104,7 @@ class UsersTable extends AppTable {
     }
 
 	public function createAuthorisedUser(Event $event, $userName, array $userInfo) {
-		$openemisNo = $this->getUniqueOpenemisId();
-
-        $GenderTable = TableRegistry::get('User.Genders');
-        $genderList = $GenderTable->find('list')->toArray();
-
-        // Just in case the gender is others
-        if (!isset($userInfo['gender'])) {
-        	$userInfo['gender'] = null;
-        }
-        $gender = array_search($userInfo['gender'], $genderList);
-        if ($gender === false) {
-            $gender = key($genderList);
-        }
-
-        if (isset($userInfo['dateOfBirth'])) {
-			try {
-				$dateOfBirth = Time::createFromFormat('Y-m-d', $userInfo['dateOfBirth']);
-			} catch (\Exception $e) {
-				$dateOfBirth = Time::createFromFormat('Y-m-d', '1970-01-01');
-			}
-        } else {
-        	$dateOfBirth = Time::createFromFormat('Y-m-d', '1970-01-01');
-        }
-
-        if (isset($userInfo['openemis_no'])) {
-        	$openemisNo = $userInfo['openemis_no'];
-        }
-
-        $date = Time::now();
-        $data = [
-            'username' => $userName,
-            'openemis_no' => $openemisNo,
-            'first_name' => $userInfo['firstName'],
-            'last_name' => $userInfo['lastName'],
-            'gender_id' => $gender,
-            'date_of_birth' => $dateOfBirth,
-            'super_admin' => 0,
-            'status' => 1,
-            'created_user_id' => 1,
-            'created' => $date,
-        ];
-        $userEntity = $this->newEntity($data, ['validate' => false]);
-        if ($this->save($userEntity)) {
-        	return $userName;
-        } else {
-        	return false;
-        }
+        return false;
 	}
 
 	public static function handleAssociations($model) {
