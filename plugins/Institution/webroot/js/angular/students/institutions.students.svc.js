@@ -557,7 +557,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             if (source.length > 0) {
                 sourceUrl = source[0].value;
             }
-            vm.initExternal(sourceUrl);
             vm.getAccessToken()
             .then(function(token){
                 var authorizationHeader = 'Bearer ' + token;
@@ -569,6 +568,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                         deferred.resolve(defaultIdentityType);
                     }
                 };
+                vm.initExternal(sourceUrl);
                 return IdentityTypes
                     .find('DefaultIdentityType')
                     .ajax({defer: true, success: success, authorizationHeader: authorizationHeader});

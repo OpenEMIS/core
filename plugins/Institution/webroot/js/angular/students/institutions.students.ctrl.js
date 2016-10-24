@@ -141,7 +141,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         .then(function(arr) {
             if (StudentController.hasExternalDataSource) {
                 externalIdentityType = arr;
-                console.log(arr);
                 StudentController.defaultExternalIdentityTypeName = externalIdentityType;
                 InstitutionsStudentsSvc.init(angular.baseUrl);
                 return true;
