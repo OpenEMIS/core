@@ -33,6 +33,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 		$this->addBehavior('Restful.RestfulAccessControl', [
         	'Dashboard' => ['index']
         ]);
+        $this->toggle('add', false);
 	}
 
 	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
@@ -349,7 +350,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 		if ($action == 'view') {
 			$attr['type'] = 'select';
 		} else if ($action == 'edit') {
-			$sessionOptions = $this->Training->getSessionList();
+			$sessionOptions = $this->Training->getSessionList(['listAll' => true]);
 			if (isset($attr['attr']['value'])) {
 				$sessionId = $attr['attr']['value'];
 
