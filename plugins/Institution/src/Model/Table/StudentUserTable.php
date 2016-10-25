@@ -253,6 +253,7 @@ class StudentUserTable extends ControllerActionTable
 			}
 		}
 
+		$this->addPromoteButton($entity, $extra);
 		$this->addTransferButton($entity, $extra);
 		$this->addDropoutButton($entity, $extra);
 	}
@@ -319,6 +320,41 @@ class StudentUserTable extends ControllerActionTable
 				$toolbarButtons['transfer'] = $transferButton;
 			}
     	}
+    }
+
+    private function addPromoteButton(Entity $entity, ArrayObject $extra)
+    {
+		if ($this->AccessControl->check([$this->controller->name, 'Promotion', 'add'])) {
+			$session = $this->Session;
+    		$toolbarButtons = $extra['toolbarButtons'];
+
+    		$StudentsTable = TableRegistry::get('Institution.Students');
+			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			$editableAcademicPeriods = $AcademicPeriods->getYearList(['isEditable' => true]);
+
+			$Enrolled = $StudentStatuses->getIdByCode('CURRENT');
+			$institutionStudentId = $extra['institutionStudentId'];
+			$studentEntity = $StudentsTable->get($institutionStudentId);
+			$academicPeriodId = $studentEntity->academic_period_id;
+
+			$params = ['student_id' => $institutionStudentId, 'user_id' => $entity->id];
+			$action = $this->setUrlParams(['action' => 'IndividualPromotion', 'add'], $params);
+
+			// Show Promote button only if the Student Status is Current and academic period is editable
+			if ($studentEntity->student_status_id == $Enrolled && array_key_exists($academicPeriodId, $editableAcademicPeriods)) {
+				// Promote button
+				$promoteButton = $toolbarButtons['back'];
+				$promoteButton['type'] = 'button';
+				$promoteButton['label'] = '<i class="fa kd-graduate"></i>';
+				$promoteButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+				$promoteButton['attr']['title'] = __('Promotion');
+				$promoteButton['url'] = $action;
+
+				$toolbarButtons['promote'] = $promoteButton;
+				//End
+			}
+		}
     }
 
     private function addDropoutButton(Entity $entity, ArrayObject $extra)

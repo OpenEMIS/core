@@ -537,8 +537,7 @@ class StudentsTable extends ControllerActionTable
             ->toArray();
 
         $educationGradesOptions = ['-1' => __('All Grades')] + $educationGradesOptions;
-        $statusOptions = ['-1' => __('All Statuses')] + $statusOptions;
-
+        
         // Query Strings
 
         if (empty($request->query['academic_period_id'])) {
