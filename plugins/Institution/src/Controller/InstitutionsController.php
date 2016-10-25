@@ -103,6 +103,8 @@ class InstitutionsController extends AppController
     public function TransferRequests()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.TransferRequests']); }
     // public function StaffAbsences() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
     public function StaffLeave()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffLeave']); }
+    public function StaffTrainingResults()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingResults']); }
+    public function StaffTrainingNeeds()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingNeeds']); }
     // End
 
     // AngularJS
@@ -629,5 +631,21 @@ class InstitutionsController extends AppController
     public function getCareerTabElements($options = []) {
         $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
         return TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
+    }
+
+    public function getTrainingTabElements($options = []) {
+        $tabElements = [];
+        $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+        $studentTabElements = [
+            'StaffTrainingResults' => ['text' => __('Results')],
+            'StaffTrainingNeeds' => ['text' => __('Needs')]
+        ];
+
+        $tabElements = array_merge($tabElements, $studentTabElements);
+
+        foreach ($studentTabElements as $key => $tab) {
+            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+        }
+        return $tabElements;
     }
 }

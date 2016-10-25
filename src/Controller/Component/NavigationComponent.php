@@ -587,11 +587,11 @@ class NavigationComponent extends Component
 				'params' => ['plugin' => 'Staff'],
 				'selected' => ['Staff.BankAccounts', 'Staff.Salaries'],
 			],
-			'Staff.TrainingResults' => [
+			'Institutions.StaffTrainingResults' => [
 				'title' => 'Training',
 				'parent' => 'Institutions.Staff.index',
-				'params' => ['plugin' => 'Staff'],
-				'selected' => ['Staff.TrainingResults', 'Staff.TrainingNeeds'],
+				'params' => ['plugin' => 'Institution'],
+				'selected' => ['Institutions.StaffTrainingResults', 'Institutions.StaffTrainingNeeds'],
 			],
 			'Staff.Healths' => [
 				'title' => 'Health',
