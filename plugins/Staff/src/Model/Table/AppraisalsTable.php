@@ -45,7 +45,6 @@ class AppraisalsTable extends ControllerActionTable {
                     'rule' => ['compareDate', 'to', false]
                 ]
             ])
-
             ;
     }
 
@@ -80,6 +79,18 @@ class AppraisalsTable extends ControllerActionTable {
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
+
+        $session = $this->request->session();
+        $loginUserId = $session->read('Auth.User.id');
+        $createdUserId = $entity->created_user->id;
+
+        // if not admin and not his own appraisal remove and edit button will be remove
+        if (!$this->AccessControl->isAdmin()) {
+            if ($loginUserId != $createdUserId) {
+                $this->toggle('remove', false);
+                $this->toggle('edit', false);
+            }
+        }
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -101,8 +112,8 @@ class AppraisalsTable extends ControllerActionTable {
     {
         $finalRating = 0.00;
 
-        if (isset($data[$this->alias]['competencies'])) {
-            $competenciesRating = $data[$this->alias]['competencies'];
+        if (isset($data[$this->alias()]['competencies'])) {
+            $competenciesRating = $data[$this->alias()]['competencies'];
             foreach ($competenciesRating as $key => $value) {
                 $finalRating = $finalRating + $value['_joinData']['rating'];
             }
@@ -114,7 +125,7 @@ class AppraisalsTable extends ControllerActionTable {
     public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $dateAttr = ['from' => Date::now(), 'to' => Date::now()];
-        $academicPeriodId = $data[$this->alias]['academic_period_id'];
+        $academicPeriodId = $data[$this->alias()]['academic_period_id'];
 
         if (!empty($academicPeriodId)) {
             $dateAttr['from'] = $this->AcademicPeriods->get($academicPeriodId)->start_date;
@@ -322,7 +333,16 @@ class AppraisalsTable extends ControllerActionTable {
                 $rating = !empty($obj['rating']) ? $obj['rating'] : '';
 
                 $cellData = "";
-                $cellData .= $form->input($joinDataPrefix.".rating", ['label' => false, 'type' => 'number', 'value' => $rating, 'min' => $obj['min'], 'max' => $obj['max'], 'step' => 0.1, 'onchange' => "jsTable.computeTotalForMoney('finalRating');$('.finalRatingInput').val($('.finalRating').html());", 'computeType' => 'finalRating']);
+                $cellData .= $form->input($joinDataPrefix.".rating", [
+                    'label' => false,
+                    'type' => 'number',
+                    'value' => $rating,
+                    'min' => $obj['min'],
+                    'max' => $obj['max'],
+                    'step' => 0.1,
+                    'onchange' => "jsTable.computeTotalForMoney('finalRating');",
+                    'computeType' => 'finalRating'
+                ]);
                 $cellData .= $form->hidden($fieldPrefix.".id", ['value' => $obj['id']]);
                 $cellData .= $form->hidden($fieldPrefix.".name", ['value' => $obj['name']]);
                 $cellData .= $form->hidden($fieldPrefix.".min", ['value' => $obj['min']]);
@@ -353,6 +373,25 @@ class AppraisalsTable extends ControllerActionTable {
         return $attr;
     }
 
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
+        $session = $this->request->session();
+        $loginUserId = $session->read('Auth.User.id');
+        $createdUserId = $entity->created_user->id;
+
+        // if not admin and not his own appraisal remove and edit button will be remove
+        if (!$this->AccessControl->isAdmin()) {
+            if ($loginUserId != $createdUserId) {
+                unset($buttons['edit']);//remove edit action from the action button
+                unset($buttons['remove']);// remove delete action from the action button
+            }
+        }
+
+        return $buttons;
+    }
+
     public function setupFields(Entity $entity)
     {
         $this->field('academic_period_id');
@@ -367,22 +406,26 @@ class AppraisalsTable extends ControllerActionTable {
     public function getStaffAppraisalTypeIdOptions()
     {
         // type only self if choose to appraise himself, if appraise other staff will be only supervisor or peer.
-        // $session = $this->request->session();
-        // $loginUserId = $session->read('Auth.User.id');
-        // $staffId = $session->read('Staff.Staff.id');
-        // pr($loginUserId);
-        // pr($staffId);
-
         $staffAppraisalType = TableRegistry::get('Staff.StaffAppraisalTypes');
+        $session = $this->request->session();
+        $loginUserId = $session->read('Auth.User.id');
+        $staffId = $session->read('Staff.Staff.id');
+
+        if ($loginUserId == $staffId) {
+            $conditions[] = [$staffAppraisalType -> aliasField('code') => 'SELF'];
+        } else {
+            $conditions[] = [$staffAppraisalType -> aliasField('code != ') => 'SELF'];
+        }
+
         $typeOptions = $staffAppraisalType
             ->find('list')
+            ->where([$conditions])
             ->toArray();
         return $typeOptions;
     }
 
     public function getCompetencySetOptions()
     {
-
         $competencySets = TableRegistry::get('Staff.CompetencySets');
         $competencySetOptions = $competencySets
             ->find('list')
