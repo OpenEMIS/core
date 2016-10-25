@@ -27,7 +27,7 @@ class StaffTrainingResultsTable extends ControllerActionTable
 	{
 		$modelAlias = 'Results';
 		$userType = 'StaffUser';
-		$this->controller->changeUserHeader($modelAlias, $userType);
+		$this->controller->changeUserHeader($this, $modelAlias, $userType);
 	}
 
 	public function onGetStatus(Event $event, Entity $entity)

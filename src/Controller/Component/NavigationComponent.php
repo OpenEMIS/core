@@ -53,7 +53,7 @@ class NavigationComponent extends Component
 
 	public function removeCrumb($title)
 	{
-		$key = array_search($title, $this->array_column($this->breadcrumbs, 'title'));
+		$key = array_search(__($title), $this->array_column($this->breadcrumbs, 'title'));
 		if ($key) {
 			unset($this->breadcrumbs[$key]);
 			$this->controller->set('_breadcrumbs', $this->breadcrumbs);
