@@ -1135,7 +1135,12 @@ trait MessagesTrait {
                 'net_salary' => [
                     'ruleMoney' => 'Please enter a valid amount.'
                 ]
-            ]
+            ],
+            'Appraisal' => [
+                'competencies' => 'Competencies / Goals',
+                'rating' => 'Rating',
+                'final_rating' => 'Final Rating'
+            ],
         ],
         'AcademicPeriod' => [
             'AcademicPeriods' => [
