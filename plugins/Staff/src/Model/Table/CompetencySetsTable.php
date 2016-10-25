@@ -24,7 +24,7 @@ class CompetencySetsTable extends ControllerActionTable
             'joinTable' => 'competency_set_competencies',
             'foreignKey' => 'competency_set_id',
             'targetForeignKey' => 'competency_id',
-            'through' => 'Staff.CompetencySetCompetencies',
+            'through' => 'Staff.CompetencySetsCompetencies',
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
