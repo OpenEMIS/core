@@ -28,6 +28,22 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         // $this->addBehavior('Restful.RestfulAccessControl', [
         //     'Dashboard' => ['index']
         // ]);
+        $this->toggle('remove', false);
+    }
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $modelAlias = 'Applications';
+        $userType = 'StaffUser';
+        $this->controller->changeUserHeader($this, $modelAlias, $userType);
+    }
+
+    public function indexbeforeAction(Event $event, ArrayObject $extra)
+    {
+        if (isset($extra['toolbarButtons']['add']['url'])) {
+            $extra['toolbarButtons']['add']['url']['action'] = 'StaffTrainingCourses';
+            $extra['toolbarButtons']['add']['url'][0] = 'index';
+        }
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
