@@ -105,6 +105,7 @@ class InstitutionsController extends AppController
     public function StaffLeave()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffLeave']); }
     public function StaffTrainingResults()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingResults']); }
     public function StaffTrainingNeeds()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingNeeds']); }
+    public function StaffTrainingApplications()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingApplications']); }
     // End
 
     // AngularJS
@@ -659,6 +660,7 @@ class InstitutionsController extends AppController
         $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
         $studentTabElements = [
             'StaffTrainingResults' => ['text' => __('Results')],
+            'StaffTrainingApplications' => ['text' => __('Applications')],
             'StaffTrainingNeeds' => ['text' => __('Needs')]
         ];
 
