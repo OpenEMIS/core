@@ -35,7 +35,7 @@ class StudentsTable extends ControllerActionTable
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('Institutions',    ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('PreviousInstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'previous_institution_student_id']);
+        $this->belongsTo('PreviousInstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'previous_institution_student_id']); 
 
         // Behaviors
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
@@ -741,6 +741,25 @@ class StudentsTable extends ControllerActionTable
             $this->Users
         ];
         $this->dispatchEventToModels('Model.Students.afterSave', [$entity], $this, $listeners);
+
+        //if new record has no previous_institution_student_id value yet, then try to update it.
+        if (!$entity->has('previous_institution_student_id')) {
+            $prevInstitutionStudent = $this
+                                ->find()
+                                ->where([
+                                    $this->aliasField('student_id') => $entity->student_id,
+                                    $this->aliasField('id <> ') => $entity->id,
+                                ])
+                                ->order(['created' => 'desc'])
+                                ->first();
+
+            if ($prevInstitutionStudent) { //if has previous record.
+                $this->updateAll(
+                    ['previous_institution_student_id' => $prevInstitutionStudent->id],
+                    ['id' => $entity->id]
+                );
+            }
+        }
     }
 
     public function onGetStudentId(Event $event, Entity $entity)
