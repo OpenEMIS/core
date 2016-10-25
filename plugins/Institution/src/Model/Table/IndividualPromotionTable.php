@@ -42,7 +42,7 @@ class IndividualPromotionTable extends ControllerActionTable
     {
         $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'];
         $Navigation->substituteCrumb('Individual Promotion', 'Students', $url);
-        $Navigation->addCrumb('Individual Promotion');
+        $Navigation->addCrumb('Individual Promotion / Repeat');
     }
 
     public function validationDefault(Validator $validator)
@@ -50,7 +50,7 @@ class IndividualPromotionTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
         $validator
             ->add('effective_date', 'ruleDateWithinAcademicPeriod', [
-                'rule' => ['checkDateWithinAcademicPeriod', 'academic_period_id'],
+                'rule' => ['checkDateWithinAcademicPeriod', 'academic_period_id',  ['excludeFirstDay' => true]],
                 'provider' => 'table',
                 'on' => function ($context) {
                     $fromAcademicPeriodId = $context['data']['from_academic_period_id'];
@@ -435,11 +435,13 @@ class IndividualPromotionTable extends ControllerActionTable
 
                     $startDate = $toPeriodData->start_date->format('d-m-Y');
                     $endDate = $toPeriodData->end_date->format('d-m-Y');
+                    $withFirstDay = Time::parse($toPeriodData->start_date);
+                    $excludeFirstDay = $withFirstDay->modify('+1 day')->format('d-m-Y');
 
                     if ($toAcademicPeriodId == $fromAcademicPeriodId) {
                         $attr['type'] = 'date';
                         $attr['value'] = Time::now()->format('d-m-Y');
-                        $attr['date_options'] = ['startDate' => $startDate, 'endDate' => $endDate];
+                        $attr['date_options'] = ['startDate' => $excludeFirstDay, 'endDate' => $endDate];
 
                     } else {
                         // if different academic period chosen, start date is fixed to start date of academic period
