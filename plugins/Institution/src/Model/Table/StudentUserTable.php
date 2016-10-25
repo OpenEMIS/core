@@ -348,7 +348,7 @@ class StudentUserTable extends ControllerActionTable
 				$promoteButton['type'] = 'button';
 				$promoteButton['label'] = '<i class="fa kd-graduate"></i>';
 				$promoteButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
-				$promoteButton['attr']['title'] = __('Promotion');
+				$promoteButton['attr']['title'] = __('Promotion / Repeat');
 				$promoteButton['url'] = $action;
 
 				$toolbarButtons['promote'] = $promoteButton;
