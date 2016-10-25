@@ -1333,6 +1333,23 @@ class ValidationBehavior extends Behavior {
 		}
 	}
 
+	public static function checkDateWithinAcademicPeriod($field, $academicPeriod, array $globalData) {
+		if (array_key_exists($academicPeriod, $globalData['data'])) {
+	        $academicPeriodId = $globalData['data'][$academicPeriod];
+
+	        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+	        $periodData = $AcademicPeriods->get($academicPeriodId);
+
+	        $startDate = $periodData->start_date->format('Y-m-d');
+	        $endDate = $periodData->end_date->format('Y-m-d');
+	        $effectiveDate = Time::parse($field)->format('Y-m-d');
+
+	        return ($effectiveDate >= $startDate && $effectiveDate <= $endDate);
+	    }
+
+	    return false;
+    }
+
 	public static function checkTimeRange($field, array $globalData) {
 		$systemTimeFormat = TableRegistry::get('Configuration.ConfigItems')->value('time_format');
 		$model = $globalData['providers']['table'];
