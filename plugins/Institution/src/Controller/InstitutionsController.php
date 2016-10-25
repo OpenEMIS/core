@@ -106,6 +106,7 @@ class InstitutionsController extends AppController
     public function StaffTrainingResults()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingResults']); }
     public function StaffTrainingNeeds()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingNeeds']); }
     public function StaffTrainingApplications()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingApplications']); }
+    public function StaffTrainingCourses()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingCourses']); }
     // End
 
     // AngularJS
@@ -181,7 +182,7 @@ class InstitutionsController extends AppController
         return $ignore;
     }
 
-    public function changeUserHeader($modelAlias, $userType)
+    public function changeUserHeader($model, $modelAlias, $userType)
     {
         $session = $this->request->session();
         // add the student name to the header
@@ -193,9 +194,9 @@ class InstitutionsController extends AppController
             $Users = TableRegistry::get('Users');
             $entity = $Users->get($id);
             $name = $entity->name;
-            $crumb = __(Inflector::humanize(Inflector::underscore($modelAlias)));
-            $header = $name . ' - ' . $crumb;
-            $this->Navigation->removeCrumb($crumb);
+            $crumb = Inflector::humanize(Inflector::underscore($modelAlias));
+            $header = $name . ' - ' . __($crumb);
+            $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
             $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $userType, 'view', $id]);
             $this->Navigation->addCrumb($crumb);
             $this->set('contentHeader', $header);
