@@ -53,7 +53,7 @@ class ConfigAuthenticationTable extends ControllerActionTable {
 
         if ($this->action == 'index') {
             $url = $this->url('view');
-            $url[] = $this->id;
+            $url[1] = $this->id;
             $this->controller->redirect($url);
         } else if ($this->action == 'view') {
             $extra['elements']['controls'] = $this->buildSystemConfigFilters();

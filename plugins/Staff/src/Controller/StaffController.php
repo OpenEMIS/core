@@ -23,14 +23,12 @@ class StaffController extends AppController {
 			'Classes'			=> ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
 			'Qualifications'	=> ['className' => 'Staff.Qualifications'],
 			'Absences'			=> ['className' => 'Staff.Absences', 'actions' => ['index', 'view']],
-			'Leave'  			=> ['className' => 'Staff.Leaves'],
 			'Behaviours'		=> ['className' => 'Staff.StaffBehaviours', 'actions' => ['index', 'view']],
 			'Extracurriculars'	=> ['className' => 'Staff.Extracurriculars'],
 			'Trainings'			=> ['className' => 'Staff.StaffTrainings'],
 			'Salaries'			=> ['className' => 'Staff.Salaries'],
 			'History'			=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 			'ImportStaff' 		=> ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
-			'TrainingNeeds'		=> ['className' => 'Staff.TrainingNeeds'],
 			'TrainingResults'	=> ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
 			'Achievements'		=> ['className' => 'Staff.Achievements'],
 
@@ -68,8 +66,12 @@ class StaffController extends AppController {
     public function Comments()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
     public function Identities() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']); }
     public function Awards() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
+<<<<<<< HEAD
 	public function Appraisals()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Appraisals']); }
 	public function StaffAppraisalTypes(){ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffAppraisalTypes']); }
+=======
+    public function TrainingNeeds() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.TrainingNeeds']); }
+>>>>>>> a0961644ade872cd180e665dff6fbd0e7a0f1abc
 	// End
 
 	public function beforeFilter(Event $event) {
@@ -217,6 +219,12 @@ class StaffController extends AppController {
 	}
 
 	public function getCareerTabElements($options = []) {
+		$options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+		$session = $this->request->session();
+		if ($session->check('Staff.Staff.id')) {
+			$userId = $session->read('Staff.Staff.id');
+			$options['user_id'] = $userId;
+		}
 		return TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
 	}
 
