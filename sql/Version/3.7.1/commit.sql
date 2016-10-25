@@ -343,7 +343,9 @@ INNER JOIN `institution_staff` AS `Staff`
 ON `Staff`.`staff_id` = `StaffLeaves`.`staff_id`
 INNER JOIN `staff_statuses` AS `StaffStatuses`
 ON `StaffStatuses`.`id` = `Staff`.`staff_status_id`
-WHERE `StaffStatuses`.`code` = 'ASSIGNED';
+WHERE `StaffStatuses`.`code` = 'ASSIGNED'
+GROUP BY `Staff`.`staff_id`
+ORDER BY `Staff`.`start_date` DESC;
 
 -- institution_positions
 RENAME TABLE `institution_positions` TO `z_3253_institution_positions`;
