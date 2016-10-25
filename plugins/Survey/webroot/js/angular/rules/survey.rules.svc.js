@@ -27,6 +27,7 @@ function SurveyRulesSvc($q, KdOrmSvc) {
 
     function init(baseUrl) {
         KdOrmSvc.base(baseUrl);
+        KdOrmSvc.controllerAction('Rules');
         KdOrmSvc.init(models);
     };
 
