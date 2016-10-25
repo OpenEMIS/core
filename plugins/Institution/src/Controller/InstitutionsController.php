@@ -61,7 +61,6 @@ class InstitutionsController extends AppController
             // Quality
             'Rubrics'           => ['className' => 'Institution.InstitutionRubrics', 'actions' => ['index', 'view', 'remove']],
             'RubricAnswers'     => ['className' => 'Institution.InstitutionRubricAnswers', 'actions' => ['view', 'edit']],
-            'Visits'            => ['className' => 'Institution.InstitutionQualityVisits'],
 
             'ImportInstitutions'        => ['className' => 'Institution.ImportInstitutions', 'actions' => ['add']],
             'ImportStaffAttendances'    => ['className' => 'Institution.ImportStaffAttendances', 'actions' => ['add']],
@@ -101,7 +100,9 @@ class InstitutionsController extends AppController
     }
     public function TransferRequests()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.TransferRequests']); }
     // public function StaffAbsences() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
-    public function StaffLeave()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffLeave']); }
+    public function StaffLeave()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffLeave']); }
+    public function VisitRequests()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.VisitRequests']); }
+    public function Visits()                { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionQualityVisits']); }
     // End
 
     // AngularJS
