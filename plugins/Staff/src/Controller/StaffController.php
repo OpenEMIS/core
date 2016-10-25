@@ -66,12 +66,9 @@ class StaffController extends AppController {
     public function Comments()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
     public function Identities() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']); }
     public function Awards() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
-<<<<<<< HEAD
 	public function Appraisals()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Appraisals']); }
 	public function StaffAppraisalTypes(){ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffAppraisalTypes']); }
-=======
     public function TrainingNeeds() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.TrainingNeeds']); }
->>>>>>> a0961644ade872cd180e665dff6fbd0e7a0f1abc
 	// End
 
 	public function beforeFilter(Event $event) {
