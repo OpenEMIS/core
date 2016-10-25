@@ -4,12 +4,12 @@
 OpenEMIS
 Open Education Management Information System
 
-Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by the Free Software Foundation
-, either version 3 of the License, or any later version.  This program is distributed in the hope 
+, either version 3 of the License, or any later version.  This program is distributed in the hope
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should 
-have received a copy of the GNU General Public License along with this program.  If not, see 
+or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should
+have received a copy of the GNU General Public License along with this program.  If not, see
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
@@ -33,8 +33,9 @@ var Workflow = {
 		$('.workflowtransition-assignee-required').val(jsonObj.assignee_required);
 		$('.workflowtransition-comment-required').val(jsonObj.comment_required);
 		$('.workflowtransition-event-description').html(jsonObj.event_description);
+        var assigneeUrl = $('.workflowtransition-assignee-id').attr('assignee-url');
 
-		Workflow.getAssigneeOptions(jsonObj.is_school_based, jsonObj.next_step_id);
+		Workflow.getAssigneeOptions(assigneeUrl, jsonObj.is_school_based, jsonObj.next_step_id);
 		Workflow.resetError();
 		Workflow.toggleAssignee(jsonObj.assignee_required);
 	},
@@ -91,8 +92,8 @@ var Workflow = {
 		}
 	},
 
-	getAssigneeOptions: function(isSchoolBased, nextStepId) {
-		var url = '/core/Workflows/ajaxGetAssignees';
+	getAssigneeOptions: function(assigneeUrl, isSchoolBased, nextStepId) {
+		var url = assigneeUrl;
 
 		$.ajax({
 			url: url,

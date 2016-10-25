@@ -72,6 +72,7 @@ class InstitutionsController extends AppController
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
+        $this->loadComponent('Training.Training');
         $this->attachAngularModules();
 
         $controller = $this->name;
