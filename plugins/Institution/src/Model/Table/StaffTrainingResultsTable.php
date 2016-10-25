@@ -20,6 +20,14 @@ class StaffTrainingResultsTable extends ControllerActionTable
 		$this->belongsTo('TrainingResultTypes', ['className' => 'Training.TrainingResultTypes']);
 		$this->toggle('edit', false);
 		$this->toggle('add', false);
+		$this->toggle('search', false);
+	}
+
+	public function beforeAction()
+	{
+		$modelAlias = 'Results';
+		$userType = 'StaffUser';
+		$this->controller->changeUserHeader($modelAlias, $userType);
 	}
 
 	public function onGetStatus(Event $event, Entity $entity)
