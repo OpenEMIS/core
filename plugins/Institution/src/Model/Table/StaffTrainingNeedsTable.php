@@ -102,6 +102,13 @@ class StaffTrainingNeedsTable extends ControllerActionTable
 			;
 	}
 
+	public function beforeAction()
+	{
+		$modelAlias = 'Needs';
+		$userType = 'StaffUser';
+		$this->controller->changeUserHeader($modelAlias, $userType);
+	}
+
 	public function onGetType(Event $event, Entity $entity)
 	{
 		list($typeOptions) = array_values($this->_getSelectOptions());

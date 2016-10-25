@@ -180,6 +180,27 @@ class InstitutionsController extends AppController
         return $ignore;
     }
 
+    public function changeUserHeader($modelAlias, $userType)
+    {
+        $session = $this->request->session();
+        // add the student name to the header
+        $id = 0;
+        if ($session->check('Staff.Staff.id')) {
+            $id = $session->read('Staff.Staff.id');
+        }
+        if (!empty($id)) {
+            $Users = TableRegistry::get('Users');
+            $entity = $Users->get($id);
+            $name = $entity->name;
+            $crumb = __(Inflector::humanize(Inflector::underscore($modelAlias)));
+            $header = $name . ' - ' . $crumb;
+            $this->Navigation->removeCrumb($crumb);
+            $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $userType, 'view', $id]);
+            $this->Navigation->addCrumb($crumb);
+            $this->set('contentHeader', $header);
+        }
+    }
+
     private function checkInstitutionAccess($id, $event)
     {
         if (!$this->AccessControl->isAdmin()) {
