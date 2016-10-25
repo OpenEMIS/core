@@ -3,13 +3,14 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
+use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use Cake\Network\Request;
 use Cake\Event\Event;
-use App\Model\Table\AppTable;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\Controller\Component;
+use App\Model\Table\AppTable;
 
 class UndoStudentStatusTable extends AppTable {
 	private $undoActions = [];
@@ -40,6 +41,8 @@ class UndoStudentStatusTable extends AppTable {
 		];
 
 		$this->addBehavior('Institution.UndoCurrent', $settings);
+		$this->addBehavior('Institution.UndoDropout', $settings);
+		$this->addBehavior('Institution.UndoTransferred', $settings);
 		$this->addBehavior('Institution.UndoGraduated', $settings);
 		$this->addBehavior('Institution.UndoPromoted', $settings);
 		$this->addBehavior('Institution.UndoRepeated', $settings);
@@ -242,6 +245,8 @@ class UndoStudentStatusTable extends AppTable {
 
 			$codes = [];
 			$codes[$this->statuses['CURRENT']] = $this->statuses['CURRENT'];
+			$codes[$this->statuses['TRANSFERRED']] = $this->statuses['TRANSFERRED'];
+			$codes[$this->statuses['DROPOUT']] = $this->statuses['DROPOUT'];
 			$codes[$this->statuses['GRADUATED']] = $this->statuses['GRADUATED'];
 			$codes[$this->statuses['PROMOTED']] = $this->statuses['PROMOTED'];
 			$codes[$this->statuses['REPEATED']] = $this->statuses['REPEATED'];
@@ -260,10 +265,18 @@ class UndoStudentStatusTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request) 
+    {   
 		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+
 		if ($action == 'reconfirm') {
-			$attr['type'] = 'readonly';
+
+            if ($request->query('status') == $this->statuses['TRANSFERRED']) {
+                $attr['type'] = 'hidden';
+            } else {
+                $attr['type'] = 'readonly';
+            }
+
 			$selectedClass = $request->query('class');
 			if ($selectedClass != -1) {
 				$institutionClassRecord = $InstitutionClasses->get($selectedClass)->name;
@@ -272,7 +285,13 @@ class UndoStudentStatusTable extends AppTable {
 			}
 			
 			$attr['attr']['value'] = $institutionClassRecord;
+
 		} else {
+
+            if ($request->query('status') == $this->statuses['TRANSFERRED']) {
+                $attr['type'] = 'hidden';
+            }
+
 			$institutionId = $institutionId = $this->Session->read('Institution.Institutions.id');
 			$selectedPeriod = $request->query('period');
 			$selectedGrade = $request->query('grade');
@@ -301,30 +320,47 @@ class UndoStudentStatusTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldStudents(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldStudents(Event $event, array $attr, $action, Request $request) 
+    {
 		$data = [];
 
 		if ($action == 'reconfirm') {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 			$selectedPeriod = $request->data[$this->alias()]['academic_period_id'];
 			$selectedGrade = $request->data[$this->alias()]['education_grade_id'];
-			$selectedStatus = $request->data[$this->alias()]['student_status_id'];
+            $selectedStatus = $request->data[$this->alias()]['student_status_id'];
 			$student_ids = $request->data[$this->alias()]['student_ids'];
 			$selectedClass = $request->query('class');
 
-			$data = $this
+            $conditions = [
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('academic_period_id') =>  $selectedPeriod,
+                $this->aliasField('education_grade_id') => $selectedGrade,
+                $this->aliasField('student_status_id') => $selectedStatus,
+                $this->aliasField('student_id IN') => $student_ids
+            ];
+
+            $data = $this
 				->find()
 	    		->matching('Users')
-	    		->matching('EducationGrades')
-	    		->where([
-	    			$this->aliasField('institution_id') => $institutionId,
-	    			$this->aliasField('academic_period_id') =>  $selectedPeriod,
-	    			$this->aliasField('education_grade_id') => $selectedGrade,
-	    			$this->aliasField('student_status_id') => $selectedStatus,
-	    			$this->aliasField('student_id IN') => $student_ids
-	    		])
-	    		->find('studentClasses', ['institution_class_id' => $selectedClass])
-				->select(['institution_class_id' => 'InstitutionClassStudents.institution_class_id'])
+	    		->matching('EducationGrades');
+
+            if ($selectedStatus == $this->statuses['TRANSFERRED']) {
+
+                $data->find('UndoTransferredStudent', 
+                    ['institutionId' => $institutionId, 'selectedPeriod' => $selectedPeriod, 'selectedClass' => $selectedClass, 'selectedGrade' => $selectedGrade, 'studentIds' => $student_ids]
+                );
+
+            } else {
+                $data = $data
+                    ->where([
+                        $conditions
+                    ])
+                    ->find('studentClasses', ['institution_class_id' => $selectedClass])
+                    ->select(['institution_class_id' => 'InstitutionClassStudents.institution_class_id']);
+            }
+	    	
+            $data = $data
 				->order(['Users.first_name'])
 				->autoFields(true);
 
@@ -351,7 +387,7 @@ class UndoStudentStatusTable extends AppTable {
                         ->matching('EducationGrades');
 
                 //to undo enrolled, then student cant have specific status before.
-                if ($selectedStatus == $this->statuses['CURRENT']){ 
+                if ($selectedStatus == $this->statuses['CURRENT']) { 
 
                     $checkStatus = [
                         $this->statuses['GRADUATED'],
@@ -372,21 +408,41 @@ class UndoStudentStatusTable extends AppTable {
                             ],
                         ]);
 
+                } else if ($selectedStatus == $this->statuses['TRANSFERRED']) {
+
+                    $data->find('UndoTransferredStudent', 
+                        ['institutionId' => $institutionId, 'selectedPeriod' => $selectedPeriod, 'selectedClass' => $selectedClass, 'selectedGrade' => $selectedGrade, 'studentIds' => '']
+                    );
+
+                } else if ($selectedStatus == $this->statuses['DROPOUT']) {
+
+                    $data = $data
+                        ->leftJoin(['InstitutionStudent' => 'institution_students'], [
+                            $this->aliasfield('id') . ' = ' . 'InstitutionStudent.previous_institution_student_id'
+                        ])
+                        ->where([
+                            $conditions,
+                            'InstitutionStudent.student_status_id IS NULL' //no record after dropout record
+                        ]);
+
                 } else {
-                    
                     $data = $data
                         ->where([
                             $conditions
                         ]);
                 }
 
+                if ($selectedStatus != $this->statuses['TRANSFERRED']) { //for undo transfer, class filter is unnecessary.
+                    $data = $data
+                        ->find('studentClasses', ['institution_class_id' => $selectedClass])
+                        ->select(['institution_class_id' => 'InstitutionClassStudents.institution_class_id']);
+                }
+
                 $data = $data
-                    ->find('studentClasses', ['institution_class_id' => $selectedClass])
-                    ->select(['institution_class_id' => 'InstitutionClassStudents.institution_class_id'])
                     ->order(['Users.first_name'])
                     ->autoFields(true);
 
-		    	// update students count here and show / hide form buttons in onGetFormButtons()
+                // update students count here and show / hide form buttons in onGetFormButtons()
 		    	$this->dataCount = $data->count();
 
 				// onGetCurrentStudents event
@@ -399,12 +455,11 @@ class UndoStudentStatusTable extends AppTable {
 					$this->dataCount = sizeof($data);
 				}
 				// End event
+				if (empty($this->dataCount)) {
+			  		$this->Alert->warning($this->aliasField('noData'));
+			  	}
 			}
 		}
-
-		if (empty($this->dataCount)) {
-	  		$this->Alert->warning($this->aliasField('noData'));
-	  	}
 
     	$attr['type'] = 'element';
 		$attr['element'] = 'Institution.UndoStudentStatus/students';
@@ -589,6 +644,46 @@ class UndoStudentStatusTable extends AppTable {
 		$this->ControllerAction->field('student_status_id', ['type' => 'select']);
 		$this->ControllerAction->field('students');
 
-		$this->ControllerAction->setFieldOrder(['academic_period_id', 'education_grade_id', 'class', 'student_status_id', 'students']);
+		$this->ControllerAction->setFieldOrder(['student_status_id', 'academic_period_id', 'education_grade_id', 'class', 'students']);
 	}
+
+    public function findUndoTransferredStudent(Query $query, array $options) 
+    {
+        $conditions = [
+            $this->aliasField('academic_period_id') =>  $options['selectedPeriod'],
+            $this->aliasField('education_grade_id') => $options['selectedGrade'],
+            $this->aliasField('student_status_id') => $this->statuses['TRANSFERRED'],
+            'StudentAdmission.institution_id = ' . $options['institutionId']
+        ];
+
+        if ($options['studentIds']) { //if has selected student / reconfirm page.
+            $conditions[$this->aliasField('student_id') . ' IN '] = $options['studentIds'];
+        }
+
+        $query
+            ->innerjoin(
+                ['StudentAdmission' => 'institution_student_admission'], [
+                    'StudentAdmission.previous_institution_id = ' . $this->aliasfield('institution_id'),
+                    'StudentAdmission.student_id = ' . $this->aliasfield('student_id'),
+                    'StudentAdmission.academic_period_id = ' . $this->aliasfield('academic_period_id'),
+                    'StudentAdmission.education_grade_id = ' . $this->aliasfield('education_grade_id'),
+                    'StudentAdmission.type = 2', //transfer type
+                    'StudentAdmission.status = 1' //status is approved
+                ])
+            ->leftJoin(
+                ['InstitutionStudent' => 'institution_students'], [
+                    $this->aliasfield('id') . ' = ' . 'InstitutionStudent.previous_institution_student_id',
+                    'StudentAdmission.institution_id = ' . 'InstitutionStudent.institution_id',
+                    'StudentAdmission.new_education_grade_id = ' . 'InstitutionStudent.education_grade_id' 
+                ])
+            ->where([
+                $conditions,
+                'OR' => [
+                    'InstitutionStudent.student_status_id = ' . $this->statuses['CURRENT'],
+                    'InstitutionStudent.student_status_id IS NULL' //null is a result of left join to detect transferred without enrolled record (Jordan data)
+                ],
+            ]);
+
+        return $query;
+    }
 }
