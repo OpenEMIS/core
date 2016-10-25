@@ -3,7 +3,8 @@ DROP TABLE `staff_appraisals`;
 DROP TABLE `staff_appraisal_types`;
 DROP TABLE `competencies`;
 DROP TABLE `competency_sets`;
-DROP TABLE `competency_set_competencies`;
+DROP TABLE `competency_sets_competencies`;
+DROP TABLE `staff_appraisals_competencies`;
 
 
 -- field_options

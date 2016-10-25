@@ -4,7 +4,7 @@ INSERT INTO `db_patches` (`issue`, `created`) VALUES('POCOR-3450', NOW());
 -- code here
 CREATE TABLE IF NOT EXISTS `staff_appraisals` (
   `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  `staff_appraisal_type_id` int(11) NOT NULL COMMENT '1 = Self, 2 = Supervisor, 3 = Peer',
+  `staff_appraisal_type_id` int(11) NOT NULL COMMENT '2 = Self, 3 = Supervisor, 4 = Peer',
   `title` VARCHAR(100) NOT NULL,
   `academic_period_id` int(11) NOT NULL,
   `from` date NOT NULL COMMENT 'From',
@@ -37,8 +37,8 @@ CREATE TABLE IF NOT EXISTS `competencies` (
   `visible` int(1) NOT NULL DEFAULT '1',
   `editable` int(1) NOT NULL DEFAULT '1',
   `default` int(1) NOT NULL DEFAULT '0',
-  `min` int(3) NOT NULL DEFAULT '0',
-  `max` int(3) NOT NULL DEFAULT '10',
+  `min` DECIMAL(4,2) NOT NULL DEFAULT '0',
+  `max` DECIMAL(4,2) NOT NULL DEFAULT '10',
   `international_code` VARCHAR(50) DEFAULT NULL,
   `national_code` VARCHAR(50) DEFAULT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
@@ -62,10 +62,17 @@ CREATE TABLE IF NOT EXISTS `competency_sets` (
   `created` datetime NOT NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `competency_set_competencies` (
+CREATE TABLE IF NOT EXISTS `competency_sets_competencies` (
   `id` CHAR(36) NOT NULL PRIMARY KEY,
   `competency_set_id` int(11) NOT NULL,
   `competency_id` int(11) NOT NULL
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `staff_appraisals_competencies` (
+  `id` CHAR(36) NOT NULL PRIMARY KEY,
+  `staff_appraisal_id` int(11) NOT NULL,
+  `competency_id` int(11) NOT NULL,
+  `rating` DECIMAL(4,2) DEFAULT NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 
 
