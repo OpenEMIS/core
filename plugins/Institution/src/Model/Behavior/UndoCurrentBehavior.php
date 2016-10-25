@@ -17,8 +17,12 @@ class UndoCurrentBehavior extends UndoBehavior {
 		return $events;
 	}
 
-	public function processSaveCurrentStudents(Event $event, Entity $entity, ArrayObject $data) {
+	public function processSaveCurrentStudents(Event $event, Entity $entity, ArrayObject $data) 
+	{
+		$model = $this->model;
 		$studentIds = [];
+
+        $institutionId = $entity->institution_id;
 
 		if (isset($entity->students)) {
 			foreach ($entity->students as $key => $obj) {
@@ -26,7 +30,17 @@ class UndoCurrentBehavior extends UndoBehavior {
 				if ($studentId != 0) {
 					$studentIds[$studentId] = $studentId;
 
-					$this->deleteEnrolledStudents($studentId);
+                    $enrolmentRecord = $model->find()
+                        ->where([
+                            $model->aliasField('institution_id') => $institutionId,
+                            $model->aliasField('student_id') => $studentId,
+                            $model->aliasField('student_status_id') => $this->statuses['CURRENT']
+                        ])
+                        ->first();
+
+                    if ($enrolmentRecord) {
+                        $model->delete($enrolmentRecord);
+                    }
 				}
 			}
 		}
