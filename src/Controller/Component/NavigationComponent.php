@@ -591,7 +591,7 @@ class NavigationComponent extends Component
 				'title' => 'Training',
 				'parent' => 'Institutions.Staff.index',
 				'params' => ['plugin' => 'Institution'],
-				'selected' => ['Institutions.StaffTrainingResults', 'Institutions.StaffTrainingNeeds'],
+				'selected' => ['Institutions.StaffTrainingResults', 'Institutions.StaffTrainingNeeds', 'Institutions.StaffTrainingApplications'],
 			],
 			'Staff.Healths' => [
 				'title' => 'Health',
