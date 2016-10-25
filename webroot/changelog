@@ -1,3 +1,8 @@
+v3.7.1.1
+- Introduced individual student promote/repeat feature that allows promote/repeat within the same year
+- Institution > Studentlist will show enrolled students by default
+- User is now able to perform Undo action on dropout and transferred students
+
 v3.7.1
 - There is a wizard now when user tries to add student workflow
 - Adding students to an Institution will trigger Pending Admission workflow
