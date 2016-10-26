@@ -83,14 +83,6 @@ class UsersController extends AppController
         $this->SSO->doAuthentication();
     }
 
-    public function getUniqueOpenemisId($model)
-    {
-        $this->autoRender = false;
-        $openemisId = TableRegistry::get('User.Users')->getUniqueOpenemisId(['model' => $model]);
-        $openemis = ['openemis_no' => $openemisId];
-        echo json_encode($openemis);
-    }
-
     public function logout()
     {
         $this->request->session()->destroy();
