@@ -28,6 +28,42 @@ CREATE TABLE IF NOT EXISTS `institution_visit_requests` (
   KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all visit requested by the institutions';
 
+-- workflow_models
+INSERT INTO `workflow_models` (`name`, `model`, `filter`, `is_school_based`, `created_user_id`, `created`) VALUES
+('Institutions > Visits > Requests', 'Institution.VisitRequests', NULL, 1, 1, NOW());
+
+-- Pre-insert workflows
+SET @modelId := 0;
+SELECT `id` INTO @modelId FROM `workflow_models` WHERE `model` = 'Institution.VisitRequests';
+INSERT INTO `workflows` (`code`, `name`, `workflow_model_id`, `created_user_id`, `created`) VALUES
+('VISIT-1001', 'Institutions - Visit Requests', @modelId, 1, NOW());
+
+SET @workflowId := 0;
+SELECT `id` INTO @workflowId FROM `workflows` WHERE `code` = 'VISIT-1001';
+
+-- Pre-insert workflow_steps
+SET @openStatusId := 0;
+SET @pendingStatusId := 0;
+SET @closedStatusId := 0;
+INSERT INTO `workflow_steps` (`name`, `category`, `is_editable`, `is_removable`, `is_system_defined`, `workflow_id`, `created_user_id`, `created`) VALUES
+('Open', 1, 1, 1, 1, @workflowId, 1, NOW()),
+('Pending For Approval', 2, 0, 0, 1, @workflowId, 1, NOW()),
+('Closed', 3, 0, 0, 1, @workflowId, 1, NOW());
+
+SELECT `id` INTO @openStatusId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `category` = 1;
+SELECT `id` INTO @pendingStatusId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `category` = 2;
+SELECT `id` INTO @closedStatusId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `category` = 3;
+
+-- Pre-insert workflow_actions
+INSERT INTO `workflow_actions` (`name`, `description`, `action`, `visible`, `comment_required`, `allow_by_assignee`, `event_key`, `workflow_step_id`, `next_workflow_step_id`, `created_user_id`, `created`) VALUES
+('Submit For Approval', NULL, 0, 1, 0, 1, NULL, @openStatusId, @pendingStatusId, 1, NOW()),
+('Cancel', NULL, 1, 1, 0, 1, NULL, @openStatusId, @closedStatusId, 1, NOW()),
+('Approve', NULL, 0, 1, 0, 0, NULL, @pendingStatusId, @closedStatusId, 1, NOW()),
+('Reject', NULL, 1, 1, 0, 0, NULL, @pendingStatusId, @openStatusId, 1, NOW()),
+('Approve', NULL, 0, 0, 0, 0, NULL, @closedStatusId, 0, 1, NOW()),
+('Reject', NULL, 1, 0, 0, 0, NULL, @closedStatusId, 0, 1, NOW()),
+('Reopen', NULL, NULL, 1, 0, 0, NULL, @closedStatusId, @openStatusId, 1, NOW());
+
 -- security_functions
 DELETE FROM `security_functions` WHERE `id` = 1047;
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`)
