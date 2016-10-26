@@ -84,6 +84,106 @@ class StudentAdmissionTable extends AppTable {
 		return $validator;
 	}
 
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		$events['Model.Students.afterSave'] = 'studentsAfterSave';
+		$events['Model.Students.afterDelete'] = 'studentsAfterDelete';
+		$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
+		return $events;
+	}
+
+	public function studentsAfterSave(Event $event, $student)
+	{
+		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+		$statusList = $StudentStatuses->findCodeList();
+		$Enrolled = $statusList['CURRENT'];
+		$Promoted = $statusList['PROMOTED'];
+        $Graduated = $statusList['GRADUATED'];
+        $Dropout = $statusList['DROPOUT'];
+
+		if ($student->isNew()) { // add
+			if ($student->student_status_id == $Enrolled) {
+				// the logic below is to set all pending admission applications to rejected status once the student is successfully enrolled in a school
+				$educationSystemId = $this->EducationGrades->getEducationSystemId($student->education_grade_id);
+				$educationGradesToUpdate = $this->EducationGrades->getEducationGradesBySystem($educationSystemId);
+
+				$conditions = [
+					'student_id' => $student->student_id,
+					'status' => 0, // pending status
+					'education_grade_id IN' => $educationGradesToUpdate
+				];
+
+				// set to rejected status
+				$this->updateAll(['status' => 2], $conditions);
+			}
+		} else { // edit
+            // to cater logic if during undo promoted / graduate (without immediate enrolled record), there is still pending admission / transfer
+            if ($student->dirty('student_status_id')) {
+                $oldStatus = $student->getOriginal('student_status_id');
+                $newStatus = $student->student_status_id;
+                $UndoPromotion = $oldStatus == $Promoted && $newStatus == $Enrolled;
+                $UndoGraduation = $oldStatus == $Graduated && $newStatus == $Enrolled;
+                $UndoDropout = $oldStatus == $Dropout && $newStatus == $Enrolled;
+
+                if ($UndoPromotion || $UndoGraduation || $UndoDropout) {
+                    $this->removePendingAdmission($student->student_id, $student->institution_id);
+                }
+            }
+        }
+	}
+
+	public function studentsAfterDelete(Event $event, Entity $student)
+	{
+        // check for enrolled status and delete admission record
+        $this->removePendingAdmission($student->student_id, $student->institution_id);
+	}
+
+    protected function removePendingAdmission($studentId, $institutionId) 
+    {
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $statusList = $StudentStatuses->findCodeList();
+        
+        //remove pending transfer request.
+        //could not include grade / academic period because not always valid. (promotion/graduation/repeat and transfer/admission can be done on different grade / academic period)
+        $conditions = [
+            'student_id' => $studentId,
+            'previous_institution_id' => $institutionId,
+            'status' => 0, //pending status
+            'type' => 2 //transfer
+        ];
+        
+        $entity = $this
+                ->find()
+                ->where(
+                    $conditions
+                )
+                ->first();
+        
+        if (!empty($entity)) {
+            $this->delete($entity);
+        }
+        
+        //remove pending admission request.
+        //no institution_id because in the pending admission, the value will be (0)
+        $conditions = [
+            'student_id' => $studentId,
+            'status' => 0, //pending status
+            'type' => 1 //admission
+        ];
+        
+        $entity = $this
+                ->find()
+                ->where(
+                    $conditions
+                )
+                ->first();
+        
+        if (!empty($entity)) {
+            $this->delete($entity);
+        }
+    }
+
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$options['auto_search'] = false;
 
@@ -181,35 +281,6 @@ class StudentAdmissionTable extends AppTable {
 			'start_date', 'end_date', 'comment'
 		]);
     }
-
-   	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-		$events['Model.Students.afterSave'] = 'studentsAfterSave';
-		$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
-		return $events;
-	}
-
-	public function studentsAfterSave(Event $event, $student)
-	{
-		if ($student->isNew()) {
-			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-			if ($StudentStatuses->get($student->student_status_id)->code == 'CURRENT') {
-				// the logic below is to set all pending admission applications to rejected status once the student is successfully enrolled in a school
-				$educationSystemId = $this->EducationGrades->getEducationSystemId($student->education_grade_id);
-				$educationGradesToUpdate = $this->EducationGrades->getEducationGradesBySystem($educationSystemId);
-
-				$conditions = [
-					'student_id' => $student->student_id,
-					'status' => 0, // pending status
-					'education_grade_id IN' => $educationGradesToUpdate
-				];
-
-				// set to rejected status
-				$this->updateAll(['status' => 2], $conditions);
-			}
-		}
-	}
 
 	public function onGetStatus(Event $event, Entity $entity) {
 		$statusName = "";
