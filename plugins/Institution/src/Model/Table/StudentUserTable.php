@@ -171,13 +171,10 @@ class StudentUserTable extends ControllerActionTable
 	{
 		$this->field('username', ['visible' => false]);
 		$toolbarButtons = $extra['toolbarButtons'];
-		$action = $this->action;
-		if ($action == 'add') {
-			$backAction = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
-			$toolbarButtons['back']['url'] = $backAction;
-			if ($toolbarButtons->offsetExists('export')) {
-				unset($toolbarButtons['export']);
-			}
+
+		// Back button does not contain the pass
+		if (isset($this->request->pass[1])) {
+			$toolbarButtons['back']['url'][1] = $this->request->pass[1];
 		}
 
 		// this value comes from the list page from StudentsTable->onUpdateActionButtons
@@ -204,6 +201,9 @@ class StudentUserTable extends ControllerActionTable
 
 			$isStudentEnrolled = $StudentTable->checkEnrolledInInstitution($studentId, $studentEntity->institution_id); // PHPOE-1897
 			$isAllowedByClass = $this->checkClassPermission($studentId, $userId); // POCOR-3010
+			if (isset($extra['toolbarButtons']['edit']['url'])) {
+				$extra['toolbarButtons']['edit']['url'][1] = $studentId;
+			}
 			if (!$isStudentEnrolled || !$isAllowedByClass) {
 				$this->toggle('edit', false);
 			}
