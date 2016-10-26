@@ -72,6 +72,7 @@ class InstitutionsController extends AppController
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
+        $this->loadComponent('Institution.UserOpenEMISID');
         $this->attachAngularModules();
 
         $controller = $this->name;
@@ -245,6 +246,12 @@ class InstitutionsController extends AppController
         }
 
         $this->set('contentHeader', $header);
+    }
+
+    public function getUniqueOpenemisId()
+    {
+        $this->autoRender = false;
+        echo $this->UserOpenEMISID->getUniqueOpenemisId();
     }
 
 	private function attachAngularModules()
