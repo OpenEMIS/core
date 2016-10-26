@@ -18,7 +18,7 @@ class SecurityAuthorize extends BaseAuthorize {
 			$roles = [];
 			$event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
 	    	if ($event->result) {
-	    		$roles = $event->result;	
+	    		$roles = $event->result;
 	    	}
 
 			if ($AccessControl->isIgnored($controller->name, $action) || $user['super_admin'] == true) {
@@ -37,7 +37,15 @@ class SecurityAuthorize extends BaseAuthorize {
 					}
 				}
 			} else { // normal actions from Controller
-				$authorized = $AccessControl->check([$controller->name, $action], $roles);
+				$isCAv4 = ctype_upper(substr($action, 0, 1));
+				if ($isCAv4) {
+					$pass = $request->pass;
+					$model = $action;
+					$action = isset($pass[0]) ? $pass[0] : 'index';
+					$authorized = $AccessControl->check([$controller->name, $model, $action], $roles);
+				} else {
+					$authorized = $AccessControl->check([$controller->name, $action], $roles);
+				}
 			}
 
 			if (!$authorized) {
