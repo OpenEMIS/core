@@ -7,8 +7,9 @@ use Cake\ORM\Behavior;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
-// use Cake\I18n\Time;
 use Cake\Log\Log;
+use Cake\Utility\Security;
+use Cake\Controller\Exception\SecurityException;
 
 use ControllerAction\Model\Traits\EventTrait;
 
@@ -289,6 +290,85 @@ class ControllerActionBehavior extends Behavior
         $session->write($sessionKey . '.' . $hash, $params);
         $action['hash'] = $hash;
         return $action;
+    }
+
+    public function urlsafeB64Encode($input)
+    {
+        return str_replace('=', '', strtr(base64_encode($input), '+/', '-_'));
+    }
+
+    public function urlsafeB64Decode($input)
+    {
+        $remainder = strlen($input) % 4;
+        if ($remainder) {
+            $padlen = 4 - $remainder;
+            $input .= str_repeat('=', $padlen);
+        }
+        return base64_decode(strtr($input, '-_', '+/'));
+    }
+
+    public function getQueryString($queryString = null)
+    {
+        $query = $this->_table->request->query('queryString');
+        $query = $this->paramsDecode($query);
+
+        if (is_null($queryString)) {
+            return $query;
+        } else if (!isset($query[$queryString])) {
+            return null;
+        } else {
+            return $query[$queryString];
+        }
+    }
+
+    public function setQueryString($url, $params)
+    {
+        if (is_array($url)) {
+            $url['queryString'] = $this->paramsEncode($params);
+        } else if (is_string($url)) {
+            if (strpos($url, '?')) {
+                $url .= '&queryString='.$this->paramsEncode($params);
+            } else {
+                $url .= '?queryString='.$this->paramsEncode($params);
+            }
+        }
+        return $url;
+    }
+
+    public function paramsDecode($params)
+    {
+        $paramArr = explode('.', $params);
+        if (count($paramArr) != 2) {
+            throw new SecurityException('Wrong number of segments');
+        }
+        list($payload, $signature) = $paramArr;
+        $payload = $this->urlsafeB64Decode($payload);
+        $signature = $this->urlsafeB64Decode($signature);
+
+        $payload = json_decode($payload, true);
+
+        if (!isset($payload['session_id'])) {
+            throw new SecurityException('No session id in payload');
+        } else {
+            $checkPayload = $payload;
+            $checkPayload['session_id'] = session_id();
+            $checkSignature = Security::hash(json_encode($checkPayload), 'sha256');
+            if ($signature !== $checkSignature) {
+                throw new SecurityException('Query String has been tampered');
+            }
+        }
+        unset($payload['session_id']);
+        return $payload;
+    }
+
+    public function paramsEncode($params = [])
+    {
+        $params['session_id'] = session_id();
+        $jsonParam = json_encode($params);
+        $base64Param = $this->urlsafeB64Encode($jsonParam);
+        $signature = Security::hash($jsonParam, 'sha256');
+        $base64Signature = $this->urlsafeB64Encode($signature);
+        return "$base64Param.$base64Signature";
     }
 
     public function field($name, $attr=[])
