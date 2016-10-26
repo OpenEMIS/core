@@ -68,29 +68,34 @@ class StaffTrainingCoursesTable extends ControllerActionTable
         ]);
 
         $this->setDeleteStrategy('restrict');
-        $this->addBehavior('ControllerAction.FileUpload', [
-            // 'name' => 'file_name',
-            // 'content' => 'file_content',
-            'size' => '10MB',
-            'contentEditable' => true,
-            'allowable_file_types' => 'all',
-            'useDefaultName' => true
-        ]);
 
         $this->toggle('add', false);
         $this->toggle('edit', false);
+        $this->toggle('remove', false);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $extra['config']['selectedLink'] = ['controller' => 'Institutions', 'action' => 'StaffTrainingResults'];
         $modelAlias = 'Applications';
         $userType = 'StaffUser';
         $this->controller->changeUserHeader($this, $modelAlias, $userType);
     }
 
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->fields=[];
+        $this->field('code');
+        $this->field('name');
+        $this->field('training_course_type_id');
+        $this->field('credit_hours');
+        $this->field('description');
+        $this->field('objective', ['visible' => false]);
+        $this->field('file_name', ['visible' => false]);
+    }
+
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $extra['config']['selectedLink'] = ['controller' => 'Institutions', 'action' => 'StaffTrainingResults'];
         $Courses = TableRegistry::get('Training.TrainingCourses');
         $steps = $this->Workflow->getStepsByModelCode($Courses->registryAlias(), 'APPROVED');
         if (!empty($steps)) {
@@ -98,6 +103,25 @@ class StaffTrainingCoursesTable extends ControllerActionTable
                 $this->aliasField('status_id IN') => $steps
             ]);
         }
+    }
+
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $buttons['add'] = [
+            'label' => '<i class="fa kd-add"></i>'.__('Add'),
+            'attr' => $buttons['view']['attr']
+        ];
+
+        $url = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'StaffTrainingApplications',
+            'add'
+        ];
+
+        $buttons['add']['url'] = $this->setQueryString($url, ['id' => $entity->id]);
+
+        return $buttons;
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
