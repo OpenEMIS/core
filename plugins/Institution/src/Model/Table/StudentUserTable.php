@@ -202,7 +202,7 @@ class StudentUserTable extends ControllerActionTable
 			$isStudentEnrolled = $StudentTable->checkEnrolledInInstitution($studentId, $studentEntity->institution_id); // PHPOE-1897
 			$isAllowedByClass = $this->checkClassPermission($studentId, $userId); // POCOR-3010
 			if (isset($extra['toolbarButtons']['edit']['url'])) {
-				$extra['toolbarButtons']['edit']['url'][1] = $userId;
+				$extra['toolbarButtons']['edit']['url'][1] = $studentId;
 			}
 			if (!$isStudentEnrolled || !$isAllowedByClass) {
 				$this->toggle('edit', false);
