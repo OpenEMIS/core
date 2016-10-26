@@ -99,20 +99,17 @@ class UndoBehavior extends Behavior {
 		$status = $this->statuses[$code];
         $entity = '';
         
-        if ($id || $conditions) {
-            
-            if ($id) {
-                $entity = $this->model->get($id);
-            } else { //if by ID cant find because of data problem.
-                if ($conditions) {
-                    $entity = $this->model->find()->where([$conditions])->first();
-                }
+        if ($id) {
+            $entity = $this->model->get($id);
+        } else { //if by ID cant find because of data problem.
+            if ($conditions) {
+                $entity = $this->model->find()->where([$conditions])->first();
             }
+        }
 
-            if (!empty($entity)) {
-                $entity->student_status_id = $status;
-                $this->model->save($entity);
-            }
+        if (!empty($entity)) {
+            $entity->student_status_id = $status;
+            $this->model->save($entity);
         }
 	}
 }
