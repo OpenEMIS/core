@@ -71,7 +71,7 @@ class IndividualPromotionTable extends ControllerActionTable
             return $this->controller->redirect(['action' => 'Students', 'index']);
 
         } else {
-            $params = $this->getUrlParams([$this->alias(), 'add'], $hash);
+            $params = $this->getUrlParams([$this->controller->name, $this->alias(), 'add'], $hash);
             $extra['params'] = $params; // student_id and user_id in extra
             $extra['redirect'] = [ // url to redirect to StudentUser view
                 'plugin' => 'Institution',
