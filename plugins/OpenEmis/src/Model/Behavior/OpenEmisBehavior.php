@@ -88,6 +88,33 @@ class OpenEmisBehavior extends Behavior {
         // end deprecated
 
         $this->attachEntityInfoToToolBar($extra);
+
+        $access = $model->AccessControl;
+        $toolbarButtons = $extra['toolbarButtons'];
+        foreach ($toolbarButtons->getArrayCopy() as $key => $buttons) {
+            if (array_key_exists('url', $buttons)) {
+                if (!$access->check($buttons['url'])) {
+                    $toolbarButtons->offsetUnset($key);
+                }
+            }
+        }
+
+        $indexButtons = $extra['indexButtons'];
+        foreach ($indexButtons->getArrayCopy() as $key => $buttons) {
+            if (array_key_exists('url', $buttons)) {
+                if (!$access->check($buttons['url'])) {
+                    $indexButtons->offsetUnset($key);
+                }
+            }
+        }
+
+        $extra['toolbarButtons'] = $toolbarButtons;
+        $extra['indexButtons'] = $indexButtons;
+
+        if ($model->actions('reorder') && $indexButtons->offsetExists('edit')) {
+            $model->controller->set('reorder', true);
+        }
+
         if ($extra->offsetExists('indexButtons')) {
             $model->controller->set('indexButtons', $extra['indexButtons']);
         }
@@ -351,26 +378,6 @@ class OpenEmisBehavior extends Behavior {
             $indexButtons['remove']['url'] = $model->url($removeUrl);
             $indexButtons['remove']['label'] = '<i class="fa fa-trash"></i>' . __('Delete');
             $indexButtons['remove']['attr'] = $indexAttr;
-        }
-
-        $access = $model->AccessControl;
-        foreach ($toolbarButtons->getArrayCopy() as $key => $buttons) {
-            if (array_key_exists('url', $buttons)) {
-                if (!$access->check($buttons['url'])) {
-                    unset($toolbarButtons[$key]);
-                }
-            }
-        }
-        foreach ($indexButtons->getArrayCopy() as $key => $buttons) {
-            if (array_key_exists('url', $buttons)) {
-                if (!$access->check($buttons['url'])) {
-                    unset($indexButtons[$key]);
-                }
-            }
-        }
-
-        if ($model->actions('reorder') && $indexButtons->offsetExists('edit')) {
-            $controller->set('reorder', true);
         }
 
         $extra['toolbarButtons'] = $toolbarButtons;
