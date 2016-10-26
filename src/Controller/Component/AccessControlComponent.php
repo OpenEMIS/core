@@ -225,6 +225,11 @@ class AccessControlComponent extends Component {
 			$url[0] = $url[2];
 			unset($url[1]);
 			unset($url[2]);
+		} else if (array_key_exists('0', $url) && array_key_exists('1', $url)) {
+			$url['controller'] = $url[0];
+			$url['action'] = $url[1];
+			unset($url[0]);
+			unset($url[1]);
 		}
 
 		if (array_key_exists('controller', $url)) {
