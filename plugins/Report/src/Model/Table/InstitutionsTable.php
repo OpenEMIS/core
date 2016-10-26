@@ -33,6 +33,10 @@ class InstitutionsTable extends AppTable
 		$this->belongsTo('Genders',				['className' => 'Institution.Genders', 'foreignKey' => 'institution_gender_id']);
 		$this->belongsTo('Areas', 				['className' => 'Area.Areas']);
 		$this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
+        $this->belongsTo('NetworkConnectivities', [
+            'className' => 'Institution.NetworkConnectivities', 
+            'foreignKey' => 'institution_network_connectivity_id'
+        ]);
 
 		$this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => false]);
 		$this->addBehavior('Report.ReportList');
@@ -133,6 +137,15 @@ class InstitutionsTable extends AppTable
             return __($this->shiftTypes[$entity->shift_type]);
         } else {
             return '';
+        }
+    }
+
+    public function onExcelGetIsAcademic(Event $event, Entity $entity) 
+    {
+        if ($entity->is_academic) {
+            return __($this->getSelectOptions('general.yesno')[1]);
+        } else {
+            return __($this->getSelectOptions('general.yesno')[0]);
         }
     }
 
