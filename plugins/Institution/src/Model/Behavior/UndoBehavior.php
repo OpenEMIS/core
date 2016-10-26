@@ -97,86 +97,19 @@ class UndoBehavior extends Behavior {
 	protected function updateStudentStatus($code, $id, $conditions) 
     {
 		$status = $this->statuses[$code];
-
-        if ($id || $conditions) {
-            $entity = $this->model->find()->where([$id])->first();
-            if (empty($entity)) { //if by ID cant find because of data problem.
+        $entity = '';
+        
+        if ($id) {
+            $entity = $this->model->get($id);
+        } else { //if by ID cant find because of data problem.
+            if ($conditions) {
                 $entity = $this->model->find()->where([$conditions])->first();
             }
+        }
 
-            if (!empty($entity)) {
-                $entity->student_status_id = $status;
-                $this->model->save($entity);
-            }
+        if (!empty($entity)) {
+            $entity->student_status_id = $status;
+            $this->model->save($entity);
         }
 	}
-
-    protected function removePendingAdmission($selectedStatus, $studentId, $institutionId) 
-    {
-        $StudentAdmissionTable = TableRegistry::get('Institution.StudentAdmission');
-
-        //remove pending transfer request.
-        //could not include grade / academic period because not always valid. (promotion/graduation/repeat and transfer/admission can be done on different grade / academic period)
-        $conditions = [
-            'student_id' => $studentId,
-            'previous_institution_id' => $institutionId,
-            'status' => 0, //pending status
-            'type' => 2 //transfer
-        ];
-        
-        $entity = $StudentAdmissionTable
-                ->find()
-                ->where(
-                    $conditions
-                )
-                ->first();
-        
-        if (!empty($entity)) {
-            $StudentAdmissionTable->delete($entity);
-        }
-        
-        //remove pending admission request.
-        //no institution_id because in the pending admission, the value will be (0)
-        if ($selectedStatus == $this->statuses['PROMOTED'] || $selectedStatus == $this->statuses['GRADUATED']) {
-            $conditions = [
-                'student_id' => $studentId,
-                'status' => 0, //pending status
-                'type' => 1 //admission
-            ];
-            
-            $entity = $StudentAdmissionTable
-                    ->find()
-                    ->where(
-                        $conditions
-                    )
-                    ->first();
-            
-            if (!empty($entity)) {
-                $StudentAdmissionTable->delete($entity);
-            }
-        }
-    }
-
-    protected function removePendingDropout($studentId, $institutionId) 
-    {
-        $StudentDropoutTable = TableRegistry::get('Institution.StudentDropout');
-        
-        //could not include grade / academic period because not always valid. (promotion/graduation/repeat and dropout can be done on different grade / academic period)
-        $conditions = [
-            'student_id' => $studentId,
-            'institution_id' => $institutionId,
-            'status' => 0, //pending status
-        ];
-        
-        $entity = $StudentDropoutTable
-                ->find()
-                ->where(
-                    $conditions
-                )
-                ->first();
-        
-        if (!empty($entity)) {
-            $StudentDropoutTable->delete($entity);
-        }
-    }
 }
