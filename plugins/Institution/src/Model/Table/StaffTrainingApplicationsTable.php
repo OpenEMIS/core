@@ -46,6 +46,22 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         }
     }
 
+    public function addBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $query = $this->getQueryString();
+        if (isset($extra['redirect']['query'])) {
+            unset($extra['redirect']['query']);
+        }
+        if ($query) {
+            $query = $this->getUrlParamsv2($query);
+            $id = $query['id'];
+            $this->field('staff_id');
+            $this->field('course_id');
+        } else {
+            $this->controller->redirect($extra['redirect']);
+        }
+    }
+
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->setupTabElements();
