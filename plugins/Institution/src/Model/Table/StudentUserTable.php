@@ -290,7 +290,7 @@ class StudentUserTable extends ControllerActionTable
 			$studentId = $studentEntity->student_id;
 
 			$params = ['student_id' => $institutionStudentId, 'user_id' => $entity->id];
-			$action = $this->setUrlParams(['action' => 'TransferRequests', 'add'], $params);
+			$action = $this->setUrlParams(['controller' => $this->controller->name, 'action' => 'TransferRequests', 'add'], $params);
 
 			$checkIfCanTransfer = $StudentsTable->checkIfCanTransfer($studentEntity, $institutionId);
 
@@ -339,7 +339,7 @@ class StudentUserTable extends ControllerActionTable
 			$academicPeriodId = $studentEntity->academic_period_id;
 
 			$params = ['student_id' => $institutionStudentId, 'user_id' => $entity->id];
-			$action = $this->setUrlParams(['action' => 'IndividualPromotion', 'add'], $params);
+			$action = $this->setUrlParams(['controller' => $this->controller->name, 'action' => 'IndividualPromotion', 'add'], $params);
 
 			// Show Promote button only if the Student Status is Current and academic period is editable
 			if ($studentEntity->student_status_id == $Enrolled && array_key_exists($academicPeriodId, $editableAcademicPeriods)) {

@@ -74,12 +74,6 @@ class InstitutionsController extends AppController
         $this->loadComponent('Institution.InstitutionAccessControl');
         $this->loadComponent('Institution.UserOpenEMISID');
         $this->attachAngularModules();
-
-        $controller = $this->name;
-        $accessMap = [
-            "$controller.StudentUser" => "$controller.%s"
-        ];
-        $this->request->addParams(['accessMap' => $accessMap]);
     }
 
     // CAv4
