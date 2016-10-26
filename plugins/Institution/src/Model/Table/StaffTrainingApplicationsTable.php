@@ -75,15 +75,15 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-        $this->fields = [];
-        $this->field('status');
-        $this->field('name');
+        $this->field('training_course_id');
         $this->field('field_of_study');
         $this->field('credit_hours');
         $this->field('training_level');
+        $this->field('assignee_id', ['type' => 'hidden']);
+        $this->field('staff_id', ['type' => 'hidden']);
 
         $this->setFieldOrder([
-            'status', 'name', 'field_of_study', 'credit_hours', 'training_level'
+            'training_course_id', 'field_of_study', 'credit_hours', 'training_level'
         ]);
     }
 
@@ -95,7 +95,6 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->fields = [];
-        $this->field('status');
         $this->field('name');
         $this->field('description');
         $this->field('objective');
@@ -109,18 +108,10 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $this->field('training_level');
 
         $this->setFieldOrder([
-            'status', 'name', 'description', 'objective', 'credit_hours', 'duration', 'experiences',
+            'name', 'description', 'objective', 'credit_hours', 'duration', 'experiences',
             'training_field_of_study_id', 'training_course_type_id', 'training_mode_of_delivery_id', 'training_requirement_id', 'training_level_id',
             // 'target_populations', 'training_providers', 'course_prerequisites', 'specialisations',
         ]);
-    }
-
-    public function onGetStatus(Event $event, Entity $entity)
-    {
-        $value = ' ';
-
-
-        return $value;
     }
 
     public function onGetName(Event $event, Entity $entity)
