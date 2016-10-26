@@ -5,6 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Cake\ORM\ResultSet;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 
@@ -17,17 +18,15 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $this->table('staff_training_applications');
         parent::initialize($config);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
-        $this->belongsTo('Courses', ['className' => 'Training.TrainingCourses', 'foreignKey' => 'course_id']);
-        // $this->belongsTo('TrainingNeedCategories', ['className' => 'Training.TrainingNeedCategories', 'foreignKey' => 'training_need_category_id']);
-        // $this->belongsTo('TrainingRequirements', ['className' => 'Training.TrainingRequirements', 'foreignKey' => 'training_requirement_id']);
-        // $this->belongsTo('TrainingPriorities', ['className' => 'Training.TrainingPriorities', 'foreignKey' => 'training_priority_id']);
+        $this->belongsTo('Courses', ['className' => 'Training.TrainingCourses', 'foreignKey' => 'training_course_id']);
         $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
-
         $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
         // $this->addBehavior('Restful.RestfulAccessControl', [
         //     'Dashboard' => ['index']
         // ]);
+
+        $this->toggle('edit', false);
         $this->toggle('remove', false);
     }
 
@@ -36,6 +35,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $modelAlias = 'Applications';
         $userType = 'StaffUser';
         $this->controller->changeUserHeader($this, $modelAlias, $userType);
+        $this->setupTabElements();
     }
 
     public function indexbeforeAction(Event $event, ArrayObject $extra)
@@ -46,9 +46,175 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         }
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $this->setupTabElements();
+        $session = $this->request->session();
+        $staff_id = $session->read('Staff.Staff.id');
+        $query
+            ->contain(['Courses.TrainingFieldStudies', 'Courses.TrainingLevels'])
+            ->where([$this->aliasField('staff_id') => $staff_id]);
+
+        $extra['auto_contain_fields'] = ['Courses' => ['credit_hours']];
+    }
+
+    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    {
+        $this->fields = [];
+        $this->field('status');
+        $this->field('name');
+        $this->field('field_of_study');
+        $this->field('credit_hours');
+        $this->field('training_level');
+
+        $this->setFieldOrder([
+            'status', 'name', 'field_of_study', 'credit_hours', 'training_level'
+        ]);
+    }
+
+    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['Courses.TrainingFieldStudies', 'Courses.TrainingCourseTypes', 'Courses.TrainingModeDeliveries', 'Courses.TrainingRequirements', 'Courses.TrainingLevels']);
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->fields = [];
+        $this->field('status');
+        $this->field('name');
+        $this->field('description');
+        $this->field('objective');
+        $this->field('credit_hours');
+        $this->field('duration');
+        $this->field('experiences');
+        $this->field('field_of_study');
+        $this->field('course_type');
+        $this->field('mode_of_delivery');
+        $this->field('training_requirement');
+        $this->field('training_level');
+
+        $this->setFieldOrder([
+            'status', 'name', 'description', 'objective', 'credit_hours', 'duration', 'experiences',
+            'training_field_of_study_id', 'training_course_type_id', 'training_mode_of_delivery_id', 'training_requirement_id', 'training_level_id',
+            // 'target_populations', 'training_providers', 'course_prerequisites', 'specialisations',
+        ]);
+    }
+
+    public function onGetStatus(Event $event, Entity $entity)
+    {
+        $value = ' ';
+
+
+        return $value;
+    }
+
+    public function onGetName(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('course')) {
+            $value = $entity->course->name;
+        }
+
+        return $value;
+    }
+
+    public function onGetDescription(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('course')) {
+            $value = $entity->course->description;
+        }
+
+        return $value;
+    }
+
+    public function onGetObjective(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('course')) {
+            $value = $entity->course->objective;
+        }
+
+        return $value;
+    }
+
+    public function onGetCreditHours(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('course')) {
+            $value = $entity->course->credit_hours;
+        }
+
+        return $value;
+    }
+
+    public function onGetDuration(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('course')) {
+            $value = $entity->course->duration;
+        }
+
+        return $value;
+    }
+
+    public function onGetExperiences(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('course')) {
+            $value = $entity->course->number_of_months;
+        }
+
+        return $value;
+    }
+
+    public function onGetFieldOfStudy(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('course')) {
+            $value = $entity->course->training_field_study->name;
+        }
+
+        return $value;
+    }
+
+    public function onGetCourseType(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('course')) {
+            $value = $entity->course->training_course_type->name;
+        }
+
+        return $value;
+    }
+
+    public function onGetModeOfDelivery(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('course')) {
+            $value = $entity->course->training_mode_delivery->name;
+        }
+
+        return $value;
+    }
+
+    public function onGetTrainingRequirement(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('course')) {
+            $value = $entity->course->training_requirement->name;
+        }
+
+        return $value;
+    }
+
+    public function onGetTrainingLevel(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('course')) {
+            $value = $entity->course->training_level->name;
+        }
+
+        return $value;
     }
 
     private function setupTabElements()
