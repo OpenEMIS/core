@@ -131,7 +131,16 @@ class InstitutionsController extends AppController
 
     public function Students($pass = 'index') {
         if ($pass == 'add') {
+            $session = $this->request->session();
+            $roles = [];
+
+            if (!$this->AccessControl->isAdmin() && $session->check('Institution.Institutions.id')) {
+                $userId = $this->Auth->user('id');
+                $institutionId = $session->read('Institution.Institutions.id');
+                $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+            }
             $this->set('ngController', 'InstitutionsStudentsCtrl as InstitutionStudentController');
+            $this->set('_createNewStudent', $this->AccessControl->check(['Institutions', 'getUniqueOpenemisId'], $roles));
             $externalDataSource = false;
         	$ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
         	$externalSourceType = $ConfigItemTable->find()->where([$ConfigItemTable->aliasField('code') => 'external_data_source_type'])->first();
