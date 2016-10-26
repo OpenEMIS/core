@@ -153,7 +153,7 @@ class TransferRequestsTable extends ControllerActionTable
         } else {
             $hash = $this->request->query('hash');
             if (!empty($hash)) { // if value is empty, redirect back to the list page
-                $params = $this->getUrlParams([$this->alias(), 'add'], $hash);
+                $params = $this->getUrlParams([$this->controller->name, $this->alias(), 'add'], $hash);
                 // back button direct to student user view
                 $backBtn = $extra['toolbarButtons']['back'];
                 $backBtn['url']['action'] = 'StudentUser';
