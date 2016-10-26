@@ -544,6 +544,7 @@ class IndividualPromotionTable extends ControllerActionTable
         $studentObj['end_date'] = $toPeriodData->end_date;
         $studentObj['end_year']= $toPeriodData->end_year;
         $studentObj['institution_id'] = $entity->institution_id;
+        $studentObj['previous_institution_student_id'] = $id;
 
         if ($toAcademicPeriodId == $fromAcademicPeriodId) {
             // if student is promoted/demoted in the middle of the academic period
