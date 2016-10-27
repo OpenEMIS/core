@@ -1165,7 +1165,8 @@ trait MessagesTrait {
             'Appraisal' => [
                 'competencies' => 'Competencies / Goals',
                 'rating' => 'Rating',
-                'final_rating' => 'Final Rating'
+                'final_rating' => 'Final Rating',
+                'deleted_competencies' => 'This competency has been removed'
             ],
         ],
         'AcademicPeriod' => [
