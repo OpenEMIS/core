@@ -101,7 +101,7 @@ class InstitutionsController extends AppController
     public function StaffTrainingResults()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingResults']); }
     public function StaffTrainingNeeds()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingNeeds']); }
     public function StaffTrainingApplications()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingApplications']); }
-    public function StaffTrainingCourses()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingCourses']); }
+    public function CourseCatalogue()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.CourseCatalogue']); }
     // End
 
     // AngularJS
