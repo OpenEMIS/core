@@ -241,13 +241,6 @@ class AccessControlComponent extends Component {
 			unset($url['action']);
 		}
 		$url = array_merge($checkUrl, $url);
-
-		$controller = $url[0];
-		$action = $url[1];
-		if ($this->isIgnored($controller, $action)) {
-			return true;
-		}
-
 		$url = array_merge(['Permissions'], $url);
 		$permissionKey = implode('.', $url);
 		// pr($permissionKey);
@@ -311,31 +304,6 @@ class AccessControlComponent extends Component {
 	public function isAdmin() {
 		$superAdmin = $this->Auth->user('super_admin');
 		return $superAdmin == 1;
-	}
-
-	// determines whether the action is required for access control checking
-	public function isIgnored($controller, $action) {
-		$ignoreList = $this->config('ignoreList');
-		$ignored = false;
-
-		if (array_key_exists($controller, $ignoreList)) {
-			if (!empty($ignoreList[$controller])) {
-				$actions = $ignoreList[$controller];
-				if (in_array($action, $actions)) {
-					$ignored = true;
-				}
-			} else {
-				$ignored = true;
-			}
-		} else {
-			$event = new Event('Controller.AccessControl.checkIgnoreActions', $this, [$controller, $action]);
-            $event = $this->controller->eventManager()->dispatch($event);
-            if ($event->result) {
-            	$ignored = $event->result;
-            }
-		}
-
-		return $ignored;
 	}
 
 	public function getRolesByUser($userId = null) {
