@@ -240,16 +240,19 @@ class AccessControlComponent extends Component {
 			$checkUrl[] = $url['action'];
 			unset($url['action']);
 		}
+		$controller = $checkUrl[0];
 		$action = $checkUrl[1];
 		$url = array_merge($checkUrl, $url);
 		$url = array_merge(['Permissions'], $url);
 		$permissionKey = implode('.', $url);
-		// pr($permissionKey);
+		// Log::write('debug', $permissionKey);
 
-		$event = $this->controller->dispatchEvent('Controller.SecurityAuthorize.isActionIgnored', [$action], $this);
-    	if ($event->result == true) {
-    		return true;
-    	}
+		if ($controller == $this->controller->name) {
+			$event = $this->controller->dispatchEvent('Controller.SecurityAuthorize.isActionIgnored', [$action], $this);
+	    	if ($event->result == true) {
+	    		return true;
+	    	}
+		}
 
 		if ($this->Session->check($permissionKey)) {
 			if (!empty($roleIds)) {
