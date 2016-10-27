@@ -95,7 +95,15 @@ class UsersController extends AppController
         $events['Auth.afterIdentify'] = 'afterIdentify';
         $events['Controller.Auth.afterAuthenticate'] = 'afterAuthenticate';
         $events['Controller.Auth.afterCheckLogin'] = 'afterCheckLogin';
+        $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
         return $events;
+    }
+
+    public function isActionIgnored(Event $event, $action)
+    {
+        if (in_array($action, ['login', 'logout', 'postLogin', 'login_remote'])) {
+            return true;
+        }
     }
 
     public function afterCheckLogin(Event $event, $extra)
