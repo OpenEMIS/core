@@ -16,6 +16,10 @@ class AssessmentItemsGradingTypesTable extends AppTable {
         $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments', 'dependent' => true]);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects', 'dependent' => true]);
         $this->belongsTo('AssessmentPeriods', ['className' => 'Assessment.AssessmentPeriods', 'dependent' => true]);
+
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Results' => ['index']
+        ]);
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data)
