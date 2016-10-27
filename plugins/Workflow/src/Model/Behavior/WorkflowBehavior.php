@@ -842,10 +842,7 @@ class WorkflowBehavior extends Behavior {
 		$step = $this->getWorkflowStep($entity);
 
 		$assigneeUrl = Router::url(['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => 'ajaxGetAssignees']);
-<<<<<<< HEAD
 
-=======
->>>>>>> 44269351a8f60b1902ef7409d69f9ad64ad61714
 		if (!is_null($step)) {
 			$workflow = $step->_matchingData['Workflows'];
 
