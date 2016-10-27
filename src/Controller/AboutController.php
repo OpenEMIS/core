@@ -39,6 +39,18 @@ class AboutController extends AppController {
 		$this->set('selectedAction', $this->request->action);
 	}
 
+	public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
+        return $events;
+    }
+
+    public function isActionIgnored(Event $event, $action)
+    {
+        return true;
+    }
+
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 		$this->set('contentHeader', __($this->name));
