@@ -93,7 +93,7 @@ class OpenEmisBehavior extends Behavior {
         $toolbarButtons = $extra['toolbarButtons'];
         foreach ($toolbarButtons->getArrayCopy() as $key => $buttons) {
             if (array_key_exists('url', $buttons)) {
-                if (!$access->check($buttons['url'])) {
+                if ($buttons['url'] != '#' && !$access->check($buttons['url'])) {
                     $toolbarButtons->offsetUnset($key);
                 }
             }
@@ -101,7 +101,7 @@ class OpenEmisBehavior extends Behavior {
 
         $indexButtons = $extra['indexButtons'];
         foreach ($indexButtons->getArrayCopy() as $key => $buttons) {
-            if (array_key_exists('url', $buttons)) {
+            if ($buttons['url'] != '#' && array_key_exists('url', $buttons)) {
                 if (!$access->check($buttons['url'])) {
                     $indexButtons->offsetUnset($key);
                 }

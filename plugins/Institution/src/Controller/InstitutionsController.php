@@ -151,34 +151,16 @@ class InstitutionsController extends AppController
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['Controller.AccessControl.checkIgnoreActions'] = 'checkIgnoreActions';
+        $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
         return $events;
     }
 
-    public function checkIgnoreActions(Event $event, $controller, $action)
+    public function isActionIgnored(Event $event, $action)
     {
-        $ignore = false;
-        if ($controller == 'Institutions') {
-            $ignoredList = ['downloadFile'];
-            if (in_array($action, $ignoredList)) {
-                $ignore = true;
-            } else {
-                $ignoredList = [
-                    'StudentUser' => ['downloadFile'],
-                    'StaffUser' => ['downloadFile'],
-                    'Infrastructures' => ['downloadFile'],
-                    'Surveys' => ['downloadFile']
-                ];
-
-                if (array_key_exists($action, $ignoredList)) {
-                    $pass = $this->request->params['pass'];
-                    if (count($pass) > 0 && in_array($pass[0], $ignoredList[$action])) {
-                        $ignore = true;
-                    }
-                }
-            }
+        $pass = $this->request->pass;
+        if (isset($pass[0]) && $pass[0] == 'downloadFile') {
+            return true;
         }
-        return $ignore;
     }
 
     private function checkInstitutionAccess($id, $event)
@@ -249,6 +231,7 @@ class InstitutionsController extends AppController
         }
 
         $this->set('contentHeader', $header);
+
     }
 
     public function getUniqueOpenemisId()

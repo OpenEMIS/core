@@ -105,14 +105,7 @@ class AppController extends Controller {
 		]);
 
 		$this->loadComponent('ControllerAction.Alert');
-		$this->loadComponent('AccessControl', [
-			'ignoreList' => [
-				'Users' => ['login', 'logout', 'postLogin', 'login_remote'],
-				'Dashboard' => [],
-				'Preferences' => [],
-				'About' => []
-			]
-		]);
+		$this->loadComponent('AccessControl');
 
 		$this->loadComponent('Workflow.Workflow');
 		$this->loadComponent('SSO.SSO', [
