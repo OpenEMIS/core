@@ -77,9 +77,7 @@ class StaffTrainingCoursesTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $extra['config']['selectedLink'] = ['controller' => 'Institutions', 'action' => 'StaffTrainingResults'];
-        $modelAlias = 'Applications';
-        $userType = 'StaffUser';
-        $this->controller->changeUserHeader($this, $modelAlias, $userType);
+        $this->controller->set('contentHeader', __('Staff Training Courses'));
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -92,10 +90,29 @@ class StaffTrainingCoursesTable extends ControllerActionTable
         $this->field('description');
         $this->field('objective', ['visible' => false]);
         $this->field('file_name', ['visible' => false]);
+
+        // back button direct to staff course application index
+        $backBtn['type'] = 'button';
+        $backBtn['label'] = '<i class="fa kd-back"></i>';
+        $backBtn['attr'] = [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false,
+            'title' => 'Back'
+        ];
+        $backBtn['url']= [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'StaffTrainingApplications',
+            '0' => 'index'
+        ];
+        $extra['toolbarButtons']['back'] = $backBtn;
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        // courses must be approved
         $Courses = TableRegistry::get('Training.TrainingCourses');
         $steps = $this->Workflow->getStepsByModelCode($Courses->registryAlias(), 'APPROVED');
         if (!empty($steps)) {
@@ -103,6 +120,65 @@ class StaffTrainingCoursesTable extends ControllerActionTable
                 $this->aliasField('status_id IN') => $steps
             ]);
         }
+
+        $session = $this->request->session();
+        $staffId = $session->read('Staff.Staff.id');
+        $InstitutionId = $session->read('Institution.Institutions.id');
+
+        $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+        $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
+
+        $Staff = TableRegistry::get('Institution.Staff');
+        $staffData = $Staff->find()
+            ->contain('Positions')
+            ->where([
+                $Staff->aliasField('staff_id') => $staffId,
+                $Staff->aliasField('institution_id') => $InstitutionId,
+                $Staff->aliasField('staff_status_id') => $assignedStatus
+            ])
+            ->first();
+
+        $positionTitle = '';
+        if ($staffData->has('position')) {
+            $positionTitle = $staffData->position->staff_position_title_id;
+
+            // only show courses where user is in target population
+            $query
+                ->matching('TargetPopulations')
+                ->where(['TargetPopulations.id' => $positionTitle]);
+        }
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['visible' => false]);
+        $this->field('assignee_id', ['visible' => false]);
+        $this->field('status_id', ['visible' => false]);
+        $this->field('modified_user_id', ['visible' => false]);
+        $this->field('modified', ['visible' => false]);
+        $this->field('created_user_id', ['visible' => false]);
+        $this->field('created', ['visible' => false]);
+
+        // back button direct to staff course application index
+        $addBtn['type'] = 'button';
+        $addBtn['label'] = '<i class="fa kd-add"></i>';
+        $addBtn['attr'] = [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false,
+            'title' => 'Add'
+        ];
+
+        $url = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'StaffTrainingApplications',
+            '0' => 'add'
+        ];
+        $addBtn['url']= $this->setQueryString($url, ['course_id' => $entity->id]);
+        $extra['toolbarButtons']['add'] = $addBtn;
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
@@ -116,23 +192,11 @@ class StaffTrainingCoursesTable extends ControllerActionTable
             'plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'StaffTrainingApplications',
-            'add'
+            '0' => 'add'
         ];
 
-        $buttons['add']['url'] = $this->setQueryString($url, ['id' => $entity->id]);
+        $buttons['add']['url'] = $this->setQueryString($url, ['course_id' => $entity->id]);
 
         return $buttons;
-    }
-
-    public function afterAction(Event $event, ArrayObject $extra)
-    {
-        $this->setupTabElements();
-    }
-
-    private function setupTabElements()
-    {
-        $tabElements = $this->controller->getTrainingTabElements();
-        $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'StaffTrainingApplications');
     }
 }
