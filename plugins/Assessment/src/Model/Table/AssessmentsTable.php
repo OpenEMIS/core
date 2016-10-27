@@ -51,7 +51,7 @@ class AssessmentsTable extends ControllerActionTable {
         ]);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'Results' => ['index']
+            'Results' => ['index', 'view']
         ]);
         $this->setDeleteStrategy('restrict');
     }
