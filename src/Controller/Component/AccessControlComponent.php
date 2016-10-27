@@ -201,6 +201,7 @@ class AccessControlComponent extends Component {
 		if ($superAdmin) {
 			return true;
 		}
+
 		// we only need controller and action
 		foreach ($url as $i => $val) {
 			if (($i != 'controller' && $i != 'action' && !is_numeric($i)) || is_numeric($val) || empty($val) || $this->isUuid($val)) {
@@ -210,14 +211,39 @@ class AccessControlComponent extends Component {
 		// Log::write('debug', $url);
 
 		if (empty($url)) {
-			$url = [$this->controller->name, $this->action];
+			$url = ['controller' => $this->controller->name, 'action' => $this->action];
+		} else {
+			if (!array_key_exists('controller', $url)) {
+				$url['controller'] = $this->controller->name;
+			}
+		}
+		$url = $this->checkAccessMap($url);
+		$checkUrl = [];
+		if (array_key_exists('0', $url) && array_key_exists('1', $url) && array_key_exists('2', $url)) {
+			$url['controller'] = $url[0];
+			$url['action'] = $url[1];
+			$url[0] = $url[2];
+			unset($url[1]);
+			unset($url[2]);
+		} else if (array_key_exists('0', $url) && array_key_exists('1', $url)) {
+			$url['controller'] = $url[0];
+			$url['action'] = $url[1];
+			unset($url[0]);
+			unset($url[1]);
 		}
 
-		$url = $this->checkAccessMap($url);
+		if (array_key_exists('controller', $url)) {
+			$checkUrl[] = $url['controller'];
+			unset($url['controller']);
+		}
+		if (array_key_exists('action', $url)) {
+			$checkUrl[] = $url['action'];
+			unset($url['action']);
+		}
+		$url = array_merge($checkUrl, $url);
 
-		// check if the action is excluded from permissions checking
-		$action = next($url);
-		$controller = reset($url);
+		$controller = $url[0];
+		$action = $url[1];
 		if ($this->isIgnored($controller, $action)) {
 			return true;
 		}

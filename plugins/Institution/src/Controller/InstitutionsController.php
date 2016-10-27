@@ -72,14 +72,12 @@ class InstitutionsController extends AppController
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
+<<<<<<< HEAD
         $this->loadComponent('Training.Training');
+=======
+        $this->loadComponent('Institution.UserOpenEMISID');
+>>>>>>> f275329691f788820b4abb86f838e8eb9a7dae16
         $this->attachAngularModules();
-
-        $controller = $this->name;
-        $accessMap = [
-            "$controller.StudentUser" => "$controller.%s"
-        ];
-        $this->request->addParams(['accessMap' => $accessMap]);
     }
 
     // CAv4
@@ -98,8 +96,8 @@ class InstitutionsController extends AppController
     public function UndoExaminationRegistration() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminationsUndoRegistration']); }
     public function ExaminationStudents()   { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminationStudents']); }
     public function Contacts()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionContacts']); }
-    public function StudentUser()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentUser']);
-    }
+    public function IndividualPromotion()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.IndividualPromotion']); }
+    public function StudentUser()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentUser']); }
     public function TransferRequests()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.TransferRequests']); }
     // public function StaffAbsences() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
     public function StaffLeave()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffLeave']); }
@@ -135,7 +133,16 @@ class InstitutionsController extends AppController
 
     public function Students($pass = 'index') {
         if ($pass == 'add') {
+            $session = $this->request->session();
+            $roles = [];
+
+            if (!$this->AccessControl->isAdmin() && $session->check('Institution.Institutions.id')) {
+                $userId = $this->Auth->user('id');
+                $institutionId = $session->read('Institution.Institutions.id');
+                $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+            }
             $this->set('ngController', 'InstitutionsStudentsCtrl as InstitutionStudentController');
+            $this->set('_createNewStudent', $this->AccessControl->check(['Institutions', 'getUniqueOpenemisId'], $roles));
             $externalDataSource = false;
         	$ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
         	$externalSourceType = $ConfigItemTable->find()->where([$ConfigItemTable->aliasField('code') => 'external_data_source_type'])->first();
@@ -273,6 +280,12 @@ class InstitutionsController extends AppController
         $this->set('contentHeader', $header);
     }
 
+    public function getUniqueOpenemisId()
+    {
+        $this->autoRender = false;
+        echo $this->UserOpenEMISID->getUniqueOpenemisId();
+    }
+
 	private function attachAngularModules()
     {
 		$action = $this->request->action;
@@ -360,6 +373,8 @@ class InstitutionsController extends AppController
             if (is_object($persona) && get_class($persona)=='User\Model\Entity\User') {
                 $header = $persona->name . ' - ' . $model->getHeader($alias);
                 $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
+            } else if ($model->alias() == 'IndividualPromotion') {
+                $header .= ' - '. __('Individual Promotion / Repeat');
             } else {
                 $header .= ' - ' . $model->getHeader($alias);
             }
