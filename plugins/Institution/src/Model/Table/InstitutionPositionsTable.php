@@ -310,7 +310,7 @@ class InstitutionPositionsTable extends ControllerActionTable {
 		$extra['auto_contain'] = false;
 		$extra['auto_order'] = false;
 
-		$query->contain(['Statuses', 'StaffPositionTitles', 'StaffPositionGrades', 'Institutions'])
+		$query->contain(['Statuses', 'StaffPositionTitles', 'StaffPositionGrades', 'Institutions', 'Assignees'])
 			->autoFields(true);
 
 		$sortList = ['position_no', 'StaffPositionTitles.order', 'StaffPositionGrades.order'];
@@ -547,7 +547,7 @@ class InstitutionPositionsTable extends ControllerActionTable {
 					return $row;
 				});
 			});
-		
+
 		return $query;
 	}
 }
